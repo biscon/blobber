@@ -47,6 +47,7 @@ struct PartyCommand {
 struct TargetAnchor {
     int x = 0, y = 0; // Viewport-local visible-body center, not a world coordinate.
     bool valid = false;
+    int top = 0;
 };
 struct TargetSnapshot {
     std::array<ActorId, NpcWorld::maxInstances> ids{};

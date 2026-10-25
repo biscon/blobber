@@ -1,6 +1,8 @@
 #include "game/commands.hpp"
+#include "ui/layout.hpp"
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 
 namespace blobber {
 const char* actionName(PartyAction action) noexcept {
@@ -29,7 +31,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::InvalidAlly:
         return "Select another dying ally.";
     case CommandReason::LogOpen:
-        return "Close the log to act.";
+        return "Close the overlay to act.";
     case CommandReason::FeatureRequired:
         return "Requires a future back-row feature.";
     case CommandReason::PreviewAccepted:
@@ -39,7 +41,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::InvalidAction:
         return "Invalid action.";
     case CommandReason::Unavailable:
-        return "Unavailable: arrives in a later slice.";
+        return "This action is not available yet.";
     case CommandReason::BackRowOnly:
         return "Select a back-row character.";
     case CommandReason::MissingTarget:
@@ -71,14 +73,13 @@ CommandController::CommandController(const Party& party, const ActorWorld& actor
     : party_(party), actors_(actors) {
     state_.selection.character = party.snapshot().formation[0];
     refresh({}, false, false, true);
-    state_.log.append("Choose a character, action and target. Mana is unavailable until the spell slice.");
+    appendLog("Choose a character, action and target. Mana is unavailable until the spell slice.");
 }
 CommandController::CommandController(GameSession& session)
     : CommandController(session.party(), session.actors()) {
     session_ = &session;
     state_.log = {};
-    state_.log.append(
-        "Frontal melee only. Each front slot protects its rear partner. Aid stabilizes; it does not heal.");
+    appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
     refresh({}, false, false, true);
 }
 void CommandController::record(const CombatOutcome& out) noexcept {
@@ -91,8 +92,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     const char* target = recipient ? recipient->build.name.c_str() : "?";
     switch (out.event) {
     case CombatEvent::Started:
-        std::snprintf(line, sizeof(line),
-                      "Combat begins. Initiative is set; front slots protect their rear partners.");
+        std::snprintf(line, sizeof(line), "Combat begins.");
         break;
     case CombatEvent::Attack:
         recordFeedback(out);
@@ -135,13 +135,11 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         return;
     }
     if (line[0])
-        state_.log.append(line);
+        appendLog(line);
     if (out.phase == CombatPhase::Victory)
-        state_.log.append(
-            "Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
+        appendLog("Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
     if (out.phase == CombatPhase::Defeat)
-        state_.log.append("Defeat: nobody is conscious. Restart begins a fresh session.");
-    state_.logOffset = 0;
+        appendLog("Defeat: nobody is conscious. Restart begins a fresh session.");
 }
 void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     if (!session_ || out.enemy.world != actors_.snapshot().world ||
@@ -199,15 +197,22 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             if (moving || combat.phase == CombatPhase::Exploration ||
                 session_->timeMs() - feedback.startedMs >= CombatFeedback::durationMs)
                 feedback.active = false;
-        if (combat.turn != state_.combat.turn) {
+        if (combat.turn != state_.combat.turn || combat.phase != state_.combat.phase) {
+            state_.selection.action = PartyAction::Melee;
             state_.selection.target.reset();
             state_.selection.ally.reset();
             if (combat.activeCharacter) {
+                char line[96];
+                std::snprintf(line, sizeof(line), "%s%s",
+                              party_.character(*combat.activeCharacter)->build.name.c_str(),
+                              combat.awaitingAction ? "'s turn." : " makes a death save.");
+                appendLog(line);
                 state_.selection.character = *combat.activeCharacter;
                 state_.selection.action = PartyAction::Melee;
             }
         }
         state_.combat = combat;
+        session_->combat().previewTurns(state_.combat);
         state_.selection.world = combat.world;
         state_.selection.turn = combat.turn;
     }
@@ -250,6 +255,20 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card = {};
         card.id = id;
         card.name = member.build.name.c_str();
+        card.raceName = party_.catalog().race(member.build.race)->name.c_str();
+        card.abilities = member.stats.abilities;
+        card.armorClass = member.stats.armorClass;
+        card.level = member.build.level;
+        constexpr const char* portraits[]{"alden", "brunna", "merrin", "lethiel"};
+        for (unsigned art = 0; art < 4; ++art)
+            if (member.build.id == portraits[art])
+                card.portrait = art;
+        const std::array<rules::OwnedItemId, 3> equipped{
+            {member.build.equipment.mainHand, member.build.equipment.offHand, member.build.equipment.body}};
+        for (std::size_t e = 0; e < equipped.size(); ++e)
+            if (equipped[e].index < member.build.itemCount)
+                card.equipment[e] =
+                    party_.catalog().item(member.build.items[equipped[e].index].item)->name.c_str();
         card.className = party_.catalog().characterClass(member.build.characterClass)->name.c_str();
         card.hp = member.hitPoints;
         card.maxHp = member.stats.maxHitPoints;
@@ -280,15 +299,15 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         const auto* selected = actors_.actor(*state_.selection.target);
         if (!session_ ||
             (state_.combat.phase == CombatPhase::Turns && selected && selected->life == ActorLife::Alive))
-            state_.log.append(commandMessage(moving     ? CommandReason::Moving
-                                             : !focused ? CommandReason::Unfocused
-                                                        : CommandReason::NotVisible));
-        state_.logOffset = 0;
+            appendLog(commandMessage(moving     ? CommandReason::Moving
+                                     : !focused ? CommandReason::Unfocused
+                                                : CommandReason::NotVisible));
         state_.selection.target.reset();
     }
     const auto pages = (state_.targets.count + 3) / 4;
     state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
     updateAvailability();
+    updateHover();
 }
 void CommandController::updateAvailability() noexcept {
     state_.availability = validate(state_.selection);
@@ -362,19 +381,21 @@ void CommandController::pageTargets(int delta) noexcept {
         state_.targetPage = (state_.targetPage + (delta < 0 ? pages - 1 : 1)) % pages;
 }
 void CommandController::scrollLog(int delta) noexcept {
-    const int maximum = state_.log.size() ? static_cast<int>(state_.log.size()) - 1 : 0;
-    state_.logOffset = static_cast<std::size_t>(
-        std::clamp<std::int64_t>(static_cast<std::int64_t>(state_.logOffset) + delta, 0, maximum));
+    const auto count =
+        state_.log.lineCount(state_.logExpanded ? hudLayout::expandedLogColumns : hudLayout::logColumns);
+    const auto maximum = count ? count - 1 : 0;
+    state_.logOffset = static_cast<std::size_t>(std::clamp<std::int64_t>(
+        static_cast<std::int64_t>(state_.logOffset) + delta, 0, static_cast<std::int64_t>(maximum)));
 }
 void CommandController::cancel() noexcept {
+    state_.selection.action = PartyAction::Melee;
     state_.selection.ally.reset();
     state_.selection.target.reset();
     updateAvailability();
 }
 void CommandController::movementStarted() noexcept {
     if (state_.selection.target) {
-        state_.log.append("Movement cleared the selected target.");
-        state_.logOffset = 0;
+        appendLog("Movement cleared the selected target.");
     }
     cancel();
 }
@@ -382,7 +403,7 @@ CommandReason CommandController::validate(const PartyCommand& command) const noe
     if (state_.suspended)
         return suspension_;
     if (session_) {
-        if (state_.logExpanded)
+        if (state_.modal())
             return CommandReason::LogOpen;
         const auto reason = session_->combat().validate(command, session_->movement().player);
         if (reason != CommandReason::Ready)
@@ -422,6 +443,8 @@ CommandReason CommandController::submit(const PartyCommand& command) noexcept {
     if (session_ && reason == CommandReason::Ready) {
         const auto out = session_->submit(command);
         record(out);
+        if (out.reason == CommandReason::Resolved)
+            cancel();
         updateAvailability();
         return out.reason;
     }
@@ -434,8 +457,7 @@ CommandReason CommandController::submit(const PartyCommand& command) noexcept {
     else
         std::snprintf(line, sizeof(line), "%s: %s - %s", member ? member->build.name.c_str() : "?",
                       actionName(command.action), commandMessage(reason));
-    state_.log.append(line);
-    state_.logOffset = 0;
+    appendLog(line);
     updateAvailability();
     return reason;
 }

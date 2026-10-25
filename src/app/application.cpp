@@ -2,6 +2,7 @@
 #include "app/actor_captures.hpp"
 #include "app/captures.hpp"
 #include "app/gameplay.hpp"
+#include "app/hud_captures.hpp"
 #include "app/options.hpp"
 #include "app/ui_demo.hpp"
 #include "assets/material_loader.hpp"
@@ -17,7 +18,8 @@ namespace blobber {
 int run(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
-        std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY] [--ui-demo | "
+        std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
+                     "--capture-hud DIRECTORY] [--ui-demo | "
                      "--combat-demo] [--seed UINT32]\n";
         return 0;
     }
@@ -37,13 +39,17 @@ int run(int argc, char** argv) {
     // Source images are needed only during preparation.
     std::vector<NpcAppearance>().swap(loadedNpcs.appearances);
     // Declaration order guarantees all GPU resources die before the window/context.
-    const Window window(options.width, options.height);
+    const Window window(options.width, options.height, !options.captureDirectory.empty());
     Presenter presenter(options.assets);
     if (!options.captureDirectory.empty()) {
         NpcAnimator animator(npcs, timings);
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureHudOnly) {
+            captureHud(map, rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
+            return 0;
+        }
         const auto shots = makeCaptures();
         for (std::size_t i = 0; i < shots.size() && !WindowShouldClose(); ++i) {
             const auto& shot = shots[i];
@@ -58,8 +64,6 @@ int run(int argc, char** argv) {
             presenter.present(frames.frame(), state, map, false, changed, &commands.snapshot(),
                               frames.picking());
             presenter.capture(options.captureDirectory / (shot.name + ".png"));
-            if (i == 0)
-                TakeScreenshot((options.captureDirectory / "window.png").string().c_str());
         }
         if (!WindowShouldClose())
             captureActors(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
@@ -70,6 +74,8 @@ int run(int argc, char** argv) {
         if (!WindowShouldClose())
             captureCombat(map, rules, loadedNpcs.world, timings, renderer, presenter,
                           options.captureDirectory);
+        if (!WindowShouldClose())
+            captureHud(map, rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
         return 0;
     }
     if (options.uiDemo) {

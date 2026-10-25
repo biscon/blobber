@@ -1,6 +1,8 @@
 # First melee combat — slice 05
 
-Status: implemented; verification and user review are recorded in
+Status: implemented and accepted by the user (2026-10-25), including combat
+corrections and the dungeon-first UI. Slice 05 and milestone A are closed.
+Verification and user review are recorded in
 [slice 05 verification](slice05_verification.md) (2026-10-25).
 The user approved the implementation plan with “Implement the plan.” Delivery
 and acceptance belong to the roadmap, not the presence of this document.

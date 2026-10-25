@@ -21,6 +21,28 @@ CombatController::CombatController(Party& party, ActorWorld& actors, rules::Dice
             throw std::runtime_error("Stationary combat requires a melee attack for every monster");
     }
 }
+void CombatController::previewTurns(CombatSnapshot& destination) const noexcept {
+    destination.upcomingCount = 0;
+    if (state_.phase != CombatPhase::Turns)
+        return;
+    for (std::size_t position = position_; position < orderCount_; ++position) {
+        const auto entry = order_[position];
+        if (entry.party) {
+            const auto life = party_.character({entry.index})->life;
+            if (life == rules::Life::Conscious || life == rules::Life::Dying)
+                destination.upcoming[destination.upcomingCount++] = {
+                    rules::CharacterId{entry.index}, {}, life == rules::Life::Dying};
+        } else {
+            for (std::size_t i = position == position_ ? enemyCursor_ : 0; i < state_.enemyCount; ++i) {
+                const auto id = state_.enemies[i];
+                const auto* actor = actors_.actor(id);
+                if (actor && actor->life == ActorLife::Alive &&
+                    actor->monster.index == groups_[entry.index].index && exposed(id))
+                    destination.upcoming[destination.upcomingCount++] = {{}, id, false};
+            }
+        }
+    }
+}
 bool CombatController::member(ActorId id) const noexcept {
     for (std::size_t i = 0; i < state_.enemyCount; ++i)
         if (sameActor(state_.enemies[i], id))

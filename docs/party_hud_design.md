@@ -1,5 +1,10 @@
 # Party HUD and commands — slice 04
 
+Current presentation: the implemented [dungeon-first UI revision](dungeon_ui_design.md)
+supersedes the original sidebar, bottom portraits, target list, confirmation button
+and hotkeys described below. See its [current verification and controls](dungeon_ui_verification.md).
+The remainder preserves the accepted slice 04 design and historical corrections.
+
 Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 adds production combat routing, Aid/ally targets, turn/status/outcome display and confirmation gating. The const-owner constructor and --ui-demo preserve the slice 04 preview contract. The remainder records this subsystem’s original slice boundary.
 
 Status: implemented and accepted by the user, including all review corrections (2026-10-25).

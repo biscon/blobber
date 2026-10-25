@@ -262,6 +262,7 @@ void commandsAndRng() {
     ui.toggleLog();
     check(ui.confirm() == CommandReason::LogOpen, "Expanded log blocks confirmation");
     ui.toggleLog();
+    ui.selectAction(PartyAction::Defend);
     const auto repeated = ui.snapshot().selection;
     check(ui.confirm() == CommandReason::Resolved && ui.submit(repeated) == CommandReason::StaleTurn,
           "UI routes authority once");
@@ -417,12 +418,14 @@ void groupedTurnsAndAidInput() {
     ui.refresh(allCombatTargets(game), false, false, true);
     ui.selectAction(PartyAction::Aid);
     UiInput input;
-    input.pressed[static_cast<std::size_t>(UiKey::Three)] = true;
-    routeHudInput(ui, input);
-    check(ui.snapshot().selection.character.index == 0 && ui.snapshot().selection.ally->index == 2,
-          "Aid portrait hotkey selects recipient without replacing actor");
     const auto command = ui.snapshot().selection;
-    check(ui.confirm() == CommandReason::Resolved, "Aid UI executes actual action");
+    const auto turn = game.combat().snapshot().turn;
+    input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
+    const auto portrait = hudLayout::card(2);
+    input.pointer = ArtPoint{float(portrait.x + 5), float(portrait.y + 5)};
+    routeHudInput(ui, input);
+    check(game.combat().snapshot().turn != turn && ui.snapshot().selection.action == PartyAction::Melee,
+          "Aid portrait click commits and resets to basic attack");
     GameSession restart(map, catalog, placements, 123, spawn);
     start(restart);
     awaitCharacter(restart, {0});
@@ -559,7 +562,7 @@ void presentedInput() {
     check(s.combat().snapshot().turn == turn, "Pre-turn Enter cannot consume newly selected action");
     input.pressed = {};
     input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
-    input.pointer = ArtPoint{60, 210};
+    input.pointer = ArtPoint{float(hudLayout::action(1).x + 3), float(hudLayout::action(1).y + 3)};
     routeHudInput(ui, input, {}, false);
     check(s.combat().snapshot().turn == turn, "Pre-turn mouse confirmation also rejected");
     routeHudInput(ui, input, {}, confirmationMatches(ui.snapshot().combat, s.combat().snapshot()));

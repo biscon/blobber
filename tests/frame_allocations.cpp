@@ -157,6 +157,15 @@ int main() {
             }
             for (std::size_t slot = 0; slot < fightAnimator.snapshot().count; ++slot)
                 attackPlayback |= fightAnimator.snapshot().frames[slot].clip == NpcAnimation::Attack;
+            fightUi.hover(HoverKind::Enemy, 0, fight.actors().id(2), 100, 100);
+            fightUi.hover(HoverKind::Action, 1, {}, 60, 320);
+            fightUi.inspect(2);
+            fightUi.closeOverlay();
+            fightUi.toggleMenu();
+            fightUi.closeOverlay();
+            char logLine[CombatLog::messageBytes];
+            fightUi.snapshot().log.lineCount(hudLayout::logColumns);
+            fightUi.snapshot().log.line(0, hudLayout::logColumns, logLine, sizeof(logLine));
             fightUi.toggleLog();
             fightUi.scrollLog(1);
             fightUi.confirm();

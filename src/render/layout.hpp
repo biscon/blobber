@@ -3,7 +3,7 @@
 
 namespace blobber {
 constexpr int artWidth = 640, artHeight = 360, gameWidth = 1920, gameHeight = 1080;
-constexpr int viewWidth = 500, viewHeight = 272, viewX = 132, viewY = 8;
+constexpr int viewWidth = 500, viewHeight = 282, viewX = 4, viewY = 18;
 struct FitRect {
     float x, y, width, height;
 };

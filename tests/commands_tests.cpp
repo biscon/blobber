@@ -108,7 +108,8 @@ int main() {
         check(std::strlen(log.newest(0)) == 191 && !*log.newest(32),
               "Truncation and out-of-range log reads safe");
         commands.scrollLog(999);
-        check(commands.snapshot().logOffset == 31, "Scroll bounded oldest");
+        check(commands.snapshot().logOffset == commands.snapshot().log.lineCount(hudLayout::logColumns) - 1,
+              "Scroll bounded oldest");
         commands.scrollLog(-999);
         check(commands.snapshot().logOffset == 0, "Scroll bounded newest");
         HudDemo demo;
@@ -173,38 +174,45 @@ int main() {
         check(!edges.sample(down, true).has(UiKey::Confirm), "Regain focus while held does not fire");
         down.fill(false);
         edges.sample(down, true);
-        down[8] = true;
+        down[static_cast<std::size_t>(UiKey::Confirm)] = true;
         check(edges.sample(down, true).has(UiKey::Confirm), "Fresh press after release fires");
         edges.sample(down, false);
-        down[10] = true;
+        down[static_cast<std::size_t>(UiKey::Click)] = true;
         check(!edges.sample(down, true).has(UiKey::Click), "Mouse held on focus regain suppressed");
         UiInputEdges platformEdges;
         std::array<bool, uiKeyCount> physical{};
-        physical[8] = true;
+        physical[static_cast<std::size_t>(UiKey::Confirm)] = true;
         check(platformEdges.sample(physical, true).has(UiKey::Confirm), "Focused confirmation starts once");
-        physical[8] = false; // Synthetic release at blur, not a physical release.
+        physical[static_cast<std::size_t>(UiKey::Confirm)] =
+            false; // Synthetic release at blur, not a physical release.
         platformEdges.sample(physical, false);
         platformEdges.sample(physical, true);
-        physical[8] = true; // Delayed key-down synthesized by desktop focus restoration.
+        physical[static_cast<std::size_t>(UiKey::Confirm)] =
+            true; // Delayed key-down synthesized by desktop focus restoration.
         check(!platformEdges.sample(physical, true).has(UiKey::Confirm),
               "Refocus synthetic press cannot replay confirmation");
-        physical[8] = false;
+        physical[static_cast<std::size_t>(UiKey::Confirm)] = false;
         platformEdges.sample(physical, true);
-        physical[8] = true;
+        physical[static_cast<std::size_t>(UiKey::Confirm)] = true;
         check(platformEdges.sample(physical, true).has(UiKey::Confirm),
               "Focused release then fresh press rearms confirmation");
         UiInput input;
-        input.pressed[10] = true;
-        input.pointer = ArtPoint{14, 210};
+        input.pressed[static_cast<std::size_t>(UiKey::Confirm)] = true;
+        commands.cancel();
         commands.selectAction(PartyAction::Melee);
         routeHudInput(commands, input);
         check(std::strstr(commands.snapshot().log.newest(0), "Select a visible target") != nullptr,
-              "Mouse confirm routes rejection");
-        input.pointer = ArtPoint{330, 300};
+              "Keyboard activation routes rejection");
+        input.pressed = {};
+        input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
+        const auto portrait = hudLayout::card(2);
+        input.pointer = ArtPoint{float(portrait.x + 5), float(portrait.y + 5)};
         routeHudInput(commands, input);
-        check(commands.snapshot().selection.character.index == party.snapshot().formation[2].index,
-              "Portrait hit uses formation identity");
-        input.pointer = ArtPoint{12, 252};
+        check(commands.snapshot().inspected &&
+                  commands.snapshot().inspected->index == party.snapshot().formation[2].index,
+              "Portrait inspection uses formation identity");
+        commands.closeOverlay();
+        input.pointer = ArtPoint{float(hudLayout::logExpand.x + 2), float(hudLayout::logExpand.y + 2)};
         routeHudInput(commands, input);
         check(commands.snapshot().logExpanded, "Log expands for complete messages");
         for (const auto size : {std::array<int, 4>{1920, 1080, 1920, 1080},

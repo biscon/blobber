@@ -7,15 +7,16 @@ InputSample Input::poll(float seconds) {
     result.clearPending = !focused || !previousFocus_;
     if (result.clearPending)
         repeat_.clear();
-    constexpr std::array<int, 12> uiKeys{KEY_ONE,  KEY_TWO,   KEY_THREE, KEY_FOUR,      KEY_UP, KEY_DOWN,
-                                         KEY_LEFT, KEY_RIGHT, KEY_ENTER, KEY_BACKSPACE, KEY_F2, KEY_F3};
+    constexpr std::array<int, 12> uiKeys{KEY_ONE, KEY_TWO,  KEY_THREE, KEY_FOUR,  KEY_FIVE,  KEY_SIX,
+                                         KEY_UP,  KEY_DOWN, KEY_LEFT,  KEY_RIGHT, KEY_ENTER, KEY_ESCAPE};
     std::array<bool, uiKeyCount> uiDown{};
-    for (std::size_t i = 0; i < 10; ++i)
+    for (std::size_t i = 0; i < uiKeys.size(); ++i)
         uiDown[i] = IsKeyDown(uiKeys[i]);
+    uiDown[static_cast<std::size_t>(UiKey::Cancel)] |= IsKeyDown(KEY_BACKSPACE);
     uiDown[static_cast<std::size_t>(UiKey::Click)] = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     uiDown[static_cast<std::size_t>(UiKey::RightClick)] = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
-    uiDown[static_cast<std::size_t>(UiKey::DemoNext)] = IsKeyDown(uiKeys[10]);
-    uiDown[static_cast<std::size_t>(UiKey::DemoReset)] = IsKeyDown(uiKeys[11]);
+    uiDown[static_cast<std::size_t>(UiKey::DemoNext)] = IsKeyDown(KEY_F2);
+    uiDown[static_cast<std::size_t>(UiKey::DemoReset)] = IsKeyDown(KEY_F3);
     const auto pointer = GetMousePosition();
     const float wheel = GetMouseWheelMove();
     result.ui = edges_.sample(uiDown, focused,

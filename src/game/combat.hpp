@@ -15,6 +15,11 @@ struct CombatOutcome {
     int roll = 0;
     CombatPhase phase = CombatPhase::Exploration;
 };
+struct CombatParticipant {
+    std::optional<rules::CharacterId> character;
+    std::optional<ActorId> enemy;
+    bool deathSave = false;
+};
 struct CombatSnapshot {
     CombatPhase phase = CombatPhase::Exploration;
     std::uint64_t world = 0, turn = 0, round = 0;
@@ -24,6 +29,8 @@ struct CombatSnapshot {
     std::array<bool, rules::partySize> defending{};
     std::array<ActorId, 4> enemies{};
     std::size_t enemyCount = 0;
+    std::array<CombatParticipant, 8> upcoming{};
+    std::size_t upcomingCount = 0;
 };
 // Borrows one session's immovable owners. No graphics, visibility oracle, or event queue.
 class CombatController {
@@ -38,6 +45,7 @@ class CombatController {
     CommandReason validate(const PartyCommand& command, Player pose) const noexcept;
     CombatOutcome submit(const PartyCommand& command, Player pose, std::uint64_t now) noexcept;
     bool continueExploring() noexcept;
+    void previewTurns(CombatSnapshot& destination) const noexcept;
     bool member(ActorId id) const noexcept;
     bool exposed(rules::CharacterId id) const noexcept;
     bool exposed(ActorId id) const noexcept;

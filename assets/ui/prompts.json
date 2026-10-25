@@ -1,0 +1,49 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "assets": {
+    "alden": {
+      "prompt": "Use case: stylized-concept. Single finished game UI portrait for a retro dungeon crawler called Stone & Shadow. Subject: Alden, rugged adult human male fighter, tousled dark brown hair, short beard, steady stern gaze, worn chainmail at shoulders. Tight head-and-shoulders composition, face large and readable, facing slightly right, dark near-black green background. Early 1990s Westwood dungeon-crawler painted pixel-art aesthetic: deliberately visible pixel clusters, restrained earthy palette, crisp shapes, warm gold highlights and deep shadows, not smooth modern digital painting. Vertical portrait, designed to remain readable at 48x56 game pixels. One character only, no text, no lettering, no border, no UI, no watermark. Fill canvas with portrait.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-875426ea-b445-4eef-9930-26aa22fedae9.png"
+    },
+    "brunna": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Vertical head-and-shoulders portrait of a stout hill dwarf cleric with copper red hair and thick braided red beard, calm resolute expression, hints of scale mail and a small gold holy symbol at neckline. Face fills frame, dark near-black green background. Designed for 48x56 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-69b338f9-2650-4425-8401-6aef4c265c90.png"
+    },
+    "merrin": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Vertical head-and-shoulders portrait of a lightfoot halfling female rogue, youthful adult, alert brown eyes, brown hair framed by a charcoal hood, subtly pointed ears, sly composed expression, leather armor at neckline. Face fills frame, dark near-black green background. Designed for 48x56 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-5d95905c-e507-4b14-bb1d-53812c021913.png"
+    },
+    "lethiel": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Vertical head-and-shoulders portrait of a high elf male wizard, pale silver long hair, elegant angular face and pointed ears, grey eyes, reserved serious expression, dark indigo robe with subdued gold embroidery at neckline. Face fills frame, dark near-black green background. Designed for 48x56 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-5e4a970c-38b3-436b-914e-0f7cdeabc3ed.png"
+    },
+    "goblin": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Square close-up head portrait of an olive green goblin with enormous sideways pointed ears, bald domed head, amber eyes, wrinkled brow and small sharp teeth, worn dark brown leather neckline. Menacing but not comic. Face fills frame, dark near-black green background. Designed for a tiny 24x24 initiative portrait.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-b565791e-39e8-472b-ae81-1ff2a36133fa.png"
+    },
+    "melee": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: diagonal medieval steel longsword, bright silver blade pointing upper right, bronze crossguard and brown grip lower left. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-c289f467-2b1b-447a-a5f9-aeb91b28e43f.png"
+    },
+    "defend": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: medieval blue heater shield with silver edge and subtle gold cross, viewed at slight angle. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-03ff3030-23e5-4d6a-bfed-e2cd2900a044.png"
+    },
+    "ranged": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: curved dark wood bow with taut pale string and a single arrow, diagonal. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-cfbe82e1-b483-419e-945c-6d0825af4725.png"
+    },
+    "spell": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: closed indigo leather spellbook with gold corner fittings and central gold eight-point magical star. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-86786947-9594-4ce1-8291-c2556c491520.png"
+    },
+    "item": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: round red glass healing potion bottle, brilliant red liquid, narrow neck, cork stopper and small silver collar. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-71f2db37-f718-4a7f-a679-e5de33238b53.png"
+    },
+    "aid": {
+      "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: open human hand reaching diagonally upward right in a warm golden healing glow with small rays, clearly readable five fingers, simple wrist at lower left. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
+      "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-fc6affc6-daaf-48ee-b0bd-7d643abe863a.png"
+    }
+  }
+}

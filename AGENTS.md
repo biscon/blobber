@@ -52,3 +52,7 @@ unnecessarily; follow the execution environment's permission rules when needed.
   or run desktop input automation. This is an explicit user instruction.
 - Use command-line/headless checks. Leave interactive desktop review to the user;
   report it as unverified rather than attempting automation.
+
+- For the approved dungeon-first UI revision, the user authorizes running the game
+  and exporting application-owned screenshots. Prefer hidden capture windows and
+  in-process scripted input; never inject OS input or select/control other windows.

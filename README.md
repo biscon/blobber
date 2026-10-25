@@ -54,13 +54,16 @@ working-directory setup is required: assets are copied beside the executable.
 | Q / E | Turn left / right 90 degrees |
 | Tab | Toggle animated / instant steps |
 | F1 | Toggle the development map overlay |
-| 1–4 / portrait click | Inspect a character; with Aid selected, choose its recipient |
-| Up / Down | Select an action |
-| Left / Right / monster click | Select a visible target |
-| Enter / CONFIRM click | Execute the active character's action; acknowledge a displayed outcome |
-| Backspace / right-click | Cancel target selection |
-| LOG click / mouse wheel | Expand the combat log / scroll its entries |
-| Esc | Exit |
+| Monster hover / click | Preview reach and damage / immediately attack a reachable enemy |
+| 1 / sword | Select basic melee |
+| 2 / shield | Immediately defend |
+| 3 / 4 / 5 | Ranged / spell / item (unavailable in this slice) |
+| 6 / aid | Arm Aid; click a dying ally's portrait to commit |
+| Portrait click | Open paused, read-only character details unless targeting Aid |
+| Left / Right, Enter | Cycle targets, then execute; Enter also acknowledges outcomes |
+| Escape / Backspace / right-click | Cancel targeting or close an overlay; unarmed Escape/Backspace opens pause menu |
+| Mouse wheel over log / + | Scroll readable history / expand paused history |
+| Gear | Open pause menu with Resume and Quit |
 
 The first movement action occurs on keypress; holding a movement key repeats after 300 ms and then
 every 180 ms. An animated action lasts 160 ms. At most one fresh keypress is
@@ -68,18 +71,17 @@ buffered during an animation. Losing focus clears the buffer and held-key state.
 Collisions block the entire move, including its visual effect. HUD commands never
 repeat while held. Controls held during focus loss require a release in the focused
 window before their next press can act. Targets clear when movement starts or focus is lost; targeting
-and confirmation wait until transitions finish and the F1 map is closed.
+and attacks wait until transitions finish and the F1 map is closed. Each action/turn resets to basic melee.
 
 Facing an adjacent goblin cell begins combat and locks movement/turning. Each
-character and enemy group rolls initiative once; the banner identifies the active
-turn. Melee, Defend and Aid spend one action. Defend imposes disadvantage until the
+character and enemy group rolls initiative once; the initiative strip puts the active participant first and removes resolved turns. Melee, Defend and Aid spend one action. Defend imposes disadvantage until the
 next turn; Aid attempts DC 10 Wisdom stabilization of another dying ally.
 
 Front slots protect their paired rear slots on **both sides** (FL/BL and FR/BR).
 A rear member can attack or be targeted as soon as its own front slot falls.
 An exposed melee goblin moves into that vacant front slot on its next turn, then
 attacks once. Party members retain their slots. Body visibility is also
-required. Targets marked `/ rear` are protected. Back-row feature attacks, reach,
+required. Hover explains paired-slot protection and other reach restrictions. Back-row feature attacks, reach,
 ranged attacks, spells and items remain unavailable; the Rogue exception is deferred.
 
 At zero HP, characters make death saves on their turns. Aid stabilizes without
@@ -92,7 +94,7 @@ active turn, which is explicitly labeled.
 For immediate review, run `./cmake-build-debug/blobber --combat-demo --seed 5`.
 This starts beside the existing goblins using the production combat path. `--seed`
 accepts an unsigned 32-bit integer; normal play reports its generated seed and
-restart reuses it. See [slice 05 review and limitations](docs/slice05_verification.md).
+restart reuses it. See [current UI review](docs/dungeon_ui_verification.md) and [combat limitations](docs/slice05_verification.md).
 
 Run `./cmake-build-debug/blobber --ui-demo` for eight deterministic development
 scenarios near the goblins. F2/NEXT advances; F3/RESET resets the current scenario.
@@ -181,16 +183,19 @@ composed with proper occlusion. Left strafes reuse the same eight-step cache in
 reverse. The game still draws 2D images; no runtime 3D scene or raycaster is used.
 Tab switches transitions off.
 
-The full presentation uses a 640×360 pixel-art grid. The viewport is 500×272 at
-`(132, 8)`, with sidebar controls and four portrait panels below. That composition
+The full presentation uses a 640×360 pixel-art grid. The viewport is 500×282 at
+`(4, 18)`, with four portraits on the right and a 54-pixel (15%) action/log dock below. That composition
 is enlarged exactly 3× into a **1920×1080 render texture**. Finally that texture
 is fitted to the actual framebuffer, centered with black bars and point filtering.
 A separate transparent 1920×1080 text layer uses bilinear filtering during that
 final fit, preserving thin font strokes in smaller windows without softening art.
 HUD text is drawn directly onto its 1920×1080 text target using the supplied fonts:
-IBM Plex Sans for controls/labels and Inconsolata for the log. Each face/size has
+DejaVu Serif Bold for headings/names, IBM Plex Sans for controls/labels, and Inconsolata for the log. Each face/size has
 its own atlas (21/24/27 px), used at its exact raster size with rounded positions.
-`assets/fonts` is copied beside the executable and is required for custom assets.
+`assets/fonts` and `assets/ui` are copied beside the executable and are required for custom assets.
+Eleven generated UI images are prepared into one reusable 256×192 atlas at startup.
+Their exact built-in imagegen prompts are in `assets/ui/prompts.json`; font licenses
+are alongside the bundled fonts.
 Window resizing never changes the logical resolution, perspective, or UI layout.
 At noninteger scales, pixel widths necessarily vary slightly to fill the fitted area.
 
@@ -224,11 +229,14 @@ cmake --build --preset debug
 
 The developer capture mode preserves existing dungeon, transition, NPC, actor and
 UI diagnostic filenames and adds ten `combat-*` cases for the shipped level.
-It also saves a screenshot of the actual game window, then exits. The following
-is a manual review command; agents must not automate the user's desktop:
+It also exports focused `hud-*` cases at native, 1280×720, and letterboxed
+1024×768 sizes, then exits. Capture mode uses a hidden window and exports its own
+render targets; it never captures another window or injects desktop input:
 
 ```sh
-./cmake-build-debug/blobber --size 1024 768 --capture /tmp/blobber-captures
+./cmake-build-debug/blobber --capture /tmp/blobber-captures
+# Focused UI captures only:
+./cmake-build-debug/blobber --capture-hud /tmp/blobber-ui
 ```
 
 `--assets DIRECTORY` overrides the default executable-relative asset directory.
@@ -247,14 +255,14 @@ contiguous column/pixel arrays, and unchanged views skip viewport uploads.
 GPU textures and render targets are owned by bounded registries with typed,
 generation-checked handles and RAII cleanup before the window closes.
 
-Sixteen routine CTest suites cover rules/health/party/actors/combat, commands and input, picking,
+Seventeen routine CTest suites cover rules/health/party/actors/combat, commands and input, picking,
 core behavior, rendering against an independent geometric oracle, resource
 lifetime/loading failures, NPC loading/rendering/collision, and zero C++ allocations
 in engine-owned CPU frame processing. They own their fixtures and need no display.
 Loading, preparation, diagnostic exports, and raylib/driver internals are outside
 the allocation guarantee. No performance benchmark framework is required.
 
-The separate desktop GPU lifecycle check is for manual desktop review:
+The separate GPU lifecycle check needs a display and uses a hidden window:
 
 ```sh
 cmake --build --preset debug --target blobber_gpu_smoke

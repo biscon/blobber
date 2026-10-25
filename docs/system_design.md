@@ -1,6 +1,12 @@
 # System design
 
-Implemented, awaiting user review (slice 05): [first melee combat](melee_combat_design.md).
+Implemented and accepted by the user (2026-10-25):
+[dungeon-first UI revision](dungeon_ui_design.md) for slice 05.
+Combat and presentation are accepted; slice 05 and milestone A are closed. See
+[UI verification and captures](dungeon_ui_verification.md).
+
+Implemented and accepted by the user (2026-10-25), slice 05:
+[first melee combat](melee_combat_design.md).
 An immovable gameplay session owns party health, actors, movement, seeded RNG and
 stationary frontal encounters. Initiative, row protection on both sides, melee,
 Defend, Aid, death saves, victory and defeat now execute authoritative commands.
@@ -10,7 +16,7 @@ review remains unverified; do not automate the user's mouse, keyboard or desktop
 Implemented and accepted by the user (2026-10-25): slice 04
 [party HUD and command design](party_hud_design.md). Four portraits, command
 previews, visible-body targeting and a bounded log read the existing party/actor
-state. Slice 05 adds combat execution; the isolated preview demo remains unchanged.
+state. Slice 05 adds combat execution; the isolated demo retains preview-only semantics with the revised UI.
 Explicit UI demo
 scenarios keep sample mana/status values separate from authoritative party state.
 See [slice 04 verification](slice04_verification.md). The typography correction uses
@@ -20,8 +26,9 @@ interactive demo clocks advance; capture clocks remain explicit, and automatic
 idle phase offsets prevent default-placed actors from moving in lockstep. The UI
 demo prepares its own idle-only placement copy, shared by interactive and
 capture scenarios, so stationary actors do not inherit showcase walk/attack loops.
-Expanded log layout packs entries by their measured wrapped line height,
-with a small inter-entry gap and bounded drawing inside the panel.
+The dock keeps four wrapped log lines readable; expanded history pauses play.
+Both use bounded word wrapping and scrolling that preserves the reading position
+when new messages arrive.
 
 Implemented and accepted by the user (2026-10-25):
 slice 03, [mutable monster world](actors_design.md).
@@ -73,7 +80,7 @@ checks and limits.
   actors, movement, RNG and elapsed time. A fixed encounter contains at most four
   enemies/four groups/eight initiative entries. Contact clears queued movement;
   commands validate turn tokens, life, equipment, range and formation before RNG.
-  Outcomes return synchronously. Focus/map/log pauses stop gameplay time. Each
+  Outcomes return synchronously. Focus/map/details/history/menu pauses stop gameplay time. Each
   update resolves at most one automatic step, spaced by 450 ms without catch-up.
 - **Party/rules:** immutable catalog values feed pure, allocation-free character
   derivation. A four-character party owns starting builds/gear, derived caches,
@@ -104,7 +111,7 @@ checks and limits.
   resources before the window closes, including exception paths.
 - **Commands/UI:** a graphics-independent controller validates current body
   visibility and routes production requests through GameSession; a separate const-owner
-  mode retains preview-only diagnostics. It owns selection, bounded enemy/ally
+  mode retains preview-only diagnostics. It separately owns targeting, read-only hover, inspection, exclusive overlays, bounded enemy/ally
   targets, a 32×192-byte log, eight timed damage/MISS splashes and a fixed HUD snapshot. Confirmation must refer to
   the turn/outcome already presented. Focus/edge handling, Aid selection and
   aspect-fit hit testing are CPU-testable.
@@ -115,12 +122,16 @@ checks and limits.
   1920×1080 target. Final aspect-fit sampling uses point filtering for art and
   bilinear filtering only for premultiplied text, preserving strokes when reduced.
   Captures temporarily composite both layers into an owned diagnostic target.
-  Four startup-loaded RAII font atlases provide Plex Sans regular 21/24 px, bold
-  27 px, and Inconsolata 24 px for logs; every draw/measurement uses its atlas
+  Five startup-loaded RAII font atlases provide Plex Sans regular 21/24 px, bold
+  27 px, Inconsolata 24 px for logs, and DejaVu Serif Bold 27 px for headings; every draw/measurement uses its atlas
   base size. Font ownership is separate from the generic texture registry and
-  ends before window shutdown, including partial loading failures.
+  ends before window shutdown, including partial loading failures. A startup-loaded
+  256×192 UI atlas holds four portraits, a goblin thumbnail and six action icons.
+  The 500×282 dungeon sits left of the portrait rail, above a 15%-height dock.
+  Overlay text clears only its own native-target rectangle to prevent underlying
+  glyphs showing through. Tooltips use matching atlas measurements in both layers.
 - **Application/tools:** option parsing, loading, scheduling, and lifecycle only.
-  Captures are an explicit diagnostic mode with startup-prepared cases; output paths, filesystem work and image export are not normal gameplay frame work.
+  Captures use a hidden GLFW window, application-owned targets and in-process UiInput scripts, with no OS input injection or foreign-window selection. They are an explicit diagnostic mode with startup-prepared cases; output paths, filesystem work and image export are not normal gameplay frame work.
 
 Dependencies flow from application/presentation toward platform, CPU rendering,
 movement, and world values. World/movement/input timing have no raylib dependency.
@@ -145,13 +156,13 @@ catalog outlive the noncopyable/nonmovable actor owner. Runtime operations retur
 fixed result values without allocation. A death unblocks immediately; animation
 shows a white frozen pose for 100 ms before hiding body/shadow.
 
-Each 500×272 RGBA frame allocates once, is move-only, and cannot resize. The live
-pipeline owns three frames (about 1.56 MiB), reusing them across idle, movement,
+Each 500×282 RGBA frame allocates once, is move-only, and cannot resize. The live
+pipeline owns three frames (about 1.61 MiB), reusing them across idle, movement,
 collision, NPC alpha composition, and transitions. Composition copies pixels but
 never allocates output storage. Input buffers at most one fresh movement command. UI confirmation is edge-triggered
 and never queued. UI formatting uses stack buffers. Each frame pipeline also owns
-one fixed 500×272 uint16 picking buffer (~266 KiB), written alongside prepared body
-pixels. Living target membership and visible-body centers are scanned after composition; transitions expose
+one fixed 500×282 uint16 picking buffer (~275 KiB), written alongside prepared body
+pixels. Living target membership, visible-body centers and top edges are scanned after composition; transitions expose
 no picking. Transparent holes/walls/shadows do not select, and dead flashes occlude
 without becoming targets. Revisions invalidate picking with the image.
 
@@ -222,7 +233,9 @@ Debug/Release presets stay CLion-compatible.
 - Command/UI tests: preview validation without costs, live formation, foreign and
   stale identities, 256-target paging, bounded logs, development-only statuses,
   focus/held input, letterbox/pillarbox/high-DPI inverse mapping, alpha/depth-aware
-  picking, transition suspension, and stationary invalidation.
+  picking, transition suspension, and stationary invalidation. Direct actions, non-mutating hover, portrait Aid/details,
+  exclusive modal input, keyboard feedback, initiative preview versus actual execution,
+  and wrapped-history read-position preservation have dedicated HUD tests.
 - Combat/health tests: pure health boundaries, death saves and stabilization;
   initiative/group ordering, both row collapses in four directions, authoritative
   requests, current visibility, Aid/Defend, pauses, queued contact, complete wins/losses,

@@ -4,7 +4,8 @@
 #include "ui/hud.hpp"
 #include <stdexcept>
 namespace blobber {
-Presenter::Presenter(const std::filesystem::path& assets) : fonts_(assets / "fonts") {
+Presenter::Presenter(const std::filesystem::path& assets)
+    : fonts_(assets / "fonts"), uiArt_(resources_, assets / "ui") {
     art_ = resources_.createTarget(artWidth, artHeight);
     game_ = resources_.createTarget(gameWidth, gameHeight);
     text_ = resources_.createTarget(gameWidth, gameHeight);
@@ -28,9 +29,11 @@ void Presenter::present(const Frame& frame, const MovementState& state, const Ma
     if (changed)
         UpdateTexture(resources_.texture(viewport_), frame.data());
     BeginTextureMode(resources_.target(art_));
-    drawUI(state, debug, map, hud);
+    drawUI(state, debug, map, hud, nullptr, &uiArt_);
     DrawTexture(resources_.texture(viewport_), viewX, viewY, WHITE);
-    drawHudOverlay(hud, picking);
+    if (debug)
+        drawMapOverlay(state, map);
+    drawHudOverlay(hud, picking, nullptr, &uiArt_, &fonts_);
     EndTextureMode();
     BeginTextureMode(resources_.target(game_));
     ClearBackground(BLACK);
@@ -42,8 +45,10 @@ void Presenter::present(const Frame& frame, const MovementState& state, const Ma
     rlSetBlendFactorsSeparate(RL_SRC_ALPHA, RL_ONE_MINUS_SRC_ALPHA, RL_ONE, RL_ONE_MINUS_SRC_ALPHA,
                               RL_FUNC_ADD, RL_FUNC_ADD);
     BeginBlendMode(BLEND_CUSTOM_SEPARATE);
-    drawUI(state, debug, map, hud, &fonts_);
-    drawHudOverlay(hud, picking, &fonts_);
+    drawUI(state, debug, map, hud, &fonts_, &uiArt_);
+    if (debug)
+        drawMapOverlay(state, map, &fonts_);
+    drawHudOverlay(hud, picking, &fonts_, &uiArt_);
     EndBlendMode();
     EndTextureMode();
     BeginDrawing();
@@ -57,13 +62,16 @@ void Presenter::present(const Frame& frame, const MovementState& state, const Ma
     }
     EndDrawing();
 }
-void Presenter::capture(const std::filesystem::path& path) const {
+void Presenter::capture(const std::filesystem::path& path, int width, int height) const {
+    if (width <= 0 || height <= 0)
+        throw std::invalid_argument("Invalid capture size");
     // Diagnostic-only allocation: the normal frame loop reuses its three targets.
     GpuResources captureResources;
-    const auto composite = captureResources.createTarget(gameWidth, gameHeight);
+    const auto composite = captureResources.createTarget(width, height);
     BeginTextureMode(captureResources.target(composite));
     ClearBackground(BLACK);
-    drawGame({0, 0, float(gameWidth), float(gameHeight)});
+    const auto fit = aspectFit(width, height);
+    drawGame({fit.x, fit.y, fit.width, fit.height});
     EndTextureMode();
     OwnedImage image(LoadImageFromTexture(captureResources.target(composite).texture));
     if (!image.value.data)

@@ -6,7 +6,8 @@
 using namespace blobber;
 int main() {
     try {
-        const Window window(320, 240);
+        const Window window(320, 240, true);
+        check(IsWindowState(FLAG_WINDOW_HIDDEN), "GPU diagnostics use a hidden window");
         GpuResources resources;
         rejects([&] { resources.createTarget(0, 32); }, "Invalid target size rejected");
         rejects([&] { resources.createTexture({}); }, "Invalid texture image rejected");

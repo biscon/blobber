@@ -1,6 +1,13 @@
 # Slice 05 verification and review
 
-Implementation date: 2026-10-25. User acceptance is pending.
+Implementation and acceptance date: 2026-10-25. Slice 05 and milestone A are
+accepted and closed, including the revised UI. Historical results and limitations
+below remain unchanged.
+
+Current evidence and controls: [dungeon-first UI verification](dungeon_ui_verification.md).
+That revision passed 17 Debug/Release suites and authorized hidden-window GPU/capture
+checks. Earlier results below remain historical; their desktop restrictions and
+invalid input test must not be mistaken for current rendering evidence.
 See the [melee combat design](melee_combat_design.md) and
 [roadmap execution record](dnd5e_demo_design.md#slice-05-first-melee-combat).
 
@@ -60,7 +67,7 @@ c++ -std=c++17 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Isrc \
   tests/combat_tests.cpp src/rules/resolve.cpp src/rules/health.cpp \
   src/rules/content.cpp src/rules/character.cpp src/world/map.cpp src/world/npc.cpp \
   src/game/movement.cpp src/game/party.cpp src/game/actors.cpp src/game/commands.cpp \
-  src/game/combat.cpp src/game/session.cpp src/ui/interaction.cpp \
+  src/game/combat.cpp src/game/session.cpp src/game/hud_state.cpp src/ui/interaction.cpp \
   -o /tmp/blobber-slice05-combat-sanitized
 env -u DISPLAY -u WAYLAND_DISPLAY ASAN_OPTIONS=detect_leaks=0 /tmp/blobber-slice05-combat-sanitized
 ```
@@ -101,14 +108,13 @@ are also unverified.
 2. Launch `./cmake-build-release/blobber --combat-demo --seed 5` yourself. The banner
    names the active character and round. Movement/turning are locked during combat.
    Ordinary play also enters combat when facing an adjacent occupied cell.
-3. With a front character active, choose Melee and a front visible goblin, then
-   Enter/CONFIRM. Selecting a visible target labeled `/ rear` explains protection
-   and spends no action. Inspect a rear party member: ordinary melee is blocked
-   while their paired front member is conscious. The back-row feature action is deferred.
-4. Use Defend to spend an action; enemy attacks against that defender have
-   disadvantage until their next turn. Use Aid with a dying ally: choose the ally
-   through the list, portrait or number key, then confirm. The acting character
-   remains unchanged. Aid can fail and never restores HP.
+3. Hover a visible goblin to see reach and equipped damage. Click a reachable
+   body to attack immediately, or cycle with Left/Right and press Enter. An
+   unreachable click explains why and spends no turn. Inspecting a rear portrait
+   opens read-only details; it does not replace the active character.
+4. Click the shield/press 2 to Defend immediately. Click Aid/press 6, then click
+   a dying ally's portrait to attempt stabilization. Aid can fail and never heals.
+   Escape/right-click cancels targeting. Actions reset to the next actor's melee.
 5. Kill one front goblin: its paired rear goblin becomes targetable immediately,
    while the other rear remains protected. On its next turn, the exposed goblin
    moves into the vacant front slot and attacks once. A downed party front member
@@ -168,3 +174,25 @@ on both sides with the supplied references. Killing blows retain their last body
 position for the remaining splash lifetime. No new desktop captures or interactive
 checks were run: final GPU appearance is unverified and must be reviewed by the user.
 Slice 05 and milestone A remain Ready for review, not accepted; slice 06 is unstarted.
+
+
+## Dungeon-first UI follow-up — 2026-10-25
+
+The user accepted the mechanics and requested the approved UI redesign. It is
+implemented and Ready for review. See [current verification](dungeon_ui_verification.md)
+for 17/17 Debug/Release results, hidden GPU lifecycle execution, application-owned
+captures at three sizes, retained screenshots and the updated review recipe.
+The prior invalid CLion test remains invalid. The new checks never select/control
+windows, inject OS input, capture the cursor or switch desktops. Overall slice 05
+and milestone A still await acceptance; slice 06 remains unstarted.
+
+
+## Acceptance and closeout — 2026-10-25
+
+User: “much better, this slice is accepted, close it in the document”. Slice 05,
+including combat corrections and the dungeon-first UI revision, and milestone A
+are accepted and closed. This supersedes earlier pending-review statuses in this
+historical verification record. No additional conditions were requested and no
+unexecuted checks are reclassified as passing. Slice 06 is eligible for planning
+in a clean context; it remains Planned and unstarted. See the
+[roadmap checkpoint](dnd5e_demo_design.md#current-checkpoint).

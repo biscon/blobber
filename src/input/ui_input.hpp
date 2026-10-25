@@ -7,6 +7,8 @@ enum class UiKey : std::size_t {
     Two,
     Three,
     Four,
+    Five,
+    Six,
     Up,
     Down,
     Left,

@@ -4,62 +4,125 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                    bool allowConfirm) noexcept {
     if (!input.focused) {
         commands.cancel();
+        commands.hover(HoverKind::None);
         return;
     }
+    const auto& state = commands.snapshot();
+    const bool moved = input.pointer && commands.pointerMoved(input.pointer->x, input.pointer->y);
+    const bool click = input.has(UiKey::Click);
+    const auto inside = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
     if (input.has(UiKey::Cancel) || input.has(UiKey::RightClick)) {
-        commands.cancel();
+        if (state.modal())
+            commands.closeOverlay();
+        else if (state.selection.action != PartyAction::Melee || state.selection.target ||
+                 state.selection.ally)
+            commands.cancel();
+        else if (input.has(UiKey::Cancel))
+            commands.toggleMenu();
+        commands.hover(HoverKind::None);
         return;
     }
-    for (int i = 0; i < 4; ++i)
-        if (input.has(static_cast<UiKey>(i)))
-            commands.selectCharacter(i);
-    if (input.has(UiKey::Up))
-        commands.cycleAction(-1);
-    if (input.has(UiKey::Down))
-        commands.cycleAction(1);
-    if (input.has(UiKey::Left))
-        commands.cycleTarget(-1);
-    if (input.has(UiKey::Right))
-        commands.cycleTarget(1);
-    bool confirm = input.has(UiKey::Confirm);
-    if (input.pointer) {
-        const auto p = *input.pointer;
-        if ((hudLayout::log.contains(p) ||
-             (commands.snapshot().logExpanded && hudLayout::expandedLog.contains(p))) &&
-            input.scroll)
-            commands.scrollLog(input.scroll);
-        if (input.has(UiKey::Click)) {
-            for (int i = 0; i < 4; ++i)
-                if (hudLayout::card(i).contains(p))
-                    commands.selectCharacter(i);
-            for (int i = 0; i < (commands.snapshot().production ? static_cast<int>(PartyAction::Count) : 6);
-                 ++i)
-                if (hudLayout::action(i, commands.snapshot().production).contains(p))
-                    commands.selectAction(static_cast<PartyAction>(i));
-            if (hudLayout::previousPage.contains(p))
-                commands.pageTargets(-1);
-            if (hudLayout::nextPage.contains(p))
-                commands.pageTargets(1);
-            const auto& state = commands.snapshot();
-            for (int i = 0; i < 4; ++i) {
-                const auto index = state.targetPage * 4 + i;
-                if (hudLayout::target(i).contains(p)) {
-                    if (state.production && state.selection.action == PartyAction::Aid)
-                        commands.selectAlly(i);
-                    else if (index < state.targets.count)
-                        commands.selectTarget(state.targets.ids[index]);
-                }
+    // An overlay owns the entire input frame, including its closing click.
+    if (state.modal()) {
+        commands.hover(HoverKind::None);
+        if (state.logExpanded) {
+            if (input.scroll && (inside(hudLayout::expandedLog) || inside(hudLayout::log)))
+                commands.scrollLog(input.scroll);
+            if (click && (inside(hudLayout::closeOverlay) || inside(hudLayout::logExpand)))
+                commands.closeOverlay();
+            if (click && inside(hudLayout::logLatest))
+                commands.latestLog();
+        } else if (state.inspected) {
+            if (click && inside(hudLayout::detailsClose))
+                commands.closeOverlay();
+        } else if (state.menuOpen) {
+            if (click && (inside(hudLayout::resume) || inside(hudLayout::gear)))
+                commands.closeOverlay();
+            else if (click && inside(hudLayout::quit))
+                commands.requestQuit();
+        }
+        return;
+    }
+    if (click && inside(hudLayout::gear)) {
+        commands.toggleMenu();
+        return;
+    }
+    if (click && inside(hudLayout::logExpand)) {
+        commands.toggleLog();
+        return;
+    }
+    if (click && inside(hudLayout::logLatest)) {
+        commands.latestLog();
+        return;
+    }
+    if (input.scroll && inside(hudLayout::log))
+        commands.scrollLog(input.scroll);
+    bool actionInput = false;
+    for (int i = 0; i < 6; ++i) {
+        const bool activated = input.has(static_cast<UiKey>(i)) || (click && inside(hudLayout::action(i)));
+        if (activated) {
+            actionInput = true;
+            if (allowConfirm && !state.suspended && (i == 0 || i == 1 || i == 5)) {
+                commands.selectAction(dockActions[i]);
+                if (i == 1)
+                    commands.confirm();
             }
-            if (hudLayout::log.contains(p))
-                commands.toggleLog();
-            if (commands.snapshot().logExpanded && hudLayout::expandedLog.contains(p))
-                return;
-            if (hudLayout::viewport.contains(p) && viewportHit)
-                commands.selectTarget(*viewportHit);
-            confirm |= hudLayout::confirm.contains(p);
         }
     }
-    if (confirm && allowConfirm)
+    if (!actionInput && click) {
+        for (int i = 0; i < 4; ++i)
+            if (inside(hudLayout::card(i))) {
+                if (state.selection.action == PartyAction::Aid) {
+                    if (allowConfirm) {
+                        commands.selectCharacter(i);
+                        commands.confirm();
+                    }
+                } else
+                    commands.inspect(i);
+                return;
+            }
+        if (allowConfirm && inside(hudLayout::viewport) && viewportHit &&
+            state.selection.action == PartyAction::Melee) {
+            commands.selectTarget(*viewportHit);
+            commands.confirm();
+        }
+    }
+    if (!actionInput && (input.has(UiKey::Left) || input.has(UiKey::Right))) {
+        commands.cycleTarget(input.has(UiKey::Left) ? -1 : 1);
+        if (state.selection.target) {
+            const auto id = *state.selection.target;
+            const auto anchor = state.targets.anchors[id.slot];
+            commands.hover(HoverKind::Enemy, 0, id, float(viewX + anchor.x), float(viewY + anchor.y));
+        } else if (state.selection.ally) {
+            for (int i = 0; i < 4; ++i)
+                if (state.cards[i].id.index == state.selection.ally->index)
+                    commands.hover(HoverKind::Portrait, i, {}, 508, float(hudLayout::card(i).y));
+        }
+        return;
+    }
+    if (!actionInput && input.has(UiKey::Confirm) && allowConfirm)
         commands.confirm();
+    if (!moved && !click && !actionInput && state.hover.kind != HoverKind::None &&
+        (state.selection.target || state.selection.ally))
+        return;
+    // Pointer hover is recomputed after mutation; it never selects a command target.
+    if (input.pointer) {
+        const auto p = *input.pointer;
+        for (int i = 0; i < 6; ++i)
+            if (inside(hudLayout::action(i))) {
+                commands.hover(HoverKind::Action, i, {}, p.x, p.y);
+                return;
+            }
+        for (int i = 0; i < 4; ++i)
+            if (inside(hudLayout::card(i))) {
+                commands.hover(HoverKind::Portrait, i, {}, p.x, p.y);
+                return;
+            }
+        if (inside(hudLayout::viewport) && viewportHit) {
+            commands.hover(HoverKind::Enemy, 0, viewportHit, p.x, p.y);
+            return;
+        }
+    }
+    commands.hover(HoverKind::None);
 }
 } // namespace blobber

@@ -14,20 +14,31 @@ struct UiRect {
 };
 namespace hudLayout {
 constexpr UiRect card(int i) {
-    return {4 + i * 159, 288, 155, 68};
+    return {508, 18 + i * 70, 128, 66};
 }
-constexpr UiRect action(int i, bool production = false) {
-    return {10, 38 + i * (production ? 14 : 16), 112, production ? 13 : 15};
+constexpr UiRect portrait(int i) {
+    const auto r = card(i);
+    return {r.x + 3, r.y + 4, 48, 56};
 }
-constexpr UiRect target(int i) {
-    return {10, 150 + i * 13, 112, 12};
+constexpr UiRect action(int i, bool = false) {
+    return {12 + i * 47, 317, 34, 32};
 }
-constexpr UiRect previousPage{10, 135, 18, 13}, nextPage{104, 135, 18, 13};
-constexpr UiRect confirm{10, 204, 112, 16}, feedback{10, 223, 112, 25}, log{10, 251, 112, 27};
-constexpr UiRect expandedLog{152, 28, 460, 232};
+constexpr UiRect header{4, 2, 632, 13}, gear{621, 2, 14, 13};
+constexpr UiRect actions{4, 304, 300, 54}, log{308, 304, 328, 54};
+constexpr UiRect logExpand{620, 306, 12, 10}, logLatest{578, 306, 38, 10};
+constexpr UiRect expandedLog{72, 48, 496, 244}, closeOverlay{551, 51, 14, 12};
+constexpr UiRect details{148, 65, 344, 210}, detailsClose{474, 68, 14, 12};
+constexpr UiRect menu{222, 103, 196, 134}, resume{242, 153, 156, 24}, quit{242, 191, 156, 24};
 constexpr UiRect viewport{viewX, viewY, viewWidth, viewHeight};
-constexpr UiRect result{210, 105, 340, 90}, resultButton{300, 164, 160, 20};
-constexpr UiRect demoNext{390, 8, 110, 16}, demoReset{505, 8, 120, 16};
+constexpr UiRect result{102, 118, 304, 91}, resultButton{174, 174, 160, 22};
+constexpr UiRect demoNext{400, 2, 50, 13}, demoReset{453, 2, 56, 13};
+// Diagnostic compatibility: these legacy controls have no interactive surface.
+constexpr UiRect target(int) {
+    return {-100, -100, 0, 0};
+}
+constexpr UiRect previousPage{-100, -100, 0, 0}, nextPage{-100, -100, 0, 0}, confirm{-100, -100, 0, 0};
+constexpr UiRect feedback{10, 350, 284, 8};
+constexpr int logColumns = 76, expandedLogColumns = 116;
 } // namespace hudLayout
 // Raylib pointer coordinates are logical; aspectFit operates in framebuffer pixels.
 inline std::optional<ArtPoint> artPoint(float x, float y, int logicalWidth, int logicalHeight,

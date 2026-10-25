@@ -129,11 +129,15 @@ void runUiDemo(const Map& map, const Party& party, const rules::Catalog& catalog
     Input input; // Keep edge latches across scenario preparation, including held next/reset.
     while (!WindowShouldClose()) {
         Scenario scenario(index, map, party, catalog, idle, timings, renderer);
-        const double animationStart = GetTime();
+        double animationMs = 700;
         bool debug = false, first = true;
         while (!WindowShouldClose()) {
             const float dt = std::min(GetFrameTime(), 0.1f);
-            const auto sample = input.poll(dt);
+            auto sample = input.poll(dt);
+            if (debug && !scenario.commands.snapshot().modal() && sample.ui.has(UiKey::Cancel)) {
+                debug = false;
+                sample.ui.pressed[static_cast<std::size_t>(UiKey::Cancel)] = false;
+            }
             const auto& ui = sample.ui;
             const bool click = ui.has(UiKey::Click) && ui.pointer;
             if (ui.has(UiKey::DemoNext) || (click && hudLayout::demoNext.contains(*ui.pointer))) {
@@ -145,23 +149,30 @@ void runUiDemo(const Map& map, const Party& party, const rules::Catalog& catalog
             if (sample.clearPending)
                 scenario.movement.clearPending();
             const auto previousPose = scenario.movement.state().player;
-            scenario.movement.update(map, dt, &scenario.actors);
             if (sample.toggleMap)
                 debug = !debug;
+            const bool paused = !ui.focused || debug || scenario.commands.snapshot().modal();
+            if (!paused)
+                scenario.movement.update(map, dt, &scenario.actors);
             if (sample.toggleAnimation)
                 scenario.movement.setAnimated(!scenario.movement.state().animated);
-            if (sample.action)
+            if (sample.action && !paused)
                 scenario.movement.submit(map, *sample.action, sample.fresh, &scenario.actors);
             if (!(previousPose == scenario.movement.state().player))
                 scenario.commands.movementStarted();
             // Captures stay at 700 ms; interactive scenarios advance from that pose.
-            scenario.animator.setTime(700 + static_cast<std::uint64_t>((GetTime() - animationStart) * 1000));
+            if (!paused)
+                animationMs += dt * 1000;
+            scenario.animator.setTime(static_cast<std::uint64_t>(animationMs));
             const bool changed = scenario.refresh(debug, ui.focused);
             const auto* picking = scenario.frames.picking();
             const auto hit = picking && ui.pointer
                                  ? picking->pick(int(ui.pointer->x) - viewX, int(ui.pointer->y) - viewY)
                                  : std::nullopt;
             routeHudInput(scenario.commands, ui, hit);
+            if (scenario.commands.snapshot().quitRequested)
+                return;
+            scenario.refresh(debug, ui.focused);
             presenter.present(scenario.frames.frame(), scenario.movement.state(), map, debug,
                               changed || first, &scenario.commands.snapshot(), picking);
             first = false;

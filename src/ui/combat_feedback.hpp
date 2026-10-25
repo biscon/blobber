@@ -13,7 +13,7 @@ inline std::optional<UiRect> feedbackRect(const CombatFeedback& feedback,
         for (std::size_t i = 0; i < cards.size(); ++i)
             if (cards[i].id.index == feedback.character.index) {
                 const auto card = hudLayout::card(static_cast<int>(i));
-                return UiRect{card.x + 2, card.y + 25, width, height};
+                return UiRect{card.x + 9, card.y + 25, width, height};
             }
         return {};
     }

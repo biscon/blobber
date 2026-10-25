@@ -64,12 +64,16 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
         view.refresh();
         while (!WindowShouldClose()) {
             const float dt = std::min(GetFrameTime(), 0.1f);
-            const auto sample = input.poll(dt);
+            auto sample = input.poll(dt);
+            if (debug && !view.commands.snapshot().modal() && sample.ui.has(UiKey::Cancel)) {
+                debug = false;
+                sample.ui.pressed[static_cast<std::size_t>(UiKey::Cancel)] = false;
+            }
             if (sample.clearPending)
                 view.session.clearPending();
             if (sample.toggleMap)
                 debug = !debug;
-            const bool paused = !sample.ui.focused || debug || view.commands.snapshot().logExpanded;
+            const bool paused = !sample.ui.focused || debug || view.commands.snapshot().modal();
             const auto presentedCombat = view.commands.snapshot().combat;
             const auto previous = view.session.movement().player;
             view.commands.record(view.session.update(dt, paused));
@@ -106,6 +110,8 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                         : std::nullopt;
                 routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result);
             }
+            if (view.commands.snapshot().quitRequested)
+                return;
             changed |= view.refresh(debug, sample.ui.focused);
             presenter.present(view.frames.frame(), view.session.movement(), map, debug, changed || first,
                               &view.commands.snapshot(), view.frames.picking());

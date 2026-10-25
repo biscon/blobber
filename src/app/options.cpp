@@ -19,7 +19,10 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--capture" && i + 1 < argc)
+        else if (arg == "--capture-hud" && i + 1 < argc) {
+            result.captureHudOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture" && i + 1 < argc)
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         else if (arg == "--size" && i + 2 < argc) {
             result.width = dimension(argv[++i]);

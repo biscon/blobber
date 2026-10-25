@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–04 are Accepted; slice 05 is Ready for review (including review corrections).
+Status: gameplay roadmap; slices 01–05 and milestone A are Accepted, including the dungeon-first UI revision. Slice 06 is eligible for planning and remains unstarted.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 04 — Party HUD and commands (2026-10-25) |
-| Active slice | 05 — First melee combat (Ready for review) |
-| Awaiting user review | Slice 05 and milestone A — first fight |
+| Latest accepted slice | 05 — First melee combat, including UI revision (2026-10-25) |
+| Active slice | None |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until slice 05 is accepted |
-| Next action | User reviews slice 05/milestone A; do not start slice 06 |
+| Next eligible slice | 06 — Goblin hurt/death animations |
+| Next action | In a clean context, inspect the slice 05 handoff and relevant code, then propose the slice 06 plan for user review |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -306,7 +306,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Accepted | A |
 | 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Accepted | A |
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Accepted | A |
-| 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Ready for review | A |
+| 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Accepted | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Planned | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Planned | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Planned | B |
@@ -321,7 +321,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
-| A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Ready for review |
+| A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Accepted |
 | B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Planned |
 | C — RPG loop | Class abilities, spells, inventory, equipment, loot, recovery, and levels 1–3 work together. | Planned |
 | D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
@@ -604,7 +604,7 @@ Record these temporary milestone limits rather than implying the full loop exist
 invalid/dead targets, missed attacks, front-row collapse, healing from zero HP,
 death-save outcomes, and exactly-once turn/death resolution. User reviews milestone A.
 
-**Stage / last updated:** Ready for review; 2026-10-25.
+**Stage / last updated:** Accepted and closed; 2026-10-25.
 **Approved plan:** User said “Implement the plan.” See [melee combat design](melee_combat_design.md).
 Frontal single-cell fights; individual/group initiative; row protection on both
 sides; visible-body targeting; Dodge-style Defend and Wisdom Aid; authoritative
@@ -619,14 +619,18 @@ next turn, one-shot attacks on hits/misses, and one-second damage/MISS splashes.
 --combat-demo starts beside the goblins; --seed reproduces play; --ui-demo remains
 isolated preview-only. Combat captures include real-API recovery fixtures. Existing
 prepared-image rendering, fixed presentation, fonts and actor flash behavior remain.
-**Verification:** Debug/Release builds and all 16 headless CTest suites passed,
-including extended zero-allocation gameplay checks. Focused ASan/UBSan combat checks,
-CLI seed boundaries, shipped/copied catalog validation and whitespace checks passed.
-Initial captures exported 130 PNGs; 122 prior logical viewports were pixel-identical.
-Those images predate final UI refinements. Final captures/GPU lifecycle and desktop
-interaction are unverified. The attempted desktop input test selected the wrong
-window and is invalid; its script was stopped and removed. All subsequent checks
-were command-line only. See [commands, evidence and limits](slice05_verification.md).
+**UI revision delivered:** Dungeon-first layout, right portrait rail, shallow action/log
+strip, generated portraits/icons, direct basic attacks and Defend, portrait Aid/details,
+hover reach/cost/damage previews, active-first initiative, readable scrolling history,
+exclusive paused overlays, and new feedback anchors. Mechanics were accepted by the
+user; the user subsequently accepted the revised UI, closing slice 05 and milestone A.
+**Verification:** Debug/Release builds and all 17 headless CTest suites passed,
+including expanded zero-allocation HUD/gameplay checks. Authorized hidden-window
+captures and the GPU lifecycle check passed on Linux/X11/OpenGL. Native, reduced
+and letterboxed images were inspected. See [current UI verification](dungeon_ui_verification.md).
+Earlier combat/sanitizer/catalog evidence and the invalid desktop automation
+attempt remain documented in [historical verification](slice05_verification.md).
+No OS input or desktop/window control was used for the UI revision.
 **Review recipe:** Run --combat-demo --seed 5 and follow the
 [slice 05 user review](slice05_verification.md#user-review): front/rear restrictions,
 Defend/Aid, death saves, a complete win/loss and restart. User performs desktop
@@ -636,9 +640,14 @@ both sides' paired-slot protection, untrained Wisdom Aid, immediate defeat when 
 one is conscious, automatic post-victory stabilization without HP recovery. Healing
 has real APIs/development fixtures but no normal action yet. No retreat, moving AI,
 shared maneuvers, reach, Rogue exception, ranged/spell attacks, loot/XP, rests or saves.
-Final desktop interaction/visual QA, Windows/macOS, physical high-DPI and scale
-benchmarks remain unverified. The user explicitly prohibited desktop automation.
-**Next-agent handoff:** Stop here pending acceptance of slice 05 and milestone A.
+Physical desktop input, Windows/macOS, physical high-DPI and scale
+benchmarks remain unverified; deterministic GPU visual QA passed. The user explicitly prohibited desktop automation.
+**Next-agent handoff:** Slice 05 and milestone A are accepted and closed. Slice 06
+is now eligible for planning in a clean context; inspect relevant code and present
+its implementation plan for user review before implementation. No slice 06 work
+was started during this closeout.
+Read the [UI design](dungeon_ui_design.md) and [UI handoff](dungeon_ui_verification.md)
+before changing presentation; old slice 04 controls/layout are historical.
 GameSession is immovable; map/catalog outlive it. Rebuild commands, animator and
 frame pipeline after restart. Party snapshots stay const; use checked health APIs.
 Combat validates rank/range/turn/life/equipment independently of UI body visibility.
@@ -648,7 +657,11 @@ newly regained action or result before it has been presented. Damage and animati
 share session time; focus/map/log pause it, and automatic steps never catch up in a
 burst. Simulation owns outcomes; animation must never resolve damage/death. Slice 06
 must preserve immediate dead occupancy release and replace presentation separately.
-**Acceptance:** Pending. Slice 06 remains Planned and has not started.
+**Acceptance:** 2026-10-25 — User explicitly accepted the completed slice, including
+its combat corrections and dungeon-first UI: “much better, this slice is accepted,
+close it in the document”. This closes slice 05 and milestone A — First fight.
+Recorded scope and verification limitations remain unchanged; no additional
+conditions were requested. Slice 06 remains Planned and has not started.
 
 ### Slice 06: Goblin hurt and death animations
 
@@ -884,14 +897,23 @@ slice completion is implied.
 Superseded slice 05 planning assumption: the earlier roadmap allowed any back-row
 character to step forward for a melee action without changing formation. The
 2026-10-25 row-protection clarification above replaces it; no such ordinary action
-is implemented. The Back-row melee control explains that a future feature is required.
+is implemented. The dungeon-first dock omits the unsupported Back-row melee control.
 
 ### Slice 05 review correction decision — 2026-10-25
 
 User requests attacks visible on misses, paired-slot protection, melee enemies
 advancing into vacant front slots, and temporary red damage/white MISS splashes
 on monsters and party portraits. These supersede whole-row protection and the
-attack-playback deferral above. Implemented within slice 05; acceptance remains
-pending. Same-cell advancement occurs on the enemy's next attack turn; general
+attack-playback deferral above. Implemented and accepted within slice 05
+on 2026-10-25. Same-cell advancement occurs on the enemy's next attack turn; general
 moving AI and new hurt/death assets remain future work. Details and validation
 strategy: [melee combat review corrections](melee_combat_design.md#review-corrections--design-2026-10-25).
+
+## Approved dungeon-first UI revision
+
+User accepted mechanics/functionality and approved [this UI plan](dungeon_ui_design.md).
+Implementation accepted and closed with slice 05 and milestone A on 2026-10-25;
+no slice 06 work. The user said: “much better, this slice is accepted, close it in the document”.
+Seventeen Debug/Release suites, extended allocation guard, hidden GPU lifecycle
+check and final native/reduced captures passed. See [verification and review](dungeon_ui_verification.md). Hidden application-owned
+captures are authorized; OS mouse/keyboard/focus automation remains prohibited.

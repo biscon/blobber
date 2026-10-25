@@ -45,7 +45,7 @@ class PickingBuffer {
             if (seen[i] && actors->snapshot().actors[i].life == ActorLife::Alive) {
                 targets_.ids[targets_.count++] = actors->id(i);
                 targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2, (minimum[i].y + maximum[i].y) / 2,
-                                       true};
+                                       true, minimum[i].y};
             }
     }
     std::optional<ActorId> pick(int x, int y) const noexcept {
