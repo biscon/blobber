@@ -3,6 +3,7 @@
 #include "app/options.hpp"
 #include "assets/material_loader.hpp"
 #include "assets/npc_loader.hpp"
+#include "assets/rules_loader.hpp"
 #include "platform/input.hpp"
 #include "platform/presenter.hpp"
 #include "platform/window.hpp"
@@ -17,6 +18,8 @@ int run(int argc, char** argv) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY]\n";
         return 0;
     }
+    // Immutable session-owned definitions; gameplay consumers arrive in later slices.
+    const auto rules = loadRules(options.assets / "rules" / "catalog.json");
     const Map map = Map::load((options.assets / "maze.txt").string());
     Controller controller;
     if (map.solid(controller.state().player.cell) || !map.connected(controller.state().player.cell))

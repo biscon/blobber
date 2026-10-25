@@ -1,8 +1,15 @@
 # System design
 
-Proposed extension: [SRD 5.1 demo design and self-tracking roadmap](dnd5e_demo_design.md).
+Gameplay extension: [SRD 5.1 demo design and self-tracking roadmap](dnd5e_demo_design.md).
 It defines sixteen individually reviewed slices toward a four-character goblin
-combat demo. No gameplay slice is implemented yet. The roadmap owns delivery
+combat demo. Slice 01's [rules foundation](rules_design.md) is implemented and
+accepted by the user (2026-10-25): explicitly seeded dice, pure attack/save/damage rules,
+and an immutable catalog loaded from bounded JSON before image preparation.
+The application owns the catalog for the session; no combat/actor integration
+exists yet. Rules are graphics-independent, JSON stays in a separate I/O library,
+and typed catalog indices are stable for one non-recycled catalog lifetime.
+The [source ledger](srd_content_ledger.md) records adopted SRD data and adaptations.
+The roadmap owns delivery
 status, user decisions, verification records, and handoff notes; this overview
 continues to describe implemented systems and must be updated as slices land.
 
@@ -129,9 +136,10 @@ Historical techniques and visual choices are documented in [research](research.m
 | Location | Responsibility |
 | --- | --- |
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
+| `src/rules/` | Deterministic dice, pure attack/save/damage resolution, immutable typed content catalog |
 | `src/game/` | Discrete movement, collision decisions, animation state |
 | `src/input/` | Platform-independent key repeat timing |
-| `src/assets/` | CPU image ownership, materials and NPC JSON/image loading |
+| `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
 | `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |
 | `src/core/` | Fixed-capacity typed resource slots |
 | `src/platform/` | Window lifetime, keyboard adapter, GPU registry and presentation |

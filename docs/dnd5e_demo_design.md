@@ -1,19 +1,19 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: proposed gameplay design; implementation has not started.
-Created: 2026-10-25. This document implements the agreed documentation plan,
-not any of the gameplay slices below.
+Status: gameplay roadmap; slice 01 is Accepted; slice 02 is eligible for planning.
+Created: 2026-10-25. Execution records below distinguish implementation from
+user acceptance.
 
 ## Current checkpoint
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | None |
+| Latest accepted slice | 01 — Rules foundation and content (2026-10-25) |
 | Active slice | None |
 | Awaiting user review | None |
-| Blockers | None identified for planning slice 01 |
-| Next eligible slice | 01 — Rules foundation and content |
-| Next action | Inspect current code and propose slice 01's implementation plan |
+| Blockers | None identified for planning slice 02 |
+| Next eligible slice | 02 — Characters and preset party |
+| Next action | In a clean context, read slice 01's handoff, inspect relevant code, and propose slice 02's implementation plan |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -299,7 +299,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 
 | ID | Slice | Prerequisite | Status | Milestone |
 | --- | --- | --- | --- | --- |
-| 01 | [Rules foundation and content](#slice-01-rules-foundation-and-content) | None | Planned | A |
+| 01 | [Rules foundation and content](#slice-01-rules-foundation-and-content) | None | Accepted | A |
 | 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Planned | A |
 | 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Planned | A |
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Planned | A |
@@ -340,7 +340,44 @@ Do not import the entire SRD or create a generic rules scripting system.
 critical attack results, failure paths, and invalid content. Reproducible RNG
 supports later encounter tests without depending on rendering or wall-clock time.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Review complete (Accepted); 2026-10-25.
+**Approved plan:** User approved the implementation plan with “Implement the plan.”
+Editable JSON was explicitly selected. See [rules design](rules_design.md):
+deterministic CPU rules, bounded validated catalog, goblin baseline, attribution,
+startup loading, headless correctness/allocation checks, and Debug/Release suites.
+**Delivered:** Graphics-independent `blobber_rules` and `blobber_rules_io` targets;
+explicitly seeded fixed-storage rolls, pure attack/save resolution, physical
+damage primitives, and immutable typed catalog definitions. Editable version-1
+JSON contains the goblin baseline and two attack profiles; startup validates it
+before map/image preparation. Source/adaptation ledger and copied attribution
+are included. Entry points: `src/rules/resolve.hpp`, `src/rules/content.hpp`,
+`src/assets/rules_loader.hpp`, and `assets/rules/catalog.json`.
+**Verification:** Debug and Release configure/build succeeded; all 8 CTest suites
+passed in each (including zero-allocation checks). Shipped/copied catalogs and
+startup failure ordering passed. X11/OpenGL startup from `/tmp`, 99 captures,
+and clean GPU/window shutdown passed; corridor and goblin captures inspected.
+See [exact commands, results, and limitations](slice01_verification.md).
+**Review recipe:** Run the focused headless tests and `--validate` diagnostic,
+inspect/edit a temporary catalog, and optionally launch the existing dungeon as
+described in the [review instructions](slice01_verification.md#user-review).
+**Deviations / limitations:** No scope deviation. No gameplay integration beyond
+startup validation; character definitions and equipment remain slice 02.
+No Windows/macOS execution, interactive gameplay recheck, or GPU pixel-baseline
+comparison was performed. Existing rendering/movement code is unchanged.
+**Next-agent handoff:** Slice 01 was accepted on 2026-10-25. Slice 02 is now
+eligible for planning in a clean context; inspect the current code and propose
+its implementation plan for user review before implementing it.
+Extend the existing versioned catalog deliberately for independent race/class
+and equipment definitions. Keep JSON outside simulation. Catalog IDs never
+recycle and are valid only for their owning catalog lifetime; they are not NPC
+type IDs. Retain stable strings for future persistence. Proficiency currently
+rejects levels outside 1–3; damage types are physical only. The application owns
+definitions but creates no gameplay session or production RNG yet. Dagger art
+uses the scimitar mechanical baseline; Nimble Escape remains deferred to slice 07.
+**Acceptance:** 2026-10-25 — User explicitly accepted slice 01: “slice accepted,
+update the plan so its ready for the next slice”. No additional conditions or
+scope changes were requested. Verification limits above remain recorded;
+milestone A is not yet complete.
 
 ### Slice 02: Characters and preset party
 

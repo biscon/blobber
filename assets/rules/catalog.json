@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "attacks": [
+    {
+      "id": "goblin.scimitar",
+      "kind": "melee",
+      "attack_bonus": 4,
+      "damage": { "count": 1, "sides": 6, "modifier": 2, "type": "slashing" }
+    },
+    {
+      "id": "goblin.shortbow",
+      "kind": "ranged",
+      "attack_bonus": 4,
+      "damage": { "count": 1, "sides": 6, "modifier": 2, "type": "piercing" }
+    }
+  ],
+  "monsters": [
+    {
+      "id": "goblin",
+      "abilities": {
+        "strength": 8, "dexterity": 14, "constitution": 10,
+        "intelligence": 10, "wisdom": 8, "charisma": 8
+      },
+      "armor_class": 15,
+      "hit_points": 7,
+      "attacks": ["goblin.scimitar", "goblin.shortbow"]
+    }
+  ]
+}

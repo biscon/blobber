@@ -1,6 +1,7 @@
 #include "input/key_repeat.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
+#include "rules/content.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -90,7 +91,30 @@ int main() {
         Controller controller({{3, 3}, Heading::North});
         KeyRepeat repeat;
         bool okay = true;
+        rules::MonsterDefinition monster;
+        monster.id = "allocation-fixture";
+        monster.abilities.fill(10);
+        monster.armorClass = 12;
+        monster.hitPoints = 8;
+        monster.attacks[0] = {0};
+        monster.attackCount = 1;
+        const rules::Catalog catalog({{"fixture-attack", rules::AttackKind::Melee, 3,
+                                       {1, 6, 2}, rules::DamageType::Slashing}}, {monster});
+        const auto monsterId = catalog.findMonster("allocation-fixture");
+        rules::DiceRng dice(42);
         tracking = true;
+        for (int i = 0; i < 1000; ++i) {
+            const auto* actor = catalog.monster(monsterId);
+            const auto* attack = catalog.attack(actor->attacks[0]);
+            const auto roll = dice.d20(rules::rollMode(i % 2 == 0, i % 3 == 0));
+            const auto hit = rules::resolveAttack(roll.value, attack->bonus, actor->armorClass);
+            const auto save = rules::resolveSave(roll.value, 2, 12);
+            const auto damage = dice.damage(attack->damage, hit.value.outcome == rules::AttackOutcome::Critical);
+            const auto bulk = dice.roll({32, 100, -3});
+            okay &= bool(roll) && bool(hit) && bool(save) && bool(damage) && bool(bulk);
+            okay &= damage.value.total >= 0 && rules::abilityModifier(actor->abilities, rules::Ability::Strength).value == 0;
+            okay &= rules::proficiencyBonus(3).value == 2;
+        }
         okay &= frames.update(renderer, map, controller.state(), &npcs);
         okay &= !frames.update(renderer, map, controller.state(), &npcs);
         for (int action = 0; action < 6; ++action) {

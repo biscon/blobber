@@ -46,6 +46,10 @@ function(blobber_warnings target)
     endif()
 endfunction()
 
+add_library(blobber_rules src/rules/resolve.cpp src/rules/content.cpp)
+target_include_directories(blobber_rules PUBLIC src)
+add_library(blobber_rules_io src/assets/rules_loader.cpp)
+target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_core src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 add_library(blobber_render
@@ -59,7 +63,7 @@ add_library(blobber_platform
     src/platform/presenter.cpp src/ui/hud.cpp)
 target_link_libraries(blobber_platform PUBLIC blobber_render)
 add_executable(blobber src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp)
-target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io)
+target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
 add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
 target_link_libraries(blobber_prepare_assets PRIVATE raylib)
 target_include_directories(blobber_prepare_assets PRIVATE src)
@@ -67,11 +71,13 @@ add_executable(blobber_prepare_npc_animation EXCLUDE_FROM_ALL tools/prepare_npc_
 target_link_libraries(blobber_prepare_npc_animation PRIVATE raylib nlohmann_json::nlohmann_json)
 target_include_directories(blobber_prepare_npc_animation PRIVATE src)
 blobber_warnings(blobber_prepare_npc_animation)
-foreach(target blobber_core blobber_render blobber_assets_io blobber_platform blobber blobber_prepare_assets)
+foreach(target blobber_rules blobber_rules_io blobber_core blobber_render blobber_assets_io blobber_platform blobber blobber_prepare_assets)
     blobber_warnings(${target})
 endforeach()
 
 add_custom_target(blobber_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules" "$<TARGET_FILE_DIR:blobber>/assets/rules"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures" "$<TARGET_FILE_DIR:blobber>/assets/textures"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -83,14 +89,18 @@ add_dependencies(blobber blobber_assets)
 
 include(CTest)
 if(BUILD_TESTING)
-    foreach(suite core render resource frame_allocations npc npc_animation)
+    foreach(suite core render resource frame_allocations npc npc_animation rules rules_content)
         if(suite STREQUAL "frame_allocations")
             set(source tests/frame_allocations.cpp)
         else()
             set(source tests/${suite}_tests.cpp)
         endif()
         add_executable(blobber_${suite}_tests ${source})
-        if(suite STREQUAL "core")
+        if(suite STREQUAL "rules")
+            target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules)
+        elseif(suite STREQUAL "rules_content")
+            target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io nlohmann_json::nlohmann_json)
+        elseif(suite STREQUAL "core")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_core)
         elseif(suite STREQUAL "resource" OR suite STREQUAL "npc")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_assets_io nlohmann_json::nlohmann_json)
@@ -104,6 +114,7 @@ if(BUILD_TESTING)
             add_test(NAME ${suite} COMMAND blobber_${suite}_tests)
         endif()
     endforeach()
+    target_link_libraries(blobber_frame_allocations_tests PRIVATE blobber_rules)
     # Explicit desktop check; not part of headless CTest.
     add_executable(blobber_gpu_smoke EXCLUDE_FROM_ALL tests/gpu_smoke.cpp)
     target_link_libraries(blobber_gpu_smoke PRIVATE blobber_platform)
