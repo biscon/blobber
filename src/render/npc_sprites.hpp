@@ -3,6 +3,7 @@
 #include "game/movement.hpp"
 #include "game/npc_animation.hpp"
 #include "render/frame.hpp"
+#include "render/picking.hpp"
 #include "render/projection.hpp"
 #include <array>
 #include <vector>
@@ -37,7 +38,7 @@ class PreparedNpcs {
     explicit PreparedNpcs(const std::vector<NpcAppearance>& appearances = {});
     void compose(const ActorWorld& npcs, Player player, int phase,
                  const std::array<float, viewWidth>& wallDepth, Frame& frame,
-                 const NpcAnimationSnapshot* animation = nullptr) const;
+                 const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr) const;
     std::size_t pixelCount() const noexcept { return pixels_.size(); }
 
   private:

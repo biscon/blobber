@@ -2,9 +2,10 @@
 #include <stdexcept>
 
 namespace blobber {
-void captureActors(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
-                   const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
-                   Presenter& presenter, const std::filesystem::path& directory) {
+void captureActors(const Map& map, const Party& party, const rules::Catalog& catalog,
+                   const NpcWorld& placements, const std::vector<NpcTimings>& timings,
+                   const SceneRenderer& renderer, Presenter& presenter,
+                   const std::filesystem::path& directory) {
     // Like the existing captures, these poses describe the shipped demo level.
     if (placements.instances().empty() || !(placements.instances()[0].cell == Cell{18, 17}))
         return;
@@ -37,7 +38,10 @@ void captureActors(const Map& map, const rules::Catalog& catalog, const NpcWorld
         animator.setTime(time);
         frames.update(renderer, map, state, &actors, &animator.snapshot());
         // Each scenario owns a fresh pipeline; its final image must be uploaded.
-        presenter.present(frames.frame(), state, map, false, true);
+        CommandController commands(party, actors);
+        commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
+                         state.transition.active(), false, true);
+        presenter.present(frames.frame(), state, map, false, true, &commands.snapshot(), frames.picking());
         presenter.capture(directory / (std::string(name) + ".png"));
     };
     scenario("actor-baseline", [](ActorWorld&, Cell) {}, 700);

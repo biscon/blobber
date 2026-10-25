@@ -1,5 +1,12 @@
 # System design
 
+Implemented, Ready for review (acceptance pending): slice 04
+[party HUD and command design](party_hud_design.md). Four portraits, command
+previews, visible-body targeting and a bounded log read the existing party/actor
+state; no combat resolution or resource spending is integrated. Explicit UI demo
+scenarios keep sample mana/status values separate from authoritative party state.
+See [slice 04 verification](slice04_verification.md).
+
 Implemented and accepted by the user (2026-10-25):
 slice 03, [mutable monster world](actors_design.md).
 Runtime actors now supply live collision/rendering state, health and lifecycle.
@@ -69,7 +76,11 @@ checks and limits.
   and render-target handles refer to fixed-capacity, generation-checked slots.
   Borrowed raw raylib values stay inside short platform calls. RAII unloads GPU
   resources before the window closes, including exception paths.
-- **Presentation:** the HUD draws from a movement snapshot and map; the presenter
+- **Commands/UI:** a graphics-independent controller validates typed preview
+  commands against borrowed party/actor state and current presentation eligibility.
+  It owns selection, bounded target membership, a 32×192-byte log and a fixed HUD
+  snapshot. Focus/edge handling and aspect-fit hit testing are CPU-testable.
+- **Presentation:** the HUD draws from movement, map and command snapshots; the presenter
   owns handles for the viewport texture and two targets. It retains the 640×360
   art grid → 1920×1080 texture → aspect-fit framebuffer path.
 - **Application/tools:** option parsing, loading, scheduling, and lifecycle only.
@@ -101,7 +112,12 @@ shows a white frozen pose for 100 ms before hiding body/shadow.
 Each 500×272 RGBA frame allocates once, is move-only, and cannot resize. The live
 pipeline owns three frames (about 1.56 MiB), reusing them across idle, movement,
 collision, NPC alpha composition, and transitions. Composition copies pixels but
-never allocates output storage. Input buffers at most one fresh command. UI formatting uses stack buffers.
+never allocates output storage. Input buffers at most one fresh movement command. UI confirmation is edge-triggered
+and never queued. UI formatting uses stack buffers. Each frame pipeline also owns
+one fixed 500×272 uint16 picking buffer (~266 KiB), written alongside prepared body
+pixels. Living target membership is scanned after composition; transitions expose
+no picking. Transparent holes/walls/shadows do not select, and dead flashes occlude
+without becoming targets. Revisions invalidate picking with the image.
 
 Party storage is four records with up to 16 owned starting item entries each,
 not the future inventory grid. Definitions allow 16 races, 16 classes, and 64
@@ -166,9 +182,13 @@ Debug/Release presets stay CLion-compatible.
   handles, transactional occupancy, queued movement, exactly-once death/removal,
   stationary view refresh, hit-flash boundaries and all movement transitions. Routine fixtures own their data;
   shipped content and startup validation are checked separately.
+- Command/UI tests: preview validation without costs, live formation, foreign and
+  stale identities, 256-target paging, bounded logs, development-only statuses,
+  focus/held input, letterbox/pillarbox/high-DPI inverse mapping, alpha/depth-aware
+  picking, transition suspension, and stationary invalidation.
 - Allocation regression: enable an allocation counter after preparation, exercise
   first and subsequent moves, all transitions, blocked/queued input, and held/advancing NPC
-  frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, and require zero C++ allocations in the normal CPU frame path.
+  frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, HUD refresh/commands/log rollover/input/picking, and require zero C++ allocations in the normal CPU frame path.
 - Desktop integration: check actual GPU handle creation/release and presentation,
   produce the same deterministic captures, and compare them with the baseline.
   Capture/export allocations are intentionally excluded from the frame guarantee.
@@ -189,7 +209,7 @@ Historical techniques and visual choices are documented in [research](research.m
 | `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |
 | `src/core/` | Fixed-capacity typed resource slots |
 | `src/platform/` | Window lifetime, keyboard adapter, GPU registry and presentation |
-| `src/ui/` | Existing HUD, drawn from read-only game state |
+| `src/ui/` | Portrait/action HUD, shared layout/input routing, targeting and bounded-log presentation |
 | `src/app/` | Startup/options, frame scheduling, diagnostic capture cases |
 | `tools/` | Offline texture normalization |
 | `tests/` | Core, renderer, resource, NPC, allocation, and explicit desktop checks |

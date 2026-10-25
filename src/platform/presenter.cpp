@@ -15,12 +15,13 @@ void Presenter::drawTarget(TargetHandle handle, Rectangle destination) const {
                    destination, {0, 0}, 0, WHITE);
 }
 void Presenter::present(const Frame& frame, const MovementState& state, const Map& map, bool debug,
-                        bool changed) {
+                        bool changed, const HudSnapshot* hud, const PickingBuffer* picking) {
     if (changed)
         UpdateTexture(resources_.texture(viewport_), frame.data());
     BeginTextureMode(resources_.target(art_));
-    drawUI(state, debug, map);
+    drawUI(state, debug, map, hud);
     DrawTexture(resources_.texture(viewport_), viewX, viewY, WHITE);
+    drawHudOverlay(hud, picking);
     EndTextureMode();
     BeginTextureMode(resources_.target(game_));
     ClearBackground(BLACK);

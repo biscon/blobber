@@ -5,8 +5,8 @@
 
 namespace blobber {
 void SceneRenderer::compose(const Map& map, Player player, Frame& result, const ActorWorld* npcs,
-                            const NpcAnimationSnapshot* animation) const {
-    composeView(map, player, 0, result, npcs, animation);
+                            const NpcAnimationSnapshot* animation, PickingBuffer* picking) const {
+    composeView(map, player, 0, result, npcs, animation, picking);
 }
 void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float t, Frame& result,
                                   const ActorWorld* npcs, const NpcAnimationSnapshot* animation) const {
@@ -34,7 +34,10 @@ void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float 
     composeView(map, base, phase, result, npcs, animation);
 }
 void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame& result,
-                                const ActorWorld* npcs, const NpcAnimationSnapshot* animation) const {
+                                const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
+                                PickingBuffer* picking) const {
+    if (picking)
+        picking->clear();
     const PreparedView& view = views_[phase];
     const int parity = (player.cell.x & 1) * 2 + (player.cell.y & 1);
     result.copyFrom(view.backgrounds[static_cast<int>(player.heading) * 4 + parity]);
@@ -64,6 +67,8 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
         }
     }
     if (npcs)
-        npcs_.compose(*npcs, player, phase, coverage, result, animation);
+        npcs_.compose(*npcs, player, phase, coverage, result, animation, picking);
+    if (picking)
+        picking->finish(npcs);
 }
 } // namespace blobber

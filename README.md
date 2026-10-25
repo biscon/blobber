@@ -2,7 +2,7 @@
 
 A C++17 / raylib 6.2 prototype of a 1990s grid-based dungeon crawler. Rendering,
 six-direction keyboard movement, wall/NPC collision, and a small exploration level
-with a stationary four-view goblin.
+with animated goblins, a four-character party HUD, and command previews.
 
 ![The great hall](docs/screenshots/great-hall.png)
 
@@ -54,12 +54,33 @@ working-directory setup is required: assets are copied beside the executable.
 | Q / E | Turn left / right 90 degrees |
 | Tab | Toggle animated / instant steps |
 | F1 | Toggle the development map overlay |
+| 1–4 / portrait click | Select a character in formation order |
+| Up / Down | Select an action |
+| Left / Right / monster click | Select a visible target |
+| Enter / PREVIEW click | Validate a command preview; no resources spent |
+| Backspace / right-click | Cancel target selection |
+| LOG click / mouse wheel | Expand the combat log / scroll its entries |
 | Esc | Exit |
 
-The first action occurs on keypress; holding a key repeats after 300 ms and then
+The first movement action occurs on keypress; holding a movement key repeats after 300 ms and then
 every 180 ms. An animated action lasts 160 ms. At most one fresh keypress is
 buffered during an animation. Losing focus clears the buffer and held-key state.
-Collisions block the entire move, including its visual effect.
+Collisions block the entire move, including its visual effect. HUD commands never
+repeat while held. Controls held during focus loss require a release in the focused
+window before their next press can act. Targets clear when movement starts or focus is lost; targeting
+and confirmation wait until transitions finish and the F1 map is closed.
+
+Melee, back-row melee and defend currently validate **previews only**. They do not
+roll attacks, spend resources or damage monsters. Ranged, spells and items explain
+that they are unavailable. Normal HP is authoritative; `Mana --` means mana is
+not implemented yet. Highlighted portraits indicate selection, not initiative.
+
+Run `./cmake-build-debug/blobber --ui-demo` for eight deterministic development
+scenarios near the goblins. F2/NEXT advances; F3/RESET resets the current scenario.
+The banner identifies sample HP/mana/status values; they never change the real
+party. Scenarios cover previews, unavailable actions, missing/removed targets,
+low HP/unconscious/dead displays and log rollover. The regular `--capture` command
+also exports eight `ui-*` images. See [slice 04 review](docs/slice04_verification.md).
 
 The player starts at `(3, 21)`, facing north. The enclosed 25×25 test map contains
 two large chambers, pillars, loops, dead ends, and long corridors. Press F1 to
@@ -94,8 +115,10 @@ Rebuild to copy edited assets beside the executable. Custom `--assets` directori
 must include `npcs/level.json`; use `{ "definitions": [], "instances": [] }` for
 an empty level. Invalid placements, unknown types, malformed assets, and exceeded
 limits fail at startup with an error. See the [NPC design](docs/npc_design.md) for
-ownership, limits, and future extension points. NPCs are frozen: no AI, animation,
-combat, stats, or runtime spawn/despawn is implemented yet.
+ownership, limits, and future extension points. Runtime actors have HP, live occupancy, checked movement/removal and brief damage/death
+flashes. Animations loop, but autonomous AI, combat resolution and runtime spawning
+remain deferred. Development scenarios exercise removal; ordinary previews do not
+damage or move actors.
 
 ## Rendering
 
@@ -137,7 +160,7 @@ reverse. The game still draws 2D images; no runtime 3D scene or raycaster is use
 Tab switches transitions off.
 
 The full presentation uses a 640×360 pixel-art grid. The viewport is 500×272 at
-`(132, 8)`, with the left and bottom areas available for future UI. That composition
+`(132, 8)`, with sidebar controls and four portrait panels below. That composition
 is enlarged exactly 3× into a **1920×1080 render texture**. Finally that texture
 is fitted to the actual framebuffer, centered with black bars and point filtering.
 Window resizing never changes the logical resolution, perspective, or UI layout.
@@ -196,9 +219,10 @@ contiguous column/pixel arrays, and unchanged views skip viewport uploads.
 GPU textures and render targets are owned by bounded registries with typed,
 generation-checked handles and RAII cleanup before the window closes.
 
-Five routine CTest suites cover core behavior, rendering against an independent
-geometric oracle, resource lifetime/loading failures, NPC loading/rendering/collision,
-and zero C++ allocations in engine-owned CPU frame processing. They own their fixtures and need no display.
+Fourteen routine CTest suites cover rules/party/actors, commands and input, picking,
+core behavior, rendering against an independent geometric oracle, resource
+lifetime/loading failures, NPC loading/rendering/collision, and zero C++ allocations
+in engine-owned CPU frame processing. They own their fixtures and need no display.
 Loading, preparation, diagnostic exports, and raylib/driver internals are outside
 the allocation guarantee. No performance benchmark framework is required.
 

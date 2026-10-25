@@ -22,7 +22,9 @@ Options parseOptions(int argc, char** argv) {
         else if (arg == "--size" && i + 2 < argc) {
             result.width = dimension(argv[++i]);
             result.height = dimension(argv[++i]);
-        } else if (arg == "--help")
+        } else if (arg == "--ui-demo")
+            result.uiDemo = true;
+        else if (arg == "--help")
             result.help = true;
         else
             throw std::runtime_error("Unknown or incomplete argument: " + arg);

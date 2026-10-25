@@ -1,3 +1,4 @@
+#include "game/commands.hpp"
 #include "game/party.hpp"
 #include "input/key_repeat.hpp"
 #include "render/frame_pipeline.hpp"
@@ -8,6 +9,7 @@
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
+#include "ui/interaction.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <new>
@@ -110,6 +112,8 @@ int main() {
         Party party(partyCatalog);
         auto invalidBuild = party.character({0})->build;
         invalidBuild.equipment.body = {16};
+        CommandController commands(party, npcs);
+        UiInputEdges edges;
         tracking = true;
         for (int i = 0; i < 1000; ++i) {
             const auto& snapshot = party.snapshot();
@@ -255,6 +259,29 @@ int main() {
             frames.update(renderer, map, state, &npcs, &animator.snapshot());
         }
         okay &= !npcs.occupied({3, 1});
+        // First and repeated HUD operations, including ring overwrite and picking refresh.
+        for (int i = 0; i < 100; ++i) {
+            animator.setTime(20000 + i * 60);
+            frames.update(renderer, map, state, &npcs, &animator.snapshot());
+            const auto* picking = frames.picking();
+            commands.refresh(picking ? picking->targets() : TargetSnapshot{}, state.transition.active(),
+                             false, true);
+            commands.selectCharacter(i % 4);
+            commands.selectAction(PartyAction::Defend);
+            if (!state.transition.active())
+                okay &= commands.confirm() == CommandReason::PreviewAccepted;
+            commands.selectAction(PartyAction::Melee);
+            commands.cycleTarget(1);
+            commands.confirm();
+            commands.scrollLog(1);
+            commands.pageTargets(1);
+            const auto point = artPoint(100, 100, 1280, 720, 2560, 1440);
+            std::array<bool, uiKeyCount> down{};
+            down[static_cast<std::size_t>(UiKey::Confirm)] = i % 2 == 0;
+            const auto input = edges.sample(down, i % 7 != 0, point, 1);
+            routeHudInput(commands, input, picking ? picking->pick(200, 200) : std::nullopt);
+            commands.cancel();
+        }
         tracking = false;
         check(okay, "Frame pipeline endpoints, idle reuse, and blocked movement");
         check(allocations == 0, "Engine-owned CPU frame work must not allocate");

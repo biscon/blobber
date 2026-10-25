@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–03 are Accepted; slice 04 is eligible for planning.
+Status: gameplay roadmap; slices 01–03 are Accepted; slice 04 is Ready for review.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 03 — Mutable monster world (2026-10-25) |
-| Active slice | None |
-| Awaiting user review | None |
-| Blockers | None identified for planning slice 04 |
-| Next eligible slice | 04 — Party HUD and commands |
-| Next action | In a clean context, read slice 03's handoff, inspect relevant code, and propose slice 04's implementation plan |
+| Active slice | 04 — Party HUD and commands (review) |
+| Awaiting user review | 04 — Party HUD and commands |
+| Blockers | Slice 04 user acceptance is required before slice 05 |
+| Next eligible slice | None until slice 04 is accepted |
+| Next action | User reviews slice 04; address corrections within this slice |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -304,7 +304,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 01 | [Rules foundation and content](#slice-01-rules-foundation-and-content) | None | Accepted | A |
 | 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Accepted | A |
 | 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Accepted | A |
-| 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Planned | A |
+| 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Ready for review | A |
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Planned | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Planned | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Planned | B |
@@ -517,7 +517,46 @@ command flows with deterministic development scenarios; initiative arrives next.
 why and spend no resources. Check focus loss, held input, target changes, and
 aspect-fit input coordinates. Inspect deterministic UI captures.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Ready for review; 2026-10-25.
+**Approved plan:** User said “Implement the plan.” See [HUD design](party_hud_design.md).
+User chose bottom portraits/sidebar controls, viewport plus list targeting, and
+preview commands plus explicit deterministic development scenarios.
+**Delivered:** Four formation cards, HP/mana availability/status presentation,
+selected character, six action choices, checked command previews, numbered target
+list and visible-silhouette picking, 32-entry bounded log with expanded reading,
+shared aspect-fit hit testing and focus/edge input gates. Optional renderer picking
+reuses prepared alpha/depth composition; no production resources are changed.
+--ui-demo supplies eight isolated scenarios; --capture adds eight ui-* images.
+**Verification:** Debug/Release builds succeeded without compiler warnings; all
+14 CTest suites passed in both, including expanded zero-allocation checks.
+Desktop GPU lifecycle passed; final capture run exported 123 PNGs. All 114 existing
+logical dungeon viewport crops were pixel-identical to the baseline. UI captures
+and desktop mouse/keyboard, held confirm, focus return, map, scenario controls,
+letterbox/pillarbox selections were inspected. See [commands/results/limits](slice04_verification.md).
+**Review recipe:** Follow [slice 04 user review](slice04_verification.md#user-review),
+run --ui-demo, and inspect the new ui-* captures. Confirm previews never spend
+resources and held/focus-return input does not duplicate requests.
+**Deviations / limitations:** No scope deviation. Expanded log reading is a
+readability detail within the bounded log. Portraits are drawn placeholders;
+normal mana is unavailable. Sample resources/statuses are development-only. No
+combat, initiative, AI, inventory, range/LOS rules, or resource-spending behavior.
+Physical high-DPI desktop, Windows/macOS, scale benchmarks, combat playtest and
+manual dungeon traversal were not performed. A held control must receive a
+focused release before rearming, including when physically released while blurred.
+**Next-agent handoff:** Do not advance: slice 04 awaits user acceptance. Handle
+review corrections here. CommandController borrows immovable session owners;
+character IDs remain party-local and actor IDs world-scoped. Refresh from current
+picking/interaction flags before input; call movementStarted for instant and
+animated pose changes. PreviewAccepted is presentation validation only, never
+combat legality or resolution. Later combat must authoritatively validate range,
+LOS, turns and costs. Party/resource snapshots remain const; demo overrides must
+never become authoritative data. Picking is null during transitions, stores slot
+indices plus world/revision, and excludes dead flash pixels from selection while
+letting them occlude living bodies. Log storage is bounded and names are borrowed.
+Retain the synthetic focus-reset regression when changing input. No general
+session clock or production RNG was introduced. After acceptance, slice 05 needs
+its own plan; milestone A remains incomplete.
+**Acceptance:** Pending.
 
 ### Slice 05: First melee combat
 

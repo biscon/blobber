@@ -1,13 +1,16 @@
 #pragma once
+#include "game/commands.hpp"
 #include "game/movement.hpp"
 #include "platform/gpu_resources.hpp"
 #include "render/frame.hpp"
+#include "render/picking.hpp"
 #include <filesystem>
 namespace blobber {
 class Presenter {
   public:
     Presenter();
-    void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed);
+    void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed,
+                 const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr);
     // Diagnostic operation: readback and export may allocate; never used during normal play.
     void capture(const std::filesystem::path& path) const;
 

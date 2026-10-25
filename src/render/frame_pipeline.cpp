@@ -18,7 +18,7 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
                             actorWorld_ != actorWorld || hadAnimation_ != (animation != nullptr) ||
                             animationRevision_ != animationRevision;
     if (newContent) {
-        renderer.compose(map, state.player, destination_, npcs, animation);
+        renderer.compose(map, state.player, destination_, npcs, animation, &picking_);
         if (state.transition.active() && !isStrafe(state.transition.action))
             renderer.compose(map, state.transition.from, source_, npcs, animation);
         revision_ = state.revision;

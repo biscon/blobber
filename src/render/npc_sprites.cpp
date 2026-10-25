@@ -205,7 +205,7 @@ void PreparedNpcs::prepareShadows(const std::vector<NpcAppearance>& appearances,
 }
 void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
                            const std::array<float, viewWidth>& walls, Frame& frame,
-                           const NpcAnimationSnapshot* animation) const {
+                           const NpcAnimationSnapshot* animation, PickingBuffer* picking) const {
     if (phase < 0 || phase >= ViewProjection::strafeSteps)
         throw std::invalid_argument("Invalid NPC strafe phase");
     if (npcs.snapshot().typeCount != types_.size())
@@ -295,6 +295,8 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
                 Color src = pixels_[s.first + static_cast<std::size_t>(y) * s.width + x - item.left];
                 if (!src.a)
                     continue;
+                if (picking)
+                    picking->write((s.top + y) * viewWidth + x, static_cast<std::uint16_t>(item.instance));
                 if (animation && animation->frames[item.instance].flash)
                     src.r = src.g = src.b = 255;
                 auto& dst = frame[(s.top + y) * viewWidth + x];

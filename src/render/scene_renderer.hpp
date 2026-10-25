@@ -11,14 +11,14 @@ class SceneRenderer {
     SceneRenderer(const SceneRenderer&) = delete;
     SceneRenderer& operator=(const SceneRenderer&) = delete;
     void compose(const Map& map, Player player, Frame& output, const ActorWorld* npcs = nullptr,
-                 const NpcAnimationSnapshot* animation = nullptr) const;
+                 const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr) const;
     void composeStrafe(const Map& map, Player from, Player to, float t, Frame& output,
                        const ActorWorld* npcs = nullptr,
                        const NpcAnimationSnapshot* animation = nullptr) const;
 
   private:
     void composeView(const Map& map, Player base, int phase, Frame& output, const ActorWorld* npcs = nullptr,
-                     const NpcAnimationSnapshot* animation = nullptr) const;
+                     const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr) const;
     PreparedScene views_;
     PreparedNpcs npcs_;
 };
