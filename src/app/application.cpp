@@ -1,4 +1,5 @@
 #include "app/application.hpp"
+#include "app/actor_captures.hpp"
 #include "app/captures.hpp"
 #include "app/options.hpp"
 #include "assets/material_loader.hpp"
@@ -27,7 +28,7 @@ int run(int argc, char** argv) {
     if (map.solid(controller.state().player.cell) || !map.connected(controller.state().player.cell))
         throw std::runtime_error("Spawn is blocked or map contains unreachable floors");
     auto loadedNpcs = loadNpcs(options.assets / "npcs" / "level.json", map, controller.state().player.cell);
-    const NpcWorld& npcs = loadedNpcs.world;
+    ActorWorld npcs(map, rules, loadedNpcs.world);
     std::vector<NpcTimings> timings;
     for (const auto& appearance : loadedNpcs.appearances)
         timings.push_back(npcTimings(appearance));
@@ -55,6 +56,9 @@ int run(int argc, char** argv) {
             if (i == 0)
                 TakeScreenshot((options.captureDirectory / "window.png").string().c_str());
         }
+        if (!WindowShouldClose())
+            captureActors(map, rules, loadedNpcs.world, timings, renderer, presenter,
+                          options.captureDirectory);
         return 0;
     }
     Input input;

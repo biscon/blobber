@@ -1,9 +1,9 @@
 #pragma once
+#include "game/actors.hpp"
 #include "game/movement.hpp"
 #include "game/npc_animation.hpp"
 #include "render/frame.hpp"
 #include "render/projection.hpp"
-#include "world/npc.hpp"
 #include <array>
 #include <vector>
 
@@ -35,7 +35,7 @@ NpcSide npcSide(Heading facing, float toCameraX, float toCameraY);
 class PreparedNpcs {
   public:
     explicit PreparedNpcs(const std::vector<NpcAppearance>& appearances = {});
-    void compose(const NpcWorld& npcs, Player player, int phase,
+    void compose(const ActorWorld& npcs, Player player, int phase,
                  const std::array<float, viewWidth>& wallDepth, Frame& frame,
                  const NpcAnimationSnapshot* animation = nullptr) const;
     std::size_t pixelCount() const noexcept { return pixels_.size(); }

@@ -1,12 +1,18 @@
 # System design
 
+Implemented and accepted by the user (2026-10-25):
+slice 03, [mutable monster world](actors_design.md).
+Runtime actors now supply live collision/rendering state, health and lifecycle.
+Prepared appearances and asset formats remain unchanged; scripted diagnostics
+exercise mutation and the 100 ms white damage/death flash.
+
 Gameplay extension: [SRD 5.1 demo design and self-tracking roadmap](dnd5e_demo_design.md).
 It defines sixteen individually reviewed slices toward a four-character goblin
 combat demo. Slice 01's [rules foundation](rules_design.md) is implemented and
 accepted by the user (2026-10-25): explicitly seeded dice, pure attack/save/damage rules,
 and an immutable catalog loaded from bounded JSON before image preparation.
-The application owns the catalog and starting party for the session; no combat/actor
-integration exists yet. Rules are graphics-independent, JSON stays in a separate I/O library,
+The application owns the catalog, starting party and runtime actors for the session;
+combat resolution is not integrated yet. Rules are graphics-independent, JSON stays in a separate I/O library,
 and typed catalog indices are stable for one non-recycled catalog lifetime.
 The [source ledger](srd_content_ledger.md) records adopted SRD data and adaptations.
 The roadmap owns delivery
@@ -21,9 +27,10 @@ const state and checked formation swaps; combat, resource spending, inventory
 transactions, and mana are deferred. See [slice 02 verification](slice02_verification.md).
 
 NPC extension: [directional sprites and slow animation](npc_design.md) is implemented.
-It adds immutable level NPC data, whole-cell occupancy collision, JSON assets,
-and prepared alpha animation frames. Placements remain stationary; a separate
-clock selects idle, walk-in-place, or frontal attack frames.
+It adds immutable level NPC placement data, JSON assets, and prepared alpha animation
+frames. Runtime actors initialize from those placements; a separate animation
+player selects idle, walk-in-place, or frontal attack frames and transient hit feedback.
+There is no autonomous movement or combat yet.
 The [NPC design](npc_design.md#rendering) also covers prepared, floor-projected
 contact shadows, blended beneath bodies and clipped against wall depth.
 
@@ -33,9 +40,8 @@ checks and limits.
 
 ## Boundaries and data flow
 
-- **World:** compact immutable row-major solid-cell storage plus a separate NPC
-  owner with typed definition indices and a per-cell occupancy mask; grid directions and
-  coordinates are value types. Loading and connectivity validation happen before
+- **World:** compact immutable row-major solid-cell storage and immutable NPC
+  loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
 - **Party/rules:** immutable catalog values feed pure, allocation-free character
   derivation. A four-character party owns starting builds/gear, derived caches,
@@ -43,6 +49,11 @@ checks and limits.
   recycle; formation swaps preserve identities and resources. JSON/loading stays
   outside game code. Schema 2 adds party content; strict schema 1 remains readable
   as rules-only content, but startup requires a preset.
+- **Actors:** a fixed-capacity runtime owner initializes monster HP and transforms
+  from placements and the catalog. Checked movement, facing, damage and removal
+  atomically update records, occupancy and revisions. Typed IDs include a unique
+  world identity; slots never recycle. Dead records remain readable, removed IDs
+  fail lookup, and only living actors block movement.
 - **Movement:** owns player pose, one pending command, transition state, and a
   revision counter. Exposes a const state snapshot; consumers cannot mutate its
   invariants. Key repetition is a separate graphics-independent input component.
@@ -81,6 +92,12 @@ The projection and eight phases bound the cache. Each phase permits at most 1024
 sprites, 512,000 columns, and 16 million colors; exceeding a limit fails loading.
 No eviction or hidden runtime growth occurs.
 
+Runtime actors retain up to 256 stable records and one byte of live occupancy
+per map cell. The immutable placement mask is loading data only. The map and
+catalog outlive the noncopyable/nonmovable actor owner. Runtime operations return
+fixed result values without allocation. A death unblocks immediately; animation
+shows a white frozen pose for 100 ms before hiding body/shadow.
+
 Each 500×272 RGBA frame allocates once, is move-only, and cannot resize. The live
 pipeline owns three frames (about 1.56 MiB), reusing them across idle, movement,
 collision, NPC alpha composition, and transitions. Composition copies pixels but
@@ -115,10 +132,10 @@ a Vulkan-style benchmark or stress-testing framework.
 
 The composition API writes to `Frame&`; callers must supply distinct buffers for
 image transitions. The frame pipeline consumes a read-only movement snapshot,
-tracks movement and NPC animation revisions, and publishes a const display frame plus a changed flag so idle
+tracks movement, actor-world identity/revision and NPC animation revisions, and publishes a const display frame plus a changed flag so idle
 frames do not trigger texture uploads. Prepared cache configuration and content
 remain immutable after construction. A pipeline belongs to one map, scene cache,
-NPC world, animation player, and controller lifetime: construct a new pipeline when replacing those systems,
+actor world, animation player, and controller lifetime: construct a new pipeline when replacing those systems,
 because revisions are local to that controller. Moved-from frames may only be
 destroyed or assigned another frame before use.
 
@@ -144,11 +161,14 @@ Debug/Release presets stay CLion-compatible.
   and wall occlusion against independent ray/block intersections.
 - Party/rules tests: deterministic dice, strict versioned content, independent
   race/class builds, armor/weapon/weight calculations, initialized resources,
-  formation identity, and rejected invalid input. Routine fixtures own their data;
+  formation identity, and rejected invalid input.
+- Actor tests: generated catalogs/maps, capacity and binding failures, stale/foreign
+  handles, transactional occupancy, queued movement, exactly-once death/removal,
+  stationary view refresh, hit-flash boundaries and all movement transitions. Routine fixtures own their data;
   shipped content and startup validation are checked separately.
 - Allocation regression: enable an allocation counter after preparation, exercise
   first and subsequent moves, all transitions, blocked/queued input, and held/advancing NPC
-  frames, rules/party queries and formation swaps, and require zero C++ allocations in the normal CPU frame path.
+  frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, and require zero C++ allocations in the normal CPU frame path.
 - Desktop integration: check actual GPU handle creation/release and presentation,
   produce the same deterministic captures, and compare them with the baseline.
   Capture/export allocations are intentionally excluded from the frame guarantee.
@@ -163,7 +183,7 @@ Historical techniques and visual choices are documented in [research](research.m
 | --- | --- |
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
 | `src/rules/` | Deterministic dice, pure attack/save/damage and character derivation, immutable typed content catalog |
-| `src/game/` | Discrete movement, collision decisions, animation state, bounded party/resources/formation |
+| `src/game/` | Runtime actors/occupancy, discrete movement, animation state, bounded party/resources/formation |
 | `src/input/` | Platform-independent key repeat timing |
 | `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
 | `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |
@@ -174,8 +194,8 @@ Historical techniques and visual choices are documented in [research](research.m
 | `tools/` | Offline texture normalization |
 | `tests/` | Core, renderer, resource, NPC, allocation, and explicit desktop checks |
 
-NPC indices remain stable for an immutable level lifetime; runtime spawning and
-removal are deferred. Other future interactive objects should have their own
+NPC appearance indices remain stable for a prepared level lifetime. Runtime actor
+slots never recycle; removal leaves a terminal record. Runtime spawning is deferred. Other future interactive objects should have their own
 owner and lifetime model before introducing handles for them. They should not be
 added to the GPU resource pool.
 Future overlays belong in the UI; new movement rules belong in the controller or
@@ -188,4 +208,6 @@ adds bounded clip timing and prepared animation frames, preserving immutable
 placements and the current image-composition/presentation pipeline. The application
 owns a graphics-independent animation player with fixed-capacity snapshots. Source
 images are released after preparation; timing metadata survives independently.
-No AI, movement or combat is attached to these visual loops.
+No AI or combat is attached to these visual loops. Controlled actor movement and
+health/lifecycle mutation are described in the actor design; prepared caches stay
+immutable and are reused at each runtime position.

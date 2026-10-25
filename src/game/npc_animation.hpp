@@ -1,5 +1,5 @@
 #pragma once
-#include "world/npc.hpp"
+#include "game/actors.hpp"
 #include <array>
 
 namespace blobber {
@@ -13,21 +13,25 @@ using NpcTimings = std::array<NpcClipTiming, npcAnimationCount>;
 void validateNpcTimings(const NpcTimings& timings);
 struct NpcFrameSelection {
     std::uint8_t active = 0, idle = 0;
+    bool visible = true, flash = false;
 };
 struct NpcAnimationSnapshot {
     std::array<NpcFrameSelection, NpcWorld::maxInstances> frames{};
     std::size_t count = 0;
-    std::uint64_t revision = 0;
+    std::uint64_t revision = 0, world = 0, actorRevision = 0;
 };
-// Borrows one immutable level; metadata and storage are copied/preallocated at startup.
+// Borrows one runtime actor world; metadata and storage are copied/preallocated at startup.
+constexpr std::uint64_t npcHitFlashMs = 100;
 class NpcAnimator {
   public:
-    NpcAnimator(const NpcWorld& world, const std::vector<NpcTimings>& timings);
+    NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings);
+    NpcAnimator(ActorWorld&&, const std::vector<NpcTimings>&) = delete;
+    NpcAnimator(const ActorWorld&&, const std::vector<NpcTimings>&) = delete;
     void setTime(std::uint64_t elapsedMs) noexcept;
     const NpcAnimationSnapshot& snapshot() const noexcept { return snapshot_; }
 
   private:
-    const NpcWorld& world_;
+    const ActorWorld& world_;
     std::array<NpcTimings, NpcWorld::maxTypes> timings_{};
     NpcAnimationSnapshot snapshot_;
 };

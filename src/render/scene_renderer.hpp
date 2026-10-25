@@ -10,13 +10,14 @@ class SceneRenderer {
         : views_(prepareScene(materials)), npcs_(npcs) {}
     SceneRenderer(const SceneRenderer&) = delete;
     SceneRenderer& operator=(const SceneRenderer&) = delete;
-    void compose(const Map& map, Player player, Frame& output, const NpcWorld* npcs = nullptr,
+    void compose(const Map& map, Player player, Frame& output, const ActorWorld* npcs = nullptr,
                  const NpcAnimationSnapshot* animation = nullptr) const;
     void composeStrafe(const Map& map, Player from, Player to, float t, Frame& output,
-                       const NpcWorld* npcs = nullptr, const NpcAnimationSnapshot* animation = nullptr) const;
+                       const ActorWorld* npcs = nullptr,
+                       const NpcAnimationSnapshot* animation = nullptr) const;
 
   private:
-    void composeView(const Map& map, Player base, int phase, Frame& output, const NpcWorld* npcs = nullptr,
+    void composeView(const Map& map, Player base, int phase, Frame& output, const ActorWorld* npcs = nullptr,
                      const NpcAnimationSnapshot* animation = nullptr) const;
     PreparedScene views_;
     PreparedNpcs npcs_;

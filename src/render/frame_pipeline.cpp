@@ -1,18 +1,29 @@
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
+#include <stdexcept>
 
 namespace blobber {
 bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const MovementState& state,
-                           const NpcWorld* npcs, const NpcAnimationSnapshot* animation) {
+                           const ActorWorld* npcs, const NpcAnimationSnapshot* animation) {
+    // Validate even on the cached-frame path; equal animation revisions do not
+    // make snapshots from different actor owners interchangeable.
+    if (animation &&
+        (!npcs || animation->world != npcs->snapshot().world ||
+         animation->actorRevision != npcs->snapshot().revision || animation->count != npcs->snapshot().count))
+        throw std::invalid_argument("NPC animation snapshot belongs to another world or revision");
     const auto animationRevision = animation ? animation->revision : 0;
-    const bool newContent = !ready_ || revision_ != state.revision ||
-                            hadAnimation_ != (animation != nullptr) ||
+    const auto actorRevision = npcs ? npcs->snapshot().revision : 0;
+    const auto actorWorld = npcs ? npcs->snapshot().world : 0;
+    const bool newContent = !ready_ || revision_ != state.revision || actorRevision_ != actorRevision ||
+                            actorWorld_ != actorWorld || hadAnimation_ != (animation != nullptr) ||
                             animationRevision_ != animationRevision;
     if (newContent) {
         renderer.compose(map, state.player, destination_, npcs, animation);
         if (state.transition.active() && !isStrafe(state.transition.action))
             renderer.compose(map, state.transition.from, source_, npcs, animation);
         revision_ = state.revision;
+        actorRevision_ = actorRevision;
+        actorWorld_ = actorWorld;
         animationRevision_ = animationRevision;
         hadAnimation_ = animation != nullptr;
     }

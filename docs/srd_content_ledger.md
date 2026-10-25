@@ -46,3 +46,12 @@ versatile grip are automatic. Thrown attacks, range, ammunition consumption,
 loading, stealth/speed penalties, skills, tools, and languages are not simulated.
 The [feature matrix](characters_design.md#content-and-compatibility) distinguishes
 active passives, slice-10 decisions, and omissions. Mana has no provisional value.
+
+## Slice 03 runtime integration
+
+Runtime monster HP initializes from the existing catalog baseline (goblin: 7).
+Resolved nonnegative damage now reduces HP; reaching zero makes the monster dead
+and immediately nonblocking. No new SRD content or attack resolution was added.
+The 100 ms white hit/death flash and subsequent hiding are project presentation
+choices, not tabletop mechanics. Loot, XP awards and death animation clips remain
+deferred to their roadmap slices.

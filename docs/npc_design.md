@@ -4,12 +4,15 @@ Status: implemented. See [verification notes](verification.md#npc-first-slice) f
 
 ## Ownership and data
 
-The application owns an immutable `NpcWorld` for the level lifetime and the
-renderer owns its prepared sprite cache. CPU source images are released after
+The loader produces immutable `NpcWorld` placement data and the renderer owns its
+prepared sprite cache. Slice 03 adds [runtime actors](actors_design.md), owned by
+the application and initialized from placements; their state and occupancy are
+the live authority. CPU source images are released after
 preparation. Core NPC instances contain a typed definition index, cell, 2x2
 subcell, cardinal facing, selected animation, and phase offset. The world owns the definition string IDs; appearance
 arrays use the same index order. Indices never recycle in this slice; checked
-access rejects invalid indices. No ECS, AI, faction, stats, or general-purpose animation scheduler is introduced.
+access rejects invalid indices. There is no ECS, AI, faction system or general-purpose animation scheduler.
+Monster HP and checked lifecycle operations now belong to the actor owner.
 A bounded graphics-independent animation player supplies frame selections.
 
 `assets/npcs/level.json` lists definition JSON paths and placements. Definition
@@ -29,8 +32,9 @@ the ground anchor are rejected. `validateNpcAppearance` is shared by the file
 loader and the preparer so generated assets obey the same invariants.
 
 Subcell [0,0] is northwest, [1,1] southeast; world positions are cell origin plus
-0.25 or 0.75 on each axis. A row-major byte occupancy mask provides constant-time
-whole-cell movement collision. The map is unchanged. NPC placement rejects walls,
+0.25 or 0.75 on each axis. A row-major byte occupancy mask validates loaded placements. The runtime actor
+owner maintains its own authoritative mask for constant-time whole-cell movement
+collision and atomic subslot updates. The map is unchanged. NPC placement rejects walls,
 player spawn, duplicate subcells, bad definitions and invalid coordinates.
 
 Limits: 32 definitions, 256 instances, 4 occupants per cell, 2048 pixels per image
@@ -38,8 +42,8 @@ axis, 128 MiB combined engine-owned decoded/prepared pixel arrays. Temporary
 Raylib decoder storage and container metadata are outside that pixel budget.
 JSON files are bounded to 1 MiB. Sprite canvas widths are at most 0.5 cells, heights at most wall height.
 All limits fail explicitly during loading. All vectors allocate only during
-loading/preparation. The frame path uses fixed scratch arrays. Replacing the NPC
-world requires reconstructing its renderer/pipeline; runtime mutation is deferred.
+loading/preparation. The frame path uses fixed scratch arrays. Replacing level assets requires reconstructing their renderer/pipeline. Runtime
+actor mutation reuses the same prepared assets; it does not rebake images.
 
 ## Rendering
 
@@ -80,8 +84,8 @@ animation snapshot, including direction-dependent attack fallback.
 
 ## Integration and validation
 
-Movement accepts a borrowed optional NPC world for destination checks, including
-queued commands. Rendering/pipeline accept the same immutable world; the renderer
+Movement accepts a borrowed optional actor world for destination checks, including
+queued commands. Rendering/pipeline read the same runtime snapshot; the renderer
 owns prepared images indexed by definition. Empty NPC sets preserve existing APIs
 and pixel output. JSON and image I/O remain in assets, outside core and rendering.
 Use system nlohmann/json 3.12.0 or a hash-pinned FetchContent fallback.
@@ -99,16 +103,17 @@ verification.md for commands, results and platform limitations.
 Status: implemented and verified; see [verification](verification.md#npc-sprite-animation).
 
 The application owns a graphics-independent NPC animation player alongside
-immutable world placement. Clips are Idle, Walk and Attack, with 1..4 frames and
+the runtime actor world. Clips are Idle, Walk and Attack, with 1..4 frames and
 positive integer millisecond durations (maximum 60,000 per frame). All directions
 of a clip share timing. Idle/walk require all four views; attack may omit non-front
 views, which use directional idle on its own timeline. Legacy `views` definitions
 remain one-frame idle. Definitions cannot mix `views` and `animations`.
 Placement adds optional `animation` (default idle) and `phase_ms` (default zero).
-No movement, turning, combat, events or AI is introduced.
+The authored clips remain presentation loops. Controlled movement, turning and
+damage now belong to the actor owner; no autonomous AI or combat resolver exists.
 
 Clip metadata is independent of decoded images. The animation player copies bounded
-metadata at startup, borrows the level-lifetime world, and publishes fixed-capacity
+metadata at startup, borrows the level-lifetime actor world, and publishes fixed-capacity
 per-instance active/idle frame indices and a revision. Absolute elapsed milliseconds
 allow deterministic captures and bounded modulo sampling without catch-up loops.
 Animation time advances independently of movement's animation toggle. Source images
@@ -121,7 +126,11 @@ The existing 128 MiB combined source/prepared pixel budget includes every frame 
 shadow, and exhaustion fails startup. Animated source frames use common 384x536
 canvases, a uniform scale per sheet, and ground pivots at (192,512). Original static artwork stays available.
 
-FramePipeline observes animation revision as well as movement revision. A changed
+FramePipeline observes animation revision as well as movement and actor revisions.
+Animation snapshots identify their world and actor revision; resample after any
+mutation before rendering. Dead actors flash white for 100 ms at their frozen hit
+pose, then body/shadow disappear. Removed actors hide immediately. The actor
+design specifies timing, ownership and the absence of a death clip in this slice. A changed
 selection recomposes destination and any transition source from the same snapshot;
 strafe composition consumes that snapshot too. Unchanged stationary frames remain
 reusable. A pipeline belongs to one world/renderer/animation-player lifetime.
@@ -164,9 +173,9 @@ form. A front-only attack omits the other direction keys; missing walk/idle
 views are errors. Unknown clip/direction names, mismatched frame/duration counts,
 missing selected clips, mixed formats, and invalid images fail loading with path
 context. `phase_ms` is an integer from 0 through 2147483647 in JSON. A missing
-animation snapshot renders frame zero of the placement's selected clip (and
-frame-zero idle for missing directions). Animation time is independent of the
-TAB movement-transition toggle. Placement indices stay fixed for the session.
+animation snapshot renders living actors at frame zero of their selected clip
+(and frame-zero idle for missing directions); dead/removed actors are hidden. Animation time is independent of the
+TAB movement-transition toggle. Actor slot indices stay fixed for the session, including after removal.
 
 The built-in imagegen tool authored nine selected sheets (twenty poses). Original
 static images and `goblin-static.json` remain available. Prompts, including the

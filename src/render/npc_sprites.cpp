@@ -203,15 +203,18 @@ void PreparedNpcs::prepareShadows(const std::vector<NpcAppearance>& appearances,
         }
     }
 }
-void PreparedNpcs::compose(const NpcWorld& npcs, Player player, int phase,
+void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
                            const std::array<float, viewWidth>& walls, Frame& frame,
                            const NpcAnimationSnapshot* animation) const {
     if (phase < 0 || phase >= ViewProjection::strafeSteps)
         throw std::invalid_argument("Invalid NPC strafe phase");
-    if (npcs.typeCount() != types_.size())
+    if (npcs.snapshot().typeCount != types_.size())
         throw std::invalid_argument("NPC world and prepared appearance counts differ");
-    if (animation && animation->count != npcs.instances().size())
+    if (animation && animation->count != npcs.snapshot().count)
         throw std::invalid_argument("NPC animation/world instance counts differ");
+    if (animation &&
+        (animation->world != npcs.snapshot().world || animation->actorRevision != npcs.snapshot().revision))
+        throw std::invalid_argument("NPC animation snapshot belongs to another world or revision");
     struct Visible {
         const Sprite* sprite;
         const Shadow* shadow;
@@ -226,8 +229,12 @@ void PreparedNpcs::compose(const NpcWorld& npcs, Player player, int phase,
     const float focal = ViewProjection::focalLength();
     const float cameraX = player.cell.x + 0.5f - f.x * ViewProjection::cameraSetback + r.x * offset;
     const float cameraY = player.cell.y + 0.5f - f.y * ViewProjection::cameraSetback + r.y * offset;
-    for (std::size_t i = 0; i < npcs.instances().size(); ++i) {
-        const auto& npc = npcs.instances()[i];
+    for (std::size_t i = 0; i < npcs.snapshot().count; ++i) {
+        const auto& actor = npcs.snapshot().actors[i];
+        if (actor.life == ActorLife::Removed ||
+            (animation ? !animation->frames[i].visible : actor.life != ActorLife::Alive))
+            continue;
+        const auto& npc = actor.npc;
         const int dx = npc.cell.x - player.cell.x, dy = npc.cell.y - player.cell.y;
         const int row = dx * f.x + dy * f.y;
         if (row < 0 || row > ViewProjection::visibleRows)
@@ -285,9 +292,11 @@ void PreparedNpcs::compose(const NpcWorld& npcs, Player player, int phase,
             if (item.depth >= walls[x])
                 continue;
             for (int y = 0; y < s.rows; ++y) {
-                const Color src = pixels_[s.first + static_cast<std::size_t>(y) * s.width + x - item.left];
+                Color src = pixels_[s.first + static_cast<std::size_t>(y) * s.width + x - item.left];
                 if (!src.a)
                     continue;
+                if (animation && animation->frames[item.instance].flash)
+                    src.r = src.g = src.b = 255;
                 auto& dst = frame[(s.top + y) * viewWidth + x];
                 const unsigned alpha = src.a, inverse = 255 - alpha;
                 dst = {static_cast<unsigned char>((src.r * alpha + dst.r * inverse + 127) / 255),

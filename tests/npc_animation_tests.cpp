@@ -1,5 +1,6 @@
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
+#include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -8,8 +9,8 @@
 using namespace blobber;
 namespace {
 const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
-NpcWorld world(NpcAnimation animation, std::uint32_t phase = 0) {
-    return NpcWorld(map, {3, 5}, {"test"}, {{{0}, {3, 3}, {0, 0}, Heading::South, animation, phase}});
+ActorWorld world(NpcAnimation animation, std::uint32_t phase = 0) {
+    return testActors(map, {3, 5}, {"test"}, {{{0}, {3, 3}, {0, 0}, Heading::South, animation, phase}});
 }
 void timing() {
     const auto metadata = npcTimings(testAnimatedNpcAppearance());
@@ -40,10 +41,11 @@ void timing() {
     NpcAnimator phase(phased, {metadata});
     const auto huge = std::numeric_limits<std::uint64_t>::max();
     phase.setTime(huge);
-    check(phase.snapshot().frames[0].active == ((huge % 60 + phased.instances()[0].phaseMs % 60) % 60 >= 30),
+    check(phase.snapshot().frames[0].active ==
+              ((huge % 60 + phased.snapshot().actors[0].npc.phaseMs % 60) % 60 >= 30),
           "Large elapsed time and phase cannot overflow or require catch-up loops");
     phase.setTime(0);
-    check(phase.snapshot().frames[0].active == (phased.instances()[0].phaseMs % 60 >= 30),
+    check(phase.snapshot().frames[0].active == (phased.snapshot().actors[0].npc.phaseMs % 60 >= 30),
           "Deterministic seek resets time");
     const auto idle = world(NpcAnimation::Idle);
     NpcAnimator still(idle, {npcTimings(testNpcAppearance())});
@@ -59,7 +61,7 @@ void timing() {
     bad = metadata;
     bad[2].count = 5;
     rejects([&] { NpcAnimator invalid(idle, {bad}); }, "Bounded frame count");
-    const NpcWorld empty(map, {1, 1}, {}, {});
+    auto empty = testActors(map, {1, 1}, {}, {});
     NpcAnimator none(empty, {});
     none.setTime(huge);
     check(none.snapshot().count == 0 && none.snapshot().revision == 0, "Empty world clock");

@@ -6,12 +6,12 @@ namespace blobber {
 class FramePipeline {
   public:
     bool update(const SceneRenderer& renderer, const Map& map, const MovementState& state,
-                const NpcWorld* npcs = nullptr, const NpcAnimationSnapshot* animation = nullptr);
+                const ActorWorld* npcs = nullptr, const NpcAnimationSnapshot* animation = nullptr);
     const Frame& frame() const noexcept { return current_; }
 
   private:
     Frame source_, destination_, current_;
-    std::uint64_t revision_ = 0, animationRevision_ = 0;
+    std::uint64_t revision_ = 0, animationRevision_ = 0, actorRevision_ = 0, actorWorld_ = 0;
     bool hadAnimation_ = false;
     bool ready_ = false, wasAnimating_ = false;
 };

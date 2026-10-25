@@ -1,5 +1,6 @@
 #include "assets/image.hpp"
 #include "assets/npc_loader.hpp"
+#include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -27,8 +28,8 @@ void testWorldAndCollision() {
                     const Player origin{{4, 4}, static_cast<Heading>(h)};
                     Player destination = origin;
                     check(tryAction(map, destination, static_cast<Action>(a)), "Fixture is walkable");
-                    const NpcWorld npcs(map, origin.cell, {"test"},
-                                        {{{0}, destination.cell, {sx, sy}, Heading::North}});
+                    auto npcs = testActors(map, origin.cell, {"test"},
+                                           {{{0}, destination.cell, {sx, sy}, Heading::North}});
                     Player blocked = origin;
                     check(!tryAction(map, blocked, static_cast<Action>(a), &npcs) && blocked == origin,
                           "Every occupied subcell blocks all movement directions/headings");
@@ -42,12 +43,13 @@ void testWorldAndCollision() {
                                         {{0}, {4, 4}, {1, 0}, Heading::East},
                                         {{0}, {4, 4}, {0, 1}, Heading::South},
                                         {{0}, {4, 4}, {1, 1}, Heading::West}};
-    const NpcWorld npcs(map, {1, 1}, {"friendly-or-hostile"}, four);
-    check(npcs.instances().size() == 4 && npcs.occupied({4, 4}) && !npcs.occupied({3, 4}) &&
+    auto npcs = testActors(map, {1, 1}, {"friendly-or-hostile"}, four);
+    check(npcs.snapshot().count == 4 && npcs.occupied({4, 4}) && !npcs.occupied({3, 4}) &&
               !npcs.occupied({-1, 4}) && !npcs.occupied({9, 9}),
           "Four slots and bounded occupancy queries");
-    check(npcs.typeId({0}) == "friendly-or-hostile", "String type IDs remain accessible");
-    rejects([&] { npcs.typeId({1}); }, "Invalid typed index rejected");
+    const NpcWorld placements(map, {1, 1}, {"friendly-or-hostile"}, four);
+    check(placements.typeId({0}) == "friendly-or-hostile", "String type IDs remain accessible");
+    rejects([&] { placements.typeId({1}); }, "Invalid typed index rejected");
     auto invalid = four;
     invalid.push_back(four[0]);
     rejects([&] { NpcWorld w(map, {1, 1}, {"test"}, invalid); }, "Fifth occupant/duplicate slot rejected");
@@ -326,7 +328,7 @@ void testViewsAndPreparation() {
     const Map map = openMap();
     const auto appearance = testNpcAppearance();
     const PreparedNpcs prepared({appearance});
-    const NpcWorld npc(map, {1, 1}, {"test"}, {{{0}, {4, 4}, {0, 0}, Heading::South}});
+    auto npc = testActors(map, {1, 1}, {"test"}, {{{0}, {4, 4}, {0, 0}, Heading::South}});
     const std::array<Player, 4> cameras{{{{4, 6}, Heading::North},
                                          {{4, 2}, Heading::South},
                                          {{6, 4}, Heading::West},
@@ -371,7 +373,7 @@ void testViewsAndPreparation() {
     check(n[2] - n[0] > 2 * (d[2] - d[0]) && n[3] - n[1] > 2 * (d[3] - d[1]), "NPC grows with inverse depth");
     const float ground = ViewProjection::horizon + ViewProjection::focalLength() * 0.5f / 1.65f;
     check(std::abs((n[3] + 1) - ground) < 1, "Feet project to floor at subcell depth");
-    const NpcWorld empty(map, {1, 1}, {}, {});
+    auto empty = testActors(map, {1, 1}, {}, {});
     rejects([&] { prepared.compose(empty, cameras[0], 0, noWalls(), near); },
             "Mismatched world/cache rejected");
 }
@@ -416,7 +418,8 @@ void testOcclusionAndTransitions() {
         const Player camera{Cell{4, 4} + f * -2, heading};
         const Cell npcCell = Cell{4, 4} + f;
         for (int sub = 0; sub < 4; ++sub) {
-            const NpcWorld npc(map, {1, 1}, {"test"}, {{{0}, npcCell, {sub % 2, sub / 2}, Heading::South}});
+            auto npc =
+                testActors(map, {1, 1}, {"test"}, {{{0}, npcCell, {sub % 2, sub / 2}, Heading::South}});
             NpcAnimator animator(npc, {npcTimings(appearance)});
             for (int phase = 0; phase < 8; ++phase) {
                 animator.setTime(phase % 2 ? 60 : 0);
@@ -462,7 +465,7 @@ void testOcclusionAndTransitions() {
     }
     check(hidden > 0 && visible > 0 && partial > 0,
           "Fixture exercises full, partial, and visible pillar cases");
-    const NpcWorld npc(map, {1, 1}, {"test"}, {{{0}, {3, 3}, {1, 1}, Heading::South}});
+    auto npc = testActors(map, {1, 1}, {"test"}, {{{0}, {3, 3}, {1, 1}, Heading::South}});
     const Player from{{3, 5}, Heading::North}, to{{2, 5}, Heading::North};
     renderer.compose(map, from, expected, &npc);
     renderer.composeStrafe(map, from, to, 0, actual, &npc);
@@ -482,9 +485,9 @@ void testLayersAndClipping() {
             p = {0, 240, 0, 255};
     const PreparedNpcs prepared({front, back});
     const NpcInstance near{{0}, {4, 4}, {0, 1}, Heading::South}, far{{1}, {4, 4}, {0, 0}, Heading::South};
-    const NpcWorld both(map, {1, 1}, {"near", "far"}, {near, far});
-    const NpcWorld reversed(map, {1, 1}, {"near", "far"}, {far, near});
-    const NpcWorld onlyNear(map, {1, 1}, {"near", "far"}, {near});
+    auto both = testActors(map, {1, 1}, {"near", "far"}, {near, far});
+    auto reversed = testActors(map, {1, 1}, {"near", "far"}, {far, near});
+    auto onlyNear = testActors(map, {1, 1}, {"near", "far"}, {near});
     Frame result({0, 0, 0, 255}), other({0, 0, 0, 255}), n({0, 0, 0, 255});
     const Player p{{4, 6}, Heading::North};
     prepared.compose(both, p, 0, noWalls(), result);
@@ -505,7 +508,7 @@ void testLayersAndClipping() {
         }
     check(holes > 0 && blends > 0 && opaque > 0, "Transparent, translucent and opaque NPC overlap");
     // Adjacent lateral sprites cross the screen boundary during a strafe; exercise all clips.
-    const NpcWorld side(map, {1, 1}, {"near", "far"}, {{{0}, {5, 4}, {0, 0}, Heading::West}});
+    auto side = testActors(map, {1, 1}, {"near", "far"}, {{{0}, {5, 4}, {0, 0}, Heading::West}});
     int clippedPixels = 0, fullPixels = 0;
     for (int phase = 0; phase < 8; ++phase) {
         std::fill(result.begin(), result.end(), Color{0, 0, 0, 255});
@@ -532,7 +535,7 @@ void testContactShadows() {
             pixel.a = 0;
     // Transparent fixture isolates floor-shadow behavior from the body artwork.
     const PreparedNpcs prepared({invisible});
-    const NpcWorld npc(map, {1, 1}, {"test"}, {{{0}, {4, 4}, {0, 0}, Heading::South}});
+    auto npc = testActors(map, {1, 1}, {"test"}, {{{0}, {4, 4}, {0, 0}, Heading::South}});
     const Player player{{4, 6}, Heading::North};
     const Color floor{240, 240, 240, 255};
     Frame shadow(floor), hidden(floor), clipped(floor);
@@ -574,11 +577,11 @@ void testContactShadows() {
                 check(depth < 2.65f, "Each shadow row uses floor depth for wall clipping");
             }
     check(visible > 0 && visible < darkened, "Wall edge can partially clip a floor blob");
-    const NpcWorld four(map, {1, 1}, {"test"},
-                        {{{0}, {4, 4}, {0, 0}, Heading::South},
-                         {{0}, {4, 4}, {1, 0}, Heading::South},
-                         {{0}, {4, 4}, {0, 1}, Heading::South},
-                         {{0}, {4, 4}, {1, 1}, Heading::South}});
+    auto four = testActors(map, {1, 1}, {"test"},
+                           {{{0}, {4, 4}, {0, 0}, Heading::South},
+                            {{0}, {4, 4}, {1, 0}, Heading::South},
+                            {{0}, {4, 4}, {0, 1}, Heading::South},
+                            {{0}, {4, 4}, {1, 1}, Heading::South}});
     Frame group(floor);
     prepared.compose(four, player, 0, noWalls(), group);
     for (int sy = 0; sy < 2; ++sy)

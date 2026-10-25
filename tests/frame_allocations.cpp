@@ -3,6 +3,7 @@
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
 #include "rules/content.hpp"
+#include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
@@ -82,11 +83,11 @@ int main() {
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
         const auto appearance = testAnimatedNpcAppearance();
         const SceneRenderer renderer(testMaterials(), {appearance});
-        const NpcWorld npcs(map, {3, 3}, {"test"},
-                            {{{0}, {3, 1}, {0, 0}, Heading::South},
-                             {{0}, {3, 1}, {1, 1}, Heading::West, NpcAnimation::Attack},
-                             {{0}, {3, 1}, {0, 1}, Heading::East, NpcAnimation::Walk},
-                             {{0}, {3, 1}, {1, 0}, Heading::North}});
+        auto npcs = testActors(map, {3, 3}, {"test"},
+                               {{{0}, {3, 1}, {0, 0}, Heading::South},
+                                {{0}, {3, 1}, {1, 1}, Heading::West, NpcAnimation::Attack},
+                                {{0}, {3, 1}, {0, 1}, Heading::East, NpcAnimation::Walk},
+                                {{0}, {3, 1}, {1, 0}, Heading::North}});
         NpcAnimator animator(npcs, {npcTimings(appearance)});
         FramePipeline frames;
         Frame expected, source, destination;
@@ -223,6 +224,37 @@ int main() {
                 okay &= same(frames.frame(), expected);
             }
         }
+        // Exercise authoritative mutations and transient presentation inside the guard.
+        state.player = {{3, 5}, Heading::North};
+        state.transition.elapsed = Transition::duration;
+        ++state.revision;
+        const auto actor = npcs.id(0);
+        for (int i = 0; i < 100; ++i) {
+            okay &= npcs.move(actor, {2, 1}, {0, 0}, state.player.cell).changed;
+            okay &= npcs.face(actor, Heading::West).changed;
+            okay &= npcs.move(actor, {3, 1}, {0, 0}, state.player.cell).changed;
+            okay &= npcs.face(actor, Heading::South).changed;
+            okay &= npcs.move(actor, {3, 1}, {1, 1}, state.player.cell).error == ActorError::Occupied;
+            okay &= npcs.damage({}, 1, 0).error == ActorError::InvalidHandle;
+            animator.setTime(1000);
+            frames.update(renderer, map, state, &npcs, &animator.snapshot());
+        }
+        for (std::size_t i = 0; i < npcs.snapshot().count; ++i) {
+            const auto id = npcs.id(i);
+            okay &= npcs.damage(id, 1, 1100).damage == 1;
+            animator.setTime(1100);
+            frames.update(renderer, map, state, &npcs, &animator.snapshot());
+            okay &= npcs.damage(id, 999, 1150).died;
+            for (const auto ms : {1150u, 1249u, 1250u}) {
+                animator.setTime(ms);
+                frames.update(renderer, map, state, &npcs, &animator.snapshot());
+            }
+            okay &= npcs.remove(id).changed;
+            okay &= npcs.remove(id).error == ActorError::InvalidHandle;
+            animator.setTime(1300);
+            frames.update(renderer, map, state, &npcs, &animator.snapshot());
+        }
+        okay &= !npcs.occupied({3, 1});
         tracking = false;
         check(okay, "Frame pipeline endpoints, idle reuse, and blocked movement");
         check(allocations == 0, "Engine-owned CPU frame work must not allocate");

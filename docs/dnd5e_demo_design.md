@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–02 are Accepted; slice 03 is eligible for planning.
+Status: gameplay roadmap; slices 01–03 are Accepted; slice 04 is eligible for planning.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 02 — Characters and preset party (2026-10-25) |
+| Latest accepted slice | 03 — Mutable monster world (2026-10-25) |
 | Active slice | None |
 | Awaiting user review | None |
-| Blockers | None identified for planning slice 03 |
-| Next eligible slice | 03 — Mutable monster world |
-| Next action | In a clean context, read slice 02's handoff, inspect relevant code, and propose slice 03's implementation plan |
+| Blockers | None identified for planning slice 04 |
+| Next eligible slice | 04 — Party HUD and commands |
+| Next action | In a clean context, read slice 03's handoff, inspect relevant code, and propose slice 04's implementation plan |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -128,13 +128,15 @@ Current implemented foundation, inspected on 2026-10-25:
 - C++17/raylib, discrete movement, prepared wall and NPC images, and deterministic
   capture support. The 640×360 art composition is presented at fixed 1920×1080.
 - A 25×25 test map and four goblin placements sharing one cell's 2×2 subslots.
-- Immutable `NpcWorld` placement/occupancy data, currently bounded to 32 types
-  and 256 instances. There is no live movement, health, AI, or removal.
+- Immutable `NpcWorld` loading data initializes an `ActorWorld`, bounded to 32
+  appearance types and 256 stable actor slots. Checked movement/facing/HP/removal
+  updates live occupancy. No AI or combat resolution exists yet.
 - Idle, walk-in-place, and attack visual loops. `NpcAnimator` uses an absolute
-  clock; the frame pipeline observes movement and animation revisions.
+  clock, including 100 ms white damage/death feedback; the frame pipeline observes
+  movement, actor and animation revisions.
 - Existing CPU correctness/allocation tests and separate desktop GPU checks.
 
-Relevant entry points are `src/world/npc.*`, `src/game/movement.*`,
+Relevant entry points are `src/world/npc.*`, `src/game/actors.*`, `src/game/movement.*`,
 `src/game/npc_animation.*`, `src/render/frame_pipeline.*`, `src/ui/hud.*`, and
 `src/app/application.cpp`. Recheck these when planning; they will evolve.
 
@@ -301,7 +303,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | --- | --- | --- | --- | --- |
 | 01 | [Rules foundation and content](#slice-01-rules-foundation-and-content) | None | Accepted | A |
 | 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Accepted | A |
-| 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Planned | A |
+| 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Accepted | A |
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Planned | A |
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Planned | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Planned | B |
@@ -438,7 +440,7 @@ choose slice 11's inventory size. Milestone A is not yet complete.
 **Acceptance:** 2026-10-25 — User explicitly accepted slice 02: “slice accepted,
 close it so we're ready for the next”. No additional conditions or scope changes
 were requested. Verification limits above remain recorded; milestone A is not yet
-complete. Slice 03 remains Planned.
+complete. At that acceptance checkpoint, slice 03 remained Planned.
 
 ### Slice 03: Mutable monster world
 
@@ -453,7 +455,54 @@ and document any compatibility change. Prepared appearances remain immutable.
 blocked moves, occupied slots, stale references, and resource bounds are handled.
 Existing transitions and no-allocation checks still work.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Review complete (Accepted); 2026-10-25.
+**Approved plan:** User said “Implement the plan.” See [actor design](actors_design.md).
+Placement-only stable runtime actors, checked movement/facing/damage/removal, live
+occupancy and rendering revisions, and scripted checks/captures. User selected
+a brief white flash including lethal hits, then hiding; dead actors immediately
+stop blocking. Preserve prepared rendering and asset formats; no AI or combat UI.
+**Delivered:** `ActorWorld` owns 256 fixed records and live occupancy, initialized
+from placements and catalog monster HP. World-scoped IDs reject foreign/removed
+references; slots never recycle. Checked mutations are atomic and allocation-free.
+Movement queries live occupancy; actor revisions refresh stationary views and
+both transition endpoints. Animation supplies a 100 ms white flash, frozen lethal
+pose, then hiding; death releases occupancy immediately. Original asset formats
+and appearance preparation remain unchanged. Sixteen scripted captures exercise
+mutation without adding gameplay controls.
+**Verification:** Debug/Release builds succeeded without warnings; all 12 CTest
+suites passed in both, including expanded zero-allocation checks. Unknown monster
+binding failed before window initialization. Desktop capture from `/tmp` exited
+cleanly with 115 PNGs; all 99 original captures were pixel-identical. New actor
+captures were visually inspected. GPU lifecycle checks passed. See
+[commands, results and limitations](slice03_verification.md).
+**Review recipe:** Run focused tests and generate the scripted captures described
+in the [user review](slice03_verification.md#user-review); compare move/turn,
+flash/expiry, removal and transition images.
+**Deviations / limitations:** No scope deviation. Normal gameplay initializes actors
+but exposes no mutation controls; scenarios exercise them explicitly. No spawning,
+AI, attack resolution, loot/rewards, hurt/death clips, or general session clock.
+No manual interactive movement recheck, Windows/macOS execution, scale benchmark,
+or combat playtest was performed.
+**Next-agent handoff:** Slice 03 was accepted on 2026-10-25. Slice 04 is now
+eligible for planning in a clean context; inspect party/actor snapshots, existing
+HUD/presenter, input/aspect-fit mapping, and application orchestration, then
+propose its implementation plan for user review before implementing it. The map
+and catalog must outlive the noncopyable/nonmovable actor owner. Actor IDs contain a
+unique world identity and stable slot; dead records are readable, removed ones
+fail lookup, and neither can act. Spatial subslots may be reused by other living
+actors; removing an old dead record must not clear its replacement's occupancy.
+Pass the controller's committed logical cell to actor movement. Apply mutations
+before sampling `NpcAnimator` on the same elapsed-time axis as damage cues, then
+compose; stale/foreign animation snapshots are rejected. Rendering uses stable
+slot indices, including terminal records. Death is simulation-owned and unblocks
+immediately, independently of the flash. Existing static/animated asset JSON is
+unchanged; each appearance type string must resolve to a catalog monster ID.
+The optional no-animation render path hides dead actors immediately. Slice 04
+remains Planned and eligible for planning; milestone A is incomplete.
+**Acceptance:** 2026-10-25 — User explicitly accepted slice 03: “I accept this
+slice, close it up so were ready for the next”. No additional conditions or scope
+changes were requested. Verification limits above remain recorded. Milestone A
+is not yet complete; slice 04 has not started.
 
 ### Slice 04: Party HUD and commands
 

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "game/actors.hpp"
 #include "world/map.hpp"
-#include "world/npc.hpp"
 #include <cstdint>
 #include <optional>
 
@@ -17,7 +17,7 @@ struct Player {
 inline bool operator==(const Player& a, const Player& b) {
     return a.cell == b.cell && a.heading == b.heading;
 }
-bool tryAction(const Map& map, Player& player, Action action, const NpcWorld* npcs = nullptr);
+bool tryAction(const Map& map, Player& player, Action action, const ActorWorld* npcs = nullptr);
 struct Transition {
     static constexpr float duration = 0.160f;
     Player from{}, to{};
@@ -36,8 +36,8 @@ class Controller {
   public:
     explicit Controller(Player spawn = {}) { state_.player = spawn; }
     const MovementState& state() const noexcept { return state_; }
-    void submit(const Map& map, Action action, bool fresh = true, const NpcWorld* npcs = nullptr);
-    void update(const Map& map, float seconds, const NpcWorld* npcs = nullptr);
+    void submit(const Map& map, Action action, bool fresh = true, const ActorWorld* npcs = nullptr);
+    void update(const Map& map, float seconds, const ActorWorld* npcs = nullptr);
     void clearPending() noexcept { pending_.reset(); }
     void setAnimated(bool enabled);
 

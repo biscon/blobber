@@ -27,31 +27,43 @@ std::uint8_t sample(const NpcClipTiming& clip, std::uint64_t time, std::uint32_t
     return 0;
 }
 } // namespace
-NpcAnimator::NpcAnimator(const NpcWorld& world, const std::vector<NpcTimings>& timings) : world_(world) {
-    if (timings.size() != world.typeCount())
+NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings) : world_(world) {
+    if (timings.size() != world.snapshot().typeCount)
         throw std::invalid_argument("NPC animation/world type counts differ");
     for (std::size_t i = 0; i < timings.size(); ++i) {
         validateNpcTimings(timings[i]);
         timings_[i] = timings[i];
     }
-    for (const auto& npc : world.instances())
+    for (std::size_t i = 0; i < world.snapshot().count; ++i) {
+        const auto& npc = world.snapshot().actors[i].npc;
         if (!timings_[npc.type.index][static_cast<std::size_t>(npc.animation)].count)
             throw std::runtime_error("NPC placement selects an absent animation");
-    snapshot_.count = world.instances().size();
+    }
+    snapshot_.count = world.snapshot().count;
+    snapshot_.world = world.snapshot().world;
     setTime(0);
 }
 void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
     bool changed = false;
     for (std::size_t i = 0; i < snapshot_.count; ++i) {
-        const auto& npc = world_.instances()[i];
+        const auto& actor = world_.snapshot().actors[i];
+        const auto& npc = actor.npc;
         const auto& timings = timings_[npc.type.index];
-        const NpcFrameSelection next{
-            sample(timings[static_cast<std::size_t>(npc.animation)], elapsedMs, npc.phaseMs),
-            sample(timings[0], elapsedMs, npc.phaseMs)};
+        const bool flash = actor.life != ActorLife::Removed && actor.hasDamage &&
+                           elapsedMs >= actor.damageTimeMs && elapsedMs - actor.damageTimeMs < npcHitFlashMs;
+        const bool visible = actor.life == ActorLife::Alive || flash;
+        const auto time = actor.life == ActorLife::Dead ? actor.damageTimeMs : elapsedMs;
+        NpcFrameSelection next{0, 0, visible, flash};
+        if (visible) {
+            next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, npc.phaseMs);
+            next.idle = sample(timings[0], time, npc.phaseMs);
+        }
         auto& old = snapshot_.frames[i];
-        changed |= old.active != next.active || old.idle != next.idle;
+        changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||
+                   old.flash != next.flash;
         old = next;
     }
+    snapshot_.actorRevision = world_.snapshot().revision;
     if (changed)
         ++snapshot_.revision;
 }
