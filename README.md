@@ -163,6 +163,12 @@ The full presentation uses a 640×360 pixel-art grid. The viewport is 500×272 a
 `(132, 8)`, with sidebar controls and four portrait panels below. That composition
 is enlarged exactly 3× into a **1920×1080 render texture**. Finally that texture
 is fitted to the actual framebuffer, centered with black bars and point filtering.
+A separate transparent 1920×1080 text layer uses bilinear filtering during that
+final fit, preserving thin font strokes in smaller windows without softening art.
+HUD text is drawn directly onto its 1920×1080 text target using the supplied fonts:
+IBM Plex Sans for controls/labels and Inconsolata for the log. Each face/size has
+its own atlas (21/24/27 px), used at its exact raster size with rounded positions.
+`assets/fonts` is copied beside the executable and is required for custom assets.
 Window resizing never changes the logical resolution, perspective, or UI layout.
 At noninteger scales, pixel widths necessarily vary slightly to fill the fitted area.
 

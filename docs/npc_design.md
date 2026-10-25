@@ -109,6 +109,15 @@ of a clip share timing. Idle/walk require all four views; attack may omit non-fr
 views, which use directional idle on its own timeline. Legacy `views` definitions
 remain one-frame idle. Definitions cannot mix `views` and `animations`.
 Placement adds optional `animation` (default idle) and `phase_ms` (default zero).
+Zero uses an automatic idle phase derived once at animator construction from the
+stable actor slot: a golden-ratio fractional sequence scaled to that type's idle
+cycle. Slot zero stays unshifted; nonzero authored phases are preserved exactly.
+A fixed-capacity phase array keeps playback allocation-free. Movement, visibility,
+removal, and rebuilding a world do not change surviving actors' phases. Active
+idle and directional idle fallback share this offset; walk/attack retain their
+authored phase. Death freezes the phased pose at hit time without shifting the
+100 ms flash lifetime. Headless animation tests cover staggered transitions,
+reconstruction, explicit phases, mutation stability, and death-flash boundaries.
 The authored clips remain presentation loops. Controlled movement, turning and
 damage now belong to the actor owner; no autonomous AI or combat resolver exists.
 

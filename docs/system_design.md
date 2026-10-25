@@ -1,11 +1,19 @@
 # System design
 
-Implemented, Ready for review (acceptance pending): slice 04
+Implemented and accepted by the user (2026-10-25): slice 04
 [party HUD and command design](party_hud_design.md). Four portraits, command
 previews, visible-body targeting and a bounded log read the existing party/actor
 state; no combat resolution or resource spending is integrated. Explicit UI demo
 scenarios keep sample mana/status values separate from authoritative party state.
-See [slice 04 verification](slice04_verification.md).
+See [slice 04 verification](slice04_verification.md). The typography correction uses
+size-specific font atlases and native 1920×1080 text over the enlarged art,
+with rounded text positions. The HUD design records the live-animation correction:
+interactive demo clocks advance; capture clocks remain explicit, and automatic
+idle phase offsets prevent default-placed actors from moving in lockstep. The UI
+demo prepares its own idle-only placement copy, shared by interactive and
+capture scenarios, so stationary actors do not inherit showcase walk/attack loops.
+Expanded log layout packs entries by their measured wrapped line height,
+with a small inter-entry gap and bounded drawing inside the panel.
 
 Implemented and accepted by the user (2026-10-25):
 slice 03, [mutable monster world](actors_design.md).
@@ -81,8 +89,16 @@ checks and limits.
   It owns selection, bounded target membership, a 32×192-byte log and a fixed HUD
   snapshot. Focus/edge handling and aspect-fit hit testing are CPU-testable.
 - **Presentation:** the HUD draws from movement, map and command snapshots; the presenter
-  owns handles for the viewport texture and two targets. It retains the 640×360
-  art grid → 1920×1080 texture → aspect-fit framebuffer path.
+  owns handles for the viewport texture and three targets. It retains the 640×360
+  art grid → 1920×1080 texture → aspect-fit framebuffer path. HUD geometry stays
+  on the art grid; text is drawn at native resolution onto a separate transparent
+  1920×1080 target. Final aspect-fit sampling uses point filtering for art and
+  bilinear filtering only for premultiplied text, preserving strokes when reduced.
+  Captures temporarily composite both layers into an owned diagnostic target.
+  Four startup-loaded RAII font atlases provide Plex Sans regular 21/24 px, bold
+  27 px, and Inconsolata 24 px for logs; every draw/measurement uses its atlas
+  base size. Font ownership is separate from the generic texture registry and
+  ends before window shutdown, including partial loading failures.
 - **Application/tools:** option parsing, loading, scheduling, and lifecycle only.
   Captures are an explicit diagnostic mode with startup-prepared cases; output paths, filesystem work and image export are not normal gameplay frame work.
 

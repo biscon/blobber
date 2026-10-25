@@ -61,7 +61,7 @@ add_library(blobber_assets_io src/assets/material_loader.cpp src/assets/npc_load
 target_link_libraries(blobber_assets_io PUBLIC blobber_render PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
-    src/platform/presenter.cpp src/ui/hud.cpp)
+    src/platform/presenter.cpp src/ui/hud.cpp src/ui/fonts.cpp)
 target_link_libraries(blobber_platform PUBLIC blobber_render)
 add_executable(blobber src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/ui_demo.cpp)
 target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
@@ -77,6 +77,8 @@ foreach(target blobber_rules blobber_rules_io blobber_core blobber_render blobbe
 endforeach()
 
 add_custom_target(blobber_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" "$<TARGET_FILE_DIR:blobber>/assets/fonts"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules" "$<TARGET_FILE_DIR:blobber>/assets/rules"
     COMMAND ${CMAKE_COMMAND} -E copy_directory

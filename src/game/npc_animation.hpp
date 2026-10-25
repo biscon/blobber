@@ -33,6 +33,7 @@ class NpcAnimator {
   private:
     const ActorWorld& world_;
     std::array<NpcTimings, NpcWorld::maxTypes> timings_{};
+    std::array<std::uint32_t, NpcWorld::maxInstances> idlePhases_{};
     NpcAnimationSnapshot snapshot_;
 };
 } // namespace blobber

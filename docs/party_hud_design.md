@@ -1,6 +1,6 @@
 # Party HUD and commands — slice 04
 
-Status: implemented; Ready for review, user acceptance pending (2026-10-25).
+Status: implemented and accepted by the user, including all review corrections (2026-10-25).
 The user approved the slice 04 plan with “Implement the plan.”
 
 ## Boundaries and ownership
@@ -15,7 +15,7 @@ strings are borrowed for their session lifetime, never copied per frame.
 
 Four bottom portrait cards follow formation order. The sidebar contains compact
 location information, six actions, four paged target rows, confirmation feedback,
-and a scrollable log. Clicking LOG opens a five-entry panel for full messages;
+and a scrollable log. Clicking LOG opens a compact, word-wrapped panel for full messages;
 scrolling works on either log surface. Placeholder silhouettes are drawn with existing facilities.
 The 500×272 viewport, 640×360 art grid and 1920×1080 presentation remain unchanged.
 Active character means UI selection, not initiative. Normal cards show real HP,
@@ -75,8 +75,9 @@ validation and unchanged state, focus/held input, layout mapping, capacity,
 transparency/overlap/walls/shadows/dead flash, cache refresh and transitions.
 Extend allocation checks through command, log, input, snapshot and picking paths.
 Run Debug/Release CTest and available GPU, deterministic capture and interactive
-desktop checks. Record unexecuted checks honestly. End at Ready for review, with
-slice 05 untouched and user acceptance pending.
+desktop checks. Record unexecuted checks honestly. Implementation stopped at
+Ready for review; the user accepted slice 04 on 2026-10-25. Slice 05 remains
+unstarted and is now eligible for its own planning session.
 
 
 ## Delivered interfaces and diagnostic lifetime
@@ -96,8 +97,7 @@ slice 05 untouched and user acceptance pending.
   target/log/development overlays; unchanged dungeon frames skip uploads.
 - `app/ui_demo.*`: eight isolated scenarios with fresh actors, movement, animator,
   frames and command owner per scenario. The shared prepared renderer is reused.
-  Scenario preparation may allocate; ordinary frame operations do not. Demo time
-  stays at 700 ms. Camera chooses an unoccupied adjacent cell facing a placement;
+  Scenario preparation may allocate; ordinary frame operations do not. Captures use 700 ms; interactive time advances from 700 ms for each scenario. Camera chooses an unoccupied adjacent cell facing a placement;
   absent targets produce normal missing-target feedback. F2 advances, F3 resets.
   Only the removal scenario mutates its diagnostic actor owner. Production party
   resources are always borrowed unchanged. Mana values are examples, not a rule.
@@ -106,3 +106,107 @@ The user-approved scope is unchanged. The expandable log is a readability detail
 within the bounded log requirement. No new catalog schema, rules source data,
 combat controller, session clock or production RNG was introduced.
 See [verification and review](slice04_verification.md). Slice 05 is not started.
+
+
+## Typography review correction (2026-10-25)
+
+Requested: use supplied Inconsolata for log text and IBM Plex Sans for buttons and
+labels, reduce text size, rasterize every used face/size separately, and pass only
+rounded coordinates to raylib text drawing. Implemented correction: keep HUD
+geometry and the dungeon on the 640×360 art surface, but draw HUD text after that
+surface is enlarged onto the fixed 1920×1080 target. This avoids magnifying a tiny
+TTF atlas. Font sizes are native target pixels: Plex Sans regular 24 for controls,
+regular 21 for small labels, Plex Sans bold 27 for headings/names, Inconsolata 24
+for log entries. Each face/size owns its own startup-loaded raylib Font. DrawTextEx
+and MeasureTextEx always use the matching baseSize; drawing rounds target-space
+coordinates and uses integer spacing. Layout/hit rectangles remain in art units.
+
+Presenter owns a fixed UiFonts set, whose noncopyable RAII font members unload
+before the window closes, including partial startup failure. Missing/invalid fonts
+fail with their asset path instead of silently using raylib's default. Fonts copy
+beside the executable through the existing asset target and honor --assets.
+No live font loading, font-size synthesis or frame-time heap storage is introduced.
+Validation passed: all 14 Debug/Release suites; all four font atlases loaded and
+unloaded on the desktop; an isolated missing-bold startup failed explicitly and
+released the two atlases already loaded. Inspected updated normal/expanded-log/
+status captures and compared 114 unoverlaid dungeon viewports (pixel-identical).
+Size-specific widths drive wrapping/truncation, including measured ellipses for
+proportional text. Font glyph storage is the default 95 printable ASCII glyphs,
+matching the existing content text contract. Font files remain unmodified.
+
+
+Resized-window correction: native text must not inherit the dungeon's point
+minification, which discards thin antialiased glyph strokes at 720p. Implemented one fixed
+1920×1080 transparent text target (a third persistent target). Text remains drawn
+at exact atlas sizes and integer positions; only final aspect-fit resampling uses
+bilinear filtering for that layer. The art/game targets retain point filtering.
+Use separate RGB/alpha blending when producing premultiplied text, then premultiplied
+compositing so glyph edges are not darkened twice. Captures composite both layers
+at native resolution into a temporary diagnostic target, released immediately;
+this allocation is outside the frame path. Inspected the corrected 720p/letterboxed text and map overlay on desktop;
+the final native capture comparison checks that layering preserves glyph colors
+and unoverlaid dungeon pixels.
+
+
+Button alignment follow-up (implemented): replaced the default-font-era fixed y offsets with
+vertical centering from the selected atlas's actual glyph ink bounds (offsetY
+through offsetY + bitmap height, ignoring whitespace). Center in the shared
+button rectangle, then round only at the final target-pixel draw boundary.
+Applied to action rows, target rows, paging arrows, preview and demo controls; use
+the same alignment band for their adjacent labels. Retain horizontal text insets
+and existing hit rectangles. Measured top/bottom ink margins in the native capture
+for all 15 button labels: equal within one pixel.
+
+
+## Live demo animation review correction (2026-10-25)
+
+The interactive demo incorrectly reused the capture-only fixed 700 ms clock.
+Scenario construction/captures stay at 700 ms; animation samples 700 ms plus
+per-scenario elapsed wall time during interactive play, before frame/picking/HUD
+refresh. F2/F3 reconstruct a scenario and restart its visual clock. This remains
+presentation time, follows normal application's focus behavior, and introduces no
+combat phase/cost clock. NpcAnimator now supplies stable automatic idle offsets for
+placements with phase_ms zero/default. A nonzero authored phase remains exact.
+Offsets depend only on immutable slot and idle cycle, not world identity, pose,
+visibility or wall-clock/random seed; movement/removal never rephase survivors.
+Attack/walk clip phases retain their existing authored timing. Directional idle
+fallback shares the actor's idle offset. Lethal flashes freeze the same offset
+pose at hit time; their 100 ms lifetime never uses animation phase offsets.
+
+Fixed-capacity per-slot idle phase storage is computed during preparation. It derives
+well-spaced phases using the fractional golden-ratio sequence over stable slot
+indices, scaled into the idle cycle; slot zero retains phase zero. Modulo
+arithmetic remains overflow-safe for uint64 timestamps. Regression tests cover
+distinct transition times, deterministic world reconstruction, explicit phases,
+mutation stability, idle fallback and frozen death poses. All 14 Debug/Release
+suites pass, including allocation tests. Inspected live desktop frames and
+fixed-time captures; see [verification](slice04_verification.md#live-demo-animation-review-correction).
+
+
+### Idle-only UI demo follow-up
+
+The UI scenarios show idle actors while movement/combat are absent. Preparation
+creates an isolated copy of loaded placements in app/ui_demo.cpp, preserving type IDs,
+slot order, transforms and phases while selecting Idle for every instance. Both
+interactive scenarios and UI captures use this copy. ActorWorld copies it
+during construction; no mutable actor API or frame-time work is needed. Existing
+non-UI animation showcase assets and captures keep their authored clip choices.
+Debug/Release builds and four focused suites passed. Inspected live idle playback
+and fixed-time UI captures; all 114 non-UI captures remain unchanged from the
+previous animation correction. Retained HUD screenshots are refreshed.
+
+
+### Compact expanded log follow-up
+
+The five fixed 39-art-pixel entry slots are replaced with a flowing layout. The
+allocation-free, font-measured wrapper returns its consumed line height;
+subsequent entries begin immediately after that height plus a two-art-pixel gap.
+Entries draw newest-first from the existing entry scroll offset until the content
+area is full. Wrapping prefers word boundaries, breaks overlong tokens at a
+character boundary, and honors explicit newlines. A partially visible last entry is fully readable by
+scrolling it to the top; no text may cross the panel's bottom inset. The
+sidebar's one-line preview remains unchanged. No command/log-storage or
+scrolling-state changes. Verified live scrolling and captures with both short and
+two-line entries using a temporary content fixture; exact-size rasterization is
+retained. The panel fits 16 one-line entries at 36 native pixels per entry,
+compared with five entries at 117 pixels before this correction.

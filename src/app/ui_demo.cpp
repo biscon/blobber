@@ -3,11 +3,22 @@
 #include "ui/interaction.hpp"
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 namespace blobber {
 namespace {
 constexpr const char* names[]{"ui-default",     "ui-melee-preview", "ui-back-row",       "ui-missing-target",
                               "ui-unavailable", "ui-sample-status", "ui-target-removed", "ui-log-overflow"};
 constexpr int scenarioCount = sizeof(names) / sizeof(names[0]);
+NpcWorld idlePlacements(const Map& map, const NpcWorld& source) {
+    auto instances = source.instances();
+    for (auto& npc : instances)
+        npc.animation = NpcAnimation::Idle;
+    std::vector<std::string> types;
+    types.reserve(source.typeCount());
+    for (std::size_t i = 0; i < source.typeCount(); ++i)
+        types.push_back(source.typeId({static_cast<std::uint16_t>(i)}));
+    return NpcWorld(map, Player{}.cell, std::move(types), std::move(instances));
+}
 Player camera(const Map& map, const ActorWorld& actors) {
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         for (const auto h : {Heading::North, Heading::East, Heading::South, Heading::West}) {
@@ -103,8 +114,9 @@ struct Scenario {
 void captureUi(const Map& map, const Party& party, const rules::Catalog& catalog, const NpcWorld& placements,
                const std::vector<NpcTimings>& timings, const SceneRenderer& renderer, Presenter& presenter,
                const std::filesystem::path& directory) {
+    const auto idle = idlePlacements(map, placements);
     for (int i = 0; i < scenarioCount && !WindowShouldClose(); ++i) {
-        Scenario scenario(i, map, party, catalog, placements, timings, renderer);
+        Scenario scenario(i, map, party, catalog, idle, timings, renderer);
         presenter.present(scenario.frames.frame(), scenario.movement.state(), map, false, true,
                           &scenario.commands.snapshot(), scenario.frames.picking());
         presenter.capture(directory / (std::string(names[i]) + ".png"));
@@ -112,10 +124,12 @@ void captureUi(const Map& map, const Party& party, const rules::Catalog& catalog
 }
 void runUiDemo(const Map& map, const Party& party, const rules::Catalog& catalog, const NpcWorld& placements,
                const std::vector<NpcTimings>& timings, const SceneRenderer& renderer, Presenter& presenter) {
+    const auto idle = idlePlacements(map, placements);
     int index = 0;
     Input input; // Keep edge latches across scenario preparation, including held next/reset.
     while (!WindowShouldClose()) {
-        Scenario scenario(index, map, party, catalog, placements, timings, renderer);
+        Scenario scenario(index, map, party, catalog, idle, timings, renderer);
+        const double animationStart = GetTime();
         bool debug = false, first = true;
         while (!WindowShouldClose()) {
             const float dt = std::min(GetFrameTime(), 0.1f);
@@ -140,7 +154,8 @@ void runUiDemo(const Map& map, const Party& party, const rules::Catalog& catalog
                 scenario.movement.submit(map, *sample.action, sample.fresh, &scenario.actors);
             if (!(previousPose == scenario.movement.state().player))
                 scenario.commands.movementStarted();
-            // Fixed animation time makes the explicit development environment reproducible.
+            // Captures stay at 700 ms; interactive scenarios advance from that pose.
+            scenario.animator.setTime(700 + static_cast<std::uint64_t>((GetTime() - animationStart) * 1000));
             const bool changed = scenario.refresh(debug, ui.focused);
             const auto* picking = scenario.frames.picking();
             const auto hit = picking && ui.pointer

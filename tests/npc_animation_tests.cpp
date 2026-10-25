@@ -66,6 +66,63 @@ void timing() {
     none.setTime(huge);
     check(none.snapshot().count == 0 && none.snapshot().revision == 0, "Empty world clock");
 }
+void staggeredIdle() {
+    const std::vector<NpcInstance> placements{{{0}, {3, 3}, {0, 0}, Heading::South},
+                                              {{0}, {3, 3}, {1, 0}, Heading::South},
+                                              {{0}, {3, 3}, {0, 1}, Heading::South},
+                                              {{0}, {3, 3}, {1, 1}, Heading::South, NpcAnimation::Idle, 60},
+                                              {{0}, {4, 3}, {0, 0}, Heading::South, NpcAnimation::Attack}};
+    auto actors = testActors(map, {3, 5}, {"test"}, placements);
+    auto rebuilt = testActors(map, {3, 5}, {"test"}, placements);
+    const auto metadata = npcTimings(testAnimatedNpcAppearance());
+    NpcAnimator animator(actors, {metadata}), repeat(rebuilt, {metadata});
+    std::array<int, 3> firstChange{{-1, -1, -1}};
+    const auto initial = animator.snapshot().frames;
+    for (std::uint64_t time = 0; time <= 120; ++time) {
+        animator.setTime(time);
+        repeat.setTime(time);
+        for (std::size_t i = 0; i < placements.size(); ++i) {
+            const auto& frame = animator.snapshot().frames[i];
+            const auto& again = repeat.snapshot().frames[i];
+            check(frame.active == again.active && frame.idle == again.idle,
+                  "Reconstructed worlds have deterministic phases despite different world IDs");
+            if (i < 3 && frame.active != initial[i].active && firstChange[i] < 0)
+                firstChange[i] = static_cast<int>(time);
+            if (i < 4)
+                check(frame.active == frame.idle, "Idle playback and directional fallback share phase");
+        }
+        check(animator.snapshot().frames[3].active == ((time + 60) % 120 >= 60),
+              "Explicit idle phase overrides automatic staggering");
+        const auto attack = time < 70 ? 0 : time < 95 ? 1 : time < 120 ? 2 : 3;
+        check(animator.snapshot().frames[4].active == attack,
+              "Automatic idle staggering does not alter authored attack timing");
+    }
+    check(firstChange[0] > 0 && firstChange[1] > 0 && firstChange[2] > 0 &&
+              firstChange[0] != firstChange[1] && firstChange[0] != firstChange[2] &&
+              firstChange[1] != firstChange[2],
+          "Default idle actors transition at different times within one cycle");
+    check(bool(actors.remove(actors.id(0))), "Remove earlier slot");
+    check(bool(actors.move(actors.id(1), {2, 3}, {0, 0}, {3, 5})), "Move phased actor");
+    for (std::uint64_t time = 0; time < 120; ++time) {
+        animator.setTime(time);
+        repeat.setTime(time);
+        for (std::size_t i = 1; i < placements.size(); ++i)
+            check(animator.snapshot().frames[i].idle == repeat.snapshot().frames[i].idle,
+                  "Movement and removal preserve surviving idle phases, including attack fallback");
+    }
+    animator.setTime(53);
+    const auto frozen = animator.snapshot().frames[1];
+    check(actors.damage(actors.id(1), 7, 53).died, "Lethal damage fixture");
+    for (std::uint64_t time : {53u, 100u, 152u}) {
+        animator.setTime(time);
+        const auto& frame = animator.snapshot().frames[1];
+        check(frame.visible && frame.flash && frame.active == frozen.active && frame.idle == frozen.idle,
+              "Death flash holds the staggered pose from hit time");
+    }
+    animator.setTime(153);
+    check(!animator.snapshot().frames[1].visible && !animator.snapshot().frames[1].flash,
+          "Idle phase does not shift the 100 ms death flash lifetime");
+}
 void rendering() {
     const auto appearance = testAnimatedNpcAppearance();
     const auto npcs = world(NpcAnimation::Attack);
@@ -158,6 +215,7 @@ void rendering() {
 int main() {
     try {
         timing();
+        staggeredIdle();
         rendering();
         std::cout << "NPC animation checks passed\n";
     } catch (const std::exception& error) {

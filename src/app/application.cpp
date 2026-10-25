@@ -42,7 +42,7 @@ int run(int argc, char** argv) {
     CommandController commands(party, npcs);
     // Declaration order guarantees all GPU resources die before the window/context.
     const Window window(options.width, options.height);
-    Presenter presenter;
+    Presenter presenter(options.assets);
     if (!options.captureDirectory.empty()) {
         std::filesystem::create_directories(options.captureDirectory);
         const auto shots = makeCaptures();

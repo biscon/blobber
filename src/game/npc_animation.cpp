@@ -38,6 +38,14 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
         const auto& npc = world.snapshot().actors[i].npc;
         if (!timings_[npc.type.index][static_cast<std::size_t>(npc.animation)].count)
             throw std::runtime_error("NPC placement selects an absent animation");
+        std::uint32_t cycle = 0;
+        const auto& idle = timings_[npc.type.index][0];
+        for (std::size_t frame = 0; frame < idle.count; ++frame)
+            cycle += idle.durationMs[frame];
+        // A golden-ratio sequence spreads stable slots around the idle cycle.
+        // Explicit phases override it; slot zero retains the unshifted timeline.
+        const auto fraction = static_cast<std::uint32_t>(i) * 0x9e3779b9u;
+        idlePhases_[i] = npc.phaseMs ? npc.phaseMs : (std::uint64_t(fraction) * cycle) >> 32;
     }
     snapshot_.count = world.snapshot().count;
     snapshot_.world = world.snapshot().world;
@@ -55,8 +63,9 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
         const auto time = actor.life == ActorLife::Dead ? actor.damageTimeMs : elapsedMs;
         NpcFrameSelection next{0, 0, visible, flash};
         if (visible) {
-            next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, npc.phaseMs);
-            next.idle = sample(timings[0], time, npc.phaseMs);
+            const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
+            next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
+            next.idle = sample(timings[0], time, idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||
