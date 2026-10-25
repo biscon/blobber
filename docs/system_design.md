@@ -5,13 +5,20 @@ It defines sixteen individually reviewed slices toward a four-character goblin
 combat demo. Slice 01's [rules foundation](rules_design.md) is implemented and
 accepted by the user (2026-10-25): explicitly seeded dice, pure attack/save/damage rules,
 and an immutable catalog loaded from bounded JSON before image preparation.
-The application owns the catalog for the session; no combat/actor integration
-exists yet. Rules are graphics-independent, JSON stays in a separate I/O library,
+The application owns the catalog and starting party for the session; no combat/actor
+integration exists yet. Rules are graphics-independent, JSON stays in a separate I/O library,
 and typed catalog indices are stable for one non-recycled catalog lifetime.
 The [source ledger](srd_content_ledger.md) records adopted SRD data and adaptations.
 The roadmap owns delivery
 status, user decisions, verification records, and handoff notes; this overview
 continues to describe implemented systems and must be updated as slices land.
+
+Implemented and accepted by the user (2026-10-25):
+[characters and preset party](characters_design.md) is slice 02. Independent race/class/item definitions and an editable preset feed
+pure stat derivation and a bounded four-character owner. It initializes HP, Hit
+Dice, XP, and relative formation before world/image preparation. The party exposes
+const state and checked formation swaps; combat, resource spending, inventory
+transactions, and mana are deferred. See [slice 02 verification](slice02_verification.md).
 
 NPC extension: [directional sprites and slow animation](npc_design.md) is implemented.
 It adds immutable level NPC data, whole-cell occupancy collision, JSON assets,
@@ -30,6 +37,12 @@ checks and limits.
   owner with typed definition indices and a per-cell occupancy mask; grid directions and
   coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
+- **Party/rules:** immutable catalog values feed pure, allocation-free character
+  derivation. A four-character party owns starting builds/gear, derived caches,
+  resources, and a formation permutation. Typed character/item indices never
+  recycle; formation swaps preserve identities and resources. JSON/loading stays
+  outside game code. Schema 2 adds party content; strict schema 1 remains readable
+  as rules-only content, but startup requires a preset.
 - **Movement:** owns player pose, one pending command, transition state, and a
   revision counter. Exposes a const state snapshot; consumers cannot mutate its
   invariants. Key repetition is a separate graphics-independent input component.
@@ -72,6 +85,15 @@ Each 500×272 RGBA frame allocates once, is move-only, and cannot resize. The li
 pipeline owns three frames (about 1.56 MiB), reusing them across idle, movement,
 collision, NPC alpha composition, and transitions. Composition copies pixels but
 never allocates output storage. Input buffers at most one fresh command. UI formatting uses stack buffers.
+
+Party storage is four records with up to 16 owned starting item entries each,
+not the future inventory grid. Definitions allow 16 races, 16 classes, and 64
+items; exceeding a bound rejects preparation. Equipment borrows owned entries,
+weight uses integer hundredths of pounds and int64 totals, and derived stats use
+fixed arrays. Party construction may copy strings; steady-state callers borrow
+its const snapshot. The application keeps the catalog alive and unmoved until
+after party destruction. Character IDs are party-local, owned-item IDs are
+character-local, and catalog IDs remain catalog-local.
 
 The GPU registry holds up to eight standalone textures and four render targets.
 Handles include a typed slot index and generation. Invalid/stale lookup returns
@@ -120,9 +142,13 @@ Debug/Release presets stay CLion-compatible.
 - NPC tests: bounded JSON loading, generated sprites, 2x2 occupancy and collision,
   four view sectors, scale/grounding, transparent overlap, viewport clipping,
   and wall occlusion against independent ray/block intersections.
+- Party/rules tests: deterministic dice, strict versioned content, independent
+  race/class builds, armor/weapon/weight calculations, initialized resources,
+  formation identity, and rejected invalid input. Routine fixtures own their data;
+  shipped content and startup validation are checked separately.
 - Allocation regression: enable an allocation counter after preparation, exercise
   first and subsequent moves, all transitions, blocked/queued input, and held/advancing NPC
-  frames, and require zero C++ allocations in the normal CPU frame path.
+  frames, rules/party queries and formation swaps, and require zero C++ allocations in the normal CPU frame path.
 - Desktop integration: check actual GPU handle creation/release and presentation,
   produce the same deterministic captures, and compare them with the baseline.
   Capture/export allocations are intentionally excluded from the frame guarantee.
@@ -136,8 +162,8 @@ Historical techniques and visual choices are documented in [research](research.m
 | Location | Responsibility |
 | --- | --- |
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
-| `src/rules/` | Deterministic dice, pure attack/save/damage resolution, immutable typed content catalog |
-| `src/game/` | Discrete movement, collision decisions, animation state |
+| `src/rules/` | Deterministic dice, pure attack/save/damage and character derivation, immutable typed content catalog |
+| `src/game/` | Discrete movement, collision decisions, animation state, bounded party/resources/formation |
 | `src/input/` | Platform-independent key repeat timing |
 | `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
 | `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |

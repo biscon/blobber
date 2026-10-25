@@ -1,29 +1,499 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "attacks": [
     {
       "id": "goblin.scimitar",
       "kind": "melee",
       "attack_bonus": 4,
-      "damage": { "count": 1, "sides": 6, "modifier": 2, "type": "slashing" }
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "modifier": 2,
+        "type": "slashing"
+      }
     },
     {
       "id": "goblin.shortbow",
       "kind": "ranged",
       "attack_bonus": 4,
-      "damage": { "count": 1, "sides": 6, "modifier": 2, "type": "piercing" }
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "modifier": 2,
+        "type": "piercing"
+      }
     }
   ],
   "monsters": [
     {
       "id": "goblin",
       "abilities": {
-        "strength": 8, "dexterity": 14, "constitution": 10,
-        "intelligence": 10, "wisdom": 8, "charisma": 8
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 10,
+        "intelligence": 10,
+        "wisdom": 8,
+        "charisma": 8
       },
       "armor_class": 15,
       "hit_points": 7,
-      "attacks": ["goblin.scimitar", "goblin.shortbow"]
+      "attacks": [
+        "goblin.scimitar",
+        "goblin.shortbow"
+      ]
     }
-  ]
+  ],
+  "races": [
+    {
+      "id": "human",
+      "name": "Human",
+      "ability_increases": {
+        "strength": 1,
+        "dexterity": 1,
+        "constitution": 1,
+        "intelligence": 1,
+        "wisdom": 1,
+        "charisma": 1
+      },
+      "hit_points_per_level": 0,
+      "weapons": []
+    },
+    {
+      "id": "hill_dwarf",
+      "name": "Hill Dwarf",
+      "ability_increases": {
+        "strength": 0,
+        "dexterity": 0,
+        "constitution": 2,
+        "intelligence": 0,
+        "wisdom": 1,
+        "charisma": 0
+      },
+      "hit_points_per_level": 1,
+      "weapons": [
+        "battleaxe",
+        "handaxe",
+        "light_hammer",
+        "warhammer"
+      ]
+    },
+    {
+      "id": "lightfoot_halfling",
+      "name": "Lightfoot Halfling",
+      "ability_increases": {
+        "strength": 0,
+        "dexterity": 2,
+        "constitution": 0,
+        "intelligence": 0,
+        "wisdom": 0,
+        "charisma": 1
+      },
+      "hit_points_per_level": 0,
+      "weapons": []
+    },
+    {
+      "id": "high_elf",
+      "name": "High Elf",
+      "ability_increases": {
+        "strength": 0,
+        "dexterity": 2,
+        "constitution": 0,
+        "intelligence": 1,
+        "wisdom": 0,
+        "charisma": 0
+      },
+      "hit_points_per_level": 0,
+      "weapons": [
+        "longsword",
+        "shortsword",
+        "shortbow",
+        "longbow"
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "fighter",
+      "name": "Fighter",
+      "hit_die": 10,
+      "saves": [
+        "strength",
+        "constitution"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "armor": [
+        "light",
+        "medium",
+        "heavy",
+        "shield"
+      ],
+      "allows_defense": true
+    },
+    {
+      "id": "cleric",
+      "name": "Cleric",
+      "hit_die": 8,
+      "saves": [
+        "wisdom",
+        "charisma"
+      ],
+      "weapons": [
+        "simple"
+      ],
+      "armor": [
+        "light",
+        "medium",
+        "shield"
+      ],
+      "allows_defense": false
+    },
+    {
+      "id": "rogue",
+      "name": "Rogue",
+      "hit_die": 8,
+      "saves": [
+        "dexterity",
+        "intelligence"
+      ],
+      "weapons": [
+        "simple",
+        "longsword",
+        "rapier",
+        "shortsword",
+        "hand_crossbow"
+      ],
+      "armor": [
+        "light"
+      ],
+      "allows_defense": false
+    },
+    {
+      "id": "wizard",
+      "name": "Wizard",
+      "hit_die": 6,
+      "saves": [
+        "intelligence",
+        "wisdom"
+      ],
+      "weapons": [
+        "dagger",
+        "dart",
+        "sling",
+        "quarterstaff",
+        "light_crossbow"
+      ],
+      "armor": [],
+      "allows_defense": false
+    }
+  ],
+  "items": [
+    {
+      "id": "longsword",
+      "name": "Longsword",
+      "description": "A longsword.",
+      "weight": 300,
+      "kind": "weapon",
+      "weapon": "longsword",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "slashing"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 10
+    },
+    {
+      "id": "chain_mail",
+      "name": "Chain mail",
+      "description": "Interlocking metal rings over padding.",
+      "weight": 5500,
+      "kind": "armor",
+      "armor": "heavy",
+      "base_ac": 16
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "description": "A shield carried in one hand.",
+      "weight": 600,
+      "kind": "shield"
+    },
+    {
+      "id": "mace",
+      "name": "Mace",
+      "description": "A mace.",
+      "weight": 400,
+      "kind": "weapon",
+      "weapon": "mace",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "bludgeoning"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 0
+    },
+    {
+      "id": "scale_mail",
+      "name": "Scale mail",
+      "description": "Overlapping metal scales on a leather coat.",
+      "weight": 4500,
+      "kind": "armor",
+      "armor": "medium",
+      "base_ac": 14
+    },
+    {
+      "id": "holy_symbol",
+      "name": "Holy symbol",
+      "description": "An amulet bearing a sacred emblem.",
+      "weight": 100,
+      "kind": "gear"
+    },
+    {
+      "id": "shortsword",
+      "name": "Shortsword",
+      "description": "A shortsword.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "shortsword",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "piercing"
+      },
+      "ranged": false,
+      "finesse": true,
+      "two_handed": false,
+      "versatile_sides": 0
+    },
+    {
+      "id": "leather",
+      "name": "Leather armor",
+      "description": "Supple leather with stiffened protective panels.",
+      "weight": 1000,
+      "kind": "armor",
+      "armor": "light",
+      "base_ac": 11
+    },
+    {
+      "id": "shortbow",
+      "name": "Shortbow",
+      "description": "A shortbow.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "shortbow",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "piercing"
+      },
+      "ranged": true,
+      "finesse": false,
+      "two_handed": true,
+      "versatile_sides": 0
+    },
+    {
+      "id": "arrow",
+      "name": "Arrow",
+      "description": "One arrow for a bow.",
+      "weight": 5,
+      "kind": "ammunition"
+    },
+    {
+      "id": "dagger",
+      "name": "Dagger",
+      "description": "A dagger.",
+      "weight": 100,
+      "kind": "weapon",
+      "weapon": "dagger",
+      "damage": {
+        "count": 1,
+        "sides": 4,
+        "type": "piercing"
+      },
+      "ranged": false,
+      "finesse": true,
+      "two_handed": false,
+      "versatile_sides": 0
+    },
+    {
+      "id": "spellbook",
+      "name": "Spellbook",
+      "description": "A book reserved for the wizard spell system; no spells are active yet.",
+      "weight": 300,
+      "kind": "gear"
+    },
+    {
+      "id": "arcane_focus",
+      "name": "Arcane focus",
+      "description": "A crystal reserved for spellcasting.",
+      "weight": 100,
+      "kind": "gear"
+    }
+  ],
+  "preset_party": {
+    "characters": [
+      {
+        "id": "alden",
+        "name": "Alden",
+        "race": "human",
+        "class": "fighter",
+        "abilities": {
+          "strength": 15,
+          "dexterity": 13,
+          "constitution": 14,
+          "intelligence": 8,
+          "wisdom": 12,
+          "charisma": 10
+        },
+        "level": 1,
+        "defense": true,
+        "items": [
+          {
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": 2
+        }
+      },
+      {
+        "id": "brunna",
+        "name": "Brunna",
+        "race": "hill_dwarf",
+        "class": "cleric",
+        "abilities": {
+          "strength": 13,
+          "dexterity": 10,
+          "constitution": 14,
+          "intelligence": 8,
+          "wisdom": 15,
+          "charisma": 12
+        },
+        "level": 1,
+        "defense": false,
+        "items": [
+          {
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "item": "shield",
+            "quantity": 1
+          },
+          {
+            "item": "holy_symbol",
+            "quantity": 1
+          }
+        ],
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": 2
+        }
+      },
+      {
+        "id": "merrin",
+        "name": "Merrin",
+        "race": "lightfoot_halfling",
+        "class": "rogue",
+        "abilities": {
+          "strength": 8,
+          "dexterity": 15,
+          "constitution": 14,
+          "intelligence": 12,
+          "wisdom": 13,
+          "charisma": 10
+        },
+        "level": 1,
+        "defense": false,
+        "items": [
+          {
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "item": "shortbow",
+            "quantity": 1
+          },
+          {
+            "item": "arrow",
+            "quantity": 20
+          }
+        ],
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": null
+        }
+      },
+      {
+        "id": "lethiel",
+        "name": "Lethiel",
+        "race": "high_elf",
+        "class": "wizard",
+        "abilities": {
+          "strength": 8,
+          "dexterity": 14,
+          "constitution": 13,
+          "intelligence": 15,
+          "wisdom": 12,
+          "charisma": 10
+        },
+        "level": 1,
+        "defense": false,
+        "items": [
+          {
+            "item": "dagger",
+            "quantity": 1
+          },
+          {
+            "item": "spellbook",
+            "quantity": 1
+          },
+          {
+            "item": "arcane_focus",
+            "quantity": 1
+          }
+        ],
+        "equipment": {
+          "body": null,
+          "main_hand": 0,
+          "off_hand": null
+        }
+      }
+    ],
+    "formation": [
+      "alden",
+      "brunna",
+      "merrin",
+      "lethiel"
+    ]
+  }
 }

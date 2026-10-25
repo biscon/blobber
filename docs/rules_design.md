@@ -5,14 +5,19 @@ The user approved the slice 01 plan and chose editable JSON content.
 See the [roadmap](dnd5e_demo_design.md) for delivery and acceptance status and
 the [source ledger](srd_content_ledger.md) for adopted rules and adaptations.
 
+Implemented extension: [slice 02 characters and party](characters_design.md)
+adds catalog schema 2, race/class/item definitions, pure stat derivation, and a
+startup party. This document preserves the slice 01 foundation contract; its
+original version-1 JSON shape remains supported as rules-only content.
+
 ## Boundaries and ownership
 
 `blobber_rules` contains dice, pure resolution, and immutable content values. It
 has no JSON, graphics, world, or clock dependency. `blobber_rules_io` parses and
 validates JSON using the existing nlohmann dependency. The application loads one
-catalog before map/image preparation and owns it for the session. No gameplay
-behavior is connected yet. Character/equipment definitions belong to slice 02;
-mutable actors, turn scheduling, death saves, mitigation, effects, and spatial
+catalog before map/image preparation and owns it for the session. The slice 02
+party now consumes character/equipment definitions; monster gameplay behavior is
+not connected yet. Mutable actors, turn scheduling, death saves, mitigation, effects, and spatial
 targeting remain in their designated slices.
 
 Catalog vectors are contiguous, bounded, and immutable after construction.
@@ -52,7 +57,8 @@ Pure resolvers reject inconsistent fabricated roll results.
 
 ## JSON and loading
 
-`assets/rules/catalog.json` has `schema_version: 1`, `attacks`, and `monsters`.
+The version-1 format has `schema_version: 1`, `attacks`, and `monsters`.
+The shipped catalog now uses version 2, described in the character design.
 Attack fields: `id`, `kind` (melee/ranged), `attack_bonus`, `damage` containing
 `count`, `sides`, `modifier`, `type`. Monster fields: `id`, `abilities` containing
 the six full lowercase ability names, `armor_class`, `hit_points`, and `attacks`

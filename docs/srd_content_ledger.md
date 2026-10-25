@@ -19,6 +19,30 @@ catalog in `assets/rules/ATTRIBUTION.md`.
 Project implementation limits (dice counts, JSON capacities, supported levels,
 AC bounds, physical-only damage types) are engineering limits, not SRD rules.
 Ranges, CR/XP, senses, skills, and other goblin features are not yet represented.
-Race/class definitions, party choices, and starting equipment belong to slice 02.
-Mana, formation, shared maneuvers, cooldowns, and omitted actions remain proposed
-adaptations in the roadmap; none are implemented by this foundation.
+Race/class definitions, party choices, and starting equipment are recorded below.
+Mana, shared maneuvers, cooldowns, and omitted actions remain proposed
+adaptations in the roadmap. Slice 02 adds formation storage, not formation combat.
+
+
+## Slice 02 adoption and adaptations
+
+All source references below refer to the official SRD linked above; page numbers
+are printed pages. Attribution remains included with copied executable assets.
+
+| Content | Source | Implemented treatment |
+| --- | --- | --- |
+| Human, Hill Dwarf, Lightfoot Halfling, High Elf | pp. 3–6 | Ability adjustments, Dwarven Toughness, and weapon training. Other racial features are inactive. |
+| Fighter, Cleric, Rogue, Wizard | pp. 15–16, 24, 39, 51–53 | Level-one Hit Dice/HP, weapon/armor training, and save proficiencies. Fighter Defense active. |
+| Armor, shields, weapon statistics | pp. 62–66 | Nonmagical base AC, damage, weights, finesse, two-handed and versatile handling for supplied gear. |
+| Ammunition, holy symbol, spellbook, focus | pp. 67–70 | Owned quantities and weights; no spending or casting behavior. |
+| Carrying capacity | pp. 79–80 | Strength × 15 lb; no graded encumbrance. |
+| Attack/damage ability and proficiency | pp. 93–96 | Deterministic previews; no attack execution. |
+
+Names, standard-array assignments, relative formation, and compact equipment
+packages are demo choices. Armor/shield proficiency is required at build validation
+rather than implementing untrained-armor penalties. Equipment is limited to body,
+main weapon, and off-hand shield; no dual wielding. Best finesse ability and free-hand
+versatile grip are automatic. Thrown attacks, range, ammunition consumption,
+loading, stealth/speed penalties, skills, tools, and languages are not simulated.
+The [feature matrix](characters_design.md#content-and-compatibility) distinguishes
+active passives, slice-10 decisions, and omissions. Mana has no provisional value.

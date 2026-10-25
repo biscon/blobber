@@ -1,4 +1,5 @@
 #include "rules/content.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
@@ -23,12 +24,64 @@ template <class T> void validateIds(const std::vector<T>& definitions, const cha
     }
 }
 } // namespace
-Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters)
-    : attacks_(std::move(attacks)), monsters_(std::move(monsters)) {
+Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
+                 std::vector<RaceDefinition> races, std::vector<ClassDefinition> classes,
+                 std::vector<ItemDefinition> items, std::optional<PresetParty> preset)
+    : attacks_(std::move(attacks)), monsters_(std::move(monsters)), races_(std::move(races)),
+      classes_(std::move(classes)), items_(std::move(items)), preset_(std::move(preset)) {
     if (attacks_.size() > maxAttacks || monsters_.size() > maxMonsters)
         throw std::runtime_error("catalog: exceeds 64 attacks or 32 monsters");
     validateIds(attacks_, "attacks");
     validateIds(monsters_, "monsters");
+    if (races_.size() > maxRaces || classes_.size() > maxClasses || items_.size() > maxItems)
+        throw std::runtime_error("catalog: exceeds 16 races, 16 classes, or 64 items");
+    validateIds(races_, "races");
+    validateIds(classes_, "classes");
+    validateIds(items_, "items");
+    for (const auto& r : races_) {
+        if (!validDisplayText(r.name, 64) || r.hitPointsPerLevel < 0 || r.hitPointsPerLevel > 1 ||
+            (r.weapons & ~allWeaponTraining))
+            throw std::runtime_error("races." + r.id + ": invalid name, HP bonus, or weapon training");
+        for (const int increase : r.abilityIncreases)
+            if (increase < 0 || increase > 2)
+                throw std::runtime_error("races." + r.id + ".ability_increases: expected 0..2");
+    }
+    for (const auto& c : classes_) {
+        if (!validDisplayText(c.name, 64) ||
+            (c.hitDie != 6 && c.hitDie != 8 && c.hitDie != 10 && c.hitDie != 12) ||
+            (c.weapons & ~allWeaponTraining) || (c.armor & ~15u) ||
+            std::count(c.saves.begin(), c.saves.end(), true) != 2)
+            throw std::runtime_error("classes." + c.id + ": invalid name, hit die, or training");
+    }
+    for (const auto& i : items_) {
+        if (!validDisplayText(i.name, 64) || !validDisplayText(i.description, 512) || i.weight < 0 ||
+            static_cast<unsigned>(i.kind) > static_cast<unsigned>(ItemKind::Gear))
+            throw std::runtime_error("items." + i.id + ": invalid name, description, weight, or kind");
+        if (i.kind == ItemKind::Weapon &&
+            (!weaponBit(i.weapon) || !validDice(i.damage) || i.damage.modifier != 0 ||
+             static_cast<unsigned>(i.damageType) > static_cast<unsigned>(DamageType::Slashing) ||
+             (i.versatileSides && (!validDice({1, i.versatileSides, 0}) ||
+                                   i.versatileSides <= i.damage.sides || i.twoHanded || i.ranged))))
+            throw std::runtime_error("items." + i.id + ": invalid weapon properties");
+        if (i.kind == ItemKind::Armor &&
+            (static_cast<unsigned>(i.armor) > static_cast<unsigned>(ArmorType::Heavy) ||
+             i.baseArmorClass < 1 || i.baseArmorClass > 30))
+            throw std::runtime_error("items." + i.id + ": invalid armor properties");
+    }
+    if (preset_) {
+        if (!validFormation(preset_->formation))
+            throw std::runtime_error("preset_party.formation: expected permutation of four characters");
+        for (std::size_t i = 0; i < partySize; ++i) {
+            const auto& b = preset_->characters[i];
+            const auto derived = deriveCharacter(*this, b);
+            if (!derived)
+                throw std::runtime_error("preset_party.characters[" + std::to_string(i) +
+                                         "]: " + characterErrorMessage(derived.error));
+            for (std::size_t j = 0; j < i; ++j)
+                if (b.id == preset_->characters[j].id)
+                    throw std::runtime_error("preset_party.characters: duplicate character ID");
+        }
+    }
     for (const auto& a : attacks_) {
         if (a.kind != AttackKind::Melee && a.kind != AttackKind::Ranged)
             throw std::runtime_error("attacks." + a.id + ".kind: invalid attack kind");
@@ -71,6 +124,33 @@ AttackId Catalog::findAttack(std::string_view id) const noexcept {
 MonsterId Catalog::findMonster(std::string_view id) const noexcept {
     for (std::size_t i = 0; i < monsters_.size(); ++i)
         if (monsters_[i].id == id)
+            return {static_cast<std::uint16_t>(i)};
+    return {};
+}
+const RaceDefinition* Catalog::race(RaceId id) const noexcept {
+    return id.index < races_.size() ? &races_[id.index] : nullptr;
+}
+const ClassDefinition* Catalog::characterClass(ClassId id) const noexcept {
+    return id.index < classes_.size() ? &classes_[id.index] : nullptr;
+}
+const ItemDefinition* Catalog::item(ItemId id) const noexcept {
+    return id.index < items_.size() ? &items_[id.index] : nullptr;
+}
+RaceId Catalog::findRace(std::string_view id) const noexcept {
+    for (std::size_t i = 0; i < races_.size(); ++i)
+        if (races_[i].id == id)
+            return {static_cast<std::uint16_t>(i)};
+    return {};
+}
+ClassId Catalog::findClass(std::string_view id) const noexcept {
+    for (std::size_t i = 0; i < classes_.size(); ++i)
+        if (classes_[i].id == id)
+            return {static_cast<std::uint16_t>(i)};
+    return {};
+}
+ItemId Catalog::findItem(std::string_view id) const noexcept {
+    for (std::size_t i = 0; i < items_.size(); ++i)
+        if (items_[i].id == id)
             return {static_cast<std::uint16_t>(i)};
     return {};
 }

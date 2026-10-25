@@ -1,0 +1,213 @@
+#include "assets/rules_character_loader.hpp"
+#include "assets/rules_json.hpp"
+
+namespace blobber {
+namespace {
+using namespace rules;
+using namespace rules_json;
+constexpr std::array<const char*, abilityCount> abilities{"strength",     "dexterity", "constitution",
+                                                          "intelligence", "wisdom",    "charisma"};
+constexpr std::array<const char*, weaponTypeCount> weapons{
+    "dagger",    "mace",    "longsword",    "shortsword",    "shortbow", "longbow",
+    "battleaxe", "handaxe", "light_hammer", "warhammer",     "rapier",   "hand_crossbow",
+    "dart",      "sling",   "quarterstaff", "light_crossbow"};
+template <std::size_t N>
+std::size_t choice(const Json& value, const std::string& path, const std::array<const char*, N>& names) {
+    const auto name = string(value, path);
+    for (std::size_t i = 0; i < N; ++i)
+        if (name == names[i])
+            return i;
+    fail(path, "unknown value: " + name);
+}
+bool boolean(const Json& value, const std::string& path) {
+    if (!value.is_boolean())
+        fail(path, "expected boolean");
+    return value.get<bool>();
+}
+Abilities scores(const Json& value, const std::string& path) {
+    fields(value, path, {"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"});
+    Abilities out{};
+    for (std::size_t i = 0; i < abilityCount; ++i)
+        out[i] = integer(value.at(abilities[i]), path + "." + abilities[i]);
+    return out;
+}
+WeaponTraining training(const Json& value, const std::string& path) {
+    array(value, path, weaponTypeCount);
+    WeaponTraining out = 0;
+    for (std::size_t i = 0; i < value.size(); ++i) {
+        const auto p = path + "[" + std::to_string(i) + "]";
+        const auto name = string(value[i], p);
+        const auto bits = name == "simple" ? simpleWeaponTraining
+                          : name == "martial"
+                              ? allWeaponTraining & ~simpleWeaponTraining
+                              : weaponBit(static_cast<WeaponType>(choice(value[i], p, weapons)));
+        if (out & bits)
+            fail(p, "duplicate weapon training");
+        out |= bits;
+    }
+    return out;
+}
+template <class T>
+std::uint16_t reference(const Json& value, const std::string& path, const std::vector<T>& definitions) {
+    const auto id = identifier(value, path);
+    for (std::size_t i = 0; i < definitions.size(); ++i)
+        if (definitions[i].id == id)
+            return static_cast<std::uint16_t>(i);
+    fail(path, "unknown reference: " + id);
+}
+OwnedItemId ownedReference(const Json& value, const std::string& path) {
+    if (value.is_null())
+        return {};
+    const auto index = integer(value, path);
+    if (index < 0 || index >= static_cast<int>(maxStartingItems))
+        fail(path, "expected owned item index 0..15 or null");
+    return {static_cast<std::uint16_t>(index)};
+}
+} // namespace
+CharacterContent loadCharacterContent(const nlohmann::json& root) {
+    CharacterContent out;
+    const auto& races = root.at("races");
+    array(races, "races", Catalog::maxRaces);
+    for (std::size_t i = 0; i < races.size(); ++i) {
+        const auto p = "races[" + std::to_string(i) + "]";
+        const auto& r = races[i];
+        fields(r, p, {"id", "name", "ability_increases", "hit_points_per_level", "weapons"});
+        out.races.push_back({identifier(r.at("id"), p + ".id"), string(r.at("name"), p + ".name"),
+                             scores(r.at("ability_increases"), p + ".ability_increases"),
+                             integer(r.at("hit_points_per_level"), p + ".hit_points_per_level"),
+                             training(r.at("weapons"), p + ".weapons")});
+    }
+    const auto& classes = root.at("classes");
+    array(classes, "classes", Catalog::maxClasses);
+    for (std::size_t i = 0; i < classes.size(); ++i) {
+        const auto p = "classes[" + std::to_string(i) + "]";
+        const auto& c = classes[i];
+        fields(c, p, {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense"});
+        ClassDefinition cls;
+        cls.id = identifier(c.at("id"), p + ".id");
+        cls.name = string(c.at("name"), p + ".name");
+        cls.hitDie = integer(c.at("hit_die"), p + ".hit_die");
+        cls.weapons = training(c.at("weapons"), p + ".weapons");
+        cls.allowsDefense = boolean(c.at("allows_defense"), p + ".allows_defense");
+        const auto& saves = c.at("saves");
+        array(saves, p + ".saves", 2);
+        if (saves.size() != 2)
+            fail(p + ".saves", "expected two saving throw proficiencies");
+        for (const auto& save : saves) {
+            const auto index = choice(save, p + ".saves", abilities);
+            if (cls.saves[index])
+                fail(p + ".saves", "duplicate proficiency");
+            cls.saves[index] = true;
+        }
+        const auto& armor = c.at("armor");
+        array(armor, p + ".armor", 4);
+        for (const auto& a : armor) {
+            const auto bit = armorBit(static_cast<ArmorType>(
+                choice(a, p + ".armor", std::array<const char*, 4>{"light", "medium", "heavy", "shield"})));
+            if (cls.armor & bit)
+                fail(p + ".armor", "duplicate proficiency");
+            cls.armor |= bit;
+        }
+        out.classes.push_back(std::move(cls));
+    }
+    const auto& items = root.at("items");
+    array(items, "items", Catalog::maxItems);
+    for (std::size_t i = 0; i < items.size(); ++i) {
+        const auto p = "items[" + std::to_string(i) + "]";
+        const auto& j = items[i];
+        if (!j.is_object() || !j.contains("kind"))
+            fail(p + ".kind", "missing item kind");
+        ItemDefinition item;
+        item.kind = static_cast<ItemKind>(
+            choice(j.at("kind"), p + ".kind",
+                   std::array<const char*, 5>{"weapon", "armor", "shield", "ammunition", "gear"}));
+        if (item.kind == ItemKind::Weapon) {
+            fields(j, p,
+                   {"id", "name", "description", "weight", "kind", "weapon", "damage", "ranged", "finesse",
+                    "two_handed", "versatile_sides"});
+            item.weapon = static_cast<WeaponType>(choice(j.at("weapon"), p + ".weapon", weapons));
+            const auto& damage = j.at("damage");
+            fields(damage, p + ".damage", {"count", "sides", "type"});
+            item.damage = {integer(damage.at("count"), p + ".damage.count"),
+                           integer(damage.at("sides"), p + ".damage.sides"), 0};
+            item.damageType = static_cast<DamageType>(
+                choice(damage.at("type"), p + ".damage.type",
+                       std::array<const char*, 3>{"bludgeoning", "piercing", "slashing"}));
+            item.ranged = boolean(j.at("ranged"), p + ".ranged");
+            item.finesse = boolean(j.at("finesse"), p + ".finesse");
+            item.twoHanded = boolean(j.at("two_handed"), p + ".two_handed");
+            item.versatileSides = integer(j.at("versatile_sides"), p + ".versatile_sides");
+        } else if (item.kind == ItemKind::Armor) {
+            fields(j, p, {"id", "name", "description", "weight", "kind", "armor", "base_ac"});
+            item.armor = static_cast<ArmorType>(
+                choice(j.at("armor"), p + ".armor", std::array<const char*, 3>{"light", "medium", "heavy"}));
+            item.baseArmorClass = integer(j.at("base_ac"), p + ".base_ac");
+        } else {
+            fields(j, p, {"id", "name", "description", "weight", "kind"});
+        }
+        item.id = identifier(j.at("id"), p + ".id");
+        item.name = string(j.at("name"), p + ".name");
+        item.description = string(j.at("description"), p + ".description");
+        item.weight = integer(j.at("weight"), p + ".weight");
+        out.items.push_back(std::move(item));
+    }
+    const auto& preset = root.at("preset_party");
+    if (preset.is_null())
+        return out;
+    fields(preset, "preset_party", {"characters", "formation"});
+    const auto& characters = preset.at("characters");
+    array(characters, "preset_party.characters", partySize);
+    if (characters.size() != partySize)
+        fail("preset_party.characters", "expected exactly four characters");
+    out.preset.emplace();
+    for (std::size_t i = 0; i < partySize; ++i) {
+        const auto p = "preset_party.characters[" + std::to_string(i) + "]";
+        const auto& c = characters[i];
+        fields(c, p, {"id", "name", "race", "class", "abilities", "level", "defense", "items", "equipment"});
+        auto& b = out.preset->characters[i];
+        b.id = identifier(c.at("id"), p + ".id");
+        b.name = string(c.at("name"), p + ".name");
+        b.race = {reference(c.at("race"), p + ".race", out.races)};
+        b.characterClass = {reference(c.at("class"), p + ".class", out.classes)};
+        b.baseAbilities = scores(c.at("abilities"), p + ".abilities");
+        b.level = integer(c.at("level"), p + ".level");
+        b.defense = boolean(c.at("defense"), p + ".defense");
+        const auto& owned = c.at("items");
+        array(owned, p + ".items", maxStartingItems);
+        b.itemCount = owned.size();
+        for (std::size_t n = 0; n < owned.size(); ++n) {
+            const auto q = p + ".items[" + std::to_string(n) + "]";
+            fields(owned[n], q, {"item", "quantity"});
+            const int quantity = integer(owned[n].at("quantity"), q + ".quantity");
+            if (quantity < 1 || quantity > UINT16_MAX)
+                fail(q + ".quantity", "expected 1..65535");
+            b.items[n] = {{reference(owned[n].at("item"), q + ".item", out.items)},
+                          static_cast<std::uint16_t>(quantity)};
+        }
+        const auto& e = c.at("equipment");
+        fields(e, p + ".equipment", {"body", "main_hand", "off_hand"});
+        b.equipment = {ownedReference(e.at("body"), p + ".equipment.body"),
+                       ownedReference(e.at("main_hand"), p + ".equipment.main_hand"),
+                       ownedReference(e.at("off_hand"), p + ".equipment.off_hand")};
+    }
+    const auto& formation = preset.at("formation");
+    array(formation, "preset_party.formation", partySize);
+    if (formation.size() != partySize)
+        fail("preset_party.formation", "expected exactly four entries");
+    for (std::size_t i = 0; i < partySize; ++i) {
+        const auto p = "preset_party.formation[" + std::to_string(i) + "]";
+        const auto id = identifier(formation[i], p);
+        bool found = false;
+        for (std::size_t c = 0; c < partySize; ++c) {
+            if (id == out.preset->characters[c].id) {
+                out.preset->formation[i] = {static_cast<std::uint16_t>(c)};
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            fail(p, "unknown character reference: " + id);
+    }
+    return out;
+}
+} // namespace blobber

@@ -1,6 +1,7 @@
 #pragma once
-#include "rules/resolve.hpp"
+#include "rules/character.hpp"
 #include <limits>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -32,7 +33,20 @@ struct MonsterDefinition {
 class Catalog {
   public:
     static constexpr std::size_t maxMonsters = 32, maxAttacks = 64, maxIdBytes = 128;
-    Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters);
+    static constexpr std::size_t maxRaces = 16, maxClasses = 16, maxItems = 64;
+    Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
+            std::vector<RaceDefinition> races = {}, std::vector<ClassDefinition> classes = {},
+            std::vector<ItemDefinition> items = {}, std::optional<PresetParty> preset = std::nullopt);
+    const RaceDefinition* race(RaceId id) const noexcept;
+    const ClassDefinition* characterClass(ClassId id) const noexcept;
+    const ItemDefinition* item(ItemId id) const noexcept;
+    RaceId findRace(std::string_view id) const noexcept;
+    ClassId findClass(std::string_view id) const noexcept;
+    ItemId findItem(std::string_view id) const noexcept;
+    const PresetParty* preset() const noexcept { return preset_ ? &*preset_ : nullptr; }
+    std::size_t raceCount() const noexcept { return races_.size(); }
+    std::size_t classCount() const noexcept { return classes_.size(); }
+    std::size_t itemCount() const noexcept { return items_.size(); }
     const AttackDefinition* attack(AttackId id) const noexcept;
     const MonsterDefinition* monster(MonsterId id) const noexcept;
     AttackId findAttack(std::string_view id) const noexcept;
@@ -43,6 +57,10 @@ class Catalog {
   private:
     std::vector<AttackDefinition> attacks_;
     std::vector<MonsterDefinition> monsters_;
+    std::vector<RaceDefinition> races_;
+    std::vector<ClassDefinition> classes_;
+    std::vector<ItemDefinition> items_;
+    std::optional<PresetParty> preset_;
 };
 bool validContentId(std::string_view id) noexcept;
 } // namespace blobber::rules

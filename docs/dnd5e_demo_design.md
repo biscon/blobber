@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slice 01 is Accepted; slice 02 is eligible for planning.
+Status: gameplay roadmap; slices 01–02 are Accepted; slice 03 is eligible for planning.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 01 — Rules foundation and content (2026-10-25) |
+| Latest accepted slice | 02 — Characters and preset party (2026-10-25) |
 | Active slice | None |
 | Awaiting user review | None |
-| Blockers | None identified for planning slice 02 |
-| Next eligible slice | 02 — Characters and preset party |
-| Next action | In a clean context, read slice 01's handoff, inspect relevant code, and propose slice 02's implementation plan |
+| Blockers | None identified for planning slice 03 |
+| Next eligible slice | 03 — Mutable monster world |
+| Next action | In a clean context, read slice 02's handoff, inspect relevant code, and propose slice 03's implementation plan |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -300,7 +300,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | ID | Slice | Prerequisite | Status | Milestone |
 | --- | --- | --- | --- | --- |
 | 01 | [Rules foundation and content](#slice-01-rules-foundation-and-content) | None | Accepted | A |
-| 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Planned | A |
+| 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Accepted | A |
 | 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Planned | A |
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Planned | A |
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Planned | A |
@@ -392,7 +392,53 @@ must use real definitions so later inventory work does not replace hardcoded sta
 is not structurally restricted, gear affects statistics, and formation/resources
 have deterministic headless checks.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Review complete (Accepted); 2026-10-25.
+**Approved plan:** User said “Implement the plan.” See [character design](characters_design.md).
+User selected SRD variants (Hill Dwarf, Lightfoot Halfling, High Elf) and active
+stat passives, including Dwarven Toughness and Fighter Defense. Implement immutable
+content, validated four-character builds/gear, derived statistics, fixed party
+resources/formation, startup validation, headless diagnostics/tests, and handoff.
+No UI, combat, mana progression, inventory transactions, or later-slice work.
+**Delivered:** Version-2 catalog with independent race/class/item definitions and
+fixed four-character preset; legacy version 1 remains readable as rules-only
+content. Pure character derivation and bounded party state provide initialized
+HP/Hit Dice/XP, stable identity, checked formation swaps, and read-only snapshots.
+The application constructs the party before map/image preparation. The existing
+content diagnostic prints formation, resources, equipment, and derived statistics.
+Entry points: `src/rules/character.hpp`, `src/game/party.hpp`, and
+`src/assets/rules_character_loader.cpp`; shipped data remains in the rules catalog.
+**Verification:** Debug and Release configure/build succeeded without new warnings;
+all 10 CTest suites passed in both, including the extended zero-allocation guard.
+Shipped/copied catalogs and attribution checks passed. Six startup failure-order
+checks passed. Desktop startup from `/tmp` generated 99 captures and shut down
+cleanly; corridor and goblin captures were visually inspected. See
+[exact commands, results, and limitations](slice02_verification.md).
+**Review recipe:** Run focused tests and the `--validate` diagnostic; inspect the
+four builds and try temporary equipment edits described in the
+[review instructions](slice02_verification.md#user-review).
+**Deviations / limitations:** No scope deviation. Party state is initialized but
+has no UI or combat/resource-spending commands. Mana and conditional/signature
+features remain deferred as documented. No interactive gameplay recheck, historical
+pixel-baseline comparison, standalone GPU smoke suite, Windows/macOS execution,
+or scale benchmark was performed.
+**Next-agent handoff:** Slice 02 was accepted on 2026-10-25. Slice 03 is now
+eligible for planning in a clean context; inspect current world/placement,
+movement, animation, and frame-pipeline code and propose its implementation plan
+for user review before implementing it. The immutable catalog must outlive and remain unmoved for
+the party; take snapshots by const reference to avoid copying startup-owned strings.
+Character IDs are party-local, owned-item indices character-local, and definition
+IDs catalog-local; none recycle. Four fixed records and a formation permutation
+preserve identity/resources on swaps. Equipped entries borrow the same owned gear
+counted once toward weight. Derived caches are read-only; later resource/equipment
+changes need authoritative validated operations. The movement controller still owns
+the shared world pose. No mutable NPC world, session clock/RNG, mana, or combat was
+introduced. Schema 2 requires a valid preset at application startup; schema 1 remains
+supported by the rules loader/diagnostic. The 16-entry starting-gear bound does not
+choose slice 11's inventory size. Milestone A is not yet complete.
+**Acceptance:** 2026-10-25 — User explicitly accepted slice 02: “slice accepted,
+close it so we're ready for the next”. No additional conditions or scope changes
+were requested. Verification limits above remain recorded; milestone A is not yet
+complete. Slice 03 remains Planned.
 
 ### Slice 03: Mutable monster world
 

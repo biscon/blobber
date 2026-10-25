@@ -1,9 +1,11 @@
+#include "game/party.hpp"
 #include "input/key_repeat.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
 #include "rules/content.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
+#include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -98,21 +100,40 @@ int main() {
         monster.hitPoints = 8;
         monster.attacks[0] = {0};
         monster.attackCount = 1;
-        const rules::Catalog catalog({{"fixture-attack", rules::AttackKind::Melee, 3,
-                                       {1, 6, 2}, rules::DamageType::Slashing}}, {monster});
+        const rules::Catalog catalog(
+            {{"fixture-attack", rules::AttackKind::Melee, 3, {1, 6, 2}, rules::DamageType::Slashing}},
+            {monster});
         const auto monsterId = catalog.findMonster("allocation-fixture");
         rules::DiceRng dice(42);
+        const auto partyCatalog = partyFixture().catalog();
+        Party party(partyCatalog);
+        auto invalidBuild = party.character({0})->build;
+        invalidBuild.equipment.body = {16};
         tracking = true;
+        for (int i = 0; i < 1000; ++i) {
+            const auto& snapshot = party.snapshot();
+            const auto* member = party.character({static_cast<std::uint16_t>(i % rules::partySize)});
+            const auto derived = rules::deriveCharacter(partyCatalog, member->build);
+            okay &= bool(derived) && derived.value.maxHitPoints == member->hitPoints;
+            okay &= partyCatalog.item(member->build.items[0].item) != nullptr;
+            okay &= snapshot.formation[0].index < rules::partySize;
+            okay &= !rules::deriveCharacter(partyCatalog, invalidBuild);
+            okay &= party.swapFormation(FormationSlot::FrontLeft, FormationSlot::BackRight);
+            okay &= !party.swapFormation(FormationSlot::FrontLeft, static_cast<FormationSlot>(255));
+            okay &= party.occupant(FormationSlot::FrontLeft) != nullptr;
+        }
         for (int i = 0; i < 1000; ++i) {
             const auto* actor = catalog.monster(monsterId);
             const auto* attack = catalog.attack(actor->attacks[0]);
             const auto roll = dice.d20(rules::rollMode(i % 2 == 0, i % 3 == 0));
             const auto hit = rules::resolveAttack(roll.value, attack->bonus, actor->armorClass);
             const auto save = rules::resolveSave(roll.value, 2, 12);
-            const auto damage = dice.damage(attack->damage, hit.value.outcome == rules::AttackOutcome::Critical);
+            const auto damage =
+                dice.damage(attack->damage, hit.value.outcome == rules::AttackOutcome::Critical);
             const auto bulk = dice.roll({32, 100, -3});
             okay &= bool(roll) && bool(hit) && bool(save) && bool(damage) && bool(bulk);
-            okay &= damage.value.total >= 0 && rules::abilityModifier(actor->abilities, rules::Ability::Strength).value == 0;
+            okay &= damage.value.total >= 0 &&
+                    rules::abilityModifier(actor->abilities, rules::Ability::Strength).value == 0;
             okay &= rules::proficiencyBonus(3).value == 2;
         }
         okay &= frames.update(renderer, map, controller.state(), &npcs);

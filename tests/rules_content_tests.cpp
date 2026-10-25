@@ -1,4 +1,5 @@
 #include "assets/rules_loader.hpp"
+#include "game/party.hpp"
 #include "support/check.hpp"
 #include <chrono>
 #include <fstream>
@@ -95,7 +96,7 @@ void loading() {
         std::string field;
         switch (fault) {
         case 0:
-            bad["schema_version"] = 2;
+            bad["schema_version"] = 3;
             field = "schema_version";
             break;
         case 1:
@@ -287,7 +288,47 @@ int main(int argc, char** argv) {
         if (argc == 3 && std::string(argv[1]) == "--validate") {
             const auto catalog = loadRules(argv[2]);
             std::cout << "Valid rules catalog: " << catalog.monsterCount() << " monsters, "
-                      << catalog.attackCount() << " attacks\n";
+                      << catalog.attackCount() << " attacks, " << catalog.raceCount() << " races, "
+                      << catalog.classCount() << " classes, " << catalog.itemCount() << " items\n";
+            if (catalog.preset()) {
+                const Party party(catalog);
+                constexpr const char* positions[]{"Front left", "Front right", "Back left", "Back right"};
+                for (std::size_t i = 0; i < partySize; ++i) {
+                    const auto& c = *party.occupant(static_cast<FormationSlot>(i));
+                    const auto& b = c.build;
+                    std::cout << positions[i] << ": " << b.name << " / " << catalog.race(b.race)->name
+                              << " / " << catalog.characterClass(b.characterClass)->name << " level "
+                              << b.level << " / XP " << c.experience << "\n  abilities";
+                    for (const int score : c.stats.abilities)
+                        std::cout << ' ' << score;
+                    std::cout << " / HP " << c.hitPoints << '/' << c.stats.maxHitPoints << " / AC "
+                              << c.stats.armorClass << " / Hit Dice " << c.availableHitDice << 'd'
+                              << catalog.characterClass(b.characterClass)->hitDie << " / weight "
+                              << c.stats.carriedWeight / 100.0 << '/' << c.stats.carryingCapacity / 100.0
+                              << " lb\n";
+                    std::cout << "  initiative " << c.stats.initiative << " / saves";
+                    for (const int save : c.stats.saves)
+                        std::cout << ' ' << save;
+                    std::cout << '\n';
+                    for (std::size_t n = 0; n < b.itemCount; ++n) {
+                        std::cout << "  " << b.items[n].quantity << " x "
+                                  << catalog.item(b.items[n].item)->name;
+                        if (b.equipment.body.index == n)
+                            std::cout << " [body]";
+                        if (b.equipment.mainHand.index == n)
+                            std::cout << " [main hand]";
+                        if (b.equipment.offHand.index == n)
+                            std::cout << " [off hand]";
+                        const auto& attack = c.stats.weapons[n];
+                        if (attack.available)
+                            std::cout << " / attack " << attack.attackBonus << " / damage "
+                                      << attack.damage.count << 'd' << attack.damage.sides << " modifier "
+                                      << attack.damage.modifier;
+                        std::cout << '\n';
+                    }
+                }
+            } else
+                std::cout << "No preset party (rules-only catalog)\n";
             return 0;
         }
         check(argc == 1, "Usage: blobber_rules_content_tests [--validate FILE]");

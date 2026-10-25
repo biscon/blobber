@@ -1,4 +1,6 @@
 #include "assets/rules_loader.hpp"
+#include "assets/rules_character_loader.hpp"
+#include "assets/rules_json.hpp"
 #include <algorithm>
 #include <fstream>
 #include <initializer_list>
@@ -12,9 +14,7 @@ namespace blobber {
 namespace {
 using Json = nlohmann::json;
 using namespace rules;
-[[noreturn]] void fail(const std::string& field, const std::string& message) {
-    throw std::runtime_error(field + ": " + message);
-}
+using namespace rules_json;
 Json read(const std::filesystem::path& path) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream)
@@ -46,52 +46,21 @@ Json read(const std::filesystem::path& path) {
     };
     return Json::parse(text, callback);
 }
-void fields(const Json& value, const std::string& path, std::initializer_list<const char*> names) {
-    if (!value.is_object())
-        fail(path, "expected object");
-    for (const auto* name : names)
-        if (!value.contains(name))
-            fail(path + "." + name, "missing field");
-    for (auto it = value.begin(); it != value.end(); ++it)
-        if (std::none_of(names.begin(), names.end(), [&](const char* name) { return it.key() == name; }))
-            fail(path + "." + it.key(), "unknown field");
-}
-void array(const Json& value, const std::string& path, std::size_t limit) {
-    if (!value.is_array() || value.size() > limit)
-        fail(path, "expected array with at most " + std::to_string(limit) + " entries");
-}
-std::int32_t integer(const Json& value, const std::string& path) {
-    if (!value.is_number_integer())
-        fail(path, "expected int32 integer");
-    if (value.is_number_unsigned()) {
-        if (value.get<std::uint64_t>() > static_cast<std::uint64_t>(INT32_MAX))
-            fail(path, "integer exceeds int32");
-    } else {
-        const auto n = value.get<std::int64_t>();
-        if (n < INT32_MIN || n > INT32_MAX)
-            fail(path, "integer exceeds int32");
-    }
-    return value.get<std::int32_t>();
-}
-std::string string(const Json& value, const std::string& path) {
-    if (!value.is_string())
-        fail(path, "expected string");
-    return value.get<std::string>();
-}
-std::string identifier(const Json& value, const std::string& path) {
-    auto id = string(value, path);
-    if (!validContentId(id))
-        fail(path, "expected 1..128 printable nonspace ASCII bytes");
-    return id;
-}
 } // namespace
 rules::Catalog loadRules(const std::filesystem::path& path) {
     using namespace rules;
     try {
         const auto root = read(path);
-        fields(root, "catalog", {"schema_version", "attacks", "monsters"});
-        if (integer(root.at("schema_version"), "schema_version") != 1)
-            fail("schema_version", "only version 1 is supported");
+        if (!root.is_object() || !root.contains("schema_version"))
+            fail("schema_version", "missing version");
+        const int version = integer(root.at("schema_version"), "schema_version");
+        if (version != 1 && version != 2)
+            fail("schema_version", "only versions 1 and 2 are supported");
+        if (version == 1)
+            fields(root, "catalog", {"schema_version", "attacks", "monsters"});
+        else
+            fields(root, "catalog",
+                   {"schema_version", "attacks", "monsters", "races", "classes", "items", "preset_party"});
         const auto& attackJson = root.at("attacks");
         const auto& monsterJson = root.at("monsters");
         array(attackJson, "attacks", Catalog::maxAttacks);
@@ -157,7 +126,12 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
             }
             monsters.push_back(std::move(definition));
         }
-        return Catalog(std::move(attacks), std::move(monsters));
+        if (version == 1)
+            return Catalog(std::move(attacks), std::move(monsters));
+        auto characters = loadCharacterContent(root);
+        return Catalog(std::move(attacks), std::move(monsters), std::move(characters.races),
+                       std::move(characters.classes), std::move(characters.items),
+                       std::move(characters.preset));
     } catch (const std::exception& e) {
         throw std::runtime_error("Loading rules " + path.string() + ": " + e.what());
     }
