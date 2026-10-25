@@ -1,0 +1,192 @@
+{
+  "id": "goblin",
+  "width": 0.45,
+  "height": 0.65,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        600,
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-right-1.png"
+          }
+        ]
+      }
+    },
+    "walk": {
+      "durations_ms": [
+        300,
+        300
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-right-1.png"
+          }
+        ]
+      }
+    },
+    "attack": {
+      "durations_ms": [
+        700,
+        250,
+        250,
+        350
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/attack-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/attack-front-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/attack-front-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/attack-front-3.png"
+          }
+        ]
+      }
+    }
+  }
+}

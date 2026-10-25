@@ -1,0 +1,36 @@
+{
+  "id": "goblin",
+  "width": 0.45,
+  "height": 0.65,
+  "alpha_cutoff": 15,
+  "views": {
+    "front": {
+      "image": "front.png",
+      "anchor": [
+        0.5,
+        0.9587837837837838
+      ]
+    },
+    "back": {
+      "image": "back-v2.png",
+      "anchor": [
+        0.5,
+        0.9675675675675676
+      ]
+    },
+    "left": {
+      "image": "left.png",
+      "anchor": [
+        0.5,
+        0.9655405405405405
+      ]
+    },
+    "right": {
+      "image": "right.png",
+      "anchor": [
+        0.5,
+        0.9695945945945946
+      ]
+    }
+  }
+}

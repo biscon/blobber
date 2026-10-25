@@ -1,0 +1,73 @@
+# Out-of-source builds (including copied assets and downloaded dependencies).
+/cmake-build-*/
+/build/
+/build-*/
+/out/
+
+# CMake/Ninja/CTest outputs, including accidental in-source configuration.
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+DartConfiguration.tcl
+Testing/
+_deps/
+.cmake/
+compile_commands.json
+CMakeUserPresets.json
+build.ninja
+rules.ninja
+.ninja_deps
+.ninja_log
+/Makefile
+/install_manifest.txt
+
+# Compiled code, debug symbols, and profiling output.
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.dSYM/
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+/blobber
+/blobber_*_tests
+/blobber_gpu_smoke
+/blobber_prepare_assets
+/blobber_prepare_npc_animation
+
+# Local IDE state, caches, editor backups, and OS metadata.
+/.idea/
+.cache/
+__pycache__/
+*.py[cod]
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Disposable captures and asset-generation experiments. Use these locations
+# (or /tmp outside the repository) for unselected sheets and intermediate files.
+/captures/
+/captures-*/
+/tmp/
+/temp/
+/scratch/
+/output/
+/assets/**/tmp/
+/assets/**/temp/
+/assets/**/scratch/
+
+# Keep assets/originals, selected animation/sheets, runtime animation/frames,
+# manifests, prompts, and docs/screenshots trackable: they are project assets.

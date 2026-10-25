@@ -1,0 +1,11 @@
+[
+  {"name":"idle-front", "split_x":768, "scale":0.5, "pivot_x":[440,317]},
+  {"name":"idle-back", "split_x":768, "scale":0.5, "pivot_x":[401,359]},
+  {"name":"idle-left", "split_x":768, "scale":0.5, "pivot_x":[435,423]},
+  {"name":"idle-right", "split_x":768, "scale":0.5, "pivot_x":[450,345]},
+  {"name":"walk-front", "split_x":768, "scale":0.5, "pivot_x":[440,329]},
+  {"name":"walk-back", "split_x":768, "scale":0.5, "pivot_x":[412,347]},
+  {"name":"walk-left", "split_x":800, "scale":0.5, "pivot_x":[442,329]},
+  {"name":"walk-right", "split_x":768, "scale":0.5, "pivot_x":[440,342]},
+  {"name":"attack-front", "split_x":535, "rows":2, "scale":0.68, "pivot_x":[305,277,312,277]}
+]

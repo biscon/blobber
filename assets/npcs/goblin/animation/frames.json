@@ -1,0 +1,160 @@
+{
+  "attack-front": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/attack-front-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/attack-front-1.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/attack-front-2.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/attack-front-3.png"
+    }
+  ],
+  "idle-back": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-back-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-back-1.png"
+    }
+  ],
+  "idle-front": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-front-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-front-1.png"
+    }
+  ],
+  "idle-left": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-left-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-left-1.png"
+    }
+  ],
+  "idle-right": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-right-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/idle-right-1.png"
+    }
+  ],
+  "walk-back": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-back-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-back-1.png"
+    }
+  ],
+  "walk-front": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-front-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-front-1.png"
+    }
+  ],
+  "walk-left": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-left-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-left-1.png"
+    }
+  ],
+  "walk-right": [
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-right-0.png"
+    },
+    {
+      "anchor": [
+        0.5,
+        0.9552238805970149
+      ],
+      "image": "animation/frames/walk-right-1.png"
+    }
+  ]
+}

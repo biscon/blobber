@@ -1,0 +1,60 @@
+{
+  "definitions": [
+    "goblin/goblin.json"
+  ],
+  "instances": [
+    {
+      "type": "goblin",
+      "cell": [
+        18,
+        17
+      ],
+      "subcell": [
+        0,
+        0
+      ],
+      "facing": "south",
+      "animation": "idle"
+    },
+    {
+      "type": "goblin",
+      "cell": [
+        18,
+        17
+      ],
+      "subcell": [
+        1,
+        0
+      ],
+      "facing": "south",
+      "animation": "attack"
+    },
+    {
+      "type": "goblin",
+      "cell": [
+        18,
+        17
+      ],
+      "subcell": [
+        0,
+        1
+      ],
+      "facing": "south",
+      "animation": "walk"
+    },
+    {
+      "type": "goblin",
+      "cell": [
+        18,
+        17
+      ],
+      "subcell": [
+        1,
+        1
+      ],
+      "facing": "south",
+      "animation": "idle",
+      "phase_ms": 600
+    }
+  ]
+}

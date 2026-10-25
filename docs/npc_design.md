@@ -1,0 +1,213 @@
+# NPC sprites
+
+Status: implemented. See [verification notes](verification.md#npc-first-slice) for executed checks.
+
+## Ownership and data
+
+The application owns an immutable `NpcWorld` for the level lifetime and the
+renderer owns its prepared sprite cache. CPU source images are released after
+preparation. Core NPC instances contain a typed definition index, cell, 2x2
+subcell, cardinal facing, selected animation, and phase offset. The world owns the definition string IDs; appearance
+arrays use the same index order. Indices never recycle in this slice; checked
+access rejects invalid indices. No ECS, AI, faction, stats, or general-purpose animation scheduler is introduced.
+A bounded graphics-independent animation player supplies frame selections.
+
+`assets/npcs/level.json` lists definition JSON paths and placements. Definition
+paths are relative to the level file; PNG paths are relative to their definition.
+Definitions contain `id`, `width`, `height`, and `views` with `front`, `back`,
+`left`, `right` PNG names (either strings or objects containing `image` and
+optional `anchor`). Instances contain `type`, `cell`, `subcell`, and
+`facing` (`north`, `east`, `south`, `west`). Left/right name anatomical sides.
+Optional per-view normalized `anchor` coordinates permit exact foot alignment
+without modifying generated artwork; the default is bottom center. Width and
+height describe the full image canvas in cell units. All four views share these
+dimensions; narrower side profiles keep their transparent horizontal padding.
+Images preserve alpha except values at or below the optional `alpha_cutoff`
+(0..254, default 0), which are transparent during preparation. The goblin uses
+15 to discard nearly invisible generated background noise. Visible pixels below
+the ground anchor are rejected. `validateNpcAppearance` is shared by the file
+loader and the preparer so generated assets obey the same invariants.
+
+Subcell [0,0] is northwest, [1,1] southeast; world positions are cell origin plus
+0.25 or 0.75 on each axis. A row-major byte occupancy mask provides constant-time
+whole-cell movement collision. The map is unchanged. NPC placement rejects walls,
+player spawn, duplicate subcells, bad definitions and invalid coordinates.
+
+Limits: 32 definitions, 256 instances, 4 occupants per cell, 2048 pixels per image
+axis, 128 MiB combined engine-owned decoded/prepared pixel arrays. Temporary
+Raylib decoder storage and container metadata are outside that pixel budget.
+JSON files are bounded to 1 MiB. Sprite canvas widths are at most 0.5 cells, heights at most wall height.
+All limits fail explicitly during loading. All vectors allocate only during
+loading/preparation. The frame path uses fixed scratch arrays. Replacing the NPC
+world requires reconstructing its renderer/pipeline; runtime mutation is deferred.
+
+## Rendering
+
+Contact shadows are prepared circular floor blobs, with radius 45% of the sprite
+canvas width, peak opacity 32%, and a smooth quadratic falloff. Projected floor
+rows and alpha bytes are cached at load time, shared across directions and
+instances. Alpha storage counts against the existing pixel budget; row metadata
+is bounded by types x depth slots x viewport height. Each row retains its floor
+depth, so lateral placement follows perspective during strafes and wall depth
+clips shadows without painting walls. Distance fog fades the blobs out. All
+shadows draw before all NPC bodies, preventing shadows from darkening other NPCs.
+No new asset or frame allocation is needed. Tests cover floor placement,
+transparency, partial/full wall clipping, multiple occupants, and the existing
+allocation and strafe invariants.
+
+For each type/clip/direction/frame prepare nearest-neighbor scaled and distance-shaded RGBA
+images for integer forward rows 0..12 and subcell depth offsets -0.25/+0.25,
+including the existing 0.4 camera setback. Depth determines size and ground
+projection; lateral position and strafe phase only change horizontal placement.
+Clip preparation vertically to the viewport and retain the original horizontal
+pivot. The cache uses contiguous pixels and immutable offsets, shared across
+instances and lateral positions. The cache budget includes input image pixels.
+
+During composition build a fixed-size visible list, sort far-to-near (instance
+index breaks ties), and alpha blend after walls. Wall column depth rejects NPC
+columns behind walls. NPCs never update wall coverage: their transparent holes
+must expose farther NPCs and scenery. Grounded sprites no taller than walls make
+the existing one-depth-per-column wall representation sufficient. Use the same
+distance lighting/fog as wall front faces, preserving source alpha.
+
+View selection uses the NPC-to-effective-camera vector relative to NPC facing;
+dominant local axis chooses front/back/left/right, with front/back winning exact
+diagonal ties. Effective camera includes setback and quantized strafe offset.
+Forward/back/turn transitions continue operating on complete prepared frames.
+Animation selections have their own revision source; stationary frames remain
+reusable between sprite-frame changes. Both transition endpoints use the same
+animation snapshot, including direction-dependent attack fallback.
+
+## Integration and validation
+
+Movement accepts a borrowed optional NPC world for destination checks, including
+queued commands. Rendering/pipeline accept the same immutable world; the renderer
+owns prepared images indexed by definition. Empty NPC sets preserve existing APIs
+and pixel output. JSON and image I/O remain in assets, outside core and rendering.
+Use system nlohmann/json 3.12.0 or a hash-pinned FetchContent fallback.
+
+Tests own generated fixtures: JSON failures and bounds, occupancy and all movement
+directions, view sectors, transparent overlap, independent wall intersection,
+distance/anchor projection, strafe reversal/endpoints and zero frame allocations.
+Debug/Release CTest and desktop GPU/captures passed separately. Four goblin views,
+depth scaling, pillars, and strafes were visually inspected. The original 35
+logical captures remain pixel-identical with an empty NPC manifest. See
+verification.md for commands, results and platform limitations.
+
+## Sprite animation
+
+Status: implemented and verified; see [verification](verification.md#npc-sprite-animation).
+
+The application owns a graphics-independent NPC animation player alongside
+immutable world placement. Clips are Idle, Walk and Attack, with 1..4 frames and
+positive integer millisecond durations (maximum 60,000 per frame). All directions
+of a clip share timing. Idle/walk require all four views; attack may omit non-front
+views, which use directional idle on its own timeline. Legacy `views` definitions
+remain one-frame idle. Definitions cannot mix `views` and `animations`.
+Placement adds optional `animation` (default idle) and `phase_ms` (default zero).
+No movement, turning, combat, events or AI is introduced.
+
+Clip metadata is independent of decoded images. The animation player copies bounded
+metadata at startup, borrows the level-lifetime world, and publishes fixed-capacity
+per-instance active/idle frame indices and a revision. Absolute elapsed milliseconds
+allow deterministic captures and bounded modulo sampling without catch-up loops.
+Animation time advances independently of movement's animation toggle. Source images
+are released after preparation; clocks and frame selections never allocate.
+
+Prepared sprites add clip/frame indices to the existing type/direction/depth lookup.
+Contiguous prepared RGBA storage stays immutable; absent directions reference idle
+at composition rather than duplicating pixels. Shadows remain shared per type/depth.
+The existing 128 MiB combined source/prepared pixel budget includes every frame and
+shadow, and exhaustion fails startup. Animated source frames use common 384x536
+canvases, a uniform scale per sheet, and ground pivots at (192,512). Original static artwork stays available.
+
+FramePipeline observes animation revision as well as movement revision. A changed
+selection recomposes destination and any transition source from the same snapshot;
+strafe composition consumes that snapshot too. Unchanged stationary frames remain
+reusable. A pipeline belongs to one world/renderer/animation-player lifetime.
+
+Demo placements in manifest order are idle, attack, walk, idle (last phase 600 ms).
+Idle: two frames at 600 ms each in four directions. Walk in place: two frames at
+300 ms each in four directions. Front/back alternate the planted foot; side views
+use a wide-stride/passing pair with steady arms to retain correct weapon ownership. Front dagger attack: rest/windup/strike/recovery
+at 700/250/250/350 ms, repeating. Other attack views display directional idle.
+
+Validation: generated fixtures cover schema and capacities, timing boundaries,
+wraparound/large jumps/phase, fallback, static compatibility, stationary refresh,
+all movement transitions, alpha/grounding/occlusion, and zero frame allocations.
+Explicit capture timestamps expose all authored frames and directional views;
+inspect loops at source and dungeon resolution. Run headless Debug/Release CTest
+and separate available desktop GPU checks. Generated art needs visual inspection:
+identity drift and apparent sliding cannot be established by unit tests alone.
+
+
+### Asset format and reproduction
+
+Animated definitions replace the top-level `views` field with `animations`:
+
+```json
+"animations": {
+  "idle": {
+    "durations_ms": [600, 600],
+    "views": {
+      "front": ["idle-front-0.png", "idle-front-1.png"],
+      "back": ["idle-back-0.png", "idle-back-1.png"],
+      "left": ["idle-left-0.png", "idle-left-1.png"],
+      "right": ["idle-right-0.png", "idle-right-1.png"]
+    }
+  }
+}
+```
+
+Each frame also accepts the existing `{ "image": "...", "anchor": [x,y] }`
+form. A front-only attack omits the other direction keys; missing walk/idle
+views are errors. Unknown clip/direction names, mismatched frame/duration counts,
+missing selected clips, mixed formats, and invalid images fail loading with path
+context. `phase_ms` is an integer from 0 through 2147483647 in JSON. A missing
+animation snapshot renders frame zero of the placement's selected clip (and
+frame-zero idle for missing directions). Animation time is independent of the
+TAB movement-transition toggle. Placement indices stay fixed for the session.
+
+The built-in imagegen tool authored nine selected sheets (twenty poses). Original
+static images and `goblin-static.json` remain available. Prompts, including the
+walk correction iterations, are in
+[`animation/prompts.txt`](../assets/npcs/goblin/animation/prompts.txt). Runtime PNGs
+and the selected sheets are checked into the asset tree; no generation API or
+image-preparation tool is required to build or run the game.
+
+The offline `blobber_prepare_npc_animation` tool reads
+[`sheets.json`](../assets/npcs/goblin/animation/sheets.json). Measured fixed split
+positions separate generated sheet cells (the generator does not guarantee exact
+grids). Registered horizontal pivots and the lowest pixel above alpha cutoff 15
+align frames; one scale per sheet preserves pose changes. It performs nearest
+sampling into 384x536 canvases, preserves source alpha, and rejects visible canvas
+clipping. It does not synthesize motion, mirror equipment, or resize individual
+poses independently. The generated `frames.json` supplies image/anchor entries
+used in `goblin.json`.
+
+```sh
+cmake --build --preset debug --target blobber_prepare_npc_animation
+cmake-build-debug/blobber_prepare_npc_animation assets/npcs/goblin/animation/sheets.json
+```
+
+The twenty decoded runtime images total 15.70 MiB. Prepared depth images and
+contact shadows also fit the enforced combined 128 MiB budget. Fixed metadata
+is bounded by 32 types × 3 clips × 4 directions × 4 frames × 26 depth slots;
+only populated frames have prepared pixels. Runtime timing is O(instances × 4)
+with at most 256 instances, independent of elapsed time. A revision can trigger
+composition even when the changed NPC is hidden; visibility-aware invalidation
+is deferred until there is evidence it is useful.
+
+### Visual previews
+
+| Clip | Front | Back | Left | Right |
+| --- | --- | --- | --- | --- |
+| Idle | ![](screenshots/npc-animation/idle-front.gif) | ![](screenshots/npc-animation/idle-back.gif) | ![](screenshots/npc-animation/idle-left.gif) | ![](screenshots/npc-animation/idle-right.gif) |
+| Walk | ![](screenshots/npc-animation/walk-front.gif) | ![](screenshots/npc-animation/walk-back.gif) | ![](screenshots/npc-animation/walk-left.gif) | ![](screenshots/npc-animation/walk-right.gif) |
+| Attack | ![](screenshots/npc-animation/attack-front.gif) | Directional idle | Directional idle | Directional idle |
+
+Previews use the configured durations and nearest sampling. GIF transparency is
+binary; runtime PNGs retain RGBA. Small facial/clothing-detail variation remains
+between generated frames, particularly at source resolution. Side walking is a
+deliberately coarse two-pose approximation. Review the art in the dungeon as well
+as isolated previews; this is not a rigged animation workflow.
