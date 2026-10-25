@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–04 are Accepted; slice 05 is next eligible for planning.
+Status: gameplay roadmap; slices 01–04 are Accepted; slice 05 is Ready for review (including review corrections).
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 04 — Party HUD and commands (2026-10-25) |
-| Active slice | None |
-| Awaiting user review | None |
-| Blockers | None for slice 05 planning |
-| Next eligible slice | 05 — First melee combat (Planned) |
-| Next action | In a clean context, inspect slice 05 code and prerequisites, then prepare its implementation plan |
+| Active slice | 05 — First melee combat (Ready for review) |
+| Awaiting user review | Slice 05 and milestone A — first fight |
+| Blockers | None |
+| Next eligible slice | None until slice 05 is accepted |
+| Next action | User reviews slice 05/milestone A; do not start slice 06 |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -194,10 +194,11 @@ called its mana model the official spell-points framework.
   individual turns. A surprised opening suppresses the opening maneuver and
   affected characters' first turns. Surprise requires unnoticed attackers;
   side/rear position alone does not cause it.
-- The front row protects the back row from ordinary frontal melee until both
-  front characters are unconscious/dead. Rear attacks expose the back row.
-  Back-row step-forward melee uses the character's action without permanently
-  changing formation. The encounter plan must resolve side attacks and threats
+- Each front slot protects its paired rear slot from ordinary frontal melee until
+  that front character is unconscious/dead. Rear attacks expose the back row.
+  The slice 05 review correction uses paired columns on both sides: ordinary
+  rear-row melee is blocked only by its own front partner; the Rogue
+  exception stays in slice 10. The encounter plan must resolve side attacks and threats
   from multiple directions consistently with these rules.
 - Include melee, ranged attack, spell, item, defend, and back-row melee commands.
   Omit bonus actions, reactions, readying, opportunity attacks, and tabletop
@@ -305,7 +306,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 02 | [Characters and preset party](#slice-02-characters-and-preset-party) | 01 | Accepted | A |
 | 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Accepted | A |
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Accepted | A |
-| 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Planned | A |
+| 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Ready for review | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Planned | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Planned | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Planned | B |
@@ -320,7 +321,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
-| A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Planned |
+| A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Ready for review |
 | B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Planned |
 | C — RPG loop | Class abilities, spells, inventory, equipment, loot, recovery, and levels 1–3 work together. | Planned |
 | D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
@@ -593,7 +594,7 @@ unchanged; no additional scope changes were requested.
 ### Slice 05: First melee combat
 
 **Deliver:** Individual initiative, enemy-group turns, melee, defend, formation
-protection, back-row melee, health/death saves/stabilization, victory, and defeat.
+protection, rear-row exposure, health/death saves/stabilization, victory, and defeat.
 Use stationary encounters and simple feedback to reach a playable checkpoint.
 
 **Boundary:** Shared maneuvers, ranged approach, and full spells come later.
@@ -603,7 +604,51 @@ Record these temporary milestone limits rather than implying the full loop exist
 invalid/dead targets, missed attacks, front-row collapse, healing from zero HP,
 death-save outcomes, and exactly-once turn/death resolution. User reviews milestone A.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Ready for review; 2026-10-25.
+**Approved plan:** User said “Implement the plan.” See [melee combat design](melee_combat_design.md).
+Frontal single-cell fights; individual/group initiative; row protection on both
+sides; visible-body targeting; Dodge-style Defend and Wisdom Aid; authoritative
+health/death saves; immediate defeat; victory stabilization without healing;
+restart with fresh owners and seeded reproduction. General back-row step-forward
+melee was superseded by the user's clarification; Rogue exceptions stay in slice 10.
+**Delivered:** Graphics-independent session/combat ownership and pure health rules;
+checked party mutations; turn-token validation and bounded automatic advancement;
+production HUD/action routing with ally targeting, status/counters and outcomes.
+Review corrections add per-slot exposure, same-cell melee enemy advancement on its
+next turn, one-shot attacks on hits/misses, and one-second damage/MISS splashes.
+--combat-demo starts beside the goblins; --seed reproduces play; --ui-demo remains
+isolated preview-only. Combat captures include real-API recovery fixtures. Existing
+prepared-image rendering, fixed presentation, fonts and actor flash behavior remain.
+**Verification:** Debug/Release builds and all 16 headless CTest suites passed,
+including extended zero-allocation gameplay checks. Focused ASan/UBSan combat checks,
+CLI seed boundaries, shipped/copied catalog validation and whitespace checks passed.
+Initial captures exported 130 PNGs; 122 prior logical viewports were pixel-identical.
+Those images predate final UI refinements. Final captures/GPU lifecycle and desktop
+interaction are unverified. The attempted desktop input test selected the wrong
+window and is invalid; its script was stopped and removed. All subsequent checks
+were command-line only. See [commands, evidence and limits](slice05_verification.md).
+**Review recipe:** Run --combat-demo --seed 5 and follow the
+[slice 05 user review](slice05_verification.md#user-review): front/rear restrictions,
+Defend/Aid, death saves, a complete win/loss and restart. User performs desktop
+review; agents must not control mouse/keyboard, windows or desktops.
+**Deviations / limitations:** Approved temporary adaptations: frontal contact only,
+both sides' paired-slot protection, untrained Wisdom Aid, immediate defeat when no
+one is conscious, automatic post-victory stabilization without HP recovery. Healing
+has real APIs/development fixtures but no normal action yet. No retreat, moving AI,
+shared maneuvers, reach, Rogue exception, ranged/spell attacks, loot/XP, rests or saves.
+Final desktop interaction/visual QA, Windows/macOS, physical high-DPI and scale
+benchmarks remain unverified. The user explicitly prohibited desktop automation.
+**Next-agent handoff:** Stop here pending acceptance of slice 05 and milestone A.
+GameSession is immovable; map/catalog outlive it. Rebuild commands, animator and
+frame pipeline after restart. Party snapshots stay const; use checked health APIs.
+Combat validates rank/range/turn/life/equipment independently of UI body visibility.
+Requests carry actor-world identity and turn serial; invalid requests spend no RNG.
+Refresh picking before input and again after mutation; do not confirm a new turn,
+newly regained action or result before it has been presented. Damage and animation
+share session time; focus/map/log pause it, and automatic steps never catch up in a
+burst. Simulation owns outcomes; animation must never resolve damage/death. Slice 06
+must preserve immediate dead occupancy release and replace presentation separately.
+**Acceptance:** Pending. Slice 06 remains Planned and has not started.
 
 ### Slice 06: Goblin hurt and death animations
 
@@ -815,6 +860,9 @@ choices belong in their execution/design records unless they change this roadmap
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-25 | Slice 05 uses frontal single-cell contact, Dodge-style Defend, Wisdom Aid, conscious-target priority, immediate defeat and post-victory stabilization without HP recovery. | User's slice 05 planning selections. |
+| 2026-10-25 | Original planning decision (superseded by the slice 05 review correction below): whole-row protection applies to attackers and targets on both sides; body visibility is also required. Ordinary step-forward melee is superseded; Rogue exception remains slice 10. | User rejected melee over front-row heads and clarified both formations. |
+| 2026-10-25 | Agents must not control mouse/keyboard, switch windows/desktops or automate desktop input. | Explicit user instruction following the invalid desktop test; recorded in AGENTS.md. |
 | 2026-10-25 | Deliver a goblin demo with four classes/races and levels 1–3; generate a balanced fixed party. | User planning answers; proposed preset pairings retained in approved roadmap. |
 | 2026-10-25 | Individual initiative turns, real-time ranged approach with cooldowns, and one shared maneuver each round. | User planning answers. |
 | 2026-10-25 | Keep death saves; use awareness-based surprise and rear-row exposure. | User planning answers. |
@@ -831,3 +879,19 @@ overview, all sixteen sequential tracker IDs and dependencies, milestone groups,
 Planned statuses, empty execution records, and trailing whitespace. No build,
 gameplay, or desktop tests were run for this documentation-only change. No gameplay
 slice completion is implied.
+
+
+Superseded slice 05 planning assumption: the earlier roadmap allowed any back-row
+character to step forward for a melee action without changing formation. The
+2026-10-25 row-protection clarification above replaces it; no such ordinary action
+is implemented. The Back-row melee control explains that a future feature is required.
+
+### Slice 05 review correction decision — 2026-10-25
+
+User requests attacks visible on misses, paired-slot protection, melee enemies
+advancing into vacant front slots, and temporary red damage/white MISS splashes
+on monsters and party portraits. These supersede whole-row protection and the
+attack-playback deferral above. Implemented within slice 05; acceptance remains
+pending. Same-cell advancement occurs on the enemy's next attack turn; general
+moving AI and new hurt/death assets remain future work. Details and validation
+strategy: [melee combat review corrections](melee_combat_design.md#review-corrections--design-2026-10-25).

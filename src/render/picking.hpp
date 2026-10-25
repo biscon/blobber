@@ -25,12 +25,28 @@ class PickingBuffer {
         targets_.world = actors->snapshot().world;
         targets_.revision = actors->snapshot().revision;
         std::array<bool, NpcWorld::maxInstances> seen{};
-        for (int i = 0; i < viewWidth * viewHeight; ++i)
-            if (pixels_[i] < seen.size())
-                seen[pixels_[i]] = true;
+        std::array<Cell, NpcWorld::maxInstances> minimum{}, maximum{};
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto slot = pixels_[y * viewWidth + x];
+                if (slot >= seen.size())
+                    continue;
+                if (!seen[slot]) {
+                    minimum[slot] = maximum[slot] = {x, y};
+                    seen[slot] = true;
+                } else {
+                    minimum[slot].x = std::min(minimum[slot].x, x);
+                    minimum[slot].y = std::min(minimum[slot].y, y);
+                    maximum[slot].x = std::max(maximum[slot].x, x);
+                    maximum[slot].y = std::max(maximum[slot].y, y);
+                }
+            }
         for (std::size_t i = 0; i < actors->snapshot().count; ++i)
-            if (seen[i] && actors->snapshot().actors[i].life == ActorLife::Alive)
+            if (seen[i] && actors->snapshot().actors[i].life == ActorLife::Alive) {
                 targets_.ids[targets_.count++] = actors->id(i);
+                targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2, (minimum[i].y + maximum[i].y) / 2,
+                                       true};
+            }
     }
     std::optional<ActorId> pick(int x, int y) const noexcept {
         const auto s = slot(x, y);

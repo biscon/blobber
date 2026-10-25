@@ -229,3 +229,16 @@ binary; runtime PNGs retain RGBA. Small facial/clothing-detail variation remains
 between generated frames, particularly at source resolution. Side walking is a
 deliberately coarse two-pose approximation. Review the art in the dungeon as well
 as isolated previews; this is not a rigged animation workflow.
+
+## Slice 05 combat playback correction
+
+Production placements remain idle. A timestamped ActorWorld attack cue overrides
+the authored clip for one existing attack cycle, regardless of hit/miss. The
+animation snapshot publishes the selected clip as well as frame indices; CPU
+composition uses those prepared images and retains directional idle fallback.
+No attack art falls back to idle. Death freezes the selected attack pose at the
+damage timestamp during the existing 100 ms flash. Retriggering restarts at frame
+zero. Animation never resolves an attack. Timing uses paused session time; authored
+showcase loops and idle phase offsets remain unchanged. New hurt/death clips are
+still deferred. Tests exercise one-shot boundaries, retriggering, missing art,
+rendered miss poses, death and invalid cue identities/times without a window.

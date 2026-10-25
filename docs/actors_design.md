@@ -1,5 +1,7 @@
 # Mutable monster world — slice 03
 
+Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 consumes these checked operations from stationary combat and shares damage timestamps with session animation time. Occupancy/death/flash contracts remain unchanged. The remainder records this subsystem’s original slice boundary.
+
 Status: implemented and accepted by the user (2026-10-25).
 See [verification and review](slice03_verification.md).
 
@@ -92,3 +94,12 @@ The normal application initializes actors but does not issue mutations yet.
 Scripted captures and tests exercise the API; later command/combat slices must
 call these checked operations rather than editing snapshots. No generic session
 clock, RNG, event bus or animation scheduler was introduced.
+
+## Slice 05 review: attack cues
+
+ActorState additionally retains a checked attack timestamp independent of HP damage.
+`attack(id, time)` rejects foreign/removed/dead IDs and timestamps older than that
+actor's previous attack; it increments the actor revision. Combat emits the cue
+for every attack, including misses. NpcAnimator selects one prepared attack clip
+from elapsed cue time and then returns to the authored clip. See the
+[melee design](melee_combat_design.md) for paired-slot combat advancement and feedback.

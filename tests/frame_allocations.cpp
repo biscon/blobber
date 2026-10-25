@@ -6,6 +6,7 @@
 #include "rules/content.hpp"
 #include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
+#include "support/combat_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -114,7 +115,60 @@ int main() {
         invalidBuild.equipment.body = {16};
         CommandController commands(party, npcs);
         UiInputEdges edges;
+        const auto fightCatalog = combatCatalog(100000, -100, {1, 4, -100});
+        const auto fightPlacements = combatPlacements(map);
+        GameSession fight(map, fightCatalog, fightPlacements, 5, {{3, 4}, Heading::North});
+        CommandController fightUi(fight);
+        NpcAnimator fightAnimator(fight.actors(), {npcTimings(appearance)});
+        FramePipeline fightFrames;
+        int meleeActions = 0;
+        bool monsterFeedback = false, partyFeedback = false, attackPlayback = false;
         tracking = true;
+        fight.setAnimated(false);
+        fight.move(Action::Forward);
+        fightUi.record(fight.update(0, false));
+        for (int i = 0; i < 1000; ++i) {
+            fightUi.record(fight.update(.45, i % 19 == 0));
+            fightAnimator.setTime(fight.timeMs());
+            fightFrames.update(renderer, map, fight.movement(), &fight.actors(), &fightAnimator.snapshot());
+            const auto* pick = fightFrames.picking();
+            fightUi.refresh(pick ? pick->targets() : TargetSnapshot{}, false, false, true);
+            if (fight.combat().snapshot().awaitingAction) {
+                const auto id = *fight.combat().snapshot().activeCharacter;
+                const rules::CharacterId ally{static_cast<std::uint16_t>((id.index + 1) % 4)};
+                if (i % 3 == 0) {
+                    fight.party().damage(ally, fight.party().character(ally)->hitPoints);
+                    fightUi.refresh(pick ? pick->targets() : TargetSnapshot{}, false, false, true);
+                    fightUi.selectAction(PartyAction::Aid);
+                    fightUi.selectAlly(0);
+                } else if (i % 3 == 2) {
+                    fightUi.selectAction(PartyAction::Melee);
+                    fightUi.selectTarget(fight.actors().id(2));
+                } else
+                    fightUi.selectAction(PartyAction::Defend);
+                const auto result = fightUi.confirm();
+                if (i % 3 == 2 && result == CommandReason::Resolved)
+                    ++meleeActions;
+                fight.party().heal(ally, 100);
+            }
+            for (const auto& feedback : fightUi.snapshot().feedback) {
+                monsterFeedback |= feedback.active && !feedback.party;
+                partyFeedback |= feedback.active && feedback.party;
+            }
+            for (std::size_t slot = 0; slot < fightAnimator.snapshot().count; ++slot)
+                attackPlayback |= fightAnimator.snapshot().frames[slot].clip == NpcAnimation::Attack;
+            fightUi.toggleLog();
+            fightUi.scrollLog(1);
+            fightUi.confirm();
+            fightUi.toggleLog();
+        }
+        for (std::size_t i = 0; i < 4; ++i)
+            fight.actors().damage(fight.actors().id(i), 100000, fight.timeMs());
+        fightUi.record(fight.update(.45, false));
+        okay &= meleeActions > 0 && monsterFeedback && partyFeedback && attackPlayback;
+        okay &= fight.combat().snapshot().phase == CombatPhase::Victory;
+        okay &= fight.combat().continueExploring();
+
         for (int i = 0; i < 1000; ++i) {
             const auto& snapshot = party.snapshot();
             const auto* member = party.character({static_cast<std::uint16_t>(i % rules::partySize)});

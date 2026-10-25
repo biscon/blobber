@@ -55,3 +55,27 @@ and immediately nonblocking. No new SRD content or attack resolution was added.
 The 100 ms white hit/death flash and subsequent hiding are project presentation
 choices, not tabletop mechanics. Loot, XP awards and death animation clips remain
 deferred to their roadmap slices.
+
+
+## Slice 05 combat adoption and adaptations
+
+Source remains the official SRD 5.1 Creative Commons PDF linked above; attribution
+continues to ship with the catalog. No new content schema or equipment data.
+
+| Rule | Source (printed pages) | Treatment |
+| --- | --- | --- |
+| Initiative and groups | pp. 90–91 | One roll per character/monster-definition group, fixed across rounds; deterministic ties use Dexterity, party, then stable identity. |
+| Attack and damage | pp. 93–97 | Existing equipped weapon derivation and goblin scimitar baseline now execute; ordinary hits, natural-roll exceptions and critical dice retained. |
+| Dodge | p. 93 | Defend spends an action, granting attack disadvantage until next turn/unconsciousness. Dexterity-save and speed conditions are not simulated. |
+| Zero HP, death saves, stabilization | pp. 97–98 | Dying/stable/dead states, natural 1/20, three outcomes, damage at zero, massive damage, healing reset and no resurrection. |
+| First aid | p. 98 | Aid spends an action on DC 10 Wisdom; no Medicine proficiency because skills remain absent. |
+
+Paired-slot protection on both sides and visibility-limited cell melee are project
+adaptations. User clarification supersedes ordinary back-row step-forward attacks;
+Rogue exceptions remain slice 10. Following user review, a front-row survivor shields only its own rear column.
+An exposed melee goblin moves into its vacant front slot on its next attack turn;
+this same-cell reform does not cost an additional action. Goblins target conscious exposed members uniformly.
+No conscious party member ends the encounter in defeat without finishing death
+saves. Victory automatically stabilizes surviving downed allies without restoring
+HP. Natural 1d4-hour recovery is deferred with resting. No reach, surprise, shared
+maneuvers, ranged approach, class features, XP, loot or resurrection is implied.

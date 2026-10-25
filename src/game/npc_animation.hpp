@@ -14,6 +14,7 @@ void validateNpcTimings(const NpcTimings& timings);
 struct NpcFrameSelection {
     std::uint8_t active = 0, idle = 0;
     bool visible = true, flash = false;
+    NpcAnimation clip = NpcAnimation::Idle;
 };
 struct NpcAnimationSnapshot {
     std::array<NpcFrameSelection, NpcWorld::maxInstances> frames{};

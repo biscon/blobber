@@ -1,5 +1,7 @@
 # Rules foundation (slice 01)
 
+Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 adds pure health transitions and runtime combat consumers of the existing dice/attack primitives. JSON schemas and seeded dice sequences are unchanged. The remainder records this subsystem’s original slice boundary.
+
 Status: implemented and accepted by the user (2026-10-25).
 The user approved the slice 01 plan and chose editable JSON content.
 See the [roadmap](dnd5e_demo_design.md) for delivery and acceptance status and

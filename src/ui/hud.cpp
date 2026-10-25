@@ -1,5 +1,6 @@
 #include "ui/hud.hpp"
 #include "raylib.h"
+#include "ui/combat_feedback.hpp"
 #include "ui/fonts.hpp"
 #include "ui/layout.hpp"
 #include <algorithm>
@@ -56,7 +57,37 @@ class HudPainter {
                  UiTextStyle style = UiTextStyle::Label);
     int wrapped(const char* value, UiRect r, Color color = pale, UiTextStyle style = UiTextStyle::Label);
     void card(const HudCard& c, int i, bool selected);
+    void splash(const CombatFeedback& feedback, UiRect r);
 };
+void HudPainter::splash(const CombatFeedback& feedback, UiRect r) {
+    if (!fonts_) {
+        const Color fill = feedback.hit ? Color{190, 24, 18, 255} : WHITE;
+        const Color border = feedback.hit ? Color{65, 10, 8, 255} : Color{55, 55, 55, 255};
+        const Vector2 center{r.x + r.width * .5f, r.y + r.height * .5f};
+        for (std::size_t i = 0; i < bloodSplat.size(); ++i) {
+            const auto a = bloodSplat[i], b = bloodSplat[(i + 1) % bloodSplat.size()];
+            const Vector2 p{r.x + a.x * (r.width - 1), r.y + a.y * (r.height - 1)};
+            const Vector2 q{r.x + b.x * (r.width - 1), r.y + b.y * (r.height - 1)};
+            // raylib expects counterclockwise vertices in screen coordinates.
+            DrawTriangle(center, q, p, fill);
+            DrawLineV(p, q, border);
+        }
+    } else {
+        char label[32];
+        if (feedback.hit)
+            std::snprintf(label, sizeof(label), "%lld", static_cast<long long>(feedback.damage));
+        else
+            std::snprintf(label, sizeof(label), "MISS");
+        const auto style = UiTextStyle::Heading;
+        const float width = fonts_->width(label, style);
+        if (width <= r.width - 6)
+            text(label, r.x + (r.width - width) * .5f,
+                 fonts_->centeredY(label, float(r.y), float(r.height), style), feedback.hit ? WHITE : BLACK,
+                 style);
+        else
+            buttonLabel(label, r, 3, feedback.hit ? WHITE : BLACK, style);
+    }
+}
 void HudPainter::box(UiRect r, Color border) {
     rectangle(r.x, r.y, r.width, r.height, panel);
     rectangleLines(r.x, r.y, r.width, r.height, border);
@@ -133,14 +164,14 @@ const char* shortReason(CommandReason r) {
     case CommandReason::MapOpen:
         return "Close map to confirm.";
     case CommandReason::CannotAct:
-        return "Cannot act: demo status.";
+        return "Character is not conscious.";
     default:
         return commandMessage(r);
     }
 }
 void HudPainter::card(const HudCard& c, int i, bool selected) {
     const auto r = hudLayout::card(i);
-    box(r, selected ? gold : edge);
+    box(r, c.recentlyHit ? danger : c.active ? pale : selected ? gold : edge);
     clipped(c.name, r.x + 6, r.y + 5, r.width - 12, selected ? gold : pale, UiTextStyle::Heading);
     constexpr Color colors[]{
         {128, 113, 85, 255}, {111, 133, 139, 255}, {112, 135, 98, 255}, {138, 113, 150, 255}};
@@ -152,15 +183,20 @@ void HudPainter::card(const HudCard& c, int i, bool selected) {
     char line[64];
     std::snprintf(line, sizeof(line), "HP %d/%d", c.hp, c.maxHp);
     text(line, r.x + 38, r.y + 29, c.hp < c.maxHp ? danger : pale);
-    if (c.hasMana)
+    if (c.hasDeathSaves)
+        std::snprintf(line, sizeof(line), "Saves %u+ / %u-", unsigned(c.successes), unsigned(c.failures));
+    else if (c.hasMana)
         std::snprintf(line, sizeof(line), "Mana %d/%d", c.mana, c.maxMana);
     else
         std::snprintf(line, sizeof(line), "Mana --");
     text(line, r.x + 38, r.y + 40, muted, UiTextStyle::Small);
     constexpr const char* positions[]{"FL", "FR", "BL", "BR"};
-    const char* status = c.status == DisplayStatus::Ready  ? "Ready"
-                         : c.status == DisplayStatus::Dead ? "Dead"
-                                                           : "Unconscious";
+    const char* status = c.status == DisplayStatus::Ready    ? (c.defending ? "Defending"
+                                                                : c.active  ? "Your turn"
+                                                                            : "Ready")
+                         : c.status == DisplayStatus::Stable ? "Stable"
+                         : c.status == DisplayStatus::Dead   ? "Dead"
+                                                             : "Unconscious";
     std::snprintf(line, sizeof(line), "%d %s / %s", i + 1, positions[i], status);
     clipped(line, r.x + 6, r.y + 55, r.width - 12, c.status == DisplayStatus::Ready ? muted : danger,
             UiTextStyle::Small);
@@ -185,15 +221,16 @@ void HudPainter::drawUI(const MovementState& state, bool debug, const Map& map, 
     clipped(line, 12, 24, 108, muted, UiTextStyle::Small);
     if (hud) {
         if (!debug) {
-            for (int i = 0; i < 6; ++i) {
+            for (int i = 0; i < (hud->production ? static_cast<int>(PartyAction::Count) : 6); ++i) {
                 const auto action = static_cast<PartyAction>(i);
                 const bool selected = hud->selection.action == action;
-                const auto r = hudLayout::action(i);
+                const auto r = hudLayout::action(i, hud->production);
                 box(r, selected ? gold : edge);
                 const auto reason = hud->actionAvailability[i];
-                const bool unavailable = reason == CommandReason::Unavailable ||
-                                         reason == CommandReason::BackRowOnly ||
-                                         reason == CommandReason::CannotAct;
+                const bool unavailable =
+                    reason == CommandReason::Unavailable || reason == CommandReason::BackRowOnly ||
+                    reason == CommandReason::CannotAct || reason == CommandReason::FeatureRequired ||
+                    reason == CommandReason::RearBlocked || reason == CommandReason::NotYourTurn;
                 buttonLabel(actionName(action), r, 4, unavailable ? muted : pale);
             }
             box(hudLayout::previousPage);
@@ -206,6 +243,18 @@ void HudPainter::drawUI(const MovementState& state, bool debug, const Map& map, 
             for (int i = 0; i < 4; ++i) {
                 const auto r = hudLayout::target(i);
                 const auto index = hud->targetPage * 4 + i;
+                if (hud->production && hud->selection.action == PartyAction::Aid) {
+                    if (static_cast<std::size_t>(i) < hud->allyCount) {
+                        const auto id = hud->allies[i];
+                        const bool selected = hud->selection.ally && hud->selection.ally->index == id.index;
+                        box(r, selected ? gold : edge);
+                        for (const auto& card : hud->cards)
+                            if (card.id.index == id.index)
+                                buttonLabel(card.name, r, 3, selected ? gold : pale);
+                    } else if (!i)
+                        buttonLabel("No dying allies", r, 0, muted);
+                    continue;
+                }
                 if (index >= hud->targets.count) {
                     if (i == 0)
                         buttonLabel("No visible targets", r, 0, muted);
@@ -214,14 +263,16 @@ void HudPainter::drawUI(const MovementState& state, bool debug, const Map& map, 
                 const auto id = hud->targets.ids[index];
                 const bool selected = hud->selection.target && sameActor(*hud->selection.target, id);
                 box(r, selected ? gold : edge);
-                std::snprintf(line, sizeof(line), "Monster #%u", unsigned(id.slot) + 1);
+                std::snprintf(line, sizeof(line), "Monster #%u%s", unsigned(id.slot) + 1,
+                              hud->protectedTargets[index] ? " / rear" : "");
                 buttonLabel(line, r, 3, hud->suspended ? muted : selected ? gold : pale);
             }
-            box(hudLayout::confirm, hud->availability == CommandReason::PreviewAccepted ? gold : edge);
-            buttonLabel("ENTER / PREVIEW", hudLayout::confirm, 6,
-                        hud->availability == CommandReason::PreviewAccepted ? gold : muted);
-            wrapped(shortReason(hud->availability), hudLayout::feedback,
-                    hud->availability == CommandReason::PreviewAccepted ? pale : danger);
+            const bool ready = hud->availability == CommandReason::PreviewAccepted ||
+                               hud->availability == CommandReason::Ready;
+            box(hudLayout::confirm, ready ? gold : edge);
+            buttonLabel(hud->production ? "ENTER / CONFIRM" : "ENTER / PREVIEW", hudLayout::confirm, 6,
+                        ready ? gold : muted);
+            wrapped(shortReason(hud->availability), hudLayout::feedback, ready ? pale : danger);
             rule(10, 248, 122, 248, edge);
             text("LOG (click / scroll)", 10, 251, gold, UiTextStyle::Log);
             clipped(hud->log.newest(hud->logOffset), 10, 264, 112, pale, UiTextStyle::Log);
@@ -264,6 +315,47 @@ void HudPainter::drawOverlay(const HudSnapshot* hud, const PickingBuffer* pickin
                      picking->slot(x, y - 1) != selected || picking->slot(x, y + 1) != selected))
                     DrawPixel(viewX + x, viewY + y, gold);
     }
+    if (hud->production) {
+        char line[128];
+        const auto& combat = hud->combat;
+        const char* active = "";
+        if (combat.activeCharacter)
+            for (const auto& card : hud->cards)
+                if (card.id.index == combat.activeCharacter->index)
+                    active = card.name;
+        if (combat.phase == CombatPhase::Turns) {
+            if (combat.activeEnemy)
+                std::snprintf(line, sizeof(line), "Round %llu / Goblin #%u",
+                              static_cast<unsigned long long>(combat.round),
+                              unsigned(combat.activeEnemy->slot) + 1);
+            else
+                std::snprintf(line, sizeof(line), "Round %llu / %s%s",
+                              static_cast<unsigned long long>(combat.round), active,
+                              combat.awaitingAction ? " - choose an action" : " - death save");
+        } else
+            std::snprintf(line, sizeof(line), "%s",
+                          combat.phase == CombatPhase::Contact   ? "Contact / movement locked"
+                          : combat.phase == CombatPhase::Victory ? "Victory"
+                          : combat.phase == CombatPhase::Defeat  ? "Defeat"
+                                                                 : "Exploration / frontal melee only");
+        box({140, 8, 485, 18}, gold);
+        buttonLabel(line, {140, 8, 485, 18}, 5, gold);
+        if (combat.phase == CombatPhase::Victory || combat.phase == CombatPhase::Defeat) {
+            box(hudLayout::result, gold);
+            text(combat.phase == CombatPhase::Victory ? "VICTORY" : "DEFEAT", 224, 116, gold,
+                 UiTextStyle::Heading);
+            wrapped(combat.phase == CombatPhase::Victory
+                        ? "Surviving allies are stable. HP is not restored."
+                        : "Nobody is conscious. Restart begins a fresh session.",
+                    {224, 135, 312, 26});
+            box(hudLayout::resultButton, gold);
+            buttonLabel(combat.phase == CombatPhase::Victory ? "ENTER / CONTINUE" : "ENTER / RESTART",
+                        hudLayout::resultButton, 10, gold);
+        }
+    }
+    for (const auto& feedback : hud->feedback)
+        if (const auto rect = feedbackRect(feedback, hud->cards))
+            splash(feedback, *rect);
     if (hud->logExpanded) {
         box(hudLayout::expandedLog, gold);
         text("COMMAND LOG / wheel to scroll / click LOG to close", 162, 38, gold, UiTextStyle::Log);

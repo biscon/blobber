@@ -101,6 +101,20 @@ ActorResult ActorWorld::face(ActorId id, Heading facing) noexcept {
     ++state_.revision;
     return {ActorError::None, true};
 }
+ActorResult ActorWorld::attack(ActorId id, std::uint64_t timeMs) noexcept {
+    const auto* old = actor(id);
+    if (!old)
+        return {ActorError::InvalidHandle};
+    if (old->life != ActorLife::Alive)
+        return {ActorError::NotAlive};
+    if (old->hasAttack && timeMs < old->attackTimeMs)
+        return {ActorError::InvalidTime};
+    auto& a = state_.actors[id.slot];
+    a.hasAttack = true;
+    a.attackTimeMs = timeMs;
+    ++state_.revision;
+    return {ActorError::None, true};
+}
 ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept {
     const auto* old = actor(id);
     if (!old)

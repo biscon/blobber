@@ -123,6 +123,60 @@ void staggeredIdle() {
     check(!animator.snapshot().frames[1].visible && !animator.snapshot().frames[1].flash,
           "Idle phase does not shift the 100 ms death flash lifetime");
 }
+void triggeredAttacks() {
+    const auto appearance = testAnimatedNpcAppearance();
+    auto actors = world(NpcAnimation::Idle);
+    const auto idleActors = world(NpcAnimation::Idle);
+    NpcAnimator animator(actors, {npcTimings(appearance)}), idle(idleActors, {npcTimings(appearance)});
+    const SceneRenderer renderer(testMaterials(), {appearance});
+    Frame attackFrame, idleFrame;
+    const auto id = actors.id(0);
+    const auto hp = actors.actor(id)->hitPoints;
+    check(actors.attack(id, 1000).changed, "Attack cue independent of damage");
+    for (const auto elapsed : {0u, 69u, 70u, 94u, 95u, 119u, 120u, 154u, 155u, 310u}) {
+        animator.setTime(1000 + elapsed);
+        const auto& frame = animator.snapshot().frames[0];
+        check(frame.clip == (elapsed < 155 ? NpcAnimation::Attack : NpcAnimation::Idle),
+              "One-shot attack plays to completion then returns to idle without looping");
+        if (elapsed < 155)
+            check(frame.active == (elapsed < 70    ? 0
+                                   : elapsed < 95  ? 1
+                                   : elapsed < 120 ? 2
+                                                   : 3),
+                  "Triggered clip uses relative time without placement phase");
+    }
+    animator.setTime(1070);
+    idle.setTime(1070);
+    renderer.compose(map, {{3, 5}, Heading::North}, attackFrame, &actors, &animator.snapshot());
+    renderer.compose(map, {{3, 5}, Heading::North}, idleFrame, &idleActors, &idle.snapshot());
+    check(!same(attackFrame, idleFrame) && actors.actor(id)->hitPoints == hp,
+          "Miss animation changes actual prepared pixels without health mutation");
+    renderer.compose(map, {{5, 3}, Heading::West}, attackFrame, &actors, &animator.snapshot());
+    renderer.compose(map, {{5, 3}, Heading::West}, idleFrame, &idleActors, &idle.snapshot());
+    check(same(attackFrame, idleFrame), "Missing attack direction uses current idle frame");
+    const auto revision = actors.snapshot().revision;
+    check(actors.attack(id, 999).error == ActorError::InvalidTime &&
+              actors.attack(idleActors.id(0), 1100).error == ActorError::InvalidHandle &&
+              actors.snapshot().revision == revision,
+          "Invalid cues leave actor state unchanged");
+    check(actors.attack(id, 1100).changed, "A new attack restarts the clip");
+    animator.setTime(1100);
+    check(animator.snapshot().frames[0].active == 0, "Retrigger starts on frame zero");
+    actors.damage(id, hp, 1170);
+    animator.setTime(1190);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Attack &&
+              animator.snapshot().frames[0].active == 1 && animator.snapshot().frames[0].flash,
+          "Death freezes triggered attack pose at the lethal timestamp");
+    check(actors.attack(id, 1200).error == ActorError::NotAlive, "Dead actor cannot start an attack");
+    animator.setTime(1270);
+    check(!animator.snapshot().frames[0].visible, "Death expiry still hides attacking body");
+    auto noArt = world(NpcAnimation::Idle);
+    NpcAnimator fallback(noArt, {npcTimings(testNpcAppearance())});
+    noArt.attack(noArt.id(0), 0);
+    fallback.setTime(10);
+    check(fallback.snapshot().frames[0].clip == NpcAnimation::Idle,
+          "Missing entire attack clip safely retains idle");
+}
 void rendering() {
     const auto appearance = testAnimatedNpcAppearance();
     const auto npcs = world(NpcAnimation::Attack);
@@ -216,6 +270,7 @@ int main() {
     try {
         timing();
         staggeredIdle();
+        triggeredAttacks();
         rendering();
         std::cout << "NPC animation checks passed\n";
     } catch (const std::exception& error) {

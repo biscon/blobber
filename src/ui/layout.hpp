@@ -16,8 +16,8 @@ namespace hudLayout {
 constexpr UiRect card(int i) {
     return {4 + i * 159, 288, 155, 68};
 }
-constexpr UiRect action(int i) {
-    return {10, 38 + i * 16, 112, 15};
+constexpr UiRect action(int i, bool production = false) {
+    return {10, 38 + i * (production ? 14 : 16), 112, production ? 13 : 15};
 }
 constexpr UiRect target(int i) {
     return {10, 150 + i * 13, 112, 12};
@@ -26,6 +26,7 @@ constexpr UiRect previousPage{10, 135, 18, 13}, nextPage{104, 135, 18, 13};
 constexpr UiRect confirm{10, 204, 112, 16}, feedback{10, 223, 112, 25}, log{10, 251, 112, 27};
 constexpr UiRect expandedLog{152, 28, 460, 232};
 constexpr UiRect viewport{viewX, viewY, viewWidth, viewHeight};
+constexpr UiRect result{210, 105, 340, 90}, resultButton{300, 164, 160, 20};
 constexpr UiRect demoNext{390, 8, 110, 16}, demoReset{505, 8, 120, 16};
 } // namespace hudLayout
 // Raylib pointer coordinates are logical; aspectFit operates in framebuffer pixels.

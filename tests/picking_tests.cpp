@@ -44,12 +44,28 @@ int main() {
             }
         check(foreground > 0 && holes > 0 && empty > 0, "Representative overlap/holes/background exercised");
         check(picking.targets().count == 2, "Visible list includes both bodies");
+        for (std::uint16_t slot = 0; slot < 2; ++slot) {
+            int left = viewWidth, top = viewHeight, right = -1, bottom = -1;
+            for (int y = 0; y < viewHeight; ++y)
+                for (int x = 0; x < viewWidth; ++x)
+                    if (picking.slot(x, y) == slot) {
+                        left = std::min(left, x);
+                        right = std::max(right, x);
+                        top = std::min(top, y);
+                        bottom = std::max(bottom, y);
+                    }
+            const auto anchor = picking.targets().anchors[slot];
+            check(anchor.valid && anchor.x == (left + right) / 2 && anchor.y == (top + bottom) / 2,
+                  "Feedback anchor follows visible body extent including overlap and holes");
+        }
         check(!picking.pick(-1, 0) && !picking.pick(viewWidth, 0), "Out-of-bounds picking rejected");
         walls.fill(0);
         picking.clear();
         prepared.compose(both, camera, 0, walls, frame, nullptr, &picking);
         picking.finish(&both);
         check(picking.targets().count == 0, "Wall-clipped bodies excluded");
+        check(!picking.targets().anchors[0].valid && !picking.targets().anchors[1].valid,
+              "Hidden bodies cannot retain stale feedback anchors");
         walls.fill(std::numeric_limits<float>::infinity());
         for (int x = 0; x < viewWidth / 2; ++x)
             walls[x] = 0;

@@ -1,5 +1,7 @@
 # Party HUD and commands — slice 04
 
+Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 adds production combat routing, Aid/ally targets, turn/status/outcome display and confirmation gating. The const-owner constructor and --ui-demo preserve the slice 04 preview contract. The remainder records this subsystem’s original slice boundary.
+
 Status: implemented and accepted by the user, including all review corrections (2026-10-25).
 The user approved the slice 04 plan with “Implement the plan.”
 
@@ -210,3 +212,15 @@ scrolling-state changes. Verified live scrolling and captures with both short an
 two-line entries using a temporary content fixture; exact-size rasterization is
 retained. The panel fits 16 one-line entries at 36 native pixels per entry,
 compared with five entries at 117 pixels before this correction.
+
+## Slice 05 review: combat splashes
+
+The production HUD retains eight bounded one-second feedback records, replacing
+the same recipient's previous marker (oldest entry if full). Enemy markers retain
+a visible-body center from picking before a killing blow removes the target. Party
+markers map stable character identity to a portrait. The two existing presentation
+passes draw jagged red geometry/white damage digits or white geometry/black MISS,
+using the existing bold font atlas. Viewport markers clamp their full footprint
+inside the viewport. Pause freezes lifetime; movement/exploration/restart clears
+old feedback. No texture preparation, per-frame allocation or rules mutation is
+performed by feedback drawing. See the [melee design](melee_combat_design.md).

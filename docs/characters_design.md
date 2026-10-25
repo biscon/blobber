@@ -1,5 +1,7 @@
 # Characters and preset party (slice 02)
 
+Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 adds authoritative health/death-save operations and locks formation during combat. Starting builds, derived caches and catalog schema are unchanged. The remainder records this subsystem’s original slice boundary.
+
 Status: implemented and accepted by the user (2026-10-25). Delivery status
 belongs to the [roadmap](dnd5e_demo_design.md#slice-02-characters-and-preset-party).
 

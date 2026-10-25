@@ -247,10 +247,10 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
             npcSide(npc.facing, cameraX - (npc.cell.x + 0.5f + sx), cameraY - (npc.cell.y + 0.5f + sy));
         const int slot = row * 2 + (subDepth > 0 ? 1 : 0);
         const auto& type = types_.at(npc.type.index);
-        auto clip = static_cast<std::size_t>(npc.animation);
+        auto clip = static_cast<std::size_t>(animation ? animation->frames[i].clip : npc.animation);
         const auto direction = static_cast<std::size_t>(side);
         std::size_t frameIndex = animation ? animation->frames[i].active : 0;
-        if (!type.count[clip][0])
+        if (clip >= npcAnimationCount || !type.count[clip][0])
             throw std::invalid_argument("NPC selects absent prepared animation");
         if (!type.count[clip][direction]) {
             clip = 0;

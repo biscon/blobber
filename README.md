@@ -2,7 +2,7 @@
 
 A C++17 / raylib 6.2 prototype of a 1990s grid-based dungeon crawler. Rendering,
 six-direction keyboard movement, wall/NPC collision, and a small exploration level
-with animated goblins, a four-character party HUD, and command previews.
+with animated goblins, a four-character party HUD, and stationary turn-based melee combat.
 
 ![The great hall](docs/screenshots/great-hall.png)
 
@@ -54,10 +54,10 @@ working-directory setup is required: assets are copied beside the executable.
 | Q / E | Turn left / right 90 degrees |
 | Tab | Toggle animated / instant steps |
 | F1 | Toggle the development map overlay |
-| 1–4 / portrait click | Select a character in formation order |
+| 1–4 / portrait click | Inspect a character; with Aid selected, choose its recipient |
 | Up / Down | Select an action |
 | Left / Right / monster click | Select a visible target |
-| Enter / PREVIEW click | Validate a command preview; no resources spent |
+| Enter / CONFIRM click | Execute the active character's action; acknowledge a displayed outcome |
 | Backspace / right-click | Cancel target selection |
 | LOG click / mouse wheel | Expand the combat log / scroll its entries |
 | Esc | Exit |
@@ -70,10 +70,29 @@ repeat while held. Controls held during focus loss require a release in the focu
 window before their next press can act. Targets clear when movement starts or focus is lost; targeting
 and confirmation wait until transitions finish and the F1 map is closed.
 
-Melee, back-row melee and defend currently validate **previews only**. They do not
-roll attacks, spend resources or damage monsters. Ranged, spells and items explain
-that they are unavailable. Normal HP is authoritative; `Mana --` means mana is
-not implemented yet. Highlighted portraits indicate selection, not initiative.
+Facing an adjacent goblin cell begins combat and locks movement/turning. Each
+character and enemy group rolls initiative once; the banner identifies the active
+turn. Melee, Defend and Aid spend one action. Defend imposes disadvantage until the
+next turn; Aid attempts DC 10 Wisdom stabilization of another dying ally.
+
+Front slots protect their paired rear slots on **both sides** (FL/BL and FR/BR).
+A rear member can attack or be targeted as soon as its own front slot falls.
+An exposed melee goblin moves into that vacant front slot on its next turn, then
+attacks once. Party members retain their slots. Body visibility is also
+required. Targets marked `/ rear` are protected. Back-row feature attacks, reach,
+ranged attacks, spells and items remain unavailable; the Rogue exception is deferred.
+
+At zero HP, characters make death saves on their turns. Aid stabilizes without
+healing. Victory stabilizes surviving downed allies and preserves HP/deaths;
+Continue resumes exploration. No conscious party member means defeat; Restart
+reconstructs the party and monsters. Map/log browsing and focus loss pause gameplay.
+`Mana --` means mana is not implemented. Portrait selection is distinct from the
+active turn, which is explicitly labeled.
+
+For immediate review, run `./cmake-build-debug/blobber --combat-demo --seed 5`.
+This starts beside the existing goblins using the production combat path. `--seed`
+accepts an unsigned 32-bit integer; normal play reports its generated seed and
+restart reuses it. See [slice 05 review and limitations](docs/slice05_verification.md).
 
 Run `./cmake-build-debug/blobber --ui-demo` for eight deterministic development
 scenarios near the goblins. F2/NEXT advances; F3/RESET resets the current scenario.
@@ -91,8 +110,9 @@ All floor tiles must be reachable from the spawn.
 
 The test goblins stand at **(18,17)** in the southeast great hall, facing south.
 The player still starts at (3,21). Use F1 and the coordinate readout to navigate;
-stand at (18,18), (18,16), (19,17), or (17,17) and face its cell to inspect all four
-views. Any occupant blocks player entry into the entire cell.
+stand at (18,18) facing north to start a frontal fight. Contact turns the goblins
+toward the party. Authored directional views remain in the capture diagnostics.
+Living occupants block player entry into the entire cell.
 
 ![The goblin in the great hall](docs/screenshots/npc-front.png)
 
@@ -100,8 +120,8 @@ Edit `assets/npcs/level.json` to list definition files and placements. Each
 placement has a string `type`, integer `cell: [x,y]`, `subcell: [x,y]` with each
 component 0 or 1, and `facing: "north"`, `"east"`, `"south"`, or `"west"`.
 The four subcells are world-aligned quarter/three-quarter positions; at most one
-NPC occupies each slot. The same entity representation supports future friendly
-and hostile types; this slice has no behavioral distinction.
+NPC occupies each slot. All current runtime placements are hostile; friendly
+NPC behavior is not implemented.
 
 A definition such as `assets/npcs/goblin/goblin.json` contains `id`, `width`,
 `height` (full canvas dimensions in cell units), and four `views` named `front`,
@@ -116,9 +136,11 @@ must include `npcs/level.json`; use `{ "definitions": [], "instances": [] }` for
 an empty level. Invalid placements, unknown types, malformed assets, and exceeded
 limits fail at startup with an error. See the [NPC design](docs/npc_design.md) for
 ownership, limits, and future extension points. Runtime actors have HP, live occupancy, checked movement/removal and brief damage/death
-flashes. Animations loop, but autonomous AI, combat resolution and runtime spawning
-remain deferred. Development scenarios exercise removal; ordinary previews do not
-damage or move actors.
+flashes. Production actors idle while stationary combat resolves independently;
+authored walk/attack loops remain isolated showcases. Production enemy attacks play
+the existing attack clip once on hits and misses. Red damage splats and white MISS
+splats briefly mark the affected monster or party portrait. Autonomous cross-cell
+movement, new hurt/death clips and runtime spawning remain deferred.
 
 ## Rendering
 
@@ -200,10 +222,10 @@ cmake --build --preset debug --target blobber_prepare_assets
 cmake --build --preset debug
 ```
 
-The developer capture mode saves eleven static poses, the midpoint of all six
-transitions, both strafe sequences at `(8,4)` facing west, plus six NPC poses and
-two nine-frame NPC strafe/reveal sequences (**59 logical captures** total). It
-also saves a screenshot of the actual window, then exits:
+The developer capture mode preserves existing dungeon, transition, NPC, actor and
+UI diagnostic filenames and adds ten `combat-*` cases for the shipped level.
+It also saves a screenshot of the actual game window, then exits. The following
+is a manual review command; agents must not automate the user's desktop:
 
 ```sh
 ./cmake-build-debug/blobber --size 1024 768 --capture /tmp/blobber-captures
@@ -225,14 +247,14 @@ contiguous column/pixel arrays, and unchanged views skip viewport uploads.
 GPU textures and render targets are owned by bounded registries with typed,
 generation-checked handles and RAII cleanup before the window closes.
 
-Fourteen routine CTest suites cover rules/party/actors, commands and input, picking,
+Sixteen routine CTest suites cover rules/health/party/actors/combat, commands and input, picking,
 core behavior, rendering against an independent geometric oracle, resource
 lifetime/loading failures, NPC loading/rendering/collision, and zero C++ allocations
 in engine-owned CPU frame processing. They own their fixtures and need no display.
 Loading, preparation, diagnostic exports, and raylib/driver internals are outside
 the allocation guarantee. No performance benchmark framework is required.
 
-The separate desktop GPU lifecycle check is explicit:
+The separate desktop GPU lifecycle check is for manual desktop review:
 
 ```sh
 cmake --build --preset debug --target blobber_gpu_smoke
@@ -243,6 +265,6 @@ C++ formatting is defined by `.clang-format`. See [research notes](docs/research
 for historical sources and [verification notes](docs/verification.md) for checks
 and remaining platform limitations.
 
-The prototype has no combat, NPC behavior, inventory, interactive doors, audio,
+The prototype has no moving NPC AI, ranged/spell combat, inventory, interactive doors, audio,
 save system, or procedural level generation. Walls have one uniform height;
 transparent walls and variable elevations would require a richer coverage model.

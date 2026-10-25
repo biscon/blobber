@@ -1,40 +1,8 @@
 #pragma once
-#include "game/actors.hpp"
-#include "game/party.hpp"
+#include "game/session.hpp"
 #include <optional>
 
 namespace blobber {
-inline bool sameActor(ActorId a, ActorId b) noexcept {
-    return a.slot == b.slot && a.world == b.world;
-}
-enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Count };
-enum class CommandReason : std::uint8_t {
-    PreviewAccepted,
-    InvalidCharacter,
-    InvalidAction,
-    Unavailable,
-    BackRowOnly,
-    MissingTarget,
-    InvalidTarget,
-    NotVisible,
-    Moving,
-    MapOpen,
-    Unfocused,
-    CannotAct
-};
-const char* actionName(PartyAction action) noexcept;
-const char* commandMessage(CommandReason reason) noexcept;
-struct PartyCommand {
-    rules::CharacterId character;
-    PartyAction action = PartyAction::Melee;
-    std::optional<ActorId> target;
-};
-// Presentation eligibility only; future combat must validate its own range/LOS/turn rules.
-struct TargetSnapshot {
-    std::array<ActorId, NpcWorld::maxInstances> ids{};
-    std::size_t count = 0;
-    std::uint64_t world = 0, revision = 0;
-};
 class CombatLog {
   public:
     static constexpr std::size_t capacity = 32, messageBytes = 192;
@@ -46,7 +14,7 @@ class CombatLog {
     std::array<std::array<char, messageBytes>, capacity> entries_{};
     std::size_t next_ = 0, count_ = 0;
 };
-enum class DisplayStatus : std::uint8_t { Ready, Unconscious, Dead };
+enum class DisplayStatus : std::uint8_t { Ready, Unconscious, Dead, Stable };
 struct DemoResources {
     int hp = 0, mana = 0, maxMana = 0;
     DisplayStatus status = DisplayStatus::Ready;
@@ -61,24 +29,45 @@ struct HudCard {
     rules::CharacterId id;
     const char *name = "", *className = "";
     int hp = 0, maxHp = 0, mana = 0, maxMana = 0;
-    bool hasMana = false;
+    bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
+    std::uint8_t successes = 0, failures = 0;
     DisplayStatus status = DisplayStatus::Ready;
+};
+struct CombatFeedback {
+    static constexpr std::uint64_t durationMs = 1000;
+    bool active = false, party = false, hit = false;
+    rules::CharacterId character;
+    ActorId enemy;
+    TargetAnchor anchor;
+    std::int64_t damage = 0;
+    std::uint64_t startedMs = 0;
 };
 struct HudSnapshot {
     std::array<HudCard, rules::partySize> cards{};
     PartyCommand selection;
     TargetSnapshot targets;
+    std::array<bool, NpcWorld::maxInstances> protectedTargets{};
     std::size_t targetPage = 0, logOffset = 0;
     CommandReason availability = CommandReason::MissingTarget;
     std::array<CommandReason, static_cast<std::size_t>(PartyAction::Count)> actionAvailability{};
     bool suspended = false, demo = false, logExpanded = false;
     int demoScenario = 0;
     CombatLog log;
+    bool production = false;
+    CombatSnapshot combat;
+    std::array<rules::CharacterId, rules::partySize> allies{};
+    std::size_t allyCount = 0;
+    std::array<CombatFeedback, 8> feedback{};
 };
-// Party/catalog/actors outlive this controller. No authoritative resource mutation.
+// Owners outlive this controller. The session overload routes checked combat requests;
+// the const-owner overload is isolated preview-only presentation.
 class CommandController {
   public:
     CommandController(const Party& party, const ActorWorld& actors);
+    explicit CommandController(GameSession& session);
+    CommandController(GameSession&&) = delete;
+    void record(const CombatOutcome& outcome) noexcept;
+    void selectAlly(std::size_t index) noexcept;
     CommandController(Party&&, const ActorWorld&) = delete;
     CommandController(const Party&&, const ActorWorld&) = delete;
     CommandController(const Party&, ActorWorld&&) = delete;
@@ -105,6 +94,9 @@ class CommandController {
   private:
     bool visible(ActorId id) const noexcept;
     void updateAvailability() noexcept;
+    void recordFeedback(const CombatOutcome& outcome) noexcept;
+    GameSession* session_ = nullptr;
+    std::array<std::uint64_t, rules::partySize> hitUntil_{};
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;

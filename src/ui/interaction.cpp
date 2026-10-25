@@ -1,7 +1,7 @@
 #include "ui/interaction.hpp"
 namespace blobber {
-void routeHudInput(CommandController& commands, const UiInput& input,
-                   std::optional<ActorId> viewportHit) noexcept {
+void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
+                   bool allowConfirm) noexcept {
     if (!input.focused) {
         commands.cancel();
         return;
@@ -32,8 +32,9 @@ void routeHudInput(CommandController& commands, const UiInput& input,
             for (int i = 0; i < 4; ++i)
                 if (hudLayout::card(i).contains(p))
                     commands.selectCharacter(i);
-            for (int i = 0; i < static_cast<int>(PartyAction::Count); ++i)
-                if (hudLayout::action(i).contains(p))
+            for (int i = 0; i < (commands.snapshot().production ? static_cast<int>(PartyAction::Count) : 6);
+                 ++i)
+                if (hudLayout::action(i, commands.snapshot().production).contains(p))
                     commands.selectAction(static_cast<PartyAction>(i));
             if (hudLayout::previousPage.contains(p))
                 commands.pageTargets(-1);
@@ -42,8 +43,12 @@ void routeHudInput(CommandController& commands, const UiInput& input,
             const auto& state = commands.snapshot();
             for (int i = 0; i < 4; ++i) {
                 const auto index = state.targetPage * 4 + i;
-                if (hudLayout::target(i).contains(p) && index < state.targets.count)
-                    commands.selectTarget(state.targets.ids[index]);
+                if (hudLayout::target(i).contains(p)) {
+                    if (state.production && state.selection.action == PartyAction::Aid)
+                        commands.selectAlly(i);
+                    else if (index < state.targets.count)
+                        commands.selectTarget(state.targets.ids[index]);
+                }
             }
             if (hudLayout::log.contains(p))
                 commands.toggleLog();
@@ -54,7 +59,7 @@ void routeHudInput(CommandController& commands, const UiInput& input,
             confirm |= hudLayout::confirm.contains(p);
         }
     }
-    if (confirm)
+    if (confirm && allowConfirm)
         commands.confirm();
 }
 } // namespace blobber

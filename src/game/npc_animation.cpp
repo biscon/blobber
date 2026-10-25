@@ -62,14 +62,26 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
         const bool visible = actor.life == ActorLife::Alive || flash;
         const auto time = actor.life == ActorLife::Dead ? actor.damageTimeMs : elapsedMs;
         NpcFrameSelection next{0, 0, visible, flash};
+        next.clip = npc.animation;
         if (visible) {
-            const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
-            next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
+            const auto& attack = timings[static_cast<std::size_t>(NpcAnimation::Attack)];
+            std::uint32_t attackDuration = 0;
+            for (std::size_t frame = 0; frame < attack.count; ++frame)
+                attackDuration += attack.durationMs[frame];
+            const bool attacking =
+                actor.hasAttack && time >= actor.attackTimeMs && time - actor.attackTimeMs < attackDuration;
+            if (attacking) {
+                next.clip = NpcAnimation::Attack;
+                next.active = sample(attack, time - actor.attackTimeMs, 0);
+            } else {
+                const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
+                next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
+            }
             next.idle = sample(timings[0], time, idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||
-                   old.flash != next.flash;
+                   old.flash != next.flash || old.clip != next.clip;
         old = next;
     }
     snapshot_.actorRevision = world_.snapshot().revision;

@@ -45,3 +45,10 @@ Prefer compatible system packages when available. Keep a pinned, reproducible
 fallback for small dependencies such as raylib so a clean CLion/CMake checkout
 builds predictably. Do not install system packages or change toolchains
 unnecessarily; follow the execution environment's permission rules when needed.
+
+## Desktop verification restriction
+
+- Do not control the user's mouse or keyboard, switch window focus or desktops,
+  or run desktop input automation. This is an explicit user instruction.
+- Use command-line/headless checks. Leave interactive desktop review to the user;
+  report it as unverified rather than attempting automation.

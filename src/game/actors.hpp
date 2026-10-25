@@ -17,6 +17,8 @@ struct ActorState {
     ActorLife life = ActorLife::Alive;
     bool hasDamage = false;
     std::uint64_t damageTimeMs = 0;
+    bool hasAttack = false;
+    std::uint64_t attackTimeMs = 0;
 };
 struct ActorSnapshot {
     std::array<ActorState, NpcWorld::maxInstances> actors{};
@@ -56,6 +58,7 @@ class ActorWorld {
     bool occupied(Cell cell) const noexcept;
     ActorResult move(ActorId id, Cell cell, Cell subcell, Cell partyCell) noexcept;
     ActorResult face(ActorId id, Heading facing) noexcept;
+    ActorResult attack(ActorId id, std::uint64_t timeMs) noexcept;
     ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept;
     ActorResult remove(ActorId id) noexcept;
     const rules::Catalog& catalog() const noexcept { return catalog_; }

@@ -1,12 +1,13 @@
 #pragma once
 #include "rules/content.hpp"
+#include "rules/health.hpp"
 
 namespace blobber {
 enum class FormationSlot : std::uint8_t { FrontLeft, FrontRight, BackLeft, BackRight };
-struct PartyCharacter {
+struct PartyCharacter : rules::HealthState {
     rules::CharacterBuild build;
     rules::CharacterStats stats;
-    int hitPoints = 0, availableHitDice = 0;
+    int availableHitDice = 0;
     std::uint32_t experience = 0;
 };
 struct PartySnapshot {
@@ -23,10 +24,17 @@ class Party {
     const PartyCharacter* character(rules::CharacterId id) const noexcept;
     const PartyCharacter* occupant(FormationSlot slot) const noexcept;
     bool swapFormation(FormationSlot a, FormationSlot b) noexcept;
+    rules::HealthResult damage(rules::CharacterId id, std::int64_t amount, bool critical = false) noexcept;
+    rules::HealthResult heal(rules::CharacterId id, std::int64_t amount) noexcept;
+    rules::HealthResult stabilize(rules::CharacterId id) noexcept;
+    rules::HealthResult deathSave(rules::CharacterId id, int face) noexcept;
+    void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
     const rules::Catalog& catalog() const noexcept { return *catalog_; }
 
   private:
     const rules::Catalog* catalog_;
     PartySnapshot state_;
+    bool formationLocked_ = false;
+    rules::HealthResult commit(rules::CharacterId id, rules::HealthResult result) noexcept;
 };
 } // namespace blobber

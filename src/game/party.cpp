@@ -28,9 +28,34 @@ const PartyCharacter* Party::occupant(FormationSlot slot) const noexcept {
 }
 bool Party::swapFormation(FormationSlot a, FormationSlot b) noexcept {
     const auto x = static_cast<unsigned>(a), y = static_cast<unsigned>(b);
-    if (x >= rules::partySize || y >= rules::partySize)
+    if (formationLocked_ || x >= rules::partySize || y >= rules::partySize)
         return false;
     std::swap(state_.formation[x], state_.formation[y]);
     return true;
+}
+rules::HealthResult Party::commit(rules::CharacterId id, rules::HealthResult result) noexcept {
+    if (result && result.changed)
+        static_cast<rules::HealthState&>(state_.characters[id.index]) = result.state;
+    return result;
+}
+rules::HealthResult Party::damage(rules::CharacterId id, std::int64_t amount, bool critical) noexcept {
+    const auto* c = character(id);
+    return c ? commit(id, rules::takeDamage(*c, c->stats.maxHitPoints, amount, critical))
+             : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
+}
+rules::HealthResult Party::heal(rules::CharacterId id, std::int64_t amount) noexcept {
+    const auto* c = character(id);
+    return c ? commit(id, rules::receiveHealing(*c, c->stats.maxHitPoints, amount))
+             : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
+}
+rules::HealthResult Party::stabilize(rules::CharacterId id) noexcept {
+    const auto* c = character(id);
+    return c ? commit(id, rules::stabilize(*c, c->stats.maxHitPoints))
+             : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
+}
+rules::HealthResult Party::deathSave(rules::CharacterId id, int face) noexcept {
+    const auto* c = character(id);
+    return c ? commit(id, rules::deathSave(*c, c->stats.maxHitPoints, face))
+             : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
 }
 } // namespace blobber

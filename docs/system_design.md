@@ -1,9 +1,17 @@
 # System design
 
+Implemented, awaiting user review (slice 05): [first melee combat](melee_combat_design.md).
+An immovable gameplay session owns party health, actors, movement, seeded RNG and
+stationary frontal encounters. Initiative, row protection on both sides, melee,
+Defend, Aid, death saves, victory and defeat now execute authoritative commands.
+See [slice 05 verification and review](slice05_verification.md). Interactive desktop
+review remains unverified; do not automate the user's mouse, keyboard or desktop.
+
 Implemented and accepted by the user (2026-10-25): slice 04
 [party HUD and command design](party_hud_design.md). Four portraits, command
 previews, visible-body targeting and a bounded log read the existing party/actor
-state; no combat resolution or resource spending is integrated. Explicit UI demo
+state. Slice 05 adds combat execution; the isolated preview demo remains unchanged.
+Explicit UI demo
 scenarios keep sample mana/status values separate from authoritative party state.
 See [slice 04 verification](slice04_verification.md). The typography correction uses
 size-specific font atlases and native 1920×1080 text over the enlarged art,
@@ -26,8 +34,8 @@ It defines sixteen individually reviewed slices toward a four-character goblin
 combat demo. Slice 01's [rules foundation](rules_design.md) is implemented and
 accepted by the user (2026-10-25): explicitly seeded dice, pure attack/save/damage rules,
 and an immutable catalog loaded from bounded JSON before image preparation.
-The application owns the catalog, starting party and runtime actors for the session;
-combat resolution is not integrated yet. Rules are graphics-independent, JSON stays in a separate I/O library,
+The application owns the catalog; GameSession owns the live party and actors.
+Rules and health transitions are graphics-independent, JSON stays in a separate I/O library,
 and typed catalog indices are stable for one non-recycled catalog lifetime.
 The [source ledger](srd_content_ledger.md) records adopted SRD data and adaptations.
 The roadmap owns delivery
@@ -38,14 +46,17 @@ Implemented and accepted by the user (2026-10-25):
 [characters and preset party](characters_design.md) is slice 02. Independent race/class/item definitions and an editable preset feed
 pure stat derivation and a bounded four-character owner. It initializes HP, Hit
 Dice, XP, and relative formation before world/image preparation. The party exposes
-const state and checked formation swaps; combat, resource spending, inventory
-transactions, and mana are deferred. See [slice 02 verification](slice02_verification.md).
+const state, checked health operations and formation swaps locked during combat.
+Inventory transactions and mana remain deferred. See [slice 02 verification](slice02_verification.md).
 
 NPC extension: [directional sprites and slow animation](npc_design.md) is implemented.
 It adds immutable level NPC placement data, JSON assets, and prepared alpha animation
 frames. Runtime actors initialize from those placements; a separate animation
 player selects idle, walk-in-place, or frontal attack frames and transient hit feedback.
-There is no autonomous movement or combat yet.
+Stationary combat is integrated. Review corrections add paired-slot protection,
+same-cell enemy advancement, one-shot existing attack clips and bounded damage/MISS
+feedback; see the melee design. Autonomous cross-cell movement and new hurt/death
+clips remain deferred.
 The [NPC design](npc_design.md#rendering) also covers prepared, floor-projected
 contact shadows, blended beneath bodies and clipped against wall depth.
 
@@ -58,14 +69,21 @@ checks and limits.
 - **World:** compact immutable row-major solid-cell storage and immutable NPC
   loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
+- **Session/combat:** an immovable owner borrows the map/catalog and owns party,
+  actors, movement, RNG and elapsed time. A fixed encounter contains at most four
+  enemies/four groups/eight initiative entries. Contact clears queued movement;
+  commands validate turn tokens, life, equipment, range and formation before RNG.
+  Outcomes return synchronously. Focus/map/log pauses stop gameplay time. Each
+  update resolves at most one automatic step, spaced by 450 ms without catch-up.
 - **Party/rules:** immutable catalog values feed pure, allocation-free character
   derivation. A four-character party owns starting builds/gear, derived caches,
-  resources, and a formation permutation. Typed character/item indices never
+  resources, health/death-save state, and a formation permutation. Pure health
+  transitions feed checked mutations; health/build snapshots remain const. Typed character/item indices never
   recycle; formation swaps preserve identities and resources. JSON/loading stays
   outside game code. Schema 2 adds party content; strict schema 1 remains readable
   as rules-only content, but startup requires a preset.
 - **Actors:** a fixed-capacity runtime owner initializes monster HP and transforms
-  from placements and the catalog. Checked movement, facing, damage and removal
+  from placements and the catalog. Checked movement, facing, attack cues, damage and removal
   atomically update records, occupancy and revisions. Typed IDs include a unique
   world identity; slots never recycle. Dead records remain readable, removed IDs
   fail lookup, and only living actors block movement.
@@ -84,10 +102,12 @@ checks and limits.
   and render-target handles refer to fixed-capacity, generation-checked slots.
   Borrowed raw raylib values stay inside short platform calls. RAII unloads GPU
   resources before the window closes, including exception paths.
-- **Commands/UI:** a graphics-independent controller validates typed preview
-  commands against borrowed party/actor state and current presentation eligibility.
-  It owns selection, bounded target membership, a 32×192-byte log and a fixed HUD
-  snapshot. Focus/edge handling and aspect-fit hit testing are CPU-testable.
+- **Commands/UI:** a graphics-independent controller validates current body
+  visibility and routes production requests through GameSession; a separate const-owner
+  mode retains preview-only diagnostics. It owns selection, bounded enemy/ally
+  targets, a 32×192-byte log, eight timed damage/MISS splashes and a fixed HUD snapshot. Confirmation must refer to
+  the turn/outcome already presented. Focus/edge handling, Aid selection and
+  aspect-fit hit testing are CPU-testable.
 - **Presentation:** the HUD draws from movement, map and command snapshots; the presenter
   owns handles for the viewport texture and three targets. It retains the 640×360
   art grid → 1920×1080 texture → aspect-fit framebuffer path. HUD geometry stays
@@ -131,7 +151,7 @@ collision, NPC alpha composition, and transitions. Composition copies pixels but
 never allocates output storage. Input buffers at most one fresh movement command. UI confirmation is edge-triggered
 and never queued. UI formatting uses stack buffers. Each frame pipeline also owns
 one fixed 500×272 uint16 picking buffer (~266 KiB), written alongside prepared body
-pixels. Living target membership is scanned after composition; transitions expose
+pixels. Living target membership and visible-body centers are scanned after composition; transitions expose
 no picking. Transparent holes/walls/shadows do not select, and dead flashes occlude
 without becoming targets. Revisions invalidate picking with the image.
 
@@ -141,7 +161,8 @@ items; exceeding a bound rejects preparation. Equipment borrows owned entries,
 weight uses integer hundredths of pounds and int64 totals, and derived stats use
 fixed arrays. Party construction may copy strings; steady-state callers borrow
 its const snapshot. The application keeps the catalog alive and unmoved until
-after party destruction. Character IDs are party-local, owned-item IDs are
+after session/party destruction. Restart reconstructs all session borrowers while
+reusing prepared assets; this explicit preparation boundary may allocate. Character IDs are party-local, owned-item IDs are
 character-local, and catalog IDs remain catalog-local.
 
 The GPU registry holds up to eight standalone textures and four render targets.
@@ -202,9 +223,14 @@ Debug/Release presets stay CLion-compatible.
   stale identities, 256-target paging, bounded logs, development-only statuses,
   focus/held input, letterbox/pillarbox/high-DPI inverse mapping, alpha/depth-aware
   picking, transition suspension, and stationary invalidation.
+- Combat/health tests: pure health boundaries, death saves and stabilization;
+  initiative/group ordering, both row collapses in four directions, authoritative
+  requests, current visibility, Aid/Defend, pauses, queued contact, complete wins/losses,
+  restart identity and input on newly displayed turns/results. Fixtures own their data.
 - Allocation regression: enable an allocation counter after preparation, exercise
   first and subsequent moves, all transitions, blocked/queued input, and held/advancing NPC
-  frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, HUD refresh/commands/log rollover/input/picking, and require zero C++ allocations in the normal CPU frame path.
+  frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, HUD refresh/commands/log rollover/input/picking, first combat entry and subsequent
+  turns/Aid/healing/outcomes, and require zero C++ allocations in the normal CPU frame path.
 - Desktop integration: check actual GPU handle creation/release and presentation,
   produce the same deterministic captures, and compare them with the baseline.
   Capture/export allocations are intentionally excluded from the frame guarantee.
@@ -219,7 +245,7 @@ Historical techniques and visual choices are documented in [research](research.m
 | --- | --- |
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
 | `src/rules/` | Deterministic dice, pure attack/save/damage and character derivation, immutable typed content catalog |
-| `src/game/` | Runtime actors/occupancy, discrete movement, animation state, bounded party/resources/formation |
+| `src/game/` | Session/encounter ownership, runtime actors/occupancy, movement, animation state, bounded party/health/formation |
 | `src/input/` | Platform-independent key repeat timing |
 | `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
 | `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |
@@ -244,6 +270,7 @@ adds bounded clip timing and prepared animation frames, preserving immutable
 placements and the current image-composition/presentation pipeline. The application
 owns a graphics-independent animation player with fixed-capacity snapshots. Source
 images are released after preparation; timing metadata survives independently.
-No AI or combat is attached to these visual loops. Controlled actor movement and
+No AI or combat resolution is attached to these visual loops; production combat
+uses idle placements plus timestamped one-shot attack and damage cues while simulation independently resolves turns. Controlled actor movement and
 health/lifecycle mutation are described in the actor design; prepared caches stay
 immutable and are reused at each runtime position.
