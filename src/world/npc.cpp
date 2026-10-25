@@ -17,7 +17,7 @@ NpcWorld::NpcWorld(const Map& map, Cell spawn, std::vector<std::string> types,
                 throw std::runtime_error("Duplicate NPC type: " + types_[i]);
     }
     for (const auto& npc : instances_) {
-        if (npc.type.index >= types_.size() || static_cast<unsigned>(npc.animation) >= npcAnimationCount ||
+        if (npc.type.index >= types_.size() || npc.animation > NpcAnimation::Attack ||
             static_cast<unsigned>(npc.facing) >= 4 || npc.subcell.x < 0 || npc.subcell.x > 1 ||
             npc.subcell.y < 0 || npc.subcell.y > 1)
             throw std::runtime_error("Invalid NPC type, facing or subcell");

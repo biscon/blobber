@@ -1,4 +1,5 @@
 #pragma once
+#include "game/npc_animation.hpp"
 #include "game/session.hpp"
 #include <optional>
 
@@ -88,7 +89,7 @@ inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, Par
 class CommandController {
   public:
     CommandController(const Party& party, const ActorWorld& actors);
-    explicit CommandController(GameSession& session);
+    explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     CommandController(GameSession&&) = delete;
     void record(const CombatOutcome& outcome) noexcept;
     void selectAlly(std::size_t index) noexcept;
@@ -133,12 +134,16 @@ class CommandController {
     bool visible(ActorId id) const noexcept;
     void updateAvailability() noexcept;
     void recordFeedback(const CombatOutcome& outcome) noexcept;
+    void showFeedback(const CombatFeedback& feedback) noexcept;
+    void refreshFeedback(bool clear) noexcept;
     void updateHover() noexcept;
     void appendLog(const char* message) noexcept;
     bool pointerKnown_ = false;
     float pointerX_ = 0, pointerY_ = 0;
     GameSession* session_ = nullptr;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
+    std::array<std::uint32_t, NpcWorld::maxTypes> attackImpactMs_{};
+    std::array<CombatFeedback, 8> pendingFeedback_{};
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;

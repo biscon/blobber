@@ -8,6 +8,7 @@ class SceneRenderer {
   public:
     explicit SceneRenderer(const Materials& materials, const std::vector<NpcAppearance>& npcs = {})
         : views_(prepareScene(materials)), npcs_(npcs) {}
+    std::size_t npcPreparedPixelBytes() const noexcept { return npcs_.preparedPixelBytes(); }
     SceneRenderer(const SceneRenderer&) = delete;
     SceneRenderer& operator=(const SceneRenderer&) = delete;
     void compose(const Map& map, Player player, Frame& output, const ActorWorld* npcs = nullptr,

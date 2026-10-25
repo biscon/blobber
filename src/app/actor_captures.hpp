@@ -9,4 +9,8 @@ void captureActors(const Map& map, const Party& party, const rules::Catalog& cat
                    const NpcWorld& placements, const std::vector<NpcTimings>& timings,
                    const SceneRenderer& renderer, Presenter& presenter,
                    const std::filesystem::path& directory);
+void captureReactions(const Map& map, const Party& party, const rules::Catalog& catalog,
+                      const NpcWorld& placements, const std::vector<NpcTimings>& timings,
+                      const SceneRenderer& renderer, Presenter& presenter,
+                      const std::filesystem::path& directory);
 } // namespace blobber

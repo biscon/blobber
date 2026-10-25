@@ -137,12 +137,19 @@ Rebuild to copy edited assets beside the executable. Custom `--assets` directori
 must include `npcs/level.json`; use `{ "definitions": [], "instances": [] }` for
 an empty level. Invalid placements, unknown types, malformed assets, and exceeded
 limits fail at startup with an error. See the [NPC design](docs/npc_design.md) for
-ownership, limits, and future extension points. Runtime actors have HP, live occupancy, checked movement/removal and brief damage/death
-flashes. Production actors idle while stationary combat resolves independently;
+ownership, limits, and future extension points. Animated definitions use `animations`
+instead of `views`; each clip has `durations_ms` and directional frame arrays.
+Optional clip `width` overrides canvas width (death may be up to one cell wide).
+Hurt/death clips are triggered, never placement loops. Runtime actors have HP,
+live occupancy, checked movement/removal and damage/death reactions. Production actors idle while stationary combat resolves independently;
 authored walk/attack loops remain isolated showcases. Production enemy attacks play
 the existing attack clip once on hits and misses. Red damage splats and white MISS
 splats briefly mark the affected monster or party portrait. Autonomous cross-cell
-movement, new hurt/death clips and runtime spawning remain deferred.
+movement and runtime spawning remain deferred. Goblins flinch for 300 ms on damage;
+lethal damage immediately releases collision, plays a 600 ms collapse, holds a
+corpse for 600 ms, then hides. Both reactions retain the first 100 ms white flash.
+All four hurt/death directions are authored; existing attacks remain front-only.
+See [slice 06 review and captures](docs/slice06_verification.md).
 
 ## Rendering
 
@@ -228,7 +235,7 @@ cmake --build --preset debug
 ```
 
 The developer capture mode preserves existing dungeon, transition, NPC, actor and
-UI diagnostic filenames and adds ten `combat-*` cases for the shipped level.
+UI diagnostic filenames and adds combat and four-direction reaction cases for the shipped level.
 It also exports focused `hud-*` cases at native, 1280×720, and letterboxed
 1024×768 sizes, then exits. Capture mode uses a hidden window and exports its own
 render targets; it never captures another window or injects desktop input:
@@ -237,6 +244,8 @@ render targets; it never captures another window or injects desktop input:
 ./cmake-build-debug/blobber --capture /tmp/blobber-captures
 # Focused UI captures only:
 ./cmake-build-debug/blobber --capture-hud /tmp/blobber-ui
+# Focused hurt/death poses, transitions, corpse replacement and combat outcomes:
+./cmake-build-debug/blobber --capture-reactions /tmp/blobber-reactions
 ```
 
 `--assets DIRECTORY` overrides the default executable-relative asset directory.

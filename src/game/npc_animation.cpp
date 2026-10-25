@@ -13,6 +13,12 @@ void validateNpcTimings(const NpcTimings& timings) {
     }
 }
 namespace {
+std::uint32_t duration(const NpcClipTiming& clip) noexcept {
+    std::uint32_t total = 0;
+    for (std::size_t i = 0; i < clip.count; ++i)
+        total += clip.durationMs[i];
+    return total;
+}
 std::uint8_t sample(const NpcClipTiming& clip, std::uint64_t time, std::uint32_t phase) noexcept {
     std::uint32_t total = 0;
     for (std::size_t i = 0; i < clip.count; ++i)
@@ -59,25 +65,38 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
         const auto& timings = timings_[npc.type.index];
         const bool flash = actor.life != ActorLife::Removed && actor.hasDamage &&
                            elapsedMs >= actor.damageTimeMs && elapsedMs - actor.damageTimeMs < npcHitFlashMs;
-        const bool visible = actor.life == ActorLife::Alive || flash;
-        const auto time = actor.life == ActorLife::Dead ? actor.damageTimeMs : elapsedMs;
+        const auto& hurt = timings[static_cast<std::size_t>(NpcAnimation::Hurt)];
+        const auto& death = timings[static_cast<std::size_t>(NpcAnimation::Death)];
+        const bool dying = actor.life == ActorLife::Dead && death.count;
+        const bool deathVisible = dying && actor.hasDamage && elapsedMs >= actor.damageTimeMs &&
+                                  elapsedMs - actor.damageTimeMs < duration(death);
+        const bool visible = actor.life == ActorLife::Alive || (dying ? deathVisible : flash);
+        // Legacy death art freezes the exact living pose at the lethal timestamp.
+        const auto time = actor.life == ActorLife::Dead && !dying ? actor.damageTimeMs : elapsedMs;
         NpcFrameSelection next{0, 0, visible, flash};
         next.clip = npc.animation;
         if (visible) {
             const auto& attack = timings[static_cast<std::size_t>(NpcAnimation::Attack)];
-            std::uint32_t attackDuration = 0;
-            for (std::size_t frame = 0; frame < attack.count; ++frame)
-                attackDuration += attack.durationMs[frame];
-            const bool attacking =
-                actor.hasAttack && time >= actor.attackTimeMs && time - actor.attackTimeMs < attackDuration;
-            if (attacking) {
+            const bool damageCue = hurt.count && actor.hasDamage && time >= actor.damageTimeMs;
+            const bool attackCue = actor.hasAttack && time >= actor.attackTimeMs;
+            const bool hurtWins = damageCue && (!attackCue || actor.damageTimeMs >= actor.attackTimeMs);
+            if (dying) {
+                next.clip = NpcAnimation::Death;
+                next.active = sample(death, time - actor.damageTimeMs, 0);
+            } else if (hurtWins && time - actor.damageTimeMs < duration(hurt)) {
+                next.clip = NpcAnimation::Hurt;
+                next.active = sample(hurt, time - actor.damageTimeMs, 0);
+            } else if (!hurtWins && attackCue && time - actor.attackTimeMs < duration(attack)) {
                 next.clip = NpcAnimation::Attack;
                 next.active = sample(attack, time - actor.attackTimeMs, 0);
             } else {
                 const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
                 next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
             }
-            next.idle = sample(timings[0], time, idlePhases_[i]);
+            // Only an attack can expose a directional idle fallback. Keep legacy
+            // idle snapshots stable; reaction/corpse holds need no idle invalidation.
+            if (next.clip <= NpcAnimation::Attack)
+                next.idle = sample(timings[0], time, idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||

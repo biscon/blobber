@@ -19,7 +19,7 @@ int run(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
-                     "--capture-hud DIRECTORY] [--ui-demo | "
+                     "--capture-hud DIRECTORY | --capture-reactions DIRECTORY] [--ui-demo | "
                      "--combat-demo] [--seed UINT32]\n";
         return 0;
     }
@@ -36,6 +36,15 @@ int run(int argc, char** argv) {
     for (const auto& appearance : loadedNpcs.appearances)
         timings.push_back(npcTimings(appearance));
     const SceneRenderer renderer(loadMaterials(options.assets / "textures"), loadedNpcs.appearances);
+    if (!options.captureDirectory.empty()) {
+        std::size_t sourceBytes = 0;
+        for (const auto& appearance : loadedNpcs.appearances)
+            sourceBytes += validateNpcAppearance(appearance) * sizeof(Color);
+        std::cout << "NPC pixel bytes: source=" << sourceBytes
+                  << " prepared_with_shadows=" << renderer.npcPreparedPixelBytes()
+                  << " combined=" << sourceBytes + renderer.npcPreparedPixelBytes()
+                  << " limit=" << npcPixelBudget * sizeof(Color) << '\n';
+    }
     // Source images are needed only during preparation.
     std::vector<NpcAppearance>().swap(loadedNpcs.appearances);
     // Declaration order guarantees all GPU resources die before the window/context.
@@ -46,6 +55,13 @@ int run(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureReactionsOnly) {
+            captureReactions(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
+                             options.captureDirectory);
+            captureCombat(map, rules, loadedNpcs.world, timings, renderer, presenter,
+                          options.captureDirectory);
+            return 0;
+        }
         if (options.captureHudOnly) {
             captureHud(map, rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
             return 0;
@@ -68,6 +84,9 @@ int run(int argc, char** argv) {
         if (!WindowShouldClose())
             captureActors(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
                           options.captureDirectory);
+        if (!WindowShouldClose())
+            captureReactions(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
+                             options.captureDirectory);
         if (!WindowShouldClose())
             captureUi(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
                       options.captureDirectory);

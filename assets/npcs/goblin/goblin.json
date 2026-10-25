@@ -187,6 +187,209 @@
           }
         ]
       }
+    },
+    "hurt": {
+      "durations_ms": [
+        150,
+        150
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-right-1.png"
+          }
+        ]
+      }
+    },
+    "death": {
+      "durations_ms": [
+        200,
+        200,
+        200,
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-3.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-3.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-3.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-3.png"
+          }
+        ]
+      },
+      "width": 0.9
     }
   }
 }

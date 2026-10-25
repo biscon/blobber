@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <stdexcept>
 
 namespace blobber {
 const char* actionName(PartyAction action) noexcept {
@@ -75,8 +76,17 @@ CommandController::CommandController(const Party& party, const ActorWorld& actor
     refresh({}, false, false, true);
     appendLog("Choose a character, action and target. Mana is unavailable until the spell slice.");
 }
-CommandController::CommandController(GameSession& session)
+CommandController::CommandController(GameSession& session, const std::vector<NpcTimings>& timings)
     : CommandController(session.party(), session.actors()) {
+    if (!timings.empty() && timings.size() != actors_.snapshot().typeCount)
+        throw std::invalid_argument("HUD animation/world type counts differ");
+    for (std::size_t i = 0; i < timings.size(); ++i) {
+        validateNpcTimings(timings[i]);
+        const auto& attack = timings[i][static_cast<std::size_t>(NpcAnimation::Attack)];
+        // Existing authored attacks put the strike at the middle frame.
+        for (std::size_t frame = 0; frame < attack.count / 2; ++frame)
+            attackImpactMs_[i] += attack.durationMs[frame];
+    }
     session_ = &session;
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
@@ -103,8 +113,6 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                           : out.hit    ? "hit"
                                        : "miss",
                           out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "");
-            if (out.damage > 0 && session_)
-                hitUntil_[out.recipient.index] = session_->timeMs() + 150;
         } else
             std::snprintf(line, sizeof(line), "%s -> goblin #%u: %s (d20 %d), %lld damage%s.", name,
                           unsigned(out.enemy.slot) + 1,
@@ -142,8 +150,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         appendLog("Defeat: nobody is conscious. Restart begins a fresh session.");
 }
 void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
-    if (!session_ || out.enemy.world != actors_.snapshot().world ||
-        (out.enemyAttack ? !party_.character(out.recipient) : !actors_.actor(out.enemy)))
+    const auto* actor = actors_.actor(out.enemy);
+    if (!session_ || !actor || (out.enemyAttack && !party_.character(out.recipient)))
         return;
     CombatFeedback next;
     next.active = true;
@@ -161,6 +169,23 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
         if (!next.anchor.valid)
             return;
     }
+    const auto delay = next.party ? attackImpactMs_[actor->npc.type.index] : 0;
+    if (delay) {
+        next.startedMs += delay;
+        auto* destination = &pendingFeedback_[0];
+        for (auto& entry : pendingFeedback_) {
+            if (!entry.active) {
+                destination = &entry;
+                break;
+            }
+            if (entry.startedMs < destination->startedMs)
+                destination = &entry;
+        }
+        *destination = next;
+    } else
+        showFeedback(next);
+}
+void CommandController::showFeedback(const CombatFeedback& next) noexcept {
     auto* destination = &state_.feedback[0];
     for (auto& entry : state_.feedback) {
         if (entry.active && entry.party == next.party &&
@@ -173,6 +198,32 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
             destination = &entry;
     }
     *destination = next;
+    if (next.party && next.hit && next.damage > 0)
+        hitUntil_[next.character.index] = next.startedMs + 150;
+}
+void CommandController::refreshFeedback(bool clear) noexcept {
+    if (clear) {
+        pendingFeedback_ = {};
+        state_.feedback = {};
+        hitUntil_ = {};
+        return;
+    }
+    const auto now = session_->timeMs();
+    for (auto& entry : state_.feedback)
+        if (entry.active && now - entry.startedMs >= CombatFeedback::durationMs)
+            entry.active = false;
+    // Drain in impact order so a skipped interval leaves the newest recipient marker.
+    for (;;) {
+        CombatFeedback* next = nullptr;
+        for (auto& entry : pendingFeedback_)
+            if (entry.active && entry.startedMs <= now && (!next || entry.startedMs < next->startedMs))
+                next = &entry;
+        if (!next)
+            break;
+        if (now - next->startedMs < CombatFeedback::durationMs)
+            showFeedback(*next);
+        next->active = false;
+    }
 }
 void CommandController::selectAlly(std::size_t index) noexcept {
     if (!state_.suspended && index < state_.allyCount)
@@ -193,10 +244,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.production = session_ != nullptr;
     if (session_) {
         const auto& combat = session_->combat().snapshot();
-        for (auto& feedback : state_.feedback)
-            if (moving || combat.phase == CombatPhase::Exploration ||
-                session_->timeMs() - feedback.startedMs >= CombatFeedback::durationMs)
-                feedback.active = false;
+        refreshFeedback(moving || combat.phase == CombatPhase::Exploration);
         if (combat.turn != state_.combat.turn || combat.phase != state_.combat.phase) {
             state_.selection.action = PartyAction::Melee;
             state_.selection.target.reset();

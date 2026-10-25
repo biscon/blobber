@@ -1,5 +1,16 @@
 # System design
 
+Implemented and accepted by the user (2026-10-26): slice 06 [goblin hurt/death reactions](goblin_reactions_design.md).
+Four-direction prepared clips provide 300 ms hurt and 1200 ms death/corpse playback,
+with a 100 ms white overlay. See [verification and review](slice06_verification.md).
+Simulation still releases occupancy immediately; art never resolves damage or death.
+Implemented review correction: enemy damage/MISS splashes and portrait hit
+highlights start at the attack strike pose, using copied clip timing and bounded
+pending feedback. See the [impact timing design](goblin_reactions_design.md#attack-impact-feedback).
+Implemented review correction (2026-10-26): same-cell melee advancement may use
+either vacant front slot, preferring straight ahead. Turn eligibility is separate
+from current target exposure; see [melee design](melee_combat_design.md#front-slot-review-correction-2026-10-26).
+
 Implemented and accepted by the user (2026-10-25):
 [dungeon-first UI revision](dungeon_ui_design.md) for slice 05.
 Combat and presentation are accepted; slice 05 and milestone A are closed. See
@@ -34,7 +45,7 @@ Implemented and accepted by the user (2026-10-25):
 slice 03, [mutable monster world](actors_design.md).
 Runtime actors now supply live collision/rendering state, health and lifecycle.
 Prepared appearances and asset formats remain unchanged; scripted diagnostics
-exercise mutation and the 100 ms white damage/death flash.
+exercise mutation and the 100 ms white damage/death flash; slice 06 adds reaction clips.
 
 Gameplay extension: [SRD 5.1 demo design and self-tracking roadmap](dnd5e_demo_design.md).
 It defines sixteen individually reviewed slices toward a four-character goblin
@@ -62,8 +73,8 @@ frames. Runtime actors initialize from those placements; a separate animation
 player selects idle, walk-in-place, or frontal attack frames and transient hit feedback.
 Stationary combat is integrated. Review corrections add paired-slot protection,
 same-cell enemy advancement, one-shot existing attack clips and bounded damage/MISS
-feedback; see the melee design. Autonomous cross-cell movement and new hurt/death
-clips remain deferred.
+feedback; see the melee design. Autonomous cross-cell movement remains deferred; slice 06 adds four-direction
+hurt/death clips.
 The [NPC design](npc_design.md#rendering) also covers prepared, floor-projected
 contact shadows, blended beneath bodies and clipped against wall depth.
 
@@ -154,7 +165,8 @@ Runtime actors retain up to 256 stable records and one byte of live occupancy
 per map cell. The immutable placement mask is loading data only. The map and
 catalog outlive the noncopyable/nonmovable actor owner. Runtime operations return
 fixed result values without allocation. A death unblocks immediately; animation
-shows a white frozen pose for 100 ms before hiding body/shadow.
+plays a 1200 ms goblin death/corpse clip, overlaying white for its first 100 ms,
+then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash.
 
 Each 500×282 RGBA frame allocates once, is move-only, and cannot resize. The live
 pipeline owns three frames (about 1.61 MiB), reusing them across idle, movement,
@@ -163,7 +175,7 @@ never allocates output storage. Input buffers at most one fresh movement command
 and never queued. UI formatting uses stack buffers. Each frame pipeline also owns
 one fixed 500×282 uint16 picking buffer (~275 KiB), written alongside prepared body
 pixels. Living target membership, visible-body centers and top edges are scanned after composition; transitions expose
-no picking. Transparent holes/walls/shadows do not select, and dead flashes occlude
+no picking. Transparent holes/walls/shadows do not select, and dead bodies occlude
 without becoming targets. Revisions invalidate picking with the image.
 
 Party storage is four records with up to 16 owned starting item entries each,
@@ -228,7 +240,9 @@ Debug/Release presets stay CLion-compatible.
   formation identity, and rejected invalid input.
 - Actor tests: generated catalogs/maps, capacity and binding failures, stale/foreign
   handles, transactional occupancy, queued movement, exactly-once death/removal,
-  stationary view refresh, hit-flash boundaries and all movement transitions. Routine fixtures own their data;
+  stationary view refresh, hit-flash/reaction boundaries and all movement transitions.
+  Reaction tests cover interruptions, corpse holds, hidden expiry, wider-canvas scale,
+  reused-subslot ordering, pauses/Continue/restart, and budget exhaustion. Routine fixtures own their data;
   shipped content and startup validation are checked separately.
 - Command/UI tests: preview validation without costs, live formation, foreign and
   stale identities, 256-target paging, bounded logs, development-only statuses,

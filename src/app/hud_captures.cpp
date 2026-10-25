@@ -14,7 +14,7 @@ struct CaptureView {
     const SceneRenderer& renderer;
     CaptureView(const Map& m, const rules::Catalog& c, const NpcWorld& n, const std::vector<NpcTimings>& t,
                 const SceneRenderer& r, unsigned seed)
-        : session(m, c, n, seed, combatCamera(m, n)), commands(session), animator(session.actors(), t),
+        : session(m, c, n, seed, combatCamera(m, n)), commands(session, t), animator(session.actors(), t),
           map(m), renderer(r) {
         commands.record(session.update(0, false));
         refresh();
@@ -158,6 +158,88 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
         v.input(scroll);
         save(v, "hud-history-scrolled");
     }
+    {
+        CaptureView v(map, catalog, idle, timings, renderer, 5);
+        v.character(0);
+        ActorId rear;
+        for (std::size_t i = 0; i < v.session.combat().snapshot().enemyCount; ++i) {
+            const auto id = v.session.combat().snapshot().enemies[i];
+            if (!v.session.combat().exposed(id))
+                rear = id;
+        }
+        const auto* actor = v.session.actors().actor(rear);
+        if (!actor)
+            throw std::runtime_error("Diagonal capture requires a protected rear enemy");
+        const auto original = actor->npc.subcell;
+        const auto paired = original + forward(v.session.movement().player.heading) * -1;
+        for (std::size_t i = 0; i < v.session.combat().snapshot().enemyCount; ++i) {
+            const auto id = v.session.combat().snapshot().enemies[i];
+            if (!sameActor(id, rear) && !(v.session.actors().actor(id)->npc.subcell == paired))
+                v.session.actors().damage(id, std::numeric_limits<int>::max(), v.session.timeMs());
+        }
+        v.commands.record(v.session.update(1.2, false)); // Held party turn; let diagnostic deaths finish.
+        save(v, "hud-diagonal-before", true);
+        bool advanced = false;
+        for (int step = 0; step < 40 && !advanced; ++step) {
+            if (v.session.combat().snapshot().awaitingAction) {
+                v.commands.selectAction(PartyAction::Defend);
+                v.commands.confirm();
+            } else {
+                const auto out = v.session.update(.45, false);
+                v.commands.record(out);
+                advanced = out.enemyAttack && sameActor(out.enemy, rear);
+            }
+            v.refresh();
+        }
+        if (!advanced || actor->npc.subcell == original || actor->npc.subcell == paired)
+            throw std::runtime_error("Protected rear enemy did not advance diagonally and attack");
+        save(v, "hud-diagonal-after", true);
+    }
+    // Isolate one real enemy outcome to compare guard, wind-up and strike feedback.
+    std::array<bool, 2> impactCaptured{};
+    for (unsigned seed = 5; seed < 40 && !(impactCaptured[0] && impactCaptured[1]); ++seed) {
+        CaptureView v(map, catalog, idle, timings, renderer, seed);
+        for (int step = 0; step < 100 && v.session.combat().snapshot().phase == CombatPhase::Turns; ++step) {
+            if (v.session.combat().snapshot().awaitingAction) {
+                v.commands.selectAction(PartyAction::Defend);
+                v.commands.confirm();
+                v.refresh();
+                continue;
+            }
+            const auto out = v.session.update(.45, false);
+            v.refresh();
+            if (out.event != CombatEvent::Attack || !out.enemyAttack || impactCaptured[out.hit ? 0 : 1])
+                continue;
+            const auto& attack = timings[v.session.actors().actor(out.enemy)->npc.type.index]
+                                        [static_cast<std::size_t>(NpcAnimation::Attack)];
+            unsigned delay = 0;
+            for (std::size_t i = 0; i < attack.count / 2; ++i)
+                delay += attack.durationMs[i];
+            if (!delay)
+                throw std::runtime_error("Impact capture requires a multi-pose attack");
+            CommandController impactUi(v.session, timings);
+            impactUi.record(out);
+            const auto captureImpact = [&](const char* phase) {
+                v.refresh();
+                impactUi.refresh(v.frames.picking() ? v.frames.picking()->targets() : TargetSnapshot{}, false,
+                                 false, true);
+                presenter.present(v.frames.frame(), v.session.movement(), map, false, true,
+                                  &impactUi.snapshot(), v.frames.picking());
+                const auto name = std::string("hud-impact-") + (out.hit ? "hit-" : "miss-") + phase;
+                presenter.capture(directory / (name + ".png"));
+                presenter.capture(directory / (name + "-1280.png"), 1280, 720);
+            };
+            captureImpact("guard");
+            v.session.update(double(delay - 1) / 1000, false);
+            captureImpact("windup");
+            v.session.update(.001, false);
+            captureImpact("strike");
+            impactCaptured[out.hit ? 0 : 1] = true;
+            break;
+        }
+    }
+    if (!impactCaptured[0] || !impactCaptured[1])
+        throw std::runtime_error("HUD capture did not exercise hit and MISS impact timing");
     std::array<bool, 4> captured{};
     constexpr const char* names[]{"hud-damage-monster", "hud-miss-monster", "hud-damage-party",
                                   "hud-miss-party"};

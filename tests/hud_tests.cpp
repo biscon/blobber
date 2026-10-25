@@ -191,7 +191,13 @@ void initiative() {
             dead |= preview.upcoming[i].enemy->slot == 2;
             blocked |= preview.upcoming[i].enemy->slot == 1;
         }
-    check(!dead && !blocked, "Dead enemies and still-protected rear slots leave preview");
+    check(!dead && !blocked, "Preview excludes dead enemies and rear enemies whose gap is claimed earlier");
+    s.actors().damage(s.actors().id(0), 1000, s.timeMs());
+    s.combat().previewTurns(preview);
+    bool diagonal = false;
+    for (std::size_t i = 0; i < preview.upcomingCount; ++i)
+        diagonal |= preview.upcoming[i].enemy && preview.upcoming[i].enemy->slot == 1;
+    check(diagonal, "Preview includes protected rear actor when the diagonal vacancy remains available");
 }
 void logs() {
     CombatLog log;

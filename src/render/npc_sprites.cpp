@@ -43,6 +43,9 @@ std::size_t validateNpcAppearance(const NpcAppearance& a) {
             throw std::runtime_error("NPC cannot mix static views and animations");
     for (std::size_t clip = 0; clip < npcAnimationCount; ++clip) {
         const auto& c = a.animations[clip];
+        const float maxWidth = clip == static_cast<std::size_t>(NpcAnimation::Death) ? 1.0f : 0.5f;
+        if (!std::isfinite(c.width) || c.width < 0 || c.width > maxWidth || (c.width && !c.timing.count))
+            throw std::runtime_error("Invalid NPC clip canvas width");
         if (!animated && c.timing.count)
             throw std::runtime_error("Animated NPC requires idle clip");
         for (std::size_t side = 0; side < 4; ++side) {
@@ -97,7 +100,9 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
                         const float depth =
                             slot / 2 + ((slot & 1) ? 0.25f : -0.25f) + ViewProjection::cameraSetback;
                         Sprite sprite;
-                        const float w = focal * a.width / depth, h = focal * a.height / depth;
+                        const float canvasWidth =
+                            a.animations[clip].width ? a.animations[clip].width : a.width;
+                        const float w = focal * canvasWidth / depth, h = focal * a.height / depth;
                         const float ground =
                             ViewProjection::horizon + focal * ViewProjection::eyeHeight / depth;
                         const float top = ground - h * image.anchorY;
@@ -221,6 +226,7 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         float lateral, depth;
         int left;
         std::size_t instance;
+        bool alive;
     };
     std::array<Visible, NpcWorld::maxInstances> visible;
     std::size_t count = 0;
@@ -253,6 +259,8 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         if (clip >= npcAnimationCount || !type.count[clip][0])
             throw std::invalid_argument("NPC selects absent prepared animation");
         if (!type.count[clip][direction]) {
+            if (clip != static_cast<std::size_t>(NpcAnimation::Attack))
+                throw std::invalid_argument("NPC reaction missing required direction");
             clip = 0;
             frameIndex = animation ? animation->frames[i].idle : 0;
         }
@@ -261,10 +269,15 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         const auto& s = sprites_[type.first[clip][direction] + frameIndex * depthCount + slot];
         const int left = static_cast<int>(std::round(viewWidth * 0.5f + focal * lateral / depth - s.pivotX));
         // A floor blob may remain visible even when the body is clipped off screen.
-        visible[count++] = {&s, &shadows_[npc.type.index][slot], lateral, depth, left, i};
+        visible[count++] = {&s, &shadows_[npc.type.index][slot], lateral, depth, left,
+                            i,  actor.life == ActorLife::Alive};
     }
     std::sort(visible.begin(), visible.begin() + count, [](const Visible& a, const Visible& b) {
-        return a.depth != b.depth ? a.depth > b.depth : a.instance < b.instance;
+        if (a.depth != b.depth)
+            return a.depth > b.depth;
+        if (a.alive != b.alive)
+            return !a.alive;
+        return a.instance < b.instance;
     });
     // Floor shadows are a separate pass: never paint a shadow over another body.
     for (std::size_t i = 0; i < count; ++i) {

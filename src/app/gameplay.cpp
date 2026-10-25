@@ -36,7 +36,7 @@ struct PlayView {
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn)
         : session(m, catalog, placements, seed, spawn), animator(session.actors(), timings),
-          commands(session), map(m), renderer(r) {}
+          commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs());
         const bool changed =
@@ -163,6 +163,11 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
         if (view.session.combat().snapshot().phase != CombatPhase::Victory)
             throw std::runtime_error("Deterministic combat capture did not reach victory");
         capture(view, "combat-victory");
+        view.session.update(.6, false);
+        capture(view, "combat-victory-corpse");
+        view.session.combat().continueExploring();
+        view.session.update(.6, false);
+        capture(view, "combat-continue-corpses-expired");
     }
     {
         PlayView view(map, catalog, idle, timings, renderer, 5, spawn);

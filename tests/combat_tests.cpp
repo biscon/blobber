@@ -75,56 +75,110 @@ void rows() {
 void advancement() {
     const auto map = combatMap();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    enum Scenario { Paired, Diagonal, Competition, BothOpen, Blocked };
     for (auto heading : {Heading::North, Heading::East, Heading::South, Heading::West})
-        for (int lane = 0; lane < 2; ++lane) {
-            const Player pose{{3, 3}, heading};
-            const auto placements = combatPlacements(map, pose);
-            GameSession s(map, catalog, placements, 5, pose);
-            start(s);
-            ActorId front, rear, blockedRear;
-            Cell vacant;
-            for (std::size_t i = 0; i < 4; ++i) {
-                const auto id = s.actors().id(i);
-                const auto sub = s.actors().actor(id)->npc.subcell;
-                const int column = heading == Heading::North || heading == Heading::South ? sub.x : sub.y;
-                if (column == lane) {
+        for (int lane = 0; lane < 2; ++lane)
+            for (auto scenario : {Paired, Diagonal, Competition, BothOpen, Blocked}) {
+                const Player pose{{3, 3}, heading};
+                const auto placements = combatPlacements(map, pose);
+                GameSession s(map, catalog, placements, 5, pose);
+                std::array<ActorId, 2> front{}, rear{};
+                std::array<Cell, 2> frontPosition{}, rearPosition{};
+                for (std::size_t i = 0; i < 4; ++i) {
+                    const auto id = s.actors().id(i);
+                    const auto sub = s.actors().actor(id)->npc.subcell;
+                    const int column = heading == Heading::North || heading == Heading::South ? sub.x : sub.y;
                     if (s.combat().exposed(id)) {
-                        front = id;
-                        vacant = sub;
-                    } else
-                        rear = id;
-                } else if (!s.combat().exposed(id))
-                    blockedRear = id;
-            }
-            const auto blockedPosition = s.actors().actor(blockedRear)->npc.subcell;
-            s.actors().damage(front, 1000, s.timeMs());
-            check(s.combat().exposed(rear) && !s.combat().exposed(blockedRear),
-                  "Either single lane can open independently from all four approaches");
-            check(!(s.actors().actor(rear)->npc.subcell == vacant), "Advance waits for own turn");
-            bool attacked = false;
-            std::array<std::uint64_t, 4> lastRound{};
-            for (int step = 0; step < 40; ++step) {
-                const auto round = s.combat().snapshot().round;
-                if (s.combat().snapshot().awaitingAction)
-                    s.submit(turnCommand(s));
-                else {
-                    const auto out = s.update(.45, false);
-                    if (out.enemyAttack) {
-                        check(lastRound[out.enemy.slot] != round, "Advancement grants no extra attack");
-                        lastRound[out.enemy.slot] = round;
-                        attacked |= sameActor(out.enemy, rear);
-                        check(!sameActor(out.enemy, blockedRear), "Protected opposite rear cannot attack");
+                        front[column] = id;
+                        frontPosition[column] = sub;
+                    } else {
+                        rear[column] = id;
+                        rearPosition[column] = sub;
                     }
                 }
+                const auto kill = [&](ActorId id) { s.actors().damage(id, 1000, s.timeMs()); };
+                if (scenario != Blocked)
+                    kill(front[lane]);
+                if (scenario == Paired)
+                    kill(rear[1 - lane]);
+                if (scenario == Diagonal)
+                    kill(rear[lane]);
+                if (scenario == BothOpen)
+                    kill(front[1 - lane]);
+                const auto advancing = rear[scenario == Diagonal ? 1 - lane : lane];
+                if (scenario == Diagonal)
+                    check(!s.combat().exposed(advancing), "Diagonal mover is protected until it moves");
+                start(s);
+                const auto revision = s.actors().snapshot().revision;
+                auto preview = s.combat().snapshot();
+                s.combat().previewTurns(preview);
+                bool listed = false;
+                unsigned rearCount = 0;
+                for (std::size_t i = 0; i < preview.upcomingCount; ++i)
+                    if (const auto id = preview.upcoming[i].enemy) {
+                        listed |= sameActor(*id, advancing);
+                        rearCount += sameActor(*id, rear[0]) || sameActor(*id, rear[1]);
+                    }
+                check(rearCount == (scenario == Blocked    ? 0u
+                                    : scenario == BothOpen ? 2u
+                                                           : 1u),
+                      "Preview reserves each vacancy for only one upcoming rear actor");
+                check(scenario == Competition || listed == (scenario != Blocked),
+                      "Preview includes rear enemies able to fill either gap");
+                s.update(20, true);
+                check(s.actors().snapshot().revision == revision, "Preview and pause cannot advance actors");
+                std::array<unsigned, 4> attacks{};
+                std::array<std::uint64_t, 4> lastRound{};
+                for (int step = 0; step < 40; ++step) {
+                    const auto round = s.combat().snapshot().round;
+                    if (s.combat().snapshot().awaitingAction)
+                        s.submit(turnCommand(s));
+                    else {
+                        const auto out = s.update(.45, false);
+                        if (out.enemyAttack) {
+                            check(lastRound[out.enemy.slot] != round, "Advancement grants no extra attack");
+                            lastRound[out.enemy.slot] = round;
+                            ++attacks[out.enemy.slot];
+                            const auto& actor = *s.actors().actor(out.enemy);
+                            check(actor.npc.cell == pose.cell + forward(heading) &&
+                                      (actor.npc.subcell == frontPosition[0] ||
+                                       actor.npc.subcell == frontPosition[1]),
+                                  "Every melee enemy attacks from a front slot in the encounter cell");
+                            check(actor.hasAttack && actor.attackTimeMs == s.timeMs(),
+                                  "Advancement and attack playback use the same authoritative turn");
+                        }
+                    }
+                }
+                if (scenario == Paired || scenario == Diagonal) {
+                    check(attacks[advancing.slot] > 0 &&
+                              s.actors().actor(advancing)->npc.subcell == frontPosition[lane],
+                          "Rear goblin fills the available front slot and attacks, including diagonally");
+                    check(s.actors()
+                                  .move(front[1 - lane], pose.cell + forward(heading), frontPosition[lane],
+                                        pose.cell)
+                                  .error == ActorError::Occupied,
+                          "Advancement reserves the destination through ActorWorld occupancy");
+                } else if (scenario == Competition) {
+                    unsigned advanced = 0;
+                    for (int i = 0; i < 2; ++i) {
+                        const bool moved = s.actors().actor(rear[i])->npc.subcell == frontPosition[lane];
+                        advanced += moved;
+                        check((attacks[rear[i].slot] > 0) == moved,
+                              "Only the rear goblin that claims the vacancy may attack");
+                        if (!moved)
+                            check(s.actors().actor(rear[i])->npc.subcell == rearPosition[i],
+                                  "Later contender stays behind occupied front row");
+                    }
+                    check(advanced == 1, "Two rear actors cannot claim the same front slot");
+                } else
+                    for (int i = 0; i < 2; ++i) {
+                        check(s.actors().actor(rear[i])->npc.subcell ==
+                                  (scenario == BothOpen ? frontPosition[i] : rearPosition[i]),
+                              "Prefer straight ahead when open; stay put when both front slots are full");
+                        check((attacks[rear[i].slot] > 0) == (scenario == BothOpen),
+                              "A full front row prevents rear attacks");
+                    }
             }
-            check(attacked && s.actors().actor(rear)->npc.subcell == vacant,
-                  "Exposed melee enemy advances to paired vacant front and attacks");
-            check(s.actors().actor(blockedRear)->npc.subcell == blockedPosition,
-                  "Other lane remains in place");
-            check(s.actors().move(blockedRear, s.actors().actor(rear)->npc.cell, vacant, pose.cell).error ==
-                      ActorError::Occupied,
-                  "Advanced slot remains collision occupied");
-        }
 }
 void feedback() {
     const auto map = combatMap();
@@ -204,6 +258,145 @@ void feedback() {
     fresh.record(miss);
     for (const auto& entry : fresh.snapshot().feedback)
         check(!entry.active, "Restart rejects feedback from old world");
+}
+void feedbackTiming() {
+    const auto map = combatMap();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    const auto placements = combatPlacements(map);
+    GameSession s(map, catalog, placements, 5, spawn);
+    start(s);
+    awaitCharacter(s, {0}); // Hold an input turn while sampling presentation time.
+    NpcTimings timing{};
+    timing[0] = {{{100, 0, 0, 0}}, 1};
+    timing[static_cast<std::size_t>(NpcAnimation::Attack)] = {{{700, 250, 250, 350}}, 4};
+    CommandController ui(s, {timing});
+    NpcAnimator animator(s.actors(), {timing});
+    const auto enemy = s.actors().id(2);
+    const auto refresh = [&] {
+        auto targets = allCombatTargets(s);
+        targets.anchors[enemy.slot] = {100, 90, true};
+        ui.refresh(targets, false, false, true);
+        animator.setTime(s.timeMs());
+    };
+    const auto advance = [&](unsigned ms) {
+        s.update(double(ms) / 1000, false);
+        refresh();
+    };
+    const auto find = [&](bool party) -> const CombatFeedback* {
+        for (const auto& entry : ui.snapshot().feedback)
+            if (entry.active && entry.party == party)
+                return &entry;
+        return nullptr;
+    };
+    refresh();
+    CombatOutcome hit;
+    hit.event = CombatEvent::Attack;
+    hit.enemy = enemy;
+    hit.enemyAttack = true;
+    hit.recipient = {3};
+    hit.hit = true;
+    hit.damage = 12;
+    s.actors().attack(enemy, s.timeMs());
+    ui.record(hit);
+    refresh();
+    check(!find(true) && !ui.snapshot().cards[3].recentlyHit, "No impact marker or highlight in guard pose");
+    advance(700);
+    check(animator.snapshot().frames[enemy.slot].active == 1 && !find(true), "No splash during wind-up");
+    s.update(30, true);
+    refresh();
+    check(!find(true), "Pause also holds pending impact");
+    advance(249);
+    check(!find(true), "Impact remains pending one millisecond before strike");
+    advance(1);
+    check(animator.snapshot().frames[enemy.slot].active == 2 && find(true) && find(true)->damage == 12 &&
+              ui.snapshot().cards[3].recentlyHit,
+          "Damage splash and portrait highlight start with strike frame");
+    advance(149);
+    check(ui.snapshot().cards[3].recentlyHit, "Impact highlight retains its full duration");
+    advance(1);
+    check(!ui.snapshot().cards[3].recentlyHit && find(true), "Highlight ends independently of splash");
+    advance(849);
+    check(find(true), "Splash survives to one millisecond before impact lifetime ends");
+    advance(1);
+    check(!find(true), "Splash lasts 1000 ms from impact, not resolution");
+
+    auto miss = hit;
+    miss.hit = false;
+    miss.damage = 0;
+    s.actors().attack(enemy, s.timeMs());
+    ui.record(miss);
+    advance(450);
+    s.actors().attack(s.actors().id(3), s.timeMs());
+    hit.enemy = s.actors().id(3);
+    ui.record(hit); // Second enemy attacks the same recipient before the first impact.
+    advance(500);
+    check(find(true) && !find(true)->hit && !ui.snapshot().cards[3].recentlyHit,
+          "Earlier MISS survives a second queued attack on the same recipient");
+    advance(449);
+    check(find(true) && !find(true)->hit, "Pending damage does not replace a visible MISS early");
+    advance(1);
+    check(find(true) && find(true)->hit && ui.snapshot().cards[3].recentlyHit,
+          "New damage replaces MISS only at its own impact");
+
+    advance(1000);
+    ui.record(hit);
+    advance(100);
+    hit.damage = 7;
+    ui.record(hit);
+    advance(1000);
+    check(find(true) && find(true)->damage == 7 && ui.snapshot().cards[3].recentlyHit,
+          "Skipped frames deliver newest due impact with only remaining highlight time");
+    advance(1000);
+    ui.record(hit);
+    advance(2000);
+    check(!find(true) && !ui.snapshot().cards[3].recentlyHit, "Large gaps never replay stale impacts");
+
+    ui.record(hit);
+    ui.refresh(allCombatTargets(s), true, false, true);
+    advance(950);
+    check(!find(true), "Movement cancels pending feedback");
+    ui.record(hit);
+    auto playerHit = hit;
+    playerHit.enemyAttack = false;
+    playerHit.enemy = enemy;
+    ui.record(playerHit);
+    check(find(false) && !find(true), "Player damage stays immediate while enemy damage waits");
+    for (std::size_t i = 0; i < s.actors().snapshot().count; ++i)
+        s.actors().damage(s.actors().id(i), 1000, s.timeMs());
+    s.update(0, false);
+    check(s.combat().snapshot().phase == CombatPhase::Victory, "Fixture reaches victory");
+    s.combat().continueExploring();
+    refresh();
+    advance(950);
+    check(!find(true) && !find(false), "Continue cancels queued impacts from finished encounter");
+
+    // Shorter and missing clips derive behavior from metadata, not a goblin-specific delay.
+    for (unsigned frames : {0u, 1u, 2u, 4u}) {
+        GameSession other(map, catalog, placements, 5, spawn);
+        start(other);
+        awaitCharacter(other, {0});
+        timing[static_cast<std::size_t>(NpcAnimation::Attack)] = {{{70, 25, 25, 35}},
+                                                                  static_cast<std::uint8_t>(frames)};
+        CommandController controller(other, {timing});
+        hit.enemy = other.actors().id(2);
+        controller.record(hit);
+        const auto hasFeedback = [&] {
+            for (const auto& entry : controller.snapshot().feedback)
+                if (entry.active)
+                    return true;
+            return false;
+        };
+        const unsigned delay = frames < 2 ? 0 : frames == 2 ? 70 : 95;
+        check(hasFeedback() == (delay == 0), "Absent/single-pose attacks have immediate feedback");
+        if (delay) {
+            other.update(double(delay - 1) / 1000, false);
+            controller.refresh(allCombatTargets(other), false, false, true);
+            check(!hasFeedback(), "Short clip still waits for its strike");
+            other.update(.001, false);
+            controller.refresh(allCombatTargets(other), false, false, true);
+            check(hasFeedback(), "Strike follows changed clip durations");
+        }
+    }
 }
 void commandsAndRng() {
     const auto map = combatMap();
@@ -628,6 +821,7 @@ int main() {
         rows();
         advancement();
         feedback();
+        feedbackTiming();
         commandsAndRng();
         movementAndPause();
         recoveryAndOutcomes();

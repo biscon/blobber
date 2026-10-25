@@ -69,6 +69,9 @@ class CombatController {
     std::size_t groupCount_ = 0, orderCount_ = 0, position_ = 0, enemyCursor_ = 0;
     std::uint64_t due_ = 0;
     bool near(const ActorState& actor) const noexcept;
+    // Current front slot, or a free front slot reachable before this enemy's attack.
+    std::optional<Cell> meleeSlot(ActorId id, std::uint8_t occupied) const noexcept;
+    std::uint8_t occupiedSlots() const noexcept;
     bool finish() noexcept;
     void begin(std::uint64_t now) noexcept;
     void selectTurn() noexcept;

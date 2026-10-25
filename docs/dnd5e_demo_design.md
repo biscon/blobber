@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–05 and milestone A are Accepted, including the dungeon-first UI revision. Slice 06 is eligible for planning and remains unstarted.
+Status: gameplay roadmap; slices 01–06 and milestone A are Accepted. Slice 06 was accepted on 2026-10-26, including hurt/death animations, impact timing and front-slot corrections. Slice 07 is next eligible and remains Planned.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 05 — First melee combat, including UI revision (2026-10-25) |
+| Latest accepted slice | 06 — Goblin hurt/death animations and review corrections (2026-10-26) |
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 06 — Goblin hurt/death animations |
-| Next action | In a clean context, inspect the slice 05 handoff and relevant code, then propose the slice 06 plan for user review |
+| Next eligible slice | 07 — Moving goblin AI (Planned; not started) |
+| Next action | In a new planning task, inspect code and prepare the slice 07 plan for user review |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -307,7 +307,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 03 | [Mutable monster world](#slice-03-mutable-monster-world) | 02 | Accepted | A |
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Accepted | A |
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Accepted | A |
-| 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Planned | B |
+| 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Planned | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Planned | B |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 08 | Planned | C |
@@ -683,7 +683,64 @@ Check all directions, hidden actors, frame skips, interruptions, corpse groundin
 occlusion, transition views, and prepared memory limits. Visually inspect source
 sheets and deterministic in-engine captures; compilation alone is insufficient.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Accepted and closed; 2026-10-26.
+**Approved plan:** User said “Implement the plan.” See [hurt/death design](goblin_reactions_design.md). User selected the existing 100 ms flash overlay, a brief collapse/corpse hold, and preservation of front-only attack art. Four-direction hurt/death presentation preserves authoritative damage, occupancy and session time.
+**Delivered:** Eight imagegen sheets and 24 runtime frames with preserved prompts,
+references and registration. Hurt plays 150/150 ms; death plays 200/200/200/600 ms,
+then hides. Latest living cue wins (damage on ties), death interrupts all behavior,
+and canceled attacks never resume. Optional legacy clips, wider death canvases,
+explicit source grounding/unequal row splits, dead picking exclusion and living
+replacement ordering are implemented. Added `--capture-reactions` diagnostics.
+**Review correction:** User reported enemy damage/MISS appearing before the attack.
+Markers and portrait hit highlights now begin at the middle attack frame (950 ms
+for goblin), with a full one-second marker lifetime after impact. Bounded pending
+feedback preserves multiple attacks on one recipient, pauses and cancellation.
+Player attacks remain immediate with hurt/flash; HP, logs and turn mechanics are
+unchanged. Both 18-suite builds and allocation checks pass; 45 hidden HUD captures
+include real hit/MISS guard, wind-up and strike comparisons.
+**Verification:** Debug/Release builds and all 18 headless suites passed, including
+zero engine-owned C++ frame allocations. Strengthened reaction/asset checks passed
+again in both configurations. Hidden GPU lifecycle and 97 focused/252 full captures
+passed on Linux/X11/OpenGL; selected native/reduced images were inspected. Combined
+NPC pixel storage is 112.98 MiB within the unchanged 128 MiB limit. All 44 runtime
+frames and the manifest reproduce byte-for-byte; original 20 PNGs remain unchanged.
+Local documentation links and `git diff --check` passed. See [verification](slice06_verification.md).
+**Front-slot correction (2026-10-26):** A protected rear enemy may advance into
+the opposite vacant front slot and attack on its turn, preferring straight ahead
+when available. Current target protection stays paired. Turn preview predicts
+vacancy claims without moving actors, and execution rechecks occupancy. All 18
+suites pass in Debug/Release, including allocation coverage of diagonal advances;
+51 hidden HUD captures include inspected before/after examples. No slice 07 work.
+**Review recipe:** Run `--combat-demo --seed 5` and follow the
+[slice 06 review](slice06_verification.md#user-review). Use `--capture-reactions DIRECTORY`
+for all four directions, timings, transitions, replacement overlap and outcomes.
+**Deviations / limitations:** No gameplay/scope deviation. Generated sheets needed
+explicit non-midpoint row splits; the left hurt dagger hand was corrected through
+imagegen. Physical interactive review, Windows/macOS, high-DPI hardware and scale
+benchmarks remain unverified. The existing victory overlay can obscure part of the
+last corpse but does not freeze its clock. No OS input/window/desktop automation.
+No moving AI, new attack directions, loot or slice 07 work.
+**Next-agent handoff:** Slice 06 is accepted and closed, including attack-impact
+timing and diagonal front-slot advancement. Slice 07 is next eligible but remains
+Planned; inspect relevant code and prepare its plan in a new planning task before
+implementation. Enemy turn eligibility must use reachable front
+slots, separately from current target exposure. Preview reserves predicted slots
+in a local mask; only execution may perform the checked ActorWorld move.
+Production HUD controllers must receive prepared NPC timings; pending impact
+feedback must remain on paused session time, separate from authoritative outcomes.
+Retain ActorWorld ownership and immediate
+occupancy release; animation never resolves death, removes records or owns loot.
+Sample after mutations on paused session time. Death/hurt clips require all four
+views and cannot be placement loops or use idle direction fallback. Old assets
+retain flash-only compatibility. Rebuild session borrowers on restart. Keep the
+128 MiB budget and 1..4-frame limit; do not resize individual generated poses.
+See the detailed design/verification for reproduction and capture commands.
+**Acceptance:** Accepted on 2026-10-26. The user said: “I accept the slice, finish it in the document”.
+Acceptance covers the delivered hurt/death animations and both review corrections
+(attack-impact feedback and diagonal front-slot advancement). No additional
+conditions or new work were requested. Recorded verification limitations remain
+as documented; acceptance does not turn unexecuted platform checks into passes.
+Slice 07 remains Planned and has not started.
 
 ### Slice 07: Moving goblin AI
 

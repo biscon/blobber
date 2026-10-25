@@ -57,7 +57,7 @@ add_library(blobber_render
     src/render/material.cpp src/render/npc_sprites.cpp src/render/scene_cache.cpp src/render/scene_renderer.cpp
     src/render/transitions.cpp src/render/frame_pipeline.cpp)
 target_link_libraries(blobber_render PUBLIC blobber_core raylib)
-add_library(blobber_assets_io src/assets/material_loader.cpp src/assets/npc_loader.cpp)
+add_library(blobber_assets_io src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp)
 target_link_libraries(blobber_assets_io PUBLIC blobber_render PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
@@ -69,7 +69,7 @@ add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
 target_link_libraries(blobber_prepare_assets PRIVATE raylib)
 target_include_directories(blobber_prepare_assets PRIVATE src)
 add_executable(blobber_prepare_npc_animation EXCLUDE_FROM_ALL tools/prepare_npc_animation.cpp)
-target_link_libraries(blobber_prepare_npc_animation PRIVATE raylib nlohmann_json::nlohmann_json)
+target_link_libraries(blobber_prepare_npc_animation PRIVATE blobber_assets_io)
 target_include_directories(blobber_prepare_npc_animation PRIVATE src)
 blobber_warnings(blobber_prepare_npc_animation)
 foreach(target blobber_rules blobber_rules_io blobber_core blobber_render blobber_assets_io blobber_platform blobber blobber_prepare_assets)
@@ -94,7 +94,7 @@ add_dependencies(blobber blobber_assets)
 
 include(CTest)
 if(BUILD_TESTING)
-    foreach(suite health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation rules rules_content party party_content)
+    foreach(suite health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
         if(suite STREQUAL "frame_allocations")
             set(source tests/frame_allocations.cpp)
         else()

@@ -17,6 +17,7 @@ struct NpcImage {
 };
 struct NpcClipImages {
     NpcClipTiming timing;
+    float width = 0; // Zero inherits appearance canvas width; never a per-frame scale.
     std::array<std::vector<NpcImage>, 4> views;
 };
 struct NpcAppearance {
@@ -40,6 +41,9 @@ class PreparedNpcs {
                  const std::array<float, viewWidth>& wallDepth, Frame& frame,
                  const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr) const;
     std::size_t pixelCount() const noexcept { return pixels_.size(); }
+    std::size_t preparedPixelBytes() const noexcept {
+        return pixels_.size() * sizeof(Color) + shadowAlpha_.size();
+    }
 
   private:
     static constexpr int depthCount = (ViewProjection::visibleRows + 1) * 2;

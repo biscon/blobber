@@ -1,5 +1,9 @@
 # Mutable monster world — slice 03
 
+Implemented slice 06 extension: [hurt/death presentation](goblin_reactions_design.md).
+The original flash-only presentation below remains the compatibility path for missing
+reaction art. Authoritative HP, occupancy, removal and identity contracts are unchanged.
+
 Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 consumes these checked operations from stationary combat and shares damage timestamps with session animation time. Occupancy/death/flash contracts remain unchanged. The remainder records this subsystem’s original slice boundary.
 
 Status: implemented and accepted by the user (2026-10-25).
@@ -102,4 +106,4 @@ ActorState additionally retains a checked attack timestamp independent of HP dam
 actor's previous attack; it increments the actor revision. Combat emits the cue
 for every attack, including misses. NpcAnimator selects one prepared attack clip
 from elapsed cue time and then returns to the authored clip. See the
-[melee design](melee_combat_design.md) for paired-slot combat advancement and feedback.
+[melee design](melee_combat_design.md) for same-cell front-slot combat advancement and feedback.

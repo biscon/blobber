@@ -9,8 +9,8 @@ namespace blobber {
 struct NpcTypeId {
     std::uint16_t index = 0;
 };
-enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack };
-constexpr std::size_t npcAnimationCount = 3;
+enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death };
+constexpr std::size_t npcAnimationCount = 5;
 struct NpcInstance {
     NpcTypeId type;
     Cell cell;

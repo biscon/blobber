@@ -1,5 +1,9 @@
 # NPC sprites
 
+Slice 06 is implemented, awaiting user review: [hurt/death design](goblin_reactions_design.md)
+and [verification](slice06_verification.md). The foundation below incorporates its
+current contracts; historical slice 05 notes are marked separately.
+
 Status: implemented. See [verification notes](verification.md#npc-first-slice) for executed checks.
 
 ## Ownership and data
@@ -40,7 +44,8 @@ player spawn, duplicate subcells, bad definitions and invalid coordinates.
 Limits: 32 definitions, 256 instances, 4 occupants per cell, 2048 pixels per image
 axis, 128 MiB combined engine-owned decoded/prepared pixel arrays. Temporary
 Raylib decoder storage and container metadata are outside that pixel budget.
-JSON files are bounded to 1 MiB. Sprite canvas widths are at most 0.5 cells, heights at most wall height.
+JSON files are bounded to 1 MiB. Living sprite canvas widths are at most 0.5 cells; a death clip can override width
+up to 1 cell. Heights remain at most wall height.
 All limits fail explicitly during loading. All vectors allocate only during
 loading/preparation. The frame path uses fixed scratch arrays. Replacing level assets requires reconstructing their renderer/pipeline. Runtime
 actor mutation reuses the same prepared assets; it does not rebake images.
@@ -103,23 +108,25 @@ verification.md for commands, results and platform limitations.
 Status: implemented and verified; see [verification](verification.md#npc-sprite-animation).
 
 The application owns a graphics-independent NPC animation player alongside
-the runtime actor world. Clips are Idle, Walk and Attack, with 1..4 frames and
+the runtime actor world. Clips are Idle, Walk, Attack, Hurt and Death, with 1..4 frames and
 positive integer millisecond durations (maximum 60,000 per frame). All directions
-of a clip share timing. Idle/walk require all four views; attack may omit non-front
+of a clip share timing. Idle/walk/hurt/death require all four views; attack may omit non-front
 views, which use directional idle on its own timeline. Legacy `views` definitions
 remain one-frame idle. Definitions cannot mix `views` and `animations`.
-Placement adds optional `animation` (default idle) and `phase_ms` (default zero).
+Placement adds optional `animation` (idle/walk/attack only, default idle) and
+`phase_ms` (default zero). Hurt/death are optional triggered clips, not loops.
 Zero uses an automatic idle phase derived once at animator construction from the
 stable actor slot: a golden-ratio fractional sequence scaled to that type's idle
 cycle. Slot zero stays unshifted; nonzero authored phases are preserved exactly.
 A fixed-capacity phase array keeps playback allocation-free. Movement, visibility,
 removal, and rebuilding a world do not change surviving actors' phases. Active
 idle and directional idle fallback share this offset; walk/attack retain their
-authored phase. Death freezes the phased pose at hit time without shifting the
-100 ms flash lifetime. Headless animation tests cover staggered transitions,
+authored phase. Legacy assets without death art freeze the phased hit pose for
+100 ms. Goblins now play the dedicated death timeline described below. Headless animation tests cover staggered transitions,
 reconstruction, explicit phases, mutation stability, and death-flash boundaries.
 The authored clips remain presentation loops. Controlled movement, turning and
-damage now belong to the actor owner; no autonomous AI or combat resolver exists.
+damage belong to the actor owner; stationary combat resolves in GameSession,
+independently of animation. Autonomous cross-cell AI remains deferred.
 
 Clip metadata is independent of decoded images. The animation player copies bounded
 metadata at startup, borrows the level-lifetime actor world, and publishes fixed-capacity
@@ -129,17 +136,21 @@ Animation time advances independently of movement's animation toggle. Source ima
 are released after preparation; clocks and frame selections never allocate.
 
 Prepared sprites add clip/frame indices to the existing type/direction/depth lookup.
-Contiguous prepared RGBA storage stays immutable; absent directions reference idle
-at composition rather than duplicating pixels. Shadows remain shared per type/depth.
+Contiguous prepared RGBA storage stays immutable; absent attack directions reference
+idle at composition rather than duplicating pixels. Hurt/death never use that fallback. Shadows remain shared per type/depth.
 The existing 128 MiB combined source/prepared pixel budget includes every frame and
-shadow, and exhaustion fails startup. Animated source frames use common 384x536
-canvases, a uniform scale per sheet, and ground pivots at (192,512). Original static artwork stays available.
+shadow, and exhaustion fails startup. Living source frames use 384x536 canvases
+and pivots at (192,512). Death uses 768x536, pivot (384,512), and clip width 0.9;
+height and pixel/world scale remain unchanged. One scale per sheet preserves pose
+size changes; the standing contact shadow remains based on appearance width.
+Original static artwork stays available.
 
 FramePipeline observes animation revision as well as movement and actor revisions.
 Animation snapshots identify their world and actor revision; resample after any
-mutation before rendering. Dead actors flash white for 100 ms at their frozen hit
-pose, then body/shadow disappear. Removed actors hide immediately. The actor
-design specifies timing, ownership and the absence of a death clip in this slice. A changed
+mutation before rendering. Hurt plays 150/150 ms; death plays 200/200/200/600 ms,
+including the final corpse hold. Both overlay white during the first 100 ms.
+Death unblocks immediately and cannot be targeted; explicit removal hides immediately.
+Legacy missing-clip behavior remains supported. A changed
 selection recomposes destination and any transition source from the same snapshot;
 strafe composition consumes that snapshot too. Unchanged stationary frames remain
 reusable. A pipeline belongs to one world/renderer/animation-player lifetime.
@@ -186,7 +197,8 @@ animation snapshot renders living actors at frame zero of their selected clip
 (and frame-zero idle for missing directions); dead/removed actors are hidden. Animation time is independent of the
 TAB movement-transition toggle. Actor slot indices stay fixed for the session, including after removal.
 
-The built-in imagegen tool authored nine selected sheets (twenty poses). Original
+The built-in imagegen tool authored seventeen selected sheets (forty-four poses):
+the original nine loop/attack sheets plus eight slice 06 reaction sheets. Original
 static images and `goblin-static.json` remain available. Prompts, including the
 walk correction iterations, are in
 [`animation/prompts.txt`](../assets/npcs/goblin/animation/prompts.txt). Runtime PNGs
@@ -198,19 +210,24 @@ The offline `blobber_prepare_npc_animation` tool reads
 positions separate generated sheet cells (the generator does not guarantee exact
 grids). Registered horizontal pivots and the lowest pixel above alpha cutoff 15
 align frames; one scale per sheet preserves pose changes. It performs nearest
-sampling into 384x536 canvases, preserves source alpha, and rejects visible canvas
+sampling into the registered canvas, preserves source alpha, and rejects visible canvas
 clipping. It does not synthesize motion, mirror equipment, or resize individual
 poses independently. The generated `frames.json` supplies image/anchor entries
-used in `goblin.json`.
+used in `goblin.json`. Slice 06 adds explicit `ground_y`, optional `split_y`,
+`canvas_width`/`canvas_height` and pixel `anchor_x`/`anchor_y`. Unequal authored
+rows use measured splits; new poses use registered ground planes. Full reproduction
+and reference/correction prompts are in
+[`reaction_prompts.json`](../assets/npcs/goblin/animation/reaction_prompts.json).
 
 ```sh
 cmake --build --preset debug --target blobber_prepare_npc_animation
 cmake-build-debug/blobber_prepare_npc_animation assets/npcs/goblin/animation/sheets.json
 ```
 
-The twenty decoded runtime images total 15.70 MiB. Prepared depth images and
-contact shadows also fit the enforced combined 128 MiB budget. Fixed metadata
-is bounded by 32 types × 3 clips × 4 directions × 4 frames × 26 depth slots;
+The forty-four decoded runtime images total 47.11 MiB. Prepared depth images and
+contact shadows use 65.87 MiB; combined storage is 112.98 MiB within the enforced
+128 MiB budget. Fixed metadata is bounded by
+32 types × 5 clips × 4 directions × 4 frames × 26 depth slots;
 only populated frames have prepared pixels. Runtime timing is O(instances × 4)
 with at most 256 instances, independent of elapsed time. A revision can trigger
 composition even when the changed NPC is hidden; visibility-aware invalidation
@@ -230,7 +247,7 @@ between generated frames, particularly at source resolution. Side walking is a
 deliberately coarse two-pose approximation. Review the art in the dungeon as well
 as isolated previews; this is not a rigged animation workflow.
 
-## Slice 05 combat playback correction
+## Slice 05 combat playback correction (historical)
 
 Production placements remain idle. A timestamped ActorWorld attack cue overrides
 the authored clip for one existing attack cycle, regardless of hit/miss. The
@@ -239,6 +256,17 @@ composition uses those prepared images and retains directional idle fallback.
 No attack art falls back to idle. Death freezes the selected attack pose at the
 damage timestamp during the existing 100 ms flash. Retriggering restarts at frame
 zero. Animation never resolves an attack. Timing uses paused session time; authored
-showcase loops and idle phase offsets remain unchanged. New hurt/death clips are
-still deferred. Tests exercise one-shot boundaries, retriggering, missing art,
+showcase loops and idle phase offsets remain unchanged. At that checkpoint new hurt/death clips were deferred; slice 06 now supersedes
+its lethal freeze when death art exists. Tests exercise one-shot boundaries, retriggering, missing art,
 rendered miss poses, death and invalid cue identities/times without a window.
+
+## Slice 06 reaction playback
+
+[Detailed design](goblin_reactions_design.md) owns reaction priority, timing,
+compatibility, storage and verification. Actor damage timestamps drive reactions;
+death wins, otherwise newest damage/attack wins with damage winning ties. Expired
+hurt does not resurrect an interrupted attack. Corpse holds have no idle-frame
+invalidation; hidden actors and time jumps progress without catch-up. Session
+pauses freeze reactions; victory/Continue do not reset or wait for presentation.
+Equal-depth corpses draw before living replacements; dead records still occlude
+but never enter target lists. No simulation or loot lifetime depends on art.

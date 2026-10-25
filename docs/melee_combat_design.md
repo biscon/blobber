@@ -25,8 +25,9 @@ Both sides use paired-slot protection: each conscious party front member shields
 only the rear member in the same column (FL/BL and FR/BR). Each living near enemy
 shields only the far subslot in its own column relative to the party's approach.
 Rear members cannot attack or be attacked through that paired front occupant.
-An exposed melee goblin steps into its vacant near subslot at the start of its
-next attack turn, then attacks once. The checked same-cell move preserves identity,
+A rear melee goblin steps into an available front subslot at the start of its
+next attack turn, preferring straight ahead and using the opposite slot if needed,
+then attacks once. It can reposition even while protected in its original slot. The checked same-cell move preserves identity,
 occupancy and initiative order; it is not pathfinding or an additional action.
 Party members retain their formation slots. Sprite facing does not define ranks.
 The Rogue exception remains slice 10. Body visibility additionally gates UI targets.
@@ -156,6 +157,9 @@ indexed by actor slot and scoped to the world/revision. CommandController copies
 the current target center when recording an attack, before refreshing dead targets.
 The resulting splash retains that point even after a killing blow hides the body.
 It owns eight fixed feedback records (four monsters plus four party recipients).
+Slice 06 adds eight separate pending records for enemy strikes; visible lifetime
+and portrait highlight begin at the middle attack frame. See
+[impact timing](goblin_reactions_design.md#attack-impact-feedback).
 A later hit on the same recipient replaces that recipient's splash; if full, the
 oldest record is replaced. Records expire after 1000 ms of session time, freeze
 with pause, and clear on exploration/movement/restart. Party feedback uses character
@@ -173,3 +177,29 @@ advance occupancy and one attack per turn, miss/hit attack playback and expiry,
 missing-art fallback, clipping/body anchors, lethal-hit feedback, replacement,
 pause/expiry/restart, and the existing allocation guard. Final GPU/visual review
 is left to the user; desktop input or focus automation is prohibited.
+
+## Front-slot review correction (2026-10-26)
+
+Implemented and accepted with slice 06 on 2026-10-26. Reported in a user screenshot: a protected rear goblin never takes the
+vacant opposite front slot. Keep paired protection for current melee targeting,
+but separate it from an enemy's ability to move into melee on its turn.
+CombatController owns a pure bounded query for the actor's usable front subslot:
+front actors keep their slot; rear actors try the paired slot first, then the
+other front slot relative to the party's approach. Both candidates must be free
+of living occupants. Dead actors release occupancy immediately. No route search,
+additional action, cross-cell movement, party rearrangement or art change.
+
+Use this same query for initiative selection, the upcoming-turn preview and
+execution. Recheck at execution, perform the checked ActorWorld move, and attack
+only once movement succeeds (or the actor is already in front). First acting rear
+actor claims a vacancy; later actors recompute occupancy. Existing identity,
+initiative order, RNG and 450 ms pacing remain intact. Preview copies a four-bit occupancy mask and reserves each predicted destination
+in turn order, so two rear actors are not listed for one vacancy. This never
+mutates ActorWorld. Fixed two-candidate / four-occupant scans allocate nothing. Target exposure changes only after movement.
+
+Regression checks use generated fixtures for both lanes and all four approaches:
+straight preference, diagonal fallback, full front row, two rear actors competing
+for one vacancy, one attack per round, occupancy, pause and mutation-free preview.
+Run the combat and frame allocation checks plus full Debug/Release suites. Inspect
+an application-owned hidden capture of before/after diagonal advancement; leave
+interactive desktop review to the user.

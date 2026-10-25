@@ -1,5 +1,6 @@
 #include "assets/image.hpp"
 #include "assets/npc_loader.hpp"
+#include "assets/npc_sheet.hpp"
 #include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
@@ -280,6 +281,119 @@ void testLoading() {
         write(directory / "level.json", badLevel);
         rejects(load, "Invalid animation schema rejected");
     }
+    animated["animations"]["hurt"] = clip;
+    animated["animations"]["death"] = clip;
+    animated["animations"]["death"]["width"] = 0.9;
+    write(directory / "type/test.json", animated);
+    write(directory / "level.json", level);
+    check(load().appearances[0].animations[4].width == 0.9f, "Reaction canvas width loads independently");
+    for (int failure = 0; failure < 8; ++failure) {
+        auto bad = animated;
+        auto badLevel = level;
+        if (failure < 2)
+            bad["animations"][failure ? "hurt" : "death"]["views"].erase("back");
+        if (failure == 2)
+            bad["animations"]["hurt"]["width"] = 0.6;
+        if (failure == 3)
+            bad["animations"]["death"]["width"] = 1.01;
+        if (failure == 4)
+            bad["animations"]["death"]["width"] = 0;
+        if (failure == 5)
+            bad["animations"]["death"]["width"] = -1;
+        if (failure >= 6)
+            badLevel["instances"][0]["animation"] = failure == 6 ? "hurt" : "death";
+        write(directory / "type/test.json", bad);
+        write(directory / "level.json", badLevel);
+        rejects(load, "Invalid reaction dimensions/directions/placement rejected");
+    }
+    // The production offline preparer uses generated sheets in an isolated directory.
+    fs::create_directories(directory / "sheets");
+    OwnedImage sheet(GenImageColor(16, 12, BLANK));
+    ImageDrawRectangle(&sheet.value, 3, 6, 2, 4, Color{30, 60, 90, 200});
+    ImageDrawRectangle(&sheet.value, 11, 3, 2, 7, Color{30, 60, 90, 200});
+    check(ExportImage(sheet.value, (directory / "sheets/test.png").string().c_str()), "Export own sheet");
+    Json registration = Json::array({{{"name", "test"},
+                                      {"split_x", 8},
+                                      {"scale", 1.0},
+                                      {"pivot_x", {4, 4}},
+                                      {"ground_y", {10, 10}},
+                                      {"canvas_width", 16},
+                                      {"canvas_height", 12},
+                                      {"anchor_x", 8},
+                                      {"anchor_y", 10}}});
+    auto prepare = [&] { prepareNpcAnimation(directory / "sheets.json"); };
+    write(directory / "sheets.json", registration);
+    prepare();
+    OwnedImage shortPose(LoadImage((directory / "frames/test-0.png").string().c_str()));
+    OwnedImage tallPose(LoadImage((directory / "frames/test-1.png").string().c_str()));
+    check(shortPose.value.width == 16 && shortPose.value.height == 12 &&
+              GetImageColor(shortPose.value, 7, 9).a == 200 && GetImageColor(tallPose.value, 7, 9).a == 200 &&
+              GetImageColor(shortPose.value, 7, 3).a == 0 && GetImageColor(tallPose.value, 7, 3).a == 200 &&
+              GetImageColor(shortPose.value, 7, 10).a == 0,
+          "Registration preserves alpha, ground, pose height differences and horizontal padding");
+    for (int failure = 0; failure < 9; ++failure) {
+        auto bad = registration;
+        auto& entry = bad[0];
+        if (failure == 0)
+            entry["ground_y"] = {9, 10};
+        if (failure == 1)
+            entry["ground_y"] = {10};
+        if (failure == 2)
+            entry["canvas_width"] = 0;
+        if (failure == 3)
+            entry["canvas_width"] = 2049;
+        if (failure == 4)
+            entry["anchor_x"] = 0;
+        if (failure == 5)
+            entry["scale"] = 0;
+        if (failure == 6)
+            entry["split_x"] = 16;
+        if (failure == 7)
+            entry["pivot_x"] = {9, 4};
+        if (failure == 8)
+            entry["rows"] = std::numeric_limits<int>::max();
+        write(directory / "sheets.json", bad);
+        rejects(prepare, "Malformed registration or visible clipping rejected");
+    }
+    // Unequal sheet rows preserve complete poses instead of cutting at half-height.
+    OwnedImage uneven(GenImageColor(16, 27, BLANK));
+    for (const int x : {3, 11}) {
+        ImageDrawRectangle(&uneven.value, x, 3, 2, 11, Color{30, 60, 90, 200});
+        ImageDrawRectangle(&uneven.value, x, 21, 2, 4, Color{30, 60, 90, 200});
+    }
+    ExportImage(uneven.value, (directory / "sheets/test.png").string().c_str());
+    auto unevenRegistration = registration;
+    unevenRegistration[0]["rows"] = 2;
+    unevenRegistration[0]["split_y"] = 16;
+    unevenRegistration[0]["ground_y"] = {14, 14, 9, 9};
+    unevenRegistration[0]["pivot_x"] = {4, 4, 4, 4};
+    unevenRegistration[0]["canvas_height"] = 16;
+    unevenRegistration[0]["anchor_y"] = 14;
+    write(directory / "sheets.json", unevenRegistration);
+    prepare();
+    OwnedImage upper(LoadImage((directory / "frames/test-0.png").string().c_str()));
+    OwnedImage lower(LoadImage((directory / "frames/test-2.png").string().c_str()));
+    check(GetImageColor(upper.value, 7, 3).a == 200 && GetImageColor(lower.value, 7, 3).a == 0 &&
+              GetImageColor(upper.value, 7, 13).a == 200 && GetImageColor(lower.value, 7, 13).a == 200,
+          "Unequal row extraction retains whole silhouettes and common ground");
+    unevenRegistration[0]["split_y"] = 27;
+    write(directory / "sheets.json", unevenRegistration);
+    rejects(prepare, "Invalid row boundary rejected");
+    ExportImage(sheet.value, (directory / "sheets/test.png").string().c_str());
+    registration[0].erase("ground_y");
+    registration[0].erase("canvas_width");
+    registration[0].erase("canvas_height");
+    registration[0].erase("anchor_x");
+    registration[0].erase("anchor_y");
+    write(directory / "sheets.json", registration);
+    prepare();
+    OwnedImage legacy(LoadImage((directory / "frames/test-0.png").string().c_str()));
+    check(legacy.value.width == 384 && legacy.value.height == 536 &&
+              GetImageColor(legacy.value, 191, 511).a == 200,
+          "Existing extraction defaults retain canvas and lowest-ink registration");
+    ImageClearBackground(&sheet.value, BLANK);
+    ExportImage(sheet.value, (directory / "sheets/test.png").string().c_str());
+    rejects(prepare, "Empty sheet frame rejected");
     write(directory / "type/test.json", definition);
     std::ofstream(directory / "level.json") << "{";
     rejects(load, "Malformed JSON rejected");

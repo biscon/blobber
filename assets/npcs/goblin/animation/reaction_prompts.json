@@ -1,0 +1,76 @@
+[
+  {
+    "name": "hurt-front",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-front-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin hurt sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. FRONT view facing camera; anatomical right dagger on viewer LEFT. TWO FRAMES, exactly two equally sized portrait cells side by side on a landscape 1536x1024 sheet. LEFT: a clear flinch, shoulders recoil and knees flex slightly, face winces; boots stay planted. RIGHT: recover toward the reference upright guard, same boots planted. Both full-body poses have the same scale and ground baseline. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/hurt-front.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  },
+  {
+    "name": "hurt-back",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-back-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin hurt sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. REAR view facing away; no face visible; anatomical right dagger on viewer RIGHT. TWO FRAMES, exactly two equally sized portrait cells side by side on a landscape 1536x1024 sheet. LEFT: a clear flinch, shoulders recoil and knees flex slightly, face winces; boots stay planted. RIGHT: recover toward the reference upright guard, same boots planted. Both full-body poses have the same scale and ground baseline. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/hurt-back.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  },
+  {
+    "name": "hurt-left",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-left-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin hurt sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. exact LEFT PROFILE, nose points LEFT; near anatomical LEFT hand empty; dagger in FAR right hand. TWO FRAMES, exactly two equally sized portrait cells side by side on a landscape 1536x1024 sheet. LEFT: a clear flinch, shoulders recoil and knees flex slightly, face winces; boots stay planted. RIGHT: recover toward the reference upright guard, same boots planted. Both full-body poses have the same scale and ground baseline. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "correction_prompt": "Use case: precise-object-edit. Correct only dagger ownership on this two-frame LEFT PROFILE goblin hurt sprite sheet. In BOTH cells the large visible NEAR arm descending at the image RIGHT of the torso is the anatomical LEFT arm: its hand must be EMPTY. Remove the dagger completely from that near rear hand, preserve fingers naturally empty. Put the rusty dagger in the FAR anatomical RIGHT hand in FRONT of the torso at image LEFT, partly occluded where appropriate. This is NOT a mirror: goblin nose still points LEFT. Preserve every other aspect: same two poses, character identity, outfit, body size, camera, palette, scale, boot ground positions, sheet layout, fully transparent RGBA background. No floor, glow, text or shadows.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/hurt-left.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json",
+    "correction_reference_note": "First generated hurt-left candidate had dagger in the near left hand; correction moved it to the far right hand."
+  },
+  {
+    "name": "hurt-right",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-right-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin hurt sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. exact RIGHT PROFILE, nose points RIGHT; near anatomical RIGHT hand holds dagger; far left hand empty. TWO FRAMES, exactly two equally sized portrait cells side by side on a landscape 1536x1024 sheet. LEFT: a clear flinch, shoulders recoil and knees flex slightly, face winces; boots stay planted. RIGHT: recover toward the reference upright guard, same boots planted. Both full-body poses have the same scale and ground baseline. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/hurt-right.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  },
+  {
+    "name": "death-front",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-front-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin death sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. FRONT view facing camera; anatomical right dagger on viewer LEFT. FOUR FRAMES in an exact 2 by 2 grid of generously padded square cells on a square sheet. Read top-left, top-right, bottom-left, bottom-right. 1: mortally struck, knees buckle, torso begins leaning forward. 2: knees reach the ground, torso folds forward. 3: body collapses forward toward the floor, arms slack. 4: completely lifeless compact prone corpse, torso and head near the ground, no standing or kneeling pose. Same forward collapse viewed from the specified camera direction, NOT turning toward camera. Retain body proportions and size throughout: a lying figure is wider and shorter, never a tiny resized goblin. No world translation; register poses around the original foot position. Keep the dagger in the anatomical right hand throughout, including the corpse. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/death-front.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  },
+  {
+    "name": "death-back",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-back-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin death sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. REAR view facing away; no face visible; anatomical right dagger on viewer RIGHT. FOUR FRAMES in an exact 2 by 2 grid of generously padded square cells on a square sheet. Read top-left, top-right, bottom-left, bottom-right. 1: mortally struck, knees buckle, torso begins leaning forward. 2: knees reach the ground, torso folds forward. 3: body collapses forward toward the floor, arms slack. 4: completely lifeless compact prone corpse, torso and head near the ground, no standing or kneeling pose. Same forward collapse viewed from the specified camera direction, NOT turning toward camera. Retain body proportions and size throughout: a lying figure is wider and shorter, never a tiny resized goblin. No world translation; register poses around the original foot position. Keep the dagger in the anatomical right hand throughout, including the corpse. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/death-back.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  },
+  {
+    "name": "death-left",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-left-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin death sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. exact LEFT PROFILE, nose points LEFT; near anatomical LEFT hand empty; dagger in FAR right hand. FOUR FRAMES in an exact 2 by 2 grid of generously padded square cells on a square sheet. Read top-left, top-right, bottom-left, bottom-right. 1: mortally struck, knees buckle, torso begins leaning forward. 2: knees reach the ground, torso folds forward. 3: body collapses forward toward the floor, arms slack. 4: completely lifeless compact prone corpse, torso and head near the ground, no standing or kneeling pose. Same forward collapse viewed from the specified camera direction, NOT turning toward camera. Retain body proportions and size throughout: a lying figure is wider and shorter, never a tiny resized goblin. No world translation; register poses around the original foot position. Keep the dagger in the anatomical right hand throughout, including the corpse. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/death-left.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  },
+  {
+    "name": "death-right",
+    "tool": "built-in image_gen",
+    "reference": "assets/npcs/goblin/animation/frames/idle-right-0.png",
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Asset: production goblin death sprite sheet. Input reference: existing goblin identity/outfit/style, not a sheet layout to copy. exact RIGHT PROFILE, nose points RIGHT; near anatomical RIGHT hand holds dagger; far left hand empty. FOUR FRAMES in an exact 2 by 2 grid of generously padded square cells on a square sheet. Read top-left, top-right, bottom-left, bottom-right. 1: mortally struck, knees buckle, torso begins leaning forward. 2: knees reach the ground, torso folds forward. 3: body collapses forward toward the floor, arms slack. 4: completely lifeless compact prone corpse, torso and head near the ground, no standing or kneeling pose. Same forward collapse viewed from the specified camera direction, NOT turning toward camera. Retain body proportions and size throughout: a lying figure is wider and shorter, never a tiny resized goblin. No world translation; register poses around the original foot position. Keep the dagger in the anatomical right hand throughout, including the corpse. Match the exact reference green skin, bald head, ears, brown leather tunic, belt pouch, wrist wraps, boots, rusty short dagger and detailed shaded retro dungeon sprite style. Same camera, scale, palette and lighting across cells. Full silhouette with generous transparent padding around ears, boots and weapon; no clipping or overlapping cells. Genuine transparent RGBA background, preserve alpha. No glow, ground, baked shadows, scenery, text, borders, grid lines, motion blur, blood or gore. Do not mirror equipment. All poses must be distinctly readable at small dungeon resolution.",
+    "selected_sheet": "assets/npcs/goblin/animation/sheets/death-right.png",
+    "registration": "assets/npcs/goblin/animation/sheets.json"
+  }
+]

@@ -84,7 +84,7 @@ int main() {
     try {
         static_assert(!std::is_copy_constructible_v<Frame>);
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
-        const auto appearance = testAnimatedNpcAppearance();
+        const auto appearance = testReactionAppearance();
         const SceneRenderer renderer(testMaterials(), {appearance});
         auto npcs = testActors(map, {3, 3}, {"test"},
                                {{{0}, {3, 1}, {0, 0}, Heading::South},
@@ -118,9 +118,12 @@ int main() {
         const auto fightCatalog = combatCatalog(100000, -100, {1, 4, -100});
         const auto fightPlacements = combatPlacements(map);
         GameSession fight(map, fightCatalog, fightPlacements, 5, {{3, 4}, Heading::North});
-        CommandController fightUi(fight);
+        CommandController fightUi(fight, {npcTimings(appearance)});
         NpcAnimator fightAnimator(fight.actors(), {npcTimings(appearance)});
         FramePipeline fightFrames;
+        GameSession diagonalFight(map, fightCatalog, fightPlacements, 5, {{3, 3}, Heading::North});
+        diagonalFight.actors().damage(diagonalFight.actors().id(0), 100000, 0);
+        diagonalFight.actors().damage(diagonalFight.actors().id(2), 100000, 0);
         int meleeActions = 0;
         bool monsterFeedback = false, partyFeedback = false, attackPlayback = false;
         tracking = true;
@@ -177,6 +180,19 @@ int main() {
         okay &= meleeActions > 0 && monsterFeedback && partyFeedback && attackPlayback;
         okay &= fight.combat().snapshot().phase == CombatPhase::Victory;
         okay &= fight.combat().continueExploring();
+
+        diagonalFight.update(0, false);
+        bool diagonalAttack = false;
+        for (int i = 0; i < 40; ++i) {
+            if (diagonalFight.combat().snapshot().awaitingAction)
+                diagonalFight.submit(turnCommand(diagonalFight));
+            else {
+                const auto out = diagonalFight.update(.45, false);
+                diagonalAttack |= out.enemyAttack && out.enemy.slot == 1;
+            }
+        }
+        okay &= diagonalAttack &&
+                diagonalFight.actors().actor(diagonalFight.actors().id(1))->npc.subcell == Cell{0, 1};
 
         for (int i = 0; i < 1000; ++i) {
             const auto& snapshot = party.snapshot();
@@ -311,10 +327,23 @@ int main() {
             okay &= npcs.damage(id, 1, 1100).damage == 1;
             animator.setTime(1100);
             frames.update(renderer, map, state, &npcs, &animator.snapshot());
-            okay &= npcs.damage(id, 999, 1150).died;
-            for (const auto ms : {1150u, 1249u, 1250u}) {
+            okay &= animator.snapshot().frames[i].clip == NpcAnimation::Hurt;
+            animator.setTime(1250);
+            frames.update(renderer, map, state, &npcs, &animator.snapshot());
+            okay &= animator.snapshot().frames[i].active == 1;
+            okay &= npcs.attack(id, 1260).changed;
+            animator.setTime(1260);
+            frames.update(renderer, map, state, &npcs, &animator.snapshot());
+            okay &= animator.snapshot().frames[i].clip == NpcAnimation::Attack;
+            okay &= npcs.damage(id, 999, 1300).died;
+            for (const auto ms : {1300u, 1399u, 1400u, 1500u, 1700u, 1900u, 2499u, 2500u}) {
                 animator.setTime(ms);
                 frames.update(renderer, map, state, &npcs, &animator.snapshot());
+                const auto& selected = animator.snapshot().frames[i];
+                okay &= selected.visible == (ms < 2500);
+                okay &= !selected.visible || selected.clip == NpcAnimation::Death;
+                if (ms == 1900)
+                    okay &= selected.active == 3;
             }
             okay &= npcs.remove(id).changed;
             okay &= npcs.remove(id).error == ActorError::InvalidHandle;

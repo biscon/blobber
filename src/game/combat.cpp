@@ -25,6 +25,7 @@ void CombatController::previewTurns(CombatSnapshot& destination) const noexcept 
     destination.upcomingCount = 0;
     if (state_.phase != CombatPhase::Turns)
         return;
+    auto occupied = occupiedSlots();
     for (std::size_t position = position_; position < orderCount_; ++position) {
         const auto entry = order_[position];
         if (entry.party) {
@@ -36,9 +37,13 @@ void CombatController::previewTurns(CombatSnapshot& destination) const noexcept 
             for (std::size_t i = position == position_ ? enemyCursor_ : 0; i < state_.enemyCount; ++i) {
                 const auto id = state_.enemies[i];
                 const auto* actor = actors_.actor(id);
-                if (actor && actor->life == ActorLife::Alive &&
-                    actor->monster.index == groups_[entry.index].index && exposed(id))
-                    destination.upcoming[destination.upcomingCount++] = {{}, id, false};
+                if (actor && actor->monster.index == groups_[entry.index].index) {
+                    if (const auto slot = meleeSlot(id, occupied)) {
+                        destination.upcoming[destination.upcomingCount++] = {{}, id, false};
+                        // Predict vacancy claims in turn order without mutating ActorWorld.
+                        occupied |= 1u << (slot->x + 2 * slot->y);
+                    }
+                }
             }
         }
     }
@@ -70,6 +75,32 @@ bool CombatController::exposed(rules::CharacterId id) const noexcept {
         if (f[i].index == id.index)
             return party_.character(f[i - 2])->life != rules::Life::Conscious;
     return false;
+}
+std::uint8_t CombatController::occupiedSlots() const noexcept {
+    std::uint8_t occupied = 0;
+    for (std::size_t i = 0; i < state_.enemyCount; ++i) {
+        const auto* actor = actors_.actor(state_.enemies[i]);
+        if (actor && actor->life == ActorLife::Alive && actor->npc.cell == cell_)
+            occupied |= 1u << (actor->npc.subcell.x + 2 * actor->npc.subcell.y);
+    }
+    return occupied;
+}
+std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupied) const noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || actor->life != ActorLife::Alive || !member(id) || !(actor->npc.cell == cell_))
+        return {};
+    if (near(*actor))
+        return actor->npc.subcell;
+    auto candidate = actor->npc.subcell + forward(origin_.heading) * -1;
+    for (int attempt = 0; attempt < 2; ++attempt) {
+        if (!(occupied & (1u << (candidate.x + 2 * candidate.y))))
+            return candidate;
+        if (origin_.heading == Heading::North || origin_.heading == Heading::South)
+            candidate.x = 1 - candidate.x;
+        else
+            candidate.y = 1 - candidate.y;
+    }
+    return {};
 }
 bool CombatController::exposed(ActorId id) const noexcept {
     const auto* actor = actors_.actor(id);
@@ -181,6 +212,7 @@ void CombatController::selectTurn() noexcept {
     state_.awaitingAction = false;
     state_.activeCharacter.reset();
     state_.activeEnemy.reset();
+    const auto occupied = occupiedSlots();
     // A conscious party member guarantees a selectable turn within one full cycle.
     for (std::size_t skipped = 0; skipped <= orderCount_; ++skipped) {
         const auto& entry = order_[position_];
@@ -198,7 +230,7 @@ void CombatController::selectTurn() noexcept {
                 const auto id = state_.enemies[enemyCursor_];
                 const auto* a = actors_.actor(id);
                 if (a && a->life == ActorLife::Alive && a->monster.index == groups_[entry.index].index &&
-                    exposed(id)) {
+                    meleeSlot(id, occupied)) {
                     state_.activeEnemy = id;
                     ++state_.turn;
                     return;
@@ -347,10 +379,9 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             } else if (state_.activeEnemy) {
                 out.enemy = *state_.activeEnemy;
                 const auto* a = actors_.actor(out.enemy);
-                if (a && a->life == ActorLife::Alive && exposed(out.enemy)) {
-                    if (!near(*a))
-                        actors_.move(out.enemy, a->npc.cell, a->npc.subcell + forward(origin_.heading) * -1,
-                                     origin_.cell);
+                const auto slot = meleeSlot(out.enemy, occupiedSlots());
+                if (slot &&
+                    (a->npc.subcell == *slot || actors_.move(out.enemy, a->npc.cell, *slot, origin_.cell))) {
                     actors_.attack(out.enemy, now);
                     out.event = CombatEvent::Attack;
                     out.enemyAttack = true;
