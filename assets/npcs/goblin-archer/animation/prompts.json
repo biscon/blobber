@@ -1,0 +1,219 @@
+[
+  {
+    "name": "idle-front",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME IDLE sprite sheet of the APPROVED hooded goblin archer in the attached four-view reference. Copy its exact identity, lean proportions, muted green short hood and shoulder covering, exposed ears, brown leather outfit/belt/boots, compact wooden bow and back quiver. FRONT view facing the viewer. Bow in anatomical LEFT hand, viewer RIGHT; right hand empty at viewer LEFT. Quiver arrows above viewer LEFT shoulder. Exactly TWO full-body poses SIDE BY SIDE in separate equal portrait cells on a 1536x1024 landscape sheet, generously spaced with at least 100 pixels transparent gap. Both characters approximately 800 pixels tall, identical scale, pelvis center and ground baseline, plenty of padding around ears/bow/boots. LEFT CELL neutral relaxed stance with bow held low in anatomical left hand, right empty. RIGHT CELL subtle breathing: slight chest/shoulder rise, FEET planted exactly like left cell, no equipment or face changes. Slow two-frame breathing loop, not different characters. Keep the lowered shortbow close alongside torso and legs so it fits narrow sprite width. Quiver remains anatomical right shoulder. Same detailed shaded textured retro dungeon sprite art as reference, sharp silhouette, consistent light. Actual alpha transparency outside figures; absolutely no backdrop, glow, floor, cast shadow, text, borders or grid. No dagger. No mirroring equipment, camera changes or independent scale changes.",
+    "path": "animation/sheets/idle-front.png",
+    "references": [
+      "reference/turnaround-v2.png"
+    ]
+  },
+  {
+    "name": "idle-back",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME IDLE sprite sheet of the APPROVED hooded goblin archer in the attached four-view reference. Copy its exact identity, lean proportions, muted green short hood and shoulder covering, exposed ears, brown leather outfit/belt/boots, compact wooden bow and back quiver. REAR view facing away. No face visible. Bow in anatomical LEFT hand at image LEFT; right hand empty at image RIGHT. Quiver opening and arrows above anatomical RIGHT shoulder at image RIGHT, body of quiver diagonally toward image LEFT hip. Exactly TWO full-body poses SIDE BY SIDE in separate equal portrait cells on a 1536x1024 landscape sheet, generously spaced with at least 100 pixels transparent gap. Both characters approximately 800 pixels tall, identical scale, pelvis center and ground baseline, plenty of padding around ears/bow/boots. LEFT CELL neutral relaxed stance with bow held low in anatomical left hand, right empty. RIGHT CELL subtle breathing: slight chest/shoulder rise, FEET planted exactly like left cell, no equipment or face changes. Slow two-frame breathing loop, not different characters. Keep the lowered shortbow close alongside torso and legs so it fits narrow sprite width. Quiver remains anatomical right shoulder. Same detailed shaded textured retro dungeon sprite art as reference, sharp silhouette, consistent light. Actual alpha transparency outside figures; absolutely no backdrop, glow, floor, cast shadow, text, borders or grid. No dagger. No mirroring equipment, camera changes or independent scale changes.",
+    "path": "animation/sheets/idle-back.png",
+    "references": [
+      "reference/turnaround-v2.png"
+    ]
+  },
+  {
+    "name": "idle-left",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME IDLE sprite sheet of the APPROVED hooded goblin archer in the attached four-view reference. Copy its exact identity, lean proportions, muted green short hood and shoulder covering, exposed ears, brown leather outfit/belt/boots, compact wooden bow and back quiver. Strict LEFT PROFILE, nose toward image LEFT. NEAR arm is anatomical LEFT holding the bow; far right hand empty. Quiver on back, consistent with anatomical right shoulder. Exactly TWO full-body poses SIDE BY SIDE in separate equal portrait cells on a 1536x1024 landscape sheet, generously spaced with at least 100 pixels transparent gap. Both characters approximately 800 pixels tall, identical scale, pelvis center and ground baseline, plenty of padding around ears/bow/boots. LEFT CELL neutral relaxed stance with bow held low in anatomical left hand, right empty. RIGHT CELL subtle breathing: slight chest/shoulder rise, FEET planted exactly like left cell, no equipment or face changes. Slow two-frame breathing loop, not different characters. Keep the lowered shortbow close alongside torso and legs so it fits narrow sprite width. Quiver remains anatomical right shoulder. Same detailed shaded textured retro dungeon sprite art as reference, sharp silhouette, consistent light. Actual alpha transparency outside figures; absolutely no backdrop, glow, floor, cast shadow, text, borders or grid. No dagger. No mirroring equipment, camera changes or independent scale changes.",
+    "path": "animation/sheets/idle-left.png",
+    "references": [
+      "reference/turnaround-v2.png"
+    ]
+  },
+  {
+    "name": "idle-right",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME IDLE sprite sheet of the APPROVED hooded goblin archer in the attached four-view reference. Copy its exact identity, lean proportions, muted green short hood and shoulder covering, exposed ears, brown leather outfit/belt/boots, compact wooden bow and back quiver. Strict RIGHT PROFILE, nose toward image RIGHT. NEAR anatomical RIGHT hand EMPTY; bow in FAR anatomical LEFT hand, partly occluded but readable. Quiver opening above anatomical right shoulder. Exactly TWO full-body poses SIDE BY SIDE in separate equal portrait cells on a 1536x1024 landscape sheet, generously spaced with at least 100 pixels transparent gap. Both characters approximately 800 pixels tall, identical scale, pelvis center and ground baseline, plenty of padding around ears/bow/boots. LEFT CELL neutral relaxed stance with bow held low in anatomical left hand, right empty. RIGHT CELL subtle breathing: slight chest/shoulder rise, FEET planted exactly like left cell, no equipment or face changes. Slow two-frame breathing loop, not different characters. Keep the lowered shortbow close alongside torso and legs so it fits narrow sprite width. Quiver remains anatomical right shoulder. Same detailed shaded textured retro dungeon sprite art as reference, sharp silhouette, consistent light. Actual alpha transparency outside figures; absolutely no backdrop, glow, floor, cast shadow, text, borders or grid. No dagger. No mirroring equipment, camera changes or independent scale changes.",
+    "path": "animation/sheets/idle-right.png",
+    "references": [
+      "reference/turnaround-v2.png"
+    ]
+  },
+  {
+    "name": "walk-front",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME WALK IN PLACE sheet of our exact approved hooded goblin archer. Use attached turnaround for exact identity/outfit and attached matching idle sheet for scale/style and equipment. FRONT view facing the viewer. Bow in anatomical LEFT hand, viewer RIGHT; right hand empty at viewer LEFT. Quiver arrows above viewer LEFT shoulder. LEFT CELL: anatomical left boot planted forward, right knee bent and right boot visibly lifted. RIGHT CELL: anatomical right boot planted forward, left knee bent and left boot visibly lifted. Clearly opposite support legs. Keep torso/pelvis centered, same character scale, alternating grounded feet on same baseline. Keep arms steady and low to preserve handedness; bow held near body in anatomical LEFT hand throughout, right hand empty. Quiver over anatomical right shoulder, green hood and short shoulder covering, no long cloak, same brown leather outfit/boots. Two equal cells SIDE BY SIDE on 1536x1024 landscape canvas; full figures about 800px tall with ample transparent margin on all sides and at least 100px gap between cells. Slow readable two-frame retro walk, no world translation. Detailed shaded textured dungeon sprite matching reference. Entire bow, hood, ears and both boots within each cell. Genuine transparent RGBA background, no floor, cast shadows, glow, text, grid or scenery. No dagger, gear switching, mirrored anatomy, duplicate limbs, or identical leg poses.",
+    "path": "animation/sheets/walk-front.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-front.png"
+    ]
+  },
+  {
+    "name": "walk-back",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME WALK IN PLACE sheet of our exact approved hooded goblin archer. Use attached turnaround for exact identity/outfit and attached matching idle sheet for scale/style and equipment. REAR view facing away. No face visible. Bow in anatomical LEFT hand at image LEFT; right hand empty at image RIGHT. Quiver opening and arrows above anatomical RIGHT shoulder at image RIGHT, body of quiver diagonally toward image LEFT hip. LEFT CELL: anatomical left boot planted forward, right knee bent and right boot visibly lifted. RIGHT CELL: anatomical right boot planted forward, left knee bent and left boot visibly lifted. Clearly opposite support legs. Keep torso/pelvis centered, same character scale, alternating grounded feet on same baseline. Keep arms steady and low to preserve handedness; bow held near body in anatomical LEFT hand throughout, right hand empty. Quiver over anatomical right shoulder, green hood and short shoulder covering, no long cloak, same brown leather outfit/boots. Two equal cells SIDE BY SIDE on 1536x1024 landscape canvas; full figures about 800px tall with ample transparent margin on all sides and at least 100px gap between cells. Slow readable two-frame retro walk, no world translation. Detailed shaded textured dungeon sprite matching reference. Entire bow, hood, ears and both boots within each cell. Genuine transparent RGBA background, no floor, cast shadows, glow, text, grid or scenery. No dagger, gear switching, mirrored anatomy, duplicate limbs, or identical leg poses.",
+    "path": "animation/sheets/walk-back.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-back.png"
+    ]
+  },
+  {
+    "name": "walk-left",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME WALK IN PLACE sheet of our exact approved hooded goblin archer. Use attached turnaround for exact identity/outfit and attached matching idle sheet for scale/style and equipment. Strict LEFT PROFILE, nose toward image LEFT. NEAR arm is anatomical LEFT holding the bow; far right hand empty. Quiver on back, consistent with anatomical right shoulder. LEFT CELL: wide stride, near leg forward planted and far leg trailing lifted. RIGHT CELL: passing step, near knee bent with near boot visibly lifted while far boot plants under body. Clearly different leg silhouettes. Keep torso/pelvis centered, same character scale, alternating grounded feet on same baseline. Keep arms steady and low to preserve handedness; bow held near body in anatomical LEFT hand throughout, right hand empty. Quiver over anatomical right shoulder, green hood and short shoulder covering, no long cloak, same brown leather outfit/boots. Two equal cells SIDE BY SIDE on 1536x1024 landscape canvas; full figures about 800px tall with ample transparent margin on all sides and at least 100px gap between cells. Slow readable two-frame retro walk, no world translation. Detailed shaded textured dungeon sprite matching reference. Entire bow, hood, ears and both boots within each cell. Genuine transparent RGBA background, no floor, cast shadows, glow, text, grid or scenery. No dagger, gear switching, mirrored anatomy, duplicate limbs, or identical leg poses.",
+    "path": "animation/sheets/walk-left.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-left.png"
+    ]
+  },
+  {
+    "name": "walk-right",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME WALK IN PLACE sheet of our exact approved hooded goblin archer. Use attached turnaround for exact identity/outfit and attached matching idle sheet for scale/style and equipment. Strict RIGHT PROFILE, nose toward image RIGHT. NEAR anatomical RIGHT hand EMPTY; bow in FAR anatomical LEFT hand, partly occluded but readable. Quiver opening above anatomical right shoulder. LEFT CELL: wide stride, near leg forward planted and far leg trailing lifted. RIGHT CELL: passing step, near knee bent with near boot visibly lifted while far boot plants under body. Clearly different leg silhouettes. Keep torso/pelvis centered, same character scale, alternating grounded feet on same baseline. Keep arms steady and low to preserve handedness; bow held near body in anatomical LEFT hand throughout, right hand empty. Quiver over anatomical right shoulder, green hood and short shoulder covering, no long cloak, same brown leather outfit/boots. Two equal cells SIDE BY SIDE on 1536x1024 landscape canvas; full figures about 800px tall with ample transparent margin on all sides and at least 100px gap between cells. Slow readable two-frame retro walk, no world translation. Detailed shaded textured dungeon sprite matching reference. Entire bow, hood, ears and both boots within each cell. Genuine transparent RGBA background, no floor, cast shadows, glow, text, grid or scenery. No dagger, gear switching, mirrored anatomy, duplicate limbs, or identical leg poses.",
+    "path": "animation/sheets/walk-right.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-right.png"
+    ]
+  },
+  {
+    "name": "hurt-front",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME HURT REACTION sheet of the exact hooded goblin archer from attached approved turnaround and matching idle sheet. FRONT view facing the viewer. Bow in anatomical LEFT hand, viewer RIGHT; right hand empty at viewer LEFT. Quiver arrows above viewer LEFT shoulder. Two full-body poses SIDE BY SIDE in separate equal cells, 1536x1024 landscape, each standing character roughly 800px high. LEFT CELL: short readable flinch from a hit, knees bend slightly, shoulders recoil, grimace (rear shows recoil without turning head toward viewer), right EMPTY hand drawn slightly toward torso. RIGHT CELL: partial recovery toward idle, knees straighten a little, face recovering. Bow stays gripped low in anatomical LEFT hand in BOTH poses; quiver/hood/equipment remain worn in same location. Same identity, green short hood and shoulder covering, exposed ears, brown leather vest/skirt/bracers/boots. Same scale/body proportions across cells, no per-pose resizing; at least one boot grounds on the SAME floor baseline. Full silhouette including bow and ears within each cell with generous padding and transparent gap. Detailed textured shaded retro dungeon art matching reference. Actual alpha-transparent background outside character, no floor, cast shadow, glow, blood, gore, damage numbers, text, grid or border. Do not switch weapons, handedness or view direction. Distinct recoil/recovery, no dramatic knockback or world travel.",
+    "path": "animation/sheets/hurt-front.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-front.png"
+    ]
+  },
+  {
+    "name": "hurt-back",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME HURT REACTION sheet of the exact hooded goblin archer from attached approved turnaround and matching idle sheet. REAR view facing away. No face visible. Bow in anatomical LEFT hand at image LEFT; right hand empty at image RIGHT. Quiver opening and arrows above anatomical RIGHT shoulder at image RIGHT, body of quiver diagonally toward image LEFT hip. Two full-body poses SIDE BY SIDE in separate equal cells, 1536x1024 landscape, each standing character roughly 800px high. LEFT CELL: short readable flinch from a hit, knees bend slightly, shoulders recoil, grimace (rear shows recoil without turning head toward viewer), right EMPTY hand drawn slightly toward torso. RIGHT CELL: partial recovery toward idle, knees straighten a little, face recovering. Bow stays gripped low in anatomical LEFT hand in BOTH poses; quiver/hood/equipment remain worn in same location. Same identity, green short hood and shoulder covering, exposed ears, brown leather vest/skirt/bracers/boots. Same scale/body proportions across cells, no per-pose resizing; at least one boot grounds on the SAME floor baseline. Full silhouette including bow and ears within each cell with generous padding and transparent gap. Detailed textured shaded retro dungeon art matching reference. Actual alpha-transparent background outside character, no floor, cast shadow, glow, blood, gore, damage numbers, text, grid or border. Do not switch weapons, handedness or view direction. Distinct recoil/recovery, no dramatic knockback or world travel.",
+    "path": "animation/sheets/hurt-back.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-back.png"
+    ]
+  },
+  {
+    "name": "hurt-left",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME HURT REACTION sheet of the exact hooded goblin archer from attached approved turnaround and matching idle sheet. Strict LEFT PROFILE, nose toward image LEFT. NEAR arm is anatomical LEFT holding the bow; far right hand empty. Quiver on back, consistent with anatomical right shoulder. Two full-body poses SIDE BY SIDE in separate equal cells, 1536x1024 landscape, each standing character roughly 800px high. LEFT CELL: short readable flinch from a hit, knees bend slightly, shoulders recoil, grimace (rear shows recoil without turning head toward viewer), right EMPTY hand drawn slightly toward torso. RIGHT CELL: partial recovery toward idle, knees straighten a little, face recovering. Bow stays gripped low in anatomical LEFT hand in BOTH poses; quiver/hood/equipment remain worn in same location. Same identity, green short hood and shoulder covering, exposed ears, brown leather vest/skirt/bracers/boots. Same scale/body proportions across cells, no per-pose resizing; at least one boot grounds on the SAME floor baseline. Full silhouette including bow and ears within each cell with generous padding and transparent gap. Detailed textured shaded retro dungeon art matching reference. Actual alpha-transparent background outside character, no floor, cast shadow, glow, blood, gore, damage numbers, text, grid or border. Do not switch weapons, handedness or view direction. Distinct recoil/recovery, no dramatic knockback or world travel.",
+    "path": "animation/revisions/hurt-left-v1.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-left.png"
+    ]
+  },
+  {
+    "name": "hurt-right",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME HURT REACTION sheet of the exact hooded goblin archer from attached approved turnaround and matching idle sheet. Strict RIGHT PROFILE, nose toward image RIGHT. NEAR anatomical RIGHT hand EMPTY; bow in FAR anatomical LEFT hand, partly occluded but readable. Quiver opening above anatomical right shoulder. Two full-body poses SIDE BY SIDE in separate equal cells, 1536x1024 landscape, each standing character roughly 800px high. LEFT CELL: short readable flinch from a hit, knees bend slightly, shoulders recoil, grimace (rear shows recoil without turning head toward viewer), right EMPTY hand drawn slightly toward torso. RIGHT CELL: partial recovery toward idle, knees straighten a little, face recovering. Bow stays gripped low in anatomical LEFT hand in BOTH poses; quiver/hood/equipment remain worn in same location. Same identity, green short hood and shoulder covering, exposed ears, brown leather vest/skirt/bracers/boots. Same scale/body proportions across cells, no per-pose resizing; at least one boot grounds on the SAME floor baseline. Full silhouette including bow and ears within each cell with generous padding and transparent gap. Detailed textured shaded retro dungeon art matching reference. Actual alpha-transparent background outside character, no floor, cast shadow, glow, blood, gore, damage numbers, text, grid or border. Do not switch weapons, handedness or view direction. Distinct recoil/recovery, no dramatic knockback or world travel.",
+    "path": "animation/sheets/hurt-right.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-right.png"
+    ]
+  },
+  {
+    "name": "bow-front",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME shortbow ATTACK sprite sheet of exact approved hooded goblin archer in references. FRONT view facing the viewer. Bow in anatomical LEFT hand, viewer RIGHT; right hand empty at viewer LEFT. Quiver arrows above viewer LEFT shoulder. Aim straight AT THE VIEWER, foreshortened arrow points out of picture toward camera, not across chest. LEFT CELL FULL DRAW: anatomical LEFT arm holds compact wooden shortbow extended in facing direction, anatomical RIGHT hand draws string and nocked arrow to cheek. RIGHT CELL RELEASE: identical planted feet and bow arm, string relaxed, right fingers open at cheek after release, nocked arrow GONE. NO flying arrow outside silhouette. Keep quiver strapped at anatomical right shoulder and same short green hood/shoulder covering, exposed ears, brown leather outfit and boots. Exactly two full-body figures SIDE BY SIDE in separate equal cells on 1536x1024 landscape, generous transparent padding, at least 100px gap between figures; reduce BOTH figures equally to fit if needed. Same scale between poses, unchanged body proportions and floor baseline. Do not overlap poses or clip bow/boots/ears. Match detailed shaded textured retro dungeon style, face and identity of reference. Actual clean alpha transparency, no scenery, floor/shadow, glow, text, borders, grid or motion blur. Never switch hands, hold dagger, add extra arms, or aim in a direction different from the stated facing.",
+    "path": "animation/revisions/bow-front-v1.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-front.png"
+    ]
+  },
+  {
+    "name": "bow-back",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME shortbow ATTACK sprite sheet of exact approved hooded goblin archer in references. REAR view facing away. No face visible. Bow in anatomical LEFT hand at image LEFT; right hand empty at image RIGHT. Quiver opening and arrows above anatomical RIGHT shoulder at image RIGHT, body of quiver diagonally toward image LEFT hip. Aim straight AWAY from viewer, bow held beyond body and partly occluded, do not turn torso/head around. LEFT CELL FULL DRAW: anatomical LEFT arm holds compact wooden shortbow extended in facing direction, anatomical RIGHT hand draws string and nocked arrow to cheek. RIGHT CELL RELEASE: identical planted feet and bow arm, string relaxed, right fingers open at cheek after release, nocked arrow GONE. NO flying arrow outside silhouette. Keep quiver strapped at anatomical right shoulder and same short green hood/shoulder covering, exposed ears, brown leather outfit and boots. Exactly two full-body figures SIDE BY SIDE in separate equal cells on 1536x1024 landscape, generous transparent padding, at least 100px gap between figures; reduce BOTH figures equally to fit if needed. Same scale between poses, unchanged body proportions and floor baseline. Do not overlap poses or clip bow/boots/ears. Match detailed shaded textured retro dungeon style, face and identity of reference. Actual clean alpha transparency, no scenery, floor/shadow, glow, text, borders, grid or motion blur. Never switch hands, hold dagger, add extra arms, or aim in a direction different from the stated facing.",
+    "path": "animation/revisions/bow-back-v1.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-back.png"
+    ]
+  },
+  {
+    "name": "bow-left",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME shortbow ATTACK sprite sheet of exact approved hooded goblin archer in references. Strict LEFT PROFILE, nose toward image LEFT. NEAR arm is anatomical LEFT holding the bow; far right hand empty. Quiver on back, consistent with anatomical right shoulder. Aim strictly toward image LEFT. LEFT CELL FULL DRAW: anatomical LEFT arm holds compact wooden shortbow extended in facing direction, anatomical RIGHT hand draws string and nocked arrow to cheek. RIGHT CELL RELEASE: identical planted feet and bow arm, string relaxed, right fingers open at cheek after release, nocked arrow GONE. NO flying arrow outside silhouette. Keep quiver strapped at anatomical right shoulder and same short green hood/shoulder covering, exposed ears, brown leather outfit and boots. Exactly two full-body figures SIDE BY SIDE in separate equal cells on 1536x1024 landscape, generous transparent padding, at least 100px gap between figures; reduce BOTH figures equally to fit if needed. Same scale between poses, unchanged body proportions and floor baseline. Do not overlap poses or clip bow/boots/ears. Match detailed shaded textured retro dungeon style, face and identity of reference. Actual clean alpha transparency, no scenery, floor/shadow, glow, text, borders, grid or motion blur. Never switch hands, hold dagger, add extra arms, or aim in a direction different from the stated facing.",
+    "path": "animation/sheets/bow-left.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-left.png"
+    ]
+  },
+  {
+    "name": "bow-right",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME shortbow ATTACK sprite sheet of exact approved hooded goblin archer in references. Strict RIGHT PROFILE, nose toward image RIGHT. NEAR anatomical RIGHT hand EMPTY; bow in FAR anatomical LEFT hand, partly occluded but readable. Quiver opening above anatomical right shoulder. Aim strictly toward image RIGHT. LEFT CELL FULL DRAW: anatomical LEFT arm holds compact wooden shortbow extended in facing direction, anatomical RIGHT hand draws string and nocked arrow to cheek. RIGHT CELL RELEASE: identical planted feet and bow arm, string relaxed, right fingers open at cheek after release, nocked arrow GONE. NO flying arrow outside silhouette. Keep quiver strapped at anatomical right shoulder and same short green hood/shoulder covering, exposed ears, brown leather outfit and boots. Exactly two full-body figures SIDE BY SIDE in separate equal cells on 1536x1024 landscape, generous transparent padding, at least 100px gap between figures; reduce BOTH figures equally to fit if needed. Same scale between poses, unchanged body proportions and floor baseline. Do not overlap poses or clip bow/boots/ears. Match detailed shaded textured retro dungeon style, face and identity of reference. Actual clean alpha transparency, no scenery, floor/shadow, glow, text, borders, grid or motion blur. Never switch hands, hold dagger, add extra arms, or aim in a direction different from the stated facing.",
+    "path": "animation/sheets/bow-right.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-right.png"
+    ]
+  },
+  {
+    "name": "death-front",
+    "prompt": "Use case: identity-preserve. Production FOUR-FRAME DEATH COLLAPSE sprite sheet of exact approved hooded goblin archer. Reference turnaround and matching idle fix identity, outfit and body proportions. FRONT view facing the viewer. Bow in anatomical LEFT hand, viewer RIGHT; right hand empty at viewer LEFT. Quiver arrows above viewer LEFT shoulder. FOUR cells in a clearly separated 2 BY 2 grid, reading top-left, top-right, bottom-left, bottom-right, on a 1536x1536 or larger square transparent canvas. Every cell has same camera/world scale; use generous horizontal room for fallen body, wide transparent gaps. Frame 1 TOP LEFT: knees buckling, torso beginning collapse, hooded head still fairly high, bow still in anatomical left hand. Frame 2 TOP RIGHT: dropped to knees, torso folding toward ground, bow lowering with left hand. Frame 3 BOTTOM LEFT: body has fallen onto side on ground, intact hood, brown leather and quiver, bow lying immediately beside left hand, no airborne gear. Frame 4 BOTTOM RIGHT: final settled lifeless corpse, slight settling from frame 3, same orientation and body scale, bow remains nearby and quiver remains attached. Use coherent collapse viewed from the requested direction throughout; never show standing idle in final poses. Front/rear falls sideways enough to show believable full body without changing viewing side; profiles fall along screen horizontal. NO gore or blood. Preserve green hood and shoulder covering, exposed ears, face identity, brown boots/belt/outfit and right-shoulder quiver. Body scale identical across poses: fallen body length remains comparable to initial standing height, DO NOT enlarge collapsed poses to fill cells. All parts including bow and boots within own cell with transparent margins. Each cell has a consistent notional ground line, with transparent space BELOW all ink. No visible floor or shadow. Detailed shaded textured retro dungeon game sprites. Genuine alpha transparency outside silhouettes, no glow, brown backdrop, text, grid/borders or labels. No extra characters, detached arrows or dagger.",
+    "path": "animation/revisions/death-front-v1.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-front.png"
+    ]
+  },
+  {
+    "name": "death-back",
+    "prompt": "Use case: identity-preserve. Production FOUR-FRAME DEATH COLLAPSE sprite sheet of exact approved hooded goblin archer. Reference turnaround and matching idle fix identity, outfit and body proportions. REAR view facing away. No face visible. Bow in anatomical LEFT hand at image LEFT; right hand empty at image RIGHT. Quiver opening and arrows above anatomical RIGHT shoulder at image RIGHT, body of quiver diagonally toward image LEFT hip. FOUR cells in a clearly separated 2 BY 2 grid, reading top-left, top-right, bottom-left, bottom-right, on a 1536x1536 or larger square transparent canvas. Every cell has same camera/world scale; use generous horizontal room for fallen body, wide transparent gaps. Frame 1 TOP LEFT: knees buckling, torso beginning collapse, hooded head still fairly high, bow still in anatomical left hand. Frame 2 TOP RIGHT: dropped to knees, torso folding toward ground, bow lowering with left hand. Frame 3 BOTTOM LEFT: body has fallen onto side on ground, intact hood, brown leather and quiver, bow lying immediately beside left hand, no airborne gear. Frame 4 BOTTOM RIGHT: final settled lifeless corpse, slight settling from frame 3, same orientation and body scale, bow remains nearby and quiver remains attached. Use coherent collapse viewed from the requested direction throughout; never show standing idle in final poses. Front/rear falls sideways enough to show believable full body without changing viewing side; profiles fall along screen horizontal. NO gore or blood. Preserve green hood and shoulder covering, exposed ears, face identity, brown boots/belt/outfit and right-shoulder quiver. Body scale identical across poses: fallen body length remains comparable to initial standing height, DO NOT enlarge collapsed poses to fill cells. All parts including bow and boots within own cell with transparent margins. Each cell has a consistent notional ground line, with transparent space BELOW all ink. No visible floor or shadow. Detailed shaded textured retro dungeon game sprites. Genuine alpha transparency outside silhouettes, no glow, brown backdrop, text, grid/borders or labels. No extra characters, detached arrows or dagger.",
+    "path": "animation/sheets/death-back.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-back.png"
+    ]
+  },
+  {
+    "name": "death-left",
+    "prompt": "Use case: identity-preserve. Production FOUR-FRAME DEATH COLLAPSE sprite sheet of exact approved hooded goblin archer. Reference turnaround and matching idle fix identity, outfit and body proportions. Strict LEFT PROFILE, nose toward image LEFT. NEAR arm is anatomical LEFT holding the bow; far right hand empty. Quiver on back, consistent with anatomical right shoulder. FOUR cells in a clearly separated 2 BY 2 grid, reading top-left, top-right, bottom-left, bottom-right, on a 1536x1536 or larger square transparent canvas. Every cell has same camera/world scale; use generous horizontal room for fallen body, wide transparent gaps. Frame 1 TOP LEFT: knees buckling, torso beginning collapse, hooded head still fairly high, bow still in anatomical left hand. Frame 2 TOP RIGHT: dropped to knees, torso folding toward ground, bow lowering with left hand. Frame 3 BOTTOM LEFT: body has fallen onto side on ground, intact hood, brown leather and quiver, bow lying immediately beside left hand, no airborne gear. Frame 4 BOTTOM RIGHT: final settled lifeless corpse, slight settling from frame 3, same orientation and body scale, bow remains nearby and quiver remains attached. Use coherent collapse viewed from the requested direction throughout; never show standing idle in final poses. Front/rear falls sideways enough to show believable full body without changing viewing side; profiles fall along screen horizontal. NO gore or blood. Preserve green hood and shoulder covering, exposed ears, face identity, brown boots/belt/outfit and right-shoulder quiver. Body scale identical across poses: fallen body length remains comparable to initial standing height, DO NOT enlarge collapsed poses to fill cells. All parts including bow and boots within own cell with transparent margins. Each cell has a consistent notional ground line, with transparent space BELOW all ink. No visible floor or shadow. Detailed shaded textured retro dungeon game sprites. Genuine alpha transparency outside silhouettes, no glow, brown backdrop, text, grid/borders or labels. No extra characters, detached arrows or dagger.",
+    "path": "animation/sheets/death-left.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-left.png"
+    ]
+  },
+  {
+    "name": "death-right",
+    "prompt": "Use case: identity-preserve. Production FOUR-FRAME DEATH COLLAPSE sprite sheet of exact approved hooded goblin archer. Reference turnaround and matching idle fix identity, outfit and body proportions. Strict RIGHT PROFILE, nose toward image RIGHT. NEAR anatomical RIGHT hand EMPTY; bow in FAR anatomical LEFT hand, partly occluded but readable. Quiver opening above anatomical right shoulder. FOUR cells in a clearly separated 2 BY 2 grid, reading top-left, top-right, bottom-left, bottom-right, on a 1536x1536 or larger square transparent canvas. Every cell has same camera/world scale; use generous horizontal room for fallen body, wide transparent gaps. Frame 1 TOP LEFT: knees buckling, torso beginning collapse, hooded head still fairly high, bow still in anatomical left hand. Frame 2 TOP RIGHT: dropped to knees, torso folding toward ground, bow lowering with left hand. Frame 3 BOTTOM LEFT: body has fallen onto side on ground, intact hood, brown leather and quiver, bow lying immediately beside left hand, no airborne gear. Frame 4 BOTTOM RIGHT: final settled lifeless corpse, slight settling from frame 3, same orientation and body scale, bow remains nearby and quiver remains attached. Use coherent collapse viewed from the requested direction throughout; never show standing idle in final poses. Front/rear falls sideways enough to show believable full body without changing viewing side; profiles fall along screen horizontal. NO gore or blood. Preserve green hood and shoulder covering, exposed ears, face identity, brown boots/belt/outfit and right-shoulder quiver. Body scale identical across poses: fallen body length remains comparable to initial standing height, DO NOT enlarge collapsed poses to fill cells. All parts including bow and boots within own cell with transparent margins. Each cell has a consistent notional ground line, with transparent space BELOW all ink. No visible floor or shadow. Detailed shaded textured retro dungeon game sprites. Genuine alpha transparency outside silhouettes, no glow, brown backdrop, text, grid/borders or labels. No extra characters, detached arrows or dagger.",
+    "path": "animation/sheets/death-right.png",
+    "references": [
+      "reference/turnaround-v2.png",
+      "animation/sheets/idle-right.png"
+    ]
+  },
+  {
+    "name": "hurt-left-correction",
+    "prompt": "Correct ONLY the LEFT-PROFILE hurt sprite sheet attached as image 1; image 2 shows correct idle anatomy. Keep two side-by-side hurt/recovery poses, face, hood, quiver, outfit, knees, scale, cell positions and full-body canvas. In BOTH cells the anatomical LEFT arm is the visible NEAR arm whose upper arm descends from the large shoulder at image RIGHT of the torso. That NEAR ARM must descend LOW beside torso and its hand must grip the wooden BOW near hip, exactly like idle reference image 2. Remove the near-arm hand raised at chest in left cell: that is wrong because it switches weapon hands. The FAR anatomical RIGHT hand may be mostly hidden or visible EMPTY beyond torso at image LEFT, but must NOT hold bow. Simplify BOTH arm poses to the idle reference's arms-down arrangement while retaining hurt expression, bent knees and slight torso recoil in first cell, recovering second cell. Bow always in NEAR anatomical left hand, same hands as reference, no third arms or floating hands. Do not mirror the image. Keep strict left facing nose image LEFT. Preserve full transparent background, no glow, floor, shadows or text. No other equipment changes.",
+    "path": "animation/sheets/hurt-left.png",
+    "references": [
+      "animation/revisions/hurt-left-v1.png",
+      "animation/sheets/idle-left.png"
+    ]
+  },
+  {
+    "name": "bow-front-correction",
+    "prompt": "Edit this exact TWO-FRAME goblin archer attack sheet to correct the shot direction. The bow must aim directly OUT OF THE IMAGE toward the viewer, not sideways. LEFT cell: replace the sideways arrow across the face with a STRONGLY FORESHORTENED arrow aimed at the camera: arrowhead seen nearly head-on directly in front of bow grip, shaft a short receding sliver, fletching near right cheek. Anatomical LEFT bow hand projects forward toward camera, enlarged slightly by foreshortening; right hand pulls string at right cheek. RIGHT cell: identical bow and left-arm direction, released string and no arrow, right fingers released near cheek. Both figures still face exactly forward, feet unchanged. Preserve exact character identity, green hood, brown leather, quiver over anatomical right shoulder, foot positions, scale and cell layout. Bow stays in anatomical LEFT hand and drawing hand is anatomical RIGHT. Two complete full-body poses, same baseline and generous margins. Genuine alpha transparency; no backdrop, floor, shadow, glow, text or detached flying arrows. Do not alter the outfit, quiver or boots.",
+    "path": "animation/revisions/bow-front-v2.png",
+    "references": [
+      "animation/revisions/bow-front-v1.png"
+    ]
+  },
+  {
+    "name": "bow-back-correction",
+    "prompt": "Edit this exact TWO-FRAME goblin archer attack sheet to correct the shot direction. The goblin must aim directly INTO THE IMAGE, AWAY from the viewer, not sideways to image left. In BOTH cells tuck the anatomical LEFT bow arm forward into depth, MOSTLY OCCLUDED BY THE TORSO: bow appears as a narrow upright outline just beyond the left shoulder/head, not held far out to the left. Right draw hand beside right cheek is partly hidden by head. LEFT cell: nocked arrow points away and is mostly hidden behind bow/head; REMOVE the long sideways horizontal arrow. RIGHT cell: string relaxed, drawing fingers released near right cheek, no arrow. Rear head/hood and back remain facing camera; never turn to profile. Preserve exact character identity, green hood, brown leather, quiver over anatomical right shoulder, foot positions, scale and cell layout. Bow stays in anatomical LEFT hand and drawing hand is anatomical RIGHT. Two complete full-body poses, same baseline and generous margins. Genuine alpha transparency; no backdrop, floor, shadow, glow, text or detached flying arrows. Do not alter the outfit, quiver or boots.",
+    "path": "animation/sheets/bow-back.png",
+    "references": [
+      "animation/revisions/bow-back-v1.png"
+    ]
+  },
+  {
+    "name": "death-front-correction",
+    "prompt": "Edit this exact four-frame hooded goblin death sheet. Correct ONLY the duplicate arrow feathers behind the TOP LEFT character: currently feather clusters appear behind BOTH shoulders. Remove the feather cluster behind the VIEWER-RIGHT shoulder/ear of the TOP LEFT pose, restoring clean transparent space and the existing hood silhouette. Retain the one correct feather cluster behind its VIEWER-LEFT shoulder (anatomical right). Keep every other pixel and all four poses, left-hand bow, skin, head, clothes, body positions, scale, baseline, quivers in other frames and transparent background unchanged. No new details, no resizing or rearrangement. The character has exactly ONE quiver throughout, not two.",
+    "path": "animation/sheets/death-front.png",
+    "references": [
+      "animation/revisions/death-front-v1.png"
+    ]
+  },
+  {
+    "name": "bow-front-arrow-correction",
+    "prompt": "Precise edit of attached TWO-CELL front-facing archer sheet. Change ONLY THE ARROW in the LEFT cell. It currently looks like a horizontal arrow pointing RIGHT across the goblin's face. REMOVE that entire horizontal brown shaft, side-on triangular arrowhead and white feather shape. Replace it with an END-ON ARROW AIMED DIRECTLY AT THE CAMERA: a small symmetric DIAMOND/FOUR-POINT metal arrowhead seen tip-first at approximately x=485,y=285 in this 1536x1024 sheet, directly above the forward left bow hand. The arrow shaft recedes away from the viewer and is almost completely hidden behind the diamond head: no visible horizontal shaft across the face, no side-on arrow silhouette. The arrow's vanishing point is behind it near the drawing hand. Keep bow, hands, face, all other pixels, RIGHT release pose (no arrow), scale, full-body view, outfit, hood and quiver unchanged. Genuine alpha-transparent backdrop, no floor, shadows, glow or added text.",
+    "path": "animation/sheets/bow-front.png",
+    "references": [
+      "animation/revisions/bow-front-v2.png"
+    ]
+  }
+]

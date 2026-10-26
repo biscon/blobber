@@ -1,0 +1,366 @@
+[
+  {
+    "name": "idle-front",
+    "split_x": 768,
+    "scale": 0.53,
+    "pivot_x": [
+      408,
+      360
+    ],
+    "ground_y": [
+      961,
+      961
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "idle-back",
+    "split_x": 768,
+    "scale": 0.523,
+    "pivot_x": [
+      402,
+      372
+    ],
+    "ground_y": [
+      959,
+      959
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "idle-left",
+    "split_x": 768,
+    "scale": 0.495,
+    "pivot_x": [
+      443,
+      345
+    ],
+    "ground_y": [
+      988,
+      988
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "idle-right",
+    "split_x": 768,
+    "scale": 0.495,
+    "pivot_x": [
+      395,
+      327
+    ],
+    "ground_y": [
+      992,
+      992
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "walk-front",
+    "split_x": 768,
+    "scale": 0.53,
+    "pivot_x": [
+      411,
+      359
+    ],
+    "ground_y": [
+      966,
+      965
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "walk-back",
+    "split_x": 768,
+    "scale": 0.52,
+    "pivot_x": [
+      404,
+      371
+    ],
+    "ground_y": [
+      955,
+      952
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "walk-left",
+    "split_x": 768,
+    "scale": 0.5,
+    "pivot_x": [
+      429,
+      366
+    ],
+    "ground_y": [
+      965,
+      977
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "walk-right",
+    "split_x": 768,
+    "scale": 0.518,
+    "pivot_x": [
+      443,
+      372
+    ],
+    "ground_y": [
+      950,
+      947
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "hurt-front",
+    "split_x": 768,
+    "scale": 0.52,
+    "pivot_x": [
+      440,
+      380
+    ],
+    "ground_y": [
+      946,
+      945
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "hurt-back",
+    "split_x": 768,
+    "scale": 0.52,
+    "pivot_x": [
+      450,
+      370
+    ],
+    "ground_y": [
+      963,
+      961
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "hurt-left",
+    "split_x": 768,
+    "scale": 0.5,
+    "pivot_x": [
+      450,
+      415
+    ],
+    "ground_y": [
+      976,
+      974
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "hurt-right",
+    "split_x": 768,
+    "scale": 0.495,
+    "pivot_x": [
+      454,
+      325
+    ],
+    "ground_y": [
+      977,
+      986
+    ],
+    "canvas_width": 384,
+    "canvas_height": 536,
+    "anchor_x": 192,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-front",
+    "split_x": 768,
+    "scale": 0.52,
+    "pivot_x": [
+      420,
+      337
+    ],
+    "ground_y": [
+      973,
+      973
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-back",
+    "split_x": 768,
+    "scale": 0.52,
+    "pivot_x": [
+      452,
+      340
+    ],
+    "ground_y": [
+      971,
+      971
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-left",
+    "split_x": 768,
+    "scale": 0.57,
+    "pivot_x": [
+      495,
+      495
+    ],
+    "ground_y": [
+      921,
+      920
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-right",
+    "split_x": 768,
+    "scale": 0.57,
+    "pivot_x": [
+      320,
+      295
+    ],
+    "ground_y": [
+      932,
+      933
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "death-front",
+    "split_x": 627,
+    "scale": 0.8,
+    "pivot_x": [
+      315,
+      290,
+      315,
+      310
+    ],
+    "ground_y": [
+      680,
+      681,
+      378,
+      379
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512,
+    "rows": 2,
+    "split_y": 750
+  },
+  {
+    "name": "death-back",
+    "split_x": 627,
+    "scale": 0.8,
+    "pivot_x": [
+      340,
+      310,
+      320,
+      320
+    ],
+    "ground_y": [
+      618,
+      637,
+      425,
+      430
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512,
+    "rows": 2,
+    "split_y": 750
+  },
+  {
+    "name": "death-left",
+    "split_x": 627,
+    "scale": 0.8,
+    "pivot_x": [
+      365,
+      330,
+      315,
+      320
+    ],
+    "ground_y": [
+      659,
+      638,
+      390,
+      395
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512,
+    "rows": 2,
+    "split_y": 750
+  },
+  {
+    "name": "death-right",
+    "split_x": 627,
+    "scale": 0.8,
+    "pivot_x": [
+      340,
+      320,
+      330,
+      320
+    ],
+    "ground_y": [
+      641,
+      630,
+      393,
+      405
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512,
+    "rows": 2,
+    "split_y": 750
+  }
+]

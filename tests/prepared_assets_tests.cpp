@@ -235,6 +235,70 @@ void roundTrip(const fs::path& root) {
             }
         }
 }
+void distinctAppearances(const fs::path& root) {
+    auto melee = testReactionAppearance();
+    auto archer = testArcherAppearance();
+    melee.sampling = archer.sampling = ImageSampling::Area;
+    const std::vector<NpcTimings> timings{npcTimings(melee), npcTimings(archer)};
+    PreparedNpcs bank({melee, archer});
+    savePreparedNpcs(root / "roles.bin", bank, timings, 41, 29);
+    auto loaded = loadPreparedNpcs(root / "roles.bin", timings, 41, 29);
+    auto wrongTimings = timings;
+    std::swap(wrongTimings[0], wrongTimings[1]);
+    rejects([&] { loadPreparedNpcs(root / "roles.bin", wrongTimings, 41, 29); },
+            "Swapped appearance clip tables cannot load the wrong bank");
+    const SceneRenderer direct(loadPreparedScene(root / "scene.bin", 29), std::move(bank));
+    const SceneRenderer restored(loadPreparedScene(root / "scene.bin", 29), std::move(loaded));
+    const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
+    auto actors = testActors(map, {3, 5}, {"near", "far"},
+                             {{{0}, {2, 3}, {1, 1}, Heading::South}, {{1}, {4, 3}, {0, 1}, Heading::South}});
+    NpcAnimator animator(actors, timings);
+    actors.attack(actors.id(0), 0);
+    actors.attack(actors.id(1), 0, true);
+    Frame expected, actual;
+    PickingBuffer expectedPick, actualPick;
+    const Player player{{3, 5}, Heading::North};
+    auto compare = [&](std::uint64_t time) {
+        animator.setTime(time);
+        direct.compose(map, player, expected, &actors, &animator.snapshot(), &expectedPick);
+        restored.compose(map, player, actual, &actors, &animator.snapshot(), &actualPick);
+        check(same(expected, actual), "Two distinct loaded appearances preserve rendered pixels");
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x)
+                check(expectedPick.slot(x, y) == actualPick.slot(x, y),
+                      "Both loaded appearances preserve body ownership in picking");
+    };
+    compare(0);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Attack &&
+              animator.snapshot().frames[1].clip == NpcAnimation::RangedAttack &&
+              actualPick.targets().count == 2,
+          "Each role selects its own attack clip and both remain visible targets");
+    for (int direction = 0; direction < 4; ++direction) {
+        actors.face(actors.id(1), static_cast<Heading>(direction));
+        for (const auto time : {599u, 600u, 999u, 1000u}) {
+            compare(time);
+            const auto& frame = animator.snapshot().frames[1];
+            check(frame.clip == (time < 1000 ? NpcAnimation::RangedAttack : NpcAnimation::Idle),
+                  "Bow-only clip ends in its own idle without a melee clip");
+            if (time < 1000)
+                check(frame.active == (time >= 600), "Bow release uses the archer's own timing");
+        }
+    }
+    check(actors.walk(actors.id(1), {3, 3}, {0, 1}, player.cell, 1100).changed,
+          "Archer fixture starts a committed travel segment");
+    compare(1400);
+    actors.damage(actors.id(1), 1, 1400);
+    compare(1550);
+    check(animator.snapshot().frames[1].clip == NpcAnimation::Hurt,
+          "Moving bow-only appearance selects its own hurt reaction");
+    actors.damage(actors.id(1), 100, 1800);
+    for (const auto time : {1900u, 2000u, 2200u, 2400u, 2999u, 3000u}) {
+        compare(time);
+        check(actualPick.targets().count == 1, "Archer corpse never becomes a living target");
+    }
+    check(!animator.snapshot().frames[1].visible && !actors.occupied({3, 3}),
+          "Archer corpse expires independently of live melee actor and occupancy");
+}
 } // namespace
 int main() {
     try {
@@ -242,6 +306,7 @@ int main() {
         Directory root;
         metadataAndDerivatives(root.path);
         roundTrip(root.path);
+        distinctAppearances(root.path);
         std::cout << "Prepared asset checks passed\n";
         return 0;
     } catch (const std::exception& error) {

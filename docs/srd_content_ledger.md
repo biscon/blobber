@@ -126,7 +126,16 @@ when wounded. Ranged-only NPCs hold a legal shot, approach to obtain one, and tr
 to create distance when adjacent regardless of health or Nimble Escape. A blocked
 escape falls back to the existing disadvantaged ranged attack. These are generic
 project AI defaults; mixed-weapon goblin decisions remain unchanged. Two demo
-archers share the goblin stats/art but list only the shortbow attack.
+archers shared the goblin stats/art but listed only the shortbow attack at that checkpoint.
+
+Slice 8.2 role loadouts (2026-10-26): production `goblin` now lists only the
+existing scimitar-mechanics attack, with its historical dagger artwork.
+`goblin.archer` retains only the existing shortbow attack and receives distinct
+hood/bow/quiver artwork. HP, AC, abilities, traits, attack bonus and damage are
+unchanged. These weapon-specific loadouts are project adaptations, not a claim
+that the SRD goblin has only one weapon. Generic mixed-weapon engine behavior
+remains covered by independent test catalogs. No ammunition or inventory rules
+are introduced.
 
 Three-cell melee-front adaptation: diagonal neighbors count as close contact with
 conservative wall/corner LOS. Either side may melee across the three cells ahead;

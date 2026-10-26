@@ -1,0 +1,429 @@
+{
+  "source_sheets": "animation/sheets.json",
+  "id": "goblin.archer",
+  "width": 0.45,
+  "height": 0.65,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        600,
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/idle-right-1.png"
+          }
+        ]
+      }
+    },
+    "walk": {
+      "durations_ms": [
+        300,
+        300
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/walk-right-1.png"
+          }
+        ]
+      }
+    },
+    "ranged_attack": {
+      "durations_ms": [
+        600,
+        400
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/bow-right-1.png"
+          }
+        ]
+      },
+      "width": 0.6
+    },
+    "hurt": {
+      "durations_ms": [
+        150,
+        150
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-front-1.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-back-1.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-left-1.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/hurt-right-1.png"
+          }
+        ]
+      }
+    },
+    "death": {
+      "durations_ms": [
+        200,
+        200,
+        200,
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-front-3.png"
+          }
+        ],
+        "back": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-back-3.png"
+          }
+        ],
+        "left": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-left-3.png"
+          }
+        ],
+        "right": [
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-0.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-1.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-2.png"
+          },
+          {
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ],
+            "image": "animation/frames/death-right-3.png"
+          }
+        ]
+      },
+      "width": 0.9
+    }
+  }
+}

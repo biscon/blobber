@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2–8.3 remain Planned between accepted slice 08 and slice 09. Slice 8.2 is next eligible for planning; slice 09 waits for acceptance of all three.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 remains Planned. Slice 09 waits for acceptance of all three.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 8.1 — Image preparation and memory (2026-10-26) |
-| Active slice | None; 8.1 accepted and closed |
+| Latest accepted slice | 8.2 — Distinct goblin archer artwork and loadouts (2026-10-26) |
+| Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 8.2 — Distinct goblin archer artwork and loadouts |
-| Next action | Plan 8.2 in a clean context using the accepted 8.1 handoff |
+| Next eligible slice | 8.3 — Projectiles and impact-time consequences |
+| Next action | Plan 8.3 in a clean context; review its plan before implementation |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -314,7 +314,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Accepted | B |
 | 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Accepted | B follow-up |
-| 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Planned | B follow-up |
+| 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Accepted | B follow-up |
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Planned | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Planned | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
@@ -1005,10 +1005,36 @@ variants together in the hybrid demo. Validate content, memory accounting and
 frame allocation behavior using 8.1's pipeline. User reviews archer consistency
 and enemy-role readability before this slice is Accepted.
 
-**Execution record:** Not started; next eligible for planning following acceptance
-of 8.1 on 2026-10-26. Read the [accepted 8.1 handoff](slice81_verification.md) and
-inspect relevant code before making this slice's plan. No detailed implementation
-plan, verification or acceptance recorded.
+**Stage / last updated:** Accepted and closed; 2026-10-26.
+**Approved plan:** User said “Implement the plan.” See [archer design](goblin_archer_design.md).
+User selected the muted green hood/shoulder covering, exposed ears, brown leather,
+bow and quiver. The four-view reference was accepted before animation production
+on 2026-10-26 (“yes it looks great, approved :)”). This was reference approval,
+not acceptance of the completed slice.
+**Delivered:** Separate `goblin.archer` appearance with 20 sheets / 48 poses across
+five four-direction clips, name-bound to the existing bow-only monster. Both hybrid
+archers use it; regular goblins are melee-only. Original melee art and historical
+bow sources are preserved. Shared profile C, existing AI, timings and mixed-weapon
+support remain. Source prompts, corrections and registration are tracked.
+**Verification:** Debug and Release 22/22, focused ASan/UBSan 3/3, zero-allocation
+loaded two-role frame processing, hidden GPU lifecycle and shipped metadata/catalog
+loading passed. 498 preparation captures include 102 archer images; 256 source-free
+runtime captures match byte-for-byte. Clean/repeated banks reproduce exactly.
+Combined runtime bank storage is 181,300,462 bytes, below the 512 MiB limit.
+See [complete verification](slice82_verification.md) for commands, accounting,
+selected native/reduced screenshots, visual findings and limitations.
+**Review recipe:** Open `docs/screenshots/slice82/`, then run
+`cmake-build-release/blobber --hybrid-demo --seed 5`. Check equipment continuity,
+role readability, ground/scale consistency, bow release, travel and reactions.
+**Deviations / limitations:** No 8.3 work. Interactive desktop review remains the
+user's task. Leak detection is unverified; the pre-existing broad-capture victory
+failure remains documented, while focused preparation/hybrid suites passed.
+**Next-agent handoff:** Slice 8.2 is accepted and closed. Plan 8.3 in a clean context using
+[slice82_verification.md](slice82_verification.md#limitations-and-next-agent-contract).
+Preserve both appearance IDs, global profile C, front-band presentation and the
+600 ms bow-release marker. Damage and occupancy release remain immediate until 8.3.
+**Acceptance:** Accepted on 2026-10-26. User said “slice accepted, close it up”.
+This closes the completed slice; the verification limitations above remain recorded.
 
 ### Slice 8.3: Projectiles and impact-time consequences
 

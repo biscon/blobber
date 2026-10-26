@@ -1,6 +1,7 @@
 {
   "definitions": [
-    "goblin/goblin.json"
+    "goblin/goblin.json",
+    "goblin-archer/goblin-archer.json"
   ],
   "instances": [
     {

@@ -71,3 +71,30 @@ inline blobber::NpcAppearance testReactionAppearance() {
     }
     return a;
 }
+
+// A separate bow-only appearance: deliberately different pixels, clip set and
+// timings catch accidental use of the melee appearance's prepared bank.
+inline blobber::NpcAppearance testArcherAppearance() {
+    auto a = testReactionAppearance();
+    a.animations[static_cast<std::size_t>(blobber::NpcAnimation::Attack)] = {};
+    auto& bow = a.animations[static_cast<std::size_t>(blobber::NpcAnimation::RangedAttack)];
+    bow.timing = {{600, 400, 0, 0}, 2};
+    bow.width = .6f;
+    const auto source = testNpcAppearance();
+    for (std::size_t side = 0; side < 4; ++side)
+        for (int frame = 0; frame < 2; ++frame) {
+            auto image = source.views[side];
+            for (auto& pixel : image.pixels) {
+                pixel.r = static_cast<unsigned char>(40 + frame * 80);
+                pixel.g = static_cast<unsigned char>(120 + side * 20);
+                pixel.b = 30;
+            }
+            bow.views[side].push_back(std::move(image));
+        }
+    for (auto& clip : a.animations)
+        for (auto& view : clip.views)
+            for (auto& image : view)
+                for (auto& pixel : image.pixels)
+                    std::swap(pixel.r, pixel.g);
+    return a;
+}

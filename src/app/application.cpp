@@ -1,5 +1,6 @@
 #include "app/application.hpp"
 #include "app/actor_captures.hpp"
+#include "app/archer_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/captures.hpp"
 #include "app/gameplay.hpp"
@@ -76,6 +77,7 @@ int run(int argc, char** argv) {
         if (options.captureHybridOnly) {
             captureHybrid(map, rules, loadedNpcs.world, timings, renderer, presenter,
                           options.captureDirectory);
+            captureArchers(rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
             return 0;
         }
         if (options.captureAiOnly) {
@@ -114,6 +116,7 @@ int run(int argc, char** argv) {
             const auto hybridMap = hybridDemoMap();
             const auto hybrid = hybridDemoPlacements(hybridMap, loadedNpcs.world, rules);
             captureHybrid(hybridMap, rules, hybrid, timings, renderer, presenter, options.captureDirectory);
+            captureArchers(rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
             const auto aiMap = aiDemoMap();
             const auto ai = aiDemoPlacements(aiMap, loadedNpcs.world);
             captureAi(aiMap, rules, ai, timings, renderer, presenter, options.captureDirectory);

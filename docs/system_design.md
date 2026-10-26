@@ -9,18 +9,27 @@ applies to every current and future appearance. Walls/floors/ceilings retain poi
 sampling. Masters remain intact. Compact NPC banks and separate 512 MiB resident /
 tracked-loading limits supersede the historical 160 MiB startup pixel cap below.
 
-Planned, not implemented: graphical subslices 8.2 (distinct melee/archer artwork
-and loadouts) and 8.3 (projectiles with impact-time consequences). See the
+Implemented, **accepted and closed** (2026-10-26): slice 8.2
+[distinct goblin archer artwork and loadouts](goblin_archer_design.md), with
+[verification and handoff](slice82_verification.md). Appearance `goblin.archer`
+provides 48 hooded bow/quiver poses across five four-direction clips and binds by
+name to the existing bow-only rules variant. The two hybrid-demo archers use it;
+regular `goblin` is melee-only. Both immutable prepared appearances share profile C,
+existing actor/animator interfaces and zero-allocation frame processing. Actual
+combined runtime banks occupy 181,300,462 bytes. Original melee artwork and historical
+bow masters remain intact. The user accepted the completed slice on 2026-10-26.
+
+Planned, not implemented: graphical subslice 8.3 (projectiles with impact-time consequences). See the
 [roadmap](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context).
-Each requires its own plan and acceptance; 8.1 is accepted, so 8.2 is next eligible
-for planning. Slice 09 waits for all three. No atlas or NPC paper-doll system is planned.
+Slices 8.1 and 8.2 are accepted; 8.3 is eligible for a separate plan and acceptance.
+Slice 09 waits for all three. No atlas or NPC paper-doll system is planned.
 Immediate damage/life transitions remain current behavior until 8.3.
 
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
 Implemented and accepted (2026-10-26): [front-approach routing correction](hybrid_encounter_design.md#front-approach-routing-correction). Pursuit from ahead prefers the center and diagonal front cells, with bounded navigation fallback when that band is full or unreachable. Living melee targets beyond reach report out of range. Initiative strip unchanged.
 
-Implemented and accepted (2026-10-26): [single-weapon AI correction](hybrid_encounter_design.md#single-weapon-review-correction). Melee-only NPCs close and attack; ranged-only NPCs hold shooting positions and create distance at contact. Mixed-weapon behavior is preserved. Two bow-only hybrid-demo goblins use validated placement MonsterId overrides to share the existing goblin art.
+Implemented and accepted (2026-10-26): [single-weapon AI correction](hybrid_encounter_design.md#single-weapon-review-correction). Melee-only NPCs close and attack; ranged-only NPCs hold shooting positions and create distance at contact. Mixed-weapon behavior is preserved. Slice 8.2 replaces the two hybrid archers' historical placement MonsterId overrides with a distinct appearance bound by name; generic overrides remain supported.
 
 Implemented and accepted (2026-10-26): slice 08
 [hybrid encounters](hybrid_encounter_design.md). GameSession owns separate

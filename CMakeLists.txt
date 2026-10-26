@@ -65,7 +65,7 @@ add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
     src/platform/presenter.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
 target_link_libraries(blobber_platform PUBLIC blobber_render)
-add_executable(blobber src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
+add_executable(blobber src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
 target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
 add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
 target_link_libraries(blobber_prepare_assets PRIVATE raylib)

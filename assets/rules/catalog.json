@@ -38,8 +38,7 @@
       "armor_class": 15,
       "hit_points": 7,
       "attacks": [
-        "goblin.scimitar",
-        "goblin.shortbow"
+        "goblin.scimitar"
       ],
       "traits": [
         "nimble_escape"

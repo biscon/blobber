@@ -1,0 +1,21 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../../goblin/front.png",
+    "../../goblin/back-v2.png"
+  ],
+  "requests": [
+    {
+      "output": "turnaround-v1.png",
+      "prompt": "Use case: identity-preserve. Asset: four-view character reference turnaround for a production dungeon sprite, not an animation sheet. Transform the goblin in the attached front and rear reference images into a distinct bow-only archer. Preserve the exact recognizable goblin face, olive-green skin, large ears, lean short proportions, brown leather vest/skirt/belt/bracers/boots and detailed shaded retro dungeon illustration style. Add a MUTED FOREST-GREEN HOOD with a SHORT SHOULDER COVERING, ears protruding freely and face fully readable; no long cape. Add a small wooden SHORTBOW held lowered in anatomical LEFT hand, right hand empty. Remove held dagger. Add a brown leather BACK QUIVER with a few pale-feather arrows visible above the anatomical RIGHT shoulder; consistent strap and equipment locations through rotation. Exactly FOUR separate full-body views on a wide transparent canvas, arranged left to right: FRONT toward viewer, strict LEFT profile nose toward image left, REAR facing away, strict RIGHT profile nose toward image right. All four depict the identical character/outfit/equipment in a relaxed standing pose, same scale, same foot baseline, ample transparent margins and space between figures, full ears, bow and boots visible. Bow remains in anatomical left hand in every view; never mirror handedness. A short compact bow near the body, not projecting far sideways. Directional orthographic sprite views, not perspective character art. Detailed crisp shaded texture matching provided game sprites, not smooth 3D. Genuine RGBA transparency outside silhouettes, no colored backdrop, no floor, no cast shadows, no glow, no text, labels, panels, borders, grid or watermark. This is the design reference the user will review before we author 48 animation poses."
+    },
+    {
+      "output": "turnaround-v2.png",
+      "references": [
+        "turnaround-v1.png"
+      ],
+      "prompt": "Edit this exact four-view goblin archer turnaround. Keep the front (first), left profile (second) and right profile (fourth) characters and their equipment unchanged. Correct ONLY the REAR view (third character): move the back quiver and its arrows to the OTHER diagonal so its opening and pale arrow feathers are over the goblin's ANATOMICAL RIGHT shoulder, image RIGHT in this rear view; the quiver bottom points toward image LEFT hip. The rear's quiver currently rises over image LEFT shoulder, which is wrong. Fix the associated leather carrying strap consistently with the first front view (front strap descends from anatomical right shoulder to left hip). Preserve rear left-hand bow at image LEFT, empty right hand at image RIGHT, right-hip pouch, hood, ears, body, pose, scale, boots, ground baseline, four-view order and all other artwork. Keep the same muted green hood and brown leather detailed game sprite style. Genuine alpha transparency, no backdrop/shadows/text. Keep all four full-body views completely within frame with transparent margins. Do not mirror the rear character or move any other equipment. This reference is for identity and equipment consistency before animation production."
+    }
+  ]
+}

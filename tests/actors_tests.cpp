@@ -58,6 +58,25 @@ void initialization() {
     ActorWorld types(map, catalog, many);
     check(types.actor(types.id(0))->monster.index == 31, "Full appearance binding capacity");
 }
+void distinctAppearanceBindings() {
+    // Catalog order intentionally differs from appearance order.
+    const auto catalog = testMonsterCatalog({"fixture.archer", "fixture.melee"});
+    const NpcWorld placements(map, {3, 5}, {"fixture.melee", "fixture.archer"},
+                              {{{0}, {2, 3}, {0, 0}}, {{1}, {4, 3}, {0, 0}}});
+    ActorWorld actors(map, catalog, placements);
+    check(actors.actor(actors.id(0))->monster.index == 1 && actors.actor(actors.id(1))->monster.index == 0,
+          "Distinct appearances resolve by name, not coincident catalog indices");
+    auto missingCatalog = testMonsterCatalog({"fixture.melee"});
+    rejects([&] { ActorWorld missing(map, missingCatalog, placements); },
+            "An unbound second appearance fails at construction");
+    auto instances = placements.instances();
+    instances[1].monster = catalog.findMonster("fixture.melee");
+    const NpcWorld overridden(map, {3, 5}, {"fixture.melee", "fixture.archer"}, instances);
+    ActorWorld overrideWorld(map, catalog, overridden);
+    check(overrideWorld.actor(overrideWorld.id(1))->monster.index == 1 &&
+              overrideWorld.actor(overrideWorld.id(1))->npc.type.index == 1,
+          "Explicit rules overrides remain independent of appearance selection");
+}
 void movementAndLifecycle() {
     auto actors = group();
     const auto id = actors.id(0);
@@ -132,6 +151,7 @@ void queuedMovement() {
 int main() {
     try {
         initialization();
+        distinctAppearanceBindings();
         movementAndLifecycle();
         queuedMovement();
         std::cout << "Actor checks passed\n";

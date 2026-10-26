@@ -17,11 +17,11 @@ std::vector<std::string> typeNames(const NpcWorld& source) {
         names.push_back(source.typeId({static_cast<std::uint16_t>(i)}));
     return names;
 }
-NpcTypeId type(const NpcWorld& source) {
+NpcTypeId type(const NpcWorld& source, const char* name = "goblin") {
     for (std::size_t i = 0; i < source.typeCount(); ++i)
-        if (source.typeId({static_cast<std::uint16_t>(i)}) == "goblin")
+        if (source.typeId({static_cast<std::uint16_t>(i)}) == name)
             return {static_cast<std::uint16_t>(i)};
-    throw std::runtime_error("Hybrid demo requires goblin appearance");
+    throw std::runtime_error(std::string("Hybrid demo requires appearance: ") + name);
 }
 } // namespace
 NpcWorld hybridDemoPlacements(const Map& map, const NpcWorld& source, const rules::Catalog& catalog) {
@@ -32,7 +32,7 @@ NpcWorld hybridDemoPlacements(const Map& map, const NpcWorld& source, const rule
     const auto archer = catalog.findMonster("goblin.archer");
     if (!catalog.monster(archer))
         throw std::runtime_error("Hybrid demo requires goblin.archer rules");
-    actors[4].monster = actors[5].monster = archer;
+    actors[4].type = actors[5].type = type(source, "goblin.archer");
     actors[2].ai.routine = NpcRoutine::Patrol;
     actors[2].ai.waypointCount = 2;
     actors[2].ai.waypoints = {Cell{6, 9}, Cell{10, 9}};
@@ -246,7 +246,8 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
     run("demo", hybridDemoSpawn(), source.instances(), 7);
     std::vector<NpcInstance> archers;
     for (const auto& npc : source.instances())
-        if (npc.monster && npc.monster->index == catalog.findMonster("goblin.archer").index)
+        if (npc.monster.value_or(catalog.findMonster(source.typeId(npc.type))).index ==
+            catalog.findMonster("goblin.archer").index)
             archers.push_back(npc);
     if (archers.size() != 2)
         throw std::runtime_error("Hybrid demo must contain two bow-only goblins");
@@ -258,12 +259,13 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
     run("front-handoff", {{8, 10}, Heading::North},
         {{t, {8, 9}, {0, 1}, Heading::South}, {t, {9, 10}, {0, 0}, Heading::West}}, 2);
     run("rear-contact", {{8, 10}, Heading::North}, {{t, {8, 11}, {0, 0}, Heading::North}}, 5);
-    run("escape", {{3, 11}, Heading::North}, {{t, {3, 10}, {0, 1}, Heading::South}}, 3);
+    run("wounded-melee", {{3, 11}, Heading::North}, {{t, {3, 10}, {0, 1}, Heading::South}}, 3);
     run("reinforcement", {{8, 10}, Heading::North},
         {{t, {8, 9}, {0, 1}, Heading::South}, {t, {11, 10}, {0, 0}, Heading::West}}, 4);
     for (int d = 0; d < 4; ++d) {
         const std::string name = "bow-" + std::to_string(d);
-        run(name.c_str(), {{3, 11}, Heading::North}, {{t, {3, 9}, {0, 0}, static_cast<Heading>(d)}}, 10 + d);
+        run(name.c_str(), {{3, 11}, Heading::North},
+            {{type(source, "goblin.archer"), {3, 9}, {0, 0}, static_cast<Heading>(d)}}, 10 + d);
     }
     if (!trace)
         throw std::runtime_error("Failed writing hybrid trace");

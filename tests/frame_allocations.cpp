@@ -88,6 +88,8 @@ int main() {
         static_assert(!std::is_copy_constructible_v<Frame>);
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
         const auto appearance = testReactionAppearance();
+        const auto archerAppearance = testArcherAppearance();
+        const std::vector<NpcTimings> roleTimings{npcTimings(appearance), npcTimings(archerAppearance)};
         const auto bundleDirectory =
             std::filesystem::temp_directory_path() /
             ("blobber-alloc-bundles-" +
@@ -103,10 +105,22 @@ int main() {
             savePreparedScene(bundleDirectory / "scene.bin", prepareScene(testMaterials()), 31);
             savePreparedNpcs(bundleDirectory / "npcs.bin", PreparedNpcs({appearance}),
                              {npcTimings(appearance)}, 19, 31);
+            savePreparedNpcs(bundleDirectory / "roles.bin", PreparedNpcs({appearance, archerAppearance}),
+                             roleTimings, 19, 31);
         }
         const SceneRenderer renderer(
             loadPreparedScene(bundleDirectory / "scene.bin", 31),
             loadPreparedNpcs(bundleDirectory / "npcs.bin", {npcTimings(appearance)}, 19, 31));
+        const SceneRenderer roleRenderer(
+            loadPreparedScene(bundleDirectory / "scene.bin", 31),
+            loadPreparedNpcs(bundleDirectory / "roles.bin", roleTimings, 19, 31));
+        auto roleActors =
+            testActors(map, {3, 5}, {"near", "far"},
+                       {{{0}, {2, 3}, {1, 1}, Heading::South}, {{1}, {4, 3}, {0, 1}, Heading::South}});
+        NpcAnimator roleAnimator(roleActors, roleTimings);
+        FramePipeline roleFrames;
+        MovementState roleView;
+        roleView.player = {{3, 5}, Heading::North};
         auto npcs = testActors(map, {3, 3}, {"test"},
                                {{{0}, {3, 1}, {0, 0}, Heading::South},
                                 {{0}, {3, 1}, {1, 1}, Heading::West, NpcAnimation::Attack},
@@ -187,6 +201,28 @@ int main() {
         NpcWorld closeArcherPlaces(hybridMap, {5, 8}, {"goblin"}, {archer});
         GameSession closeArcher(hybridMap, hybridRules, closeArcherPlaces, 5, {{5, 8}, Heading::North});
         tracking = true;
+        roleActors.attack(roleActors.id(0), 0);
+        roleActors.attack(roleActors.id(1), 0, true);
+        for (const auto time : {0u, 599u, 600u, 999u, 1000u, 1400u, 1550u, 2400u, 3000u}) {
+            if (time == 1000)
+                okay &= roleActors.walk(roleActors.id(1), {3, 3}, {0, 1}, roleView.player.cell, 1000).changed;
+            if (time == 1400)
+                okay &= roleActors.damage(roleActors.id(1), 1, time).changed;
+            if (time == 2400)
+                okay &= roleActors.damage(roleActors.id(1), 100, 1800).died;
+            roleAnimator.setTime(time);
+            roleFrames.update(roleRenderer, map, roleView, &roleActors, &roleAnimator.snapshot());
+            const auto& pose = roleAnimator.snapshot().frames[1];
+            okay &= roleFrames.picking() && roleFrames.picking()->targets().count == (time < 2400 ? 2 : 1);
+            if (time == 600)
+                okay &= pose.clip == NpcAnimation::RangedAttack && pose.active == 1;
+            if (time == 1400)
+                okay &= pose.clip == NpcAnimation::Hurt && (pose.offsetX != 0 || pose.offsetY != 0);
+            if (time == 2400)
+                okay &= pose.clip == NpcAnimation::Death && pose.visible;
+            if (time == 3000)
+                okay &= !pose.visible;
+        }
         int archerShots = 0;
         bool archerRetreated = false;
         for (int i = 0; i < 140; ++i) {
