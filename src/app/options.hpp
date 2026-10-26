@@ -4,7 +4,7 @@
 #include <optional>
 namespace blobber {
 struct Options {
-    int width = 1280, height = 720;
+    int width = 1920, height = 1080;
     std::filesystem::path assets, captureDirectory;
     bool captureReactionsOnly = false, captureHudOnly = false, help = false, uiDemo = false,
          combatDemo = false, aiDemo = false, captureAiOnly = false;
