@@ -8,6 +8,8 @@ class SceneRenderer {
   public:
     explicit SceneRenderer(const Materials& materials, const std::vector<NpcAppearance>& npcs = {})
         : views_(prepareScene(materials)), npcs_(npcs) {}
+    SceneRenderer(PreparedScene&& scene, PreparedNpcs&& npcs)
+        : views_(std::move(scene)), npcs_(std::move(npcs)) {}
     std::size_t npcPreparedPixelBytes() const noexcept { return npcs_.preparedPixelBytes(); }
     SceneRenderer(const SceneRenderer&) = delete;
     SceneRenderer& operator=(const SceneRenderer&) = delete;

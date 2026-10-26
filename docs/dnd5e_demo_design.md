@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. User-approved graphical subslices 8.1–8.3 are Planned between accepted slice 08 and slice 09. Slice 8.1 is next eligible; slice 09 waits for acceptance of all three.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 is Ready for review; 8.2–8.3 remain Planned between accepted slice 08 and slice 09. Slice 8.2 requires acceptance of 8.1; slice 09 waits for acceptance of all three.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 08 — Hybrid encounter loop and review corrections (2026-10-26) |
-| Active slice | None |
-| Awaiting user review | None |
+| Active slice | 8.1 — Image preparation and memory (Ready for review) |
+| Awaiting user review | Slice 8.1 completed implementation; profile C / surface A already selected |
 | Blockers | None |
-| Next eligible slice | 8.1 — Image preparation and memory (Planned; not started) |
-| Next action | Plan slice 8.1 only in a fresh context; review its implementation plan before coding |
+| Next eligible slice | None until 8.1 review; 8.2 requires acceptance |
+| Next action | Await slice 8.1 acceptance; do not advance to 8.2 |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -313,7 +313,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Accepted | B |
-| 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Planned | B follow-up |
+| 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Ready for review | B follow-up |
 | 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Planned | B follow-up |
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Planned | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Planned | C |
@@ -949,8 +949,30 @@ shipped art separately. Report before/after source, resident and loading-memory
 accounting and preparation cost, stating measurement limits. Check hidden GPU
 integration. Originals remain intact and derivatives can be regenerated.
 
-**Execution record:** Not started; no detailed implementation plan, verification
-or acceptance recorded. Predecessor: [slice 08 handoff](slice08_verification.md).
+**Stage / last updated:** Ready for review; 2026-10-26.
+**Approved plan:** User said “Implement the plan.” Both NPC and dungeon raster
+preparation move offline; preserve masters. NPC profile C applies to all current
+and future NPCs. Surface option A retains point sampling. See
+[implemented design](image_preparation_design.md).
+**Delivered:** Shared profile, reproducible derivatives, cropped NPC banks,
+validated versioned scene/NPC bundles, metadata-only startup, incremental CMake
+bake target, separate bounded raster budgets and source-free startup diagnostics.
+**Verification:** Debug/Release 22/22, focused ASan/UBSan with leak detection
+unavailable under tracing, loaded-bank allocation guard, hidden GPU lifecycle,
+396 final captures identical to the approved pre-compaction C reference, clean /
+incremental / input-triggered builds and source-free startup. Resident prepared
+storage is 147.55 MiB; NPC pixels fell about 61%. Two complete appearance sets fit.
+See [verification and handoff](slice81_verification.md) for measurements and limits.
+**Review recipe:** Build and run `cmake-build-release/blobber --hybrid-demo --seed 5`.
+Review startup, NPC edges/animation/travel and the retained point-sampled dungeon.
+**Deviations / limitations:** Both caches bake offline, superseding the original
+allowance for startup preparation. The pre-existing broad combat capture fixture
+still fails its victory assertion; the focused preparation capture completes.
+Interactive desktop review remains the user's task. No 8.2 work has begun.
+**Next-agent handoff:** Await 8.1 review. Preserve global NPC C / surface A and the
+new appearance integration contract. After explicit acceptance, plan 8.2 only.
+Predecessor: [slice 08 handoff](slice08_verification.md).
+**Acceptance:** Pending; choosing profiles did not accept the whole slice.
 
 ### Slice 8.2: Distinct goblin archer artwork and loadouts
 

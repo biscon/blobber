@@ -8,7 +8,7 @@ struct Options {
     std::filesystem::path assets, captureDirectory;
     bool captureReactionsOnly = false, captureHudOnly = false, help = false, uiDemo = false,
          combatDemo = false, aiDemo = false, captureAiOnly = false, hybridDemo = false,
-         captureHybridOnly = false;
+         captureHybridOnly = false, capturePreparationOnly = false, checkPreparedOnly = false;
     std::optional<std::uint32_t> seed;
 };
 Options parseOptions(int argc, char** argv);

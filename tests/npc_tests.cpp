@@ -474,8 +474,8 @@ void testViewsAndPreparation() {
     invalid = testNpcAppearance();
     invalid.width = 0.5f;
     invalid.height = 1;
-    // Maximum-sized billboards at the nearest depth have a meaningful bounded cache cost.
-    rejects([&] { PreparedNpcs p(std::vector<NpcAppearance>(32, invalid)); },
+    // Inject a small budget instead of allocating many production-sized banks.
+    rejects([&] { PreparedNpcs p({invalid}, {1024, 512u * 1024u * 1024u}); },
             "Prepared pixel budget exhaustion");
     const Map map = openMap();
     const auto appearance = testNpcAppearance();

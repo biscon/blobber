@@ -425,7 +425,7 @@ void rendering() {
     auto oversized = appearance;
     oversized.width = 0.5f;
     oversized.height = 1;
-    rejects([&] { PreparedNpcs bad(std::vector<NpcAppearance>(8, oversized)); },
+    rejects([&] { PreparedNpcs bad({oversized}, {1024, 512u * 1024u * 1024u}); },
             "All animation frames count toward prepared pixel budget");
     auto invalid = animator.snapshot();
     invalid.frames[0].active = 4;

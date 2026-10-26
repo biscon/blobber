@@ -54,10 +54,12 @@ add_library(blobber_core src/world/map.cpp src/world/npc.cpp src/game/movement.c
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules)
 add_library(blobber_render
+    src/render/image_sampling.cpp
+    src/render/npc_preparation.cpp
     src/render/material.cpp src/render/npc_sprites.cpp src/render/npc_travel.cpp src/render/scene_cache.cpp src/render/scene_renderer.cpp
     src/render/transitions.cpp src/render/frame_pipeline.cpp)
 target_link_libraries(blobber_render PUBLIC blobber_core raylib)
-add_library(blobber_assets_io src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp)
+add_library(blobber_assets_io src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp src/assets/npc_derivatives.cpp src/assets/preparation_profile.cpp src/assets/prepared_binary.cpp src/assets/prepared_scene.cpp src/assets/prepared_npcs.cpp src/assets/prepared_publication.cpp)
 target_link_libraries(blobber_assets_io PUBLIC blobber_render PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
@@ -72,11 +74,36 @@ add_executable(blobber_prepare_npc_animation EXCLUDE_FROM_ALL tools/prepare_npc_
 target_link_libraries(blobber_prepare_npc_animation PRIVATE blobber_assets_io)
 target_include_directories(blobber_prepare_npc_animation PRIVATE src)
 blobber_warnings(blobber_prepare_npc_animation)
+add_executable(blobber_bake_assets tools/bake_runtime_assets.cpp)
+target_link_libraries(blobber_bake_assets PRIVATE blobber_assets_io nlohmann_json::nlohmann_json)
+blobber_warnings(blobber_bake_assets)
+file(GLOB_RECURSE BLOBBER_BAKE_INPUTS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs/*.json"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs/*.png"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/*.png")
+set(BLOBBER_PREPARED_DIR "${CMAKE_CURRENT_BINARY_DIR}/assets/prepared")
+if(CMAKE_CONFIGURATION_TYPES)
+    set(BLOBBER_PREPARED_DIR "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/assets/prepared")
+endif()
+add_custom_command(
+    OUTPUT "${BLOBBER_PREPARED_DIR}/scene.bin" "${BLOBBER_PREPARED_DIR}/npcs.bin"
+           "${BLOBBER_PREPARED_DIR}/metadata.json"
+    COMMAND blobber_bake_assets "${CMAKE_CURRENT_SOURCE_DIR}/assets" "${BLOBBER_PREPARED_DIR}"
+    DEPENDS blobber_bake_assets ${BLOBBER_BAKE_INPUTS}
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/preparation.json" "${CMAKE_CURRENT_SOURCE_DIR}/assets/maze.txt"
+    COMMENT "Baking profile-C NPCs and point-sampled dungeon images offline"
+    VERBATIM)
+add_custom_target(blobber_bake_runtime_assets
+    DEPENDS "${BLOBBER_PREPARED_DIR}/scene.bin" "${BLOBBER_PREPARED_DIR}/npcs.bin"
+            "${BLOBBER_PREPARED_DIR}/metadata.json")
+add_dependencies(blobber blobber_bake_runtime_assets)
 foreach(target blobber_rules blobber_rules_io blobber_core blobber_render blobber_assets_io blobber_platform blobber blobber_prepare_assets)
     blobber_warnings(${target})
 endforeach()
 
 add_custom_target(blobber_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/preparation.json" "$<TARGET_FILE_DIR:blobber>/assets/preparation.json"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" "$<TARGET_FILE_DIR:blobber>/assets/fonts"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -94,7 +121,7 @@ add_dependencies(blobber blobber_assets)
 
 include(CTest)
 if(BUILD_TESTING)
-    foreach(suite hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
+    foreach(suite prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
         if(suite STREQUAL "frame_allocations")
             set(source tests/frame_allocations.cpp)
         else()
@@ -107,7 +134,7 @@ if(BUILD_TESTING)
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
         elseif(suite STREQUAL "hybrid" OR suite STREQUAL "ai" OR suite STREQUAL "hud" OR suite STREQUAL "combat" OR suite STREQUAL "commands" OR suite STREQUAL "actors" OR suite STREQUAL "core" OR suite STREQUAL "party")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_core)
-        elseif(suite STREQUAL "resource" OR suite STREQUAL "npc")
+        elseif(suite STREQUAL "resource" OR suite STREQUAL "npc" OR suite STREQUAL "image_preparation" OR suite STREQUAL "prepared_assets")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_assets_io nlohmann_json::nlohmann_json)
         else()
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_render)
@@ -119,7 +146,7 @@ if(BUILD_TESTING)
             add_test(NAME ${suite} COMMAND blobber_${suite}_tests)
         endif()
     endforeach()
-    target_link_libraries(blobber_frame_allocations_tests PRIVATE blobber_rules)
+    target_link_libraries(blobber_frame_allocations_tests PRIVATE blobber_rules blobber_assets_io)
     # Explicit desktop check; not part of headless CTest.
     add_executable(blobber_gpu_smoke EXCLUDE_FROM_ALL tests/gpu_smoke.cpp)
     target_link_libraries(blobber_gpu_smoke PRIVATE blobber_platform)

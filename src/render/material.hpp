@@ -9,6 +9,7 @@ class Material {
     static constexpr int maxDimension = 4096;
     Material(int width, int height, std::vector<Color> pixels);
     Color sample(float u, float v) const noexcept;
+    std::size_t storageBytes() const noexcept { return sizeof(*this) + pixels_.capacity() * sizeof(Color); }
 
   private:
     int width_, height_;

@@ -87,9 +87,8 @@ void render() {
             for (auto& pixel : image.pixels)
                 if (pixel.a)
                     pixel.a = 255;
-    // Three complete reaction sets exceed the 160 MiB preparation cap; two fit.
-    rejects([&] { PreparedNpcs oversized(std::vector<NpcAppearance>(3, appearance)); },
-            "Wider reaction frames and all directions count toward combined pixel budget");
+    rejects([&] { PreparedNpcs oversized({appearance}, {1024, 512u * 1024u * 1024u}); },
+            "Reaction preparation respects an explicit small resident budget");
     auto invalid = appearance;
     invalid.animations[4].views[2].clear();
     rejects([&] { PreparedNpcs incomplete({invalid}); }, "Death cannot fall back to living direction");

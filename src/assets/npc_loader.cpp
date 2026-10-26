@@ -1,4 +1,5 @@
 #include "assets/npc_loader.hpp"
+#include "assets/fingerprint.hpp"
 #include "assets/image.hpp"
 #include <algorithm>
 #include <cmath>
@@ -66,28 +67,13 @@ NpcAnimation animationName(const std::string& name) {
     throw std::runtime_error("Unknown NPC animation: " + name);
 }
 void loadAnimations(const Json& definition, const std::filesystem::path& parent, NpcAppearance& appearance,
-                    std::size_t& pixels);
-NpcImage loadSprite(const std::filesystem::path& parent, const Json& spec, std::size_t& pixelCount) {
+                    std::size_t& pixels, std::size_t& highWater, bool decode);
+NpcImage loadSprite(const std::filesystem::path& parent, const Json& spec, std::size_t& pixelCount,
+                    std::size_t& highWater, bool decode) {
     const std::string name = spec.is_string() ? spec.get<std::string>() : spec.at("image").get<std::string>();
-    const auto path = parent / name;
-    OwnedImage image(LoadImage(path.string().c_str()));
-    if (!image.value.data)
-        throw std::runtime_error("Missing or invalid NPC image: " + path.string());
+    if (name.empty() || name.size() > 4096)
+        throw std::runtime_error("NPC image path must contain 1..4096 bytes");
     NpcImage result;
-    result.width = image.value.width;
-    result.height = image.value.height;
-    if (result.width <= 0 || result.height <= 0 || result.width > npcMaxImageDimension ||
-        result.height > npcMaxImageDimension)
-        throw std::runtime_error("NPC image exceeds 2048 pixel dimension: " + path.string());
-    const std::size_t count = static_cast<std::size_t>(result.width) * result.height;
-    if (count > npcPixelBudget - pixelCount)
-        throw std::runtime_error("NPC source images exceed 128 MiB budget");
-    pixelCount += count;
-    std::unique_ptr<Color, decltype(&UnloadImageColors)> colors(LoadImageColors(image.value),
-                                                                UnloadImageColors);
-    if (!colors)
-        throw std::runtime_error("Cannot decode NPC image: " + path.string());
-    result.pixels.assign(colors.get(), colors.get() + count);
     if (spec.is_object() && spec.contains("anchor")) {
         const auto& anchor = spec.at("anchor");
         if (!anchor.is_array() || anchor.size() != 2)
@@ -95,16 +81,41 @@ NpcImage loadSprite(const std::filesystem::path& parent, const Json& spec, std::
         result.anchorX = number(anchor[0]);
         result.anchorY = number(anchor[1]);
     }
+    if (!decode)
+        return result;
+    const auto path = parent / name;
+    OwnedImage image(LoadImage(path.string().c_str()));
+    if (!image.value.data)
+        throw std::runtime_error("Missing or invalid NPC image: " + path.string());
+    result.width = image.value.width;
+    result.height = image.value.height;
+    if (result.width <= 0 || result.height <= 0 || result.width > npcMaxImageDimension ||
+        result.height > npcMaxImageDimension)
+        throw std::runtime_error("NPC image exceeds 2048 pixel dimension: " + path.string());
+    const std::size_t count = static_cast<std::size_t>(result.width) * result.height;
+    if (count > npcPixelBudget - pixelCount)
+        throw std::runtime_error("NPC source images exceed 512 MiB source bound");
+    // The decoded image, raylib color copy and owning vector overlap briefly.
+    const auto peak = (pixelCount + 3 * count) * sizeof(Color);
+    requirePreparationBytes(0, peak, PreparationLimits{}.loadingBytes);
+    highWater = std::max(highWater, peak);
+    pixelCount += count;
+    std::unique_ptr<Color, decltype(&UnloadImageColors)> colors(LoadImageColors(image.value),
+                                                                UnloadImageColors);
+    if (!colors)
+        throw std::runtime_error("Cannot decode NPC image: " + path.string());
+    result.pixels.assign(colors.get(), colors.get() + count);
     return result;
 }
 void loadAnimations(const Json& definition, const std::filesystem::path& parent, NpcAppearance& appearance,
-                    std::size_t& pixels) {
+                    std::size_t& pixels, std::size_t& highWater, bool decode) {
     const std::array<const char*, 4> sides{"front", "back", "left", "right"};
     if (definition.contains("views") == definition.contains("animations"))
         throw std::runtime_error("NPC requires either views or animations, not both");
     if (definition.contains("views")) {
         for (std::size_t i = 0; i < sides.size(); ++i)
-            appearance.views[i] = loadSprite(parent, definition.at("views").at(sides[i]), pixels);
+            appearance.views[i] =
+                loadSprite(parent, definition.at("views").at(sides[i]), pixels, highWater, decode);
         return;
     }
     const auto& clips = definition.at("animations");
@@ -143,12 +154,11 @@ void loadAnimations(const Json& definition, const std::filesystem::path& parent,
             if (!frames.is_array() || frames.size() != durations.size())
                 throw std::runtime_error("NPC image/duration counts differ");
             for (const auto& frame : frames)
-                clip.views[side].push_back(loadSprite(parent, frame, pixels));
+                clip.views[side].push_back(loadSprite(parent, frame, pixels, highWater, decode));
         }
     }
 }
-} // namespace
-LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spawn) {
+LoadedNpcs loadNpcsImpl(const std::filesystem::path& file, const Map& map, Cell spawn, bool decode) {
     try {
         const Json level = readJson(file);
         const auto& files = level.at("definitions");
@@ -158,16 +168,25 @@ LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spaw
             throw std::runtime_error("NPC definitions/instances must be arrays within capacity");
         std::vector<std::string> types;
         std::vector<NpcAppearance> appearances;
-        std::size_t pixels = 0;
+        std::size_t pixels = 0, highWater = 0;
+        std::uint64_t definitionHash = fingerprintBasis;
         for (const auto& entry : files) {
             const auto path = file.parent_path() / entry.get<std::string>();
             try {
                 const auto definition = readJson(path);
+                const auto canonical = definition.dump();
+                fingerprintBytes(definitionHash, canonical.data(), canonical.size());
+                const char separator = 0;
+                fingerprintBytes(definitionHash, &separator, 1);
                 const auto id = definition.at("id").get<std::string>();
                 if (id.empty() || id.size() > 128 || std::find(types.begin(), types.end(), id) != types.end())
                     throw std::runtime_error("Empty, oversized or duplicate NPC type ID: " + id);
                 types.push_back(id);
                 NpcAppearance appearance;
+                const auto sampling = definition.value("sampling", std::string("nearest"));
+                if (sampling != "nearest" && sampling != "area")
+                    throw std::runtime_error("NPC sampling must be nearest or area");
+                appearance.sampling = sampling == "area" ? ImageSampling::Area : ImageSampling::Nearest;
                 appearance.width = number(definition.at("width"));
                 appearance.height = number(definition.at("height"));
                 if (definition.contains("alpha_cutoff")) {
@@ -176,8 +195,11 @@ LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spaw
                         throw std::runtime_error("NPC alpha_cutoff must be 0..254");
                     appearance.alphaCutoff = static_cast<unsigned char>(cutoff);
                 }
-                loadAnimations(definition, path.parent_path(), appearance, pixels);
-                validateNpcAppearance(appearance);
+                loadAnimations(definition, path.parent_path(), appearance, pixels, highWater, decode);
+                if (decode)
+                    validateNpcAppearance(appearance);
+                else
+                    validateNpcAppearanceMetadata(appearance);
                 appearances.push_back(std::move(appearance));
             } catch (const std::exception& e) {
                 throw std::runtime_error(path.string() + ": " + e.what());
@@ -224,9 +246,22 @@ LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spaw
                 }
             }
         }
-        return {NpcWorld(map, spawn, std::move(types), std::move(instances)), std::move(appearances)};
+        return {NpcWorld(map, spawn, std::move(types), std::move(instances)), std::move(appearances),
+                definitionHash, highWater};
     } catch (const std::exception& e) {
         throw std::runtime_error("Loading NPC level " + file.string() + ": " + e.what());
     }
+}
+} // namespace
+LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spawn) {
+    return loadNpcsImpl(file, map, spawn, true);
+}
+LoadedNpcMetadata loadNpcMetadata(const std::filesystem::path& file, const Map& map, Cell spawn) {
+    auto parsed = loadNpcsImpl(file, map, spawn, false);
+    std::vector<NpcTimings> timings;
+    timings.reserve(parsed.appearances.size());
+    for (const auto& a : parsed.appearances)
+        timings.push_back(npcTimings(a));
+    return {std::move(parsed.world), std::move(timings), parsed.definitionFingerprint};
 }
 } // namespace blobber

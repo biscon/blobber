@@ -1,3 +1,4 @@
+#include "assets/prepared_assets.hpp"
 #include "game/commands.hpp"
 #include "game/party.hpp"
 #include "input/key_repeat.hpp"
@@ -12,6 +13,7 @@
 #include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <new>
@@ -86,7 +88,25 @@ int main() {
         static_assert(!std::is_copy_constructible_v<Frame>);
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
         const auto appearance = testReactionAppearance();
-        const SceneRenderer renderer(testMaterials(), {appearance});
+        const auto bundleDirectory =
+            std::filesystem::temp_directory_path() /
+            ("blobber-alloc-bundles-" +
+             std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        struct Cleanup {
+            std::filesystem::path path;
+            ~Cleanup() {
+                std::error_code error;
+                std::filesystem::remove_all(path, error);
+            }
+        } cleanup{bundleDirectory};
+        {
+            savePreparedScene(bundleDirectory / "scene.bin", prepareScene(testMaterials()), 31);
+            savePreparedNpcs(bundleDirectory / "npcs.bin", PreparedNpcs({appearance}),
+                             {npcTimings(appearance)}, 19, 31);
+        }
+        const SceneRenderer renderer(
+            loadPreparedScene(bundleDirectory / "scene.bin", 31),
+            loadPreparedNpcs(bundleDirectory / "npcs.bin", {npcTimings(appearance)}, 19, 31));
         auto npcs = testActors(map, {3, 3}, {"test"},
                                {{{0}, {3, 1}, {0, 0}, Heading::South},
                                 {{0}, {3, 1}, {1, 1}, Heading::West, NpcAnimation::Attack},

@@ -7,6 +7,8 @@ namespace blobber {
 void PreparedNpcs::composeTravel(const TravelSprite& s, float lateral, float depth, std::uint16_t instance,
                                  bool flash, const std::array<float, viewWidth>& walls, Frame& frame,
                                  PickingBuffer* picking) const {
+    if (!s.cropWidth || !s.cropHeight)
+        return;
     const float focal = ViewProjection::focalLength();
     const int width = std::max(1, int(std::round(focal * s.worldWidth / depth)));
     const float height = focal * s.worldHeight / depth;
@@ -25,9 +27,13 @@ void PreparedNpcs::composeTravel(const TravelSprite& s, float lateral, float dep
         if (depth >= walls[x])
             continue;
         const int sx = std::min(s.width - 1, int((x - left + .5f) * s.width / width));
+        if (sx < s.cropX || sx >= s.cropX + s.cropWidth)
+            continue;
         for (int y = firstY; y < lastY; ++y) {
             const int sy = std::clamp(int((y + .5f - top) * s.height / height), 0, s.height - 1);
-            auto src = pixels_[s.first + static_cast<std::size_t>(sy) * s.width + sx];
+            if (sy < s.cropY || sy >= s.cropY + s.cropHeight)
+                continue;
+            auto src = pixels_[s.first + static_cast<std::size_t>(sy - s.cropY) * s.cropWidth + sx - s.cropX];
             if (!src.a)
                 continue;
             const auto pixel = y * viewWidth + x;

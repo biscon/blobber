@@ -15,11 +15,31 @@ namespace {
 const float focal = ViewProjection::focalLength();
 constexpr float horizon = ViewProjection::horizon, setback = ViewProjection::cameraSetback;
 constexpr float farDepth = ViewProjection::visibleRows + 0.5f + setback;
+constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 16u * Frame::pixelCount * sizeof(Color);
+struct Storage {
+    std::size_t resident, source, highWater;
+    PreparationLimits limits;
+    template <class T> void reserve(std::vector<T>& data, std::size_t count, std::size_t maximum) {
+        if (count > maximum)
+            throw std::runtime_error("Prepared scene exceeds structural capacity");
+        if (count <= data.capacity())
+            return;
+        const auto capacity =
+            std::min(maximum, std::max(count, std::max<std::size_t>(1, data.capacity() * 2)));
+        const auto oldBytes = data.capacity() * sizeof(T), newBytes = capacity * sizeof(T);
+        requirePreparationBytes(resident - oldBytes, newBytes, limits.residentBytes);
+        // vector::reserve temporarily owns both the old and replacement arrays.
+        requirePreparationBytes(source + resident, newBytes, limits.loadingBytes);
+        highWater = std::max(highWater, source + resident + newBytes);
+        data.reserve(capacity);
+        resident += data.capacity() * sizeof(T) - oldBytes;
+    }
+};
 Color shadeOpaque(Color color, float depth, float face = 1.0f) {
     color.a = 255;
     return shadeScene(color, depth, face);
 }
-void bakeWalls(const Material& material, float offset, PreparedView& view) {
+void bakeWalls(const Material& material, float offset, PreparedView& view, Storage& storage) {
     // At fixed cardinal views the projected geometry is invariant. Prepare it once.
     // The near faces and inward-facing sides of solid cells are the only visible faces.
     // Wider FOVs need more lateral slots in the distant rows, not just new scaling.
@@ -61,6 +81,8 @@ void bakeWalls(const Material& material, float offset, PreparedView& view) {
                         view.pixels.size() + 2 * count > PreparedView::maxPixels)
                         throw std::runtime_error("Prepared view exceeds its column/pixel capacity");
                     PreparedColumn column{x, y0, depth, count, {}};
+                    storage.reserve(view.pixels, view.pixels.size() + 2 * count, PreparedView::maxPixels);
+                    storage.reserve(view.columns, view.columns.size() + 1, PreparedView::maxColumns);
                     for (int parity = 0; parity < 2; ++parity) {
                         column.pixelOffsets[parity] = static_cast<std::uint32_t>(view.pixels.size());
                         for (int y = y0; y < y1; ++y) {
@@ -76,6 +98,7 @@ void bakeWalls(const Material& material, float offset, PreparedView& view) {
                 if (sprite.columnCount) {
                     if (view.sprites.size() == PreparedView::maxSprites)
                         throw std::runtime_error("Prepared view exceeds sprite capacity");
+                    storage.reserve(view.sprites, view.sprites.size() + 1, PreparedView::maxSprites);
                     view.sprites.push_back(sprite);
                 }
             }
@@ -111,13 +134,29 @@ void bakeBackgrounds(const Material& floor, const Material& ceiling, float offse
     }
 }
 } // namespace
-PreparedScene prepareScene(const Materials& materials) {
+std::size_t sceneStorageBytes(const PreparedScene& scene) noexcept {
+    std::size_t bytes = sizeof(scene) + backgroundBytes;
+    for (const auto& view : scene)
+        bytes += view.sprites.capacity() * sizeof(PreparedSprite) +
+                 view.columns.capacity() * sizeof(PreparedColumn) + view.pixels.capacity() * sizeof(Color);
+    return bytes;
+}
+PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
+                           ScenePreparationStats* stats) {
+    const auto source =
+        materials.wall.storageBytes() + materials.floor.storageBytes() + materials.ceiling.storageBytes();
+    Storage storage{sizeof(PreparedScene) + backgroundBytes, source, 0, limits};
+    requirePreparationBytes(0, storage.resident, limits.residentBytes);
+    requirePreparationBytes(source, storage.resident, limits.loadingBytes);
+    storage.highWater = source + storage.resident;
     PreparedScene views;
     for (int phase = 0; phase < ViewProjection::strafeSteps; ++phase) {
         const float offset = float(phase) / ViewProjection::strafeSteps;
-        bakeWalls(materials.wall, offset, views[phase]);
+        bakeWalls(materials.wall, offset, views[phase], storage);
         bakeBackgrounds(materials.floor, materials.ceiling, offset, views[phase]);
     }
+    if (stats)
+        *stats = {source, storage.highWater};
     return views;
 }
 } // namespace blobber

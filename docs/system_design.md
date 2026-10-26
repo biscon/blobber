@@ -1,13 +1,20 @@
 # System design
 
-Planned, not implemented: [graphical subslices 8.1–8.3](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context)
-cover image preparation/memory, distinct melee-goblin and archer artwork/loadouts,
-and projectiles with impact-time consequences. Each requires its own plan and user
-acceptance before the next begins. Slice 8.1 is next; slice 09 waits for all three.
-High-resolution masters are preserved; no atlas or NPC paper-doll system is planned.
-The 160 MiB cap below describes the accepted implementation, not a user constraint;
-8.1 will reassess it. Immediate damage/life transitions remain current behavior
-until 8.3 implements impact-time application.
+Implemented, **Ready for review** (2026-10-26): slice 8.1
+[offline image preparation and memory](image_preparation_design.md), with
+[verification and handoff](slice81_verification.md). NPC and dungeon surface banks
+are baked by an incremental build target and loaded without source image decoding
+or resizing at startup. Shared NPC profile C (alpha-aware area/half-size derivatives)
+applies to every current and future appearance. Walls/floors/ceilings retain point
+sampling. Masters remain intact. Compact NPC banks and separate 512 MiB resident /
+tracked-loading limits supersede the historical 160 MiB startup pixel cap below.
+
+Planned, not implemented: graphical subslices 8.2 (distinct melee/archer artwork
+and loadouts) and 8.3 (projectiles with impact-time consequences). See the
+[roadmap](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context).
+Each requires its own plan and acceptance; 8.2 cannot begin until the user accepts
+8.1. Slice 09 waits for all three. No atlas or NPC paper-doll system is planned.
+Immediate damage/life transitions remain current behavior until 8.3.
 
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
@@ -153,12 +160,15 @@ checks and limits.
 - **Movement:** owns player pose, one pending command, transition state, and a
   revision counter. Exposes a const state snapshot; consumers cannot mutate its
   invariants. Key repetition is a separate graphics-independent input component.
-- **Assets and preparation:** file loading produces owned CPU materials and JSON
-  NPC definitions/placements. NPC source images become bounded prepared RGBA
-  clip/direction/frame/depth sprites plus bounded full-pose travel rasters and are
-  released before play. A scene cache baker prepares eight lateral view phases, wall strips, and sixteen
-  floor/ceiling variants per phase. CPU composition accepts generated materials
-  as well as file-loaded ones, so tests do not require game artwork.
+- **Assets and preparation:** the offline bake tool reads masters/materials and
+  produces versioned scene/NPC banks. Scene banks retain eight lateral phases and
+  sixteen floor/ceiling variants per phase. NPC banks use cropped contiguous
+  clip/direction/frame/depth and travel rasters with unchanged logical pivots,
+  plus independent shadows. Runtime reads bounded JSON metadata and validates a
+  publication manifest and both banks, streaming into their final owners. It
+  neither decodes NPC/material sources nor prepares rasters. Standalone preparation
+  remains available to generated-fixture tests. See the image preparation design
+  for format, invalidation, budget and appearance-integration contracts.
 - **CPU rendering:** immutable prepared data plus caller-owned fixed-size frames.
   Scene composition and image transitions write into supplied buffers. A frame
   pipeline owns source/destination/display buffers and only updates changed views.
@@ -271,11 +281,11 @@ viewport height. `ViewProjection` remains the shared compile-time configuration
 for prepared walls/floors, NPCs, shadows and picking; no new API, runtime setting,
 storage ownership or frame-time work is introduced. The larger projected NPC
 images exceed the previous 128 MiB combined source/prepared pixel cap with shipped
-art; deliberately raise this bounded startup budget to 160 MiB, retaining explicit
-failure on exhaustion and source-image release before play. Retain the 0.4-tile setback
+art; that revision raised the startup budget to 160 MiB. Slice 8.1 supersedes
+that historical budget with separate 512 MiB limits and offline source loading. Retain the 0.4-tile setback
 to expose current-cell floor for future dropped items. At 500×282 this leaves
 32 central floor rows (96 presentation pixels) facing an adjacent wall. Rebuild
-prepared images at startup as usual. Validate all four adjacent-wall headings
+prepared images offline (the original startup path was superseded by slice 8.1). Validate all four adjacent-wall headings
 with generated materials, preserve side-opening/occlusion/strafe tests, run
 Debug/Release correctness and allocation suites, and compare deterministic hidden
 captures of walls, passages, rooms and goblins. Item interaction remains deferred.

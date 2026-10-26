@@ -1,4 +1,5 @@
 {
+  "source_sheets": "animation/sheets.json",
   "id": "goblin",
   "width": 0.45,
   "height": 0.65,

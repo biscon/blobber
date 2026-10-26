@@ -19,7 +19,12 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--capture-hybrid" && i + 1 < argc) {
+        else if (arg == "--check-prepared")
+            result.checkPreparedOnly = true;
+        else if (arg == "--capture-preparation" && i + 1 < argc) {
+            result.capturePreparationOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture-hybrid" && i + 1 < argc) {
             result.captureHybridOnly = true;
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         } else if (arg == "--capture-ai" && i + 1 < argc) {
@@ -60,7 +65,7 @@ Options parseOptions(int argc, char** argv) {
         (result.captureAiOnly && (result.uiDemo || result.combatDemo)))
         throw std::runtime_error("Choose only one of --ui-demo, --combat-demo or --ai-demo");
     if (int(result.captureAiOnly) + int(result.captureHudOnly) + int(result.captureReactionsOnly) +
-            int(result.captureHybridOnly) >
+            int(result.captureHybridOnly) + int(result.capturePreparationOnly) >
         1)
         throw std::runtime_error("Choose only one focused capture mode");
     if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)
@@ -69,6 +74,9 @@ Options parseOptions(int argc, char** argv) {
         throw std::runtime_error("Use --capture-hybrid for hybrid demo");
     if (result.captureHybridOnly && (result.uiDemo || result.combatDemo || result.aiDemo))
         throw std::runtime_error("Hybrid capture cannot combine with another demo");
+    if (result.capturePreparationOnly &&
+        (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo))
+        throw std::runtime_error("Preparation capture cannot combine with a demo");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
     return result;

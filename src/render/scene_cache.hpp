@@ -1,6 +1,7 @@
 #pragma once
 #include "render/frame.hpp"
 #include "render/material.hpp"
+#include "render/preparation_limits.hpp"
 #include "render/projection.hpp"
 #include <array>
 #include <cstdint>
@@ -26,5 +27,10 @@ struct PreparedView {
     std::array<Frame, 16> backgrounds;
 };
 using PreparedScene = std::array<PreparedView, ViewProjection::strafeSteps>;
-PreparedScene prepareScene(const Materials& materials); // Loading phase only.
+struct ScenePreparationStats {
+    std::size_t sourceBytes = 0, loadingHighWater = 0;
+};
+std::size_t sceneStorageBytes(const PreparedScene& scene) noexcept;
+PreparedScene prepareScene(const Materials& materials, PreparationLimits limits = {},
+                           ScenePreparationStats* stats = nullptr); // Offline only.
 } // namespace blobber

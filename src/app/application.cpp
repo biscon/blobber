@@ -7,13 +7,15 @@
 #include "app/hybrid_demo.hpp"
 #include "app/options.hpp"
 #include "app/ui_demo.hpp"
-#include "assets/material_loader.hpp"
 #include "assets/npc_loader.hpp"
+#include "assets/preparation_profile.hpp"
+#include "assets/prepared_assets.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/party.hpp"
 #include "platform/presenter.hpp"
 #include "platform/window.hpp"
 #include "render/frame_pipeline.hpp"
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 namespace blobber {
@@ -22,9 +24,9 @@ int run(int argc, char** argv) {
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-hybrid DIRECTORY] "
+                     "--capture-hybrid DIRECTORY | --capture-preparation DIRECTORY] "
                      "[--ui-demo | "
-                     "--combat-demo | --ai-demo | --hybrid-demo] [--seed UINT32]\n";
+                     "--combat-demo | --ai-demo | --hybrid-demo] [--seed UINT32] [--check-prepared]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
@@ -37,27 +39,32 @@ int run(int argc, char** argv) {
     Controller controller(hybridScenario ? hybridDemoSpawn() : aiScenario ? aiDemoSpawn() : Player{});
     if (map.solid(controller.state().player.cell) || !map.connected(controller.state().player.cell))
         throw std::runtime_error("Spawn is blocked or map contains unreachable floors");
-    auto loadedNpcs = loadNpcs(options.assets / "npcs" / "level.json", sourceMap, Player{}.cell);
+    const auto loadStart = std::chrono::steady_clock::now();
+    auto loadedNpcs = loadNpcMetadata(options.assets / "npcs" / "level.json", sourceMap, Player{}.cell);
     if (aiScenario)
         loadedNpcs.world = aiDemoPlacements(map, loadedNpcs.world);
     if (hybridScenario)
         loadedNpcs.world = hybridDemoPlacements(map, loadedNpcs.world, rules);
     ActorWorld npcs(map, rules, loadedNpcs.world);
-    std::vector<NpcTimings> timings;
-    for (const auto& appearance : loadedNpcs.appearances)
-        timings.push_back(npcTimings(appearance));
-    const SceneRenderer renderer(loadMaterials(options.assets / "textures"), loadedNpcs.appearances);
-    if (!options.captureDirectory.empty()) {
-        std::size_t sourceBytes = 0;
-        for (const auto& appearance : loadedNpcs.appearances)
-            sourceBytes += validateNpcAppearance(appearance) * sizeof(Color);
-        std::cout << "NPC pixel bytes: source=" << sourceBytes
-                  << " prepared_with_shadows=" << renderer.npcPreparedPixelBytes()
-                  << " combined=" << sourceBytes + renderer.npcPreparedPixelBytes()
-                  << " limit=" << npcPixelBudget * sizeof(Color) << '\n';
-    }
-    // Source images are needed only during preparation.
-    std::vector<NpcAppearance>().swap(loadedNpcs.appearances);
+    const auto& timings = loadedNpcs.timings;
+    const auto profile = loadPreparationProfile(options.assets / "preparation.json");
+    validatePreparedPublication(options.assets / "prepared", profile, loadedNpcs.definitionFingerprint);
+    auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
+    const auto sceneBytes = sceneStorageBytes(scene);
+    const auto remaining = PreparationLimits{}.residentBytes - sceneBytes;
+    auto preparedNpcs = loadPreparedNpcs(options.assets / "prepared/npcs.bin", timings,
+                                         loadedNpcs.definitionFingerprint, profile, {remaining, remaining});
+    const auto npcBytes = preparedNpcs.storageBytes();
+    const SceneRenderer renderer(std::move(scene), std::move(preparedNpcs));
+    std::cout << "Prepared assets loaded: scene=" << sceneBytes << " npc=" << npcBytes
+              << " resident=" << sceneBytes + npcBytes << " limit=" << PreparationLimits{}.residentBytes
+              << " load_ms="
+              << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                       loadStart)
+                     .count()
+              << '\n';
+    if (options.checkPreparedOnly)
+        return 0;
     // Declaration order guarantees all GPU resources die before the window/context.
     const Window window(options.width, options.height, !options.captureDirectory.empty());
     Presenter presenter(options.assets);
@@ -100,6 +107,17 @@ int run(int argc, char** argv) {
             presenter.present(frames.frame(), state, map, false, changed, &commands.snapshot(),
                               frames.picking());
             presenter.capture(options.captureDirectory / (shot.name + ".png"));
+        }
+        if (options.capturePreparationOnly) {
+            captureReactions(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
+                             options.captureDirectory);
+            const auto hybridMap = hybridDemoMap();
+            const auto hybrid = hybridDemoPlacements(hybridMap, loadedNpcs.world, rules);
+            captureHybrid(hybridMap, rules, hybrid, timings, renderer, presenter, options.captureDirectory);
+            const auto aiMap = aiDemoMap();
+            const auto ai = aiDemoPlacements(aiMap, loadedNpcs.world);
+            captureAi(aiMap, rules, ai, timings, renderer, presenter, options.captureDirectory);
+            return 0;
         }
         if (!WindowShouldClose())
             captureActors(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
