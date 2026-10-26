@@ -1,4 +1,5 @@
 #include "game/navigation.hpp"
+#include "game/perception.hpp"
 #include <cstdlib>
 #include <utility>
 namespace blobber {
@@ -44,11 +45,19 @@ bool Navigation::start() noexcept {
         head_ = tail_ = cleanup_ = 0;
         canceled_ = cleaning_ = false;
         fallbackStep_.reset();
-        preferAvailable_ = active_.adjacent && active_.preferred &&
-                           std::abs(active_.preferred->x - active_.target.x) +
-                                   std::abs(active_.preferred->y - active_.target.y) ==
-                               1 &&
-                           !map_.solid(*active_.preferred) && actors_.occupiedSlots(*active_.preferred) != 15;
+        frontStep_.reset();
+        preferAvailable_ = centerAvailable_ = false;
+        if (active_.adjacent && active_.preferred && cellDistance(*active_.preferred, active_.target) == 1) {
+            const auto heading = headingToward(active_.target, *active_.preferred);
+            for (int side = -1; side <= 1; ++side) {
+                const auto cell = *active_.preferred + right(heading) * side;
+                const bool available =
+                    combatAdjacent(map_, active_.target, cell) && actors_.occupiedSlots(cell) != 15;
+                preferAvailable_ |= available;
+                if (!side)
+                    centerAvailable_ = available;
+            }
+        }
         if (map_.solid(active_.from)) {
             finish(false, {});
             return true;
@@ -88,21 +97,27 @@ void Navigation::update(Cell party) noexcept {
         if (cleaning_)
             continue;
         if (canceled_ || head_ == tail_) {
-            finish(fallbackStep_.has_value(), fallbackStep_.value_or(Cell{}));
+            finish(frontStep_.has_value() || fallbackStep_.has_value(),
+                   frontStep_.value_or(fallbackStep_.value_or(Cell{})));
             continue;
         }
         const auto current = queue_[head_++];
         const auto c = cell(current);
         ++work_;
-        const int distance = std::abs(c.x - active_.target.x) + std::abs(c.y - active_.target.y);
-        if ((active_.adjacent ? distance == 1 : distance == 0) && !(c == party)) {
+        if ((active_.adjacent ? combatAdjacent(map_, active_.target, c) : c == active_.target) &&
+            !(c == party)) {
             const auto step = first_[current] == 4
                                   ? active_.from
                                   : active_.from + forward(static_cast<Heading>(first_[current]));
-            if (!preferAvailable_ || c == *active_.preferred) {
+            const bool front =
+                preferAvailable_ &&
+                inMeleeFront(map_, active_.target, headingToward(active_.target, *active_.preferred), c);
+            if (!preferAvailable_ || c == *active_.preferred || (front && !centerAvailable_)) {
                 finish(true, step);
                 continue;
             }
+            if (front && !frontStep_)
+                frontStep_ = step;
             if (!fallbackStep_)
                 fallbackStep_ = step;
         }

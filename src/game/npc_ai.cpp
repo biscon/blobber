@@ -74,7 +74,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
         return {};
     }
     if (a.awareness == Awareness::Pursuing) {
-        if (distance(here, party.cell) == 1) {
+        if (combatAdjacent(map_, here, party.cell)) {
             face(slot, party.cell);
             return {};
         }
@@ -86,7 +86,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
             // path turn put it outside the sight cone. Approach that remembered
             // cell, stop at its collision boundary, then look toward it.
             const bool occupiedByParty = a.lastSeen == party.cell;
-            if (occupiedByParty && distance(here, a.lastSeen) == 1) {
+            if (occupiedByParty && combatAdjacent(map_, here, a.lastSeen)) {
                 face(slot, a.lastSeen);
                 return {};
             }
@@ -249,8 +249,10 @@ bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexce
     const auto away = static_cast<unsigned>(headingToward(party.cell, actor->npc.cell));
     for (const unsigned d : {away, (away + 3) % 4, (away + 1) % 4}) {
         const auto dest = actor->npc.cell + forward(static_cast<Heading>(d));
-        if (cellDistance(dest, party.cell) > cellDistance(actor->npc.cell, party.cell) &&
-            step(id.slot, dest, party.cell, now))
+        const auto separation = [&](Cell cell) {
+            return std::max(std::abs(cell.x - party.cell.x), std::abs(cell.y - party.cell.y));
+        };
+        if (separation(dest) > separation(actor->npc.cell) && step(id.slot, dest, party.cell, now))
             return true;
     }
     return false;

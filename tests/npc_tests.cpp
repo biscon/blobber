@@ -679,6 +679,59 @@ void testLayersAndClipping() {
           "Strafe reveals a sprite clipped at the viewport edge");
     rejects([&] { prepared.compose(side, p, 8, noWalls(), result); }, "Invalid strafe phase rejected");
 }
+void testFrontBandVisibility() {
+    const auto map = openMap();
+    const auto appearance = testNpcAppearance();
+    PreparedNpcs prepared({appearance});
+    for (int d = 0; d < 4; ++d) {
+        const Player p{{4, 4}, static_cast<Heading>(d)};
+        const auto f = forward(p.heading), r = right(p.heading);
+        std::vector<NpcInstance> nearRow;
+        for (int side = -1; side <= 1; ++side)
+            for (int sub = 0; sub < 4; ++sub) {
+                NpcInstance instance{{0}, p.cell + f + r * side, {sub % 2, sub / 2}, Heading::South};
+                auto actors = testActors(map, p.cell, {"test"}, {instance});
+                Frame frame;
+                PickingBuffer picking;
+                prepared.compose(actors, p, 0, noWalls(), frame, nullptr, &picking);
+                picking.finish(&actors);
+                check(picking.targets().count == 1,
+                      "Every isolated front-band subslot has a visible clickable body");
+                const Cell local{sub % 2 * 2 - 1, sub / 2 * 2 - 1};
+                if (local.x * f.x + local.y * f.y < 0)
+                    nearRow.push_back(instance);
+            }
+        auto six = testActors(map, p.cell, {"test"}, nearRow);
+        Frame frame;
+        PickingBuffer picking;
+        prepared.compose(six, p, 0, noWalls(), frame, nullptr, &picking);
+        picking.finish(&six);
+        check(picking.targets().count == 6,
+              "Six front-row bodies remain distinct clickable targets without edge stacking");
+        auto walls = noWalls();
+        walls.fill(.5f);
+        Frame hidden;
+        PickingBuffer occluded;
+        prepared.compose(six, p, 0, walls, hidden, nullptr, &occluded);
+        occluded.finish(&six);
+        check(occluded.targets().count == 0, "Edge presentation still respects nearer wall occlusion");
+        // A retreat from the outer diagonal slot stays pickable throughout the
+        // interpolation and settles back into the unmodified farther projection.
+        const auto outer = nearRow.front();
+        auto walker = testActors(map, p.cell, {"test"}, {outer});
+        NpcAnimator animator(walker, {npcTimings(appearance)});
+        walker.walk(walker.id(0), outer.cell + f, outer.subcell, p.cell, 0);
+        for (std::uint64_t time : {0u, 100u, 300u, 599u, 600u}) {
+            animator.setTime(time);
+            Frame walking;
+            PickingBuffer hit;
+            prepared.compose(walker, p, 0, noWalls(), walking, &animator.snapshot(), &hit);
+            hit.finish(&walker);
+            check(hit.targets().count == 1,
+                  "Outer diagonal retreat remains a visible body throughout travel");
+        }
+    }
+}
 void testContactShadows() {
     const Map map = openMap();
     auto invisible = testNpcAppearance();
@@ -753,6 +806,7 @@ int main() {
         testViewsAndPreparation();
         testOcclusionAndTransitions();
         testLayersAndClipping();
+        testFrontBandVisibility();
         testContactShadows();
         std::cout << "NPC checks passed\n";
     } catch (const std::exception& e) {

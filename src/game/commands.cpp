@@ -1,4 +1,5 @@
 #include "game/commands.hpp"
+#include "game/perception.hpp"
 #include "ui/layout.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -309,7 +310,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         for (std::size_t i = 0; i < state_.targets.count; ++i) {
             const auto* target = actors_.actor(state_.targets.ids[i]);
             const auto pose = session_->movement().player;
-            state_.protectedTargets[i] = target && target->npc.cell == pose.cell + forward(pose.heading) &&
+            state_.protectedTargets[i] = target && inFrontBand(pose.cell, pose.heading, target->npc.cell) &&
                                          !session_->combat().exposed(state_.targets.ids[i]);
         }
     state_.demo = !session_ && demo && demo->enabled;

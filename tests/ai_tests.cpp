@@ -1,4 +1,5 @@
 #include "game/npc_ai.hpp"
+#include "game/perception.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include <chrono>
@@ -290,6 +291,36 @@ void preferredApproachRoutes() {
     }
     check(found && updates > 1, "Large unreachable preference eventually publishes its adjacent fallback");
 }
+void fullCenterUsesDiagonalFront() {
+    const auto map = room();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    for (int d = 0; d < 4; ++d) {
+        const Player party{{7, 7}, static_cast<Heading>(d)};
+        const auto f = forward(party.heading), r = right(party.heading);
+        for (const int fill : {1, 3}) {
+            std::vector<NpcInstance> instances{npc(party.cell + f * 3 + r)};
+            for (int side = -1; side <= 1; ++side) {
+                if (fill == 1 && side)
+                    continue;
+                for (int sub = 0; sub < 4; ++sub)
+                    instances.push_back(npc(party.cell + f + r * side, Heading::South, {sub % 2, sub / 2}));
+            }
+            NpcWorld places(map, party.cell, {"goblin"}, instances);
+            ActorWorld actors(map, catalog, places);
+            NpcAiController ai(map, actors, 5);
+            bool reached = false;
+            for (int i = 0; i < 20 && !reached; ++i) {
+                ai.approach(actors.id(0), party, i * npcWalkDurationMs);
+                reached = combatAdjacent(map, actors.actor(actors.id(0))->npc.cell, party.cell);
+            }
+            const auto cell = actors.actor(actors.id(0))->npc.cell;
+            check(reached && actors.occupiedSlots(cell) != 15,
+                  "Approach finds a free contact slot without overflowing occupancy");
+            check(inFrontBand(party.cell, party.heading, cell) == (fill == 1),
+                  "Full center uses diagonal front before flanks; full band permits other contact");
+        }
+    }
+}
 void blockedRoutesAndRng() {
     const Map corridor({"#########", "#.......#", "#########"});
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
@@ -345,7 +376,7 @@ void blockedRoutesAndRng() {
     NpcAiController pursuit(map, turner, 5);
     for (int t = 100; t <= 4000; t += 100)
         pursuit.update(100, t, {{10, 9}, Heading::East});
-    check(manhattan(turner.snapshot().actors[0].npc.cell, {10, 9}) == 1,
+    check(combatAdjacent(map, turner.snapshot().actors[0].npc.cell, {10, 9}),
           "Turning along a path cannot strand pursuit at a still-occupied last-seen cell");
     ActorWorld watcher(map, catalog, placed);
     NpcAiController brain(map, watcher, 5);
@@ -403,6 +434,7 @@ int main(int argc, char** argv) {
             contentionAndSession();
             arrivalBeforeCombat();
             preferredApproachRoutes();
+            fullCenterUsesDiagonalFront();
             blockedRoutesAndRng();
         }
         std::cout << "AI checks passed\n";

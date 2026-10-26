@@ -88,6 +88,7 @@ class CombatController {
     bool exposed(rules::CharacterId) const noexcept;
     bool exposed(ActorId) const noexcept;
     bool adjacent(Cell) const noexcept;
+    bool occupiedFront(Player) const noexcept;
 
   private:
     struct Entry {

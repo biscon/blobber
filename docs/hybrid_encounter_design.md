@@ -1,10 +1,10 @@
 # Hybrid encounter loop — slice 08
 
-Status: implemented with front-focused review correction; Ready for review, 2026-10-26.
+Status: implemented and Accepted, including all review corrections, 2026-10-26.
 See [verification and handoff](slice08_verification.md).
 User approved the planning conversation with “Implement the plan.” Slice 07 and
-its two review corrections are accepted. Stop at Ready for review for slice 08
-and milestone B; do not start slice 09.
+its two review corrections are accepted. The user has now accepted slice 08 and
+milestone B. Discuss graphical changes before planning or starting slice 09.
 
 ## Ownership and boundaries
 
@@ -63,15 +63,15 @@ Hit or miss alerts the target and living goblins within three cardinal walkable
 steps of it, using a bounded local flood without recursively propagating alerts.
 An unnoticed opening shot gains advantage based on pre-resolution awareness.
 Party sight is a strict forward cone with six-cell range, conservative LOS and
-six-second threat memory. The cone excludes 45-degree edge cells outside the
-84-degree presentation. This predicate also gates both sides' ranged attacks,
+six-second threat memory. The cone excludes distant 45-degree edge cells; the immediate three-cell melee
+front is included explicitly, with edge presentation keeping its bodies visible. This predicate also gates both sides' ranged attacks,
 enemy initiative eligibility and the HUD preview. Offscreen enemies cannot attack,
 including during real-time approach. NPC detection retains its six-cell/90-degree
 cone. Known encounter threats stay known while turning. Unaware enemies skip
 their first action, sampled before contact reveals the party; this happens once
 per threat episode. The party always receives normal opening initiative.
 
-All cardinal adjacency starts contact. Membership includes adjacent and actively
+All clear eight-neighbor adjacency starts contact. Membership includes adjacent and actively
 pursuing/investigating enemies. Roll per character and monster-definition group,
 retain existing ties and stable actor ordering. New arrivals join at the next
 round boundary, never retroactively; new groups roll once. Outside NPCs get at
@@ -85,8 +85,8 @@ Victory retains stabilization; defeat retains existing no-conscious-character ru
 
 ## Facing, formation and NPC decisions
 
-Settled contact enters individual initiative directly. Keep facing while the tile
-immediately ahead contains living enemies. Once it clears, wait for committed
+Settled contact enters individual initiative directly. Keep facing while any tile
+in the three-cell front band contains living enemies. Once the entire band clears, wait for committed
 travel and attack/feedback holds, then face another occupied adjacent tile using
 the shortest rotation, clockwise on ties. Rear contact uses two clockwise turns.
 Movement uses the existing 160 ms quarter-turn presentation. This never spends an
@@ -101,7 +101,7 @@ freezes gameplay time; pauses freeze presentation too. No safe-location metadata
 or escape-spell implementation is introduced.
 
 The front row always shields its paired back row. Party melee needs an exposed
-attacker and an exposed enemy in the adjacent front tile. Enemy near/far protection
+attacker and an exposed enemy in any of the three cells immediately ahead. Enemy near/far protection
 and checked same-cell advancement remain (straight preferred, opposite vacant
 slot next). Enemies target conscious exposed characters uniformly; ranged may
 target any conscious character. Offscreen adjacent enemies wait. Offscreen distant
@@ -151,7 +151,8 @@ preparation, documentation links and whitespace. Add --hybrid-demo and
 --capture-hybrid deterministic scenarios; inspect native/reduced captures and all
 bow views. Hidden owned GPU checks only; no OS input/focus/desktop automation.
 Record actual commands, results and unavailable checks in slice08_verification.md.
-Finish at Ready for review and request user review of slice 08/milestone B.
+The implementation finished at Ready for review; the user accepted slice 08 and
+milestone B on 2026-10-26.
 
 ## Implemented interfaces and storage
 
@@ -197,7 +198,7 @@ case, front persistence, rear/tied rotations, pause/stale input during facing,
 attack-marker and pending-arrival travel holds, hidden ranged/melee suppression,
 paired protection, reinforcement timing and partial-round costs. Debug/Release,
 allocation guards, focused sanitizers and hidden captures verify the correction.
-See the handoff for actual results and remaining user review. Slice 09 is unstarted.
+See the handoff for results and the acceptance record. Slice 09 is unstarted.
 
 ## Single-weapon review correction
 
@@ -243,10 +244,12 @@ A headless demo trace confirms ordinary pursuit chooses a tied shortest route
 from (4,9) through (4,10) to the party's right flank (4,11), rather than the open
 front cell (3,10). This is path selection, not wounded escape.
 
-NPC pursuit/turn approach from ahead of the party prefers its front cell.
+NPC pursuit/turn approach from ahead of the party prefers its front cell, then
+the diagonal front cells before considering a flank (extended by the three-cell correction).
 Navigation's existing bounded BFS accepts an optional preferred adjacent goal;
 it keeps the first ordinary adjacent result as fallback if the preferred cell is
-unreachable. Full/solid preferred cells immediately use ordinary adjacency.
+unreachable. A full/solid center uses reachable diagonal front cells first; only an unavailable
+entire front band falls back to other adjacency.
 Root expansion prefers moving toward the front axis on tied routes, keeping the
 reported actor in view while closing. Side/rear approaches and explicit escape
 remain unchanged. Result metadata includes the preference so stale requests do
@@ -255,7 +258,7 @@ fallback step; map-sized scratch, cleanup and per-update budgets remain unchange
 An unreachable preferred goal can require exploring the reachable area; work
 remains incremental and capped, and no frame-path allocations are added.
 
-Living melee targets outside the adjacent front cell return OutOfRange, with a
+Living melee targets outside the three-cell front band return OutOfRange, with a
 weapon-neutral range message. Dead/removed/foreign targets retain InvalidTarget.
 Range rejection spends no action, RNG or cooldown. The initiative strip is
 explicitly unchanged at the user's request.
@@ -264,3 +267,41 @@ Regression tests cover the reported route through multiple rounds, four
 headings, blocked/full front destinations, navigation fallback/budgets, and melee
 hover/log/command rejection. Debug/Release, allocation checks, focused ASan/UBSan
 and actual-demo hidden captures pass. Keep this review correction inside slice 08.
+
+## Three-cell melee front
+
+User approved the three cells immediately ahead as one melee front and requested
+AI use diagonal front tiles when the center tile's four slots are full. Shared
+perception helpers define eight-neighbor contact (Chebyshev distance one) with
+conservative wall/corner LOS, and a heading-relative front band (depth one, lateral
+-1..1). Both sides use this band for melee; fixed paired protection is relative
+to party heading across all three cells. Existing body picking still gates clicks.
+
+Diagonal contact starts initiative. Keep facing while any reachable front-band
+cell is occupied; automatic facing searches for another occupied band only after
+it clears. Ranged disadvantage and archer/trait escape use the same close-contact
+predicate. Escaping must increase Chebyshev separation beyond one, preventing a
+sideways step that remains in the new melee zone. Single-weapon rules otherwise
+remain intact. Movement stays cardinal and discrete.
+
+Navigation's optional preferred front becomes a band: center remains first choice;
+when unavailable or unreachable, reachable diagonal front tiles are preferred to
+side/rear contact. BFS retains bounded fallback candidates and accepts diagonal
+contact only with clear corner LOS. Shared AI contact stopping matches combat.
+No new runtime allocations, unbounded loops or initiative-strip redesign.
+The two diagonal cells retain four slots each; occupancy and same-cell movement
+remain authoritative, with rows paired relative to the party heading.
+
+Visibility preflight with shipped art found zero picked pixels for the outer near
+slot in each diagonal cell (left subcell 0,1; right 1,1 when facing north). The other
+six positions were visible. The user approved drawing edge NPCs slightly inward. PreparedNpcs shifts
+the horizontal front-row layout inward to fit the outer actors' full pose canvases,
+using a per-type maximum half-width across clips for stable positioning. Apply
+one proportional lateral compression to the row so adjacent subslots remain
+distinct instead of clamping multiple bodies to the same edge. Body,
+shadow, picking and feedback anchors share that offset; world cells, depth, scale,
+FOV and camera remain unchanged. Travel uses the same position-dependent
+compression, blended at the row edges to avoid abrupt transitions. Verification
+covers all headings/slots, blocked corners,
+row protection, front persistence, diagonal archer escape, center-full routing,
+allocations and hidden shipped-art captures.

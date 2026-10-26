@@ -1,4 +1,5 @@
 #include "game/perception.hpp"
+#include <algorithm>
 #include <cstdlib>
 namespace blobber {
 bool lineOfSight(const Map& map, Cell from, Cell target) noexcept {
@@ -44,13 +45,29 @@ bool npcSees(const Map& map, Cell from, Heading facing, Cell target) noexcept {
     const int ahead = dx * f.x + dy * f.y, side = dx * f.y - dy * f.x;
     return ahead > 0 && std::abs(side) <= ahead && lineOfSight(map, from, target);
 }
+bool combatAdjacent(const Map& map, Cell from, Cell target) noexcept {
+    const int dx = std::abs(target.x - from.x), dy = std::abs(target.y - from.y);
+    return std::max(dx, dy) == 1 && lineOfSight(map, from, target);
+}
+bool inFrontBand(Cell from, Heading heading, Cell target) noexcept {
+    if (static_cast<unsigned>(heading) >= 4)
+        return false;
+    const auto f = forward(heading);
+    const Cell delta{target.x - from.x, target.y - from.y};
+    const int ahead = delta.x * f.x + delta.y * f.y, side = delta.x * f.y - delta.y * f.x;
+    return ahead == 1 && std::abs(side) <= 1;
+}
+bool inMeleeFront(const Map& map, Cell from, Heading heading, Cell target) noexcept {
+    return inFrontBand(from, heading, target) && lineOfSight(map, from, target);
+}
 bool inPartyView(const Map& map, Cell from, Heading facing, Cell target) noexcept {
     if (static_cast<unsigned>(facing) >= 4 || !inBowRange(from, target))
         return false;
     const auto f = forward(facing);
     const Cell delta{target.x - from.x, target.y - from.y};
     const int ahead = delta.x * f.x + delta.y * f.y, side = delta.x * f.y - delta.y * f.x;
-    return ahead > 0 && std::abs(side) < ahead && lineOfSight(map, from, target);
+    return ((ahead == 1 && std::abs(side) <= 1) || (ahead > 0 && std::abs(side) < ahead)) &&
+           lineOfSight(map, from, target);
 }
 Heading headingToward(Cell from, Cell to) noexcept {
     const int dx = to.x - from.x, dy = to.y - from.y;

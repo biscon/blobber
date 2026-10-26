@@ -1,21 +1,24 @@
 # System design
 
-Implemented, Ready for review: [front-approach routing correction](hybrid_encounter_design.md#front-approach-routing-correction). Pursuit from ahead prefers the front cell, with bounded navigation fallback when it is full or unreachable. Living melee targets beyond reach report out of range. Initiative strip unchanged.
+Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
-Implemented, Ready for review: [single-weapon AI correction](hybrid_encounter_design.md#single-weapon-review-correction). Melee-only NPCs close and attack; ranged-only NPCs hold shooting positions and create distance at contact. Mixed-weapon behavior is preserved. Two bow-only hybrid-demo goblins use validated placement MonsterId overrides to share the existing goblin art.
+Implemented and accepted (2026-10-26): [front-approach routing correction](hybrid_encounter_design.md#front-approach-routing-correction). Pursuit from ahead prefers the center and diagonal front cells, with bounded navigation fallback when that band is full or unreachable. Living melee targets beyond reach report out of range. Initiative strip unchanged.
 
-Implemented, Ready for review (2026-10-26): slice 08
+Implemented and accepted (2026-10-26): [single-weapon AI correction](hybrid_encounter_design.md#single-weapon-review-correction). Melee-only NPCs close and attack; ranged-only NPCs hold shooting positions and create distance at contact. Mixed-weapon behavior is preserved. Two bow-only hybrid-demo goblins use validated placement MonsterId overrides to share the existing goblin art.
+
+Implemented and accepted (2026-10-26): slice 08
 [hybrid encounters](hybrid_encounter_design.md). GameSession owns separate
 presentation and gameplay clocks; shared NPC AI/perception supports six-cell bows,
 local alerts, NPC surprise and boundary-enrolled reinforcements. Combat enters
-initiative directly, retains facing while the front group lives, and automatically
+initiative directly, retains facing while the three-cell front group lives, and automatically
 turns to the next adjacent group without spending an action. Offscreen enemies
 cannot attack; fixed front-row protection replaces directional exposure. No
 maneuver/retreat command or party surprise penalty remains. Catalog schema 3 adds typed traits and
 a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
 fixed 1920×1080 presentation and 160 MiB pixel cap. See
 [verification and handoff](slice08_verification.md). Slice 09 remains Planned;
-user acceptance of slice 08 and milestone B is pending.
+slice 08 and milestone B are closed. Discuss the user’s graphical changes before
+planning or starting slice 09.
 
 Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
 600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)

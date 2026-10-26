@@ -292,3 +292,23 @@ nothing. Current goblin assets consume 126,647,440 bytes combined (120.78 MiB).
 No source images or new GPU textures are retained for runtime resampling. This
 trades some transient high-resolution detail for bounded storage; arrival restores
 the original stationary bank. See [verification](slice07_verification.md#review-correction-interpolated-walking).
+
+## Slice 08 front-row edge presentation
+
+The approved [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front)
+requires the outer near diagonal positions to remain visible. PreparedNpcs stores
+one maximum horizontal half-width per type across all clip canvases/anchors during
+preparation. Composition proportionally compresses the close front row's lateral
+presentation only as much as the outermost centers need to fit that envelope.
+This keeps neighboring subslots distinct, avoids clip-dependent position jitter,
+and shares the offset across body/shadow rendering and picking/feedback anchors.
+Travel uses the same calculation from its interpolated position, blended at the
+row edges to avoid abrupt transitions. World cell/subslot,
+collision, sprite scale/depth, camera setback and 84-degree FOV do not change.
+Wall-depth occlusion still applies. No extra raster banks or frame allocations;
+shipped combined pixel storage remains 160,526,125 bytes under 160 MiB.
+Generated tests check all 48 heading/cell/subslot combinations individually,
+six simultaneous nearest-row targets and interpolated outer-slot retreats in all
+headings, and wall occlusion.
+Shipped-art hidden captures check six clickable targets and melee acceptance in
+all four headings, then resolve an outer diagonal attack.

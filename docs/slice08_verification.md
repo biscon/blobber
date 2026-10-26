@@ -1,8 +1,11 @@
 # Slice 08 verification and handoff
 
-Status: Ready for review, 2026-10-26. Implementation was authorized by “Implement
+Status: Accepted and closed, 2026-10-26. Implementation was authorized by “Implement
 the plan.” Slice 07 and its two corrections were accepted before this work.
-Slice 08 and milestone B await user acceptance; slice 09 remains Planned.
+The user accepted slice 08 and milestone B, including all review corrections.
+Slice 09 remains Planned; discuss graphical changes before starting it.
+The verification/review notes below record the checks and limitations at delivery;
+the acceptance record at the end supersedes their pending-review instructions.
 
 ## Delivered
 
@@ -236,3 +239,66 @@ Review with `cmake-build-debug/blobber --hybrid-demo --seed 5`. Let enemies clos
 try Alden's melee against a distant archer, then play several rounds. The front
 pursuers should join the front group instead of voluntarily walking onto a flank.
 Interactive review remains with the user; slice 09 is unstarted.
+
+## Three-cell melee front and diagonal visibility correction
+
+Implemented the approved three-cell melee front: center, front-left and front-right
+share melee reach in both directions, with paired front/back protection relative
+to party heading. Clear diagonal contact starts initiative; walls and blocked
+corners prevent contact. Facing stays fixed until the whole front band clears.
+Ranged disadvantage and archer escape use the same adjacency; an escape must
+actually leave that melee distance. Mixed-weapon policy otherwise remains intact.
+
+Pursuit prefers the center front cell, then reachable diagonal front cells when
+the center's four slots are full or unreachable, before falling back to a flank.
+Navigation keeps its existing bounded BFS and allocation-free runtime storage.
+The initiative strip's presentation and remaining-turn behavior are unchanged.
+
+Shipped-art preflight found the two outer nearest-row slots completely clipped.
+With the user's approval, the close row now compresses laterally enough to keep
+its outer pose canvases visible. All neighboring slots retain distinct positions;
+bodies, shadows, picking and feedback share the adjustment. Interpolated movement
+blends it at row edges. World occupancy, depth/scale, FOV and camera stay unchanged.
+
+Checks for this correction:
+
+- Debug and Release: **20/20 passed**, no build warnings.
+- Combat regressions cover all four headings and both diagonals, party/enemy melee,
+  paired protection, whole-front facing retention, blocked corners and healthy
+  ranged-only escape beyond diagonal melee reach.
+- Navigation regressions cover all four headings with a full center, plus a fully
+  occupied front band falling back to other adjacency. Existing bounded fallback,
+  cancellation and mixed-weapon behavior checks pass.
+- Generated rendering fixtures cover all 48 heading/cell/subslot combinations,
+  six simultaneous nearest-row targets in every heading, wall occlusion and
+  outer-slot retreat at five interpolation times. Fixtures own their content.
+- Frame allocation guard: **zero engine-owned C++ allocations** in guarded work.
+- Focused hybrid ASan/UBSan: **passed** (`detect_leaks=0`), executable
+  `/tmp/blobber-band-sanitized`, log `/tmp/blobber-band-sanitizer.log`.
+- Hidden `--capture-hybrid /tmp/blobber-band-captures` asserts six shipped-art
+  targets and legal melee in all four headings, then resolves an outer diagonal
+  attack. North/east `diagonal-melee-ready` captures were visually inspected.
+- Hidden GPU lifecycle smoke and `--capture-hud /tmp/blobber-band-hud` completed.
+  Combined source/prepared pixels remain **160,526,125 bytes** under 160 MiB;
+  no new raster banks or GPU resources. Captures use the final stationary layout;
+  the subsequent travel-edge smoothing is covered by the CPU rendering checks.
+- No OS input or focus automation. Interactive feel remains unverified and is
+  left to the user.
+
+Review with `cmake-build-debug/blobber --hybrid-demo --seed 5`: Alden and Brunna can
+melee exposed enemies in all three cells immediately ahead. Bow-only goblins try
+to back out of that band; incoming melee enemies can fill diagonal front cells
+instead of taking a flank when the center is full. Slice 08 and milestone B remain
+Ready for review; slice 09 is unstarted.
+
+## Acceptance and closure — 2026-10-26
+
+The user said “yes I accept this slice so close it”, following positive review of
+the broader melee front and moving combatants. Slice 08 and milestone B are
+Accepted and closed, including all review corrections above. No additional
+implementation or testing was performed for this documentation-only closure;
+recorded automated checks and their technical limitations remain unchanged.
+
+The user wants to discuss graphical work before the next slice. Slice 09 is now
+eligible but remains Planned and unstarted. Do not plan or implement it until
+the user resumes that work.

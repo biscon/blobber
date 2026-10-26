@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–07 and milestone A are Accepted. Slice 07 was accepted on 2026-10-26, including attack-turn sequencing and interpolated-walking corrections. Slice 08 and milestone B are Ready for review, including front-approach routing and melee range-message corrections.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Slice 09 remains Planned; the user wants to discuss graphics before starting it.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 07 — Moving goblin AI and review corrections (2026-10-26) |
-| Active slice | 08 — Hybrid encounter loop (front-focused correction) |
-| Awaiting user review | Slice 08 and milestone B, including routing/range-message correction |
+| Latest accepted slice | 08 — Hybrid encounter loop and review corrections (2026-10-26) |
+| Active slice | None |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until slice 08 acceptance |
-| Next action | Await user review; do not start slice 09 |
+| Next eligible slice | 09 — Effects and concentration (Planned; not started) |
+| Next action | Discuss the user’s graphical changes before planning or starting slice 09 |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -191,7 +191,7 @@ called its mana model the official spell-points framework.
   enemy groups roll initiative; actions resolve in that order. Preserve hidden
   initiative rolls while making the active actor and phase legible.
 - Enter initiative directly; no shared maneuver prompt or party surprise penalty.
-  Keep facing while the adjacent front group lives. After it clears and presentation
+  Keep facing while any enemy remains in the three cells immediately ahead. After it clears and presentation
   settles, automatically face the next adjacent group by shortest rotation,
   clockwise on ties. Preserve the active action and clock. No player movement,
   manual rotation or retreat command during combat.
@@ -311,7 +311,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Accepted | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
-| 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Ready for review | B |
+| 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Accepted | B |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 08 | Planned | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
@@ -324,7 +324,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
 | A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Accepted |
-| B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Ready for review |
+| B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Accepted |
 | C — RPG loop | Class abilities, spells, inventory, equipment, loot, recovery, and levels 1–3 work together. | Planned |
 | D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
 
@@ -861,14 +861,14 @@ plugs into these rules in slice 10. Pause must not recharge combat opportunistic
 facing, pending arrivals, partial-round re-entry, focus/menu pauses and mode transitions with no
 duplicate actions or reset costs. User reviews milestone B and overall combat feel.
 
-**Stage / last updated:** Ready for review; 2026-10-26.
+**Stage / last updated:** Accepted; 2026-10-26.
 **Approved plan:** User said “Implement the plan.” See [hybrid encounter design](hybrid_encounter_design.md).
-**Delivered:** Shared NPC AI/typed trait, ranged approach and bow clips, front-focused contact/automatic facing, fixed protection, NPC surprise, reinforcements, persistent clocks/costs and direct action controls. Single-weapon AI defaults and two bow-only demo goblins share the existing art; mixed-weapon behavior remains unchanged.
+**Delivered:** Shared NPC AI/typed trait, ranged approach and bow clips, front-focused contact/automatic facing, fixed protection, NPC surprise, reinforcements, persistent clocks/costs and direct action controls. Single-weapon AI defaults and two bow-only demo goblins share the existing art; mixed-weapon behavior remains unchanged. The three-cell melee front includes diagonal contact, front-band routing and inward edge presentation.
 **Verification:** Debug and Release 20/20; focused ASan/UBSan, zero-allocation frame guard, separate scale checks, hidden GPU smoke and hybrid/HUD captures. See [verification and handoff](slice08_verification.md).
 **Review recipe:** Run `cmake-build-debug/blobber --hybrid-demo --seed 5`; select Merrin, press 3 and click a goblin. Review direct attacks and automatic side/rear facing with preserved actions. Full recipe and capture locations are in the handoff.
-**Deviations / limitations:** Approved project adaptations are recorded in the design and SRD ledger. Interactive feel/artistic acceptance remain unverified; generated-fixture stress does not establish shipped-art performance at maximum population. LeakSanitizer was not run.
-**Next-agent handoff:** Await user review of slice 08/milestone B. Preserve travel/impact/turn holds and the 160 MiB cap. Handle corrections within this slice; do not advance to slice 09.
-**Acceptance:** Pending user review.
+**Deviations / limitations:** Approved project adaptations are recorded in the design and SRD ledger. The user accepted the delivered combat feel and presentation; further graphical work is a separate discussion. Generated-fixture stress does not establish shipped-art performance at maximum population. LeakSanitizer was not run.
+**Next-agent handoff:** Slice 08 and milestone B are closed. Preserve travel/impact/turn holds and the 160 MiB cap. Discuss the user’s graphical changes before planning or starting slice 09.
+**Acceptance:** Accepted on 2026-10-26: “yes I accept this slice so close it”. This closes milestone B, including all slice 08 review corrections. The user requested a graphics discussion before the next slice.
 
 ### Slice 09: Effects and concentration
 
@@ -1085,3 +1085,14 @@ right flank in the hybrid demo. Front-side pursuit now prefers the front tile,
 with bounded fallback for unavailable routes. Distant living melee targets report
 out of range. User explicitly requested leaving the initiative strip unchanged;
 its remaining-turn preview is preserved. Verified within slice 08; acceptance pending.
+
+Review decision (2026-10-26): user approved the three-cell melee front, diagonal
+contact and close-range archer behavior, and AI preference for diagonal front cells
+when the center is full. After shipped-art checks found two hidden edge slots,
+user approved drawing the front row inward without changing camera/FOV or grid
+positions. Implemented within slice 08; human review remains pending.
+
+Acceptance (2026-10-26): user explicitly accepted and closed slice 08, including
+its review corrections, completing milestone B. This supersedes the pending-review
+notes above. Slice 09 is eligible but remains Planned and unstarted; discuss the
+user’s graphical work before advancing.

@@ -38,9 +38,20 @@ bool CombatController::member(ActorId id) const noexcept {
     return actors_.actor(id) && id.slot < members_.size() && members_[id.slot];
 }
 bool CombatController::adjacent(Cell party) const noexcept {
-    for (int d = 0; d < 4; ++d)
-        if (actors_.occupied(party + forward(static_cast<Heading>(d))))
+    for (int y = -1; y <= 1; ++y)
+        for (int x = -1; x <= 1; ++x) {
+            const auto cell = party + Cell{x, y};
+            if (actors_.occupied(cell) && combatAdjacent(map_, party, cell))
+                return true;
+        }
+    return false;
+}
+bool CombatController::occupiedFront(Player pose) const noexcept {
+    for (int side = -1; side <= 1; ++side) {
+        const auto cell = pose.cell + forward(pose.heading) + right(pose.heading) * side;
+        if (actors_.occupied(cell) && inMeleeFront(map_, pose.cell, pose.heading, cell))
             return true;
+    }
     return false;
 }
 bool CombatController::near(const ActorState& a, Heading approach) const noexcept {
@@ -90,13 +101,13 @@ void CombatController::approach() noexcept {
     ++state_.turn;
 }
 bool CombatController::settleFront(std::uint64_t now) noexcept {
-    if (actors_.occupied(origin_.cell + forward(origin_.heading)))
+    if (occupiedFront(origin_))
         return false;
     if (presentationBusy(now))
         return true;
     for (unsigned offset : {1u, 3u, 2u}) {
         const auto heading = static_cast<Heading>((static_cast<unsigned>(origin_.heading) + offset) % 4);
-        if (!actors_.occupied(origin_.cell + forward(heading)))
+        if (!occupiedFront({origin_.cell, heading}))
             continue;
         resumePhase_ = state_.phase;
         resumeAwaiting_ = state_.awaitingAction;
@@ -113,7 +124,7 @@ bool CombatController::exposed(ActorId id) const noexcept {
     const auto* a = actors_.actor(id);
     if (!a || a->life != ActorLife::Alive)
         return false;
-    const auto approach = headingToward(origin_.cell, a->npc.cell);
+    const auto approach = origin_.heading;
     if (near(*a, approach))
         return true;
     const auto front = a->npc.subcell + forward(approach) * -1;
@@ -121,9 +132,9 @@ bool CombatController::exposed(ActorId id) const noexcept {
 }
 std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupied) const noexcept {
     const auto* a = actors_.actor(id);
-    if (!a || a->life != ActorLife::Alive || !(a->npc.cell == origin_.cell + forward(origin_.heading)))
+    if (!a || a->life != ActorLife::Alive || !inMeleeFront(map_, origin_.cell, origin_.heading, a->npc.cell))
         return {};
-    const auto approach = headingToward(origin_.cell, a->npc.cell);
+    const auto approach = origin_.heading;
     if (near(*a, approach))
         return a->npc.subcell;
     auto slot = a->npc.subcell + forward(approach) * -1;
@@ -170,7 +181,7 @@ void CombatController::observe(Player pose) noexcept {
         if (known_[i])
             state_.knownDirections |= 1u << static_cast<unsigned>(headingToward(pose.cell, a.npc.cell));
         if (known_[i] && !members_[i] &&
-            (ai_.aware(actors_.id(i)) || cellDistance(a.npc.cell, pose.cell) == 1))
+            (ai_.aware(actors_.id(i)) || combatAdjacent(map_, a.npc.cell, pose.cell)))
             ++state_.pendingCount;
     }
 }
@@ -190,7 +201,7 @@ void CombatController::enroll(Player pose, bool opening) noexcept {
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
         if (a.life != ActorLife::Alive || members_[i] ||
-            (!ai_.aware(actors_.id(i)) && cellDistance(a.npc.cell, pose.cell) != 1))
+            (!ai_.aware(actors_.id(i)) && !combatAdjacent(map_, a.npc.cell, pose.cell)))
             continue;
         if (state_.enemyCount >= state_.enemies.size())
             return; // capacity equals all possible actors
@@ -291,7 +302,7 @@ void CombatController::selectTurn() noexcept {
                 const auto* a = actors_.actor(id);
                 if (frontal(id) && a->monster.index == groups_[e.index].index &&
                     (actors_.catalog().attack(ranged_[id.slot]) ||
-                     cellDistance(a->npc.cell, origin_.cell) != 1 ||
+                     !combatAdjacent(map_, a->npc.cell, origin_.cell) ||
                      meleeSlot(id, actors_.occupiedSlots(a->npc.cell)))) {
                     state_.activeEnemy = id;
                     ++state_.turn;
@@ -346,7 +357,7 @@ bool CombatController::finish(std::uint64_t now) noexcept {
         const auto* a = actors_.actor(id);
         if (!a || a->life != ActorLife::Alive)
             continue;
-        const bool active = ai_.aware(id) || cellDistance(a->npc.cell, origin_.cell) == 1;
+        const bool active = ai_.aware(id) || combatAdjacent(map_, a->npc.cell, origin_.cell);
         if (members_[i] || active) {
             living = true;
             threat |= active;
@@ -409,7 +420,7 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
                     continue;
                 const auto slot = meleeSlot(id, occupied[i]);
                 if (!slot && !actors_.catalog().attack(ranged_[id.slot]) &&
-                    cellDistance(a->npc.cell, origin_.cell) == 1)
+                    combatAdjacent(map_, a->npc.cell, origin_.cell))
                     continue;
                 dst.upcoming[dst.upcomingCount++] = {{}, id, false};
                 if (slot)

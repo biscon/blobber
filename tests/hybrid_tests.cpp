@@ -323,6 +323,103 @@ void reinforcementAndSaves() {
     }
     check(repeated == 0, "Contact does not grant an extra death save before next six-second boundary");
 }
+void threeCellFront() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false);
+    for (int d = 0; d < 4; ++d) {
+        const Player p{{6, 6}, static_cast<Heading>(d)};
+        const auto f = forward(p.heading), r = right(p.heading);
+        for (int side : {-1, 1}) {
+            const auto cell = p.cell + f + r * side;
+            NpcWorld places(map, p.cell, {"goblin"}, {npc(cell, headingToward(cell, p.cell))});
+            GameSession s(map, catalog, places, 5, p, false);
+            check(s.combat().snapshot().phase == CombatPhase::Contact,
+                  "Diagonal adjacency starts contact in every heading");
+            bool enemyMelee = false, playerMelee = false;
+            for (int i = 0; i < 100 && !(enemyMelee && playerMelee); ++i) {
+                const auto st = s.combat().snapshot();
+                if (st.awaitingAction) {
+                    auto command = turnCommand(s);
+                    if (s.combat().exposed(*st.activeCharacter)) {
+                        command.action = PartyAction::Melee;
+                        command.target = s.actors().id(0);
+                        const auto result = s.submit(command);
+                        if (result.reason == CommandReason::FrontProtected)
+                            s.submit(turnCommand(s));
+                        else {
+                            check(result.event == CombatEvent::Attack,
+                                  "Exposed front character can melee a diagonal enemy");
+                            playerMelee = true;
+                        }
+                    } else {
+                        command.action = PartyAction::Melee;
+                        command.target = s.actors().id(0);
+                        check(s.submit(command).reason == CommandReason::RearBlocked,
+                              "Diagonal melee preserves paired party protection");
+                        s.submit(turnCommand(s));
+                    }
+                } else {
+                    const auto out = s.update(.5, false);
+                    if (out.event == CombatEvent::Attack) {
+                        check(out.kind == rules::AttackKind::Melee && out.recipient.index < 2,
+                              "Diagonal enemy melee attacks the protected formation's front row");
+                        enemyMelee = true;
+                    }
+                }
+                check(s.movement().player.heading == p.heading,
+                      "Diagonal front occupants keep the current facing");
+            }
+            check(playerMelee && enemyMelee, "Both sides use diagonal melee");
+
+            // The enemy's near/far rows follow the party heading, including east/west diagonals.
+            std::vector<NpcInstance> rows;
+            for (int sub = 0; sub < 4; ++sub)
+                rows.push_back(npc(cell, headingToward(cell, p.cell), {sub % 2, sub / 2}));
+            NpcWorld packed(map, p.cell, {"goblin"}, rows);
+            GameSession protection(map, catalog, packed, 5, p, false);
+            for (int sub = 0; sub < 4; ++sub) {
+                const Cell local{sub % 2 * 2 - 1, sub / 2 * 2 - 1};
+                check(protection.combat().exposed(protection.actors().id(sub)) ==
+                          (local.x * f.x + local.y * f.y < 0),
+                      "Diagonal enemy paired rows stay aligned to party heading");
+            }
+        }
+    }
+    const Player p{{5, 6}, Heading::North};
+    NpcWorld group(map, p.cell, {"goblin"}, {npc({5, 5}), npc({4, 5}), npc({6, 6}, Heading::West)});
+    GameSession held(map, catalog, group, 5, p, false);
+    held.update(0, false);
+    held.actors().damage(held.actors().id(0), 1000, 0);
+    held.update(0, false);
+    check(held.combat().snapshot().phase == CombatPhase::Turns && held.movement().player.heading == p.heading,
+          "Clearing center does not turn away from a living diagonal front enemy");
+    held.actors().damage(held.actors().id(1), 1000, 0);
+    held.update(0, false);
+    check(held.combat().snapshot().phase == CombatPhase::Facing &&
+              held.combat().snapshot().facing == Heading::East,
+          "Clearing the entire front band permits the next automatic turn");
+
+    const Map corner({"#####", "#...#", "##..#", "#...#", "#####"});
+    NpcWorld blocked(corner, {1, 3}, {"goblin"}, {npc({2, 2})});
+    GameSession walls(corner, catalog, blocked, 5, {{1, 3}, Heading::North}, false);
+    check(walls.combat().snapshot().phase == CombatPhase::Exploration &&
+              !inMeleeFront(corner, {1, 3}, Heading::North, {2, 2}),
+          "A wall at a diagonal corner blocks contact and melee");
+
+    auto archer = npc({6, 5}, Heading::South);
+    archer.monster = catalog.findMonster("archer");
+    NpcWorld ranged(map, p.cell, {"goblin"}, {archer});
+    GameSession escape(map, catalog, ranged, 5, p, false);
+    bool moved = false;
+    for (int i = 0; i < 100 && !moved; ++i) {
+        if (escape.combat().snapshot().awaitingAction)
+            escape.submit(turnCommand(escape));
+        else
+            moved = escape.update(.5, false).event == CombatEvent::Move;
+    }
+    check(moved && !combatAdjacent(map, p.cell, escape.actors().actor(escape.actors().id(0))->npc.cell),
+          "Healthy diagonal archer escapes beyond the entire close-contact zone");
+}
 void frontApproachInCombat() {
     const auto map = hybridRoom();
     const auto catalog = hybridCatalog();
@@ -622,6 +719,7 @@ int main() {
         traitAndPresentation();
         reinforcementAndSaves();
         capacityAndBlockedEscape();
+        threeCellFront();
         frontApproachInCombat();
         singleWeaponPolicies();
         rangedPursuit();

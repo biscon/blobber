@@ -44,8 +44,8 @@ class Navigation {
     Request active_{};
     std::size_t owner_ = NpcWorld::maxInstances, cursor_ = 0;
     std::size_t head_ = 0, tail_ = 0, cleanup_ = 0, work_ = 0, completed_ = 0;
-    bool cleaning_ = false, canceled_ = false, preferAvailable_ = false;
-    std::optional<Cell> fallbackStep_{};
+    bool cleaning_ = false, canceled_ = false, preferAvailable_ = false, centerAvailable_ = false;
+    std::optional<Cell> fallbackStep_{}, frontStep_{};
     std::uint32_t index(Cell cell) const noexcept;
     Cell cell(std::uint32_t index) const noexcept;
     bool start() noexcept;

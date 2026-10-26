@@ -127,3 +127,9 @@ to create distance when adjacent regardless of health or Nimble Escape. A blocke
 escape falls back to the existing disadvantaged ranged attack. These are generic
 project AI defaults; mixed-weapon goblin decisions remain unchanged. Two demo
 archers share the goblin stats/art but list only the shortbow attack.
+
+Three-cell melee-front adaptation: diagonal neighbors count as close contact with
+conservative wall/corner LOS. Either side may melee across the three cells ahead;
+paired enemy rows follow party heading. Close-range ranged disadvantage and
+archer escape use this same neighborhood. Movement remains cardinal; this is a
+project grid/formation rule, not additional tabletop weapon reach.

@@ -80,6 +80,42 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
             }
             return;
         }
+        if (mode == 8) {
+            for (int step = 0; step < 100; ++step) {
+                const auto st = s.combat().snapshot();
+                if (st.awaitingAction && st.activeCharacter->index == 0)
+                    break;
+                if (st.awaitingAction) {
+                    PartyCommand command;
+                    command.character = *st.activeCharacter;
+                    command.action = PartyAction::Defend;
+                    command.world = st.world;
+                    command.turn = st.turn;
+                    ui.record(s.submit(command));
+                } else
+                    ui.record(s.update(.1, false));
+            }
+            save("front-line");
+            if (ui.snapshot().targets.count != 6)
+                throw std::runtime_error("All six front-line subslots must remain visible and clickable");
+            const auto st = s.combat().snapshot();
+            PartyCommand attack;
+            attack.character = {0};
+            attack.action = PartyAction::Melee;
+            attack.world = st.world;
+            attack.turn = st.turn;
+            for (std::size_t i = 0; i < 6; ++i) {
+                attack.target = s.actors().id(i);
+                if (s.combat().validate(attack, spawn) != CommandReason::Ready)
+                    throw std::runtime_error("Every exposed front-line target must permit melee");
+            }
+            attack.target = s.actors().id(0);
+            ui.hover(HoverKind::Enemy, 0, attack.target, 200, 180);
+            save("diagonal-melee-ready");
+            ui.record(s.submit(attack));
+            save("diagonal-melee-hit");
+            return;
+        }
         save("initial");
         if (mode == 2) {
             for (int step = 0; step < 100; ++step) {
@@ -190,6 +226,23 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
         save("final");
     };
     const auto t = type(source);
+    for (int d = 0; d < 4; ++d) {
+        const Player p{{8, 10}, static_cast<Heading>(d)};
+        std::vector<NpcInstance> line;
+        for (int side = -1; side <= 1; ++side)
+            for (int sub = 0; sub < 4; ++sub) {
+                const Cell local{sub % 2 * 2 - 1, sub / 2 * 2 - 1};
+                const auto f = forward(p.heading);
+                if (local.x * f.x + local.y * f.y >= 0)
+                    continue;
+                line.push_back({t,
+                                p.cell + f + right(p.heading) * side,
+                                {sub % 2, sub / 2},
+                                headingToward(p.cell + f, p.cell)});
+            }
+        const auto name = "front-band-" + std::to_string(d);
+        run(name.c_str(), p, std::move(line), 8);
+    }
     run("demo", hybridDemoSpawn(), source.instances(), 7);
     std::vector<NpcInstance> archers;
     for (const auto& npc : source.instances())

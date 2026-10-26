@@ -3,6 +3,9 @@
 namespace blobber {
 bool lineOfSight(const Map&, Cell, Cell) noexcept;
 bool inBowRange(Cell, Cell) noexcept;
+bool combatAdjacent(const Map&, Cell, Cell) noexcept;
+bool inFrontBand(Cell, Heading, Cell) noexcept;
+bool inMeleeFront(const Map&, Cell, Heading, Cell) noexcept;
 bool inPartyView(const Map&, Cell, Heading, Cell) noexcept;
 bool npcSees(const Map&, Cell, Heading, Cell) noexcept;
 Heading headingToward(Cell, Cell) noexcept;

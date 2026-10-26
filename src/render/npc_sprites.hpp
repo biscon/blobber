@@ -76,7 +76,7 @@ class PreparedNpcs {
         std::array<std::array<std::size_t, 4>, npcAnimationCount> first{};
         std::array<std::array<std::uint8_t, 4>, npcAnimationCount> count{};
         std::array<std::array<std::size_t, 4>, npcAnimationCount> travelFirst{};
-        float shadowRadius = 0;
+        float shadowRadius = 0, edgeHalfWidth = 0;
     };
     std::vector<Sprite> sprites_;
     std::vector<TravelSprite> travelSprites_;

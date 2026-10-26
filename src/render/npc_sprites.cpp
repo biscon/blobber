@@ -107,6 +107,9 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
                 types_[type].count[clip][side] = static_cast<std::uint8_t>(frames);
                 for (std::size_t frame = 0; frame < frames; ++frame) {
                     const auto& image = sourceFrame(a, clip, side, frame);
+                    const float canvasWidth = a.animations[clip].width ? a.animations[clip].width : a.width;
+                    types_[type].edgeHalfWidth = std::max(
+                        types_[type].edgeHalfWidth, canvasWidth * std::max(image.anchorX, 1 - image.anchorX));
                     const float scale = std::min(1.f, 256.f / std::max(image.width, image.height));
                     const int tw = std::max(1, static_cast<int>(std::round(image.width * scale)));
                     const int th = std::max(1, static_cast<int>(std::round(image.height * scale)));
@@ -290,11 +293,25 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         if (traveling ? (depth < .15f || depth > ViewProjection::visibleRows + .65f)
                       : (row < 0 || row > ViewProjection::visibleRows))
             continue;
-        const float lateral = dx * r.x + dy * r.y + sx * r.x + sy * r.y - offset;
+        float lateral = dx * r.x + dy * r.y + sx * r.x + sy * r.y - offset;
+        // Compress the front row laterally only as much as its outer positions
+        // need. Applying one factor preserves distinct subslots instead of
+        // clamping two neighboring bodies onto the same screen position.
+        // Depth, world occupancy and sprite scale are unchanged.
+        const auto& type = types_.at(npc.type.index);
+        const float forwardPosition = row + subDepth;
+        if (forwardPosition > .25f && forwardPosition < 1.75f) {
+            const float limit = std::max(0.f, (viewWidth * .5f - 2.f) * depth / focal - type.edgeHalfWidth);
+            // Blend at the row edges so travel/strafe cannot snap between the
+            // adjusted front row and ordinary projection.
+            const float blend = std::min({std::clamp((forwardPosition - .25f) * 2.f, 0.f, 1.f),
+                                          std::clamp((1.75f - forwardPosition) * 2.f, 0.f, 1.f),
+                                          std::clamp((1.75f - std::abs(lateral)) * 2.f, 0.f, 1.f)});
+            lateral *= 1.f - (1.f - std::min(1.f, limit / 1.25f)) * blend;
+        }
         const auto side =
             npcSide(npc.facing, cameraX - (npc.cell.x + 0.5f + sx), cameraY - (npc.cell.y + 0.5f + sy));
         const int slot = traveling ? 0 : row * 2 + (subDepth > 0 ? 1 : 0);
-        const auto& type = types_.at(npc.type.index);
         auto clip = static_cast<std::size_t>(animation ? animation->frames[i].clip : npc.animation);
         const auto direction = static_cast<std::size_t>(side);
         std::size_t frameIndex = animation ? animation->frames[i].active : 0;

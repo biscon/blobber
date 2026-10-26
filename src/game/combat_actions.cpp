@@ -69,7 +69,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
             return CommandReason::NotVisible;
         return CommandReason::Ready;
     }
-    if (!(a->npc.cell == pose.cell + forward(pose.heading)))
+    if (!inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
         return CommandReason::OutOfRange;
     return exposed(*c.target) ? CommandReason::Ready : CommandReason::FrontProtected;
 }
@@ -230,7 +230,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.impactMs = ranged ? timing.bowImpact : timing.impact;
     const auto roll =
         rng_.d20(rules::rollMode(opening, state_.defending[out.recipient.index] ||
-                                              (ranged && cellDistance(a->npc.cell, origin_.cell) == 1)))
+                                              (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
             .value;
     out.roll = roll.selected;
     const auto hit =
@@ -261,7 +261,7 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
         out.event = CombatEvent::Spent;
         return out;
     }
-    const bool adjacent = cellDistance(a->npc.cell, origin_.cell) == 1;
+    const bool adjacent = combatAdjacent(map_, a->npc.cell, origin_.cell);
     const bool wounded =
         rules::hasTrait(actors_.catalog().monster(a->monster)->traits, rules::Trait::NimbleEscape) &&
         a->hitPoints * 2 <= a->maxHitPoints;
