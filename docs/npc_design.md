@@ -126,7 +126,8 @@ authored phase. Legacy assets without death art freeze the phased hit pose for
 reconstruction, explicit phases, mutation stability, and death-flash boundaries.
 The authored clips remain presentation loops. Controlled movement, turning and
 damage belong to the actor owner; stationary combat resolves in GameSession,
-independently of animation. Autonomous cross-cell AI remains deferred.
+independently of animation. Autonomous cross-cell AI and interpolated presentation
+are now implemented in slice 07; see the travel section below.
 
 Clip metadata is independent of decoded images. The animation player copies bounded
 metadata at startup, borrows the level-lifetime actor world, and publishes fixed-capacity
@@ -270,3 +271,22 @@ invalidation; hidden actors and time jumps progress without catch-up. Session
 pauses freeze reactions; victory/Continue do not reset or wait for presentation.
 Equal-depth corpses draw before living replacements; dead records still occlude
 but never enter target lists. No simulation or loot lifetime depends on art.
+
+## Slice 07: interpolated cross-cell travel
+
+[Travel design](goblin_ai_design.md#review-correction-interpolated-walking) extends
+prepared rendering for moving actors. ActorWorld retains one timestamped segment;
+NpcAnimator publishes offsets relative to the authoritative destination. The
+stationary depth banks above remain unchanged. While an offset is nonzero,
+composition projects an immutable full-pose raster capped at 256 pixels on its
+longest axis, shades samples through a per-draw fixed lighting table, and projects
+a shared prepared 64×64 shadow kernel onto the floor. Bodies, shadows, occlusion,
+sort order and picking use the same continuous world position. Death freezes the
+position at impact; missing walk art still travels using idle art.
+
+Travel rasters and the kernel count toward the same combined 128 MiB source and
+prepared pixel cap. Preparation rejects exhaustion; frame composition allocates
+nothing. Current goblin assets consume 126,647,440 bytes combined (120.78 MiB).
+No source images or new GPU textures are retained for runtime resampling. This
+trades some transient high-resolution detail for bounded storage; arrival restores
+the original stationary bank. See [verification](slice07_verification.md#review-correction-interpolated-walking).

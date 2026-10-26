@@ -86,16 +86,32 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
     }
     types_.resize(appearances.size());
     const float focal = ViewProjection::focalLength();
+    for (int y = 0; y < 64; ++y)
+        for (int x = 0; x < 64; ++x) {
+            const float dx = (x + .5f) / 32 - 1, dy = (y + .5f) / 32 - 1;
+            const float falloff = std::max(0.f, 1 - dx * dx - dy * dy);
+            travelShadow_[y * 64 + x] =
+                static_cast<unsigned char>(std::round(255 * .32f * falloff * falloff));
+        }
     std::size_t count = 0;
     for (std::size_t type = 0; type < appearances.size(); ++type) {
         const auto& a = appearances[type];
+        types_[type].shadowRadius = a.width * .45f;
         for (std::size_t clip = 0; clip < npcAnimationCount; ++clip) {
             for (std::size_t side = 0; side < 4; ++side) {
                 const auto frames = frameCount(a, clip, side);
                 types_[type].first[clip][side] = sprites_.size();
+                types_[type].travelFirst[clip][side] = travelSprites_.size();
                 types_[type].count[clip][side] = static_cast<std::uint8_t>(frames);
                 for (std::size_t frame = 0; frame < frames; ++frame) {
                     const auto& image = sourceFrame(a, clip, side, frame);
+                    const float scale = std::min(1.f, 256.f / std::max(image.width, image.height));
+                    const int tw = std::max(1, static_cast<int>(std::round(image.width * scale)));
+                    const int th = std::max(1, static_cast<int>(std::round(image.height * scale)));
+                    travelSprites_.push_back({tw, th,
+                                              a.animations[clip].width ? a.animations[clip].width : a.width,
+                                              a.height, image.anchorX, image.anchorY, count});
+                    count += static_cast<std::size_t>(tw) * th;
                     for (int slot = 0; slot < depthCount; ++slot) {
                         const float depth =
                             slot / 2 + ((slot & 1) ? 0.25f : -0.25f) + ViewProjection::cameraSetback;
@@ -122,7 +138,7 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
             }
         }
     }
-    prepareShadows(appearances, (sourcePixels + count) * sizeof(Color));
+    prepareShadows(appearances, (sourcePixels + count) * sizeof(Color) + travelShadow_.size());
     pixels_.resize(count);
     for (std::size_t type = 0; type < appearances.size(); ++type) {
         const auto& a = appearances[type];
@@ -130,6 +146,18 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
             for (std::size_t side = 0; side < 4; ++side) {
                 for (std::size_t frame = 0; frame < frameCount(a, clip, side); ++frame) {
                     const auto& image = sourceFrame(a, clip, side, frame);
+                    const auto& travel = travelSprites_[types_[type].travelFirst[clip][side] + frame];
+                    for (int y = 0; y < travel.height; ++y)
+                        for (int x = 0; x < travel.width; ++x) {
+                            const int sx =
+                                std::min(image.width - 1, int((x + .5f) * image.width / travel.width));
+                            const int sy =
+                                std::min(image.height - 1, int((y + .5f) * image.height / travel.height));
+                            auto pixel = image.pixels[static_cast<std::size_t>(sy) * image.width + sx];
+                            if (pixel.a <= a.alphaCutoff)
+                                pixel.a = 0;
+                            pixels_[travel.first + static_cast<std::size_t>(y) * travel.width + x] = pixel;
+                        }
                     for (int slot = 0; slot < depthCount; ++slot) {
                         const float depth =
                             slot / 2 + ((slot & 1) ? 0.25f : -0.25f) + ViewProjection::cameraSetback;
@@ -160,6 +188,8 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
     }
 }
 void PreparedNpcs::prepareShadows(const std::vector<NpcAppearance>& appearances, std::size_t usedPixelBytes) {
+    if (usedPixelBytes > npcPixelBudget * sizeof(Color))
+        throw std::runtime_error("NPC images and shadows exceed 128 MiB budget");
     shadows_.resize(appearances.size());
     const float focal = ViewProjection::focalLength();
     std::size_t alphaCount = 0;
@@ -227,6 +257,8 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         int left;
         std::size_t instance;
         bool alive;
+        const TravelSprite* travel;
+        float shadowRadius;
     };
     std::array<Visible, NpcWorld::maxInstances> visible;
     std::size_t count = 0;
@@ -241,17 +273,25 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
             (animation ? !animation->frames[i].visible : actor.life != ActorLife::Alive))
             continue;
         const auto& npc = actor.npc;
+        const float ox = animation ? animation->frames[i].offsetX : 0;
+        const float oy = animation ? animation->frames[i].offsetY : 0;
+        if (!std::isfinite(ox) || !std::isfinite(oy) || std::abs(ox) > Map::maxDimension ||
+            std::abs(oy) > Map::maxDimension)
+            throw std::invalid_argument("Invalid NPC travel offset");
+        const bool traveling = ox != 0 || oy != 0;
         const int dx = npc.cell.x - player.cell.x, dy = npc.cell.y - player.cell.y;
         const int row = dx * f.x + dy * f.y;
-        if (row < 0 || row > ViewProjection::visibleRows)
-            continue;
-        const float sx = npc.subcell.x * 0.5f - 0.25f, sy = npc.subcell.y * 0.5f - 0.25f;
+        const float sx = npc.subcell.x * 0.5f - 0.25f + ox;
+        const float sy = npc.subcell.y * 0.5f - 0.25f + oy;
         const float subDepth = sx * f.x + sy * f.y;
         const float depth = row + subDepth + ViewProjection::cameraSetback;
+        if (traveling ? (depth < .15f || depth > ViewProjection::visibleRows + .65f)
+                      : (row < 0 || row > ViewProjection::visibleRows))
+            continue;
         const float lateral = dx * r.x + dy * r.y + sx * r.x + sy * r.y - offset;
         const auto side =
             npcSide(npc.facing, cameraX - (npc.cell.x + 0.5f + sx), cameraY - (npc.cell.y + 0.5f + sy));
-        const int slot = row * 2 + (subDepth > 0 ? 1 : 0);
+        const int slot = traveling ? 0 : row * 2 + (subDepth > 0 ? 1 : 0);
         const auto& type = types_.at(npc.type.index);
         auto clip = static_cast<std::size_t>(animation ? animation->frames[i].clip : npc.animation);
         const auto direction = static_cast<std::size_t>(side);
@@ -269,8 +309,16 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         const auto& s = sprites_[type.first[clip][direction] + frameIndex * depthCount + slot];
         const int left = static_cast<int>(std::round(viewWidth * 0.5f + focal * lateral / depth - s.pivotX));
         // A floor blob may remain visible even when the body is clipped off screen.
-        visible[count++] = {&s, &shadows_[npc.type.index][slot], lateral, depth, left,
-                            i,  actor.life == ActorLife::Alive};
+        visible[count++] = {&s,
+                            &shadows_[npc.type.index][slot],
+                            lateral,
+                            depth,
+                            left,
+                            i,
+                            actor.life == ActorLife::Alive,
+                            traveling ? &travelSprites_[type.travelFirst[clip][direction] + frameIndex]
+                                      : nullptr,
+                            type.shadowRadius};
     }
     std::sort(visible.begin(), visible.begin() + count, [](const Visible& a, const Visible& b) {
         if (a.depth != b.depth)
@@ -282,6 +330,10 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
     // Floor shadows are a separate pass: never paint a shadow over another body.
     for (std::size_t i = 0; i < count; ++i) {
         const auto& item = visible[i];
+        if (item.travel) {
+            composeTravelShadow(item.shadowRadius, item.lateral, item.depth, walls, frame);
+            continue;
+        }
         const auto& shadow = *item.shadow;
         for (std::size_t r = 0; r < shadow.rowCount; ++r) {
             const auto& row = shadowRows_[shadow.firstRow + r];
@@ -300,6 +352,11 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
     }
     for (std::size_t i = 0; i < count; ++i) {
         const auto& item = visible[i];
+        if (item.travel) {
+            composeTravel(*item.travel, item.lateral, item.depth, static_cast<std::uint16_t>(item.instance),
+                          animation && animation->frames[item.instance].flash, walls, frame, picking);
+            continue;
+        }
         const auto& s = *item.sprite;
         for (int x = std::max(0, item.left); x < std::min(viewWidth, item.left + s.width); ++x) {
             if (item.depth >= walls[x])

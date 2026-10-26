@@ -10,6 +10,10 @@ struct ActorId {
     std::uint64_t world = 0;
 };
 enum class ActorLife : std::uint8_t { Alive, Dead, Removed };
+inline constexpr std::uint64_t npcWalkDurationMs = 600;
+struct ActorPosition {
+    float x = 0, y = 0;
+};
 struct ActorState {
     NpcInstance npc;
     rules::MonsterId monster;
@@ -19,7 +23,13 @@ struct ActorState {
     std::uint64_t damageTimeMs = 0;
     bool hasAttack = false;
     std::uint64_t attackTimeMs = 0;
+    bool hasWalk = false;
+    std::uint64_t walkTimeMs = 0;
+    bool hasTravel = false;
+    ActorPosition walkFrom;
 };
+ActorPosition actorPosition(const ActorState& actor, std::uint64_t timeMs) noexcept;
+bool actorWalking(const ActorState& actor, std::uint64_t timeMs) noexcept;
 struct ActorSnapshot {
     std::array<ActorState, NpcWorld::maxInstances> actors{};
     std::size_t count = 0, typeCount = 0;
@@ -56,7 +66,9 @@ class ActorWorld {
     ActorId id(std::size_t slot) const noexcept;
     const ActorState* actor(ActorId id) const noexcept;
     bool occupied(Cell cell) const noexcept;
+    std::uint8_t occupiedSlots(Cell cell) const noexcept;
     ActorResult move(ActorId id, Cell cell, Cell subcell, Cell partyCell) noexcept;
+    ActorResult walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs) noexcept;
     ActorResult face(ActorId id, Heading facing) noexcept;
     ActorResult attack(ActorId id, std::uint64_t timeMs) noexcept;
     ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept;

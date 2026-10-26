@@ -20,6 +20,22 @@ std::uint8_t bit(Cell subcell) noexcept {
     return static_cast<std::uint8_t>(1u << (subcell.y * 2 + subcell.x));
 }
 } // namespace
+bool actorWalking(const ActorState& a, std::uint64_t timeMs) noexcept {
+    return a.hasTravel && a.life == ActorLife::Alive &&
+           (timeMs < a.walkTimeMs || timeMs - a.walkTimeMs < npcWalkDurationMs);
+}
+ActorPosition actorPosition(const ActorState& a, std::uint64_t timeMs) noexcept {
+    const ActorPosition destination{a.npc.cell.x + .25f + a.npc.subcell.x * .5f,
+                                    a.npc.cell.y + .25f + a.npc.subcell.y * .5f};
+    if (!a.hasTravel)
+        return destination;
+    if (a.life == ActorLife::Dead)
+        timeMs = std::min(timeMs, a.damageTimeMs);
+    const float t =
+        timeMs < a.walkTimeMs ? 0.f : std::min(1.f, float(timeMs - a.walkTimeMs) / npcWalkDurationMs);
+    return {a.walkFrom.x + (destination.x - a.walkFrom.x) * t,
+            a.walkFrom.y + (destination.y - a.walkFrom.y) * t};
+}
 ActorWorld::ActorWorld(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements)
     : map_(map), catalog_(catalog), occupancy_(static_cast<std::size_t>(map.width()) * map.height(), 0) {
     state_.world = nextWorld();
@@ -57,6 +73,27 @@ bool ActorWorld::occupied(Cell c) const noexcept {
     return c.x >= 0 && c.y >= 0 && c.x < map_.width() && c.y < map_.height() &&
            occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x] != 0;
 }
+std::uint8_t ActorWorld::occupiedSlots(Cell c) const noexcept {
+    return map_.solid(c) ? 15 : occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x];
+}
+ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell,
+                             std::uint64_t timeMs) noexcept {
+    const auto* a = actor(id);
+    if (!a)
+        return {ActorError::InvalidHandle};
+    if (a->hasWalk && timeMs < a->walkTimeMs)
+        return {ActorError::InvalidTime};
+    const bool crossCell = !(a->npc.cell == cell);
+    const auto from = actorPosition(*a, timeMs);
+    const auto result = move(id, cell, subcell, partyCell);
+    if (result.changed && crossCell) {
+        state_.actors[id.slot].hasTravel = true;
+        state_.actors[id.slot].walkFrom = from;
+        state_.actors[id.slot].hasWalk = true;
+        state_.actors[id.slot].walkTimeMs = timeMs;
+    }
+    return result;
+}
 std::uint8_t& ActorWorld::mask(Cell c) noexcept {
     return occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x];
 }
@@ -82,6 +119,7 @@ ActorResult ActorWorld::move(ActorId id, Cell cell, Cell subcell, Cell partyCell
     auto& a = state_.actors[id.slot];
     vacate(a);
     mask(cell) |= bit(subcell);
+    a.hasTravel = false;
     a.npc.cell = cell;
     a.npc.subcell = subcell;
     ++state_.revision;

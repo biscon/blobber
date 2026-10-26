@@ -1,5 +1,6 @@
 #include "app/application.hpp"
 #include "app/actor_captures.hpp"
+#include "app/ai_demo.hpp"
 #include "app/captures.hpp"
 #include "app/gameplay.hpp"
 #include "app/hud_captures.hpp"
@@ -19,18 +20,23 @@ int run(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
-                     "--capture-hud DIRECTORY | --capture-reactions DIRECTORY] [--ui-demo | "
-                     "--combat-demo] [--seed UINT32]\n";
+                     "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY] "
+                     "[--ui-demo | "
+                     "--combat-demo | --ai-demo] [--seed UINT32]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
     const auto rules = loadRules(options.assets / "rules" / "catalog.json");
     const Party party(rules);
-    const Map map = Map::load((options.assets / "maze.txt").string());
-    Controller controller;
+    const Map sourceMap = Map::load((options.assets / "maze.txt").string());
+    const bool aiScenario = options.aiDemo || options.captureAiOnly;
+    const Map map = aiScenario ? aiDemoMap() : sourceMap;
+    Controller controller(aiScenario ? aiDemoSpawn() : Player{});
     if (map.solid(controller.state().player.cell) || !map.connected(controller.state().player.cell))
         throw std::runtime_error("Spawn is blocked or map contains unreachable floors");
-    auto loadedNpcs = loadNpcs(options.assets / "npcs" / "level.json", map, controller.state().player.cell);
+    auto loadedNpcs = loadNpcs(options.assets / "npcs" / "level.json", sourceMap, Player{}.cell);
+    if (aiScenario)
+        loadedNpcs.world = aiDemoPlacements(map, loadedNpcs.world);
     ActorWorld npcs(map, rules, loadedNpcs.world);
     std::vector<NpcTimings> timings;
     for (const auto& appearance : loadedNpcs.appearances)
@@ -55,6 +61,10 @@ int run(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureAiOnly) {
+            captureAi(map, rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
+            return 0;
+        }
         if (options.captureReactionsOnly) {
             captureReactions(map, party, rules, loadedNpcs.world, timings, renderer, presenter,
                              options.captureDirectory);

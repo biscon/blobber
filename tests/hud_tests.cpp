@@ -55,8 +55,8 @@ void directActions() {
     routeHudInput(ui, input, s.actors().id(2), false);
     check(s.combat().snapshot().turn == turn, "Click sampled before new turn cannot commit");
     routeHudInput(ui, input, s.actors().id(2), true);
-    check(s.combat().snapshot().turn != turn && ui.snapshot().selection.action == PartyAction::Melee &&
-              !ui.snapshot().selection.target,
+    check(s.combat().snapshot().resolvingAction && !s.combat().snapshot().awaitingAction &&
+              ui.snapshot().selection.action == PartyAction::Melee && !ui.snapshot().selection.target,
           "One reachable click attacks then clears targeting");
     const auto after = s.combat().snapshot().turn;
     routeHudInput(ui, input, s.actors().id(2), true);
@@ -168,6 +168,10 @@ void initiative() {
                 s.submit(turnCommand(s));
             else
                 s.update(.45, false);
+            // Presentation holds the old participant; compare preview only when
+            // the authoritative turn actually advances.
+            if (s.combat().snapshot().turn == preview.turn)
+                continue;
             if (preview.upcomingCount > 1) {
                 const auto next = preview.upcoming[1];
                 const auto actual = s.combat().snapshot();

@@ -12,13 +12,19 @@ void validateNpcTimings(const NpcTimings& timings) {
                 throw std::runtime_error("NPC frame duration must be 1..60000 ms");
     }
 }
-namespace {
-std::uint32_t duration(const NpcClipTiming& clip) noexcept {
+std::uint32_t npcClipDuration(const NpcClipTiming& clip) noexcept {
     std::uint32_t total = 0;
     for (std::size_t i = 0; i < clip.count; ++i)
         total += clip.durationMs[i];
     return total;
 }
+std::uint32_t npcAttackImpact(const NpcClipTiming& clip) noexcept {
+    std::uint32_t total = 0;
+    for (std::size_t i = 0; i < clip.count / 2; ++i)
+        total += clip.durationMs[i];
+    return total;
+}
+namespace {
 std::uint8_t sample(const NpcClipTiming& clip, std::uint64_t time, std::uint32_t phase) noexcept {
     std::uint32_t total = 0;
     for (std::size_t i = 0; i < clip.count; ++i)
@@ -69,11 +75,14 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
         const auto& death = timings[static_cast<std::size_t>(NpcAnimation::Death)];
         const bool dying = actor.life == ActorLife::Dead && death.count;
         const bool deathVisible = dying && actor.hasDamage && elapsedMs >= actor.damageTimeMs &&
-                                  elapsedMs - actor.damageTimeMs < duration(death);
+                                  elapsedMs - actor.damageTimeMs < npcClipDuration(death);
         const bool visible = actor.life == ActorLife::Alive || (dying ? deathVisible : flash);
         // Legacy death art freezes the exact living pose at the lethal timestamp.
         const auto time = actor.life == ActorLife::Dead && !dying ? actor.damageTimeMs : elapsedMs;
         NpcFrameSelection next{0, 0, visible, flash};
+        const auto position = actorPosition(actor, elapsedMs);
+        next.offsetX = position.x - (npc.cell.x + .25f + npc.subcell.x * .5f);
+        next.offsetY = position.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
         next.clip = npc.animation;
         if (visible) {
             const auto& attack = timings[static_cast<std::size_t>(NpcAnimation::Attack)];
@@ -83,12 +92,20 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
             if (dying) {
                 next.clip = NpcAnimation::Death;
                 next.active = sample(death, time - actor.damageTimeMs, 0);
-            } else if (hurtWins && time - actor.damageTimeMs < duration(hurt)) {
+            } else if (hurtWins && time - actor.damageTimeMs < npcClipDuration(hurt)) {
                 next.clip = NpcAnimation::Hurt;
                 next.active = sample(hurt, time - actor.damageTimeMs, 0);
-            } else if (!hurtWins && attackCue && time - actor.attackTimeMs < duration(attack)) {
+            } else if (!hurtWins && attackCue && time - actor.attackTimeMs < npcClipDuration(attack)) {
                 next.clip = NpcAnimation::Attack;
                 next.active = sample(attack, time - actor.attackTimeMs, 0);
+            } else if (actor.hasWalk && (!actor.hasAttack || actor.walkTimeMs > actor.attackTimeMs) &&
+                       (!actor.hasDamage || actor.walkTimeMs > actor.damageTimeMs ||
+                        (actor.life == ActorLife::Dead && !dying)) &&
+                       time >= actor.walkTimeMs && time - actor.walkTimeMs < npcWalkDurationMs &&
+                       timings[static_cast<std::size_t>(NpcAnimation::Walk)].count) {
+                next.clip = NpcAnimation::Walk;
+                next.active =
+                    sample(timings[static_cast<std::size_t>(NpcAnimation::Walk)], time - actor.walkTimeMs, 0);
             } else {
                 const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
                 next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
@@ -100,7 +117,8 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||
-                   old.flash != next.flash || old.clip != next.clip;
+                   old.flash != next.flash || old.clip != next.clip || old.offsetX != next.offsetX ||
+                   old.offsetY != next.offsetY;
         old = next;
     }
     snapshot_.actorRevision = world_.snapshot().revision;

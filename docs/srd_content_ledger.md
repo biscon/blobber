@@ -14,7 +14,7 @@ catalog in `assets/rules/ATTRIBUTION.md`.
 | Damage and critical hits | p. 96 | Rolled damage, critical dice doubled, modifier once, zero minimum; physical damage types only. Mitigation/HP mutation deferred. |
 | Goblin | p. 315 | STR 8, DEX 14, CON 10, INT 10, WIS 8, CHA 8; AC 15, HP 7; +4 scimitar/shortbow, 1d6+2 slashing/piercing. Fixed HP adopted. |
 | Goblin appearance | Existing project artwork | Dagger art remains while melee mechanics use the scimitar baseline; visual difference, not a new dagger stat block. |
-| Nimble Escape | p. 315 | Not implemented; explicit adaptation/defer decision belongs to slice 07. |
+| Nimble Escape | p. 315 | Inactive in slice 07 by user decision; adaptation deferred to slice 08 alongside disengagement. |
 
 Project implementation limits (dice counts, JSON capacities, supported levels,
 AC bounds, physical-only damage types) are engineering limits, not SRD rules.
@@ -79,3 +79,13 @@ No conscious party member ends the encounter in defeat without finishing death
 saves. Victory automatically stabilizes surviving downed allies without restoring
 HP. Natural 1d4-hour recovery is deferred with resting. No reach, surprise, shared
 maneuvers, ranged approach, class features, XP, loot or resurrection is implied.
+
+## Slice 07 AI adaptation
+
+Directional six-cell sight, last-seen memory, guard/patrol/wander routines,
+600/1200 ms movement and side/rear waiting are project adaptations, not SRD senses,
+speed, stealth or action-economy implementations. No perception rolls, hearing,
+shared alerts or surprise are active. Nimble Escape remains inactive by explicit
+user choice; decide its adaptation in slice 08 with disengagement. Existing melee
+rules, target selection and front-slot advancement remain authoritative.
+See [AI design](goblin_ai_design.md) and [verification](slice07_verification.md).

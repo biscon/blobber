@@ -106,7 +106,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         actor = "VICTORY";
     else if (h->combat.phase == CombatPhase::Defeat)
         actor = "DEFEAT";
-    std::snprintf(line, sizeof(line), "%s%s", actor, h->combat.awaitingAction ? "  /  CHOOSE AN ACTION" : "");
+    std::snprintf(line, sizeof(line), "%s%s", actor,
+                  h->combat.resolvingAction  ? "  /  RESOLVING"
+                  : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
+                                             : "");
     p.clipped(line, 12, 306, 284, gold, UiTextStyle::Display);
     for (int i = 0; i < 6; ++i) {
         const auto r = hudLayout::action(i);

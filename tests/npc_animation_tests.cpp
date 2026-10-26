@@ -4,6 +4,7 @@
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
+#include <chrono>
 #include <iostream>
 #include <limits>
 using namespace blobber;
@@ -65,6 +66,182 @@ void timing() {
     NpcAnimator none(empty, {});
     none.setTime(huge);
     check(none.snapshot().count == 0 && none.snapshot().revision == 0, "Empty world clock");
+}
+void actualWalking() {
+    auto actors = world(NpcAnimation::Idle);
+    const auto id = actors.id(0);
+    auto timings = npcTimings(testReactionAppearance());
+    NpcAnimator animator(actors, {timings});
+    check(actors.walk(id, {3, 2}, {0, 0}, {3, 5}, 100).changed, "Successful cross-cell walk commits");
+    animator.setTime(100);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Walk,
+          "Successful move triggers walk at frame zero");
+    animator.setTime(699);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Walk, "Walk lasts 600 ms");
+    animator.setTime(700);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Idle, "Walk expires to idle");
+    check(!actors.walk(id, {0, 0}, {0, 0}, {3, 5}, 800), "Wall step rejected");
+    animator.setTime(800);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Idle, "Rejected step cannot animate walking");
+    actors.walk(id, {3, 3}, {0, 0}, {3, 5}, 900);
+    actors.attack(id, 950);
+    animator.setTime(950);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Attack, "Attack interrupts walk");
+    animator.setTime(1200);
+    check(animator.snapshot().frames[0].clip != NpcAnimation::Walk,
+          "Canceled walk cannot resume after attack");
+    actors.walk(id, {3, 2}, {0, 0}, {3, 5}, 1500);
+    actors.damage(id, 1, 1550);
+    animator.setTime(1550);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Hurt, "Hurt interrupts walk");
+    animator.setTime(2050);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Idle, "Damage canceled old walking");
+    NpcAnimator legacy(actors, {npcTimings(testNpcAppearance())});
+    actors.walk(id, {3, 3}, {0, 0}, {3, 5}, 2200);
+    legacy.setTime(2200);
+    check(legacy.snapshot().frames[0].clip == NpcAnimation::Idle, "Missing walk art remains idle");
+    actors.damage(id, 10000, 2250);
+    animator.setTime(2250);
+    check(animator.snapshot().frames[0].clip == NpcAnimation::Death, "Lethal damage interrupts walk");
+    check(!actors.walk(id, {3, 2}, {0, 0}, {3, 5}, 2300), "Dead actor cannot walk");
+    auto old = world(NpcAnimation::Idle);
+    NpcAnimator oldAnimator(old, {npcTimings(testAnimatedNpcAppearance())});
+    old.walk(old.id(0), {3, 2}, {0, 0}, {3, 5}, 100);
+    old.damage(old.id(0), 10000, 120);
+    oldAnimator.setTime(150);
+    check(oldAnimator.snapshot().frames[0].clip == NpcAnimation::Walk &&
+              oldAnimator.snapshot().frames[0].flash,
+          "Legacy lethal flash freezes the walking pose");
+}
+void travelTiming() {
+    auto actors = world(NpcAnimation::Idle);
+    const auto id = actors.id(0);
+    NpcAnimator animator(actors, {npcTimings(testNpcAppearance())});
+    actors.walk(id, {4, 3}, {0, 0}, {3, 5}, 100);
+    check(actors.occupied({4, 3}) && !actors.occupied({3, 3}), "Travel commits grid collision immediately");
+    animator.setTime(100);
+    check(animator.snapshot().frames[0].offsetX == -1, "Travel starts at source, including without walk art");
+    const auto revision = animator.snapshot().revision;
+    animator.setTime(101);
+    check(animator.snapshot().revision > revision, "Position invalidates a held animation frame");
+    animator.setTime(400);
+    check(animator.snapshot().frames[0].offsetX == -.5f, "Halfway position is halfway between cells");
+    const auto held = animator.snapshot().revision;
+    animator.setTime(400);
+    check(animator.snapshot().revision == held, "Paused presentation reuses the same position");
+    animator.setTime(700);
+    check(animator.snapshot().frames[0].offsetX == 0, "Arrival has exact destination position");
+    actors.walk(id, {4, 2}, {1, 1}, {3, 5}, 700);
+    const auto midway = actorPosition(*actors.actor(id), 1000);
+    check(midway.x == 4.5f && midway.y == 3.f, "Travel includes changed subcell coordinates");
+    actors.walk(id, {3, 2}, {0, 0}, {3, 5}, 1000);
+    const auto chained = actorPosition(*actors.actor(id), 1000);
+    check(chained.x == midway.x && chained.y == midway.y, "Early chained step starts without snapping");
+    actors.move(id, {3, 3}, {0, 0}, {3, 5});
+    check(actorPosition(*actors.actor(id), 1001).y == 3.25f, "Explicit move cancels travel");
+    actors.walk(id, {3, 2}, {0, 0}, {3, 5}, 1100);
+    actors.damage(id, 10000, 1400);
+    const auto dead = actorPosition(*actors.actor(id), 1400);
+    check(dead.y == 2.75f && actorPosition(*actors.actor(id), 5000).y == dead.y,
+          "Lethal damage freezes travel where the actor died");
+}
+void travelRendering() {
+    const auto appearance = testNpcAppearance();
+    const PreparedNpcs prepared({appearance});
+    auto actors = world(NpcAnimation::Idle);
+    NpcAnimator animator(actors, {npcTimings(appearance)});
+    auto halfway = testActors(map, {3, 5}, {"test"}, {{{0}, {3, 3}, {1, 0}, Heading::South}});
+    const std::array<Player, 4> cameras{{{{3, 5}, Heading::North},
+                                         {{3, 1}, Heading::South},
+                                         {{5, 3}, Heading::West},
+                                         {{1, 3}, Heading::East}}};
+    std::array<float, viewWidth> walls;
+    walls.fill(100);
+    Frame moving, reference;
+    PickingBuffer pick, expected;
+    actors.walk(actors.id(0), {4, 3}, {0, 0}, {3, 5}, 0);
+    animator.setTime(300);
+    for (const auto camera : cameras) {
+        pick.clear();
+        expected.clear();
+        prepared.compose(actors, camera, 0, walls, moving, &animator.snapshot(), &pick);
+        prepared.compose(halfway, camera, 0, walls, reference, nullptr, &expected);
+        std::size_t body = 0;
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                check(pick.slot(x, y) == expected.slot(x, y),
+                      "Moving body projects exactly at the intermediate subslot from every heading");
+                body += pick.slot(x, y) == 0;
+            }
+        check(body > 0, "Travel projection fixture is visible");
+    }
+    const Player camera{{3, 5}, Heading::North};
+    for (float invalidOffset : {std::numeric_limits<float>::quiet_NaN(),
+                                std::numeric_limits<float>::infinity(), float(Map::maxDimension + 1)}) {
+        auto invalid = animator.snapshot();
+        invalid.frames[0].offsetX = invalidOffset;
+        rejects([&] { prepared.compose(actors, camera, 0, walls, moving, &invalid); },
+                "Malformed travel offsets cannot reach projection arithmetic");
+    }
+    walls.fill(.1f);
+    pick.clear();
+    std::fill(moving.begin(), moving.end(), BLACK);
+    prepared.compose(actors, camera, 0, walls, moving, &animator.snapshot(), &pick);
+    for (int y = 0; y < viewHeight; ++y)
+        for (int x = 0; x < viewWidth; ++x)
+            check(pick.slot(x, y) == PickingBuffer::empty && moving[y * viewWidth + x].r == 0,
+                  "Wall depth clips traveling bodies, shadows and picking");
+    const SceneRenderer renderer(testMaterials(), {appearance});
+    FramePipeline pipeline;
+    MovementState movement;
+    movement.player = camera;
+    animator.setTime(310);
+    check(pipeline.update(renderer, map, movement, &actors, &animator.snapshot()), "First travel frame");
+    animator.setTime(320);
+    check(pipeline.update(renderer, map, movement, &actors, &animator.snapshot()),
+          "Held pose still refreshes continuous travel");
+    animator.setTime(600);
+    pipeline.update(renderer, map, movement, &actors, &animator.snapshot());
+    renderer.compose(map, camera, reference, &actors);
+    check(same(pipeline.frame(), reference), "Arrival restores exact stationary prepared rendering");
+}
+// Explicit benchmark, excluded from routine CTest. All fixtures are generated.
+void travelStress() {
+    std::vector<std::string> rows(20, std::string(20, '.'));
+    rows.front() = rows.back() = std::string(20, '#');
+    for (auto& row : rows)
+        row.front() = row.back() = '#';
+    const Map crowdedMap(rows);
+    std::vector<NpcInstance> placements;
+    for (int y = 5; y < 13; ++y)
+        for (int x = 2; x < 18; x += 2)
+            for (int slot = 0; slot < 4; ++slot)
+                placements.push_back({{0}, {x, y}, {slot % 2, slot / 2}, Heading::East});
+    auto actors = testActors(crowdedMap, {9, 14}, {"test"}, placements);
+    const auto appearance = testNpcAppearance();
+    const PreparedNpcs prepared({appearance});
+    NpcAnimator animator(actors, {npcTimings(appearance)});
+    for (std::size_t i = 0; i < placements.size(); ++i) {
+        const auto& npc = placements[i];
+        check(actors.walk(actors.id(i), {npc.cell.x + 1, npc.cell.y}, npc.subcell, {9, 14}, 0).changed,
+              "Every stress actor has a real legal travel segment");
+    }
+    Frame frame;
+    PickingBuffer picking;
+    std::array<float, viewWidth> walls;
+    walls.fill(100);
+    const auto start = std::chrono::steady_clock::now();
+    for (std::uint64_t time = 0; time < 600; time += 5) {
+        animator.setTime(time);
+        picking.clear();
+        prepared.compose(actors, {{9, 14}, Heading::North}, 0, walls, frame, &animator.snapshot(), &picking);
+        picking.finish(&actors);
+    }
+    const auto ms =
+        std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    check(picking.targets().count > 0, "Stress actually presents visible bodies");
+    std::cout << "256 traveling actors, 120 compositions with picking: " << ms << " ms total, " << ms / 120
+              << " ms/frame (CPU only, generated solid art)\n";
 }
 void staggeredIdle() {
     const std::vector<NpcInstance> placements{{{0}, {3, 3}, {0, 0}, Heading::South},
@@ -266,9 +443,16 @@ void rendering() {
     rejects([&] { PreparedNpcs bad({malformed}); }, "Every frame respects ground anchor");
 }
 } // namespace
-int main() {
+int main(int argc, char** argv) {
     try {
+        if (argc == 2 && std::string(argv[1]) == "--stress") {
+            travelStress();
+            return 0;
+        }
         timing();
+        actualWalking();
+        travelTiming();
+        travelRendering();
         staggeredIdle();
         triggeredAttacks();
         rendering();

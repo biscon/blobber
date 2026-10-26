@@ -83,9 +83,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
     for (std::size_t i = 0; i < timings.size(); ++i) {
         validateNpcTimings(timings[i]);
         const auto& attack = timings[i][static_cast<std::size_t>(NpcAnimation::Attack)];
-        // Existing authored attacks put the strike at the middle frame.
-        for (std::size_t frame = 0; frame < attack.count / 2; ++frame)
-            attackImpactMs_[i] += attack.durationMs[frame];
+        attackImpactMs_[i] = npcAttackImpact(attack);
     }
     session_ = &session;
     state_.log = {};
@@ -328,7 +326,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.failures = member.failures;
         if (session_) {
             card.hasDeathSaves = member.life == rules::Life::Dying;
-            card.active = state_.combat.activeCharacter && state_.combat.activeCharacter->index == id.index;
+            card.active = state_.combat.awaitingAction && state_.combat.activeCharacter &&
+                          state_.combat.activeCharacter->index == id.index;
             card.defending = state_.combat.defending[id.index];
             card.recentlyHit = session_->timeMs() < hitUntil_[id.index];
             if (member.life == rules::Life::Dying && id.index != state_.selection.character.index)

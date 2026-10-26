@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–06 and milestone A are Accepted. Slice 06 was accepted on 2026-10-26, including hurt/death animations, impact timing and front-slot corrections. Slice 07 is next eligible and remains Planned.
+Status: gameplay roadmap; slices 01–07 and milestone A are Accepted. Slice 07 was accepted on 2026-10-26, including attack-turn sequencing and interpolated-walking corrections. Slice 08 is next eligible and remains Planned; milestone B remains open.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 06 — Goblin hurt/death animations and review corrections (2026-10-26) |
+| Latest accepted slice | 07 — Moving goblin AI and review corrections (2026-10-26) |
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 07 — Moving goblin AI (Planned; not started) |
-| Next action | In a new planning task, inspect code and prepare the slice 07 plan for user review |
+| Next eligible slice | 08 — Hybrid encounter loop |
+| Next action | Plan slice 08 in a new planning task when requested; do not advance automatically |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -308,7 +308,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 04 | [Party HUD and commands](#slice-04-party-hud-and-commands) | 03 | Accepted | A |
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Accepted | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
-| 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Planned | B |
+| 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Planned | B |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 08 | Planned | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
@@ -396,6 +396,12 @@ is not structurally restricted, gear affects statistics, and formation/resources
 have deterministic headless checks.
 
 **Stage / last updated:** Review complete (Accepted); 2026-10-25.
+**Walking review correction:** User requested continuous movement using the existing
+walk art. Implemented 600 ms visual travel between committed cells, continuous
+projection/shadows/picking, pause/death handling and arrival-gated combat. Both
+19-suite configurations pass; final captures and the separate 256-actor CPU
+composition measurement are recorded in the verification report. Logical collision
+remains discrete; no slice 08 work was introduced.
 **Approved plan:** User said “Implement the plan.” See [character design](characters_design.md).
 User selected SRD variants (Hill Dwarf, Lightfoot Halfling, High Elf) and active
 stat passives, including Dwarven Toughness and Fighter Defense. Implement immutable
@@ -457,6 +463,12 @@ blocked moves, occupied slots, stale references, and resource bounds are handled
 Existing transitions and no-allocation checks still work.
 
 **Stage / last updated:** Review complete (Accepted); 2026-10-25.
+**Walking review correction:** User requested continuous movement using the existing
+walk art. Implemented 600 ms visual travel between committed cells, continuous
+projection/shadows/picking, pause/death handling and arrival-gated combat. Both
+19-suite configurations pass; final captures and the separate 256-actor CPU
+composition measurement are recorded in the verification report. Logical collision
+remains discrete; no slice 08 work was introduced.
 **Approved plan:** User said “Implement the plan.” See [actor design](actors_design.md).
 Placement-only stable runtime actors, checked movement/facing/damage/removal, live
 occupancy and rendering revisions, and scripted checks/captures. User selected
@@ -544,6 +556,12 @@ with a small gap, replacing five oversized fixed slots. The panel fits 16 short
 entries; long targeted commands wrap cleanly. Debug/Release builds passed;
 Release command/allocation checks and desktop wrapping/scroll checks passed.
 Only the expanded-log image changed among 122 logical captures.
+**Walking review correction:** User requested continuous movement using the existing
+walk art. Implemented 600 ms visual travel between committed cells, continuous
+projection/shadows/picking, pause/death handling and arrival-gated combat. Both
+19-suite configurations pass; final captures and the separate 256-actor CPU
+composition measurement are recorded in the verification report. Logical collision
+remains discrete; no slice 08 work was introduced.
 **Approved plan:** User said “Implement the plan.” See [HUD design](party_hud_design.md).
 User chose bottom portraits/sidebar controls, viewport plus list targeting, and
 preview commands plus explicit deterministic development scenarios.
@@ -605,6 +623,12 @@ invalid/dead targets, missed attacks, front-row collapse, healing from zero HP,
 death-save outcomes, and exactly-once turn/death resolution. User reviews milestone A.
 
 **Stage / last updated:** Accepted and closed; 2026-10-25.
+**Walking review correction:** User requested continuous movement using the existing
+walk art. Implemented 600 ms visual travel between committed cells, continuous
+projection/shadows/picking, pause/death handling and arrival-gated combat. Both
+19-suite configurations pass; final captures and the separate 256-actor CPU
+composition measurement are recorded in the verification report. Logical collision
+remains discrete; no slice 08 work was introduced.
 **Approved plan:** User said “Implement the plan.” See [melee combat design](melee_combat_design.md).
 Frontal single-cell fights; individual/group initiative; row protection on both
 sides; visible-body targeting; Dodge-style Defend and Wisdom Aid; authoritative
@@ -684,6 +708,12 @@ occlusion, transition views, and prepared memory limits. Visually inspect source
 sheets and deterministic in-engine captures; compilation alone is insufficient.
 
 **Stage / last updated:** Accepted and closed; 2026-10-26.
+**Walking review correction:** User requested continuous movement using the existing
+walk art. Implemented 600 ms visual travel between committed cells, continuous
+projection/shadows/picking, pause/death handling and arrival-gated combat. Both
+19-suite configurations pass; final captures and the separate 256-actor CPU
+composition measurement are recorded in the verification report. Logical collision
+remains discrete; no slice 08 work was introduced.
 **Approved plan:** User said “Implement the plan.” See [hurt/death design](goblin_reactions_design.md). User selected the existing 100 ms flash overlay, a brief collapse/corpse hold, and preservation of front-only attack art. Four-direction hurt/death presentation preserves authoritative damage, occupancy and session time.
 **Delivered:** Eight imagegen sheets and 24 runtime frames with preserved prompts,
 references and registration. Hurt plays 150/150 ms; death plays 200/200/200/600 ms,
@@ -756,9 +786,65 @@ multiple goblins, contention, and unreachable targets. Actors cannot cross walls
 enter the party cell, or overlap occupied subslots. Pathfinding work/storage is
 bounded and does not allocate in normal simulation updates.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Accepted and closed; 2026-10-26.
+**Review correction:** User reported being able to attack while an enemy's attack
+was still playing. Implemented a session-time presentation hold for enemy/player
+attacks: no next turn or result overlay before animation/reaction and damage/MISS
+expiry. Goblin hold is 1950 ms. HP/death still resolve once immediately. Debug and
+Release all 19 suites, allocation checks and 59 HUD captures passed; inspected
+strike, feedback-tail and handoff images. See the AI design and verification.
+**Walking review correction:** User requested continuous movement using the existing
+walk art. Implemented 600 ms visual travel between committed cells, continuous
+projection/shadows/picking, pause/death handling and arrival-gated combat. Both
+19-suite configurations pass; final captures and the separate 256-actor CPU
+composition measurement are recorded in the verification report. Logical collision
+remains discrete; no slice 08 work was introduced.
+**Approved plan:** User said “Implement the plan.” See [AI design](goblin_ai_design.md).
+Guards, waypoint patrols and wandering; directional sight/memory; deliberate
+600/1200 ms movement; side/rear waiting; frozen roaming during combat/results;
+dedicated AI demo; Nimble Escape deferred to slice 08.
+**Delivered:** Session-owned bounded AI/navigation, validated optional placement
+settings, checked movement/facing/walk cues, independent RNG, --ai-demo and
+--capture-ai. Existing stationary review modes, combat outcomes, impact timing,
+front-slot correction and prepared rendering remain intact.
+**Verification:** Debug/Release builds and all 19 headless suites passed, including
+extended zero-allocation checks. Focused ASan/UBSan passed with leak detection
+disabled due to the environment's ptrace limitation. Hidden GPU lifecycle and
+40 AI captures passed; selected native images inspected. Separate 256-request
+stress runs respected work/storage limits. See [commands, measurements and review](slice07_verification.md).
+**Review recipe:** Run --ai-demo --seed 5; observe routines, provoke directional
+pursuit, break sight around the wall, test pauses and face adjacent pursuers to
+enter combat. The verification report gives coordinates and capture alternatives.
+**Deviations / limitations:** No scope change. Bounded shared BFS can produce long
+queues at extreme map/actor scale; maximum-map stress is capacity evidence, not
+responsive gameplay evidence. Physical interactive review, Windows/macOS, physical
+high-DPI and LeakSanitizer remain unverified. No OS input/focus automation.
+**Next-agent handoff:** Slice 07 is accepted and closed, including both review
+corrections. Slice 08 is next eligible but remains Planned; inspect the relevant
+code and prepare its plan in a new planning task before implementation.
+Production GameSession and HUD
+must receive matching prepared timings. CombatSnapshot::resolvingAction retains
+the old participant/serial with awaitingAction=false; update releases it at the
+deadline and never executes a second action in that same call. Preserve presented-
+turn confirmation gating and delayed terminal overlays. Preserve the explicit exploration
+AI clock and separate combat RNG; navigation results are advisory, ActorWorld
+revalidates each move. Keep travel offsets in animation invalidation, and keep
+contact awaiting all living members' arrival before initiative. Last-seen cells still occupied by the party use adjacent
+approach and facing, preventing self-turn sight loss from stalling pursuit.
+Runtime AI copies optional placement routines; diagnostic animation loops remain
+separate. Restart rebuilds every borrower. Keep immediate death occupancy release,
+reaction priority, impact timing and front-slot advancement. Slice 08 must decide
+multidirectional membership, reinforcements, phase clocks and Nimble Escape.
+**Acceptance:** Accepted on 2026-10-26. The user said: “slice accepted, update the document”.
+Acceptance covers moving goblin AI and both review corrections: attack-turn
+sequencing and interpolated cross-cell walking with arrival-gated combat. No
+additional conditions or new work were requested. Recorded verification and
+scale limitations remain documented; acceptance does not turn unexecuted checks
+into passes. Milestone B remains open; slice 08 remains Planned and has not started.
 
 ### Slice 08: Hybrid encounter loop
+
+**Slice 07 handoff:** Nimble Escape is explicitly inactive in slice 07; decide its adaptation here alongside disengagement and awareness-based encounters.
 
 **Deliver:** Real-time ranged weapon approach/cooldowns, adjacency combat entry,
 shared round maneuvers, awareness-based ambushes, rear exposure, reinforcements,

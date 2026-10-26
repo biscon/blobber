@@ -1,5 +1,18 @@
 # System design
 
+Implemented and accepted by the user (2026-10-26): slice 07
+[moving goblin AI](goblin_ai_design.md). Session-owned guards, waypoint patrols and
+wandering use directional sight, last-seen investigation and bounded incremental
+navigation. Successful checked steps drive prepared walk playback and 600 ms
+[visual travel](goblin_ai_design.md#review-correction-interpolated-walking), with
+discrete collision, moving shadows/picking and arrival-gated combat. Frontal combat
+remains the contact boundary; roaming freezes during fights/results. See
+[verification, scale limits and acceptance](slice07_verification.md). Acceptance
+includes both review corrections; slice 08 is next eligible and has not started.
+Review correction implemented: retain the
+acting turn until attack animation and damage/MISS feedback finish; see the
+[AI review correction](goblin_ai_design.md#review-correction-finish-attack-presentation-before-advancing).
+
 Implemented and accepted by the user (2026-10-26): slice 06 [goblin hurt/death reactions](goblin_reactions_design.md).
 Four-direction prepared clips provide 300 ms hurt and 1200 ms death/corpse playback,
 with a 100 ms white overlay. See [verification and review](slice06_verification.md).
@@ -73,7 +86,7 @@ frames. Runtime actors initialize from those placements; a separate animation
 player selects idle, walk-in-place, or frontal attack frames and transient hit feedback.
 Stationary combat is integrated. Review corrections add paired-slot protection,
 same-cell enemy advancement, one-shot existing attack clips and bounded damage/MISS
-feedback; see the melee design. Autonomous cross-cell movement remains deferred; slice 06 adds four-direction
+feedback; see the melee design. Slice 07 adds autonomous cross-cell movement; slice 06 supplies four-direction
 hurt/death clips.
 The [NPC design](npc_design.md#rendering) also covers prepared, floor-projected
 contact shadows, blended beneath bodies and clipped against wall depth.
@@ -88,9 +101,11 @@ checks and limits.
   loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
 - **Session/combat:** an immovable owner borrows the map/catalog and owns party,
-  actors, movement, RNG and elapsed time. A fixed encounter contains at most four
+  actors, movement, AI, combat RNG and elapsed time. A fixed encounter contains at most four
   enemies/four groups/eight initiative entries. Contact clears queued movement;
   commands validate turn tokens, life, equipment, range and formation before RNG.
+  Resolved attacks retain the acting turn until copied clip timings and the shared
+  damage/MISS lifetime expire; result overlays wait too, while HP/death resolve immediately.
   Outcomes return synchronously. Focus/map/details/history/menu pauses stop gameplay time. Each
   update resolves at most one automatic step, spaced by 450 ms without catch-up.
 - **Party/rules:** immutable catalog values feed pure, allocation-free character
@@ -105,12 +120,19 @@ checks and limits.
   atomically update records, occupancy and revisions. Typed IDs include a unique
   world identity; slots never recycle. Dead records remain readable, removed IDs
   fail lookup, and only living actors block movement.
+- **AI/navigation:** fixed state for at most 256 actors; immutable placements supply
+  guard/patrol/wander settings. Separate seeded randomness preserves combat rolls.
+  One exploration tick per 100 ms uses a shared map-sized BFS workspace (six bytes
+  per cell), at most 4096 search/cleanup visits and eight completed requests.
+  Requests wait on budget exhaustion; checked ActorWorld steps revalidate occupancy.
+  AI time freezes outside exploration; visual walk cues use paused session time.
 - **Movement:** owns player pose, one pending command, transition state, and a
   revision counter. Exposes a const state snapshot; consumers cannot mutate its
   invariants. Key repetition is a separate graphics-independent input component.
 - **Assets and preparation:** file loading produces owned CPU materials and JSON
   NPC definitions/placements. NPC source images become bounded prepared RGBA
-  clip/direction/frame/depth sprites and are released before play. A scene cache baker prepares eight lateral view phases, wall strips, and sixteen
+  clip/direction/frame/depth sprites plus bounded full-pose travel rasters and are
+  released before play. A scene cache baker prepares eight lateral view phases, wall strips, and sixteen
   floor/ceiling variants per phase. CPU composition accepts generated materials
   as well as file-loaded ones, so tests do not require game artwork.
 - **CPU rendering:** immutable prepared data plus caller-owned fixed-size frames.
@@ -297,7 +319,8 @@ adds bounded clip timing and prepared animation frames, preserving immutable
 placements and the current image-composition/presentation pipeline. The application
 owns a graphics-independent animation player with fixed-capacity snapshots. Source
 images are released after preparation; timing metadata survives independently.
-No AI or combat resolution is attached to these visual loops; production combat
-uses idle placements plus timestamped one-shot attack and damage cues while simulation independently resolves turns. Controlled actor movement and
+Authored visual loops remain isolated diagnostics; production gameplay
+uses idle placements plus timestamped walk, attack and damage cues while AI and
+combat independently resolve movement and turns. Controlled actor movement and
 health/lifecycle mutation are described in the actor design; prepared caches stay
 immutable and are reused at each runtime position.

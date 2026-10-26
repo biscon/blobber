@@ -19,7 +19,10 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--capture-reactions" && i + 1 < argc) {
+        else if (arg == "--capture-ai" && i + 1 < argc) {
+            result.captureAiOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture-reactions" && i + 1 < argc) {
             result.captureReactionsOnly = true;
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         } else if (arg == "--capture-hud" && i + 1 < argc) {
@@ -32,6 +35,8 @@ Options parseOptions(int argc, char** argv) {
             result.height = dimension(argv[++i]);
         } else if (arg == "--ui-demo")
             result.uiDemo = true;
+        else if (arg == "--ai-demo")
+            result.aiDemo = true;
         else if (arg == "--combat-demo")
             result.combatDemo = true;
         else if (arg == "--seed" && i + 1 < argc) {
@@ -46,8 +51,13 @@ Options parseOptions(int argc, char** argv) {
         else
             throw std::runtime_error("Unknown or incomplete argument: " + arg);
     }
-    if (result.uiDemo && result.combatDemo)
-        throw std::runtime_error("Choose either --ui-demo or --combat-demo");
+    if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) > 1 ||
+        (result.captureAiOnly && (result.uiDemo || result.combatDemo)))
+        throw std::runtime_error("Choose only one of --ui-demo, --combat-demo or --ai-demo");
+    if (int(result.captureAiOnly) + int(result.captureHudOnly) + int(result.captureReactionsOnly) > 1)
+        throw std::runtime_error("Choose only one focused capture mode");
+    if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)
+        throw std::runtime_error("Use --capture-ai for the AI demo map");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
     return result;

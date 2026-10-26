@@ -24,6 +24,134 @@ void awaitCharacter(GameSession& s, rules::CharacterId id) {
     }
     check(false, "Expected character turn");
 }
+void presentationHandoff() {
+    const auto map = combatMap();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    const auto placements = combatPlacements(map);
+    NpcTimings timing{};
+    timing[0] = {{600, 600, 0, 0}, 2};
+    timing[2] = {{700, 250, 250, 350}, 4};
+    timing[3] = {{150, 150, 0, 0}, 2};
+    timing[4] = {{200, 200, 200, 600}, 4};
+    const std::vector<NpcTimings> timings{timing};
+    GameSession game(map, catalog, placements, 5, spawn, false, timings);
+    CommandController ui(game, timings);
+    start(game);
+    bool toPlayer = false, toEnemy = false;
+    for (int step = 0; step < 100 && !(toPlayer && toEnemy); ++step) {
+        if (game.combat().snapshot().awaitingAction) {
+            game.submit(turnCommand(game));
+            continue;
+        }
+        auto out = game.update(.45, false);
+        if (out.event != CombatEvent::Attack)
+            continue;
+        ui.record(out);
+        const auto held = game.combat().snapshot();
+        check(held.resolvingAction && held.activeEnemy && sameActor(*held.activeEnemy, out.enemy) &&
+                  !held.awaitingAction,
+              "Enemy keeps turn while its attack presents");
+        auto attempt = turnCommand(game);
+        attempt.character = {0};
+        check(game.submit(attempt).reason == CommandReason::NotYourTurn,
+              "Player cannot act during enemy playback");
+        game.update(60, true);
+        check(game.combat().snapshot().turn == held.turn, "Pause cannot release attack turn");
+        const auto refresh = [&] { ui.refresh(allCombatTargets(game), false, false, true); };
+        const auto visible = [&] {
+            for (const auto& f : ui.snapshot().feedback)
+                if (f.active && f.party)
+                    return true;
+            return false;
+        };
+        game.update(.949, false);
+        refresh();
+        check(!visible() && game.combat().snapshot().turn == held.turn,
+              "No feedback or handoff before impact");
+        game.update(.001, false);
+        refresh();
+        check(visible(), "MISS appears at strike");
+        game.update(.999, false);
+        refresh();
+        check(visible() && game.combat().snapshot().resolvingAction &&
+                  game.combat().snapshot().turn == held.turn,
+              "Clip ending cannot release turn while damage marker remains");
+        game.update(.001, false);
+        refresh();
+        const auto next = game.combat().snapshot();
+        check(!visible() && !next.resolvingAction && next.turn != held.turn,
+              "Exact feedback deadline releases the next turn");
+        check(!confirmationMatches(held, next), "Held input must see the new turn before confirming");
+        toPlayer |= next.awaitingAction;
+        toEnemy |= next.activeEnemy.has_value();
+    }
+    check(toPlayer && toEnemy, "Enemy playback gates both player and enemy successors");
+    // Single-frame long attack: clip, rather than marker, controls release.
+    timing[2] = {{2500, 0, 0, 0}, 1};
+    GameSession longClip(map, catalog, placements, 5, spawn, false, {timing});
+    start(longClip);
+    for (int i = 0; i < 100; ++i) {
+        if (longClip.combat().snapshot().awaitingAction)
+            longClip.submit(turnCommand(longClip));
+        else if (longClip.update(.45, false).event == CombatEvent::Attack)
+            break;
+    }
+    const auto serial = longClip.combat().snapshot().turn;
+    longClip.update(2.499, false);
+    check(longClip.combat().snapshot().resolvingAction && longClip.combat().snapshot().turn == serial,
+          "Long clip remains held after marker expiry");
+    const auto released = longClip.update(60, false);
+    check(released.event != CombatEvent::Attack && !longClip.combat().snapshot().resolvingAction,
+          "Large gap releases once without resolving a second attack");
+    GameSession fallback(map, catalog, placements, 5, spawn, false);
+    start(fallback);
+    awaitCharacter(fallback, {0});
+    auto plain = turnCommand(fallback, PartyAction::Melee);
+    plain.target = fallback.actors().id(2);
+    check(fallback.submit(plain).event == CombatEvent::Attack, "Art-free attack resolves once");
+    fallback.update(.999, false);
+    check(fallback.combat().snapshot().resolvingAction, "Missing art still holds the marker lifetime");
+    fallback.update(.001, false);
+    check(!fallback.combat().snapshot().resolvingAction, "Art-free attack releases at marker deadline");
+    const auto lethal = combatCatalog(1000, 100, {1, 4, 100});
+    GameSession defeat(map, lethal, placements, 5, spawn, false, timings);
+    for (unsigned i = 1; i < 4; ++i)
+        defeat.party().damage({static_cast<std::uint16_t>(i)}, 10000);
+    start(defeat);
+    bool lethalHit = false;
+    for (int i = 0; i < 100 && !lethalHit; ++i) {
+        if (defeat.combat().snapshot().awaitingAction)
+            defeat.submit(turnCommand(defeat));
+        else {
+            const auto attack = defeat.update(.45, false);
+            lethalHit = attack.event == CombatEvent::Attack && attack.hit;
+        }
+    }
+    check(lethalHit && defeat.party().character({0})->life != rules::Life::Conscious &&
+              defeat.combat().snapshot().phase == CombatPhase::Turns,
+          "Fatal hit resolves health before result overlay");
+    defeat.update(1.949, false);
+    check(defeat.combat().snapshot().resolvingAction, "Defeat waits for lethal impact marker");
+    check(defeat.update(.001, false).phase == CombatPhase::Defeat, "Defeat follows final marker expiry");
+    // Party attacks also finish hurt/death and feedback before handing over.
+    const auto fragile = combatCatalog(1, -100, {1, 4, -100}, 1);
+    GameSession kill(map, fragile, placements, 5, spawn, false, timings);
+    start(kill);
+    awaitCharacter(kill, {0});
+    for (int i = 0; i < 3; ++i)
+        kill.actors().damage(kill.actors().id(i), 100, kill.timeMs());
+    auto command = turnCommand(kill, PartyAction::Melee);
+    command.target = kill.actors().id(3);
+    const auto hit = kill.submit(command);
+    check(hit.died && kill.combat().snapshot().phase == CombatPhase::Turns &&
+              !kill.actors().occupied(spawn.cell + forward(spawn.heading)),
+          "Lethal outcome releases occupancy immediately but holds result presentation");
+    kill.update(1.199, false);
+    check(kill.combat().snapshot().resolvingAction, "Corpse playback outlasts the one-second marker");
+    check(kill.update(.001, false).event == CombatEvent::Finished &&
+              kill.combat().snapshot().phase == CombatPhase::Victory,
+          "Victory follows finished corpse and marker");
+}
 void rows() {
     const auto map = combatMap();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
@@ -435,7 +563,8 @@ void commandsAndRng() {
     const auto x = a.submit(c), y = b.submit(other);
     check(x.roll == y.roll && x.damage == y.damage && x.critical == y.critical,
           "Rejected requests preserve RNG sequence");
-    check(a.submit(c).reason == CommandReason::StaleTurn, "Duplicate command cannot execute twice");
+    check(a.submit(c).reason == CommandReason::NotYourTurn,
+          "Consumed action cannot execute again during presentation");
     // Production command gating must use the current visibility revision.
     awaitCharacter(a, {0});
     CommandController ui(a);
@@ -818,6 +947,7 @@ void completeFights() {
 } // namespace
 int main() {
     try {
+        presentationHandoff();
         rows();
         advancement();
         feedback();

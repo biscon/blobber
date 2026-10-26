@@ -1,5 +1,6 @@
 #pragma once
 #include "world/map.hpp"
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -11,6 +12,12 @@ struct NpcTypeId {
 };
 enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death };
 constexpr std::size_t npcAnimationCount = 5;
+enum class NpcRoutine : std::uint8_t { Guard, Patrol, Wander };
+struct NpcAiConfig {
+    NpcRoutine routine = NpcRoutine::Guard;
+    std::array<Cell, 8> waypoints{};
+    std::uint8_t waypointCount = 0;
+};
 struct NpcInstance {
     NpcTypeId type;
     Cell cell;
@@ -18,6 +25,7 @@ struct NpcInstance {
     Heading facing = Heading::North;
     NpcAnimation animation = NpcAnimation::Idle;
     std::uint32_t phaseMs = 0;
+    NpcAiConfig ai{};
 };
 // Immutable level-lifetime indices: no removal, recycling or runtime spawning.
 class NpcWorld {

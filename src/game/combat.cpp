@@ -4,10 +4,21 @@
 #include <stdexcept>
 
 namespace blobber {
-CombatController::CombatController(Party& party, ActorWorld& actors, rules::DiceRng& rng)
+CombatController::CombatController(Party& party, ActorWorld& actors, rules::DiceRng& rng,
+                                   const std::vector<NpcTimings>& timings)
     : party_(party), actors_(actors), rng_(rng) {
     if (&party.catalog() != &actors.catalog())
         throw std::runtime_error("Combat owners must share one catalog");
+    if (!timings.empty() && timings.size() != actors.snapshot().typeCount)
+        throw std::invalid_argument("Combat animation/world type counts differ");
+    for (std::size_t i = 0; i < timings.size(); ++i) {
+        validateNpcTimings(timings[i]);
+        const auto& t = timings[i];
+        const auto& attack = t[static_cast<std::size_t>(NpcAnimation::Attack)];
+        presentation_[i] = {npcClipDuration(attack), npcAttackImpact(attack),
+                            npcClipDuration(t[static_cast<std::size_t>(NpcAnimation::Hurt)]),
+                            npcClipDuration(t[static_cast<std::size_t>(NpcAnimation::Death)])};
+    }
     state_.world = actors.snapshot().world;
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto& actor = actors.snapshot().actors[i];
@@ -141,9 +152,6 @@ bool CombatController::contact(Player pose) noexcept {
         return false;
     state_.phase = CombatPhase::Contact;
     party_.lockFormation(true);
-    const auto facing = static_cast<Heading>((static_cast<unsigned>(pose.heading) + 2) % 4);
-    for (std::size_t i = 0; i < state_.enemyCount; ++i)
-        actors_.face(state_.enemies[i], facing);
     return true;
 }
 bool CombatController::finish() noexcept {
@@ -168,6 +176,9 @@ bool CombatController::finish() noexcept {
     return true;
 }
 void CombatController::begin(std::uint64_t now) noexcept {
+    const auto facing = static_cast<Heading>((static_cast<unsigned>(origin_.heading) + 2) % 4);
+    for (std::size_t i = 0; i < state_.enemyCount; ++i)
+        actors_.face(state_.enemies[i], facing);
     state_.phase = CombatPhase::Turns;
     if (finish())
         return;
@@ -243,6 +254,16 @@ void CombatController::selectTurn() noexcept {
             ++state_.round;
         }
     }
+}
+void CombatController::holdAttack(const CombatOutcome& out, std::uint64_t now) noexcept {
+    const auto& t = presentation_[actors_.actor(out.enemy)->npc.type.index];
+    const std::uint64_t duration =
+        out.enemyAttack
+            ? std::max<std::uint64_t>(t.attack, t.impact + combatFeedbackDurationMs)
+            : std::max<std::uint64_t>(combatFeedbackDurationMs, out.hit ? (out.died ? t.death : t.hurt) : 0);
+    state_.awaitingAction = false;
+    state_.resolvingAction = true;
+    due_ = now + std::max(actionDelayMs, duration);
 }
 void CombatController::advance(std::uint64_t now) noexcept {
     due_ = now + actionDelayMs;
@@ -343,16 +364,34 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
             out.died = actors_.damage(out.enemy, out.damage, now).died;
         }
     }
-    advance(now);
+    if (out.event == CombatEvent::Attack)
+        holdAttack(out, now);
+    else
+        advance(now);
     out.phase = state_.phase;
     return out;
 }
 CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t now) noexcept {
     CombatOutcome out;
+    if (state_.phase == CombatPhase::Contact)
+        for (std::size_t i = 0; i < state_.enemyCount; ++i) {
+            const auto* actor = actors_.actor(state_.enemies[i]);
+            moving |= actor && actorWalking(*actor, now);
+        }
     if (state_.phase == CombatPhase::Contact && !moving) {
         begin(now);
         out.event = CombatEvent::Started;
     } else if (state_.phase == CombatPhase::Turns) {
+        if (state_.resolvingAction) {
+            if (now >= due_) {
+                state_.resolvingAction = false;
+                advance(now);
+                if (state_.phase == CombatPhase::Victory || state_.phase == CombatPhase::Defeat)
+                    out.event = CombatEvent::Finished;
+            }
+            out.phase = state_.phase;
+            return out; // Never execute the next automatic action in this update.
+        }
         if (finish())
             out.event = CombatEvent::Finished;
         else {
@@ -411,7 +450,10 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                             state_.defending[out.recipient.index] = false;
                     }
                 }
-                advance(now);
+                if (out.event == CombatEvent::Attack)
+                    holdAttack(out, now);
+                else
+                    advance(now);
             }
         }
     }

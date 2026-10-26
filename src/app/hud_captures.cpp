@@ -14,8 +14,8 @@ struct CaptureView {
     const SceneRenderer& renderer;
     CaptureView(const Map& m, const rules::Catalog& c, const NpcWorld& n, const std::vector<NpcTimings>& t,
                 const SceneRenderer& r, unsigned seed)
-        : session(m, c, n, seed, combatCamera(m, n)), commands(session, t), animator(session.actors(), t),
-          map(m), renderer(r) {
+        : session(m, c, n, seed, combatCamera(m, n), false, t), commands(session, t),
+          animator(session.actors(), t), map(m), renderer(r) {
         commands.record(session.update(0, false));
         refresh();
     }
@@ -234,6 +234,18 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
             captureImpact("windup");
             v.session.update(.001, false);
             captureImpact("strike");
+            const auto heldTurn = v.session.combat().snapshot().turn;
+            const auto hold =
+                std::max<std::uint64_t>(npcClipDuration(attack), delay + combatFeedbackDurationMs);
+            v.session.update(double(hold - delay - 1) / 1000, false);
+            if (!v.session.combat().snapshot().resolvingAction ||
+                v.session.combat().snapshot().turn != heldTurn)
+                throw std::runtime_error("Attack released its turn before presentation finished");
+            captureImpact("feedback-tail");
+            v.session.update(.001, false);
+            if (v.session.combat().snapshot().resolvingAction)
+                throw std::runtime_error("Attack did not release after presentation");
+            captureImpact("handoff");
             impactCaptured[out.hit ? 0 : 1] = true;
             break;
         }

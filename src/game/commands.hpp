@@ -51,7 +51,7 @@ struct HudHover {
     std::array<std::array<char, 96>, 4> lines{};
 };
 struct CombatFeedback {
-    static constexpr std::uint64_t durationMs = 1000;
+    static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
     bool active = false, party = false, hit = false;
     rules::CharacterId character;
     ActorId enemy;

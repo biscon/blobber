@@ -4,9 +4,10 @@
 #include <stdexcept>
 namespace blobber {
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
-                         std::uint32_t seed, Player spawn)
+                         std::uint32_t seed, Player spawn, bool enableAi,
+                         const std::vector<NpcTimings>& timings)
     : map_(map), party_(catalog), actors_(map, catalog, placements), movement_(spawn), rng_(seed),
-      combat_(party_, actors_, rng_) {
+      combat_(party_, actors_, rng_, timings), ai_(map, actors_, seed), enableAi_(enableAi) {
     if (map.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     detectContact();
@@ -31,6 +32,10 @@ CombatOutcome GameSession::update(double seconds, bool paused) noexcept {
     detectContact();
     movement_.update(map_, static_cast<float>(seconds), &actors_);
     detectContact();
+    if (enableAi_ && combat_.snapshot().phase == CombatPhase::Exploration) {
+        ai_.update(elapsed, timeMs_, movement_.state().player);
+        detectContact();
+    }
     return combat_.update(movement_.state().player, movement_.state().transition.active(), timeMs_);
 }
 void GameSession::move(Action action, bool fresh) noexcept {

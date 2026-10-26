@@ -11,10 +11,13 @@ struct NpcClipTiming {
 using NpcTimings = std::array<NpcClipTiming, npcAnimationCount>;
 // Absent clips have count zero. Throws during loading on malformed timing.
 void validateNpcTimings(const NpcTimings& timings);
+std::uint32_t npcClipDuration(const NpcClipTiming& clip) noexcept;
+std::uint32_t npcAttackImpact(const NpcClipTiming& clip) noexcept;
 struct NpcFrameSelection {
     std::uint8_t active = 0, idle = 0;
     bool visible = true, flash = false;
     NpcAnimation clip = NpcAnimation::Idle;
+    float offsetX = 0, offsetY = 0;
 };
 struct NpcAnimationSnapshot {
     std::array<NpcFrameSelection, NpcWorld::maxInstances> frames{};

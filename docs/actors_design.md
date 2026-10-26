@@ -1,5 +1,9 @@
 # Mutable monster world — slice 03
 
+Implemented slice 07 extension, accepted 2026-10-26: [moving goblin AI](goblin_ai_design.md).
+ActorWorld adds a const subslot occupancy query and checked walk cue; AI remains a
+separate session owner. Existing actor identity, occupancy and lifetime contracts remain.
+
 Implemented slice 06 extension: [hurt/death presentation](goblin_reactions_design.md).
 The original flash-only presentation below remains the compatibility path for missing
 reaction art. Authoritative HP, occupancy, removal and identity contracts are unchanged.
@@ -107,3 +111,13 @@ actor's previous attack; it increments the actor revision. Combat emits the cue
 for every attack, including misses. NpcAnimator selects one prepared attack clip
 from elapsed cue time and then returns to the authored clip. See the
 [melee design](melee_combat_design.md) for same-cell front-slot combat advancement and feedback.
+
+## Slice 07 review: travel presentation
+
+Checked cross-cell `walk` commits occupancy immediately, retaining one source
+position and session timestamp per slot. `actorPosition` samples 600 ms linear
+travel, includes subslot offsets, chains from the current visual position and
+freezes on lethal damage. A successful position-changing `move` cancels the
+segment. `actorWalking` lets contact wait for arrival without consulting graphics.
+The animator publishes destination-relative offsets; revisions include position
+changes even while a pose is held. See the [AI travel design](goblin_ai_design.md#review-correction-interpolated-walking).

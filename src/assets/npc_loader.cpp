@@ -200,6 +200,28 @@ LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spaw
                                  heading(placement.at("facing").get<std::string>()),
                                  animation,
                                  static_cast<std::uint32_t>(phase)});
+            if (placement.contains("ai")) {
+                const auto& ai = placement.at("ai");
+                if (!ai.is_object())
+                    throw std::runtime_error("NPC ai must be an object");
+                auto& config = instances.back().ai;
+                const auto mode = ai.at("routine").get<std::string>();
+                if (mode == "guard")
+                    config.routine = NpcRoutine::Guard;
+                else if (mode == "patrol")
+                    config.routine = NpcRoutine::Patrol;
+                else if (mode == "wander")
+                    config.routine = NpcRoutine::Wander;
+                else
+                    throw std::runtime_error("Unknown NPC AI routine");
+                if (ai.contains("waypoints")) {
+                    const auto& points = ai.at("waypoints");
+                    if (!points.is_array() || points.size() > config.waypoints.size())
+                        throw std::runtime_error("NPC patrol exceeds eight waypoints");
+                    for (const auto& point : points)
+                        config.waypoints[config.waypointCount++] = cell(point);
+                }
+            }
         }
         return {NpcWorld(map, spawn, std::move(types), std::move(instances)), std::move(appearances)};
     } catch (const std::exception& e) {

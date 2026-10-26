@@ -1,5 +1,11 @@
 # First melee combat — slice 05
 
+Implemented slice 07 review correction (2026-10-26): [attack presentation handoff](goblin_ai_design.md#review-correction-finish-attack-presentation-before-advancing).
+Attack outcomes still apply immediately, but the acting turn remains locked until
+its animation and damage/MISS marker finish. Victory/defeat overlays also wait
+for an in-flight attack; the next automatic turn retains its 450 ms preparation
+delay. This supersedes immediate post-attack turn selection described below.
+
 Status: implemented and accepted by the user (2026-10-25), including combat
 corrections and the dungeon-first UI. Slice 05 and milestone A are closed.
 Verification and user review are recorded in

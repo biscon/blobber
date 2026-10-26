@@ -1,4 +1,5 @@
 #include "app/gameplay.hpp"
+#include "app/ai_demo.hpp"
 #include "platform/input.hpp"
 #include "ui/interaction.hpp"
 #include <algorithm>
@@ -34,9 +35,10 @@ struct PlayView {
     const Map& map;
     const SceneRenderer& renderer;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
-             const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn)
-        : session(m, catalog, placements, seed, spawn), animator(session.actors(), timings),
-          commands(session, timings), map(m), renderer(r) {}
+             const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
+             bool enableAi = false)
+        : session(m, catalog, placements, seed, spawn, enableAi, timings),
+          animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs());
         const bool changed =
@@ -52,14 +54,16 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                  const std::vector<NpcTimings>& timings, const SceneRenderer& renderer, Presenter& presenter,
                  const Options& options) {
     const auto idle = gameplayPlacements(map, placements);
-    const Player spawn = options.combatDemo ? combatCamera(map, idle) : Player{};
-    const std::uint32_t seed = options.seed         ? *options.seed
-                               : options.combatDemo ? 5u
-                                                    : std::random_device{}();
+    const Player spawn = options.combatDemo ? combatCamera(map, idle)
+                         : options.aiDemo   ? aiDemoSpawn()
+                                            : Player{};
+    const std::uint32_t seed = options.seed                             ? *options.seed
+                               : (options.combatDemo || options.aiDemo) ? 5u
+                                                                        : std::random_device{}();
     std::cout << "Gameplay seed: " << seed << '\n';
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     for (;;) {
-        PlayView view(map, catalog, idle, timings, renderer, seed, spawn);
+        PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo);
         bool debug = false, first = true, restart = false;
         view.refresh();
         while (!WindowShouldClose()) {

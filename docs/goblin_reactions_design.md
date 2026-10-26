@@ -131,3 +131,15 @@ multiple pending attacks, pause/resume, large skips, cancellation, expiration an
 legacy fallback. Exercise the delayed path under the frame allocation guard.
 Capture authored attack before/at strike in the hidden application-owned window
 and inspect alongside the recipient splash. Run Debug/Release correctness checks.
+
+## Slice 07 turn-handoff correction
+
+Implemented and accepted with slice 07 on 2026-10-26: [attack presentation handoff](goblin_ai_design.md#review-correction-finish-attack-presentation-before-advancing).
+Combat now copies clip durations/strike offsets at startup and holds each resolved
+attack through the later of clip expiry and marker expiry. The shared marker
+constant and impact helper keep simulation pacing and UI aligned. Existing
+pending-feedback capacity remains useful for diagnostic/external outcomes; normal
+turns no longer overlap these presentations. HP and damage resolution remain
+immediate and independent of drawing. Production session and HUD borrowers receive
+the same prepared timing metadata. Missing metadata uses an immediate strike plus
+the one-second marker hold. The original slice 06 acceptance remains unchanged.

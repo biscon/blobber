@@ -33,7 +33,7 @@ std::size_t validateNpcAppearance(const NpcAppearance& appearance);
 NpcTimings npcTimings(const NpcAppearance& appearance);
 NpcSide npcSide(Heading facing, float toCameraX, float toCameraY);
 
-// Loading-time scaled/shaded images; compose only clips and blends prepared pixels.
+// Immutable prepared images; travel projects bounded full-pose rasters between grid banks.
 class PreparedNpcs {
   public:
     explicit PreparedNpcs(const std::vector<NpcAppearance>& appearances = {});
@@ -42,7 +42,7 @@ class PreparedNpcs {
                  const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr) const;
     std::size_t pixelCount() const noexcept { return pixels_.size(); }
     std::size_t preparedPixelBytes() const noexcept {
-        return pixels_.size() * sizeof(Color) + shadowAlpha_.size();
+        return pixels_.size() * sizeof(Color) + shadowAlpha_.size() + travelShadow_.size();
     }
 
   private:
@@ -52,6 +52,16 @@ class PreparedNpcs {
         float pivotX = 0;
         std::size_t first = 0;
     };
+    struct TravelSprite {
+        int width, height;
+        float worldWidth, worldHeight, anchorX, anchorY;
+        std::size_t first;
+    };
+    void composeTravel(const TravelSprite& sprite, float lateral, float depth, std::uint16_t instance,
+                       bool flash, const std::array<float, viewWidth>& walls, Frame& frame,
+                       PickingBuffer* picking) const;
+    void composeTravelShadow(float radius, float lateral, float depth,
+                             const std::array<float, viewWidth>& walls, Frame& frame) const;
     struct ShadowRow {
         int y, width;
         float depth;
@@ -64,8 +74,12 @@ class PreparedNpcs {
     struct Type {
         std::array<std::array<std::size_t, 4>, npcAnimationCount> first{};
         std::array<std::array<std::uint8_t, 4>, npcAnimationCount> count{};
+        std::array<std::array<std::size_t, 4>, npcAnimationCount> travelFirst{};
+        float shadowRadius = 0;
     };
     std::vector<Sprite> sprites_;
+    std::vector<TravelSprite> travelSprites_;
+    std::array<unsigned char, 64 * 64> travelShadow_{};
     std::vector<Type> types_;
     std::vector<Color> pixels_;
     std::vector<std::array<Shadow, depthCount>> shadows_;

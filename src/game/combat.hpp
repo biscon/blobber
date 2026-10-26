@@ -1,8 +1,10 @@
 #pragma once
 #include "game/command_types.hpp"
 #include "game/movement.hpp"
+#include "game/npc_animation.hpp"
 
 namespace blobber {
+constexpr std::uint64_t combatFeedbackDurationMs = 1000;
 enum class CombatPhase : std::uint8_t { Exploration, Contact, Turns, Victory, Defeat };
 enum class CombatEvent : std::uint8_t { None, Started, Attack, Defend, Aid, DeathSave, Finished };
 struct CombatOutcome {
@@ -25,7 +27,7 @@ struct CombatSnapshot {
     std::uint64_t world = 0, turn = 0, round = 0;
     std::optional<rules::CharacterId> activeCharacter;
     std::optional<ActorId> activeEnemy;
-    bool awaitingAction = false;
+    bool awaitingAction = false, resolvingAction = false;
     std::array<bool, rules::partySize> defending{};
     std::array<ActorId, 4> enemies{};
     std::size_t enemyCount = 0;
@@ -36,7 +38,8 @@ struct CombatSnapshot {
 class CombatController {
   public:
     static constexpr std::uint64_t actionDelayMs = 450;
-    CombatController(Party& party, ActorWorld& actors, rules::DiceRng& rng);
+    CombatController(Party& party, ActorWorld& actors, rules::DiceRng& rng,
+                     const std::vector<NpcTimings>& timings = {});
     CombatController(const CombatController&) = delete;
     CombatController& operator=(const CombatController&) = delete;
     const CombatSnapshot& snapshot() const noexcept { return state_; }
@@ -64,6 +67,10 @@ class CombatController {
     Player origin_;
     Cell cell_{};
     std::array<rules::AttackId, NpcWorld::maxInstances> melee_{};
+    struct PresentationTiming {
+        std::uint32_t attack = 0, impact = 0, hurt = 0, death = 0;
+    };
+    std::array<PresentationTiming, NpcWorld::maxTypes> presentation_{};
     std::array<rules::MonsterId, 4> groups_{};
     std::array<Entry, 8> order_{};
     std::size_t groupCount_ = 0, orderCount_ = 0, position_ = 0, enemyCursor_ = 0;
@@ -76,6 +83,7 @@ class CombatController {
     void begin(std::uint64_t now) noexcept;
     void selectTurn() noexcept;
     void advance(std::uint64_t now) noexcept;
+    void holdAttack(const CombatOutcome& outcome, std::uint64_t now) noexcept;
     const rules::WeaponPreview* weapon(rules::CharacterId id) const noexcept;
 };
 } // namespace blobber

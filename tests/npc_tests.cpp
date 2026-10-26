@@ -112,6 +112,25 @@ void testLoading() {
     check(loaded.world.occupied({4, 4}) && loaded.world.instances()[0].facing == Heading::South &&
               loaded.appearances[0].views[0].pixels[0].b == 160,
           "Relative definition/image paths and decoded pixels");
+    check(loaded.world.instances()[0].ai.routine == NpcRoutine::Guard, "Legacy placements default to guard");
+    auto patrolLevel = level;
+    patrolLevel["instances"][0]["ai"] = {{"routine", "patrol"}, {"waypoints", {{4, 5}, {6, 5}}}};
+    write(directory / "level.json", patrolLevel);
+    check(load().world.instances()[0].ai.waypointCount == 2, "Patrol settings survive JSON loading");
+    for (const auto& badAi : std::vector<Json>{
+             {{"routine", "unknown"}},
+             {{"routine", "patrol"}},
+             {{"routine", "guard"}, {"waypoints", {{4, 5}}}},
+             {{"routine", "patrol"}, {"waypoints", {{0, 0}}}},
+             {{"routine", "patrol"},
+              {"waypoints",
+               Json::array({{4, 5}, {4, 5}, {4, 5}, {4, 5}, {4, 5}, {4, 5}, {4, 5}, {4, 5}, {4, 5}})}},
+             Json::array({"wander"})}) {
+        auto bad = level;
+        bad["instances"][0]["ai"] = badAi;
+        write(directory / "level.json", bad);
+        rejects(load, "Malformed or oversized AI settings rejected during preparation");
+    }
     Json empty{{"definitions", Json::array()}, {"instances", Json::array()}};
     write(directory / "level.json", empty);
     check(load().world.instances().empty(), "Explicit empty NPC level accepted");

@@ -117,7 +117,8 @@ int main() {
         UiInputEdges edges;
         const auto fightCatalog = combatCatalog(100000, -100, {1, 4, -100});
         const auto fightPlacements = combatPlacements(map);
-        GameSession fight(map, fightCatalog, fightPlacements, 5, {{3, 4}, Heading::North});
+        GameSession fight(map, fightCatalog, fightPlacements, 5, {{3, 4}, Heading::North}, false,
+                          {npcTimings(appearance)});
         CommandController fightUi(fight, {npcTimings(appearance)});
         NpcAnimator fightAnimator(fight.actors(), {npcTimings(appearance)});
         FramePipeline fightFrames;
@@ -126,7 +127,49 @@ int main() {
         diagonalFight.actors().damage(diagonalFight.actors().id(2), 100000, 0);
         int meleeActions = 0;
         bool monsterFeedback = false, partyFeedback = false, attackPlayback = false;
+        auto walkingNpc = NpcInstance{{0}, {1, 1}, {0, 0}, Heading::North};
+        walkingNpc.ai.routine = NpcRoutine::Patrol;
+        walkingNpc.ai.waypointCount = 2;
+        walkingNpc.ai.waypoints[0] = {4, 1};
+        walkingNpc.ai.waypoints[1] = {1, 1};
+        NpcWorld walkingPlacements(map, {3, 5}, {"goblin"}, {walkingNpc});
+        GameSession walking(map, fightCatalog, walkingPlacements, 5, {{3, 5}, Heading::North});
+        NpcAnimator walkAnimator(walking.actors(), {npcTimings(appearance)});
+        FramePipeline walkFrames;
+        std::vector<std::string> bigRows(100, std::string(100, '.'));
+        bigRows.front() = bigRows.back() = std::string(100, '#');
+        for (auto& row : bigRows)
+            row.front() = row.back() = '#';
+        Map bigMap(bigRows);
+        NpcWorld bigPlacements(bigMap, {1, 1}, {"goblin"}, {{{0}, {2, 2}, {0, 0}, Heading::North}});
+        ActorWorld bigActors(bigMap, fightCatalog, bigPlacements);
+        Navigation navigation(bigMap, bigActors);
+        std::vector<NpcInstance> crowd;
+        for (int i = 0; i < 4; ++i)
+            crowd.push_back({{0}, {3, 1}, {i % 2, i / 2}, Heading::South});
+        NpcWorld crowdPlacements(map, {3, 5}, {"goblin"}, crowd);
+        GameSession crowded(map, fightCatalog, crowdPlacements, 5, {{3, 5}, Heading::South});
         tracking = true;
+        for (int i = 0; i < 25; ++i)
+            crowded.update(.1, false);
+        okay &= crowded.actors().occupiedSlots({3, 4}) == 15;
+        navigation.request(0, {2, 2}, {98, 98}, false);
+        for (int i = 0; i < 20; ++i) {
+            navigation.update({1, 1});
+            okay &= navigation.lastWork() <= Navigation::nodeBudget;
+        }
+        okay &= navigation.take(0).found;
+        bool presentedTravel = false;
+        for (int i = 0; i < 150; ++i) {
+            walking.update(.016, i % 13 == 0);
+            walkAnimator.setTime(walking.timeMs());
+            walkFrames.update(renderer, map, walking.movement(), &walking.actors(), &walkAnimator.snapshot());
+            const auto& pose = walkAnimator.snapshot().frames[0];
+            presentedTravel |= (pose.offsetX != 0 || pose.offsetY != 0) && walkFrames.picking() &&
+                               walkFrames.picking()->targets().count > 0;
+        }
+        okay &= walking.actors().snapshot().actors[0].hasWalk && presentedTravel;
+
         fight.setAnimated(false);
         fight.move(Action::Forward);
         fightUi.record(fight.update(0, false));
