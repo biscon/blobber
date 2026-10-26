@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 is Ready for review; 8.2–8.3 remain Planned between accepted slice 08 and slice 09. Slice 8.2 requires acceptance of 8.1; slice 09 waits for acceptance of all three.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2–8.3 remain Planned between accepted slice 08 and slice 09. Slice 8.2 is next eligible for planning; slice 09 waits for acceptance of all three.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 08 — Hybrid encounter loop and review corrections (2026-10-26) |
-| Active slice | 8.1 — Image preparation and memory (Ready for review) |
-| Awaiting user review | Slice 8.1 completed implementation; profile C / surface A already selected |
+| Latest accepted slice | 8.1 — Image preparation and memory (2026-10-26) |
+| Active slice | None; 8.1 accepted and closed |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until 8.1 review; 8.2 requires acceptance |
-| Next action | Await slice 8.1 acceptance; do not advance to 8.2 |
+| Next eligible slice | 8.2 — Distinct goblin archer artwork and loadouts |
+| Next action | Plan 8.2 in a clean context using the accepted 8.1 handoff |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -313,7 +313,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Accepted | B |
-| 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Ready for review | B follow-up |
+| 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Accepted | B follow-up |
 | 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Planned | B follow-up |
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Planned | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Planned | C |
@@ -949,7 +949,7 @@ shipped art separately. Report before/after source, resident and loading-memory
 accounting and preparation cost, stating measurement limits. Check hidden GPU
 integration. Originals remain intact and derivatives can be regenerated.
 
-**Stage / last updated:** Ready for review; 2026-10-26.
+**Stage / last updated:** Accepted and closed; 2026-10-26.
 **Approved plan:** User said “Implement the plan.” Both NPC and dungeon raster
 preparation move offline; preserve masters. NPC profile C applies to all current
 and future NPCs. Surface option A retains point sampling. See
@@ -969,10 +969,13 @@ Review startup, NPC edges/animation/travel and the retained point-sampled dungeo
 allowance for startup preparation. The pre-existing broad combat capture fixture
 still fails its victory assertion; the focused preparation capture completes.
 Interactive desktop review remains the user's task. No 8.2 work has begun.
-**Next-agent handoff:** Await 8.1 review. Preserve global NPC C / surface A and the
-new appearance integration contract. After explicit acceptance, plan 8.2 only.
+**Next-agent handoff:** Slice 8.1 is accepted and closed. Preserve global NPC C /
+surface A and the appearance integration contract. Plan 8.2 only in a clean context;
+its implementation still requires review of its own plan.
 Predecessor: [slice 08 handoff](slice08_verification.md).
-**Acceptance:** Pending; choosing profiles did not accept the whole slice.
+**Acceptance:** 2026-10-26 — the user said “slice accepted, close it so we can start
+8.2”. This explicitly accepts the completed slice; the verification limitations
+above remain recorded.
 
 ### Slice 8.2: Distinct goblin archer artwork and loadouts
 
@@ -1002,8 +1005,10 @@ variants together in the hybrid demo. Validate content, memory accounting and
 frame allocation behavior using 8.1's pipeline. User reviews archer consistency
 and enemy-role readability before this slice is Accepted.
 
-**Execution record:** Not started; requires accepted 8.1 and its handoff. No
-detailed implementation plan, verification or acceptance recorded.
+**Execution record:** Not started; next eligible for planning following acceptance
+of 8.1 on 2026-10-26. Read the [accepted 8.1 handoff](slice81_verification.md) and
+inspect relevant code before making this slice's plan. No detailed implementation
+plan, verification or acceptance recorded.
 
 ### Slice 8.3: Projectiles and impact-time consequences
 

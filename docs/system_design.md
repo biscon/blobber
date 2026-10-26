@@ -1,6 +1,6 @@
 # System design
 
-Implemented, **Ready for review** (2026-10-26): slice 8.1
+Implemented, **accepted and closed** (2026-10-26): slice 8.1
 [offline image preparation and memory](image_preparation_design.md), with
 [verification and handoff](slice81_verification.md). NPC and dungeon surface banks
 are baked by an incremental build target and loaded without source image decoding
@@ -12,8 +12,8 @@ tracked-loading limits supersede the historical 160 MiB startup pixel cap below.
 Planned, not implemented: graphical subslices 8.2 (distinct melee/archer artwork
 and loadouts) and 8.3 (projectiles with impact-time consequences). See the
 [roadmap](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context).
-Each requires its own plan and acceptance; 8.2 cannot begin until the user accepts
-8.1. Slice 09 waits for all three. No atlas or NPC paper-doll system is planned.
+Each requires its own plan and acceptance; 8.1 is accepted, so 8.2 is next eligible
+for planning. Slice 09 waits for all three. No atlas or NPC paper-doll system is planned.
 Immediate damage/life transitions remain current behavior until 8.3.
 
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.

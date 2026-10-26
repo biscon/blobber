@@ -1,7 +1,8 @@
 # Slice 8.1: offline image preparation and memory
 
-Status: implemented, **Ready for review** (2026-10-26); not yet accepted.
-Slice 08 is accepted; 8.2 remains Planned. The user selected **NPC profile C**
+Status: implemented, **Accepted and closed** (2026-10-26). The user explicitly
+accepted the slice: “slice accepted, close it so we can start 8.2”.
+Slice 8.2 remains Planned and is now next eligible for planning. The user selected **NPC profile C**
 (area filtering with half-size source derivatives) for **all current and future
 NPC appearances**, and **surface option A** (existing point sampling).
 [Verification and handoff](slice81_verification.md) records the measurements and
@@ -112,7 +113,7 @@ pixel count was 102,346,541 bytes; source pixels were 58,179,584 bytes.
 
 Record exact regeneration commands, chosen sampling profile, measured budgets,
 verification and the appearance integration contract for 8.2 in a durable
-verification/handoff. This slice is Ready for review. Only the user can accept 8.1; 8.2 remains Planned.
+verification/handoff. The user accepted and closed this slice on 2026-10-26; 8.2 is next eligible for planning.
 
 ## Implemented interfaces and appearance integration contract
 

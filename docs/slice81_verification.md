@@ -1,10 +1,12 @@
 # Slice 8.1 verification and handoff
 
-Status: **Ready for review**, 2026-10-26. Implementation was authorized by
+Status: **Accepted and closed**, 2026-10-26. Implementation was authorized by
 “Implement the plan.” The user selected **NPC profile C** (alpha-aware area
 filtering and half-size source derivatives) for **all current and future NPCs**,
 and **surface option A** (existing point sampling). Profile selection was not
-acceptance of the whole slice. Slice 8.2 remains Planned.
+acceptance of the whole slice. The user subsequently explicitly accepted it:
+“slice accepted, close it so we can start 8.2”. The verification limitations below
+remain recorded. Slice 8.2 remains Planned and is now next eligible for planning.
 
 ## Delivered
 
@@ -171,8 +173,9 @@ cmake-build-release/blobber_prepare_npc_animation assets/npcs/goblin/animation/s
 
 ## Next-agent handoff
 
-Await user review of 8.1. Do not mark Accepted or start 8.2 without explicit
-acceptance. Keep profile C global and surfaces point sampled. Future NPC authors
+Slice 8.1 is accepted and closed. Plan 8.2 in a clean context after reading this
+handoff and inspecting the relevant code; review its own plan before implementation.
+Keep profile C global and surfaces point sampled. Future NPC authors
 follow the [appearance integration contract](image_preparation_design.md#implemented-interfaces-and-appearance-integration-contract):
 register masters with `source_sheets` or provide even-sized frame masters, preserve
 anchors and clip timings, and rebuild. Do not add per-NPC filtering exceptions.
