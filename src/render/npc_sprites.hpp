@@ -26,7 +26,8 @@ struct NpcAppearance {
     std::array<NpcClipImages, npcAnimationCount> animations;
     unsigned char alphaCutoff = 0;
 };
-constexpr std::size_t npcPixelBudget = 128u * 1024u * 1024u / sizeof(Color);
+// Narrower 84-degree framing enlarges prepared sprites; startup remains bounded.
+constexpr std::size_t npcPixelBudget = 160u * 1024u * 1024u / sizeof(Color);
 constexpr int npcMaxImageDimension = 2048;
 // Loading-time validation, also used for generated test assets. Returns source pixel count.
 std::size_t validateNpcAppearance(const NpcAppearance& appearance);

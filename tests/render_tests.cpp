@@ -110,11 +110,17 @@ void testOcclusion(const Map& map) {
     }
     check(visibleRight >= 80 && visibleLeft >= 80,
           "Adjacent side passages must occupy a readable strip of the view");
-    const Frame nearWall = compose(renderer, map, {{3, 14}, Heading::West});
-    for (int y = viewHeight - 32; y < viewHeight; y += 3) {
-        const Color c = nearWall[y * viewWidth + viewWidth / 2];
-        check(c.g > 0 && c.r == 0 && c.b == 0,
-              "Facing an adjacent wall must leave at least 32 pixels of foreground floor");
+    // With walls immediately around this cell, all visible floor belongs to the
+    // current cell. Check a usable central strip in every cardinal view.
+    const Map enclosedCell({"###", "#.#", "###"});
+    for (int heading = 0; heading < 4; ++heading) {
+        const Frame nearWall = compose(renderer, enclosedCell, {{1, 1}, static_cast<Heading>(heading)});
+        for (int y = viewHeight - 32; y < viewHeight; ++y)
+            for (int x = viewWidth / 4; x < 3 * viewWidth / 4; ++x) {
+                const Color c = nearWall[y * viewWidth + x];
+                check(c.g > 0 && c.r == 0 && c.b == 0 && c.a == 255,
+                      "Every heading must expose 32 rows of current-cell floor across the central half");
+            }
     }
     const Frame room = compose(renderer, openMap(), {{3, 3}, Heading::North});
     int floorPixels = 0, ceilingPixels = 0;

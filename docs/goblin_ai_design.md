@@ -58,7 +58,7 @@ Successful cross-cell AI movement records a checked 600 ms walk cue on session
 time. Failed moves never cue walking. Attack/damage cancel walking; reactions keep
 their existing priority and ownership. Missing walk art uses idle. Logical positions
 stay discrete; visual travel now interpolates as described in the review correction
-below. Prepared images, all four walk directions and the 128 MiB image budget are
+below. Prepared images, all four walk directions and the 160 MiB image budget are
 retained. Animation is sampled
 after mutation and never resolves simulation. Restart reconstructs all borrowers.
 
@@ -161,7 +161,7 @@ pixels (never enlarged). This avoids rescaling an already viewport-cropped bank.
 Per-draw 256-entry lighting tables shade these prepared samples without per-pixel
 lighting arithmetic. The tradeoff is modest transient image filtering/detail loss
 versus retaining full source images. All source, cached, travel and shadow pixels
-share the existing 128 MiB preparation cap; exhaustion rejects loading.
+share the existing 160 MiB preparation cap; exhaustion rejects loading.
 
 Moving floor shadows sample one prepared 64×64 radial alpha kernel projected onto
 the floor at the continuous position. Composition uses fixed 256-actor scratch,

@@ -87,7 +87,8 @@ void render() {
             for (auto& pixel : image.pixels)
                 if (pixel.a)
                     pixel.a = 255;
-    rejects([&] { PreparedNpcs oversized(std::vector<NpcAppearance>(2, appearance)); },
+    // Three complete reaction sets exceed the 160 MiB preparation cap; two fit.
+    rejects([&] { PreparedNpcs oversized(std::vector<NpcAppearance>(3, appearance)); },
             "Wider reaction frames and all directions count toward combined pixel budget");
     auto invalid = appearance;
     invalid.animations[4].views[2].clear();

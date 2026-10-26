@@ -237,9 +237,28 @@ actor world, animation player, and controller lifetime: construct a new pipeline
 because revisions are local to that controller. Moved-from frames may only be
 destroyed or assigned another frame before use.
 
-Keep controls, collision, queued-command behavior, the 90° field of view,
-0.4-tile viewpoint setback, raised horizon, strafe parallax, and existing image
-transition effects. Capture filenames remain stable for before/after comparisons.
+Keep controls, collision, queued-command behavior, the 0.4-tile viewpoint setback,
+strafe parallax, and existing image transition effects. Capture filenames remain
+stable for before/after comparisons.
+
+Implemented and accepted by the user (2026-10-26): narrower dungeon framing.
+horizontal FOV reduced from 90° to 84° and horizon raised from 36% to 34% of
+viewport height. `ViewProjection` remains the shared compile-time configuration
+for prepared walls/floors, NPCs, shadows and picking; no new API, runtime setting,
+storage ownership or frame-time work is introduced. The larger projected NPC
+images exceed the previous 128 MiB combined source/prepared pixel cap with shipped
+art; deliberately raise this bounded startup budget to 160 MiB, retaining explicit
+failure on exhaustion and source-image release before play. Retain the 0.4-tile setback
+to expose current-cell floor for future dropped items. At 500×282 this leaves
+32 central floor rows (96 presentation pixels) facing an adjacent wall. Rebuild
+prepared images at startup as usual. Validate all four adjacent-wall headings
+with generated materials, preserve side-opening/occlusion/strafe tests, run
+Debug/Release correctness and allocation suites, and compare deterministic hidden
+captures of walls, passages, rooms and goblins. Item interaction remains deferred.
+Both 19-suite builds, allocation checks and the hidden GPU lifecycle check pass;
+278 captures per projection completed. See the [framing verification and retained
+comparisons](verification.md#84-framing-experiment-2026-10-26).
+
 Prefer an installed compatible raylib 6.2 package, otherwise use the current
 hash-verified FetchContent fallback. nlohmann/json 3.12.0 likewise prefers the
 installed package with a hash-pinned download fallback; only asset I/O uses JSON.

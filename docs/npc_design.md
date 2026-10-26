@@ -42,8 +42,10 @@ collision and atomic subslot updates. The map is unchanged. NPC placement reject
 player spawn, duplicate subcells, bad definitions and invalid coordinates.
 
 Limits: 32 definitions, 256 instances, 4 occupants per cell, 2048 pixels per image
-axis, 128 MiB combined engine-owned decoded/prepared pixel arrays. Temporary
+axis, 160 MiB combined engine-owned decoded/prepared pixel arrays. Temporary
 Raylib decoder storage and container metadata are outside that pixel budget.
+The 84° framing experiment raises this cap from 128 to 160 MiB to accommodate
+larger projected sprites; source images are still released before normal play.
 JSON files are bounded to 1 MiB. Living sprite canvas widths are at most 0.5 cells; a death clip can override width
 up to 1 cell. Heights remain at most wall height.
 All limits fail explicitly during loading. All vectors allocate only during
@@ -139,7 +141,7 @@ are released after preparation; clocks and frame selections never allocate.
 Prepared sprites add clip/frame indices to the existing type/direction/depth lookup.
 Contiguous prepared RGBA storage stays immutable; absent attack directions reference
 idle at composition rather than duplicating pixels. Hurt/death never use that fallback. Shadows remain shared per type/depth.
-The existing 128 MiB combined source/prepared pixel budget includes every frame and
+The existing 160 MiB combined source/prepared pixel budget includes every frame and
 shadow, and exhaustion fails startup. Living source frames use 384x536 canvases
 and pivots at (192,512). Death uses 768x536, pivot (384,512), and clip width 0.9;
 height and pixel/world scale remain unchanged. One scale per sheet preserves pose
@@ -227,7 +229,7 @@ cmake-build-debug/blobber_prepare_npc_animation assets/npcs/goblin/animation/she
 
 The forty-four decoded runtime images total 47.11 MiB. Prepared depth images and
 contact shadows use 65.87 MiB; combined storage is 112.98 MiB within the enforced
-128 MiB budget. Fixed metadata is bounded by
+160 MiB budget. Fixed metadata is bounded by
 32 types × 5 clips × 4 directions × 4 frames × 26 depth slots;
 only populated frames have prepared pixels. Runtime timing is O(instances × 4)
 with at most 256 instances, independent of elapsed time. A revision can trigger
@@ -284,7 +286,7 @@ a shared prepared 64×64 shadow kernel onto the floor. Bodies, shadows, occlusio
 sort order and picking use the same continuous world position. Death freezes the
 position at impact; missing walk art still travels using idle art.
 
-Travel rasters and the kernel count toward the same combined 128 MiB source and
+Travel rasters and the kernel count toward the same combined 160 MiB source and
 prepared pixel cap. Preparation rejects exhaustion; frame composition allocates
 nothing. Current goblin assets consume 126,647,440 bytes combined (120.78 MiB).
 No source images or new GPU textures are retained for runtime resampling. This

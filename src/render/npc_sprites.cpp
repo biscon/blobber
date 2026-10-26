@@ -69,7 +69,7 @@ std::size_t validateNpcAppearance(const NpcAppearance& a) {
                                 throw std::runtime_error("NPC image has visible pixels below ground anchor");
                 pixels += image.pixels.size();
                 if (pixels > npcPixelBudget)
-                    throw std::runtime_error("NPC source images exceed 128 MiB budget");
+                    throw std::runtime_error("NPC source images exceed 160 MiB budget");
             }
         }
     }
@@ -82,7 +82,7 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
     for (const auto& a : appearances) {
         sourcePixels += validateNpcAppearance(a);
         if (sourcePixels > npcPixelBudget)
-            throw std::runtime_error("NPC source images exceed 128 MiB budget");
+            throw std::runtime_error("NPC source images exceed 160 MiB budget");
     }
     types_.resize(appearances.size());
     const float focal = ViewProjection::focalLength();
@@ -131,7 +131,7 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
                         sprite.first = count;
                         count += static_cast<std::size_t>(sprite.width) * sprite.rows;
                         if (count > npcPixelBudget - sourcePixels)
-                            throw std::runtime_error("NPC source and prepared images exceed 128 MiB budget");
+                            throw std::runtime_error("NPC source and prepared images exceed 160 MiB budget");
                         sprites_.push_back(sprite);
                     }
                 }
@@ -189,7 +189,7 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances) {
 }
 void PreparedNpcs::prepareShadows(const std::vector<NpcAppearance>& appearances, std::size_t usedPixelBytes) {
     if (usedPixelBytes > npcPixelBudget * sizeof(Color))
-        throw std::runtime_error("NPC images and shadows exceed 128 MiB budget");
+        throw std::runtime_error("NPC images and shadows exceed 160 MiB budget");
     shadows_.resize(appearances.size());
     const float focal = ViewProjection::focalLength();
     std::size_t alphaCount = 0;
@@ -211,7 +211,7 @@ void PreparedNpcs::prepareShadows(const std::vector<NpcAppearance>& appearances,
                 shadowRows_.push_back({y, width, depth, alphaCount});
                 alphaCount += static_cast<std::size_t>(width);
                 if (alphaCount > npcPixelBudget * sizeof(Color) - usedPixelBytes)
-                    throw std::runtime_error("NPC images and shadows exceed 128 MiB budget");
+                    throw std::runtime_error("NPC images and shadows exceed 160 MiB budget");
             }
             shadow.rowCount = shadowRows_.size() - shadow.firstRow;
         }

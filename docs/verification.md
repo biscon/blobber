@@ -230,3 +230,75 @@ and presets, executable-relative asset paths, framebuffer-aware presentation,
 and a zero-dimension/minimized-window guard. Movement effects are intentionally
 stylized 2D effects for forward/backward and turns. Strafes use geometrically
 projected, precomputed 2D views at eight lateral substeps per tile.
+
+## 84° framing experiment (2026-10-26)
+
+Implemented and accepted by the user (2026-10-26): 84° horizontal FOV, horizon at 34%
+of the 282-row viewport, unchanged 0.4-cell setback. Fixed 1920×1080 presentation,
+discrete movement and shared prepared-image projection remain in place.
+
+Both builds completed, then all 19 CTest suites passed in Debug (15.97 s) and
+Release (2.24 s):
+
+```sh
+cmake --build --preset debug -j 4
+cmake --build --preset release -j 4
+ctest --preset debug -j 2
+ctest --preset release -j 2
+cmake --build --preset release --target blobber_gpu_smoke -j 4
+cmake-build-release/blobber_gpu_smoke
+```
+
+The floor regression now uses a generated enclosed single-cell map and solid
+material colors. Every pixel in the central half-width of the bottom 32 rows
+must be opaque floor in all four headings: 96 pixels tall at native presentation
+scale, all belonging to the current cell. Existing independent wall occlusion,
+side-passage visibility, strafe reversal/endpoints, NPC grounding/shadows/picking,
+and engine-owned frame allocation checks pass.
+
+The narrower FOV increases prepared NPC pixel storage. Full shipped-content
+startup initially rejected the old 128 MiB limit. The combined decoded/prepared
+pixel budget is deliberately raised to 160 MiB; explicit overflow rejection and
+source release before play remain. The reaction overflow fixture uses three
+generated appearances because two now fit. Measured pixel-array usage:
+
+| Pixel arrays | 90° baseline | 84° experiment |
+| --- | ---: | ---: |
+| Decoded source | 47.11 MiB | 47.11 MiB |
+| Prepared bodies/travel/shadows | 73.67 MiB | 82.42 MiB |
+| Combined | 120.78 MiB | 129.53 MiB |
+
+These figures exclude decoder temporaries, container metadata and graphics-driver
+storage. The increase is 8.75 MiB; the 160 MiB cap is a limit, not an allocation.
+
+Before changing the projection, captured the baseline with:
+
+```sh
+timeout 120 cmake-build-release/blobber --capture /tmp/blobber-fov-before
+```
+
+After rebuilding, captured the same deterministic scenarios with:
+
+```sh
+timeout 120 cmake-build-release/blobber --capture /tmp/blobber-fov-after
+```
+
+Both runs exited successfully with 278 PNGs each. Hidden raylib/GLFW capture
+and GPU lifecycle checks passed on NVIDIA GeForce RTX 3060/OpenGL. The sandbox
+could not open X11 initially; capture and GPU checks succeeded with approved
+access outside it. No OS input, focus changes or other-window control was used.
+
+Visually compared matching `01-corridor`, `10-beside-right-passage`,
+`03-great-hall`, `11-facing-adjacent-wall` and `hud-overview` captures. The view
+shows a modest enlargement; side passages remain visible, goblin feet/shadows
+remain grounded, and an adjacent wall leaves a clear foreground floor strip.
+Retained unmodified 1920×1080 captures:
+
+| Scene | Before: 90°, 36% horizon | After: 84°, 34% horizon |
+| --- | --- | --- |
+| Combat | [Before](screenshots/fov-combat-before.png) | [After](screenshots/fov-combat-after.png) |
+| Adjacent wall/current-cell floor | [Before](screenshots/fov-adjacent-wall-before.png) | [After](screenshots/fov-adjacent-wall-after.png) |
+
+The user accepted the framing ("that better, ill keep that"). Interactive movement
+feel was not independently tested by the agent. Dropped items/pickup are not
+implemented; this verifies floor space reserved for them.

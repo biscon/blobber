@@ -57,7 +57,7 @@ The shared standing contact shadow continues using appearance width, not padding
 
 PreparedNpcs retains contiguous immutable pixels and bounded metadata, prepares
 all directions/depths at startup, and uses effective clip width. Source plus
-prepared colors plus shadow alpha retain the 128 MiB cap with explicit failure;
+prepared colors plus shadow alpha retain the 160 MiB cap with explicit failure;
 measured source storage is 49,397,760 bytes and prepared colors/shadow alpha
 69,065,872 bytes: combined 118,463,632 bytes (112.98 MiB). No frame allocation.
 Dead bodies remain alpha/wall occluders but not targets. Equal-depth dead bodies
