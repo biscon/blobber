@@ -88,6 +88,7 @@ struct OwnedItem {
 };
 struct Equipment {
     OwnedItemId body, mainHand, offHand;
+    OwnedItemId ranged{}; // Readied alternate weapon, not an additional hand.
 };
 struct CharacterBuild {
     std::string id, name;

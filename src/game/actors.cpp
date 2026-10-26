@@ -53,7 +53,9 @@ ActorWorld::ActorWorld(const Map& map, const rules::Catalog& catalog, const NpcW
         actor.npc = placements.instances()[i];
         if (map.solid(actor.npc.cell))
             throw std::runtime_error("Actor placement overlaps runtime map wall or boundary");
-        actor.monster = bindings[actor.npc.type.index];
+        actor.monster = actor.npc.monster.value_or(bindings[actor.npc.type.index]);
+        if (!catalog.monster(actor.monster))
+            throw std::runtime_error("Actor placement has an invalid monster definition");
         actor.hitPoints = actor.maxHitPoints = catalog.monster(actor.monster)->hitPoints;
         mask(actor.npc.cell) |= bit(actor.npc.subcell);
     }
@@ -139,7 +141,7 @@ ActorResult ActorWorld::face(ActorId id, Heading facing) noexcept {
     ++state_.revision;
     return {ActorError::None, true};
 }
-ActorResult ActorWorld::attack(ActorId id, std::uint64_t timeMs) noexcept {
+ActorResult ActorWorld::attack(ActorId id, std::uint64_t timeMs, bool ranged) noexcept {
     const auto* old = actor(id);
     if (!old)
         return {ActorError::InvalidHandle};
@@ -149,6 +151,7 @@ ActorResult ActorWorld::attack(ActorId id, std::uint64_t timeMs) noexcept {
         return {ActorError::InvalidTime};
     auto& a = state_.actors[id.slot];
     a.hasAttack = true;
+    a.rangedAttack = ranged;
     a.attackTimeMs = timeMs;
     ++state_.revision;
     return {ActorError::None, true};

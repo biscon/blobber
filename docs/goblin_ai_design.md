@@ -177,3 +177,15 @@ cross an already-vacated source cell, and overlapping early diagnostic steps use
 a direct segment rather than reserving a continuous swept path. Ordinary AI steps
 are at least 600 ms apart. Front-slot combat shuffles still use instantaneous
 same-cell `move`; this correction covers cross-cell walks.
+
+## Slice 08 front-approach correction
+
+[Hybrid routing correction](hybrid_encounter_design.md#front-approach-routing-correction)
+adds an optional preferred adjacent goal to Navigation requests/results. NPCs
+approaching from ahead prefer the party's front tile and close lateral offset on
+tied routes. BFS retains the first ordinary adjacent result as fallback if the
+preferred goal cannot be reached; solid/full preferred cells bypass preference.
+The existing incremental queue, cleanup and work/request budgets remain in force.
+Unreachable preferences can scan the reachable area before fallback, so this does
+not establish responsive pathfinding on arbitrarily large maps. No frame-path
+allocation or change to explicit escape/side-contact rules is introduced.

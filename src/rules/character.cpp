@@ -88,8 +88,9 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
     }
     if (stats.carriedWeight > stats.carryingCapacity)
         return fail(CharacterError::Overweight);
-    const std::array<OwnedItemId, 3> equipped{b.equipment.body, b.equipment.mainHand, b.equipment.offHand};
-    std::array<const ItemDefinition*, 3> items{};
+    const std::array<OwnedItemId, 4> equipped{b.equipment.body, b.equipment.mainHand, b.equipment.offHand,
+                                              b.equipment.ranged};
+    std::array<const ItemDefinition*, 4> items{};
     for (std::size_t i = 0; i < equipped.size(); ++i) {
         const auto id = equipped[i];
         if (id.index == UINT16_MAX)
@@ -103,6 +104,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
     }
     if ((items[0] && items[0]->kind != ItemKind::Armor) || (items[1] && items[1]->kind != ItemKind::Weapon) ||
         (items[2] && items[2]->kind != ItemKind::Shield) || (items[1] && items[1]->twoHanded && items[2]))
+        return fail(CharacterError::InvalidEquipment);
+    if (items[3] && (items[3]->kind != ItemKind::Weapon || !items[3]->ranged || items[2]))
         return fail(CharacterError::InvalidEquipment);
     if (items[0]) {
         const auto& armor = *items[0];

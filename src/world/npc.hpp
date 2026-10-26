@@ -1,4 +1,5 @@
 #pragma once
+#include "rules/content.hpp"
 #include "world/map.hpp"
 #include <array>
 #include <cstddef>
@@ -10,8 +11,8 @@ namespace blobber {
 struct NpcTypeId {
     std::uint16_t index = 0;
 };
-enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death };
-constexpr std::size_t npcAnimationCount = 5;
+enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack };
+constexpr std::size_t npcAnimationCount = 6;
 enum class NpcRoutine : std::uint8_t { Guard, Patrol, Wander };
 struct NpcAiConfig {
     NpcRoutine routine = NpcRoutine::Guard;
@@ -26,6 +27,8 @@ struct NpcInstance {
     NpcAnimation animation = NpcAnimation::Idle;
     std::uint32_t phaseMs = 0;
     NpcAiConfig ai{};
+    // Optional rules variant sharing this appearance; local to the session catalog.
+    std::optional<rules::MonsterId> monster{};
 };
 // Immutable level-lifetime indices: no removal, recycling or runtime spawning.
 class NpcWorld {

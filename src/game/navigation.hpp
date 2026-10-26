@@ -10,6 +10,7 @@ class Navigation {
         bool ready = false, found = false;
         Cell from{}, target{}, step{};
         bool adjacent = false;
+        std::optional<Cell> preferred{};
     };
     Navigation(const Map& map, const ActorWorld& actors);
     Navigation(Map&&, const ActorWorld&) = delete;
@@ -18,7 +19,8 @@ class Navigation {
     Navigation(const Map&, const ActorWorld&&) = delete;
     Navigation(const Navigation&) = delete;
     Navigation& operator=(const Navigation&) = delete;
-    void request(std::size_t slot, Cell from, Cell target, bool adjacent) noexcept;
+    void request(std::size_t slot, Cell from, Cell target, bool adjacent,
+                 std::optional<Cell> preferred = {}) noexcept;
     void cancel(std::size_t slot) noexcept;
     Result take(std::size_t slot) noexcept;
     void update(Cell party) noexcept;
@@ -31,6 +33,7 @@ class Navigation {
         bool pending = false;
         Cell from{}, target{};
         bool adjacent = false;
+        std::optional<Cell> preferred{};
     };
     const Map& map_;
     const ActorWorld& actors_;
@@ -41,7 +44,8 @@ class Navigation {
     Request active_{};
     std::size_t owner_ = NpcWorld::maxInstances, cursor_ = 0;
     std::size_t head_ = 0, tail_ = 0, cleanup_ = 0, work_ = 0, completed_ = 0;
-    bool cleaning_ = false, canceled_ = false;
+    bool cleaning_ = false, canceled_ = false, preferAvailable_ = false;
+    std::optional<Cell> fallbackStep_{};
     std::uint32_t index(Cell cell) const noexcept;
     Cell cell(std::uint32_t index) const noexcept;
     bool start() noexcept;

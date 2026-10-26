@@ -36,9 +36,11 @@ struct HudCard {
     std::uint8_t successes = 0, failures = 0;
     DisplayStatus status = DisplayStatus::Ready;
     const char* raceName = "";
-    std::array<const char*, 3> equipment{{"None", "None", "None"}};
+    std::array<const char*, 4> equipment{{"None", "None", "None", "None"}};
     rules::Abilities abilities{};
     int armorClass = 0, level = 1;
+    std::uint64_t cooldownMs = 0;
+    bool spent = false, selecting = false;
     unsigned portrait = 11;
 };
 enum class HoverKind { None, Enemy, Action, Portrait };
@@ -142,7 +144,6 @@ class CommandController {
     float pointerX_ = 0, pointerY_ = 0;
     GameSession* session_ = nullptr;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
-    std::array<std::uint32_t, NpcWorld::maxTypes> attackImpactMs_{};
     std::array<CombatFeedback, 8> pendingFeedback_{};
     const Party& party_;
     const ActorWorld& actors_;

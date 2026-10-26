@@ -1,4 +1,5 @@
-#include "game/goblin_ai.hpp"
+#include "game/npc_ai.hpp"
+#include "game/perception.hpp"
 #include <algorithm>
 #include <cstdlib>
 namespace blobber {
@@ -7,41 +8,7 @@ int distance(Cell a, Cell b) noexcept {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 } // namespace
-bool goblinSees(const Map& map, Cell from, Heading facing, Cell target) noexcept {
-    if (map.solid(from) || map.solid(target) || static_cast<unsigned>(facing) >= 4)
-        return false;
-    const int dx = target.x - from.x, dy = target.y - from.y;
-    const auto f = forward(facing);
-    const int ahead = dx * f.x + dy * f.y, side = dx * f.y - dy * f.x;
-    if (ahead <= 0 || std::abs(side) > ahead || dx * dx + dy * dy > 36)
-        return false;
-    // Integer supercover ray between cell centers. Exact corner crossings test
-    // both neighboring cells, so two diagonal floors cannot see through a seam.
-    const int nx = std::abs(dx), ny = std::abs(dy), sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1;
-    int ix = 0, iy = 0;
-    Cell c = from;
-    while (ix < nx || iy < ny) {
-        const int xCross = (1 + 2 * ix) * ny, yCross = (1 + 2 * iy) * nx;
-        if (xCross == yCross) {
-            if (map.solid({c.x + sx, c.y}) || map.solid({c.x, c.y + sy}))
-                return false;
-            c.x += sx;
-            c.y += sy;
-            ++ix;
-            ++iy;
-        } else if (xCross < yCross) {
-            c.x += sx;
-            ++ix;
-        } else {
-            c.y += sy;
-            ++iy;
-        }
-        if (map.solid(c))
-            return false;
-    }
-    return true;
-}
-GoblinAiController::GoblinAiController(const Map& map, ActorWorld& actors, std::uint32_t seed)
+NpcAiController::NpcAiController(const Map& map, ActorWorld& actors, std::uint32_t seed)
     : map_(map), actors_(actors), navigation_(map, actors), rng_(seed ^ 0x41493037u) {
     state_.count = actors.snapshot().count;
     for (std::size_t i = 0; i < state_.count; ++i) {
@@ -51,9 +18,17 @@ GoblinAiController::GoblinAiController(const Map& map, ActorWorld& actors, std::
         a.homeFacing = npc.facing;
         a.config = npc.ai;
         a.moveDueMs = 1200;
+        const auto& monster = *actors.catalog().monster(actors.snapshot().actors[i].monster);
+        bool melee = false, ranged = false;
+        for (std::size_t j = 0; j < monster.attackCount; ++j) {
+            const auto kind = actors.catalog().attack(monster.attacks[j])->kind;
+            melee |= kind == rules::AttackKind::Melee;
+            ranged |= kind == rules::AttackKind::Ranged;
+        }
+        rangedOnly_[i] = ranged && !melee;
     }
 }
-void GoblinAiController::face(std::size_t slot, Cell target) noexcept {
+void NpcAiController::face(std::size_t slot, Cell target) noexcept {
     const auto& npc = actors_.snapshot().actors[slot].npc;
     const int dx = target.x - npc.cell.x, dy = target.y - npc.cell.y;
     if (!dx && !dy)
@@ -62,14 +37,21 @@ void GoblinAiController::face(std::size_t slot, Cell target) noexcept {
                                                     : (dy > 0 ? Heading::South : Heading::North);
     actors_.face(actors_.id(slot), facing);
 }
-GoblinAiController::Goal GoblinAiController::think(std::size_t slot, Player party) noexcept {
+std::optional<Cell> NpcAiController::preferredFront(Cell from, Player party) const noexcept {
+    const auto f = forward(party.heading);
+    const auto delta = from + party.cell * -1;
+    if (delta.x * f.x + delta.y * f.y > 0)
+        return party.cell + f;
+    return {};
+}
+NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noexcept {
     auto& a = state_.actors[slot];
     const auto& actor = actors_.snapshot().actors[slot];
     const auto here = actor.npc.cell;
     const auto now = state_.timeMs;
     if (actor.life != ActorLife::Alive)
         return {};
-    if (goblinSees(map_, here, actor.npc.facing, party.cell)) {
+    if (npcSees(map_, here, actor.npc.facing, party.cell)) {
         if (a.awareness != Awareness::Pursuing)
             a.moveDueMs = std::min(a.moveDueMs, now + 600);
         a.awareness = Awareness::Pursuing;
@@ -82,12 +64,21 @@ GoblinAiController::Goal GoblinAiController::think(std::size_t slot, Player part
         a.awareness = Awareness::Returning;
         a.moveDueMs = now + 1200;
     }
+    // Only a usable forward-view shot stops pursuit. Hidden enemies still close;
+    // investigation never acquires a new party position through a wall.
+    if (rangedOnly_[slot] &&
+        (a.awareness == Awareness::Pursuing ||
+         (a.awareness == Awareness::Investigating && a.lastSeen == party.cell)) &&
+        inPartyView(map_, party.cell, party.heading, here)) {
+        face(slot, party.cell);
+        return {};
+    }
     if (a.awareness == Awareness::Pursuing) {
         if (distance(here, party.cell) == 1) {
             face(slot, party.cell);
             return {};
         }
-        return {true, true, a.lastSeen};
+        return {true, true, a.lastSeen, preferredFront(here, party)};
     }
     if (a.awareness == Awareness::Investigating) {
         if (!(here == a.lastSeen)) {
@@ -99,7 +90,8 @@ GoblinAiController::Goal GoblinAiController::think(std::size_t slot, Player part
                 face(slot, a.lastSeen);
                 return {};
             }
-            return {true, occupiedByParty, a.lastSeen};
+            return {true, occupiedByParty, a.lastSeen,
+                    occupiedByParty ? preferredFront(here, party) : std::nullopt};
         }
         a.awareness = Awareness::Searching;
         a.searchStartMs = now;
@@ -138,7 +130,7 @@ GoblinAiController::Goal GoblinAiController::think(std::size_t slot, Player part
     }
     return {}; // Local wandering does not need a path search.
 }
-bool GoblinAiController::step(std::size_t slot, Cell destination, Cell party, std::uint64_t now) noexcept {
+bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::uint64_t now) noexcept {
     const auto& actor = actors_.snapshot().actors[slot];
     if (actor.life != ActorLife::Alive || destination == actor.npc.cell)
         return false;
@@ -162,7 +154,8 @@ bool GoblinAiController::step(std::size_t slot, Cell destination, Cell party, st
     actors_.face(actors_.id(slot), heading);
     return true;
 }
-void GoblinAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime, Player party) noexcept {
+void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime, Player party,
+                             const std::array<bool, NpcWorld::maxInstances>* frozen) noexcept {
     state_.timeMs += elapsedMs;
     state_.searchWork = state_.completedSearches = 0;
     if (state_.timeMs < tickDue_)
@@ -171,10 +164,11 @@ void GoblinAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTi
     std::array<Goal, NpcWorld::maxInstances> goals{};
     for (std::size_t i = 0; i < state_.count; ++i) {
         goals[i] = think(i, party);
-        if (!goals[i].active)
+        if ((frozen && (*frozen)[i]) || !goals[i].active)
             navigation_.cancel(i);
         else if (state_.timeMs >= state_.actors[i].moveDueMs)
-            navigation_.request(i, actors_.snapshot().actors[i].npc.cell, goals[i].target, goals[i].adjacent);
+            navigation_.request(i, actors_.snapshot().actors[i].npc.cell, goals[i].target, goals[i].adjacent,
+                                goals[i].preferred);
     }
     navigation_.update(party.cell);
     state_.searchWork = navigation_.lastWork();
@@ -183,14 +177,15 @@ void GoblinAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTi
         const auto i = (priority_ + offset) % state_.count;
         auto& a = state_.actors[i];
         const auto& actor = actors_.snapshot().actors[i];
-        if (actor.life != ActorLife::Alive || state_.timeMs < a.moveDueMs)
+        if ((frozen && (*frozen)[i]) || actorWalking(actor, sessionTime) || actor.life != ActorLife::Alive ||
+            state_.timeMs < a.moveDueMs)
             continue;
         if (goals[i].active) {
             const auto result = navigation_.take(i);
             if (!result.ready)
                 continue;
             if (result.found && result.from == actor.npc.cell && result.target == goals[i].target &&
-                result.adjacent == goals[i].adjacent)
+                result.adjacent == goals[i].adjacent && result.preferred == goals[i].preferred)
                 step(i, result.step, party.cell, sessionTime);
             a.moveDueMs =
                 state_.timeMs +
@@ -218,5 +213,46 @@ void GoblinAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTi
     }
     if (state_.count)
         priority_ = (priority_ + 1) % state_.count;
+}
+void NpcAiController::alert(ActorId id, Cell party) noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || actor->life != ActorLife::Alive)
+        return;
+    auto& a = state_.actors[id.slot];
+    a.awareness = Awareness::Pursuing;
+    a.lastSeen = party;
+    a.lastSeenMs = state_.timeMs;
+    a.moveDueMs = std::min(a.moveDueMs, state_.timeMs + 600);
+}
+bool NpcAiController::aware(ActorId id) const noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || actor->life != ActorLife::Alive)
+        return false;
+    const auto a = state_.actors[id.slot].awareness;
+    return a == Awareness::Pursuing || a == Awareness::Investigating || a == Awareness::Searching;
+}
+bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
+        return false;
+    const auto preferred = preferredFront(actor->npc.cell, party);
+    navigation_.request(id.slot, actor->npc.cell, party.cell, true, preferred);
+    navigation_.update(party.cell);
+    const auto result = navigation_.take(id.slot);
+    return result.ready && result.found && result.from == actor->npc.cell && result.target == party.cell &&
+           result.preferred == preferred && step(id.slot, result.step, party.cell, now);
+}
+bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
+        return false;
+    const auto away = static_cast<unsigned>(headingToward(party.cell, actor->npc.cell));
+    for (const unsigned d : {away, (away + 3) % 4, (away + 1) % 4}) {
+        const auto dest = actor->npc.cell + forward(static_cast<Heading>(d));
+        if (cellDistance(dest, party.cell) > cellDistance(actor->npc.cell, party.cell) &&
+            step(id.slot, dest, party.cell, now))
+            return true;
+    }
+    return false;
 }
 } // namespace blobber

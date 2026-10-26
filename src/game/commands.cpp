@@ -13,6 +13,12 @@ const char* actionName(PartyAction action) noexcept {
 }
 const char* commandMessage(CommandReason reason) noexcept {
     switch (reason) {
+    case CommandReason::Cooldown:
+        return "Action is recharging.";
+    case CommandReason::OutOfRange:
+        return "Target is out of range for this attack.";
+    case CommandReason::Blocked:
+        return "That step is blocked.";
     case CommandReason::Ready:
         return "Ready: spends this turn's action.";
     case CommandReason::Resolved:
@@ -28,7 +34,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::RearBlocked:
         return "Your front slot blocks melee.";
     case CommandReason::NoWeapon:
-        return "Equip a melee weapon first.";
+        return "No ready weapon for this action.";
     case CommandReason::InvalidAlly:
         return "Select another dying ally.";
     case CommandReason::LogOpen:
@@ -80,11 +86,8 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
     : CommandController(session.party(), session.actors()) {
     if (!timings.empty() && timings.size() != actors_.snapshot().typeCount)
         throw std::invalid_argument("HUD animation/world type counts differ");
-    for (std::size_t i = 0; i < timings.size(); ++i) {
-        validateNpcTimings(timings[i]);
-        const auto& attack = timings[i][static_cast<std::size_t>(NpcAnimation::Attack)];
-        attackImpactMs_[i] = npcAttackImpact(attack);
-    }
+    for (const auto& timing : timings)
+        validateNpcTimings(timing);
     session_ = &session;
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
@@ -137,6 +140,18 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Finished:
         line[0] = '\0';
         break;
+    case CombatEvent::Move:
+        std::snprintf(line, sizeof(line), "Enemy #%u moves.", unsigned(out.enemy.slot) + 1);
+        break;
+    case CombatEvent::Round:
+        std::snprintf(line, sizeof(line), "New round.");
+        break;
+    case CombatEvent::Spent:
+        std::snprintf(line, sizeof(line), "Turn spent: cooldown, NPC surprise or no legal action.");
+        break;
+    case CombatEvent::Disengaged:
+        std::snprintf(line, sizeof(line), "Contact broken. Ranged approach resumes.");
+        break;
     case CombatEvent::None:
         return;
     }
@@ -167,7 +182,7 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
         if (!next.anchor.valid)
             return;
     }
-    const auto delay = next.party ? attackImpactMs_[actor->npc.type.index] : 0;
+    const auto delay = next.party ? out.impactMs : 0;
     if (delay) {
         next.startedMs += delay;
         auto* destination = &pendingFeedback_[0];
@@ -242,16 +257,19 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.production = session_ != nullptr;
     if (session_) {
         const auto& combat = session_->combat().snapshot();
-        refreshFeedback(moving || combat.phase == CombatPhase::Exploration);
+        refreshFeedback(moving || (combat.phase == CombatPhase::Exploration &&
+                                   state_.combat.phase != CombatPhase::Exploration));
         if (combat.turn != state_.combat.turn || combat.phase != state_.combat.phase) {
-            state_.selection.action = PartyAction::Melee;
+            if (!realTime(combat.phase))
+                state_.selection.action = PartyAction::Melee;
             state_.selection.target.reset();
             state_.selection.ally.reset();
-            if (combat.activeCharacter) {
+            if (combat.activeCharacter && combat.turn != state_.combat.turn &&
+                combat.phase != CombatPhase::Facing && state_.combat.phase != CombatPhase::Facing) {
                 char line[96];
                 std::snprintf(line, sizeof(line), "%s%s",
                               party_.character(*combat.activeCharacter)->build.name.c_str(),
-                              combat.awaitingAction ? "'s turn." : " makes a death save.");
+                              combat.awaitingAction ? "'s turn." : " waits or resolves their turn.");
                 appendLog(line);
                 state_.selection.character = *combat.activeCharacter;
                 state_.selection.action = PartyAction::Melee;
@@ -288,9 +306,12 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.targets = normalized;
     state_.protectedTargets.fill(false);
     if (session_)
-        for (std::size_t i = 0; i < state_.targets.count; ++i)
-            state_.protectedTargets[i] = session_->combat().member(state_.targets.ids[i]) &&
+        for (std::size_t i = 0; i < state_.targets.count; ++i) {
+            const auto* target = actors_.actor(state_.targets.ids[i]);
+            const auto pose = session_->movement().player;
+            state_.protectedTargets[i] = target && target->npc.cell == pose.cell + forward(pose.heading) &&
                                          !session_->combat().exposed(state_.targets.ids[i]);
+        }
     state_.demo = !session_ && demo && demo->enabled;
     state_.allyCount = 0;
     state_.demoScenario = state_.demo ? demo->scenario : 0;
@@ -309,8 +330,9 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         for (unsigned art = 0; art < 4; ++art)
             if (member.build.id == portraits[art])
                 card.portrait = art;
-        const std::array<rules::OwnedItemId, 3> equipped{
-            {member.build.equipment.mainHand, member.build.equipment.offHand, member.build.equipment.body}};
+        const std::array<rules::OwnedItemId, 4> equipped{
+            {member.build.equipment.mainHand, member.build.equipment.offHand, member.build.equipment.body,
+             member.build.equipment.ranged}};
         for (std::size_t e = 0; e < equipped.size(); ++e)
             if (equipped[e].index < member.build.itemCount)
                 card.equipment[e] =
@@ -326,8 +348,13 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.failures = member.failures;
         if (session_) {
             card.hasDeathSaves = member.life == rules::Life::Dying;
-            card.active = state_.combat.awaitingAction && state_.combat.activeCharacter &&
-                          state_.combat.activeCharacter->index == id.index;
+            card.active = realTime(state_.combat.phase)
+                              ? state_.selection.character.index == id.index
+                              : state_.combat.awaitingAction && state_.combat.activeCharacter &&
+                                    state_.combat.activeCharacter->index == id.index;
+            card.selecting = realTime(state_.combat.phase);
+            card.cooldownMs = state_.combat.cooldownMs[id.index];
+            card.spent = state_.combat.spent[id.index] && !realTime(state_.combat.phase);
             card.defending = state_.combat.defending[id.index];
             card.recentlyHit = session_->timeMs() < hitUntil_[id.index];
             if (member.life == rules::Life::Dying && id.index != state_.selection.character.index)
@@ -455,7 +482,8 @@ CommandReason CommandController::validate(const PartyCommand& command) const noe
         const auto reason = session_->combat().validate(command, session_->movement().player);
         if (reason != CommandReason::Ready)
             return reason;
-        if (command.action == PartyAction::Melee && command.target && !visible(*command.target))
+        if ((command.action == PartyAction::Melee || command.action == PartyAction::Ranged) &&
+            command.target && !visible(*command.target))
             return CommandReason::NotVisible;
         return CommandReason::Ready;
     }

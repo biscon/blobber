@@ -23,6 +23,11 @@ constexpr UiRect portrait(int i) {
 constexpr UiRect action(int i, bool = false) {
     return {12 + i * 47, 317, 34, 32};
 }
+constexpr UiRect detail(int i) {
+    const auto r = card(i);
+    return {r.x + 114, r.y + 54, 12, 10};
+}
+
 constexpr UiRect header{4, 2, 632, 13}, gear{621, 2, 14, 13};
 constexpr UiRect actions{4, 304, 300, 54}, log{308, 304, 328, 54};
 constexpr UiRect logExpand{620, 306, 12, 10}, logLatest{578, 306, 38, 10};

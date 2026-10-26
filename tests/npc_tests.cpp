@@ -325,6 +325,25 @@ void testLoading() {
         write(directory / "level.json", badLevel);
         rejects(load, "Invalid reaction dimensions/directions/placement rejected");
     }
+    animated["animations"]["ranged_attack"] = clip;
+    animated["animations"]["ranged_attack"]["width"] = 0.6;
+    write(directory / "type/test.json", animated);
+    write(directory / "level.json", level);
+    check(
+        load().appearances[0].animations[static_cast<std::size_t>(NpcAnimation::RangedAttack)].timing.count ==
+            2,
+        "Optional four-view bow clip loads separately from melee");
+    for (const char* side : {"front", "back", "left", "right"}) {
+        auto bad = animated;
+        bad["animations"]["ranged_attack"]["views"].erase(side);
+        write(directory / "type/test.json", bad);
+        rejects(load, "Present bow clips require every view");
+    }
+    write(directory / "type/test.json", animated);
+    auto placedBow = level;
+    placedBow["instances"][0]["animation"] = "ranged_attack";
+    write(directory / "level.json", placedBow);
+    rejects(load, "Bow attack is a runtime cue, not a looping placement clip");
     // The production offline preparer uses generated sheets in an isolated directory.
     fs::create_directories(directory / "sheets");
     OwnedImage sheet(GenImageColor(16, 12, BLANK));

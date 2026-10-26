@@ -22,10 +22,14 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     const char* status = c.status == DisplayStatus::Dead          ? "DEAD"
                          : c.status == DisplayStatus::Stable      ? "STABLE"
                          : c.status == DisplayStatus::Unconscious ? "DYING"
-                         : c.active                               ? "YOUR TURN"
+                         : c.active                               ? (c.selecting ? "SELECTED" : "YOUR TURN")
                          : c.defending                            ? "DEFENDING"
                                                                   : "";
-    if (c.hasDeathSaves)
+    if (c.selecting && c.cooldownMs && c.status == DisplayStatus::Ready)
+        std::snprintf(line, sizeof(line), "Ready %.1fs", c.cooldownMs / 1000.0);
+    else if ((c.spent || c.cooldownMs) && !c.defending && c.status == DisplayStatus::Ready)
+        std::snprintf(line, sizeof(line), "ACTION SPENT");
+    else if (c.hasDeathSaves)
         std::snprintf(line, sizeof(line), "Saves %u+ %u-", unsigned(c.successes), unsigned(c.failures));
     else if (c.hasMana && c.status == DisplayStatus::Ready)
         std::snprintf(line, sizeof(line), "Mana %d/%d", c.mana, c.maxMana);
@@ -38,6 +42,8 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
             : c.status == DisplayStatus::Ready ? muted
                                                : red,
             UiTextStyle::Small);
+    box(hudLayout::detail(i));
+    label("i", hudLayout::detail(i), gold, UiTextStyle::Small);
 }
 void HudPainter::log(const HudSnapshot& h, bool expanded) const {
     const auto r = expanded ? hudLayout::expandedLog : hudLayout::log;
@@ -102,7 +108,16 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             actor = c.name;
     if (h->production && h->combat.activeEnemy)
         actor = "ENEMY TURN";
-    if (h->combat.phase == CombatPhase::Victory)
+    if (h->combat.phase == CombatPhase::Facing && h->combat.facing) {
+        constexpr const char* labels[]{"FACING NORTH", "FACING EAST", "FACING SOUTH", "FACING WEST"};
+        actor = labels[static_cast<unsigned>(*h->combat.facing)];
+    } else if (h->combat.phase == CombatPhase::Approach)
+        actor = "RANGED APPROACH";
+    else if (h->combat.phase == CombatPhase::Contact)
+        actor = "CONTACT / WAIT";
+    else if (h->combat.phase == CombatPhase::RoundEnd)
+        actor = "ROUND END";
+    else if (h->combat.phase == CombatPhase::Victory)
         actor = "VICTORY";
     else if (h->combat.phase == CombatPhase::Defeat)
         actor = "DEFEAT";
@@ -116,7 +131,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         const auto action = dockActions[i];
         const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
         const bool available =
-            (i == 0 || i == 1 || i == 5) && !h->suspended && !h->modal() &&
+            (i == 0 || i == 1 || i == 2 || i == 5) && !h->suspended && !h->modal() &&
             (reason == CommandReason::Ready || reason == CommandReason::MissingTarget ||
              reason == CommandReason::InvalidAlly || reason == CommandReason::PreviewAccepted);
         const bool selected = action == h->selection.action;
@@ -130,13 +145,26 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         p.text(key, r.x + 2, r.y + r.height - 9, available ? gold : muted, UiTextStyle::Small);
     }
     const char* hint =
-        h->combat.phase == CombatPhase::Victory     ? "Continue to explore with your surviving party."
+        h->combat.phase == CombatPhase::Facing      ? "Turning to the next group. Your action is preserved."
+        : h->combat.phase == CombatPhase::Victory   ? "Continue to explore with your surviving party."
         : h->combat.phase == CombatPhase::Defeat    ? "Restart to begin a fresh session."
         : h->selection.action == PartyAction::Aid   ? "Click a dying ally's portrait. Right-click cancels."
         : h->production && h->combat.awaitingAction ? "Click a reachable enemy to attack."
         : h->production && h->combat.phase == CombatPhase::Turns ? "Waiting for the active participant."
                                                                  : "WASD move / Q E turn / F1 map";
     p.clipped(hint, 12, 350, 284, muted, UiTextStyle::Small);
+    if (h->production && (h->combat.knownDirections || h->combat.pendingCount)) {
+        char threats[96];
+        char dirs[5]{};
+        int n = 0;
+        for (int d = 0; d < 4; ++d)
+            if (h->combat.knownDirections & (1u << d))
+                dirs[n++] = "NESW"[d];
+        std::snprintf(threats, sizeof(threats), "Threats %s%s", dirs,
+                      h->combat.pendingCount ? " / arrivals" : "");
+        p.fill({viewX + 4, viewY + 4, 180, 12}, background);
+        p.text(threats, viewX + 6, viewY + 5, gold, UiTextStyle::Small);
+    }
     p.log(*h, false);
     (void)debug;
     (void)map;

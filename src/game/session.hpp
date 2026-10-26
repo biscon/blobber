@@ -1,6 +1,6 @@
 #pragma once
 #include "game/combat.hpp"
-#include "game/goblin_ai.hpp"
+#include "game/npc_ai.hpp"
 
 namespace blobber {
 // Map/catalog outlive this owner and every UI/animation borrower of its members.
@@ -26,7 +26,7 @@ class GameSession {
     const CombatController& combat() const noexcept { return combat_; }
     const MovementState& movement() const noexcept { return movement_.state(); }
     std::uint64_t timeMs() const noexcept { return timeMs_; }
-    const GoblinAiSnapshot& ai() const noexcept { return ai_.snapshot(); }
+    const NpcAiSnapshot& ai() const noexcept { return ai_.snapshot(); }
     CombatOutcome update(double seconds, bool paused) noexcept;
     void move(Action action, bool fresh = true) noexcept;
     void clearPending() noexcept { movement_.clearPending(); }
@@ -39,11 +39,12 @@ class GameSession {
     ActorWorld actors_;
     Controller movement_;
     rules::DiceRng rng_;
+    NpcAiController ai_;
     CombatController combat_;
-    GoblinAiController ai_;
     bool enableAi_ = true;
     std::uint64_t timeMs_ = 0;
     double remainderMs_ = 0;
     void detectContact() noexcept;
+    void driveFacing() noexcept;
 };
 } // namespace blobber

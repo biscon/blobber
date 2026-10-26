@@ -315,6 +315,52 @@ void loading() {
     legacy["races"] = Json::array();
     files.invalid(legacy, "unknown field");
 }
+void hybridSchema() {
+    Files files;
+    auto j = fixture();
+    j["schema_version"] = 3;
+    for (auto& c : j["preset_party"]["characters"])
+        c["equipment"]["ranged"] = nullptr;
+    auto bow = j["items"][0];
+    bow["id"] = "test.bow";
+    bow["weapon"] = "shortbow";
+    bow["ranged"] = true;
+    bow["two_handed"] = true;
+    bow["finesse"] = false;
+    j["items"].push_back(bow);
+    auto& first = j["preset_party"]["characters"][0];
+    first["items"].push_back({{"item", "test.bow"}, {"quantity", 1}});
+    first["equipment"]["off_hand"] = nullptr;
+    first["equipment"]["ranged"] = 3;
+    j["attacks"].push_back({{"id", "test.shot"},
+                            {"kind", "ranged"},
+                            {"attack_bonus", 4},
+                            {"damage", {{"count", 1}, {"sides", 6}, {"modifier", 2}, {"type", "piercing"}}}});
+    j["monsters"].push_back({{"id", "test.goblin"},
+                             {"abilities", abilities(8, 14, 10, 10, 8, 8)},
+                             {"armor_class", 15},
+                             {"hit_points", 7},
+                             {"attacks", {"test.shot"}},
+                             {"traits", {"nimble_escape"}}});
+    auto loaded = files.load(j);
+    check(loaded.preset()->characters[0].equipment.ranged.index == 3 &&
+              hasTrait(loaded.monster({0})->traits, Trait::NimbleEscape),
+          "Schema 3 binds ranged equipment and typed traits");
+    auto bad = j;
+    bad["monsters"][0]["traits"] = {"unknown"};
+    files.invalid(bad, "traits");
+    bad = j;
+    bad["monsters"][0].erase("traits");
+    files.invalid(bad, "traits");
+    bad = j;
+    bad["preset_party"]["characters"][0]["equipment"]["ranged"] = 0;
+    files.invalid(bad, "equipment");
+    bad = j;
+    bad["preset_party"]["characters"][0]["equipment"]["off_hand"] = 2;
+    files.invalid(bad, "equipment");
+    const auto legacy = files.load(fixture());
+    check(legacy.preset()->characters[0].equipment.ranged.index >= 16, "Schema 2 defaults to no readied bow");
+}
 void limits() {
     Files files;
     auto j = fixture();
@@ -352,6 +398,7 @@ void limits() {
 int main() {
     try {
         loading();
+        hybridSchema();
         limits();
         std::cout << "Party content checks passed\n";
     } catch (const std::exception& e) {

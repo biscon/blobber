@@ -1,5 +1,6 @@
 #include "app/gameplay.hpp"
 #include "app/ai_demo.hpp"
+#include "app/hybrid_demo.hpp"
 #include "platform/input.hpp"
 #include "ui/interaction.hpp"
 #include <algorithm>
@@ -54,12 +55,14 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                  const std::vector<NpcTimings>& timings, const SceneRenderer& renderer, Presenter& presenter,
                  const Options& options) {
     const auto idle = gameplayPlacements(map, placements);
-    const Player spawn = options.combatDemo ? combatCamera(map, idle)
-                         : options.aiDemo   ? aiDemoSpawn()
-                                            : Player{};
-    const std::uint32_t seed = options.seed                             ? *options.seed
-                               : (options.combatDemo || options.aiDemo) ? 5u
-                                                                        : std::random_device{}();
+    const Player spawn = options.combatDemo   ? combatCamera(map, idle)
+                         : options.hybridDemo ? hybridDemoSpawn()
+                         : options.aiDemo     ? aiDemoSpawn()
+                                              : Player{};
+    const std::uint32_t seed = options.seed ? *options.seed
+                               : (options.combatDemo || options.aiDemo || options.hybridDemo)
+                                   ? 5u
+                                   : std::random_device{}();
     std::cout << "Gameplay seed: " << seed << '\n';
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     for (;;) {
@@ -84,8 +87,9 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
             if (!paused) {
                 if (sample.toggleAnimation)
                     view.session.setAnimated(!view.session.movement().animated);
-                if (sample.action)
+                if (sample.action) {
                     view.session.move(*sample.action, sample.fresh);
+                }
             }
             if (!(previous == view.session.movement().player))
                 view.commands.movementStarted();
@@ -142,7 +146,8 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
         PlayView view(map, catalog, idle, timings, renderer, 5, spawn);
         view.commands.record(view.session.update(0, false));
         capture(view, "combat-start");
-        for (int step = 0; step < 500 && view.session.combat().snapshot().phase == CombatPhase::Turns;
+        for (int step = 0; step < 500 && view.session.combat().snapshot().phase != CombatPhase::Victory &&
+                           view.session.combat().snapshot().phase != CombatPhase::Defeat;
              ++step) {
             view.refresh();
             const auto& combat = view.session.combat().snapshot();

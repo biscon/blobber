@@ -1,17 +1,29 @@
 # System design
 
-Implemented and accepted by the user (2026-10-26): slice 07
-[moving goblin AI](goblin_ai_design.md). Session-owned guards, waypoint patrols and
-wandering use directional sight, last-seen investigation and bounded incremental
-navigation. Successful checked steps drive prepared walk playback and 600 ms
-[visual travel](goblin_ai_design.md#review-correction-interpolated-walking), with
-discrete collision, moving shadows/picking and arrival-gated combat. Frontal combat
-remains the contact boundary; roaming freezes during fights/results. See
-[verification, scale limits and acceptance](slice07_verification.md). Acceptance
-includes both review corrections; slice 08 is next eligible and has not started.
-Review correction implemented: retain the
-acting turn until attack animation and damage/MISS feedback finish; see the
-[AI review correction](goblin_ai_design.md#review-correction-finish-attack-presentation-before-advancing).
+Implemented, Ready for review: [front-approach routing correction](hybrid_encounter_design.md#front-approach-routing-correction). Pursuit from ahead prefers the front cell, with bounded navigation fallback when it is full or unreachable. Living melee targets beyond reach report out of range. Initiative strip unchanged.
+
+Implemented, Ready for review: [single-weapon AI correction](hybrid_encounter_design.md#single-weapon-review-correction). Melee-only NPCs close and attack; ranged-only NPCs hold shooting positions and create distance at contact. Mixed-weapon behavior is preserved. Two bow-only hybrid-demo goblins use validated placement MonsterId overrides to share the existing goblin art.
+
+Implemented, Ready for review (2026-10-26): slice 08
+[hybrid encounters](hybrid_encounter_design.md). GameSession owns separate
+presentation and gameplay clocks; shared NPC AI/perception supports six-cell bows,
+local alerts, NPC surprise and boundary-enrolled reinforcements. Combat enters
+initiative directly, retains facing while the front group lives, and automatically
+turns to the next adjacent group without spending an action. Offscreen enemies
+cannot attack; fixed front-row protection replaces directional exposure. No
+maneuver/retreat command or party surprise penalty remains. Catalog schema 3 adds typed traits and
+a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
+fixed 1920×1080 presentation and 160 MiB pixel cap. See
+[verification and handoff](slice08_verification.md). Slice 09 remains Planned;
+user acceptance of slice 08 and milestone B is pending.
+
+Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
+600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)
+and attack-presentation holds. Slice 08 renames the shared controller to NpcAiController
+and supersedes the former frontal-only contact and frozen-roaming phase policy.
+[Slice 07 verification](slice07_verification.md) is its historical acceptance record.
+The earlier slice descriptions below record their accepted scope; hybrid encounter
+rules above supersede their stationary-combat restrictions.
 
 Implemented and accepted by the user (2026-10-26): slice 06 [goblin hurt/death reactions](goblin_reactions_design.md).
 Four-direction prepared clips provide 300 ms hurt and 1200 ms death/corpse playback,

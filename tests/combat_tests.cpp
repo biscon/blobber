@@ -82,7 +82,9 @@ void presentationHandoff() {
         check(!visible() && !next.resolvingAction && next.turn != held.turn,
               "Exact feedback deadline releases the next turn");
         check(!confirmationMatches(held, next), "Held input must see the new turn before confirming");
-        toPlayer |= next.awaitingAction;
+        if (next.phase == CombatPhase::RoundEnd)
+            game.update(.45, false);
+        toPlayer |= game.combat().snapshot().awaitingAction;
         toEnemy |= next.activeEnemy.has_value();
     }
     check(toPlayer && toEnemy, "Enemy playback gates both player and enemy successors");
@@ -325,6 +327,7 @@ void feedback() {
     hit.enemy = enemy;
     hit.hit = true;
     hit.damage = 12;
+
     s.actors().damage(enemy, 1000, s.timeMs());
     ui.record(hit);
     ui.refresh(allCombatTargets(s), false, false, true);
@@ -424,6 +427,7 @@ void feedbackTiming() {
     hit.recipient = {3};
     hit.hit = true;
     hit.damage = 12;
+    hit.impactMs = 950;
     s.actors().attack(enemy, s.timeMs());
     ui.record(hit);
     refresh();
@@ -507,6 +511,7 @@ void feedbackTiming() {
                                                                   static_cast<std::uint8_t>(frames)};
         CommandController controller(other, {timing});
         hit.enemy = other.actors().id(2);
+        hit.impactMs = npcAttackImpact(timing[static_cast<std::size_t>(NpcAnimation::Attack)]);
         controller.record(hit);
         const auto hasFeedback = [&] {
             for (const auto& entry : controller.snapshot().feedback)
@@ -622,7 +627,7 @@ void movementAndPause() {
         check(s.combat().snapshot().round <= before + 1, "Large frame has no automatic round catch-up");
     }
     GameSession side(map, catalog, placements, 5, {{2, 2}, Heading::North});
-    check(side.combat().snapshot().phase == CombatPhase::Exploration, "Side contact not in this slice");
+    check(side.combat().snapshot().phase == CombatPhase::Contact, "Side contact enters hybrid encounter");
     side.move(Action::TurnRight);
     check(side.combat().snapshot().phase == CombatPhase::Contact, "Turning to face contact starts fight");
 }
@@ -708,10 +713,10 @@ void groupedTurnsAndAidInput() {
         {{"melee", rules::AttackKind::Melee, -100, {1, 4, -100}, rules::DamageType::Slashing}}, {a, b},
         f.races, f.classes, f.items, f.preset);
     const NpcWorld placements(map, spawn.cell, {"group-a", "group-b"},
-                              {{{0}, {3, 2}, {0, 0}, Heading::East},
-                               {{1}, {3, 2}, {1, 0}, Heading::East},
-                               {{0}, {3, 2}, {0, 1}, Heading::East},
-                               {{1}, {3, 2}, {1, 1}, Heading::East}});
+                              {{{0}, {3, 2}, {0, 0}, Heading::South},
+                               {{1}, {3, 2}, {1, 0}, Heading::South},
+                               {{0}, {3, 2}, {0, 1}, Heading::South},
+                               {{1}, {3, 2}, {1, 1}, Heading::South}});
     GameSession game(map, catalog, placements, 123, spawn);
     start(game);
     std::array<int, 4> characterActions{}, enemyActions{};
@@ -782,13 +787,18 @@ void contentAndInvalidTargets() {
     const rules::Catalog rangedOnly(
         {{"bow", rules::AttackKind::Ranged, 4, {1, 6, 2}, rules::DamageType::Piercing}}, {m}, f.races,
         f.classes, f.items, f.preset);
-    bool rejected = false;
-    try {
-        GameSession invalid(map, rangedOnly, placements, 1, spawn);
-    } catch (const std::runtime_error&) {
-        rejected = true;
+    GameSession archer(map, rangedOnly, placements, 1, spawn);
+    start(archer);
+    bool shot = false;
+    for (int i = 0; i < 100 && !shot; ++i) {
+        if (archer.combat().snapshot().awaitingAction)
+            archer.submit(turnCommand(archer));
+        else {
+            const auto out = archer.update(.5, false);
+            shot = out.event == CombatEvent::Attack && out.kind == rules::AttackKind::Ranged;
+        }
     }
-    check(rejected, "Unsupported monster attack content rejected before play");
+    check(shot, "Ranged-only monsters can act at contact");
     const auto safe = combatCatalog(1000, -100, {1, 4, -100});
     GameSession targets(map, safe, placements, 5, spawn);
     start(targets);
@@ -908,7 +918,9 @@ void completeFights() {
         for (bool attack : {false, true}) {
             GameSession s(map, catalog, placements, seed, spawn);
             start(s);
-            for (int step = 0; step < 3000 && s.combat().snapshot().phase == CombatPhase::Turns; ++step) {
+            for (int step = 0; step < 3000 && s.combat().snapshot().phase != CombatPhase::Victory &&
+                               s.combat().snapshot().phase != CombatPhase::Defeat;
+                 ++step) {
                 CombatOutcome out;
                 if (s.combat().snapshot().awaitingAction) {
                     auto c = turnCommand(s);
@@ -938,7 +950,9 @@ void completeFights() {
             }
             won |= s.combat().snapshot().phase == CombatPhase::Victory;
             lost |= s.combat().snapshot().phase == CombatPhase::Defeat;
-            check(s.combat().snapshot().phase != CombatPhase::Turns, "Complete fight terminates");
+            check(s.combat().snapshot().phase == CombatPhase::Victory ||
+                      s.combat().snapshot().phase == CombatPhase::Defeat,
+                  "Complete fight terminates");
         }
     }
     check(won && lost && miss && critical,

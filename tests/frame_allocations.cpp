@@ -7,6 +7,7 @@
 #include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include "support/hybrid_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -149,11 +150,68 @@ int main() {
             crowd.push_back({{0}, {3, 1}, {i % 2, i / 2}, Heading::South});
         NpcWorld crowdPlacements(map, {3, 5}, {"goblin"}, crowd);
         GameSession crowded(map, fightCatalog, crowdPlacements, 5, {{3, 5}, Heading::South});
+        const auto hybridMap = hybridRoom();
+        const auto hybridRules = hybridCatalog();
+        NpcWorld hybridPlaces(hybridMap, {5, 8}, {"goblin"},
+                              {{{0}, {5, 4}, {0, 1}, Heading::North},
+                               {{0}, {7, 4}, {0, 0}, Heading::North},
+                               {{0}, {8, 8}, {0, 0}, Heading::North}});
+        GameSession hybrid(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false);
+        hybrid.setAnimated(false);
+        CommandController hybridUi(hybrid);
+        auto archer = NpcInstance{{0}, {5, 4}, {0, 0}, Heading::South};
+        archer.monster = hybridRules.findMonster("archer");
+        NpcWorld archerPlaces(hybridMap, {5, 8}, {"goblin"}, {archer});
+        GameSession archerSession(hybridMap, hybridRules, archerPlaces, 5, {{5, 8}, Heading::North});
+        archer.cell = {5, 7};
+        NpcWorld closeArcherPlaces(hybridMap, {5, 8}, {"goblin"}, {archer});
+        GameSession closeArcher(hybridMap, hybridRules, closeArcherPlaces, 5, {{5, 8}, Heading::North});
         tracking = true;
+        int archerShots = 0;
+        bool archerRetreated = false;
+        for (int i = 0; i < 140; ++i) {
+            archerShots += archerSession.update(.1, false).event == CombatEvent::Attack;
+            if (closeArcher.combat().snapshot().awaitingAction)
+                closeArcher.submit(turnCommand(closeArcher));
+            else
+                archerRetreated |= closeArcher.update(.1, false).event == CombatEvent::Move;
+        }
+        okay &= archerShots >= 2 && archerRetreated &&
+                archerSession.actors().actor(archerSession.actors().id(0))->npc.cell == Cell{5, 4};
+        auto bow = turnCommand(hybrid, PartyAction::Ranged);
+        bow.character = {2};
+        bow.target = hybrid.actors().id(0);
+        hybridUi.record(hybrid.submit(bow));
+        for (int i = 0; i < 3; ++i)
+            hybrid.move(Action::Forward);
+        bool hybridRound = false;
+        for (int i = 0; i < 100; ++i) {
+            if (i == 6)
+                for (const Cell step : {Cell{7, 8}, Cell{6, 8}, Cell{6, 7}, Cell{6, 6}, Cell{6, 5}})
+                    okay &= hybrid.actors()
+                                .move(hybrid.actors().id(2), step, {0, 0}, hybrid.movement().player.cell)
+                                .changed;
+            const auto st = hybrid.combat().snapshot();
+            hybridRound |= st.round > 1;
+            if (st.awaitingAction)
+                hybridUi.record(hybrid.submit(turnCommand(hybrid)));
+            else
+                hybridUi.record(hybrid.update(.5, false));
+            hybridUi.refresh(allCombatTargets(hybrid), false, false, true);
+        }
+        okay &= hybridRound && hybrid.combat().snapshot().enemyCount == 3;
+        hybrid.setAnimated(true);
+        hybrid.actors().damage(hybrid.actors().id(0), 1000, hybrid.timeMs());
+        for (int i = 0; i < 80; ++i) {
+            hybridUi.record(hybrid.update(.04, false));
+            hybridUi.refresh(allCombatTargets(hybrid), hybrid.movement().transition.active(), false, true);
+        }
+        okay &= hybrid.movement().player.heading == Heading::East;
+
         for (int i = 0; i < 25; ++i)
             crowded.update(.1, false);
         okay &= crowded.actors().occupiedSlots({3, 4}) == 15;
-        navigation.request(0, {2, 2}, {98, 98}, false);
+        navigation.request(0, {2, 2}, {98, 98}, true, Cell{98, 97});
         for (int i = 0; i < 20; ++i) {
             navigation.update({1, 1});
             okay &= navigation.lastWork() <= Navigation::nodeBudget;

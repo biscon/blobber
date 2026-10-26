@@ -185,10 +185,15 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                           static_cast<std::uint16_t>(quantity)};
         }
         const auto& e = c.at("equipment");
-        fields(e, p + ".equipment", {"body", "main_hand", "off_hand"});
+        if (root.at("schema_version") == 3)
+            fields(e, p + ".equipment", {"body", "main_hand", "off_hand", "ranged"});
+        else
+            fields(e, p + ".equipment", {"body", "main_hand", "off_hand"});
+        if (root.at("schema_version") == 3)
+            b.equipment.ranged = ownedReference(e.at("ranged"), p + ".equipment.ranged");
         b.equipment = {ownedReference(e.at("body"), p + ".equipment.body"),
                        ownedReference(e.at("main_hand"), p + ".equipment.main_hand"),
-                       ownedReference(e.at("off_hand"), p + ".equipment.off_hand")};
+                       ownedReference(e.at("off_hand"), p + ".equipment.off_hand"), b.equipment.ranged};
     }
     const auto& formation = preset.at("formation");
     array(formation, "preset_party.formation", partySize);

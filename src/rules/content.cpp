@@ -92,6 +92,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
             throw std::runtime_error("attacks." + a.id + ".damage.type: invalid physical damage type");
     }
     for (const auto& m : monsters_) {
+        if (m.traits & ~static_cast<Traits>(Trait::NimbleEscape))
+            throw std::runtime_error("Unsupported monster trait");
         for (const int score : m.abilities)
             if (!abilityModifier(score))
                 throw std::runtime_error("monsters." + m.id + ".abilities: scores must be 1..30");

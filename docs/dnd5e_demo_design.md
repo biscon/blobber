@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–07 and milestone A are Accepted. Slice 07 was accepted on 2026-10-26, including attack-turn sequencing and interpolated-walking corrections. Slice 08 is next eligible and remains Planned; milestone B remains open.
+Status: gameplay roadmap; slices 01–07 and milestone A are Accepted. Slice 07 was accepted on 2026-10-26, including attack-turn sequencing and interpolated-walking corrections. Slice 08 and milestone B are Ready for review, including front-approach routing and melee range-message corrections.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 07 — Moving goblin AI and review corrections (2026-10-26) |
-| Active slice | None |
-| Awaiting user review | None |
+| Active slice | 08 — Hybrid encounter loop (front-focused correction) |
+| Awaiting user review | Slice 08 and milestone B, including routing/range-message correction |
 | Blockers | None |
-| Next eligible slice | 08 — Hybrid encounter loop |
-| Next action | Plan slice 08 in a new planning task when requested; do not advance automatically |
+| Next eligible slice | None until slice 08 acceptance |
+| Next action | Await user review; do not start slice 09 |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -159,7 +159,7 @@ feature changes must be recorded as adaptations rather than claimed as verbatim
 SRD behavior. Nimble Escape depends on omitted bonus-action mechanics and needs
 an explicit adaptation/defer decision in the AI plan.
 
-Mana, cell-based areas, shared maneuvers, formation protection, and the other
+Mana, cell-based areas, automatic facing, formation protection, and the other
 departures below are project adaptations. Do not imply that changing the action
 economy preserves tabletop encounter balance automatically. Validate pacing in
 play. Do not import a non-SRD rulebook wholesale because the original brief
@@ -190,16 +190,18 @@ called its mana model the official spell-points framework.
 - Adjacent hostile contact starts individual turn-based combat. Characters and
   enemy groups roll initiative; actions resolve in that order. Preserve hidden
   initiative rolls while making the active actor and phase legible.
-- At each round's beginning, choose one shared party step, turn, or hold before
-  individual turns. A surprised opening suppresses the opening maneuver and
-  affected characters' first turns. Surprise requires unnoticed attackers;
-  side/rear position alone does not cause it.
-- Each front slot protects its paired rear slot from ordinary frontal melee until
-  that front character is unconscious/dead. Rear attacks expose the back row.
-  The slice 05 review correction uses paired columns on both sides: ordinary
-  rear-row melee is blocked only by its own front partner; the Rogue
-  exception stays in slice 10. The encounter plan must resolve side attacks and threats
-  from multiple directions consistently with these rules.
+- Enter initiative directly; no shared maneuver prompt or party surprise penalty.
+  Keep facing while the adjacent front group lives. After it clears and presentation
+  settles, automatically face the next adjacent group by shortest rotation,
+  clockwise on ties. Preserve the active action and clock. No player movement,
+  manual rotation or retreat command during combat.
+- Offscreen enemies cannot attack. Adjacent side/rear enemies wait until faced;
+  distant offscreen enemies can approach once at the round boundary. New arrivals
+  can be attacked immediately once faced but join initiative next round.
+- Each front slot always protects its paired rear slot from ordinary melee until
+  that front character is unconscious/dead. Enemy slots also use paired protection.
+  The Rogue back-row exception stays in slice 10. NPC awareness, surprise and
+  unnoticed opening-shot advantage remain; party surprise is removed by review.
 - Include melee, ranged attack, spell, item, defend, and back-row melee commands.
   Omit bonus actions, reactions, readying, opportunity attacks, and tabletop
   movement distances. Explicitly adapt signature features instead of silently
@@ -209,10 +211,10 @@ called its mana model the official spell-points framework.
   defeat offers restart, and loading once persistence exists. Rest does not
   resurrect dead characters.
 
-Pause/menu transitions, cooldowns, combat entry/exit, retreat, and reinforcement
-entry must share coherent timing rules. A phase change cannot reset costs or
-grant duplicate attacks. The slice 08 plan must define encounter membership,
-disengagement, maneuver collision, and timing before implementation.
+Pause/menu transitions, cooldowns, combat entry/exit and reinforcement entry share
+coherent timing rules. A phase change cannot reset costs or grant duplicate attacks.
+No adjacent threat means Approach after holds; incomplete rounds grant no six-second
+advance. Re-contact retains initiative and action deadlines. See the slice 08 design.
 
 ### Spells and effects
 
@@ -309,7 +311,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 05 | [First melee combat](#slice-05-first-melee-combat) | 04 | Accepted | A |
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
-| 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Planned | B |
+| 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Ready for review | B |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 08 | Planned | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
@@ -322,7 +324,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
 | A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Accepted |
-| B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Planned |
+| B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Ready for review |
 | C — RPG loop | Class abilities, spells, inventory, equipment, loot, recovery, and levels 1–3 work together. | Planned |
 | D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
 
@@ -847,18 +849,26 @@ into passes. Milestone B remains open; slice 08 remains Planned and has not star
 **Slice 07 handoff:** Nimble Escape is explicitly inactive in slice 07; decide its adaptation here alongside disengagement and awareness-based encounters.
 
 **Deliver:** Real-time ranged weapon approach/cooldowns, adjacency combat entry,
-shared round maneuvers, awareness-based ambushes, rear exposure, reinforcements,
-retreat, and disengagement. Define the clock/phase policy later spells will share.
+automatic facing between front groups, NPC awareness/surprise, reinforcements,
+and disengagement when adjacency ends. Define the clock/phase policy later spells
+will share. The approved review correction removes maneuvers, retreat and party surprise.
 
 **Boundary:** Plan encounter membership, perception, line of sight, range, misses,
 turn ordering, and multi-direction threats before implementation. Spell casting
 plugs into these rules in slice 10. Pause must not recharge combat opportunistically.
 
-**Acceptance:** Exercise approach-to-contact, blocked maneuvers, side/rear contact,
-new arrivals, retreat/re-entry, focus/menu pauses, and mode transitions with no
+**Acceptance:** Exercise approach-to-contact, front persistence, side/rear automatic
+facing, pending arrivals, partial-round re-entry, focus/menu pauses and mode transitions with no
 duplicate actions or reset costs. User reviews milestone B and overall combat feel.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Ready for review; 2026-10-26.
+**Approved plan:** User said “Implement the plan.” See [hybrid encounter design](hybrid_encounter_design.md).
+**Delivered:** Shared NPC AI/typed trait, ranged approach and bow clips, front-focused contact/automatic facing, fixed protection, NPC surprise, reinforcements, persistent clocks/costs and direct action controls. Single-weapon AI defaults and two bow-only demo goblins share the existing art; mixed-weapon behavior remains unchanged.
+**Verification:** Debug and Release 20/20; focused ASan/UBSan, zero-allocation frame guard, separate scale checks, hidden GPU smoke and hybrid/HUD captures. See [verification and handoff](slice08_verification.md).
+**Review recipe:** Run `cmake-build-debug/blobber --hybrid-demo --seed 5`; select Merrin, press 3 and click a goblin. Review direct attacks and automatic side/rear facing with preserved actions. Full recipe and capture locations are in the handoff.
+**Deviations / limitations:** Approved project adaptations are recorded in the design and SRD ledger. Interactive feel/artistic acceptance remain unverified; generated-fixture stress does not establish shipped-art performance at maximum population. LeakSanitizer was not run.
+**Next-agent handoff:** Await user review of slice 08/milestone B. Preserve travel/impact/turn holds and the 160 MiB cap. Handle corrections within this slice; do not advance to slice 09.
+**Acceptance:** Pending user review.
 
 ### Slice 09: Effects and concentration
 
@@ -1060,3 +1070,18 @@ no slice 06 work. The user said: “much better, this slice is accepted, close i
 Seventeen Debug/Release suites, extended allocation guard, hidden GPU lifecycle
 check and final native/reduced captures passed. See [verification and review](dungeon_ui_verification.md). Hidden application-owned
 captures are authorized; OS mouse/keyboard/focus automation remains prohibited.
+
+Review decision (2026-10-26): user approved front-focused combat, automatic facing,
+normal party initiative and no retreat. This supersedes the 2026-10-25 shared
+maneuver and rear-exposure decisions. Implemented within slice 08; acceptance pending.
+
+Review decision (2026-10-26): user authorized general melee-only/ranged-only AI
+rules, preserving the existing mixed-weapon goblin policy, and requested two
+bow-only goblins in the hybrid demo. Implemented and verified within slice 08.
+Random preferences, richer mixed-weapon roles and caster decisions remain deferred.
+
+Review correction (2026-10-26): reproduced the healthy goblin's route onto the
+right flank in the hybrid demo. Front-side pursuit now prefers the front tile,
+with bounded fallback for unavailable routes. Distant living melee targets report
+out of range. User explicitly requested leaving the initiative strip unchanged;
+its remaining-turn preview is preserved. Verified within slice 08; acceptance pending.

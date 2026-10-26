@@ -214,5 +214,73 @@
     "rows": 2,
     "split_y": 720,
     "canvas_width": 768
+  },
+  {
+    "name": "bow-front",
+    "split_x": 774,
+    "scale": 0.5,
+    "pivot_x": [
+      440,
+      309
+    ],
+    "ground_y": [
+      982,
+      983
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-back",
+    "split_x": 815,
+    "scale": 0.5,
+    "pivot_x": [
+      500,
+      384
+    ],
+    "ground_y": [
+      977,
+      977
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-left",
+    "split_x": 832,
+    "scale": 0.5,
+    "pivot_x": [
+      535,
+      484
+    ],
+    "ground_y": [
+      979,
+      979
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
+  },
+  {
+    "name": "bow-right",
+    "split_x": 790,
+    "scale": 0.5,
+    "pivot_x": [
+      330,
+      340
+    ],
+    "ground_y": [
+      981,
+      983
+    ],
+    "canvas_width": 512,
+    "canvas_height": 536,
+    "anchor_x": 256,
+    "anchor_y": 512
   }
 ]

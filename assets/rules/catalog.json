@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -40,6 +40,28 @@
       "attacks": [
         "goblin.scimitar",
         "goblin.shortbow"
+      ],
+      "traits": [
+        "nimble_escape"
+      ]
+    },
+    {
+      "id": "goblin.archer",
+      "abilities": {
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 10,
+        "intelligence": 10,
+        "wisdom": 8,
+        "charisma": 8
+      },
+      "armor_class": 15,
+      "hit_points": 7,
+      "attacks": [
+        "goblin.shortbow"
+      ],
+      "traits": [
+        "nimble_escape"
       ]
     }
   ],
@@ -372,7 +394,8 @@
         "equipment": {
           "body": 1,
           "main_hand": 0,
-          "off_hand": 2
+          "off_hand": 2,
+          "ranged": null
         }
       },
       {
@@ -411,7 +434,8 @@
         "equipment": {
           "body": 1,
           "main_hand": 0,
-          "off_hand": 2
+          "off_hand": 2,
+          "ranged": null
         }
       },
       {
@@ -450,7 +474,8 @@
         "equipment": {
           "body": 1,
           "main_hand": 0,
-          "off_hand": null
+          "off_hand": null,
+          "ranged": 2
         }
       },
       {
@@ -485,7 +510,8 @@
         "equipment": {
           "body": null,
           "main_hand": 0,
-          "off_hand": null
+          "off_hand": null,
+          "ranged": null
         }
       }
     ],

@@ -85,7 +85,8 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
         next.offsetY = position.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
         next.clip = npc.animation;
         if (visible) {
-            const auto& attack = timings[static_cast<std::size_t>(NpcAnimation::Attack)];
+            const auto attackClip = actor.rangedAttack ? NpcAnimation::RangedAttack : NpcAnimation::Attack;
+            const auto& attack = timings[static_cast<std::size_t>(attackClip)];
             const bool damageCue = hurt.count && actor.hasDamage && time >= actor.damageTimeMs;
             const bool attackCue = actor.hasAttack && time >= actor.attackTimeMs;
             const bool hurtWins = damageCue && (!attackCue || actor.damageTimeMs >= actor.attackTimeMs);
@@ -96,7 +97,7 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
                 next.clip = NpcAnimation::Hurt;
                 next.active = sample(hurt, time - actor.damageTimeMs, 0);
             } else if (!hurtWins && attackCue && time - actor.attackTimeMs < npcClipDuration(attack)) {
-                next.clip = NpcAnimation::Attack;
+                next.clip = attackClip;
                 next.active = sample(attack, time - actor.attackTimeMs, 0);
             } else if (actor.hasWalk && (!actor.hasAttack || actor.walkTimeMs > actor.attackTimeMs) &&
                        (!actor.hasDamage || actor.walkTimeMs > actor.damageTimeMs ||

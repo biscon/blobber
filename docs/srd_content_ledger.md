@@ -20,7 +20,7 @@ Project implementation limits (dice counts, JSON capacities, supported levels,
 AC bounds, physical-only damage types) are engineering limits, not SRD rules.
 Ranges, CR/XP, senses, skills, and other goblin features are not yet represented.
 Race/class definitions, party choices, and starting equipment are recorded below.
-Mana, shared maneuvers, cooldowns, and omitted actions remain proposed
+Mana, cooldowns, and omitted actions remain proposed
 adaptations in the roadmap. Slice 02 adds formation storage, not formation combat.
 
 
@@ -89,3 +89,41 @@ shared alerts or surprise are active. Nimble Escape remains inactive by explicit
 user choice; decide its adaptation in slice 08 with disengagement. Existing melee
 rules, target selection and front-slot advancement remain authoritative.
 See [AI design](goblin_ai_design.md) and [verification](slice07_verification.md).
+
+
+## Slice 08 hybrid encounter adaptations
+
+The catalog's existing shortbow attack now executes for goblins; Merrin readies
+his carried bow in a dedicated ranged slot. Ammunition remains unspent until slice
+11. Range is six cells by Euclidean distance with conservative wall/corner LOS,
+no creature cover, and disadvantage with adjacent enemies. Ranged attacks ignore
+formation protection. These range/formation policies are project adaptations.
+
+NPC surprise uses awareness instead of skill checks and skips the NPC's first
+action. The party has no surprise penalty after the approved front-focused review
+correction. Initial unnoticed ranged attacks receive advantage. Local hit-or-miss alerts travel three walkable cardinal steps
+without chaining. Existing group initiative survives partial-round disengagement/re-entry; arrivals
+join at round boundaries. These are deterministic demo policies, not complete
+SRD stealth, perception, cover or encounter rules.
+
+Nimble Escape is represented as a typed catalog trait. At half HP or below, an
+adjacent mixed-weapon goblin spends its whole action on one legal step away, then prefers ranged
+attacks. The SRD bonus-action Hide/Disengage behavior is intentionally adapted;
+there is no bonus-action engine or opportunity-attack simulation. Combat uses
+steady facing with automatic turns after the adjacent front group clears. Turns
+cost no action; offscreen enemies cannot attack. The front row always protects
+its paired back row. Shared maneuvers and party retreat were removed by review.
+These are project mechanics, not tabletop facing or flanking rules.
+
+Gameplay advances in real time during approach and six seconds per finished
+combat round. Decisions and presentation holds cannot recharge readiness or saves.
+Presentation has its own clock; overlays/focus pauses stop both. Defend and
+six-second readiness/death-save deadlines persist across phase changes. This clock
+contract is available to later effects work; no slice 09 effects were implemented.
+
+Slice 08 single-weapon review correction: melee-only NPCs close and attack even
+when wounded. Ranged-only NPCs hold a legal shot, approach to obtain one, and try
+to create distance when adjacent regardless of health or Nimble Escape. A blocked
+escape falls back to the existing disadvantaged ranged attack. These are generic
+project AI defaults; mixed-weapon goblin decisions remain unchanged. Two demo
+archers share the goblin stats/art but list only the shortbow attack.

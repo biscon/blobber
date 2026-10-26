@@ -21,6 +21,11 @@ struct AttackDefinition {
     Dice damage;
     DamageType damageType = DamageType::Bludgeoning;
 };
+enum class Trait : std::uint8_t { NimbleEscape = 1 };
+using Traits = std::uint8_t;
+inline bool hasTrait(Traits traits, Trait trait) noexcept {
+    return (traits & static_cast<Traits>(trait)) != 0;
+}
 struct MonsterDefinition {
     std::string id;
     Abilities abilities{};
@@ -28,6 +33,7 @@ struct MonsterDefinition {
     std::int32_t hitPoints = 0;
     std::array<AttackId, 8> attacks{};
     std::size_t attackCount = 0;
+    Traits traits = 0;
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
 class Catalog {

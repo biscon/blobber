@@ -199,7 +199,9 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
     std::array<bool, 2> impactCaptured{};
     for (unsigned seed = 5; seed < 40 && !(impactCaptured[0] && impactCaptured[1]); ++seed) {
         CaptureView v(map, catalog, idle, timings, renderer, seed);
-        for (int step = 0; step < 100 && v.session.combat().snapshot().phase == CombatPhase::Turns; ++step) {
+        for (int step = 0; step < 100 && v.session.combat().snapshot().phase != CombatPhase::Victory &&
+                           v.session.combat().snapshot().phase != CombatPhase::Defeat;
+             ++step) {
             if (v.session.combat().snapshot().awaitingAction) {
                 v.commands.selectAction(PartyAction::Defend);
                 v.commands.confirm();
@@ -210,11 +212,11 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
             v.refresh();
             if (out.event != CombatEvent::Attack || !out.enemyAttack || impactCaptured[out.hit ? 0 : 1])
                 continue;
-            const auto& attack = timings[v.session.actors().actor(out.enemy)->npc.type.index]
-                                        [static_cast<std::size_t>(NpcAnimation::Attack)];
-            unsigned delay = 0;
-            for (std::size_t i = 0; i < attack.count / 2; ++i)
-                delay += attack.durationMs[i];
+            const auto clip =
+                out.kind == rules::AttackKind::Ranged ? NpcAnimation::RangedAttack : NpcAnimation::Attack;
+            const auto& attack =
+                timings[v.session.actors().actor(out.enemy)->npc.type.index][static_cast<std::size_t>(clip)];
+            const unsigned delay = out.impactMs;
             if (!delay)
                 throw std::runtime_error("Impact capture requires a multi-pose attack");
             CommandController impactUi(v.session, timings);
@@ -258,7 +260,9 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
     for (unsigned seed = 5; seed < 12 && !(captured[0] && captured[1] && captured[2] && captured[3]);
          ++seed) {
         CaptureView v(map, catalog, idle, timings, renderer, seed);
-        for (int step = 0; step < 300 && v.session.combat().snapshot().phase == CombatPhase::Turns; ++step) {
+        for (int step = 0; step < 300 && v.session.combat().snapshot().phase != CombatPhase::Victory &&
+                           v.session.combat().snapshot().phase != CombatPhase::Defeat;
+             ++step) {
             if (v.session.combat().snapshot().awaitingAction) {
                 bool attacked = false;
                 if (v.session.combat().exposed(*v.session.combat().snapshot().activeCharacter)) {

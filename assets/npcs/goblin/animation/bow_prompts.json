@@ -1,0 +1,18 @@
+{
+  "tool": "built-in image_gen",
+  "referenceRoot": "assets/npcs/goblin",
+  "front": {
+    "prompt": "Create a production sprite sheet for this exact goblin reference, preserve face, olive green skin, ears, leather vest, skirt, belt and boots, painterly detailed retro dungeon game art. Transparent background. Two full-body poses SIDE BY SIDE in equal cells, no text or border, ample transparent padding, identical body scale and ground baseline. FRONT VIEW, looking toward viewer, shortbow held in LEFT hand and string drawn with RIGHT hand; dagger sheathed and not held. Pose left: bow drawn, arrow aimed toward viewer at full draw. Pose right: just released the arrow, bow arm extended, string relaxed, right drawing hand near cheek; no flying arrow outside silhouette. Both entire boots and bow visible with ample margin. Keep small wooden bow narrow enough to fit alongside torso. Exactly two goblins as animation poses, not different characters. Each pose approximately 800px tall in a 1536x1024 landscape image.",
+    "correction": "Edit this exact two-pose sprite sheet. Remove ALL brown/black background and ALL glow completely: fully transparent pixels everywhere outside goblin/bow/string/arrow silhouettes, no ground shadow, no ambient aura. Keep both complete figures and matching scale, detailed art, clothes and boots. Correct front-facing bow aim: both goblins aim at the CAMERA/viewer, with strong foreshortening; left pose shows arrow pointing toward viewer from drawn bow, not sideways across chest, right pose release. Keep bow in goblin's LEFT hand and RIGHT hand drawing string at cheek. Keep generous transparent margins. No text. The final output must be a clean alpha-cutout sprite sheet.",
+    "sheet": "sheets/bow-front.png"
+  },
+  "otherViews": {
+    "prompt": "Create a production sprite sheet of this exact goblin reference: olive green skin, earrings, same leather vest skirt belt boots, detailed painterly retro dungeon art. Two full-body animation poses side by side, same scale and ground baseline, 1536x1024 landscape, each figure approx 800px high with generous transparent padding on all sides. Exactly two poses: left pose DRAW with shortbow drawn and arrow ready, right pose RELEASE with string relaxed and arrow gone. Bow in anatomical LEFT hand, RIGHT hand draws string. Dagger sheathed, not held. Fully transparent alpha cutout outside both silhouettes, no glow, no floor shadow, no text or background. ",
+    "rightCorrection": "Regenerate this right-facing goblin bow animation sheet as two cleanly SEPARATED full-body poses. Each figure must fit within its own half of the image. Leave a fully transparent vertical gap at least 120 pixels wide between poses and at least 80px empty outer margins. Scale both figures down equally if necessary to fit. Same goblin identity, olive green skin, earrings, leather outfit and boots. Bow held in LEFT hand, RIGHT hand pulls string. Both goblins strict right profile, aiming right. Left cell pose drawing arrow; right cell releasing arrow, arrow absent. No background, no glow, no floor shadow, clean alpha transparency. 1536x1024. Keep consistent body size between poses. No text.",
+    "sheets": [
+      "sheets/bow-back.png",
+      "sheets/bow-left.png",
+      "sheets/bow-right.png"
+    ]
+  }
+}

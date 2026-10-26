@@ -32,7 +32,10 @@ enum class CommandReason : std::uint8_t {
     Moving,
     MapOpen,
     Unfocused,
-    CannotAct
+    CannotAct,
+    Cooldown,
+    OutOfRange,
+    Blocked,
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;

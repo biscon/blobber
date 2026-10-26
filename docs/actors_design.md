@@ -1,5 +1,7 @@
 # Mutable monster world — slice 03
 
+Implemented slice 08 extension: [shared appearance rules variants](hybrid_encounter_design.md#single-weapon-review-correction). Programmatic placements may carry an optional catalog-local MonsterId. ActorWorld validates it at construction; absent overrides retain appearance-name binding. All appearance defaults must still bind. The override is a small value, adds no runtime allocation, and does not change the JSON placement schema. Catalog lifetime must cover placements and their session.
+
 Implemented slice 07 extension, accepted 2026-10-26: [moving goblin AI](goblin_ai_design.md).
 ActorWorld adds a const subslot occupancy query and checked walk cue; AI remains a
 separate session owner. Existing actor identity, occupancy and lifetime contracts remain.

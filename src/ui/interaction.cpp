@@ -57,12 +57,18 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     }
     if (input.scroll && inside(hudLayout::log))
         commands.scrollLog(input.scroll);
+    if (click)
+        for (int i = 0; i < 4; ++i)
+            if (inside(hudLayout::detail(i))) {
+                commands.inspect(i);
+                return;
+            }
     bool actionInput = false;
     for (int i = 0; i < 6; ++i) {
         const bool activated = input.has(static_cast<UiKey>(i)) || (click && inside(hudLayout::action(i)));
         if (activated) {
             actionInput = true;
-            if (allowConfirm && !state.suspended && (i == 0 || i == 1 || i == 5)) {
+            if (allowConfirm && !state.suspended && (i == 0 || i == 1 || i == 2 || i == 5)) {
                 commands.selectAction(dockActions[i]);
                 if (i == 1)
                     commands.confirm();
@@ -71,18 +77,23 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     }
     if (!actionInput && click) {
         for (int i = 0; i < 4; ++i)
-            if (inside(hudLayout::card(i))) {
+            if (inside(hudLayout::detail(i))) {
+                commands.inspect(i);
+                return;
+            } else if (inside(hudLayout::card(i))) {
                 if (state.selection.action == PartyAction::Aid) {
                     if (allowConfirm) {
                         commands.selectCharacter(i);
                         commands.confirm();
                     }
-                } else
+                } else if (state.production && realTime(state.combat.phase))
+                    commands.selectCharacter(i);
+                else
                     commands.inspect(i);
                 return;
             }
         if (allowConfirm && inside(hudLayout::viewport) && viewportHit &&
-            state.selection.action == PartyAction::Melee) {
+            (state.selection.action == PartyAction::Melee || state.selection.action == PartyAction::Ranged)) {
             commands.selectTarget(*viewportHit);
             commands.confirm();
         }
@@ -114,7 +125,10 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                 return;
             }
         for (int i = 0; i < 4; ++i)
-            if (inside(hudLayout::card(i))) {
+            if (inside(hudLayout::detail(i))) {
+                commands.hover(HoverKind::Portrait, i, {}, p.x, p.y);
+                return;
+            } else if (inside(hudLayout::card(i))) {
                 commands.hover(HoverKind::Portrait, i, {}, p.x, p.y);
                 return;
             }

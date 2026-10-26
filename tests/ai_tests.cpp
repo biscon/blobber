@@ -1,4 +1,4 @@
-#include "game/goblin_ai.hpp"
+#include "game/npc_ai.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include <chrono>
@@ -26,24 +26,24 @@ void sight() {
         const auto h = static_cast<Heading>(d);
         const Cell origin{9, 9};
         const auto f = forward(h), r = right(h);
-        check(goblinSees(map, origin, h, origin + f * 6), "Sight includes six-cell range boundary");
-        check(!goblinSees(map, origin, h, origin + f * 7), "Sight excludes beyond six cells");
-        check(goblinSees(map, origin, h, origin + f * 4 + r * 4), "Cone includes diagonal boundary");
-        check(!goblinSees(map, origin, h, origin + f * 3 + r * 4), "Cone excludes wider angles");
-        check(!goblinSees(map, origin, h, origin + f * -1), "No rear sight");
-        check(!goblinSees(map, origin, h, origin + r), "No perpendicular sight");
+        check(npcSees(map, origin, h, origin + f * 6), "Sight includes six-cell range boundary");
+        check(!npcSees(map, origin, h, origin + f * 7), "Sight excludes beyond six cells");
+        check(npcSees(map, origin, h, origin + f * 4 + r * 4), "Cone includes diagonal boundary");
+        check(!npcSees(map, origin, h, origin + f * 3 + r * 4), "Cone excludes wider angles");
+        check(!npcSees(map, origin, h, origin + f * -1), "No rear sight");
+        check(!npcSees(map, origin, h, origin + r), "No perpendicular sight");
     }
     const Map blocked({"#######", "#.....#", "#.#...#", "#.....#", "#.....#", "#.....#", "#######"});
-    check(!goblinSees(blocked, {2, 1}, Heading::South, {2, 4}), "Walls occlude sight");
-    check(!goblinSees(blocked, {1, 1}, Heading::South, {3, 3}), "Corner seam is conservatively blocked");
-    check(goblinSees(blocked, {4, 1}, Heading::South, {4, 5}), "Parallel clear corridor sees through");
+    check(!npcSees(blocked, {2, 1}, Heading::South, {2, 4}), "Walls occlude sight");
+    check(!npcSees(blocked, {1, 1}, Heading::South, {3, 3}), "Corner seam is conservatively blocked");
+    check(npcSees(blocked, {4, 1}, Heading::South, {4, 5}), "Parallel clear corridor sees through");
 }
 void memoryAndRoutines() {
     const auto map = room();
     const auto catalog = combatCatalog();
     NpcWorld placements(map, {7, 6}, {"goblin"}, {npc({7, 2})});
     ActorWorld world(map, catalog, placements);
-    GoblinAiController ai(map, world, 5);
+    NpcAiController ai(map, world, 5);
     ai.update(100, 100, {{7, 6}, Heading::North});
     check(ai.snapshot().actors[0].awareness == Awareness::Pursuing, "Directional sight alerts guard");
     for (int t = 200; t <= 700; t += 100)
@@ -71,7 +71,7 @@ void memoryAndRoutines() {
     wander.ai.routine = NpcRoutine::Wander;
     NpcWorld routines(map, {1, 1}, {"goblin"}, {patrol, wander});
     ActorWorld wa(map, catalog, routines), wb(map, catalog, routines);
-    GoblinAiController a(map, wa, 18), b(map, wb, 18);
+    NpcAiController a(map, wa, 18), b(map, wb, 18);
     bool far = false, loop = false, wandered = false;
     for (int t = 100; t <= 18000; t += 100) {
         a.update(100, t, {{1, 13}, Heading::North});
@@ -177,7 +177,7 @@ void contentionAndSession() {
     game.setAnimated(false);
     for (int i = 0; i < 25; ++i)
         game.update(.1, false);
-    check(game.combat().snapshot().phase == CombatPhase::Exploration, "Side arrivals do not start combat");
+    check(!realTime(game.combat().snapshot().phase), "Side arrivals start hybrid contact");
     check(game.actors().occupiedSlots({7, 6}) == 15,
           "Four pursuers share legal distinct destination subslots");
     for (const auto& a : game.actors().snapshot().actors) {
@@ -188,9 +188,9 @@ void contentionAndSession() {
     game.update(60, true);
     check(game.actors().snapshot().revision == before && game.ai().timeMs == clock,
           "Pause freezes AI and actors");
+    const auto poseBefore = game.movement().player;
     game.move(Action::TurnLeft);
-    check(game.combat().snapshot().phase == CombatPhase::Contact,
-          "Facing waiting enemies starts existing frontal contact");
+    check(game.movement().player == poseBefore, "Contact locks exploration turns during combat");
     game.update(.1, false);
     const auto frozen = game.ai().timeMs;
     for (int i = 0; i < 10; ++i)
@@ -218,6 +218,77 @@ void contentionAndSession() {
           "Terminal actors never resume movement");
     check(manhattan(restart.actors().snapshot().actors[2].npc.cell, {7, 3}) <= 1,
           "Large delta never catches up multiple steps");
+}
+void preferredApproachRoutes() {
+    const auto map = room();
+    const auto catalog = combatCatalog();
+    for (int d = 0; d < 4; ++d) {
+        const Player party{{7, 7}, static_cast<Heading>(d)};
+        const auto f = forward(party.heading), r = right(party.heading);
+        const auto from = party.cell + f * 2 + r;
+        NpcWorld places(map, party.cell, {"goblin"}, {npc(from)});
+        ActorWorld actors(map, catalog, places);
+        Navigation nav(map, actors);
+        nav.request(0, from, party.cell, true, party.cell + f);
+        nav.update(party.cell);
+        const auto result = nav.take(0);
+        check(result.ready && result.found && result.step == party.cell + f * 2,
+              "Tied approach moves toward front axis instead of into the flank");
+        check(result.preferred == party.cell + f && nav.lastWork() <= Navigation::nodeBudget,
+              "Preferred route preserves request metadata and work budget");
+    }
+    const Map isolated({"#######", "#######", "###.###", "#.....#", "#.....#", "#######"});
+    NpcWorld places(isolated, {3, 3}, {"goblin"}, {npc({5, 3})});
+    ActorWorld actors(isolated, catalog, places);
+    Navigation nav(isolated, actors);
+    nav.request(0, {5, 3}, {3, 3}, true, Cell{3, 2});
+    nav.update({3, 3});
+    const auto fallback = nav.take(0);
+    check(fallback.ready && fallback.found && fallback.step == Cell{4, 3},
+          "Unreachable preferred front falls back to a reachable adjacent tile");
+    nav.request(0, {5, 3}, {3, 3}, true, Cell{3, 2});
+    nav.cancel(0);
+    nav.update({3, 3});
+    check(!nav.take(0).ready, "Canceled preferred search cannot publish its fallback");
+
+    for (bool full : {false, true}) {
+        const Map blocked(
+            {"#######", "#.....#", full ? "#.....#" : "###.###", "#.....#", "#.....#", "#######"});
+        const Cell party{2, 3}, front{2, 2};
+        std::vector<NpcInstance> instances{npc({4, 3})};
+        if (full)
+            for (int i = 0; i < 4; ++i)
+                instances.push_back(npc(front, Heading::South, {i % 2, i / 2}));
+        NpcWorld world(blocked, party, {"goblin"}, instances);
+        ActorWorld a(blocked, catalog, world);
+        Navigation n(blocked, a);
+        n.request(0, {4, 3}, party, true, front);
+        n.update(party);
+        const auto result = n.take(0);
+        check(result.ready && result.found && result.step == Cell{3, 3},
+              "Solid or fully occupied front uses normal adjacency without blocking pursuit");
+    }
+    // An unreachable preference may need several bounded updates, including cleanup.
+    std::vector<std::string> rows(80, std::string(80, '.'));
+    rows.front() = rows.back() = std::string(80, '#');
+    for (auto& row : rows)
+        row.front() = row.back() = '#';
+    rows[38][40] = rows[39][39] = rows[39][41] = '#';
+    const Map large(rows);
+    NpcWorld largePlaces(large, {40, 40}, {"goblin"}, {npc({42, 40})});
+    ActorWorld largeActors(large, catalog, largePlaces);
+    Navigation bounded(large, largeActors);
+    bounded.request(0, {42, 40}, {40, 40}, true, Cell{40, 39});
+    bool found = false;
+    int updates = 0;
+    for (; updates < 20 && !found; ++updates) {
+        bounded.update({40, 40});
+        check(bounded.lastWork() <= Navigation::nodeBudget &&
+                  bounded.lastCompleted() <= Navigation::requestBudget,
+              "Preferred fallback search respects incremental work budgets");
+        found = bounded.take(0).found;
+    }
+    check(found && updates > 1, "Large unreachable preference eventually publishes its adjacent fallback");
 }
 void blockedRoutesAndRng() {
     const Map corridor({"#########", "#.......#", "#########"});
@@ -271,13 +342,13 @@ void blockedRoutesAndRng() {
     }
     NpcWorld turning(map, {10, 9}, {"goblin"}, {npc({9, 5}, Heading::South)});
     ActorWorld turner(map, catalog, turning);
-    GoblinAiController pursuit(map, turner, 5);
+    NpcAiController pursuit(map, turner, 5);
     for (int t = 100; t <= 4000; t += 100)
         pursuit.update(100, t, {{10, 9}, Heading::East});
     check(manhattan(turner.snapshot().actors[0].npc.cell, {10, 9}) == 1,
           "Turning along a path cannot strand pursuit at a still-occupied last-seen cell");
     ActorWorld watcher(map, catalog, placed);
-    GoblinAiController brain(map, watcher, 5);
+    NpcAiController brain(map, watcher, 5);
     brain.update(100, 100, {{3, 2}, Heading::South});
     brain.update(100, 200, {{20, 2}, Heading::South});
     check(brain.snapshot().actors[0].awareness == Awareness::Investigating,
@@ -331,6 +402,7 @@ int main(int argc, char** argv) {
             navigation();
             contentionAndSession();
             arrivalBeforeCombat();
+            preferredApproachRoutes();
             blockedRoutesAndRng();
         }
         std::cout << "AI checks passed\n";

@@ -58,7 +58,8 @@ Heading heading(const std::string& name) {
     throw std::runtime_error("Invalid NPC facing: " + name);
 }
 NpcAnimation animationName(const std::string& name) {
-    const std::array<const char*, npcAnimationCount> names{"idle", "walk", "attack", "hurt", "death"};
+    const std::array<const char*, npcAnimationCount> names{"idle", "walk",  "attack",
+                                                           "hurt", "death", "ranged_attack"};
     for (std::size_t i = 0; i < names.size(); ++i)
         if (name == names[i])
             return static_cast<NpcAnimation>(i);

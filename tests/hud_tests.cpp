@@ -28,6 +28,37 @@ UiInput click(UiRect r) {
     input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
     return input;
 }
+void meleeRangeFeedback() {
+    const auto map = combatMap();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    NpcWorld places(map, spawn.cell, {"goblin"},
+                    {{{0}, {3, 2}, {0, 1}, Heading::South}, {{0}, {3, 1}, {0, 1}, Heading::South}});
+    GameSession s(map, catalog, places, 5, spawn, false);
+    ready(s);
+    CommandController ui(s);
+    refresh(ui, s);
+    const auto before = s.combat().snapshot();
+    UiInput hover;
+    hover.pointer = ArtPoint{210, 140};
+    routeHudInput(ui, hover, s.actors().id(1));
+    check(ui.snapshot().hover.reason == CommandReason::OutOfRange,
+          "Living distant melee target previews out of range");
+    routeHudInput(ui, click(hudLayout::viewport), s.actors().id(1));
+    check(s.combat().snapshot().turn == before.turn && s.combat().snapshot().awaitingAction &&
+              s.combat().snapshot().cooldownMs == before.cooldownMs,
+          "Out-of-range melee click preserves action and readiness");
+    bool found = false;
+    for (std::size_t i = 0; i < ui.snapshot().log.size(); ++i)
+        found |= std::strstr(ui.snapshot().log.newest(i), "out of range") != nullptr;
+    check(found, "Rejected melee click logs a range explanation");
+    auto command = turnCommand(s, PartyAction::Melee);
+    command.target = s.actors().id(1);
+    s.actors().damage(*command.target, 1000, s.timeMs());
+    check(s.submit(command).reason == CommandReason::InvalidTarget,
+          "Actually dead distant target still reports invalid target");
+    command.target = s.actors().id(0);
+    check(s.submit(command).event == CombatEvent::Attack, "Valid melee remains available after rejection");
+}
 void directActions() {
     const auto map = combatMap();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
@@ -48,7 +79,7 @@ void directActions() {
     auto input = click(hudLayout::viewport);
     routeHudInput(ui, input, s.actors().id(0));
     check(s.combat().snapshot().turn == turn, "Unreachable click spends no turn");
-    for (int i = 2; i < 5; ++i)
+    for (int i = 3; i < 5; ++i)
         routeHudInput(ui, click(hudLayout::action(i)));
     check(s.combat().snapshot().turn == turn && ui.snapshot().selection.action == PartyAction::Melee,
           "Deferred action icons cannot arm or commit commands");
@@ -179,8 +210,11 @@ void initiative() {
                        next.character->index == actual.activeCharacter->index) ||
                           (next.enemy && actual.activeEnemy && sameActor(*next.enemy, *actual.activeEnemy)),
                       "Preview predicts actual execution order without rerolling initiative");
-            } else
+            } else {
+                if (s.combat().snapshot().phase == CombatPhase::RoundEnd)
+                    s.update(.45, false);
                 check(s.combat().snapshot().round == preview.round + 1, "Queue refills only at next round");
+            }
         }
     }
     GameSession s(map, catalog, placements, 5, spawn);
@@ -248,6 +282,7 @@ void logs() {
 } // namespace
 int main() {
     try {
+        meleeRangeFeedback();
         directActions();
         keyboardHover();
         overlaysAndAid();

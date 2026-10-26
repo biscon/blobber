@@ -54,8 +54,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         if (!root.is_object() || !root.contains("schema_version"))
             fail("schema_version", "missing version");
         const int version = integer(root.at("schema_version"), "schema_version");
-        if (version != 1 && version != 2)
-            fail("schema_version", "only versions 1 and 2 are supported");
+        if (version != 1 && version != 2 && version != 3)
+            fail("schema_version", "only versions 1, 2 and 3 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else
@@ -101,9 +101,20 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         for (std::size_t i = 0; i < monsterJson.size(); ++i) {
             const auto p = "monsters[" + std::to_string(i) + "]";
             const auto& m = monsterJson[i];
-            fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks"});
+            if (version == 3)
+                fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks", "traits"});
+            else
+                fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks"});
             MonsterDefinition definition;
             definition.id = identifier(m.at("id"), p + ".id");
+            if (version == 3) {
+                array(m.at("traits"), p + ".traits", 1);
+                for (const auto& trait : m.at("traits")) {
+                    if (string(trait, p + ".traits") != "nimble_escape")
+                        fail(p + ".traits", "unknown trait");
+                    definition.traits |= static_cast<Traits>(Trait::NimbleEscape);
+                }
+            }
             definition.armorClass = integer(m.at("armor_class"), p + ".armor_class");
             definition.hitPoints = integer(m.at("hit_points"), p + ".hit_points");
             const auto& scores = m.at("abilities");

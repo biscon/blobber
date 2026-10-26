@@ -133,12 +133,17 @@ void CommandController::updateHover() noexcept {
                       actors_.catalog().monster(a.monster)->id.c_str(), unsigned(h.enemy->slot) + 1);
         h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
-        command.action = PartyAction::Melee;
+        command.action =
+            state_.selection.action == PartyAction::Ranged ? PartyAction::Ranged : PartyAction::Melee;
         command.target = h.enemy;
         h.reason = validate(command);
         const auto* c = party_.character(command.character);
-        if (c && c->build.equipment.mainHand.index < c->build.itemCount) {
-            const auto i = c->build.equipment.mainHand.index;
+        if (c &&
+            (command.action == PartyAction::Ranged ? c->build.equipment.ranged : c->build.equipment.mainHand)
+                    .index < c->build.itemCount) {
+            const auto i = (command.action == PartyAction::Ranged ? c->build.equipment.ranged
+                                                                  : c->build.equipment.mainHand)
+                               .index;
             const auto& weapon = c->stats.weapons[i];
             const auto& dice = weapon.damage;
             const auto* item = party_.catalog().item(c->build.items[i].item);
@@ -147,7 +152,7 @@ void CommandController::updateHover() noexcept {
                           static_cast<long long>(std::max<std::int64_t>(
                               0, std::int64_t(dice.count) * dice.sides + dice.modifier)));
         }
-        put(2, "Cost: 1 action");
+        put(2, realTime(state_.combat.phase) ? "Cost: 6-second cooldown" : "Cost: 1 action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
     } else if (h.kind == HoverKind::Action && h.index >= 0 && h.index < 6) {
         const auto action = dockActions[h.index];
@@ -155,11 +160,11 @@ void CommandController::updateHover() noexcept {
         h.reason = validate(command);
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s [%d]", actionName(action), h.index + 1);
         constexpr const char* effects[]{
-            "Attack with your equipped weapon.",   "Attacks against you: disadvantage until next turn.",
-            "Ranged combat is not available yet.", "Spells are not available yet.",
-            "Usable items are not available yet.", "DC 10 Wisdom: stabilize a dying ally."};
+            "Attack with your equipped weapon.",       "Attacks against you: disadvantage until next turn.",
+            "Ready bow: six-cell range, clear sight.", "Spells are not available yet.",
+            "Usable items are not available yet.",     "DC 10 Wisdom: stabilize a dying ally."};
         put(1, effects[h.index]);
-        put(2, (h.index >= 2 && h.index <= 4) ? "Unavailable" : "Cost: 1 action");
+        put(2, (h.index == 3 || h.index == 4) ? "Unavailable" : "Cost: 1 action");
         if (h.reason != CommandReason::Ready && h.reason != CommandReason::MissingTarget &&
             h.reason != CommandReason::InvalidAlly && h.reason != CommandReason::PreviewAccepted)
             put(3, commandMessage(h.reason));
@@ -180,7 +185,8 @@ void CommandController::updateHover() noexcept {
             put(1, h.reason == CommandReason::Ready ? "Click to aid. Cost: 1 action."
                                                     : commandMessage(h.reason));
         } else {
-            put(1, "Click to inspect character.");
+            put(1, realTime(state_.combat.phase) ? "Click to select. [i] opens details."
+                                                 : "Click to inspect character.");
             put(2, "Read-only details; pauses combat.");
         }
     }
