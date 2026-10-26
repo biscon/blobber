@@ -3,7 +3,7 @@
 Status: Accepted and closed, 2026-10-26. Implementation was authorized by “Implement
 the plan.” Slice 07 and its two corrections were accepted before this work.
 The user accepted slice 08 and milestone B, including all review corrections.
-Slice 09 remains Planned; discuss graphical changes before starting it.
+Graphical subslices 8.1–8.3 are now Planned before slice 09; 8.1 is next eligible.
 The verification/review notes below record the checks and limitations at delivery;
 the acceptance record at the end supersedes their pending-review instructions.
 
@@ -299,6 +299,11 @@ Accepted and closed, including all review corrections above. No additional
 implementation or testing was performed for this documentation-only closure;
 recorded automated checks and their technical limitations remain unchanged.
 
-The user wants to discuss graphical work before the next slice. Slice 09 is now
-eligible but remains Planned and unstarted. Do not plan or implement it until
-the user resumes that work.
+The user subsequently approved three graphical subslices before slice 09:
+[8.1 image preparation, 8.2 archer artwork/loadouts, and 8.3 projectiles/impact timing](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context).
+Plan 8.1 next in a fresh context; each needs a separate implementation plan and
+user acceptance. Slice 09 remains Planned and is ineligible until 8.3 is Accepted.
+The old 160 MiB limit is not a user constraint; 8.1 may revise it with measurements.
+Slice 8.3 will intentionally replace immediate damage/life/occupancy consequences
+with impact-time application. Until implemented, the historical behavior and
+verification recorded above remain accurate.

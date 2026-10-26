@@ -1,5 +1,14 @@
 # System design
 
+Planned, not implemented: [graphical subslices 8.1–8.3](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context)
+cover image preparation/memory, distinct melee-goblin and archer artwork/loadouts,
+and projectiles with impact-time consequences. Each requires its own plan and user
+acceptance before the next begins. Slice 8.1 is next; slice 09 waits for all three.
+High-resolution masters are preserved; no atlas or NPC paper-doll system is planned.
+The 160 MiB cap below describes the accepted implementation, not a user constraint;
+8.1 will reassess it. Immediate damage/life transitions remain current behavior
+until 8.3 implements impact-time application.
+
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
 Implemented and accepted (2026-10-26): [front-approach routing correction](hybrid_encounter_design.md#front-approach-routing-correction). Pursuit from ahead prefers the center and diagonal front cells, with bounded navigation fallback when that band is full or unreachable. Living melee targets beyond reach report out of range. Initiative strip unchanged.
@@ -17,8 +26,8 @@ maneuver/retreat command or party surprise penalty remains. Catalog schema 3 add
 a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
 fixed 1920×1080 presentation and 160 MiB pixel cap. See
 [verification and handoff](slice08_verification.md). Slice 09 remains Planned;
-slice 08 and milestone B are closed. Discuss the user’s graphical changes before
-planning or starting slice 09.
+slice 08 and milestone B are closed. Complete and accept graphical subslices
+8.1–8.3 before planning or starting slice 09.
 
 Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
 600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)

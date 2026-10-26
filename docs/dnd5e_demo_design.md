@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Slice 09 remains Planned; the user wants to discuss graphics before starting it.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. User-approved graphical subslices 8.1–8.3 are Planned between accepted slice 08 and slice 09. Slice 8.1 is next eligible; slice 09 waits for acceptance of all three.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -12,8 +12,8 @@ user acceptance.
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 09 — Effects and concentration (Planned; not started) |
-| Next action | Discuss the user’s graphical changes before planning or starting slice 09 |
+| Next eligible slice | 8.1 — Image preparation and memory (Planned; not started) |
+| Next action | Plan slice 8.1 only in a fresh context; review its implementation plan before coding |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -62,7 +62,8 @@ override the session's permission or mode constraints.
 
 If a slice proves too large, propose a split with a useful review checkpoint.
 Preserve existing slice IDs; use suffixes such as 10a/10b rather than silently
-renumbering completed history. Record approved dependency and milestone changes.
+renumbering completed history. The user explicitly chose decimal IDs 8.1–8.3
+for the graphical interlude after slice 08. Record approved dependency and milestone changes.
 Do not quietly push unfinished requirements into another slice.
 
 ### Status meanings
@@ -312,7 +313,10 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 06 | [Goblin hurt/death animations](#slice-06-goblin-hurt-and-death-animations) | 05 | Accepted | B |
 | 07 | [Moving goblin AI](#slice-07-moving-goblin-ai) | 06 | Accepted | B |
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Accepted | B |
-| 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 08 | Planned | C |
+| 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Planned | B follow-up |
+| 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Planned | B follow-up |
+| 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Planned | B follow-up |
+| 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Planned | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
@@ -327,6 +331,10 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Accepted |
 | C — RPG loop | Class abilities, spells, inventory, equipment, loot, recovery, and levels 1–3 work together. | Planned |
 | D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
+
+The B follow-up subslices do not reopen accepted slice 08 or milestone B. Each
+is a separate planning, implementation and user-acceptance checkpoint. They must
+all be Accepted before slice 09 starts; IDs 09–16 retain their existing scope.
 
 Every slice ends with user review. At milestone boundaries, also review the
 combined experience; passing isolated tests does not establish the intended feel.
@@ -867,16 +875,168 @@ duplicate actions or reset costs. User reviews milestone B and overall combat fe
 **Verification:** Debug and Release 20/20; focused ASan/UBSan, zero-allocation frame guard, separate scale checks, hidden GPU smoke and hybrid/HUD captures. See [verification and handoff](slice08_verification.md).
 **Review recipe:** Run `cmake-build-debug/blobber --hybrid-demo --seed 5`; select Merrin, press 3 and click a goblin. Review direct attacks and automatic side/rear facing with preserved actions. Full recipe and capture locations are in the handoff.
 **Deviations / limitations:** Approved project adaptations are recorded in the design and SRD ledger. The user accepted the delivered combat feel and presentation; further graphical work is a separate discussion. Generated-fixture stress does not establish shipped-art performance at maximum population. LeakSanitizer was not run.
-**Next-agent handoff:** Slice 08 and milestone B are closed. Preserve travel/impact/turn holds and the 160 MiB cap. Discuss the user’s graphical changes before planning or starting slice 09.
+**Next-agent handoff:** Slice 08 and milestone B are closed. Plan 8.1 next, then 8.2 and 8.3, with separate user acceptance. Preserve accepted combat geometry and presentation except where these subslices explicitly change it. The old 160 MiB cap is an implementation guardrail, not a user requirement; 8.1 may replace it with measured, documented budgets. Slice 8.3 intentionally supersedes immediate damage and occupancy release at attack calculation.
 **Acceptance:** Accepted on 2026-10-26: “yes I accept this slice so close it”. This closes milestone B, including all slice 08 review corrections. The user requested a graphics discussion before the next slice.
+
+### Graphical interlude: shared decisions and planning context
+
+Approved scope (2026-10-26): the user requested three subslices, numbered 8.1,
+8.2 and 8.3, so each can be planned and implemented in a clean context. This is
+roadmap authorization, not approval of their detailed implementation plans. Use
+the normal reusable prompts above; do not plan or implement all three together.
+Read the preceding accepted slice's handoff and inspect current code before each
+plan. Record a durable design and verification/handoff for each as it progresses.
+
+User decisions to preserve:
+
+- Preserve high-resolution originals and generated sheets. Runtime derivatives
+  must be reproducible and replaceable; do not destructively resize masters.
+- No texture-atlas work or NPC weapon paper dolls. Separate weapon-specific NPC
+  appearances are a content convention; the engine still supports mixed equipment.
+- Regular demo goblins become melee-only; archers are bow-only with their own art.
+- Show outgoing and incoming projectiles. Apply attack consequences at impact,
+  including health, life state, reactions, damage/MISS feedback and result logs.
+  Calculating rolls in advance is allowed; showing HP loss before impact is not.
+- Keep the prepared-image renderer, discrete grid, current camera/FOV and fixed
+  presentation. A future higher-resolution dungeon viewport is motivation for
+  keeping masters, not a feature to implement in this interlude.
+- Keep bounded storage and allocation-free engine frame work. The historical
+  160 MiB NPC pixel cap is not a user constraint and may be revised with evidence.
+- Hidden application-owned captures are allowed; never automate OS input/focus.
+
+Inspection baseline for the 8.1 planner (verify against current code): the animated
+manifest uses 52 extracted frames at 384×536, 512×536 or 768×536, rather than the
+large static goblin back.png. Offline extraction currently uses nearest-neighbor
+sampling. Startup builds CPU distance banks and a movement raster per pose, then
+releases loaded source pixels. NPCs are CPU-composited into the 500×282 dungeon
+image, uploaded as one viewport texture; there are no individual NPC GPU draws.
+Source pixels measured 58,179,584 bytes; prepared pixels including shadows measured
+102,346,541 bytes. Their 160,526,125-byte sum is a startup accounting figure, not
+resident GPU usage or a complete peak-memory measurement. A static calculation
+estimated 87.88 MiB of stationary banks, 75.65 MiB in the two closest depth slots
+in the party's grid row. Audit those slots, including strafe/travel visibility,
+before deciding which can be omitted or represented more compactly.
+
+### Slice 8.1: Image preparation and memory
+
+**Deliver:** Reproducible runtime image preparation from preserved masters, better
+control of downsampling quality, and materially leaner prepared NPC storage.
+Separate source/loading costs from resident prepared pixels in diagnostics and
+budgets. Document regeneration commands and how a future viewport-resolution
+change would rebuild derivatives. Establish enough measured capacity for the
+second complete NPC appearance in 8.2 without inventing an exact asset count.
+
+**Planning focus:** Inspect the existing sheet extraction, NPC loading,
+PreparedNpcs distance/travel banks, source lifetime and application upload path.
+Audit oversized close-depth canvases and transparent padding first: shrinking
+inputs alone does not shrink projection-sized outputs. Compare nearest-neighbor
+with alpha-aware area and/or higher-quality filtering on representative actual
+poses; choose the default through visual review. Plan safe edge/anchor handling,
+reproducible derived-output metadata, capacity/exhaustion behavior and loading
+lifetime. Use an offline derivative workflow; retain startup preparation where
+appropriate. Do not introduce atlas packing or replace the rendering architecture.
+
+**Boundary:** No new goblin art/loadouts, projectile system, combat-timing changes,
+or increased viewport resolution. Preserve ground registration, shadows, picking,
+three-cell front visibility and interpolated travel. Revised memory limits must
+be measured and documented, not an unexplained increase to bypass inefficiency.
+
+**Acceptance:** Compare deterministic before/after captures at near/far distances,
+all headings, diagonal edge slots, strafe and NPC travel. Verify transparent edges,
+anchors, wall occlusion and all existing animation clips. Use generated fixtures
+for CPU correctness, derivative reproducibility and allocation checks; inspect
+shipped art separately. Report before/after source, resident and loading-memory
+accounting and preparation cost, stating measurement limits. Check hidden GPU
+integration. Originals remain intact and derivatives can be regenerated.
+
+**Execution record:** Not started; no detailed implementation plan, verification
+or acceptance recorded. Predecessor: [slice 08 handoff](slice08_verification.md).
+
+### Slice 8.2: Distinct goblin archer artwork and loadouts
+
+**Deliver:** A separate goblin archer appearance bound to the existing bow-only
+rules variant. Its idle, walk, bow attack, hurt and death poses consistently show
+appropriate equipment, with the directional coverage required by the renderer.
+Use a recognizable bow/quiver silhouette and a cohesive match to existing art.
+Bind the two hybrid-demo archers to that appearance. Make regular demo goblins
+melee-only and remove their need for bow art in the production appearance.
+
+**Planning focus:** Read 8.1's accepted regeneration/storage contract and the
+existing NPC appearance/rules binding and animation authoring workflow. Use the
+image-generation skill for new artwork; preserve master sheets and provenance.
+Review an archer reference before generating the full set. Reuse suitable existing
+bow poses only when visually consistent; registration, equipment and identity
+must remain coherent across clips. Plan content/fixture updates for changing the
+regular goblin loadout without weakening mixed-weapon engine regression coverage.
+
+**Boundary:** No paper dolls, engine restriction to one weapon, new AI preferences,
+or projectile/timing implementation. Mixed-weapon behavior remains supported
+through dedicated fixtures. Do not implement spells, inventories or ammunition.
+
+**Acceptance:** Verify appearance/rules bindings and melee-only versus ranged-only
+behavior. Inspect all required directional clips, ground/scale continuity, edge
+visibility, hit picking and shadows using deterministic captures. Exercise both
+variants together in the hybrid demo. Validate content, memory accounting and
+frame allocation behavior using 8.1's pipeline. User reviews archer consistency
+and enemy-role readability before this slice is Accepted.
+
+**Execution record:** Not started; requires accepted 8.1 and its handoff. No
+detailed implementation plan, verification or acceptance recorded.
+
+### Slice 8.3: Projectiles and impact-time consequences
+
+**Deliver:** Visible arrows traveling from the party into the dungeon and from
+enemy archers toward the viewer, with perspective size changes and distinct
+hit/miss endings. Launch enemy arrows at their authored bow-release marker;
+place source/target anchors consistently with displayed NPC positions, including
+the inward front-row adjustment. Synchronize arrival with all attack consequences.
+
+Calculate hit/damage once in advance if useful, spend the action/cooldown at attack
+start, and apply damage at impact. HP, unconsciousness/death, occupancy release,
+hurt/death animation, portrait state, splashes and result logs must agree at that
+instant. Apply the same consequence-timing rule to existing melee strikes. Preserve
+turn presentation holds and freeze pending impacts/projectiles during pauses.
+This supersedes slice 08's immediate damage/life changes, not its accepted combat
+geometry, initiative rules or AI policy.
+
+**Planning focus:** Inspect CombatController attack/hold/update paths, ActorWorld
+and PartyState damage, NpcAnimator cues, CommandController feedback/log scheduling,
+and session phase clocks. Design a bounded authoritative pending-impact mechanism
+separate from cosmetic projectiles; gameplay consequences must not be dropped when
+visual capacity is exhausted. Resolve launch interruption, overlapping real-time
+shots, target death/removal before arrival, party/NPC movement or turning during
+flight, phase transitions, large time steps, restart and victory/defeat ordering
+in the detailed plan. Define flight duration/trajectory and anchoring with visual
+review. Preserve deterministic RNG and exactly-once damage; visuals never reroll
+or determine a hit by collision. Simple authored arrow art need not use imagegen.
+
+**Boundary:** Provide a small reusable presentation path for later spell projectiles,
+without implementing spells, concentration, beams, area effects, physics simulation
+or a speculative general VFX framework. Do not defer health display correction
+while only adding moving arrows. Integrate with 8.1's memory/preparation approach.
+
+**Acceptance:** Tests check immediately before/at/after release and impact for
+party/enemy melee and ranged hits, misses and lethal attacks. Cover pause/resume,
+overlapping approach attacks, invalidated targets, movement, phase changes,
+restart, bounded capacity and no duplicate damage/RNG consumption. Verify no
+premature HP/life/log/reaction changes and no early turn or victory handoff. Run
+allocation checks and hidden captures at launch, mid-flight and impact, near/far
+and diagonal targets. User reviews shot direction, target attribution and pacing.
+
+**Execution record:** Not started; requires accepted 8.2 and its handoff. No
+detailed implementation plan, verification or acceptance recorded. Its final
+handoff must give slice 09 the authoritative impact/phase-clock contract and
+identify extension points that slice 10 can use for spell visuals.
 
 ### Slice 09: Effects and concentration
 
 **Deliver:** Bounded effect lifecycle for the planned curated spells/features:
 durations, expiry, saves, concentration, stacking rules where needed, and cleanup.
 
-**Boundary:** First identify concrete consumers in slices 10 and 13. Avoid a
-universal effect language or implementation of unused conditions.
+**Boundary:** Requires accepted 8.1–8.3. Read 8.3’s impact/phase-clock handoff so
+effect application and concentration consequences agree with attack impact. First
+identify concrete consumers in slices 10 and 13. Avoid a universal effect language
+or implementation of unused conditions.
 
 **Acceptance:** Effects behave across real-time/turn phases, pauses, unconsciousness,
 death, and encounter completion. Test interruption, replacement, expiry boundaries,
@@ -1096,3 +1256,9 @@ Acceptance (2026-10-26): user explicitly accepted and closed slice 08, including
 its review corrections, completing milestone B. This supersedes the pending-review
 notes above. Slice 09 is eligible but remains Planned and unstarted; discuss the
 user’s graphical work before advancing.
+
+Roadmap amendment (2026-10-26): user requested graphical subslices 8.1–8.3
+between accepted 08 and Planned 09, with clean-context planning and implementation
+for each. Their scope and shared decisions are recorded above. Dependency chain
+is 08 → 8.1 → 8.2 → 8.3 → 09; milestone B stays Accepted. The graphical
+interlude has not started, and no detailed implementation plan is yet approved.
