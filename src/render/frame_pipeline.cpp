@@ -5,7 +5,7 @@
 namespace blobber {
 bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const MovementState& state,
                            const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
-                           const AttackVisualSnapshot* attacks, std::uint64_t now) {
+                           const AttackVisualSnapshot* attacks, std::uint64_t now, const SpellArea* area) {
     if (attacks && (!npcs || attacks->world != npcs->snapshot().world))
         throw std::invalid_argument("Attack snapshot belongs to another actor world");
     const bool effectsChanged = projectiles_.update(attacks, now);
@@ -18,12 +18,16 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
     const auto animationRevision = animation ? animation->revision : 0;
     const auto actorRevision = npcs ? npcs->snapshot().revision : 0;
     const auto actorWorld = npcs ? npcs->snapshot().world : 0;
-    const bool newContent = effectsChanged || !ready_ || revision_ != state.revision ||
+    const SpellArea preview = area && !state.transition.active() ? *area : SpellArea{};
+    const bool previewChanged =
+        preview.cells != area_.cells || preview.eligible != area_.eligible || preview.kind != area_.kind;
+    area_ = preview;
+    const bool newContent = previewChanged || effectsChanged || !ready_ || revision_ != state.revision ||
                             actorRevision_ != actorRevision || actorWorld_ != actorWorld ||
                             hadAnimation_ != (animation != nullptr) ||
                             animationRevision_ != animationRevision;
     if (newContent) {
-        renderer.compose(map, state.player, destination_, npcs, animation, &picking_, &projectiles_);
+        renderer.compose(map, state.player, destination_, npcs, animation, &picking_, &projectiles_, &area_);
         if (state.transition.active() && !isStrafe(state.transition.action))
             renderer.compose(map, state.transition.from, source_, npcs, animation,
                              projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_);

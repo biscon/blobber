@@ -234,6 +234,7 @@ int main() {
             spellUis[i] = std::make_unique<CommandController>(*spellSessions[i]);
         }
         ProjectilePlayer spellVisuals;
+        FramePipeline spellFrames;
         tracking = true;
         for (unsigned i = 0; i < spellSessions.size(); ++i) {
             auto& s = *spellSessions[i];
@@ -255,7 +256,30 @@ int main() {
             ui.refresh(allCombatTargets(s), false, false, true);
             ui.selectCharacter(caster);
             ui.openSpellbook();
-            ui.browseSpellbook(1);
+            std::size_t entry = 0;
+            while (entry < ui.snapshot().magic.count &&
+                   ui.snapshot().magic.entries[entry].spell.index != command.spell.index)
+                ++entry;
+            ui.chooseSpellbook(entry);
+            if (rule.area) {
+                const auto area = ui.floorPreview();
+                spellFrames.update(renderer, hybridMap, s.movement(), &s.actors(), nullptr, nullptr,
+                                   s.timeMs(), &area);
+                spellFrames.update(renderer, hybridMap, s.movement(), &s.actors(), nullptr, nullptr,
+                                   s.timeMs(), &area);
+                spellFrames.update(renderer, hybridMap, s.movement(), &s.actors());
+            } else if (rule.hostile) {
+                ui.magicEnemy(command.enemies[0]);
+                if (kind == rules::SpellKind::MagicMissile) {
+                    ui.magicEnemy(command.enemies[0]);
+                    ui.magicEnemy(command.enemies[0], true);
+                    ui.magicEnemy(command.enemies[0]);
+                }
+            } else
+                ui.magicAlly(3);
+            ui.refresh(allCombatTargets(s), false, false, false);
+            ui.refresh(allCombatTargets(s), false, false, true);
+            ui.backToSpellbook();
             ui.closeOverlay();
             okay &= s.submit(command).reason == CommandReason::Resolved;
             ui.record(s.events());

@@ -112,6 +112,15 @@ struct CombatSnapshot {
     std::size_t pendingCount = 0;
     std::uint64_t gameplayMs = 0;
 };
+struct SpellArea {
+    rules::SpellKind kind = rules::SpellKind::Count;
+    std::array<Cell, 3> cells{};
+    std::array<bool, 3> eligible{};
+    std::array<ActorId, 12> actors{};
+    std::size_t count = 0;
+};
+SpellArea spellArea(const ActorWorld&, Player) noexcept;
+
 class CombatController {
   public:
     static constexpr std::uint64_t actionDelayMs = 450;
@@ -137,6 +146,8 @@ class CombatController {
     bool exposed(ActorId) const noexcept;
     bool adjacent(Cell) const noexcept;
     bool occupiedFront(Player) const noexcept;
+    CommandReason spellRecipient(const PartyCommand&, Player, std::size_t index) const noexcept;
+    bool casterResolving(rules::CharacterId id) const noexcept;
     bool sneakPreview(rules::CharacterId, ActorId, bool ranged, Player) const noexcept;
 
   private:

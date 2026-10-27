@@ -9,6 +9,7 @@ namespace blobber {
 namespace hudInk {
 inline constexpr Color background{12, 18, 18, 255}, panel{17, 24, 24, 255}, edge{96, 83, 57, 255};
 inline constexpr Color gold{204, 166, 94, 255}, bright{244, 203, 103, 255}, text{220, 216, 199, 255};
+inline constexpr Color teal{69, 210, 207, 255};
 inline constexpr Color muted{133, 141, 138, 255}, red{190, 51, 36, 255}, blue{108, 166, 188, 255};
 } // namespace hudInk
 // Geometry and artwork render on the art target; fonts render on the native text target.
@@ -84,5 +85,20 @@ class HudPainter {
     void details(const HudSnapshot& h) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
+    void spellMarkers(const HudSnapshot& h) const;
+    void checkmark(UiRect r) const {
+        fill(r, hudInk::teal);
+        if (!fonts) {
+            DrawLine(r.x + 1, r.y + r.height / 2, r.x + r.width / 3, r.y + r.height - 2, WHITE);
+            DrawLine(r.x + r.width / 3, r.y + r.height - 2, r.x + r.width - 2, r.y + 1, WHITE);
+        }
+    }
+    void dart(UiRect r) const {
+        if (!fonts) {
+            DrawLine(r.x, r.y + r.height - 1, r.x + r.width - 1, r.y, hudInk::teal);
+            DrawTriangle({float(r.x + r.width - 1), float(r.y)}, {float(r.x + r.width - 4), float(r.y)},
+                         {float(r.x + r.width - 1), float(r.y + 4)}, WHITE);
+        }
+    }
 };
 } // namespace blobber

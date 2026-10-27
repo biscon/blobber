@@ -11,6 +11,7 @@ class CombatLog {
     const char* newest(std::size_t offset) const noexcept;
     std::size_t size() const noexcept { return count_; }
     std::size_t lineCount(int columns) const noexcept;
+    std::size_t rewrapOffset(std::size_t offset, int from, int to) const noexcept;
     bool line(std::size_t fromOldest, int columns, char* output, std::size_t bytes) const noexcept;
 
   private:
@@ -44,7 +45,9 @@ struct HudCard {
     int armorClass = 0, level = 1;
     std::uint64_t cooldownMs = 0;
     bool spent = false, selecting = false;
-    unsigned portrait = 11;
+    unsigned portrait = 100;
+    bool castRecipient = false, castEligible = true, castCaster = false, castHovered = false;
+    const char* castPreview = "";
 };
 enum class HoverKind { None, Enemy, Action, Portrait };
 struct HudHover {
@@ -70,10 +73,24 @@ struct SpellBookEntry {
     rules::Feature feature = rules::Feature::None;
     const char *name = "", *description = "";
     int cost = 0;
+    rules::SpellKind kind = rules::SpellKind::Count;
     CommandReason reason = CommandReason::Unavailable;
     int charges = -1; // Negative for entries without a finite-use resource.
 };
+enum class CastingState : std::uint8_t { Normal, SpellPicker, Targeting, Resolving };
 struct MagicHud {
+    CastingState state = CastingState::Normal;
+    PartyCommand pending;
+    rules::SpellKind kind = rules::SpellKind::Count;
+    std::array<CommandReason, rules::partySize> allyReasons{};
+    std::array<bool, rules::partySize> selectedAllies{};
+    SpellArea footprint;
+    std::array<char, 128> feedback{};
+    unsigned assigned = 0, maximum = 0;
+    bool single = false;
+    bool casting() const noexcept {
+        return state == CastingState::Targeting || state == CastingState::Resolving;
+    }
     bool open = false, armed = false, hostile = false, area = false, missiles = false;
     std::array<SpellBookEntry, 20> entries{};
     std::size_t count = 0, cursor = 0, offset = 0;
@@ -126,7 +143,12 @@ class CommandController {
     void openSpellbook() noexcept;
     void browseSpellbook(int delta) noexcept;
     void chooseSpellbook(std::size_t index) noexcept;
-    void magicEnemy(ActorId) noexcept;
+    SpellArea floorPreview() const noexcept;
+    void backToSpellbook() noexcept;
+    void magicEnemy(ActorId, bool remove = false) noexcept;
+    void removeMagicRecipient(std::size_t index) noexcept;
+    CommandReason magicEligibility(ActorId) const noexcept;
+    void scrollSpellbook(int delta) noexcept;
     void magicAlly(std::size_t formationIndex) noexcept;
     bool magicSingleTarget() const noexcept;
     void magicKeyboardTarget(int delta) noexcept;
@@ -164,11 +186,15 @@ class CommandController {
     void movementStarted() noexcept;
     CommandReason validate(const PartyCommand& command) const noexcept;
     CommandReason submit(const PartyCommand& command) noexcept;
-    CommandReason confirm() noexcept { return submit(state_.selection); }
+    CommandReason confirm() noexcept;
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
     void refreshMagic() noexcept;
+    void reconcileMagic() noexcept;
+    void magicFeedback(const char*) noexcept;
+    void setCastingState(CastingState) noexcept;
+    std::array<std::size_t, rules::partySize> bookCursors_{}, bookOffsets_{};
     bool visible(ActorId id) const noexcept;
     void updateAvailability() noexcept;
     void recordFeedback(const CombatOutcome& outcome) noexcept;

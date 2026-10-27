@@ -1,5 +1,8 @@
 # Slice 10 verification and handoff
 
+Historical core-spell handoff. The subsequent [casting UI correction handoff](slice10_ui_verification.md)
+supersedes the interaction, art and capture limitations below.
+
 Status: **Ready for review**, 2026-10-27. Implementation was authorized with
 “Implement the plan”. User acceptance is pending. Slice 11 remains Planned and
 must not begin until slice 10 is accepted. See the [implemented design](spells_design.md),

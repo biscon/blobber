@@ -3,9 +3,35 @@
 #include <stdexcept>
 namespace blobber {
 UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : resources_(resources) {
-    constexpr const char* names[]{"alden",  "brunna", "merrin", "lethiel", "goblin", "melee",
-                                  "defend", "ranged", "spell",  "item",    "aid"};
-    OwnedImage atlas(GenImageColor(256, 192, BLANK));
+    constexpr const char* names[]{"alden",
+                                  "brunna",
+                                  "merrin",
+                                  "lethiel",
+                                  "goblin",
+                                  "melee",
+                                  "defend",
+                                  "ranged",
+                                  "spell",
+                                  "item",
+                                  "aid",
+                                  "spells/sacred_flame",
+                                  "spells/spare_the_dying",
+                                  "spells/bless",
+                                  "spells/bane",
+                                  "spells/shield_of_faith",
+                                  "spells/cure_wounds",
+                                  "spells/guiding_bolt",
+                                  "spells/inflict_wounds",
+                                  "spells/fire_bolt",
+                                  "spells/acid_splash",
+                                  "spells/mage_armor",
+                                  "spells/magic_missile",
+                                  "spells/burning_hands",
+                                  "spells/thunderwave",
+                                  "spells/second_wind",
+                                  "spells/arcane_recovery",
+                                  "spells/dismiss_concentration"};
+    OwnedImage atlas(GenImageColor(256, 448, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
     for (unsigned i = 0; i < regions_.size(); ++i) {
@@ -13,12 +39,30 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
         OwnedImage image(LoadImage(path.string().c_str()));
         if (!image.value.data)
             throw std::runtime_error("Missing UI art: " + path.string());
-        const int w = i < 4 ? 48 : i == 4 ? 24 : 30, h = i < 4 ? 56 : i == 4 ? 24 : 28;
+        const int w = i < 4    ? 48
+                      : i == 4 ? 24
+                      : i < 11 ? 30
+                               : 36,
+                  h = i < 4    ? 56
+                      : i == 4 ? 24
+                      : i < 11 ? 28
+                               : 36;
         ImageResize(&image.value, w, h);
         regions_[i] = {float((i % 4) * 64), float((i / 4) * 64), float(w), float(h)};
         ImageDrawImage(&atlas.value, image.value, int(regions_[i].x), int(regions_[i].y), WHITE);
     }
     atlas_ = resources_.createTexture(atlas.value);
+}
+static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 14,
+              "Extend the spell atlas mapping for new spells");
+unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcept {
+    if (feature == rules::Feature::SecondWind)
+        return 25;
+    if (feature == rules::Feature::ArcaneRecovery)
+        return 26;
+    if (feature == rules::Feature::DismissConcentration)
+        return 27;
+    return kind < rules::SpellKind::Count ? 11 + static_cast<unsigned>(kind) : 8;
 }
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     if (index >= regions_.size()) {

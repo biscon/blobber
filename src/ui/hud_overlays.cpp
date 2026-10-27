@@ -123,22 +123,48 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         return;
     const HudPainter p(fonts, art, metrics);
     const auto& combat = h->combat;
-    if (!h->suspended && !h->modal() && h->hover.kind == HoverKind::Enemy && h->hover.enemy && picking &&
-        h->hover.enemy->world == picking->targets().world) {
-        const auto slot = h->hover.enemy->slot;
-        const auto color = h->hover.reason == CommandReason::Ready ? bright : muted;
+    if (!h->modal() && picking && (!h->suspended || h->magic.armed)) {
+        std::array<std::uint8_t, NpcWorld::maxInstances> marks{};
+        if (h->magic.armed) {
+            for (std::size_t i = 0; i < h->magic.affectedCount; ++i) {
+                const auto id = h->magic.affected[i];
+                if (id.world == picking->targets().world && id.slot < marks.size())
+                    marks[id.slot] = h->magic.area ? 2 : 1;
+            }
+        }
+        if (!h->suspended && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
+            h->hover.enemy->world == picking->targets().world && h->hover.enemy->slot < marks.size() &&
+            !h->magic.area)
+            marks[h->hover.enemy->slot] = marks[h->hover.enemy->slot]               ? 4
+                                          : h->hover.reason == CommandReason::Ready ? 3
+                                                                                    : 5;
         if (!fonts)
             for (int y = 0; y < viewHeight; ++y)
-                for (int x = 0; x < viewWidth; ++x)
-                    if (picking->slot(x, y) == slot &&
-                        (picking->slot(x - 1, y) != slot || picking->slot(x + 1, y) != slot ||
-                         picking->slot(x, y - 1) != slot || picking->slot(x, y + 1) != slot))
+                for (int x = 0; x < viewWidth; ++x) {
+                    const auto slot = picking->slot(x, y);
+                    if (slot >= marks.size() || !marks[slot])
+                        continue;
+                    if (picking->slot(x - 1, y) != slot || picking->slot(x + 1, y) != slot ||
+                        picking->slot(x, y - 1) != slot || picking->slot(x, y + 1) != slot) {
+                        const Color color =
+                            marks[slot] == 1 ? teal
+                            : marks[slot] == 2
+                                ? (h->magic.kind == rules::SpellKind::Thunderwave ? Color{96, 185, 236, 255}
+                                                                                  : Color{235, 148, 45, 255})
+                            : marks[slot] == 4 ? Color{174, 238, 230, 255}
+                            : marks[slot] == 3 ? bright
+                                               : muted;
                         DrawPixel(viewX + x, viewY + y, color);
-        const auto anchor = picking->targets().anchors[slot];
-        if (anchor.valid)
-            p.health({viewX + std::clamp(anchor.x - 23, 0, viewWidth - 46),
-                      viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6},
-                     h->hover.health);
+                    }
+                }
+        if (!h->magic.casting() && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
+            h->hover.enemy->slot < picking->targets().anchors.size()) {
+            const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
+            if (anchor.valid)
+                p.health({viewX + std::clamp(anchor.x - 23, 0, viewWidth - 46),
+                          viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6},
+                         h->hover.health);
+        }
     }
     if (!h->suspended && combat.phase == CombatPhase::Turns && combat.upcomingCount) {
         const int width = 54 + int(combat.upcomingCount) * 30;
@@ -170,7 +196,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             }
         }
     }
-    p.spellTargets(*h);
+    p.spellMarkers(*h);
     for (const auto& feedback : h->feedback)
         if (const auto rect = feedbackRect(feedback, h->cards))
             splash(p, feedback, *rect);
@@ -188,7 +214,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.label(combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER" : "RESTART / ENTER",
                 hudLayout::resultButton, gold);
     }
-    if (h->modal())
+    if (h->modal() && !h->magic.open)
         p.fill({0, 16, 640, 344}, {0, 0, 0, 110});
     if (h->logExpanded) {
         p.overlayBox(hudLayout::expandedLog);

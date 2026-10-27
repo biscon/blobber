@@ -17,6 +17,7 @@ enum class UiKey : std::size_t {
     Cancel,
     Click,
     RightClick,
+    Back,
     DemoNext,
     DemoReset,
     Count
@@ -26,7 +27,7 @@ struct UiInput {
     std::array<bool, uiKeyCount> pressed{};
     std::optional<ArtPoint> pointer;
     int scroll = 0;
-    bool focused = true;
+    bool focused = true, shift = false;
     bool has(UiKey key) const noexcept { return pressed[static_cast<std::size_t>(key)]; }
 };
 class UiInputEdges {

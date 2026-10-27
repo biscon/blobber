@@ -72,17 +72,26 @@ fixed/reused; content loading, preparation and diagnostics may allocate.
 
 ## UI and visuals
 
-Dock slot 4 opens a paused Spells / Abilities picker. Selection closes it and
-resumes simulation without click-through. Single targets use body/portrait input;
-multi-target and area spells use explicit Cast/Enter confirmation, counts and
-three-cell footprint preview. Revalidate at confirmation; movement, focus loss,
-character/turn changes clear stale choices. Rogue normal Melee selects its rear
-exception automatically. Show mana, charges, concentration/status, saves/healing
-and action rejection reasons; allow free explicit concentration dismissal.
-Prepared bolt/dart/pulse/healing glints extend the existing compositor; preserve
-projection, occlusion, source-free startup and fixed presentation. No new generated
-icon set; final art remains slice 15. Sixteen bounded feedback entries show a
-complete area hit. Cosmetic overflow replaces oldest independently of simulation.
+The implemented [casting UI revision](spellcasting_ui_design.md) owns Normal,
+SpellPicker, Targeting and Resolving states. Dock slot 4 opens a compact paused
+picker with seven scrollable icon/name/cost rows and a details column. Choosing
+closes it without click-through. Pending selections remain separate from committed
+combat state; Back restores the picker position, Cancel spends nothing, and focus
+loss suspends input while preserving valid choices. Live changes remove invalid
+recipients individually. Movement, caster and turn changes cancel stale casts.
+
+Single targets use immediate body/portrait clicks; multi-target, fixed-area and
+untargeted actions require confirmation in a shared casting dock. Portrait frames,
+checkmarks and removable chips identify allies; manual dart allocation has small
+count badges and pips. A shared authoritative query drives area validation,
+resolution, floor tint and affected-enemy markers. The combat log stays visible.
+Rogue normal Melee retains its rear exception. Mana, charges, concentration/status,
+saves/healing and specific rejection reasons remain visible; concentration dismissal
+is free. Seventeen painted spell/ability icons extend the existing atlas.
+
+Prepared bolt/dart/pulse/healing glints retain projection, occlusion, source-free
+startup and fixed presentation. Sixteen bounded feedback entries show a complete
+area hit. Cosmetic overflow replaces oldest independently of simulation.
 
 ## Validation and delivery
 

@@ -15,6 +15,76 @@ bool delayed(SpellKind k) {
            k == SpellKind::InflictWounds;
 }
 } // namespace
+SpellArea spellArea(const ActorWorld& actors, Player pose) noexcept {
+    SpellArea result;
+    for (int side = -1; side <= 1; ++side) {
+        const auto cell = pose.cell + forward(pose.heading) + right(pose.heading) * side;
+        result.cells[side + 1] = cell;
+        result.eligible[side + 1] = inMeleeFront(actors.map(), pose.cell, pose.heading, cell);
+    }
+    for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
+        const auto* a = actors.actor(actors.id(i));
+        if (!a || a->life != ActorLife::Alive)
+            continue;
+        for (std::size_t j = 0; j < result.cells.size(); ++j)
+            if (result.eligible[j] && a->npc.cell == result.cells[j]) {
+                assert(result.count < result.actors.size());
+                result.actors[result.count++] = actors.id(i);
+                break;
+            }
+    }
+    return result;
+}
+bool CombatController::casterResolving(rules::CharacterId id) const noexcept {
+    return id.index < rules::partySize && attackBusy(NpcWorld::maxInstances + id.index);
+}
+CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pose,
+                                               std::size_t i) const noexcept {
+    const auto* definition = party_.catalog().spell(c.spell);
+    if (!definition || i >= c.enemies.size() || !party_.character(c.character))
+        return CommandReason::InvalidSpell;
+    const auto kind = definition->kind;
+    const auto* r = rules::spellRules(kind);
+    if (r->hostile) {
+        const auto* a = actors_.actor(c.enemies[i]);
+        if (!a || a->life != ActorLife::Alive)
+            return CommandReason::InvalidTarget;
+        if (kind == SpellKind::InflictWounds) {
+            if (!exposed(c.character))
+                return CommandReason::RearBlocked;
+            if (!inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
+                return CommandReason::OutOfRange;
+            if (!exposed(c.enemies[i]))
+                return CommandReason::FrontProtected;
+        } else {
+            if (!inBowRange(pose.cell, a->npc.cell))
+                return CommandReason::OutOfRange;
+            if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell))
+                return CommandReason::NotVisible;
+        }
+        if (kind == SpellKind::AcidSplash && i &&
+            (!actors_.actor(c.enemies[0]) || !(a->npc.cell == actors_.actor(c.enemies[0])->npc.cell)))
+            return CommandReason::SameCellRequired;
+
+    } else {
+        const auto* ally = party_.character(c.allies[i]);
+        if (!ally || ally->life == rules::Life::Dead)
+            return CommandReason::DeadAlly;
+        if (kind == SpellKind::CureWounds && ally->hitPoints == ally->stats.maxHitPoints)
+            return CommandReason::FullHealth;
+        if (kind == SpellKind::SpareTheDying && ally->life != rules::Life::Dying)
+            return CommandReason::MustBeDying;
+    }
+
+    if (kind == SpellKind::MageArmor) {
+        auto one = c;
+        one.allies[0] = c.allies[i];
+        one.targetCount = 1;
+        if (effects_.validate(spellEffect(one, kind)) == EffectError::InvalidTargets)
+            return CommandReason::Armored;
+    }
+    return CommandReason::Ready;
+}
 EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kind) const noexcept {
     EffectRequest request;
     request.world = c.world;
@@ -103,12 +173,7 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     if (r.area) {
         if (c.targetCount)
             return CommandReason::InvalidTargets;
-        for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
-            const auto& a = actors_.snapshot().actors[i];
-            if (a.life == ActorLife::Alive && inMeleeFront(map_, pose.cell, pose.heading, a.npc.cell))
-                return CommandReason::Ready;
-        }
-        return CommandReason::MissingTarget;
+        return spellArea(actors_, pose).count ? CommandReason::Ready : CommandReason::MissingTarget;
     }
     if (!c.targetCount)
         return CommandReason::MissingTarget;
@@ -116,39 +181,13 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         return CommandReason::InvalidTargets;
     unsigned darts = 0;
     for (std::size_t i = 0; i < c.targetCount; ++i) {
-        if (r.hostile) {
-            const auto* a = actors_.actor(c.enemies[i]);
-            if (!a || a->life != ActorLife::Alive)
-                return CommandReason::InvalidTarget;
-            if (definition->kind == SpellKind::InflictWounds) {
-                if (!exposed(c.character))
-                    return CommandReason::RearBlocked;
-                if (!inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
-                    return CommandReason::OutOfRange;
-                if (!exposed(c.enemies[i]))
-                    return CommandReason::FrontProtected;
-            } else {
-                if (!inBowRange(pose.cell, a->npc.cell))
-                    return CommandReason::OutOfRange;
-                if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell))
-                    return CommandReason::NotVisible;
-            }
-            if (definition->kind == SpellKind::AcidSplash && i &&
-                !(a->npc.cell == actors_.actor(c.enemies[0])->npc.cell))
+        const auto eligibility = spellRecipient(c, pose, i);
+        if (eligibility != CommandReason::Ready)
+            return eligibility;
+        if (definition->kind == SpellKind::MagicMissile) {
+            if (!c.darts[i] || c.darts[i] > 3)
                 return CommandReason::InvalidTargets;
-            if (definition->kind == SpellKind::MagicMissile) {
-                if (!c.darts[i] || c.darts[i] > 3)
-                    return CommandReason::InvalidTargets;
-                darts += c.darts[i];
-            }
-        } else {
-            const auto* ally = party_.character(c.allies[i]);
-            if (!ally || ally->life == rules::Life::Dead)
-                return CommandReason::InvalidAlly;
-            if (definition->kind == SpellKind::CureWounds && ally->hitPoints == ally->stats.maxHitPoints)
-                return CommandReason::FullHealth;
-            if (definition->kind == SpellKind::SpareTheDying && ally->life != rules::Life::Dying)
-                return CommandReason::InvalidAlly;
+            darts += c.darts[i];
         }
         for (std::size_t j = 0; j < i; ++j)
             if (r.hostile ? sameActor(c.enemies[i], c.enemies[j]) : c.allies[i].index == c.allies[j].index)
@@ -277,12 +316,9 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             std::array<ActorId, 12> targets{};
             std::size_t count = 0;
             if (r.area) {
-                for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
-                    const auto* a = actors_.actor(actors_.id(i));
-                    if (a && a->life == ActorLife::Alive &&
-                        inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
-                        targets[count++] = actors_.id(i);
-                }
+                const auto area = spellArea(actors_, pose);
+                targets = area.actors;
+                count = area.count;
             } else {
                 count = c.targetCount;
                 std::copy_n(c.enemies.begin(), count, targets.begin());

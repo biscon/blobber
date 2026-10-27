@@ -2,6 +2,7 @@
 #include "support/check.hpp"
 #include "support/spell_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/spell_layout.hpp"
 #include <chrono>
 #include <cstring>
 #include <iostream>
@@ -26,7 +27,7 @@ void resourcesAndHealing() {
     check(s.submit(heal).reason == CommandReason::FullHealth && s.party().character({1})->mana == 4,
           "Full healing target rejects without cost");
     s.party().damage({0}, 1000);
-    check(s.submit(heal).reason == CommandReason::InvalidAlly, "Healing never resurrects");
+    check(s.submit(heal).reason == CommandReason::DeadAlly, "Healing never resurrects");
     s.party().damage({2}, s.party().character({2})->hitPoints);
     s.party().deathSave({2}, 5);
     heal.allies[0] = {2};
@@ -111,7 +112,7 @@ void effectsAndValidation() {
     auto armor = spellCommand(s, SpellKind::MageArmor);
     armor.targetCount = 1;
     armor.allies[0] = {0};
-    check(s.submit(armor).reason == CommandReason::InvalidTargets, "Mage Armor rejects armored target");
+    check(s.submit(armor).reason == CommandReason::Armored, "Mage Armor rejects armored target");
     armor.allies[0] = {3};
     check(s.submit(armor).reason == CommandReason::Resolved &&
               s.effects().armorClass(rules::CharacterId{3}) == s.party().character({3})->stats.armorClass + 3,
@@ -277,16 +278,18 @@ void ui() {
     choose.pointer = ArtPoint{hudLayout::spellEntry(3).x + 2, hudLayout::spellEntry(3).y + 2};
     choose.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
     routeHudInput(ui, choose, s.actors().id(0)); // Modal click must not also target/cast.
-    check(ui.snapshot().selection.targetCount == 0, "Picker closing click does not select a target");
+    check(ui.snapshot().magic.pending.targetCount == 0, "Picker closing click does not select a target");
     check(!ui.snapshot().modal() && ui.snapshot().magic.missiles && s.party().character({3})->mana == 4,
           "Selection arms without casting or spending");
     ui.magicEnemy(s.actors().id(0));
     ui.magicEnemy(s.actors().id(1));
     ui.magicEnemy(s.actors().id(2));
-    check(ui.snapshot().selection.targetCount == 3 && ui.snapshot().selection.darts[0] == 1,
+    check(ui.snapshot().magic.pending.targetCount == 3 && ui.snapshot().magic.pending.darts[0] == 1,
           "Darts can be distributed across three bodies");
     check(ui.confirm() == CommandReason::Resolved && ui.snapshot().selection.action == PartyAction::Melee,
           "UI commits then clears targeting");
+    ui.refresh(allCombatTargets(s), false, false, true);
+    s.update(2, false);
     ui.refresh(allCombatTargets(s), false, false, true);
     ui.selectCharacter(1);
     ui.openSpellbook();
@@ -294,10 +297,231 @@ void ui() {
     ui.magicAlly(0);
     ui.magicAlly(1);
     ui.magicAlly(2);
-    check(ui.snapshot().selection.targetCount == 3, "Portrait targeting supports three allies");
+    check(ui.snapshot().magic.pending.targetCount == 3, "Portrait targeting supports three allies");
     ui.refresh(allCombatTargets(s), false, false, false);
-    check(ui.snapshot().selection.targetCount == 0 && !ui.snapshot().magic.armed,
-          "Focus loss clears spell selections");
+    check(ui.snapshot().magic.pending.targetCount == 3 && ui.snapshot().magic.armed,
+          "Focus loss preserves spell selections");
+}
+void uiRevision() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    const auto places = spellPlacements(map);
+    GameSession s(map, catalog, places, 5, spellSpawn, false);
+    CommandController ui(s);
+    auto refresh = [&](bool focus = true) { ui.refresh(allCombatTargets(s), false, false, focus); };
+    auto key = [&](UiKey k) {
+        UiInput input;
+        input.pressed[static_cast<std::size_t>(k)] = true;
+        routeHudInput(ui, input);
+    };
+    auto click = [&](UiRect r, std::optional<ActorId> id = {}, bool right = false, bool shift = false) {
+        UiInput input;
+        input.pointer = ArtPoint{float(r.x + 2), float(r.y + 2)};
+        input.shift = shift;
+        input.pressed[static_cast<std::size_t>(right ? UiKey::RightClick : UiKey::Click)] = true;
+        routeHudInput(ui, input, id);
+    };
+    refresh();
+    ui.selectCharacter(3);
+    ui.openSpellbook();
+    click(hudLayout::viewport, s.actors().id(0));
+    check(!ui.snapshot().modal() && !ui.snapshot().selection.target && s.party().character({3})->mana == 4,
+          "Outside picker click dismisses without underlying attack");
+    ui.openSpellbook();
+    ui.chooseSpellbook(6);
+    check(ui.snapshot().magic.open && ui.snapshot().magic.entries[6].reason == CommandReason::FullMana,
+          "Unavailable ability stays in picker with a specific reason");
+    ui.chooseSpellbook(3);
+    const auto a = s.actors().id(0), b = s.actors().id(1), c = s.actors().id(2);
+    click(hudLayout::viewport, a);
+    click(hudLayout::viewport, a);
+    check(ui.snapshot().magic.assigned == 2 && ui.snapshot().magic.pending.darts[0] == 2,
+          "Each missile click adds exactly one dart");
+    click(hudLayout::viewport, a, true);
+    check(ui.snapshot().magic.assigned == 1 && ui.snapshot().magic.armed,
+          "Right click removes instead of cancelling");
+    click(hudLayout::viewport, a, false, true);
+    check(ui.snapshot().magic.pending.targetCount == 0, "Shift click removes final dart and recipient");
+    click(hudLayout::viewport, a);
+    click(hudLayout::viewport, b);
+    click(hudLayout::viewport, c);
+    click(hudLayout::viewport, a);
+    check(ui.snapshot().magic.pending.darts[0] == 1 && ui.snapshot().magic.assigned == 3 &&
+              std::strstr(ui.snapshot().magic.feedback.data(), "Remove a dart"),
+          "Full allocation never redistributes");
+    key(UiKey::One);
+    check(ui.snapshot().magic.armed && s.party().character({3})->mana == 4,
+          "Casting consumes ordinary action shortcuts");
+    const auto logCount = ui.snapshot().log.size();
+    refresh(false);
+    UiInput blur;
+    blur.focused = false;
+    routeHudInput(ui, blur);
+    check(ui.snapshot().magic.assigned == 3 && ui.snapshot().suspended &&
+              ui.confirm() == CommandReason::Unfocused,
+          "Blur preserves allocation and prevents casts");
+    refresh();
+    check(ui.snapshot().magic.assigned == 3 && ui.snapshot().log.size() <= logCount + 1,
+          "Refocus does not emit repeated cancellation logs");
+    ui.toggleLog();
+    check(ui.snapshot().magic.armed && ui.snapshot().modal(), "History preserves pending cast");
+    ui.closeOverlay();
+    const auto original = s.actors().actor(b)->npc;
+    for (int y = original.cell.y - 1; y >= 1; --y)
+        check(s.actors().move(b, {6, y}, original.subcell, spellSpawn.cell).changed,
+              "Move selected enemy beyond six cells");
+    refresh();
+    check(ui.snapshot().magic.assigned == 2, "Range loss returns only that enemy's dart");
+    for (int y = 2; y <= original.cell.y; ++y)
+        check(s.actors().move(b, {6, y}, original.subcell, spellSpawn.cell).changed,
+              "Restore recipient fixture");
+    refresh();
+    ui.magicEnemy(b);
+    auto hidden = allCombatTargets(s);
+    for (std::size_t i = 0; i < hidden.count; ++i)
+        if (sameActor(hidden.ids[i], b)) {
+            for (std::size_t j = i + 1; j < hidden.count; ++j)
+                hidden.ids[j - 1] = hidden.ids[j];
+            --hidden.count;
+            break;
+        }
+    ui.refresh(hidden, false, false, true);
+    check(ui.snapshot().magic.assigned == 2, "Loss of visible body removes only that assignment");
+    refresh();
+    ui.magicEnemy(b);
+    s.actors().damage(b, 1000, s.timeMs());
+    refresh();
+    check(ui.snapshot().magic.assigned == 2 && ui.snapshot().magic.pending.targetCount == 2,
+          "Dead target alone is removed and its dart becomes unassigned");
+    click(hudLayout::viewport, a);
+    key(UiKey::Back);
+    check(ui.snapshot().magic.open && ui.snapshot().magic.cursor == 3 &&
+              ui.snapshot().magic.pending.targetCount == 0,
+          "Back remembers spell and clears assignments without costs");
+    ui.chooseSpellbook(3);
+    click(hudLayout::viewport, a);
+    click(hudLayout::viewport, a);
+    click(hudLayout::viewport, a);
+    UiInput commit;
+    commit.pointer = ArtPoint{float(hudLayout::spellCast.x + 2), float(hudLayout::spellCast.y + 2)};
+    commit.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
+    commit.pressed[static_cast<std::size_t>(UiKey::Confirm)] = true;
+    routeHudInput(ui, commit);
+    check(s.party().character({3})->mana == 2 && ui.snapshot().magic.state == CastingState::Resolving,
+          "Simultaneous button and Enter commit once and enter resolving");
+    routeHudInput(ui, commit);
+    check(s.party().character({3})->mana == 2, "Resolving rejects replay");
+    s.update(2, false);
+    refresh();
+    check(ui.snapshot().magic.state == CastingState::Normal, "Existing cast hold ends resolving");
+    ui.selectCharacter(1);
+    ui.openSpellbook();
+    ui.browseSpellbook(7);
+    const auto offset = ui.snapshot().magic.offset;
+    check(offset == 1, "Cleric list scrolls beyond seven entries");
+    ui.chooseSpellbook(2);
+    click(hudLayout::card(0));
+    click(hudLayout::card(1));
+    click(hudLayout::card(2));
+    refresh();
+    check(ui.snapshot().cards[1].castCaster && ui.snapshot().cards[1].castRecipient,
+          "Caster and recipient markers coexist on self-selection");
+    click(hudLayout::card(3));
+    check(ui.snapshot().magic.pending.targetCount == 3 &&
+              std::strstr(ui.snapshot().magic.feedback.data(), "Remove a target"),
+          "Ally maximum neither casts nor replaces anyone");
+    click(hudLayout::recipientChip(1));
+    check(ui.snapshot().magic.pending.targetCount == 2 && ui.snapshot().availability == CommandReason::Ready,
+          "Recipient chip removal allows fewer legal recipients");
+    const auto mana = s.party().character({1})->mana;
+    key(UiKey::Cancel);
+    check(s.party().character({1})->mana == mana && !s.effects().concentration({1}).serial,
+          "Cancellation leaves mana and concentration untouched");
+    ui.openSpellbook();
+    ui.browseSpellbook(7);
+    ui.chooseSpellbook(7);
+    key(UiKey::Back);
+    check(ui.snapshot().magic.offset == offset && ui.snapshot().magic.cursor == 7,
+          "Back restores scrolled list position");
+    ui.closeOverlay();
+    s.update(6, false);
+    refresh();
+    ui.selectCharacter(3);
+    ui.openSpellbook();
+    ui.chooseSpellbook(2);
+    refresh();
+    check(ui.snapshot().magic.allyReasons[0] == CommandReason::Armored &&
+              ui.snapshot().magic.allyReasons[3] == CommandReason::Ready,
+          "Portrait eligibility matches spell restrictions");
+    click(hudLayout::card(0));
+    check(s.party().character({3})->mana == 2 && ui.snapshot().magic.armed,
+          "Invalid single target never commits");
+    click(hudLayout::card(3));
+    check(s.party().character({3})->mana == 0 &&
+              s.effects().has(rules::CharacterId{3}, EffectKind::MageArmor),
+          "Valid single portrait click commits immediately");
+}
+void markerLayoutAndLog() {
+    HudSnapshot h;
+    h.magic.missiles = true;
+    h.magic.affectedCount = 3;
+    h.targets.world = 55;
+    for (unsigned i = 0; i < 3; ++i) {
+        h.magic.affected[i] = {static_cast<std::uint16_t>(i), 55};
+        h.targets.anchors[i] = {250, 100, true, 90};
+    }
+    const auto layout = spellMarkerLayout(h);
+    for (std::size_t i = 0; i < 3; ++i) {
+        check(layout[i].has_value(), "Every overlapping visible recipient retains a badge");
+        for (std::size_t j = 0; j < i; ++j) {
+            const auto a = *layout[i], b = *layout[j];
+            check(a.y + a.height <= b.y || b.y + b.height <= a.y || a.x + a.width <= b.x ||
+                      b.x + b.width <= a.x,
+                  "Dart badges never overlap at shared screen anchors");
+        }
+    }
+    h.targets.anchors[1].valid = false;
+    check(!spellMarkerLayout(h)[1], "Hidden bodies do not receive revealing badges");
+    CombatLog log;
+    log.append("First line: a long message about a previous round and the actions taken there, preserved "
+               "while browsing.");
+    log.append(
+        "Second line: another long message that wraps differently when the casting dock takes more width.");
+    log.append("Newest line.");
+    const auto offset = log.rewrapOffset(2, hudLayout::logColumns, hudLayout::castingLogColumns);
+    char line[CombatLog::messageBytes];
+    log.line(log.lineCount(hudLayout::castingLogColumns) - offset - 1, hudLayout::castingLogColumns, line,
+             sizeof(line));
+    check(std::strstr(line, "width"), "Dock rewrap retains the logical message position");
+}
+void sharedArea() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    for (int h = 0; h < 4; ++h) {
+        const Player pose{spellSpawn.cell, static_cast<Heading>(h)};
+        std::vector<NpcInstance> instances;
+        for (int i = 0; i < 12; ++i)
+            instances.push_back({{0},
+                                 pose.cell + forward(pose.heading) + right(pose.heading) * (i / 4 - 1),
+                                 {i % 2, (i / 2) % 2},
+                                 Heading::North});
+        NpcWorld places(map, pose.cell, {"goblin"}, instances);
+        GameSession s(map, catalog, places, 5, pose, false);
+        spellReady(s, 3);
+        const auto preview = spellArea(s.actors(), s.movement().player);
+        check(preview.count == 12,
+              "Shared area includes protected and body-occluded occupants for every heading");
+        auto command = spellCommand(s, SpellKind::BurningHands);
+        check(s.submit(command).reason == CommandReason::Resolved, "Area preview validates for commit");
+        std::size_t impacts = 0;
+        for (const auto& e : s.events())
+            if (e.event == CombatEvent::Attack) {
+                check(impacts < preview.count && sameActor(e.enemy, preview.actors[impacts]),
+                      "Preview and resolution recipients agree in stable order");
+                ++impacts;
+            }
+        check(impacts == preview.count, "Every previewed occupant receives a result");
+    }
 }
 void guidingAndSneak() {
     const auto map = hybridRoom();
@@ -527,6 +751,9 @@ int main(int argc, char** argv) {
         allDamageSpells();
         invalidAndPool();
         ui();
+        uiRevision();
+        sharedArea();
+        markerLayoutAndLog();
         guidingAndSneak();
         geometryAndPush();
         timingAndInterruption();

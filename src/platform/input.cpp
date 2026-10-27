@@ -17,6 +17,7 @@ InputSample Input::poll(float seconds) {
     uiDown[static_cast<std::size_t>(UiKey::RightClick)] = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
     uiDown[static_cast<std::size_t>(UiKey::DemoNext)] = IsKeyDown(KEY_F2);
     uiDown[static_cast<std::size_t>(UiKey::DemoReset)] = IsKeyDown(KEY_F3);
+    uiDown[static_cast<std::size_t>(UiKey::Back)] = IsKeyDown(KEY_B);
     const auto pointer = GetMousePosition();
     const float wheel = GetMouseWheelMove();
     result.ui = edges_.sample(uiDown, focused,
@@ -25,6 +26,7 @@ InputSample Input::poll(float seconds) {
                               wheel > 0   ? 1
                               : wheel < 0 ? -1
                                           : 0);
+    result.ui.shift = focused && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT));
     if (focused && previousFocus_) {
         result.toggleAnimation = IsKeyPressed(KEY_TAB);
         result.toggleMap = IsKeyPressed(KEY_F1);

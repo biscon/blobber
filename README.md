@@ -63,9 +63,12 @@ working-directory setup is required: assets are copied beside the executable.
 | 6 / aid | Arm Aid; click a dying ally's portrait to commit |
 | Portrait click | Select a character in real time, or a friendly spell/Aid target; use i for details |
 | Spellbook Up / Down, Enter | Browse descriptions, then choose a spell or ability |
-| Spell targeting Left / Right, Up, Enter | Move cursor, add/toggle recipient, then cast |
+| Spell targeting Left / Right, Up / Down, Enter | Move cursor, add/toggle or remove recipient, then cast |
+| Casting B / Back | Return to the picker at the remembered scroll position |
+| Magic Missile left / right / Shift-click | Add one dart / remove one dart |
 | Left / Right, Enter | Cycle targets, then execute; Enter also acknowledges outcomes |
-| Escape / Backspace / right-click | Cancel targeting or close an overlay; unarmed Escape/Backspace opens pause menu |
+| Escape / Backspace | Cancel targeting or close an overlay; unarmed opens pause menu |
+| Right-click outside casting | Cancel ordinary targeting or close an overlay |
 | Mouse wheel over log / + | Scroll readable history / expand paused history |
 | Gear | Open pause menu with Resume and Quit |
 
@@ -74,7 +77,7 @@ every 180 ms. An animated action lasts 160 ms. At most one fresh keypress is
 buffered during an animation. Losing focus clears the buffer and held-key state.
 Collisions block the entire move, including its visual effect. HUD commands never
 repeat while held. Controls held during focus loss require a release in the focused
-window before their next press can act. Targets clear when movement starts or focus is lost; targeting
+window before their next press can act. Spell selections survive focus loss and are revalidated on return; ordinary attack targets clear. Movement clears targeting. Targeting
 and attacks wait until transitions finish and the F1 map is closed. Each action/turn resets to basic melee.
 
 Facing an adjacent goblin cell begins combat and locks movement/turning. Each
@@ -101,16 +104,22 @@ Restart restores initial resources. Portrait selection is distinct from the acti
 Slice 10 review: `./cmake-build-debug/blobber --spell-demo --seed 5` opens the
 Wizard's spellbook on the hybrid demo map. Browsing pauses; selecting an entry
 resumes play. Click a body/portrait for a single-target cast. Bless/Bane/Acid Splash
-let you toggle multiple targets; Magic Missile begins with three darts on the first
-target, and subsequent clicks move darts to other targets. Confirm with Cast/Enter.
-Area spells preview the three clear front cells. Escape cancels without spending.
+let you toggle multiple targets. Magic Missile starts empty: each left-click adds
+one dart; right-click or Shift-click removes one. At the limit, remove a dart before
+reassigning it. Confirm multi-target and area spells with Cast/Enter.
+The casting dock replaces ordinary action buttons while the log stays visible.
+Selected portraits have teal frames/checkmarks; the caster retains a gold outer
+border. Recipient chips remove allies. Area spells preview the actual clear front
+cells and affected enemies. B returns to the picker; Escape cancels without spending.
+Invalid recipients are removed individually, preserving other selections.
 Fighter Second Wind and Wizard Arcane Recovery are in the same picker. A blue
 portrait marker indicates concentration; inspect details for effects and use
 End concentration in the picker to dismiss it freely. Rogue features are automatic.
 
 `--capture-spells DIRECTORY` exports deterministic hidden-window spell/ability
 captures. `blobber_spells_tests --trace` provides a headless impact/resource trace.
-See [spell design](docs/spells_design.md) for the exact roster and adaptations.
+See [spell design](docs/spells_design.md) for the exact roster and adaptations, and
+[casting UI design](docs/spellcasting_ui_design.md) for interaction and rendering contracts.
 
 For immediate review, run `./cmake-build-debug/blobber --combat-demo --seed 5`.
 This starts beside the existing goblins using the production combat path. `--seed`
@@ -221,9 +230,9 @@ HUD text is drawn directly onto its 1920×1080 text target using the supplied fo
 DejaVu Serif Bold for headings/names, IBM Plex Sans for controls/labels, and Inconsolata for the log. Each face/size has
 its own atlas (21/24/27 px), used at its exact raster size with rounded positions.
 `assets/fonts` and `assets/ui` are copied beside the executable and are required for custom assets.
-Eleven generated UI images are prepared into one reusable 256×192 atlas at startup.
-Their exact built-in imagegen prompts are in `assets/ui/prompts.json`; font licenses
-are alongside the bundled fonts.
+Twenty-eight generated UI images are prepared into one reusable 256×448 atlas at startup.
+Exact built-in imagegen prompts are in `assets/ui/prompts.json` and
+`assets/ui/spells/prompts.json`; font licenses are alongside the bundled fonts.
 Window resizing never changes the logical resolution, perspective, or UI layout.
 At noninteger scales, pixel widths necessarily vary slightly to fill the fitted area.
 
@@ -303,6 +312,6 @@ C++ formatting is defined by `.clang-format`. See [research notes](docs/research
 for historical sources and [verification notes](docs/verification.md) for checks
 and remaining platform limitations.
 
-The prototype has no moving NPC AI, ranged/spell combat, inventory, interactive doors, audio,
+The prototype has no inventory/equipment UI, interactive doors, audio,
 save system, or procedural level generation. Walls have one uniform height;
 transparent walls and variable elevations would require a richer coverage model.

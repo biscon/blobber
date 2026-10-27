@@ -42,12 +42,19 @@ struct PlayView {
           animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs());
+        const auto area = debug ? SpellArea{} : commands.floorPreview();
         const bool changed =
             frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                          &session.combat().attacks(), session.timeMs());
+                          &session.combat().attacks(), session.timeMs(), &area);
         const auto* picking = frames.picking();
         commands.refresh(picking ? picking->targets() : TargetSnapshot{},
                          session.movement().transition.active(), debug, focused);
+        const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
+        if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
+            area.eligible != currentArea.eligible)
+            return frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
+                                 &session.combat().attacks(), session.timeMs(), &currentArea) ||
+                   changed;
         return changed;
     }
 };

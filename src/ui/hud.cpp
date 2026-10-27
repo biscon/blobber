@@ -4,15 +4,32 @@ namespace blobber {
 using namespace hudInk;
 void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) const {
     const auto r = hudLayout::card(i), portrait = hudLayout::portrait(i);
-    const auto accent = c.active ? bright : aidTarget ? blue : inspected ? gold : edge;
+    const auto accent = c.castCaster ? bright
+                        : c.active   ? bright
+                        : aidTarget  ? blue
+                        : inspected  ? gold
+                                     : edge;
     box(r, c.recentlyHit ? red : accent);
-    if (c.active || aidTarget)
+    if (c.castCaster || c.active || aidTarget)
         border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, accent);
     if (c.incomingShot)
         border({r.x + 2, r.y + 2, r.width - 4, r.height - 4}, blue);
     fill(portrait, background);
-    picture(c.portrait, portrait, c.status == DisplayStatus::Dead ? Color{100, 100, 100, 255} : WHITE);
+    picture(c.portrait, portrait,
+            c.status == DisplayStatus::Dead || !c.castEligible ? Color{100, 100, 100, 255} : WHITE);
     border({portrait.x - 1, portrait.y - 1, portrait.width + 2, portrait.height + 2}, accent);
+    if (c.castRecipient) {
+        border({portrait.x, portrait.y, portrait.width, portrait.height}, teal);
+        border({portrait.x + 1, portrait.y + 1, portrait.width - 2, portrait.height - 2},
+               c.castHovered ? Color{174, 238, 230, 255} : teal);
+        checkmark({portrait.x + portrait.width - 10, portrait.y + 1, 9, 9});
+        fill({portrait.x + 2, portrait.y + portrait.height - 17, portrait.width - 4, 15}, {12, 26, 26, 245});
+        clipped("Will receive", portrait.x + 3, portrait.y + portrait.height - 17, portrait.width - 6, teal,
+                UiTextStyle::Small);
+        clipped(c.castPreview, portrait.x + 3, portrait.y + portrait.height - 10, portrait.width - 6,
+                hudInk::text, UiTextStyle::Small);
+    } else if (c.castHovered)
+        border(portrait, {170, 208, 204, 255});
     clipped(c.name, r.x + 56, r.y + 4, 68, c.active ? bright : gold, UiTextStyle::Display);
     clipped(c.className, r.x + 56, r.y + 16, 68, muted, UiTextStyle::Small);
     constexpr const char* slots[]{"FRONT LEFT", "FRONT RIGHT", "REAR LEFT", "REAR RIGHT"};
@@ -51,7 +68,9 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     label("i", hudLayout::detail(i), gold, UiTextStyle::Small);
 }
 void HudPainter::log(const HudSnapshot& h, bool expanded) const {
-    const auto r = expanded ? hudLayout::expandedLog : hudLayout::log;
+    const auto r = expanded            ? hudLayout::expandedLog
+                   : h.magic.casting() ? hudLayout::castingLog
+                                       : hudLayout::log;
     box(r, expanded ? gold : edge);
     text(expanded ? "COMBAT HISTORY" : "COMBAT LOG", r.x + 8, r.y + 2, gold, UiTextStyle::Display);
     if (expanded) {
@@ -63,7 +82,9 @@ void HudPainter::log(const HudSnapshot& h, bool expanded) const {
     }
     if (h.logOffset && !expanded)
         label("LATEST", hudLayout::logLatest, blue, UiTextStyle::Small);
-    const auto columns = expanded ? hudLayout::expandedLogColumns : hudLayout::logColumns;
+    const auto columns = expanded            ? hudLayout::expandedLogColumns
+                         : h.magic.casting() ? hudLayout::castingLogColumns
+                                             : hudLayout::logColumns;
     const auto count = h.log.lineCount(columns);
     const auto end = count - std::min(h.logOffset, count);
     const int rows = expanded ? 21 : 4;
@@ -106,58 +127,62 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         p.card(h->cards[i], i, h->selection.action == PartyAction::Aid && eligible,
                h->inspected && h->inspected->index == h->cards[i].id.index);
     }
-    const char* actor = "EXPLORATION";
-    for (const auto& c : h->cards)
-        if ((h->combat.activeCharacter && c.id.index == h->combat.activeCharacter->index) ||
-            (!h->production && c.id.index == h->selection.character.index))
-            actor = c.name;
-    if (h->production && h->combat.activeEnemy)
-        actor = "ENEMY TURN";
-    if (h->combat.phase == CombatPhase::Facing && h->combat.facing) {
-        constexpr const char* labels[]{"FACING NORTH", "FACING EAST", "FACING SOUTH", "FACING WEST"};
-        actor = labels[static_cast<unsigned>(*h->combat.facing)];
-    } else if (h->combat.phase == CombatPhase::Approach)
-        actor = "RANGED APPROACH";
-    else if (h->combat.phase == CombatPhase::Contact)
-        actor = "CONTACT / WAIT";
-    else if (h->combat.phase == CombatPhase::RoundEnd)
-        actor = "ROUND END";
-    else if (h->combat.phase == CombatPhase::Victory)
-        actor = "VICTORY";
-    else if (h->combat.phase == CombatPhase::Defeat)
-        actor = "DEFEAT";
-    std::snprintf(line, sizeof(line), "%s%s", actor,
-                  h->combat.resolvingAction  ? "  /  RESOLVING"
-                  : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
-                                             : "");
-    p.clipped(line, 12, 306, 284, gold, UiTextStyle::Display);
-    for (int i = 0; i < 6; ++i) {
-        const auto r = hudLayout::action(i);
-        const auto action = dockActions[i];
-        const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
-        const bool available =
-            (i == 0 || i == 1 || i == 2 || i == 3 || i == 5) && !h->suspended && !h->modal() &&
-            (i == 3 || reason == CommandReason::Ready || reason == CommandReason::MissingTarget ||
-             reason == CommandReason::InvalidAlly || reason == CommandReason::PreviewAccepted);
-        const bool selected = action == h->selection.action;
-        p.box(r, selected ? bright : edge);
-        p.picture(5 + i, {r.x + 2, r.y + 2, r.width - 4, r.height - 4},
-                  available ? WHITE : Color{85, 90, 88, 255});
-        if (selected)
-            p.border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, gold);
-        p.fill({r.x + 1, r.y + r.height - 9, 8, 8}, background);
-        char key[]{char('1' + i), 0};
-        p.text(key, r.x + 2, r.y + r.height - 9, available ? gold : muted, UiTextStyle::Small);
+    if (h->magic.casting()) {
+        p.spellTargets(*h);
+    } else {
+        const char* actor = "EXPLORATION";
+        for (const auto& c : h->cards)
+            if ((h->combat.activeCharacter && c.id.index == h->combat.activeCharacter->index) ||
+                (!h->production && c.id.index == h->selection.character.index))
+                actor = c.name;
+        if (h->production && h->combat.activeEnemy)
+            actor = "ENEMY TURN";
+        if (h->combat.phase == CombatPhase::Facing && h->combat.facing) {
+            constexpr const char* labels[]{"FACING NORTH", "FACING EAST", "FACING SOUTH", "FACING WEST"};
+            actor = labels[static_cast<unsigned>(*h->combat.facing)];
+        } else if (h->combat.phase == CombatPhase::Approach)
+            actor = "RANGED APPROACH";
+        else if (h->combat.phase == CombatPhase::Contact)
+            actor = "CONTACT / WAIT";
+        else if (h->combat.phase == CombatPhase::RoundEnd)
+            actor = "ROUND END";
+        else if (h->combat.phase == CombatPhase::Victory)
+            actor = "VICTORY";
+        else if (h->combat.phase == CombatPhase::Defeat)
+            actor = "DEFEAT";
+        std::snprintf(line, sizeof(line), "%s%s", actor,
+                      h->combat.resolvingAction  ? "  /  RESOLVING"
+                      : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
+                                                 : "");
+        p.clipped(line, 12, 306, 284, gold, UiTextStyle::Display);
+        for (int i = 0; i < 6; ++i) {
+            const auto r = hudLayout::action(i);
+            const auto action = dockActions[i];
+            const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
+            const bool available =
+                (i == 0 || i == 1 || i == 2 || i == 3 || i == 5) && !h->suspended && !h->modal() &&
+                (i == 3 || reason == CommandReason::Ready || reason == CommandReason::MissingTarget ||
+                 reason == CommandReason::InvalidAlly || reason == CommandReason::PreviewAccepted);
+            const bool selected = action == h->selection.action;
+            p.box(r, selected ? bright : edge);
+            p.picture(5 + i, {r.x + 2, r.y + 2, r.width - 4, r.height - 4},
+                      available ? WHITE : Color{85, 90, 88, 255});
+            if (selected)
+                p.border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, gold);
+            p.fill({r.x + 1, r.y + r.height - 9, 8, 8}, background);
+            char key[]{char('1' + i), 0};
+            p.text(key, r.x + 2, r.y + r.height - 9, available ? gold : muted, UiTextStyle::Small);
+        }
+        const char* hint =
+            h->combat.phase == CombatPhase::Facing    ? "Turning to the next group. Your action is preserved."
+            : h->combat.phase == CombatPhase::Victory ? "Continue to explore with your surviving party."
+            : h->combat.phase == CombatPhase::Defeat  ? "Restart to begin a fresh session."
+            : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
+            : h->production && h->combat.awaitingAction              ? "Click a reachable enemy to attack."
+            : h->production && h->combat.phase == CombatPhase::Turns ? "Waiting for the active participant."
+                                                                     : "WASD move / Q E turn / F1 map";
+        p.clipped(hint, 12, 350, 284, muted, UiTextStyle::Small);
     }
-    const char* hint =
-        h->combat.phase == CombatPhase::Facing      ? "Turning to the next group. Your action is preserved."
-        : h->combat.phase == CombatPhase::Victory   ? "Continue to explore with your surviving party."
-        : h->combat.phase == CombatPhase::Defeat    ? "Restart to begin a fresh session."
-        : h->selection.action == PartyAction::Aid   ? "Click a dying ally's portrait. Right-click cancels."
-        : h->production && h->combat.awaitingAction ? "Click a reachable enemy to attack."
-        : h->production && h->combat.phase == CombatPhase::Turns ? "Waiting for the active participant."
-                                                                 : "WASD move / Q E turn / F1 map";
-    p.clipped(hint, 12, 350, 284, muted, UiTextStyle::Small);
     if (h->production && (h->combat.knownDirections || h->combat.pendingCount)) {
         char threats[96];
         char dirs[5]{};

@@ -1,0 +1,90 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "assets": [
+    {
+      "key": "sacred_flame",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-ebd32be9-1fb2-4c4e-aa2d-810ca32de95a.png",
+      "prompt": "Use case: stylized-concept. Single finished square game spell icon for Stone & Shadow, early 1990s Westwood dungeon crawler. Sacred Flame: a single upright ivory-white holy flame with a golden radiant core and short gold rays. Painted pixel art, deliberate chunky pixel clusters, crisp bold silhouette, limited warm palette, deep shadows, near-black green background. Large simple central subject with small margins, legible at 18x18 and 34x34 pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "spare_the_dying",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-6825fc93-ac16-4e30-831e-a297c5f4f2e4.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a pale protective hand cradling a tiny fading white spark, soft turquoise halo. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "bless",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-72f91797-f1cf-4c9a-b16e-3d9bd9dab0cc.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a bright golden four-point holy star radiating small golden rays. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "bane",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-0db9192f-e962-4489-9f42-6442fde3f792.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a dark violet cracked skull with a crimson downward curse rune, ominous magenta haze. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "shield_of_faith",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-bb34c40f-7e06-42ed-a8b3-798d8dea0122.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a radiant gold shield with a white holy star and warm halo. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "cure_wounds",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-619f0e63-1d2d-462f-bbd4-f46da4f94965.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: an open healing hand with a bright green-gold central light and a few restorative sparks. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "guiding_bolt",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-5218b447-8e39-419f-928f-83007c305a56.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: one brilliant white-gold diagonal streak of holy light with a pointed luminous tip. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "inflict_wounds",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-48622f13-e593-4009-8c6b-2a8867bc4e9e.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a shadowy skeletal hand surrounded by jagged violet-black necrotic energy. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "fire_bolt",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-4417269a-f253-48d2-a032-b5a6a5fe5dc8.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: one diagonal orange fireball with a yellow-white core and long red-orange trail. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "acid_splash",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-1386f068-e00b-4f1b-a925-34b1c6ce3ea1.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a vivid green acid droplet bursting into three chunky droplets with yellow-green highlights. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "mage_armor",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-8f6eb023-6341-42e4-9420-d0d1cc4d61c0.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a ghostly blue torso cuirass inside a luminous cyan protective shield outline. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "magic_missile",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-1b761c58-db93-4e4c-ba7d-db2ee7d93608.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: three diagonal bright magenta-violet magical darts with white pointed tips and purple trails. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "burning_hands",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-347b49bc-f2a5-4210-9283-b52913556e75.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: two small hands at the bottom projecting a broad fan of orange-yellow flame upward. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "thunderwave",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-59de458e-d1be-41aa-824d-43d23d2f4e60.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a spiraling blue-white shockwave ring with three bold curved expanding bands. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "second_wind",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-b47c80d9-8592-4f0f-9fd0-d0cbfd3e0559.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a strong silver breastplate with a warm red-gold heart glow and two curling breath wisps. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "arcane_recovery",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-db3b4edd-acbd-40e2-94ad-62de972b2aec.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a violet crystal above a small indigo spellbook, curling blue magical energy returning into the crystal. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    },
+    {
+      "key": "dismiss_concentration",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-3714f142-1653-4770-9d60-9b07d8bc86e5.png",
+      "prompt": "Use case: stylized-concept. One finished square spell/ability icon for Stone & Shadow, an early 1990s Westwood dungeon crawler. Subject: a golden magical circle breaking into three separated arcs around a dimming violet spark. Painted pixel art with deliberate chunky pixel clusters, crisp bold silhouette, limited palette, warm highlights and deep shadows; not smooth modern painting. Near-black green background, one large simple central symbol with small margins. Legible at 18x18 and 34x34 game pixels. No text, lettering, border, UI, watermark or multiple panels. Square composition."
+    }
+  ]
+}

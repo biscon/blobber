@@ -121,7 +121,8 @@ void bakeBackgrounds(const Material& floor, const Material& ceiling, float offse
                         frame[index] = sceneDarkness;
                         continue;
                     }
-                    const float lateral = (x + 0.5f - viewWidth * 0.5f) * depth / focal;
+                    const float lateral =
+                        isFloor ? floorPoint(x, y).lateral : (x + 0.5f - viewWidth * 0.5f) * depth / focal;
                     // Independent world X/Y parity anchors the floor through a strafe;
                     // toggling both axes would make it jump diagonally at the endpoint.
                     const float wx = 0.5f + (parity / 2) + r.x * (lateral + offset) + f.x * (depth - setback);

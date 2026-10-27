@@ -152,6 +152,61 @@ void occludedFlash(const SceneRenderer& renderer, const NpcTimings& timing) {
     animator.setTime(10000);
     check(!animator.snapshot().frames[0].visible, "Offscreen death expires without being presented");
 }
+void spellFloorPreview(const SceneRenderer& renderer) {
+    for (int heading = 0; heading < 4; ++heading) {
+        MovementState movement;
+        movement.player = {{3, 3}, static_cast<Heading>(heading)};
+        const auto cell = movement.player.cell + forward(movement.player.heading);
+        auto actors = testActors(map, movement.player.cell, {"test"}, {{{0}, cell, {0, 0}, Heading::South}});
+        auto area = spellArea(actors, movement.player);
+        area.kind = rules::SpellKind::BurningHands;
+        Frame before, after, bare, tinted;
+        renderer.compose(map, movement.player, bare);
+        renderer.compose(map, movement.player, tinted, nullptr, nullptr, nullptr, nullptr, &area);
+        PickingBuffer beforePick, afterPick;
+        renderer.compose(map, movement.player, before, &actors, nullptr, &beforePick);
+        renderer.compose(map, movement.player, after, &actors, nullptr, &afterPick, nullptr, &area);
+        std::size_t changed = 0, bodies = 0, opaqueBodies = 0;
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto i = y * viewWidth + x;
+                const auto a = before[i], b = after[i];
+                check(beforePick.slot(x, y) == afterPick.slot(x, y),
+                      "Floor preview preserves picking exactly");
+                const bool equal = a.r == b.r && a.g == b.g && a.b == b.b;
+                if (beforePick.slot(x, y) != PickingBuffer::empty) {
+                    ++bodies;
+                    opaqueBodies += equal;
+                }
+                const auto ground = bare[i], preview = tinted[i];
+                if (ground.r != preview.r || ground.g != preview.g || ground.b != preview.b) {
+                    ++changed;
+                    check(ground.g > 0 && ground.r == 0 && ground.b == 0,
+                          "Preview changes only generated green floor, never wall or ceiling");
+                }
+            }
+        check(changed > 100 && bodies > 0 && opaqueBodies > bodies / 2,
+              "Fixture exercises floor tint and body occlusion in every heading");
+        FramePipeline pipeline;
+        pipeline.update(renderer, map, movement, &actors);
+        check(pipeline.update(renderer, map, movement, &actors, nullptr, nullptr, 0, &area),
+              "Preview invalidates stationary cache");
+        check(!pipeline.update(renderer, map, movement, &actors, nullptr, nullptr, 0, &area),
+              "Unchanged preview reuses cache");
+        check(pipeline.update(renderer, map, movement, &actors) && same(pipeline.frame(), before),
+              "Cancel removes all cached floor tint");
+    }
+    const Map walls({"#######", "#.....#", "#.....#", "#.##..#", "#.....#", "#.....#", "#######"});
+    const Player pose{{3, 4}, Heading::North};
+    auto actors = testActors(walls, pose.cell, {"test"}, {});
+    const auto blocked = spellArea(actors, pose);
+    check(!blocked.eligible[0] && !blocked.eligible[1] && !blocked.eligible[2],
+          "Conservative wall/corner rules also suppress diagonal preview cells");
+    Frame a, b;
+    renderer.compose(walls, pose, a, &actors);
+    renderer.compose(walls, pose, b, &actors, nullptr, nullptr, nullptr, &blocked);
+    check(same(a, b), "Blocked footprint produces no tint");
+}
 } // namespace
 int main() {
     try {
@@ -161,6 +216,7 @@ int main() {
         checkPresentation(renderer, timing);
         transitions(renderer, timing);
         occludedFlash(renderer, timing);
+        spellFloorPreview(renderer);
         std::cout << "Actor presentation checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

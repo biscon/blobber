@@ -15,10 +15,18 @@ const char* actionName(PartyAction action) noexcept {
 }
 const char* commandMessage(CommandReason reason) noexcept {
     switch (reason) {
+    case CommandReason::DeadAlly:
+        return "Requires a living ally.";
+    case CommandReason::Armored:
+        return "Requires an unarmored ally.";
+    case CommandReason::MustBeDying:
+        return "Requires a dying ally.";
+    case CommandReason::SameCellRequired:
+        return "Choose enemies in the same cell.";
     case CommandReason::InsufficientMana:
         return "Not enough mana.";
     case CommandReason::NoCharges:
-        return "No uses left until rest (restart in this slice).";
+        return "No uses remaining this run.";
     case CommandReason::InvalidSpell:
         return "Spell is not in this character's spellbook.";
     case CommandReason::InvalidTargets:
@@ -82,7 +90,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::MapOpen:
         return "Close the map to target or confirm.";
     case CommandReason::Unfocused:
-        return "Focus lost: selection cancelled.";
+        return "Input paused while unfocused.";
     case CommandReason::CannotAct:
         return "Character is not conscious.";
     }
@@ -334,7 +342,10 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             state_.selection.targetCount = 0;
             state_.selection.spell = {};
             state_.selection.feature = rules::Feature::None;
-            state_.magic.open = false;
+            if (state_.magic.state != CastingState::Resolving) {
+                setCastingState(CastingState::Normal);
+                state_.magic.pending = {};
+            }
             if (state_.selection.action == PartyAction::Spell ||
                 state_.selection.action == PartyAction::Feature)
                 state_.selection.action = PartyAction::Melee;
@@ -479,17 +490,29 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     }
     const auto pages = (state_.targets.count + 3) / 4;
     state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
-    if (moving || !focused) {
+    if (moving) {
         state_.selection.targetCount = 0;
         if (state_.magic.armed)
             cancel();
     }
+    reconcileMagic();
     refreshMagic();
+    for (std::size_t i = 0; i < state_.cards.size(); ++i) {
+        auto& card = state_.cards[i];
+        const auto& m = state_.magic;
+        card.castCaster = m.casting() && card.id.index == m.pending.character.index;
+        card.castRecipient = m.armed && m.selectedAllies[i];
+        card.castEligible = !m.armed || m.hostile || m.pending.action != PartyAction::Spell ||
+                            m.allyReasons[i] == CommandReason::Ready;
+        card.castHovered =
+            m.armed && state_.hover.kind == HoverKind::Portrait && state_.hover.index == int(i);
+        card.castPreview = card.castRecipient ? m.name : "";
+    }
     updateAvailability();
     updateHover();
 }
 void CommandController::updateAvailability() noexcept {
-    state_.availability = validate(state_.selection);
+    state_.availability = validate(state_.magic.armed ? state_.magic.pending : state_.selection);
     auto preview = state_.selection;
     for (std::size_t i = 0; i < state_.actionAvailability.size(); ++i) {
         preview.action = static_cast<PartyAction>(i);
@@ -566,8 +589,9 @@ void CommandController::pageTargets(int delta) noexcept {
         state_.targetPage = (state_.targetPage + (delta < 0 ? pages - 1 : 1)) % pages;
 }
 void CommandController::scrollLog(int delta) noexcept {
-    const auto count =
-        state_.log.lineCount(state_.logExpanded ? hudLayout::expandedLogColumns : hudLayout::logColumns);
+    const auto count = state_.log.lineCount(state_.logExpanded       ? hudLayout::expandedLogColumns
+                                            : state_.magic.casting() ? hudLayout::castingLogColumns
+                                                                     : hudLayout::logColumns);
     const auto maximum = count ? count - 1 : 0;
     state_.logOffset = static_cast<std::size_t>(std::clamp<std::int64_t>(
         static_cast<std::int64_t>(state_.logOffset) + delta, 0, static_cast<std::int64_t>(maximum)));
@@ -576,7 +600,9 @@ void CommandController::cancel() noexcept {
     state_.selection.targetCount = 0;
     state_.selection.spell = {};
     state_.selection.feature = rules::Feature::None;
-    state_.magic.armed = false;
+    setCastingState(CastingState::Normal);
+    state_.magic.pending = {};
+    state_.magic.feedback = {};
     state_.selection.action = PartyAction::Melee;
     state_.selection.ally.reset();
     state_.selection.target.reset();
@@ -639,10 +665,19 @@ CommandReason CommandController::validate(const PartyCommand& command) const noe
 CommandReason CommandController::submit(const PartyCommand& command) noexcept {
     const auto reason = validate(command);
     if (session_ && reason == CommandReason::Ready) {
+        const auto submitted = command;
+        const bool magic = submitted.action == PartyAction::Spell || submitted.action == PartyAction::Feature;
         const auto out = session_->submit(command);
         record(session_->events());
-        if (out.reason == CommandReason::Resolved)
+        if (out.reason == CommandReason::Resolved) {
             cancel();
+            if (magic && session_->combat().casterResolving(submitted.character)) {
+                state_.magic.pending = submitted;
+                state_.magic.pending.targetCount = 0;
+                setCastingState(CastingState::Resolving);
+                refreshMagic();
+            }
+        }
         updateAvailability();
         return out.reason;
     }

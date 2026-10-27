@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/gpu_resources.hpp"
+#include "rules/spells.hpp"
 #include "ui/layout.hpp"
 #include <array>
 #include <filesystem>
@@ -8,11 +9,12 @@ namespace blobber {
 class UiArt {
   public:
     UiArt(GpuResources& resources, const std::filesystem::path& directory);
+    static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
 
   private:
     GpuResources& resources_;
     TextureHandle atlas_;
-    std::array<Rectangle, 11> regions_{};
+    std::array<Rectangle, 28> regions_{};
 };
 } // namespace blobber

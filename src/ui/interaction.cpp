@@ -3,7 +3,6 @@ namespace blobber {
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
                    bool allowConfirm) noexcept {
     if (!input.focused) {
-        commands.cancel();
         commands.hover(HoverKind::None);
         return;
     }
@@ -11,11 +10,11 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     const bool moved = input.pointer && commands.pointerMoved(input.pointer->x, input.pointer->y);
     const bool click = input.has(UiKey::Click);
     const auto inside = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
-    if (input.has(UiKey::Cancel) || input.has(UiKey::RightClick)) {
+    if (input.has(UiKey::Cancel) || (input.has(UiKey::RightClick) && !state.magic.casting())) {
         if (state.modal())
             commands.closeOverlay();
-        else if (state.selection.action != PartyAction::Melee || state.selection.target ||
-                 state.selection.ally)
+        else if (state.magic.armed || state.selection.action != PartyAction::Melee ||
+                 state.selection.target || state.selection.ally)
             commands.cancel();
         else if (input.has(UiKey::Cancel))
             commands.toggleMenu();
@@ -27,11 +26,11 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         commands.hover(HoverKind::None);
         if (state.magic.open) {
             if (moved)
-                for (int i = 0; i < 10; ++i)
+                for (int i = 0; i < hudLayout::spellRows; ++i)
                     if (inside(hudLayout::spellEntry(i)) && state.magic.offset + i < state.magic.count)
                         commands.browseSpellbook(int(state.magic.offset + i) - int(state.magic.cursor));
-            if (input.scroll)
-                commands.browseSpellbook(-input.scroll);
+            if (input.scroll && inside(hudLayout::spellbook))
+                commands.scrollSpellbook(-input.scroll);
             if (input.has(UiKey::Up))
                 commands.browseSpellbook(-1);
             if (input.has(UiKey::Down))
@@ -39,14 +38,14 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             if (input.has(UiKey::Confirm))
                 commands.chooseSpellbook(state.magic.cursor);
             if (click) {
-                if (inside(hudLayout::spellbookClose))
+                if (inside(hudLayout::spellbookClose) || !inside(hudLayout::spellbook))
                     commands.closeOverlay();
                 else if (inside(hudLayout::spellPrevious))
-                    commands.browseSpellbook(-10);
+                    commands.scrollSpellbook(-7);
                 else if (inside(hudLayout::spellNext))
-                    commands.browseSpellbook(10);
+                    commands.scrollSpellbook(7);
                 else
-                    for (int i = 0; i < 10; ++i)
+                    for (int i = 0; i < hudLayout::spellRows; ++i)
                         if (inside(hudLayout::spellEntry(i)))
                             commands.chooseSpellbook(state.magic.offset + i);
             }
@@ -68,6 +67,10 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         }
         return;
     }
+    if (state.suspended) {
+        commands.hover(HoverKind::None);
+        return;
+    }
     if (click && inside(hudLayout::gear)) {
         commands.toggleMenu();
         return;
@@ -80,7 +83,7 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         commands.latestLog();
         return;
     }
-    if (input.scroll && inside(hudLayout::log))
+    if (input.scroll && inside(state.magic.casting() ? hudLayout::castingLog : hudLayout::log))
         commands.scrollLog(input.scroll);
     if (click)
         for (int i = 0; i < 4; ++i)
@@ -88,40 +91,92 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                 commands.inspect(i);
                 return;
             }
-    if (state.magic.armed && !input.has(UiKey::Four)) {
+    if (state.magic.casting()) {
+        if (state.magic.state == CastingState::Resolving) {
+            commands.hover(HoverKind::None);
+            return;
+        }
+        if (input.has(UiKey::Back) || (click && inside(hudLayout::spellBack))) {
+            commands.backToSpellbook();
+            return;
+        }
+        if (click && inside(hudLayout::spellCancel)) {
+            commands.cancel();
+            return;
+        }
         if (input.has(UiKey::Left) || input.has(UiKey::Right)) {
             commands.magicKeyboardTarget(input.has(UiKey::Left) ? -1 : 1);
-            return;
-        }
-        // Up adds/toggles the keyboard cursor, Enter commits the complete selection.
-        if (input.has(UiKey::Up)) {
-            if (state.magic.hostile && state.selection.target)
-                commands.magicEnemy(*state.selection.target);
-            else if (state.selection.ally)
-                for (std::size_t i = 0; i < state.cards.size(); ++i)
-                    if (state.cards[i].id.index == state.selection.ally->index)
-                        commands.magicAlly(i);
-            return;
-        }
-        if (allowConfirm && (input.has(UiKey::Confirm) || (click && inside(hudLayout::spellCast)))) {
-            commands.confirm();
-            return;
-        }
-        if (click && allowConfirm) {
-            if (viewportHit && inside(hudLayout::viewport)) {
-                commands.magicEnemy(*viewportHit);
-                if (commands.magicSingleTarget())
-                    commands.confirm();
-                return;
+            const auto& c = state.magic.pending;
+            if (state.magic.hostile && c.target) {
+                const auto anchor = state.targets.anchors[c.target->slot];
+                commands.hover(HoverKind::Enemy, 0, c.target, float(viewX + anchor.x),
+                               float(viewY + anchor.y));
+            } else if (c.ally) {
+                for (int i = 0; i < 4; ++i)
+                    if (state.cards[i].id.index == c.ally->index)
+                        commands.hover(HoverKind::Portrait, i, {}, 508, float(hudLayout::card(i).y));
             }
-            for (std::size_t i = 0; i < state.cards.size(); ++i)
-                if (inside(hudLayout::card(int(i)))) {
-                    commands.magicAlly(i);
-                    if (commands.magicSingleTarget())
-                        commands.confirm();
+            return;
+        }
+        if (input.has(UiKey::Up) || input.has(UiKey::Down)) {
+            const auto c = state.magic.pending;
+            if (state.magic.hostile && c.target)
+                commands.magicEnemy(*c.target, input.has(UiKey::Down));
+            else if (c.ally) {
+                if (input.has(UiKey::Down)) {
+                    for (std::size_t j = 0; j < c.targetCount; ++j)
+                        if (c.allies[j].index == c.ally->index) {
+                            commands.removeMagicRecipient(j);
+                            break;
+                        }
+                } else
+                    for (std::size_t i = 0; i < state.cards.size(); ++i)
+                        if (state.cards[i].id.index == c.ally->index)
+                            commands.magicAlly(i);
+            }
+            return;
+        }
+        if (allowConfirm &&
+            (input.has(UiKey::Confirm) || (!state.magic.single && click && inside(hudLayout::spellCast)))) {
+            if (state.availability == CommandReason::Ready || state.magic.single)
+                commands.confirm();
+            return;
+        }
+        if (click && !state.magic.hostile && state.magic.pending.targetCount > 0)
+            for (std::size_t i = 0; i < state.magic.pending.targetCount; ++i)
+                if (inside(hudLayout::recipientChip(int(i)))) {
+                    commands.removeMagicRecipient(i);
                     return;
                 }
+        if ((click || input.has(UiKey::RightClick)) && allowConfirm) {
+            if (viewportHit && inside(hudLayout::viewport)) {
+                const bool commit = click && !input.shift && commands.magicSingleTarget() &&
+                                    commands.magicEligibility(*viewportHit) == CommandReason::Ready;
+                commands.magicEnemy(*viewportHit, input.has(UiKey::RightClick) || input.shift);
+                if (commit)
+                    commands.confirm();
+            } else if (click)
+                for (std::size_t i = 0; i < state.cards.size(); ++i)
+                    if (inside(hudLayout::card(int(i)))) {
+                        const bool commit = commands.magicSingleTarget() && !state.magic.hostile &&
+                                            state.magic.allyReasons[i] == CommandReason::Ready;
+                        commands.magicAlly(i);
+                        if (commit)
+                            commands.confirm();
+                        break;
+                    }
         }
+        // Casting owns the whole frame. Hover is read-only, including after mutations.
+        if (input.pointer && (moved || click || input.has(UiKey::RightClick))) {
+            const auto p = *input.pointer;
+            commands.hover(HoverKind::None);
+            if (inside(hudLayout::viewport) && viewportHit)
+                commands.hover(HoverKind::Enemy, 0, viewportHit, p.x, p.y);
+            for (int i = 0; i < 4; ++i)
+                if (inside(hudLayout::card(i)))
+                    commands.hover(HoverKind::Portrait, i, {}, p.x, p.y);
+        }
+        return;
     }
     bool actionInput = false;
     for (int i = 0; i < 6; ++i) {
