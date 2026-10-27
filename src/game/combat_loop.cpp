@@ -2,7 +2,8 @@
 #include "game/perception.hpp"
 #include <algorithm>
 namespace blobber {
-CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t now) noexcept {
+CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t now,
+                                       CombatEvents& events) noexcept {
     CombatOutcome out;
     origin_ = pose;
     if (state_.phase == CombatPhase::Victory || state_.phase == CombatPhase::Defeat) {
@@ -64,7 +65,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                     const auto i = (autoCursor_ + n) % count;
                     const auto id = actors_.id(i);
                     const auto* a = actors_.actor(id);
-                    if (!a || a->life != ActorLife::Alive || !ai_.aware(id) || actorWalking(*a, now) ||
+                    if (!a || !effects_.canAct(id) || !ai_.aware(id) || actorWalking(*a, now) ||
                         now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs ||
                         !actors_.catalog().attack(ranged_[i]) || !inBowRange(a->npc.cell, pose.cell) ||
                         !frontal(id))
@@ -101,17 +102,21 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
     } else if (state_.phase == CombatPhase::RoundEnd) {
         if (now >= due_) {
             state_.gameplayMs += combatRoundMs;
+            effects_.advance(state_.gameplayMs, now, false, events);
+            reconcileEffects(now, events);
             refreshReadiness();
             std::array<bool, NpcWorld::maxInstances> frozen{};
             std::array<Cell, NpcWorld::maxInstances> before{};
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
                 const auto id = actors_.id(i);
                 before[i] = actors_.snapshot().actors[i].npc.cell;
-                frozen[i] = (members_[i] && frontal(id)) || now < enemyBusy_[i] || attackBusy(i) ||
-                            enemyReady_[i] > state_.gameplayMs;
+                frozen[i] = !effects_.canAct(id) || (members_[i] && frontal(id)) || now < enemyBusy_[i] ||
+                            attackBusy(i) || enemyReady_[i] > state_.gameplayMs;
             }
-            if (enableRoaming_)
-                ai_.update(combatRoundMs, now, pose, &frozen);
+            if (enableRoaming_) {
+                const auto incapacitated = effects_.incapacitatedActors();
+                ai_.update(combatRoundMs, now, pose, &frozen, &incapacitated);
+            }
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
                 if (!(before[i] == actors_.snapshot().actors[i].npc.cell))
                     enemyReady_[i] = state_.gameplayMs + combatRoundMs;
@@ -145,13 +150,12 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
         } else if (now >= due_ && !moving) {
             if (state_.activeCharacter) {
                 const auto id = *state_.activeCharacter;
-                const auto life = party_.character(id)->life;
-                if (life == rules::Life::Conscious && !state_.spent[id.index])
+                if (effects_.canAct(id) && !state_.spent[id.index])
                     state_.awaitingAction = true;
                 else {
                     state_.awaitingAction = false;
                     out = deathSave(id, now);
-                    if (party_.character(id)->life == rules::Life::Conscious && !state_.spent[id.index])
+                    if (effects_.canAct(id) && !state_.spent[id.index])
                         state_.awaitingAction = true;
                     else {
                         if (out.event == CombatEvent::None) {

@@ -155,7 +155,8 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::
     return true;
 }
 void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime, Player party,
-                             const std::array<bool, NpcWorld::maxInstances>* frozen) noexcept {
+                             const std::array<bool, NpcWorld::maxInstances>* frozen,
+                             const std::array<bool, NpcWorld::maxInstances>* incapacitated) noexcept {
     state_.timeMs += elapsedMs;
     state_.searchWork = state_.completedSearches = 0;
     if (state_.timeMs < tickDue_)
@@ -163,6 +164,10 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
     tickDue_ = state_.timeMs + 100;
     std::array<Goal, NpcWorld::maxInstances> goals{};
     for (std::size_t i = 0; i < state_.count; ++i) {
+        if (incapacitated && (*incapacitated)[i]) {
+            navigation_.cancel(i);
+            continue; // Includes facing; ordinary attack/travel locks still perceive.
+        }
         goals[i] = think(i, party);
         if ((frozen && (*frozen)[i]) || !goals[i].active)
             navigation_.cancel(i);
@@ -177,8 +182,8 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
         const auto i = (priority_ + offset) % state_.count;
         auto& a = state_.actors[i];
         const auto& actor = actors_.snapshot().actors[i];
-        if ((frozen && (*frozen)[i]) || actorWalking(actor, sessionTime) || actor.life != ActorLife::Alive ||
-            state_.timeMs < a.moveDueMs)
+        if ((incapacitated && (*incapacitated)[i]) || (frozen && (*frozen)[i]) ||
+            actorWalking(actor, sessionTime) || actor.life != ActorLife::Alive || state_.timeMs < a.moveDueMs)
             continue;
         if (goals[i].active) {
             const auto result = navigation_.take(i);

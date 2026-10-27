@@ -20,5 +20,5 @@ HealthResult takeDamage(const HealthState& health, int maximum, std::int64_t amo
                         bool critical = false) noexcept;
 HealthResult receiveHealing(const HealthState& health, int maximum, std::int64_t amount) noexcept;
 HealthResult stabilize(const HealthState& health, int maximum) noexcept;
-HealthResult deathSave(const HealthState& health, int maximum, int face) noexcept;
+HealthResult deathSave(const HealthState& health, int maximum, int face, int modifier = 0) noexcept;
 } // namespace blobber::rules

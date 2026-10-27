@@ -5,8 +5,9 @@
 
 namespace blobber {
 CombatController::CombatController(const Map& map, Party& party, ActorWorld& actors, rules::DiceRng& rng,
-                                   NpcAiController& ai, const std::vector<NpcTimings>& timings)
-    : map_(map), party_(party), actors_(actors), rng_(rng), ai_(ai) {
+                                   NpcAiController& ai, EffectController& effects,
+                                   const std::vector<NpcTimings>& timings)
+    : map_(map), party_(party), actors_(actors), rng_(rng), ai_(ai), effects_(effects) {
     if (&party.catalog() != &actors.catalog())
         throw std::invalid_argument("Combat catalog mismatch");
     if (!timings.empty() && timings.size() != actors.snapshot().typeCount)
@@ -72,7 +73,7 @@ bool CombatController::partyExposed(rules::CharacterId id) const noexcept {
     const auto& f = party_.snapshot().formation;
     for (std::size_t i = 0; i < f.size(); ++i)
         if (f[i].index == id.index)
-            return i < 2 || party_.character(f[i - 2])->life != rules::Life::Conscious;
+            return i < 2 || !effects_.canAct(f[i - 2]);
     return false;
 }
 bool CombatController::exposed(rules::CharacterId id) const noexcept {
@@ -129,7 +130,12 @@ bool CombatController::exposed(ActorId id) const noexcept {
     if (near(*a, approach))
         return true;
     const auto front = a->npc.subcell + forward(approach) * -1;
-    return !(actors_.occupiedSlots(a->npc.cell) & (1u << (front.x + 2 * front.y)));
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto& other = actors_.snapshot().actors[i];
+        if (other.life == ActorLife::Alive && other.npc.cell == a->npc.cell && other.npc.subcell == front)
+            return !effects_.canAct(actors_.id(i));
+    }
+    return true;
 }
 std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupied) const noexcept {
     const auto* a = actors_.actor(id);
@@ -138,7 +144,15 @@ std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupie
     const auto approach = origin_.heading;
     if (near(*a, approach))
         return a->npc.subcell;
-    auto slot = a->npc.subcell + forward(approach) * -1;
+    // Incapacitated front bodies occupy their slots but do not protect the rear.
+    const auto paired = a->npc.subcell + forward(approach) * -1;
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto& other = actors_.snapshot().actors[i];
+        if (other.life == ActorLife::Alive && other.npc.cell == a->npc.cell && other.npc.subcell == paired &&
+            !effects_.canAct(actors_.id(i)))
+            return a->npc.subcell;
+    }
+    auto slot = paired;
     for (int i = 0; i < 2; ++i) {
         if (!(occupied & (1u << (slot.x + 2 * slot.y))))
             return slot;
@@ -194,7 +208,8 @@ std::array<bool, NpcWorld::maxInstances> CombatController::movementLocks(std::ui
             rules::hasTrait(actors_.catalog().monster(a.monster)->traits, rules::Trait::NimbleEscape) &&
             a.hitPoints * 2 <= a.maxHitPoints && ai_.aware(actors_.id(i)) &&
             actors_.catalog().attack(melee_[i]) && actors_.catalog().attack(ranged_[i]);
-        result[i] = now < enemyBusy_[i] || (!realTime(state_.phase) && members_[i]) || wounded;
+        result[i] = !effects_.canAct(actors_.id(i)) || now < enemyBusy_[i] ||
+                    (!realTime(state_.phase) && members_[i]) || wounded;
     }
     return result;
 }
@@ -259,7 +274,7 @@ void CombatController::addGroups() noexcept {
 void CombatController::begin(std::uint64_t now) noexcept {
     for (std::size_t i = 0; i < state_.enemyCount; ++i) {
         const auto* a = actors_.actor(state_.enemies[i]);
-        if (a && a->life == ActorLife::Alive)
+        if (a && effects_.canAct(state_.enemies[i]))
             actors_.face(state_.enemies[i], headingToward(a->npc.cell, origin_.cell));
     }
     if (!orderCount_) {
@@ -293,7 +308,8 @@ void CombatController::selectTurn() noexcept {
             if (life == rules::Life::Conscious || life == rules::Life::Dying) {
                 state_.activeCharacter = rules::CharacterId{e.index};
                 state_.spent[e.index] = state_.spent[e.index] || partyReady_[e.index] > state_.gameplayMs;
-                state_.awaitingAction = life == rules::Life::Conscious && !state_.spent[e.index];
+                state_.awaitingAction =
+                    effects_.canAct(rules::CharacterId{e.index}) && !state_.spent[e.index];
                 ++state_.turn;
                 return;
             }

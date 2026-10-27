@@ -25,7 +25,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::Unavailable;
     if (c.world != state_.world || c.turn != state_.turn)
         return CommandReason::StaleTurn;
-    if (ch->life != rules::Life::Conscious)
+    if (!effects_.canAct(c.character))
         return CommandReason::CannotAct;
     const bool ranged = c.action == PartyAction::Ranged;
     if (realTime(state_.phase)) {
@@ -156,13 +156,15 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const auto* a = actors_.actor(out.enemy);
         const bool advantage = ranged && realTime(state_.phase) && !ai_.aware(out.enemy) &&
                                !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
-        const auto roll = rng_.d20(rules::rollMode(advantage, ranged && adjacent(pose.cell))).value;
+        const bool held = effects_.has(out.enemy, EffectKind::HoldPerson);
+        const auto roll = rng_.d20(rules::rollMode(advantage || held, ranged && adjacent(pose.cell))).value;
         out.roll = roll.selected;
-        const auto hit =
-            rules::resolveAttack(roll, w.attackBonus, actors_.catalog().monster(a->monster)->armorClass)
-                .value;
+        const auto hit = rules::resolveAttack(roll, w.attackBonus + effects_.rollModifier(c.character),
+                                              effects_.armorClass(out.enemy))
+                             .value;
         out.hit = hit.outcome != rules::AttackOutcome::Miss;
-        out.critical = hit.outcome == rules::AttackOutcome::Critical;
+        out.critical = hit.outcome == rules::AttackOutcome::Critical ||
+                       (out.hit && held && combatAdjacent(map_, a->npc.cell, pose.cell));
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
         }
@@ -184,7 +186,8 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.enemy = id;
     out.enemyAttack = true;
     const auto* a = actors_.actor(id);
-    if (!a || !frontal(id) || attackBusy(id.slot) || nextAttack_ == std::numeric_limits<std::uint64_t>::max())
+    if (!a || !effects_.canAct(id) || !frontal(id) || attackBusy(id.slot) ||
+        nextAttack_ == std::numeric_limits<std::uint64_t>::max())
         return out;
     const auto* attack = actors_.catalog().attack(ranged ? ranged_[id.slot] : melee_[id.slot]);
     if (!attack)
@@ -210,14 +213,18 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     const auto& timing = presentation_[a->npc.type.index];
     out.impactMs = ranged ? timing.bowImpact : timing.impact;
     const auto roll =
-        rng_.d20(rules::rollMode(opening, state_.defending[out.recipient.index] ||
-                                              (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
+        rng_.d20(rules::rollMode(opening || effects_.has(out.recipient, EffectKind::HoldPerson),
+                                 state_.defending[out.recipient.index] ||
+                                     (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
             .value;
     out.roll = roll.selected;
-    const auto hit =
-        rules::resolveAttack(roll, attack->bonus, party_.character(out.recipient)->stats.armorClass).value;
+    const auto hit = rules::resolveAttack(roll, attack->bonus + effects_.rollModifier(id),
+                                          effects_.armorClass(out.recipient))
+                         .value;
     out.hit = hit.outcome != rules::AttackOutcome::Miss;
-    out.critical = hit.outcome == rules::AttackOutcome::Critical;
+    out.critical = hit.outcome == rules::AttackOutcome::Critical ||
+                   (out.hit && effects_.has(out.recipient, EffectKind::HoldPerson) &&
+                    combatAdjacent(map_, a->npc.cell, origin_.cell));
     actors_.face(id, headingToward(a->npc.cell, origin_.cell));
     actors_.attack(id, now, ranged);
     if (out.hit) {
@@ -233,7 +240,7 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
     const auto* a = actors_.actor(id);
     if (!frontal(id))
         return out;
-    if (surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
+    if (!effects_.canAct(id) || surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
         surprised_[id.slot] = false;
         out.event = CombatEvent::Spent;
         return out;
@@ -281,7 +288,7 @@ CombatOutcome CombatController::deathSave(rules::CharacterId id, std::uint64_t) 
         return out;
     out.event = CombatEvent::DeathSave;
     out.roll = rng_.d20().value.selected;
-    out.died = party_.deathSave(id, out.roll).died;
+    out.died = party_.deathSave(id, out.roll, effects_.rollModifier(id)).died;
     saveDue_[id.index] = state_.gameplayMs + combatRoundMs;
     return out;
 }

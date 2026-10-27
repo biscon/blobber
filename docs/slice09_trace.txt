@@ -1,0 +1,44 @@
+REAL TIME AND PAUSE
+session_ms=0 gameplay_ms=0 Mage Armor #1 applied caster=3 d20=0 total=0 dc=0 success=0 reason=none
+  session_ms=0 gameplay_ms=0 wizard AC=16 HP=7 concentration=0
+session_ms=0 gameplay_ms=0 Shield of Faith #2 applied caster=1 d20=0 total=0 dc=0 success=0 reason=none
+  session_ms=0 gameplay_ms=0 wizard AC=18 HP=7 concentration=0
+session_ms=0 gameplay_ms=0 Bane #3 initial save caster=0 d20=12 total=11 dc=1000 success=0 reason=none
+session_ms=0 gameplay_ms=0 Bane #3 applied caster=0 d20=0 total=0 dc=0 success=0 reason=none
+  session_ms=0 gameplay_ms=0 wizard AC=18 HP=7 concentration=0
+session_ms=0 gameplay_ms=0 Hold Person #4 initial save caster=3 d20=15 total=10 dc=14 success=0 reason=none
+session_ms=0 gameplay_ms=0 Hold Person #4 applied caster=3 d20=0 total=0 dc=0 success=0 reason=none
+  session_ms=0 gameplay_ms=0 wizard AC=18 HP=7 concentration=4
+session_ms=6000 gameplay_ms=6000 Hold Person #4 repeat save caster=3 d20=6 total=2 dc=14 success=0 reason=none
+  session_ms=6000 gameplay_ms=6000 wizard AC=18 HP=7 concentration=4
+Pause for 60 seconds:
+  session_ms=6000 gameplay_ms=6000 wizard AC=18 HP=7 concentration=4
+session_ms=12000 gameplay_ms=12000 Hold Person #4 repeat save caster=3 d20=11 total=9 dc=14 success=0 reason=none
+session_ms=18000 gameplay_ms=18000 Hold Person #4 repeat save caster=3 d20=14 total=12 dc=14 success=0 reason=none
+session_ms=24000 gameplay_ms=24000 Hold Person #4 repeat save caster=3 d20=5 total=0 dc=14 success=0 reason=none
+session_ms=30000 gameplay_ms=30000 Hold Person #4 repeat save caster=3 d20=11 total=6 dc=14 success=0 reason=none
+session_ms=36000 gameplay_ms=36000 Hold Person #4 repeat save caster=3 d20=13 total=9 dc=14 success=0 reason=none
+session_ms=42000 gameplay_ms=42000 Hold Person #4 repeat save caster=3 d20=9 total=4 dc=14 success=0 reason=none
+session_ms=48000 gameplay_ms=48000 Hold Person #4 repeat save caster=3 d20=1 total=-4 dc=14 success=0 reason=none
+session_ms=54000 gameplay_ms=54000 Hold Person #4 repeat save caster=3 d20=10 total=7 dc=14 success=0 reason=none
+session_ms=60000 gameplay_ms=60000 Bane #3 ended caster=0 d20=0 total=0 dc=0 success=0 reason=expired
+session_ms=60000 gameplay_ms=60000 Hold Person #4 ended caster=3 d20=0 total=0 dc=0 success=0 reason=expired
+  session_ms=60000 gameplay_ms=60000 wizard AC=18 HP=7 concentration=0
+TURN-BASED: WAITING VERSUS COMPLETING A ROUND
+session_ms=0 gameplay_ms=0 Hold Person #1 initial save caster=3 d20=12 total=11 dc=1000 success=0 reason=none
+session_ms=0 gameplay_ms=0 Hold Person #1 applied caster=3 d20=0 total=0 dc=0 success=0 reason=none
+  session_ms=0 gameplay_ms=0 wizard AC=13 HP=7 concentration=1
+Wait 60 seconds at player decision:
+  session_ms=60500 gameplay_ms=0 wizard AC=13 HP=7 concentration=1
+session_ms=62500 gameplay_ms=6000 Hold Person #1 repeat save caster=3 d20=13 total=12 dc=1000 success=0 reason=none
+Full round completed; gameplay_ms=6000
+  session_ms=62500 gameplay_ms=6000 wizard AC=13 HP=7 concentration=1
+CONCENTRATION AT IMPACT
+session_ms=100 gameplay_ms=100 Bless #1 applied caster=3 d20=0 total=0 dc=0 success=0 reason=none
+  session_ms=100 gameplay_ms=100 wizard AC=13 HP=7 concentration=1
+  session_ms=1041 gameplay_ms=1041 wizard AC=13 HP=7 concentration=1
+session_ms=1042 impact damage=4 recipient=3
+session_ms=1042 gameplay_ms=1042 Bless #1 concentration save caster=3 d20=6 total=10 dc=10 success=1 reason=none
+  session_ms=1042 gameplay_ms=1042 wizard AC=13 HP=3 concentration=1
+Storage bytes: EffectController=8744 CombatEvents=190816
+Effects checks passed

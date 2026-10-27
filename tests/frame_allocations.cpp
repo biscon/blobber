@@ -212,7 +212,47 @@ int main() {
         archer.cell = {5, 7};
         NpcWorld closeArcherPlaces(hybridMap, {5, 8}, {"goblin"}, {archer});
         GameSession closeArcher(hybridMap, hybridRules, closeArcherPlaces, 5, {{5, 8}, Heading::North});
+        Party effectParty(hybridRules);
+        ActorWorld effectActors(hybridMap, hybridRules, hybridPlaces);
+        rules::DiceRng effectRng(5);
+        EffectController effects(effectParty, effectActors, effectRng);
+        CombatEvents effectEvents;
+        GameSession effectSession(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false);
         tracking = true;
+        EffectRequest effectRequest;
+        effectRequest.world = effectActors.snapshot().world;
+        effectRequest.caster = {0};
+        effectRequest.targets[0] = rules::CharacterId{0};
+        effectRequest.count = 1;
+        okay &= bool(effects.apply(effectRequest, 0, effectEvents));
+        effects.damaged({0}, 1, 100, effectEvents);
+        effectRequest.kind = EffectKind::Bane;
+        effectRequest.caster = {1};
+        effectRequest.targets[0] = effectActors.id(0);
+        effectRequest.difficulty = 1000;
+        okay &= bool(effects.apply(effectRequest, 100, effectEvents));
+        effects.save(effectActors.id(0), rules::Ability::Wisdom, 10);
+        effectRequest.kind = EffectKind::HoldPerson;
+        okay &= bool(effects.apply(effectRequest, 100, effectEvents));
+        effects.advance(60000, 60100, true, effectEvents);
+        effectEvents.clear();
+        effectRequest.kind = EffectKind::MageArmor;
+        effectRequest.caster = {3};
+        effectRequest.targets[0] = rules::CharacterId{3};
+        for (std::size_t i = 0; i < EffectController::capacity; ++i)
+            okay &= bool(effects.apply(effectRequest, 60100, effectEvents));
+        okay &= effects.apply(effectRequest, 60100, effectEvents).error == EffectError::Capacity;
+        okay &= effects.armorClass(rules::CharacterId{3}) == effectParty.character({3})->stats.armorClass + 3;
+        effectParty.damage({3}, 999);
+        effects.reconcile(60100, effectEvents);
+        effectRequest.world = effectSession.actors().snapshot().world;
+        effectRequest.kind = EffectKind::HoldPerson;
+        effectRequest.targets[0] = effectSession.actors().id(0);
+        okay &= bool(effectSession.applyEffect(effectRequest));
+        effectSession.update(60, true);
+        effectSession.update(60, false);
+        okay &= !effectSession.effects().has(effectSession.actors().id(0), EffectKind::HoldPerson);
+
         roleActors.attack(roleActors.id(0), 0);
         roleActors.attack(roleActors.id(1), 0, true);
         for (const auto time : {0u, 599u, 600u, 999u, 1000u, 1400u, 1550u, 2400u, 3000u}) {

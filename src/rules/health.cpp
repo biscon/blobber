@@ -80,7 +80,7 @@ HealthResult stabilize(const HealthState& h, int maximum) noexcept {
     r.changed = true;
     return r;
 }
-HealthResult deathSave(const HealthState& h, int maximum, int face) noexcept {
+HealthResult deathSave(const HealthState& h, int maximum, int face, int modifier) noexcept {
     auto r = invalid(h, maximum);
     if (!r)
         return r;
@@ -91,7 +91,7 @@ HealthResult deathSave(const HealthState& h, int maximum, int face) noexcept {
     if (face == 20)
         return receiveHealing(h, maximum, 1);
     r.changed = true;
-    if (face >= 10) {
+    if (face != 1 && std::int64_t(face) + modifier >= 10) {
         if (++r.state.successes == 3)
             r.state = {0, Life::Stable, 0, 0};
     } else {

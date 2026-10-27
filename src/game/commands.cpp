@@ -167,6 +167,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Disengaged:
         std::snprintf(line, sizeof(line), "Contact broken. Ranged approach resumes.");
         break;
+    case CombatEvent::Effect: // Slice 09 exposes effects through headless diagnostics.
     case CombatEvent::None:
         return;
     }

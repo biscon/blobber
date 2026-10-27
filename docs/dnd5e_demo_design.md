@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 is next eligible for planning.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 is next eligible for planning.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 8.3 — Projectiles and impact-time consequences (2026-10-27) |
+| Latest accepted slice | 09 — Effects and concentration (2026-10-27) |
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 09 — Effects and concentration (planning) |
-| Next action | Plan slice 09 in a clean context when requested |
+| Next eligible slice | 10 — Spells and class identity (planning) |
+| Next action | Plan slice 10 in a clean context when requested |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -316,7 +316,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Accepted | B follow-up |
 | 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Accepted | B follow-up |
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Accepted | B follow-up |
-| 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Planned | C |
+| 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
@@ -1128,7 +1128,36 @@ or implementation of unused conditions.
 death, and encounter completion. Test interruption, replacement, expiry boundaries,
 invalid targets, capacity exhaustion, and allocation behavior.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Accepted and closed; 2026-10-27.
+**Approved plan:** User said “okay implement the plan”. See [effects design](effects_design.md).
+Selected Bless, Bane, Shield of Faith, Mage Armor and Hold Person; headless review.
+Hold retries every six gameplay seconds outside turns and at full-round boundaries
+during turns. Mobile allies carry paralyzed members; paralysis removes paired protection.
+**Delivered:** Session-owned bounded effects, stacking and armor/roll modifiers,
+initial/repeat saves, impact-time concentration, chronological expiry/impact ordering,
+paralysis action/facing/formation integration, and deterministic headless review.
+Spell casting, mana and slice 10 content remain unavailable.
+**Verification:** Final Debug 25/25, Release 25/25, focused ASan/UBSan 5/5;
+zero tracked C++ frame allocations. Separate effect-capacity and 260-attack stress
+pass. Debug/Release traces are byte-identical. See [verification and handoff](slice09_verification.md).
+**Review recipe:** `cmake-build-release/blobber_effects_tests --trace`; compare
+real-time retries, no retry while waiting on a player decision, one retry at the
+full-round boundary, and concentration/HP changing at impact. See [retained trace](slice09_trace.txt).
+**Deviations / limitations:** No scope expansion. Only party casters exist, so an
+all-paralyzed concentrating party cannot persist: the last caster's incapacitation
+ends Hold. Tests cover self-incapacitation and skipped-turn behavior without adding
+NPC casters. Leak detection is disabled/unverified; no GPU or interactive checks
+were run for this headless slice.
+**Next-agent handoff:** Slice 09 is accepted and closed. Slice 10 is next eligible
+for planning in a clean context and remains unstarted. Consume the whole event batch before any subsequent session
+simulation operation, including synchronous apply/remove/submit/move. Effect APIs
+are low-level consequences, not player casts: future spell commands own resource,
+class, range/humanoid/visibility validation and provocation. Effects use gameplay
+time; attack impact and event presentation use session time. Accepted attacks retain
+their rolls; damage checks concentration at impact. Read the design and verification.
+**Acceptance:** 2026-10-27. The user said “I accept the slice, mark it as such in the plan doc”.
+Recorded verification limitations remain; acceptance does not turn unexecuted checks
+into passes. Slice 10 remains Planned and unstarted.
 
 ### Slice 10: Spells and class identity
 

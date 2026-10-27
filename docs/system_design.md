@@ -1,5 +1,16 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-27): slice 09
+[effects and concentration](effects_design.md), with
+[verification and handoff](slice09_verification.md). GameSession owns 64 fixed
+instances for Bless, Bane, Shield of Faith, Mage Armor and Hold Person. Effects
+share the hybrid gameplay clock, with real-time deadlines interleaved with attack
+impacts and full-round retries during turns. Concentration changes at damage impact;
+paralysis blocks actions/facing and paired protection while retaining occupancy.
+Read-only effective stats leave base builds unchanged. No player spell casting or
+mana is added. The user accepted slice 09 on 2026-10-27. Slice 10 is next eligible
+for planning and remains unstarted.
+
 Implemented, **accepted and closed** (2026-10-26): slice 8.1
 [offline image preparation and memory](image_preparation_design.md), with
 [verification and handoff](slice81_verification.md). NPC and dungeon surface banks
@@ -29,7 +40,7 @@ prepared arrows, a melee slash and impact glints. Hurt suspends unreleased NPC
 windups; released arrows survive shooter death. Current prepared resident accounting
 is 182,314,670 bytes. This supersedes the earlier immediate-damage and UI-delayed-
 feedback descriptions below. The user accepted 8.3, including the front-cell
-spacing correction. Slice 09 is next eligible for planning and remains unstarted.
+spacing correction. Slice 09 is now accepted and closed (see above).
 
 Implemented review correction (2026-10-27): the front-band edge fit previously compressed
 center-cell pairs, causing visible overlap. The corrected mapping preserves ordinary projection between
@@ -56,9 +67,9 @@ cannot attack; fixed front-row protection replaces directional exposure. No
 maneuver/retreat command or party surprise penalty remains. Catalog schema 3 adds typed traits and
 a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
 fixed 1920×1080 presentation and 160 MiB pixel cap. See
-[verification and handoff](slice08_verification.md). Slice 09 remains Planned;
+[verification and handoff](slice08_verification.md). Slice 09 is now accepted and closed;
 slice 08 and milestone B are closed. Graphical subslices 8.1–8.3 are also
-accepted and closed; slice 09 is next eligible for planning.
+accepted and closed; see the slice 09 checkpoint above.
 
 Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
 600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)
@@ -161,11 +172,20 @@ checks and limits.
   clears queued movement; commands validate turn tokens, life, equipment, range,
   formation and attacker availability before RNG. Acceptance returns synchronously;
   a fixed pending record retains the saved result until strike/arrival. Each update
-  returns a borrowed timestamped batch (524 events), draining all due existing
-  attacks before movement/AI and then taking at most one new automatic step.
+  returns a borrowed timestamped batch (1,036 entries including effect notices),
+  draining effect deadlines and existing attacks before movement/AI and then taking
+  at most one new automatic step. Consume the batch before any subsequent session
+  simulation operation, not only the next update.
   Acting turns, facing and results wait for pending impacts and presentation tails.
   Focus/map/details/history/menu pauses freeze session deadlines and gameplay time.
   Gameplay cooldowns retain the hybrid real-time/round-boundary policy.
+- **Effects:** session-owned 64-instance fixed storage, up to three typed recipients
+  per instance; world/serial IDs reject stale slot reuse. Party casters own at most
+  one concentration each. Checked apply/remove operations and save/lifecycle events
+  serve later spell commands; current review is headless. Full storage rejects
+  before costs/RNG/replacement. Expiry precedes repeat saves and equal-time impacts;
+  existing accepted attacks keep their saved rolls. Incapacitation masks suppress
+  NPC facing as well as pathfinding; living held actors retain occupancy.
 - **Party/rules:** immutable catalog values feed pure, allocation-free character
   derivation. A four-character party owns starting builds/gear, derived caches,
   resources, health/death-save state, and a formation permutation. Pure health
@@ -362,6 +382,10 @@ Debug/Release presets stay CLion-compatible.
   initiative/group ordering, both row collapses in four directions, authoritative
   requests, current visibility, Aid/Defend, pauses, queued contact, complete wins/losses,
   restart identity and input on newly displayed turns/results. Fixtures own their data.
+- Effect tests: generated fixtures for the five supported consumers; atomic
+  replacement, stacking, invalid/stale references, full capacity, expiry/retry
+  boundaries, concentration at impact, natural death saves, paralysis and formation,
+  frozen flight outcomes, pause/round/victory transitions and deterministic traces.
 - Allocation regression: enable an allocation counter after preparation, exercise
   first and subsequent moves, all transitions, blocked/queued input, and held/advancing NPC
   frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, HUD refresh/commands/log rollover/input/picking, first combat entry and subsequent

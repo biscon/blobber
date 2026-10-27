@@ -392,13 +392,15 @@ void stress() {
         ActorWorld actors(map, c, placements);
         rules::DiceRng rng(5);
         NpcAiController ai(map, actors, 5);
-        CombatController combat(map, party, actors, rng, ai, {timings()});
+        EffectController effects(party, actors, rng);
+        CombatEvents events;
+        CombatController combat(map, party, actors, rng, ai, effects, {timings()});
         Player pose = player;
         for (std::size_t i = 0; i < NpcWorld::maxInstances; ++i) {
             pose.cell = {instances[i].cell.x, instances[i].cell.y + 2};
             ai.alert(actors.id(i), pose.cell);
             combat.observe(pose);
-            check(combat.update(pose, false, 0).event == CombatEvent::AttackStarted,
+            check(combat.update(pose, false, 0, events).event == CombatEvent::AttackStarted,
                   "Every NPC books its own pending slot");
         }
         for (std::uint16_t i = 0; i < rules::partySize; ++i) {
@@ -411,7 +413,7 @@ void stress() {
             check(combat.submit(command, pose, 0).event == CombatEvent::AttackStarted,
                   "Four party attacks coexist with full NPC population");
         }
-        CombatEvents events;
+        events.clear();
         const auto start = std::chrono::steady_clock::now();
         combat.resolveImpacts(pose, 3000, events);
         const auto elapsed =

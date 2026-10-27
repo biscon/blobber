@@ -119,8 +119,33 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
     drainedThisUpdate_ = true;
     ++visuals_.revision;
 }
-void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEvents& events) noexcept {
+void CombatController::reconcileEffects(std::uint64_t now, CombatEvents& events) noexcept {
+    effects_.reconcile(now, events);
+    for (std::uint16_t i = 0; i < rules::partySize; ++i)
+        if (!effects_.canAct(rules::CharacterId{i}))
+            state_.defending[i] = false;
+    if (state_.activeCharacter && !effects_.canAct(*state_.activeCharacter))
+        state_.awaitingAction = false;
+    for (std::size_t i = 0; i < attackCapacity; ++i) {
+        const auto& v = visuals_.attacks[i];
+        if (v.stage == AttackStage::Windup &&
+            !(v.incoming ? effects_.canAct(v.enemy) : effects_.canAct(v.character)))
+            cancelAttack(i, now, events, false);
+    }
+}
+void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEvents& events,
+                                      std::uint64_t elapsed) noexcept {
     drainedThisUpdate_ = false;
+    auto cursor = now - elapsed;
+    const bool realtime = realTime(state_.phase);
+    reconcileEffects(cursor, events);
+    const auto advanceEffects = [&](std::uint64_t when) {
+        if (when > cursor) {
+            elapse(when - cursor);
+            cursor = when;
+        }
+        effects_.advance(state_.gameplayMs, when, realtime, events);
+    };
     for (std::size_t i = 0; i < attackCapacity; ++i) {
         auto& p = pending_[i];
         const auto& v = visuals_.attacks[i];
@@ -137,12 +162,11 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             continue;
         const auto* a = actors_.actor(v.enemy);
         const auto* c = party_.character(v.character);
-        const bool sourceAlive =
-            v.incoming ? a && a->life == ActorLife::Alive : c && c->life == rules::Life::Conscious;
+        const bool sourceAlive = v.incoming ? effects_.canAct(v.enemy) : effects_.canAct(v.character);
         const bool targetAlive =
             v.incoming ? c && c->life != rules::Life::Dead : a && a->life == ActorLife::Alive;
         if (!sourceAlive || !targetAlive)
-            cancelAttack(i, now, events, !targetAlive);
+            cancelAttack(i, cursor, events, !targetAlive);
     }
     // Each record has at most release + impact. Rescanning bounded contiguous
     // storage avoids heap queues and tolerates deadline changes caused by hurt.
@@ -169,6 +193,7 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         }
         if (next == attackCapacity)
             break;
+        advanceEffects(earliest);
         auto& v = visuals_.attacks[next];
         auto& p = pending_[next];
         const auto* a = actors_.actor(v.enemy);
@@ -176,8 +201,7 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         const bool targetAlive =
             v.incoming ? character && character->life != rules::Life::Dead : a && a->life == ActorLife::Alive;
         if (v.stage == AttackStage::Windup) {
-            const bool sourceAlive = v.incoming ? a && a->life == ActorLife::Alive
-                                                : character && character->life == rules::Life::Conscious;
+            const bool sourceAlive = v.incoming ? effects_.canAct(v.enemy) : effects_.canAct(v.character);
             if (!sourceAlive || !targetAlive) {
                 cancelAttack(next, earliest, events, !targetAlive);
                 continue;
@@ -227,6 +251,10 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         v.stage = AttackStage::Resolved;
         v.targetGone = out.targetGone;
         events.append(out);
+        if (out.hit && v.incoming)
+            effects_.damaged(out.recipient, out.damage, earliest, events);
+        else
+            effects_.reconcile(earliest, events);
         drainedThisUpdate_ = true;
         ++visuals_.revision;
         // Cancel incapacitated windups immediately at this impact's timestamp,
@@ -237,14 +265,15 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
                 continue;
             const auto* npc = actors_.actor(other.enemy);
             const auto* ch = party_.character(other.character);
-            const bool sourceAlive = other.incoming ? npc && npc->life == ActorLife::Alive
-                                                    : ch && ch->life == rules::Life::Conscious;
+            const bool sourceAlive =
+                other.incoming ? effects_.canAct(other.enemy) : effects_.canAct(other.character);
             const bool liveTarget =
                 other.incoming ? ch && ch->life != rules::Life::Dead : npc && npc->life == ActorLife::Alive;
             if (!sourceAlive || !liveTarget)
                 cancelAttack(i, earliest, events, !liveTarget);
         }
     }
+    advanceEffects(now);
     for (std::size_t i = 0; i < attackCapacity; ++i) {
         auto& v = visuals_.attacks[i];
         if ((v.stage == AttackStage::Resolved || v.stage == AttackStage::Canceled) && now >= v.endMs) {

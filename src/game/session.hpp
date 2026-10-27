@@ -26,6 +26,12 @@ class GameSession {
     const CombatController& combat() const noexcept { return combat_; }
     const MovementState& movement() const noexcept { return movement_.state(); }
     std::uint64_t timeMs() const noexcept { return timeMs_; }
+    const EffectController& effects() const noexcept { return effects_; }
+    // All simulation operations invalidate the previous borrowed event batch.
+    const CombatEvents& events() const noexcept { return events_; }
+    EffectResult applyEffect(const EffectRequest&) noexcept;
+    EffectResult removeEffect(EffectId) noexcept;
+    EffectResult endConcentration(std::uint64_t world, rules::CharacterId) noexcept;
     const NpcAiSnapshot& ai() const noexcept { return ai_.snapshot(); }
     const CombatEvents& update(double seconds, bool paused) noexcept;
     void move(Action action, bool fresh = true) noexcept;
@@ -40,6 +46,7 @@ class GameSession {
     Controller movement_;
     rules::DiceRng rng_;
     NpcAiController ai_;
+    EffectController effects_;
     CombatController combat_;
     CombatEvents events_;
     bool enableAi_ = true;

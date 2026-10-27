@@ -53,9 +53,9 @@ rules::HealthResult Party::stabilize(rules::CharacterId id) noexcept {
     return c ? commit(id, rules::stabilize(*c, c->stats.maxHitPoints))
              : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
 }
-rules::HealthResult Party::deathSave(rules::CharacterId id, int face) noexcept {
+rules::HealthResult Party::deathSave(rules::CharacterId id, int face, int modifier) noexcept {
     const auto* c = character(id);
-    return c ? commit(id, rules::deathSave(*c, c->stats.maxHitPoints, face))
+    return c ? commit(id, rules::deathSave(*c, c->stats.maxHitPoints, face, modifier))
              : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
 }
 } // namespace blobber

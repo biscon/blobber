@@ -25,7 +25,8 @@ class NpcAiController {
     NpcAiController(const NpcAiController&) = delete;
     NpcAiController& operator=(const NpcAiController&) = delete;
     void update(std::uint64_t elapsedMs, std::uint64_t sessionTime, Player party,
-                const std::array<bool, NpcWorld::maxInstances>* frozen = nullptr) noexcept;
+                const std::array<bool, NpcWorld::maxInstances>* frozen = nullptr,
+                const std::array<bool, NpcWorld::maxInstances>* incapacitated = nullptr) noexcept;
     void alert(ActorId id, Cell party) noexcept;
     bool aware(ActorId id) const noexcept;
     bool approach(ActorId id, Player party, std::uint64_t now) noexcept;

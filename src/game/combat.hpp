@@ -1,5 +1,6 @@
 #pragma once
 #include "game/attack_timeline.hpp"
+#include "game/effects.hpp"
 #include "game/npc_ai.hpp"
 #include "game/npc_animation.hpp"
 #include <cassert>
@@ -35,7 +36,8 @@ enum class CombatEvent : std::uint8_t {
     Move,
     Round,
     Spent,
-    Disengaged
+    Disengaged,
+    Effect
 };
 struct CombatOutcome {
     CombatEvent event = CombatEvent::None;
@@ -51,9 +53,10 @@ struct CombatOutcome {
     CombatAttackId attackId;
     std::uint64_t occurredMs = 0;
     bool targetGone = false;
+    EffectEvent effect;
 };
 struct CombatEvents {
-    static constexpr std::size_t capacity = attackCapacity * 2 + 4;
+    static constexpr std::size_t capacity = attackCapacity * 2 + 4 + EffectController::eventAllowance;
     std::array<CombatOutcome, capacity> values{};
     std::size_t count = 0;
     CombatOutcome step; // The single automatic/phase step, separate from draining deadlines.
@@ -98,18 +101,19 @@ struct CombatSnapshot {
 class CombatController {
   public:
     static constexpr std::uint64_t actionDelayMs = 450;
-    CombatController(const Map&, Party&, ActorWorld&, rules::DiceRng&, NpcAiController&,
+    CombatController(const Map&, Party&, ActorWorld&, rules::DiceRng&, NpcAiController&, EffectController&,
                      const std::vector<NpcTimings>& timings = {});
     CombatController(const CombatController&) = delete;
     CombatController& operator=(const CombatController&) = delete;
     const CombatSnapshot& snapshot() const noexcept { return state_; }
     const AttackVisualSnapshot& attacks() const noexcept { return visuals_; }
-    void resolveImpacts(Player pose, std::uint64_t now, CombatEvents&) noexcept;
+    void resolveImpacts(Player pose, std::uint64_t now, CombatEvents&, std::uint64_t elapsed = 0) noexcept;
+    void reconcileEffects(std::uint64_t now, CombatEvents&) noexcept;
     bool contact(Player pose) noexcept;
     void elapse(std::uint64_t elapsed) noexcept;
     void observe(Player pose) noexcept;
     std::array<bool, NpcWorld::maxInstances> movementLocks(std::uint64_t now) const noexcept;
-    CombatOutcome update(Player pose, bool moving, std::uint64_t now) noexcept;
+    CombatOutcome update(Player pose, bool moving, std::uint64_t now, CombatEvents&) noexcept;
     CommandReason validate(const PartyCommand&, Player) const noexcept;
     CombatOutcome submit(const PartyCommand&, Player, std::uint64_t now) noexcept;
     bool continueExploring() noexcept;
@@ -135,6 +139,7 @@ class CombatController {
     ActorWorld& actors_;
     rules::DiceRng& rng_;
     NpcAiController& ai_;
+    EffectController& effects_;
     CombatSnapshot state_;
     struct PendingAttack {
         CombatOutcome result;

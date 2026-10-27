@@ -142,3 +142,36 @@ conservative wall/corner LOS. Either side may melee across the three cells ahead
 paired enemy rows follow party heading. Close-range ranged disadvantage and
 archer escape use this same neighborhood. Movement remains cardinal; this is a
 project grid/formation rule, not additional tabletop weapon reach.
+
+
+## Slice 09 effects and concentration
+
+Source: the official SRD 5.1 CC PDF linked above, verified during planning.
+These are effect primitives for later spells; casting/mana/target selection is not
+implemented. Printed-page references:
+
+| Content | Source | Adopted consequence |
+| --- | --- | --- |
+| Concentration | p. 102 | One per caster; Constitution save per positive damage source at impact, DC max(10, floor(damage/2)); incapacitation/death ends it. |
+| Combining spell effects | p. 104 | Same-kind benefits do not stack; independently owned durations remain. Different kinds combine. |
+| Bane | p. 120 | Initial Charisma save; attack/save minus 1d4; concentration up to one minute. |
+| Bless | p. 122 | Attack/save plus 1d4; concentration up to one minute. |
+| Hold Person | pp. 154–155 | Wisdom initial and repeat saves; paralysis; concentration up to one minute. |
+| Mage Armor | p. 160 | Unarmored party base AC 13 + Dexterity, shield retained; eight hours, no concentration. |
+| Shield of Faith | p. 179 | +2 AC, concentration up to ten minutes. Casting action adaptation is left to slice 10. |
+| Paralysis | pp. 358–359 | Cannot act/move; automatic Strength/Dexterity save failure; incoming advantage and close-hit criticals. |
+| Death saves | p. 98 | Bless/Bane modify the save total; natural 1/20 exceptions still use the original face. |
+
+Approved adaptations: Hold Person retries every six gameplay seconds outside turns,
+and at completed full-round boundaries during turns, rather than at the individual
+target's turn end. Pauses and decision/playback time do not advance these deadlines.
+Incapacitated front members no longer protect their paired rear; mobile allies
+carry paralyzed party members. Close criticals use the accepted conservative
+adjacent-contact geometry. Logical steps already committed finish visually.
+
+The 64-instance pool, three-target storage, 1..1000 supplied DC and party-only caster
+scope are engineering bounds, not SRD rules. Hold accepts one recipient; Bless/Bane
+accept up to three; upcasting remains deferred. Mage Armor is party-only because
+NPC armor currently has no equipment breakdown. Future spell commands must enforce
+class, humanoid, range/visibility and resource rules before requesting application.
+See [effects design](effects_design.md) for lifecycle, timestamp and capacity contracts.

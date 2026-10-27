@@ -27,7 +27,7 @@ class Party {
     rules::HealthResult damage(rules::CharacterId id, std::int64_t amount, bool critical = false) noexcept;
     rules::HealthResult heal(rules::CharacterId id, std::int64_t amount) noexcept;
     rules::HealthResult stabilize(rules::CharacterId id) noexcept;
-    rules::HealthResult deathSave(rules::CharacterId id, int face) noexcept;
+    rules::HealthResult deathSave(rules::CharacterId id, int face, int modifier = 0) noexcept;
     void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
     const rules::Catalog& catalog() const noexcept { return *catalog_; }
 
