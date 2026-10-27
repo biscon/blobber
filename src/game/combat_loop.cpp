@@ -20,7 +20,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
         return out;
     }
     if (state_.resolvingAction) {
-        if (now >= due_) {
+        if (now >= due_ && !pendingImpacts() && !drainedThisUpdate_) {
             state_.resolvingAction = false;
             advance(now);
             if (state_.phase == CombatPhase::Victory || state_.phase == CombatPhase::Defeat)
@@ -65,7 +65,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                     const auto id = actors_.id(i);
                     const auto* a = actors_.actor(id);
                     if (!a || a->life != ActorLife::Alive || !ai_.aware(id) || actorWalking(*a, now) ||
-                        now < enemyBusy_[i] || enemyReady_[i] > state_.gameplayMs ||
+                        now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs ||
                         !actors_.catalog().attack(ranged_[i]) || !inBowRange(a->npc.cell, pose.cell) ||
                         !frontal(id))
                         continue;
@@ -76,7 +76,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             }
         }
     } else if (state_.phase == CombatPhase::Contact) {
-        moving |= now < partyBusy_;
+        moving |= pendingImpacts() || now < partyBusy_;
         for (std::size_t i = 0; i < state_.enemyCount; ++i) {
             const auto id = state_.enemies[i];
             const auto* a = actors_.actor(id);
@@ -107,8 +107,8 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
                 const auto id = actors_.id(i);
                 before[i] = actors_.snapshot().actors[i].npc.cell;
-                frozen[i] =
-                    (members_[i] && frontal(id)) || now < enemyBusy_[i] || enemyReady_[i] > state_.gameplayMs;
+                frozen[i] = (members_[i] && frontal(id)) || now < enemyBusy_[i] || attackBusy(i) ||
+                            enemyReady_[i] > state_.gameplayMs;
             }
             if (enableRoaming_)
                 ai_.update(combatRoundMs, now, pose, &frozen);

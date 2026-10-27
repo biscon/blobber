@@ -19,11 +19,16 @@ existing actor/animator interfaces and zero-allocation frame processing. Actual
 combined runtime banks occupy 181,300,462 bytes. Original melee artwork and historical
 bow masters remain intact. The user accepted the completed slice on 2026-10-26.
 
-Planned, not implemented: graphical subslice 8.3 (projectiles with impact-time consequences). See the
-[roadmap](dnd5e_demo_design.md#graphical-interlude-shared-decisions-and-planning-context).
-Slices 8.1 and 8.2 are accepted; 8.3 is eligible for a separate plan and acceptance.
-Slice 09 waits for all three. No atlas or NPC paper-doll system is planned.
-Immediate damage/life transitions remain current behavior until 8.3.
+Implemented, **Ready for review** (2026-10-27): slice 8.3
+[projectiles and impact-time consequences](projectile_impact_design.md), with
+[verification and handoff](slice83_verification.md). Combat owns 260 pending
+attacks; validation, costs and rolls occur at acceptance, while HP/life/occupancy,
+reactions and result feedback change at impact. Timestamped batches drain existing
+deadlines before movement/AI and phase handoff. Separate bounded cosmetics render
+prepared arrows, a melee slash and impact glints. Hurt suspends unreleased NPC
+windups; released arrows survive shooter death. Current prepared resident accounting
+is 182,314,670 bytes. This supersedes the earlier immediate-damage and UI-delayed-
+feedback descriptions below. Slice 09 waits for user acceptance of 8.3.
 
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
@@ -56,10 +61,10 @@ rules above supersede their stationary-combat restrictions.
 Implemented and accepted by the user (2026-10-26): slice 06 [goblin hurt/death reactions](goblin_reactions_design.md).
 Four-direction prepared clips provide 300 ms hurt and 1200 ms death/corpse playback,
 with a 100 ms white overlay. See [verification and review](slice06_verification.md).
-Simulation still releases occupancy immediately; art never resolves damage or death.
-Implemented review correction: enemy damage/MISS splashes and portrait hit
-highlights start at the attack strike pose, using copied clip timing and bounded
-pending feedback. See the [impact timing design](goblin_reactions_design.md#attack-impact-feedback).
+Simulation releases occupancy when lethal damage is committed, now at impact;
+art never resolves damage or death. The historical UI-only delay in the
+[impact timing design](goblin_reactions_design.md#attack-impact-feedback) is
+superseded by slice 8.3's authoritative timeline and direct impact feedback.
 Implemented review correction (2026-10-26): same-cell melee advancement may use
 either vacant front slot, preferring straight ahead. Turn eligibility is separate
 from current target exposure; see [melee design](melee_combat_design.md#front-slot-review-correction-2026-10-26).
@@ -141,13 +146,16 @@ checks and limits.
   loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
 - **Session/combat:** an immovable owner borrows the map/catalog and owns party,
-  actors, movement, AI, combat RNG and elapsed time. A fixed encounter contains at most four
-  enemies/four groups/eight initiative entries. Contact clears queued movement;
-  commands validate turn tokens, life, equipment, range and formation before RNG.
-  Resolved attacks retain the acting turn until copied clip timings and the shared
-  damage/MISS lifetime expire; result overlays wait too, while HP/death resolve immediately.
-  Outcomes return synchronously. Focus/map/details/history/menu pauses stop gameplay time. Each
-  update resolves at most one automatic step, spaced by 450 ms without catch-up.
+  actors, movement, AI, combat RNG and elapsed time. Actors and encounter membership
+  are bounded at 256; initiative groups use catalog monster identities. Contact
+  clears queued movement; commands validate turn tokens, life, equipment, range,
+  formation and attacker availability before RNG. Acceptance returns synchronously;
+  a fixed pending record retains the saved result until strike/arrival. Each update
+  returns a borrowed timestamped batch (524 events), draining all due existing
+  attacks before movement/AI and then taking at most one new automatic step.
+  Acting turns, facing and results wait for pending impacts and presentation tails.
+  Focus/map/details/history/menu pauses freeze session deadlines and gameplay time.
+  Gameplay cooldowns retain the hybrid real-time/round-boundary policy.
 - **Party/rules:** immutable catalog values feed pure, allocation-free character
   derivation. A four-character party owns starting builds/gear, derived caches,
   resources, health/death-save state, and a formation permutation. Pure health
@@ -181,6 +189,12 @@ checks and limits.
 - **CPU rendering:** immutable prepared data plus caller-owned fixed-size frames.
   Scene composition and image transitions write into supplied buffers. A frame
   pipeline owns source/destination/display buffers and only updates changed views.
+  Its independent 260-slot projectile owner copies visual snapshots; cosmetic
+  exhaustion replaces the oldest visual without affecting pending damage. Compile-
+  time arrow/slash/glint rasters total 1,012,160 bytes. Shared NPC projection and
+  optional directional attachments keep bodies and arrows aligned. Wall/body depth
+  clips effects, which never write picking IDs. Extra picking scratch is reused
+  for effects during transitions.
 - **Platform:** raylib window/input adaptation and GPU ownership. Typed texture
   and render-target handles refer to fixed-capacity, generation-checked slots.
   Borrowed raw raylib values stay inside short platform calls. RAII unloads GPU
@@ -229,7 +243,7 @@ No eviction or hidden runtime growth occurs.
 Runtime actors retain up to 256 stable records and one byte of live occupancy
 per map cell. The immutable placement mask is loading data only. The map and
 catalog outlive the noncopyable/nonmovable actor owner. Runtime operations return
-fixed result values without allocation. A death unblocks immediately; animation
+fixed result values without allocation. Lethal impact unblocks immediately; animation
 plays a 1200 ms goblin death/corpse clip, overlaying white for its first 100 ms,
 then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash.
 
@@ -238,7 +252,7 @@ pipeline owns three frames (about 1.61 MiB), reusing them across idle, movement,
 collision, NPC alpha composition, and transitions. Composition copies pixels but
 never allocates output storage. Input buffers at most one fresh movement command. UI confirmation is edge-triggered
 and never queued. UI formatting uses stack buffers. Each frame pipeline also owns
-one fixed 500×282 uint16 picking buffer (~275 KiB), written alongside prepared body
+two fixed 500×282 uint16 picking buffers (~551 KiB combined; one is transition effect scratch), written alongside prepared body
 pixels. Living target membership, visible-body centers and top edges are scanned after composition; transitions expose
 no picking. Transparent holes/walls/shadows do not select, and dead bodies occlude
 without becoming targets. Revisions invalidate picking with the image.

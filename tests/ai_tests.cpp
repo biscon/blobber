@@ -162,7 +162,7 @@ void arrivalBeforeCombat() {
     game.update(60, true);
     check(game.timeMs() == 599 && game.combat().snapshot().phase == CombatPhase::Contact,
           "Pause cannot skip arrival");
-    const auto outcome = game.update(.001, false);
+    const auto outcome = game.update(.001, false).step;
     check(outcome.event == CombatEvent::Started && game.combat().snapshot().phase == CombatPhase::Turns,
           "Combat starts exactly at arrival");
 }
@@ -361,8 +361,13 @@ void blockedRoutesAndRng() {
     }
     for (int i = 0; i < 30; ++i) {
         const auto a = ai.update(.45, false), b = stationary.update(.45, false);
-        check(a.event == b.event && a.roll == b.roll && a.hit == b.hit && a.damage == b.damage,
-              "Roaming does not alter subsequent combat rolls");
+        check(a.count == b.count, "Roaming preserves combat event count");
+        for (std::size_t event = 0; event < a.count; ++event)
+            check(a.values[event].event == b.values[event].event &&
+                      a.values[event].roll == b.values[event].roll &&
+                      a.values[event].hit == b.values[event].hit &&
+                      a.values[event].damage == b.values[event].damage,
+                  "Roaming does not alter authoritative impact rolls");
         check(ai.combat().snapshot().activeCharacter.value_or(rules::CharacterId{}).index ==
                   stationary.combat().snapshot().activeCharacter.value_or(rules::CharacterId{}).index,
               "Roaming does not alter initiative order");

@@ -153,6 +153,31 @@ ActorResult ActorWorld::attack(ActorId id, std::uint64_t timeMs, bool ranged) no
     a.hasAttack = true;
     a.rangedAttack = ranged;
     a.attackTimeMs = timeMs;
+    a.resumableAttack = false;
+    a.attackPausedMs = a.attackPauseFromMs = a.attackPauseUntilMs = 0;
+    ++state_.revision;
+    return {ActorError::None, true};
+}
+ActorResult ActorWorld::suspendAttack(ActorId id, std::uint64_t when, std::uint64_t duration) noexcept {
+    if (!actor(id))
+        return {ActorError::InvalidHandle};
+    auto& a = state_.actors[id.slot];
+    if (!a.hasAttack || when < a.attackTimeMs)
+        return {ActorError::InvalidTime};
+    if (when >= a.attackPauseUntilMs) {
+        a.attackPausedMs += a.attackPauseUntilMs - a.attackPauseFromMs;
+        a.attackPauseFromMs = when;
+    }
+    a.attackPauseUntilMs = std::max(a.attackPauseUntilMs, when + duration);
+    a.resumableAttack = true;
+    ++state_.revision;
+    return {ActorError::None, true};
+}
+ActorResult ActorWorld::cancelAttack(ActorId id) noexcept {
+    if (!actor(id))
+        return {ActorError::InvalidHandle};
+    auto& a = state_.actors[id.slot];
+    a.hasAttack = a.resumableAttack = false;
     ++state_.revision;
     return {ActorError::None, true};
 }

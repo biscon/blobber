@@ -1,12 +1,13 @@
 #include "app/application.hpp"
 #include "app/actor_captures.hpp"
-#include "app/archer_captures.hpp"
 #include "app/ai_demo.hpp"
+#include "app/archer_captures.hpp"
 #include "app/captures.hpp"
 #include "app/gameplay.hpp"
 #include "app/hud_captures.hpp"
 #include "app/hybrid_demo.hpp"
 #include "app/options.hpp"
+#include "app/projectile_captures.hpp"
 #include "app/ui_demo.hpp"
 #include "assets/npc_loader.hpp"
 #include "assets/preparation_profile.hpp"
@@ -16,6 +17,7 @@
 #include "platform/presenter.hpp"
 #include "platform/window.hpp"
 #include "render/frame_pipeline.hpp"
+#include "render/preparation_limits.hpp"
 #include <chrono>
 #include <iostream>
 #include <stdexcept>
@@ -25,7 +27,8 @@ int run(int argc, char** argv) {
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-hybrid DIRECTORY | --capture-preparation DIRECTORY] "
+                     "--capture-hybrid DIRECTORY | --capture-preparation DIRECTORY | --capture-projectiles "
+                     "DIRECTORY] "
                      "[--ui-demo | "
                      "--combat-demo | --ai-demo | --hybrid-demo] [--seed UINT32] [--check-prepared]\n";
         return 0;
@@ -52,14 +55,16 @@ int run(int argc, char** argv) {
     validatePreparedPublication(options.assets / "prepared", profile, loadedNpcs.definitionFingerprint);
     auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
     const auto sceneBytes = sceneStorageBytes(scene);
-    const auto remaining = PreparationLimits{}.residentBytes - sceneBytes;
+    requirePreparationBytes(sceneBytes, projectilePreparedBytes(), PreparationLimits{}.residentBytes);
+    const auto remaining = PreparationLimits{}.residentBytes - sceneBytes - projectilePreparedBytes();
     auto preparedNpcs = loadPreparedNpcs(options.assets / "prepared/npcs.bin", timings,
                                          loadedNpcs.definitionFingerprint, profile, {remaining, remaining});
     const auto npcBytes = preparedNpcs.storageBytes();
-    const SceneRenderer renderer(std::move(scene), std::move(preparedNpcs));
+    const SceneRenderer renderer(std::move(scene), std::move(preparedNpcs), loadedNpcs.attachments);
     std::cout << "Prepared assets loaded: scene=" << sceneBytes << " npc=" << npcBytes
-              << " resident=" << sceneBytes + npcBytes << " limit=" << PreparationLimits{}.residentBytes
-              << " load_ms="
+              << " projectiles=" << projectilePreparedBytes()
+              << " resident=" << sceneBytes + npcBytes + projectilePreparedBytes()
+              << " limit=" << PreparationLimits{}.residentBytes << " load_ms="
               << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                        loadStart)
                      .count()
@@ -74,6 +79,11 @@ int run(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureProjectilesOnly) {
+            captureProjectiles(rules, loadedNpcs.world, timings, renderer, presenter,
+                               options.captureDirectory);
+            return 0;
+        }
         if (options.captureHybridOnly) {
             captureHybrid(map, rules, loadedNpcs.world, timings, renderer, presenter,
                           options.captureDirectory);

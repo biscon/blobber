@@ -8,6 +8,8 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     box(r, c.recentlyHit ? red : accent);
     if (c.active || aidTarget)
         border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, accent);
+    if (c.incomingShot)
+        border({r.x + 2, r.y + 2, r.width - 4, r.height - 4}, blue);
     fill(portrait, background);
     picture(c.portrait, portrait, c.status == DisplayStatus::Dead ? Color{100, 100, 100, 255} : WHITE);
     border({portrait.x - 1, portrait.y - 1, portrait.width + 2, portrait.height + 2}, accent);

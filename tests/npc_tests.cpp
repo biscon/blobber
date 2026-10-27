@@ -113,6 +113,23 @@ void testLoading() {
               loaded.appearances[0].views[0].pixels[0].b == 160,
           "Relative definition/image paths and decoded pixels");
     check(loaded.world.instances()[0].ai.routine == NpcRoutine::Guard, "Legacy placements default to guard");
+    auto attached = definition;
+    attached["attachments"]["release"] = {
+        {"front", {.6, .3}}, {"back", {.4, .3}}, {"left", {.1, .4}}, {"right", {.9, .4}}};
+    write(directory / "type/test.json", attached);
+    const auto metadata = loadNpcMetadata(directory / "level.json", map, {1, 1});
+    check(metadata.attachments[0].release[2].x == .1f &&
+              metadata.definitionFingerprint != loaded.definitionFingerprint,
+          "Source-free directional attachments are fingerprinted");
+    for (const Json& badPoint :
+         {Json::array({-1, 0}), Json::array({2, 0}), Json::array({0}), Json::array({"x", 0})}) {
+        auto bad = attached;
+        bad["attachments"]["release"]["front"] = badPoint;
+        write(directory / "type/test.json", bad);
+        rejects([&] { loadNpcMetadata(directory / "level.json", map, {1, 1}); },
+                "Malformed attachment rejected without decoding");
+    }
+    write(directory / "type/test.json", definition);
     auto patrolLevel = level;
     patrolLevel["instances"][0]["ai"] = {{"routine", "patrol"}, {"waypoints", {{4, 5}, {6, 5}}}};
     write(directory / "level.json", patrolLevel);

@@ -21,7 +21,8 @@ struct CaptureView {
     }
     void refresh(bool debug = false) {
         animator.setTime(session.timeMs());
-        frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot());
+        frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
+                      &session.combat().attacks(), session.timeMs());
         commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, debug,
                          true);
     }
@@ -185,7 +186,7 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
                 v.commands.selectAction(PartyAction::Defend);
                 v.commands.confirm();
             } else {
-                const auto out = v.session.update(.45, false);
+                const auto out = v.session.update(.45, false).step;
                 v.commands.record(out);
                 advanced = out.enemyAttack && sameActor(out.enemy, rear);
             }
@@ -195,65 +196,66 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
             throw std::runtime_error("Protected rear enemy did not advance diagonally and attack");
         save(v, "hud-diagonal-after", true);
     }
-    // Isolate one real enemy outcome to compare guard, wind-up and strike feedback.
+    // Actual authoritative enemy strike: capture candidate seeds, retain result names after impact.
     std::array<bool, 2> impactCaptured{};
     for (unsigned seed = 5; seed < 40 && !(impactCaptured[0] && impactCaptured[1]); ++seed) {
         CaptureView v(map, catalog, idle, timings, renderer, seed);
-        for (int step = 0; step < 100 && v.session.combat().snapshot().phase != CombatPhase::Victory &&
-                           v.session.combat().snapshot().phase != CombatPhase::Defeat;
-             ++step) {
+        for (int step = 0; step < 100; ++step) {
+            if (v.session.combat().snapshot().phase == CombatPhase::Defeat)
+                break;
             if (v.session.combat().snapshot().awaitingAction) {
                 v.commands.selectAction(PartyAction::Defend);
                 v.commands.confirm();
                 v.refresh();
                 continue;
             }
-            const auto out = v.session.update(.45, false);
-            v.refresh();
-            if (out.event != CombatEvent::Attack || !out.enemyAttack || impactCaptured[out.hit ? 0 : 1])
+            const auto& events = v.session.update(.45, false);
+            v.commands.record(events);
+            const auto accepted = events.step;
+            if (accepted.event != CombatEvent::AttackStarted || !accepted.enemyAttack)
                 continue;
-            const auto clip =
-                out.kind == rules::AttackKind::Ranged ? NpcAnimation::RangedAttack : NpcAnimation::Attack;
-            const auto& attack =
-                timings[v.session.actors().actor(out.enemy)->npc.type.index][static_cast<std::size_t>(clip)];
-            const unsigned delay = out.impactMs;
-            if (!delay)
-                throw std::runtime_error("Impact capture requires a multi-pose attack");
-            CommandController impactUi(v.session, timings);
-            impactUi.record(out);
-            const auto captureImpact = [&](const char* phase) {
-                v.refresh();
-                impactUi.refresh(v.frames.picking() ? v.frames.picking()->targets() : TargetSnapshot{}, false,
-                                 false, true);
-                presenter.present(v.frames.frame(), v.session.movement(), map, false, true,
-                                  &impactUi.snapshot(), v.frames.picking());
-                const auto name = std::string("hud-impact-") + (out.hit ? "hit-" : "miss-") + phase;
-                presenter.capture(directory / (name + ".png"));
-                presenter.capture(directory / (name + "-1280.png"), 1280, 720);
-            };
-            captureImpact("guard");
-            v.session.update(double(delay - 1) / 1000, false);
-            captureImpact("windup");
-            v.session.update(.001, false);
-            captureImpact("strike");
-            const auto heldTurn = v.session.combat().snapshot().turn;
-            const auto hold =
-                std::max<std::uint64_t>(npcClipDuration(attack), delay + combatFeedbackDurationMs);
-            v.session.update(double(hold - delay - 1) / 1000, false);
-            if (!v.session.combat().snapshot().resolvingAction ||
-                v.session.combat().snapshot().turn != heldTurn)
-                throw std::runtime_error("Attack released its turn before presentation finished");
-            captureImpact("feedback-tail");
-            v.session.update(.001, false);
-            if (v.session.combat().snapshot().resolvingAction)
-                throw std::runtime_error("Attack did not release after presentation");
-            captureImpact("handoff");
-            impactCaptured[out.hit ? 0 : 1] = true;
+            const auto shot = v.session.combat().attacks().attacks[accepted.enemy.slot];
+            const std::string prefix = "hud-impact-seed-" + std::to_string(seed) + "-";
+            save(v, (prefix + "guard").c_str(), true);
+            v.commands.record(v.session.update(double(shot.impactMs - v.session.timeMs() - 1) / 1000, false));
+            save(v, (prefix + "windup").c_str(), true);
+            const auto& impacts = v.session.update(.001, false);
+            v.commands.record(impacts);
+            bool found = false, hit = false;
+            for (const auto& out : impacts)
+                if (out.event == CombatEvent::Attack && out.attackId.serial == accepted.attackId.serial) {
+                    found = true;
+                    hit = out.hit;
+                }
+            if (!found)
+                throw std::runtime_error("Missing authoritative capture impact");
+            const std::string result = hit ? "hud-impact-hit-" : "hud-impact-miss-";
+            if (!impactCaptured[hit ? 0 : 1]) {
+                for (const auto* phase : {"guard", "windup"})
+                    for (const auto* suffix : {".png", "-1280.png"})
+                        std::filesystem::copy_file(directory / (prefix + phase + suffix),
+                                                   directory / (result + phase + suffix),
+                                                   std::filesystem::copy_options::overwrite_existing);
+                save(v, (result + "strike").c_str(), true);
+                const auto end = v.session.combat().attacks().attacks[accepted.enemy.slot].endMs;
+                v.commands.record(v.session.update(double(end - v.session.timeMs() - 1) / 1000, false));
+                if (!v.session.combat().snapshot().resolvingAction)
+                    throw std::runtime_error("Early impact handoff");
+                save(v, (result + "feedback-tail").c_str(), true);
+                v.commands.record(v.session.update(.001, false));
+                if (v.session.combat().snapshot().resolvingAction)
+                    throw std::runtime_error("Late impact handoff");
+                save(v, (result + "handoff").c_str(), true);
+                impactCaptured[hit ? 0 : 1] = true;
+            }
+            for (const auto* phase : {"guard", "windup"})
+                for (const auto* suffix : {".png", "-1280.png"})
+                    std::filesystem::remove(directory / (prefix + phase + suffix));
             break;
         }
     }
     if (!impactCaptured[0] || !impactCaptured[1])
-        throw std::runtime_error("HUD capture did not exercise hit and MISS impact timing");
+        throw std::runtime_error("Missing hit/MISS impact captures");
     std::array<bool, 4> captured{};
     constexpr const char* names[]{"hud-damage-monster", "hud-miss-monster", "hud-damage-party",
                                   "hud-miss-party"};

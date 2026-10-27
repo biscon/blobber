@@ -33,6 +33,7 @@ struct HudCard {
     const char *name = "", *className = "";
     int hp = 0, maxHp = 0, mana = 0, maxMana = 0;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
+    bool incomingShot = false;
     std::uint8_t successes = 0, failures = 0;
     DisplayStatus status = DisplayStatus::Ready;
     const char* raceName = "";
@@ -94,6 +95,10 @@ class CommandController {
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     CommandController(GameSession&&) = delete;
     void record(const CombatOutcome& outcome) noexcept;
+    void record(const CombatEvents& events) noexcept {
+        for (const auto& out : events)
+            record(out);
+    }
     void selectAlly(std::size_t index) noexcept;
     CommandController(Party&&, const ActorWorld&) = delete;
     CommandController(const Party&&, const ActorWorld&) = delete;
@@ -144,7 +149,6 @@ class CommandController {
     float pointerX_ = 0, pointerY_ = 0;
     GameSession* session_ = nullptr;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
-    std::array<CombatFeedback, 8> pendingFeedback_{};
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;

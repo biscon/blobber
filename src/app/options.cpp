@@ -21,7 +21,10 @@ Options parseOptions(int argc, char** argv) {
             result.assets = argv[++i];
         else if (arg == "--check-prepared")
             result.checkPreparedOnly = true;
-        else if (arg == "--capture-preparation" && i + 1 < argc) {
+        else if (arg == "--capture-projectiles" && i + 1 < argc) {
+            result.captureProjectilesOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture-preparation" && i + 1 < argc) {
             result.capturePreparationOnly = true;
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         } else if (arg == "--capture-hybrid" && i + 1 < argc) {
@@ -65,7 +68,8 @@ Options parseOptions(int argc, char** argv) {
         (result.captureAiOnly && (result.uiDemo || result.combatDemo)))
         throw std::runtime_error("Choose only one of --ui-demo, --combat-demo or --ai-demo");
     if (int(result.captureAiOnly) + int(result.captureHudOnly) + int(result.captureReactionsOnly) +
-            int(result.captureHybridOnly) + int(result.capturePreparationOnly) >
+            int(result.captureHybridOnly) + int(result.capturePreparationOnly) +
+            int(result.captureProjectilesOnly) >
         1)
         throw std::runtime_error("Choose only one focused capture mode");
     if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)

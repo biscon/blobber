@@ -4,6 +4,7 @@
 #include "game/npc_animation.hpp"
 #include "render/frame.hpp"
 #include "render/image_sampling.hpp"
+#include "render/npc_projection.hpp"
 #include "render/picking.hpp"
 #include "render/preparation_limits.hpp"
 #include "render/projection.hpp"
@@ -22,7 +23,14 @@ struct NpcClipImages {
     float width = 0; // Zero inherits appearance canvas width; never a per-frame scale.
     std::array<std::vector<NpcImage>, 4> views;
 };
+struct NpcAttachment {
+    float x = .5f, y = .45f;
+};
+struct NpcAttachments {
+    std::array<NpcAttachment, 4> release{}, torso{};
+};
 struct NpcAppearance {
+    NpcAttachments attachments;
     float width = 0.45f, height = 0.65f;
     std::array<NpcImage, 4> views; // Legacy static assets; mutually exclusive with animations.
     std::array<NpcClipImages, npcAnimationCount> animations;
@@ -50,6 +58,9 @@ class PreparedNpcs {
     void compose(const ActorWorld& npcs, Player player, int phase,
                  const std::array<float, viewWidth>& wallDepth, Frame& frame,
                  const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr) const;
+    void setAttachments(const std::vector<NpcAttachments>& metadata);
+    ProjectedAttachment attachment(const NpcInstance&, ActorPosition, bool release, Player,
+                                   int phase) const noexcept;
     std::size_t pixelCount() const noexcept { return pixels_.size(); }
     std::size_t preparedPixelBytes() const noexcept {
         return pixels_.size() * sizeof(Color) + shadowAlpha_.size() + travelShadow_.size();
@@ -97,6 +108,7 @@ class PreparedNpcs {
         std::array<std::array<std::size_t, 4>, npcAnimationCount> travelFirst{};
         float shadowRadius = 0, edgeHalfWidth = 0;
     };
+    std::array<NpcAttachments, NpcWorld::maxTypes> attachments_{};
     std::vector<Sprite> sprites_;
     std::vector<TravelSprite> travelSprites_;
     std::array<unsigned char, 64 * 64> travelShadow_{};

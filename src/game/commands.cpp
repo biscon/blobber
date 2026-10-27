@@ -14,6 +14,8 @@ const char* actionName(PartyAction action) noexcept {
 }
 const char* commandMessage(CommandReason reason) noexcept {
     switch (reason) {
+    case CommandReason::AttackPending:
+        return "This attack is still playing.";
     case CommandReason::Cooldown:
         return "Action is recharging.";
     case CommandReason::OutOfRange:
@@ -95,7 +97,8 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
     refresh({}, false, false, true);
 }
 void CommandController::record(const CombatOutcome& out) noexcept {
-    if (out.event == CombatEvent::None)
+    if (out.event == CombatEvent::None ||
+        (out.attackId.world && out.attackId.world != actors_.snapshot().world))
         return;
     char line[CombatLog::messageBytes];
     const auto* actor = party_.character(out.character);
@@ -106,7 +109,18 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Started:
         std::snprintf(line, sizeof(line), "Combat begins.");
         break;
+    case CombatEvent::AttackStarted:
+    case CombatEvent::ProjectileReleased:
+        return;
+    case CombatEvent::AttackCanceled:
+        std::snprintf(line, sizeof(line), "Attack canceled: %s.",
+                      out.targetGone ? "target gone" : "attacker incapacitated");
+        break;
     case CombatEvent::Attack:
+        if (out.targetGone) {
+            std::snprintf(line, sizeof(line), "Arrow arrives: target gone.");
+            break;
+        }
         recordFeedback(out);
         if (out.enemyAttack) {
             std::snprintf(line, sizeof(line), "Goblin #%u -> %s: %s (d20 %d), %lld damage%s.",
@@ -174,7 +188,10 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     next.character = out.recipient;
     next.enemy = out.enemy;
     next.damage = out.damage;
-    next.startedMs = session_->timeMs();
+    next.startedMs = out.occurredMs;
+    if (session_->timeMs() < next.startedMs ||
+        session_->timeMs() - next.startedMs >= CombatFeedback::durationMs)
+        return;
     if (!next.party) {
         // This is the last presented target image, including for a newly dead actor.
         if (state_.targets.world != out.enemy.world || out.enemy.slot >= state_.targets.anchors.size())
@@ -183,21 +200,7 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
         if (!next.anchor.valid)
             return;
     }
-    const auto delay = next.party ? out.impactMs : 0;
-    if (delay) {
-        next.startedMs += delay;
-        auto* destination = &pendingFeedback_[0];
-        for (auto& entry : pendingFeedback_) {
-            if (!entry.active) {
-                destination = &entry;
-                break;
-            }
-            if (entry.startedMs < destination->startedMs)
-                destination = &entry;
-        }
-        *destination = next;
-    } else
-        showFeedback(next);
+    showFeedback(next);
 }
 void CommandController::showFeedback(const CombatFeedback& next) noexcept {
     auto* destination = &state_.feedback[0];
@@ -217,7 +220,6 @@ void CommandController::showFeedback(const CombatFeedback& next) noexcept {
 }
 void CommandController::refreshFeedback(bool clear) noexcept {
     if (clear) {
-        pendingFeedback_ = {};
         state_.feedback = {};
         hitUntil_ = {};
         return;
@@ -226,18 +228,6 @@ void CommandController::refreshFeedback(bool clear) noexcept {
     for (auto& entry : state_.feedback)
         if (entry.active && now - entry.startedMs >= CombatFeedback::durationMs)
             entry.active = false;
-    // Drain in impact order so a skipped interval leaves the newest recipient marker.
-    for (;;) {
-        CombatFeedback* next = nullptr;
-        for (auto& entry : pendingFeedback_)
-            if (entry.active && entry.startedMs <= now && (!next || entry.startedMs < next->startedMs))
-                next = &entry;
-        if (!next)
-            break;
-        if (now - next->startedMs < CombatFeedback::durationMs)
-            showFeedback(*next);
-        next->active = false;
-    }
 }
 void CommandController::selectAlly(std::size_t index) noexcept {
     if (!state_.suspended && index < state_.allyCount)
@@ -258,8 +248,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.production = session_ != nullptr;
     if (session_) {
         const auto& combat = session_->combat().snapshot();
-        refreshFeedback(moving || (combat.phase == CombatPhase::Exploration &&
-                                   state_.combat.phase != CombatPhase::Exploration));
+        refreshFeedback(false);
         if (combat.turn != state_.combat.turn || combat.phase != state_.combat.phase) {
             if (!realTime(combat.phase))
                 state_.selection.action = PartyAction::Melee;
@@ -291,6 +280,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         targets.revision == actors_.snapshot().revision) {
         normalized.world = targets.world;
         normalized.revision = targets.revision;
+        normalized.anchors = targets.anchors;
         // Normalize membership in stable slot order, ignoring duplicates and invalid IDs.
         std::array<bool, NpcWorld::maxInstances> included{};
         for (std::size_t i = 0; i < targets.count; ++i) {
@@ -305,6 +295,16 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             }
     }
     state_.targets = normalized;
+    for (auto& feedback : state_.feedback) {
+        if (!feedback.active || feedback.party)
+            continue;
+        if (moving || normalized.world != feedback.enemy.world)
+            feedback.anchor.valid = false;
+        else if (normalized.anchors[feedback.enemy.slot].valid)
+            feedback.anchor = normalized.anchors[feedback.enemy.slot];
+        else
+            feedback.anchor.valid = false;
+    }
     state_.protectedTargets.fill(false);
     if (session_)
         for (std::size_t i = 0; i < state_.targets.count; ++i) {
@@ -358,6 +358,9 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             card.spent = state_.combat.spent[id.index] && !realTime(state_.combat.phase);
             card.defending = state_.combat.defending[id.index];
             card.recentlyHit = session_->timeMs() < hitUntil_[id.index];
+            for (const auto& shot : session_->combat().attacks().attacks)
+                card.incomingShot |= shot.incoming && shot.ranged && shot.character.index == id.index &&
+                                     shot.stage == AttackStage::Flight;
             if (member.life == rules::Life::Dying && id.index != state_.selection.character.index)
                 state_.allies[state_.allyCount++] = id;
         }

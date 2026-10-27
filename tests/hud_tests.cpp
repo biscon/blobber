@@ -57,7 +57,8 @@ void meleeRangeFeedback() {
     check(s.submit(command).reason == CommandReason::InvalidTarget,
           "Actually dead distant target still reports invalid target");
     command.target = s.actors().id(0);
-    check(s.submit(command).event == CombatEvent::Attack, "Valid melee remains available after rejection");
+    check(s.submit(command).event == CombatEvent::AttackStarted,
+          "Valid melee remains available after rejection");
 }
 void directActions() {
     const auto map = combatMap();

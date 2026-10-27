@@ -36,6 +36,7 @@ enum class CommandReason : std::uint8_t {
     Cooldown,
     OutOfRange,
     Blocked,
+    AttackPending,
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;

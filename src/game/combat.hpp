@@ -1,7 +1,9 @@
 #pragma once
-#include "game/command_types.hpp"
+#include "game/attack_timeline.hpp"
 #include "game/npc_ai.hpp"
 #include "game/npc_animation.hpp"
+#include <cassert>
+#include <cstdlib>
 
 namespace blobber {
 constexpr std::uint64_t combatFeedbackDurationMs = 1000;
@@ -22,7 +24,10 @@ inline bool realTime(CombatPhase phase) noexcept {
 enum class CombatEvent : std::uint8_t {
     None,
     Started,
-    Attack,
+    Attack, // Resolved impact; never command acceptance.
+    AttackStarted,
+    ProjectileReleased,
+    AttackCanceled,
     Defend,
     Aid,
     DeathSave,
@@ -42,7 +47,30 @@ struct CombatOutcome {
     int roll = 0;
     CombatPhase phase = CombatPhase::Exploration;
     rules::AttackKind kind = rules::AttackKind::Melee;
-    std::uint32_t impactMs = 0;
+    std::uint32_t impactMs = 0; // Strike/release offset in acceptance events.
+    CombatAttackId attackId;
+    std::uint64_t occurredMs = 0;
+    bool targetGone = false;
+};
+struct CombatEvents {
+    static constexpr std::size_t capacity = attackCapacity * 2 + 4;
+    std::array<CombatOutcome, capacity> values{};
+    std::size_t count = 0;
+    CombatOutcome step; // The single automatic/phase step, separate from draining deadlines.
+    void clear() noexcept {
+        count = 0;
+        step = {};
+    }
+    void append(const CombatOutcome& out) noexcept {
+        if (out.event == CombatEvent::None)
+            return;
+        assert(count < capacity);
+        if (count >= capacity)
+            std::abort(); // Internal bound violation must never drop consequences.
+        values[count++] = out;
+    }
+    const CombatOutcome* begin() const noexcept { return values.data(); }
+    const CombatOutcome* end() const noexcept { return values.data() + count; }
 };
 struct CombatParticipant {
     std::optional<rules::CharacterId> character;
@@ -75,6 +103,8 @@ class CombatController {
     CombatController(const CombatController&) = delete;
     CombatController& operator=(const CombatController&) = delete;
     const CombatSnapshot& snapshot() const noexcept { return state_; }
+    const AttackVisualSnapshot& attacks() const noexcept { return visuals_; }
+    void resolveImpacts(Player pose, std::uint64_t now, CombatEvents&) noexcept;
     bool contact(Player pose) noexcept;
     void elapse(std::uint64_t elapsed) noexcept;
     void observe(Player pose) noexcept;
@@ -106,6 +136,21 @@ class CombatController {
     rules::DiceRng& rng_;
     NpcAiController& ai_;
     CombatSnapshot state_;
+    struct PendingAttack {
+        CombatOutcome result;
+        std::uint64_t clipEndMs = 0, hurtUntilMs = 0;
+        bool turn = false, releaseNotice = false;
+    };
+    std::array<PendingAttack, attackCapacity> pending_{};
+    AttackVisualSnapshot visuals_;
+    std::uint64_t nextAttack_ = 1;
+    bool drainedThisUpdate_ = false;
+    bool attackBusy(std::size_t slot) const noexcept;
+    bool pendingImpacts() const noexcept;
+    CombatOutcome queueAttack(CombatOutcome, Player, std::uint64_t now) noexcept;
+    void setAttackHold(std::size_t slot, std::uint64_t until) noexcept;
+    void interruptWindup(ActorId, std::uint64_t when) noexcept;
+    void cancelAttack(std::size_t slot, std::uint64_t when, CombatEvents&, bool targetGone) noexcept;
     Player origin_;
     std::array<rules::AttackId, NpcWorld::maxInstances> melee_{}, ranged_{};
     std::array<Timing, NpcWorld::maxTypes> presentation_{};
@@ -132,7 +177,6 @@ class CombatController {
     void addGroups() noexcept;
     void selectTurn() noexcept;
     void advance(std::uint64_t now) noexcept;
-    void holdAttack(const CombatOutcome&, std::uint64_t now) noexcept;
     void alert(ActorId, Player) noexcept;
     void refreshReadiness() noexcept;
     void leave() noexcept;

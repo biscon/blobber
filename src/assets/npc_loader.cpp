@@ -195,6 +195,26 @@ LoadedNpcs loadNpcsImpl(const std::filesystem::path& file, const Map& map, Cell 
                         throw std::runtime_error("NPC alpha_cutoff must be 0..254");
                     appearance.alphaCutoff = static_cast<unsigned char>(cutoff);
                 }
+                if (definition.contains("attachments")) {
+                    const auto& anchors = definition.at("attachments");
+                    if (!anchors.is_object())
+                        throw std::runtime_error("NPC attachments must be an object");
+                    const std::array<const char*, 4> sides{"front", "back", "left", "right"};
+                    for (const auto* kind : {"release", "torso"}) {
+                        if (!anchors.contains(kind))
+                            continue;
+                        auto& values = std::string(kind) == "release" ? appearance.attachments.release
+                                                                      : appearance.attachments.torso;
+                        for (std::size_t i = 0; i < 4; ++i) {
+                            const auto& point = anchors.at(kind).at(sides[i]);
+                            if (!point.is_array() || point.size() != 2)
+                                throw std::runtime_error("NPC attachment requires [x,y]");
+                            values[i] = {number(point[0]), number(point[1])};
+                            if (values[i].x < 0 || values[i].x > 1 || values[i].y < 0 || values[i].y > 1)
+                                throw std::runtime_error("NPC attachment outside normalized canvas");
+                        }
+                    }
+                }
                 loadAnimations(definition, path.parent_path(), appearance, pixels, highWater, decode);
                 if (decode)
                     validateNpcAppearance(appearance);
@@ -260,8 +280,12 @@ LoadedNpcMetadata loadNpcMetadata(const std::filesystem::path& file, const Map& 
     auto parsed = loadNpcsImpl(file, map, spawn, false);
     std::vector<NpcTimings> timings;
     timings.reserve(parsed.appearances.size());
-    for (const auto& a : parsed.appearances)
+    std::vector<NpcAttachments> attachments;
+    for (const auto& a : parsed.appearances) {
         timings.push_back(npcTimings(a));
-    return {std::move(parsed.world), std::move(timings), parsed.definitionFingerprint};
+        attachments.push_back(a.attachments);
+    }
+    return {std::move(parsed.world), std::move(timings), std::move(attachments),
+            parsed.definitionFingerprint};
 }
 } // namespace blobber

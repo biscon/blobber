@@ -43,7 +43,8 @@ struct PlayView {
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs());
         const bool changed =
-            frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot());
+            frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
+                          &session.combat().attacks(), session.timeMs());
         const auto* picking = frames.picking();
         commands.refresh(picking ? picking->targets() : TargetSnapshot{},
                          session.movement().transition.active(), debug, focused);

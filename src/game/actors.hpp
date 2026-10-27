@@ -24,6 +24,8 @@ struct ActorState {
     bool hasAttack = false;
     bool rangedAttack = false;
     std::uint64_t attackTimeMs = 0;
+    bool resumableAttack = false;
+    std::uint64_t attackPausedMs = 0, attackPauseFromMs = 0, attackPauseUntilMs = 0;
     bool hasWalk = false;
     std::uint64_t walkTimeMs = 0;
     bool hasTravel = false;
@@ -72,6 +74,8 @@ class ActorWorld {
     ActorResult walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs) noexcept;
     ActorResult face(ActorId id, Heading facing) noexcept;
     ActorResult attack(ActorId id, std::uint64_t timeMs, bool ranged = false) noexcept;
+    ActorResult suspendAttack(ActorId, std::uint64_t when, std::uint64_t duration) noexcept;
+    ActorResult cancelAttack(ActorId) noexcept;
     ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept;
     ActorResult remove(ActorId id) noexcept;
     const rules::Catalog& catalog() const noexcept { return catalog_; }

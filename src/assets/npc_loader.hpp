@@ -11,6 +11,7 @@ struct LoadedNpcs {
 struct LoadedNpcMetadata {
     NpcWorld world;
     std::vector<NpcTimings> timings;
+    std::vector<NpcAttachments> attachments;
     std::uint64_t definitionFingerprint = 0;
 };
 LoadedNpcs loadNpcs(const std::filesystem::path& levelFile, const Map& map, Cell playerSpawn);

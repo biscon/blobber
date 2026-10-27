@@ -5,21 +5,23 @@
 
 namespace blobber {
 void SceneRenderer::compose(const Map& map, Player player, Frame& result, const ActorWorld* npcs,
-                            const NpcAnimationSnapshot* animation, PickingBuffer* picking) const {
-    composeView(map, player, 0, result, npcs, animation, picking);
+                            const NpcAnimationSnapshot* animation, PickingBuffer* picking,
+                            const ProjectilePlayer* projectiles) const {
+    composeView(map, player, 0, result, npcs, animation, picking, projectiles);
 }
 void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float t, Frame& result,
-                                  const ActorWorld* npcs, const NpcAnimationSnapshot* animation) const {
+                                  const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
+                                  PickingBuffer* picking, const ProjectilePlayer* projectiles) const {
     const Cell r = right(from.heading);
     const bool movingRight = to.cell == from.cell + r;
     if (from.heading != to.heading || (!movingRight && !(to.cell == from.cell + r * -1)))
         throw std::invalid_argument("Strafe views require adjacent tiles and an unchanged heading");
     if (t <= 0) {
-        compose(map, from, result, npcs, animation);
+        compose(map, from, result, npcs, animation, picking, projectiles);
         return;
     }
     if (t >= 1) {
-        compose(map, to, result, npcs, animation);
+        compose(map, to, result, npcs, animation, picking, projectiles);
         return;
     }
     const float eased = t * t * (3 - 2 * t);
@@ -28,14 +30,14 @@ void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float 
     const int phase = static_cast<int>(std::round(offset * ViewProjection::strafeSteps));
     if (phase == ViewProjection::strafeSteps) {
         base.cell = base.cell + r;
-        compose(map, base, result, npcs, animation);
+        compose(map, base, result, npcs, animation, picking, projectiles);
         return;
     }
-    composeView(map, base, phase, result, npcs, animation);
+    composeView(map, base, phase, result, npcs, animation, picking, projectiles);
 }
 void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame& result,
                                 const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
-                                PickingBuffer* picking) const {
+                                PickingBuffer* picking, const ProjectilePlayer* projectiles) const {
     if (picking)
         picking->clear();
     const PreparedView& view = views_[phase];
@@ -70,5 +72,7 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
         npcs_.compose(*npcs, player, phase, coverage, result, animation, picking);
     if (picking)
         picking->finish(npcs);
+    if (projectiles && npcs)
+        composeProjectiles(*projectiles, npcs_, *npcs, player, phase, coverage, picking, result);
 }
 } // namespace blobber

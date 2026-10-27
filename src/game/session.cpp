@@ -18,10 +18,11 @@ void GameSession::detectContact() noexcept {
     if (combat_.contact(movement_.state().player))
         movement_.clearPending();
 }
-CombatOutcome GameSession::update(double seconds, bool paused) noexcept {
+const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
+    events_.clear();
     if (paused) {
         movement_.clearPending();
-        return {};
+        return events_;
     }
     if (!std::isfinite(seconds) || seconds < 0)
         seconds = 0;
@@ -32,6 +33,7 @@ CombatOutcome GameSession::update(double seconds, bool paused) noexcept {
     timeMs_ += elapsed;
     remainderMs_ -= static_cast<double>(elapsed);
     combat_.elapse(elapsed);
+    combat_.resolveImpacts(movement_.state().player, timeMs_, events_);
     detectContact();
     movement_.update(map_, static_cast<float>(seconds), &actors_);
     driveFacing();
@@ -41,9 +43,10 @@ CombatOutcome GameSession::update(double seconds, bool paused) noexcept {
         ai_.update(elapsed, timeMs_, movement_.state().player, &locks);
         detectContact();
     }
-    auto out = combat_.update(movement_.state().player, movement_.state().transition.active(), timeMs_);
+    events_.step = combat_.update(movement_.state().player, movement_.state().transition.active(), timeMs_);
+    events_.append(events_.step);
     driveFacing();
-    return out;
+    return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
     if (!realTime(combat_.snapshot().phase))

@@ -89,16 +89,25 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
             const auto& attack = timings[static_cast<std::size_t>(attackClip)];
             const bool damageCue = hurt.count && actor.hasDamage && time >= actor.damageTimeMs;
             const bool attackCue = actor.hasAttack && time >= actor.attackTimeMs;
-            const bool hurtWins = damageCue && (!attackCue || actor.damageTimeMs >= actor.attackTimeMs);
+            const auto paused = actor.attackPausedMs +
+                                (time > actor.attackPauseFromMs
+                                     ? std::min(time, actor.attackPauseUntilMs) - actor.attackPauseFromMs
+                                     : 0);
+            const auto attackElapsed =
+                attackCue ? time - actor.attackTimeMs - std::min(paused, time - actor.attackTimeMs) : 0;
+            const bool resume = actor.resumableAttack && time >= actor.attackPauseUntilMs &&
+                                actor.damageTimeMs < actor.attackPauseUntilMs;
+            const bool hurtWins =
+                damageCue && (!attackCue || actor.damageTimeMs >= actor.attackTimeMs) && !resume;
             if (dying) {
                 next.clip = NpcAnimation::Death;
                 next.active = sample(death, time - actor.damageTimeMs, 0);
             } else if (hurtWins && time - actor.damageTimeMs < npcClipDuration(hurt)) {
                 next.clip = NpcAnimation::Hurt;
                 next.active = sample(hurt, time - actor.damageTimeMs, 0);
-            } else if (!hurtWins && attackCue && time - actor.attackTimeMs < npcClipDuration(attack)) {
+            } else if (!hurtWins && attackCue && attackElapsed < npcClipDuration(attack)) {
                 next.clip = attackClip;
-                next.active = sample(attack, time - actor.attackTimeMs, 0);
+                next.active = sample(attack, attackElapsed, 0);
             } else if (actor.hasWalk && (!actor.hasAttack || actor.walkTimeMs > actor.attackTimeMs) &&
                        (!actor.hasDamage || actor.walkTimeMs > actor.damageTimeMs ||
                         (actor.life == ActorLife::Dead && !dying)) &&

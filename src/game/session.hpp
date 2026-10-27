@@ -27,7 +27,7 @@ class GameSession {
     const MovementState& movement() const noexcept { return movement_.state(); }
     std::uint64_t timeMs() const noexcept { return timeMs_; }
     const NpcAiSnapshot& ai() const noexcept { return ai_.snapshot(); }
-    CombatOutcome update(double seconds, bool paused) noexcept;
+    const CombatEvents& update(double seconds, bool paused) noexcept;
     void move(Action action, bool fresh = true) noexcept;
     void clearPending() noexcept { movement_.clearPending(); }
     void setAnimated(bool enabled) noexcept { movement_.setAnimated(enabled); }
@@ -41,6 +41,7 @@ class GameSession {
     rules::DiceRng rng_;
     NpcAiController ai_;
     CombatController combat_;
+    CombatEvents events_;
     bool enableAi_ = true;
     std::uint64_t timeMs_ = 0;
     double remainderMs_ = 0;

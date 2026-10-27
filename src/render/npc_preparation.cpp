@@ -25,6 +25,11 @@ NpcTimings npcTimings(const NpcAppearance& a) {
 }
 namespace {
 std::size_t validateAppearance(const NpcAppearance& a, bool requirePixels) {
+    for (const auto& group : {a.attachments.release, a.attachments.torso})
+        for (const auto& anchor : group)
+            if (!std::isfinite(anchor.x) || !std::isfinite(anchor.y) || anchor.x < 0 || anchor.x > 1 ||
+                anchor.y < 0 || anchor.y > 1)
+                throw std::runtime_error("Invalid NPC effect attachment");
     std::size_t pixels = 0;
     if (a.sampling != ImageSampling::Nearest && a.sampling != ImageSampling::Area)
         throw std::runtime_error("Invalid NPC sampling profile");
@@ -134,6 +139,7 @@ PreparedNpcs::PreparedNpcs(const std::vector<NpcAppearance>& appearances, Prepar
         }
     for (std::size_t type = 0; type < appearances.size(); ++type) {
         const auto& a = appearances[type];
+        attachments_[type] = a.attachments;
         types_[type].shadowRadius = a.width * .45f;
         for (std::size_t clip = 0; clip < npcAnimationCount; ++clip)
             for (std::size_t side = 0; side < 4; ++side) {

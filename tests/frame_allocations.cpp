@@ -119,6 +119,18 @@ int main() {
                        {{{0}, {2, 3}, {1, 1}, Heading::South}, {{1}, {4, 3}, {0, 1}, Heading::South}});
         NpcAnimator roleAnimator(roleActors, roleTimings);
         FramePipeline roleFrames;
+        AttackVisualSnapshot visualShots;
+        visualShots.world = roleActors.snapshot().world;
+        visualShots.revision = 1;
+        auto& visualShot = visualShots.attacks[0];
+        visualShot.id = {visualShots.world, 1};
+        visualShot.stage = AttackStage::Flight;
+        visualShot.ranged = visualShot.incoming = visualShot.hit = true;
+        visualShot.enemy = roleActors.id(1);
+        visualShot.npcOrigin = roleActors.snapshot().actors[1].npc;
+        visualShot.sourcePosition = actorPosition(roleActors.snapshot().actors[1], 0);
+        visualShot.impactMs = 1000;
+        visualShot.partyOrigin = {{3, 5}, Heading::North};
         MovementState roleView;
         roleView.player = {{3, 5}, Heading::North};
         auto npcs = testActors(map, {3, 3}, {"test"},
@@ -211,7 +223,8 @@ int main() {
             if (time == 2400)
                 okay &= roleActors.damage(roleActors.id(1), 100, 1800).died;
             roleAnimator.setTime(time);
-            roleFrames.update(roleRenderer, map, roleView, &roleActors, &roleAnimator.snapshot());
+            roleFrames.update(roleRenderer, map, roleView, &roleActors, &roleAnimator.snapshot(),
+                              &visualShots, time);
             const auto& pose = roleAnimator.snapshot().frames[1];
             okay &= roleFrames.picking() && roleFrames.picking()->targets().count == (time < 2400 ? 2 : 1);
             if (time == 600)
@@ -226,11 +239,11 @@ int main() {
         int archerShots = 0;
         bool archerRetreated = false;
         for (int i = 0; i < 140; ++i) {
-            archerShots += archerSession.update(.1, false).event == CombatEvent::Attack;
+            archerShots += archerSession.update(.1, false).step.event == CombatEvent::AttackStarted;
             if (closeArcher.combat().snapshot().awaitingAction)
                 closeArcher.submit(turnCommand(closeArcher));
             else
-                archerRetreated |= closeArcher.update(.1, false).event == CombatEvent::Move;
+                archerRetreated |= closeArcher.update(.1, false).step.event == CombatEvent::Move;
         }
         okay &= archerShots >= 2 && archerRetreated &&
                 archerSession.actors().actor(archerSession.actors().id(0))->npc.cell == Cell{5, 4};
@@ -290,7 +303,8 @@ int main() {
         for (int i = 0; i < 1000; ++i) {
             fightUi.record(fight.update(.45, i % 19 == 0));
             fightAnimator.setTime(fight.timeMs());
-            fightFrames.update(renderer, map, fight.movement(), &fight.actors(), &fightAnimator.snapshot());
+            fightFrames.update(renderer, map, fight.movement(), &fight.actors(), &fightAnimator.snapshot(),
+                               &fight.combat().attacks(), fight.timeMs());
             const auto* pick = fightFrames.picking();
             fightUi.refresh(pick ? pick->targets() : TargetSnapshot{}, false, false, true);
             if (fight.combat().snapshot().awaitingAction) {
@@ -344,7 +358,7 @@ int main() {
             if (diagonalFight.combat().snapshot().awaitingAction)
                 diagonalFight.submit(turnCommand(diagonalFight));
             else {
-                const auto out = diagonalFight.update(.45, false);
+                const auto out = diagonalFight.update(.45, false).step;
                 diagonalAttack |= out.enemyAttack && out.enemy.slot == 1;
             }
         }

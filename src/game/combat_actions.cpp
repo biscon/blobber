@@ -50,6 +50,9 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
                    ? CommandReason::Ready
                    : CommandReason::InvalidAlly;
     }
+    if (nextAttack_ == std::numeric_limits<std::uint64_t>::max() ||
+        attackBusy(NpcWorld::maxInstances + c.character.index))
+        return CommandReason::AttackPending;
     if (!ranged && !exposed(c.character))
         return CommandReason::RearBlocked;
     if (!weapon(c.character, ranged))
@@ -123,27 +126,6 @@ void CombatController::alert(ActorId target, Player pose) noexcept {
         state_.phase = CombatPhase::Approach;
     }
 }
-void CombatController::holdAttack(const CombatOutcome& out, std::uint64_t now) noexcept {
-    const auto* a = actors_.actor(out.enemy);
-    if (!a)
-        return;
-    const auto& t = presentation_[a->npc.type.index];
-    const auto duration =
-        out.enemyAttack
-            ? std::max<std::uint64_t>(out.kind == rules::AttackKind::Ranged ? t.bow : t.attack,
-                                      out.impactMs + combatFeedbackDurationMs)
-            : std::max<std::uint64_t>(combatFeedbackDurationMs, out.hit ? (out.died ? t.death : t.hurt) : 0);
-    const auto until = now + std::max(actionDelayMs, duration);
-    if (out.enemyAttack)
-        enemyBusy_[out.enemy.slot] = until;
-    else
-        partyBusy_ = std::max(partyBusy_, until);
-    if (state_.phase == CombatPhase::Turns) {
-        state_.awaitingAction = false;
-        state_.resolvingAction = true;
-        due_ = until;
-    }
-}
 CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::uint64_t now) noexcept {
     CombatOutcome out;
     out.reason = validate(c, pose);
@@ -183,14 +165,13 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         out.critical = hit.outcome == rules::AttackOutcome::Critical;
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
-            out.died = actors_.damage(out.enemy, out.damage, now).died;
         }
         alert(out.enemy, pose);
-        holdAttack(out, now);
+        out = queueAttack(out, pose, now);
     }
     refreshReadiness();
     if (turn) {
-        if (out.event != CombatEvent::Attack)
+        if (out.event != CombatEvent::AttackStarted)
             advance(now);
     } else
         ++state_.turn;
@@ -203,7 +184,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.enemy = id;
     out.enemyAttack = true;
     const auto* a = actors_.actor(id);
-    if (!a || !frontal(id))
+    if (!a || !frontal(id) || attackBusy(id.slot) || nextAttack_ == std::numeric_limits<std::uint64_t>::max())
         return out;
     const auto* attack = actors_.catalog().attack(ranged ? ranged_[id.slot] : melee_[id.slot]);
     if (!attack)
@@ -241,14 +222,10 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     actors_.attack(id, now, ranged);
     if (out.hit) {
         out.damage = rng_.damage(attack->damage, out.critical).value.total;
-        out.died = party_.damage(out.recipient, out.damage, out.critical).died;
-        if (party_.character(out.recipient)->life != rules::Life::Conscious)
-            state_.defending[out.recipient.index] = false;
     }
     enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
     alert(id, origin_);
-    holdAttack(out, now);
-    return out;
+    return queueAttack(out, origin_, now);
 }
 CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcept {
     CombatOutcome out;

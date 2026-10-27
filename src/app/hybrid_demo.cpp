@@ -54,7 +54,8 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
         CommandController ui(s, timings);
         auto save = [&](const std::string& suffix) {
             animator.setTime(s.timeMs());
-            frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot());
+            frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
+                          &s.combat().attacks(), s.timeMs());
             ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
                        s.movement().transition.active(), false, true);
             presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(),
@@ -177,10 +178,11 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
         int captured = 0, shots = 0;
         bool rangeCaptured = false;
         for (int step = 0; step < 220; ++step) {
-            const auto out = s.update(.1, false);
-            ui.record(out);
+            const auto& events = s.update(.1, false);
+            ui.record(events);
+            const auto out = events.step;
             if (mode == 6) {
-                shots += out.event == CombatEvent::Attack && out.kind == rules::AttackKind::Ranged;
+                shots += out.event == CombatEvent::AttackStarted && out.kind == rules::AttackKind::Ranged;
                 for (std::size_t i = 0; i < placements.instances().size(); ++i)
                     if (!(s.actors().snapshot().actors[i].npc.cell == placements.instances()[i].cell))
                         throw std::runtime_error("Bow-only demo goblin abandoned its clear shot");

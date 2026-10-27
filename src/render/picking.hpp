@@ -42,8 +42,9 @@ class PickingBuffer {
                 }
             }
         for (std::size_t i = 0; i < actors->snapshot().count; ++i)
-            if (seen[i] && actors->snapshot().actors[i].life == ActorLife::Alive) {
-                targets_.ids[targets_.count++] = actors->id(i);
+            if (seen[i]) {
+                if (actors->snapshot().actors[i].life == ActorLife::Alive)
+                    targets_.ids[targets_.count++] = actors->id(i);
                 targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2, (minimum[i].y + maximum[i].y) / 2,
                                        true, minimum[i].y};
             }

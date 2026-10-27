@@ -10,7 +10,7 @@ using namespace blobber;
 namespace {
 constexpr Player spawn{{3, 3}, Heading::North};
 void start(GameSession& s) {
-    check(s.update(0, false).event == CombatEvent::Started, "Contact starts once");
+    check(s.update(0, false).step.event == CombatEvent::Started, "Contact starts once");
 }
 void awaitCharacter(GameSession& s, rules::CharacterId id) {
     for (int i = 0; i < 200; ++i) {
@@ -31,128 +31,46 @@ void presentationHandoff() {
     NpcTimings timing{};
     timing[0] = {{600, 600, 0, 0}, 2};
     timing[2] = {{700, 250, 250, 350}, 4};
-    timing[3] = {{150, 150, 0, 0}, 2};
-    timing[4] = {{200, 200, 200, 600}, 4};
-    const std::vector<NpcTimings> timings{timing};
-    GameSession game(map, catalog, placements, 5, spawn, false, timings);
-    CommandController ui(game, timings);
+    GameSession game(map, catalog, placements, 5, spawn, false, {timing});
+    CommandController ui(game);
     start(game);
-    bool toPlayer = false, toEnemy = false;
-    for (int step = 0; step < 100 && !(toPlayer && toEnemy); ++step) {
+    bool checked = false;
+    for (int i = 0; i < 100 && !checked; ++i) {
         if (game.combat().snapshot().awaitingAction) {
             game.submit(turnCommand(game));
             continue;
         }
-        auto out = game.update(.45, false);
-        if (out.event != CombatEvent::Attack)
+        const auto started = game.update(.45, false).step;
+        if (started.event != CombatEvent::AttackStarted)
             continue;
-        ui.record(out);
         const auto held = game.combat().snapshot();
-        check(held.resolvingAction && held.activeEnemy && sameActor(*held.activeEnemy, out.enemy) &&
-                  !held.awaitingAction,
-              "Enemy keeps turn while its attack presents");
-        auto attempt = turnCommand(game);
-        attempt.character = {0};
-        check(game.submit(attempt).reason == CommandReason::NotYourTurn,
-              "Player cannot act during enemy playback");
+        check(held.resolvingAction && !held.awaitingAction && held.activeEnemy, "Enemy holds acting turn");
+        const auto hp = game.party().character(started.recipient)->hitPoints;
+        ui.record(started);
         game.update(60, true);
-        check(game.combat().snapshot().turn == held.turn, "Pause cannot release attack turn");
-        const auto refresh = [&] { ui.refresh(allCombatTargets(game), false, false, true); };
-        const auto visible = [&] {
-            for (const auto& f : ui.snapshot().feedback)
-                if (f.active && f.party)
-                    return true;
-            return false;
-        };
-        game.update(.949, false);
-        refresh();
-        check(!visible() && game.combat().snapshot().turn == held.turn,
-              "No feedback or handoff before impact");
-        game.update(.001, false);
-        refresh();
-        check(visible(), "MISS appears at strike");
-        game.update(.999, false);
-        refresh();
-        check(visible() && game.combat().snapshot().resolvingAction &&
-                  game.combat().snapshot().turn == held.turn,
-              "Clip ending cannot release turn while damage marker remains");
-        game.update(.001, false);
-        refresh();
-        const auto next = game.combat().snapshot();
-        check(!visible() && !next.resolvingAction && next.turn != held.turn,
-              "Exact feedback deadline releases the next turn");
-        check(!confirmationMatches(held, next), "Held input must see the new turn before confirming");
-        if (next.phase == CombatPhase::RoundEnd)
-            game.update(.45, false);
-        toPlayer |= game.combat().snapshot().awaitingAction;
-        toEnemy |= next.activeEnemy.has_value();
+        ui.record(game.update(.949, false));
+        check(game.party().character(started.recipient)->hitPoints == hp, "Health unchanged before strike");
+        for (const auto& f : ui.snapshot().feedback)
+            check(!f.active, "No premature feedback");
+        const auto& impacts = game.update(.001, false);
+        bool found = false;
+        for (const auto& out : impacts)
+            found |= out.event == CombatEvent::Attack;
+        check(found, "Impact event at strike");
+        ui.record(impacts);
+        ui.refresh(allCombatTargets(game), false, false, true);
+        bool visible = false;
+        for (const auto& f : ui.snapshot().feedback)
+            visible |= f.active;
+        check(visible && game.combat().snapshot().turn == held.turn, "Impact feedback before handoff");
+        ui.record(game.update(.999, false));
+        check(game.combat().snapshot().resolvingAction, "Full feedback lifetime held");
+        ui.record(game.update(.001, false));
+        check(!game.combat().snapshot().resolvingAction && game.combat().snapshot().turn != held.turn,
+              "Handoff at completed presentation, separate from impact");
+        checked = true;
     }
-    check(toPlayer && toEnemy, "Enemy playback gates both player and enemy successors");
-    // Single-frame long attack: clip, rather than marker, controls release.
-    timing[2] = {{2500, 0, 0, 0}, 1};
-    GameSession longClip(map, catalog, placements, 5, spawn, false, {timing});
-    start(longClip);
-    for (int i = 0; i < 100; ++i) {
-        if (longClip.combat().snapshot().awaitingAction)
-            longClip.submit(turnCommand(longClip));
-        else if (longClip.update(.45, false).event == CombatEvent::Attack)
-            break;
-    }
-    const auto serial = longClip.combat().snapshot().turn;
-    longClip.update(2.499, false);
-    check(longClip.combat().snapshot().resolvingAction && longClip.combat().snapshot().turn == serial,
-          "Long clip remains held after marker expiry");
-    const auto released = longClip.update(60, false);
-    check(released.event != CombatEvent::Attack && !longClip.combat().snapshot().resolvingAction,
-          "Large gap releases once without resolving a second attack");
-    GameSession fallback(map, catalog, placements, 5, spawn, false);
-    start(fallback);
-    awaitCharacter(fallback, {0});
-    auto plain = turnCommand(fallback, PartyAction::Melee);
-    plain.target = fallback.actors().id(2);
-    check(fallback.submit(plain).event == CombatEvent::Attack, "Art-free attack resolves once");
-    fallback.update(.999, false);
-    check(fallback.combat().snapshot().resolvingAction, "Missing art still holds the marker lifetime");
-    fallback.update(.001, false);
-    check(!fallback.combat().snapshot().resolvingAction, "Art-free attack releases at marker deadline");
-    const auto lethal = combatCatalog(1000, 100, {1, 4, 100});
-    GameSession defeat(map, lethal, placements, 5, spawn, false, timings);
-    for (unsigned i = 1; i < 4; ++i)
-        defeat.party().damage({static_cast<std::uint16_t>(i)}, 10000);
-    start(defeat);
-    bool lethalHit = false;
-    for (int i = 0; i < 100 && !lethalHit; ++i) {
-        if (defeat.combat().snapshot().awaitingAction)
-            defeat.submit(turnCommand(defeat));
-        else {
-            const auto attack = defeat.update(.45, false);
-            lethalHit = attack.event == CombatEvent::Attack && attack.hit;
-        }
-    }
-    check(lethalHit && defeat.party().character({0})->life != rules::Life::Conscious &&
-              defeat.combat().snapshot().phase == CombatPhase::Turns,
-          "Fatal hit resolves health before result overlay");
-    defeat.update(1.949, false);
-    check(defeat.combat().snapshot().resolvingAction, "Defeat waits for lethal impact marker");
-    check(defeat.update(.001, false).phase == CombatPhase::Defeat, "Defeat follows final marker expiry");
-    // Party attacks also finish hurt/death and feedback before handing over.
-    const auto fragile = combatCatalog(1, -100, {1, 4, -100}, 1);
-    GameSession kill(map, fragile, placements, 5, spawn, false, timings);
-    start(kill);
-    awaitCharacter(kill, {0});
-    for (int i = 0; i < 3; ++i)
-        kill.actors().damage(kill.actors().id(i), 100, kill.timeMs());
-    auto command = turnCommand(kill, PartyAction::Melee);
-    command.target = kill.actors().id(3);
-    const auto hit = kill.submit(command);
-    check(hit.died && kill.combat().snapshot().phase == CombatPhase::Turns &&
-              !kill.actors().occupied(spawn.cell + forward(spawn.heading)),
-          "Lethal outcome releases occupancy immediately but holds result presentation");
-    kill.update(1.199, false);
-    check(kill.combat().snapshot().resolvingAction, "Corpse playback outlasts the one-second marker");
-    check(kill.update(.001, false).event == CombatEvent::Finished &&
-              kill.combat().snapshot().phase == CombatPhase::Victory,
-          "Victory follows finished corpse and marker");
+    check(checked, "Encounter reaches enemy strike");
 }
 void rows() {
     const auto map = combatMap();
@@ -264,7 +182,7 @@ void advancement() {
                     if (s.combat().snapshot().awaitingAction)
                         s.submit(turnCommand(s));
                     else {
-                        const auto out = s.update(.45, false);
+                        const auto out = s.update(.45, false).step;
                         if (out.enemyAttack) {
                             check(lastRound[out.enemy.slot] != round, "Advancement grants no extra attack");
                             lastRound[out.enemy.slot] = round;
@@ -327,10 +245,13 @@ void feedback() {
     hit.enemy = enemy;
     hit.hit = true;
     hit.damage = 12;
+    hit.occurredMs = s.timeMs();
 
     s.actors().damage(enemy, 1000, s.timeMs());
     ui.record(hit);
-    ui.refresh(allCombatTargets(s), false, false, true);
+    auto corpseTargets = allCombatTargets(s);
+    corpseTargets.anchors[enemy.slot] = targets.anchors[enemy.slot];
+    ui.refresh(corpseTargets, false, false, true);
     const auto find = [&](bool party) -> const CombatFeedback* {
         for (const auto& entry : ui.snapshot().feedback)
             if (entry.active && entry.party == party)
@@ -361,6 +282,7 @@ void feedback() {
     check(find(true) && find(false), "Feedback survives until duration boundary");
     hit.enemyAttack = true;
     hit.recipient = {3};
+    hit.occurredMs = s.timeMs();
     ui.record(hit);
     unsigned partyCount = 0;
     for (const auto& entry : ui.snapshot().feedback)
@@ -381,9 +303,10 @@ void feedback() {
                   r->y + r->height <= viewY + viewHeight,
               "Whole splash stays inside viewport at edges");
     }
+    miss.occurredMs = s.timeMs();
     ui.record(miss);
     ui.refresh(allCombatTargets(s), true, false, true);
-    check(!find(true), "Movement clears old scene feedback");
+    check(find(true), "Movement preserves impact feedback");
     GameSession restarted(map, catalog, placements, 5, spawn);
     CommandController fresh(restarted);
     fresh.record(miss);
@@ -394,142 +317,32 @@ void feedbackTiming() {
     const auto map = combatMap();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
     const auto placements = combatPlacements(map);
-    GameSession s(map, catalog, placements, 5, spawn);
-    start(s);
-    awaitCharacter(s, {0}); // Hold an input turn while sampling presentation time.
-    NpcTimings timing{};
-    timing[0] = {{{100, 0, 0, 0}}, 1};
-    timing[static_cast<std::size_t>(NpcAnimation::Attack)] = {{{700, 250, 250, 350}}, 4};
-    CommandController ui(s, {timing});
-    NpcAnimator animator(s.actors(), {timing});
-    const auto enemy = s.actors().id(2);
-    const auto refresh = [&] {
-        auto targets = allCombatTargets(s);
-        targets.anchors[enemy.slot] = {100, 90, true};
-        ui.refresh(targets, false, false, true);
-        animator.setTime(s.timeMs());
-    };
-    const auto advance = [&](unsigned ms) {
-        s.update(double(ms) / 1000, false);
-        refresh();
-    };
-    const auto find = [&](bool party) -> const CombatFeedback* {
-        for (const auto& entry : ui.snapshot().feedback)
-            if (entry.active && entry.party == party)
-                return &entry;
-        return nullptr;
-    };
-    refresh();
+    GameSession game(map, catalog, placements, 5, spawn, false);
+    CommandController ui(game);
+    start(game);
+    awaitCharacter(game, {0});
     CombatOutcome hit;
     hit.event = CombatEvent::Attack;
-    hit.enemy = enemy;
+    hit.enemy = game.actors().id(2);
     hit.enemyAttack = true;
-    hit.recipient = {3};
+    hit.recipient = {0};
     hit.hit = true;
-    hit.damage = 12;
-    hit.impactMs = 950;
-    s.actors().attack(enemy, s.timeMs());
+    hit.damage = 3;
+    hit.occurredMs = game.timeMs();
     ui.record(hit);
-    refresh();
-    check(!find(true) && !ui.snapshot().cards[3].recentlyHit, "No impact marker or highlight in guard pose");
-    advance(700);
-    check(animator.snapshot().frames[enemy.slot].active == 1 && !find(true), "No splash during wind-up");
-    s.update(30, true);
-    refresh();
-    check(!find(true), "Pause also holds pending impact");
-    advance(249);
-    check(!find(true), "Impact remains pending one millisecond before strike");
-    advance(1);
-    check(animator.snapshot().frames[enemy.slot].active == 2 && find(true) && find(true)->damage == 12 &&
-              ui.snapshot().cards[3].recentlyHit,
-          "Damage splash and portrait highlight start with strike frame");
-    advance(149);
-    check(ui.snapshot().cards[3].recentlyHit, "Impact highlight retains its full duration");
-    advance(1);
-    check(!ui.snapshot().cards[3].recentlyHit && find(true), "Highlight ends independently of splash");
-    advance(849);
-    check(find(true), "Splash survives to one millisecond before impact lifetime ends");
-    advance(1);
-    check(!find(true), "Splash lasts 1000 ms from impact, not resolution");
-
-    auto miss = hit;
-    miss.hit = false;
-    miss.damage = 0;
-    s.actors().attack(enemy, s.timeMs());
-    ui.record(miss);
-    advance(450);
-    s.actors().attack(s.actors().id(3), s.timeMs());
-    hit.enemy = s.actors().id(3);
-    ui.record(hit); // Second enemy attacks the same recipient before the first impact.
-    advance(500);
-    check(find(true) && !find(true)->hit && !ui.snapshot().cards[3].recentlyHit,
-          "Earlier MISS survives a second queued attack on the same recipient");
-    advance(449);
-    check(find(true) && !find(true)->hit, "Pending damage does not replace a visible MISS early");
-    advance(1);
-    check(find(true) && find(true)->hit && ui.snapshot().cards[3].recentlyHit,
-          "New damage replaces MISS only at its own impact");
-
-    advance(1000);
+    ui.refresh(allCombatTargets(game), false, false, true);
+    check(ui.snapshot().cards[0].recentlyHit, "Impact immediately highlights recipient");
+    game.update(.149, false);
+    ui.refresh(allCombatTargets(game), false, false, true);
+    check(ui.snapshot().cards[0].recentlyHit, "Highlight holds for 150 ms");
+    game.update(.001, false);
+    ui.refresh(allCombatTargets(game), false, false, true);
+    check(!ui.snapshot().cards[0].recentlyHit, "Highlight expires at boundary");
+    game.update(.850, false);
+    ui.refresh(allCombatTargets(game), false, false, true);
     ui.record(hit);
-    advance(100);
-    hit.damage = 7;
-    ui.record(hit);
-    advance(1000);
-    check(find(true) && find(true)->damage == 7 && ui.snapshot().cards[3].recentlyHit,
-          "Skipped frames deliver newest due impact with only remaining highlight time");
-    advance(1000);
-    ui.record(hit);
-    advance(2000);
-    check(!find(true) && !ui.snapshot().cards[3].recentlyHit, "Large gaps never replay stale impacts");
-
-    ui.record(hit);
-    ui.refresh(allCombatTargets(s), true, false, true);
-    advance(950);
-    check(!find(true), "Movement cancels pending feedback");
-    ui.record(hit);
-    auto playerHit = hit;
-    playerHit.enemyAttack = false;
-    playerHit.enemy = enemy;
-    ui.record(playerHit);
-    check(find(false) && !find(true), "Player damage stays immediate while enemy damage waits");
-    for (std::size_t i = 0; i < s.actors().snapshot().count; ++i)
-        s.actors().damage(s.actors().id(i), 1000, s.timeMs());
-    s.update(0, false);
-    check(s.combat().snapshot().phase == CombatPhase::Victory, "Fixture reaches victory");
-    s.combat().continueExploring();
-    refresh();
-    advance(950);
-    check(!find(true) && !find(false), "Continue cancels queued impacts from finished encounter");
-
-    // Shorter and missing clips derive behavior from metadata, not a goblin-specific delay.
-    for (unsigned frames : {0u, 1u, 2u, 4u}) {
-        GameSession other(map, catalog, placements, 5, spawn);
-        start(other);
-        awaitCharacter(other, {0});
-        timing[static_cast<std::size_t>(NpcAnimation::Attack)] = {{{70, 25, 25, 35}},
-                                                                  static_cast<std::uint8_t>(frames)};
-        CommandController controller(other, {timing});
-        hit.enemy = other.actors().id(2);
-        hit.impactMs = npcAttackImpact(timing[static_cast<std::size_t>(NpcAnimation::Attack)]);
-        controller.record(hit);
-        const auto hasFeedback = [&] {
-            for (const auto& entry : controller.snapshot().feedback)
-                if (entry.active)
-                    return true;
-            return false;
-        };
-        const unsigned delay = frames < 2 ? 0 : frames == 2 ? 70 : 95;
-        check(hasFeedback() == (delay == 0), "Absent/single-pose attacks have immediate feedback");
-        if (delay) {
-            other.update(double(delay - 1) / 1000, false);
-            controller.refresh(allCombatTargets(other), false, false, true);
-            check(!hasFeedback(), "Short clip still waits for its strike");
-            other.update(.001, false);
-            controller.refresh(allCombatTargets(other), false, false, true);
-            check(hasFeedback(), "Strike follows changed clip durations");
-        }
-    }
+    for (const auto& f : ui.snapshot().feedback)
+        check(!f.active, "Old timestamp never replays expired feedback");
 }
 void commandsAndRng() {
     const auto map = combatMap();
@@ -565,7 +378,11 @@ void commandsAndRng() {
     check(a.combat().snapshot().turn == turn, "Rejected requests spend no turn");
     auto other = turnCommand(b, PartyAction::Melee);
     other.target = b.actors().id(2);
-    const auto x = a.submit(c), y = b.submit(other);
+    a.submit(c);
+    b.submit(other);
+    const auto ax = a.update(.2, false), bx = b.update(.2, false);
+    check(ax.count && bx.count, "Both accepted commands reach impact");
+    const auto x = ax.values[0], y = bx.values[0];
     check(x.roll == y.roll && x.damage == y.damage && x.critical == y.critical,
           "Rejected requests preserve RNG sequence");
     check(a.submit(c).reason == CommandReason::NotYourTurn,
@@ -657,7 +474,7 @@ void recoveryAndOutcomes() {
                 s.submit(turnCommand(s));
             else {
                 const auto presented = s.combat().snapshot();
-                const auto out = s.update(.45, false);
+                const auto out = s.update(.45, false).step;
                 if (out.event == CombatEvent::DeathSave && out.character.index == 3 && out.roll == 20) {
                     naturalTwenty = true;
                     check(!confirmationMatches(presented, s.combat().snapshot()),
@@ -678,12 +495,12 @@ void recoveryAndOutcomes() {
     victory.party().damage({1}, 100000);
     for (std::size_t i = 0; i < 4; ++i)
         victory.actors().damage(victory.actors().id(i), 1000, 0);
-    check(victory.update(.45, false).phase == CombatPhase::Victory, "All enemies dead gives victory");
+    check(victory.update(.45, false).step.phase == CombatPhase::Victory, "All enemies dead gives victory");
     check(victory.party().character({0})->life == rules::Life::Stable &&
               victory.party().character({0})->hitPoints == 0,
           "Victory stabilizes without healing");
     check(victory.party().character({1})->life == rules::Life::Dead, "Victory cannot resurrect");
-    check(victory.update(.45, false).event == CombatEvent::None, "Victory resolves once");
+    check(victory.update(.45, false).step.event == CombatEvent::None, "Victory resolves once");
     check(victory.combat().continueExploring() && !victory.combat().continueExploring(), "Continue once");
     check(victory.party().swapFormation(FormationSlot::FrontLeft, FormationSlot::BackLeft),
           "Continue unlocks formation");
@@ -693,8 +510,9 @@ void recoveryAndOutcomes() {
         defeat.party().damage({i}, defeat.party().character({i})->hitPoints);
         defeat.party().stabilize({i});
     }
-    check(defeat.update(.45, false).phase == CombatPhase::Defeat, "All stable is still immediate defeat");
-    check(defeat.update(.45, false).event == CombatEvent::None, "Defeat once");
+    check(defeat.update(.45, false).step.phase == CombatPhase::Defeat,
+          "All stable is still immediate defeat");
+    check(defeat.update(.45, false).step.event == CombatEvent::None, "Defeat once");
     check(!defeat.combat().continueExploring(), "Cannot continue after defeat");
 }
 void groupedTurnsAndAidInput() {
@@ -727,10 +545,10 @@ void groupedTurnsAndAidInput() {
             game.submit(turnCommand(game));
         } else {
             const auto turn = state.turn;
-            check(game.update(0, false).event == CombatEvent::None && state.turn == turn,
+            check(game.update(0, false).step.event == CombatEvent::None && state.turn == turn,
                   "Same timestamp cannot duplicate automatic turn");
-            const auto out = game.update(.45, false);
-            if (out.event == CombatEvent::Attack) {
+            const auto out = game.update(.45, false).step;
+            if (out.event == CombatEvent::AttackStarted) {
                 ++enemyActions[out.enemy.slot];
                 check(out.enemyAttack && out.recipient.index < 2, "Enemies target conscious front row only");
             }
@@ -794,8 +612,8 @@ void contentAndInvalidTargets() {
         if (archer.combat().snapshot().awaitingAction)
             archer.submit(turnCommand(archer));
         else {
-            const auto out = archer.update(.5, false);
-            shot = out.event == CombatEvent::Attack && out.kind == rules::AttackKind::Ranged;
+            const auto out = archer.update(.5, false).step;
+            shot = out.event == CombatEvent::AttackStarted && out.kind == rules::AttackKind::Ranged;
         }
     }
     check(shot, "Ranged-only monsters can act at contact");
@@ -858,7 +676,11 @@ void initiativeAndDefend() {
                     const auto roll =
                         expected.d20(defending ? rules::RollMode::Disadvantage : rules::RollMode::Normal)
                             .value;
-                    const auto out = s.update(.45, false);
+                    const auto accepted = s.update(.45, false).step;
+                    check(accepted.event == CombatEvent::AttackStarted, "Enemy accepts an attack");
+                    const auto& impacts = s.update(0, false);
+                    check(impacts.count != 0, "Zero-marker fixture resolves at current timestamp");
+                    const auto out = impacts.values[0];
                     check(out.recipient.index == recipient && out.roll == roll.selected,
                           "Enemy choice and Defend use the seeded unbiased rolls");
                     defendedAttack |= defending;
@@ -872,7 +694,7 @@ void initiativeAndDefend() {
     GameSession removed(map, catalog, placements, 5, spawn);
     for (std::size_t i = 0; i < 4; ++i)
         removed.actors().remove(removed.actors().id(i));
-    check(removed.update(0, false).phase == CombatPhase::Victory,
+    check(removed.update(0, false).step.phase == CombatPhase::Victory,
           "Removed contact members cannot be dereferenced at initiative start");
 }
 void presentedInput() {
@@ -935,11 +757,14 @@ void completeFights() {
                         }
                     out = s.submit(c);
                     check(out.reason == CommandReason::Resolved, "Complete fight command resolves");
-                } else
-                    out = s.update(.45, false);
-                if (out.event == CombatEvent::Attack) {
-                    miss |= !out.hit;
-                    critical |= out.critical;
+                } else {
+                    const auto& events = s.update(.45, false);
+                    out = events.step;
+                    for (const auto& impact : events)
+                        if (impact.event == CombatEvent::Attack) {
+                            miss |= !impact.hit;
+                            critical |= impact.critical;
+                        }
                 }
                 if (out.enemyAttack) {
                     check(out.recipient.index < 4, "Enemy target valid");

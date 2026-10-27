@@ -43,7 +43,7 @@ void rangesAndCosts() {
     check(s.submit(bad).reason == CommandReason::OutOfRange, "Out-of-range rejects before cost");
     check(s.combat().snapshot().cooldownMs[2] == 0, "Rejections spend no readiness");
     const auto out = s.submit(command);
-    check(out.event == CombatEvent::Attack, "Approach shot resolves");
+    check(out.event == CombatEvent::AttackStarted, "Approach shot resolves");
     check(s.submit(command).reason == CommandReason::StaleTurn, "Repeated approach request rejected");
     check(s.ai().actors[0].awareness == Awareness::Pursuing &&
               s.ai().actors[1].awareness == Awareness::Pursuing &&
@@ -58,7 +58,7 @@ void rangesAndCosts() {
     for (int i = 0; i < 3; ++i)
         s.move(Action::Forward);
     check(s.combat().snapshot().phase == CombatPhase::Contact, "Adjacent approach enters contact");
-    s.update(.999, false);
+    s.update(1.341, false);
     check(s.combat().snapshot().phase == CombatPhase::Contact, "Contact waits outstanding marker");
     s.update(.001, false);
     check(s.combat().snapshot().phase == CombatPhase::Turns, "Contact enters initiative after feedback");
@@ -100,8 +100,8 @@ void facingAndFormation() {
                 s.submit(turnCommand(s));
                 partyActed = true;
             } else {
-                const auto out = s.update(.2, false);
-                if (out.event == CombatEvent::Attack && out.kind == rules::AttackKind::Melee) {
+                const auto out = s.update(.2, false).step;
+                if (out.event == CombatEvent::AttackStarted && out.kind == rules::AttackKind::Melee) {
                     check(out.recipient.index < 2,
                           "Front row protects back row regardless of original threat direction");
                     enemyActed = true;
@@ -149,7 +149,7 @@ void handoff() {
           "Old view cannot confirm the resumed action");
     auto command = turnCommand(s, PartyAction::Melee);
     command.target = s.actors().id(1);
-    check(s.submit(command).event == CombatEvent::Attack,
+    check(s.submit(command).event == CombatEvent::AttackStarted,
           "Fighter can attack the newly faced goblin immediately");
 }
 void facingPresentation() {
@@ -185,7 +185,7 @@ void facingPresentation() {
         if (s.combat().snapshot().awaitingAction)
             s.submit(turnCommand(s));
         else
-            attacked = s.update(.5, false).event == CombatEvent::Attack;
+            attacked = s.update(.5, false).step.event == CombatEvent::AttackStarted;
     }
     check(attacked, "Front attack presentation started");
     s.actors().damage(s.actors().id(0), 1000, s.timeMs());
@@ -210,21 +210,22 @@ void offscreenAndPartialRound() {
         if (s.combat().snapshot().awaitingAction)
             s.submit(turnCommand(s));
         else {
-            const auto out = s.update(.5, false);
-            if (out.event == CombatEvent::Attack)
+            const auto out = s.update(.5, false).step;
+            if (out.event == CombatEvent::AttackStarted)
                 check(out.enemy.slot == 0, "Side and rear enemies cannot attack while front group remains");
         }
     }
     // Outside combat an alerted offscreen archer also cannot shoot.
     NpcWorld behind(m, p.cell, {"goblin"}, {npc({5, 9}, Heading::North)});
     GameSession approach(m, c, behind, 5, p, true);
-    check(approach.update(.1, false).event != CombatEvent::Attack, "Offscreen approach archer cannot shoot");
+    check(approach.update(.1, false).step.event != CombatEvent::AttackStarted,
+          "Offscreen approach archer cannot shoot");
 
     NpcWorld distant(m, p.cell, {"goblin"},
                      {npc({5, 5}, Heading::South, {0, 1}), npc({5, 2}, Heading::South)});
     GameSession partial(m, c, distant, 5, {{5, 8}, Heading::North}, false);
     partial.setAnimated(false);
-    check(partial.submit(shot(partial, partial.actors().id(1))).event == CombatEvent::Attack,
+    check(partial.submit(shot(partial, partial.actors().id(1))).event == CombatEvent::AttackStarted,
           "Opening shot alerts distant threat");
     partial.move(Action::Forward);
     partial.move(Action::Forward);
@@ -283,7 +284,7 @@ void reinforcementAndSaves() {
           "Pending arrival can be faced without joining initiative early");
     auto immediate = turnCommand(s, PartyAction::Melee);
     immediate.target = newcomer;
-    check(s.submit(immediate).event == CombatEvent::Attack,
+    check(s.submit(immediate).event == CombatEvent::AttackStarted,
           "An arrival is attackable before its first initiative boundary");
     for (int i = 0; i < 100 && s.combat().snapshot().round == first; ++i)
         tick(s);
@@ -305,9 +306,9 @@ void reinforcementAndSaves() {
     saves.party().damage({0}, saves.party().character({0})->hitPoints, false);
     saves.submit(shot(saves, saves.actors().id(0)));
     saves.update(0, false);
-    check(saves.update(5.999, false).event != CombatEvent::DeathSave,
+    check(saves.update(5.999, false).step.event != CombatEvent::DeathSave,
           "Real-time saves wait six gameplay seconds");
-    check(saves.update(.001, false).event == CombatEvent::DeathSave,
+    check(saves.update(.001, false).step.event == CombatEvent::DeathSave,
           "Real-time save fires at exact deadline");
     for (int i = 0; i < 3; ++i)
         saves.move(Action::Forward);
@@ -319,7 +320,7 @@ void reinforcementAndSaves() {
         if (saves.combat().snapshot().awaitingAction)
             saves.submit(turnCommand(saves));
         else
-            repeated += saves.update(.5, false).event == CombatEvent::DeathSave;
+            repeated += saves.update(.5, false).step.event == CombatEvent::DeathSave;
     }
     check(repeated == 0, "Contact does not grant an extra death save before next six-second boundary");
 }
@@ -347,7 +348,7 @@ void threeCellFront() {
                         if (result.reason == CommandReason::FrontProtected)
                             s.submit(turnCommand(s));
                         else {
-                            check(result.event == CombatEvent::Attack,
+                            check(result.event == CombatEvent::AttackStarted,
                                   "Exposed front character can melee a diagonal enemy");
                             playerMelee = true;
                         }
@@ -359,8 +360,8 @@ void threeCellFront() {
                         s.submit(turnCommand(s));
                     }
                 } else {
-                    const auto out = s.update(.5, false);
-                    if (out.event == CombatEvent::Attack) {
+                    const auto out = s.update(.5, false).step;
+                    if (out.event == CombatEvent::AttackStarted) {
                         check(out.kind == rules::AttackKind::Melee && out.recipient.index < 2,
                               "Diagonal enemy melee attacks the protected formation's front row");
                         enemyMelee = true;
@@ -415,7 +416,7 @@ void threeCellFront() {
         if (escape.combat().snapshot().awaitingAction)
             escape.submit(turnCommand(escape));
         else
-            moved = escape.update(.5, false).event == CombatEvent::Move;
+            moved = escape.update(.5, false).step.event == CombatEvent::Move;
     }
     check(moved && !combatAdjacent(map, p.cell, escape.actors().actor(escape.actors().id(0))->npc.cell),
           "Healthy diagonal archer escapes beyond the entire close-contact zone");
@@ -436,8 +437,8 @@ void frontApproachInCombat() {
             if (s.combat().snapshot().awaitingAction)
                 s.submit(turnCommand(s));
             else {
-                const auto out = s.update(.5, false);
-                melee += out.event == CombatEvent::Attack && out.enemy.slot == 1 &&
+                const auto out = s.update(.5, false).step;
+                melee += out.event == CombatEvent::AttackStarted && out.enemy.slot == 1 &&
                          out.kind == rules::AttackKind::Melee;
             }
             const auto* actor = s.actors().actor(s.actors().id(1));
@@ -466,8 +467,8 @@ void singleWeaponPolicies() {
             ranged.actors().damage(ranged.actors().id(0), 500, 0);
         int shots = 0;
         for (int i = 0; i < 140; ++i) {
-            const auto out = ranged.update(.1, false);
-            shots += out.event == CombatEvent::Attack;
+            const auto out = ranged.update(.1, false).step;
+            shots += out.event == CombatEvent::AttackStarted;
             check(ranged.actors().actor(ranged.actors().id(0))->npc.cell == archer.cell,
                   "Ranged-only NPC holds a clear shot at either health level");
         }
@@ -482,8 +483,8 @@ void singleWeaponPolicies() {
             if (melee.combat().snapshot().awaitingAction)
                 melee.submit(turnCommand(melee));
             else {
-                const auto out = melee.update(.1, false);
-                if (out.event == CombatEvent::Attack) {
+                const auto out = melee.update(.1, false).step;
+                if (out.event == CombatEvent::AttackStarted) {
                     check(out.kind == rules::AttackKind::Melee,
                           "Melee-only NPC never invents a ranged attack");
                     attacked = true;
@@ -520,8 +521,8 @@ void singleWeaponPolicies() {
         if (combat.combat().snapshot().awaitingAction)
             combat.submit(turnCommand(combat));
         else {
-            const auto out = combat.update(.5, false);
-            if (out.enemy.slot == 1 && out.event == CombatEvent::Attack) {
+            const auto out = combat.update(.5, false).step;
+            if (out.enemy.slot == 1 && out.event == CombatEvent::AttackStarted) {
                 check(out.kind == rules::AttackKind::Ranged, "Archer shoots in initiative");
                 ++shots;
             }
@@ -541,8 +542,9 @@ void singleWeaponPolicies() {
         if (retreat.combat().snapshot().awaitingAction)
             retreat.submit(turnCommand(retreat));
         else {
-            const auto out = retreat.update(.5, false);
-            check(out.event != CombatEvent::Attack, "Archer spends its action creating distance first");
+            const auto out = retreat.update(.5, false).step;
+            check(out.event != CombatEvent::AttackStarted,
+                  "Archer spends its action creating distance first");
             moved = out.event == CombatEvent::Move;
         }
     }
@@ -550,8 +552,8 @@ void singleWeaponPolicies() {
           "Full-health ranged-only NPC escapes without needing Nimble Escape");
     const auto deadline = retreat.combat().snapshot().gameplayMs + combatRoundMs;
     for (int i = 0; i < 30 && retreat.combat().snapshot().gameplayMs < deadline; ++i) {
-        const auto out = retreat.update(.1, false);
-        check(out.event != CombatEvent::Attack, "Escaping cannot also shoot before action cooldown");
+        const auto out = retreat.update(.1, false).step;
+        check(out.event != CombatEvent::AttackStarted, "Escaping cannot also shoot before action cooldown");
     }
 
     const Map trapped({"#####", "#####", "##.##", "#...#", "#####"});
@@ -563,8 +565,8 @@ void singleWeaponPolicies() {
         if (cornered.combat().snapshot().awaitingAction)
             cornered.submit(turnCommand(cornered));
         else {
-            const auto out = cornered.update(.5, false);
-            fired = out.event == CombatEvent::Attack && out.kind == rules::AttackKind::Ranged;
+            const auto out = cornered.update(.5, false).step;
+            fired = out.event == CombatEvent::AttackStarted && out.kind == rules::AttackKind::Ranged;
         }
     }
     check(fired && cornered.actors().actor(cornered.actors().id(0))->npc.cell == Cell{2, 2},
@@ -630,8 +632,8 @@ void capacityAndBlockedEscape() {
         if (s.combat().snapshot().awaitingAction)
             s.submit(turnCommand(s));
         else {
-            const auto out = s.update(.5, false);
-            attacked = out.event == CombatEvent::Attack;
+            const auto out = s.update(.5, false).step;
+            attacked = out.event == CombatEvent::AttackStarted;
         }
     }
     check(attacked && s.actors().actor(s.actors().id(0))->npc.cell == Cell{2, 2},
@@ -674,9 +676,9 @@ void traitAndPresentation() {
             if (s.combat().snapshot().awaitingAction)
                 s.submit(turnCommand(s));
             else {
-                const auto out = s.update(.5, false);
-                if (out.event == CombatEvent::Move || out.event == CombatEvent::Attack) {
-                    check(enabled ? out.event == CombatEvent::Move : out.event == CombatEvent::Attack,
+                const auto out = s.update(.5, false).step;
+                if (out.event == CombatEvent::Move || out.event == CombatEvent::AttackStarted) {
+                    check(enabled ? out.event == CombatEvent::Move : out.event == CombatEvent::AttackStarted,
                           "Catalog trait controls escape, not creature name");
                     acted = true;
                 }
@@ -694,8 +696,9 @@ void traitAndPresentation() {
     t[5] = {{600, 400, 0, 0}, 2};
     GameSession s(m, c, places, 5, p, true, {t});
     NpcAnimator animator(s.actors(), {t});
-    const auto out = s.update(.1, false);
-    check(out.event == CombatEvent::Attack && out.kind == rules::AttackKind::Ranged && out.impactMs == 600,
+    const auto out = s.update(.1, false).step;
+    check(out.event == CombatEvent::AttackStarted && out.kind == rules::AttackKind::Ranged &&
+              out.impactMs == 600,
           "Bow outcome publishes release timing");
     animator.setTime(s.timeMs());
     check(animator.snapshot().frames[0].clip == NpcAnimation::RangedAttack, "Bow cue selects bow clip");

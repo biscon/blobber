@@ -24,6 +24,7 @@ CombatController::CombatController(const Map& map, Party& party, ActorWorld& act
                             npcAttackImpact(b)};
     }
     state_.world = actors.snapshot().world;
+    visuals_.world = state_.world;
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto& m = *actors.catalog().monster(actors.snapshot().actors[i].monster);
         for (std::size_t j = 0; j < m.attackCount; ++j) {
@@ -82,7 +83,7 @@ bool CombatController::frontal(ActorId id) const noexcept {
     return a && a->life == ActorLife::Alive && inPartyView(map_, origin_.cell, origin_.heading, a->npc.cell);
 }
 bool CombatController::presentationBusy(std::uint64_t now) const noexcept {
-    if (now < partyBusy_)
+    if (pendingImpacts() || now < partyBusy_)
         return true;
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
@@ -347,6 +348,8 @@ void CombatController::leave() noexcept {
     ++state_.turn;
 }
 bool CombatController::finish(std::uint64_t now) noexcept {
+    if (pendingImpacts())
+        return false;
     bool conscious = false, living = false, threat = false;
     for (const auto& c : party_.snapshot().characters)
         conscious |= c.life == rules::Life::Conscious;
