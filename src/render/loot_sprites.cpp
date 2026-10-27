@@ -65,6 +65,7 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
     const float focal = ViewProjection::focalLength();
     for (std::size_t i = 0; i < n; ++i) {
         const auto& v = visible[i];
+        picking.lootGeneration(v.slot, loot.stacks[v.slot].generation);
         const int size = std::clamp(int(std::round(focal * .25f / v.depth)), minSize, maxSize);
         const int left = int(std::round(viewWidth * .5f + focal * v.lateral / v.depth)) - size / 2;
         const int foot =

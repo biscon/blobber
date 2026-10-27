@@ -528,8 +528,9 @@ void contextualActions() {
     for (unsigned item = 12; item < 15; ++item) {
         ui.inventorySelect(s.party().inventory().locate(findInventoryItem(s.party(), 3, item)).cell);
         const auto& actions = ui.snapshot().inventory.actions;
-        check(!actions[0].visible && actions[1].visible && actions[1].enabled && !actions[2].visible,
-              "Book, holy symbol and focus show only Transfer");
+        check(!actions[0].visible && actions[1].visible && actions[1].enabled && !actions[2].visible &&
+                  actions[3].visible && actions[3].enabled,
+              "Book, holy symbol and focus show Transfer and Drop");
         UiInput use;
         use.pressed[static_cast<std::size_t>(UiKey::UseItem)] = true;
         routeHudInput(ui, use, {});

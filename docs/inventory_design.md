@@ -177,3 +177,14 @@ The dock tooltip names Inventory and shows its I/5 shortcuts.
 Verify contextual actions and unavailable shortcuts, drag/split/merge conservation,
 I opening, quantity-confirmation isolation, allocation guards, hidden GPU lifecycle,
 and native/reduced review captures. No new D&D abilities or later-slice features.
+
+## Slice 12 ground-drop extension
+
+The user's 2026-10-27 follow-up adds Drop to the contextual sidebar after the other
+applicable actions. Drop removes the entire selected stack (including equipped
+items) into the current cell's loot bag, leaving Inventory open. Split first for a
+partial drop. Safe stationary exploration, source revision and floor capacity are
+checked before either owner changes; equipment-derived stats/effects update on
+commit. The shared [loot/recovery design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up)
+owns the reusable floor slots and their generation checks. This supersedes slice
+11's deferral of dropped items; other accepted Inventory controls remain unchanged.

@@ -1,6 +1,8 @@
 # Loot and recovery — slice 12
 
-Status: **Ready for review — approved correction implemented and verified**, 2026-10-27.
+Status: **Accepted and closed**, 2026-10-27.
+The user explicitly accepted slice 12 after the Drop, Take All auto-close and
+top-bar Rest follow-up: “thats better, record the slice as accepted in the doc”.
 The user accepted the camp mockup before the original implementation, then accepted
 the loot-dialog mockup with the corrections recorded below. This document describes
 the corrected system; the initial mockup checkpoint is retained as history.
@@ -11,8 +13,8 @@ Implement corpse-independent floor loot, checked collection, gold and equipment
 drops, authored camp supplies, short/long rests, and camp presentation. Preserve
 combat rules, accepted Inventory / Character controls, discrete movement, fixed
 1920×1080 presentation, prepared dungeon rendering and allocation-free frame work.
-No shops, hub, dungeon progression, XP/level advancement, persistence, player item
-dropping or recovery of fired arrows. The user is considering a future hub with
+No shops, hub, dungeon progression, XP/level advancement, persistence, or
+recovery of fired arrows. The user is considering a future hub with
 shops and progressively harder dungeon levels; that direction is context, not
 authorization to implement those systems in this slice.
 
@@ -70,8 +72,9 @@ deadlines and cooldowns; monsters remain in place with no patrol/AI catch-up.
 ## Ownership, interfaces and bounds
 
 GameSession owns LootWorld. Reserve eight possible drop slots per actor plus 64
-authored ground stacks: 2,112 lifetime slots. Slots never recycle; typed world/slot
-handles reject foreign, collected and stale references. Validate content bounds
+authored ground stacks: 2,112 lifetime reservations that never recycle. Another 256
+player-drop slots recycle with checked generations, for 2,368 total entries. Typed
+world/slot/generation handles reject foreign, collected and stale references. Validate content bounds
 at loading rather than silently discarding runtime rewards.
 
 Actor state retains an authoritative death marker after removal. Reconcile deaths
@@ -109,7 +112,7 @@ explicit visual approval before writing gameplay/UI code or making animation fra
 Following approval, produce four registered frames with stable background/camera/
 silhouettes and varying flames/light. Preserve masters and prompts. Preload native
 UI artwork with RAII; do not introduce frame-time image generation or loading.
-Enter via the visible Rest button below the portraits, a labelled pause-menu entry
+Enter via the small campfire icon beside Settings in the top bar, a labelled pause-menu entry
 or R; cancel pending targeting
 and use an exclusive paused screen. Surrounding portraits/log remain visible.
 Start commits once, plays two four-frame loops over about 1.6 seconds, then briefly
@@ -151,8 +154,9 @@ separated encounters/authored supplies and --capture-recovery using in-process
 production input paths. Inspect floor/camp captures and record unavailable checks.
 Never automate OS input, focus or desktops.
 
-Finish at Ready for review with a durable verification/handoff report, actual
-commands/results and review recipe. User acceptance is pending; do not start 13.
+Implementation finished at Ready for review with a durable verification/handoff
+report, actual commands/results and review recipe. The user accepted the completed
+slice and corrections on 2026-10-27. Slice 13 is next eligible for planning, unstarted.
 
 ## Current checkpoint
 
@@ -200,7 +204,7 @@ budget before NPC loading. UI item icons still come from the existing inventory 
 
 Composition gathers active slots into fixed scratch arrays, sorts by cell/slot,
 selects one live representative per cell, then sorts visible bags back to front.
-Work is bounded by 2,112 slots (O(n log n)) plus visible sprite pixels. Every size
+Work is bounded by 2,368 slots (O(n log n)) plus visible sprite pixels. Every size
 uses the same projected quarter-cell width, capped at 64; the current-cell floor
 anchor is clamped to keep the bag onscreen, without shrinking it. Front diagonals
 fit the existing FOV. Per-column walls and per-pixel NPC/corpse IDs with projected
@@ -259,19 +263,20 @@ full/overweight inventory, scrolling, tooltips, Escape and approach scaling. Kee
 rest and accepted Inventory/Character controls intact. No gameplay, renderer or
 runtime asset changes were made during this mockup checkpoint.
 
-### Approved correction implementation — 2026-10-27
+### Initial approved correction implementation — 2026-10-27
 
 The user approved proceeding without another mockup and required the info panel
 inside its parent, top-aligned with the item grid; identical Inventory slot borders
 and quantity treatment; clickable party portraits to change the recipient while
 looting; and a visible disabled-when-unavailable Rest button below the portraits.
 
-Approved plan, implemented for this slice 12 correction:
+Initial approved plan (Take All closure and the large Rest dock are superseded
+by the follow-up below):
 - Keep authoritative per-stack loot reservations and death cells. Render one bag
   per nonempty cell, identified by a checked representative live slot. The dialog
   stores world/cell identity, never a borrowed stack pointer. Retain safe pickup
   reach/threat rules. It pauses simulation but revalidates each transaction.
-- Use fixed arrays of at most 2,112 stack IDs with a ten-slot visible grid and
+- Use fixed arrays of at most 2,368 stack IDs with a ten-slot visible grid and
   scrolling/page controls. Click takes one whole displayed stack. Take All tries
   whole stacks in stable slot order for the selected recipient; anything that
   cannot fit stays in the bag, with an explicit count/reason. Never redirect items
@@ -303,15 +308,43 @@ full or incapacitated recipients can still browse and choose another portrait.
 Every collection revalidates recipient, world/slot, safety and inventory revision.
 Take All performs stable-order whole-stack transactions across every page; failures
 do not stop later stacks from merging. Fixed feedback reports success/leftover counts
-and the first rejection, with the complete message also in history. Empty dialogs
-remain open until Close/Escape. Focus loss blocks input; closing consumes the frame.
-The fixed 2,112-ID list fits the authoritative lifetime capacity, so it never grows
+and the first rejection, with the complete message also in history. Take All closes the dialog even if some items remain; individual pickup leaves
+it open until Close/Escape. Focus loss blocks input; closing consumes the frame.
+The fixed 2,368-ID list fits the authoritative floor capacity, so it never grows
 or truncates. Catalog definition pointers in ten visible entries share the existing
 immutable catalog lifetime. No ownership or stack pointers are retained.
 
 Rest availability previews a beneficial Short Rest with at most one available die
 per injured living member, and a Long Rest, using the same authoritative checks as
 camp. This is bounded work over four members/192 bag cells without allocations.
-The bottom-right Rest dock reserves x=508..636, y=304..358; normal/casting logs narrow
-and rewrap into the remaining space, preserving the four portrait sizes. Casting
-uses a compact LOG title; history expansion still exposes complete messages.
+The follow-up replaces the bottom-right dock with a generated 16×13-art-unit
+campfire immediately left of Settings, using the existing atlas and disabled tint.
+Normal/casting logs return to their original widths and wrapping.
+
+## Inventory Drop and top-bar Rest follow-up
+
+Approved 2026-10-27, plan recorded before code; implemented and verified:
+- Take All closes after attempting every stack, including partial/failing results;
+  leftover bags persist and the existing log retains the counts/rejection reason.
+- Inventory adds Drop beside existing contextual actions. It removes the entire
+  selected stack (bag or equipped item), keeps Inventory open, and deposits it in
+  the current party cell; split first to drop part. Safe stationary exploration is
+  required. GameSession validates revision, source, safety and floor capacity before
+  Party stages removal/derived stats. Publication then cannot fail in this single-
+  threaded transaction. Reconcile equipment effects after successful removal.
+- Retain 2,112 actor/authored reservations; append 256 reusable player-drop slots.
+  Floor exhaustion leaves inventory unchanged with a clear reason. Add a generation
+  to floor handles/entries, carry it through picking and dialog IDs, and retire a
+  dynamic slot if its generation exhausts. Collection permits reuse without stale
+  handles naming new items; actor/authored slots remain non-recycled. Fixed total
+  capacity 2,368; no per-frame allocations. Different dropped stacks in one cell
+  share its existing single bag. Pick/drop cycles can reuse slots indefinitely
+  within generation bounds without consuming future death reservations.
+- Restore normal/casting log bounds and wrapping to the pre-Rest-dock sizes. Put a
+  small generated campfire icon immediately left of Settings in the top bar. It
+  reuses the UI atlas (no extra GPU texture), uses tint/alpha when disabled, and
+  retains Rest [R]/availability hover text and input behavior.
+- Test equipment/stat and whole-stack conservation, foreign/stale/replayed requests,
+  repeated slot reuse and stale floor IDs, exhaustion rollback, unsafe/moving
+  rejection, modal auto-close including leftovers, headless allocation invariants,
+  and hidden native/reduced/letterboxed captures. No slice 13 work.

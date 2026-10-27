@@ -122,10 +122,11 @@ bag in your cell or the three reachable front cells to browse everything inside.
 Click a stack to take it, hover for stats, or use Take All; use the wheel/page
 buttons to browse crowded bags without taking unwanted gear. Click a party portrait
 while the dialog is open to change the recipient. Whole stacks that cannot fit stay
-in the bag. Close or Escape leaves leftovers in place. Gold weighs 0.02 lb per coin;
+in the bag. Take All closes the dialog after collection; Close or Escape also
+leaves leftovers in place. Gold weighs 0.02 lb per coin;
 camp kits weigh 8 lb each.
 
-The Rest button below the four portraits opens camp. It is dimmed and disabled
+The small campfire icon in the top bar, beside Settings, opens camp. It is dimmed and disabled
 when no beneficial, legal rest is available. R and the pause-menu Rest entry also
 open camp, where unavailable choices explain their requirements.
 
@@ -144,6 +145,11 @@ organization remains available during paused danger. Rejected operations preserv
 all items; unequipping needs a free cell, while a replacement returns old equipment
 to its source cell. Drag to another character's tab to transfer; Shift-drag opens
 the quantity dialog with one selected. Escape cancels the pending operation.
+The sidebar Drop button puts the selected item or entire stack in a loot bag at
+the party's current cell, joining any existing loot. Dropping requires safe, stationary
+exploration; equipped items update your stats when dropped. Split a stack first to
+drop only part of it.
+
 Drop onto the same item to merge stacks. The sidebar shows only actions relevant
 to the selected item; temporarily blocked actions are dimmed with a reason.
 

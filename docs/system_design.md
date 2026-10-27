@@ -1,20 +1,33 @@
 # System design
 
-Implemented, **Ready for review** (2026-10-27): slice 12
+Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
+Drop into the current cell, automatic Take All closure, and a small generated Rest
+icon beside Settings while restoring full log widths. Session validates floor
+capacity before staged Party removal; 256 generation-checked reusable player-drop
+slots complement the unchanged 2,112 death/authored reservations. Equipment-derived
+stats/effects reconcile after a drop. Fixed storage, per-pixel picking identities
+and modal input rules remain intact. See [design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up)
+and [current verification](slice12_verification.md): Debug/Release 29/29, focused
+sanitizers 3/3, allocation/stress/hidden GPU checks and 108 hidden captures pass.
+The user accepted slice 12, including all review corrections, on 2026-10-27.
+Slice 13 is next eligible for planning and remains unstarted.
+
+Implemented, **accepted and closed** (2026-10-27): slice 12
 [loot and recovery](loot_recovery_design.md), including the approved loot-bag review
 correction; [verification and handoff](slice12_verification.md). GameSession owns
 bounded corpse-independent loot and checked rest transactions; Party stages whole-
 stack acquisition and supply consumption. One prepared bag per nonempty cell opens
 a paused grid with contained/aligned details, shared Inventory slot painting, live
 portrait recipient selection, per-stack pickup and Take All. Leftovers retain the
-bag. One projection fixes approach scaling. The visible Rest button below portraits
-is dim/inert when neither rest has a legal benefit; narrow logs rewrap beside it.
+bag. One projection fixes approach scaling. The Rest icon in the top bar
+is dim/inert when neither rest has a legal benefit.
 Schema 6 adds authored drops, weighted currency and camp kits. Floor imagery is
 baked offline and shares depth-aware picking/transitions; normal frames allocate no
 engine-owned C++ storage. Camp commits recovery once and plays a cosmetic bonfire.
 Debug/Release 29/29, focused sanitizers, capacity stress, allocation guard, hidden
-GPU checks and 93 native/reduced/letterboxed captures pass. Interactive review and
-user acceptance remain pending; slice 13 is not eligible.
+GPU checks and 93 native/reduced/letterboxed captures passed at that checkpoint.
+The user accepted the completed slice and its follow-up corrections on 2026-10-27.
+Automated verification limits remain recorded in the handoff.
 
 Implemented, **accepted and closed**: approved [tabbed inventory and character sheet](character_sheet_design.md),
 replacing the portrait inspector while preserving the current inventory layout.

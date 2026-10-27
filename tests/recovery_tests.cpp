@@ -2,6 +2,7 @@
 #include "support/combat_fixtures.hpp"
 #include "support/recovery_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/inventory_layout.hpp"
 #include "ui/loot_layout.hpp"
 #include <iostream>
 #include <memory>
@@ -268,8 +269,8 @@ void lootDialogAndRestButton() {
     ui.refresh({}, false, false, true);
     ui.openLoot(first);
     ui.lootTakeAll();
-    check(ui.snapshot().loot.open && ui.snapshot().loot.count == 0,
-          "Take All drains every page and retains empty dialog");
+    check(!ui.snapshot().loot.open && ui.snapshot().loot.count == 0,
+          "Take All drains every page and closes the dialog");
     check(inventoryQuantity(s.party(), 3, 12) == 11, "Take All uses selected recipient for every page");
     ui.closeOverlay();
     ui.refresh({}, false, false, true);
@@ -319,9 +320,117 @@ void lootDialogAndRestButton() {
     const auto potionAfter = inventoryQuantity(full.party(), 3, 10);
     check(potionAfter == potionBefore + 2 && fullUi.snapshot().loot.count == 1,
           "Take All skips full-bag equipment and still merges later potions");
+    check(!fullUi.snapshot().loot.open, "Partial Take All also closes the dialog");
+    fullUi.openLoot(sword);
     fullUi.lootRecipient(0);
     fullUi.lootTakeAll();
     check(fullUi.snapshot().loot.count == 0, "Switching to a capable recipient collects leftovers");
+}
+void inventoryGroundDrop() {
+    const auto cat = recoveryCatalog();
+    const auto map = combatMap();
+    const auto empty = combatPlacements(map, pose, 0);
+    RecoveryLevel level;
+    level.ground[level.groundCount++] = {pose.cell, {12}, 5};
+    auto owner =
+        std::make_unique<GameSession>(map, cat, empty, 7, pose, false, std::vector<NpcTimings>{}, level);
+    auto& s = *owner;
+    const auto world = s.actors().snapshot().world;
+    auto liveDrop = [&]() {
+        for (std::uint16_t n = lootReservedCapacity; n < lootCapacity; ++n) {
+            const auto& stack = s.loot().snapshot().stacks[n];
+            if (stack.active)
+                return LootId{world, n, stack.generation};
+        }
+        return LootId{};
+    };
+    CommandController ui(s);
+    ui.refresh({}, false, false, true);
+    ui.openInventory(rules::CharacterId{0});
+    const auto armor = s.party().inventory().at({{0}, 48});
+    const auto armorItem = s.party().inventory().stack(armor)->item;
+    const auto ac = s.party().character({0})->stats.armorClass;
+    const auto oldRevision = s.party().inventory().revision();
+    const auto floorRevision = s.loot().snapshot().revision;
+    check(bool(s.dropItem(armor, oldRevision, true)), "Equipped item can be previewed for dropping");
+    auto foreign = armor;
+    ++foreign.owner;
+    check(!s.dropItem(foreign, oldRevision) && s.party().inventory().stack(armor),
+          "Foreign inventory handle cannot drop another owner\'s item");
+    check(s.party().inventory().stack(armor) && s.loot().snapshot().revision == floorRevision,
+          "Drop preview changes neither owner");
+    check(!s.dropItem(armor, oldRevision - 1) && s.party().inventory().stack(armor),
+          "Stale revision cannot drop");
+    ui.inventorySelect(48);
+    const auto dropButton = inventoryLayout::action(ui.snapshot().inventory, InventoryAction::Drop);
+    UiInput click;
+    click.focused = true;
+    click.pointer = ArtPoint{float(dropButton.x + 3), float(dropButton.y + 3)};
+    click.pressed[std::size_t(UiKey::Click)] = true;
+    routeHudInput(ui, click, {});
+    check(ui.snapshot().inventory.open && !s.party().inventory().stack(armor),
+          "Drop action removes equipped item and keeps Inventory open");
+    const auto first = liveDrop();
+    const auto* dropped = s.loot().find(first);
+    check(dropped && dropped->cell == pose.cell && dropped->item.index == armorItem.index &&
+              dropped->quantity == 1,
+          "Dropped equipment belongs to current cell");
+    check(s.party().character({0})->stats.armorClass < ac, "Dropping armor recomputes protection");
+    check(!s.dropItem(armor, s.party().inventory().revision()),
+          "Replayed item handle cannot duplicate floor loot");
+    ui.closeOverlay();
+    ui.openLoot({world, 2048});
+    check(ui.snapshot().loot.count == 2, "Existing loot and player drops share the same bag");
+    ui.closeOverlay();
+    check(bool(s.pickup({first, {0}, s.party().inventory().revision()})),
+          "Dropped equipment can be collected again");
+    for (int n = 0; n < 300; ++n) {
+        const auto item = findInventoryItem(s.party(), 0, armorItem.index);
+        check(bool(s.dropItem(item, s.party().inventory().revision())), "Drop slot supports repeated reuse");
+        const auto id = liveDrop();
+        check(id.slot == first.slot && id.generation > first.generation && !s.loot().find(first),
+              "Reused slots reject stale floor identities");
+        check(!s.pickup({first, {0}, s.party().inventory().revision()}),
+              "Old pick cannot collect replacement content");
+        check(bool(s.pickup({id, {0}, s.party().inventory().revision()})),
+              "Live generation remains collectible");
+    }
+    const auto potion = findInventoryItem(s.party(), 0, 10);
+    const auto quantity = s.party().inventory().stack(potion)->quantity;
+    check(bool(s.dropItem(potion, s.party().inventory().revision())), "Whole potion stack drops");
+    check(s.loot().find(liveDrop())->quantity == quantity && inventoryQuantity(s.party(), 0, 10) == 0,
+          "Whole-stack ownership conserved");
+    const auto held = findInventoryItem(s.party(), 0, 11);
+    s.setAnimated(true);
+    s.move(Action::Back);
+    check(s.dropItem(held, s.party().inventory().revision()).error == InventoryError::Moving,
+          "Cannot drop while moving");
+    const auto threat = combatPlacements(map, pose, 1);
+    auto unsafe = std::make_unique<GameSession>(map, cat, threat, 7, pose, false);
+    const auto unsafeItem = findInventoryItem(unsafe->party(), 0, 10);
+    check(unsafe->dropItem(unsafeItem, unsafe->party().inventory().revision()).error ==
+              InventoryError::Unsafe,
+          "Cannot drop beside a threat");
+    // Exhaust only player-drop capacity; failures must preserve inventory and death reservations.
+    auto full = std::make_unique<GameSession>(map, cat, empty, 7, pose, false);
+    for (unsigned n = 0; n < lootDropCapacity; ++n) {
+        check(bool(full->party().acquire({{0}, {12}, 1, full->party().inventory().revision()})),
+              "Capacity fixture acquires coin");
+        check(bool(full->dropItem(findInventoryItem(full->party(), 0, 12),
+                                  full->party().inventory().revision())),
+              "Every dynamic floor slot usable");
+    }
+    const auto keep = findInventoryItem(full->party(), 0, 10);
+    const auto rev = full->party().inventory().revision();
+    check(full->dropItem(keep, rev).error == InventoryError::Full && full->party().inventory().stack(keep) &&
+              full->party().inventory().revision() == rev,
+          "Floor exhaustion leaves inventory unchanged");
+    const auto& stack = full->loot().snapshot().stacks[lootReservedCapacity];
+    check(bool(full->pickup(
+              {{full->actors().snapshot().world, lootReservedCapacity, stack.generation}, {0}, rev})),
+          "Collecting a dropped stack frees floor capacity");
+    check(bool(full->dropItem(keep, full->party().inventory().revision())),
+          "Freed floor capacity is reusable");
 }
 void capacityStress() {
     const auto cat = recoveryCatalog(false, true);
@@ -350,9 +459,9 @@ void capacityStress() {
     unsigned count = 0;
     for (const auto& stack : loot.snapshot().stacks)
         count += stack.active;
-    check(count == lootCapacity, "All 256 deaths plus 64 placed stacks publish without exhaustion");
+    check(count == lootReservedCapacity, "All 256 deaths plus 64 placed stacks publish without exhaustion");
     loot.reconcile(actors);
-    for (std::uint16_t i = 0; i < lootCapacity; ++i)
+    for (std::uint16_t i = 0; i < lootReservedCapacity; ++i)
         check(loot.collect({actors.snapshot().world, i}), "Every reservation collectible once");
     loot.reconcile(actors);
     for (const auto& stack : loot.snapshot().stacks)
@@ -405,6 +514,7 @@ int main(int argc, char**) {
         lootAndPickup();
         acquisitionFailures();
         lootDialogAndRestButton();
+        inventoryGroundDrop();
         std::cout << "Recovery and loot checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

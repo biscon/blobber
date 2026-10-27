@@ -45,6 +45,7 @@ class Party {
     InventoryResult acquire(const AcquisitionRequest&, bool preview = false) noexcept;
     RestError recoveryBenefits(const RestRequest&) const noexcept;
     RestResult recover(const RestRequest&, ItemHandle supply, rules::DiceRng&) noexcept;
+    InventoryResult releaseItem(ItemHandle, std::uint64_t revision, bool preview = false) noexcept;
     bool consumeItem(ItemHandle, unsigned quantity = 1) noexcept;
     bool restoreMana(rules::CharacterId, int amount) noexcept;
     const rules::ItemDefinition* equipped(rules::CharacterId, EquipmentSlot) const noexcept;

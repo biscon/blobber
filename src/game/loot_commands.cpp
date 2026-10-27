@@ -37,7 +37,7 @@ void CommandController::refreshLoot() noexcept {
     const auto& stacks = session_->loot().snapshot().stacks;
     for (std::uint16_t i = 0; i < stacks.size(); ++i)
         if (stacks[i].active && stacks[i].cell == h.cell)
-            h.ids[h.count++] = {h.world, i};
+            h.ids[h.count++] = {h.world, i, stacks[i].generation};
     h.page = std::min(h.page, h.count ? (h.count - 1) / LootHud::visibleCount : 0);
     h.entries = {};
     for (unsigned i = 0; i < LootHud::visibleCount && h.page * LootHud::visibleCount + i < h.count; ++i) {
@@ -134,5 +134,7 @@ void CommandController::lootTakeAll() noexcept {
     state_.log.append(h.feedback.data());
     h.hovered = -1;
     refreshLoot();
+    closeOverlay();
+    refreshRestAvailability();
 }
 } // namespace blobber

@@ -42,6 +42,7 @@ int main(int argc, char**) {
         loot.world = 42;
         for (int i = 0; i < 9; ++i)
             loot.stacks[i] = {{3, 2}, {12}, 1, true};
+        loot.stacks[0].generation = 7;
         loot.stacks[9] = {{3, 3}, {13}, 1, true};
         MovementState movement;
         movement.player = {{3, 3}, Heading::North};
@@ -58,6 +59,16 @@ int main(int argc, char**) {
                 }
             return seen;
         };
+        bool checkedGeneration = false;
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto id = frames.picking()->pickLoot(x, y);
+                if (id && id->slot == 0) {
+                    check(id->generation == 7, "Picking retains floor generation");
+                    checkedGeneration = true;
+                }
+            }
+        check(checkedGeneration, "Generation fixture is visible");
         auto seen = visible(frames.picking());
         check(seen[0] && seen[9], "One bag per occupied cell, including party cell");
         for (int i = 1; i < 9; ++i)

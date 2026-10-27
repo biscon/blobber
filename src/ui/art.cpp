@@ -49,7 +49,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "items/arcane_focus",
                                   "items/healing_potion",
                                   "items/mana_potion",
-                                  "items/silhouette"};
+                                  "items/silhouette",
+                                  "rest"};
     OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
     OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
     if (!campImage.value.data || !lootImage.value.data)
@@ -76,7 +77,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
         const int w = std::max(1, int(std::round(image.value.width * factor)));
         const int h = std::max(1, int(std::round(image.value.height * factor)));
         ImageResize(&image.value, w, h);
-        const int x = i == silhouetteIcon ? 1026 : int(i % 8) * 256 + 2;
+        const int x = i == 45 ? 1794 : i == silhouetteIcon ? 1026 : int(i % 8) * 256 + 2;
         const int y = i == silhouetteIcon ? 1282 : int(i / 8) * 256 + 2;
         regions_[i] = {float(x), float(y), float(w), float(h)};
         ImageDrawImage(&atlas.value, image.value, x, y, WHITE);
@@ -127,6 +128,8 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
+    if (index == restIcon)
+        index = 45;
     if (index >= regions_.size()) {
         DrawRectangleRec(destination, {19, 26, 25, 255});
         DrawCircleV({destination.x + destination.width / 2, destination.y + destination.height / 3},

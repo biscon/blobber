@@ -21,7 +21,7 @@ struct CharacterSheet {
     unsigned featureCount = 0;
 };
 enum class InventoryMode : std::uint8_t { Browse, Transfer, Quantity };
-enum class InventoryAction : std::uint8_t { Equip, Transfer, Use, Count };
+enum class InventoryAction : std::uint8_t { Equip, Transfer, Use, Drop, Count };
 struct InventoryActionState {
     bool visible = false, enabled = false;
     const char* label = "";

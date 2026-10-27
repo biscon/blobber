@@ -57,6 +57,26 @@ InventoryResult Party::inventoryChange(const InventoryRequest& request) noexcept
         state_.characters[i].stats = stats[i];
     return result;
 }
+InventoryResult Party::releaseItem(ItemHandle handle, std::uint64_t revision, bool preview) noexcept {
+    if (revision != inventory_.revision() || revision == UINT64_MAX)
+        return {InventoryError::Stale};
+    const auto* stack = inventory_.stack(handle);
+    const auto location = inventory_.locate(handle);
+    if (!stack || location.cell >= 52)
+        return {InventoryError::InvalidItem};
+    auto candidate = inventory_;
+    if (!candidate.consume(handle, stack->quantity))
+        return {InventoryError::InvalidItem};
+    const auto derived = rules::deriveCharacter(*catalog_, state_.characters[location.character.index].build,
+                                                candidate.loadout(location.character));
+    if (!derived)
+        return {InventoryError::Equipment};
+    if (!preview) {
+        inventory_ = candidate;
+        state_.characters[location.character.index].stats = derived.value;
+    }
+    return {InventoryError::None, true};
+}
 bool Party::consumeItem(ItemHandle h, unsigned q) noexcept {
     const auto location = inventory_.locate(h);
     if (location.cell >= bagCells || !inventory_.consume(h, q))

@@ -43,6 +43,7 @@ class GameSession {
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     CombatOutcome submit(const PartyCommand& command) noexcept;
     const LootWorld& loot() const noexcept { return loot_; }
+    PickupResult dropItem(ItemHandle, std::uint64_t inventoryRevision, bool preview = false) noexcept;
     PickupResult lootAccess(LootId) const noexcept;
     PickupResult pickup(const PickupRequest&, bool preview = false) noexcept;
     RestPreview previewRest(const RestRequest&) const noexcept;

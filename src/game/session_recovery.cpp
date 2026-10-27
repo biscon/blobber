@@ -1,6 +1,32 @@
 #include "game/perception.hpp"
 #include "game/session.hpp"
 namespace blobber {
+PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bool preview) noexcept {
+    if (!preview)
+        events_.clear();
+    if (movement().transition.active())
+        return {InventoryError::Moving, "Wait until movement finishes."};
+    if (!combat_.safeRecovery(movement().player))
+        return {InventoryError::Unsafe, "Dropping requires safe exploration."};
+    const auto* stack = party_.inventory().stack(handle);
+    if (revision != party_.inventory().revision())
+        return {InventoryError::Stale, inventoryMessage(InventoryError::Stale)};
+    if (!stack)
+        return {InventoryError::InvalidItem, inventoryMessage(InventoryError::InvalidItem)};
+    const auto ticket = loot_.availableDrop();
+    if (!ticket)
+        return {InventoryError::Full, "Floor loot is full. Pick up a dropped stack first."};
+    const auto item = stack->item;
+    const auto quantity = stack->quantity;
+    const auto result = party_.releaseItem(handle, revision, preview);
+    if (!result)
+        return {result.error, inventoryMessage(result.error)};
+    if (!preview) {
+        loot_.publishDrop(ticket, movement().player.cell, item, quantity);
+        combat_.reconcileEffects(timeMs_, events_);
+    }
+    return {InventoryError::None, "Dropped in a loot bag at your feet."};
+}
 PickupResult GameSession::lootAccess(LootId id) const noexcept {
     const auto* s = loot_.find(id);
     if (!s || loot_.snapshot().revision == UINT64_MAX)

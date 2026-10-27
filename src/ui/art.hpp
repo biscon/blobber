@@ -9,7 +9,7 @@ namespace blobber {
 // One startup-prepared atlas, owned by Presenter's resource registry.
 class UiArt {
   public:
-    static constexpr unsigned classFeaturesIcon = 28, silhouetteIcon = 44;
+    static constexpr unsigned classFeaturesIcon = 28, silhouetteIcon = 44, restIcon = 48;
     static unsigned itemIcon(const rules::ItemDefinition&) noexcept;
     UiArt(GpuResources& resources, const std::filesystem::path& directory);
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
@@ -19,6 +19,6 @@ class UiArt {
   private:
     GpuResources& resources_;
     TextureHandle atlas_, camp_, loot_;
-    std::array<Rectangle, 45> regions_{};
+    std::array<Rectangle, 46> regions_{};
 };
 } // namespace blobber

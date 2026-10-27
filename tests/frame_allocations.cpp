@@ -317,6 +317,23 @@ int main() {
             recoveryUi->closeOverlay();
         }
 
+        for (unsigned n = 0; n < 64; ++n) {
+            const auto handle = findInventoryItem(recoverySession->party(), 0, 13);
+            okay &= bool(
+                recoverySession->dropItem(handle, recoverySession->party().inventory().revision(), true));
+            okay &= bool(recoverySession->dropItem(handle, recoverySession->party().inventory().revision()));
+            recoveryUi->openInventory(rules::CharacterId{0});
+            recoveryUi->refresh({}, false, false, true);
+            recoveryUi->closeOverlay();
+            lootFrames->update(*lootRenderer, hybridMap, recoverySession->movement(), nullptr, nullptr,
+                               nullptr, 0, nullptr, &recoverySession->loot().snapshot());
+            const auto& stack = recoverySession->loot().snapshot().stacks[lootReservedCapacity];
+            okay &= bool(recoverySession->pickup(
+                {{recoverySession->actors().snapshot().world, lootReservedCapacity, stack.generation},
+                 {0},
+                 recoverySession->party().inventory().revision()}));
+        }
+
         for (int iteration = 0; iteration < 100; ++iteration) {
             inventoryUi.refresh({}, false, false, true);
             inventoryUi.openInventory(rules::CharacterId{2});

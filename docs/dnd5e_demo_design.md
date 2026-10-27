@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 is now In progress at its approved camp-screen visual checkpoint; gameplay implementation has not started.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. No slice is active; slice 13 is next eligible for planning and remains Planned/unstarted.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 11 — Inventory and equipment, including Character sheet (2026-10-27) |
-| Active slice | 12 — Loot and recovery; review correction at mockup checkpoint |
-| Awaiting user review | Loot-dialog mockup; acceptance required before correction implementation |
+| Latest accepted slice | 12 — Loot and recovery, including all review corrections (2026-10-27) |
+| Active slice | None |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until slice 12 is accepted; 13 remains Planned |
-| Next action | User reviews loot-dialog mockup; wait before implementing requested correction |
+| Next eligible slice | 13 — Levels 2 and 3; Planned/unstarted |
+| Next action | When requested, plan slice 13 in a clean context using the accepted slice 12 handoff |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -322,7 +322,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Accepted | C |
-| 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | In progress | C |
+| 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Accepted | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
@@ -1234,11 +1234,11 @@ consumption/ammunition costs, and combat restrictions. Inspect the large-screen 
 **Review correction (2026-10-27):** Implemented the user's screenshot feedback: contextual actions with unavailable states, drag-only move/merge/split initiation, torso/ranged slot placement, centered captions and large split controls, right-aligned counts, I inventory/M map, and a painted backpack dock icon with an updated tooltip. No later-slice rules were added. Follow-up checks and replacement review images are recorded in the [correction handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
 **Approved Character tab extension (2026-10-27):** User accepted the image-generated mockup and authorized implementation. The fullscreen panel now shares Inventory / Character tabs and the character strip; portrait info opens Character, inventory controls open Inventory. Live read-only stats/resources/equipment replace the small inspector. XP displays progress but awards and advancement remain deferred. Focused Debug/Release 6/6, allocation and hidden GPU checks pass; 77 captures generated. See [design](character_sheet_design.md) and [verification](character_sheet_verification.md). The implementation was accepted with slice 11 on 2026-10-27.
 **Acceptance:** Explicitly accepted by the user on 2026-10-27 after the inventory corrections and Character sheet implementation. The user requested documentation closure and a fresh context for slice 12. Interactive desktop review was not automated; recorded verification limits remain unchanged.
-**Next-agent handoff:** Slice 11 is accepted and closed. Slice 12 — Loot and recovery is next eligible, still Planned and unstarted. Read [slice 11 handoff](slice11_verification.md#accepted-closeout-and-slice-12-handoff) and [Character sheet handoff](character_sheet_verification.md) before planning it. Preserve the accepted UI, authoritative inventory transactions and bounded allocation contracts. Define loot/rest ownership, safety, capacities and recovery rules in the slice 12 plan; ask about material ambiguities and obtain plan approval before coding. XP awards/level-up remain slice 13; save/resume remains slice 14.
+**Historical handoff at slice 11 closeout:** Slice 12 was next eligible, Planned and unstarted at that checkpoint. It has since been accepted and closed; see the current checkpoint and slice 12 record below. Read [slice 11 handoff](slice11_verification.md#accepted-closeout-and-slice-12-handoff) and [Character sheet handoff](character_sheet_verification.md) before planning it. Preserve the accepted UI, authoritative inventory transactions and bounded allocation contracts. Define loot/rest ownership, safety, capacities and recovery rules in the slice 12 plan; ask about material ambiguities and obtain plan approval before coding. XP awards/level-up remain slice 13; save/resume remains slice 14.
 
 ### Slice 12: Loot and recovery
 
-**Current review correction:** The user approved the loot-dialog mockup with contained/aligned details, shared Inventory slot styling, live portrait recipient selection, and a visible inactive-when-unavailable Rest button. Implementation and verification are complete; [correction design](loot_recovery_design.md#loot-bag-review-correction). One bag per cell replaces individual icons and approach scaling is corrected. Earlier delivery/verification below describes the initial result.
+**Current review correction:** Implemented and verified: one-bag loot dialog with contained/aligned details, shared Inventory slots and portrait recipient selection; Take All now closes automatically; Inventory Drop places selected stacks in the current cell; a small generated top-bar Rest icon replaces the large dock and log widths are restored. [Current handoff](slice12_verification.md) and [design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up). Accepted by the user on 2026-10-27.
 
 **Deliver:** Bounded loot ownership and collection, supplies/consumable acquisition,
 Hit Dice short rests, feature recovery, safe-location long rests, and camp supplies.
@@ -1265,14 +1265,14 @@ clicking collects into the active character's bag, changing the selected charact
 changes the recipient, failed collection preserves the drop, and repeated clicks
 cannot duplicate items. Verify visible floor placement and reliable item picking.
 
-**Stage / last updated:** Ready for review — approved loot-bag correction implemented and verified; 2026-10-27.
+**Stage / last updated:** Accepted and closed; 2026-10-27.
 **Approved plan:** User said “Implement the plan.” See the [loot/recovery design](loot_recovery_design.md) for behavior, ownership, capacities and verification.
 **Decisions:** Safe-only whole-stack pickup into the selected character, current/three-front-cell reach, one bag per cell and ten-slot dialog pages; usable gear, weighted gold and occasional potions; three fixed camp kits and no sanctuary in normal dungeon play. One/eight-hour short/long rest skips advance effects/cooldowns without moving NPCs. Stable allies can recover; dead allies cannot. Future hub/shops remain out of scope.
 **Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.
 **Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared bags with occlusion, paused grid collection and visible Rest button; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
-**Verification:** Corrected implementation: Debug 29/29 and Release 29/29; focused recovery/render ASan+UBSan 2/2; zero tracked frame C++ allocations; separate full-capacity loot publication/render stress, hidden GPU lifecycle, and 93 native/reduced/letterboxed captures pass. Interactive review remains for the user. Earlier baseline checks remain recorded separately in the handoff.
-**Next-agent handoff:** Wait for slice 12 review or fix requested corrections. Preserve the accepted Inventory/Character UI and session ownership. Do not advance to slice 13 without acceptance. Full commands, coverage, limits and review recipe are in [slice 12 verification](slice12_verification.md).
-**Acceptance:** Pending; mockup acceptance does not accept the implementation.
+**Verification:** Corrected implementation: Debug 29/29 and Release 29/29; focused recovery/inventory/render ASan+UBSan 3/3; zero tracked frame C++ allocations; separate full-capacity loot publication/render stress, hidden GPU lifecycle, and 108 native/reduced/letterboxed captures pass. The user accepted the result; automated verification limits remain unchanged. Earlier baseline checks remain recorded separately in the handoff.
+**Next-agent handoff:** Slice 12 is accepted and closed. Slice 13 — Levels 2 and 3 is next eligible for planning, still Planned/unstarted. Read the [accepted closeout](slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
+**Acceptance:** Explicitly accepted on 2026-10-27: “thats better, record the slice as accepted in the doc”. Acceptance covers the completed slice and all loot-bag, Drop, Take All and Rest-icon corrections.
 
 ### Slice 13: Levels 2 and 3
 

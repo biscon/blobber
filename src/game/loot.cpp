@@ -1,4 +1,5 @@
 #include "game/loot.hpp"
+#include <cassert>
 #include <stdexcept>
 namespace blobber {
 LootWorld::LootWorld(const ActorWorld& actors, const RecoveryLevel& level, std::uint32_t seed) {
@@ -32,7 +33,7 @@ const FloorLoot* LootWorld::find(LootId id) const noexcept {
     if (id.world != state_.world || id.slot >= lootCapacity)
         return nullptr;
     const auto& s = state_.stacks[id.slot];
-    return s.active && s.quantity ? &s : nullptr;
+    return s.active && s.quantity && id.generation == s.generation ? &s : nullptr;
 }
 void LootWorld::reconcile(const ActorWorld& actors) noexcept {
     if (actors.snapshot().world != state_.world || actorRevision_ == actors.snapshot().revision)
@@ -52,6 +53,22 @@ void LootWorld::reconcile(const ActorWorld& actors) noexcept {
         }
         ++state_.revision;
     }
+}
+LootId LootWorld::availableDrop() const noexcept {
+    if (state_.revision == UINT64_MAX)
+        return {};
+    for (std::uint16_t i = lootReservedCapacity; i < lootCapacity; ++i)
+        if (!state_.stacks[i].active && state_.stacks[i].generation < UINT64_MAX)
+            return {state_.world, i, state_.stacks[i].generation + 1};
+    return {};
+}
+void LootWorld::publishDrop(LootId id, Cell cell, rules::ItemId item, std::uint16_t quantity) noexcept {
+    // GameSession preflights this ticket before removing inventory; no intervening floor mutation.
+    assert(id.world == state_.world && id.slot >= lootReservedCapacity && id.slot < lootCapacity);
+    assert(!state_.stacks[id.slot].active && id.generation == state_.stacks[id.slot].generation + 1);
+    assert(quantity && state_.revision < UINT64_MAX);
+    state_.stacks[id.slot] = {cell, item, quantity, true, id.generation};
+    ++state_.revision;
 }
 bool LootWorld::collect(LootId id) noexcept {
     if (!find(id) || state_.revision == UINT64_MAX)

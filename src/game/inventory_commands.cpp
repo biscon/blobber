@@ -90,6 +90,12 @@ void CommandController::refreshInventoryActions() noexcept {
                      : reason == CommandReason::FullMana ? "No ally needs mana."
                                                          : commandMessage(reason);
     }
+    auto& drop = i.actions[static_cast<unsigned>(InventoryAction::Drop)];
+    drop.visible = true;
+    drop.label = stack->quantity > 1 ? "DROP STACK" : "DROP";
+    const auto dropResult = session_->dropItem(i.selected, i.revision, true);
+    drop.enabled = bool(dropResult);
+    drop.reason = dropResult.reason;
 }
 
 void CommandController::inventoryFeedback(const char* s) noexcept {
@@ -271,7 +277,14 @@ void CommandController::inventoryAction(InventoryAction action) noexcept {
     const auto* stack = party_.inventory().stack(i.selected);
     const auto* item = party_.catalog().item(stack->item);
     i.source = i.selected;
-    if (action == InventoryAction::Transfer) {
+    if (action == InventoryAction::Drop) {
+        const auto result = session_->dropItem(i.selected, i.revision);
+        record(session_->events());
+        inventoryFeedback(result.reason);
+        i.source = {};
+        i.pointerDown = i.dragging = false;
+        refreshInventory();
+    } else if (action == InventoryAction::Transfer) {
         i.mode = InventoryMode::Transfer;
         inventoryFeedback("Select another character above (or press 1-4).");
     } else if (action == InventoryAction::Equip) {

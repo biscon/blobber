@@ -40,11 +40,11 @@ constexpr UiRect spellCast{288, 310, 90, 19}, spellBack{288, 334, 41, 17}, spell
 constexpr UiRect recipientChip(int i) {
     return {202 + i * 26, 322, 23, 28};
 }
-constexpr UiRect castingLog{388, 304, 118, 54};
-constexpr int castingLogColumns = 24;
+constexpr UiRect castingLog{388, 304, 248, 54};
+constexpr int castingLogColumns = 55;
 constexpr UiRect header{4, 2, 632, 13}, gear{621, 2, 14, 13};
-constexpr UiRect actions{4, 304, 300, 54}, log{308, 304, 198, 54};
-constexpr UiRect logExpand{490, 306, 12, 10}, logLatest{448, 306, 38, 10};
+constexpr UiRect actions{4, 304, 300, 54}, log{308, 304, 328, 54};
+constexpr UiRect logExpand{620, 306, 12, 10}, logLatest{578, 306, 38, 10};
 constexpr UiRect expandedLog{72, 48, 496, 244}, closeOverlay{551, 51, 14, 12};
 constexpr UiRect menu{222, 85, 196, 182}, resume{242, 130, 156, 24}, rest{242, 169, 156, 24},
     quit{242, 208, 156, 24};
@@ -57,8 +57,8 @@ constexpr UiRect target(int) {
 }
 constexpr UiRect previousPage{-100, -100, 0, 0}, nextPage{-100, -100, 0, 0}, confirm{-100, -100, 0, 0};
 constexpr UiRect feedback{10, 350, 284, 8};
-constexpr UiRect restDock{508, 304, 128, 54}, restButton{516, 312, 112, 27};
-constexpr int logColumns = 44, expandedLogColumns = 116;
+constexpr UiRect restButton{600, 2, 16, 13};
+constexpr int logColumns = 76, expandedLogColumns = 116;
 } // namespace hudLayout
 // Raylib pointer coordinates are logical; aspectFit operates in framebuffer pixels.
 inline std::optional<ArtPoint> artPoint(float x, float y, int logicalWidth, int logicalHeight,

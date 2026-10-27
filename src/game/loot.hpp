@@ -2,20 +2,23 @@
 #include "game/actors.hpp"
 #include "game/recovery.hpp"
 namespace blobber {
-constexpr std::size_t lootPerActor = 8, lootCapacity = NpcWorld::maxInstances * lootPerActor + 64;
+constexpr std::size_t lootPerActor = 8, lootReservedCapacity = NpcWorld::maxInstances * lootPerActor + 64;
+constexpr std::size_t lootDropCapacity = 256, lootCapacity = lootReservedCapacity + lootDropCapacity;
 struct LootId {
     std::uint64_t world = 0;
     std::uint16_t slot = UINT16_MAX;
-    explicit operator bool() const noexcept { return world && slot < lootCapacity; }
+    std::uint64_t generation = 1;
+    explicit operator bool() const noexcept { return world && generation && slot < lootCapacity; }
 };
 inline bool operator==(LootId a, LootId b) noexcept {
-    return a.world == b.world && a.slot == b.slot;
+    return a.world == b.world && a.slot == b.slot && a.generation == b.generation;
 }
 struct FloorLoot {
     Cell cell{};
     rules::ItemId item{};
     std::uint16_t quantity = 0;
     bool active = false;
+    std::uint64_t generation = 1;
 };
 struct LootSnapshot {
     std::array<FloorLoot, lootCapacity> stacks{};
@@ -31,7 +34,7 @@ struct PickupResult {
     const char* reason = "Collected.";
     explicit operator bool() const noexcept { return error == InventoryError::None; }
 };
-// Fixed reservations guarantee every death can publish all rewards. No slot reuse.
+// Death reservations never recycle; separate player-drop slots use checked generations.
 class LootWorld {
   public:
     LootWorld(const ActorWorld&, const RecoveryLevel&, std::uint32_t seed);
@@ -41,6 +44,9 @@ class LootWorld {
     bool collect(LootId) noexcept;
 
   private:
+    friend class GameSession;
+    LootId availableDrop() const noexcept;
+    void publishDrop(LootId, Cell, rules::ItemId, std::uint16_t) noexcept;
     LootSnapshot state_;
     std::array<bool, NpcWorld::maxInstances> deaths_{};
     std::uint64_t actorRevision_ = 0;

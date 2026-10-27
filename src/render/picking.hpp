@@ -16,6 +16,7 @@ class PickingBuffer {
         badgeAnchors_ = {};
         lootWorld_ = 0;
         lootAnchors_ = {};
+        lootGenerations_ = {};
     }
     void badgeAnchor(std::uint16_t slot, int x, int top) noexcept { badgeAnchors_[slot] = {x, top}; }
     void write(std::size_t pixel, std::uint16_t slot) noexcept { pixels_[pixel] = slot; }
@@ -64,6 +65,9 @@ class PickingBuffer {
                 return targets_.ids[i];
         return {};
     }
+    void lootGeneration(std::uint16_t slot, std::uint64_t generation) noexcept {
+        lootGenerations_[slot] = generation;
+    }
     void lootWorld(std::uint64_t world) noexcept { lootWorld_ = world; }
     void lootAnchor(std::uint16_t slot, int x, int y) noexcept { lootAnchors_[slot] = {x, y}; }
     Cell lootAnchor(std::uint16_t slot) const noexcept {
@@ -72,7 +76,8 @@ class PickingBuffer {
     std::optional<LootId> pickLoot(int x, int y) const noexcept {
         const auto s = slot(x, y);
         if (lootWorld_ && s >= NpcWorld::maxInstances && s < NpcWorld::maxInstances + lootCapacity)
-            return LootId{lootWorld_, static_cast<std::uint16_t>(s - NpcWorld::maxInstances)};
+            return LootId{lootWorld_, static_cast<std::uint16_t>(s - NpcWorld::maxInstances),
+                          lootGenerations_[s - NpcWorld::maxInstances]};
         return {};
     }
     const TargetSnapshot& targets() const noexcept { return targets_; }
@@ -82,6 +87,7 @@ class PickingBuffer {
     TargetSnapshot targets_;
     std::uint64_t lootWorld_ = 0;
     std::array<Cell, lootCapacity> lootAnchors_{};
+    std::array<std::uint64_t, lootCapacity> lootGenerations_{};
     std::array<Cell, NpcWorld::maxInstances> badgeAnchors_{};
 };
 } // namespace blobber

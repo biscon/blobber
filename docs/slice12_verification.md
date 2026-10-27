@@ -1,6 +1,84 @@
 # Slice 12 verification and handoff
 
-Status: **Ready for review — loot-bag correction verified**, 2026-10-27.
+Status: **Accepted and closed**, 2026-10-27.
+The user explicitly accepted slice 12 after all review corrections: “thats better,
+record the slice as accepted in the doc”. This includes loot bags, recipient switching,
+Take All auto-close, Inventory Drop, approach scaling, and the top-bar Rest icon.
+Previous pending-review instructions below are historical and superseded by this
+acceptance. Verification limits remain unchanged.
+
+## Current follow-up
+
+- Take All attempts every stack and closes the loot dialog, including when capacity
+  leaves items behind. Remaining contents keep the floor bag; the log retains the
+  result and first failure reason. Individual pickup still leaves the dialog open.
+- Inventory's bottom-right contextual actions now include Drop (Drop Stack for
+  quantities above one). It removes the selected whole stack into the party's current
+  cell, joining the cell's existing bag. Inventory stays open. Equipped items can
+  be dropped and their derived stats/effects update immediately. Split first to drop
+  part of a stack. Safe, stationary exploration is required.
+- The large Rest dock is removed. Normal/casting combat logs use their original
+  widths again. A small generated campfire icon sits in the top bar immediately
+  left of Settings, with Rest [R]/availability hover text. It is dimmed and inert
+  when unavailable. R and pause-menu access remain.
+- Player drops use 256 reusable slots alongside the 2,112 reserved actor/authored
+  slots. Generation checks flow through storage, picking and dialog IDs. Exhaustion
+  rejects the drop before inventory changes; collected slots become reusable.
+  Future deaths retain all their reservations. All storage stays bounded.
+
+## Verification of this follow-up
+
+- Full Debug: **29/29**, 123.49 seconds. Full Release: **29/29**, 13.52 seconds.
+  Times overlapped captures/builds and are not benchmarks.
+- Focused ASan+UBSan: **3/3** (recovery, inventory, loot render), 20.89 seconds.
+  Final foreign-handle assertion also passes in Debug, Release and sanitizer
+  recovery rechecks, recorded with the `/tmp/blobber-drop-*` output prefix. Leak checking is
+  disabled for the existing raylib tool environment.
+- Engine frame allocation guard: zero tracked C++ allocations, including 64 new
+  drop/preview/pickup/render/UI cycles with recycled floor slots.
+- Separate full death/publication and prepared floor capacity stress pass. Hidden
+  GPU lifecycle/native atlas checks pass with generated fixture art including Rest.
+- New checks cover equipped-item removal/stat updates; whole-stack conservation;
+  existing-bag contents; repeated/replayed/stale/foreign inventory requests; 300
+  drop/pickup cycles with stale floor-generation rejection; floor exhaustion with
+  inventory rollback and later reuse; danger/movement rejection; picking generation
+  retention; Take All auto-close for both full and partial collection.
+- **108 hidden application captures**: 36 each at native 1920×1080, 1280×720 and
+  letterboxed 1024×768. Inspected the Drop action, bag contents, automatic closure,
+  enabled/disabled top-bar Rest icon and restored log. No OS input/focus automation.
+  Interactive desktop review remains unverified and belongs to the user.
+
+Selected captures:
+
+- [Inventory Drop button](screenshots/slice12/drop-rest-followup/inventory-drop-selected.png)
+- [Inventory after dropping armor](screenshots/slice12/drop-rest-followup/inventory-drop-complete.png)
+- [Dropped armor in the current-cell bag](screenshots/slice12/drop-rest-followup/player-drop-in-loot-dialog.png)
+- [Take All closes the dialog](screenshots/slice12/drop-rest-followup/player-drop-take-all-closed.png)
+- [Top-bar Rest and full-width log](screenshots/slice12/drop-rest-followup/rest-button-enabled.png)
+- [Rest disabled](screenshots/slice12/drop-rest-followup/loot-bags-rest-disabled.png)
+- [Top-bar Rest, letterboxed](screenshots/slice12/drop-rest-followup/rest-topbar-1024.png)
+
+Production [Rest icon](../assets/ui/rest.png) and [exact prompt](../assets/ui/rest.prompt.json)
+are retained in the workspace; generated with built-in imagegen, using the existing
+atlas and no extra GPU texture. Reproduce with the normal build/test presets,
+`blobber_gpu_smoke`, the recovery/loot-render `--stress` binaries, and
+`blobber --capture-recovery DIRECTORY [--size WIDTH HEIGHT]`.
+
+## Accepted closeout and next-agent handoff
+
+Slice 12 is accepted and closed. Slice 13 — Levels 2 and 3 is next eligible for
+planning and remains Planned/unstarted; this closeout does not begin implementation.
+Read AGENTS.md, the system design, roadmap and this handoff before planning it.
+Preserve the accepted loot/Inventory/Rest UI, checked ownership transactions, floor
+handle generations, bounded storage and allocation guarantees. XP awards, advancement,
+higher class features and second-level spells belong to slice 13; persistence remains
+slice 14. Existing automated and desktop-verification restrictions still apply.
+
+---
+
+# Previous loot-bag correction record
+
+Historical checkpoint: **Ready for review — loot-bag correction verified**, 2026-10-27.
 The user approved the loot-dialog mockup with corrections; implementation acceptance
 is still pending. Do not start slice 13. The earlier delivery below is historical;
 this section and the [current design](loot_recovery_design.md) describe the correction.
@@ -75,7 +153,7 @@ an encounter. Acceptance remains pending; continue only with slice 12 correction
 
 # Initial slice 12 implementation record
 
-Status: **Ready for review**, 2026-10-27. Implementation and available checks are
+Historical checkpoint: **Ready for review**, 2026-10-27. Implementation and available checks are
 complete. User acceptance is pending; do not start slice 13. The plan and camp
 mockup were explicitly accepted before implementation. See the
 [implemented design](loot_recovery_design.md) and [roadmap](dnd5e_demo_design.md#slice-12-loot-and-recovery).

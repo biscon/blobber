@@ -93,8 +93,8 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
     constexpr UiKey keys[]{UiKey::Equip, UiKey::TransferItem, UiKey::UseItem};
     for (unsigned n = 0; n < i.actions.size(); ++n) {
         const auto action = static_cast<InventoryAction>(n);
-        if (i.actions[n].visible &&
-            (in.has(keys[n]) || (click && inside(inventoryLayout::action(i, action))))) {
+        if (i.actions[n].visible && ((n < std::size(keys) && in.has(keys[n])) ||
+                                     (click && inside(inventoryLayout::action(i, action))))) {
             commands.inventoryAction(action);
             return true;
         }

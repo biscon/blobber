@@ -128,16 +128,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
                    (h->loot.open && h->loot.recipient.index == h->cards[i].id.index));
     }
-    p.box(hudLayout::restDock);
-    const auto restColor = h->restAvailable ? gold : muted;
-    p.box(hudLayout::restButton, h->restAvailable ? gold : edge);
-    p.line({523, 332}, {538, 328}, restColor, 2);
-    p.line({524, 328}, {538, 332}, restColor, 2);
-    p.triangle({525, 326}, {537, 326}, {531, 316}, restColor);
-    p.triangle({529, 326}, {534, 326}, {532, 321}, hudInk::panel);
-    p.centered("Rest [R]", {540, 313, 82, 24}, restColor, UiTextStyle::Heading);
-    p.centered(h->restAvailable ? "Make camp" : "Rest unavailable", {512, 342, 120, 10},
-               h->restAvailable ? gold : muted, UiTextStyle::Small);
+    p.picture(UiArt::restIcon, hudLayout::restButton, h->restAvailable ? WHITE : Color{110, 110, 110, 125});
     if (h->inventory.itemTargeting) {
         p.itemTargets(*h);
     } else if (h->magic.casting()) {

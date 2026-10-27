@@ -1,6 +1,7 @@
 #include "app/recovery_demo.hpp"
 #include "ui/camp_layout.hpp"
 #include "ui/interaction.hpp"
+#include "ui/inventory_layout.hpp"
 #include "ui/loot_layout.hpp"
 #include <stdexcept>
 namespace blobber {
@@ -95,7 +96,7 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
     save("loot-bag-leftovers");
     ui.openLoot(first);
     click(lootLayout::takeAll);
-    save("loot-take-all-empty");
+    save("loot-take-all-closed");
     click(lootLayout::dismiss);
     save("loot-empty-bag-removed");
     // More than ten stacks, including a potion on page two; no prerequisite pickup.
@@ -132,6 +133,19 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
         presenter.capture(directory / ("loot-distance-" + std::to_string(distance) + ".png"),
                           GetScreenWidth(), GetScreenHeight());
     }
+    // Player drops share the current-cell bag and preserve inventory until clicked.
+    ui.openInventory(rules::CharacterId{0});
+    ui.inventorySelect(48);
+    save("inventory-drop-selected");
+    click(inventoryLayout::action(ui.snapshot().inventory, InventoryAction::Drop));
+    save("inventory-drop-complete");
+    ui.closeOverlay();
+    save("player-drop-bag");
+    ui.openLoot({s.actors().snapshot().world, 2057});
+    ui.lootHover(1);
+    save("player-drop-in-loot-dialog");
+    ui.lootTakeAll();
+    save("player-drop-take-all-closed");
     for (std::uint16_t i = 0; i < 4; ++i)
         s.party().damage({i}, 3 + i);
     s.party().spendMana({3}, 1);

@@ -69,7 +69,8 @@ void nativeUi() {
                                   "items/mana_potion",
                                   "items/silhouette",
                                   "items/loot-sheet",
-                                  "camp/bonfire-sheet"};
+                                  "camp/bonfire-sheet",
+                                  "rest"};
     for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168
