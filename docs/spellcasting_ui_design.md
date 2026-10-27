@@ -90,3 +90,24 @@ live in `assets/ui/spells/`; loading/resizing/upload occurs only at startup.
 Log width changes rewrap by logical message position using fixed scratch buffers.
 
 Actual results and retained captures: [UI verification and handoff](slice10_ui_verification.md).
+
+## Review polish: badge stability and spacing (2026-10-27)
+
+Implemented, Ready for review. Keep body-derived anchors for hit feedback, but provide separate
+badge coordinates from the shared actor projection and canonical idle geometry.
+Picking still gates visibility; pose alpha bounds must never reposition badges.
+This uses fixed per-slot coordinates, no temporal smoothing, retained pointers or
+allocations. Actor/camera travel moves anchors normally. Regress with visibly
+different idle silhouettes, movement and complete occlusion.
+
+Inset spell-row images within the row border, vertically center header text using
+existing ink metrics, separate portrait and active-card borders, and add breathing
+room above/below action/log content without reducing the four-line log capacity.
+Verify with hidden native/reduced captures and focused CPU/allocation checks.
+
+`TargetAnchor` keeps its original visible-body fields and adds `badgeX/badgeTop`.
+`PickingBuffer` reuses a 256-slot coordinate array (2,048 bytes); NPC composition
+sets projected positions from fixed front-idle geometry and current travel offsets.
+The visibility scan publishes badge coordinates only for visible bodies. Badge
+collision layout uses these stable coordinates. No prepared-bank format changes.
+See [polish verification](slice10_ui_verification.md#review-polish-badge-stability-and-spacing).

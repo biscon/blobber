@@ -60,6 +60,16 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
                       : (row < 0 || row > ViewProjection::visibleRows))
             continue;
         const auto side = npcSide(npc.facing, projected.cameraX - position.x, projected.cameraY - position.y);
+        if (picking) {
+            // Fixed front-idle geometry keeps badges still as silhouettes breathe or turn.
+            // finish() publishes this position only if the body has visible pixels.
+            const auto& idle = travelSprites_[type.travelFirst[0][0]];
+            const float scale = focal / depth;
+            picking->badgeAnchor(
+                static_cast<std::uint16_t>(i), int(std::round(viewWidth * .5f + scale * lateral)),
+                int(std::round(ViewProjection::horizon +
+                               scale * (ViewProjection::eyeHeight - idle.worldHeight * idle.anchorY))));
+        }
         const int slot = traveling ? 0 : row * 2 + (subDepth > 0 ? 1 : 0);
         auto clip = static_cast<std::size_t>(animation ? animation->frames[i].clip : npc.animation);
         const auto direction = static_cast<std::size_t>(side);

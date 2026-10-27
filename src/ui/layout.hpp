@@ -18,10 +18,10 @@ constexpr UiRect card(int i) {
 }
 constexpr UiRect portrait(int i) {
     const auto r = card(i);
-    return {r.x + 3, r.y + 4, 48, 56};
+    return {r.x + 5, r.y + 4, 46, 56};
 }
 constexpr UiRect action(int i, bool = false) {
-    return {12 + i * 47, 317, 34, 32};
+    return {12 + i * 47, 319, 34, 30};
 }
 constexpr UiRect detail(int i) {
     const auto r = card(i);

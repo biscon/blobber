@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 is Ready for review (UI review correction implemented); user acceptance is pending.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 is Ready for review (badge stability and spacing correction implemented); user acceptance is pending.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -10,7 +10,7 @@ user acceptance.
 | --- | --- |
 | Latest accepted slice | 09 — Effects and concentration (2026-10-27) |
 | Active slice | 10 — Spells and class identity (Ready for review) |
-| Awaiting user review | Slice 10, including casting UI correction |
+| Awaiting user review | Slice 10, including badge stability and spacing correction |
 | Blockers | None |
 | Next eligible slice | None until slice 10 is accepted |
 | Next action | Review slice 10 correction; do not advance without acceptance |
@@ -1173,7 +1173,7 @@ selection must demonstrate distinct class roles, not just differently named dama
 mana and usage limits, legal/illegal targeting, concentration, durations, healing,
 tile areas, pause behavior, and spell use in both approach and turn-based phases.
 
-**Stage / last updated:** Ready for review, approved UI correction implemented; 2026-10-27.
+**Stage / last updated:** Ready for review, badge stability and spacing correction implemented; 2026-10-27.
 **Approved plan:** User said “Implement the plan”. See [spells design](spells_design.md).
 Expanded roster with Inflict Wounds replacing Healing Word, 4/6/14 mana, Rogue
 back-row reach, safe Arcane Recovery, three-cell areas, live target selection,
@@ -1188,7 +1188,9 @@ The approved [UI correction](spellcasting_ui_design.md) adds the compact picker,
 60%-width casting dock, direct portrait/dart/area feedback, focus preservation,
 individual invalid-target pruning and seventeen painted icons. See the latest
 [UI verification and handoff](slice10_ui_verification.md), which supersedes the
-original [verification](slice10_verification.md) for casting interactions.
+original [verification](slice10_verification.md) for casting interactions. Subsequent
+badge/spacing polish passed focused Debug 6/6 and Release 8/8, with 231 spell
+and 73 HUD captures; see the same handoff for the exact checks.
 **Acceptance:** Pending. Interactive desktop review remains unverified.
 **Next-agent handoff:** Review or correct slice 10 only. Stop at Ready for review;
 slice 11 remains Planned until explicit acceptance.

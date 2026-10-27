@@ -13,8 +13,8 @@ inline std::array<std::optional<UiRect>, 12> spellMarkerLayout(const HudSnapshot
         const auto a = h.targets.anchors[id.slot];
         if (!a.valid)
             continue;
-        UiRect r{viewX + std::clamp(a.x + 10, 1, viewWidth - width - 1),
-                 viewY + std::clamp(a.top - 8, 1, viewHeight - 13), width, 12};
+        UiRect r{viewX + std::clamp(a.badgeX + 10, 1, viewWidth - width - 1),
+                 viewY + std::clamp(a.badgeTop - 8, 1, viewHeight - 13), width, 12};
         const int preferred = r.y;
         for (int attempt = 0; attempt < 25; ++attempt) {
             bool overlap = false;

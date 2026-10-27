@@ -70,6 +70,7 @@ struct TargetAnchor {
     int x = 0, y = 0; // Viewport-local visible-body center, not a world coordinate.
     bool valid = false;
     int top = 0;
+    int badgeX = 0, badgeTop = 0; // Canonical projected geometry, independent of pose alpha bounds.
 };
 struct TargetSnapshot {
     std::array<ActorId, NpcWorld::maxInstances> ids{};

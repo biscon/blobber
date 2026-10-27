@@ -10,7 +10,9 @@ Schema 4 retains versions 1–3 compatibility. User acceptance is pending; slice
 remains Planned. The approved [casting UI revision](spellcasting_ui_design.md)
 is implemented without changing spell mechanics: independent pending casts, compact picker,
 casting dock, direct recipient feedback and a shared authoritative area query. See
-[UI verification and captures](slice10_ui_verification.md).
+[UI verification and captures](slice10_ui_verification.md). The completed review correction
+stabilizes badges with projection-based anchors and adjusts HUD spacing; see the
+[review polish design](spellcasting_ui_design.md#review-polish-badge-stability-and-spacing-2026-10-27).
 
 Implemented, **accepted and closed** (2026-10-27): slice 09
 [effects and concentration](effects_design.md), with

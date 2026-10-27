@@ -4,10 +4,57 @@
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
+#include "ui/spell_layout.hpp"
 #include <iostream>
 #include <limits>
 using namespace blobber;
 namespace {
+void stableSpellBadges() {
+    auto appearance = testAnimatedNpcAppearance();
+    // The second idle silhouette is narrower and shorter: visible bounds genuinely move.
+    for (auto& view : appearance.animations[0].views)
+        for (int y = 0; y < view[1].height; ++y)
+            for (int x = 0; x < view[1].width; ++x)
+                if (y < 3 || x < 2)
+                    view[1].pixels[y * view[1].width + x].a = 0;
+    const PreparedNpcs prepared({appearance});
+    const Map room({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
+    const Player camera{{3, 5}, Heading::North};
+    auto actors = testActors(room, camera.cell, {"test"},
+                             {{{0}, {3, 2}, {0, 0}, Heading::South}, {{0}, {3, 2}, {1, 0}, Heading::South}});
+    NpcAnimator animator(actors, {npcTimings(appearance)});
+    PickingBuffer picking;
+    Frame frame;
+    std::array<float, viewWidth> walls;
+    walls.fill(std::numeric_limits<float>::infinity());
+    HudSnapshot hud;
+    hud.magic.missiles = true;
+    hud.magic.affectedCount = 2;
+    hud.magic.affected[0] = actors.id(0);
+    hud.magic.affected[1] = actors.id(1);
+    const auto draw = [&](std::uint64_t time) {
+        animator.setTime(time);
+        picking.clear();
+        prepared.compose(actors, camera, 0, walls, frame, &animator.snapshot(), &picking);
+        picking.finish(&actors);
+        hud.targets = picking.targets();
+        return spellMarkerLayout(hud);
+    };
+    const auto first = draw(0);
+    const auto body = hud.targets.anchors[0];
+    const auto second = draw(60);
+    check(body.valid && hud.targets.anchors[0].top != body.top,
+          "Idle fixture changes visible silhouette bounds");
+    for (unsigned i = 0; i < 2; ++i)
+        check(first[i] && second[i] && first[i]->x == second[i]->x && first[i]->y == second[i]->y,
+              "Badge positions and collision layout remain stable across idle poses");
+    check(actors.move(actors.id(0), {2, 2}, {0, 0}, camera.cell).changed, "Badge fixture moves actor");
+    const auto moved = draw(120);
+    check(moved[0] && moved[0]->x != first[0]->x, "Badge follows actual actor movement");
+    walls.fill(0);
+    const auto hidden = draw(180);
+    check(!hidden[0] && !hidden[1], "Projected badge anchors never reveal fully occluded bodies");
+}
 const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
 ActorWorld world() {
     return testActors(
@@ -217,6 +264,7 @@ int main() {
         transitions(renderer, timing);
         occludedFlash(renderer, timing);
         spellFloorPreview(renderer);
+        stableSpellBadges();
         std::cout << "Actor presentation checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

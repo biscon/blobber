@@ -468,7 +468,7 @@ void markerLayoutAndLog() {
     h.targets.world = 55;
     for (unsigned i = 0; i < 3; ++i) {
         h.magic.affected[i] = {static_cast<std::uint16_t>(i), 55};
-        h.targets.anchors[i] = {250, 100, true, 90};
+        h.targets.anchors[i] = {250, 100, true, 90, 250, 90};
     }
     const auto layout = spellMarkerLayout(h);
     for (std::size_t i = 0; i < 3; ++i) {

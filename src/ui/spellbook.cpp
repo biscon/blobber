@@ -54,7 +54,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         const auto r = hudLayout::spellEntry(int(i - m.offset));
         const bool available = e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
         box(r, i == m.cursor ? teal : edge);
-        picture(UiArt::spellIcon(e.kind, e.feature), {r.x + 2, r.y + 2, 16, 16},
+        picture(UiArt::spellIcon(e.kind, e.feature), {r.x + 2, r.y + 2, r.height - 4, r.height - 4},
                 available ? WHITE : Color{100, 108, 106, 255});
         clipped(e.name, r.x + 21, r.y + 4, 89, available ? gold : muted, UiTextStyle::Label);
         std::snprintf(line, sizeof(line), "%d", e.cost);

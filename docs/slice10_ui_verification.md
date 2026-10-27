@@ -123,3 +123,47 @@ and in-process scripted input were used; no OS mouse, keyboard or focus automati
 
 Stop at this review checkpoint. Preserve the original handoff's event-batch,
 clock, capacity and ownership contracts. Do not begin slice 11 without acceptance.
+
+## Review polish: badge stability and spacing
+
+Implemented 2026-10-27; Ready for review. Spellbook icons now have a two-art-pixel
+inset within their rows. Header text uses font ink bounds for vertical centering;
+the gear shares the header center. Portraits are inset farther from the active
+card border, leaving a visible gap. Action and log headings have more top padding;
+footer/last-line spacing clears the bottom border while preserving four log lines.
+
+Badges use projected actor positions and canonical idle geometry, separately from
+animated visible-body bounds. A regression fixture changes silhouette width and
+height between idle frames, checks stable badge/collision positions, then checks
+actual movement and full occlusion. Picking and outline visibility still follow
+the visible body; no smoothing delay or per-frame allocation was introduced.
+
+Executed after these changes:
+
+- Debug build; focused `spells|hud|commands|picking|actor_render|frame_allocations`:
+  **6/6**, 21.69 s.
+- Release build; the same suite plus `render|npc`: **8/8**, 3.79 s.
+- Hidden application-owned `--capture-spells /tmp/blobber-ui-polish`: **231 PNGs**.
+- Hidden `--capture-hud /tmp/blobber-hud-polish`: **73 PNGs**.
+- Inspected native/reduced picker, selection and ordinary HUD captures. For the
+  fixed simulation missile scenario, the badge region (native x=300..999,
+  y=80..319) is pixel-identical at animation offsets 0/200/400/600 ms, while the
+  creature region changes at each offset.
+- `git diff --check` passed. No desktop input/focus automation was used.
+
+The Debug build was warning-free. Release emitted GCC 16 array-bounds diagnostics
+from the unchanged `std::sort` in `EffectController::apply` (effects.cpp:200);
+`validate()` rejects counts outside the fixed three-target capacity before that
+call. This review did not modify effect sorting. Full suites and sanitizers above
+are historical results from the preceding implementation, not rerun for this polish.
+Interactive review remains pending.
+
+Selected captures are retained in [slice10-ui-polish](screenshots/slice10-ui-polish/):
+[picker](screenshots/slice10-ui-polish/spell-magic_missile-book.png),
+[reduced picker](screenshots/slice10-ui-polish/spell-magic_missile-book-1280.png),
+[missile selection](screenshots/slice10-ui-polish/spell-magic_missile-target.png),
+[idle 200](screenshots/slice10-ui-polish/spell-magic_missile-idle-200.png),
+[idle 400](screenshots/slice10-ui-polish/spell-magic_missile-idle-400.png),
+[idle 600](screenshots/slice10-ui-polish/spell-magic_missile-idle-600.png),
+[Bless borders](screenshots/slice10-ui-polish/spell-bless-target-1280.png), and
+[ordinary HUD](screenshots/slice10-ui-polish/hud-impact-hit-handoff.png).

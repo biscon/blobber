@@ -62,7 +62,7 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
                                                : red,
             UiTextStyle::Small);
     if (c.concentrating) {
-        fill({r.x + 3, r.y + 4, 6, 6}, blue);
+        fill({portrait.x, portrait.y, 6, 6}, blue);
     }
     box(hudLayout::detail(i));
     label("i", hudLayout::detail(i), gold, UiTextStyle::Small);
@@ -72,7 +72,8 @@ void HudPainter::log(const HudSnapshot& h, bool expanded) const {
                    : h.magic.casting() ? hudLayout::castingLog
                                        : hudLayout::log;
     box(r, expanded ? gold : edge);
-    text(expanded ? "COMBAT HISTORY" : "COMBAT LOG", r.x + 8, r.y + 2, gold, UiTextStyle::Display);
+    text(expanded ? "COMBAT HISTORY" : "COMBAT LOG", r.x + 8, r.y + (expanded ? 2 : 4), gold,
+         UiTextStyle::Display);
     if (expanded) {
         box(hudLayout::closeOverlay);
         label("X", hudLayout::closeOverlay, gold);
@@ -92,8 +93,8 @@ void HudPainter::log(const HudSnapshot& h, bool expanded) const {
     char line[CombatLog::messageBytes];
     for (std::size_t n = begin; n < end; ++n)
         if (h.log.line(n, columns, line, sizeof(line)))
-            clipped(line, r.x + 8, r.y + 13 + int(n - begin) * 10, r.width - 16,
-                    n + 1 == count ? gold : hudInk::text, UiTextStyle::Log);
+            clipped(line, r.x + 8, r.y + (expanded ? 13 : 15) + int(n - begin) * (expanded ? 10 : 9),
+                    r.width - 16, n + 1 == count ? gold : hudInk::text, UiTextStyle::Log);
 }
 void drawUI(const MovementState& state, bool debug, const Map& map, const HudSnapshot* h,
             const UiFonts* fonts, const UiArt* art) {
@@ -101,16 +102,22 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     if (!fonts)
         ClearBackground(background);
     p.box(hudLayout::header, gold);
-    p.text("STONE & SHADOW", 12, 3, gold, UiTextStyle::Display);
+    const auto headerText = [&](const char* value, int x, Color color, UiTextStyle style) {
+        const auto r = hudLayout::header;
+        p.text(value, x, fonts ? fonts->centeredY(value, float(r.y), float(r.height), style) : float(r.y),
+               color, style);
+    };
+    headerText("STONE & SHADOW", 12, gold, UiTextStyle::Display);
     if (h && h->demo)
-        p.text("UI DEMO / SAMPLE", 175, 4, blue, UiTextStyle::Small);
+        headerText("UI DEMO / SAMPLE", 175, blue, UiTextStyle::Small);
     char line[96];
     std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .", headingName(state.player.heading));
-    p.text(line, 245, 3, gold, UiTextStyle::Small);
+    headerText(line, 245, gold, UiTextStyle::Small);
     if (!h || !h->demo)
-        p.text("Depth I", 449, 3, gold, UiTextStyle::Small);
+        headerText("Depth I", 449, gold, UiTextStyle::Small);
     if (!fonts) {
-        const Vector2 center{float(hudLayout::gear.x + 7), float(hudLayout::gear.y + 6)};
+        const Vector2 center{hudLayout::gear.x + hudLayout::gear.width * .5f,
+                             hudLayout::gear.y + hudLayout::gear.height * .5f};
         for (int tooth = 0; tooth < 8; ++tooth)
             DrawRectanglePro({center.x, center.y, 2, 3}, {1, 5}, float(tooth * 45), gold);
         DrawCircleV(center, 3.5f, gold);
@@ -154,7 +161,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                       h->combat.resolvingAction  ? "  /  RESOLVING"
                       : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
                                                  : "");
-        p.clipped(line, 12, 306, 284, gold, UiTextStyle::Display);
+        p.clipped(line, 12, 308, 284, gold, UiTextStyle::Display);
         for (int i = 0; i < 6; ++i) {
             const auto r = hudLayout::action(i);
             const auto action = dockActions[i];
@@ -181,7 +188,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             : h->production && h->combat.awaitingAction              ? "Click a reachable enemy to attack."
             : h->production && h->combat.phase == CombatPhase::Turns ? "Waiting for the active participant."
                                                                      : "WASD move / Q E turn / F1 map";
-        p.clipped(hint, 12, 350, 284, muted, UiTextStyle::Small);
+        p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
     if (h->production && (h->combat.knownDirections || h->combat.pendingCount)) {
         char threats[96];

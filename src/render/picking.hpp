@@ -13,7 +13,9 @@ class PickingBuffer {
     void clear() noexcept {
         std::fill_n(pixels_.get(), viewWidth * viewHeight, empty);
         targets_ = {};
+        badgeAnchors_ = {};
     }
+    void badgeAnchor(std::uint16_t slot, int x, int top) noexcept { badgeAnchors_[slot] = {x, top}; }
     void write(std::size_t pixel, std::uint16_t slot) noexcept { pixels_[pixel] = slot; }
     std::uint16_t slot(int x, int y) const noexcept {
         return x >= 0 && x < viewWidth && y >= 0 && y < viewHeight ? pixels_[y * viewWidth + x] : empty;
@@ -45,8 +47,12 @@ class PickingBuffer {
             if (seen[i]) {
                 if (actors->snapshot().actors[i].life == ActorLife::Alive)
                     targets_.ids[targets_.count++] = actors->id(i);
-                targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2, (minimum[i].y + maximum[i].y) / 2,
-                                       true, minimum[i].y};
+                targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2,
+                                       (minimum[i].y + maximum[i].y) / 2,
+                                       true,
+                                       minimum[i].y,
+                                       badgeAnchors_[i].x,
+                                       badgeAnchors_[i].y};
             }
     }
     std::optional<ActorId> pick(int x, int y) const noexcept {
@@ -61,5 +67,6 @@ class PickingBuffer {
   private:
     std::unique_ptr<std::uint16_t[]> pixels_;
     TargetSnapshot targets_;
+    std::array<Cell, NpcWorld::maxInstances> badgeAnchors_{};
 };
 } // namespace blobber

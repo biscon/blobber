@@ -49,16 +49,16 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         CommandController ui(s, timings);
         const unsigned caster = rule.casting == rules::Casting::Wisdom ? 1 : 3;
         bool focused = true;
-        auto refresh = [&] {
-            animator.setTime(s.timeMs());
+        auto refresh = [&](std::uint64_t animationOffset = 0) {
+            animator.setTime(s.timeMs() + animationOffset);
             const auto area = ui.floorPreview();
             frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
                           &s.combat().attacks(), s.timeMs(), &area);
             ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
                        s.movement().transition.active(), false, focused);
         };
-        auto capture = [&](const std::string& suffix) {
-            refresh();
+        auto capture = [&](const std::string& suffix, std::uint64_t animationOffset = 0) {
+            refresh(animationOffset);
             presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(),
                               frames.picking());
             const auto name = std::string("spell-") + rule.id + (sparse ? "-sparse-" : "-") + suffix;
@@ -134,6 +134,9 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         }
         capture("target");
         if (kind == rules::SpellKind::MagicMissile) {
+            // Keep simulation still while exercising every idle pose in the rendered UI.
+            for (unsigned offset : {200u, 400u, 600u})
+                capture("idle-" + std::to_string(offset), offset);
             const auto first = ui.snapshot().magic.pending.enemies[0];
             ui.magicEnemy(first);
             capture("limit");
