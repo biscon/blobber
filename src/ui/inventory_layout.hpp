@@ -2,15 +2,15 @@
 #include "game/inventory_ui.hpp"
 #include "ui/layout.hpp"
 namespace blobber::inventoryLayout {
-constexpr UiRect panel{4, 2, 632, 356}, close{607, 9, 20, 17};
+constexpr UiRect panel{4, 2, 632, 356}, close{606, 9, 20, 17};
 constexpr UiRect tab(int i) {
-    return {12 + i * 153, 33, 149, 28};
+    return {14 + i * 154, 33, 150, 28};
 }
 constexpr UiRect cell(int i) {
     return {178 + (i % 8) * 38, 83 + (i / 8) * 38, 35, 35};
 }
 constexpr UiRect equipment(int i) {
-    return i == 0   ? UiRect{68, 143, 40, 40}
+    return i == 0   ? UiRect{71, 143, 40, 40}
            : i == 1 ? UiRect{16, 170, 40, 40}
            : i == 2 ? UiRect{120, 170, 40, 40}
                     : UiRect{16, 237, 40, 40};

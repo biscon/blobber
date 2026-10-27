@@ -194,3 +194,13 @@ Selected replacement review images:
 
 Reproduce with `cmake-build-debug/blobber --capture-inventory DIRECTORY --seed 5`.
 Continue review corrections within slice 11; do not start slice 12 until acceptance.
+
+Follow-up alignment review: Body moved 9 native pixels right to the silhouette's
+centerline. All four character boxes are now equally wider, with their original
+gaps preserved, equal panel insets, and edges aligned with the title and close
+button. The close button moved 3 native pixels left to keep those constraints exact.
+The Debug application build and inventory test pass; all 53 hidden captures were
+regenerated and the retained images above refreshed. Inspected native and reduced
+examples, including the [matching focus view](screenshots/slice11-review/inventory-focus.png).
+Interactive review remains with the user; no broader tests were needed for this
+shared-layout-only adjustment.

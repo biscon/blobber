@@ -157,6 +157,13 @@ The 48-pixel bold control font is loaded once alongside the existing size-specif
 atlases and destroyed with UiFonts. Shared layout functions compact visible action
 rows identically for painting and hit testing.
 
+Follow-up alignment correction: center Body at the silhouette's x=91 axis.
+Use equal 150-unit character boxes with the existing 4-unit gaps, spanning x=14
+to x=626. This aligns the row with the title, leaves equal 10-unit panel insets,
+and aligns its right edge with the close button (shifted left by one unit).
+Drawing and pointer targets continue to use the shared layout rectangles. Verify
+with the existing inventory test and hidden native/reduced captures.
+
 I remains the inventory shortcut (already mapped, now regression-tested); M replaces
 F1 for map toggling. Remove the obsolete M/S inventory command bindings. Update the
 on-screen map hints and README. Replace the dock potion artwork with a separately
