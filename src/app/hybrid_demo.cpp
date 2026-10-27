@@ -72,6 +72,33 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
         };
         if (mode == 3)
             s.actors().damage(s.actors().id(0), 4, 0);
+        if (mode == 9) {
+            s.move(Action::Forward);
+            ui.record(s.update(0, false));
+            save("contact");
+            for (int step = 0; step < 400; ++step) {
+                const auto st = s.combat().snapshot();
+                if (st.awaitingAction) {
+                    PartyCommand command;
+                    command.character = *st.activeCharacter;
+                    command.action = PartyAction::Defend;
+                    command.world = st.world;
+                    command.turn = st.turn;
+                    s.submit(command);
+                    ui.record(s.events());
+                    continue;
+                }
+                const auto events = s.update(.05, false);
+                ui.record(events);
+                if (events.step.event != CombatEvent::AttackStarted || !events.step.enemyAttack)
+                    continue;
+                save("windup");
+                ui.record(s.update(events.step.impactMs / 1000.0, false));
+                save("strike");
+                return;
+            }
+            throw std::runtime_error("Side-contact capture did not reach enemy attack");
+        }
         if (mode >= 10) {
             s.actors().attack(s.actors().id(0), 0, true);
             for (unsigned ms : {0u, 599u, 600u, 999u, 1000u}) {
@@ -248,6 +275,13 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
             }
         const auto name = "front-band-" + std::to_string(d);
         run(name.c_str(), p, std::move(line), 8);
+        for (int side : {-1, 1}) {
+            const auto f = forward(p.heading);
+            const auto name = "diagonal-contact-" + std::to_string(d) + "-" + std::to_string(side);
+            run(name.c_str(), {p.cell + f * -1, p.heading},
+                {{t, p.cell + f + right(p.heading) * side, {0, 0},
+                  static_cast<Heading>((d + 1) % 4)}}, 9);
+        }
     }
     run("demo", hybridDemoSpawn(), source.instances(), 7);
     std::vector<NpcInstance> archers;

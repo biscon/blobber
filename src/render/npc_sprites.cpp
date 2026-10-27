@@ -13,6 +13,19 @@ NpcSide npcSide(Heading facing, float x, float y) {
         return front >= 0 ? NpcSide::Front : NpcSide::Back;
     return side >= 0 ? NpcSide::Right : NpcSide::Left;
 }
+namespace {
+NpcSide viewSide(const NpcInstance& npc, ActorPosition position, Player player, int phase) {
+    // Facing is defined between cell centers. Subcell placement and camera setback
+    // affect projection, not orientation: either can otherwise turn a diagonal
+    // front-facing attack into a missing side clip (and therefore idle fallback).
+    const float travelX = position.x - (npc.cell.x + .25f + npc.subcell.x * .5f);
+    const float travelY = position.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
+    const auto r = right(player.heading);
+    const float strafe = float(phase) / ViewProjection::strafeSteps;
+    return npcSide(npc.facing, player.cell.x - npc.cell.x + r.x * strafe - travelX,
+                   player.cell.y - npc.cell.y + r.y * strafe - travelY);
+}
+} // namespace
 void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
                            const std::array<float, viewWidth>& walls, Frame& frame,
                            const NpcAnimationSnapshot* animation, PickingBuffer* picking) const {
@@ -59,7 +72,7 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         if (traveling ? (depth < .15f || depth > ViewProjection::visibleRows + .65f)
                       : (row < 0 || row > ViewProjection::visibleRows))
             continue;
-        const auto side = npcSide(npc.facing, projected.cameraX - position.x, projected.cameraY - position.y);
+        const auto side = viewSide(npc, position, player, phase);
         if (picking) {
             // Fixed front-idle geometry keeps badges still as silhouettes breathe or turn.
             // finish() publishes this position only if the body has visible pixels.
@@ -178,8 +191,7 @@ ProjectedAttachment PreparedNpcs::attachment(const NpcInstance& npc, ActorPositi
     const auto p = projectNpc(npc, position, player, phase, type.edgeHalfWidth);
     if (p.depth < .1f || p.depth > ViewProjection::visibleRows + 1)
         return {};
-    const auto side =
-        static_cast<std::size_t>(npcSide(npc.facing, p.cameraX - position.x, p.cameraY - position.y));
+    const auto side = static_cast<std::size_t>(viewSide(npc, position, player, phase));
     auto clip = release ? static_cast<std::size_t>(NpcAnimation::RangedAttack) : 0;
     if (!type.count[clip][side])
         clip = 0;

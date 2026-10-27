@@ -309,3 +309,45 @@ compression, blended at the row edges to avoid abrupt transitions. Verification
 covers all headings/slots, blocked corners,
 row protection, front persistence, diagonal archer escape, center-full routing,
 allocations and hidden shipped-art captures.
+
+## Diagonal-contact animation correction (2026-10-27)
+
+Implemented after slice 10 acceptance; interactive user review of this correction
+is pending. Slice 10 stays accepted/closed and slice 11 stays unstarted.
+
+Approaching a goblin from the side could enter initiative with the goblin visibly
+side-on. Its attack resolved normally but displayed idle artwork. `CombatController`
+already rotates enemies toward the party at `begin` and `enemyAttack`. The mismatch
+was in rendering: `headingToward` compares cell centers, while directional sprite
+selection compared the actual subcell position against a camera set back 0.4 cells.
+At a diagonal, these vectors could choose different cardinal sectors. The melee
+appearance has only front attack frames, so the side sector correctly fell back to
+idle, concealing the attack.
+
+`PreparedNpcs` now shares a cell-based direction query between body composition and
+projectile attachments. It removes the fixed subcell displacement from the actor's
+presented position and uses the party cell center without camera setback. Travel
+and strafe offsets remain interpolated. Thus stationary enemies facing the party
+select front artwork consistently across all four subcells, including diagonal
+contact. Ordinary front/back/side selection and missing-direction fallback remain;
+the rule applies consistently to all clips, rather than overriding attacks alone.
+Perspective position, edge fitting, shadows, picking, world occupancy, facing rules,
+attack timing and damage are unchanged. The query uses constant scalar work, adds
+no persistent state or allocation, and reuses the existing prepared banks.
+
+Verification:
+
+- A generated-art integration regression approaches sideways-facing melee enemies
+  in all four party headings, three front cells and four subcells (48 cases). It
+  runs initiative to an actual enemy attack and compares rendered pixels against
+  idle at the same timestamp. It failed with the old direction query and passes
+  with the correction. Existing side/back fallback and interpolated travel checks
+  also pass.
+- Debug build and full CTest: 26/26 passed (56.61 s), including frame allocation
+  guards. Hidden GPU lifecycle/native-art smoke check passed.
+- `--capture-hybrid` adds eight diagonal approach scenarios (four headings, both
+  sides), with contact, windup and strike captures. The east/right case reproduces
+  the reported layout; its three captures were visually inspected. Retained images:
+  [facing the party at contact](screenshots/side-contact-fix/east-contact.png) and
+  [front strike at impact](screenshots/side-contact-fix/east-strike.png).
+- No OS input, focus changes or interactive desktop automation were used.

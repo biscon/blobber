@@ -1,5 +1,16 @@
 # System design
 
+Implemented post-acceptance [diagonal-contact animation fix](hybrid_encounter_design.md#diagonal-contact-animation-correction-2026-10-27):
+Combat already faces NPCs toward the party at initiative
+entry and attack acceptance. Sprite direction now uses that same cell-center geometry,
+including interpolated travel/strafe offsets, rather than the subcell placement and
+camera setback used to project the body. Bodies and projectile attachments share
+the direction query; projection, occupancy, clocks and prepared banks stay unchanged.
+This is constant work per NPC without new storage or allocations. All 26 Debug suites
+pass, including 48 approach/render combinations, side/back fallback, travel and
+allocation checks. Hidden GPU checks and shipped-art captures also pass. Slice 10's
+acceptance remains recorded below; this correction does not start slice 11.
+
 Implemented correction, accepted by the user on 2026-10-27: [native-resolution HUD and impact alerts](native_hud_design.md), with [verification](native_hud_verification.md).
 
 Implemented, **accepted and closed** (2026-10-27): slice 10

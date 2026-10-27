@@ -1,7 +1,9 @@
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
 #include "support/actor_fixtures.hpp"
+#include "support/combat_fixtures.hpp"
 #include "support/check.hpp"
+#include "support/hybrid_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
 #include <chrono>
@@ -354,6 +356,58 @@ void triggeredAttacks() {
     check(fallback.snapshot().frames[0].clip == NpcAnimation::Idle,
           "Missing entire attack clip safely retains idle");
 }
+void sideContactAttacks() {
+    const auto room = hybridRoom();
+    const auto catalog = hybridCatalog(false);
+    const auto appearance = testAnimatedNpcAppearance();
+    const auto timings = npcTimings(appearance);
+    const SceneRenderer renderer(testMaterials(), {appearance});
+    Frame attack, idle;
+    for (int heading = 0; heading < 4; ++heading) {
+        const Player contact{{6, 6}, static_cast<Heading>(heading)};
+        const auto f = forward(contact.heading), r = right(contact.heading);
+        const Player start{contact.cell + f * -1, contact.heading};
+        for (int side : {-1, 0, 1}) {
+            for (int slot = 0; slot < 4; ++slot) {
+                NpcInstance npc{{0}, contact.cell + f + r * side, {slot % 2, slot / 2},
+                                static_cast<Heading>((heading + 1) % 4)};
+                npc.monster = catalog.findMonster("swordsman");
+                NpcWorld placements(room, start.cell, {"goblin"}, {npc});
+                GameSession session(room, catalog, placements, 5, start, false, {timings});
+                session.setAnimated(false);
+                session.move(Action::Forward);
+                check(session.combat().snapshot().phase == CombatPhase::Contact,
+                      "Side approach enters contact");
+                NpcAnimator animator(session.actors(), {timings});
+                bool attacked = false;
+                for (int step = 0; step < 400 && !attacked; ++step) {
+                    if (session.combat().snapshot().awaitingAction) {
+                        session.submit(turnCommand(session));
+                        continue;
+                    }
+                    const auto event = session.update(.05, false).step;
+                    if (event.event != CombatEvent::AttackStarted)
+                        continue;
+                    check(event.enemyAttack && event.kind == rules::AttackKind::Melee,
+                          "Contact enemy starts melee attack");
+                    animator.setTime(session.timeMs());
+                    const auto& pose = animator.snapshot();
+                    check(pose.frames[0].clip == NpcAnimation::Attack,
+                          "Accepted melee attack selects its animation");
+                    renderer.compose(room, session.movement().player, attack, &session.actors(), &pose);
+                    auto idlePose = pose;
+                    idlePose.frames[0].clip = NpcAnimation::Idle;
+                    idlePose.frames[0].active = idlePose.frames[0].idle;
+                    renderer.compose(room, session.movement().player, idle, &session.actors(), &idlePose);
+                    check(!same(attack, idle),
+                          "Every contact heading/cell/subcell renders attack pixels, not side idle fallback");
+                    attacked = true;
+                }
+                check(attacked, "Side-approached enemy takes its attack turn");
+            }
+        }
+    }
+}
 void rendering() {
     const auto appearance = testAnimatedNpcAppearance();
     const auto npcs = world(NpcAnimation::Attack);
@@ -455,6 +509,7 @@ int main(int argc, char** argv) {
         travelRendering();
         staggeredIdle();
         triggeredAttacks();
+        sideContactAttacks();
         rendering();
         std::cout << "NPC animation checks passed\n";
     } catch (const std::exception& error) {
