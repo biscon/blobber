@@ -95,17 +95,35 @@ void CommandController::refreshInventoryActions() noexcept {
 void CommandController::inventoryFeedback(const char* s) noexcept {
     std::snprintf(state_.inventory.feedback.data(), state_.inventory.feedback.size(), "%s", s);
 }
-void CommandController::openInventory(std::optional<rules::CharacterId> character) noexcept {
-    if (!session_ || state_.suspended)
+void CommandController::openInventory(std::optional<rules::CharacterId> character,
+                                      CharacterPage page) noexcept {
+    if (state_.suspended)
         return;
     const auto selected = character.value_or(state_.selection.character);
     closeOverlay();
-    cancel();
+    if (page == CharacterPage::Inventory || !state_.magic.casting())
+        cancel();
     auto& i = state_.inventory;
     i = {};
     i.open = true;
+    i.page = page;
     i.character = party_.character(selected) ? selected : rules::CharacterId{0};
-    session_->clearPending();
+    if (session_)
+        session_->clearPending();
+    refreshInventory();
+}
+void CommandController::inventoryPage(CharacterPage page) noexcept {
+    auto& i = state_.inventory;
+    if (!i.open || i.page == page)
+        return;
+    i.page = page;
+    if (page == CharacterPage::Inventory && state_.magic.casting())
+        cancel();
+    i.mode = InventoryMode::Browse;
+    i.pointerDown = i.dragging = i.splitDrag = false;
+    i.source = {};
+    i.pending = {};
+    i.feedback = {};
     refreshInventory();
 }
 void CommandController::inventoryCharacter(rules::CharacterId c) noexcept {
@@ -157,6 +175,8 @@ void CommandController::refreshInventory() noexcept {
                            : InventoryError::Unsafe;
     }
     refreshInventoryActions();
+    if (i.open && i.page == CharacterPage::Character)
+        refreshCharacterSheet();
     if (i.itemTargeting && session_) {
         for (std::size_t n = 0; n < 4; ++n) {
             auto command = i.itemCommand;
@@ -196,6 +216,8 @@ void CommandController::inventoryExecute(const InventoryRequest& r) noexcept {
 }
 void CommandController::inventoryDrop(ItemLocation dest, bool split) noexcept {
     auto& i = state_.inventory;
+    if (!session_ || i.page != CharacterPage::Inventory)
+        return;
     const auto h = i.source ? i.source : i.selected;
     const auto* s = party_.inventory().stack(h);
     if (!s) {
@@ -236,7 +258,7 @@ void CommandController::inventoryDrop(ItemLocation dest, bool split) noexcept {
 }
 void CommandController::inventoryAction(InventoryAction action) noexcept {
     auto& i = state_.inventory;
-    if (!i.open || !session_)
+    if (!i.open || !session_ || i.page != CharacterPage::Inventory)
         return;
     refreshInventoryActions();
     const auto index = static_cast<unsigned>(action);

@@ -59,14 +59,16 @@ working-directory setup is required: assets are copied beside the executable.
 | 2 / shield | Immediately defend |
 | 3 / bow | Select ranged attack |
 | 4 / spell | Browse paused Spells / Abilities, then resume to select targets |
-| I / 5 / backpack / inspector Inventory | Open the paused inventory for the selected character |
-| Inventory 1–4 / character tabs | Inspect another bag; choose a transfer recipient |
+| I / 5 / backpack | Open the paused fullscreen panel on Inventory for the selected character |
+| Portrait i | Open the fullscreen panel on Character for that portrait |
+| Inventory / Character top tabs | Switch pages while keeping the viewed character |
+| Fullscreen 1–4 / character strip | View another character; choose a recipient during inventory transfer |
 | Drag / Shift-drag | Move, swap, merge, equip, or transfer / choose a split quantity on release |
 | Inventory E / T / U | Applicable Equip/Unequip, Transfer, and Use Potion actions |
 | Inventory arrows / Tab / Enter | Select a cell / switch bag and equipment / confirm selection or split quantity |
 | Inventory wheel / Page Up / Page Down | Read further description pages; wheel adjusts a split quantity |
 | 6 / aid | Arm Aid; click a dying ally's portrait to commit |
-| Portrait click | Select a character in real time, or a friendly spell/potion/Aid target; use i for details |
+| Portrait click | Select a character in real time, or a friendly spell/potion/Aid target; use i for Character |
 | Spellbook Up / Down, Enter | Browse descriptions, then choose a spell or ability |
 | Spell targeting Left / Right, Up / Down, Enter | Move cursor, add/toggle or remove recipient, then cast |
 | Casting B / Back | Return to the picker at the remembered scroll position |
@@ -117,6 +119,14 @@ to its source cell. Drag to another character's tab to transfer; Shift-drag open
 the quantity dialog with one selected. Escape cancels the pending operation.
 Drop onto the same item to merge stacks. The sidebar shows only actions relevant
 to the selected item; temporarily blocked actions are dimmed with a reason.
+
+The Character tab shares the character strip and shows live resources, effective
+AC, equipped weapon attacks/damage, ability scores and saves, proficiencies, class
+features and effects. Switching tabs preserves the viewed character and cancels
+unfinished inventory operations. Character inspection preserves a pending spell;
+entering Inventory cancels targeting. XP shows the stored value and progress toward
+level 2 (300 XP); XP awards and the future level-up flow are not implemented yet.
+See the [approved character sheet design](docs/character_sheet_design.md).
 
 Use a potion from its owner's inventory, then click a living ally or confirm with
 Enter. Healing restores 2d4+2 HP, including reviving a dying ally; mana restores two.

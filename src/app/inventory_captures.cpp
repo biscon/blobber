@@ -60,15 +60,28 @@ void captureInventory(const Map& map, const rules::Catalog& catalog, const NpcWo
     ui.record(session.update(0, false));
     refresh();
     save("inventory-backpack-dock", true);
+    input(click(hudLayout::detail(2)));
+    require(ui.snapshot().inventory.open && ui.snapshot().inventory.page == CharacterPage::Character &&
+            ui.snapshot().inventory.character.index == 2);
+    save("character-portrait-entry", true);
+    input(click(inventoryLayout::inventoryPage));
+    save("inventory-from-character", true);
+    input(click(inventoryLayout::close));
     UiInput open;
     open.pressed[static_cast<std::size_t>(UiKey::Inventory)] = true;
     input(open);
     constexpr const char* names[]{"inventory-fighter", "inventory-cleric", "inventory-rogue",
                                   "inventory-wizard"};
+    constexpr const char* sheets[]{"character-fighter", "character-cleric", "character-rogue",
+                                   "character-wizard"};
     for (std::uint16_t n = 0; n < 4; ++n) {
         input(click(inventoryLayout::tab(n)));
         input(click(inventoryLayout::equipment(n == 3 ? 1 : 0)));
         save(names[n], true);
+        input(click(inventoryLayout::characterPage));
+        save(sheets[n], true);
+        input(click(inventoryLayout::inventoryPage));
+        require(ui.snapshot().inventory.character.index == n);
     }
     input(click(inventoryLayout::tab(1)));
     input(click(inventoryLayout::cell(find({1}, "holy_symbol"))));
@@ -109,6 +122,9 @@ void captureInventory(const Map& map, const rules::Catalog& catalog, const NpcWo
     input(click(inventoryLayout::action(ui.snapshot().inventory, InventoryAction::Equip)));
     require(!session.party().equipped({0}, EquipmentSlot::OffHand));
     save("inventory-shield-removed", true);
+    input(click(inventoryLayout::characterPage));
+    save("character-shield-removed", true);
+    input(click(inventoryLayout::inventoryPage));
     input(click(inventoryLayout::action(ui.snapshot().inventory, InventoryAction::Equip)));
     require(session.party().equipped({0}, EquipmentSlot::OffHand));
     input(click(inventoryLayout::cell(find({0}, "healing_potion"))));
@@ -131,6 +147,16 @@ void captureInventory(const Map& map, const rules::Catalog& catalog, const NpcWo
     input(click(hudLayout::card(3)));
     require(session.party().character({3})->mana == 3);
     save("inventory-mana-result");
+    EffectRequest effect;
+    effect.world = session.actors().snapshot().world;
+    effect.caster = {3};
+    effect.kind = EffectKind::MageArmor;
+    effect.targets[0] = rules::CharacterId{3};
+    effect.count = 1;
+    require(bool(session.applyEffect(effect)));
+    ui.inspect(3);
+    save("character-active-effects", true);
+    input(click(inventoryLayout::close));
     // Actual full bag: clone only the starting arrow quantity during preparation, then
     // use production splits to fill every cell. No invented snapshot or frame mutation.
     std::vector<rules::AttackDefinition> attacks;

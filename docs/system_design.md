@@ -1,5 +1,12 @@
 # System design
 
+Implemented, **Ready for review**: approved [tabbed inventory and character sheet](character_sheet_design.md),
+replacing the portrait inspector while preserving the current inventory layout.
+The shared paused overlay uses fixed snapshots of live stats, equipment, resources,
+features and effects; XP remains read-only. Both entry routes and tab directions
+preserve character identity. [Verification and captures](character_sheet_verification.md)
+record focused Debug/Release, allocation and hidden GPU checks. Slice 11 acceptance remains pending.
+
 Implemented, **Ready for review**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
 
 Implemented, **Ready for review** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).

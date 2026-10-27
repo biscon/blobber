@@ -252,6 +252,10 @@ int main() {
         for (int iteration = 0; iteration < 100; ++iteration) {
             inventoryUi.refresh({}, false, false, true);
             inventoryUi.openInventory(rules::CharacterId{2});
+            inventoryUi.inventoryPage(CharacterPage::Character);
+            inventoryUi.refresh({}, false, false, true);
+            okay &= inventoryUi.snapshot().inventory.sheet.proficiency == 2;
+            inventoryUi.inventoryPage(CharacterPage::Inventory);
             inventoryUi.inventorySelect(arrowCell);
             inventoryUi.inventoryDrop({{2}, 47}, true);
             okay &= inventoryUi.snapshot().inventory.mode == InventoryMode::Quantity;

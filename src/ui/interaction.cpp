@@ -59,9 +59,6 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                 commands.closeOverlay();
             if (click && inside(hudLayout::logLatest))
                 commands.latestLog();
-        } else if (state.inspected) {
-            if (click && inside(hudLayout::detailsClose))
-                commands.closeOverlay();
         } else if (state.menuOpen) {
             if (click && (inside(hudLayout::resume) || inside(hudLayout::gear)))
                 commands.closeOverlay();

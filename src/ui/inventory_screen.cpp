@@ -86,7 +86,16 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     const auto& i = h.inventory;
     fill({0, 0, 640, 360}, background);
     overlayBox(inventoryLayout::panel);
-    text("INVENTORY & EQUIPMENT", 14, 11, gold, UiTextStyle::Display);
+    text("INVENTORY", inventoryLayout::inventoryPage.x, 11,
+         i.page == CharacterPage::Inventory ? bright : gold, UiTextStyle::Display);
+    line({81, 10}, {81, 25}, edge);
+    text("CHARACTER", inventoryLayout::characterPage.x, 11,
+         i.page == CharacterPage::Character ? bright : gold, UiTextStyle::Display);
+    const auto activePage =
+        i.page == CharacterPage::Inventory ? inventoryLayout::inventoryPage : inventoryLayout::characterPage;
+    const auto activeLabel = i.page == CharacterPage::Inventory ? "INVENTORY" : "CHARACTER";
+    const float tabWidth = fonts ? fonts->width(activeLabel, UiTextStyle::Display) : activePage.width;
+    line({float(activePage.x), 23}, {activePage.x + tabWidth, 23}, bright, 2);
     text("PAUSED", 282, 13, teal, UiTextStyle::Small);
     box(inventoryLayout::close);
     centered("X", inventoryLayout::close, gold);
@@ -99,6 +108,10 @@ void HudPainter::inventory(const HudSnapshot& h) const {
         std::snprintf(line, sizeof(line), "%d  %s", n + 1, c.name);
         clipped(line, r.x + 28, r.y + 4, r.width - 32, gold, UiTextStyle::Label);
         clipped(c.className, r.x + 28, r.y + 16, r.width - 32, muted, UiTextStyle::Small);
+    }
+    if (i.page == CharacterPage::Character) {
+        characterSheet(h);
+        return;
     }
     text("EQUIPPED", 16, 69, gold, UiTextStyle::Display);
     text("BAG / 48 SLOTS", 178, 69, gold, UiTextStyle::Display);

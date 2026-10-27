@@ -48,48 +48,6 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
         lineY += 11;
     }
 }
-void HudPainter::details(const HudSnapshot& h) const {
-    if (!h.inspected)
-        return;
-    const HudCard* c = nullptr;
-    int formation = 0;
-    for (int i = 0; i < 4; ++i)
-        if (h.cards[i].id.index == h.inspected->index) {
-            c = &h.cards[i];
-            formation = i;
-        }
-    if (!c)
-        return;
-    const auto r = hudLayout::details;
-    overlayBox(r);
-    box(hudLayout::detailsClose);
-    label("X", hudLayout::detailsClose, gold);
-    text(c->name, r.x + 12, r.y + 10, gold, UiTextStyle::Display);
-    picture(c->portrait, {r.x + 12, r.y + 30, 72, 84});
-    border({r.x + 11, r.y + 29, 74, 86}, edge);
-    char line[96];
-    std::snprintf(line, sizeof(line), "Level %d %s / %s", c->level, c->raceName, c->className);
-    clipped(line, r.x + 96, r.y + 31, 232);
-    std::snprintf(line, sizeof(line), "HP %d/%d     Armor class %d", c->hp, c->maxHp, c->armorClass);
-    text(line, r.x + 96, r.y + 46);
-    constexpr const char* positions[]{"Front left", "Front right", "Rear left", "Rear right"};
-    text(positions[formation], r.x + 96, r.y + 61, muted);
-    constexpr const char* abilities[]{"STR", "DEX", "CON", "INT", "WIS", "CHA"};
-    for (int i = 0; i < 6; ++i) {
-        std::snprintf(line, sizeof(line), "%s %d", abilities[i], c->abilities[i]);
-        text(line, r.x + 96 + (i % 3) * 75, r.y + 80 + (i / 3) * 16, gold);
-    }
-    text("EQUIPMENT", r.x + 12, r.y + 129, gold, UiTextStyle::Display);
-    constexpr const char* slots[]{"Main hand", "Off hand", "Armor"};
-    for (int i = 0; i < 3; ++i) {
-        std::snprintf(line, sizeof(line), "%s: %s", slots[i], c->equipment[i]);
-        clipped(line, r.x + 12, r.y + 145 + i * 13, 320);
-    }
-    clipped(c->effects.data(), r.x + 96, r.y + 115, 232, blue, UiTextStyle::Small);
-    box(inventoryLayout::inspectorButton);
-    label("INVENTORY / I", inventoryLayout::inspectorButton, gold, UiTextStyle::Small);
-    text("PAUSED / ESC TO CLOSE", r.x + 150, r.y + 192, muted, UiTextStyle::Small);
-}
 namespace {
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
     {
@@ -230,8 +188,6 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.overlayBox(hudLayout::expandedLog);
         p.log(*h, true);
     }
-    if (h->inspected)
-        p.details(*h);
     if (h->menuOpen) {
         p.overlayBox(hudLayout::menu);
         p.text("PAUSED", hudLayout::menu.x + 16, hudLayout::menu.y + 15, gold, UiTextStyle::Display);

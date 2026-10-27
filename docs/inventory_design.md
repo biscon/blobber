@@ -59,7 +59,7 @@ invalid requests spend no RNG. Existing impact outcomes and clocks remain intact
 ## Presentation
 
 Full-screen paused overlay: four character tabs, equipment silhouette left, 8×6
-bag centrally and details/actions right. Open with I, inspector Inventory, or
+bag centrally and details/actions right. Open with I or
 backpack/5. Drag and applicable button actions share transactions. Drop onto another character's
 tab transfers. Shift-drag to a valid target opens a split dialog on release,
 default 1, with no mutation before confirmation. Escape/focus loss/invalidated
@@ -163,6 +163,10 @@ to x=626. This aligns the row with the title, leaves equal 10-unit panel insets,
 and aligns its right edge with the close button (shifted left by one unit).
 Drawing and pointer targets continue to use the shared layout rectangles. Verify
 with the existing inventory test and hidden native/reduced captures.
+
+The subsequently approved [Character tab](character_sheet_design.md) replaces the
+small portrait inspector. It shares this overlay and selector without moving the
+inventory contents; only the title band becomes Inventory / Character navigation.
 
 I remains the inventory shortcut (already mapped, now regression-tested); M replaces
 F1 for map toggling. Remove the obsolete M/S inventory command bindings. Update the

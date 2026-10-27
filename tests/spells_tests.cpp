@@ -643,6 +643,12 @@ void uiRevision() {
     ui.toggleLog();
     check(ui.snapshot().magic.armed && ui.snapshot().modal(), "History preserves pending cast");
     ui.closeOverlay();
+    ui.inspect(2);
+    check(ui.snapshot().inventory.page == CharacterPage::Character && ui.snapshot().modal() &&
+              ui.snapshot().magic.armed && ui.snapshot().magic.assigned == 3,
+          "Character inspection pauses and preserves the pending spell and dart assignment");
+    ui.closeOverlay();
+    check(!ui.snapshot().modal() && ui.snapshot().magic.armed, "Closing Character resumes the pending spell");
     const auto original = s.actors().actor(b)->npc;
     for (int y = original.cell.y - 1; y >= 1; --y)
         check(s.actors().move(b, {6, y}, original.subcell, spellSpawn.cell).changed,

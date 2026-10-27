@@ -1,6 +1,7 @@
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/inventory_layout.hpp"
 #include <cstring>
 #include <iostream>
 using namespace blobber;
@@ -136,14 +137,14 @@ void overlaysAndAid() {
     refresh(ui, s);
     const auto turn = s.combat().snapshot().turn, clock = s.timeMs();
     routeHudInput(ui, click(hudLayout::card(3)));
-    check(ui.snapshot().inspected && ui.snapshot().inspected->index == 3 &&
-              ui.snapshot().selection.character.index == 0,
+    check(ui.snapshot().inventory.open && ui.snapshot().inventory.page == CharacterPage::Character &&
+              ui.snapshot().inventory.character.index == 3 && ui.snapshot().selection.character.index == 0,
           "Inspection never replaces acting character");
     s.update(10, ui.snapshot().modal());
     check(s.timeMs() == clock, "Details pause gameplay time");
     routeHudInput(ui, click(hudLayout::action(1)), s.actors().id(2));
     check(s.combat().snapshot().turn == turn, "Overlay prevents actions through its entire surface");
-    routeHudInput(ui, click(hudLayout::detailsClose), s.actors().id(2));
+    routeHudInput(ui, click(inventoryLayout::close), s.actors().id(2));
     check(!ui.snapshot().modal() && s.combat().snapshot().turn == turn, "Closing overlay cannot attack");
     s.party().damage({2}, s.party().character({2})->hitPoints);
     refresh(ui, s);
@@ -152,7 +153,7 @@ void overlaysAndAid() {
     routeHudInput(ui, aid);
     check(ui.snapshot().selection.action == PartyAction::Aid, "Aid shortcut arms friendly targeting");
     routeHudInput(ui, click(hudLayout::card(1)));
-    check(s.combat().snapshot().turn == turn && !ui.snapshot().inspected,
+    check(s.combat().snapshot().turn == turn && !ui.snapshot().inventory.open,
           "Invalid ally never opens details or spends action");
     routeHudInput(ui, click(hudLayout::card(2)));
     check(s.combat().snapshot().turn != turn && ui.snapshot().selection.action == PartyAction::Melee,

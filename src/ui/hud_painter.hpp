@@ -110,7 +110,7 @@ class HudPainter {
     void card(const HudCard& c, int i, bool aidTarget, bool inspected) const;
     void log(const HudSnapshot& h, bool expanded) const;
     void tooltip(const HudSnapshot& h) const;
-    void details(const HudSnapshot& h) const;
+    void characterSheet(const HudSnapshot& h) const;
     void inventory(const HudSnapshot& h) const;
     void itemTargets(const HudSnapshot& h) const;
     void spellbook(const HudSnapshot& h) const;

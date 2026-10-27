@@ -37,11 +37,7 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
     }
     if (!i.open) {
         if (in.has(UiKey::Inventory) && !h.suspended) {
-            commands.openInventory(h.inspected);
-            return true;
-        }
-        if (h.inspected && click && inside(inventoryLayout::inspectorButton)) {
-            commands.openInventory(h.inspected);
+            commands.openInventory();
             return true;
         }
         if (!h.modal() && !h.magic.casting() && !h.suspended &&
@@ -57,6 +53,14 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
     }
     if (click && inside(inventoryLayout::close)) {
         commands.closeOverlay();
+        return true;
+    }
+    if (in.has(UiKey::Inventory) || (click && inside(inventoryLayout::inventoryPage))) {
+        commands.inventoryPage(CharacterPage::Inventory);
+        return true;
+    }
+    if (click && inside(inventoryLayout::characterPage)) {
+        commands.inventoryPage(CharacterPage::Character);
         return true;
     }
     if (i.mode == InventoryMode::Quantity) {
@@ -78,6 +82,8 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
             return true;
         }
     }
+    if (i.page == CharacterPage::Character)
+        return true;
     if (in.scroll)
         commands.inventoryDescription(in.scroll > 0 ? -1 : 1);
     if (in.has(UiKey::PreviousPage))

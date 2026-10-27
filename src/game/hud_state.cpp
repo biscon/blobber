@@ -120,10 +120,7 @@ void CommandController::toggleLog() noexcept {
 void CommandController::inspect(std::size_t index) noexcept {
     if (index >= rules::partySize || state_.suspended)
         return;
-    closeOverlay();
-    if (!state_.magic.casting())
-        cancel();
-    state_.inspected = state_.cards[index].id;
+    openInventory(state_.cards[index].id, CharacterPage::Character);
     state_.hover = {};
 }
 void CommandController::toggleMenu() noexcept {
@@ -140,7 +137,6 @@ void CommandController::closeOverlay() noexcept {
     state_.inventory.mode = InventoryMode::Browse;
     if (state_.magic.open)
         setCastingState(CastingState::Normal);
-    state_.inspected.reset();
     if (state_.logExpanded)
         state_.logOffset = state_.log.rewrapOffset(state_.logOffset, hudLayout::expandedLogColumns,
                                                    state_.magic.casting() ? hudLayout::castingLogColumns

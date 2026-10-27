@@ -208,8 +208,9 @@ int main() {
         const auto portrait = hudLayout::card(2);
         input.pointer = ArtPoint{float(portrait.x + 5), float(portrait.y + 5)};
         routeHudInput(commands, input);
-        check(commands.snapshot().inspected &&
-                  commands.snapshot().inspected->index == party.snapshot().formation[2].index,
+        check(commands.snapshot().inventory.open &&
+                  commands.snapshot().inventory.page == CharacterPage::Character &&
+                  commands.snapshot().inventory.character.index == party.snapshot().formation[2].index,
               "Portrait inspection uses formation identity");
         commands.closeOverlay();
         input.pointer = ArtPoint{float(hudLayout::logExpand.x + 2), float(hudLayout::logExpand.y + 2)};

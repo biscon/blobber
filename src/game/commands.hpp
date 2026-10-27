@@ -129,11 +129,8 @@ struct HudSnapshot {
     MagicHud magic;
     InventoryHud inventory;
     HudHover hover;
-    std::optional<rules::CharacterId> inspected;
     bool menuOpen = false, quitRequested = false;
-    bool modal() const noexcept {
-        return inventory.open || logExpanded || inspected.has_value() || menuOpen || magic.open;
-    }
+    bool modal() const noexcept { return inventory.open || logExpanded || menuOpen || magic.open; }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
                                                          PartyAction::Ranged, PartyAction::Spell,
@@ -146,7 +143,9 @@ class CommandController {
     CommandController(const Party& party, const ActorWorld& actors);
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     CommandController(GameSession&&) = delete;
-    void openInventory(std::optional<rules::CharacterId> = {}) noexcept;
+    void openInventory(std::optional<rules::CharacterId> = {},
+                       CharacterPage = CharacterPage::Inventory) noexcept;
+    void inventoryPage(CharacterPage) noexcept;
     void inventoryCharacter(rules::CharacterId) noexcept;
     void inventoryCursor(std::uint16_t cell) noexcept {
         if (cell < 52)
@@ -219,6 +218,7 @@ class CommandController {
 
   private:
     void refreshInventory() noexcept;
+    void refreshCharacterSheet() noexcept;
     void refreshInventoryActions() noexcept;
     PartyCommand inventoryUseCommand() const noexcept;
     void inventoryFeedback(const char*) noexcept;

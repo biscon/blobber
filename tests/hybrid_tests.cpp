@@ -624,7 +624,8 @@ void detailsInput() {
     check(!ui.snapshot().modal(), "Hovering details does not open a pause overlay");
     input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
     routeHudInput(ui, input);
-    check(ui.snapshot().inspected && ui.snapshot().inspected->index == 2,
+    check(ui.snapshot().inventory.open && ui.snapshot().inventory.page == CharacterPage::Character &&
+              ui.snapshot().inventory.character.index == 2,
           "Details click opens the chosen character");
 }
 void capacityAndBlockedEscape() {

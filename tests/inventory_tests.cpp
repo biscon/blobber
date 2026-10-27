@@ -373,6 +373,125 @@ void staleAndKeyboard() {
     const auto refocus = edges.sample(down, true);
     check(!refocus.has(UiKey::Click) && !refocus.pointerHeld, "Held pointer blocked across focus loss");
 }
+void characterSheet() {
+    auto f = inventoryFixture();
+    f.classes[0].features = static_cast<rules::ClassFeatures>(rules::ClassFeature::SecondWind);
+    f.classes[2].features = static_cast<rules::ClassFeatures>(rules::ClassFeature::SneakAttack);
+    const auto cat = inventoryCatalog(f);
+    const auto map = hybridRoom();
+    const Player spawn{{6, 8}, Heading::North};
+    const NpcWorld empty(map, spawn.cell, {}, {});
+    GameSession s(map, cat, empty, 5, spawn, false);
+    check(s.party().swapFormation(FormationSlot::FrontLeft, FormationSlot::BackLeft),
+          "Fixture swaps formation");
+    CommandController ui(s);
+    auto refresh = [&] { ui.refresh({}, false, false, true); };
+    auto click = [&](UiRect r) {
+        UiInput in;
+        in.pointer = ArtPoint{float(r.x + r.width / 2), float(r.y + r.height / 2)};
+        in.pressed[static_cast<unsigned>(UiKey::Click)] = true;
+        routeHudInput(ui, in, {});
+    };
+    refresh();
+    const auto actor = ui.snapshot().selection.character;
+    click(hudLayout::detail(0));
+    const auto& i = ui.snapshot().inventory;
+    check(i.open && i.page == CharacterPage::Character && i.character.index == 2 &&
+              ui.snapshot().selection.character.index == actor.index,
+          "Portrait info opens Character by formation identity without changing actor");
+    const auto clock = s.timeMs();
+    s.update(1, ui.snapshot().modal());
+    check(s.timeMs() == clock, "Character sheet pauses gameplay");
+    check(i.sheet.modifiers[0] == -1 && i.sheet.modifiers[1] == 3 && i.sheet.saves[1] == 5 &&
+              i.sheet.saves[3] == 3 && i.sheet.proficientSaves[1] && !i.sheet.proficientSaves[0],
+          "Character abilities, saves and training are derived from the selected character");
+    check(i.sheet.hitDice == 1 && i.sheet.hitDie == 8 && i.sheet.experience == 0 &&
+              i.sheet.nextLevelExperience == 300 && i.sheet.arrows == 20 &&
+              std::strstr(i.sheet.weapons.data(), "Shortswords") && i.sheet.featureCount == 1,
+          "Sheet exposes resources, XP preview, training and class features");
+    click(inventoryLayout::inventoryPage);
+    const auto arrows = findInventoryItem(s.party(), 2, 9);
+    const auto source = s.party().inventory().locate(arrows).cell;
+    ui.inventorySelect(source);
+    const auto revision = s.party().inventory().revision();
+    ui.inventoryDrop({{2}, 47}, true);
+    check(i.mode == InventoryMode::Quantity, "Fixture starts a pending split");
+    click(inventoryLayout::characterPage);
+    check(i.mode == InventoryMode::Browse && !i.source && i.selected == arrows && i.cursor == source,
+          "Changing page cancels pending split but preserves selection and cursor");
+    UiInput hidden;
+    hidden.pressed[static_cast<unsigned>(UiKey::UseItem)] = true;
+    hidden.pressed[static_cast<unsigned>(UiKey::Equip)] = true;
+    hidden.pressed[static_cast<unsigned>(UiKey::Confirm)] = true;
+    routeHudInput(ui, hidden, {});
+    click(inventoryLayout::cell(47));
+    check(s.party().inventory().revision() == revision && !i.itemTargeting && i.selected == arrows,
+          "Character page consumes inventory shortcuts and hidden grid clicks");
+    click(inventoryLayout::inventoryPage);
+    check(i.page == CharacterPage::Inventory && i.character.index == 2 && i.selected == arrows,
+          "Both directions retain character and inventory selection");
+    const auto from = inventoryLayout::cell(source);
+    ui.inventoryPointer(from.x + 4, from.y + 4, true, true, false, false);
+    ui.inventoryPointer(from.x + 30, from.y + 30, false, true, false, false);
+    check(i.dragging, "Fixture begins dragging an item");
+    click(inventoryLayout::characterPage);
+    UiInput release;
+    release.pointerReleased = true;
+    release.pointer =
+        ArtPoint{float(inventoryLayout::cell(47).x + 4), float(inventoryLayout::cell(47).y + 4)};
+    routeHudInput(ui, release, {});
+    check(!i.dragging && !i.pointerDown && !i.source && s.party().inventory().revision() == revision,
+          "Tab change cancels drag and its later release cannot move inventory");
+    click(inventoryLayout::inventoryPage);
+    ui.inventoryAction(InventoryAction::Transfer);
+    click(inventoryLayout::characterPage);
+    click(inventoryLayout::tab(1));
+    check(i.character.index == 1 && s.party().inventory().revision() == revision,
+          "Switching from transfer then selecting a character never transfers the item");
+    click(inventoryLayout::tab(3));
+    check(std::strstr(i.sheet.weapons.data(), "Daggers") && std::strstr(i.sheet.weapons.data(), "Shortbows"),
+          "Training combines race and class");
+    EffectRequest effect;
+    effect.world = s.actors().snapshot().world;
+    effect.caster = {3};
+    effect.kind = EffectKind::MageArmor;
+    effect.targets[0] = rules::CharacterId{3};
+    effect.count = 1;
+    check(bool(s.applyEffect(effect)), "Sheet effect fixture applies");
+    s.party().damage({3}, 2);
+    s.party().spendMana({3}, 1);
+    refresh();
+    check(i.armorClass == s.effects().armorClass(rules::CharacterId{3}) &&
+              i.armorClass > s.party().character({3})->stats.armorClass &&
+              std::strstr(i.sheet.effects.data(), "Mage Armor") &&
+              !std::strstr(i.sheet.effects.data(), "Concentrating") &&
+              ui.snapshot().cards[3].mana == s.party().character({3})->mana &&
+              ui.snapshot().cards[3].hp == s.party().character({3})->hitPoints,
+          "Sheet displays live effective AC, effects, HP and mana");
+    const auto weapon = s.party().inventory().at({{3}, 49});
+    check(bool(s.inventoryChange(inventoryRequest(s.party(), weapon, 3, 47))), "Remove weapon fixture");
+    refresh();
+    check(!i.cells[49].definition && !i.cells[49].weapon.available && !i.cells[51].definition,
+          "Empty weapon slots expose no stale attack preview");
+    ui.inventoryCharacter({0});
+    check(i.sheet.featureCount == 2 && std::strcmp(i.sheet.features[1].value.data(), "1 / 1 use") == 0,
+          "Fighter sheet includes Defense and available Second Wind");
+    s.party().useFeature({0}, rules::Feature::SecondWind);
+    const auto shield = s.party().inventory().at({{0}, 50});
+    const int oldAC = i.armorClass;
+    check(bool(s.inventoryChange(inventoryRequest(s.party(), shield, 0, 47))), "Remove shield fixture");
+    refresh();
+    check(i.armorClass == oldAC - 2 && i.cells[49].weapon.damage.sides == 10 &&
+              std::strcmp(i.sheet.features[1].value.data(), "0 / 1 use") == 0,
+          "Gear and feature changes update AC, versatile damage and charges");
+    click(inventoryLayout::close);
+    check(!ui.snapshot().modal(), "Fullscreen close consumes its click");
+    UiInput open;
+    open.pressed[static_cast<unsigned>(UiKey::Inventory)] = true;
+    routeHudInput(ui, open, {});
+    check(i.open && i.page == CharacterPage::Inventory && i.character.index == actor.index,
+          "I entry resets to Inventory for the gameplay selection");
+}
 void contextualActions() {
     auto f = inventoryFixture();
     for (const auto* id : {"fixture.book", "fixture.symbol", "fixture.focus"}) {
@@ -534,6 +653,7 @@ int main(int argc, char** argv) {
         staleAndKeyboard();
         inputBehavior();
         contextualActions();
+        characterSheet();
         std::cout << "Inventory transactions, costs, effects and input passed ("
                   << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                            start)

@@ -3,6 +3,7 @@
 #include "ui/layout.hpp"
 namespace blobber::inventoryLayout {
 constexpr UiRect panel{4, 2, 632, 356}, close{606, 9, 20, 17};
+constexpr UiRect inventoryPage{14, 9, 65, 17}, characterPage{88, 9, 78, 17};
 constexpr UiRect tab(int i) {
     return {14 + i * 154, 33, 150, 28};
 }
@@ -26,6 +27,5 @@ inline UiRect action(const InventoryHud& inventory, InventoryAction kind) {
 }
 constexpr UiRect dialog{210, 120, 220, 116}, minus{226, 162, 28, 22}, plus{385, 162, 28, 22};
 constexpr UiRect accept{225, 202, 90, 22}, cancel{325, 202, 90, 22};
-constexpr UiRect inspectorButton{159, 250, 110, 17};
 constexpr UiRect useBack{220, 330, 75, 20}, useCancel{300, 330, 75, 20};
 } // namespace blobber::inventoryLayout

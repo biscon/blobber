@@ -1,5 +1,6 @@
 #include "app/hud_captures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/inventory_layout.hpp"
 #include <limits>
 #include <stdexcept>
 namespace blobber {
@@ -117,7 +118,7 @@ void captureHud(const Map& map, const rules::Catalog& catalog, const NpcWorld& p
         save(v, "hud-hover-unavailable");
         v.input(click(hudLayout::card(2)));
         save(v, "hud-character-details", true);
-        v.input(click(hudLayout::detailsClose));
+        v.input(click(inventoryLayout::close));
         v.input(click(hudLayout::gear));
         save(v, "hud-pause");
         v.input(click(hudLayout::resume));

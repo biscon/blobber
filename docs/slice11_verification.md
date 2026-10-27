@@ -5,6 +5,10 @@ The [inventory design](inventory_design.md) records the approved boundaries and
 implementation. Slice 10 was accepted before this work began. Slice 12 remains
 Planned and must not start before the user accepts slice 11.
 
+Latest approved extension: the portrait inspector is replaced by the
+[tabbed Character sheet](character_sheet_design.md), with its own
+[verification and current screenshots](character_sheet_verification.md).
+
 ## Delivered
 
 Four independent 8×6 bags, separate body/main-hand/shield/ranged positions, typed

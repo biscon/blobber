@@ -123,7 +123,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         for (std::size_t j = 0; j < h->allyCount; ++j)
             eligible |= h->allies[j].index == h->cards[i].id.index;
         p.card(h->cards[i], i, h->selection.action == PartyAction::Aid && eligible,
-               h->inspected && h->inspected->index == h->cards[i].id.index);
+               h->inventory.open && h->inventory.character.index == h->cards[i].id.index);
     }
     if (h->inventory.itemTargeting) {
         p.itemTargets(*h);
