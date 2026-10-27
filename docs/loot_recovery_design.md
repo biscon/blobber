@@ -1,12 +1,9 @@
 # Loot and recovery — slice 12
 
-Status: **review correction requested; loot-dialog mockup awaiting approval**, 2026-10-27.
-The previous implementation and verification remain recorded below. The requested
-revision is described in [Loot-bag review correction](#loot-bag-review-correction).
-The user approved the implementation plan with “Implement the plan.” The first
-checkpoint is an image-generated camp-screen mockup, followed by explicit visual
-approval **before coding or producing animation frames**. This is the user's
-requested gate, not another request to approve the implementation plan.
+Status: **Ready for review — approved correction implemented and verified**, 2026-10-27.
+The user accepted the camp mockup before the original implementation, then accepted
+the loot-dialog mockup with the corrections recorded below. This document describes
+the corrected system; the initial mockup checkpoint is retained as history.
 
 ## Scope and decisions
 
@@ -112,18 +109,20 @@ explicit visual approval before writing gameplay/UI code or making animation fra
 Following approval, produce four registered frames with stable background/camera/
 silhouettes and varying flames/light. Preserve masters and prompts. Preload native
 UI artwork with RAII; do not introduce frame-time image generation or loading.
-Enter via a labelled Rest entry in the pause menu or R; cancel pending targeting
+Enter via the visible Rest button below the portraits, a labelled pause-menu entry
+or R; cancel pending targeting
 and use an exclusive paused screen. Surrounding portraits/log remain visible.
 Start commits once, plays two four-frame loops over about 1.6 seconds, then briefly
 fades back to the dungeon. Cancel before Start costs nothing; Escape after commit
 only skips cosmetics. Focus loss pauses presentation; held input cannot retrigger
 or click through. Feature descriptions/Character sheet explain the recovery rules.
 
-Floor loot uses six individually clickable, floor-anchored sprites per cell in
-deterministic order. Wheel paging over the cell exposes more, with a page/count
-indicator. Use a compact foreground arrangement in the party cell, preserving
-visibility against adjacent walls. Hover names item, quantity, recipient and any
-rejection reason. Armed spell/item targeting takes precedence.
+Floor loot uses one floor-anchored bag per nonempty cell. Clicking it opens a
+paused ten-slot grid with wheel/page controls, hover stats, per-stack pickup, Take
+All and Close/Escape. Portrait clicks change the recipient without closing. The
+info panel stays inside its parent, top-aligned with the grid; Inventory and Loot
+share one slot painter for borders, padding and quantity labels. Leftovers retain
+the bag; final collection removes it. Armed spell/item targeting takes precedence.
 
 Reuse item art and generate missing gold, kit and scimitar icons after the camp
 checkpoint. Bake bounded floor-size derivatives offline; retain masters/provenance.
@@ -192,30 +191,29 @@ clock. The application consumes the frame on which playback ends to prevent
 closing-frame click-through. Rest implementation is split across recovery,
 session recovery and recovery command modules rather than application code.
 
-`PreparedLoot` stores nine atlas regions at every integer square size from 4 to
-48: 342,090 RGBA pixels, 1,368,360 bytes plus at most 64 item mappings. The production
-catalog adds 18 mapping bytes. The separate CMake bake reads the retained transparent
-master, writes a checked `loot.bin` through the existing binary format machinery,
-and never resizes images in normal frame work. Loading reserves its bytes from the
-shared prepared-memory budget before loading NPCs. The nine supported demo visuals
-are scimitar, leather, shield, bow, arrows, coins, healing/mana potions and kit;
-other future content needs its own visual mapping.
+`PreparedLoot` stores one transparent bag at every integer square size from 4 to
+64: 89,426 RGBA pixels, 357,704 bytes, with no catalog-to-icon mapping. The separate
+CMake bake reads `assets/ui/items/loot-bag.png`, writes checked `BLBLOOT2` content to
+`loot.bin`, and never resizes images in normal frame work. The new signature rejects
+old individual-item banks. Loading reserves its bytes from the shared prepared-memory
+budget before NPC loading. UI item icons still come from the existing inventory art.
 
 Composition gathers active slots into fixed scratch arrays, sorts by cell/slot,
-selects six per cell, then sorts visible sprites back to front. Work is bounded by
-2,112 slots (O(n log n)) plus visible sprite pixels. Current-cell sprites use a
-compact foreground layout; front-diagonal groups are fitted within the existing
-FOV. Per-column wall coverage and existing per-pixel NPC/corpse IDs with projected
-body depth prevent drawing/picking through occluders. The same uint16 picking
-pixels encode actor slots 0–255 and loot slots offset by 256. Fixed region records
-allow wheel paging over the visible cluster; exact opaque sprite pixels are required
-for clicks. The hover line reports item count and page. No extra framebuffer depth
-allocation is introduced. Immutable scene ownership includes scratch picking for
-transition composition when no public picking buffer is requested; composition
-remains single-threaded like the existing pipeline.
+selects one live representative per cell, then sorts visible bags back to front.
+Work is bounded by 2,112 slots (O(n log n)) plus visible sprite pixels. Every size
+uses the same projected quarter-cell width, capped at 64; the current-cell floor
+anchor is clamped to keep the bag onscreen, without shrinking it. Front diagonals
+fit the existing FOV. Per-column walls and per-pixel NPC/corpse IDs with projected
+body depth prevent drawing/picking through occluders. The same uint16 picking pixels
+encode actors 0–255 and representative loot slots offset by 256. Only visible opaque
+bag pixels accept clicks. A stale representative is checked before opening; removing
+it republishes the next live slot. No extra framebuffer depth allocation is added.
+Immutable scene ownership retains scratch picking for transitions without a public
+picking buffer; composition remains single-threaded.
 
-Frame cache keys include loot world/revision and page revision. Turns/steps retain
-loot in prepared transition images and expose no picks until stationary. Native
+Frame cache keys include loot world/revision. Dialog paging no longer invalidates
+the dungeon frame. Turns/steps retain bags in prepared transition images and expose
+no picks until stationary. Native
 camp and missing item icons use two startup textures in the existing GPU registry;
 painting uses one fixed background frame and a varying central fire region from
 four retained frames, keeping the rest of the scene stable. All text stays live.
@@ -234,10 +232,10 @@ loot-bag graphic per cell containing loot. Death locations and authoritative flo
 ownership remain unchanged. Clicking a nearby bag after combat should open a paused
 loot dialog with an item grid, click-to-take, hover stat tooltips, Take All and
 Close/Escape. Uncollected contents keep the bag present. This request supersedes
-the individual floor icons and wheel paging described above; it does not change
+the original individual floor icons and floor-wheel paging; it does not change
 rest mechanics or authorize slice 13.
 
-**Required checkpoint:** the user explicitly asked for an imagegen mockup, then a
+**Accepted checkpoint:** the user explicitly asked for an imagegen mockup, then a
 pause for acceptance before implementation. [Loot dialog v1](mockups/slice12/loot-dialog-v1.png)
 was produced with the built-in imagegen tool; [exact prompt/provenance](mockups/slice12/loot-dialog-v1.prompt.json)
 are retained. It shows a five-column grid with quantities, selected recipient and
@@ -253,10 +251,67 @@ must replace this special-case size jump with consistent bag scale and positioni
 including current-cell visibility and near/adjacent/diagonal regression checks.
 This diagnosis is from code inspection; the reported movement was not replayed.
 
-**Next step after approval:** finalize bounded cell grouping/dialog snapshots,
+**Original next step (now implemented):** finalize bounded cell grouping/dialog snapshots,
 reuse checked inventory transactions and stat descriptions, define Take All failure
 feedback without losing leftovers, replace world icons/picking with one bag per
 cell, and test partial/empty bag lifetime, recipient identity, duplicate requests,
 full/overweight inventory, scrolling, tooltips, Escape and approach scaling. Keep
 rest and accepted Inventory/Character controls intact. No gameplay, renderer or
 runtime asset changes were made during this mockup checkpoint.
+
+### Approved correction implementation — 2026-10-27
+
+The user approved proceeding without another mockup and required the info panel
+inside its parent, top-aligned with the item grid; identical Inventory slot borders
+and quantity treatment; clickable party portraits to change the recipient while
+looting; and a visible disabled-when-unavailable Rest button below the portraits.
+
+Approved plan, implemented for this slice 12 correction:
+- Keep authoritative per-stack loot reservations and death cells. Render one bag
+  per nonempty cell, identified by a checked representative live slot. The dialog
+  stores world/cell identity, never a borrowed stack pointer. Retain safe pickup
+  reach/threat rules. It pauses simulation but revalidates each transaction.
+- Use fixed arrays of at most 2,112 stack IDs with a ten-slot visible grid and
+  scrolling/page controls. Click takes one whole displayed stack. Take All tries
+  whole stacks in stable slot order for the selected recipient; anything that
+  cannot fit stays in the bag, with an explicit count/reason. Never redirect items
+  to another character. Empty bags disappear; the empty dialog can be closed.
+- Portrait clicks in the loot modal change gameplay selection and recipient while
+  keeping the modal open. Tooltips follow hover and show base item stats, weight,
+  quantity, description and collection availability. The info rectangle stays
+  within the modal and shares the grid's top edge. Extract one shared slot painter
+  so Inventory and Loot cannot diverge in borders, art padding or quantity labels.
+- Replace the floor derivative atlas with a single transparent bag image baked at
+  bounded sizes. Project size monotonically with approach; only the floor anchor
+  is clamped upward to keep a current-cell bag onscreen. Retain wall/body/corpse
+  occlusion, transition picking suppression, fixed scratch and cache invalidation.
+- Put a labelled campfire/Rest button in the bottom-right HUD below the unchanged
+  portrait rail; narrow and rewrap the adjacent log to reserve this area. Enable
+  it only when some Short/Long Rest can provide a legal benefit (considering Hit
+  Dice, supplies, threats, movement and presentation). Keep R and menu access for
+  inspecting camp failure reasons. The button is dim and inert when unavailable.
+- Test bag grouping/leftovers/final removal, scroll without pickup, Take All partial
+  capacity failures, recipient switching, parent/info alignment, shared slot
+  visuals, Escape/focus isolation, Rest availability, monotonic approach size,
+  allocation behavior and hidden native/reduced/letterboxed application captures.
+  Update verification and stop for user review; no slice 13 work.
+
+Implementation boundaries: `loot_commands.cpp` owns the modal and its bounded ID
+snapshot; `loot_screen.cpp` paints it; `loot_layout.hpp` defines fixed geometry.
+`GameSession::lootAccess` checks safe reach independently of inventory capacity, so
+full or incapacitated recipients can still browse and choose another portrait.
+Every collection revalidates recipient, world/slot, safety and inventory revision.
+Take All performs stable-order whole-stack transactions across every page; failures
+do not stop later stacks from merging. Fixed feedback reports success/leftover counts
+and the first rejection, with the complete message also in history. Empty dialogs
+remain open until Close/Escape. Focus loss blocks input; closing consumes the frame.
+The fixed 2,112-ID list fits the authoritative lifetime capacity, so it never grows
+or truncates. Catalog definition pointers in ten visible entries share the existing
+immutable catalog lifetime. No ownership or stack pointers are retained.
+
+Rest availability previews a beneficial Short Rest with at most one available die
+per injured living member, and a Long Rest, using the same authoritative checks as
+camp. This is bounded work over four members/192 bag cells without allocations.
+The bottom-right Rest dock reserves x=508..636, y=304..358; normal/casting logs narrow
+and rewrap into the remaining space, preserving the four portrait sizes. Casting
+uses a compact LOG title; history expansion still exposes complete messages.

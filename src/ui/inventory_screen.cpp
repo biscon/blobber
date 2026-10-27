@@ -119,20 +119,10 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     picture(UiArt::silhouetteIcon, {32, 93, 118, 200}, {160, 165, 154, 210});
     const InventoryCell* selected = nullptr;
     auto drawCell = [&](const InventoryCell& c, UiRect r, unsigned index) {
-        box(r, i.cursor == index ? teal : c.handle && c.handle == i.selected ? bright : edge);
-        if (c.definition) {
-            picture(UiArt::itemIcon(*c.definition), {r.x + 2, r.y + 2, r.width - 4, r.height - 4});
-            if (c.quantity > 1) {
-                char q[12];
-                std::snprintf(q, sizeof(q), "%u", c.quantity);
-                fill({r.x + r.width - 17, r.y + r.height - 11, 16, 10}, background);
-                rightAligned(q, {r.x + r.width - 20, r.y + r.height - 12, 20, 12}, gold, UiTextStyle::Small);
-            }
-            if (c.handle == i.selected) {
-                selected = &c;
-                border(r, bright);
-            }
-        }
+        const bool chosen = c.definition && c.handle == i.selected;
+        itemSlot(c.definition, c.quantity, r, i.cursor == index ? teal : chosen ? bright : edge, chosen);
+        if (chosen)
+            selected = &c;
     };
     for (int n = 0; n < 48; ++n)
         drawCell(i.cells[n], inventoryLayout::cell(n), n);

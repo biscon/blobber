@@ -113,6 +113,23 @@ class HudPainter {
     void characterSheet(const HudSnapshot& h) const;
     void camp(const HudSnapshot& h) const;
     void inventory(const HudSnapshot& h) const;
+    void loot(const HudSnapshot& h) const;
+    void itemSlot(const rules::ItemDefinition* definition, unsigned quantity, UiRect r, Color edgeColor,
+                  bool selected = false) const {
+        box(r, edgeColor);
+        if (!definition)
+            return;
+        picture(UiArt::itemIcon(*definition), {r.x + 2, r.y + 2, r.width - 4, r.height - 4});
+        if (quantity > 1) {
+            char q[12];
+            std::snprintf(q, sizeof(q), "%u", quantity);
+            fill({r.x + r.width - 17, r.y + r.height - 11, 16, 10}, hudInk::background);
+            rightAligned(q, {r.x + r.width - 20, r.y + r.height - 12, 20, 12}, hudInk::gold,
+                         UiTextStyle::Small);
+        }
+        if (selected)
+            border(r, hudInk::bright);
+    }
     void itemTargets(const HudSnapshot& h) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;

@@ -6,7 +6,7 @@ namespace blobber {
 bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const MovementState& state,
                            const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                            const AttackVisualSnapshot* attacks, std::uint64_t now, const SpellArea* area,
-                           const LootSnapshot* loot, const LootPage* page) {
+                           const LootSnapshot* loot) {
     if (attacks && (!npcs || attacks->world != npcs->snapshot().world))
         throw std::invalid_argument("Attack snapshot belongs to another actor world");
     const bool effectsChanged = projectiles_.update(attacks, now);
@@ -23,22 +23,20 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
     const bool previewChanged =
         preview.cells != area_.cells || preview.eligible != area_.eligible || preview.kind != area_.kind;
     area_ = preview;
-    const auto lw = loot ? loot->world : 0, lr = loot ? loot->revision : 0, pr = page ? page->revision : 0;
-    const bool lootChanged = lw != lootWorld_ || lr != lootRevision_ || pr != pageRevision_;
+    const auto lw = loot ? loot->world : 0, lr = loot ? loot->revision : 0;
+    const bool lootChanged = lw != lootWorld_ || lr != lootRevision_;
     lootWorld_ = lw;
     lootRevision_ = lr;
-    pageRevision_ = pr;
     const bool newContent = lootChanged || previewChanged || effectsChanged || !ready_ ||
                             revision_ != state.revision || actorRevision_ != actorRevision ||
                             actorWorld_ != actorWorld || hadAnimation_ != (animation != nullptr) ||
                             animationRevision_ != animationRevision;
     if (newContent) {
         renderer.compose(map, state.player, destination_, npcs, animation, &picking_, &projectiles_, &area_,
-                         loot, page);
+                         loot);
         if (state.transition.active() && !isStrafe(state.transition.action))
             renderer.compose(map, state.transition.from, source_, npcs, animation,
-                             projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, nullptr, loot,
-                             page);
+                             projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, nullptr, loot);
         revision_ = state.revision;
         actorRevision_ = actorRevision;
         actorWorld_ = actorWorld;
@@ -52,7 +50,7 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
         if (isStrafe(t.action))
             renderer.composeStrafe(map, t.from, t.to, t.progress(), current_, npcs, animation,
                                    projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, nullptr,
-                                   loot, page);
+                                   loot);
         else
             composeTransition(source_, destination_, t.action, t.progress(), current_);
     } else if (changed)

@@ -771,11 +771,15 @@ void markerLayoutAndLog() {
     log.append(
         "Second line: another long message that wraps differently when the casting dock takes more width.");
     log.append("Newest line.");
+    char original[CombatLog::messageBytes];
+    log.line(log.lineCount(hudLayout::logColumns) - 3, hudLayout::logColumns, original, sizeof(original));
+    const auto* lastWord = std::strrchr(original, ' ');
+    lastWord = lastWord ? lastWord + 1 : original;
     const auto offset = log.rewrapOffset(2, hudLayout::logColumns, hudLayout::castingLogColumns);
     char line[CombatLog::messageBytes];
     log.line(log.lineCount(hudLayout::castingLogColumns) - offset - 1, hudLayout::castingLogColumns, line,
              sizeof(line));
-    check(std::strstr(line, "width"), "Dock rewrap retains the logical message position");
+    check(*lastWord && std::strstr(line, lastWord), "Dock rewrap retains the logical message position");
 }
 void sharedArea() {
     const auto map = hybridRoom();

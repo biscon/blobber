@@ -14,9 +14,7 @@ int main(int argc, char**) {
     try {
         const auto cat = recoveryCatalog();
         OwnedImage sheet(GenImageColor(96, 96, BLANK));
-        for (int i = 0; i < 9; ++i)
-            ImageDrawCircle(&sheet.value, 16 + 32 * (i % 3), 16 + 32 * (i / 3), 12,
-                            {static_cast<unsigned char>(80 + 15 * i), 180, 90, 255});
+        ImageDrawCircle(&sheet.value, 48, 48, 40, {120, 180, 90, 255});
         auto bank = prepareLoot(sheet.value);
         const auto file =
             std::filesystem::temp_directory_path() /
@@ -38,7 +36,6 @@ int main(int argc, char**) {
             out.put(char(123));
         }
         rejects([&] { loadPreparedLoot(file); }, "Corrupted sprite bank rejected");
-        loaded.bind(cat);
         const SceneRenderer renderer(prepareScene(testMaterials()), PreparedNpcs{}, {}, std::move(loaded));
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
         LootSnapshot loot;
@@ -49,8 +46,7 @@ int main(int argc, char**) {
         MovementState movement;
         movement.player = {{3, 3}, Heading::North};
         FramePipeline frames;
-        LootPage page;
-        check(frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot, &page),
+        check(frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot),
               "Initial floor draw");
         auto visible = [&](const PickingBuffer* pick) {
             std::array<bool, lootCapacity> seen{};
@@ -63,29 +59,32 @@ int main(int argc, char**) {
             return seen;
         };
         auto seen = visible(frames.picking());
-        for (int i = 0; i < 6; ++i)
-            check(seen[i], "All six first-page items independently clickable");
-        check(!seen[6] && seen[9], "Paged items hidden, party-cell item visible");
-        check(!frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot, &page),
+        check(seen[0] && seen[9], "One bag per occupied cell, including party cell");
+        for (int i = 1; i < 9; ++i)
+            check(!seen[i], "Stack icons do not overlap bag");
+        check(!frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot),
               "Unchanged loot keeps cached frame");
-        page = {{3, 2}, 1, 1};
-        check(frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot, &page),
-              "Page invalidates cache");
-        seen = visible(frames.picking());
-        check(!seen[0] && seen[6] && seen[7] && seen[8], "Second page picks correct stable slots");
-        loot.stacks[6].active = false;
+        loot.stacks[0].active = false;
         ++loot.revision;
-        frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot, &page);
-        check(!visible(frames.picking())[6], "Collected sprite and picking disappear together");
+        check(frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot),
+              "Pickup invalidates bag representative");
+        seen = visible(frames.picking());
+        check(!seen[0] && seen[1], "Leftover bag remains clickable with a live representative");
+        for (int i = 1; i < 9; ++i)
+            loot.stacks[i].active = false;
+        ++loot.revision;
+        frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot);
+        check(!visible(frames.picking())[1] && visible(frames.picking())[9],
+              "Empty bag disappears independently");
         movement.transition = {movement.player, {{4, 3}, Heading::North}, Action::Right, .05f};
         ++movement.revision;
-        frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot, &page);
+        frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot);
         check(!frames.picking(), "Transitions disable floor picking");
         movement.transition = {};
         for (auto heading : {Heading::North, Heading::East, Heading::South, Heading::West}) {
             movement.player.heading = heading;
             ++movement.revision;
-            frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot, &page);
+            frames.update(renderer, map, movement, nullptr, nullptr, nullptr, 0, nullptr, &loot);
             check(visible(frames.picking())[9], "Party-cell loot visible at every heading");
         }
         const Map blocked({"#######", "#.....#", "#..#..#", "#.....#", "#.....#", "#.....#", "#######"});
@@ -105,13 +104,26 @@ int main(int argc, char**) {
             renderer.compose(cell == Cell{3, 3} ? blocked : map, {{3, 3}, Heading::North}, frame, nullptr,
                              nullptr, &picking, nullptr, nullptr, &loot);
             seen = visible(&picking);
-            for (int i = 0; i < 6; ++i)
-                check(seen[i], "Six party/diagonal items remain pickable against viewport/wall boundaries");
+            check(seen[0], "Party/diagonal bag remains pickable against viewport/wall boundaries");
+        }
+        // Regression: the same sack grows monotonically from two cells away through the party cell.
+        loot.stacks = {};
+        loot.stacks[0] = {{3, 2}, {12}, 1, true};
+        unsigned previous = 0;
+        for (int distance = 2; distance >= 0; --distance) {
+            renderer.compose(map, {{3, 2 + distance}, Heading::North}, frame, nullptr, nullptr, &picking,
+                             nullptr, nullptr, &loot);
+            unsigned pixels = 0;
+            for (int y = 0; y < viewHeight; ++y)
+                for (int x = 0; x < viewWidth; ++x)
+                    if (picking.pickLoot(x, y))
+                        ++pixels;
+            check(pixels > previous, "Bag grows as the party approaches, including current cell");
+            previous = pixels;
         }
         // Actual prepared body pixels occlude items behind them, including death poses.
         const auto appearance = testReactionAppearance();
         auto bodyBank = prepareLoot(sheet.value);
-        bodyBank.bind(cat);
         SceneRenderer bodies(prepareScene(testMaterials()), PreparedNpcs({appearance}), {},
                              std::move(bodyBank));
         const NpcWorld places(map, {3, 3}, {"goblin"}, {{{0}, {3, 2}, {0, 1}, Heading::South}});
@@ -145,8 +157,9 @@ int main(int argc, char**) {
             renderer.compose(map, {{3, 3}, Heading::North}, frame, nullptr, nullptr, &picking, nullptr,
                              nullptr, &loot);
             seen = visible(&picking);
-            for (int i = 0; i < 6; ++i)
-                check(seen[i], "Capacity stress retains visible six");
+            check(seen[0], "Capacity stress retains a single bag");
+            for (unsigned i = 1; i < lootCapacity; ++i)
+                check(!seen[i], "Capacity stress groups every stack");
         }
         std::cout << "Prepared floor loot checks passed\n";
     } catch (const std::exception& e) {

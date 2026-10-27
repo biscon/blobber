@@ -45,8 +45,7 @@ struct PlayView {
         const auto area = debug ? SpellArea{} : commands.floorPreview();
         const bool changed =
             frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                          &session.combat().attacks(), session.timeMs(), &area, &session.loot().snapshot(),
-                          &commands.snapshot().lootPage);
+                          &session.combat().attacks(), session.timeMs(), &area, &session.loot().snapshot());
         const auto* picking = frames.picking();
         commands.refresh(picking ? picking->targets() : TargetSnapshot{},
                          session.movement().transition.active(), debug, focused);
@@ -55,7 +54,7 @@ struct PlayView {
             area.eligible != currentArea.eligible)
             return frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
                                  &session.combat().attacks(), session.timeMs(), &currentArea,
-                                 &session.loot().snapshot(), &commands.snapshot().lootPage) ||
+                                 &session.loot().snapshot()) ||
                    changed;
         return changed;
     }
@@ -140,10 +139,6 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                                    ? picking->pickLoot(int(sample.ui.pointer->x) - viewX,
                                                        int(sample.ui.pointer->y) - viewY)
                                    : std::nullopt;
-                if (!lootHit && picking && sample.ui.pointer && sample.ui.scroll &&
-                    !sample.ui.has(UiKey::Click))
-                    lootHit = picking->pickLootCell(int(sample.ui.pointer->x) - viewX,
-                                                    int(sample.ui.pointer->y) - viewY);
                 routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit);
             }
             if (view.commands.snapshot().quitRequested)

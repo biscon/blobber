@@ -524,6 +524,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.castPreview = card.castRecipient ? m.name : "";
     }
     refreshInventory();
+    refreshLoot();
+    refreshRestAvailability();
     updateAvailability();
     updateHover();
 }

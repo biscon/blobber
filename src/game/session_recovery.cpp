@@ -1,28 +1,35 @@
 #include "game/perception.hpp"
 #include "game/session.hpp"
 namespace blobber {
+PickupResult GameSession::lootAccess(LootId id) const noexcept {
+    const auto* s = loot_.find(id);
+    if (!s || loot_.snapshot().revision == UINT64_MAX)
+        return {InventoryError::Stale, "That loot bag is no longer available."};
+    if (movement().transition.active())
+        return {InventoryError::Moving, "Wait until movement finishes."};
+    if (!combat_.safeRecovery(movement().player))
+        return {InventoryError::Unsafe, "Loot requires safe exploration."};
+    if (!(s->cell == movement().player.cell) &&
+        !inMeleeFront(map_, movement().player.cell, movement().player.heading, s->cell))
+        return {InventoryError::Unavailable, "Move closer and face the loot bag."};
+    return {};
+}
 PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept {
     if (!preview) {
         events_.clear();
         loot_.reconcile(actors_);
     }
-    const auto* s = loot_.find(r.loot);
-    if (!s || loot_.snapshot().revision == UINT64_MAX)
-        return {InventoryError::Stale, "That floor item is no longer available."};
-    if (movement().transition.active())
-        return {InventoryError::Moving, "Wait until movement finishes."};
-    if (!combat_.safeRecovery(movement().player))
-        return {InventoryError::Unsafe, "Loot requires safe exploration."};
+    const auto access = lootAccess(r.loot);
+    if (!access)
+        return access;
     if (!party_.character(r.recipient) || !effects_.canAct(r.recipient))
         return {InventoryError::Unavailable, "Select a conscious, able companion to collect loot."};
-    if (!(s->cell == movement().player.cell) &&
-        !inMeleeFront(map_, movement().player.cell, movement().player.heading, s->cell))
-        return {InventoryError::Unavailable, "Move closer and face the item to collect it."};
+    const auto* s = loot_.find(r.loot);
     const auto result = party_.acquire({r.recipient, s->item, s->quantity, r.inventoryRevision}, preview);
     if (!result)
         return {result.error, inventoryMessage(result.error)};
     if (!preview)
-        loot_.collect(r.loot); // Validated stable reservation; no failure after inventory commit.
+        loot_.collect(r.loot);
     return {};
 }
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {

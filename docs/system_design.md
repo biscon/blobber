@@ -1,21 +1,20 @@
 # System design
 
-Review correction **awaiting mockup approval** (2026-10-27): the user requested
-one loot bag per occupied floor cell and a grid-based loot dialog with tooltips,
-Take All and Close/Escape. See the [loot-bag correction and mockup](loot_recovery_design.md#loot-bag-review-correction).
-The current-cell scaling discontinuity is also recorded for correction. The user
-requires visual acceptance before implementation; the previous result below has
-not been accepted. No slice 13 work is eligible.
-
 Implemented, **Ready for review** (2026-10-27): slice 12
-[loot and recovery](loot_recovery_design.md), with [verification and handoff](slice12_verification.md).
-GameSession owns bounded, corpse-independent loot and checked rest transactions;
-Party stages acquisition and supply consumption. Schema 6 adds authored drops,
-weighted currency and camp kits. Floor sprites are baked offline into a bounded
-bank; depth-aware floor picking shares existing presentation and transitions.
-The exclusive camp screen commits recovery once and plays a cosmetic bonfire loop.
-Debug/Release, focused sanitizers, allocation checks and hidden captures pass.
-User acceptance is pending; slice 13 is not eligible.
+[loot and recovery](loot_recovery_design.md), including the approved loot-bag review
+correction; [verification and handoff](slice12_verification.md). GameSession owns
+bounded corpse-independent loot and checked rest transactions; Party stages whole-
+stack acquisition and supply consumption. One prepared bag per nonempty cell opens
+a paused grid with contained/aligned details, shared Inventory slot painting, live
+portrait recipient selection, per-stack pickup and Take All. Leftovers retain the
+bag. One projection fixes approach scaling. The visible Rest button below portraits
+is dim/inert when neither rest has a legal benefit; narrow logs rewrap beside it.
+Schema 6 adds authored drops, weighted currency and camp kits. Floor imagery is
+baked offline and shares depth-aware picking/transitions; normal frames allocate no
+engine-owned C++ storage. Camp commits recovery once and plays a cosmetic bonfire.
+Debug/Release 29/29, focused sanitizers, capacity stress, allocation guard, hidden
+GPU checks and 93 native/reduced/letterboxed captures pass. Interactive review and
+user acceptance remain pending; slice 13 is not eligible.
 
 Implemented, **accepted and closed**: approved [tabbed inventory and character sheet](character_sheet_design.md),
 replacing the portrait inspector while preserving the current inventory layout.

@@ -182,7 +182,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.label(combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER" : "RESTART / ENTER",
                 hudLayout::resultButton, gold);
     }
-    if (h->modal() && !h->magic.open && !h->camp.open)
+    if (h->modal() && !h->magic.open && !h->camp.open && !h->loot.open)
         p.fill({0, 16, 640, 344}, {0, 0, 0, 110});
     if (h->logExpanded) {
         p.overlayBox(hudLayout::expandedLog);
@@ -202,6 +202,10 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.fill({viewX + 3, viewY + viewHeight - 20, viewWidth - 6, 18}, {12, 18, 18, 235});
         p.clipped(h->lootHover.data(), viewX + 7, viewY + viewHeight - 16, viewWidth - 14, gold,
                   UiTextStyle::Small);
+    }
+    if (h->loot.open) {
+        p.fill(hudLayout::viewport, {0, 0, 0, 110});
+        p.loot(*h);
     }
     p.spellbook(*h);
     p.tooltip(*h);

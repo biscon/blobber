@@ -2,6 +2,7 @@
 #include "support/combat_fixtures.hpp"
 #include "support/recovery_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/loot_layout.hpp"
 #include <iostream>
 #include <memory>
 using namespace blobber;
@@ -216,6 +217,112 @@ void lootAndPickup() {
     check(inventoryQuantity(s.party(), 1, 0) == 1 && inventoryQuantity(s.party(), 3, 0) == 0,
           "Viewed sheet character never replaces selected floor recipient");
 }
+void lootDialogAndRestButton() {
+    const auto cat = recoveryCatalog();
+    const auto map = combatMap();
+    const auto empty = combatPlacements(map, pose, 0);
+    RecoveryLevel level;
+    for (int i = 0; i < 12; ++i)
+        level.ground[level.groundCount++] = {
+            pose.cell, {std::uint16_t(i == 11 ? 10 : 12)}, std::uint16_t(i == 11 ? 2 : 1)};
+    auto owner =
+        std::make_unique<GameSession>(map, cat, empty, 7, pose, false, std::vector<NpcTimings>{}, level);
+    auto& s = *owner;
+    CommandController ui(s);
+    ui.refresh({}, false, false, true);
+    const LootId first{s.actors().snapshot().world, 2048};
+    auto click = [](UiRect r) {
+        UiInput in;
+        in.focused = true;
+        in.pointer = ArtPoint{float(r.x + 3), float(r.y + 3)};
+        in.pressed[std::size_t(UiKey::Click)] = true;
+        return in;
+    };
+    routeHudInput(ui, click(hudLayout::viewport), {}, true, first);
+    check(ui.snapshot().loot.open && ui.snapshot().loot.count == 12,
+          "Floor click opens all cell contents without collecting");
+    check(s.loot().find(first), "Opening leaves ownership intact");
+    UiInput wheel;
+    wheel.focused = true;
+    wheel.pointer = ArtPoint{80, 120};
+    wheel.scroll = -1;
+    routeHudInput(ui, wheel, {});
+    check(ui.snapshot().loot.page == 1 && ui.snapshot().loot.entries[1].quantity == 2,
+          "Later loot accessible without taking unwanted items");
+    routeHudInput(ui, click(hudLayout::portrait(3)), {});
+    check(ui.snapshot().loot.open && ui.snapshot().loot.recipient.index == 3,
+          "Portrait changes pickup recipient without closing");
+    const auto before = inventoryQuantity(s.party(), 3, 10);
+    auto unfocused = click(lootLayout::cell(1));
+    unfocused.focused = false;
+    routeHudInput(ui, unfocused, {});
+    check(inventoryQuantity(s.party(), 3, 10) == before, "Unfocused click cannot acquire loot");
+    routeHudInput(ui, click(lootLayout::cell(1)), {});
+    check(inventoryQuantity(s.party(), 3, 10) == before + 2 && ui.snapshot().loot.count == 11,
+          "Selected recipient receives clicked stack only");
+    UiInput escape = click(lootLayout::takeAll);
+    escape.pressed[std::size_t(UiKey::Cancel)] = true;
+    routeHudInput(ui, escape, {});
+    check(!ui.snapshot().loot.open && !ui.snapshot().menuOpen && s.loot().find(first),
+          "Escape consumes the entire closing frame");
+    ui.refresh({}, false, false, true);
+    ui.openLoot(first);
+    ui.lootTakeAll();
+    check(ui.snapshot().loot.open && ui.snapshot().loot.count == 0,
+          "Take All drains every page and retains empty dialog");
+    check(inventoryQuantity(s.party(), 3, 12) == 11, "Take All uses selected recipient for every page");
+    ui.closeOverlay();
+    ui.refresh({}, false, false, true);
+    check(!ui.snapshot().restAvailable, "No-benefit rest is visibly disabled");
+    routeHudInput(ui, click(hudLayout::restButton), {});
+    check(!ui.snapshot().camp.open, "Disabled Rest button cannot open camp");
+    s.party().damage({0}, 2);
+    ui.refresh({}, false, false, true);
+    check(ui.snapshot().restAvailable, "Beneficial safe short rest enables button");
+    routeHudInput(ui, click(hudLayout::restButton), {});
+    check(ui.snapshot().camp.open, "Rest button opens camp");
+    ui.closeOverlay();
+    ui.refresh({}, true, false, true);
+    check(!ui.snapshot().restAvailable, "Movement disables rest button");
+    ui.refresh({}, false, false, false);
+    check(!ui.snapshot().restAvailable, "Focus loss disables rest button");
+    check(lootLayout::info.y == lootLayout::cell(0).y &&
+              lootLayout::info.x + lootLayout::info.width < lootLayout::panel.x + lootLayout::panel.width &&
+              lootLayout::info.y + lootLayout::info.height < lootLayout::panel.y + lootLayout::panel.height,
+          "Details align with grid and fit within parent");
+    // Full bag: equipment cannot fit, but potion merges still succeed after it.
+    RecoveryLevel mixed;
+    mixed.ground[mixed.groundCount++] = {pose.cell, {0}, 1};
+    mixed.ground[mixed.groundCount++] = {pose.cell, {10}, 2};
+    auto fixture = inventoryFixture();
+    rules::ItemDefinition token;
+    token.id = "token";
+    token.name = token.description = "Token";
+    token.kind = rules::ItemKind::Gear;
+    fixture.items.push_back(token);
+    const auto fullCatalog = inventoryCatalog(fixture);
+    auto fullOwner = std::make_unique<GameSession>(map, fullCatalog, empty, 7, pose, false,
+                                                   std::vector<NpcTimings>{}, mixed);
+    auto& full = *fullOwner;
+    while (full.party().acquire({{3}, {12}, 1, full.party().inventory().revision()})) {
+    }
+    const auto sword = LootId{full.actors().snapshot().world, 2048};
+    const auto potionBefore = inventoryQuantity(full.party(), 3, 10);
+    CommandController fullUi(full);
+    fullUi.refresh({}, false, false, true);
+    fullUi.selectCharacter(3);
+    fullUi.openLoot(sword);
+    check(fullUi.snapshot().loot.open, "Bag can be browsed when recipient cannot carry equipment");
+    fullUi.lootTakeAll();
+    check(full.loot().find(sword), "Failed stack remains on ground");
+    // A capacity failure cannot consume or partially acquire a stack.
+    const auto potionAfter = inventoryQuantity(full.party(), 3, 10);
+    check(potionAfter == potionBefore + 2 && fullUi.snapshot().loot.count == 1,
+          "Take All skips full-bag equipment and still merges later potions");
+    fullUi.lootRecipient(0);
+    fullUi.lootTakeAll();
+    check(fullUi.snapshot().loot.count == 0, "Switching to a capable recipient collects leftovers");
+}
 void capacityStress() {
     const auto cat = recoveryCatalog(false, true);
     std::vector<std::string> rows(12, std::string(12, '.'));
@@ -297,6 +404,7 @@ int main(int argc, char**) {
         safetyAndUi();
         lootAndPickup();
         acquisitionFailures();
+        lootDialogAndRestButton();
         std::cout << "Recovery and loot checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

@@ -1238,31 +1238,24 @@ consumption/ammunition costs, and combat restrictions. Inspect the large-screen 
 
 ### Slice 12: Loot and recovery
 
-**Current review correction:** Individual floor icons are superseded by the user's requested one-bag-per-cell / grid loot dialog. [Mockup and correction notes](loot_recovery_design.md#loot-bag-review-correction) await explicit visual approval before implementation. The reported camp-kit approach scaling defect is recorded there. Earlier delivery/verification below describe the pre-correction implementation.
+**Current review correction:** The user approved the loot-dialog mockup with contained/aligned details, shared Inventory slot styling, live portrait recipient selection, and a visible inactive-when-unavailable Rest button. Implementation and verification are complete; [correction design](loot_recovery_design.md#loot-bag-review-correction). One bag per cell replaces individual icons and approach scaling is corrected. Earlier delivery/verification below describes the initial result.
 
 **Deliver:** Bounded loot ownership and collection, supplies/consumable acquisition,
 Hit Dice short rests, feature recovery, safe-location long rests, and camp supplies.
 
-**Approved loot interaction (2026-10-27):** When a monster dies, its loot drops onto
-the dungeon floor at its death location as visible, clickable items/stacks. Clicking
-a dropped item collects it into the active gameplay character's inventory. During
-exploration this is the selected character; if combat pickup is allowed, it is the
-current turn actor. The recipient is not the last character viewed in the fullscreen
-sheet, and collection must not silently redirect to another party member.
-
-Create drops exactly once from authoritative death, independently of corpse
-animation or disappearance. Uncollected loot remains on the floor after the corpse
-is gone. Route pickup through checked inventory transactions: remove floor loot
-only after successful collection, and leave it unchanged with clear feedback if
-collection is rejected, including bag/stack capacity, weight or eligibility failure.
-Use direct clicks on the floor items rather than requiring a corpse-loot window.
+**Approved loot interaction (corrected 2026-10-27):** Death publishes drops once
+at the monster's death cell, independently of corpse animation/removal. One bag
+represents all remaining contents. Clicking opens a paused grid with hover stats,
+click-to-take, Take All and Close/Escape. Paging never requires pickup. Portrait
+clicks switch the selected recipient while the dialog remains open; collection
+never silently redirects items to another party member. Whole-stack transactions
+leave failed contents on the floor with capacity/weight/eligibility feedback.
 
 **Boundary:** No shops or quest system. Define safety, resource quantities, corpse
 independence, rest eligibility, and full-inventory handling explicitly.
 The slice 12 plan must also specify pickup reach/visibility, combat eligibility and
 any action cost, drop contents/quantities, and presentation/picking of overlapping
-floor items. Those details remain planning decisions; the floor-drop/click-to-pick-up
-interaction and active-character recipient are user requirements.
+floor bags. These decisions are implemented in the linked design.
 
 **Acceptance:** Several encounters can be played with meaningful recovery decisions.
 Test duplicate collection, full inventories, resource depletion, repeated rest,
@@ -1272,12 +1265,12 @@ clicking collects into the active character's bag, changing the selected charact
 changes the recipient, failed collection preserves the drop, and repeated clicks
 cannot duplicate items. Verify visible floor placement and reliable item picking.
 
-**Stage / last updated:** In progress — review correction, awaiting loot-dialog mockup approval; 2026-10-27.
+**Stage / last updated:** Ready for review — approved loot-bag correction implemented and verified; 2026-10-27.
 **Approved plan:** User said “Implement the plan.” See the [loot/recovery design](loot_recovery_design.md) for behavior, ownership, capacities and verification.
-**Decisions:** Safe-only whole-stack pickup into the selected character, current/three-front-cell reach, six-item floor paging; usable gear, weighted gold and occasional potions; three fixed camp kits and no sanctuary in normal dungeon play. One/eight-hour short/long rest skips advance effects/cooldowns without moving NPCs. Stable allies can recover; dead allies cannot. Future hub/shops remain out of scope.
+**Decisions:** Safe-only whole-stack pickup into the selected character, current/three-front-cell reach, one bag per cell and ten-slot dialog pages; usable gear, weighted gold and occasional potions; three fixed camp kits and no sanctuary in normal dungeon play. One/eight-hour short/long rest skips advance effects/cooldowns without moving NPCs. Stable allies can recover; dead allies cannot. Future hub/shops remain out of scope.
 **Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.
-**Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared floor sprites with paging/occlusion; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
-**Verification:** Debug 29/29 and Release 29/29; focused ASan/UBSan 4/4; final expanded recovery/render checks pass; zero tracked frame C++ allocations; separate full-capacity stress, byte-identical loot rebake, hidden GPU lifecycle and native/reduced/letterboxed captures pass. Interactive review remains for the user.
+**Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared bags with occlusion, paused grid collection and visible Rest button; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
+**Verification:** Corrected implementation: Debug 29/29 and Release 29/29; focused recovery/render ASan+UBSan 2/2; zero tracked frame C++ allocations; separate full-capacity loot publication/render stress, hidden GPU lifecycle, and 93 native/reduced/letterboxed captures pass. Interactive review remains for the user. Earlier baseline checks remain recorded separately in the handoff.
 **Next-agent handoff:** Wait for slice 12 review or fix requested corrections. Preserve the accepted Inventory/Character UI and session ownership. Do not advance to slice 13 without acceptance. Full commands, coverage, limits and review recipe are in [slice 12 verification](slice12_verification.md).
 **Acceptance:** Pending; mockup acceptance does not accept the implementation.
 

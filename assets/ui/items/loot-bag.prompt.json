@@ -1,0 +1,5 @@
+{
+  "tool": "image_gen.imagegen",
+  "purpose": "Runtime floor loot bag",
+  "prompt": "Use case: stylized-concept. Production sprite for a dark fantasy grid dungeon game. One single squat tied brown leather loot sack resting on the floor, viewed from eye level slightly looking down, front three-quarter view. Warm dark ochre brown leather, cinched neck tied with cord, heavy rounded bulging base, small folded mouth, subtle visible stitching. Hand-painted realistic fantasy item art with strong clean silhouette and restrained highlights, readable down to 32 pixels. Centered in a square canvas, object fills 88 percent of width and height. No other items, no coins spilling out, no symbols, no letters or text, no labels, no frame, no scene, no ground plane or cast shadow. Truly transparent background, soft antialiased edges, isolated sack cutout. Keep bottom grounded and horizontal. This is a runtime item sprite, not a UI mockup."
+}

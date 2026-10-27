@@ -72,8 +72,10 @@ void HudPainter::log(const HudSnapshot& h, bool expanded) const {
                    : (h.magic.casting() || h.inventory.itemTargeting) ? hudLayout::castingLog
                                                                       : hudLayout::log;
     box(r, expanded ? gold : edge);
-    text(expanded ? "COMBAT HISTORY" : "COMBAT LOG", r.x + 8, r.y + (expanded ? 2 : 4), gold,
-         UiTextStyle::Display);
+    text(expanded        ? "COMBAT HISTORY"
+         : r.width < 150 ? "LOG"
+                         : "COMBAT LOG",
+         r.x + 8, r.y + (expanded ? 2 : 4), gold, UiTextStyle::Display);
     if (expanded) {
         box(hudLayout::closeOverlay);
         label("X", hudLayout::closeOverlay, gold);
@@ -123,8 +125,19 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         for (std::size_t j = 0; j < h->allyCount; ++j)
             eligible |= h->allies[j].index == h->cards[i].id.index;
         p.card(h->cards[i], i, h->selection.action == PartyAction::Aid && eligible,
-               h->inventory.open && h->inventory.character.index == h->cards[i].id.index);
+               (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
+                   (h->loot.open && h->loot.recipient.index == h->cards[i].id.index));
     }
+    p.box(hudLayout::restDock);
+    const auto restColor = h->restAvailable ? gold : muted;
+    p.box(hudLayout::restButton, h->restAvailable ? gold : edge);
+    p.line({523, 332}, {538, 328}, restColor, 2);
+    p.line({524, 328}, {538, 332}, restColor, 2);
+    p.triangle({525, 326}, {537, 326}, {531, 316}, restColor);
+    p.triangle({529, 326}, {534, 326}, {532, 321}, hudInk::panel);
+    p.centered("Rest [R]", {540, 313, 82, 24}, restColor, UiTextStyle::Heading);
+    p.centered(h->restAvailable ? "Make camp" : "Rest unavailable", {512, 342, 120, 10},
+               h->restAvailable ? gold : muted, UiTextStyle::Small);
     if (h->inventory.itemTargeting) {
         p.itemTargets(*h);
     } else if (h->magic.casting()) {

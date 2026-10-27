@@ -94,18 +94,13 @@ void CommandController::floorHover(std::optional<LootId> id) noexcept {
     const auto* s = session_->loot().find(*id);
     if (!s)
         return;
-    const auto p = session_->pickup({*id, state_.selection.character, party_.inventory().revision()}, true);
+    const auto p = session_->lootAccess(*id);
     const auto* c = party_.character(state_.selection.character);
     unsigned count = 0;
     for (const auto& stack : session_->loot().snapshot().stacks)
         count += stack.active && stack.cell == s->cell;
-    const unsigned pages = (count + 5) / 6;
-    const unsigned page = state_.lootPage.cell == s->cell ? state_.lootPage.page % pages : 0;
-    std::snprintf(state_.lootHover.data(), state_.lootHover.size(),
-                  "%s x%u | %s | %s | %u items, page %u/%u (wheel)",
-                  party_.catalog().item(s->item)->name.c_str(), unsigned(s->quantity),
-                  c ? c->build.name.c_str() : "No recipient", p ? "Click to collect" : p.reason, count,
-                  page + 1, pages);
+    std::snprintf(state_.lootHover.data(), state_.lootHover.size(), "Loot bag | %u stacks | %s | %s", count,
+                  c ? c->build.name.c_str() : "No recipient", p ? "Click to browse" : p.reason);
 }
 void CommandController::collectLoot(LootId id) noexcept {
     if (!session_ || state_.modal() || state_.suspended)
@@ -127,23 +122,27 @@ void CommandController::collectLoot(LootId id) noexcept {
     state_.log.append(line);
     floorHover({});
 }
-void CommandController::pageLoot(LootId id, int delta) noexcept {
+void CommandController::refreshRestAvailability() noexcept {
+    state_.restAvailable = false;
+    state_.restReason = "Rest unavailable.";
     if (!session_)
         return;
-    const auto* source = session_->loot().find(id);
-    if (!source)
-        return;
-    const Cell cell = source->cell;
-    unsigned count = 0;
-    for (const auto& s : session_->loot().snapshot().stacks)
-        count += s.active && s.cell == cell;
-    const int pages = int((count + 5) / 6);
-    if (!pages)
-        return;
-    auto& p = state_.lootPage;
-    const int current = p.cell == cell ? int(std::min(p.page, unsigned(pages - 1))) : 0;
-    p.cell = cell;
-    p.page = (current + (delta > 0 ? 1 : pages - 1)) % pages;
-    ++p.revision;
+    RestRequest request{RestKind::Short, {}, actors_.snapshot().world, session_->restToken()};
+    for (std::uint16_t i = 0; i < 4; ++i) {
+        const auto& c = *party_.character({i});
+        if (c.life != rules::Life::Dead && c.hitPoints < c.stats.maxHitPoints && c.availableHitDice > 0)
+            request.dice[i] = 1;
+    }
+    const auto shortRest = session_->previewRest(request);
+    request.kind = RestKind::Long;
+    request.dice = {};
+    const auto longRest = session_->previewRest(request);
+    state_.restAvailable = !state_.suspended && !state_.modal() && (shortRest || longRest);
+    state_.restReason =
+        state_.restAvailable ? "Make camp to recover HP and resources."
+        : state_.modal()     ? "Close the current window first."
+        : state_.suspended
+            ? "Wait until movement ends and the game is active."
+            : restMessage(shortRest.error == RestError::NoBenefit ? longRest.error : shortRest.error);
 }
 } // namespace blobber

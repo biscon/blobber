@@ -281,7 +281,6 @@ int main() {
         auto recoveryUi = std::make_unique<CommandController>(*recoverySession);
         OwnedImage lootImage(GenImageColor(30, 30, WHITE));
         auto lootBank = prepareLoot(lootImage.value);
-        lootBank.bind(recoveryRules);
         auto lootRenderer = std::make_unique<SceneRenderer>(
             loadPreparedScene(bundleDirectory / "scene.bin", 31), PreparedNpcs{},
             std::vector<NpcAttachments>{}, std::move(lootBank));
@@ -306,11 +305,16 @@ int main() {
             const LootId lootId{recoverySession->actors().snapshot().world,
                                 static_cast<std::uint16_t>(2048 + i)};
             recoveryUi->floorHover(lootId);
-            recoveryUi->pageLoot(lootId, 1);
+            recoveryUi->openLoot(lootId);
+            recoveryUi->lootPage(1);
             lootFrames->update(*lootRenderer, hybridMap, recoverySession->movement(), nullptr, nullptr,
-                               nullptr, 0, nullptr, &recoverySession->loot().snapshot(),
-                               &recoveryUi->snapshot().lootPage);
-            recoveryUi->collectLoot(lootId);
+                               nullptr, 0, nullptr, &recoverySession->loot().snapshot());
+            recoveryUi->lootHover(0);
+            recoveryUi->lootRecipient(i % 4);
+            recoveryUi->lootTake(0);
+            if (i == 63)
+                recoveryUi->lootTakeAll();
+            recoveryUi->closeOverlay();
         }
 
         for (int iteration = 0; iteration < 100; ++iteration) {

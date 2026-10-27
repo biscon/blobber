@@ -29,24 +29,23 @@ void SceneRenderer::prepareFloorPreview() noexcept {
 void SceneRenderer::compose(const Map& map, Player player, Frame& result, const ActorWorld* npcs,
                             const NpcAnimationSnapshot* animation, PickingBuffer* picking,
                             const ProjectilePlayer* projectiles, const SpellArea* area,
-                            const LootSnapshot* loot, const LootPage* page) const {
-    composeView(map, player, 0, result, npcs, animation, picking, projectiles, area, loot, page);
+                            const LootSnapshot* loot) const {
+    composeView(map, player, 0, result, npcs, animation, picking, projectiles, area, loot);
 }
 void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float t, Frame& result,
                                   const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                                   PickingBuffer* picking, const ProjectilePlayer* projectiles,
-                                  const SpellArea* area, const LootSnapshot* loot,
-                                  const LootPage* page) const {
+                                  const SpellArea* area, const LootSnapshot* loot) const {
     const Cell r = right(from.heading);
     const bool movingRight = to.cell == from.cell + r;
     if (from.heading != to.heading || (!movingRight && !(to.cell == from.cell + r * -1)))
         throw std::invalid_argument("Strafe views require adjacent tiles and an unchanged heading");
     if (t <= 0) {
-        compose(map, from, result, npcs, animation, picking, projectiles, area, loot, page);
+        compose(map, from, result, npcs, animation, picking, projectiles, area, loot);
         return;
     }
     if (t >= 1) {
-        compose(map, to, result, npcs, animation, picking, projectiles, area, loot, page);
+        compose(map, to, result, npcs, animation, picking, projectiles, area, loot);
         return;
     }
     const float eased = t * t * (3 - 2 * t);
@@ -55,15 +54,15 @@ void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float 
     const int phase = static_cast<int>(std::round(offset * ViewProjection::strafeSteps));
     if (phase == ViewProjection::strafeSteps) {
         base.cell = base.cell + r;
-        compose(map, base, result, npcs, animation, picking, projectiles, area, loot, page);
+        compose(map, base, result, npcs, animation, picking, projectiles, area, loot);
         return;
     }
-    composeView(map, base, phase, result, npcs, animation, picking, projectiles, area, loot, page);
+    composeView(map, base, phase, result, npcs, animation, picking, projectiles, area, loot);
 }
 void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame& result,
                                 const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                                 PickingBuffer* picking, const ProjectilePlayer* projectiles,
-                                const SpellArea* area, const LootSnapshot* loot, const LootPage* page) const {
+                                const SpellArea* area, const LootSnapshot* loot) const {
     if (loot && !picking)
         picking = &lootScratch_;
     if (picking)
@@ -118,7 +117,7 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
     if (npcs)
         npcs_.compose(*npcs, player, phase, coverage, result, animation, picking);
     if (loot && picking)
-        loot_.compose(*loot, page, player, phase, coverage, npcs, animation, result, *picking);
+        loot_.compose(*loot, player, phase, coverage, npcs, animation, result, *picking);
     if (picking)
         picking->finish(npcs);
     if (projectiles && npcs)

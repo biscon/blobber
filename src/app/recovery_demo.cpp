@@ -1,6 +1,7 @@
 #include "app/recovery_demo.hpp"
 #include "ui/camp_layout.hpp"
 #include "ui/interaction.hpp"
+#include "ui/loot_layout.hpp"
 #include <stdexcept>
 namespace blobber {
 namespace {
@@ -48,7 +49,12 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
         const auto id = catalog.findItem(items[i]);
         if (!catalog.item(id))
             throw std::runtime_error(std::string("Missing capture item: ") + items[i]);
-        level.ground[level.groundCount++] = {{4, 4}, id, 1};
+        level.ground[level.groundCount++] = {{4, 4},
+                                             id,
+                                             std::uint16_t(i == 5   ? 24
+                                                           : i == 4 ? 10
+                                                           : i == 6 ? 2
+                                                                    : 1)};
     }
     level.ground[level.groundCount++] = {pose.cell, catalog.findItem("camp_kit"), 1};
     level.ground[level.groundCount++] = {{3, 4}, catalog.findItem("gold"), 6};
@@ -60,45 +66,77 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
     auto save = [&](const std::string& name) {
         animator.setTime(s.timeMs());
         frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(), &s.combat().attacks(),
-                      s.timeMs(), nullptr, &s.loot().snapshot(), &ui.snapshot().lootPage);
+                      s.timeMs(), nullptr, &s.loot().snapshot());
         ui.refresh(frames.picking()->targets(), false, false, true);
         presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(), frames.picking());
         presenter.capture(directory / (name + ".png"), GetScreenWidth(), GetScreenHeight());
     };
-    save("loot-six-items");
+    save("loot-bags-rest-disabled");
     const LootId first{s.actors().snapshot().world, 2048};
     ui.floorHover(first);
-    save("loot-hover");
-    UiInput wheel;
-    wheel.focused = true;
-    wheel.scroll = 1;
-    routeHudInput(ui, wheel, {}, true, first);
-    save("loot-page-two");
-    for (int y = 0; y < viewHeight; ++y) {
-        bool clicked = false;
-        for (int x = 0; x < viewWidth; ++x) {
-            const auto hit = frames.picking()->pickLoot(x, y);
-            if (hit && hit->slot == 2056) {
-                UiInput click;
-                click.focused = true;
-                click.pointer = ArtPoint{float(x + viewX), float(y + viewY)};
-                click.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
-                routeHudInput(ui, click, {}, true, hit);
-                clicked = true;
-                break;
-            }
-        }
-        if (clicked)
-            break;
+    save("loot-bag-hover");
+    auto click = [&](UiRect r) {
+        UiInput input;
+        input.focused = true;
+        input.pointer = ArtPoint{float(r.x + 4), float(r.y + 4)};
+        input.pressed[std::size_t(UiKey::Click)] = true;
+        routeHudInput(ui, input, {});
+    };
+    ui.openLoot(first);
+    save("loot-dialog");
+    ui.lootHover(6);
+    save("loot-potion-info");
+    click(hudLayout::portrait(3));
+    ui.lootHover(6);
+    save("loot-recipient-wizard");
+    click(lootLayout::cell(6));
+    save("loot-potion-taken-leftovers");
+    ui.closeOverlay();
+    save("loot-bag-leftovers");
+    ui.openLoot(first);
+    click(lootLayout::takeAll);
+    save("loot-take-all-empty");
+    click(lootLayout::dismiss);
+    save("loot-empty-bag-removed");
+    // More than ten stacks, including a potion on page two; no prerequisite pickup.
+    {
+        RecoveryLevel crowded;
+        for (int i = 0; i < 12; ++i)
+            crowded.ground[crowded.groundCount++] = {
+                {4, 4}, catalog.findItem(i == 11 ? "healing_potion" : "leather"), 1};
+        GameSession many(map, catalog, empty, 5, pose, false, timings, crowded);
+        CommandController grid(many, timings);
+        grid.refresh({}, false, false, true);
+        grid.openLoot({many.actors().snapshot().world, 2048});
+        grid.lootPage(1);
+        grid.lootHover(1);
+        FramePipeline page;
+        page.update(renderer, map, many.movement(), nullptr, nullptr, nullptr, 0, nullptr,
+                    &many.loot().snapshot());
+        presenter.present(page.frame(), many.movement(), map, false, true, &grid.snapshot(), page.picking());
+        presenter.capture(directory / "loot-page-two.png", GetScreenWidth(), GetScreenHeight());
     }
-    save("loot-collected");
+    // Identical bag viewed from two cells, one cell, then the same cell.
+    for (int distance = 2; distance >= 0; --distance) {
+        RecoveryLevel scale;
+        scale.ground[scale.groundCount++] = {{4, 3}, catalog.findItem("camp_kit"), 1};
+        GameSession approach(map, catalog, empty, 5, {{4, 3 + distance}, Heading::North}, false, timings,
+                             scale);
+        CommandController scaleUi(approach, timings);
+        scaleUi.refresh({}, false, false, true);
+        FramePipeline image;
+        image.update(renderer, map, approach.movement(), nullptr, nullptr, nullptr, 0, nullptr,
+                     &approach.loot().snapshot());
+        presenter.present(image.frame(), approach.movement(), map, false, true, &scaleUi.snapshot(),
+                          image.picking());
+        presenter.capture(directory / ("loot-distance-" + std::to_string(distance) + ".png"),
+                          GetScreenWidth(), GetScreenHeight());
+    }
     for (std::uint16_t i = 0; i < 4; ++i)
         s.party().damage({i}, 3 + i);
     s.party().spendMana({3}, 1);
-    UiInput input;
-    input.focused = true;
-    input.pressed[static_cast<std::size_t>(UiKey::Rest)] = true;
-    routeHudInput(ui, input, {});
+    save("rest-button-enabled");
+    click(hudLayout::restButton);
     save("camp-short-zero");
     for (unsigned i = 0; i < 4; ++i)
         ui.campDice(i, 1);
@@ -158,8 +196,7 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
         const auto shot = [&](const char* name) {
             poses.setTime(dead.timeMs());
             images.update(renderer, map, dead.movement(), &dead.actors(), &poses.snapshot(),
-                          &dead.combat().attacks(), dead.timeMs(), nullptr, &dead.loot().snapshot(),
-                          &hud.snapshot().lootPage);
+                          &dead.combat().attacks(), dead.timeMs(), nullptr, &dead.loot().snapshot());
             hud.refresh(images.picking()->targets(), false, false, true);
             presenter.present(images.frame(), dead.movement(), map, false, true, &hud.snapshot(),
                               images.picking());

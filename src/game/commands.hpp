@@ -1,5 +1,6 @@
 #pragma once
 #include "game/inventory_ui.hpp"
+#include "game/loot_ui.hpp"
 #include "game/npc_animation.hpp"
 #include "game/recovery_ui.hpp"
 #include "game/session.hpp"
@@ -51,7 +52,7 @@ struct HudCard {
     bool castRecipient = false, castEligible = true, castCaster = false, castHovered = false;
     const char* castPreview = "";
 };
-enum class HoverKind { None, Enemy, Action, Portrait };
+enum class HoverKind { None, Enemy, Action, Portrait, Rest };
 struct HudHover {
     HoverKind kind = HoverKind::None;
     int index = 0;
@@ -130,12 +131,14 @@ struct HudSnapshot {
     MagicHud magic;
     InventoryHud inventory;
     CampHud camp;
-    LootPage lootPage;
+    LootHud loot;
+    bool restAvailable = false;
+    const char* restReason = "Rest unavailable.";
     std::array<char, 192> lootHover{};
     HudHover hover;
     bool menuOpen = false, quitRequested = false;
     bool modal() const noexcept {
-        return camp.open || inventory.open || logExpanded || menuOpen || magic.open;
+        return loot.open || camp.open || inventory.open || logExpanded || menuOpen || magic.open;
     }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
@@ -213,7 +216,14 @@ class CommandController {
     void refreshCamp() noexcept;
     void floorHover(std::optional<LootId>) noexcept;
     void collectLoot(LootId) noexcept;
-    void pageLoot(LootId, int delta) noexcept;
+    void openLoot(LootId) noexcept;
+    void refreshLoot() noexcept;
+    void lootHover(int) noexcept;
+    void lootPage(int) noexcept;
+    void lootRecipient(std::size_t) noexcept;
+    void lootTake(unsigned) noexcept;
+    void lootTakeAll() noexcept;
+    void refreshRestAvailability() noexcept;
     void requestQuit() noexcept { state_.quitRequested = true; }
     bool pointerMoved(float x, float y) noexcept {
         const bool moved = !pointerKnown_ || x != pointerX_ || y != pointerY_;

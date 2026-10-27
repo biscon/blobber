@@ -117,11 +117,17 @@ Normal dungeon play has no sanctuary. Alden starts with one kit; two more are on
 floor. Cancel before starting costs nothing; Escape after starting only skips the
 animation. Portrait selection is distinct from the active turn.
 
-Loot stays on the floor after a corpse disappears. Click a visible item in your cell
-or the three reachable front cells to collect it into the selected character's bag.
-Pickup requires safety and enough capacity for the whole stack. Wheel over a loot
-cluster to page beyond six items; hover shows quantity, recipient, page and any
-rejection reason. Gold weighs 0.02 lb per coin; camp kits weigh 8 lb each.
+Loot stays in each monster's death cell after the corpse disappears. Click its loot
+bag in your cell or the three reachable front cells to browse everything inside.
+Click a stack to take it, hover for stats, or use Take All; use the wheel/page
+buttons to browse crowded bags without taking unwanted gear. Click a party portrait
+while the dialog is open to change the recipient. Whole stacks that cannot fit stay
+in the bag. Close or Escape leaves leftovers in place. Gold weighs 0.02 lb per coin;
+camp kits weigh 8 lb each.
+
+The Rest button below the four portraits opens camp. It is dimmed and disabled
+when no beneficial, legal rest is available. R and the pause-menu Rest entry also
+open camp, where unavailable choices explain their requirements.
 
 Recovery demo: `./cmake-build-debug/blobber --recovery-demo --seed 5` uses separated
 encounters, supplies and an explicitly free sanctuary at the starting cell. The normal

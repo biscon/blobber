@@ -1,5 +1,80 @@
 # Slice 12 verification and handoff
 
+Status: **Ready for review — loot-bag correction verified**, 2026-10-27.
+The user approved the loot-dialog mockup with corrections; implementation acceptance
+is still pending. Do not start slice 13. The earlier delivery below is historical;
+this section and the [current design](loot_recovery_design.md) describe the correction.
+
+## Loot-bag and Rest-button correction
+
+- One bag represents all remaining loot in a death/authored cell. Visible bags use
+  the same reach, safety, wall/body/corpse occlusion and checked ownership rules.
+- The paused five-column/two-row dialog exposes every stack through page buttons or
+  wheel scrolling, without requiring pickup. Click takes a whole stack; Take All
+  tries all pages for the selected character and leaves rejected stacks in place.
+  Counts and the first rejection are shown and logged. Empty bags disappear; the
+  empty dialog stays open until Close/Escape.
+- Item details remain inside the parent and align with the grid top. Loot and
+  Inventory use the same painter for borders, icon padding and right-aligned
+  quantities (a quantity of one has no badge). Click a party portrait to change
+  the recipient without closing; the selected portrait and carry weight update.
+- The Rest button with campfire icon sits below the four portraits. It is dimmed
+  and inert if neither Short nor Long Rest can provide a legal benefit. R and the
+  pause-menu entry remain available for inspecting requirements. Logs rewrap into
+  the remaining dock width, including during spell/item targeting.
+- The camp-kit approach regression is fixed for all floor contents: bag size uses
+  one projection formula through near and current cells. The offline bank contains
+  sizes 4–64 and uses 357,704 bytes, replacing the 1,368,360-byte item bank.
+
+## Correction verification
+
+Full Debug **29/29** passes (120.82 seconds), and full Release **29/29** passes
+(13.96 seconds). These runs overlapped capture/build work; timings are not performance
+benchmarks. Focused recovery/render
+ASan+UBSan checks pass (2/2, 21.01 seconds; leak checking disabled for the existing
+raylib tool environment). The engine frame guard records zero C++ allocations,
+including opening/hovering/paging, portrait switching, pickup, Take All and rest.
+Separate full-capacity loot publication/render stress and hidden GPU lifecycle
+checks pass. One existing log test assumed a word at the old dock width; it now
+checks preservation of the actual reading anchor across the new widths.
+
+New deterministic checks cover one bag per cell, remaining/final-stack lifetime,
+cache invalidation, monotonic two/one/current-cell size, all headings, front diagonals,
+wall/NPC/corpse occlusion, no picking during transitions, page access without pickup,
+live recipient selection, focus and Escape isolation, full-bag best-effort Take All
+that still merges a later potion, whole-stack failure, and Rest button availability.
+The original acquisition/rest tests retain weight, duplicate/stale handles, threat,
+resource-depletion and exactly-once cost checks. Fixtures are generated and independent
+of production art/content. Routine tests remain windowless.
+
+The application exported **93 hidden captures** (31 at each of 1920×1080, 1280×720,
+and 1024×768 letterboxed). Inspected dialog details, recipient selection, paging,
+leftovers/empty bag, Rest enabled/disabled, and approach sizes. Representative files:
+
+- [Contained potion details, native](screenshots/slice12/loot-correction/loot-potion-info.png)
+- [Recipient switched, letterboxed](screenshots/slice12/loot-correction/loot-recipient-1024.png)
+- [Page two without collecting armor, reduced](screenshots/slice12/loot-correction/loot-page-two-1280.png)
+- [Leftover bags](screenshots/slice12/loot-correction/loot-bag-leftovers.png) and [Take All result](screenshots/slice12/loot-correction/loot-take-all-empty.png)
+- [Enabled Rest button](screenshots/slice12/loot-correction/rest-button-enabled.png)
+- Approach: [two cells](screenshots/slice12/loot-correction/loot-distance-2.png), [one cell](screenshots/slice12/loot-correction/loot-distance-1.png), [current cell](screenshots/slice12/loot-correction/loot-distance-0.png)
+
+The production [bag sprite](../assets/ui/items/loot-bag.png) was generated with the
+built-in imagegen tool; [exact prompt](../assets/ui/items/loot-bag.prompt.json) is
+retained beside it. This is runtime art; no replacement mockup was generated.
+
+Reproduce with the Debug/Release presets, `blobber_recovery_tests --stress`,
+`blobber_loot_render_tests --stress`, `blobber_gpu_smoke`, and
+`blobber --capture-recovery DIRECTORY [--size WIDTH HEIGHT]`. Full command outputs
+for this correction are `/tmp/blobber-loot-*.log` in this workspace.
+No OS input/focus/window automation was used. Live interactive desktop review remains
+unverified and is left to the user. Review several bags, leave unwanted armor, choose
+a different portrait, take potions/gold, then verify bag leftovers and resting after
+an encounter. Acceptance remains pending; continue only with slice 12 corrections.
+
+---
+
+# Initial slice 12 implementation record
+
 Status: **Ready for review**, 2026-10-27. Implementation and available checks are
 complete. User acceptance is pending; do not start slice 13. The plan and camp
 mockup were explicitly accepted before implementation. See the

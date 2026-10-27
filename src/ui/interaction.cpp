@@ -1,6 +1,7 @@
 #include "ui/interaction.hpp"
 #include "ui/camp_layout.hpp"
 #include "ui/inventory_interaction.hpp"
+#include "ui/loot_layout.hpp"
 namespace blobber {
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit) noexcept {
@@ -9,6 +10,46 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         return;
     }
     const auto insideCamp = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
+    if (commands.snapshot().loot.open) {
+        commands.hover(HoverKind::None);
+        if (input.has(UiKey::Cancel) ||
+            (input.has(UiKey::Click) && (insideCamp(lootLayout::close) || insideCamp(lootLayout::dismiss)))) {
+            commands.closeOverlay();
+            return;
+        }
+        if (input.has(UiKey::Click)) {
+            for (unsigned i = 0; i < 4; ++i)
+                if (insideCamp(hudLayout::card(i))) {
+                    commands.lootRecipient(i);
+                    return;
+                }
+            if (insideCamp(lootLayout::takeAll)) {
+                if (commands.snapshot().loot.canTakeAny)
+                    commands.lootTakeAll();
+                return;
+            }
+            if (insideCamp(lootLayout::previous)) {
+                commands.lootPage(-1);
+                return;
+            }
+            if (insideCamp(lootLayout::next)) {
+                commands.lootPage(1);
+                return;
+            }
+        }
+        if (input.scroll && insideCamp(lootLayout::panel)) {
+            commands.lootPage(-input.scroll);
+            return;
+        }
+        int hovered = -1;
+        for (unsigned i = 0; i < LootHud::visibleCount; ++i)
+            if (insideCamp(lootLayout::cell(i)))
+                hovered = int(i);
+        commands.lootHover(hovered);
+        if (input.has(UiKey::Click) && hovered >= 0)
+            commands.lootTake(unsigned(hovered));
+        return;
+    }
     if (commands.snapshot().camp.open) {
         if (input.has(UiKey::Cancel) || (input.has(UiKey::Click) && insideCamp(campLayout::cancel))) {
             commands.closeOverlay();
@@ -109,15 +150,16 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     }
     if (lootHit && !state.magic.casting() && !state.magic.armed && !state.inventory.itemTargeting) {
         commands.floorHover(lootHit);
-        if (input.scroll) {
-            // The controller resolves the live cell from the checked ID.
-            commands.pageLoot(*lootHit, -input.scroll);
-            return;
-        }
         if (click && allowConfirm) {
-            commands.collectLoot(*lootHit);
+            commands.openLoot(*lootHit);
             return;
         }
+    }
+    if (inside(hudLayout::restButton)) {
+        commands.hover(HoverKind::Rest, 0, {}, input.pointer->x, input.pointer->y);
+        if (click && state.restAvailable)
+            commands.openCamp();
+        return;
     }
     if (click && inside(hudLayout::gear)) {
         commands.toggleMenu();

@@ -73,7 +73,6 @@ int run(int argc, char** argv) {
     auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
     const auto sceneBytes = sceneStorageBytes(scene);
     auto loot = loadPreparedLoot(options.assets / "prepared/loot.bin");
-    loot.bind(rules);
     const auto lootBytes = loot.storageBytes();
     requirePreparationBytes(sceneBytes, projectilePreparedBytes() + lootBytes,
                             PreparationLimits{}.residentBytes);

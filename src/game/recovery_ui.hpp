@@ -15,9 +15,4 @@ struct CampHud {
     const char* supplier = "";
     RestResult result;
 };
-struct LootPage {
-    Cell cell{};
-    unsigned page = 0;
-    std::uint64_t revision = 0;
-};
 } // namespace blobber

@@ -132,6 +132,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    state_.loot.open = false;
     state_.camp.open = false;
     state_.inventory.open = false;
     state_.inventory.pointerDown = state_.inventory.dragging = false;
@@ -167,7 +168,10 @@ void CommandController::updateHover() noexcept {
     auto put = [&](int line, const char* text) {
         std::snprintf(h.lines[line].data(), h.lines[line].size(), "%s", text);
     };
-    if (h.kind == HoverKind::Enemy) {
+    if (h.kind == HoverKind::Rest) {
+        std::snprintf(h.lines[0].data(), h.lines[0].size(), "Rest [R]");
+        std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s", state_.restReason);
+    } else if (h.kind == HoverKind::Enemy) {
         if (!h.enemy || !visible(*h.enemy)) {
             h.kind = HoverKind::None;
             return;
