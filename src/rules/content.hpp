@@ -26,6 +26,12 @@ using Traits = std::uint8_t;
 inline bool hasTrait(Traits traits, Trait trait) noexcept {
     return (traits & static_cast<Traits>(trait)) != 0;
 }
+// One shared percentile roll selects optional entries; [1,100] is guaranteed.
+struct LootEntry {
+    ItemId item;
+    std::uint16_t quantity = 1, sides = 0; // sides=0: fixed quantity; otherwise quantity d sides.
+    std::uint8_t first = 1, last = 100;
+};
 struct MonsterDefinition {
     std::string id;
     Abilities abilities{};
@@ -34,6 +40,8 @@ struct MonsterDefinition {
     std::array<AttackId, 8> attacks{};
     std::size_t attackCount = 0;
     Traits traits = 0;
+    std::array<LootEntry, 8> loot{};
+    std::size_t lootCount = 0;
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
 class Catalog {

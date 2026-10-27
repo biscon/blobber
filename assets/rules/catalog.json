@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -42,6 +42,62 @@
       ],
       "traits": [
         "nimble_escape"
+      ],
+      "loot": [
+        {
+          "item": "scimitar",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "leather",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "gold",
+          "quantity": 1,
+          "sides": 6,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            15
+          ]
+        },
+        {
+          "item": "mana_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            16,
+            20
+          ]
+        }
       ]
     },
     {
@@ -61,6 +117,71 @@
       ],
       "traits": [
         "nimble_escape"
+      ],
+      "loot": [
+        {
+          "item": "shortbow",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "leather",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "arrow",
+          "quantity": 10,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "gold",
+          "quantity": 1,
+          "sides": 6,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            15
+          ]
+        },
+        {
+          "item": "mana_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            16,
+            20
+          ]
+        }
       ]
     }
   ],
@@ -430,6 +551,41 @@
       "kind": "consumable",
       "stack_limit": 20,
       "effect": "mana"
+    },
+    {
+      "id": "scimitar",
+      "name": "Scimitar",
+      "description": "A curved martial blade. Finesse uses the better of Strength or Dexterity.",
+      "weight": 300,
+      "kind": "weapon",
+      "weapon": "scimitar",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "slashing"
+      },
+      "ranged": false,
+      "finesse": true,
+      "two_handed": false,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none"
+    },
+    {
+      "id": "gold",
+      "name": "Gold coins",
+      "description": "Transferable treasure. Fifty coins weigh one pound. Shops are not available in this demo.",
+      "weight": 2,
+      "kind": "currency",
+      "stack_limit": 1000
+    },
+    {
+      "id": "camp_kit",
+      "name": "Camp kit",
+      "description": "Supplies for one party long rest outside a sanctuary. Consumed from the camp screen; never replenished by resting.",
+      "weight": 800,
+      "kind": "supply",
+      "stack_limit": 5
     }
   ],
   "preset_party": {
@@ -465,6 +621,10 @@
           {
             "item": "healing_potion",
             "quantity": 2
+          },
+          {
+            "item": "camp_kit",
+            "quantity": 1
           }
         ],
         "equipment": {

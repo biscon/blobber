@@ -276,4 +276,38 @@ InventoryResult Inventory::move(const InventoryRequest& r, const rules::Catalog&
     }
     return {InventoryError::None, true};
 }
+InventoryResult Inventory::acquire(const AcquisitionRequest& r, const rules::Catalog& cat) noexcept {
+    if (r.revision != revision_ || revision_ == UINT64_MAX)
+        return {InventoryError::Stale};
+    if (r.character.index >= 4)
+        return {InventoryError::InvalidDestination};
+    const auto* d = cat.item(r.item);
+    if (!d)
+        return {InventoryError::InvalidItem};
+    if (!r.quantity)
+        return {InventoryError::InvalidQuantity};
+    unsigned remaining = r.quantity;
+    for (std::uint16_t i = 0; i < bagCells && remaining; ++i) {
+        const auto h = at({r.character, i});
+        if (const auto* s = stack(h); s && s->item.index == r.item.index) {
+            const unsigned n = std::min(remaining, rules::stackLimit(*d) - s->quantity);
+            stacks_[h.slot].quantity += n;
+            remaining -= n;
+        }
+    }
+    for (std::uint16_t i = 0; i < bagCells && remaining; ++i) {
+        if (at({r.character, i}))
+            continue;
+        const auto n = std::min(remaining, rules::stackLimit(*d));
+        const auto h = create(r.item, n);
+        if (!h)
+            return {InventoryError::Full};
+        locations_[r.character.index][i] = h;
+        remaining -= n;
+    }
+    if (remaining)
+        return {InventoryError::Full};
+    ++revision_;
+    return {InventoryError::None, true};
+}
 } // namespace blobber

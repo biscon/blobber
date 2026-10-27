@@ -19,6 +19,7 @@ struct ActorState {
     rules::MonsterId monster;
     std::int32_t hitPoints = 0, maxHitPoints = 0;
     ActorLife life = ActorLife::Alive;
+    bool hasDeath = false; // Permanent authoritative marker; removal never erases it.
     bool hasDamage = false;
     std::uint64_t damageTimeMs = 0;
     bool hasAttack = false;

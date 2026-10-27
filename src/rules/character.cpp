@@ -50,6 +50,8 @@ const char* characterErrorMessage(CharacterError error) noexcept {
 unsigned stackLimit(const ItemDefinition& i) noexcept {
     return i.stackMaximum                   ? i.stackMaximum
            : i.kind == ItemKind::Ammunition ? 100
+           : i.kind == ItemKind::Currency   ? 1000
+           : i.kind == ItemKind::Supply     ? 5
            : i.kind == ItemKind::Consumable ? 20
                                             : 1;
 }

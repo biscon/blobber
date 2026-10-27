@@ -9,11 +9,14 @@
 #include "app/inventory_captures.hpp"
 #include "app/options.hpp"
 #include "app/projectile_captures.hpp"
+#include "app/recovery_demo.hpp"
 #include "app/spell_captures.hpp"
 #include "app/ui_demo.hpp"
 #include "assets/npc_loader.hpp"
 #include "assets/preparation_profile.hpp"
 #include "assets/prepared_assets.hpp"
+#include "assets/prepared_loot.hpp"
+#include "assets/recovery_loader.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/party.hpp"
 #include "platform/presenter.hpp"
@@ -27,16 +30,17 @@ namespace blobber {
 int run(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
-        std::cout
-            << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
-               "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-               "--capture-inventory DIRECTORY | --capture-spells DIRECTORY | --capture-hybrid DIRECTORY | "
-               "--capture-preparation "
-               "DIRECTORY | --capture-projectiles "
-               "DIRECTORY] "
-               "[--ui-demo | "
-               "--inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | --spell-demo] [--seed UINT32] "
-               "[--check-prepared]\n";
+        std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
+                     "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
+                     "--capture-recovery DIRECTORY | --capture-inventory DIRECTORY | --capture-spells "
+                     "DIRECTORY | --capture-hybrid DIRECTORY | "
+                     "--capture-preparation "
+                     "DIRECTORY | --capture-projectiles "
+                     "DIRECTORY] "
+                     "[--ui-demo | "
+                     "--recovery-demo | --inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | "
+                     "--spell-demo] [--seed UINT32] "
+                     "[--check-prepared]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
@@ -55,21 +59,35 @@ int run(int argc, char** argv) {
         loadedNpcs.world = aiDemoPlacements(map, loadedNpcs.world);
     if (hybridScenario)
         loadedNpcs.world = hybridDemoPlacements(map, loadedNpcs.world, rules);
+    if (options.recoveryDemo)
+        loadedNpcs.world = recoveryDemoPlacements(map, loadedNpcs.world);
+    const auto recovery = options.recoveryDemo
+                              ? recoveryDemoLevel(rules)
+                              : (aiScenario || hybridScenario
+                                     ? RecoveryLevel{}
+                                     : loadRecoveryLevel(options.assets / "rules/recovery.json", map, rules));
     ActorWorld npcs(map, rules, loadedNpcs.world);
     const auto& timings = loadedNpcs.timings;
     const auto profile = loadPreparationProfile(options.assets / "preparation.json");
     validatePreparedPublication(options.assets / "prepared", profile, loadedNpcs.definitionFingerprint);
     auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
     const auto sceneBytes = sceneStorageBytes(scene);
-    requirePreparationBytes(sceneBytes, projectilePreparedBytes(), PreparationLimits{}.residentBytes);
-    const auto remaining = PreparationLimits{}.residentBytes - sceneBytes - projectilePreparedBytes();
+    auto loot = loadPreparedLoot(options.assets / "prepared/loot.bin");
+    loot.bind(rules);
+    const auto lootBytes = loot.storageBytes();
+    requirePreparationBytes(sceneBytes, projectilePreparedBytes() + lootBytes,
+                            PreparationLimits{}.residentBytes);
+    const auto remaining =
+        PreparationLimits{}.residentBytes - sceneBytes - projectilePreparedBytes() - lootBytes;
     auto preparedNpcs = loadPreparedNpcs(options.assets / "prepared/npcs.bin", timings,
                                          loadedNpcs.definitionFingerprint, profile, {remaining, remaining});
     const auto npcBytes = preparedNpcs.storageBytes();
-    const SceneRenderer renderer(std::move(scene), std::move(preparedNpcs), loadedNpcs.attachments);
+
+    const SceneRenderer renderer(std::move(scene), std::move(preparedNpcs), loadedNpcs.attachments,
+                                 std::move(loot));
     std::cout << "Prepared assets loaded: scene=" << sceneBytes << " npc=" << npcBytes
-              << " projectiles=" << projectilePreparedBytes()
-              << " resident=" << sceneBytes + npcBytes + projectilePreparedBytes()
+              << " projectiles=" << projectilePreparedBytes() << " loot=" << lootBytes
+              << " resident=" << sceneBytes + npcBytes + projectilePreparedBytes() + lootBytes
               << " limit=" << PreparationLimits{}.residentBytes << " load_ms="
               << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                        loadStart)
@@ -85,6 +103,10 @@ int run(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureRecoveryOnly) {
+            captureRecovery(rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
+            return 0;
+        }
         if (options.captureInventoryOnly) {
             captureInventory(map, rules, loadedNpcs.world, timings, renderer, presenter,
                              options.captureDirectory);
@@ -167,7 +189,7 @@ int run(int argc, char** argv) {
         runUiDemo(map, party, rules, loadedNpcs.world, timings, renderer, presenter);
         return 0;
     }
-    runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options);
+    runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options, recovery);
     return 0;
 }
 } // namespace blobber

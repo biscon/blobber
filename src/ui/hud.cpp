@@ -130,7 +130,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     } else if (h->magic.casting()) {
         p.spellTargets(*h);
     } else {
-        const char* actor = "EXPLORATION";
+        const char* actor = h->camp.open ? "CAMP / PAUSED" : "EXPLORATION";
         for (const auto& c : h->cards)
             if ((h->combat.activeCharacter && c.id.index == h->combat.activeCharacter->index) ||
                 (!h->production && c.id.index == h->selection.character.index))
@@ -180,9 +180,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             : h->combat.phase == CombatPhase::Victory ? "Continue to explore with your surviving party."
             : h->combat.phase == CombatPhase::Defeat  ? "Restart to begin a fresh session."
             : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
-            : h->production && h->combat.awaitingAction              ? "Click a reachable enemy to attack."
-            : h->production && h->combat.phase == CombatPhase::Turns ? "Waiting for the active participant."
-                                                                     : "WASD move / Q E turn / M map";
+            : h->production && h->combat.awaitingAction ? "Click a reachable enemy to attack."
+            : h->production && h->combat.phase == CombatPhase::Turns
+                ? "Waiting for the active participant."
+                : "WASD move / Q E turn / M map / R camp";
         p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
     if (h->production && (h->combat.knownDirections || h->combat.pendingCount)) {

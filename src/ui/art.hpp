@@ -14,10 +14,11 @@ class UiArt {
     UiArt(GpuResources& resources, const std::filesystem::path& directory);
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
+    void camp(unsigned frame, UiRect destination, Color tint = WHITE) const;
 
   private:
     GpuResources& resources_;
-    TextureHandle atlas_;
+    TextureHandle atlas_, camp_, loot_;
     std::array<Rectangle, 45> regions_{};
 };
 } // namespace blobber

@@ -24,6 +24,7 @@ InputSample Input::poll(float seconds) {
     uiDown[static_cast<std::size_t>(UiKey::Equip)] = IsKeyDown(KEY_E);
     uiDown[static_cast<std::size_t>(UiKey::TransferItem)] = IsKeyDown(KEY_T);
     uiDown[static_cast<std::size_t>(UiKey::UseItem)] = IsKeyDown(KEY_U);
+    uiDown[static_cast<std::size_t>(UiKey::Rest)] = IsKeyDown(KEY_R);
     uiDown[static_cast<std::size_t>(UiKey::Tab)] = IsKeyDown(KEY_TAB);
     const auto pointer = GetMousePosition();
     const float wheel = GetMouseWheelMove();

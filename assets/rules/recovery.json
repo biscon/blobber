@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "sanctuaries": [],
+  "ground": [
+    {
+      "cell": [
+        7,
+        15
+      ],
+      "item": "camp_kit",
+      "quantity": 1
+    },
+    {
+      "cell": [
+        19,
+        19
+      ],
+      "item": "camp_kit",
+      "quantity": 1
+    }
+  ]
+}

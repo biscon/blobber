@@ -48,10 +48,10 @@ void CommandController::refreshCharacterSheet() noexcept {
         append(out.weapons, "Simple weapons");
         weapons &= ~rules::simpleWeaponTraining;
     }
-    constexpr const char* names[]{"Daggers",       "Maces",      "Longswords",    "Shortswords",
-                                  "Shortbows",     "Longbows",   "Battleaxes",    "Handaxes",
-                                  "Light hammers", "Warhammers", "Rapiers",       "Hand crossbows",
-                                  "Darts",         "Slings",     "Quarterstaffs", "Light crossbows"};
+    constexpr const char* names[]{
+        "Daggers",    "Maces",    "Longswords",    "Shortswords",     "Shortbows", "Longbows",
+        "Battleaxes", "Handaxes", "Light hammers", "Warhammers",      "Rapiers",   "Hand crossbows",
+        "Darts",      "Slings",   "Quarterstaffs", "Light crossbows", "Scimitars"};
     static_assert(std::size(names) == rules::weaponTypeCount);
     for (unsigned n = 0; n < rules::weaponTypeCount; ++n)
         if (weapons & (1u << n))
@@ -67,13 +67,14 @@ void CommandController::refreshCharacterSheet() noexcept {
     if (c->build.defense)
         feature("Defense", "While wearing armor; included in AC.", "+1 AC");
     if (party_.hasFeature(i.character, rules::ClassFeature::SecondWind))
-        feature("Second Wind", "Heal 1d10 + level; one action.", c->secondWind ? "1 / 1 use" : "0 / 1 use");
+        feature("Second Wind", "Heal 1d10 + level; refreshes on rest.",
+                c->secondWind ? "1 / 1 use" : "0 / 1 use");
     if (party_.hasFeature(i.character, rules::ClassFeature::SneakAttack))
         feature("Sneak Attack", "Conditional extra damage; once per round.", "+1d6");
     if (party_.hasFeature(i.character, rules::ClassFeature::LifeDomain))
         feature("Life Domain", "Bonus to healing spells of level 1 or higher.", "+2 + spell level");
     if (party_.hasFeature(i.character, rules::ClassFeature::ArcaneRecovery))
-        feature("Arcane Recovery", "Recover 2 mana in safe exploration.",
+        feature("Arcane Recovery", "Safe mana recovery; refreshes on long rest.",
                 c->arcaneRecovery ? "1 / 1 use" : "0 / 1 use");
     if (session_) {
         constexpr const char* effects[]{"Bless", "Bane", "Shield of Faith", "Mage Armor", "Hold Person"};

@@ -50,6 +50,14 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "items/healing_potion",
                                   "items/mana_potion",
                                   "items/silhouette"};
+    OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
+    OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
+    if (!campImage.value.data || !lootImage.value.data)
+        throw std::runtime_error("Missing camp/loot art");
+    camp_ = resources_.createTexture(campImage.value);
+    loot_ = resources_.createTexture(lootImage.value);
+    SetTextureFilter(resources_.texture(camp_), TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(resources_.texture(loot_), TEXTURE_FILTER_BILINEAR);
     OwnedImage atlas(GenImageColor(2048, 2048, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
@@ -86,6 +94,12 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
 static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 14,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
+    if (item.id == "scimitar")
+        return 45;
+    if (item.kind == rules::ItemKind::Currency)
+        return 46;
+    if (item.kind == rules::ItemKind::Supply)
+        return 47;
     constexpr const char* ids[]{"longsword",   "chain_mail", "shield",       "mace",           "scale_mail",
                                 "holy_symbol", "shortsword", "leather",      "shortbow",       "arrow",
                                 "dagger",      "spellbook",  "arcane_focus", "healing_potion", "mana_potion"};
@@ -106,6 +120,13 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
+    if (index >= 45 && index <= 47) {
+        const auto& texture = resources_.texture(loot_);
+        const int tile = index == 45 ? 0 : index == 46 ? 5 : 8;
+        const float w = texture.width / 3.f, h = texture.height / 3.f;
+        DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
+        return;
+    }
     if (index >= regions_.size()) {
         DrawRectangleRec(destination, {19, 26, 25, 255});
         DrawCircleV({destination.x + destination.width / 2, destination.y + destination.height / 3},
@@ -137,5 +158,21 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         destination.height = height;
     }
     DrawTexturePro(resources_.texture(atlas_), source, destination, {0, 0}, 0, tint);
+}
+void UiArt::camp(unsigned frame, UiRect r, Color tint) const {
+    constexpr float scale = float(gameWidth) / artWidth;
+    const Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
+    const auto& texture = resources_.texture(camp_);
+    const float w = texture.width / 2.f, h = texture.height / 2.f;
+    // Keep the camera/characters perfectly still; animate only the fire region.
+    DrawTexturePro(texture, {0, 0, w, h}, destination, {0, 0}, 0, tint);
+    frame %= 4;
+    if (frame) {
+        constexpr float x = .465f, y = .24f, width = .19f, height = .73f;
+        DrawTexturePro(texture, {(frame % 2 + x) * w, (frame / 2 + y) * h, width * w, height * h},
+                       {destination.x + x * destination.width, destination.y + y * destination.height,
+                        width * destination.width, height * destination.height},
+                       {0, 0}, 0, tint);
+    }
 }
 } // namespace blobber

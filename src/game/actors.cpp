@@ -201,6 +201,7 @@ ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t ti
     const bool died = a.hitPoints == 0;
     if (died) {
         a.life = ActorLife::Dead;
+        a.hasDeath = true;
         vacate(a);
     }
     ++state_.revision;

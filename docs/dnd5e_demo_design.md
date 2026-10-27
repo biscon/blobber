@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 is next eligible for planning.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 is now In progress at its approved camp-screen visual checkpoint; gameplay implementation has not started.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 11 — Inventory and equipment, including Character sheet (2026-10-27) |
-| Active slice | None |
-| Awaiting user review | None |
+| Active slice | 12 — Loot and recovery; Ready for review |
+| Awaiting user review | 12 — Loot and recovery (implementation) |
 | Blockers | None |
-| Next eligible slice | 12 — Loot and recovery (Planned) |
-| Next action | In a fresh context, read slice 11 handoffs and plan slice 12 only; obtain plan approval before implementation |
+| Next eligible slice | None until slice 12 is accepted; 13 remains Planned |
+| Next action | User reviews slice 12; address corrections without advancing |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -322,7 +322,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Accepted | C |
-| 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
+| 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Ready for review | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
@@ -1270,9 +1270,14 @@ clicking collects into the active character's bag, changing the selected charact
 changes the recipient, failed collection preserves the drop, and repeated clicks
 cannot duplicate items. Verify visible floor placement and reliable item picking.
 
-**Execution record:** Not started; no verification or acceptance recorded.
-The user explicitly requested the floor-drop interaction above after accepting
-slice 11. Slice 12 remains Planned; its implementation plan has not been approved.
+**Stage / last updated:** Ready for review; 2026-10-27.
+**Approved plan:** User said “Implement the plan.” See the [loot/recovery design](loot_recovery_design.md) for behavior, ownership, capacities and verification.
+**Decisions:** Safe-only whole-stack pickup into the selected character, current/three-front-cell reach, six-item floor paging; usable gear, weighted gold and occasional potions; three fixed camp kits and no sanctuary in normal dungeon play. One/eight-hour short/long rest skips advance effects/cooldowns without moving NPCs. Stable allies can recover; dead allies cannot. Future hub/shops remain out of scope.
+**Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.
+**Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared floor sprites with paging/occlusion; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
+**Verification:** Debug 29/29 and Release 29/29; focused ASan/UBSan 4/4; final expanded recovery/render checks pass; zero tracked frame C++ allocations; separate full-capacity stress, byte-identical loot rebake, hidden GPU lifecycle and native/reduced/letterboxed captures pass. Interactive review remains for the user.
+**Next-agent handoff:** Wait for slice 12 review or fix requested corrections. Preserve the accepted Inventory/Character UI and session ownership. Do not advance to slice 13 without acceptance. Full commands, coverage, limits and review recipe are in [slice 12 verification](slice12_verification.md).
+**Acceptance:** Pending; mockup acceptance does not accept the implementation.
 
 ### Slice 13: Levels 2 and 3
 

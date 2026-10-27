@@ -1,0 +1,108 @@
+#include "game/party.hpp"
+#include <algorithm>
+namespace blobber {
+const char* restMessage(RestError e) noexcept {
+    switch (e) {
+    case RestError::None:
+        return "Ready to rest.";
+    case RestError::Stale:
+        return "Rest request expired; open camp again.";
+    case RestError::Unsafe:
+        return "Rest requires safe exploration and settled attacks.";
+    case RestError::Moving:
+        return "Wait until movement finishes.";
+    case RestError::Dying:
+        return "Stabilize dying companions before resting.";
+    case RestError::NoLeader:
+        return "A conscious, able companion must lead camp.";
+    case RestError::InvalidDice:
+        return "Choose available Hit Dice for injured living companions.";
+    case RestError::NoBenefit:
+        return "No recovery needed. Choose Hit Dice or another rest.";
+    case RestError::NoSupplies:
+        return "A field long rest requires one camp kit.";
+    case RestError::ClockFull:
+        return "Rest time capacity exhausted.";
+    }
+    return "Rest unavailable.";
+}
+InventoryResult Party::acquire(const AcquisitionRequest& request, bool preview) noexcept {
+    auto candidate = inventory_;
+    const auto result = candidate.acquire(request, *catalog_);
+    if (!result)
+        return result;
+    const auto id = request.character;
+    const auto derived =
+        rules::deriveCharacter(*catalog_, state_.characters[id.index].build, candidate.loadout(id));
+    if (!derived)
+        return {derived.error == rules::CharacterError::Overweight ? InventoryError::Overweight
+                                                                   : InventoryError::Equipment};
+    if (!preview) {
+        inventory_ = candidate;
+        state_.characters[id.index].stats = derived.value;
+    }
+    return result;
+}
+RestError Party::recoveryBenefits(const RestRequest& r) const noexcept {
+    if (r.kind != RestKind::Short && r.kind != RestKind::Long)
+        return RestError::InvalidDice;
+    bool benefit = false;
+    for (std::uint16_t i = 0; i < 4; ++i) {
+        const auto& c = state_.characters[i];
+        if (c.life == rules::Life::Dying)
+            return RestError::Dying;
+        if (r.dice[i] && (r.kind != RestKind::Short || c.life == rules::Life::Dead ||
+                          r.dice[i] > c.availableHitDice || c.hitPoints == c.stats.maxHitPoints))
+            return RestError::InvalidDice;
+        if (c.life == rules::Life::Dead)
+            continue;
+        benefit |= r.dice[i] || (hasFeature({i}, rules::ClassFeature::SecondWind) && !c.secondWind);
+        if (r.kind == RestKind::Long)
+            benefit |= c.hitPoints < c.stats.maxHitPoints || c.mana < c.maxMana ||
+                       c.availableHitDice < c.build.level ||
+                       (hasFeature({i}, rules::ClassFeature::ArcaneRecovery) && !c.arcaneRecovery);
+    }
+    return benefit ? RestError::None : RestError::NoBenefit;
+}
+RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRng& rng) noexcept {
+    RestResult out;
+    out.error = recoveryBenefits(r);
+    if (out.error != RestError::None)
+        return out;
+    if (supply) {
+        const auto* stack = inventory_.stack(supply);
+        if (r.kind != RestKind::Long || !stack ||
+            catalog_->item(stack->item)->kind != rules::ItemKind::Supply || !consumeItem(supply))
+            return {RestError::NoSupplies};
+        out.usedSupply = true;
+    }
+    // Every failure precedes RNG and recovery mutation. All class dice are validated at loading.
+    for (std::uint16_t i = 0; i < 4; ++i) {
+        auto& c = state_.characters[i];
+        if (c.life == rules::Life::Dead)
+            continue;
+        const int beforeHp = c.hitPoints, beforeMana = c.mana;
+        if (r.kind == RestKind::Short) {
+            const auto sides = catalog_->characterClass(c.build.characterClass)->hitDie;
+            for (unsigned n = 0; n < r.dice[i]; ++n) {
+                const auto amount =
+                    std::max<std::int64_t>(0, rng.roll({1, sides, c.stats.modifiers[2]}).value.total);
+                heal({i}, amount);
+                --c.availableHitDice;
+                ++out.diceSpent[i];
+            }
+        } else {
+            heal({i}, c.stats.maxHitPoints);
+            c.mana = c.maxMana;
+            c.availableHitDice = std::min(c.build.level, c.availableHitDice + std::max(1, c.build.level / 2));
+            if (hasFeature({i}, rules::ClassFeature::ArcaneRecovery))
+                c.arcaneRecovery = true;
+        }
+        if (hasFeature({i}, rules::ClassFeature::SecondWind))
+            c.secondWind = true;
+        out.healed[i] = c.hitPoints - beforeHp;
+        out.mana[i] = c.mana - beforeMana;
+    }
+    return out;
+}
+} // namespace blobber

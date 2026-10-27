@@ -8,9 +8,9 @@ using namespace rules_json;
 constexpr std::array<const char*, abilityCount> abilities{"strength",     "dexterity", "constitution",
                                                           "intelligence", "wisdom",    "charisma"};
 constexpr std::array<const char*, weaponTypeCount> weapons{
-    "dagger",    "mace",    "longsword",    "shortsword",    "shortbow", "longbow",
-    "battleaxe", "handaxe", "light_hammer", "warhammer",     "rapier",   "hand_crossbow",
-    "dart",      "sling",   "quarterstaff", "light_crossbow"};
+    "dagger",    "mace",    "longsword",    "shortsword",     "shortbow", "longbow",
+    "battleaxe", "handaxe", "light_hammer", "warhammer",      "rapier",   "hand_crossbow",
+    "dart",      "sling",   "quarterstaff", "light_crossbow", "scimitar"};
 template <std::size_t N>
 std::size_t choice(const Json& value, const std::string& path, const std::array<const char*, N>& names) {
     const auto name = string(value, path);
@@ -31,12 +31,14 @@ Abilities scores(const Json& value, const std::string& path) {
         out[i] = integer(value.at(abilities[i]), path + "." + abilities[i]);
     return out;
 }
-WeaponTraining training(const Json& value, const std::string& path) {
+WeaponTraining training(const Json& value, const std::string& path, int version) {
     array(value, path, weaponTypeCount);
     WeaponTraining out = 0;
     for (std::size_t i = 0; i < value.size(); ++i) {
         const auto p = path + "[" + std::to_string(i) + "]";
         const auto name = string(value[i], p);
+        if (version < 6 && name == "scimitar")
+            fail(p, "scimitar requires schema 6");
         const auto bits = name == "simple" ? simpleWeaponTraining
                           : name == "martial"
                               ? allWeaponTraining & ~simpleWeaponTraining
@@ -94,7 +96,7 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         out.races.push_back({identifier(r.at("id"), p + ".id"), string(r.at("name"), p + ".name"),
                              scores(r.at("ability_increases"), p + ".ability_increases"),
                              integer(r.at("hit_points_per_level"), p + ".hit_points_per_level"),
-                             training(r.at("weapons"), p + ".weapons")});
+                             training(r.at("weapons"), p + ".weapons", version)});
     }
     const auto& classes = root.at("classes");
     array(classes, "classes", Catalog::maxClasses);
@@ -111,7 +113,7 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         cls.id = identifier(c.at("id"), p + ".id");
         cls.name = string(c.at("name"), p + ".name");
         cls.hitDie = integer(c.at("hit_die"), p + ".hit_die");
-        cls.weapons = training(c.at("weapons"), p + ".weapons");
+        cls.weapons = training(c.at("weapons"), p + ".weapons", version);
         cls.allowsDefense = boolean(c.at("allows_defense"), p + ".allows_defense");
         if (spellsEnabled) {
             cls.casting =
@@ -159,14 +161,17 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         if (!j.is_object() || !j.contains("kind"))
             fail(p + ".kind", "missing item kind");
         ItemDefinition item;
-        item.kind = static_cast<ItemKind>(choice(
-            j.at("kind"), p + ".kind",
-            std::array<const char*, 6>{"weapon", "armor", "shield", "ammunition", "gear", "consumable"}));
+        item.kind = static_cast<ItemKind>(
+            choice(j.at("kind"), p + ".kind",
+                   std::array<const char*, 8>{"weapon", "armor", "shield", "ammunition", "gear", "consumable",
+                                              "currency", "supply"}));
+        if (version < 6 && item.kind > ItemKind::Consumable)
+            fail(p + ".kind", "currency/supplies require schema 6");
         if (version >= 5) {
             if (!j.contains("stack_limit"))
                 fail(p + ".stack_limit", "missing field");
             const auto limit = integer(j.at("stack_limit"), p + ".stack_limit");
-            if (limit < 1 || limit > 100)
+            if (limit < 1 || limit > (version >= 6 ? 1000 : 100))
                 fail(p + ".stack_limit", "expected 1..100");
             item.stackMaximum = static_cast<std::uint16_t>(limit);
             j.erase("stack_limit");
@@ -191,6 +196,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                    {"id", "name", "description", "weight", "kind", "weapon", "damage", "ranged", "finesse",
                     "two_handed", "versatile_sides"});
             item.weapon = static_cast<WeaponType>(choice(j.at("weapon"), p + ".weapon", weapons));
+            if (version < 6 && item.weapon == WeaponType::Scimitar)
+                fail(p + ".weapon", "scimitar requires schema 6");
             const auto& damage = j.at("damage");
             fields(damage, p + ".damage", {"count", "sides", "type"});
             item.damage = {integer(damage.at("count"), p + ".damage.count"),

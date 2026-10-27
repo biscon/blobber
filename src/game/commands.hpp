@@ -1,6 +1,7 @@
 #pragma once
 #include "game/inventory_ui.hpp"
 #include "game/npc_animation.hpp"
+#include "game/recovery_ui.hpp"
 #include "game/session.hpp"
 #include <optional>
 
@@ -128,9 +129,14 @@ struct HudSnapshot {
     std::array<CombatFeedback, 16> feedback{};
     MagicHud magic;
     InventoryHud inventory;
+    CampHud camp;
+    LootPage lootPage;
+    std::array<char, 192> lootHover{};
     HudHover hover;
     bool menuOpen = false, quitRequested = false;
-    bool modal() const noexcept { return inventory.open || logExpanded || menuOpen || magic.open; }
+    bool modal() const noexcept {
+        return camp.open || inventory.open || logExpanded || menuOpen || magic.open;
+    }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
                                                          PartyAction::Ranged, PartyAction::Spell,
@@ -199,6 +205,15 @@ class CommandController {
     void inspect(std::size_t formationIndex) noexcept;
     void toggleMenu() noexcept;
     void closeOverlay() noexcept;
+    void openCamp() noexcept;
+    void campKind(RestKind) noexcept;
+    void campDice(unsigned character, int delta) noexcept;
+    void startRest() noexcept;
+    void tickCamp(double seconds, bool focused) noexcept;
+    void refreshCamp() noexcept;
+    void floorHover(std::optional<LootId>) noexcept;
+    void collectLoot(LootId) noexcept;
+    void pageLoot(LootId, int delta) noexcept;
     void requestQuit() noexcept { state_.quitRequested = true; }
     bool pointerMoved(float x, float y) noexcept {
         const bool moved = !pointerKnown_ || x != pointerX_ || y != pointerY_;

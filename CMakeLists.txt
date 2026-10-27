@@ -48,25 +48,28 @@ endfunction()
 
 add_library(blobber_rules src/rules/spells.cpp src/rules/resolve.cpp src/rules/health.cpp src/rules/content.cpp src/rules/character.cpp)
 target_include_directories(blobber_rules PUBLIC src)
-add_library(blobber_rules_io src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp)
+add_library(blobber_rules_io src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
-add_library(blobber_core src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
+add_library(blobber_core src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules)
+# Level recovery loading validates world cells and exposes core recovery data.
+target_link_libraries(blobber_rules_io PUBLIC blobber_core)
 add_library(blobber_render
+    src/render/loot_sprites.cpp
     src/render/projectiles.cpp
     src/render/image_sampling.cpp
     src/render/npc_preparation.cpp
     src/render/material.cpp src/render/npc_sprites.cpp src/render/npc_travel.cpp src/render/scene_cache.cpp src/render/scene_renderer.cpp
     src/render/transitions.cpp src/render/frame_pipeline.cpp)
 target_link_libraries(blobber_render PUBLIC blobber_core raylib)
-add_library(blobber_assets_io src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp src/assets/npc_derivatives.cpp src/assets/preparation_profile.cpp src/assets/prepared_binary.cpp src/assets/prepared_scene.cpp src/assets/prepared_npcs.cpp src/assets/prepared_publication.cpp)
+add_library(blobber_assets_io src/assets/prepared_loot.cpp src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp src/assets/npc_derivatives.cpp src/assets/preparation_profile.cpp src/assets/prepared_binary.cpp src/assets/prepared_scene.cpp src/assets/prepared_npcs.cpp src/assets/prepared_publication.cpp)
 target_link_libraries(blobber_assets_io PUBLIC blobber_render PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
-    src/platform/presenter.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
+    src/platform/presenter.cpp src/ui/camp_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
 target_link_libraries(blobber_platform PUBLIC blobber_render)
-add_executable(blobber src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
+add_executable(blobber src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
 target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
 add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
 target_link_libraries(blobber_prepare_assets PRIVATE raylib)
@@ -97,6 +100,14 @@ add_custom_command(
 add_custom_target(blobber_bake_runtime_assets
     DEPENDS "${BLOBBER_PREPARED_DIR}/scene.bin" "${BLOBBER_PREPARED_DIR}/npcs.bin"
             "${BLOBBER_PREPARED_DIR}/metadata.json")
+add_executable(blobber_bake_loot tools/bake_loot.cpp)
+target_link_libraries(blobber_bake_loot PRIVATE blobber_assets_io)
+add_custom_command(OUTPUT "${BLOBBER_PREPARED_DIR}/loot.bin"
+    COMMAND blobber_bake_loot "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/loot-sheet.png" "${BLOBBER_PREPARED_DIR}/loot.bin"
+    DEPENDS blobber_bake_loot "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/loot-sheet.png"
+    COMMENT "Baking floor loot sprites offline" VERBATIM)
+add_custom_target(blobber_bake_floor_loot DEPENDS "${BLOBBER_PREPARED_DIR}/loot.bin")
+add_dependencies(blobber blobber_bake_floor_loot)
 add_dependencies(blobber blobber_bake_runtime_assets)
 foreach(target blobber_rules blobber_rules_io blobber_core blobber_render blobber_assets_io blobber_platform blobber blobber_prepare_assets)
     blobber_warnings(${target})
@@ -122,18 +133,20 @@ add_dependencies(blobber blobber_assets)
 
 include(CTest)
 if(BUILD_TESTING)
-    foreach(suite inventory spells effects projectile impact prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
+    foreach(suite recovery loot_render inventory spells effects projectile impact prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
         if(suite STREQUAL "frame_allocations")
             set(source tests/frame_allocations.cpp)
         else()
             set(source tests/${suite}_tests.cpp)
         endif()
         add_executable(blobber_${suite}_tests ${source})
-        if(suite STREQUAL "rules" OR suite STREQUAL "health")
+        if(suite STREQUAL "loot_render")
+            target_link_libraries(blobber_${suite}_tests PRIVATE blobber_assets_io)
+        elseif(suite STREQUAL "rules" OR suite STREQUAL "health")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules)
         elseif(suite STREQUAL "rules_content" OR suite STREQUAL "party_content")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
-        elseif(suite STREQUAL "inventory" OR suite STREQUAL "spells" OR suite STREQUAL "effects" OR suite STREQUAL "impact" OR suite STREQUAL "hybrid" OR suite STREQUAL "ai" OR suite STREQUAL "hud" OR suite STREQUAL "combat" OR suite STREQUAL "commands" OR suite STREQUAL "actors" OR suite STREQUAL "core" OR suite STREQUAL "party")
+        elseif(suite STREQUAL "recovery" OR suite STREQUAL "inventory" OR suite STREQUAL "spells" OR suite STREQUAL "effects" OR suite STREQUAL "impact" OR suite STREQUAL "hybrid" OR suite STREQUAL "ai" OR suite STREQUAL "hud" OR suite STREQUAL "combat" OR suite STREQUAL "commands" OR suite STREQUAL "actors" OR suite STREQUAL "core" OR suite STREQUAL "party")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_core)
         elseif(suite STREQUAL "resource" OR suite STREQUAL "npc" OR suite STREQUAL "image_preparation" OR suite STREQUAL "prepared_assets")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_assets_io nlohmann_json::nlohmann_json)

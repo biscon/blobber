@@ -83,9 +83,11 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
     }
     for (const auto& i : items_) {
         if (!validDisplayText(i.name, 64) || !validDisplayText(i.description, 512) || i.weight < 0 ||
-            static_cast<unsigned>(i.kind) > static_cast<unsigned>(ItemKind::Consumable))
+            static_cast<unsigned>(i.kind) > static_cast<unsigned>(ItemKind::Supply))
             throw std::runtime_error("items." + i.id + ": invalid name, description, weight, or kind");
-        const unsigned expected = i.kind == ItemKind::Ammunition   ? 100
+        const unsigned expected = i.kind == ItemKind::Currency     ? 1000
+                                  : i.kind == ItemKind::Supply     ? 5
+                                  : i.kind == ItemKind::Ammunition ? 100
                                   : i.kind == ItemKind::Consumable ? 20
                                                                    : 1;
         if (stackLimit(i) != expected || static_cast<unsigned>(i.ammunition) > 1 ||
@@ -129,6 +131,16 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
             throw std::runtime_error("attacks." + a.id + ".damage.type: invalid physical damage type");
     }
     for (const auto& m : monsters_) {
+        if (m.lootCount > m.loot.size())
+            throw std::runtime_error("Monster loot exceeds eight stacks");
+        for (std::size_t j = 0; j < m.lootCount; ++j) {
+            const auto& e = m.loot[j];
+            const auto* d = item(e.item);
+            const auto maximum = unsigned(e.quantity) * (e.sides ? e.sides : 1u);
+            if (!d || !e.quantity || !e.first || e.first > e.last || e.last > 100 ||
+                (e.sides && !validDice({e.quantity, e.sides, 0})) || maximum > stackLimit(*d))
+                throw std::runtime_error("Invalid monster loot entry");
+        }
         if (m.traits & ~static_cast<Traits>(Trait::NimbleEscape))
             throw std::runtime_error("Unsupported monster trait");
         for (const int score : m.abilities)

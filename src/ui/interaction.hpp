@@ -9,5 +9,5 @@ inline bool confirmationMatches(const CombatSnapshot& presented, const CombatSna
 }
 // Optional viewport hit has already been mapped by the renderer's read-only picking buffer.
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit = {},
-                   bool allowConfirm = true) noexcept;
+                   bool allowConfirm = true, std::optional<LootId> lootHit = {}) noexcept;
 } // namespace blobber

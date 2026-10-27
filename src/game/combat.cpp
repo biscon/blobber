@@ -451,4 +451,10 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
             }
     }
 }
+void CombatController::restTime(std::uint64_t elapsed, std::uint64_t now, CombatEvents& events) noexcept {
+    elapse(elapsed);
+    // Report skipped-time expiry at the current presentation instant, without underflow or AI steps.
+    effects_.advance(state_.gameplayMs, now, false, events);
+    reconcileEffects(now, events);
+}
 } // namespace blobber

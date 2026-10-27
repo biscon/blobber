@@ -21,7 +21,12 @@ Options parseOptions(int argc, char** argv) {
             result.assets = argv[++i];
         else if (arg == "--check-prepared")
             result.checkPreparedOnly = true;
-        else if (arg == "--inventory-demo")
+        else if (arg == "--recovery-demo")
+            result.recoveryDemo = true;
+        else if (arg == "--capture-recovery" && i + 1 < argc) {
+            result.captureRecoveryOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--inventory-demo")
             result.inventoryDemo = true;
         else if (arg == "--capture-inventory" && i + 1 < argc) {
             result.captureInventoryOnly = true;
@@ -76,14 +81,14 @@ Options parseOptions(int argc, char** argv) {
             throw std::runtime_error("Unknown or incomplete argument: " + arg);
     }
     if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) + int(result.hybridDemo) +
-                int(result.inventoryDemo) >
+                int(result.inventoryDemo) + int(result.recoveryDemo) >
             1 ||
         (result.captureAiOnly && (result.uiDemo || result.combatDemo)))
         throw std::runtime_error("Choose only one of --ui-demo, --combat-demo or --ai-demo");
     if (int(result.captureAiOnly) + int(result.captureHudOnly) + int(result.captureReactionsOnly) +
             int(result.captureHybridOnly) + int(result.capturePreparationOnly) +
             int(result.captureProjectilesOnly) + int(result.captureSpellsOnly) +
-            int(result.captureInventoryOnly) >
+            int(result.captureInventoryOnly) + int(result.captureRecoveryOnly) >
         1)
         throw std::runtime_error("Choose only one focused capture mode");
     if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)
@@ -102,6 +107,10 @@ Options parseOptions(int argc, char** argv) {
          (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo)) ||
         (result.inventoryDemo && !result.captureDirectory.empty() && !result.captureInventoryOnly))
         throw std::runtime_error("Use --capture-inventory alone for inventory captures");
+    if ((result.recoveryDemo && !result.captureDirectory.empty()) ||
+        (result.captureRecoveryOnly &&
+         (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo || result.inventoryDemo)))
+        throw std::runtime_error("Use --capture-recovery alone for recovery captures");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
     return result;

@@ -1,3 +1,4 @@
+#include "assets/recovery_loader.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/party.hpp"
 #include "support/check.hpp"
@@ -176,6 +177,87 @@ void inventoryLoading() {
             break;
         }
         files.invalid(bad, "items");
+    }
+    auto six = good;
+    six["schema_version"] = 6;
+    six["items"].push_back({{"id", "test.gold"},
+                            {"name", "Gold"},
+                            {"description", "Test coins"},
+                            {"kind", "currency"},
+                            {"weight", 2},
+                            {"stack_limit", 1000}});
+    six["items"].push_back({{"id", "test.kit"},
+                            {"name", "Kit"},
+                            {"description", "Test kit"},
+                            {"kind", "supply"},
+                            {"weight", 800},
+                            {"stack_limit", 5}});
+    six["items"][0]["weapon"] = "scimitar";
+    six["classes"][0]["weapons"] = Json::array({"scimitar"});
+    six["monsters"].push_back(
+        {{"id", "test.monster"},
+         {"abilities", abilities(10, 10, 10, 10, 10, 10)},
+         {"armor_class", 10},
+         {"hit_points", 7},
+         {"attacks", Json::array()},
+         {"traits", Json::array()},
+         {"loot",
+          Json::array(
+              {{{"item", "test.gold"}, {"quantity", 1}, {"sides", 6}, {"roll", Json::array({1, 100})}}})}});
+    // Monsters require an attack even when this fixture only exercises loot loading.
+    six["attacks"].push_back(
+        {{"id", "test.hit"},
+         {"kind", "melee"},
+         {"attack_bonus", 0},
+         {"damage", {{"count", 1}, {"sides", 4}, {"modifier", 0}, {"type", "slashing"}}}});
+    six["monsters"][0]["attacks"].push_back("test.hit");
+    const auto newCat = files.load(six);
+    check(newCat.monster({0})->lootCount == 1 && stackLimit(*newCat.item({5})) == 1000,
+          "Schema six resolves loot and currency");
+    for (int fault = 0; fault < 5; ++fault) {
+        auto bad = six;
+        if (fault == 0)
+            bad["monsters"][0]["loot"][0]["item"] = "missing";
+        if (fault == 1)
+            bad["monsters"][0]["loot"][0]["roll"] = Json::array({20, 10});
+        if (fault == 2)
+            bad["monsters"][0]["loot"][0]["quantity"] = 1001;
+        if (fault == 3)
+            bad["monsters"][0]["loot"][0]["sides"] = 1;
+        if (fault == 4)
+            bad["monsters"][0]["loot"] = Json::array(
+                {six["monsters"][0]["loot"][0], six["monsters"][0]["loot"][0], six["monsters"][0]["loot"][0],
+                 six["monsters"][0]["loot"][0], six["monsters"][0]["loot"][0], six["monsters"][0]["loot"][0],
+                 six["monsters"][0]["loot"][0], six["monsters"][0]["loot"][0],
+                 six["monsters"][0]["loot"][0]});
+        rejects([&] { files.load(bad); }, "Invalid reward profile rejected");
+    }
+    const Map recoveryMap({"#####", "#...#", "#...#", "#####"});
+    const auto recoveryFile = files.directory / "recovery.json";
+    const Json recovery = {
+        {"schema_version", 1},
+        {"sanctuaries", Json::array({Json::array({1, 1})})},
+        {"ground", Json::array({{{"cell", Json::array({2, 1})}, {"item", "test.kit"}, {"quantity", 1}}})}};
+    const auto loadLevel = [&](const Json& data) {
+        std::ofstream out(recoveryFile);
+        out << data;
+        out.close();
+        return loadRecoveryLevel(recoveryFile, recoveryMap, newCat);
+    };
+    check(loadLevel(recovery).groundCount == 1, "Authored ground and sanctuary metadata");
+    for (int fault = 0; fault < 5; ++fault) {
+        auto bad = recovery;
+        if (fault == 0)
+            bad["ground"][0]["quantity"] = 6;
+        if (fault == 1)
+            bad["ground"][0]["cell"] = Json::array({0, 0});
+        if (fault == 2)
+            bad["sanctuaries"].push_back(Json::array({1, 1}));
+        if (fault == 3)
+            bad["ground"][0]["item"] = "missing";
+        if (fault == 4)
+            bad["unexpected"] = true;
+        rejects([&] { loadLevel(bad); }, "Invalid recovery metadata rejected");
     }
     // Legacy version two keeps its strict fields and still gains bounded live stacks.
     auto legacy = fixture();

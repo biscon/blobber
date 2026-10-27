@@ -149,6 +149,10 @@ class CombatController {
     bool occupiedFront(Player) const noexcept;
     CommandReason spellRecipient(const PartyCommand&, Player, std::size_t index) const noexcept;
     bool safeRecovery(Player) const noexcept;
+    bool settledRecovery(Player pose, std::uint64_t now) const noexcept {
+        return safeRecovery(pose) && !presentationBusy(now);
+    }
+    void restTime(std::uint64_t elapsed, std::uint64_t now, CombatEvents&) noexcept;
     CommandReason validateItem(const PartyCommand&, Player) const noexcept;
     CombatOutcome submitItem(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     bool casterResolving(rules::CharacterId id) const noexcept;

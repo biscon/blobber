@@ -1,0 +1,443 @@
+[
+  {
+    "mode": "native",
+    "capture": "camp-dying-ally.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "225446070a2372d9bc3a7816ba7b6bf06f9b2f9aea66b271efe4be35352eeea7"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-fade-in.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "d4c77c861d6b9ee5fb92846ab4ef9526119369a74b807202805de6c27b07be81"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-fade-out.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "adce07e584686b49f9a493da64a0698e751a087eaf34cf1aa228166621484c3f"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-fire-0.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "4c2fc5c64aac4236091734e9010f898b169d57848d31925864087143d21d71f3"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-fire-1.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "7f79a55002d0bb7f94f57cff7da59bf7bcfc2ef5996cd4db5718b5e85d32b278"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-fire-2.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "7a5ea6388372c42c9ca1170ffaf15e1492cb9e5ac46a2204a25156d93b88a874"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-fire-3.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "6828cf3e3de50fad1695ffaeeed12d1a73c89a9a1586a0bfba512f7baf09d3e2"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-long-kit.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "c9c24fbf92223d00b874515bd851c04e714d6e7fea85134c48709f07d87f1b1c"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-long-result.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "4127e82e21b14f9d5c74dc400ed73daadd0ced186a869ebe5e0aea6f5cf5e5b9"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-no-benefit.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "0a0ac89b09c2d70412927f05e0d7c73b360d1a25499958e9e87b3ecf6091184a"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-no-supplies.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "fa720ca9a9db60948b9a7a130157aa59707be5018728930975dbd4a9e9508e69"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-short-dice.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "b934b74a7e122768d5a7b012af5d04256674d93d81eea4fdc45d3e5d3162552d"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-short-result.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "409fd88a217afe4e6daeb7420a872db447c26982d0d4f045d1f8eb1d3912c182"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-short-zero.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "2649c45a1a490bba0b85a162898376a85926745ccebf62a70d3d470d74945e13"
+  },
+  {
+    "mode": "native",
+    "capture": "camp-threat.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "a87e334144b45fdf547dbeb842ef76b0b896d12c9e9272e1f6a41fb4212ea162"
+  },
+  {
+    "mode": "native",
+    "capture": "loot-after-corpse-removal.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "884320218eb734818775e197707350628724e2c76339b0e9cb74f9aca52a92ab"
+  },
+  {
+    "mode": "native",
+    "capture": "loot-collected.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "6709314196412e95145beaedd9f54a6444a702cf795570b820abdb9cdd1ecc64"
+  },
+  {
+    "mode": "native",
+    "capture": "loot-corpse.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "00c09839202fb57aadada84b609159aa150c47e52a16974cad6cc9070b95db76"
+  },
+  {
+    "mode": "native",
+    "capture": "loot-hover.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "5e6bb589cf65fc4bd74c235cb9db393cfca5f5c180640ceead6df921bd38a106"
+  },
+  {
+    "mode": "native",
+    "capture": "loot-page-two.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "b8c3484bb4c24cf01c7f3247f5ed358163ee254df4ad74d780b6fe58085e3341"
+  },
+  {
+    "mode": "native",
+    "capture": "loot-six-items.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "46c7af088ba70ba4a54b483853feab028ad8dfc35de654f52c0fac2c97bc4f5c"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-dying-ally.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "8c612942587713b09d5d53c4f9cc50205500468c3f445f916943e81625b0fb24"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-fade-in.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "15dcba667f14b7e751576fc278172213053995d3a6dd9cbdc17b25cbed0433f9"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-fade-out.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "bd5d75735b730008f78022591c6437855cb1daad92dae3de4869e084174db735"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-fire-0.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "c357b22ceb558a1cb5e656144b747c9d638b241af3364fae0aee60c5df2f2ecd"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-fire-1.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "0f5400962467e944bc0c6e55845fcb022234c748644910c357ae06badec7aca0"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-fire-2.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "3f604e40be7faec572fdee3460cdb33874f1fa90421ed494c29c2a640fe01855"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-fire-3.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "a591b0c91c1d015f7e80ed53f924bea8348bcf33eed72e70e534b838a0221fc3"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-long-kit.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "040cb0d03e3f7bffaa67dfa10e9d2ef87be0af3cd49c4ec7d61cbc78d570f833"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-long-result.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "d7c500d2dff09a12b8bafeaafd6d906eeb1062bd1e18b2f24ba70dd183c0b940"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-no-benefit.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "f61c55a18d075b687abed6553603286c5fc3580e6e09d241c17ceeb4267045f7"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-no-supplies.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "8d0bfffeac0fffa32293408e2e6c534e4616d9e963a6d331debdec92223c387c"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-short-dice.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "0cc7f3719e6cfcd4b1e0df01c32cbc8139ffc9cc4355b6670242c0bd6fc63cf3"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-short-result.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "40c93ec37fac7f96624a389c478fb6a569770bfbc566af5a5da00bfd44c92c4d"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-short-zero.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "0c1806f7022c178ead8e678b850196fcf918b563a4b3977214dc368e6fbbf57a"
+  },
+  {
+    "mode": "reduced",
+    "capture": "camp-threat.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "d6b2bccd44d9908ac29b1871d45e091f00e53f1e87652c73e9b8eed191afdb71"
+  },
+  {
+    "mode": "reduced",
+    "capture": "loot-after-corpse-removal.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "966cf575902a9d4c3d50ba4fa7b13a8e04c9f37982721a0bb0df62defa4fcaa1"
+  },
+  {
+    "mode": "reduced",
+    "capture": "loot-collected.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "71a78dff8268630c63c02ea6e3465c93377ab1d13bc26d5201d7569f54d26fb8"
+  },
+  {
+    "mode": "reduced",
+    "capture": "loot-corpse.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "7a29d4a5943f010b0efc512d0e7d793dc2dfba439abf9bfd9b1f30d32b200e9f"
+  },
+  {
+    "mode": "reduced",
+    "capture": "loot-hover.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "163e61e2fc0383352c3147dfd27451660e3ecf76145ec5eb585ee1a42d10208c"
+  },
+  {
+    "mode": "reduced",
+    "capture": "loot-page-two.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "7acddfeca123a91dff77a4a46c7cffd61269ffb2b968c32c33b7f0ef9d99fe06"
+  },
+  {
+    "mode": "reduced",
+    "capture": "loot-six-items.png",
+    "width": 1280,
+    "height": 720,
+    "sha256": "2d0bb6f803ba49df41fcd53736803b54ceff05f934bf863950ded1539806b370"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-dying-ally.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "7966cd7eb5aefbc5328b66d2ceb3b89f18bab2d3594e2347a66c6aada0cd5f59"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-fade-in.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "37e0731fe96cbb3044b7cb54eba86a31c7fdb30614d19d3ec5b59652f0c3ad42"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-fade-out.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "d72b0b0f4abebc6a33f2cd9859e47b282c4dc03b2a3267a465b7a591747f0a57"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-fire-0.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "d42dbdb580cb365d8d20a0ecbdd0b9425cb7eacda9b4a37b9609927996032aa6"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-fire-1.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "1d5e343d3363ea682678e1055db584ebc861921b75cddb3c720fd42d2d67bf64"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-fire-2.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "9105644d17ed6acdac2c4e529452152255f31f217ab37afba560e618cae26771"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-fire-3.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "fe33eb7ee79e03a7da70caacb103ba9857680bb00609231ccaf5f8356d723853"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-long-kit.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "124b2cec7e8330f64e5b5ae50c0f7889e708ffe5eb77d66a941c6769e0985efb"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-long-result.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "3e7a6184e454ce0a2b40651a0107586eed14693060fcd600edf5a2181661c9f4"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-no-benefit.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "916f9b627ebf7c0deb6a7e1a3521b4347bae03581aa1dcd2a60ed77953df51d0"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-no-supplies.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "48445de2657621522ae8d2c4d09fe0d3c793a1300f7e9dec857607ee426fcbc6"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-short-dice.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "b34978a7288e1dea100085a8307ea1037ca3874c795caba1d98fd1e32fc0aea9"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-short-result.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "07f7c3268c9b87eb72ca04a37c82033453938badbd65fe28ec1d606fe015259a"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-short-zero.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "07f05a5c70b75377fed7d9754f7022630beca9113cf719467f43e27674e78121"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "camp-threat.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "7838475ecad28bb8dd6aa9d8418b67fbc16175279430b22f913e396d0edb696f"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "loot-after-corpse-removal.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "1c762b4ca85be14eef0b2e3370433f4c8c8d77da65c0cbee8792f580821cd31c"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "loot-collected.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "ab49308b3d72201c6eeb5376f8f4bd94d3eb6c6e6612fff45a3498692a46a8f5"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "loot-corpse.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "425f540e9f4d6965f35dce5e7fba4f4115c3b73365e1748cdc641350175a6435"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "loot-hover.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "e9aaaf71f7fe4022fb14ec750ca953d66a47c9cb366e219f97d12e74dac4c2b7"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "loot-page-two.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "ea2a6dfc3658708acb6146235de8df7f466a2c8f9b965b6f425b926de55d5abd"
+  },
+  {
+    "mode": "letterbox",
+    "capture": "loot-six-items.png",
+    "width": 1024,
+    "height": 768,
+    "sha256": "57edda80c0767573119080cedd1743d6db9eb18e29a43f206a1bd0099241d565"
+  }
+]

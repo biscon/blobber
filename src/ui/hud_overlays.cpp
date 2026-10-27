@@ -182,7 +182,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.label(combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER" : "RESTART / ENTER",
                 hudLayout::resultButton, gold);
     }
-    if (h->modal() && !h->magic.open)
+    if (h->modal() && !h->magic.open && !h->camp.open)
         p.fill({0, 16, 640, 344}, {0, 0, 0, 110});
     if (h->logExpanded) {
         p.overlayBox(hudLayout::expandedLog);
@@ -193,13 +193,22 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.text("PAUSED", hudLayout::menu.x + 16, hudLayout::menu.y + 15, gold, UiTextStyle::Display);
         p.box(hudLayout::resume, gold);
         p.label("RESUME", hudLayout::resume, gold);
+        p.box(hudLayout::rest, gold);
+        p.label("REST / R", hudLayout::rest, gold);
         p.box(hudLayout::quit);
         p.label("QUIT GAME", hudLayout::quit);
+    }
+    if (h->lootHover[0] && !h->modal()) {
+        p.fill({viewX + 3, viewY + viewHeight - 20, viewWidth - 6, 18}, {12, 18, 18, 235});
+        p.clipped(h->lootHover.data(), viewX + 7, viewY + viewHeight - 16, viewWidth - 14, gold,
+                  UiTextStyle::Small);
     }
     p.spellbook(*h);
     p.tooltip(*h);
     if (h->inventory.open)
         p.inventory(*h);
+    if (h->camp.open)
+        p.camp(*h);
     if (h->demo) {
         p.label("F2 NEXT", hudLayout::demoNext, gold, UiTextStyle::Small);
         p.label("F3 RESET", hudLayout::demoReset, gold, UiTextStyle::Small);

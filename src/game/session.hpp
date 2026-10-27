@@ -1,5 +1,6 @@
 #pragma once
 #include "game/combat.hpp"
+#include "game/loot.hpp"
 #include "game/npc_ai.hpp"
 
 namespace blobber {
@@ -7,15 +8,16 @@ namespace blobber {
 class GameSession {
   public:
     GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements, std::uint32_t seed,
-                Player spawn = {}, bool enableAi = true, const std::vector<NpcTimings>& timings = {});
+                Player spawn = {}, bool enableAi = true, const std::vector<NpcTimings>& timings = {},
+                const RecoveryLevel& recovery = {});
     GameSession(Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
     GameSession(const Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
     GameSession(const Map&, rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
     GameSession(const Map&, const rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
     GameSession(const GameSession&) = delete;
     GameSession& operator=(const GameSession&) = delete;
     Party& party() noexcept { return party_; }
@@ -40,11 +42,18 @@ class GameSession {
     InventoryError inventoryAccess(const InventoryRequest&) const noexcept;
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     CombatOutcome submit(const PartyCommand& command) noexcept;
+    const LootWorld& loot() const noexcept { return loot_; }
+    PickupResult pickup(const PickupRequest&, bool preview = false) noexcept;
+    RestPreview previewRest(const RestRequest&) const noexcept;
+    RestResult rest(const RestRequest&) noexcept;
+    std::uint64_t restToken() const noexcept { return restToken_; }
 
   private:
     const Map& map_;
     Party party_;
     ActorWorld actors_;
+    RecoveryLevel recovery_;
+    LootWorld loot_;
     Controller movement_;
     rules::DiceRng rng_;
     NpcAiController ai_;
@@ -52,7 +61,7 @@ class GameSession {
     CombatController combat_;
     CombatEvents events_;
     bool enableAi_ = true;
-    std::uint64_t timeMs_ = 0;
+    std::uint64_t timeMs_ = 0, restToken_ = 1;
     double remainderMs_ = 0;
     void detectContact() noexcept;
     void driveFacing() noexcept;

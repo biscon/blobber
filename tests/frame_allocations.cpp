@@ -1,4 +1,6 @@
+#include "assets/image.hpp"
 #include "assets/prepared_assets.hpp"
+#include "assets/prepared_loot.hpp"
 #include "game/commands.hpp"
 #include "game/party.hpp"
 #include "input/key_repeat.hpp"
@@ -12,6 +14,7 @@
 #include "support/inventory_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
+#include "support/recovery_fixtures.hpp"
 #include "support/render_fixtures.hpp"
 #include "support/spell_fixtures.hpp"
 #include "ui/interaction.hpp"
@@ -166,12 +169,16 @@ int main() {
         UiInputEdges edges;
         const auto fightCatalog = combatCatalog(100000, -100, {1, 4, -100});
         const auto fightPlacements = combatPlacements(map);
-        GameSession fight(map, fightCatalog, fightPlacements, 5, {{3, 4}, Heading::North}, false,
-                          {npcTimings(appearance)});
+        auto fightStorage = std::unique_ptr<GameSession>(new GameSession(map, fightCatalog, fightPlacements,
+                                                                         5, {{3, 4}, Heading::North}, false,
+                                                                         {npcTimings(appearance)}));
+        auto& fight = *fightStorage;
         CommandController fightUi(fight, {npcTimings(appearance)});
         NpcAnimator fightAnimator(fight.actors(), {npcTimings(appearance)});
         FramePipeline fightFrames;
-        GameSession diagonalFight(map, fightCatalog, fightPlacements, 5, {{3, 3}, Heading::North});
+        auto diagonalFightStorage = std::unique_ptr<GameSession>(
+            new GameSession(map, fightCatalog, fightPlacements, 5, {{3, 3}, Heading::North}));
+        auto& diagonalFight = *diagonalFightStorage;
         diagonalFight.actors().damage(diagonalFight.actors().id(0), 100000, 0);
         diagonalFight.actors().damage(diagonalFight.actors().id(2), 100000, 0);
         int meleeActions = 0;
@@ -182,7 +189,9 @@ int main() {
         walkingNpc.ai.waypoints[0] = {4, 1};
         walkingNpc.ai.waypoints[1] = {1, 1};
         NpcWorld walkingPlacements(map, {3, 5}, {"goblin"}, {walkingNpc});
-        GameSession walking(map, fightCatalog, walkingPlacements, 5, {{3, 5}, Heading::North});
+        auto walkingStorage = std::unique_ptr<GameSession>(
+            new GameSession(map, fightCatalog, walkingPlacements, 5, {{3, 5}, Heading::North}));
+        auto& walking = *walkingStorage;
         NpcAnimator walkAnimator(walking.actors(), {npcTimings(appearance)});
         FramePipeline walkFrames;
         std::vector<std::string> bigRows(100, std::string(100, '.'));
@@ -197,29 +206,39 @@ int main() {
         for (int i = 0; i < 4; ++i)
             crowd.push_back({{0}, {3, 1}, {i % 2, i / 2}, Heading::South});
         NpcWorld crowdPlacements(map, {3, 5}, {"goblin"}, crowd);
-        GameSession crowded(map, fightCatalog, crowdPlacements, 5, {{3, 5}, Heading::South});
+        auto crowdedStorage = std::unique_ptr<GameSession>(
+            new GameSession(map, fightCatalog, crowdPlacements, 5, {{3, 5}, Heading::South}));
+        auto& crowded = *crowdedStorage;
         const auto hybridMap = hybridRoom();
         const auto hybridRules = hybridCatalog();
         NpcWorld hybridPlaces(hybridMap, {5, 8}, {"goblin"},
                               {{{0}, {5, 4}, {0, 1}, Heading::North},
                                {{0}, {7, 4}, {0, 0}, Heading::North},
                                {{0}, {8, 8}, {0, 0}, Heading::North}});
-        GameSession hybrid(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false);
+        auto hybridStorage = std::unique_ptr<GameSession>(
+            new GameSession(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false));
+        auto& hybrid = *hybridStorage;
         hybrid.setAnimated(false);
         CommandController hybridUi(hybrid);
         auto archer = NpcInstance{{0}, {5, 4}, {0, 0}, Heading::South};
         archer.monster = hybridRules.findMonster("archer");
         NpcWorld archerPlaces(hybridMap, {5, 8}, {"goblin"}, {archer});
-        GameSession archerSession(hybridMap, hybridRules, archerPlaces, 5, {{5, 8}, Heading::North});
+        auto archerSessionStorage = std::unique_ptr<GameSession>(
+            new GameSession(hybridMap, hybridRules, archerPlaces, 5, {{5, 8}, Heading::North}));
+        auto& archerSession = *archerSessionStorage;
         archer.cell = {5, 7};
         NpcWorld closeArcherPlaces(hybridMap, {5, 8}, {"goblin"}, {archer});
-        GameSession closeArcher(hybridMap, hybridRules, closeArcherPlaces, 5, {{5, 8}, Heading::North});
+        auto closeArcherStorage = std::unique_ptr<GameSession>(
+            new GameSession(hybridMap, hybridRules, closeArcherPlaces, 5, {{5, 8}, Heading::North}));
+        auto& closeArcher = *closeArcherStorage;
         Party effectParty(hybridRules);
         ActorWorld effectActors(hybridMap, hybridRules, hybridPlaces);
         rules::DiceRng effectRng(5);
         EffectController effects(effectParty, effectActors, effectRng);
         CombatEvents effectEvents;
-        GameSession effectSession(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false);
+        auto effectSessionStorage = std::unique_ptr<GameSession>(
+            new GameSession(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false));
+        auto& effectSession = *effectSessionStorage;
         const auto spellRules = spellCatalog();
         const auto spellFar = spellPlacements(hybridMap);
         const auto spellNear = spellPlacements(hybridMap, 12, true);
@@ -237,7 +256,9 @@ int main() {
         ProjectilePlayer spellVisuals;
         FramePipeline spellFrames;
         const auto featurePlaces = spellPlacements(hybridMap, 0);
-        GameSession featureSession(hybridMap, spellRules, featurePlaces, 5, spellSpawn, false);
+        auto featureSessionStorage = std::unique_ptr<GameSession>(
+            new GameSession(hybridMap, spellRules, featurePlaces, 5, spellSpawn, false));
+        auto& featureSession = *featureSessionStorage;
         CommandController featureUi(featureSession);
         const auto inventoryRules = inventoryCatalog();
         const NpcWorld inventoryPlaces(hybridMap, {6, 8}, {}, {});
@@ -248,7 +269,50 @@ int main() {
         auto& inventoryUi = *inventoryUiStorage;
         const auto arrow = findInventoryItem(inventorySession.party(), 2, 9);
         const auto arrowCell = inventorySession.party().inventory().locate(arrow).cell;
+        const auto recoveryRules = recoveryCatalog();
+        RecoveryLevel recoveryLevel;
+        recoveryLevel.sanctuaries[0] = {6, 8};
+        recoveryLevel.sanctuaryCount = 1;
+        for (std::size_t i = 0; i < recoveryLevel.ground.size(); ++i)
+            recoveryLevel.ground[recoveryLevel.groundCount++] = {{6, 8}, {12}, 6};
+        auto recoverySession = std::make_unique<GameSession>(hybridMap, recoveryRules, inventoryPlaces, 5,
+                                                             Player{{6, 8}, Heading::North}, false,
+                                                             std::vector<NpcTimings>{}, recoveryLevel);
+        auto recoveryUi = std::make_unique<CommandController>(*recoverySession);
+        OwnedImage lootImage(GenImageColor(30, 30, WHITE));
+        auto lootBank = prepareLoot(lootImage.value);
+        lootBank.bind(recoveryRules);
+        auto lootRenderer = std::make_unique<SceneRenderer>(
+            loadPreparedScene(bundleDirectory / "scene.bin", 31), PreparedNpcs{},
+            std::vector<NpcAttachments>{}, std::move(lootBank));
+        auto lootFrames = std::make_unique<FramePipeline>();
+        const auto deathPlaces = combatPlacements(map, Player{{3, 3}, Heading::North}, 4);
+        ActorWorld deathActors(map, recoveryRules, deathPlaces);
+        LootWorld deathLoot(deathActors, {}, 5);
         tracking = true;
+        for (std::size_t i = 0; i < 4; ++i)
+            deathActors.damage(deathActors.id(i), 100, 0);
+        deathLoot.reconcile(deathActors);
+        okay &= deathLoot.find({deathActors.snapshot().world, 0}) != nullptr;
+
+        for (int i = 0; i < 64; ++i) {
+            recoverySession->party().damage({0}, 1);
+            recoveryUi->refresh({}, false, false, true);
+            recoveryUi->openCamp();
+            recoveryUi->campKind(RestKind::Long);
+            recoveryUi->startRest();
+            recoveryUi->tickCamp(.1, true);
+            recoveryUi->closeOverlay();
+            const LootId lootId{recoverySession->actors().snapshot().world,
+                                static_cast<std::uint16_t>(2048 + i)};
+            recoveryUi->floorHover(lootId);
+            recoveryUi->pageLoot(lootId, 1);
+            lootFrames->update(*lootRenderer, hybridMap, recoverySession->movement(), nullptr, nullptr,
+                               nullptr, 0, nullptr, &recoverySession->loot().snapshot(),
+                               &recoveryUi->snapshot().lootPage);
+            recoveryUi->collectLoot(lootId);
+        }
+
         for (int iteration = 0; iteration < 100; ++iteration) {
             inventoryUi.refresh({}, false, false, true);
             inventoryUi.openInventory(rules::CharacterId{2});

@@ -54,6 +54,8 @@ working-directory setup is required: assets are copied beside the executable.
 | Q / E | Turn left / right 90 degrees |
 | Tab | Toggle animated / instant steps |
 | M | Toggle the development map overlay |
+| R / pause-menu Rest | Open camp; Left/Right selects Short/Long Rest, Enter starts, Escape closes |
+| Floor item hover / click / wheel | Inspect / collect into selected character / page through a crowded cell |
 | Monster hover / click | Preview reach and damage / immediately attack a reachable enemy |
 | 1 / sword | Select basic melee |
 | 2 / shield | Immediately defend |
@@ -97,7 +99,7 @@ An exposed melee goblin moves into that vacant front slot on its next turn, then
 attacks once. Party members retain their slots. Body visibility is also
 required. Hover explains paired-slot protection and other reach restrictions. The Rogue can melee from behind an ally and gains conditional Sneak Attack; enemy
 paired protection still applies. Inflict Wounds uses ordinary exposed melee reach.
-Ranged attacks and spells ignore enemy row protection. Items remain deferred.
+Ranged attacks and spells ignore enemy row protection. Potions use the checked inventory controls.
 
 At zero HP, characters make death saves on their turns. Aid stabilizes without
 healing. Victory stabilizes surviving downed allies and preserves HP/deaths;
@@ -105,8 +107,27 @@ Continue resumes exploration. No conscious party member means defeat; Restart
 reconstructs the party and monsters. Map/log browsing and focus loss pause gameplay.
 Cleric and Wizard start with four mana; first-level spells cost two and cantrips
 cost none. Casting takes one action or the shared six-second cooldown in real time.
-Mana and feature charges do not reset after encounters. Resting is a later slice;
-Restart restores initial resources. Portrait selection is distinct from the active turn.
+Mana and feature charges do not reset after encounters. Safe, stationary exploration
+allows camp: a Short Rest takes one gameplay hour and spends the Hit Dice you choose
+(class die + Constitution healing), refreshing Second Wind but not mana. A Long Rest
+takes eight hours, costs one party camp kit outside an authored sanctuary, and restores
+living members' HP, mana, class charges and half their maximum Hit Dice (rounded down,
+minimum one). Dead companions stay dead; dying companions must first be stabilized.
+Normal dungeon play has no sanctuary. Alden starts with one kit; two more are on the
+floor. Cancel before starting costs nothing; Escape after starting only skips the
+animation. Portrait selection is distinct from the active turn.
+
+Loot stays on the floor after a corpse disappears. Click a visible item in your cell
+or the three reachable front cells to collect it into the selected character's bag.
+Pickup requires safety and enough capacity for the whole stack. Wheel over a loot
+cluster to page beyond six items; hover shows quantity, recipient, page and any
+rejection reason. Gold weighs 0.02 lb per coin; camp kits weigh 8 lb each.
+
+Recovery demo: `./cmake-build-debug/blobber --recovery-demo --seed 5` uses separated
+encounters, supplies and an explicitly free sanctuary at the starting cell. The normal
+dungeon has no such sanctuary. `--capture-recovery DIRECTORY` exports hidden scripted
+camp/loot captures; add `--size 1280 720` or `--size 1024 768` to check scaling.
+See [slice 12 verification](docs/slice12_verification.md) for the review recipe.
 
 Inventory demo: `./cmake-build-debug/blobber --inventory-demo --seed 5` opens
 Merrin's inventory. Each character has 48 bag cells plus separate body, main-hand,

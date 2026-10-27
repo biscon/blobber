@@ -1,0 +1,18 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "prompt": "Create ONE production game sprite atlas on a genuinely TRANSPARENT background. Exactly 3 columns by 3 rows of equally sized square cells, 9 separate objects, with generous transparent margins in each cell and no overlap. No text, no border, no colored background, no shadows outside objects. Dark fantasy painterly detailed loot sprites, warm gold highlights, compatible with the Stone & Shadow camp style in the reference. Objects lie on an invisible dungeon floor viewed slightly from above, compact readable silhouettes. Row-major order: row1 curved steel SCIMITAR with brown grip; brown LEATHER ARMOR folded; round iron-banded wooden SHIELD. Row2 SHORTBOW with taut string; small bundle of ARROWS; little pile of GOLD COINS. Row3 round red HEALING POTION bottle; round blue MANA POTION bottle; CAMP SUPPLY KIT of rolled bedroll bound to canvas ration pack. Exactly one icon of each item. Equal visual scale centered in its cell. Make objects easily recognized at small sizes, no tiny decorative details. Transparent negative space is critical: no black or green squares and no checkerboard painted in.",
+  "layout": [
+    "scimitar",
+    "leather",
+    "shield",
+    "shortbow",
+    "arrow",
+    "gold",
+    "healing_potion",
+    "mana_potion",
+    "camp_kit"
+  ],
+  "columns": 3,
+  "rows": 3,
+  "transparent": true
+}

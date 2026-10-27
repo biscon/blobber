@@ -1,5 +1,5 @@
 #pragma once
-#include "game/inventory.hpp"
+#include "game/recovery.hpp"
 #include "rules/health.hpp"
 
 namespace blobber {
@@ -42,6 +42,9 @@ class Party {
     const Inventory& inventory() const noexcept { return inventory_; }
     InventoryResult previewInventoryChange(const InventoryRequest&) const noexcept;
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
+    InventoryResult acquire(const AcquisitionRequest&, bool preview = false) noexcept;
+    RestError recoveryBenefits(const RestRequest&) const noexcept;
+    RestResult recover(const RestRequest&, ItemHandle supply, rules::DiceRng&) noexcept;
     bool consumeItem(ItemHandle, unsigned quantity = 1) noexcept;
     bool restoreMana(rules::CharacterId, int amount) noexcept;
     const rules::ItemDefinition* equipped(rules::CharacterId, EquipmentSlot) const noexcept;

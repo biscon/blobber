@@ -27,6 +27,7 @@ enum class UiKey : std::size_t {
     TransferItem,
     UseItem,
     Tab,
+    Rest,
     Count
 };
 constexpr auto uiKeyCount = static_cast<std::size_t>(UiKey::Count);

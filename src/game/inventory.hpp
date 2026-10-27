@@ -51,6 +51,12 @@ struct InventoryResult {
     bool changed = false;
     explicit operator bool() const noexcept { return error == InventoryError::None; }
 };
+struct AcquisitionRequest {
+    rules::CharacterId character;
+    rules::ItemId item;
+    std::uint16_t quantity = 0;
+    std::uint64_t revision = 0;
+};
 // Value storage; Party stages a copy before committing. Catalog and character strings stay outside it.
 class Inventory {
   public:
@@ -69,6 +75,7 @@ class Inventory {
     void initialize(const rules::Catalog&, const rules::PresetParty&);
     InventoryResult apply(const InventoryRequest&, const rules::Catalog&) noexcept;
     bool consume(ItemHandle, unsigned quantity) noexcept;
+    InventoryResult acquire(const AcquisitionRequest&, const rules::Catalog&) noexcept;
 
     std::array<ItemStack, inventoryCapacity> stacks_{};
     std::array<std::array<ItemHandle, 52>, rules::partySize> locations_{};

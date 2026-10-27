@@ -14,6 +14,7 @@ struct FixtureDirectory {
     FixtureDirectory() {
         std::filesystem::create_directories(path / "spells");
         std::filesystem::create_directories(path / "items");
+        std::filesystem::create_directories(path / "camp");
     }
     ~FixtureDirectory() {
         std::error_code e;
@@ -66,8 +67,10 @@ void nativeUi() {
                                   "items/arcane_focus",
                                   "items/healing_potion",
                                   "items/mana_potion",
-                                  "items/silhouette"};
-    for (unsigned i = 0; i < 45; ++i) {
+                                  "items/silhouette",
+                                  "items/loot-sheet",
+                                  "camp/bonfire-sheet"};
+    for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168
                                                  : 108,

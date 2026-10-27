@@ -14,6 +14,9 @@ class PickingBuffer {
         std::fill_n(pixels_.get(), viewWidth * viewHeight, empty);
         targets_ = {};
         badgeAnchors_ = {};
+        lootWorld_ = 0;
+        lootAnchors_ = {};
+        lootRegionCount_ = 0;
     }
     void badgeAnchor(std::uint16_t slot, int x, int top) noexcept { badgeAnchors_[slot] = {x, top}; }
     void write(std::size_t pixel, std::uint16_t slot) noexcept { pixels_[pixel] = slot; }
@@ -62,11 +65,42 @@ class PickingBuffer {
                 return targets_.ids[i];
         return {};
     }
+    void lootRegion(LootId id, int left, int top, int size) noexcept {
+        if (lootRegionCount_ < lootRegions_.size())
+            lootRegions_[lootRegionCount_++] = {id, left - 15, top - 15, size + 30};
+    }
+    std::optional<LootId> pickLootCell(int x, int y) const noexcept {
+        for (std::size_t i = lootRegionCount_; i > 0; --i) {
+            const auto& r = lootRegions_[i - 1];
+            if (x >= r.x && y >= r.y && x < r.x + r.size && y < r.y + r.size)
+                return r.id;
+        }
+        return {};
+    }
+    void lootWorld(std::uint64_t world) noexcept { lootWorld_ = world; }
+    void lootAnchor(std::uint16_t slot, int x, int y) noexcept { lootAnchors_[slot] = {x, y}; }
+    Cell lootAnchor(std::uint16_t slot) const noexcept {
+        return slot < lootCapacity ? lootAnchors_[slot] : Cell{};
+    }
+    std::optional<LootId> pickLoot(int x, int y) const noexcept {
+        const auto s = slot(x, y);
+        if (lootWorld_ && s >= NpcWorld::maxInstances && s < NpcWorld::maxInstances + lootCapacity)
+            return LootId{lootWorld_, static_cast<std::uint16_t>(s - NpcWorld::maxInstances)};
+        return {};
+    }
     const TargetSnapshot& targets() const noexcept { return targets_; }
 
   private:
     std::unique_ptr<std::uint16_t[]> pixels_;
     TargetSnapshot targets_;
+    struct LootRegion {
+        LootId id;
+        int x = 0, y = 0, size = 0;
+    };
+    std::array<LootRegion, lootCapacity> lootRegions_{};
+    std::size_t lootRegionCount_ = 0;
+    std::uint64_t lootWorld_ = 0;
+    std::array<Cell, lootCapacity> lootAnchors_{};
     std::array<Cell, NpcWorld::maxInstances> badgeAnchors_{};
 };
 } // namespace blobber

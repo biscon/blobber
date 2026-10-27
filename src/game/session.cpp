@@ -5,10 +5,11 @@
 namespace blobber {
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                          std::uint32_t seed, Player spawn, bool enableAi,
-                         const std::vector<NpcTimings>& timings)
-    : map_(map), party_(catalog), actors_(map, catalog, placements), movement_(spawn), rng_(seed),
-      ai_(map, actors_, seed), effects_(party_, actors_, rng_),
-      combat_(map, party_, actors_, rng_, ai_, effects_, timings), enableAi_(enableAi) {
+                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery)
+    : map_(map), party_(catalog), actors_(map, catalog, placements), recovery_(recovery),
+      loot_(actors_, recovery, seed), movement_(spawn), rng_(seed), ai_(map, actors_, seed),
+      effects_(party_, actors_, rng_), combat_(map, party_, actors_, rng_, ai_, effects_, timings),
+      enableAi_(enableAi) {
     if (map.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     combat_.enableRoaming(enableAi_);
@@ -21,6 +22,7 @@ void GameSession::detectContact() noexcept {
 }
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     events_.clear();
+    loot_.reconcile(actors_);
     if (paused) {
         movement_.clearPending();
         return events_;
@@ -50,6 +52,7 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
         combat_.update(movement_.state().player, movement_.state().transition.active(), timeMs_, events_);
     events_.append(events_.step);
     driveFacing();
+    loot_.reconcile(actors_);
     return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
@@ -97,6 +100,7 @@ CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
     const auto out = combat_.submit(command, movement_.state().player, timeMs_, events_);
     if (out.event != CombatEvent::Cast)
         events_.append(out);
+    loot_.reconcile(actors_);
     return out;
 }
 EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {

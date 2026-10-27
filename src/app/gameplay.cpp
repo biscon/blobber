@@ -37,15 +37,16 @@ struct PlayView {
     const SceneRenderer& renderer;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
-             bool enableAi = false)
-        : session(m, catalog, placements, seed, spawn, enableAi, timings),
+             bool enableAi = false, const RecoveryLevel& recovery = {})
+        : session(m, catalog, placements, seed, spawn, enableAi, timings, recovery),
           animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs());
         const auto area = debug ? SpellArea{} : commands.floorPreview();
         const bool changed =
             frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                          &session.combat().attacks(), session.timeMs(), &area);
+                          &session.combat().attacks(), session.timeMs(), &area, &session.loot().snapshot(),
+                          &commands.snapshot().lootPage);
         const auto* picking = frames.picking();
         commands.refresh(picking ? picking->targets() : TargetSnapshot{},
                          session.movement().transition.active(), debug, focused);
@@ -53,7 +54,8 @@ struct PlayView {
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible)
             return frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                                 &session.combat().attacks(), session.timeMs(), &currentArea) ||
+                                 &session.combat().attacks(), session.timeMs(), &currentArea,
+                                 &session.loot().snapshot(), &commands.snapshot().lootPage) ||
                    changed;
         return changed;
     }
@@ -61,7 +63,7 @@ struct PlayView {
 } // namespace
 void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                  const std::vector<NpcTimings>& timings, const SceneRenderer& renderer, Presenter& presenter,
-                 const Options& options) {
+                 const Options& options, const RecoveryLevel& recovery) {
     const auto idle = gameplayPlacements(map, placements);
     const Player spawn = options.combatDemo   ? combatCamera(map, idle)
                          : options.hybridDemo ? hybridDemoSpawn()
@@ -74,7 +76,7 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
     std::cout << "Gameplay seed: " << seed << '\n';
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     for (;;) {
-        PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo);
+        PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo, recovery);
         bool debug = false, first = true, restart = false;
         view.refresh();
         if (options.inventoryDemo)
@@ -94,7 +96,10 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                 view.session.clearPending();
             if (sample.toggleMap)
                 debug = !debug;
-            const bool paused = !sample.ui.focused || debug || view.commands.snapshot().modal();
+            const bool campWasOpen = view.commands.snapshot().camp.open;
+            view.commands.tickCamp(dt, sample.ui.focused);
+            const bool paused =
+                campWasOpen || !sample.ui.focused || debug || view.commands.snapshot().modal();
             const auto presentedCombat = view.commands.snapshot().combat;
             const auto previous = view.session.movement().player;
             view.commands.record(view.session.update(dt, paused));
@@ -125,13 +130,21 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                 view.session.combat().continueExploring();
                 view.commands.cancel();
                 view.session.clearPending();
-            } else {
+            } else if (!(campWasOpen && !view.commands.snapshot().camp.open)) {
                 const auto* picking = view.frames.picking();
                 const auto hit =
                     picking && sample.ui.pointer
                         ? picking->pick(int(sample.ui.pointer->x) - viewX, int(sample.ui.pointer->y) - viewY)
                         : std::nullopt;
-                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result);
+                auto lootHit = picking && sample.ui.pointer
+                                   ? picking->pickLoot(int(sample.ui.pointer->x) - viewX,
+                                                       int(sample.ui.pointer->y) - viewY)
+                                   : std::nullopt;
+                if (!lootHit && picking && sample.ui.pointer && sample.ui.scroll &&
+                    !sample.ui.has(UiKey::Click))
+                    lootHit = picking->pickLootCell(int(sample.ui.pointer->x) - viewX,
+                                                    int(sample.ui.pointer->y) - viewY);
+                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit);
             }
             if (view.commands.snapshot().quitRequested)
                 return;

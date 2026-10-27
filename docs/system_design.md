@@ -1,5 +1,15 @@
 # System design
 
+Implemented, **Ready for review** (2026-10-27): slice 12
+[loot and recovery](loot_recovery_design.md), with [verification and handoff](slice12_verification.md).
+GameSession owns bounded, corpse-independent loot and checked rest transactions;
+Party stages acquisition and supply consumption. Schema 6 adds authored drops,
+weighted currency and camp kits. Floor sprites are baked offline into a bounded
+bank; depth-aware floor picking shares existing presentation and transitions.
+The exclusive camp screen commits recovery once and plays a cosmetic bonfire loop.
+Debug/Release, focused sanitizers, allocation checks and hidden captures pass.
+User acceptance is pending; slice 13 is not eligible.
+
 Implemented, **accepted and closed**: approved [tabbed inventory and character sheet](character_sheet_design.md),
 replacing the portrait inspector while preserving the current inventory layout.
 The shared paused overlay uses fixed snapshots of live stats, equipment, resources,
@@ -15,7 +25,7 @@ weight/stat/effect reconciliation and strict schema-5 content. Full-screen pause
 browsing supports drag, split, transfer and equipment controls. Potions and finite
 party arrows share authoritative combat costs. Native item art preserves prepared
 dungeon rendering. Debug/Release suites, focused sanitizers, allocation guards and
-hidden GPU/captures pass. The user accepted slice 11 on 2026-10-27. Slice 12 is next eligible for planning and remains unstarted.
+hidden GPU/captures pass. The user accepted slice 11 on 2026-10-27. Slice 12's implemented result is tracked above.
 
 Implemented, **accepted and closed** (2026-10-27): [Class Features picker correction](spellcasting_ui_design.md#class-features-presentation).
 The shared picker distinguishes spells, activated features and read-only automatic

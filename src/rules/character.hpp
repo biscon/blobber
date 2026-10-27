@@ -39,6 +39,7 @@ enum class WeaponType : std::uint8_t {
     Sling,
     Quarterstaff,
     LightCrossbow,
+    Scimitar,
     Count
 };
 constexpr std::size_t weaponTypeCount = static_cast<std::size_t>(WeaponType::Count);
@@ -56,7 +57,7 @@ constexpr std::uint8_t armorBit(ArmorType type) noexcept {
     return static_cast<unsigned>(type) <= 3 ? static_cast<std::uint8_t>(1u << static_cast<unsigned>(type))
                                             : 0;
 }
-enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable };
+enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable, Currency, Supply };
 enum class Ammunition : std::uint8_t { None, Arrow };
 enum class Consumable : std::uint8_t { None, Healing, Mana };
 struct RaceDefinition {

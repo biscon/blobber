@@ -231,3 +231,28 @@ confirmation and automatic transfer ordering are approved project rules. All fou
 characters start with two healing potions; Cleric and Wizard additionally start
 with two mana potions. Rogue starts with twenty arrows. Loot, arrow recovery, rest,
 progression, saves and dropping items are outside this slice.
+
+## Slice 12 loot and recovery — implemented, awaiting review
+
+Source: [official SRD 5.1 CC edition](https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf),
+printed p. 62 (coin weight), p. 87 (short/long rests), and the previously recorded
+class/equipment sections. See the [approved design](loot_recovery_design.md).
+
+SRD 5.1 does not contain the DMG's individual-treasure/hoard-generation tables.
+The 1d6 gold for current CR-1/4 goblins, guaranteed usable equipment, 15% healing /
+5% mana potion outcomes, gold stack limit and fixed camp kits are project choices,
+not a universal SRD gold-per-monster formula. Gold uses 50 coins per pound.
+NPC stats/art/weapon roles stay unchanged, including the existing dagger-art /
+scimitar-rules distinction and the archer's abstract shield/AC treatment.
+
+Adopt one-hour short rests with selected class Hit Dice + Constitution healing,
+and eight-hour long rests with full HP and half-maximum Hit Dice recovery (minimum
+one). Second Wind refreshes on either rest; Arcane Recovery refreshes only on a
+long rest while retaining its accepted manual safe-exploration activation. Mana
+refill is the project's resource adaptation. Stable zero-HP allies may receive
+rest benefits; dead allies never do. Omit the once-per-24-hours long-rest limit
+and the SRD's one-HP-at-start requirement. Require existing safe Exploration plus
+settled presentation/no dying ally. Skip gameplay time without AI movement.
+Camp kits, authored sanctuaries, instantaneous transactions and cosmetic camp
+playback are project adaptations. Implementation and checks are recorded in
+[slice 12 verification](slice12_verification.md).

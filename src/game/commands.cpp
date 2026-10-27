@@ -339,6 +339,8 @@ bool CommandController::visible(ActorId id) const noexcept {
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
                                 const HudDemo* demo) noexcept {
     state_.production = session_ != nullptr;
+    if (state_.camp.open)
+        refreshCamp();
     if (!focused) {
         state_.inventory.pointerDown = false;
         state_.inventory.dragging = false;
