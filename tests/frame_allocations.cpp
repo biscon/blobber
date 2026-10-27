@@ -253,8 +253,7 @@ int main() {
             inventoryUi.refresh({}, false, false, true);
             inventoryUi.openInventory(rules::CharacterId{2});
             inventoryUi.inventorySelect(arrowCell);
-            inventoryUi.inventoryAction(InventoryAction::Split);
-            inventoryUi.inventorySelect(47);
+            inventoryUi.inventoryDrop({{2}, 47}, true);
             okay &= inventoryUi.snapshot().inventory.mode == InventoryMode::Quantity;
             inventoryUi.inventoryConfirm();
             inventoryUi.inventorySelect(47);

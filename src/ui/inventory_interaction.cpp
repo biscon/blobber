@@ -74,10 +74,7 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
     }
     for (int n = 0; n < 4; ++n) {
         if (in.has(static_cast<UiKey>(n)) || (click && inside(inventoryLayout::tab(n)))) {
-            if (i.mode == InventoryMode::Split)
-                commands.inventoryDrop({h.cards[n].id, UINT16_MAX}, true);
-            else
-                commands.inventoryCharacter(h.cards[n].id);
+            commands.inventoryCharacter(h.cards[n].id);
             return true;
         }
     }
@@ -87,19 +84,17 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
         commands.inventoryDescription(-1);
     if (in.has(UiKey::NextPage))
         commands.inventoryDescription(1);
-    constexpr UiKey keys[]{UiKey::Equip, UiKey::MoveItem, UiKey::SplitItem, UiKey::TransferItem,
-                           UiKey::UseItem};
-    for (int n = 0; n < 5; ++n)
-        if (in.has(keys[n]) || (click && inside(inventoryLayout::action(n)))) {
-            commands.inventoryAction(static_cast<InventoryAction>(n));
+    constexpr UiKey keys[]{UiKey::Equip, UiKey::TransferItem, UiKey::UseItem};
+    for (unsigned n = 0; n < i.actions.size(); ++n) {
+        const auto action = static_cast<InventoryAction>(n);
+        if (i.actions[n].visible &&
+            (in.has(keys[n]) || (click && inside(inventoryLayout::action(i, action))))) {
+            commands.inventoryAction(action);
             return true;
         }
-    if (in.has(UiKey::Tab)) {
-        if (i.mode == InventoryMode::Move || i.mode == InventoryMode::Split)
-            commands.inventoryCursor(i.cursor < 48 ? 48 : 0);
-        else
-            commands.inventorySelect(i.cursor < 48 ? 48 : 0);
     }
+    if (in.has(UiKey::Tab))
+        commands.inventorySelect(i.cursor < 48 ? 48 : 0);
     const int delta = in.has(UiKey::Left)    ? -1
                       : in.has(UiKey::Right) ? 1
                       : in.has(UiKey::Up)    ? (i.cursor < 48 ? -8 : -1)
@@ -107,13 +102,7 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
                                              : 0;
     if (delta) {
         const int cell = std::clamp(int(i.cursor) + delta, 0, 51);
-        // Destination mode navigates without committing until Enter.
-        if (i.mode == InventoryMode::Move || i.mode == InventoryMode::Split) {
-            // Separate cursor motion is provided through pointer-free selection below.
-            commands.inventoryPointer(-100, -100, false, false, false, false);
-            commands.inventoryCursor(static_cast<std::uint16_t>(cell));
-        } else
-            commands.inventorySelect(static_cast<std::uint16_t>(cell));
+        commands.inventorySelect(static_cast<std::uint16_t>(cell));
     }
     if (in.has(UiKey::Confirm))
         commands.inventoryConfirm();

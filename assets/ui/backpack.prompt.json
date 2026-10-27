@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "prompt": "Use case: stylized-concept. Asset type: square painted fantasy dungeon-crawler inventory button icon. Primary request: one sturdy brown leather adventurer's backpack, clearly recognizable as a backpack, front three-quarter view with rounded top flap, two brass buckles, visible shoulder straps and one simple small front pocket. Entire backpack centered with generous 12% padding, bold silhouette readable at 80 to 110 pixels. Rich warm brown leather, warm golden edge lighting, muted dark emerald near-black textured background, matching classic painted fantasy RPG item icons. No potion bottles, weapons, people, hands, lettering, border, UI, or extra loose objects. High-resolution original.",
+  "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-87df6eee-809f-40a4-9d20-519c34622c68.png",
+  "file": "assets/ui/backpack.png"
+}

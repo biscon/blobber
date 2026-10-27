@@ -1,8 +1,13 @@
 #pragma once
 #include "game/command_types.hpp"
 namespace blobber {
-enum class InventoryMode : std::uint8_t { Browse, Move, Split, Transfer, Quantity };
-enum class InventoryAction : std::uint8_t { Equip, Move, Split, Transfer, Use };
+enum class InventoryMode : std::uint8_t { Browse, Transfer, Quantity };
+enum class InventoryAction : std::uint8_t { Equip, Transfer, Use, Count };
+struct InventoryActionState {
+    bool visible = false, enabled = false;
+    const char* label = "";
+    const char* reason = "";
+};
 struct InventoryCell {
     ItemHandle handle;
     const rules::ItemDefinition* definition = nullptr;
@@ -16,6 +21,7 @@ struct InventoryHud {
     std::array<InventoryCell, 52> cells{};
     ItemHandle selected{}, source{};
     InventoryMode mode = InventoryMode::Browse;
+    std::array<InventoryActionState, static_cast<unsigned>(InventoryAction::Count)> actions{};
     InventoryRequest pending;
     unsigned quantity = 1, maximum = 1;
     std::uint64_t revision = 0;

@@ -219,6 +219,8 @@ class CommandController {
 
   private:
     void refreshInventory() noexcept;
+    void refreshInventoryActions() noexcept;
+    PartyCommand inventoryUseCommand() const noexcept;
     void inventoryFeedback(const char*) noexcept;
     void inventoryExecute(const InventoryRequest&) noexcept;
     void refreshMagic() noexcept;

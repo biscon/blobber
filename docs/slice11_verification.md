@@ -135,3 +135,62 @@ No loot, arrow recovery, resting, progression, save/resume, item dropping or lay
 clothing is delivered. See the [source/adaptation ledger](srd_content_ledger.md#slice-11-inventory-ammunition-and-potions).
 After user acceptance, record it in the checkpoint/tracker/execution record before
 planning slice 12. Do not infer acceptance from these checks or captured images.
+
+## Inventory review correction (2026-10-27)
+
+Implemented the user's screenshot feedback; **Ready for review**, acceptance still
+pending. This section supersedes the earlier button-split/keyboard-destination
+coverage and the earlier inventory screenshots above.
+
+- Holy symbols, spellbooks and focuses expose Transfer only. Equip/Unequip and
+  Use Potion appear only for applicable items. Temporarily blocked actions are
+  dimmed with a reason; clicks and shortcuts consult authoritative availability.
+- Removed Move/Merge and Split buttons and their M/S modes. Drag/drop moves and
+  merges; Shift-drag opens the quantity dialog. A persistent gesture hint makes
+  these interactions discoverable.
+- Body sits over the torso; Ranged sits below Main Hand, beside the silhouette.
+  Head and feet remain clear. Close/action/dialog captions are centered, split
+  +/- use a prepared 48-pixel bold font, and quantity badges align to the right.
+- I opens inventory (existing binding now covered by regression tests). Map
+  toggling and its hints use M. The fifth dock icon is a backpack; its tooltip
+  describes inventory and I/5 instead of claiming items are unavailable.
+
+The built-in image generator produced the original
+[backpack master](../assets/ui/backpack.png); the exact
+[prompt and provenance](../assets/ui/backpack.prompt.json) are retained. Existing
+item art and the old potion master remain intact.
+
+Verification for this correction:
+
+| Check | Result |
+| --- | --- |
+| Focused Debug and Release | 5/5 each: inventory, spells, HUD, commands, frame allocations |
+| Final layout/tooltip follow-up | Inventory, HUD and allocation checks 3/3 in both builds; Debug 14.22 s, Release 1.86 s |
+| Allocation guard | Zero tracked C++ allocations, including repeated action availability previews |
+| Hidden GPU lifecycle | Passed with the backpack atlas fixture; application captures exercise added font loading/destruction |
+| Final application build | Passed without compiler warnings |
+| Hidden scripted captures | 53 PNGs at native, reduced and letterboxed sizes; representative images visually inspected |
+
+The earlier full-suite, stress and sanitizer runs were not repeated for this UI
+correction. The focused regression tests cover non-actionable gear, hidden
+shortcuts/hit areas, full-health potion blocking, eligible potion targeting,
+equip/unequip labels, danger restrictions, inventory opening and the dock tooltip.
+Existing drag/split/merge, cancellation and transaction conservation checks pass.
+No OS input or desktop focus was controlled; interactive user review remains
+unverified. Physical M polling was changed in the platform adapter; the captures
+verify its displayed hint, not a real keyboard event.
+
+Selected replacement review images:
+
+- [Holy symbol, native](screenshots/slice11-review/inventory-holy-symbol.png)
+  and [spellbook, reduced](screenshots/slice11-review/inventory-spellbook-1280.png).
+- [Paper doll layout](screenshots/slice11-review/inventory-cleric-1280.png).
+- [Split dialog, native](screenshots/slice11-review/inventory-split-default.png)
+  and [reduced](screenshots/slice11-review/inventory-split-default-1280.png).
+- [Unavailable potion](screenshots/slice11-review/inventory-potion-disabled-1280.png),
+  [full bag](screenshots/slice11-review/inventory-full-bag-1280.png),
+  and [danger restrictions](screenshots/slice11-review/inventory-danger.png).
+- [Backpack dock and M map hint](screenshots/slice11-review/inventory-backpack-dock-1280.png).
+
+Reproduce with `cmake-build-debug/blobber --capture-inventory DIRECTORY --seed 5`.
+Continue review corrections within slice 11; do not start slice 12 until acceptance.

@@ -3,6 +3,95 @@
 #include <algorithm>
 #include <cstdio>
 namespace blobber {
+namespace {
+std::uint16_t equipDestination(const Inventory& inventory, ItemHandle handle,
+                               const rules::ItemDefinition& item) noexcept {
+    const auto location = inventory.locate(handle);
+    if (location.cell >= bagCells) {
+        for (std::uint16_t n = 0; n < bagCells; ++n)
+            if (!inventory.at({location.character, n}))
+                return n;
+        return UINT16_MAX;
+    }
+    if (item.kind == rules::ItemKind::Armor)
+        return 48;
+    if (item.kind == rules::ItemKind::Shield)
+        return 50;
+    if (item.kind == rules::ItemKind::Weapon)
+        return item.ranged ? 51 : 49;
+    return UINT16_MAX;
+}
+} // namespace
+PartyCommand CommandController::inventoryUseCommand() const noexcept {
+    PartyCommand c;
+    c.character = state_.inventory.character;
+    c.action = PartyAction::Item;
+    c.item = state_.inventory.selected;
+    c.inventoryRevision = party_.inventory().revision();
+    c.world = state_.combat.world;
+    c.turn = state_.combat.turn;
+    c.ally = c.character;
+    return c;
+}
+void CommandController::refreshInventoryActions() noexcept {
+    auto& i = state_.inventory;
+    i.actions = {};
+    const auto* stack = party_.inventory().stack(i.selected);
+    if (!i.open || !session_ || !stack)
+        return;
+    const auto& item = *party_.catalog().item(stack->item);
+    const auto location = party_.inventory().locate(i.selected);
+    if (location.character.index != i.character.index)
+        return;
+    auto preview = [&](InventoryRequest request) {
+        const auto access = session_->inventoryAccess(request);
+        return access == InventoryError::None ? party_.previewInventoryChange(request).error : access;
+    };
+    auto& equip = i.actions[static_cast<unsigned>(InventoryAction::Equip)];
+    equip.visible = location.cell >= bagCells || item.kind == rules::ItemKind::Armor ||
+                    item.kind == rules::ItemKind::Shield || item.kind == rules::ItemKind::Weapon;
+    equip.label = location.cell >= bagCells ? "E  UNEQUIP" : "E  EQUIP";
+    if (equip.visible) {
+        const auto dest = equipDestination(party_.inventory(), i.selected, item);
+        const auto error = dest == UINT16_MAX
+                               ? InventoryError::Full
+                               : preview({InventoryOp::Move, i.selected, {i.character, dest}, 0, i.revision});
+        equip.enabled = error == InventoryError::None;
+        equip.reason = inventoryMessage(error);
+    }
+    auto& transfer = i.actions[static_cast<unsigned>(InventoryAction::Transfer)];
+    transfer.visible = true;
+    transfer.label = "T  TRANSFER";
+    InventoryError transferError = InventoryError::Full;
+    for (std::uint16_t n = 0; n < 4; ++n)
+        if (n != i.character.index) {
+            transferError = preview({InventoryOp::Transfer, i.selected, {{n}, UINT16_MAX}, 0, i.revision});
+            if (transferError == InventoryError::None) {
+                transfer.enabled = true;
+                break;
+            }
+        }
+    transfer.reason = inventoryMessage(transferError);
+    auto& use = i.actions[static_cast<unsigned>(InventoryAction::Use)];
+    use.visible = item.kind == rules::ItemKind::Consumable;
+    use.label = "U  USE POTION";
+    if (use.visible) {
+        auto c = inventoryUseCommand();
+        auto reason = CommandReason::MissingTarget;
+        for (std::uint16_t n = 0; n < 4; ++n) {
+            c.ally = rules::CharacterId{n};
+            reason = session_->combat().validate(c, session_->movement().player);
+            if (reason == CommandReason::Ready) {
+                use.enabled = true;
+                break;
+            }
+        }
+        use.reason = reason == CommandReason::FullHealth ? "All living allies are at full health."
+                     : reason == CommandReason::FullMana ? "No ally needs mana."
+                                                         : commandMessage(reason);
+    }
+}
+
 void CommandController::inventoryFeedback(const char* s) noexcept {
     std::snprintf(state_.inventory.feedback.data(), state_.inventory.feedback.size(), "%s", s);
 }
@@ -67,6 +156,7 @@ void CommandController::refreshInventory() noexcept {
                            ? InventoryError::None
                            : InventoryError::Unsafe;
     }
+    refreshInventoryActions();
     if (i.itemTargeting && session_) {
         for (std::size_t n = 0; n < 4; ++n) {
             auto command = i.itemCommand;
@@ -86,15 +176,12 @@ void CommandController::inventorySelect(std::uint16_t cell) noexcept {
     if (!i.open || cell >= 52)
         return;
     i.cursor = cell;
-    if (i.mode == InventoryMode::Move || i.mode == InventoryMode::Split) {
-        inventoryDrop({i.character, cell}, i.mode == InventoryMode::Split);
-        return;
-    }
     if (i.selected != i.cells[cell].handle)
         i.descriptionPage = 0;
     i.selected = i.cells[cell].handle;
     i.source = {};
     i.feedback = {};
+    refreshInventoryActions();
 }
 void CommandController::inventoryExecute(const InventoryRequest& r) noexcept {
     if (!session_)
@@ -151,63 +238,24 @@ void CommandController::inventoryAction(InventoryAction action) noexcept {
     auto& i = state_.inventory;
     if (!i.open || !session_)
         return;
-    const auto* stack = party_.inventory().stack(i.selected);
-    if (!stack) {
-        inventoryFeedback("Select an item first.");
+    refreshInventoryActions();
+    const auto index = static_cast<unsigned>(action);
+    if (index >= i.actions.size() || !i.actions[index].visible)
+        return;
+    if (!i.actions[index].enabled) {
+        inventoryFeedback(i.actions[index].reason);
         return;
     }
+    const auto* stack = party_.inventory().stack(i.selected);
     const auto* item = party_.catalog().item(stack->item);
-    const auto loc = party_.inventory().locate(i.selected);
     i.source = i.selected;
-    if (action == InventoryAction::Move) {
-        i.mode = InventoryMode::Move;
-        inventoryFeedback("Select a destination cell or equipment slot.");
-    } else if (action == InventoryAction::Split) {
-        if (stack->quantity < 2) {
-            inventoryFeedback("This item cannot be split.");
-            return;
-        }
-        i.mode = InventoryMode::Split;
-        inventoryFeedback("Choose a bag cell or another character, then a quantity.");
-    } else if (action == InventoryAction::Transfer) {
+    if (action == InventoryAction::Transfer) {
         i.mode = InventoryMode::Transfer;
         inventoryFeedback("Select another character above (or press 1-4).");
     } else if (action == InventoryAction::Equip) {
-        std::uint16_t dest = UINT16_MAX;
-        if (loc.cell >= bagCells) {
-            for (std::uint16_t k = 0; k < bagCells; ++k)
-                if (!i.cells[k].handle) {
-                    dest = k;
-                    break;
-                }
-            if (dest == UINT16_MAX) {
-                inventoryFeedback(inventoryMessage(InventoryError::Full));
-                return;
-            }
-        } else if (item->kind == rules::ItemKind::Armor)
-            dest = 48;
-        else if (item->kind == rules::ItemKind::Shield)
-            dest = 50;
-        else if (item->kind == rules::ItemKind::Weapon)
-            dest = item->ranged ? 51 : 49;
-        else {
-            inventoryFeedback("This item cannot be equipped.");
-            return;
-        }
-        inventoryDrop({i.character, dest});
+        inventoryDrop({i.character, equipDestination(party_.inventory(), i.selected, *item)});
     } else if (action == InventoryAction::Use) {
-        if (item->kind != rules::ItemKind::Consumable) {
-            inventoryFeedback("Select a healing or mana potion.");
-            return;
-        }
-        PartyCommand c;
-        c.character = i.character;
-        c.action = PartyAction::Item;
-        c.item = i.selected;
-        c.world = state_.combat.world;
-        c.turn = state_.combat.turn;
-        c.inventoryRevision = party_.inventory().revision();
-        c.ally = i.character;
+        auto c = inventoryUseCommand();
         auto reason = session_->combat().validate(c, session_->movement().player);
         if (reason != CommandReason::Ready && reason != CommandReason::FullHealth &&
             reason != CommandReason::FullMana && reason != CommandReason::DeadAlly) {
@@ -277,10 +325,6 @@ void CommandController::inventoryPointer(float x, float y, bool press, bool held
         const auto k = hit();
         if (k >= 52)
             return;
-        if (i.mode == InventoryMode::Move || i.mode == InventoryMode::Split) {
-            inventorySelect(k);
-            return;
-        }
         inventorySelect(k);
         i.source = i.selected;
         i.pointerDown = bool(i.source);

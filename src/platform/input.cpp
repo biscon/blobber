@@ -22,8 +22,6 @@ InputSample Input::poll(float seconds) {
     uiDown[static_cast<std::size_t>(UiKey::NextPage)] = IsKeyDown(KEY_PAGE_DOWN);
     uiDown[static_cast<std::size_t>(UiKey::Inventory)] = IsKeyDown(KEY_I);
     uiDown[static_cast<std::size_t>(UiKey::Equip)] = IsKeyDown(KEY_E);
-    uiDown[static_cast<std::size_t>(UiKey::MoveItem)] = IsKeyDown(KEY_M);
-    uiDown[static_cast<std::size_t>(UiKey::SplitItem)] = IsKeyDown(KEY_S);
     uiDown[static_cast<std::size_t>(UiKey::TransferItem)] = IsKeyDown(KEY_T);
     uiDown[static_cast<std::size_t>(UiKey::UseItem)] = IsKeyDown(KEY_U);
     uiDown[static_cast<std::size_t>(UiKey::Tab)] = IsKeyDown(KEY_TAB);
@@ -38,7 +36,7 @@ InputSample Input::poll(float seconds) {
     result.ui.shift = focused && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT));
     if (focused && previousFocus_) {
         result.toggleAnimation = IsKeyPressed(KEY_TAB);
-        result.toggleMap = IsKeyPressed(KEY_F1);
+        result.toggleMap = IsKeyPressed(KEY_M);
         constexpr std::array<int, 6> keys{KEY_W, KEY_S, KEY_A, KEY_D, KEY_Q, KEY_E};
         std::array<bool, 6> down{}, pressed{};
         for (int i = 0; i < 6; ++i) {

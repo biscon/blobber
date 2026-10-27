@@ -26,9 +26,11 @@ UiFonts::SizedFont::~SizedFont() {
 UiFonts::UiFonts(const std::filesystem::path& directory)
     : label_(directory / "IBMPlexSans-Regular.ttf", 24), small_(directory / "IBMPlexSans-Regular.ttf", 21),
       heading_(directory / "IBMPlexSans-Bold.ttf", 27), log_(directory / "Inconsolata.otf", 24),
-      display_(directory / "DejaVuSerif-Bold.ttf", 27) {}
+      display_(directory / "DejaVuSerif-Bold.ttf", 27), control_(directory / "IBMPlexSans-Bold.ttf", 48) {}
 const Font& UiFonts::font(UiTextStyle style) const {
     switch (style) {
+    case UiTextStyle::Control:
+        return control_.value;
     case UiTextStyle::Display:
         return display_.value;
     case UiTextStyle::Label:

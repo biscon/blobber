@@ -3,7 +3,7 @@
 #include <filesystem>
 
 namespace blobber {
-enum class UiTextStyle { Label, Small, Heading, Log, Display };
+enum class UiTextStyle { Label, Small, Heading, Log, Display, Control };
 // Fixed, size-specific atlases. Construct with a live window; destroy before it closes.
 // Coordinates/measurements use art units, but glyphs draw at native game-target resolution.
 class UiFonts {
@@ -25,6 +25,6 @@ class UiFonts {
         Font value{};
     };
     const Font& font(UiTextStyle style) const;
-    SizedFont label_, small_, heading_, log_, display_;
+    SizedFont label_, small_, heading_, log_, display_, control_;
 };
 } // namespace blobber

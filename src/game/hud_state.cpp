@@ -238,6 +238,14 @@ void CommandController::updateHover() noexcept {
             put(2, "Sneak Attack: +1d6 on hit / one action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
     } else if (h.kind == HoverKind::Action && h.index >= 0 && h.index < 6) {
+        if (h.index == 4 && session_) {
+            h.reason = CommandReason::Ready;
+            put(0, "Inventory [I / 5]");
+            put(1, "Browse bags, equipment and potions.");
+            put(2, "Browsing pauses play.");
+            put(3, "Click or press I to open.");
+            return;
+        }
         const auto action = dockActions[h.index];
         command.action = action;
         h.reason = validate(command);

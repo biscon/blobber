@@ -89,7 +89,7 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     text("INVENTORY & EQUIPMENT", 14, 11, gold, UiTextStyle::Display);
     text("PAUSED", 282, 13, teal, UiTextStyle::Small);
     box(inventoryLayout::close);
-    label("X", inventoryLayout::close, gold);
+    centered("X", inventoryLayout::close, gold);
     for (int n = 0; n < 4; ++n) {
         const auto r = inventoryLayout::tab(n);
         const auto& c = h.cards[n];
@@ -113,7 +113,7 @@ void HudPainter::inventory(const HudSnapshot& h) const {
                 char q[12];
                 std::snprintf(q, sizeof(q), "%u", c.quantity);
                 fill({r.x + r.width - 17, r.y + r.height - 11, 16, 10}, background);
-                label(q, {r.x + r.width - 20, r.y + r.height - 12, 20, 12}, gold, UiTextStyle::Small);
+                rightAligned(q, {r.x + r.width - 20, r.y + r.height - 12, 20, 12}, gold, UiTextStyle::Small);
             }
             if (c.handle == i.selected) {
                 selected = &c;
@@ -127,7 +127,7 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     for (int n = 0; n < 4; ++n) {
         const auto r = inventoryLayout::equipment(n);
         drawCell(i.cells[48 + n], r, 48 + n);
-        label(slots[n], {r.x - 8, r.y - 13, r.width + 16, 12}, gold, UiTextStyle::Small);
+        centered(slots[n], {r.x - 8, r.y - 13, r.width + 16, 12}, gold, UiTextStyle::Small);
     }
     char line[128];
     std::snprintf(line, sizeof(line), "AC %d", i.armorClass);
@@ -158,17 +158,22 @@ void HudPainter::inventory(const HudSnapshot& h) const {
                 "Select an item to inspect it. Drag to move, equip, merge or transfer. Shift-drag splits a "
                 "stack.",
                 490, 91, 136, 10);
-    constexpr const char* actions[]{"E  EQUIP / UNEQUIP", "M  MOVE / MERGE", "S  SPLIT STACK", "T  TRANSFER",
-                                    "U  USE POTION"};
-    for (int n = 0; n < 5; ++n) {
-        box(inventoryLayout::action(n));
-        label(actions[n], inventoryLayout::action(n), selected ? gold : muted, UiTextStyle::Small);
+    for (unsigned n = 0; n < i.actions.size(); ++n) {
+        const auto& action = i.actions[n];
+        if (!action.visible)
+            continue;
+        const auto rect = inventoryLayout::action(i, static_cast<InventoryAction>(n));
+        box(rect, action.enabled ? edge : Color{47, 50, 44, 255});
+        centered(action.label, rect, action.enabled ? gold : muted, UiTextStyle::Small);
+        if (!action.enabled)
+            clipped(action.reason, rect.x, rect.y + 22, rect.width, muted, UiTextStyle::Small);
     }
+    clipped("Drag: move / same item: merge / Shift-drag: split", 178, 330, 300, muted, UiTextStyle::Small);
     clipped(i.management == InventoryError::None ? "Equipment & transfers available"
                                                  : "Equipment & transfers locked in danger",
             16, 313, 155, i.management == InventoryError::None ? muted : red, UiTextStyle::Small);
     clipped(i.feedback[0] ? i.feedback.data()
-                          : "Drag items / Shift-drag: split / 1-4: character / Arrows: select / Tab: "
+                          : "1-4: character / Arrows: select / Tab: "
                             "equipment / Esc: close",
             14, 342, 610, i.feedback[0] ? teal : muted, UiTextStyle::Small);
     if (i.dragging) {
@@ -184,15 +189,15 @@ void HudPainter::inventory(const HudSnapshot& h) const {
         overlayBox(inventoryLayout::dialog);
         text("SPLIT STACK", 225, 132, gold, UiTextStyle::Display);
         std::snprintf(line, sizeof(line), "Quantity %u / %u", i.quantity, i.maximum);
-        label(line, {257, 162, 124, 22}, hudInk::text);
+        centered(line, {257, 162, 124, 22}, hudInk::text);
         box(inventoryLayout::minus);
-        label("-", inventoryLayout::minus, gold);
+        centered("-", inventoryLayout::minus, gold, UiTextStyle::Control);
         box(inventoryLayout::plus);
-        label("+", inventoryLayout::plus, gold);
+        centered("+", inventoryLayout::plus, gold, UiTextStyle::Control);
         box(inventoryLayout::accept);
-        label("CONFIRM", inventoryLayout::accept, gold);
+        centered("CONFIRM", inventoryLayout::accept, gold);
         box(inventoryLayout::cancel);
-        label("CANCEL", inventoryLayout::cancel, gold);
+        centered("CANCEL", inventoryLayout::cancel, gold);
     }
 }
 void HudPainter::itemTargets(const HudSnapshot& h) const {
@@ -210,8 +215,8 @@ void HudPainter::itemTargets(const HudSnapshot& h) const {
                          : commandMessage(i.recipients[n]);
     clipped(reason, 12, 340, 200, teal, UiTextStyle::Small);
     box(inventoryLayout::useBack);
-    label("BACK / B", inventoryLayout::useBack, gold, UiTextStyle::Small);
+    centered("BACK / B", inventoryLayout::useBack, gold, UiTextStyle::Small);
     box(inventoryLayout::useCancel);
-    label("CANCEL", inventoryLayout::useCancel, gold, UiTextStyle::Small);
+    centered("CANCEL", inventoryLayout::useCancel, gold, UiTextStyle::Small);
 }
 } // namespace blobber

@@ -53,17 +53,17 @@ working-directory setup is required: assets are copied beside the executable.
 | A / D | Strafe left / right one tile |
 | Q / E | Turn left / right 90 degrees |
 | Tab | Toggle animated / instant steps |
-| F1 | Toggle the development map overlay |
+| M | Toggle the development map overlay |
 | Monster hover / click | Preview reach and damage / immediately attack a reachable enemy |
 | 1 / sword | Select basic melee |
 | 2 / shield | Immediately defend |
 | 3 / bow | Select ranged attack |
 | 4 / spell | Browse paused Spells / Abilities, then resume to select targets |
-| I / 5 / item / inspector Inventory | Open the paused inventory for the selected character |
+| I / 5 / backpack / inspector Inventory | Open the paused inventory for the selected character |
 | Inventory 1–4 / character tabs | Inspect another bag; choose a transfer recipient |
 | Drag / Shift-drag | Move, swap, merge, equip, or transfer / choose a split quantity on release |
-| Inventory E / M / S / T / U | Equip or unequip / move / split / transfer / use potion |
-| Inventory arrows / Tab / Enter | Select a cell / switch bag and equipment / confirm destination or quantity |
+| Inventory E / T / U | Applicable Equip/Unequip, Transfer, and Use Potion actions |
+| Inventory arrows / Tab / Enter | Select a cell / switch bag and equipment / confirm selection or split quantity |
 | Inventory wheel / Page Up / Page Down | Read further description pages; wheel adjusts a split quantity |
 | 6 / aid | Arm Aid; click a dying ally's portrait to commit |
 | Portrait click | Select a character in real time, or a friendly spell/potion/Aid target; use i for details |
@@ -83,7 +83,7 @@ buffered during an animation. Losing focus clears the buffer and held-key state.
 Collisions block the entire move, including its visual effect. HUD commands never
 repeat while held. Controls held during focus loss require a release in the focused
 window before their next press can act. Spell selections survive focus loss and are revalidated on return; ordinary attack targets clear. Movement clears targeting. Targeting
-and attacks wait until transitions finish and the F1 map is closed. Each action/turn resets to basic melee.
+and attacks wait until transitions finish and the M map is closed. Each action/turn resets to basic melee.
 
 Facing an adjacent goblin cell begins combat and locks movement/turning. Each
 character and enemy group rolls initiative once; the initiative strip puts the active participant first and removes resolved turns. Melee, Defend and Aid spend one action. Defend imposes disadvantage until the
@@ -115,6 +115,8 @@ organization remains available during paused danger. Rejected operations preserv
 all items; unequipping needs a free cell, while a replacement returns old equipment
 to its source cell. Drag to another character's tab to transfer; Shift-drag opens
 the quantity dialog with one selected. Escape cancels the pending operation.
+Drop onto the same item to merge stacks. The sidebar shows only actions relevant
+to the selected item; temporarily blocked actions are dimmed with a reason.
 
 Use a potion from its owner's inventory, then click a living ally or confirm with
 Enter. Healing restores 2d4+2 HP, including reviving a dying ally; mana restores two.
@@ -159,14 +161,14 @@ low HP/unconscious/dead displays and log rollover. The regular `--capture` comma
 also exports eight `ui-*` images. See [slice 04 review](docs/slice04_verification.md).
 
 The player starts at `(3, 21)`, facing north. The enclosed 25×25 test map contains
-two large chambers, pillars, loops, dead ends, and long corridors. Press F1 to
+two large chambers, pillars, loops, dead ends, and long corridors. Press M to
 inspect the layout. `assets/maze.txt` is plain ASCII: `#` is solid, `.` is floor.
 All floor tiles must be reachable from the spawn.
 
 ## NPCs
 
 The test goblins stand at **(18,17)** in the southeast great hall, facing south.
-The player still starts at (3,21). Use F1 and the coordinate readout to navigate;
+The player still starts at (3,21). Use M and the coordinate readout to navigate;
 stand at (18,18) facing north to start a frontal fight. Contact turns the goblins
 toward the party. Authored directional views remain in the capture diagnostics.
 Living occupants block player entry into the entire cell.

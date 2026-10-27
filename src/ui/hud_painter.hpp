@@ -85,6 +85,18 @@ class HudPainter {
             clipped(value, r.x + 4, fonts->centeredY(value, float(r.y), float(r.height), style), r.width - 8,
                     color, style);
     }
+    void centered(const char* value, UiRect r, Color color = hudInk::text,
+                  UiTextStyle style = UiTextStyle::Label) const {
+        if (fonts)
+            text(value, r.x + (r.width - fonts->width(value, style)) * .5f,
+                 fonts->centeredY(value, float(r.y), float(r.height), style), color, style);
+    }
+    void rightAligned(const char* value, UiRect r, Color color = hudInk::text,
+                      UiTextStyle style = UiTextStyle::Small) const {
+        if (fonts)
+            text(value, r.x + r.width - 2 - fonts->width(value, style),
+                 fonts->centeredY(value, float(r.y), float(r.height), style), color, style);
+    }
     void picture(unsigned index, UiRect r, Color tint = WHITE) const {
         if (art)
             art->draw(index, r, tint);

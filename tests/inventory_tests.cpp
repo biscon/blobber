@@ -5,6 +5,7 @@
 #include "ui/interaction.hpp"
 #include "ui/inventory_layout.hpp"
 #include <chrono>
+#include <cstring>
 #include <iostream>
 #include <string_view>
 using namespace blobber;
@@ -343,8 +344,7 @@ void staleAndKeyboard() {
     const auto h = findInventoryItem(s.party(), 2, 9);
     const auto source = s.party().inventory().locate(h).cell;
     ui.inventorySelect(source);
-    ui.inventoryAction(InventoryAction::Split);
-    ui.inventorySelect(47);
+    ui.inventoryDrop({{2}, 47}, true);
     check(bool(s.inventoryChange(inventoryRequest(s.party(), h, 2, 46, InventoryOp::Split, 1))),
           "External transaction changes pending revision");
     const auto rev = s.party().inventory().revision();
@@ -353,7 +353,6 @@ void staleAndKeyboard() {
           "Stale dialog never applies quantity");
     ui.refresh({}, false, false, true);
     ui.inventorySelect(source);
-    ui.inventoryAction(InventoryAction::Move);
     UiInput tab;
     tab.pressed[static_cast<std::size_t>(UiKey::Tab)] = true;
     routeHudInput(ui, tab, {});
@@ -363,7 +362,8 @@ void staleAndKeyboard() {
     UiInput enter;
     enter.pressed[static_cast<std::size_t>(UiKey::Confirm)] = true;
     routeHudInput(ui, enter, {});
-    check(s.party().inventory().at({{2}, 45}) == h, "Keyboard Enter commits selected destination");
+    check(s.party().inventory().revision() == rev && s.party().inventory().at({{2}, source}) == h,
+          "Keyboard navigation never implicitly moves an item");
     UiInputEdges edges;
     std::array<bool, uiKeyCount> down{};
     down[static_cast<std::size_t>(UiKey::Click)] = true;
@@ -372,6 +372,96 @@ void staleAndKeyboard() {
     edges.sample(down, false);
     const auto refocus = edges.sample(down, true);
     check(!refocus.has(UiKey::Click) && !refocus.pointerHeld, "Held pointer blocked across focus loss");
+}
+void contextualActions() {
+    auto f = inventoryFixture();
+    for (const auto* id : {"fixture.book", "fixture.symbol", "fixture.focus"}) {
+        rules::ItemDefinition item;
+        item.id = id;
+        item.name = id;
+        item.description = "Test-owned gear with no active use";
+        const auto index = static_cast<std::uint16_t>(f.items.size());
+        f.items.push_back(item);
+        auto& wizard = f.preset.characters[3];
+        wizard.items[wizard.itemCount++] = {{index}, 1};
+    }
+    const auto cat = inventoryCatalog(f);
+    const auto map = hybridRoom();
+    const Player spawn{{6, 8}, Heading::North};
+    const NpcWorld empty(map, spawn.cell, {}, {});
+    GameSession s(map, cat, empty, 5, spawn, false);
+    CommandController ui(s);
+    ui.refresh({}, false, false, true);
+    UiInput hover;
+    const auto dock = hudLayout::action(4);
+    hover.pointer = ArtPoint{float(dock.x + dock.width / 2), float(dock.y + dock.height / 2)};
+    routeHudInput(ui, hover, {});
+    check(std::strstr(ui.snapshot().hover.lines[0].data(), "Inventory") &&
+              std::strstr(ui.snapshot().hover.lines[3].data(), "press I"),
+          "Backpack tooltip describes inventory and its shortcut");
+    UiInput open;
+    open.pressed[static_cast<std::size_t>(UiKey::Inventory)] = true;
+    routeHudInput(ui, open, {});
+    check(ui.snapshot().inventory.open, "I opens inventory through the production router");
+    ui.inventoryCharacter({3});
+    const auto original = quantities(s.party());
+    const auto revision = s.party().inventory().revision();
+    for (unsigned item = 12; item < 15; ++item) {
+        ui.inventorySelect(s.party().inventory().locate(findInventoryItem(s.party(), 3, item)).cell);
+        const auto& actions = ui.snapshot().inventory.actions;
+        check(!actions[0].visible && actions[1].visible && actions[1].enabled && !actions[2].visible,
+              "Book, holy symbol and focus show only Transfer");
+        UiInput use;
+        use.pressed[static_cast<std::size_t>(UiKey::UseItem)] = true;
+        routeHudInput(ui, use, {});
+        ui.inventoryAction(InventoryAction::Equip);
+        check(!ui.snapshot().inventory.itemTargeting &&
+                  ui.snapshot().inventory.mode == InventoryMode::Browse &&
+                  s.party().inventory().revision() == revision,
+              "Hidden use/equip shortcuts cannot start an action");
+        UiInput obsolete;
+        obsolete.pointer = ArtPoint{500, 315};
+        obsolete.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
+        routeHudInput(ui, obsolete, {});
+        check(ui.snapshot().inventory.mode == InventoryMode::Browse,
+              "Removed action rows have no invisible click targets");
+    }
+    ui.inventorySelect(s.party().inventory().locate(findInventoryItem(s.party(), 3, 10)).cell);
+    check(!ui.snapshot().inventory.actions[0].visible && ui.snapshot().inventory.actions[2].visible &&
+              !ui.snapshot().inventory.actions[2].enabled,
+          "Potion use is disabled when nobody needs healing");
+    ui.inventoryAction(InventoryAction::Use);
+    check(!ui.snapshot().inventory.itemTargeting && quantities(s.party()) == original,
+          "Disabled use does not leave inventory or consume items");
+    s.party().damage({1}, 5);
+    ui.refresh({}, false, false, true);
+    check(ui.snapshot().inventory.actions[2].enabled, "Potion use enables for an eligible ally");
+    ui.inventoryAction(InventoryAction::Use);
+    check(ui.snapshot().inventory.itemTargeting, "Applicable enabled use enters targeting");
+    ui.cancel();
+    ui.openInventory(rules::CharacterId{0});
+    ui.inventorySelect(50);
+    check(ui.snapshot().inventory.actions[0].enabled &&
+              std::string_view(ui.snapshot().inventory.actions[0].label) == "E  UNEQUIP",
+          "Equipment offers explicit unequip");
+    ui.inventoryAction(InventoryAction::Equip);
+    check(ui.snapshot().inventory.actions[0].enabled &&
+              std::string_view(ui.snapshot().inventory.actions[0].label) == "E  EQUIP",
+          "Removed equipment offers equip");
+    ui.inventoryCharacter({2});
+    ui.inventorySelect(s.party().inventory().locate(findInventoryItem(s.party(), 2, 9)).cell);
+    check(!ui.snapshot().inventory.actions[0].visible && !ui.snapshot().inventory.actions[2].visible,
+          "Arrows have neither equip nor use action");
+    const NpcWorld nearby(map, spawn.cell, {"goblin"}, {{{0}, {6, 7}, {0, 0}, Heading::South}});
+    GameSession danger(map, cat, nearby, 5, spawn, false);
+    CommandController locked(danger);
+    locked.record(danger.update(0, false));
+    locked.refresh({}, false, false, true);
+    locked.openInventory(rules::CharacterId{0});
+    locked.inventorySelect(50);
+    check(locked.snapshot().inventory.actions[0].visible && !locked.snapshot().inventory.actions[0].enabled &&
+              !locked.snapshot().inventory.actions[1].enabled,
+          "Unsafe equipment and transfers remain visibly disabled");
 }
 void inputBehavior() {
     const auto map = hybridRoom();
@@ -412,9 +502,8 @@ void inputBehavior() {
           "Blur cancels drag without release commit");
     ui.refresh({}, false, false, true);
     ui.inventorySelect(cell);
-    ui.inventoryAction(InventoryAction::Split);
-    ui.inventorySelect(46);
-    check(ui.snapshot().inventory.mode == InventoryMode::Quantity, "Button split reaches same dialog");
+    ui.inventoryDrop({{2}, 46}, true);
+    check(ui.snapshot().inventory.mode == InventoryMode::Quantity, "Pending split can be canceled");
     ui.inventoryCancel();
     check(s.party().inventory().revision() == rev, "Canceled split spends nothing");
     ui.inventoryAction(InventoryAction::Transfer);
@@ -444,6 +533,7 @@ int main(int argc, char** argv) {
         rejectionBoundaries();
         staleAndKeyboard();
         inputBehavior();
+        contextualActions();
         std::cout << "Inventory transactions, costs, effects and input passed ("
                   << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                            start)

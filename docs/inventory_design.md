@@ -60,11 +60,12 @@ invalid requests spend no RNG. Existing impact outcomes and clocks remain intact
 
 Full-screen paused overlay: four character tabs, equipment silhouette left, 8×6
 bag centrally and details/actions right. Open with I, inspector Inventory, or
-Item/5. Drag and button actions share transactions. Drop onto another character's
+backpack/5. Drag and applicable button actions share transactions. Drop onto another character's
 tab transfers. Shift-drag to a valid target opens a split dialog on release,
 default 1, with no mutation before confirmation. Escape/focus loss/invalidated
 source cancels drag. Mouse down/release and held latches prevent click-through.
-Keyboard grid/actions/quantity controls mirror pointer behavior. Use exits browsing
+Keyboard navigation, contextual actions and quantity controls remain available;
+move/merge/split use drag gestures (see the review correction below). Use exits browsing
 into live ally targeting; combat actor is independent of the inspected character.
 
 Generate fifteen painted item icons plus a neutral silhouette using built-in
@@ -131,3 +132,37 @@ placements for safe management, ordinary placements for danger, and a catalog cl
 with 100 arrows and long text for the full-bag/page stress image. These diagnostic
 preparation changes are never applied to normal gameplay. All windows are hidden;
 no external window or OS input is controlled.
+
+## Review correction: simpler inventory controls (2026-10-27)
+
+Implemented from the user's screenshot review; Ready for review. This supersedes
+slice 11's original Move/Split button and keyboard destination modes. Drag/drop
+organizes and merges stacks; Shift-drag opens the quantity dialog. Keep only
+contextual Equip/Unequip, Transfer and Use Potion actions. Gear-only items such as
+holy symbols, spellbooks and arcane focuses expose Transfer, without suggesting
+unimplemented abilities. Applicable actions temporarily blocked by safety, capacity,
+training, turn, cooldown or recipient state are visibly disabled with a reason.
+The controller builds a fixed action snapshot using the same transaction previews
+and combat validation as submission; both clicks and shortcuts consult it.
+This adds bounded preview work for at most three actions/four recipients per refresh,
+with no retained transaction copies or frame-time allocations. Labels/reasons point
+to static strings; character/item ownership and mutation stay with Party/GameSession.
+
+Move the body slot onto the torso and ranged slot below the main hand, alongside
+the silhouette. Leave head and feet unobstructed for future slots without adding
+those slots now. Center inventory button captions using font measurements; use a
+larger prepared font for split +/- controls. Align stack badges to the right with
+consistent padding. Add an explicit always-visible drag/Shift-drag hint.
+The 48-pixel bold control font is loaded once alongside the existing size-specific
+atlases and destroyed with UiFonts. Shared layout functions compact visible action
+rows identically for painting and hit testing.
+
+I remains the inventory shortcut (already mapped, now regression-tested); M replaces
+F1 for map toggling. Remove the obsolete M/S inventory command bindings. Update the
+on-screen map hints and README. Replace the dock potion artwork with a separately
+saved painted backpack and retain its generation prompt/master.
+The dock tooltip names Inventory and shows its I/5 shortcuts.
+
+Verify contextual actions and unavailable shortcuts, drag/split/merge conservation,
+I opening, quantity-confirmation isolation, allocation guards, hidden GPU lifecycle,
+and native/reduced review captures. No new D&D abilities or later-slice features.

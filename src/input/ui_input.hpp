@@ -24,8 +24,6 @@ enum class UiKey : std::size_t {
     NextPage,
     Inventory,
     Equip,
-    MoveItem,
-    SplitItem,
     TransferItem,
     UseItem,
     Tab,

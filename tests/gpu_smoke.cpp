@@ -31,7 +31,7 @@ void nativeUi() {
                                   "defend",
                                   "ranged",
                                   "spell",
-                                  "item",
+                                  "backpack",
                                   "aid",
                                   "spells/sacred_flame",
                                   "spells/spare_the_dying",

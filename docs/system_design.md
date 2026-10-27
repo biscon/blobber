@@ -1,5 +1,7 @@
 # System design
 
+Implemented, **Ready for review**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
+
 Implemented, **Ready for review** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).
 Party owns bounded live stacks and separate gear, with atomic staged transactions,
 weight/stat/effect reconciliation and strict schema-5 content. Full-screen paused

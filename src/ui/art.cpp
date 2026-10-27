@@ -14,7 +14,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "defend",
                                   "ranged",
                                   "spell",
-                                  "item",
+                                  "backpack",
                                   "aid",
                                   "spells/sacred_flame",
                                   "spells/spare_the_dying",

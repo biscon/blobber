@@ -182,7 +182,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
             : h->production && h->combat.awaitingAction              ? "Click a reachable enemy to attack."
             : h->production && h->combat.phase == CombatPhase::Turns ? "Waiting for the active participant."
-                                                                     : "WASD move / Q E turn / F1 map";
+                                                                     : "WASD move / Q E turn / M map";
         p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
     if (h->production && (h->combat.knownDirections || h->combat.pendingCount)) {
@@ -204,7 +204,7 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
     const HudPainter p(fonts, nullptr);
     {
         p.overlayBox({12, 32, 176, 242}, gold);
-        p.text("SURVEY / F1 CLOSE", 22, 40, gold, UiTextStyle::Display);
+        p.text("SURVEY / M CLOSE", 22, 40, gold, UiTextStyle::Display);
         const float scale = std::min(152.0f / map.width(), 200.0f / map.height());
         {
             for (int y = 0; y < map.height(); ++y)
