@@ -149,6 +149,29 @@ void captureArchers(const rules::Catalog& catalog, const NpcWorld& source,
                                      {sub % 2, sub / 2},
                                      headingToward(cell, player.cell)});
             }
+        for (const auto type : {melee, archer})
+            for (int row : {-1, 1}) {
+                std::vector<NpcInstance> pair;
+                const auto cell = player.cell + f;
+                for (int sub = 0; sub < 4; ++sub) {
+                    const Cell local{sub % 2 * 2 - 1, sub / 2 * 2 - 1};
+                    if (local.x * f.x + local.y * f.y == row)
+                        pair.push_back({type, cell, {sub % 2, sub / 2}, headingToward(cell, player.cell)});
+                }
+                const NpcWorld pairPlacements(map, player.cell, names, pair);
+                ActorWorld pairActors(map, catalog, pairPlacements);
+                NpcAnimator pairAnimator(pairActors, timings);
+                FramePipeline pairFrames;
+                MovementState pairState;
+                pairState.player = player;
+                const auto name = std::string("roles-center-") +
+                                  (type.index == melee.index ? "melee-" : "archer-") +
+                                  std::to_string(heading) + (row < 0 ? "-near" : "-far");
+                present(name, pairActors, pairAnimator, pairFrames, pairState, 0, 2);
+                for (std::size_t i = 0; i < pair.size(); ++i)
+                    pairActors.attack(pairActors.id(i), 0, type.index == archer.index);
+                present(name + "-attack", pairActors, pairAnimator, pairFrames, pairState, 600, 2);
+            }
         const NpcWorld placements(map, player.cell, names, instances);
         ActorWorld actors(map, catalog, placements);
         NpcAnimator animator(actors, timings);

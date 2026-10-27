@@ -718,6 +718,27 @@ void testFrontBandVisibility() {
                 if (local.x * f.x + local.y * f.y < 0)
                     nearRow.push_back(instance);
             }
+        // The edge fit must not squeeze either pair in the center cell.
+        // Compare rendered/pickable body centers with ordinary perspective spacing.
+        for (int row : {-1, 1}) {
+            std::vector<NpcInstance> pair;
+            for (int sub = 0; sub < 4; ++sub) {
+                const Cell local{sub % 2 * 2 - 1, sub / 2 * 2 - 1};
+                if (local.x * f.x + local.y * f.y == row)
+                    pair.push_back({{0}, p.cell + f, {sub % 2, sub / 2}, Heading::South});
+            }
+            auto center = testActors(map, p.cell, {"test"}, pair);
+            Frame view;
+            PickingBuffer hit;
+            prepared.compose(center, p, 0, noWalls(), view, nullptr, &hit);
+            hit.finish(&center);
+            check(hit.targets().count == 2, "Both center-cell bodies remain pickable");
+            const auto& anchors = hit.targets().anchors;
+            const float expected =
+                ViewProjection::focalLength() * .5f / (1.f + row * .25f + ViewProjection::cameraSetback);
+            check(std::abs(std::abs(anchors[0].x - anchors[1].x) - expected) <= 2,
+                  "Center-cell pair retains ordinary half-cell perspective separation");
+        }
         auto six = testActors(map, p.cell, {"test"}, nearRow);
         Frame frame;
         PickingBuffer picking;

@@ -297,8 +297,12 @@ slot in each diagonal cell (left subcell 0,1; right 1,1 when facing north). The 
 six positions were visible. The user approved drawing edge NPCs slightly inward. PreparedNpcs shifts
 the horizontal front-row layout inward to fit the outer actors' full pose canvases,
 using a per-type maximum half-width across clips for stable positioning. Apply
-one proportional lateral compression to the row so adjacent subslots remain
-distinct instead of clamping multiple bodies to the same edge. Body,
+a continuous lateral fit outside the center-slot pivots (±0.25 cells), leaving
+the center-cell pair at ordinary perspective spacing. Distance beyond each pivot
+is compressed toward the edge limit; adjacent diagonal subslots stay distinct
+instead of clamping multiple bodies to the same edge. This supersedes the original
+whole-row proportional compression, which squeezed center pairs together (8.3
+review correction, 2026-10-27). Body,
 shadow, picking and feedback anchors share that offset; world cells, depth, scale,
 FOV and camera remain unchanged. Travel uses the same position-dependent
 compression, blended at the row edges to avoid abrupt transitions. Verification

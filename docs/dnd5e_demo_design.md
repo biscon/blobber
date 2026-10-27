@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 is Ready for review. Slice 09 waits for acceptance of all three.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 is next eligible for planning.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 8.2 — Distinct goblin archer artwork and loadouts (2026-10-26) |
-| Active slice | 8.3 — Ready for review |
-| Awaiting user review | 8.3 — projectiles and impact-time consequences |
+| Latest accepted slice | 8.3 — Projectiles and impact-time consequences (2026-10-27) |
+| Active slice | None |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until 8.3 is accepted |
-| Next action | User reviews 8.3 implementation and pacing; do not advance |
+| Next eligible slice | 09 — Effects and concentration (planning) |
+| Next action | Plan slice 09 in a clean context when requested |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -315,7 +315,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 08 | [Hybrid encounter loop](#slice-08-hybrid-encounter-loop) | 07 | Accepted | B |
 | 8.1 | [Image preparation and memory](#slice-81-image-preparation-and-memory) | 08 | Accepted | B follow-up |
 | 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Accepted | B follow-up |
-| 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Ready for review | B follow-up |
+| 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Accepted | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Planned | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
@@ -1076,7 +1076,7 @@ premature HP/life/log/reaction changes and no early turn or victory handoff. Run
 allocation checks and hidden captures at launch, mid-flight and impact, near/far
 and diagonal targets. User reviews shot direction, target attribution and pacing.
 
-**Stage / last updated:** Ready for review; 2026-10-27.
+**Stage / last updated:** Accepted and closed; 2026-10-27 (including front-cell spacing correction).
 **Approved plan:** User said “Implement the plan.” See
 [projectile/impact design](projectile_impact_design.md). Movement preserves rolled
 outcomes; incapacitation cancels unreleased attacks; nonlethal hurt suspends and
@@ -1091,18 +1091,28 @@ ASan/UBSan 4/4 pass; zero tracked frame allocations. Full 260-attack stress deli
 292 images (inherited victory failure did not recur). New suite exports 380 images,
 all byte-identical with source-free assets. 183 shared 8.2 images are unchanged.
 See [verification, selected captures and handoff](slice83_verification.md).
+**Review correction (2026-10-27):** User reported center-cell monster overlap after
+the diagonal edge fit. The fit now preserves the original center-slot spacing and
+compresses only outside those pivots. A regression first failed on the old mapping,
+then passed in both rows/all headings. Release 24/24, focused Debug 5/5 (including
+zero frame allocations), and 320 hidden hybrid/appearance captures pass. Both
+center pairs and all six front-band targets remain pickable. See the
+[corrected captures](slice83_verification.md#review-correction-center-cell-pair-spacing).
 **Review recipe:** Run `cmake-build-release/blobber --hybrid-demo --seed 5`.
 Review party/enemy arrows, recipient attribution, melee windup, impact feedback,
 pauses and hurt before release; deterministic capture instructions are in the report.
 **Deviations / limitations:** No scope deviation. Interactive pacing/desktop review
 remains the user's task. Leak detection remains unavailable under the tracing
 restriction; ASan/UBSan ran with it disabled. Third-party raylib is not instrumented.
-**Next-agent handoff:** Await user review; do not begin 09. Consume whole borrowed
+**Next-agent handoff:** Slice 8.3 is accepted and closed. Slice 09 is next eligible
+for planning in a clean context; it has not started. Consume whole borrowed
 `CombatEvents` batches: `AttackStarted` is acceptance, `Attack` is committed impact,
 `occurredMs` uses session time, and `step` omits drained impacts. Keep hybrid gameplay
 cooldowns/round effects separate from presentation deadlines. Cosmetic exhaustion
 never cancels gameplay. Read the design and verification before any follow-up.
-**Acceptance:** Pending.
+**Acceptance:** 2026-10-27. The user said “slice accepted, update doc”, accepting
+the completed slice including the front-cell spacing correction. Recorded
+verification limitations remain; acceptance does not turn unexecuted checks into passes.
 
 ### Slice 09: Effects and concentration
 

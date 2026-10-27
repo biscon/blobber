@@ -19,7 +19,7 @@ existing actor/animator interfaces and zero-allocation frame processing. Actual
 combined runtime banks occupy 181,300,462 bytes. Original melee artwork and historical
 bow masters remain intact. The user accepted the completed slice on 2026-10-26.
 
-Implemented, **Ready for review** (2026-10-27): slice 8.3
+Implemented, **accepted and closed** (2026-10-27): slice 8.3
 [projectiles and impact-time consequences](projectile_impact_design.md), with
 [verification and handoff](slice83_verification.md). Combat owns 260 pending
 attacks; validation, costs and rolls occur at acceptance, while HP/life/occupancy,
@@ -28,7 +28,17 @@ deadlines before movement/AI and phase handoff. Separate bounded cosmetics rende
 prepared arrows, a melee slash and impact glints. Hurt suspends unreleased NPC
 windups; released arrows survive shooter death. Current prepared resident accounting
 is 182,314,670 bytes. This supersedes the earlier immediate-damage and UI-delayed-
-feedback descriptions below. Slice 09 waits for user acceptance of 8.3.
+feedback descriptions below. The user accepted 8.3, including the front-cell
+spacing correction. Slice 09 is next eligible for planning and remains unstarted.
+
+Implemented review correction (2026-10-27): the front-band edge fit previously compressed
+center-cell pairs, causing visible overlap. The corrected mapping preserves ordinary projection between
+the two center-slot pivots (lateral ±0.25 cells), tapering compression only outside
+that interval toward the existing diagonal edge limit. It retains the continuous depth/
+strafe blend and shared body/shadow/picking/projectile projection. Center pair
+separation in both rows/all headings, diagonal visibility, travel and allocations
+pass regression checks; hidden captures confirm the shipped-art result. See the
+[correction verification](slice83_verification.md#review-correction-center-cell-pair-spacing).
 
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
@@ -47,8 +57,8 @@ maneuver/retreat command or party surprise penalty remains. Catalog schema 3 add
 a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
 fixed 1920×1080 presentation and 160 MiB pixel cap. See
 [verification and handoff](slice08_verification.md). Slice 09 remains Planned;
-slice 08 and milestone B are closed. Complete and accept graphical subslices
-8.1–8.3 before planning or starting slice 09.
+slice 08 and milestone B are closed. Graphical subslices 8.1–8.3 are also
+accepted and closed; slice 09 is next eligible for planning.
 
 Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
 600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)

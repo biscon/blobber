@@ -1,7 +1,8 @@
 # Slice 8.3: projectiles and impact-time consequences
 
-Status: implemented, **Ready for review** (2026-10-27). The user
-approved the plan with “Implement the plan.” Acceptance remains pending.
+Status: implemented, **accepted and closed** (2026-10-27). The user
+approved the plan with “Implement the plan.” The subsequent “slice accepted,
+update doc” accepts the completed slice, including the front-cell spacing correction.
 
 ## Contract and ownership
 
@@ -70,7 +71,8 @@ population stress separate. Run Debug/Release, focused sanitizers, prepared/sour
 free checks, hidden GPU lifecycle and application-owned captures. No OS input or
 window/focus automation. Recheck inherited broad-capture victory failure without
 weakening its assertion. Record commands, limitations and selected native/reduced
-captures in slice83_verification.md. End at Ready for review; no slice 09 work.
+captures in slice83_verification.md. Implementation stopped at Ready for review;
+the user has since accepted it. No slice 09 work has begun.
 
 The final handoff must specify the authoritative impact/phase-clock contract and
 small visual extension points for future spell projectiles, without implementing
@@ -111,3 +113,11 @@ round-based effects at the hybrid boundary defined by slice 08. No spell, effect
 concentration, ammo or general VFX abstraction has been added in this slice.
 
 See [verification, captures and review recipe](slice83_verification.md).
+
+### Review correction: center-cell spacing
+
+The shared front-band projection preserves lateral ±0.25-cell center pivots and
+only compresses distance outside them. This fixes the center pair overlap caused
+by the earlier whole-row edge fit. Continuous depth and strafe blending remain;
+bodies, shadows, body picking and effect attachments use the same corrected
+projection. See the latest review correction in the verification report.

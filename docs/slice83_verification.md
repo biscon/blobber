@@ -1,8 +1,12 @@
 # Slice 8.3 verification and handoff
 
-Status: **Ready for review**, 2026-10-27. The user approved implementation with
-“Implement the plan.” User acceptance is pending. Slice 09 remains Planned.
-See the [implemented design](projectile_impact_design.md).
+Status: **Accepted and closed**, 2026-10-27. The user approved implementation with
+“Implement the plan” and accepted the completed slice with “slice accepted, update
+doc”, including the front-cell spacing correction. Verification limitations remain
+recorded below. Slice 09 remains Planned and is next eligible for planning.
+See the [implemented design](projectile_impact_design.md). The initial verification
+and capture sets below precede the [center-cell spacing review correction](#review-correction-center-cell-pair-spacing);
+use that section for the latest placement screenshots.
 
 ## Delivered behavior
 
@@ -134,8 +138,8 @@ release placement, diagonal bodies, movement, hurt/resumption, lethal impacts an
 portrait attribution. Incoming arrows grow toward the lower viewport; the neutral
 blue recipient outline disappears at arrival, when the actual hit/miss result and
 health are shown. Hurt/death flash and the existing damage splash can obscure a
-small distant body briefly. Interactive readability and pacing await the user's
-review; static captures do not establish that subjective result.
+small distant body briefly. The user has accepted the result. Static captures alone do not establish
+interactive readability or pacing; no agent-driven desktop review was performed.
 
 Every reduced projectile link below has a native sibling with `-720` removed.
 
@@ -184,5 +188,49 @@ clock or reintroduce UI-owned delayed damage.
 
 Future visual kinds can extend the small copied attack visual record and raster
 compositor; gameplay consequences stay in combat. Preserve source-free metadata,
-projection and cosmetic/gameplay capacity independence. User acceptance and live
-pacing review are pending. Stop at 8.3; do not start 09 until it is accepted.
+projection and cosmetic/gameplay capacity independence. Slice 8.3 is accepted and
+closed. Plan slice 09 in a clean context when requested; it has not started.
+
+## Review correction: center-cell pair spacing
+
+The user's screenshot showed the two melee goblins in the center front cell
+squeezed together. The original diagonal edge fit scaled every lateral coordinate,
+including the center pair. `projectNpc` now leaves lateral ±0.25-cell center pivots
+unchanged and compresses only distance beyond those pivots. The mapping remains
+continuous through travel/strafe and retains the existing edge and depth blends.
+Body, shadow, picking and projectile attachment projection share the correction.
+Camera, scale, world occupancy and combat reach remain unchanged.
+
+The rendered-body regression failed against the old mapping, then passed with
+the fix. It checks ordinary half-cell perspective separation in both center rows
+and all four headings, alongside the existing six-target diagonal, wall and travel
+checks. No extra frame storage or allocation was added.
+
+```sh
+cmake --build --preset release -j4
+cmake --build --preset debug -j4
+ctest --preset release --output-on-failure
+ctest --preset debug -R '^(npc|projectile|picking|actor_render|frame_allocations)$' --output-on-failure
+cmake-build-release/blobber --capture-hybrid /tmp/blobber83-spacing-captures
+```
+
+Release **24/24 passed** (11.86 s); focused Debug **5/5 passed** (32.33 s), including
+**zero tracked frame allocations**. Both builds pass without compiler warnings;
+`git diff --check` passes. The hidden capture suite completes **320 PNGs**, including
+64 new center-pair images covering both appearances, both rows, all headings and
+idle/attack poses. Existing six-target front-band assertions pass. Rendering and
+readback used the authorized hidden application window with no OS input/focus control.
+Selected east-facing center pairs, bow poses and full front-band images were
+visually inspected; the reported center-pair overlap is resolved. All six targets
+remain visible/pickable, although fitting the occupied diagonal cells still permits
+partial silhouette overlap there. This is not a general silhouette packing system.
+
+- Corrected melee center pair: [native](screenshots/slice83/spacing/archer-roles-center-melee-1-near.png), [1280×720](screenshots/slice83/spacing/archer-roles-center-melee-1-near-720.png).
+- Center rear row: [1280×720](screenshots/slice83/spacing/archer-roles-center-melee-1-far-720.png).
+- Archer attack pair: [1280×720](screenshots/slice83/spacing/archer-roles-center-archer-1-near-attack-720.png).
+- Full front band: [idle](screenshots/slice83/spacing/archer-roles-front-band-1-720.png), [attacks](screenshots/slice83/spacing/archer-roles-release-1-720.png).
+- [Appearance/picking trace](screenshots/slice83/spacing/archer-trace.tsv).
+
+Slice 8.3 returned to **Ready for review**, then the user accepted it with
+“slice accepted, update doc” on 2026-10-27. It is now **Accepted and closed**,
+including this correction. No slice 09 work has begun.

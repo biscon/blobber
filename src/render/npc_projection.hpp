@@ -29,7 +29,15 @@ inline NpcProjection projectNpc(const NpcInstance& npc, ActorPosition position, 
         const float blend = std::min({std::clamp((forwardPosition - .25f) * 2.f, 0.f, 1.f),
                                       std::clamp((1.75f - forwardPosition) * 2.f, 0.f, 1.f),
                                       std::clamp((1.75f - std::abs(p.lateral)) * 2.f, 0.f, 1.f)});
-        p.lateral *= 1.f - (1.f - std::min(1.f, limit / 1.25f)) * blend;
+        // Preserve the center-cell pair's half-cell spacing. Fit only the
+        // lateral distance beyond those pivots, continuously toward each edge.
+        constexpr float centerPivot = .25f;
+        const float magnitude = std::abs(p.lateral);
+        if (magnitude > centerPivot) {
+            const float scale = std::clamp((limit - centerPivot) / (1.25f - centerPivot), 0.f, 1.f);
+            const float fitted = centerPivot + (magnitude - centerPivot) * scale;
+            p.lateral = std::copysign(magnitude + (fitted - magnitude) * blend, p.lateral);
+        }
     }
     return p;
 }
