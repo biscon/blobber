@@ -128,10 +128,12 @@ Planned/unstarted.
 - `game/effects.*` owns 256 actor-indexed Guiding deadlines using existing world
   identity; expiry participates in the same chronological drain as other effects.
   No new pool is needed. Invalid/dead actors cannot keep an active marker.
-- `game/spell_commands.cpp` builds the bounded UI model: 20 book entries, three
+- `game/spell_commands.cpp` builds the bounded UI model: 22 book entries, three
   selected recipients, twelve area highlights and a 192-byte target summary.
   Names/descriptions borrow immutable catalog storage. `ui/spellbook.cpp` renders
   it; `ui/interaction.cpp` routes input without mutating simulation directly.
+  The [Class Features presentation](spellcasting_ui_design.md#class-features-presentation)
+  adds explicit read-only passive entries and resource labels without changing rules.
 - `render/projectiles.cpp` reuses the prepared glint with spell-specific color and
   dart offsets. Sixteen immediate pulse slots and the existing bounded cosmetic
   player replace old cosmetics on overflow. They never decide damage or targets.

@@ -410,6 +410,175 @@ void ui() {
     check(ui.snapshot().magic.pending.targetCount == 3 && ui.snapshot().magic.armed,
           "Focus loss preserves spell selections");
 }
+void classFeaturesUi() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    const auto places = spellPlacements(map, 0);
+    GameSession s(map, catalog, places, 5, spellSpawn, false);
+    CommandController ui(s);
+    const auto refresh = [&] { ui.refresh(allCombatTargets(s), false, false, true); };
+    const auto key = [&](UiKey k) {
+        UiInput input;
+        input.pressed[static_cast<std::size_t>(k)] = true;
+        routeHudInput(ui, input);
+    };
+    refresh();
+    ui.selectCharacter(2);
+    ui.hover(HoverKind::Action, 3);
+    check(!std::strcmp(ui.snapshot().hover.lines[0].data(), "Class Features [4]"),
+          "Non-caster action tooltip names Class Features");
+    key(UiKey::Four);
+    check(ui.snapshot().magic.open && !ui.snapshot().magic.spellcaster && ui.snapshot().magic.count == 2 &&
+              ui.snapshot().magic.entries[0].passive == PassiveFeature::SneakAttack &&
+              ui.snapshot().magic.entries[1].passive == PassiveFeature::RearRowMelee,
+          "Rogue has two browsable automatic features");
+    const auto turn = s.combat().snapshot().turn;
+    const auto time = s.timeMs();
+    const auto resources = s.party().snapshot();
+    for (int i = 0; i < 8; ++i) {
+        key(i % 2 ? UiKey::Up : UiKey::Down);
+        key(UiKey::Confirm);
+        UiInput click;
+        const auto r = hudLayout::spellEntry(i % 2);
+        click.pointer = ArtPoint{float(r.x + 2), float(r.y + 2)};
+        click.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
+        routeHudInput(ui, click);
+        s.update(1, ui.snapshot().modal());
+        refresh();
+        check(ui.snapshot().magic.open && !ui.snapshot().magic.armed &&
+                  ui.snapshot().magic.cursor == std::size_t(i % 2) && s.combat().snapshot().turn == turn &&
+                  s.timeMs() == time,
+              "Passive mouse/Enter browsing stays paused and never commits an action");
+    }
+    for (unsigned i = 0; i < rules::partySize; ++i) {
+        const auto* c = s.party().character({static_cast<std::uint16_t>(i)});
+        check(c->mana == resources.characters[i].mana &&
+                  c->secondWind == resources.characters[i].secondWind &&
+                  c->hitPoints == resources.characters[i].hitPoints,
+              "Passive browsing spends no resources or health");
+    }
+    key(UiKey::Cancel);
+    ui.selectCharacter(0);
+    ui.openSpellbook();
+    check(ui.snapshot().magic.count == 2 &&
+              ui.snapshot().magic.entries[0].category == PickerEntryKind::ActivatedFeature &&
+              ui.snapshot().magic.entries[0].charges == 1 &&
+              ui.snapshot().magic.entries[0].reason == CommandReason::FullHealth &&
+              ui.snapshot().magic.entries[1].passive == PassiveFeature::Defense,
+          "Fighter lists checked Second Wind and selected automatic Defense");
+    ui.chooseSpellbook(0);
+    check(ui.snapshot().magic.open, "Full-health Second Wind cannot leave picker");
+    key(UiKey::Cancel);
+    s.party().damage({0}, 6);
+    refresh();
+    ui.openSpellbook();
+    ui.chooseSpellbook(0);
+    check(ui.snapshot().magic.armed && ui.snapshot().magic.charges == 1 &&
+              ui.snapshot().magic.pending.action == PartyAction::Feature,
+          "Confirmation dock retains explicit feature identity and remaining uses");
+    ui.hover(HoverKind::Portrait, 1);
+    check(!std::strcmp(ui.snapshot().hover.lines[1].data(), "This feature needs no recipient selection."),
+          "Feature confirmation does not call the ability a spell in portrait hints");
+    key(UiKey::Cancel);
+    check(s.party().character({0})->secondWind && s.combat().snapshot().turn == turn,
+          "Canceling Second Wind spends neither use nor action");
+    ui.openSpellbook();
+    ui.chooseSpellbook(0);
+    check(ui.confirm() == CommandReason::Resolved && !s.party().character({0})->secondWind &&
+              s.party().character({0})->mana == 0 && s.combat().snapshot().cooldownMs[0] == combatRoundMs,
+          "Second Wind spends one use and normal readiness, never mana");
+    s.update(6, false);
+    refresh();
+    ui.openSpellbook();
+    check(ui.snapshot().magic.entries[0].charges == 0 &&
+              ui.snapshot().magic.entries[0].reason == CommandReason::NoCharges,
+          "Exhausted feature exposes zero uses and rejection reason");
+    key(UiKey::Cancel);
+    s.party().spendMana({3}, 4);
+    refresh();
+    ui.selectCharacter(3);
+    ui.hover(HoverKind::Action, 3);
+    check(!std::strcmp(ui.snapshot().hover.lines[0].data(), "Spells [4]"),
+          "An exhausted caster still has the Spells tooltip");
+    ui.openSpellbook();
+    check(ui.snapshot().magic.spellcaster && ui.snapshot().magic.mana == 0,
+          "Casting capability, not remaining mana, identifies a spellbook");
+
+    // A legacy class with no active or passive features has a safe empty picker.
+    const auto legacy = partyFixture().catalog();
+    NpcWorld empty(map, spellSpawn.cell, {}, {});
+    GameSession noFeatures(map, legacy, empty, 5, spellSpawn, false);
+    CommandController emptyUi(noFeatures);
+    emptyUi.refresh({}, false, false, true);
+    emptyUi.selectCharacter(2);
+    emptyUi.openSpellbook();
+    emptyUi.chooseSpellbook(0);
+    emptyUi.scrollSpellbook(100);
+    check(emptyUi.snapshot().magic.open && !emptyUi.snapshot().magic.count &&
+              !emptyUi.snapshot().magic.cursor && !emptyUi.snapshot().magic.offset,
+          "Empty picker stays bounded and cannot activate a nonexistent feature");
+
+    // Largest current spell family plus two activated features exercises mixed-list paging.
+    auto mixedFixture = partyFixture();
+    auto& cls = mixedFixture.classes[1];
+    cls.casting = rules::Casting::Wisdom;
+    cls.features = static_cast<rules::ClassFeatures>(rules::ClassFeature::SecondWind);
+    std::vector<rules::SpellDefinition> definitions;
+    for (unsigned i = 0; i < static_cast<unsigned>(SpellKind::Count); ++i) {
+        const auto kind = static_cast<SpellKind>(i);
+        const auto& rule = *rules::spellRules(kind);
+        if (rule.casting != cls.casting)
+            continue;
+        cls.spells[cls.spellCount++] = {static_cast<std::uint16_t>(definitions.size())};
+        definitions.push_back({rule.id, rule.name, rule.description, kind});
+    }
+    const rules::Catalog mixedCatalog({}, {}, mixedFixture.races, mixedFixture.classes, mixedFixture.items,
+                                      mixedFixture.preset, definitions);
+    GameSession mixed(map, mixedCatalog, empty, 5, spellSpawn, false);
+    mixed.party().damage({1}, 2);
+    EffectRequest blessing;
+    blessing.world = mixed.actors().snapshot().world;
+    blessing.caster = {1};
+    blessing.kind = EffectKind::Bless;
+    blessing.targets[0] = rules::CharacterId{0};
+    blessing.count = 1;
+    check(bool(mixed.applyEffect(blessing)), "Mixed-list fixture has dismissible concentration");
+    CommandController mixedUi(mixed);
+    mixedUi.refresh({}, false, false, true);
+    mixedUi.selectCharacter(1);
+    mixedUi.openSpellbook();
+    mixedUi.scrollSpellbook(100);
+    const auto mixedCount = mixedUi.snapshot().magic.count;
+    check(mixedCount == definitions.size() + 2 && mixedCount <= MagicHud::capacity &&
+              mixedUi.snapshot().magic.offset == mixedCount - hudLayout::spellRows &&
+              mixedUi.snapshot().magic.entries[mixedCount - 1].feature ==
+                  rules::Feature::DismissConcentration,
+          "Mixed spell/feature list scrolls to its final entry within bounded storage");
+    mixedUi.chooseSpellbook(mixedCount - 2);
+    check(mixedUi.snapshot().magic.armed &&
+              mixedUi.snapshot().magic.pending.feature == rules::Feature::SecondWind,
+          "Scrolled activated feature creates the correct command");
+    mixedUi.backToSpellbook();
+    check(mixedUi.snapshot().magic.open && mixedUi.snapshot().magic.cursor == mixedCount - 2 &&
+              mixedUi.snapshot().magic.offset == mixedCount - hudLayout::spellRows &&
+              mixed.party().character({1})->secondWind,
+          "Back restores mixed-list cursor and scroll without spending the feature");
+
+    const auto nearby = spellPlacements(map, 1, true);
+    GameSession combat(map, catalog, nearby, 5, spellSpawn, false);
+    combat.party().damage({0}, 6);
+    spellReady(combat, 0);
+    CommandController combatUi(combat);
+    combatUi.refresh(allCombatTargets(combat), false, false, true);
+    combatUi.openSpellbook();
+    combatUi.chooseSpellbook(0);
+    const auto committed = combatUi.snapshot().magic.pending;
+    check(combatUi.confirm() == CommandReason::Resolved && combat.combat().snapshot().spent[0] &&
+              !combat.party().character({0})->secondWind && combat.party().character({0})->mana == 0,
+          "Second Wind in initiative spends the regular action and one charge");
+    check(combat.submit(committed).reason != CommandReason::Resolved,
+          "Repeated Second Wind confirmation cannot commit twice");
+}
 void uiRevision() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog();
@@ -861,6 +1030,7 @@ int main(int argc, char** argv) {
         allDamageSpells();
         invalidAndPool();
         ui();
+        classFeaturesUi();
         uiRevision();
         sharedArea();
         markerLayoutAndLog();

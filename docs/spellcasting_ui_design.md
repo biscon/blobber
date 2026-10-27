@@ -113,3 +113,79 @@ sets projected positions from fixed front-idle geometry and current travel offse
 The visibility scan publishes badge coordinates only for visible bodies. Badge
 collision layout uses these stable coordinates. No prepared-bank format changes.
 See [polish verification](slice10_ui_verification.md#review-polish-badge-stability-and-spacing).
+
+## Class Features presentation
+
+Implemented correction, **accepted and closed** (2026-10-27). `CommandController` derives the
+picker's Spells/Class Features identity from class casting capability, independent
+of remaining mana. Its bounded HUD entries distinguish spells, activated features
+and automatic features; passive identities never become gameplay commands.
+Capacity is 22: at most 16 class spells, three activated features and three passive
+entries. Immutable descriptions and stack formatting retain allocation-free refresh.
+No catalog, save, combat cost or action-economy changes are involved.
+
+Non-casters use CLASS FEATURES, no mana header, and one new native-resolution laurel
+badge in slot 4. The fighter lists Second Wind plus selected Defense; the rogue lists
+Sneak Attack and rear-row melee. Automatic rows are readable, never disabled-looking,
+and mouse/Enter only selects details. Their text explains existing conditions.
+Active features show labelled uses rather than numeric mana; Second Wind shows one
+regular action and remaining uses, including on the confirmation dock. Casters retain
+their spellbook and mana, with feature-specific resource text for their utility entries.
+Exploration shows the existing six-second character cooldown instead of a combat
+action, including Arcane Recovery's existing readiness cost; this corrects the old
+"no action" recovery hint without changing its execution. End concentration remains
+free. The Second Wind button uses the small text style so its full name and Enter
+shortcut fit the shared button bounds.
+The details rectangle owns all text below the header, including a generic empty state.
+Seven-row scrolling, saved positions, input capture and cancellation remain shared.
+
+Verify passive mouse/keyboard browsing cannot commit, resource/action costs and
+failure paths are unchanged, empty/long lists stay bounded, and exhausted casters
+retain spell identity. Inspect hidden native/reduced fighter, rogue, caster and empty
+captures; run command/HUD/spell, allocation and GPU checks. Slice 10 remains accepted;
+this correction is now also accepted and does not advance slice 11.
+
+## Class Features verification
+
+**User acceptance:** Recorded on 2026-10-27. The user described the result as
+“very nice” and requested that acceptance be recorded. This closes the Class Features
+correction, including the layout fix, non-caster labels/icon, passive browsing and
+resource clarity. The automated verification below remains distinct from user review.
+
+- Debug build and full CTest: **26/26 passed**, 56.30 s. Final focused spells,
+  commands, HUD and allocation checks after tooltip/button refinements: **4/4 passed**,
+  14.33 s. Hidden GPU lifecycle/native-atlas checks passed with the 29th icon.
+- Generated fixtures cover passive mouse/keyboard inspection, unchanged resources
+  and clocks, full-health/used Second Wind, cancellation, one regular action/use
+  at confirmation, duplicate rejection, immediate caster switching, zero-mana caster
+  identity and an empty legacy class. A ten-entry mixed spell/feature list verifies
+  bounded scrolling and Back restoration. First/repeated passive browsing passes
+  the engine allocation guard.
+- Hidden application captures cover fighter and rogue in exploration and initiative,
+  full-health/injured/used Second Wind, Defense, both rogue passives, the generic empty
+  state and the wizard utility feature at native and reduced resolution. The empty
+  capture is explicitly a presentation-only diagnostic; empty-class behavior also has
+  a separate CPU fixture. Agent-performed interactive desktop review was not run;
+  no OS input or focus automation was used. User acceptance is recorded above.
+- Final capture export completed with **274 PNGs**, including 48 feature views and
+  63 reduced views. Selected native/reduced views were inspected, not every export.
+  Nine final images are retained in [class-features](screenshots/class-features/), including
+  [rogue browsing](screenshots/class-features/feature-2-combat-book.png),
+  [Second Wind confirmation](screenshots/class-features/feature-0-combat-confirm.png),
+  [exhausted uses](screenshots/class-features/feature-0-combat-used.png), and the
+  [bounded empty state](screenshots/class-features/feature-2-explore-empty-1280.png).
+- The laurel emblem was generated with built-in imagegen, saved as
+  [class_features.png](../assets/ui/class_features.png). Its exact final prompt and
+  original generation path are recorded in [UI artwork provenance](../assets/ui/prompts.json).
+  Existing master artwork was preserved, and atlas memory remains 8 MiB.
+
+Commands:
+
+```sh
+cmake --build cmake-build-debug -j 4
+ctest --test-dir cmake-build-debug --output-on-failure -j 4
+ctest --test-dir cmake-build-debug --output-on-failure -j 4 -R '^(spells|commands|hud|frame_allocations)$'
+cmake --build cmake-build-debug --target blobber_gpu_smoke
+cmake-build-debug/blobber_gpu_smoke
+cmake-build-debug/blobber --capture-spells /tmp/blobber-class-features-final
+```

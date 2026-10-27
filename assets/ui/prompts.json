@@ -44,6 +44,11 @@
     "aid": {
       "prompt": "Use case: stylized-concept. One finished game UI asset for Stone & Shadow, an early 1990s Westwood-style dungeon crawler. Painted pixel art with deliberate visible pixel clusters, crisp silhouettes, earthy muted colors, warm gold highlights, deep shadows; not smooth modern digital painting. No text, letters, border, UI or watermark. Single square action icon: open human hand reaching diagonally upward right in a warm golden healing glow with small rays, clearly readable five fingers, simple wrist at lower left. Bold large readable silhouette, centered with slight margins. Dark near-black green background. Designed for 30x30 game pixels.",
       "source": "/home/bison/.codex/generated_images/01a17483-71f3-7aa1-bd4c-15ee20419e91/exec-fc6affc6-daaf-48ee-b0bd-7d643abe863a.png"
+    },
+    "class_features": {
+      "prompt": "Use case: stylized-concept. Create one finished square game action icon for Stone & Shadow, matching a richly painted retro fantasy dungeon crawler interface. Subject: a single embossed bronze and warm gold laurel badge, two sturdy curved laurel branches framing a small plain raised bronze lozenge medallion. This is the neutral Class Features icon shared by fighter and rogue. Centered large bold readable silhouette with slight margins, dark near-black green background (#0c1212). Painterly pixel-art-inspired metal texture, crisp detailed highlights at full asset resolution, restrained earthy palette, fine craftsmanship. No magical glow, no runes, no book, no weapons, no letters, no text, no border, no watermark. Square 1024x1024 asset, readable when displayed at about 100 pixels, retain high resolution rather than artificially pixelating.",
+      "source": "/home/bison/.codex/generated_images/01a17cef-49fc-7a41-aab8-a939eb5459f9/exec-552d72a8-ee44-4d69-86b6-2c044048244a.png",
+      "tool": "Built-in image_gen.imagegen"
     }
   }
 }

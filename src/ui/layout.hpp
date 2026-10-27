@@ -30,6 +30,7 @@ constexpr UiRect detail(int i) {
 
 constexpr int spellRows = 7;
 constexpr UiRect spellbook{8, 132, 306, 168}, spellbookClose{296, 137, 12, 11};
+constexpr UiRect spellDetails{143, 153, 165, 140};
 constexpr UiRect spellEntry(int row) {
     return {14, 154 + row * 18, 123, 17};
 }

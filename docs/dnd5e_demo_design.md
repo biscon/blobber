@@ -1200,6 +1200,10 @@ badges, native-resolution portraits/icons and HUD, and impact-triggered alerts.
 The user reported that the result looks good and works well. Remaining technical
 verification limitations in the handoffs are retained; acceptance does not imply
 that previously skipped hardware/leak checks were run.
+The subsequent [Class Features correction](spellcasting_ui_design.md#class-features-verification)
+was also accepted on 2026-10-27: the user described it as “very nice” and requested
+that acceptance be recorded. Its non-caster labels/icon, passive browsing, resource
+clarity and layout fix are accepted and closed; its verification is linked above.
 **Next-agent handoff:** Slice 10 is accepted and closed. Slice 11 is next eligible
 for planning and remains Planned/unstarted. Preserve the documented combat,
 resource, rendering and allocation contracts; do not implement slice 11 as part

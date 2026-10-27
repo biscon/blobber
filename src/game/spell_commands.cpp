@@ -18,6 +18,7 @@ void CommandController::refreshMagic() noexcept {
     m.name = "";
     m.description = "";
     m.cost = 0;
+    m.charges = -1;
     m.open = m.state == CastingState::SpellPicker;
     m.armed = m.state == CastingState::Targeting;
     m.kind = rules::SpellKind::Count;
@@ -35,6 +36,9 @@ void CommandController::refreshMagic() noexcept {
     m.attackBonus = c->stats.proficiency + party_.castingModifier(caster);
     m.difficulty = 8 + m.attackBonus;
     const auto* cls = party_.catalog().characterClass(c->build.characterClass);
+    m.spellcaster = cls->casting != rules::Casting::None;
+    static_assert(std::tuple_size<decltype(cls->spells)>::value + 6 <= MagicHud::capacity,
+                  "Picker must hold all supported spells and features");
     const auto entry = [&](rules::SpellId spell, rules::Feature feature, const char* name, const char* desc,
                            int cost) {
         auto command = state_.selection;
@@ -47,9 +51,16 @@ void CommandController::refreshMagic() noexcept {
                             : feature == rules::Feature::ArcaneRecovery ? int(c->arcaneRecovery)
                                                                         : -1;
         const auto* definition = party_.catalog().spell(spell);
-        m.entries[m.count++] = {spell,  feature, name,
-                                desc,   cost,    definition ? definition->kind : rules::SpellKind::Count,
-                                reason, charges};
+        m.entries[m.count++] = {spell,
+                                feature,
+                                name,
+                                desc,
+                                cost,
+                                definition ? definition->kind : rules::SpellKind::Count,
+                                reason,
+                                charges,
+                                feature == rules::Feature::None ? PickerEntryKind::Spell
+                                                                : PickerEntryKind::ActivatedFeature};
     };
     for (std::size_t i = 0; i < cls->spellCount; ++i) {
         const auto* s = party_.catalog().spell(cls->spells[i]);
@@ -67,6 +78,27 @@ void CommandController::refreshMagic() noexcept {
     if (session_->effects().concentration(caster).serial)
         entry({}, rules::Feature::DismissConcentration, "End concentration",
               "End your concentration voluntarily. No action, mana or cooldown cost.", 0);
+    const auto passive = [&](PassiveFeature id, const char* name, const char* description) {
+        SpellBookEntry e;
+        e.name = name;
+        e.description = description;
+        e.category = PickerEntryKind::AutomaticFeature;
+        e.passive = id;
+        m.entries[m.count++] = e;
+    };
+    if (!m.spellcaster) {
+        if (c->build.defense)
+            passive(PassiveFeature::Defense, "Defense",
+                    "+1 Armor Class while wearing body armor. Already included in your armor class.");
+        if (party_.hasFeature(caster, rules::ClassFeature::SneakAttack)) {
+            passive(PassiveFeature::SneakAttack, "Sneak Attack",
+                    "Finesse or ranged hits add 1d6 with advantage, or an acting front ally engaging "
+                    "the target. No disadvantage. Once per 6 gameplay seconds; criticals double the die.");
+            passive(PassiveFeature::RearRowMelee, "Rear-row melee",
+                    "Your normal melee attack works from the rear row. Targets must still be in "
+                    "the three front cells and respect enemy front-row protection.");
+        }
+    }
     if (m.count) {
         m.cursor = std::min(m.cursor, m.count - 1);
         m.offset = std::min(m.offset, m.count > 7 ? m.count - 7 : 0);
@@ -76,12 +108,15 @@ void CommandController::refreshMagic() noexcept {
         return;
     for (std::size_t i = 0; i < m.count; ++i) {
         const auto& e = m.entries[i];
+        if (e.category == PickerEntryKind::AutomaticFeature)
+            continue;
         if (state_.magic.pending.action == PartyAction::Spell
                 ? e.spell.index == state_.magic.pending.spell.index && e.feature == rules::Feature::None
                 : e.feature == state_.magic.pending.feature) {
             m.name = e.name;
             m.description = e.description;
             m.cost = e.cost;
+            m.charges = e.charges;
         }
     }
     const auto* s = party_.catalog().spell(state_.magic.pending.spell);
@@ -148,9 +183,6 @@ void CommandController::openSpellbook() noexcept {
     closeOverlay();
     cancel();
     refreshMagic();
-    if (!state_.magic.count &&
-        !party_.hasFeature(state_.selection.character, rules::ClassFeature::SneakAttack))
-        return;
     auto& m = state_.magic;
     m.cursor = bookCursors_[state_.selection.character.index];
     m.offset = bookOffsets_[state_.selection.character.index];
@@ -189,6 +221,10 @@ void CommandController::chooseSpellbook(std::size_t index) noexcept {
         return;
     browseSpellbook(int(index) - int(m.cursor));
     const auto entry = m.entries[index];
+    if (entry.category == PickerEntryKind::AutomaticFeature) {
+        magicFeedback("");
+        return;
+    }
     if (entry.reason != CommandReason::Ready && entry.reason != CommandReason::MissingTarget) {
         magicFeedback(commandMessage(entry.reason));
         return;

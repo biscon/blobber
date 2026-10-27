@@ -163,7 +163,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                  reason == CommandReason::InvalidAlly || reason == CommandReason::PreviewAccepted);
             const bool selected = action == h->selection.action;
             p.box(r, selected ? bright : edge);
-            p.picture(5 + i, {r.x + 2, r.y + 2, r.width - 4, r.height - 4},
+            const unsigned icon = i == 3 && !h->magic.spellcaster ? UiArt::classFeaturesIcon : 5 + i;
+            p.picture(icon, {r.x + 2, r.y + 2, r.width - 4, r.height - 4},
                       available ? WHITE : Color{85, 90, 88, 255});
             if (selected)
                 p.border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, gold);

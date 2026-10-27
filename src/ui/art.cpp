@@ -32,7 +32,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/thunderwave",
                                   "spells/second_wind",
                                   "spells/arcane_recovery",
-                                  "spells/dismiss_concentration"};
+                                  "spells/dismiss_concentration",
+                                  "class_features"};
     OwnedImage atlas(GenImageColor(2048, 1024, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");

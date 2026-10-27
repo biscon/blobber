@@ -235,7 +235,22 @@ int main() {
         }
         ProjectilePlayer spellVisuals;
         FramePipeline spellFrames;
+        const auto featurePlaces = spellPlacements(hybridMap, 0);
+        GameSession featureSession(hybridMap, spellRules, featurePlaces, 5, spellSpawn, false);
+        CommandController featureUi(featureSession);
         tracking = true;
+        for (int repeat = 0; repeat < 20; ++repeat) {
+            featureUi.refresh({}, false, false, true);
+            for (unsigned member : {0u, 2u}) {
+                featureUi.selectCharacter(member);
+                featureUi.openSpellbook();
+                featureUi.browseSpellbook(1);
+                featureUi.chooseSpellbook(1); // Defense / rear-row melee are read-only.
+                okay &= featureUi.snapshot().magic.open && !featureUi.snapshot().magic.armed;
+                featureUi.hover(HoverKind::Action, 3);
+                featureUi.closeOverlay();
+            }
+        }
         for (unsigned i = 0; i < spellSessions.size(); ++i) {
             auto& s = *spellSessions[i];
             auto& ui = *spellUis[i];

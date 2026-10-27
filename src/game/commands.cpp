@@ -528,8 +528,10 @@ void CommandController::selectCharacter(std::size_t index) noexcept {
     if (state_.magic.armed && index < rules::partySize &&
         state_.selection.character.index != party_.snapshot().formation[index].index)
         cancel();
-    if (index < rules::partySize)
+    if (index < rules::partySize) {
         state_.selection.character = party_.snapshot().formation[index];
+        refreshMagic();
+    }
     updateAvailability();
 }
 void CommandController::selectAction(PartyAction action) noexcept {

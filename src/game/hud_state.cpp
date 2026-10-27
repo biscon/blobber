@@ -250,6 +250,10 @@ void CommandController::updateHover() noexcept {
                : h.index == 4 ? "Unavailable"
                               : "Cost: 1 action");
         if (h.index == 3 && session_) {
+            put(0, state_.magic.spellcaster ? "Spells [4]" : "Class Features [4]");
+            put(1, state_.magic.spellcaster ? "Browse spells and activated class features."
+                                            : "Browse activated and automatic class features.");
+            put(2, "Browsing pauses; choosing a feature spends nothing.");
             put(3, "Click or press 4 to browse.");
             return;
         }
@@ -272,7 +276,9 @@ void CommandController::updateHover() noexcept {
         if (state_.magic.armed) {
             const auto& m = state_.magic;
             h.reason = m.allyReasons[h.index];
-            if (m.hostile || m.pending.action != PartyAction::Spell)
+            if (m.pending.action == PartyAction::Feature)
+                put(1, "This feature needs no recipient selection.");
+            else if (m.hostile)
                 put(1, "This spell does not target allies.");
             else if (m.selectedAllies[h.index]) {
                 put(1, "Selected recipient");

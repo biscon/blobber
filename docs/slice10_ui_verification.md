@@ -1,7 +1,10 @@
 # Slice 10 casting UI correction: verification and handoff
 
-Latest follow-up: [native HUD and impact-alert verification](native_hud_verification.md)
-supersedes the low-resolution rendering and acceptance-time alert behavior below.
+Latest follow-up: [Class Features verification](spellcasting_ui_design.md#class-features-verification),
+accepted and closed on 2026-10-27, records non-caster labels/icon, passive browsing,
+resource clarity and the picker layout fix. The earlier
+[native HUD and impact-alert verification](native_hud_verification.md) supersedes
+the low-resolution rendering and acceptance-time alert behavior below.
 
 Status: **Accepted and closed**, 2026-10-27. The user explicitly accepted slice 10
 after its native HUD and impact-alert follow-up. Slice 11 remains Planned/unstarted. This implements the approved mockup-based correction and supersedes

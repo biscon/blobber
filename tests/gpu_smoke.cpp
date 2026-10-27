@@ -46,8 +46,9 @@ void nativeUi() {
                                   "spells/thunderwave",
                                   "spells/second_wind",
                                   "spells/arcane_recovery",
-                                  "spells/dismiss_concentration"};
-    for (unsigned i = 0; i < 28; ++i) {
+                                  "spells/dismiss_concentration",
+                                  "class_features"};
+    for (unsigned i = 0; i < 29; ++i) {
         OwnedImage image(GenImageColor(i < 4 ? 216 : 108, i < 4 ? 252 : 108, GREEN));
         for (int y = 0; y < image.value.height; ++y)
             for (int x = 0; x < image.value.width; ++x)

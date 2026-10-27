@@ -68,6 +68,8 @@ struct CombatFeedback {
     std::int64_t damage = 0;
     std::uint64_t startedMs = 0;
 };
+enum class PickerEntryKind : std::uint8_t { Spell, ActivatedFeature, AutomaticFeature };
+enum class PassiveFeature : std::uint8_t { None, Defense, SneakAttack, RearRowMelee };
 struct SpellBookEntry {
     rules::SpellId spell;
     rules::Feature feature = rules::Feature::None;
@@ -76,6 +78,8 @@ struct SpellBookEntry {
     rules::SpellKind kind = rules::SpellKind::Count;
     CommandReason reason = CommandReason::Unavailable;
     int charges = -1; // Negative for entries without a finite-use resource.
+    PickerEntryKind category = PickerEntryKind::Spell;
+    PassiveFeature passive = PassiveFeature::None;
 };
 enum class CastingState : std::uint8_t { Normal, SpellPicker, Targeting, Resolving };
 struct MagicHud {
@@ -92,10 +96,14 @@ struct MagicHud {
         return state == CastingState::Targeting || state == CastingState::Resolving;
     }
     bool open = false, armed = false, hostile = false, area = false, missiles = false;
-    std::array<SpellBookEntry, 20> entries{};
+    // 16 class spells + 3 activated features + 3 automatic features.
+    static constexpr std::size_t capacity = 22;
+    std::array<SpellBookEntry, capacity> entries{};
     std::size_t count = 0, cursor = 0, offset = 0;
     const char *name = "", *description = "";
     int mana = 0, maxMana = 0, cost = 0, attackBonus = 0, difficulty = 0;
+    int charges = -1;
+    bool spellcaster = false;
     std::array<ActorId, 12> affected{};
     std::size_t affectedCount = 0;
     std::array<bool, 3> cells{};

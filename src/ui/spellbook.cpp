@@ -3,6 +3,16 @@
 namespace blobber {
 using namespace hudInk;
 namespace {
+void usesLabel(char* output, std::size_t size, int charges) {
+    std::snprintf(output, size, "%d %s remaining", charges, charges == 1 ? "use" : "uses");
+}
+const char* featureAction(rules::Feature feature, CombatPhase phase) {
+    if (feature == rules::Feature::DismissConcentration)
+        return "No action cost";
+    if (feature == rules::Feature::ArcaneRecovery)
+        return "6s cooldown / safe exploration";
+    return realTime(phase) ? "6s cooldown" : "1 action";
+}
 void wrapped(const HudPainter& p, const char* text, int x, int y, int width, int rows) {
     const char* cursor = text;
     for (int row = 0; *cursor && row < rows; ++row) {
@@ -42,55 +52,79 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
     for (const auto& c : h.cards)
         if (c.id.index == h.selection.character.index)
             caster = c.name;
-    std::snprintf(line, sizeof(line), "%s - SPELLS", caster);
+    std::snprintf(line, sizeof(line), "%s - %s", caster, m.spellcaster ? "SPELLS" : "CLASS FEATURES");
     clipped(line, 15, 138, 190, gold, UiTextStyle::Display);
-    std::snprintf(line, sizeof(line), "Mana %d/%d", m.mana, m.maxMana);
-    text(line, 220, 139, blue, UiTextStyle::Small);
+    if (m.spellcaster) {
+        std::snprintf(line, sizeof(line), "Mana %d/%d", m.mana, m.maxMana);
+        text(line, 220, 139, blue, UiTextStyle::Small);
+    }
     box(hudLayout::spellbookClose);
     label("X", hudLayout::spellbookClose, gold, UiTextStyle::Small);
-    box({143, 153, 165, 140});
+    const auto details = hudLayout::spellDetails;
+    const int dx = details.x + 6, dy = details.y + 6, dw = details.width - 12;
+    box(details);
     for (std::size_t i = m.offset; i < m.count && i < m.offset + hudLayout::spellRows; ++i) {
         const auto& e = m.entries[i];
         const auto r = hudLayout::spellEntry(int(i - m.offset));
-        const bool available = e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
+        const bool automatic = e.category == PickerEntryKind::AutomaticFeature;
+        const bool available =
+            automatic || e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
         box(r, i == m.cursor ? teal : edge);
-        picture(UiArt::spellIcon(e.kind, e.feature), {r.x + 3, r.y + 3, r.height - 6, r.height - 6},
+        picture(automatic ? UiArt::classFeaturesIcon : UiArt::spellIcon(e.kind, e.feature),
+                {r.x + 3, r.y + 3, r.height - 6, r.height - 6},
                 available ? WHITE : Color{100, 108, 106, 255});
         border({r.x + 2, r.y + 2, r.height - 4, r.height - 4}, {29, 36, 33, 255});
-        clipped(e.name, r.x + 21, r.y + 4, 89, available ? gold : muted, UiTextStyle::Label);
-        std::snprintf(line, sizeof(line), "%d", e.cost);
-        text(line, r.x + 112, r.y + 4, available ? blue : muted, UiTextStyle::Small);
+        const bool spell = e.category == PickerEntryKind::Spell;
+        clipped(e.name, r.x + 21, r.y + 4, spell ? 89 : 62, available ? gold : muted, UiTextStyle::Label);
+        if (automatic)
+            std::snprintf(line, sizeof(line), "Automatic");
+        else if (spell)
+            std::snprintf(line, sizeof(line), "%d", e.cost);
+        else if (e.charges >= 0)
+            std::snprintf(line, sizeof(line), "%d %s", e.charges, e.charges == 1 ? "use" : "uses");
+        else
+            std::snprintf(line, sizeof(line), "Free");
+        label(line, {r.x + (spell ? 109 : 85), r.y + 2, spell ? 12 : 36, r.height - 4},
+              available ? blue : muted, UiTextStyle::Small);
         if (!available) {
             fill({r.x + 10, r.y + 10, 5, 5}, background);
             text("-", r.x + 10, r.y + 8, muted, UiTextStyle::Small);
         }
     }
     if (!m.count) {
-        wrapped(*this, "Rogue abilities are automatic: rear-row melee and conditional Sneak Attack.", 166,
-                140, 158, 8);
+        wrapped(*this,
+                m.spellcaster ? "No spells or class features available." : "No class features available.", dx,
+                dy, dw, 8);
     } else {
         const auto& e = m.entries[m.cursor];
-        picture(UiArt::spellIcon(e.kind, e.feature), {149, 159, 28, 28});
-        clipped(e.name, 183, 161, 119, gold, UiTextStyle::Heading);
-        if (e.charges >= 0)
-            std::snprintf(line, sizeof(line), "Uses %d/1", e.charges);
+        const bool automatic = e.category == PickerEntryKind::AutomaticFeature;
+        picture(automatic ? UiArt::classFeaturesIcon : UiArt::spellIcon(e.kind, e.feature), {dx, dy, 28, 28});
+        clipped(e.name, dx + 34, dy + 2, dw - 34, gold, UiTextStyle::Heading);
+        if (automatic)
+            std::snprintf(line, sizeof(line), "Automatic");
+        else if (e.charges >= 0)
+            usesLabel(line, sizeof(line), e.charges);
+        else if (e.category == PickerEntryKind::ActivatedFeature)
+            std::snprintf(line, sizeof(line), "No resource cost");
         else
             std::snprintf(line, sizeof(line), "%d mana", e.cost);
-        text(line, 183, 175, blue, UiTextStyle::Small);
-        wrapped(*this, e.description, 149, 193, 153, 5);
+        clipped(line, dx + 34, dy + 16, dw - 34, blue, UiTextStyle::Small);
+        wrapped(*this, e.description, dx, dy + 34, dw, 5);
         const auto* rules = rules::spellRules(e.kind);
-        const char* targeting =
-            e.feature == rules::Feature::DismissConcentration ? "No action or mana cost."
-            : e.feature == rules::Feature::ArcaneRecovery     ? "No action / safe exploration."
-            : e.feature != rules::Feature::None               ? "Self / 1 action."
-            : rules && rules->area                            ? "Fixed area / 1 action."
-            : rules && rules->hostile
-                ? (e.kind == rules::SpellKind::InflictWounds ? "Exposed melee / 1 action."
-                                                             : "6 cells / clear sight / 1 action.")
-                : "Ally portraits / 1 action.";
-        clipped(targeting, 149, 253, 153, blue, UiTextStyle::Small);
+        const char* targeting = automatic                           ? "No separate action or activation."
+                                : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)
+                                : rules && rules->area              ? "Fixed area / 1 action."
+                                : rules && rules->hostile ? (e.kind == rules::SpellKind::InflictWounds
+                                                                 ? "Exposed melee / 1 action."
+                                                                 : "6 cells / clear sight / 1 action.")
+                                                          : "Ally portraits / 1 action.";
+        clipped(targeting, dx, dy + 94, dw, blue, UiTextStyle::Small);
         const bool available = e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
-        wrapped(*this, available ? "Click or Enter to choose." : commandMessage(e.reason), 149, 268, 153, 2);
+        wrapped(*this,
+                automatic   ? "Applies automatically when its conditions are met."
+                : available ? "Click or Enter to choose."
+                            : commandMessage(e.reason),
+                dx, dy + 109, dw, 2);
     }
     if (m.count > hudLayout::spellRows) {
         label("Up / Down", hudLayout::spellPrevious, muted, UiTextStyle::Small);
@@ -115,12 +149,15 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     picture(UiArt::spellIcon(m.kind, c.feature), {12, 314, 34, 34});
     border({11, 313, 36, 36}, gold);
     clipped(line, 53, 309, 229, gold, UiTextStyle::Display);
-    std::snprintf(line, sizeof(line), "%d mana / %s", m.cost,
-                  c.feature == rules::Feature::ArcaneRecovery ||
-                          c.feature == rules::Feature::DismissConcentration
-                      ? "no action"
-                      : "1 action");
-    text(line, 53, 321, hudInk::text, UiTextStyle::Small);
+    if (c.action == PartyAction::Feature) {
+        char uses[40]{};
+        if (m.charges >= 0)
+            usesLabel(uses, sizeof(uses), m.charges);
+        std::snprintf(line, sizeof(line), "%s%s%s", featureAction(c.feature, h.combat.phase),
+                      m.charges >= 0 ? " / " : "", uses);
+    } else
+        std::snprintf(line, sizeof(line), "%d mana / 1 action", m.cost);
+    clipped(line, 53, 321, 229, hudInk::text, UiTextStyle::Small);
     const bool resolving = m.state == CastingState::Resolving;
     const bool enabled = !resolving && !h.suspended && !h.modal() && h.availability == CommandReason::Ready;
     clipped(resolving  ? "Resolving..."
@@ -141,17 +178,20 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         !m.feedback[0])
         hint = commandMessage(h.availability);
     if (resolving)
-        hint = "Waiting for the cast to finish.";
+        hint = c.action == PartyAction::Feature ? "Waiting for the ability to finish."
+                                                : "Waiting for the cast to finish.";
     clipped(hint, 53, 347, 229, muted, UiTextStyle::Small);
     box(hudLayout::spellCast, enabled && !m.single ? bright : edge);
     if (enabled && !m.single)
         fill({290, 312, 86, 15}, {65, 48, 18, 255});
-    label(resolving                           ? "RESOLVING"
-          : m.single                          ? "Click a target"
-          : c.action == PartyAction::Feature  ? "Use [Enter]"
-          : m.kind == rules::SpellKind::Bless ? "Cast Bless [Enter]"
-                                              : "Cast [Enter]",
-          hudLayout::spellCast, enabled && !m.single ? bright : muted, UiTextStyle::Heading);
+    label(resolving                                 ? "RESOLVING"
+          : m.single                                ? "Click a target"
+          : c.feature == rules::Feature::SecondWind ? "Use Second Wind [Enter]"
+          : c.action == PartyAction::Feature        ? "Use [Enter]"
+          : m.kind == rules::SpellKind::Bless       ? "Cast Bless [Enter]"
+                                                    : "Cast [Enter]",
+          hudLayout::spellCast, enabled && !m.single ? bright : muted,
+          c.feature == rules::Feature::SecondWind ? UiTextStyle::Small : UiTextStyle::Heading);
     box(hudLayout::spellBack);
     label("Back [B]", hudLayout::spellBack, resolving ? muted : gold, UiTextStyle::Small);
     box(hudLayout::spellCancel);

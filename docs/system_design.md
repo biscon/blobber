@@ -1,5 +1,12 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-27): [Class Features picker correction](spellcasting_ui_design.md#class-features-presentation).
+The shared picker distinguishes spells, activated features and read-only automatic
+features. Class casting capability controls headings/resource visibility and slot-4
+art; gameplay commands, costs and schemas remain unchanged. UI storage stays bounded,
+with native-resolution artwork and captured fighter/rogue verification. The full
+Debug suite passes (26/26), with focused follow-up tests and hidden GPU checks.
+
 Implemented post-acceptance [diagonal-contact animation fix](hybrid_encounter_design.md#diagonal-contact-animation-correction-2026-10-27):
 Combat already faces NPCs toward the party at initiative
 entry and attack acceptance. Sprite direction now uses that same cell-center geometry,

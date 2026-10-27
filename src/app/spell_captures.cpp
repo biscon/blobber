@@ -181,36 +181,109 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         }
     }
     // Feature picker and actual self-recovery through the same command UI.
-    for (unsigned member : {0u, 2u, 3u}) {
-        NpcWorld places(map, spawn.cell, names, {});
+    for (unsigned scenario = 0; scenario < 5; ++scenario) {
+        const unsigned member = scenario == 2 ? 3 : scenario % 3 == 0 ? 0 : 2;
+        const bool combat = scenario >= 3;
+        std::vector<NpcInstance> instances;
+        if (combat)
+            instances.push_back({goblin, {8, 10}, {0, 1}, Heading::South});
+        NpcWorld places(map, spawn.cell, names, instances);
         GameSession s(map, catalog, places, 5, spawn, false, timings);
-        s.party().damage({0}, 6);
         s.party().spendMana({3}, 3);
         NpcAnimator animator(s.actors(), timings);
         FramePipeline frames;
         CommandController ui(s, timings);
-        animator.setTime(0);
-        frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(), &s.combat().attacks(),
-                      0);
-        ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false, true);
+        const auto refresh = [&] {
+            animator.setTime(s.timeMs());
+            frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
+                          &s.combat().attacks(), s.timeMs());
+            ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false, true);
+        };
+        const auto capture = [&](const char* suffix, bool empty = false) {
+            refresh();
+            auto hud = ui.snapshot();
+            if (empty) // Presentation-only diagnostic of a class without any features.
+                hud.magic.count = hud.magic.cursor = hud.magic.offset = 0;
+            presenter.present(frames.frame(), s.movement(), map, false, true, &hud, frames.picking());
+            const auto name =
+                "feature-" + std::to_string(member) + (combat ? "-combat-" : "-explore-") + suffix;
+            presenter.capture(directory / (name + ".png"));
+            presenter.capture(directory / (name + "-1280.png"), 1280, 720);
+        };
+        if (combat) {
+            for (int i = 0; i < 300; ++i) {
+                const auto& st = s.combat().snapshot();
+                if (st.awaitingAction && st.activeCharacter && st.activeCharacter->index == member)
+                    break;
+                if (st.awaitingAction) {
+                    PartyCommand defend;
+                    defend.character = *st.activeCharacter;
+                    defend.action = PartyAction::Defend;
+                    defend.world = st.world;
+                    defend.turn = st.turn;
+                    s.submit(defend);
+                    ui.record(s.events());
+                }
+                ui.record(s.update(.1, false));
+            }
+            if (!s.combat().snapshot().awaitingAction ||
+                s.combat().snapshot().activeCharacter->index != member)
+                throw std::runtime_error("Feature capture did not reach character turn");
+        }
+        refresh();
         ui.selectCharacter(member);
+        capture("actions");
         ui.openSpellbook();
-        presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(), frames.picking());
-        presenter.capture(directory / ("spell-feature-" + std::to_string(member) + ".png"));
+        capture("book");
+        if (member == 2) {
+            ui.chooseSpellbook(1);
+            capture("rear-row");
+            if (!ui.snapshot().magic.open)
+                throw std::runtime_error("Automatic feature must remain in the picker");
+            capture("empty", true);
+        }
         if (member != 2) {
+            if (member == 0) {
+                ui.chooseSpellbook(1);
+                capture("defense");
+                s.party().damage({0}, 6);
+                refresh();
+                ui.browseSpellbook(-1);
+                capture("injured");
+            }
             const auto feature = member == 0 ? rules::Feature::SecondWind : rules::Feature::ArcaneRecovery;
             std::size_t index = 0;
             while (index < ui.snapshot().magic.count && ui.snapshot().magic.entries[index].feature != feature)
                 ++index;
             ui.chooseSpellbook(index);
+            capture("confirm");
             if (ui.confirm() != CommandReason::Resolved)
                 throw std::runtime_error("Feature capture action rejected");
-            ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false, true);
+            // Revisit the fighter after readiness/turn handling to show the actual exhausted reason.
+            if (!combat)
+                ui.record(s.update(6, false));
+            else {
+                for (int i = 0; i < 300; ++i) {
+                    const auto& st = s.combat().snapshot();
+                    if (st.awaitingAction && st.activeCharacter && st.activeCharacter->index == member)
+                        break;
+                    if (st.awaitingAction) {
+                        PartyCommand defend;
+                        defend.character = *st.activeCharacter;
+                        defend.action = PartyAction::Defend;
+                        defend.world = st.world;
+                        defend.turn = st.turn;
+                        s.submit(defend);
+                        ui.record(s.events());
+                    }
+                    ui.record(s.update(.1, false));
+                }
+            }
+            refresh();
+            ui.selectCharacter(member);
             ui.openSpellbook();
             ui.browseSpellbook(int(index) - int(ui.snapshot().magic.cursor));
-            presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(),
-                              frames.picking());
-            presenter.capture(directory / ("spell-feature-" + std::to_string(member) + "-used.png"));
+            capture("used");
         }
     }
 }

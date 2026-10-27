@@ -13,13 +13,15 @@ artwork, geometry and text together, so modal backgrounds cover all three.
 World selection contours retain picking-mask alignment with native-width strokes.
 The dungeon's prepared pixels, projection and discrete movement do not change.
 
-UiArt owns one startup-prepared 2048×1024 RGBA atlas through GpuResources. Twenty-eight
+UiArt owns one startup-prepared 2048×1024 RGBA atlas through GpuResources. Twenty-nine
 256-pixel cells hold portraits up to 216×252 and icons up to 108×108, with two-pixel
 edge extrusion. Sources remain intact. Portraits crop centrally to destinations;
 icons aspect-fit. Source decoding/resampling occurs only at startup. The atlas is
 8 MiB, with no retained decoded source images or per-frame allocations. The old
 640×360 HUD target is removed. Code-native shapes supply thin borders, checkmarks,
 darts and a clean eight-tooth gold cog; spell icons get a separate dark frame.
+The Class Features correction adds one shared laurel emblem in the existing atlas;
+its size and resource ownership are unchanged.
 
 ## Combat timing
 
