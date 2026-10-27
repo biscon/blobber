@@ -2,7 +2,7 @@
 
 A C++17 / raylib 6.2 prototype of a 1990s grid-based dungeon crawler. Rendering,
 six-direction keyboard movement, wall/NPC collision, and a small exploration level
-with animated goblins, a four-character party HUD, and hybrid ranged approach / turn-based combat with spells and class abilities.
+with animated goblins, a four-character party HUD, and hybrid ranged approach / turn-based combat with spells, class abilities, inventory, and equipment.
 
 ![The great hall](docs/screenshots/great-hall.png)
 
@@ -59,9 +59,14 @@ working-directory setup is required: assets are copied beside the executable.
 | 2 / shield | Immediately defend |
 | 3 / bow | Select ranged attack |
 | 4 / spell | Browse paused Spells / Abilities, then resume to select targets |
-| 5 / item | Reserved for the inventory slice |
+| I / 5 / item / inspector Inventory | Open the paused inventory for the selected character |
+| Inventory 1–4 / character tabs | Inspect another bag; choose a transfer recipient |
+| Drag / Shift-drag | Move, swap, merge, equip, or transfer / choose a split quantity on release |
+| Inventory E / M / S / T / U | Equip or unequip / move / split / transfer / use potion |
+| Inventory arrows / Tab / Enter | Select a cell / switch bag and equipment / confirm destination or quantity |
+| Inventory wheel / Page Up / Page Down | Read further description pages; wheel adjusts a split quantity |
 | 6 / aid | Arm Aid; click a dying ally's portrait to commit |
-| Portrait click | Select a character in real time, or a friendly spell/Aid target; use i for details |
+| Portrait click | Select a character in real time, or a friendly spell/potion/Aid target; use i for details |
 | Spellbook Up / Down, Enter | Browse descriptions, then choose a spell or ability |
 | Spell targeting Left / Right, Up / Down, Enter | Move cursor, add/toggle or remove recipient, then cast |
 | Casting B / Back | Return to the picker at the remembered scroll position |
@@ -100,6 +105,26 @@ Cleric and Wizard start with four mana; first-level spells cost two and cantrips
 cost none. Casting takes one action or the shared six-second cooldown in real time.
 Mana and feature charges do not reset after encounters. Resting is a later slice;
 Restart restores initial resources. Portrait selection is distinct from the active turn.
+
+Slice 11 review: `./cmake-build-debug/blobber --inventory-demo --seed 5` opens
+Merrin's inventory. Each character has 48 bag cells plus separate body, main-hand,
+shield and ranged slots. Weight includes both bag and equipment; the limit is
+Strength × 15 lb. Arrows stack to 100, potions to 20, and other items stay separate.
+Equipment changes and transfers require stationary, safe exploration. Bag
+organization remains available during paused danger. Rejected operations preserve
+all items; unequipping needs a free cell, while a replacement returns old equipment
+to its source cell. Drag to another character's tab to transfer; Shift-drag opens
+the quantity dialog with one selected. Escape cancels the pending operation.
+
+Use a potion from its owner's inventory, then click a living ally or confirm with
+Enter. Healing restores 2d4+2 HP, including reviving a dying ally; mana restores two.
+Both use one action or the character's shared six-second cooldown. Full resources
+reject without consumption. Every accepted party bow attack spends an arrow,
+including misses and interrupted projectiles. Arrows and potions do not replenish
+between encounters; looting and rests remain deferred.
+
+`--capture-inventory DIRECTORY` exports hidden, scripted inventory captures.
+See [inventory design](docs/inventory_design.md) and [slice 11 review notes](docs/slice11_verification.md).
 
 Slice 10 review: `./cmake-build-debug/blobber --spell-demo --seed 5` opens the
 Wizard's spellbook on the hybrid demo map. Browsing pauses; selecting an entry

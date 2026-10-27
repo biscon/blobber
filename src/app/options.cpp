@@ -21,7 +21,12 @@ Options parseOptions(int argc, char** argv) {
             result.assets = argv[++i];
         else if (arg == "--check-prepared")
             result.checkPreparedOnly = true;
-        else if (arg == "--spell-demo") {
+        else if (arg == "--inventory-demo")
+            result.inventoryDemo = true;
+        else if (arg == "--capture-inventory" && i + 1 < argc) {
+            result.captureInventoryOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--spell-demo") {
             result.spellDemo = true;
             result.hybridDemo = true;
         } else if (arg == "--capture-spells" && i + 1 < argc) {
@@ -70,12 +75,15 @@ Options parseOptions(int argc, char** argv) {
         else
             throw std::runtime_error("Unknown or incomplete argument: " + arg);
     }
-    if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) + int(result.hybridDemo) > 1 ||
+    if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) + int(result.hybridDemo) +
+                int(result.inventoryDemo) >
+            1 ||
         (result.captureAiOnly && (result.uiDemo || result.combatDemo)))
         throw std::runtime_error("Choose only one of --ui-demo, --combat-demo or --ai-demo");
     if (int(result.captureAiOnly) + int(result.captureHudOnly) + int(result.captureReactionsOnly) +
             int(result.captureHybridOnly) + int(result.capturePreparationOnly) +
-            int(result.captureProjectilesOnly) + int(result.captureSpellsOnly) >
+            int(result.captureProjectilesOnly) + int(result.captureSpellsOnly) +
+            int(result.captureInventoryOnly) >
         1)
         throw std::runtime_error("Choose only one focused capture mode");
     if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)
@@ -90,6 +98,10 @@ Options parseOptions(int argc, char** argv) {
     if (result.captureSpellsOnly &&
         (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo))
         throw std::runtime_error("Spell capture cannot combine with a demo");
+    if ((result.captureInventoryOnly &&
+         (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo)) ||
+        (result.inventoryDemo && !result.captureDirectory.empty() && !result.captureInventoryOnly))
+        throw std::runtime_error("Use --capture-inventory alone for inventory captures");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
     return result;

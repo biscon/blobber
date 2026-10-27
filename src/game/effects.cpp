@@ -47,7 +47,7 @@ bool EffectController::living(EffectTarget t) const noexcept {
 }
 bool EffectController::unarmored(rules::CharacterId id) const noexcept {
     const auto* c = party_.character(id);
-    return c && c->build.equipment.body.index >= c->build.itemCount;
+    return c && !party_.equipped(id, EquipmentSlot::Body);
 }
 bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept {
     if (!living(target))
@@ -197,7 +197,11 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     candidate.expiresMs = gameplayMs_ + duration(request.kind);
     candidate.retryMs = gameplayMs_ + retryIntervalMs;
     auto targets = request.targets;
-    std::sort(targets.begin(), targets.begin() + request.count, targetLess);
+    // At most three recipients; a bounded insertion pass preserves canonical RNG
+    // order without instantiating a large-range sort for this tiny array.
+    for (std::size_t i = 1; i < targets.size() && i < request.count; ++i)
+        for (std::size_t j = i; j > 0 && targetLess(targets[j], targets[j - 1]); --j)
+            std::swap(targets[j], targets[j - 1]);
     for (std::size_t i = 0; i < request.count; ++i) {
         bool accepted = true;
         if (request.kind == EffectKind::Bane || request.kind == EffectKind::HoldPerson) {

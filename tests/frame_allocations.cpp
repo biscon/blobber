@@ -9,6 +9,7 @@
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include "support/hybrid_fixtures.hpp"
+#include "support/inventory_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -159,7 +160,7 @@ int main() {
         rules::DiceRng dice(42);
         const auto partyCatalog = partyFixture().catalog();
         Party party(partyCatalog);
-        auto invalidBuild = party.character({0})->build;
+        auto invalidBuild = partyCatalog.preset()->characters[0];
         invalidBuild.equipment.body = {16};
         CommandController commands(party, npcs);
         UiInputEdges edges;
@@ -238,7 +239,58 @@ int main() {
         const auto featurePlaces = spellPlacements(hybridMap, 0);
         GameSession featureSession(hybridMap, spellRules, featurePlaces, 5, spellSpawn, false);
         CommandController featureUi(featureSession);
+        const auto inventoryRules = inventoryCatalog();
+        const NpcWorld inventoryPlaces(hybridMap, {6, 8}, {}, {});
+        auto inventoryStorage = std::make_unique<GameSession>(hybridMap, inventoryRules, inventoryPlaces, 5,
+                                                              Player{{6, 8}, Heading::North}, false);
+        auto& inventorySession = *inventoryStorage;
+        auto inventoryUiStorage = std::make_unique<CommandController>(inventorySession);
+        auto& inventoryUi = *inventoryUiStorage;
+        const auto arrow = findInventoryItem(inventorySession.party(), 2, 9);
+        const auto arrowCell = inventorySession.party().inventory().locate(arrow).cell;
         tracking = true;
+        for (int iteration = 0; iteration < 100; ++iteration) {
+            inventoryUi.refresh({}, false, false, true);
+            inventoryUi.openInventory(rules::CharacterId{2});
+            inventoryUi.inventorySelect(arrowCell);
+            inventoryUi.inventoryAction(InventoryAction::Split);
+            inventoryUi.inventorySelect(47);
+            okay &= inventoryUi.snapshot().inventory.mode == InventoryMode::Quantity;
+            inventoryUi.inventoryConfirm();
+            inventoryUi.inventorySelect(47);
+            inventoryUi.inventoryDrop({{2}, arrowCell});
+            inventoryUi.inventorySelect(arrowCell);
+            inventoryUi.inventoryAction(InventoryAction::Transfer);
+            inventoryUi.inventoryCharacter({0});
+            inventoryUi.inventoryCharacter({0});
+            const auto transferred = inventorySession.party().inventory().locate(arrow).cell;
+            inventoryUi.inventorySelect(transferred);
+            inventoryUi.inventoryAction(InventoryAction::Transfer);
+            inventoryUi.inventoryCharacter({2});
+            const auto shield = inventorySession.party().inventory().at({{0}, 50});
+            okay &= bool(
+                inventorySession.inventoryChange(inventoryRequest(inventorySession.party(), shield, 0, 47)));
+            okay &= bool(
+                inventorySession.inventoryChange(inventoryRequest(inventorySession.party(), shield, 0, 50)));
+            const auto potion = findInventoryItem(inventorySession.party(), 3, 10);
+            okay &=
+                inventorySession.inventoryChange(inventoryRequest(inventorySession.party(), potion, 3, 48))
+                    .error == InventoryError::Equipment;
+            inventoryUi.refresh({}, false, false, false);
+            inventoryUi.closeOverlay();
+        }
+        inventorySession.party().damage({1}, 5);
+        inventoryUi.refresh({}, false, false, true);
+        inventoryUi.openInventory(rules::CharacterId{0});
+        inventoryUi.inventorySelect(inventorySession.party()
+                                        .inventory()
+                                        .locate(findInventoryItem(inventorySession.party(), 0, 10))
+                                        .cell);
+        inventoryUi.inventoryAction(InventoryAction::Use);
+        okay &= inventoryUi.snapshot().inventory.itemTargeting;
+        inventoryUi.inventoryAlly(1, true);
+        okay &= inventorySession.party().character({1})->hitPoints > 7;
+
         for (int repeat = 0; repeat < 20; ++repeat) {
             featureUi.refresh({}, false, false, true);
             for (unsigned member : {0u, 2u}) {
@@ -492,9 +544,11 @@ int main() {
         for (int i = 0; i < 1000; ++i) {
             const auto& snapshot = party.snapshot();
             const auto* member = party.character({static_cast<std::uint16_t>(i % rules::partySize)});
-            const auto derived = rules::deriveCharacter(partyCatalog, member->build);
+            const auto derived = rules::deriveCharacter(
+                partyCatalog, member->build,
+                party.inventory().loadout({static_cast<std::uint16_t>(i % rules::partySize)}));
             okay &= bool(derived) && derived.value.maxHitPoints == member->hitPoints;
-            okay &= partyCatalog.item(member->build.items[0].item) != nullptr;
+            okay &= party.equipped({0}, EquipmentSlot::MainHand) != nullptr;
             okay &= snapshot.formation[0].index < rules::partySize;
             okay &= !rules::deriveCharacter(partyCatalog, invalidBuild);
             okay &= party.swapFormation(FormationSlot::FrontLeft, FormationSlot::BackRight);

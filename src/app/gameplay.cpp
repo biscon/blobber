@@ -77,6 +77,8 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
         PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo);
         bool debug = false, first = true, restart = false;
         view.refresh();
+        if (options.inventoryDemo)
+            view.commands.openInventory(rules::CharacterId{2});
         if (options.spellDemo) {
             view.commands.selectCharacter(3);
             view.commands.openSpellbook();

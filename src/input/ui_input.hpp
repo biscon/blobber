@@ -20,6 +20,15 @@ enum class UiKey : std::size_t {
     Back,
     DemoNext,
     DemoReset,
+    PreviousPage,
+    NextPage,
+    Inventory,
+    Equip,
+    MoveItem,
+    SplitItem,
+    TransferItem,
+    UseItem,
+    Tab,
     Count
 };
 constexpr auto uiKeyCount = static_cast<std::size_t>(UiKey::Count);
@@ -28,6 +37,7 @@ struct UiInput {
     std::optional<ArtPoint> pointer;
     int scroll = 0;
     bool focused = true, shift = false;
+    bool pointerHeld = false, pointerReleased = false;
     bool has(UiKey key) const noexcept { return pressed[static_cast<std::size_t>(key)]; }
 };
 class UiInputEdges {
@@ -49,6 +59,10 @@ class UiInputEdges {
                 blocked_[i] = false;
             result.pressed[i] = focused && previousFocus_ && down[i] && !previous_[i] && !blocked_[i];
         }
+        const auto click = static_cast<std::size_t>(UiKey::Click);
+        result.pointerHeld = focused && previousFocus_ && down[click] && !blocked_[click];
+        result.pointerReleased =
+            focused && previousFocus_ && previous_[click] && !down[click] && !blocked_[click];
         previous_ = down;
         previousFocus_ = focused;
         return result;

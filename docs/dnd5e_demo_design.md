@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 is implemented and Ready for review; acceptance is pending.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 10 — Spells and class identity (2026-10-27) |
-| Active slice | None |
-| Awaiting user review | None |
+| Active slice | 11 — Inventory and equipment (Ready for review) |
+| Awaiting user review | 11 — Inventory and equipment |
 | Blockers | None |
-| Next eligible slice | 11 — Inventory and equipment (Planned; unstarted) |
-| Next action | Plan slice 11 when requested; no implementation started |
+| Next eligible slice | None until slice 11 is accepted |
+| Next action | User reviews slice 11; record acceptance before planning slice 12 |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -318,7 +318,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Accepted | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
-| 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
+| 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Ready for review | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
@@ -1224,7 +1224,12 @@ invalid changes without partial mutation, and recalculate derived stats correctl
 Test full bags, weight limits, equipped-item ownership, split/merge boundaries,
 consumption/ammunition costs, and combat restrictions. Inspect the large-screen UI.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Ready for review; 2026-10-27.
+**Approved plan:** User said “Implement the plan.” See [inventory design](inventory_design.md).
+**Implemented:** Four 48-cell bags and separate equipment, atomic weight/stack/equipment transactions, safe-only gear/transfers, paused bag organization, drag/button/keyboard controls, Shift-drag quantity default one, fifteen painted item icons and silhouette. Healing/mana potions and finite party arrows use existing action/readiness clocks. Schema 5 retains 1–4 compatibility; gear changes update stats and end Mage Armor when required.
+**Verification:** Debug/Release 27/27; affected suites rerun after refinements, ASan/UBSan, zero-allocation guard, 100,000 split/merge cycles, hidden GPU and 41 native/reduced/letterboxed captures. See [durable verification and handoff](slice11_verification.md), including test limitations and retained review images.
+**Acceptance:** Pending user review. Interactive desktop review was not automated.
+**Next-agent handoff:** Review/fix this slice only until user acceptance is explicit. Then update checkpoint, tracker and this record before planning slice 12. Loot/recovery/rest/progression/save work has not started.
 
 ### Slice 12: Loot and recovery
 

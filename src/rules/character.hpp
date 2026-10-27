@@ -56,7 +56,9 @@ constexpr std::uint8_t armorBit(ArmorType type) noexcept {
     return static_cast<unsigned>(type) <= 3 ? static_cast<std::uint8_t>(1u << static_cast<unsigned>(type))
                                             : 0;
 }
-enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear };
+enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable };
+enum class Ammunition : std::uint8_t { None, Arrow };
+enum class Consumable : std::uint8_t { None, Healing, Mana };
 struct RaceDefinition {
     std::string id, name;
     Abilities abilityIncreases{};
@@ -86,7 +88,12 @@ struct ItemDefinition {
     int versatileSides = 0; // Zero means not versatile.
     ArmorType armor = ArmorType::Light;
     int baseArmorClass = 0;
+    std::uint16_t stackMaximum = 0; // Zero selects legacy kind default.
+    Ammunition ammunition = Ammunition::None;
+    Consumable consumable = Consumable::None;
 };
+unsigned stackLimit(const ItemDefinition&) noexcept;
+Ammunition ammunitionFor(const ItemDefinition&) noexcept;
 struct OwnedItem {
     ItemId item;
     std::uint16_t quantity = 0;
@@ -95,17 +102,19 @@ struct Equipment {
     OwnedItemId body, mainHand, offHand;
     OwnedItemId ranged{}; // Readied alternate weapon, not an additional hand.
 };
-struct CharacterBuild {
+struct CharacterIdentity {
     std::string id, name;
     RaceId race;
     ClassId characterClass;
     Abilities baseAbilities{};
     int level = 1;
     bool defense = false;
+    bool lifeDomain = false;
+};
+struct CharacterBuild : CharacterIdentity {
     std::array<OwnedItem, maxStartingItems> items{};
     std::size_t itemCount = 0;
     Equipment equipment;
-    bool lifeDomain = false;
 };
 struct PresetParty {
     std::array<CharacterBuild, partySize> characters;
@@ -120,11 +129,17 @@ struct WeaponPreview {
     Dice damage{};
     DamageType damageType = DamageType::Piercing;
 };
+constexpr std::size_t maxCarriedItems = 52;
+struct CharacterLoadout {
+    std::array<OwnedItem, maxCarriedItems> items{};
+    std::size_t itemCount = maxCarriedItems;
+    Equipment equipment;
+};
 struct CharacterStats {
     Abilities abilities{}, modifiers{}, saves{};
     int proficiency = 0, initiative = 0, maxHitPoints = 0, armorClass = 0;
     std::int64_t carriedWeight = 0, carryingCapacity = 0;
-    std::array<WeaponPreview, maxStartingItems> weapons{}; // Indexed by owned entry.
+    std::array<WeaponPreview, maxCarriedItems> weapons{}; // Indexed by owned entry.
 };
 enum class CharacterError {
     None,
@@ -146,6 +161,7 @@ struct CharacterResult {
 };
 class Catalog;
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& build) noexcept;
+CharacterResult deriveCharacter(const Catalog&, const CharacterIdentity&, const CharacterLoadout&) noexcept;
 bool validFormation(const std::array<CharacterId, partySize>& formation) noexcept;
 bool validDisplayText(const std::string& text, std::size_t maximum) noexcept;
 } // namespace blobber::rules

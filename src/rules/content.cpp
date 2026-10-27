@@ -83,8 +83,17 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
     }
     for (const auto& i : items_) {
         if (!validDisplayText(i.name, 64) || !validDisplayText(i.description, 512) || i.weight < 0 ||
-            static_cast<unsigned>(i.kind) > static_cast<unsigned>(ItemKind::Gear))
+            static_cast<unsigned>(i.kind) > static_cast<unsigned>(ItemKind::Consumable))
             throw std::runtime_error("items." + i.id + ": invalid name, description, weight, or kind");
+        const unsigned expected = i.kind == ItemKind::Ammunition   ? 100
+                                  : i.kind == ItemKind::Consumable ? 20
+                                                                   : 1;
+        if (stackLimit(i) != expected || static_cast<unsigned>(i.ammunition) > 1 ||
+            static_cast<unsigned>(i.consumable) > 2 ||
+            (i.kind == ItemKind::Consumable) != (i.consumable != Consumable::None) ||
+            (i.ammunition != Ammunition::None && i.kind != ItemKind::Ammunition &&
+             (i.kind != ItemKind::Weapon || !i.ranged)))
+            throw std::runtime_error("items: invalid stack, ammunition or consumable definition");
         if (i.kind == ItemKind::Weapon &&
             (!weaponBit(i.weapon) || !validDice(i.damage) || i.damage.modifier != 0 ||
              static_cast<unsigned>(i.damageType) > static_cast<unsigned>(DamageType::Slashing) ||

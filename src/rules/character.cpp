@@ -47,7 +47,36 @@ const char* characterErrorMessage(CharacterError error) noexcept {
     }
     return "unknown character error";
 }
+unsigned stackLimit(const ItemDefinition& i) noexcept {
+    return i.stackMaximum                   ? i.stackMaximum
+           : i.kind == ItemKind::Ammunition ? 100
+           : i.kind == ItemKind::Consumable ? 20
+                                            : 1;
+}
+Ammunition ammunitionFor(const ItemDefinition& i) noexcept {
+    if (i.ammunition != Ammunition::None)
+        return i.ammunition;
+    return (i.kind == ItemKind::Ammunition ||
+            (i.kind == ItemKind::Weapon && i.ranged &&
+             (i.weapon == WeaponType::Shortbow || i.weapon == WeaponType::Longbow)))
+               ? Ammunition::Arrow
+               : Ammunition::None;
+}
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b) noexcept {
+    if (b.itemCount > maxStartingItems)
+        return {{}, CharacterError::InvalidItems};
+    CharacterLoadout gear;
+    gear.itemCount = b.itemCount;
+    gear.equipment = b.equipment;
+    for (std::size_t i = 0; i < b.itemCount; ++i) {
+        if (!b.items[i].quantity)
+            return {{}, CharacterError::InvalidItems};
+        gear.items[i] = b.items[i];
+    }
+    return deriveCharacter(catalog, b, gear);
+}
+CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentity& b,
+                                const CharacterLoadout& gear) noexcept {
     const auto fail = [](CharacterError e) { return CharacterResult{{}, e}; };
     if (!validContentId(b.id) || !validDisplayText(b.name, 64))
         return fail(CharacterError::InvalidIdentity);
@@ -78,31 +107,33 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
     stats.maxHitPoints = std::max(1, cls->hitDie + stats.modifiers[2]) + race->hitPointsPerLevel;
     stats.carryingCapacity = std::int64_t(stats.abilities[0]) * 1500;
     stats.armorClass = 10 + dexterity;
-    if (b.itemCount > maxStartingItems)
+    if (gear.itemCount > maxCarriedItems)
         return fail(CharacterError::InvalidItems);
-    for (std::size_t i = 0; i < b.itemCount; ++i) {
-        const auto* item = catalog.item(b.items[i].item);
+    for (std::size_t i = 0; i < gear.itemCount; ++i) {
+        if (!gear.items[i].quantity)
+            continue;
+        const auto* item = catalog.item(gear.items[i].item);
         if (!item)
             return fail(CharacterError::InvalidReference);
-        if (!b.items[i].quantity)
+        if (!gear.items[i].quantity)
             return fail(CharacterError::InvalidItems);
-        stats.carriedWeight += std::int64_t(item->weight) * b.items[i].quantity;
+        stats.carriedWeight += std::int64_t(item->weight) * gear.items[i].quantity;
     }
     if (stats.carriedWeight > stats.carryingCapacity)
         return fail(CharacterError::Overweight);
-    const std::array<OwnedItemId, 4> equipped{b.equipment.body, b.equipment.mainHand, b.equipment.offHand,
-                                              b.equipment.ranged};
+    const std::array<OwnedItemId, 4> equipped{gear.equipment.body, gear.equipment.mainHand,
+                                              gear.equipment.offHand, gear.equipment.ranged};
     std::array<const ItemDefinition*, 4> items{};
     for (std::size_t i = 0; i < equipped.size(); ++i) {
         const auto id = equipped[i];
         if (id.index == UINT16_MAX)
             continue;
-        if (id.index >= b.itemCount || b.items[id.index].quantity != 1)
+        if (id.index >= gear.itemCount || gear.items[id.index].quantity != 1)
             return fail(CharacterError::InvalidEquipment);
         for (std::size_t j = 0; j < i; ++j)
             if (equipped[j].index == id.index)
                 return fail(CharacterError::InvalidEquipment);
-        items[i] = catalog.item(b.items[id.index].item);
+        items[i] = catalog.item(gear.items[id.index].item);
     }
     if ((items[0] && items[0]->kind != ItemKind::Armor) || (items[1] && items[1]->kind != ItemKind::Weapon) ||
         (items[2] && items[2]->kind != ItemKind::Shield) || (items[1] && items[1]->twoHanded && items[2]))
@@ -126,8 +157,10 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
             return fail(CharacterError::ArmorProficiency);
         stats.armorClass += 2;
     }
-    for (std::size_t i = 0; i < b.itemCount; ++i) {
-        const auto& item = *catalog.item(b.items[i].item);
+    for (std::size_t i = 0; i < gear.itemCount; ++i) {
+        if (!gear.items[i].quantity)
+            continue;
+        const auto& item = *catalog.item(gear.items[i].item);
         if (item.kind != ItemKind::Weapon)
             continue;
         auto& preview = stats.weapons[i];
@@ -140,7 +173,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
         preview.attackBonus = modifier + (preview.proficient ? stats.proficiency : 0);
         preview.damage = item.damage;
         preview.damage.modifier = modifier;
-        if (item.versatileSides && b.equipment.mainHand.index == i && !items[2])
+        if (item.versatileSides && gear.equipment.mainHand.index == i && !items[2])
             preview.damage.sides = item.versatileSides;
         preview.damageType = item.damageType;
     }

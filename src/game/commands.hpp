@@ -1,4 +1,5 @@
 #pragma once
+#include "game/inventory_ui.hpp"
 #include "game/npc_animation.hpp"
 #include "game/session.hpp"
 #include <optional>
@@ -126,10 +127,13 @@ struct HudSnapshot {
     std::size_t allyCount = 0;
     std::array<CombatFeedback, 16> feedback{};
     MagicHud magic;
+    InventoryHud inventory;
     HudHover hover;
     std::optional<rules::CharacterId> inspected;
     bool menuOpen = false, quitRequested = false;
-    bool modal() const noexcept { return logExpanded || inspected.has_value() || menuOpen || magic.open; }
+    bool modal() const noexcept {
+        return inventory.open || logExpanded || inspected.has_value() || menuOpen || magic.open;
+    }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
                                                          PartyAction::Ranged, PartyAction::Spell,
@@ -142,6 +146,22 @@ class CommandController {
     CommandController(const Party& party, const ActorWorld& actors);
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     CommandController(GameSession&&) = delete;
+    void openInventory(std::optional<rules::CharacterId> = {}) noexcept;
+    void inventoryCharacter(rules::CharacterId) noexcept;
+    void inventoryCursor(std::uint16_t cell) noexcept {
+        if (cell < 52)
+            state_.inventory.cursor = cell;
+    }
+    void inventorySelect(std::uint16_t) noexcept;
+    void inventoryAction(InventoryAction) noexcept;
+    void inventoryDrop(ItemLocation, bool split = false) noexcept;
+    void inventoryQuantity(int) noexcept;
+    void inventoryDescription(int) noexcept;
+    void inventoryConfirm() noexcept;
+    void inventoryCancel() noexcept;
+    void inventoryPointer(float, float, bool press, bool held, bool release, bool shift) noexcept;
+    void inventoryAlly(std::size_t, bool commit) noexcept;
+    void inventoryBack() noexcept;
     void record(const CombatOutcome& outcome) noexcept;
     void record(const CombatEvents& events) noexcept {
         for (const auto& out : events)
@@ -198,6 +218,9 @@ class CommandController {
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    void refreshInventory() noexcept;
+    void inventoryFeedback(const char*) noexcept;
+    void inventoryExecute(const InventoryRequest&) noexcept;
     void refreshMagic() noexcept;
     void reconcileMagic() noexcept;
     void magicFeedback(const char*) noexcept;

@@ -99,6 +99,8 @@ class HudPainter {
     void log(const HudSnapshot& h, bool expanded) const;
     void tooltip(const HudSnapshot& h) const;
     void details(const HudSnapshot& h) const;
+    void inventory(const HudSnapshot& h) const;
+    void itemTargets(const HudSnapshot& h) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
     void spellMarkers(const HudSnapshot& h) const;

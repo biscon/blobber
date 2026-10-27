@@ -135,6 +135,9 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    state_.inventory.open = false;
+    state_.inventory.pointerDown = state_.inventory.dragging = false;
+    state_.inventory.mode = InventoryMode::Browse;
     if (state_.magic.open)
         setCastingState(CastingState::Normal);
     state_.inspected.reset();
@@ -216,15 +219,13 @@ void CommandController::updateHover() noexcept {
         command.target = h.enemy;
         h.reason = validate(command);
         const auto* c = party_.character(command.character);
-        if (c &&
-            (command.action == PartyAction::Ranged ? c->build.equipment.ranged : c->build.equipment.mainHand)
-                    .index < c->build.itemCount) {
-            const auto i = (command.action == PartyAction::Ranged ? c->build.equipment.ranged
-                                                                  : c->build.equipment.mainHand)
-                               .index;
+        const auto slot =
+            command.action == PartyAction::Ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand;
+        const auto* item = party_.equipped(command.character, slot);
+        if (c && item) {
+            const auto i = static_cast<unsigned>(slot);
             const auto& weapon = c->stats.weapons[i];
             const auto& dice = weapon.damage;
-            const auto* item = party_.catalog().item(c->build.items[i].item);
             std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s: %lld-%lld damage", item->name.c_str(),
                           static_cast<long long>(std::max<std::int64_t>(0, dice.count + dice.modifier)),
                           static_cast<long long>(std::max<std::int64_t>(

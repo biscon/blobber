@@ -11,7 +11,10 @@ struct FixtureDirectory {
     std::filesystem::path path =
         std::filesystem::temp_directory_path() /
         ("blobber-native-ui-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-    FixtureDirectory() { std::filesystem::create_directories(path / "spells"); }
+    FixtureDirectory() {
+        std::filesystem::create_directories(path / "spells");
+        std::filesystem::create_directories(path / "items");
+    }
     ~FixtureDirectory() {
         std::error_code e;
         std::filesystem::remove_all(path, e);
@@ -47,9 +50,31 @@ void nativeUi() {
                                   "spells/second_wind",
                                   "spells/arcane_recovery",
                                   "spells/dismiss_concentration",
-                                  "class_features"};
-    for (unsigned i = 0; i < 29; ++i) {
-        OwnedImage image(GenImageColor(i < 4 ? 216 : 108, i < 4 ? 252 : 108, GREEN));
+                                  "class_features",
+                                  "items/longsword",
+                                  "items/chain_mail",
+                                  "items/shield",
+                                  "items/mace",
+                                  "items/scale_mail",
+                                  "items/holy_symbol",
+                                  "items/shortsword",
+                                  "items/leather",
+                                  "items/shortbow",
+                                  "items/arrow",
+                                  "items/dagger",
+                                  "items/spellbook",
+                                  "items/arcane_focus",
+                                  "items/healing_potion",
+                                  "items/mana_potion",
+                                  "items/silhouette"};
+    for (unsigned i = 0; i < 45; ++i) {
+        OwnedImage image(GenImageColor(i < 4     ? 216
+                                       : i >= 29 ? 168
+                                                 : 108,
+                                       i < 4     ? 252
+                                       : i >= 29 ? 168
+                                                 : 108,
+                                       GREEN));
         for (int y = 0; y < image.value.height; ++y)
             for (int x = 0; x < image.value.width; ++x)
                 ImageDrawPixel(&image.value, x, y,
@@ -64,6 +89,7 @@ void nativeUi() {
     BeginTextureMode(resources.target(target));
     ClearBackground(MAGENTA);
     painter.picture(5, {0, 0, 36, 36});
+    painter.picture(29, {40, 80, 56, 56});
     painter.picture(0, {0, 40, 30, 84});
     // A wide icon destination must fit rather than stretch the square artwork.
     painter.picture(6, {40, 0, 60, 36});
@@ -85,6 +111,10 @@ void nativeUi() {
     for (int x : {0, 45, 89}) {
         const auto c = GetImageColor(result.value, x, 200);
         check(c.g > 200 && c.r < 15, "Portrait crop fills destination without stretching edge bands");
+    }
+    for (int x = 130; x < 278; ++x) {
+        const auto c = GetImageColor(result.value, x, 260);
+        check(x % 2 ? c.r > 240 : c.r < 15, "Item atlas preserves native single-pixel detail");
     }
     const auto covered = GetImageColor(result.value, 315, 135);
     check(covered.r == hudInk::panel.r && covered.g == hudInk::panel.g,

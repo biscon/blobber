@@ -1,6 +1,7 @@
 #include "ui/combat_feedback.hpp"
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
+#include "ui/inventory_layout.hpp"
 namespace blobber {
 using namespace hudInk;
 void HudPainter::tooltip(const HudSnapshot& h) const {
@@ -85,7 +86,9 @@ void HudPainter::details(const HudSnapshot& h) const {
         clipped(line, r.x + 12, r.y + 145 + i * 13, 320);
     }
     clipped(c->effects.data(), r.x + 96, r.y + 115, 232, blue, UiTextStyle::Small);
-    text("READ ONLY / PAUSED / ESC TO CLOSE", r.x + 12, r.y + 192, muted, UiTextStyle::Small);
+    box(inventoryLayout::inspectorButton);
+    label("INVENTORY / I", inventoryLayout::inspectorButton, gold, UiTextStyle::Small);
+    text("PAUSED / ESC TO CLOSE", r.x + 150, r.y + 192, muted, UiTextStyle::Small);
 }
 namespace {
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
@@ -239,6 +242,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     }
     p.spellbook(*h);
     p.tooltip(*h);
+    if (h->inventory.open)
+        p.inventory(*h);
     if (h->demo) {
         p.label("F2 NEXT", hudLayout::demoNext, gold, UiTextStyle::Small);
         p.label("F3 RESET", hudLayout::demoReset, gold, UiTextStyle::Small);

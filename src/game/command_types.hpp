@@ -49,6 +49,9 @@ enum class CommandReason : std::uint8_t {
     FullMana,
     Unsafe,
     EffectCapacity,
+    NoAmmunition,
+    InvalidItem,
+    StaleInventory,
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;
@@ -58,6 +61,8 @@ struct PartyCommand {
     std::optional<ActorId> target;
     std::optional<rules::CharacterId> ally{};
     std::uint64_t world = 0, turn = 0;
+    ItemHandle item{};
+    std::uint64_t inventoryRevision = 0;
     rules::SpellId spell{};
     rules::Feature feature = rules::Feature::None;
     std::array<ActorId, 3> enemies{};

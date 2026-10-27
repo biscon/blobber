@@ -23,6 +23,7 @@ rules::Catalog catalog(int hp = 1000, int ac = 1, int bonus = 100, rules::Dice d
         const auto slot = c.itemCount++;
         c.items[slot] = {{3}, 1};
         c.equipment.ranged = {static_cast<std::uint16_t>(slot)};
+        c.items[c.itemCount++] = {{9}, 100}; // Each fixture archer owns ammunition.
     }
     rules::MonsterDefinition m;
     m.id = "goblin";

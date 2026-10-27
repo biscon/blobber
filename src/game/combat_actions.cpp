@@ -7,9 +7,7 @@ const rules::WeaponPreview* CombatController::weapon(rules::CharacterId id, bool
     const auto* c = party_.character(id);
     if (!c)
         return nullptr;
-    const auto i = (ranged ? c->build.equipment.ranged : c->build.equipment.mainHand).index;
-    if (i >= c->build.itemCount)
-        return nullptr;
+    const auto i = static_cast<unsigned>(ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand);
     const auto& w = c->stats.weapons[i];
     return w.available && w.ranged == ranged ? &w : nullptr;
 }
@@ -25,7 +23,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         !party_.hasFeature(c.character, rules::ClassFeature::SneakAttack))
         return CommandReason::FeatureRequired;
     if (c.action == PartyAction::Item)
-        return CommandReason::Unavailable;
+        return validateItem(c, pose);
     if (c.world != state_.world || c.turn != state_.turn)
         return CommandReason::StaleTurn;
     if (!effects_.canAct(c.character))
@@ -60,6 +58,12 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::RearBlocked;
     if (!weapon(c.character, ranged))
         return CommandReason::NoWeapon;
+    if (ranged) {
+        const auto* item = party_.equipped(c.character, EquipmentSlot::Ranged);
+        if (item && rules::ammunitionFor(*item) != rules::Ammunition::None &&
+            !party_.inventory().ammunition(c.character, rules::ammunitionFor(*item), party_.catalog()))
+            return CommandReason::NoAmmunition;
+    }
     if (!c.target)
         return CommandReason::MissingTarget;
     const auto* a = actors_.actor(*c.target);
@@ -133,10 +137,21 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
                                        CombatEvents& events) noexcept {
     if (c.action == PartyAction::Spell || c.action == PartyAction::Feature)
         return submitMagic(c, pose, now, events);
+    if (c.action == PartyAction::Item)
+        return submitItem(c, pose, now, events);
     CombatOutcome out;
     out.reason = validate(c, pose);
     if (out.reason != CommandReason::Ready)
         return out;
+    if (c.action == PartyAction::Ranged) {
+        const auto* item = party_.equipped(c.character, EquipmentSlot::Ranged);
+        const auto kind = rules::ammunitionFor(*item);
+        if (kind != rules::Ammunition::None &&
+            !party_.consumeItem(party_.inventory().ammunition(c.character, kind, party_.catalog()))) {
+            out.reason = CommandReason::NoAmmunition;
+            return out;
+        }
+    }
     out.reason = CommandReason::Resolved;
     out.character = c.character;
     const bool turn = state_.phase == CombatPhase::Turns;

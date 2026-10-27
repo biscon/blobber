@@ -96,7 +96,7 @@ void loading() {
         std::string field;
         switch (fault) {
         case 0:
-            bad["schema_version"] = 5;
+            bad["schema_version"] = 6;
             field = "schema_version";
             break;
         case 1:
@@ -310,14 +310,17 @@ int main(int argc, char** argv) {
                     for (const int save : c.stats.saves)
                         std::cout << ' ' << save;
                     std::cout << '\n';
-                    for (std::size_t n = 0; n < b.itemCount; ++n) {
-                        std::cout << "  " << b.items[n].quantity << " x "
-                                  << catalog.item(b.items[n].item)->name;
-                        if (b.equipment.body.index == n)
+                    const auto gear = party.inventory().loadout(party.snapshot().formation[i]);
+                    for (std::size_t n = 0; n < gear.itemCount; ++n) {
+                        if (!gear.items[n].quantity)
+                            continue;
+                        std::cout << "  " << gear.items[n].quantity << " x "
+                                  << catalog.item(gear.items[n].item)->name;
+                        if (gear.equipment.body.index == n)
                             std::cout << " [body]";
-                        if (b.equipment.mainHand.index == n)
+                        if (gear.equipment.mainHand.index == n)
                             std::cout << " [main hand]";
-                        if (b.equipment.offHand.index == n)
+                        if (gear.equipment.offHand.index == n)
                             std::cout << " [off hand]";
                         const auto& attack = c.stats.weapons[n];
                         if (attack.available)

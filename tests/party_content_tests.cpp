@@ -103,6 +103,95 @@ Json fixture() {
     root["preset_party"] = party;
     return root;
 }
+void inventoryLoading() {
+    Files files;
+    auto good = fixture();
+    good["schema_version"] = 5;
+    good["spells"] = Json::array();
+    good["classes"][0]["casting"] = "none";
+    good["classes"][0]["features"] = Json::array();
+    good["classes"][0]["spells"] = Json::array();
+    for (auto& item : good["items"])
+        item["stack_limit"] = 1;
+    good["items"][0]["ammunition"] = "none";
+    good["items"].push_back({{"id", "test.arrow"},
+                             {"name", "Arrow"},
+                             {"description", "Fixture ammunition"},
+                             {"kind", "ammunition"},
+                             {"weight", 5},
+                             {"stack_limit", 100},
+                             {"ammunition", "arrow"}});
+    good["items"].push_back({{"id", "test.potion"},
+                             {"name", "Potion"},
+                             {"description", "Fixture healing"},
+                             {"kind", "consumable"},
+                             {"weight", 50},
+                             {"stack_limit", 20},
+                             {"effect", "healing"}});
+    for (auto& c : good["preset_party"]["characters"]) {
+        c["life_domain"] = false;
+        c["equipment"]["ranged"] = nullptr;
+        c["items"].push_back({{"item", "test.arrow"}, {"quantity", 201}});
+        c["items"].push_back({{"item", "test.potion"}, {"quantity", 21}});
+    }
+    const auto cat = files.load(good);
+    const Party p(cat);
+    check(p.inventory().count({0}, Ammunition::Arrow, cat) == 201,
+          "Schema five preserves and partitions starting quantities");
+    check(p.inventory().stack(p.inventory().at({{0}, 0}))->quantity == 100 &&
+              p.inventory().stack(p.inventory().at({{0}, 2}))->quantity == 1 &&
+              p.inventory().stack(p.inventory().at({{0}, 3}))->quantity == 20 &&
+              p.inventory().stack(p.inventory().at({{0}, 4}))->quantity == 1,
+          "Ammo and potion stack boundaries");
+    for (int fault = 0; fault < 9; ++fault) {
+        auto bad = good;
+        switch (fault) {
+        case 0:
+            bad["items"][3]["stack_limit"] = 20;
+            break;
+        case 1:
+            bad["items"][4]["effect"] = "resurrect";
+            break;
+        case 2:
+            bad["items"][3]["ammunition"] = "none";
+            break;
+        case 3:
+            bad["items"][0]["ammunition"] = "arrow";
+            break;
+        case 4:
+            bad["items"][4]["stack_limit"] = 0;
+            break;
+        case 5:
+            bad["items"][4]["effect"] = "mana";
+            bad["items"][4]["spell"] = "test.fire";
+            break;
+        case 6:
+            bad["items"][4].erase("effect");
+            break;
+        case 7:
+            bad["items"][0].erase("ammunition");
+            break;
+        case 8:
+            bad["items"][4].erase("stack_limit");
+            break;
+        }
+        files.invalid(bad, "items");
+    }
+    // Legacy version two keeps its strict fields and still gains bounded live stacks.
+    auto legacy = fixture();
+    auto arrow = good["items"][3];
+    arrow.erase("stack_limit");
+    arrow.erase("ammunition");
+    legacy["items"].push_back(arrow);
+    legacy["preset_party"]["characters"][0]["items"].push_back({{"item", "test.arrow"}, {"quantity", 101}});
+    const auto oldCat = files.load(legacy);
+    const Party old(oldCat);
+    check(old.inventory().count({0}, Ammunition::Arrow, oldCat) == 101 &&
+              old.inventory().stack(old.inventory().at({{0}, 1}))->quantity == 1,
+          "Legacy ammunition normalizes");
+    legacy["items"][3]["stack_limit"] = 100;
+    files.invalid(legacy, "stack_limit");
+}
 void spellsLoading() {
     Files files;
     auto good = fixture();
@@ -172,7 +261,7 @@ void loading() {
     const Party party(catalog);
     const auto* c = party.character({0});
     check(c && c->hitPoints == 14 && c->stats.armorClass == 17 && c->stats.carriedWeight == 145 &&
-              c->stats.weapons[0].attackBonus == 5 && c->stats.weapons[0].damage.modifier == 3,
+              c->stats.weapons[49].attackBonus == 5 && c->stats.weapons[49].damage.modifier == 3,
           "JSON references create observable party statistics");
     for (int fault = 0; fault < 45; ++fault) {
         auto bad = good;
@@ -461,6 +550,7 @@ int main() {
     try {
         loading();
         spellsLoading();
+        inventoryLoading();
         hybridSchema();
         limits();
         std::cout << "Party content checks passed\n";

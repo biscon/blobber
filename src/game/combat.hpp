@@ -61,6 +61,7 @@ struct CombatOutcome {
     EffectEvent effect;
     rules::SpellKind spell = rules::SpellKind::Count;
     rules::Feature feature = rules::Feature::None;
+    rules::ItemId item{};
     int saveTotal = 0, saveDifficulty = 0;
     std::uint8_t darts = 0;
 };
@@ -147,6 +148,9 @@ class CombatController {
     bool adjacent(Cell) const noexcept;
     bool occupiedFront(Player) const noexcept;
     CommandReason spellRecipient(const PartyCommand&, Player, std::size_t index) const noexcept;
+    bool safeRecovery(Player) const noexcept;
+    CommandReason validateItem(const PartyCommand&, Player) const noexcept;
+    CombatOutcome submitItem(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     bool casterResolving(rules::CharacterId id) const noexcept;
     bool sneakPreview(rules::CharacterId, ActorId, bool ranged, Player) const noexcept;
 
@@ -182,7 +186,6 @@ class CombatController {
     CommandReason validateMagic(const PartyCommand&, Player) const noexcept;
     CombatOutcome submitMagic(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     EffectRequest spellEffect(const PartyCommand&, rules::SpellKind) const noexcept;
-    bool safeRecovery(Player) const noexcept;
     bool sneakEligible(rules::CharacterId, ActorId, rules::RollMode, bool ranged, Player) const noexcept;
     void spellPulse(ActorId, rules::CharacterId, rules::SpellKind, Player, std::uint64_t) noexcept;
     void applyDamage(CombatOutcome&, std::uint64_t, CombatEvents&) noexcept;

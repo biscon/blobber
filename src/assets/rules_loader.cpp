@@ -54,11 +54,11 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         if (!root.is_object() || !root.contains("schema_version"))
             fail("schema_version", "missing version");
         const int version = integer(root.at("schema_version"), "schema_version");
-        if (version != 1 && version != 2 && version != 3 && version != 4)
-            fail("schema_version", "only versions 1 through 4 are supported");
+        if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5)
+            fail("schema_version", "only versions 1 through 5 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
-        else if (version == 4)
+        else if (version >= 4)
             fields(root, "catalog",
                    {"schema_version", "attacks", "monsters", "races", "classes", "items", "preset_party",
                     "spells"});

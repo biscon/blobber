@@ -1,5 +1,13 @@
 # System design
 
+Implemented, **Ready for review** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).
+Party owns bounded live stacks and separate gear, with atomic staged transactions,
+weight/stat/effect reconciliation and strict schema-5 content. Full-screen paused
+browsing supports drag, split, transfer and equipment controls. Potions and finite
+party arrows share authoritative combat costs. Native item art preserves prepared
+dungeon rendering. Debug/Release suites, focused sanitizers, allocation guards and
+hidden GPU/captures pass. User acceptance is pending; slice 12 remains Planned.
+
 Implemented, **accepted and closed** (2026-10-27): [Class Features picker correction](spellcasting_ui_design.md#class-features-presentation).
 The shared picker distinguishes spells, activated features and read-only automatic
 features. Class casting capability controls headings/resource visibility and slot-4
@@ -27,8 +35,7 @@ impact/effect clocks. Party owns mana/charges; Combat owns readiness and Sneak A
 Effects owns concentration and Guiding deadlines. The paused spellbook resumes into
 live targeting, with multi-target/area confirmation and bounded cosmetic feedback.
 Schema 4 retains versions 1–3 compatibility. The user accepted slice 10, including
-all UI and impact-alert corrections. Slice 11 is next eligible for planning and
-remains Planned/unstarted. The approved [casting UI revision](spellcasting_ui_design.md)
+all UI and impact-alert corrections. Slice 11 is tracked separately at the top of this overview. The approved [casting UI revision](spellcasting_ui_design.md)
 is implemented without changing spell mechanics: independent pending casts, compact picker,
 casting dock, direct recipient feedback and a shared authoritative area query. See
 [UI verification and captures](slice10_ui_verification.md). The completed review correction
@@ -319,15 +326,23 @@ pixels. Living target membership, visible-body centers and top edges are scanned
 no picking. Transparent holes/walls/shadows do not select, and dead bodies occlude
 without becoming targets. Revisions invalidate picking with the image.
 
-Party storage is four records with up to 16 owned starting item entries each,
-not the future inventory grid. Definitions allow 16 races, 16 classes, and 64
-items; exceeding a bound rejects preparation. Equipment borrows owned entries,
-weight uses integer hundredths of pounds and int64 totals, and derived stats use
-fixed arrays. Party construction may copy strings; steady-state callers borrow
-its const snapshot. The application keeps the catalog alive and unmoved until
-after session/party destruction. Restart reconstructs all session borrowers while
-reusing prepared assets; this explicit preparation boundary may allocate. Character IDs are party-local, owned-item IDs are
-character-local, and catalog IDs remain catalog-local.
+Party stores four character identities/resources and owns one fixed 208-stack
+inventory: four 48-cell bags plus four equipment positions per character. Startup
+content retains up to 16 owned entries; live queries use inventory handles and
+52-position sparse loadouts, never startup indices. Item handles carry party
+inventory identity, pool index and generation. Moves preserve identity; complete
+merges/consumption invalidate it, and exhausted generations retire slots.
+Transactions stage fixed value storage and all four derived-stat records, committing
+only after capacity, training, hand compatibility and weight validation. Weight is
+integer hundredths of pounds with int64 totals. Catalog bounds remain 16 races,
+16 classes and 64 items; all preparation bounds reject explicitly.
+
+Party construction may copy strings; frame callers borrow const snapshots. The
+catalog outlives sessions/parties. Restart reconstructs session borrowers while
+reusing prepared assets; that preparation boundary may allocate. Character IDs are
+party-local; startup owned-item indices are character-local; catalog IDs remain
+catalog-local. See [inventory design](inventory_design.md) for schema 5, live item
+commands, safety, UI storage and tests.
 
 The GPU registry holds up to eight standalone textures and four render targets.
 Handles include a typed slot index and generation. Invalid/stale lookup returns

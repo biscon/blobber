@@ -1,11 +1,11 @@
 #pragma once
-#include "rules/content.hpp"
+#include "game/inventory.hpp"
 #include "rules/health.hpp"
 
 namespace blobber {
 enum class FormationSlot : std::uint8_t { FrontLeft, FrontRight, BackLeft, BackRight };
 struct PartyCharacter : rules::HealthState {
-    rules::CharacterBuild build;
+    rules::CharacterIdentity build;
     rules::CharacterStats stats;
     int availableHitDice = 0;
     int mana = 0, maxMana = 0;
@@ -16,10 +16,14 @@ struct PartySnapshot {
     std::array<PartyCharacter, rules::partySize> characters;
     std::array<rules::CharacterId, rules::partySize> formation;
 };
-// The immutable catalog must outlive this party. Character/item slots never recycle.
+// The immutable catalog must outlive this party. Item handles are generation checked.
 class Party {
   public:
     explicit Party(const rules::Catalog& catalog);
+    Party(const Party&) = delete;
+    Party& operator=(const Party&) = delete;
+    Party(Party&&) = delete;
+    Party& operator=(Party&&) = delete;
     Party(rules::Catalog&&) = delete;
     Party(const rules::Catalog&&) = delete;
     const PartySnapshot& snapshot() const noexcept { return state_; }
@@ -35,12 +39,21 @@ class Party {
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
     int castingModifier(rules::CharacterId) const noexcept;
     void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
+    const Inventory& inventory() const noexcept { return inventory_; }
+    InventoryResult previewInventoryChange(const InventoryRequest&) const noexcept;
+    InventoryResult inventoryChange(const InventoryRequest&) noexcept;
+    bool consumeItem(ItemHandle, unsigned quantity = 1) noexcept;
+    bool restoreMana(rules::CharacterId, int amount) noexcept;
+    const rules::ItemDefinition* equipped(rules::CharacterId, EquipmentSlot) const noexcept;
     const rules::Catalog& catalog() const noexcept { return *catalog_; }
 
   private:
     const rules::Catalog* catalog_;
     PartySnapshot state_;
+    Inventory inventory_;
     bool formationLocked_ = false;
+    InventoryResult stageInventoryChange(const InventoryRequest&, Inventory&,
+                                         std::array<rules::CharacterStats, 4>&) const noexcept;
     rules::HealthResult commit(rules::CharacterId id, rules::HealthResult result) noexcept;
 };
 } // namespace blobber

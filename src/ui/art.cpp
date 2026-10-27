@@ -33,8 +33,24 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/second_wind",
                                   "spells/arcane_recovery",
                                   "spells/dismiss_concentration",
-                                  "class_features"};
-    OwnedImage atlas(GenImageColor(2048, 1024, BLANK));
+                                  "class_features",
+                                  "items/longsword",
+                                  "items/chain_mail",
+                                  "items/shield",
+                                  "items/mace",
+                                  "items/scale_mail",
+                                  "items/holy_symbol",
+                                  "items/shortsword",
+                                  "items/leather",
+                                  "items/shortbow",
+                                  "items/arrow",
+                                  "items/dagger",
+                                  "items/spellbook",
+                                  "items/arcane_focus",
+                                  "items/healing_potion",
+                                  "items/mana_potion",
+                                  "items/silhouette"};
+    OwnedImage atlas(GenImageColor(2048, 2048, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
     for (unsigned i = 0; i < regions_.size(); ++i) {
@@ -42,14 +58,18 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
         OwnedImage image(LoadImage(path.string().c_str()));
         if (!image.value.data)
             throw std::runtime_error("Missing UI art: " + path.string());
-        const int maximumWidth = i < 4 ? 216 : (i == 4 ? 72 : 108);
-        const int maximumHeight = i < 4 ? 252 : maximumWidth;
+        const int maximumWidth = i == silhouetteIcon ? 384
+                                 : i >= 29           ? 168
+                                 : i < 4             ? 216
+                                                     : (i == 4 ? 72 : 108);
+        const int maximumHeight = i == silhouetteIcon ? 600 : i < 4 ? 252 : maximumWidth;
         const float factor =
             std::min(float(maximumWidth) / image.value.width, float(maximumHeight) / image.value.height);
         const int w = std::max(1, int(std::round(image.value.width * factor)));
         const int h = std::max(1, int(std::round(image.value.height * factor)));
         ImageResize(&image.value, w, h);
-        const int x = int(i % 8) * 256 + 2, y = int(i / 8) * 256 + 2;
+        const int x = i == silhouetteIcon ? 1026 : int(i % 8) * 256 + 2;
+        const int y = i == silhouetteIcon ? 1282 : int(i / 8) * 256 + 2;
         regions_[i] = {float(x), float(y), float(w), float(h)};
         ImageDrawImage(&atlas.value, image.value, x, y, WHITE);
         // Extrude two pixels so bilinear sampling never reaches adjacent/blank cells.
@@ -65,6 +85,15 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
 }
 static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 14,
               "Extend the spell atlas mapping for new spells");
+unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
+    constexpr const char* ids[]{"longsword",   "chain_mail", "shield",       "mace",           "scale_mail",
+                                "holy_symbol", "shortsword", "leather",      "shortbow",       "arrow",
+                                "dagger",      "spellbook",  "arcane_focus", "healing_potion", "mana_potion"};
+    for (unsigned i = 0; i < 15; ++i)
+        if (item.id == ids[i])
+            return 29 + i;
+    return 9;
+}
 unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcept {
     if (feature == rules::Feature::SecondWind)
         return 25;

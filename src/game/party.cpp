@@ -8,11 +8,13 @@ Party::Party(const rules::Catalog& catalog) : catalog_(&catalog) {
     const auto* preset = catalog.preset();
     if (!preset)
         throw std::runtime_error("Starting party: catalog has no preset_party (schema 2 required)");
+    inventory_.initialize(catalog, *preset);
     state_.formation = preset->formation;
     for (std::size_t i = 0; i < rules::partySize; ++i) {
         auto& c = state_.characters[i];
         c.build = preset->characters[i];
-        const auto stats = rules::deriveCharacter(catalog, c.build);
+        const auto stats =
+            rules::deriveCharacter(catalog, c.build, inventory_.loadout({static_cast<std::uint16_t>(i)}));
         if (!stats)
             throw std::runtime_error(rules::characterErrorMessage(stats.error));
         c.stats = stats.value;
@@ -23,6 +25,56 @@ Party::Party(const rules::Catalog& catalog) : catalog_(&catalog) {
         c.secondWind = rules::hasFeature(cls->features, rules::ClassFeature::SecondWind);
         c.arcaneRecovery = rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery);
     }
+}
+InventoryResult Party::stageInventoryChange(const InventoryRequest& request, Inventory& candidate,
+                                            std::array<rules::CharacterStats, 4>& stats) const noexcept {
+    const auto result = candidate.apply(request, *catalog_);
+    if (!result || !result.changed)
+        return result;
+    for (std::uint16_t i = 0; i < 4; ++i) {
+        const auto derived =
+            rules::deriveCharacter(*catalog_, state_.characters[i].build, candidate.loadout({i}));
+        if (!derived)
+            return {derived.error == rules::CharacterError::Overweight ? InventoryError::Overweight
+                                                                       : InventoryError::Equipment};
+        stats[i] = derived.value;
+    }
+    return result;
+}
+InventoryResult Party::previewInventoryChange(const InventoryRequest& request) const noexcept {
+    auto candidate = inventory_;
+    std::array<rules::CharacterStats, 4> stats;
+    return stageInventoryChange(request, candidate, stats);
+}
+InventoryResult Party::inventoryChange(const InventoryRequest& request) noexcept {
+    auto candidate = inventory_;
+    std::array<rules::CharacterStats, 4> stats;
+    const auto result = stageInventoryChange(request, candidate, stats);
+    if (!result || !result.changed)
+        return result;
+    inventory_ = candidate;
+    for (std::uint16_t i = 0; i < 4; ++i)
+        state_.characters[i].stats = stats[i];
+    return result;
+}
+bool Party::consumeItem(ItemHandle h, unsigned q) noexcept {
+    const auto location = inventory_.locate(h);
+    if (location.cell >= bagCells || !inventory_.consume(h, q))
+        return false;
+    auto& c = state_.characters[location.character.index];
+    c.stats = rules::deriveCharacter(*catalog_, c.build, inventory_.loadout(location.character)).value;
+    return true;
+}
+bool Party::restoreMana(rules::CharacterId id, int amount) noexcept {
+    if (!character(id) || amount < 0)
+        return false;
+    auto& c = state_.characters[id.index];
+    c.mana += std::min(amount, c.maxMana - c.mana);
+    return true;
+}
+const rules::ItemDefinition* Party::equipped(rules::CharacterId c, EquipmentSlot slot) const noexcept {
+    const auto* s = inventory_.stack(inventory_.at({c, static_cast<std::uint16_t>(slot)}));
+    return s ? catalog_->item(s->item) : nullptr;
 }
 const PartyCharacter* Party::character(rules::CharacterId id) const noexcept {
     return id.index < rules::partySize ? &state_.characters[id.index] : nullptr;

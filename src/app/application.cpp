@@ -6,6 +6,7 @@
 #include "app/gameplay.hpp"
 #include "app/hud_captures.hpp"
 #include "app/hybrid_demo.hpp"
+#include "app/inventory_captures.hpp"
 #include "app/options.hpp"
 #include "app/projectile_captures.hpp"
 #include "app/spell_captures.hpp"
@@ -26,14 +27,16 @@ namespace blobber {
 int run(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
-        std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
-                     "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-spells DIRECTORY | --capture-hybrid DIRECTORY | --capture-preparation "
-                     "DIRECTORY | --capture-projectiles "
-                     "DIRECTORY] "
-                     "[--ui-demo | "
-                     "--combat-demo | --ai-demo | --hybrid-demo | --spell-demo] [--seed UINT32] "
-                     "[--check-prepared]\n";
+        std::cout
+            << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
+               "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
+               "--capture-inventory DIRECTORY | --capture-spells DIRECTORY | --capture-hybrid DIRECTORY | "
+               "--capture-preparation "
+               "DIRECTORY | --capture-projectiles "
+               "DIRECTORY] "
+               "[--ui-demo | "
+               "--inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | --spell-demo] [--seed UINT32] "
+               "[--check-prepared]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
@@ -82,6 +85,11 @@ int run(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureInventoryOnly) {
+            captureInventory(map, rules, loadedNpcs.world, timings, renderer, presenter,
+                             options.captureDirectory);
+            return 0;
+        }
         if (options.captureSpellsOnly) {
             captureSpells(rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
             return 0;

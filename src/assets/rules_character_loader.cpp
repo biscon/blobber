@@ -66,7 +66,8 @@ OwnedItemId ownedReference(const Json& value, const std::string& path) {
 } // namespace
 CharacterContent loadCharacterContent(const nlohmann::json& root) {
     CharacterContent out;
-    const bool spellsEnabled = root.at("schema_version") == 4;
+    const int version = integer(root.at("schema_version"), "schema_version");
+    const bool spellsEnabled = version >= 4;
     if (spellsEnabled) {
         array(root.at("spells"), "spells", Catalog::maxSpells);
         for (const auto& j : root.at("spells")) {
@@ -154,13 +155,37 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     array(items, "items", Catalog::maxItems);
     for (std::size_t i = 0; i < items.size(); ++i) {
         const auto p = "items[" + std::to_string(i) + "]";
-        const auto& j = items[i];
+        auto j = items[i];
         if (!j.is_object() || !j.contains("kind"))
             fail(p + ".kind", "missing item kind");
         ItemDefinition item;
-        item.kind = static_cast<ItemKind>(
-            choice(j.at("kind"), p + ".kind",
-                   std::array<const char*, 5>{"weapon", "armor", "shield", "ammunition", "gear"}));
+        item.kind = static_cast<ItemKind>(choice(
+            j.at("kind"), p + ".kind",
+            std::array<const char*, 6>{"weapon", "armor", "shield", "ammunition", "gear", "consumable"}));
+        if (version >= 5) {
+            if (!j.contains("stack_limit"))
+                fail(p + ".stack_limit", "missing field");
+            const auto limit = integer(j.at("stack_limit"), p + ".stack_limit");
+            if (limit < 1 || limit > 100)
+                fail(p + ".stack_limit", "expected 1..100");
+            item.stackMaximum = static_cast<std::uint16_t>(limit);
+            j.erase("stack_limit");
+            if (item.kind == ItemKind::Weapon || item.kind == ItemKind::Ammunition) {
+                if (!j.contains("ammunition"))
+                    fail(p + ".ammunition", "missing field");
+                item.ammunition = static_cast<Ammunition>(choice(
+                    j.at("ammunition"), p + ".ammunition", std::array<const char*, 2>{"none", "arrow"}));
+                j.erase("ammunition");
+            }
+            if (item.kind == ItemKind::Consumable) {
+                if (!j.contains("effect"))
+                    fail(p + ".effect", "missing field");
+                item.consumable = static_cast<Consumable>(
+                    1 + choice(j.at("effect"), p + ".effect", std::array<const char*, 2>{"healing", "mana"}));
+                j.erase("effect");
+            }
+        } else if (item.kind == ItemKind::Consumable)
+            fail(p + ".kind", "consumables require schema 5");
         if (item.kind == ItemKind::Weapon) {
             fields(j, p,
                    {"id", "name", "description", "weight", "kind", "weapon", "damage", "ranged", "finesse",
@@ -185,6 +210,11 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         } else {
             fields(j, p, {"id", "name", "description", "weight", "kind"});
         }
+        if (version >= 5 && ((item.kind == ItemKind::Ammunition && item.ammunition == Ammunition::None) ||
+                             (item.kind == ItemKind::Weapon &&
+                              (item.weapon == WeaponType::Shortbow || item.weapon == WeaponType::Longbow) &&
+                              item.ammunition != Ammunition::Arrow)))
+            fail(p + ".ammunition", "arrows required for ammunition and bows");
         item.id = identifier(j.at("id"), p + ".id");
         item.name = string(j.at("name"), p + ".name");
         item.description = string(j.at("description"), p + ".description");

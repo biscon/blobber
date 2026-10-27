@@ -1,0 +1,175 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "assets": [
+    {
+      "id": "longsword",
+      "prompt": "Create one square fantasy dungeon RPG inventory icon: a steel longsword with a warm bronze crossguard and dark brown leather wrapped grip, diagonally from lower left to upper right, entire sword visible, centered with 12% padding. Painterly pixel-art inspired rich materials, crisp readable silhouette, muted dark emerald near-black background, warm golden edge lighting, same classic dungeon-crawler aesthetic as painted spell icons. No text, no border, no UI, no hands or people. This will display at 96 to 150 pixels; bold simple form, high-resolution original.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-bd749d7e-b761-4e08-84b6-f3eef9dd0394.png",
+      "file": "assets/ui/items/longsword.png"
+    },
+    {
+      "id": "chain_mail",
+      "prompt": "One square fantasy dungeon RPG inventory icon: a chain mail tunic, interlocking silver steel rings, brown padded collar, no wearer. Entire object visible, centered with 12% padding. Painterly classic dungeon-crawler illustration, crisp readable silhouette and rich materials, muted dark emerald near-black background, warm golden edge lighting. Bold simple form readable at 96 pixels, high-resolution master. No text, border, UI, hands or people. Match a steel longsword with bronze crossguard and leather grip painted against dark emerald.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-262e1251-a75f-4b0f-a4f5-dc6e1182b31a.png",
+      "file": "assets/ui/items/chain_mail.png"
+    },
+    {
+      "id": "shield",
+      "prompt": "Generate one square painted fantasy RPG inventory icon. One round wooden shield with a bronze rim and central steel boss. ONLY THE SHIELD. No sword, weapon, person or additional objects. Centered entire object with generous padding; rich brushed materials, golden rim lighting, dark emerald-black textured backdrop. Single bold object, readable at 96 pixels. No text, borders or UI.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-0c29e94e-fa23-47b1-ac4f-883962646f35.png",
+      "file": "assets/ui/items/shield.png"
+    },
+    {
+      "id": "mace",
+      "prompt": "One square fantasy dungeon RPG inventory icon: a stout steel flanged mace with a brown leather grip, diagonal. Entire object visible, centered with 12% padding. Painterly classic dungeon-crawler illustration, crisp readable silhouette and rich materials, muted dark emerald near-black background, warm golden edge lighting. Bold simple form readable at 96 pixels, high-resolution master. No text, border, UI, hands or people. Match a steel longsword with bronze crossguard and leather grip painted against dark emerald.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-7e586846-339d-41c1-b51a-73ba4f158038.png",
+      "file": "assets/ui/items/mace.png"
+    },
+    {
+      "id": "scale_mail",
+      "prompt": "Generate one square painted fantasy RPG inventory icon. One empty sleeveless scale mail vest with overlapping steel scales and leather straps. ONLY THE VEST. No sword, weapon, person or additional objects. Centered entire object with generous padding; rich brushed materials, golden rim lighting, dark emerald-black textured backdrop. Single bold object, readable at 96 pixels. No text, borders or UI.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-a566d419-787d-4c0b-8644-b5a47f675994.png",
+      "file": "assets/ui/items/scale_mail.png"
+    },
+    {
+      "id": "holy_symbol",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single small bronze sunburst amulet on a leather cord. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people, additional weapons or other objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-58327bd1-7f56-42f1-930e-893398f9b3c2.png",
+      "file": "assets/ui/items/holy_symbol.png"
+    },
+    {
+      "id": "shortsword",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single compact straight steel shortsword with a simple bronze guard and brown grip. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people, additional weapons or other objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-60cfdc02-f53c-4879-9890-f6fd818bbfb8.png",
+      "file": "assets/ui/items/shortsword.png"
+    },
+    {
+      "id": "leather",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single sleeveless brown leather armor vest, stitched panels and buckles, empty with no wearer. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people, additional weapons or other objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-06c6279c-9620-44f1-b668-2b7bd555397f.png",
+      "file": "assets/ui/items/leather.png"
+    },
+    {
+      "id": "shortbow",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single compact wooden shortbow with a taut bowstring, no arrow, curved warm brown wood and wrapped leather grip. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-87b0fec9-7f27-4ec3-ad59-0a36d06a5b00.png",
+      "file": "assets/ui/items/shortbow.png"
+    },
+    {
+      "id": "arrow",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single straight wooden arrow with a steel pointed arrowhead and white feather fletching, diagonally arranged. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-5cce5612-7b30-4de7-84c4-a341419643fa.png",
+      "file": "assets/ui/items/arrow.png"
+    },
+    {
+      "id": "dagger",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single short steel dagger with a broad triangular blade, small bronze guard and brown leather grip. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-50637ed9-dda7-491f-81b2-98e2fc84b958.png",
+      "file": "assets/ui/items/dagger.png"
+    },
+    {
+      "id": "spellbook",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one closed thick wizard spellbook with a worn deep-brown leather cover, bronze corners and a simple embossed arcane star, no lettering. Entire object centered, generous padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-92279006-6e80-4020-84b8-4b77bdaa552b.png",
+      "file": "assets/ui/items/spellbook.png"
+    },
+    {
+      "id": "arcane_focus",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one faceted violet crystal arcane focus held in a small bronze setting. Entire object centered, generous padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-3e26b956-19e9-4709-95f6-8fe754d6ae38.png",
+      "file": "assets/ui/items/arcane_focus.png"
+    },
+    {
+      "id": "healing_potion",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one squat round glass potion bottle filled with ruby-red healing liquid, short cork stopper, bronze neck ring. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-a44f79fd-8e32-4691-9841-70dcefabb36e.png",
+      "file": "assets/ui/items/healing_potion.png"
+    },
+    {
+      "id": "mana_potion",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one slender angular glass potion bottle filled with luminous sapphire-blue mana liquid, short cork stopper, bronze neck ring. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-7dd8e56e-090d-49c9-887c-8c6ab8f4b353.png",
+      "file": "assets/ui/items/mana_potion.png"
+    },
+    {
+      "id": "silhouette",
+      "prompt": "Create a neutral full-body paper-doll silhouette for a fantasy dungeon RPG equipment panel. One front-facing adult human-shaped mannequin, upright relaxed stance with arms angled slightly away, legs slightly apart. Featureless head, no facial features, gender-neutral simple matte bronze-gray solid body, no anatomy details, no clothing detail or equipment. Subtle painterly aged-metal texture and thin warm bronze rim, restrained low contrast. Entire figure visible with generous margins, tall portrait composition. Transparent background. No lettering, icons, slots, frame or interface. This is a quiet background silhouette behind separate equipment icons, not a portrait.",
+      "source": "/home/bison/.codex/generated_images/01a17e25-2ddc-7b81-82a8-46b8ea81acd7/exec-6e1f6e64-4b35-4666-8d6d-28961127b4dc.png",
+      "file": "assets/ui/items/silhouette.png"
+    }
+  ],
+  "history": [
+    {
+      "id": "longsword",
+      "prompt": "Create one square fantasy dungeon RPG inventory icon: a steel longsword with a warm bronze crossguard and dark brown leather wrapped grip, diagonally from lower left to upper right, entire sword visible, centered with 12% padding. Painterly pixel-art inspired rich materials, crisp readable silhouette, muted dark emerald near-black background, warm golden edge lighting, same classic dungeon-crawler aesthetic as painted spell icons. No text, no border, no UI, no hands or people. This will display at 96 to 150 pixels; bold simple form, high-resolution original."
+    },
+    {
+      "id": "chain_mail",
+      "prompt": "One square fantasy dungeon RPG inventory icon: a chain mail tunic, interlocking silver steel rings, brown padded collar, no wearer. Entire object visible, centered with 12% padding. Painterly classic dungeon-crawler illustration, crisp readable silhouette and rich materials, muted dark emerald near-black background, warm golden edge lighting. Bold simple form readable at 96 pixels, high-resolution master. No text, border, UI, hands or people. Match a steel longsword with bronze crossguard and leather grip painted against dark emerald."
+    },
+    {
+      "id": "shield",
+      "prompt": "One square fantasy dungeon RPG inventory icon: a sturdy round wooden shield with bronze rim and steel central boss. Entire object visible, centered with 12% padding. Painterly classic dungeon-crawler illustration, crisp readable silhouette and rich materials, muted dark emerald near-black background, warm golden edge lighting. Bold simple form readable at 96 pixels, high-resolution master. No text, border, UI, hands or people. Match a steel longsword with bronze crossguard and leather grip painted against dark emerald."
+    },
+    {
+      "id": "mace",
+      "prompt": "One square fantasy dungeon RPG inventory icon: a stout steel flanged mace with a brown leather grip, diagonal. Entire object visible, centered with 12% padding. Painterly classic dungeon-crawler illustration, crisp readable silhouette and rich materials, muted dark emerald near-black background, warm golden edge lighting. Bold simple form readable at 96 pixels, high-resolution master. No text, border, UI, hands or people. Match a steel longsword with bronze crossguard and leather grip painted against dark emerald."
+    },
+    {
+      "id": "scale_mail",
+      "prompt": "One square fantasy dungeon RPG inventory icon: a scale mail vest, overlapping steel scales and brown leather straps, no wearer. Entire object visible, centered with 12% padding. Painterly classic dungeon-crawler illustration, crisp readable silhouette and rich materials, muted dark emerald near-black background, warm golden edge lighting. Bold simple form readable at 96 pixels, high-resolution master. No text, border, UI, hands or people. Match a steel longsword with bronze crossguard and leather grip painted against dark emerald."
+    },
+    {
+      "id": "shield",
+      "prompt": "Generate one square painted fantasy RPG inventory icon. One round wooden shield with a bronze rim and central steel boss. ONLY THE SHIELD. No sword, weapon, person or additional objects. Centered entire object with generous padding; rich brushed materials, golden rim lighting, dark emerald-black textured backdrop. Single bold object, readable at 96 pixels. No text, borders or UI."
+    },
+    {
+      "id": "scale_mail",
+      "prompt": "Generate one square painted fantasy RPG inventory icon. One empty sleeveless scale mail vest with overlapping steel scales and leather straps. ONLY THE VEST. No sword, weapon, person or additional objects. Centered entire object with generous padding; rich brushed materials, golden rim lighting, dark emerald-black textured backdrop. Single bold object, readable at 96 pixels. No text, borders or UI."
+    },
+    {
+      "id": "holy_symbol",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single small bronze sunburst amulet on a leather cord. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people, additional weapons or other objects."
+    },
+    {
+      "id": "shortsword",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single compact straight steel shortsword with a simple bronze guard and brown grip. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people, additional weapons or other objects."
+    },
+    {
+      "id": "leather",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single sleeveless brown leather armor vest, stitched panels and buckles, empty with no wearer. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people, additional weapons or other objects."
+    },
+    {
+      "id": "shortbow",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single compact wooden shortbow with a taut bowstring, no arrow, curved warm brown wood and wrapped leather grip. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "arrow",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single straight wooden arrow with a steel pointed arrowhead and white feather fletching, diagonally arranged. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "dagger",
+      "prompt": "One square painted fantasy RPG inventory icon showing only a single short steel dagger with a broad triangular blade, small bronze guard and brown leather grip. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "spellbook",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one closed thick wizard spellbook with a worn deep-brown leather cover, bronze corners and a simple embossed arcane star, no lettering. Entire object centered, generous padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "arcane_focus",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one faceted violet crystal arcane focus held in a small bronze setting. Entire object centered, generous padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "healing_potion",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one squat round glass potion bottle filled with ruby-red healing liquid, short cork stopper, bronze neck ring. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "mana_potion",
+      "prompt": "One square painted fantasy RPG inventory icon showing only one slender angular glass potion bottle filled with luminous sapphire-blue mana liquid, short cork stopper, bronze neck ring. Entire object centered, 12% padding, rich hand-painted materials, golden edge lighting, dark emerald-black textured backdrop. Bold readable form at 96 pixels. No text, border, UI, people or additional objects."
+    },
+    {
+      "id": "silhouette",
+      "prompt": "Create a neutral full-body paper-doll silhouette for a fantasy dungeon RPG equipment panel. One front-facing adult human-shaped mannequin, upright relaxed stance with arms angled slightly away, legs slightly apart. Featureless head, no facial features, gender-neutral simple matte bronze-gray solid body, no anatomy details, no clothing detail or equipment. Subtle painterly aged-metal texture and thin warm bronze rim, restrained low contrast. Entire figure visible with generous margins, tall portrait composition. Transparent background. No lettering, icons, slots, frame or interface. This is a quiet background silhouette behind separate equipment icons, not a portrait."
+    }
+  ]
+}

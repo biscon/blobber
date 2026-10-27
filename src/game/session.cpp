@@ -60,6 +60,32 @@ void GameSession::move(Action action, bool fresh) noexcept {
     movement_.submit(map_, action, fresh, &actors_);
     detectContact();
 }
+InventoryError GameSession::inventoryAccess(const InventoryRequest& request) const noexcept {
+    if (movement_.state().transition.active())
+        return InventoryError::Moving;
+    const auto source = party_.inventory().locate(request.source);
+    if (source.cell >= 52)
+        return InventoryError::InvalidItem;
+    const auto phase = combat_.snapshot().phase;
+    if (phase == CombatPhase::Victory || phase == CombatPhase::Defeat)
+        return InventoryError::Unavailable;
+    if ((source.cell >= bagCells || request.destination.cell >= bagCells ||
+         source.character.index != request.destination.character.index ||
+         request.operation == InventoryOp::Transfer) &&
+        !combat_.safeRecovery(movement_.state().player))
+        return InventoryError::Unsafe;
+    return InventoryError::None;
+}
+InventoryResult GameSession::inventoryChange(const InventoryRequest& request) noexcept {
+    events_.clear();
+    const auto access = inventoryAccess(request);
+    if (access != InventoryError::None)
+        return {access};
+    auto result = party_.inventoryChange(request);
+    if (result && result.changed)
+        combat_.reconcileEffects(timeMs_, events_);
+    return result;
+}
 CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
     events_.clear();
     combat_.reconcileEffects(timeMs_, events_);

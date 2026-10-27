@@ -15,6 +15,12 @@ const char* actionName(PartyAction action) noexcept {
 }
 const char* commandMessage(CommandReason reason) noexcept {
     switch (reason) {
+    case CommandReason::NoAmmunition:
+        return "No compatible ammunition in this bag.";
+    case CommandReason::InvalidItem:
+        return "Select a usable potion from this character\'s bag.";
+    case CommandReason::StaleInventory:
+        return "Inventory changed; select the potion again.";
     case CommandReason::DeadAlly:
         return "Requires a living ally.";
     case CommandReason::Armored:
@@ -202,8 +208,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     }
     case CombatEvent::Healing:
     case CombatEvent::Recovery: {
-        std::snprintf(line, sizeof(line), "%s -> %s: +%lld %s.", name, target,
-                      static_cast<long long>(out.damage), out.event == CombatEvent::Healing ? "HP" : "mana");
+        const auto* item = party_.catalog().item(out.item);
+        std::snprintf(line, sizeof(line), "%s%s%s -> %s: +%lld %s.", name, item ? " uses " : "",
+                      item ? item->name.c_str() : "", target, static_cast<long long>(out.damage),
+                      out.event == CombatEvent::Healing ? "HP" : "mana");
         if (out.event == CombatEvent::Healing) {
             CombatFeedback f;
             f.active = f.party = f.hit = f.healing = true;
@@ -331,6 +339,10 @@ bool CommandController::visible(ActorId id) const noexcept {
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
                                 const HudDemo* demo) noexcept {
     state_.production = session_ != nullptr;
+    if (!focused) {
+        state_.inventory.pointerDown = false;
+        state_.inventory.dragging = false;
+    }
     if (session_) {
         const auto& combat = session_->combat().snapshot();
         refreshFeedback(false);
@@ -360,6 +372,9 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                 state_.selection.action = PartyAction::Melee;
             }
         }
+        if (state_.inventory.itemTargeting && (state_.inventory.itemCommand.turn != combat.turn ||
+                                               state_.inventory.itemCommand.world != combat.world))
+            state_.inventory.itemTargeting = false;
         state_.combat = combat;
         session_->combat().previewTurns(state_.combat);
         state_.selection.world = combat.world;
@@ -426,13 +441,11 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         for (unsigned art = 0; art < 4; ++art)
             if (member.build.id == portraits[art])
                 card.portrait = art;
-        const std::array<rules::OwnedItemId, 4> equipped{
-            {member.build.equipment.mainHand, member.build.equipment.offHand, member.build.equipment.body,
-             member.build.equipment.ranged}};
+        const std::array<EquipmentSlot, 4> equipped{EquipmentSlot::MainHand, EquipmentSlot::OffHand,
+                                                    EquipmentSlot::Body, EquipmentSlot::Ranged};
         for (std::size_t e = 0; e < equipped.size(); ++e)
-            if (equipped[e].index < member.build.itemCount)
-                card.equipment[e] =
-                    party_.catalog().item(member.build.items[equipped[e].index].item)->name.c_str();
+            if (const auto* item = party_.equipped(id, equipped[e]))
+                card.equipment[e] = item->name.c_str();
         card.className = party_.catalog().characterClass(member.build.characterClass)->name.c_str();
         card.hp = member.hitPoints;
         card.maxHp = member.stats.maxHitPoints;
@@ -508,6 +521,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             m.armed && state_.hover.kind == HoverKind::Portrait && state_.hover.index == int(i);
         card.castPreview = card.castRecipient ? m.name : "";
     }
+    refreshInventory();
     updateAvailability();
     updateHover();
 }
@@ -599,6 +613,7 @@ void CommandController::scrollLog(int delta) noexcept {
         static_cast<std::int64_t>(state_.logOffset) + delta, 0, static_cast<std::int64_t>(maximum)));
 }
 void CommandController::cancel() noexcept {
+    state_.inventory.itemTargeting = false;
     state_.selection.targetCount = 0;
     state_.selection.spell = {};
     state_.selection.feature = rules::Feature::None;

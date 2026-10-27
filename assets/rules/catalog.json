@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -262,7 +262,9 @@
       "ranged": false,
       "finesse": false,
       "two_handed": false,
-      "versatile_sides": 10
+      "versatile_sides": 10,
+      "stack_limit": 1,
+      "ammunition": "none"
     },
     {
       "id": "chain_mail",
@@ -271,14 +273,16 @@
       "weight": 5500,
       "kind": "armor",
       "armor": "heavy",
-      "base_ac": 16
+      "base_ac": 16,
+      "stack_limit": 1
     },
     {
       "id": "shield",
       "name": "Shield",
       "description": "A shield carried in one hand.",
       "weight": 600,
-      "kind": "shield"
+      "kind": "shield",
+      "stack_limit": 1
     },
     {
       "id": "mace",
@@ -295,7 +299,9 @@
       "ranged": false,
       "finesse": false,
       "two_handed": false,
-      "versatile_sides": 0
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none"
     },
     {
       "id": "scale_mail",
@@ -304,14 +310,16 @@
       "weight": 4500,
       "kind": "armor",
       "armor": "medium",
-      "base_ac": 14
+      "base_ac": 14,
+      "stack_limit": 1
     },
     {
       "id": "holy_symbol",
       "name": "Holy symbol",
       "description": "An amulet bearing a sacred emblem.",
       "weight": 100,
-      "kind": "gear"
+      "kind": "gear",
+      "stack_limit": 1
     },
     {
       "id": "shortsword",
@@ -328,7 +336,9 @@
       "ranged": false,
       "finesse": true,
       "two_handed": false,
-      "versatile_sides": 0
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none"
     },
     {
       "id": "leather",
@@ -337,7 +347,8 @@
       "weight": 1000,
       "kind": "armor",
       "armor": "light",
-      "base_ac": 11
+      "base_ac": 11,
+      "stack_limit": 1
     },
     {
       "id": "shortbow",
@@ -354,14 +365,18 @@
       "ranged": true,
       "finesse": false,
       "two_handed": true,
-      "versatile_sides": 0
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "arrow"
     },
     {
       "id": "arrow",
       "name": "Arrow",
       "description": "One arrow for a bow.",
       "weight": 5,
-      "kind": "ammunition"
+      "kind": "ammunition",
+      "stack_limit": 100,
+      "ammunition": "arrow"
     },
     {
       "id": "dagger",
@@ -378,21 +393,43 @@
       "ranged": false,
       "finesse": true,
       "two_handed": false,
-      "versatile_sides": 0
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none"
     },
     {
       "id": "spellbook",
       "name": "Spellbook",
       "description": "A book containing the curated wizard spells.",
       "weight": 300,
-      "kind": "gear"
+      "kind": "gear",
+      "stack_limit": 1
     },
     {
       "id": "arcane_focus",
       "name": "Arcane focus",
       "description": "A crystal used for spellcasting; components are not consumed in this demo.",
       "weight": 100,
-      "kind": "gear"
+      "kind": "gear",
+      "stack_limit": 1
+    },
+    {
+      "id": "healing_potion",
+      "name": "Potion of healing",
+      "description": "Drink or administer to a living ally to restore 2d4+2 HP. Costs one action or a six-second cooldown.",
+      "weight": 50,
+      "kind": "consumable",
+      "stack_limit": 20,
+      "effect": "healing"
+    },
+    {
+      "id": "mana_potion",
+      "name": "Potion of mana",
+      "description": "Drink or administer to a living ally to restore 2 mana, up to their maximum. Costs one action or a six-second cooldown.",
+      "weight": 50,
+      "kind": "consumable",
+      "stack_limit": 20,
+      "effect": "mana"
     }
   ],
   "preset_party": {
@@ -424,6 +461,10 @@
           {
             "item": "shield",
             "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
           }
         ],
         "equipment": {
@@ -465,6 +506,14 @@
           {
             "item": "holy_symbol",
             "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "item": "mana_potion",
+            "quantity": 2
           }
         ],
         "equipment": {
@@ -506,6 +555,10 @@
           {
             "item": "arrow",
             "quantity": 20
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
           }
         ],
         "equipment": {
@@ -543,6 +596,14 @@
           {
             "item": "arcane_focus",
             "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "item": "mana_potion",
+            "quantity": 2
           }
         ],
         "equipment": {

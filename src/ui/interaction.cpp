@@ -1,4 +1,5 @@
 #include "ui/interaction.hpp"
+#include "ui/inventory_interaction.hpp"
 namespace blobber {
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
                    bool allowConfirm) noexcept {
@@ -6,6 +7,8 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         commands.hover(HoverKind::None);
         return;
     }
+    if (routeInventoryInput(commands, input, allowConfirm))
+        return;
     const auto& state = commands.snapshot();
     const bool moved = input.pointer && commands.pointerMoved(input.pointer->x, input.pointer->y);
     const bool click = input.has(UiKey::Click);

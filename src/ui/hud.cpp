@@ -68,9 +68,9 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     label("i", hudLayout::detail(i), gold, UiTextStyle::Small);
 }
 void HudPainter::log(const HudSnapshot& h, bool expanded) const {
-    const auto r = expanded            ? hudLayout::expandedLog
-                   : h.magic.casting() ? hudLayout::castingLog
-                                       : hudLayout::log;
+    const auto r = expanded                                           ? hudLayout::expandedLog
+                   : (h.magic.casting() || h.inventory.itemTargeting) ? hudLayout::castingLog
+                                                                      : hudLayout::log;
     box(r, expanded ? gold : edge);
     text(expanded ? "COMBAT HISTORY" : "COMBAT LOG", r.x + 8, r.y + (expanded ? 2 : 4), gold,
          UiTextStyle::Display);
@@ -83,9 +83,9 @@ void HudPainter::log(const HudSnapshot& h, bool expanded) const {
     }
     if (h.logOffset && !expanded)
         label("LATEST", hudLayout::logLatest, blue, UiTextStyle::Small);
-    const auto columns = expanded            ? hudLayout::expandedLogColumns
-                         : h.magic.casting() ? hudLayout::castingLogColumns
-                                             : hudLayout::logColumns;
+    const auto columns = expanded                                           ? hudLayout::expandedLogColumns
+                         : (h.magic.casting() || h.inventory.itemTargeting) ? hudLayout::castingLogColumns
+                                                                            : hudLayout::logColumns;
     const auto count = h.log.lineCount(columns);
     const auto end = count - std::min(h.logOffset, count);
     const int rows = expanded ? 21 : 4;
@@ -125,7 +125,9 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         p.card(h->cards[i], i, h->selection.action == PartyAction::Aid && eligible,
                h->inspected && h->inspected->index == h->cards[i].id.index);
     }
-    if (h->magic.casting()) {
+    if (h->inventory.itemTargeting) {
+        p.itemTargets(*h);
+    } else if (h->magic.casting()) {
         p.spellTargets(*h);
     } else {
         const char* actor = "EXPLORATION";
@@ -158,9 +160,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             const auto action = dockActions[i];
             const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
             const bool available =
-                (i == 0 || i == 1 || i == 2 || i == 3 || i == 5) && !h->suspended && !h->modal() &&
-                (i == 3 || reason == CommandReason::Ready || reason == CommandReason::MissingTarget ||
-                 reason == CommandReason::InvalidAlly || reason == CommandReason::PreviewAccepted);
+                (i >= 0 && i < 6) && !h->suspended && !h->modal() &&
+                (i == 3 || (i == 4 && h->production) || reason == CommandReason::Ready ||
+                 reason == CommandReason::MissingTarget || reason == CommandReason::InvalidAlly ||
+                 reason == CommandReason::PreviewAccepted);
             const bool selected = action == h->selection.action;
             p.box(r, selected ? bright : edge);
             const unsigned icon = i == 3 && !h->magic.spellcaster ? UiArt::classFeaturesIcon : 5 + i;

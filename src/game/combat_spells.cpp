@@ -222,10 +222,10 @@ bool CombatController::sneakEligible(rules::CharacterId id, ActorId target, rule
         sneakReady_[id.index] > state_.gameplayMs || mode == rules::RollMode::Disadvantage)
         return false;
     const auto* c = party_.character(id);
-    const auto item = (ranged ? c->build.equipment.ranged : c->build.equipment.mainHand).index;
-    if (item >= c->build.itemCount)
+    const auto item = static_cast<unsigned>(ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand);
+    if (item >= c->stats.weapons.size())
         return false;
-    const auto* w = party_.catalog().item(c->build.items[item].item);
+    const auto* w = party_.equipped(id, ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand);
     if (!w || (!w->finesse && !w->ranged))
         return false;
     if (mode == rules::RollMode::Advantage)

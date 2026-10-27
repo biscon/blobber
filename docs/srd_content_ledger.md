@@ -210,3 +210,24 @@ strikes at 200 ms; all other consequences occur at casting time. These timings,
 conservative grid visibility, pause/full-round clocks, UI confirmation rules and
 bounded capacities are project mechanics. See [spells design](spells_design.md)
 and [verification](slice10_verification.md).
+
+
+## Slice 11 inventory, ammunition and potions
+
+Source: [official SRD 5.1 CC edition](https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf),
+printed p. 64 (ammunition), pp. 68–69 (potion use and adventuring gear weight), pp. 79–80 (carrying capacity),
+and p. 234 (Potion of Healing). Existing weapons/armor retain their earlier ledger entries.
+
+| Content | Adopted behavior | Project adaptation or omission |
+| --- | --- | --- |
+| Potion of Healing | 2d4+2 healing; drinking or administering takes an action; weight 0.5 lb | Any living party ally is within reach. Full HP rejects without consumption. No resurrection or Life Domain spell-healing bonus. |
+| Bow ammunition | One compatible arrow consumed per accepted attack | Consume at acceptance, including misses/interruption. NPC arrows remain abstract. Post-battle recovery is deferred. |
+| Carrying capacity | Strength × 15 lb | Integer hundredths of pounds; reject overweight transactions atomically. No encumbrance tiers, lifting/dragging or racial size variations. |
+| Mana potion | No SRD equivalent | Restores two mana, weighs 0.5 lb, uses one action/shared six-second cooldown. Full mana/noncasters reject. |
+
+The 48-cell bags, four equipment positions, 208-stack bound, arrows-100/potions-20
+stack limits, paused browsing, safe-only equipment/transfers, default-one split
+confirmation and automatic transfer ordering are approved project rules. All four
+characters start with two healing potions; Cleric and Wizard additionally start
+with two mana potions. Rogue starts with twenty arrows. Loot, arrow recovery, rest,
+progression, saves and dropping items are outside this slice.

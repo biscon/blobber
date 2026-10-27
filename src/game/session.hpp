@@ -37,6 +37,8 @@ class GameSession {
     void move(Action action, bool fresh = true) noexcept;
     void clearPending() noexcept { movement_.clearPending(); }
     void setAnimated(bool enabled) noexcept { movement_.setAnimated(enabled); }
+    InventoryError inventoryAccess(const InventoryRequest&) const noexcept;
+    InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     CombatOutcome submit(const PartyCommand& command) noexcept;
 
   private:

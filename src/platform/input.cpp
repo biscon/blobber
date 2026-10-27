@@ -18,6 +18,15 @@ InputSample Input::poll(float seconds) {
     uiDown[static_cast<std::size_t>(UiKey::DemoNext)] = IsKeyDown(KEY_F2);
     uiDown[static_cast<std::size_t>(UiKey::DemoReset)] = IsKeyDown(KEY_F3);
     uiDown[static_cast<std::size_t>(UiKey::Back)] = IsKeyDown(KEY_B);
+    uiDown[static_cast<std::size_t>(UiKey::PreviousPage)] = IsKeyDown(KEY_PAGE_UP);
+    uiDown[static_cast<std::size_t>(UiKey::NextPage)] = IsKeyDown(KEY_PAGE_DOWN);
+    uiDown[static_cast<std::size_t>(UiKey::Inventory)] = IsKeyDown(KEY_I);
+    uiDown[static_cast<std::size_t>(UiKey::Equip)] = IsKeyDown(KEY_E);
+    uiDown[static_cast<std::size_t>(UiKey::MoveItem)] = IsKeyDown(KEY_M);
+    uiDown[static_cast<std::size_t>(UiKey::SplitItem)] = IsKeyDown(KEY_S);
+    uiDown[static_cast<std::size_t>(UiKey::TransferItem)] = IsKeyDown(KEY_T);
+    uiDown[static_cast<std::size_t>(UiKey::UseItem)] = IsKeyDown(KEY_U);
+    uiDown[static_cast<std::size_t>(UiKey::Tab)] = IsKeyDown(KEY_TAB);
     const auto pointer = GetMousePosition();
     const float wheel = GetMouseWheelMove();
     result.ui = edges_.sample(uiDown, focused,
