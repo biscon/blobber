@@ -1,7 +1,7 @@
 # Slice 10: spells and class identity
 
-Status: implemented, **Ready for review** (2026-10-27). The user approved
-the implementation plan with “Implement the plan”. User acceptance is pending. See [verification and handoff](slice10_verification.md).
+Status: implemented, **accepted and closed** (2026-10-27). The user explicitly accepted
+slice 10, including its spellcasting UI, native HUD and impact-alert corrections. See [verification and handoff](slice10_verification.md).
 
 ## Rules and boundaries
 
@@ -36,7 +36,11 @@ half rounded down on success. Party origin is excluded. Thunderwave pushes faile
 save survivors one cell along heading after damage, in actor-ID order, preserving
 subslot or choosing first vacancy. Walls/full destinations block without damage.
 Reuse 600 ms visual travel. Empty areas and invalid requests reject before costs/RNG.
-Hostile casts provoke existing local alerts even on saves/misses.
+Instant hostile effects provoke existing local alerts on resolution, even on saves.
+Delayed spells and weapon attacks alert at impact (including misses), never merely
+at acceptance. Missing/canceled targets do not alert; lethal hits still warn nearby
+survivors. Normal sight detection remains independent. See [native HUD and impact
+alert correction](native_hud_design.md).
 
 ## Ownership and execution
 
@@ -105,7 +109,8 @@ from routine tests. Run Debug/Release suites and focused ASan/UBSan. Provide
 `blobber_spells_tests --trace`, `--spell-demo --seed 5` and
 `--capture-spells DIRECTORY`. Use hidden application-owned captures and in-process
 input only; no desktop automation. Record actual checks and limitations in
-slice10_verification.md and stop at Ready for review, leaving slice 11 Planned.
+slice10_verification.md. User acceptance was recorded on 2026-10-27; slice 11 remains
+Planned/unstarted.
 
 ## Implementation map and storage
 

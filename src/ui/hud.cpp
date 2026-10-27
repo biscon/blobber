@@ -99,8 +99,6 @@ void HudPainter::log(const HudSnapshot& h, bool expanded) const {
 void drawUI(const MovementState& state, bool debug, const Map& map, const HudSnapshot* h,
             const UiFonts* fonts, const UiArt* art) {
     const HudPainter p(fonts, art);
-    if (!fonts)
-        ClearBackground(background);
     p.box(hudLayout::header, gold);
     const auto headerText = [&](const char* value, int x, Color color, UiTextStyle style) {
         const auto r = hudLayout::header;
@@ -115,15 +113,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     headerText(line, 245, gold, UiTextStyle::Small);
     if (!h || !h->demo)
         headerText("Depth I", 449, gold, UiTextStyle::Small);
-    if (!fonts) {
-        const Vector2 center{hudLayout::gear.x + hudLayout::gear.width * .5f,
-                             hudLayout::gear.y + hudLayout::gear.height * .5f};
-        for (int tooth = 0; tooth < 8; ++tooth)
-            DrawRectanglePro({center.x, center.y, 2, 3}, {1, 5}, float(tooth * 45), gold);
-        DrawCircleV(center, 3.5f, gold);
-        DrawCircleV(center, 1.5f, background);
-    }
-    p.box({viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2});
+    p.gear(hudLayout::gear);
+    p.border({viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2}, edge);
     p.box(hudLayout::actions);
     if (!h)
         return;
@@ -199,7 +190,6 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                 dirs[n++] = "NESW"[d];
         std::snprintf(threats, sizeof(threats), "Threats %s%s", dirs,
                       h->combat.pendingCount ? " / arrivals" : "");
-        p.fill({viewX + 4, viewY + 4, 180, 12}, background);
         p.text(threats, viewX + 6, viewY + 5, gold, UiTextStyle::Small);
     }
     p.log(*h, false);
@@ -212,13 +202,13 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
         p.overlayBox({12, 32, 176, 242}, gold);
         p.text("SURVEY / F1 CLOSE", 22, 40, gold, UiTextStyle::Display);
         const float scale = std::min(152.0f / map.width(), 200.0f / map.height());
-        if (!fonts) {
+        {
             for (int y = 0; y < map.height(); ++y)
                 for (int x = 0; x < map.width(); ++x)
                     if (map.solid({x, y}))
-                        DrawRectangleRec({22 + x * scale, 58 + y * scale, scale, scale}, edge);
-            DrawRectangleRec(
-                {22 + state.player.cell.x * scale, 58 + state.player.cell.y * scale, scale, scale}, bright);
+                        p.rectangle({22 + x * scale, 58 + y * scale, scale, scale}, edge);
+            p.rectangle({22 + state.player.cell.x * scale, 58 + state.player.cell.y * scale, scale, scale},
+                        bright);
         }
     }
 }

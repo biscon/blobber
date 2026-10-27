@@ -89,7 +89,7 @@ void HudPainter::details(const HudSnapshot& h) const {
 }
 namespace {
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
-    if (!p.fonts) {
+    {
         const Color color = feedback.healing ? Color{35, 140, 95, 255}
                             : feedback.hit   ? Color{190, 24, 18, 255}
                                              : WHITE;
@@ -98,10 +98,11 @@ void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
             const auto a = bloodSplat[i], b = bloodSplat[(i + 1) % bloodSplat.size()];
             const Vector2 one{r.x + a.x * (r.width - 1), r.y + a.y * (r.height - 1)},
                 two{r.x + b.x * (r.width - 1), r.y + b.y * (r.height - 1)};
-            DrawTriangle(center, two, one, color);
-            DrawLineV(one, two, {65, 16, 12, 255});
+            p.triangle(center, two, one, color);
+            p.line(one, two, {65, 16, 12, 255});
         }
-    } else {
+    }
+    if (p.fonts) {
         char label[32];
         if (feedback.text)
             std::snprintf(label, sizeof(label), "%s", feedback.text);
@@ -138,25 +139,31 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             marks[h->hover.enemy->slot] = marks[h->hover.enemy->slot]               ? 4
                                           : h->hover.reason == CommandReason::Ready ? 3
                                                                                     : 5;
-        if (!fonts)
-            for (int y = 0; y < viewHeight; ++y)
-                for (int x = 0; x < viewWidth; ++x) {
-                    const auto slot = picking->slot(x, y);
-                    if (slot >= marks.size() || !marks[slot])
-                        continue;
-                    if (picking->slot(x - 1, y) != slot || picking->slot(x + 1, y) != slot ||
-                        picking->slot(x, y - 1) != slot || picking->slot(x, y + 1) != slot) {
-                        const Color color =
-                            marks[slot] == 1 ? teal
-                            : marks[slot] == 2
-                                ? (h->magic.kind == rules::SpellKind::Thunderwave ? Color{96, 185, 236, 255}
-                                                                                  : Color{235, 148, 45, 255})
-                            : marks[slot] == 4 ? Color{174, 238, 230, 255}
-                            : marks[slot] == 3 ? bright
-                                               : muted;
-                        DrawPixel(viewX + x, viewY + y, color);
-                    }
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto slot = picking->slot(x, y);
+                if (slot >= marks.size() || !marks[slot])
+                    continue;
+                if (picking->slot(x - 1, y) != slot || picking->slot(x + 1, y) != slot ||
+                    picking->slot(x, y - 1) != slot || picking->slot(x, y + 1) != slot) {
+                    const Color color = marks[slot] == 1   ? teal
+                                        : marks[slot] == 2 ? (h->magic.kind == rules::SpellKind::Thunderwave
+                                                                  ? Color{96, 185, 236, 255}
+                                                                  : Color{235, 148, 45, 255})
+                                        : marks[slot] == 4 ? Color{174, 238, 230, 255}
+                                        : marks[slot] == 3 ? bright
+                                                           : muted;
+                    const float left = float(viewX + x), top = float(viewY + y);
+                    if (picking->slot(x - 1, y) != slot)
+                        p.line({left, top}, {left, top + 1}, color);
+                    if (picking->slot(x + 1, y) != slot)
+                        p.line({left + 1, top}, {left + 1, top + 1}, color);
+                    if (picking->slot(x, y - 1) != slot)
+                        p.line({left, top}, {left + 1, top}, color);
+                    if (picking->slot(x, y + 1) != slot)
+                        p.line({left, top + 1}, {left + 1, top + 1}, color);
                 }
+            }
         if (!h->magic.casting() && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
             h->hover.enemy->slot < picking->targets().anchors.size()) {
             const auto anchor = picking->targets().anchors[h->hover.enemy->slot];

@@ -1,5 +1,7 @@
 #include "ui/art.hpp"
 #include "assets/image.hpp"
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
 namespace blobber {
 UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : resources_(resources) {
@@ -31,7 +33,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/second_wind",
                                   "spells/arcane_recovery",
                                   "spells/dismiss_concentration"};
-    OwnedImage atlas(GenImageColor(256, 448, BLANK));
+    OwnedImage atlas(GenImageColor(2048, 1024, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
     for (unsigned i = 0; i < regions_.size(); ++i) {
@@ -39,19 +41,26 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
         OwnedImage image(LoadImage(path.string().c_str()));
         if (!image.value.data)
             throw std::runtime_error("Missing UI art: " + path.string());
-        const int w = i < 4    ? 48
-                      : i == 4 ? 24
-                      : i < 11 ? 30
-                               : 36,
-                  h = i < 4    ? 56
-                      : i == 4 ? 24
-                      : i < 11 ? 28
-                               : 36;
+        const int maximumWidth = i < 4 ? 216 : (i == 4 ? 72 : 108);
+        const int maximumHeight = i < 4 ? 252 : maximumWidth;
+        const float factor =
+            std::min(float(maximumWidth) / image.value.width, float(maximumHeight) / image.value.height);
+        const int w = std::max(1, int(std::round(image.value.width * factor)));
+        const int h = std::max(1, int(std::round(image.value.height * factor)));
         ImageResize(&image.value, w, h);
-        regions_[i] = {float((i % 4) * 64), float((i / 4) * 64), float(w), float(h)};
-        ImageDrawImage(&atlas.value, image.value, int(regions_[i].x), int(regions_[i].y), WHITE);
+        const int x = int(i % 8) * 256 + 2, y = int(i / 8) * 256 + 2;
+        regions_[i] = {float(x), float(y), float(w), float(h)};
+        ImageDrawImage(&atlas.value, image.value, x, y, WHITE);
+        // Extrude two pixels so bilinear sampling never reaches adjacent/blank cells.
+        for (int py = -2; py < h + 2; ++py)
+            for (int px = -2; px < w + 2; ++px)
+                if (px < 0 || px >= w || py < 0 || py >= h)
+                    ImageDrawPixel(
+                        &atlas.value, x + px, y + py,
+                        GetImageColor(image.value, std::clamp(px, 0, w - 1), std::clamp(py, 0, h - 1)));
     }
     atlas_ = resources_.createTexture(atlas.value);
+    SetTextureFilter(resources_.texture(atlas_), TEXTURE_FILTER_BILINEAR);
 }
 static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 14,
               "Extend the spell atlas mapping for new spells");
@@ -65,14 +74,38 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
     return kind < rules::SpellKind::Count ? 11 + static_cast<unsigned>(kind) : 8;
 }
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
+    constexpr float scale = float(gameWidth) / artWidth;
+    Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
     if (index >= regions_.size()) {
-        DrawRectangle(r.x, r.y, r.width, r.height, {19, 26, 25, 255});
-        DrawCircle(r.x + r.width / 2, r.y + r.height / 3, float(r.width) / 5, {101, 115, 108, 255});
-        DrawRectangle(r.x + r.width / 5, r.y + r.height / 2, r.width * 3 / 5, r.height * 2 / 5,
-                      {101, 115, 108, 255});
+        DrawRectangleRec(destination, {19, 26, 25, 255});
+        DrawCircleV({destination.x + destination.width / 2, destination.y + destination.height / 3},
+                    destination.width / 5, {101, 115, 108, 255});
+        DrawRectangleRec({destination.x + destination.width / 5, destination.y + destination.height / 2,
+                          destination.width * 3 / 5, destination.height * 2 / 5},
+                         {101, 115, 108, 255});
         return;
     }
-    DrawTexturePro(resources_.texture(atlas_), regions_[index],
-                   {float(r.x), float(r.y), float(r.width), float(r.height)}, {0, 0}, 0, tint);
+    auto source = regions_[index];
+    if (index < 5) {
+        // Portraits cover their card without stretching faces.
+        const float ratio = destination.width / destination.height;
+        if (source.width / source.height > ratio) {
+            const float width = source.height * ratio;
+            source.x += (source.width - width) * .5f;
+            source.width = width;
+        } else {
+            const float height = source.width / ratio;
+            source.y += (source.height - height) * .5f;
+            source.height = height;
+        }
+    } else {
+        const float fit = std::min(destination.width / source.width, destination.height / source.height);
+        const float width = source.width * fit, height = source.height * fit;
+        destination.x += (destination.width - width) * .5f;
+        destination.y += (destination.height - height) * .5f;
+        destination.width = width;
+        destination.height = height;
+    }
+    DrawTexturePro(resources_.texture(atlas_), source, destination, {0, 0}, 0, tint);
 }
 } // namespace blobber

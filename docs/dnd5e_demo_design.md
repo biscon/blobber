@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 is Ready for review (badge stability and spacing correction implemented); user acceptance is pending.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 09 — Effects and concentration (2026-10-27) |
-| Active slice | 10 — Spells and class identity (Ready for review) |
-| Awaiting user review | Slice 10, including badge stability and spacing correction |
+| Latest accepted slice | 10 — Spells and class identity (2026-10-27) |
+| Active slice | None |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until slice 10 is accepted |
-| Next action | Review slice 10 correction; do not advance without acceptance |
+| Next eligible slice | 11 — Inventory and equipment (Planned; unstarted) |
+| Next action | Plan slice 11 when requested; no implementation started |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -317,7 +317,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Accepted | B follow-up |
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Accepted | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
-| 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Ready for review | C |
+| 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
@@ -1173,7 +1173,7 @@ selection must demonstrate distinct class roles, not just differently named dama
 mana and usage limits, legal/illegal targeting, concentration, durations, healing,
 tile areas, pause behavior, and spell use in both approach and turn-based phases.
 
-**Stage / last updated:** Ready for review, badge stability and spacing correction implemented; 2026-10-27.
+**Stage / last updated:** Accepted and closed; 2026-10-27.
 **Approved plan:** User said “Implement the plan”. See [spells design](spells_design.md).
 Expanded roster with Inflict Wounds replacing Healing Word, 4/6/14 mana, Rogue
 back-row reach, safe Arcane Recovery, three-cell areas, live target selection,
@@ -1190,10 +1190,20 @@ individual invalid-target pruning and seventeen painted icons. See the latest
 [UI verification and handoff](slice10_ui_verification.md), which supersedes the
 original [verification](slice10_verification.md) for casting interactions. Subsequent
 badge/spacing polish passed focused Debug 6/6 and Release 8/8, with 231 spell
-and 73 HUD captures; see the same handoff for the exact checks.
-**Acceptance:** Pending. Interactive desktop review remains unverified.
-**Next-agent handoff:** Review or correct slice 10 only. Stop at Ready for review;
-slice 11 remains Planned until explicit acceptance.
+and 73 HUD captures; see the same handoff for the exact checks. The latest
+[native HUD and impact-alert correction](native_hud_verification.md) passed full
+Debug/Release 26/26, focused sanitizers 5/5, generated-art GPU checks, allocation
+guards and capacity stress; native/reduced captures are retained there.
+**Acceptance:** Explicitly accepted by the user on 2026-10-27: “I accept the slice,
+close it in the doc”. Acceptance includes all spellcasting UI corrections, stable
+badges, native-resolution portraits/icons and HUD, and impact-triggered alerts.
+The user reported that the result looks good and works well. Remaining technical
+verification limitations in the handoffs are retained; acceptance does not imply
+that previously skipped hardware/leak checks were run.
+**Next-agent handoff:** Slice 10 is accepted and closed. Slice 11 is next eligible
+for planning and remains Planned/unstarted. Preserve the documented combat,
+resource, rendering and allocation contracts; do not implement slice 11 as part
+of this closure.
 
 ### Slice 11: Inventory and equipment
 

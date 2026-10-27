@@ -247,6 +247,11 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         out.occurredMs = earliest;
         out.phase = state_.phase;
         out.targetGone = !targetAlive;
+        // An accepted attack does not reveal its source. Contact (including a miss)
+        // alerts before damage so a lethal impact still warns nearby survivors.
+        if (!v.incoming && targetAlive)
+            alert(out.enemy, pose);
+        out.phase = state_.phase;
         applyDamage(out, earliest, events);
         if (!v.incoming && !out.targetGone) {
             const auto* victim = actors_.actor(out.enemy);

@@ -220,18 +220,18 @@ composed with proper occlusion. Left strafes reuse the same eight-step cache in
 reverse. The game still draws 2D images; no runtime 3D scene or raycaster is used.
 Tab switches transitions off.
 
-The full presentation uses a 640×360 pixel-art grid. The viewport is 500×282 at
-`(4, 18)`, with four portraits on the right and a 54-pixel (15%) action/log dock below. That composition
-is enlarged exactly 3× into a **1920×1080 render texture**. Finally that texture
-is fitted to the actual framebuffer, centered with black bars and point filtering.
-A separate transparent 1920×1080 text layer uses bilinear filtering during that
-final fit, preserving thin font strokes in smaller windows without softening art.
-HUD text is drawn directly onto its 1920×1080 text target using the supplied fonts:
-DejaVu Serif Bold for headings/names, IBM Plex Sans for controls/labels, and Inconsolata for the log. Each face/size has
-its own atlas (21/24/27 px), used at its exact raster size with rounded positions.
-`assets/fonts` and `assets/ui` are copied beside the executable and are required for custom assets.
-Twenty-eight generated UI images are prepared into one reusable 256×448 atlas at startup.
-Exact built-in imagegen prompts are in `assets/ui/prompts.json` and
+The dungeon retains its 500×282 prepared pixel view at logical `(4, 18)`, enlarged
+3× within the fixed **1920×1080 presentation**. The whole HUD—portraits, icons,
+borders, controls and text—renders directly at native resolution. Logical layout
+coordinates and hit testing still use the 640×360 grid. Final aspect fitting uses
+point sampling for the dungeon and bilinear sampling for the premultiplied UI,
+with centered black bars when needed.
+HUD fonts are DejaVu Serif Bold for headings/names, IBM Plex Sans for controls,
+and Inconsolata for the log, using native 21/24/27 px atlases.
+`assets/fonts` and `assets/ui` are copied beside the executable and required for custom assets.
+Twenty-eight images are prepared from their original sources into one 2048×1024
+atlas at startup, sized for native display rather than the old low-resolution HUD.
+Exact built-in imagegen prompts remain in `assets/ui/prompts.json` and
 `assets/ui/spells/prompts.json`; font licenses are alongside the bundled fonts.
 Window resizing never changes the logical resolution, perspective, or UI layout.
 At noninteger scales, pixel widths necessarily vary slightly to fill the fitted area.

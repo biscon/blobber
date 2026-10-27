@@ -20,7 +20,7 @@ class Presenter {
     void drawTarget(TargetHandle handle, Rectangle destination) const;
     void drawGame(Rectangle destination) const;
     GpuResources resources_;
-    TargetHandle art_, game_, text_;
+    TargetHandle game_, ui_;
     TextureHandle viewport_;
     UiFonts fonts_;
     UiArt uiArt_;

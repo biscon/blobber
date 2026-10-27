@@ -378,10 +378,10 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     result.damage = save.succeeded ? (r.area ? sharedDamage / 2 : 0) : sharedDamage;
                     push[i] = kind == SpellKind::Thunderwave && !save.succeeded;
                 }
-                alert(id, pose);
                 if (delayed(kind))
                     payload.outcomes[payload.count++] = result;
                 else {
+                    alert(id, pose);
                     applyDamage(result, now, events);
                     spellPulse(id, c.character, kind, pose, now);
                 }

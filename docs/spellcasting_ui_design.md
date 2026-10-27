@@ -1,7 +1,7 @@
 # Spellcasting UI review correction
 
-Status: implemented, **Ready for review**, 2026-10-27. The user approved the
-plan with “Implement the plan”. This corrects slice 10; slice 11 stays Planned.
+Status: implemented, **accepted and closed**, 2026-10-27. The user explicitly
+accepted slice 10 and its UI corrections; slice 11 remains Planned/unstarted.
 
 ## Interaction and ownership
 
@@ -62,7 +62,8 @@ and occluded occupants. Check floor occlusion, picking invariance and cached-pre
 removal. Extend first/repeated frame allocation checks. Run Debug/Release suites,
 focused sanitizers and hidden GPU checks. Inspect deterministic captures at native
 1920×1080 and reduced 1280×720 for all modes, errors and focus preservation.
-Return slice 10 to Ready for review, never Accepted; document unavailable checks.
+Implementation stopped at Ready for review; the user subsequently accepted the
+slice on 2026-10-27. Unavailable checks remain documented.
 
 ## Implementation details
 
@@ -83,8 +84,9 @@ invalidation. Area changes do not alter the picking buffer. Visible-body outline
 use one bounded viewport scan; twelve fixed marker rectangles avoid badge overlap
 without changing body hit targets or exposing occluded actors.
 
-UI atlas capacity grows from 11 to 28 entries and 256×192 to 256×448 RGBA pixels
-(262,144 additional GPU bytes). Typed SpellKind/Feature mappings select icons;
+The original revision grew the UI atlas from 11 to 28 entries. The subsequent
+[native-resolution correction](native_hud_design.md) replaces that low-resolution
+atlas with a 2048×1024 atlas and renders all HUD content at native resolution. Typed SpellKind/Feature mappings select icons;
 unknown portraits retain their placeholder. Generated PNG sources and exact prompts
 live in `assets/ui/spells/`; loading/resizing/upload occurs only at startup.
 Log width changes rewrap by logical message position using fixed scratch buffers.
@@ -93,7 +95,7 @@ Actual results and retained captures: [UI verification and handoff](slice10_ui_v
 
 ## Review polish: badge stability and spacing (2026-10-27)
 
-Implemented, Ready for review. Keep body-derived anchors for hit feedback, but provide separate
+Implemented and accepted with slice 10 on 2026-10-27. Keep body-derived anchors for hit feedback, but provide separate
 badge coordinates from the shared actor projection and canonical idle geometry.
 Picking still gates visibility; pose alpha bounds must never reposition badges.
 This uses fixed per-slot coordinates, no temporal smoothing, retained pointers or

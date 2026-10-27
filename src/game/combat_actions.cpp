@@ -181,7 +181,6 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
                 sneakReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
             }
         }
-        alert(out.enemy, pose);
         out = queueAttack(out, pose, now);
     }
     refreshReadiness();

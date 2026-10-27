@@ -172,6 +172,108 @@ void projectiles() {
         gone |= e.event == CombatEvent::Attack && e.targetGone && !e.damage;
     check(gone, "Released missiles survive caster death and never retarget a removed recipient");
 }
+void impactAlerts() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    NpcWorld places(map, spellSpawn.cell, {"goblin"},
+                    {{{0}, {6, 5}, {0, 0}, Heading::North},
+                     {{0}, {9, 4}, {0, 0}, Heading::North},
+                     {{0}, {5, 5}, {0, 0}, Heading::North}});
+    GameSession s(map, catalog, places, 5, spellSpawn, false);
+    auto c = spellCommand(s, SpellKind::MagicMissile);
+    c.targetCount = 2;
+    c.enemies[0] = s.actors().id(0);
+    c.enemies[1] = s.actors().id(1);
+    c.darts[0] = 2;
+    c.darts[1] = 1;
+    check(s.submit(c).event == CombatEvent::AttackStarted, "Staggered missile fixture accepted");
+    check(s.combat().snapshot().phase == CombatPhase::Exploration &&
+              s.ai().actors[0].awareness == Awareness::Routine,
+          "Casting alone never starts pursuit");
+    const auto first = arrowFlightMs(spellSpawn.cell, {6, 5});
+    const auto last = arrowFlightMs(spellSpawn.cell, {9, 4});
+    s.update(double(first - 1) / 1000, false);
+    s.update(60, true);
+    check(s.ai().actors[0].awareness == Awareness::Routine &&
+              s.ai().actors[1].awareness == Awareness::Routine,
+          "Flight and pause preserve unawareness");
+    s.update(.001, false);
+    check(s.ai().actors[0].awareness == Awareness::Pursuing &&
+              s.ai().actors[2].awareness == Awareness::Pursuing &&
+              s.ai().actors[1].awareness == Awareness::Routine,
+          "First missile alerts only its local group");
+    s.update(double(last - first - 1) / 1000, false);
+    check(s.ai().actors[1].awareness == Awareness::Routine, "Distant second recipient remains unaware");
+    s.update(.001, false);
+    check(s.ai().actors[1].awareness == Awareness::Pursuing, "Second recipient alerts at its own arrival");
+    GameSession coarse(map, catalog, places, 5, spellSpawn, false);
+    c.world = coarse.combat().snapshot().world;
+    c.turn = coarse.combat().snapshot().turn;
+    c.enemies[0] = coarse.actors().id(0);
+    c.enemies[1] = coarse.actors().id(1);
+    coarse.submit(c);
+    coarse.update(1, false);
+    for (unsigned i = 0; i < 3; ++i)
+        check(coarse.ai().actors[i].awareness == s.ai().actors[i].awareness &&
+                  coarse.actors().snapshot().actors[i].hitPoints == s.actors().snapshot().actors[i].hitPoints,
+              "Coarse update preserves missile damage and alert results");
+    const auto frail = spellCatalog(1);
+    GameSession lethal(map, frail, places, 5, spellSpawn, false);
+    c = spellCommand(lethal, SpellKind::MagicMissile);
+    c.targetCount = 1;
+    c.enemies[0] = lethal.actors().id(0);
+    c.darts[0] = 3;
+    lethal.submit(c);
+    lethal.update(double(first) / 1000, false);
+    check(lethal.actors().actor(c.enemies[0])->life == ActorLife::Dead &&
+              lethal.ai().actors[2].awareness == Awareness::Pursuing,
+          "Lethal impact still alerts nearby survivors");
+    GameSession removed(map, catalog, places, 5, spellSpawn, false);
+    c = spellCommand(removed, SpellKind::MagicMissile);
+    c.targetCount = 1;
+    c.enemies[0] = removed.actors().id(0);
+    c.darts[0] = 3;
+    removed.submit(c);
+    removed.actors().remove(c.enemies[0]);
+    removed.update(1, false);
+    check(removed.ai().actors[2].awareness == Awareness::Routine, "Missing recipient causes no local alert");
+    NpcWorld sees(map, spellSpawn.cell, {"goblin"}, {{{0}, {6, 5}, {0, 0}, Heading::South}});
+    GameSession sight(map, catalog, sees, 5, spellSpawn, true);
+    c = spellCommand(sight, SpellKind::MagicMissile);
+    c.targetCount = 1;
+    c.enemies[0] = sight.actors().id(0);
+    c.darts[0] = 3;
+    sight.submit(c);
+    sight.update(.1, false);
+    check(sight.ai().actors[0].awareness == Awareness::Pursuing &&
+              sight.actors().actor(c.enemies[0])->hitPoints == 1000,
+          "Normal sight can reveal the party before a projectile arrives");
+}
+void meleeAlertTiming() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    NpcWorld places(map, spellSpawn.cell, {"goblin"},
+                    {{{0}, {6, 7}, {0, 1}, Heading::North}, {{0}, {6, 4}, {0, 0}, Heading::North}});
+    for (bool spell : {false, true})
+        for (bool cancel : {false, true}) {
+            GameSession s(map, catalog, places, 5, spellSpawn, false);
+            spellReady(s, spell ? 1 : 0);
+            auto command =
+                spell ? spellCommand(s, SpellKind::InflictWounds) : turnCommand(s, PartyAction::Melee);
+            command.target = s.actors().id(0);
+            command.targetCount = 1;
+            command.enemies[0] = s.actors().id(0);
+            check(s.submit(command).event == CombatEvent::AttackStarted, "Delayed strike accepted");
+            s.update(.199, false);
+            check(s.ai().actors[1].awareness == Awareness::Routine,
+                  "Melee windup does not reveal attack to nearby group");
+            if (cancel)
+                s.party().damage(command.character, 1000);
+            s.update(.001, false);
+            check(s.ai().actors[1].awareness == (cancel ? Awareness::Routine : Awareness::Pursuing),
+                  "Melee weapon/spell alerts at strike; canceled windup does not alert");
+        }
+}
 void allDamageSpells() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog();
@@ -194,7 +296,13 @@ void allDamageSpells() {
         }
         check(s.submit(c).reason == CommandReason::Resolved,
               "Every curated hostile spell accepts a legal request");
-        if (kind == SpellKind::FireBolt || kind == SpellKind::GuidingBolt || kind == SpellKind::InflictWounds)
+        if (kind == SpellKind::FireBolt || kind == SpellKind::GuidingBolt) {
+            check(s.ai().actors[0].awareness == Awareness::Routine, "Projectile spell cast does not alert");
+            s.update(.341, false);
+            check(s.ai().actors[0].awareness == Awareness::Routine, "Projectile spell flight does not alert");
+            s.update(.001, false);
+            check(s.ai().actors[0].awareness == Awareness::Pursuing, "Projectile spell arrival alerts");
+        } else if (kind == SpellKind::InflictWounds)
             s.update(.5, false);
         bool result = false;
         for (const auto& e : s.events())
@@ -748,6 +856,8 @@ int main(int argc, char** argv) {
         features();
         effectsAndValidation();
         projectiles();
+        impactAlerts();
+        meleeAlertTiming();
         allDamageSpells();
         invalidAndPool();
         ui();

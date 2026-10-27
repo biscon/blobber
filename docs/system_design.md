@@ -1,13 +1,16 @@
 # System design
 
-Implemented, **Ready for review** (2026-10-27): slice 10
+Implemented correction, accepted by the user on 2026-10-27: [native-resolution HUD and impact alerts](native_hud_design.md), with [verification](native_hud_verification.md).
+
+Implemented, **accepted and closed** (2026-10-27): slice 10
 [spells and class identity](spells_design.md), with [verification and handoff](slice10_verification.md).
 Fourteen curated spells use checked commands, fixed party payloads and the existing
 impact/effect clocks. Party owns mana/charges; Combat owns readiness and Sneak Attack;
 Effects owns concentration and Guiding deadlines. The paused spellbook resumes into
 live targeting, with multi-target/area confirmation and bounded cosmetic feedback.
-Schema 4 retains versions 1–3 compatibility. User acceptance is pending; slice 11
-remains Planned. The approved [casting UI revision](spellcasting_ui_design.md)
+Schema 4 retains versions 1–3 compatibility. The user accepted slice 10, including
+all UI and impact-alert corrections. Slice 11 is next eligible for planning and
+remains Planned/unstarted. The approved [casting UI revision](spellcasting_ui_design.md)
 is implemented without changing spell mechanics: independent pending casts, compact picker,
 casting dock, direct recipient feedback and a shared authoritative area query. See
 [UI verification and captures](slice10_ui_verification.md). The completed review correction
@@ -248,21 +251,19 @@ checks and limits.
   targets, a 32×192-byte log, eight timed damage/MISS splashes and a fixed HUD snapshot. Confirmation must refer to
   the turn/outcome already presented. Focus/edge handling, Aid selection and
   aspect-fit hit testing are CPU-testable.
-- **Presentation:** the HUD draws from movement, map and command snapshots; the presenter
-  owns handles for the viewport texture and three targets. It retains the 640×360
-  art grid → 1920×1080 texture → aspect-fit framebuffer path. HUD geometry stays
-  on the art grid; text is drawn at native resolution onto a separate transparent
-  1920×1080 target. Final aspect-fit sampling uses point filtering for art and
-  bilinear filtering only for premultiplied text, preserving strokes when reduced.
-  Captures temporarily composite both layers into an owned diagnostic target.
+- **Presentation:** Presenter owns the viewport texture and two native 1920×1080
+  targets: a point-filtered dungeon base and a transparent premultiplied UI layer
+  fitted with bilinear filtering. The 500×282 prepared dungeon remains unchanged.
+  Layout and input retain logical 640×360 coordinates; HudPainter converts geometry
+  to native pixels, and fonts draw at their native atlas sizes. Artwork, geometry
+  and text share one ordered UI pass; modal fills cover all underlying UI content.
   Five startup-loaded RAII font atlases provide Plex Sans regular 21/24 px, bold
-  27 px, Inconsolata 24 px for logs, and DejaVu Serif Bold 27 px for headings; every draw/measurement uses its atlas
-  base size. Font ownership is separate from the generic texture registry and
-  ends before window shutdown, including partial loading failures. A startup-loaded
-  256×192 UI atlas holds four portraits, a goblin thumbnail and six action icons.
-  The 500×282 dungeon sits left of the portrait rail, above a 15%-height dock.
-  Overlay text clears only its own native-target rectangle to prevent underlying
-  glyphs showing through. Tooltips use matching atlas measurements in both layers.
+  27 px, Inconsolata 24 px and DejaVu Serif Bold 27 px. Font ownership is separate
+  from the generic texture registry and ends before window shutdown.
+  A 2048×1024 startup atlas holds 28 original-art derivatives at native display
+  sizes, with padded edges and bilinear sampling. Portraits center-crop and icons
+  aspect-fit. No low-resolution UI image is enlarged threefold. Captures use one
+  temporary diagnostic target. See [native HUD design](native_hud_design.md).
 - **Application/tools:** option parsing, loading, scheduling, and lifecycle only.
   Captures use a hidden GLFW window, application-owned targets and in-process UiInput scripts, with no OS input injection or foreign-window selection. They are an explicit diagnostic mode with startup-prepared cases; output paths, filesystem work and image export are not normal gameplay frame work.
 

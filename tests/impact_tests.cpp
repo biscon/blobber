@@ -79,6 +79,7 @@ void partyArrows() {
         const auto accepted = s.submit(command);
         check(accepted.event == CombatEvent::AttackStarted && accepted.damage == 0 && accepted.roll == 0,
               "Acceptance hides pending result");
+        check(s.ai().actors[0].awareness == Awareness::Routine, "Accepting an arrow does not alert");
         ui.record(accepted);
         check(ui.snapshot().log.size() == 1, "Acceptance has no result log");
         check(s.submit(command).reason == CommandReason::StaleTurn, "Duplicate spends no action");
@@ -88,6 +89,7 @@ void partyArrows() {
         ui.record(s.update(.395, false));
         check(s.actors().actor(*command.target)->hitPoints == hp, "HP unchanged until arrival");
         check(!s.actors().actor(*command.target)->hasDamage, "No premature reaction");
+        check(s.ai().actors[0].awareness == Awareness::Routine, "Flight does not alert before arrival");
         const auto before = s.timeMs();
         s.update(60, true);
         check(s.timeMs() == before, "Pause freezes flight");
@@ -99,6 +101,7 @@ void partyArrows() {
         check(s.actors().actor(*command.target)->hitPoints == hp - result.damage,
               "Damage committed with event");
         check(ui.snapshot().log.size() == 2, "Result log arrives with impact");
+        check(s.ai().actors[0].awareness == Awareness::Pursuing, "Hits and misses alert at impact");
         hit |= result.hit;
         miss |= !result.hit;
         critical |= result.critical;
@@ -128,6 +131,7 @@ void movementAndInvalidation() {
     const auto shotId = removed.submit(shot(removed));
     removed.actors().remove(removed.actors().id(0));
     const auto gone = impact(removed.update(.396, false), shotId.attackId.serial);
+    check(removed.ai().actors[0].awareness == Awareness::Routine, "Gone target produces no alert");
     check(gone.targetGone && gone.damage == 0,
           "Released arrow finishes against removed target without damage");
     GameSession restarted(map, c, places, 5, p, false, {timings()});

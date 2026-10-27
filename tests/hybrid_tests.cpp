@@ -45,16 +45,25 @@ void rangesAndCosts() {
     const auto out = s.submit(command);
     check(out.event == CombatEvent::AttackStarted, "Approach shot resolves");
     check(s.submit(command).reason == CommandReason::StaleTurn, "Repeated approach request rejected");
-    check(s.ai().actors[0].awareness == Awareness::Pursuing &&
-              s.ai().actors[1].awareness == Awareness::Pursuing &&
-              s.ai().actors[2].awareness == Awareness::Routine,
-          "Local alert reaches radius three without chaining");
+    check(s.ai().actors[0].awareness == Awareness::Routine &&
+              s.ai().actors[1].awareness == Awareness::Routine,
+          "Accepted opening shot does not alert its target or neighbors");
     check(s.submit(shot(s, s.actors().id(0))).reason == CommandReason::Cooldown,
           "Fresh token cannot bypass cooldown");
     const auto clock = s.combat().snapshot().gameplayMs;
     s.update(60, true);
     check(s.combat().snapshot().gameplayMs == clock && s.combat().snapshot().cooldownMs[2] == 6000,
           "Pause freezes costs");
+    GameSession alertProbe(m, c, places, 5, p, false);
+    alertProbe.submit(shot(alertProbe, alertProbe.actors().id(0)));
+    alertProbe.update(.341, false);
+    check(alertProbe.ai().actors[0].awareness == Awareness::Routine,
+          "Opening shot stays hidden during flight");
+    alertProbe.update(.001, false);
+    check(alertProbe.ai().actors[0].awareness == Awareness::Pursuing &&
+              alertProbe.ai().actors[1].awareness == Awareness::Pursuing &&
+              alertProbe.ai().actors[2].awareness == Awareness::Routine,
+          "Local impact alert reaches radius three without chaining");
     for (int i = 0; i < 3; ++i)
         s.move(Action::Forward);
     check(s.combat().snapshot().phase == CombatPhase::Contact, "Adjacent approach enters contact");
@@ -305,7 +314,7 @@ void reinforcementAndSaves() {
     saves.setAnimated(false);
     saves.party().damage({0}, saves.party().character({0})->hitPoints, false);
     saves.submit(shot(saves, saves.actors().id(0)));
-    saves.update(0, false);
+    saves.update(.342, false); // Impact starts the approach and its death-save deadline.
     check(saves.update(5.999, false).step.event != CombatEvent::DeathSave,
           "Real-time saves wait six gameplay seconds");
     check(saves.update(.001, false).step.event == CombatEvent::DeathSave,

@@ -1,7 +1,10 @@
 # Slice 10 casting UI correction: verification and handoff
 
-Status: **Ready for review**, 2026-10-27. User acceptance remains pending; slice
-11 is Planned. This implements the approved mockup-based correction and supersedes
+Latest follow-up: [native HUD and impact-alert verification](native_hud_verification.md)
+supersedes the low-resolution rendering and acceptance-time alert behavior below.
+
+Status: **Accepted and closed**, 2026-10-27. The user explicitly accepted slice 10
+after its native HUD and impact-alert follow-up. Slice 11 remains Planned/unstarted. This implements the approved mockup-based correction and supersedes
 the UI portions of the [original handoff](slice10_verification.md).
 
 Design: [casting UI ownership and rendering](spellcasting_ui_design.md).
@@ -115,18 +118,19 @@ single-target spells say “Click to cast”. Left/Right navigates targets, Up
 adds/toggles, Down removes, and Enter confirms. Switch characters in exploration;
 in turns use the active character. Verify focus return and normal turn progression.
 
-Interactive desktop play, real high-DPI input and human acceptance remain
-**unverified**. LeakSanitizer remains unverified because leak detection was disabled
+At this earlier handoff, interactive desktop play, real high-DPI input and human
+acceptance were unverified. The user subsequently accepted the completed slice on
+2026-10-27; agent-driven interactive and real high-DPI checks remain unverified. LeakSanitizer remains unverified because leak detection was disabled
 for the environment's tracing limitation. Source-free startup passed, but a full
 source-free screenshot comparison was not run. Hidden application-owned windows
 and in-process scripted input were used; no OS mouse, keyboard or focus automation.
 
-Stop at this review checkpoint. Preserve the original handoff's event-batch,
-clock, capacity and ownership contracts. Do not begin slice 11 without acceptance.
+Slice 10 is now accepted and closed. Preserve the original handoff's event-batch,
+clock, capacity and ownership contracts. Slice 11 remains Planned/unstarted.
 
 ## Review polish: badge stability and spacing
 
-Implemented 2026-10-27; Ready for review. Spellbook icons now have a two-art-pixel
+Implemented and accepted with slice 10 on 2026-10-27. Spellbook icons now have a two-art-pixel
 inset within their rows. Header text uses font ink bounds for vertical centering;
 the gear shares the header center. Portraits are inset farther from the active
 card border, leaving a visible gap. Action and log headings have more top padding;
@@ -156,7 +160,7 @@ from the unchanged `std::sort` in `EffectController::apply` (effects.cpp:200);
 `validate()` rejects counts outside the fixed three-target capacity before that
 call. This review did not modify effect sorting. Full suites and sanitizers above
 are historical results from the preceding implementation, not rerun for this polish.
-Interactive review remains pending.
+The user subsequently completed review and accepted slice 10 on 2026-10-27.
 
 Selected captures are retained in [slice10-ui-polish](screenshots/slice10-ui-polish/):
 [picker](screenshots/slice10-ui-polish/spell-magic_missile-book.png),

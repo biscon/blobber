@@ -2,12 +2,102 @@
 #include "platform/gpu_resources.hpp"
 #include "platform/window.hpp"
 #include "support/check.hpp"
+#include "ui/hud_painter.hpp"
+#include <chrono>
 #include <iostream>
 using namespace blobber;
+namespace {
+struct FixtureDirectory {
+    std::filesystem::path path =
+        std::filesystem::temp_directory_path() /
+        ("blobber-native-ui-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    FixtureDirectory() { std::filesystem::create_directories(path / "spells"); }
+    ~FixtureDirectory() {
+        std::error_code e;
+        std::filesystem::remove_all(path, e);
+    }
+};
+void nativeUi() {
+    FixtureDirectory fixture;
+    constexpr const char* names[]{"alden",
+                                  "brunna",
+                                  "merrin",
+                                  "lethiel",
+                                  "goblin",
+                                  "melee",
+                                  "defend",
+                                  "ranged",
+                                  "spell",
+                                  "item",
+                                  "aid",
+                                  "spells/sacred_flame",
+                                  "spells/spare_the_dying",
+                                  "spells/bless",
+                                  "spells/bane",
+                                  "spells/shield_of_faith",
+                                  "spells/cure_wounds",
+                                  "spells/guiding_bolt",
+                                  "spells/inflict_wounds",
+                                  "spells/fire_bolt",
+                                  "spells/acid_splash",
+                                  "spells/mage_armor",
+                                  "spells/magic_missile",
+                                  "spells/burning_hands",
+                                  "spells/thunderwave",
+                                  "spells/second_wind",
+                                  "spells/arcane_recovery",
+                                  "spells/dismiss_concentration"};
+    for (unsigned i = 0; i < 28; ++i) {
+        OwnedImage image(GenImageColor(i < 4 ? 216 : 108, i < 4 ? 252 : 108, GREEN));
+        for (int y = 0; y < image.value.height; ++y)
+            for (int x = 0; x < image.value.width; ++x)
+                ImageDrawPixel(&image.value, x, y,
+                               i < 4 ? (x < 32 || x >= 184 ? RED : GREEN) : (x % 2 ? WHITE : BLACK));
+        check(ExportImage(image.value, (fixture.path / (std::string(names[i]) + ".png")).string().c_str()),
+              "Export generated UI fixture");
+    }
+    GpuResources resources;
+    const UiArt art(resources, fixture.path);
+    const HudPainter painter(nullptr, &art);
+    const auto target = resources.createTarget(400, 400);
+    BeginTextureMode(resources.target(target));
+    ClearBackground(MAGENTA);
+    painter.picture(5, {0, 0, 36, 36});
+    painter.picture(0, {0, 40, 30, 84});
+    // A wide icon destination must fit rather than stretch the square artwork.
+    painter.picture(6, {40, 0, 60, 36});
+    painter.overlayBox({100, 40, 20, 20});
+    painter.fill({101, 41, 18, 18}, RED);
+    painter.overlayBox({100, 40, 20, 20});
+    EndTextureMode();
+    OwnedImage result(LoadImageFromTexture(resources.target(target).texture));
+    ImageFlipVertical(&result.value);
+    for (int x = 10; x < 100; ++x) {
+        const auto c = GetImageColor(result.value, x, 50);
+        check(x % 2 ? c.r > 240 : c.r < 15, "One-native-pixel source detail survives the UI atlas and draw");
+    }
+    const auto left = GetImageColor(result.value, 0, 50), right = GetImageColor(result.value, 107, 50);
+    check(left.r < 15 && left.b < 15 && right.r > 240 && right.g > 240,
+          "Atlas edge padding does not bleed neighboring/blank texels");
+    const auto margin = GetImageColor(result.value, 125, 50);
+    check(margin.r == MAGENTA.r && margin.b == MAGENTA.b, "Icons aspect-fit inside wide destinations");
+    for (int x : {0, 45, 89}) {
+        const auto c = GetImageColor(result.value, x, 200);
+        check(c.g > 200 && c.r < 15, "Portrait crop fills destination without stretching edge bands");
+    }
+    const auto covered = GetImageColor(result.value, 315, 135);
+    check(covered.r == hudInk::panel.r && covered.g == hudInk::panel.g,
+          "Opaque native modal covers previously drawn content");
+    const auto edge = GetImageColor(result.value, 300, 130);
+    const auto inset = GetImageColor(result.value, 301, 130);
+    check(edge.r == hudInk::gold.r && inset.r == hudInk::panel.r, "Native border is one pixel, not three");
+}
+} // namespace
 int main() {
     try {
         const Window window(320, 240, true);
         check(IsWindowState(FLAG_WINDOW_HIDDEN), "GPU diagnostics use a hidden window");
+        nativeUi();
         GpuResources resources;
         rejects([&] { resources.createTarget(0, 32); }, "Invalid target size rejected");
         rejects([&] { resources.createTexture({}); }, "Invalid texture image rejected");

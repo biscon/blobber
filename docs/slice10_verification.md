@@ -3,9 +3,9 @@
 Historical core-spell handoff. The subsequent [casting UI correction handoff](slice10_ui_verification.md)
 supersedes the interaction, art and capture limitations below.
 
-Status: **Ready for review**, 2026-10-27. Implementation was authorized with
-“Implement the plan”. User acceptance is pending. Slice 11 remains Planned and
-must not begin until slice 10 is accepted. See the [implemented design](spells_design.md),
+Status: **Accepted and closed**, 2026-10-27. The user explicitly accepted slice 10
+after its UI and impact-alert corrections. Slice 11 is next eligible for planning
+and remains Planned/unstarted. See the [implemented design](spells_design.md),
 [source/adaptation ledger](srd_content_ledger.md#slice-10-spells-and-class-identity)
 and [headless trace](slice10_trace.txt).
 
@@ -137,7 +137,9 @@ under the 512 MiB limit. On this build, `CombatEvents` is 409,808 bytes,
 snapshot 63,632 bytes; fixed storage trades this predictable memory for no
 per-cast allocation. These ABI measurements are descriptive, not portable limits.
 
-Interactive desktop play and human acceptance are **unverified**. Native captures
+At this original handoff, interactive desktop play and human acceptance were
+unverified. The user subsequently accepted the completed slice on 2026-10-27;
+agent-driven interactive checks remain unverified. Native captures
 were reviewed selectively, not every PNG. Reduced-size spell screenshots and a
 full source-free screenshot comparison were not run; source-free startup and
 existing projection/HUD coordinate tests passed. Final art remains slice 15.
@@ -163,7 +165,8 @@ not. Rest-based refresh is intentionally deferred to slice 12.
 
 ## Next-agent contract
 
-- Stop here pending user review. Do not mark this slice Accepted or start slice 11.
+- Slice 10 is accepted and closed by explicit user instruction (2026-10-27).
+  Slice 11 is next eligible for planning and remains Planned/unstarted.
 - Session `submit()` returns the primary acceptance outcome; consume **all** of
   `events()` before the next simulation operation. Recording both would duplicate
   the primary event. Update batches remain borrowed under the same contract.
