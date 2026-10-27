@@ -1,4 +1,5 @@
 #include "game/party.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
@@ -17,6 +18,10 @@ Party::Party(const rules::Catalog& catalog) : catalog_(&catalog) {
         c.stats = stats.value;
         c.hitPoints = c.stats.maxHitPoints;
         c.availableHitDice = c.build.level;
+        const auto* cls = catalog.characterClass(c.build.characterClass);
+        c.mana = c.maxMana = rules::maximumMana(cls->casting, c.build.level);
+        c.secondWind = rules::hasFeature(cls->features, rules::ClassFeature::SecondWind);
+        c.arcaneRecovery = rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery);
     }
 }
 const PartyCharacter* Party::character(rules::CharacterId id) const noexcept {
@@ -57,5 +62,40 @@ rules::HealthResult Party::deathSave(rules::CharacterId id, int face, int modifi
     const auto* c = character(id);
     return c ? commit(id, rules::deathSave(*c, c->stats.maxHitPoints, face, modifier))
              : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
+}
+bool Party::hasFeature(rules::CharacterId id, rules::ClassFeature feature) const noexcept {
+    const auto* c = character(id);
+    return c && rules::hasFeature(catalog_->characterClass(c->build.characterClass)->features, feature) &&
+           (feature != rules::ClassFeature::LifeDomain || c->build.lifeDomain);
+}
+int Party::castingModifier(rules::CharacterId id) const noexcept {
+    const auto* c = character(id);
+    if (!c)
+        return 0;
+    const auto casting = catalog_->characterClass(c->build.characterClass)->casting;
+    return casting == rules::Casting::None ? 0
+                                           : c->stats.modifiers[casting == rules::Casting::Wisdom ? 4 : 3];
+}
+bool Party::spendMana(rules::CharacterId id, int amount) noexcept {
+    const auto* c = character(id);
+    if (!c || amount < 0 || amount > c->mana)
+        return false;
+    state_.characters[id.index].mana -= amount;
+    return true;
+}
+bool Party::useFeature(rules::CharacterId id, rules::Feature feature) noexcept {
+    if (!character(id))
+        return false;
+    auto& c = state_.characters[id.index];
+    if (feature == rules::Feature::SecondWind && c.secondWind) {
+        c.secondWind = false;
+        return true;
+    }
+    if (feature == rules::Feature::ArcaneRecovery && c.arcaneRecovery && c.mana < c.maxMana) {
+        c.arcaneRecovery = false;
+        c.mana = std::min(c.maxMana, c.mana + 2 * ((c.build.level + 1) / 2));
+        return true;
+    }
+    return false;
 }
 } // namespace blobber

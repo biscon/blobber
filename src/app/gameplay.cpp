@@ -70,6 +70,10 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
         PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo);
         bool debug = false, first = true, restart = false;
         view.refresh();
+        if (options.spellDemo) {
+            view.commands.selectCharacter(3);
+            view.commands.openSpellbook();
+        }
         while (!WindowShouldClose()) {
             const float dt = std::min(GetFrameTime(), 0.1f);
             auto sample = input.poll(dt);
@@ -90,6 +94,7 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                     view.session.setAnimated(!view.session.movement().animated);
                 if (sample.action) {
                     view.session.move(*sample.action, sample.fresh);
+                    view.commands.record(view.session.events());
                 }
             }
             if (!(previous == view.session.movement().player))

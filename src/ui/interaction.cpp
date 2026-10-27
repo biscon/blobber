@@ -25,7 +25,32 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     // An overlay owns the entire input frame, including its closing click.
     if (state.modal()) {
         commands.hover(HoverKind::None);
-        if (state.logExpanded) {
+        if (state.magic.open) {
+            if (moved)
+                for (int i = 0; i < 10; ++i)
+                    if (inside(hudLayout::spellEntry(i)) && state.magic.offset + i < state.magic.count)
+                        commands.browseSpellbook(int(state.magic.offset + i) - int(state.magic.cursor));
+            if (input.scroll)
+                commands.browseSpellbook(-input.scroll);
+            if (input.has(UiKey::Up))
+                commands.browseSpellbook(-1);
+            if (input.has(UiKey::Down))
+                commands.browseSpellbook(1);
+            if (input.has(UiKey::Confirm))
+                commands.chooseSpellbook(state.magic.cursor);
+            if (click) {
+                if (inside(hudLayout::spellbookClose))
+                    commands.closeOverlay();
+                else if (inside(hudLayout::spellPrevious))
+                    commands.browseSpellbook(-10);
+                else if (inside(hudLayout::spellNext))
+                    commands.browseSpellbook(10);
+                else
+                    for (int i = 0; i < 10; ++i)
+                        if (inside(hudLayout::spellEntry(i)))
+                            commands.chooseSpellbook(state.magic.offset + i);
+            }
+        } else if (state.logExpanded) {
             if (input.scroll && (inside(hudLayout::expandedLog) || inside(hudLayout::log)))
                 commands.scrollLog(input.scroll);
             if (click && (inside(hudLayout::closeOverlay) || inside(hudLayout::logExpand)))
@@ -63,11 +88,50 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                 commands.inspect(i);
                 return;
             }
+    if (state.magic.armed && !input.has(UiKey::Four)) {
+        if (input.has(UiKey::Left) || input.has(UiKey::Right)) {
+            commands.magicKeyboardTarget(input.has(UiKey::Left) ? -1 : 1);
+            return;
+        }
+        // Up adds/toggles the keyboard cursor, Enter commits the complete selection.
+        if (input.has(UiKey::Up)) {
+            if (state.magic.hostile && state.selection.target)
+                commands.magicEnemy(*state.selection.target);
+            else if (state.selection.ally)
+                for (std::size_t i = 0; i < state.cards.size(); ++i)
+                    if (state.cards[i].id.index == state.selection.ally->index)
+                        commands.magicAlly(i);
+            return;
+        }
+        if (allowConfirm && (input.has(UiKey::Confirm) || (click && inside(hudLayout::spellCast)))) {
+            commands.confirm();
+            return;
+        }
+        if (click && allowConfirm) {
+            if (viewportHit && inside(hudLayout::viewport)) {
+                commands.magicEnemy(*viewportHit);
+                if (commands.magicSingleTarget())
+                    commands.confirm();
+                return;
+            }
+            for (std::size_t i = 0; i < state.cards.size(); ++i)
+                if (inside(hudLayout::card(int(i)))) {
+                    commands.magicAlly(i);
+                    if (commands.magicSingleTarget())
+                        commands.confirm();
+                    return;
+                }
+        }
+    }
     bool actionInput = false;
     for (int i = 0; i < 6; ++i) {
         const bool activated = input.has(static_cast<UiKey>(i)) || (click && inside(hudLayout::action(i)));
         if (activated) {
             actionInput = true;
+            if (i == 3) {
+                commands.openSpellbook();
+                return;
+            }
             if (allowConfirm && !state.suspended && (i == 0 || i == 1 || i == 2 || i == 5)) {
                 commands.selectAction(dockActions[i]);
                 if (i == 1)

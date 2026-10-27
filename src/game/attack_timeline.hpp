@@ -21,9 +21,13 @@ struct AttackVisual {
     ActorPosition sourcePosition;
     ActorPosition targetPosition;
     std::uint8_t formationSlot = 0;
+    rules::SpellKind spell = rules::SpellKind::Count;
+    std::uint8_t darts = 0;
 };
 struct AttackVisualSnapshot {
     std::array<AttackVisual, attackCapacity> attacks{};
+    std::array<AttackVisual, rules::partySize * 2> spellExtras{};
+    std::array<AttackVisual, 16> spellPulses{};
     std::uint64_t world = 0, revision = 0;
 };
 std::uint32_t arrowFlightMs(Cell from, Cell to) noexcept;

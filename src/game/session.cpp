@@ -68,7 +68,10 @@ CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
         result.reason = CommandReason::Moving;
         return result;
     }
-    return combat_.submit(command, movement_.state().player, timeMs_);
+    const auto out = combat_.submit(command, movement_.state().player, timeMs_, events_);
+    if (out.event != CombatEvent::Cast)
+        events_.append(out);
+    return out;
 }
 EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
     events_.clear();

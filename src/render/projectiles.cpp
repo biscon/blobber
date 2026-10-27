@@ -13,12 +13,12 @@ bool ProjectilePlayer::update(const AttackVisualSnapshot* snapshot, std::uint64_
     world_ = snapshot ? snapshot->world : 0;
     revision_ = snapshot ? snapshot->revision : 0;
     if (snapshot && capacity_) {
-        for (const auto& v : snapshot->attacks) {
+        const auto add = [&](const AttackVisual& v) {
             if (v.stage == AttackStage::Empty || v.stage == AttackStage::Canceled ||
                 now < (v.ranged ? v.releaseMs : v.impactMs) || now >= v.impactMs + 120)
-                continue;
+                return;
             if (!v.ranged && v.stage != AttackStage::Resolved)
-                continue;
+                return;
             if (count_ < capacity_)
                 shots_[count_++] = v;
             else {
@@ -29,7 +29,13 @@ bool ProjectilePlayer::update(const AttackVisualSnapshot* snapshot, std::uint64_
                 if (v.id.serial > oldest->id.serial)
                     *oldest = v;
             }
-        }
+        };
+        for (const auto& v : snapshot->attacks)
+            add(v);
+        for (const auto& v : snapshot->spellExtras)
+            add(v);
+        for (const auto& v : snapshot->spellPulses)
+            add(v);
     }
     return changed || oldCount != count_;
 }
@@ -169,6 +175,11 @@ void composeProjectiles(const ProjectilePlayer& effects, const PreparedNpcs& pre
             size = shot.ranged ? 12.f : 28.f;
         } else if (std::abs(to.x - from.x) < 25 && std::abs(to.y - from.y) < 35)
             shape = shot.incoming ? 1 : 2;
+        const bool magical = shot.spell != rules::SpellKind::Count;
+        if (magical) {
+            shape = 4;
+            size = ending ? 28.f : std::max(7.f, size * 1.4f);
+        }
         const float direction = std::atan2(ty - from.y, tx - from.x);
         const int angle = (int(std::round(direction * (8.f / 3.14159265358979323846f))) + 16) % 16;
         int tier = 0;
@@ -180,25 +191,59 @@ void composeProjectiles(const ProjectilePlayer& effects, const PreparedNpcs& pre
         const int width = sizes[tier], left = int(std::round(x)) - width / 2,
                   top = int(std::round(y)) - width / 2;
         const float fade = ending ? 1.f - float(effects.timeMs() - shot.impactMs) / 120.f : 1.f;
-        for (int sy = 0; sy < width; ++sy)
-            for (int sx = 0; sx < width; ++sx) {
-                const int px = left + sx, py = top + sy;
-                if (px < 0 || px >= viewWidth || py < 0 || py >= viewHeight || depth >= walls[px])
-                    continue;
-                const auto body = bodies ? bodies->slot(px, py) : PickingBuffer::empty;
-                if (body < actors.snapshot().count && depths[body] + .025f < depth &&
-                    !(ending && body == shot.enemy.slot && !shot.incoming))
-                    continue;
-                auto color = pixels[first + sy * width + sx];
-                if (!color.a)
-                    continue;
-                color = shadeScene(color, depth);
-                const unsigned alpha = unsigned(color.a * fade), inverse = 255 - alpha;
-                auto& dst = frame[py * viewWidth + px];
-                dst = {static_cast<unsigned char>((color.r * alpha + dst.r * inverse + 127) / 255),
-                       static_cast<unsigned char>((color.g * alpha + dst.g * inverse + 127) / 255),
-                       static_cast<unsigned char>((color.b * alpha + dst.b * inverse + 127) / 255), 255};
-            }
+        for (int dart = 0; dart < std::max<int>(1, shot.darts); ++dart)
+            for (int sy = 0; sy < width; ++sy)
+                for (int sx = 0; sx < width; ++sx) {
+                    const int px = left + sx + (shot.darts > 1 ? (dart * 2 - shot.darts + 1) * 5 : 0),
+                              py = top + sy;
+                    if (px < 0 || px >= viewWidth || py < 0 || py >= viewHeight || depth >= walls[px])
+                        continue;
+                    const auto body = bodies ? bodies->slot(px, py) : PickingBuffer::empty;
+                    if (body < actors.snapshot().count && depths[body] + .025f < depth &&
+                        !(ending && body == shot.enemy.slot && !shot.incoming))
+                        continue;
+                    auto color = pixels[first + sy * width + sx];
+                    if (!color.a)
+                        continue;
+                    if (magical) {
+                        switch (shot.spell) {
+                        case rules::SpellKind::FireBolt:
+                        case rules::SpellKind::BurningHands:
+                            color.r = 255;
+                            color.g = 114;
+                            color.b = 38;
+                            break;
+                        case rules::SpellKind::AcidSplash:
+                            color.r = 118;
+                            color.g = 242;
+                            color.b = 60;
+                            break;
+                        case rules::SpellKind::InflictWounds:
+                        case rules::SpellKind::Bane:
+                            color.r = 179;
+                            color.g = 75;
+                            color.b = 215;
+                            break;
+                        case rules::SpellKind::Thunderwave:
+                        case rules::SpellKind::MagicMissile:
+                            color.r = 110;
+                            color.g = 174;
+                            color.b = 255;
+                            break;
+                        default:
+                            color.r = 255;
+                            color.g = 232;
+                            color.b = 150;
+                            break;
+                        }
+                    }
+                    color = shadeScene(color, depth);
+                    const unsigned alpha = unsigned(color.a * fade), inverse = 255 - alpha;
+                    auto& dst = frame[py * viewWidth + px];
+                    dst = {static_cast<unsigned char>((color.r * alpha + dst.r * inverse + 127) / 255),
+                           static_cast<unsigned char>((color.g * alpha + dst.g * inverse + 127) / 255),
+                           static_cast<unsigned char>((color.b * alpha + dst.b * inverse + 127) / 255), 255};
+                }
     }
 }
 } // namespace blobber

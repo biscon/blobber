@@ -103,6 +103,68 @@ Json fixture() {
     root["preset_party"] = party;
     return root;
 }
+void spellsLoading() {
+    Files files;
+    auto good = fixture();
+    good["schema_version"] = 4;
+    good["spells"] = Json::array({{{"id", "test.fire"},
+                                   {"name", "Test fire"},
+                                   {"description", "Fixture spell"},
+                                   {"kind", "fire_bolt"}}});
+    good["classes"][0]["casting"] = "intelligence";
+    good["classes"][0]["features"] = Json::array({"arcane_recovery"});
+    good["classes"][0]["spells"] = Json::array({"test.fire"});
+    for (auto& c : good["preset_party"]["characters"]) {
+        c["life_domain"] = false;
+        c["equipment"]["ranged"] = nullptr;
+    }
+    const auto catalog = files.load(good);
+    const Party party(catalog);
+    check(catalog.spellCount() == 1 &&
+              catalog.spell(catalog.findSpell("test.fire"))->kind == SpellKind::FireBolt &&
+              party.character({0})->mana == 4,
+          "Schema four loads typed spells and initializes casting resources");
+    for (int fault = 0; fault < 8; ++fault) {
+        auto bad = good;
+        switch (fault) {
+        case 0:
+            bad["spells"][0]["kind"] = "fireball";
+            files.invalid(bad, "kind");
+            break;
+        case 1:
+            bad["classes"][0]["spells"] = {"missing"};
+            files.invalid(bad, "reference");
+            break;
+        case 2:
+            bad["classes"][0]["spells"] = {"test.fire", "test.fire"};
+            files.invalid(bad, "duplicate");
+            break;
+        case 3:
+            bad["classes"][0]["casting"] = "wisdom";
+            bad["classes"][0]["features"] = Json::array();
+            files.invalid(bad, "eligibility");
+            break;
+        case 4:
+            bad["classes"][0]["features"] = {"arcane_recovery", "arcane_recovery"};
+            files.invalid(bad, "duplicate");
+            break;
+        case 5:
+            bad["preset_party"]["characters"][0]["life_domain"] = true;
+            files.invalid(bad, "feature");
+            break;
+        case 6:
+            bad["spells"].push_back(bad["spells"][0]);
+            bad["spells"][1]["id"] = "another";
+            files.invalid(bad, "duplicate");
+            break;
+        case 7:
+            for (int i = 0; i < 32; ++i)
+                bad["spells"].push_back(bad["spells"][0]);
+            files.invalid(bad, "spells");
+            break;
+        }
+    }
+}
 void loading() {
     Files files;
     const auto good = fixture();
@@ -398,6 +460,7 @@ void limits() {
 int main() {
     try {
         loading();
+        spellsLoading();
         hybridSchema();
         limits();
         std::cout << "Party content checks passed\n";

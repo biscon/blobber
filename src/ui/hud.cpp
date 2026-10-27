@@ -44,6 +44,9 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
             : c.status == DisplayStatus::Ready ? muted
                                                : red,
             UiTextStyle::Small);
+    if (c.concentrating) {
+        fill({r.x + 3, r.y + 4, 6, 6}, blue);
+    }
     box(hudLayout::detail(i));
     label("i", hudLayout::detail(i), gold, UiTextStyle::Small);
 }
@@ -133,8 +136,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         const auto action = dockActions[i];
         const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
         const bool available =
-            (i == 0 || i == 1 || i == 2 || i == 5) && !h->suspended && !h->modal() &&
-            (reason == CommandReason::Ready || reason == CommandReason::MissingTarget ||
+            (i == 0 || i == 1 || i == 2 || i == 3 || i == 5) && !h->suspended && !h->modal() &&
+            (i == 3 || reason == CommandReason::Ready || reason == CommandReason::MissingTarget ||
              reason == CommandReason::InvalidAlly || reason == CommandReason::PreviewAccepted);
         const bool selected = action == h->selection.action;
         p.box(r, selected ? bright : edge);

@@ -2,7 +2,7 @@
 
 A C++17 / raylib 6.2 prototype of a 1990s grid-based dungeon crawler. Rendering,
 six-direction keyboard movement, wall/NPC collision, and a small exploration level
-with animated goblins, a four-character party HUD, and stationary turn-based melee combat.
+with animated goblins, a four-character party HUD, and hybrid ranged approach / turn-based combat with spells and class abilities.
 
 ![The great hall](docs/screenshots/great-hall.png)
 
@@ -57,9 +57,13 @@ working-directory setup is required: assets are copied beside the executable.
 | Monster hover / click | Preview reach and damage / immediately attack a reachable enemy |
 | 1 / sword | Select basic melee |
 | 2 / shield | Immediately defend |
-| 3 / 4 / 5 | Ranged / spell / item (unavailable in this slice) |
+| 3 / bow | Select ranged attack |
+| 4 / spell | Browse paused Spells / Abilities, then resume to select targets |
+| 5 / item | Reserved for the inventory slice |
 | 6 / aid | Arm Aid; click a dying ally's portrait to commit |
-| Portrait click | Open paused, read-only character details unless targeting Aid |
+| Portrait click | Select a character in real time, or a friendly spell/Aid target; use i for details |
+| Spellbook Up / Down, Enter | Browse descriptions, then choose a spell or ability |
+| Spell targeting Left / Right, Up, Enter | Move cursor, add/toggle recipient, then cast |
 | Left / Right, Enter | Cycle targets, then execute; Enter also acknowledges outcomes |
 | Escape / Backspace / right-click | Cancel targeting or close an overlay; unarmed Escape/Backspace opens pause menu |
 | Mouse wheel over log / + | Scroll readable history / expand paused history |
@@ -81,15 +85,32 @@ Front slots protect their paired rear slots on **both sides** (FL/BL and FR/BR).
 A rear member can attack or be targeted as soon as its own front slot falls.
 An exposed melee goblin moves into that vacant front slot on its next turn, then
 attacks once. Party members retain their slots. Body visibility is also
-required. Hover explains paired-slot protection and other reach restrictions. Back-row feature attacks, reach,
-ranged attacks, spells and items remain unavailable; the Rogue exception is deferred.
+required. Hover explains paired-slot protection and other reach restrictions. The Rogue can melee from behind an ally and gains conditional Sneak Attack; enemy
+paired protection still applies. Inflict Wounds uses ordinary exposed melee reach.
+Ranged attacks and spells ignore enemy row protection. Items remain deferred.
 
 At zero HP, characters make death saves on their turns. Aid stabilizes without
 healing. Victory stabilizes surviving downed allies and preserves HP/deaths;
 Continue resumes exploration. No conscious party member means defeat; Restart
 reconstructs the party and monsters. Map/log browsing and focus loss pause gameplay.
-`Mana --` means mana is not implemented. Portrait selection is distinct from the
-active turn, which is explicitly labeled.
+Cleric and Wizard start with four mana; first-level spells cost two and cantrips
+cost none. Casting takes one action or the shared six-second cooldown in real time.
+Mana and feature charges do not reset after encounters. Resting is a later slice;
+Restart restores initial resources. Portrait selection is distinct from the active turn.
+
+Slice 10 review: `./cmake-build-debug/blobber --spell-demo --seed 5` opens the
+Wizard's spellbook on the hybrid demo map. Browsing pauses; selecting an entry
+resumes play. Click a body/portrait for a single-target cast. Bless/Bane/Acid Splash
+let you toggle multiple targets; Magic Missile begins with three darts on the first
+target, and subsequent clicks move darts to other targets. Confirm with Cast/Enter.
+Area spells preview the three clear front cells. Escape cancels without spending.
+Fighter Second Wind and Wizard Arcane Recovery are in the same picker. A blue
+portrait marker indicates concentration; inspect details for effects and use
+End concentration in the picker to dismiss it freely. Rogue features are automatic.
+
+`--capture-spells DIRECTORY` exports deterministic hidden-window spell/ability
+captures. `blobber_spells_tests --trace` provides a headless impact/resource trace.
+See [spell design](docs/spells_design.md) for the exact roster and adaptations.
 
 For immediate review, run `./cmake-build-debug/blobber --combat-demo --seed 5`.
 This starts beside the existing goblins using the production combat path. `--seed`

@@ -1,5 +1,14 @@
 # System design
 
+Implemented, **Ready for review** (2026-10-27): slice 10
+[spells and class identity](spells_design.md), with [verification and handoff](slice10_verification.md).
+Fourteen curated spells use checked commands, fixed party payloads and the existing
+impact/effect clocks. Party owns mana/charges; Combat owns readiness and Sneak Attack;
+Effects owns concentration and Guiding deadlines. The paused spellbook resumes into
+live targeting, with multi-target/area confirmation and bounded cosmetic feedback.
+Schema 4 retains versions 1–3 compatibility. User acceptance is pending; slice 11
+remains Planned.
+
 Implemented, **accepted and closed** (2026-10-27): slice 09
 [effects and concentration](effects_design.md), with
 [verification and handoff](slice09_verification.md). GameSession owns 64 fixed
@@ -7,9 +16,8 @@ instances for Bless, Bane, Shield of Faith, Mage Armor and Hold Person. Effects
 share the hybrid gameplay clock, with real-time deadlines interleaved with attack
 impacts and full-round retries during turns. Concentration changes at damage impact;
 paralysis blocks actions/facing and paired protection while retaining occupancy.
-Read-only effective stats leave base builds unchanged. No player spell casting or
-mana is added. The user accepted slice 09 on 2026-10-27. Slice 10 is next eligible
-for planning and remains unstarted.
+Read-only effective stats leave base builds unchanged. Slice 09 supplied consequences;
+player casting and mana arrive in slice 10 above. The user accepted slice 09 on 2026-10-27.
 
 Implemented, **accepted and closed** (2026-10-26): slice 8.1
 [offline image preparation and memory](image_preparation_design.md), with

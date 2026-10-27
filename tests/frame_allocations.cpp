@@ -12,6 +12,7 @@
 #include "support/npc_fixtures.hpp"
 #include "support/party_fixtures.hpp"
 #include "support/render_fixtures.hpp"
+#include "support/spell_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include <chrono>
 #include <cstdlib>
@@ -218,7 +219,51 @@ int main() {
         EffectController effects(effectParty, effectActors, effectRng);
         CombatEvents effectEvents;
         GameSession effectSession(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false);
+        const auto spellRules = spellCatalog();
+        const auto spellFar = spellPlacements(hybridMap);
+        const auto spellNear = spellPlacements(hybridMap, 12, true);
+        std::array<std::unique_ptr<GameSession>, static_cast<unsigned>(rules::SpellKind::Count)>
+            spellSessions;
+        std::array<std::unique_ptr<CommandController>, static_cast<unsigned>(rules::SpellKind::Count)>
+            spellUis;
+        for (unsigned i = 0; i < spellSessions.size(); ++i) {
+            const auto kind = static_cast<rules::SpellKind>(i);
+            const bool close = rules::spellRules(kind)->area || kind == rules::SpellKind::InflictWounds;
+            spellSessions[i] = std::make_unique<GameSession>(
+                hybridMap, spellRules, close ? spellNear : spellFar, 5, spellSpawn, false);
+            spellUis[i] = std::make_unique<CommandController>(*spellSessions[i]);
+        }
+        ProjectilePlayer spellVisuals;
         tracking = true;
+        for (unsigned i = 0; i < spellSessions.size(); ++i) {
+            auto& s = *spellSessions[i];
+            auto& ui = *spellUis[i];
+            const auto kind = static_cast<rules::SpellKind>(i);
+            const auto& rule = *rules::spellRules(kind);
+            const unsigned caster = rule.casting == rules::Casting::Wisdom ? 1 : 3;
+            if (rule.area || kind == rules::SpellKind::InflictWounds)
+                spellReady(s, caster);
+            auto command = spellCommand(s, kind);
+            if (!rule.area) {
+                command.targetCount = 1;
+                command.enemies[0] = s.actors().id(kind == rules::SpellKind::InflictWounds ? 2 : 0);
+                command.darts[0] = 3;
+                command.allies[0] = {3};
+            }
+            if (kind == rules::SpellKind::CureWounds || kind == rules::SpellKind::SpareTheDying)
+                s.party().damage({3}, s.party().character({3})->hitPoints);
+            ui.refresh(allCombatTargets(s), false, false, true);
+            ui.selectCharacter(caster);
+            ui.openSpellbook();
+            ui.browseSpellbook(1);
+            ui.closeOverlay();
+            okay &= s.submit(command).reason == CommandReason::Resolved;
+            ui.record(s.events());
+            spellVisuals.update(&s.combat().attacks(), s.timeMs());
+            ui.record(s.update(.5, false));
+            spellVisuals.update(&s.combat().attacks(), s.timeMs());
+            ui.refresh(allCombatTargets(s), false, false, true);
+        }
         EffectRequest effectRequest;
         effectRequest.world = effectActors.snapshot().world;
         effectRequest.caster = {0};

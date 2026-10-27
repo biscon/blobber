@@ -143,27 +143,26 @@ EffectResult EffectController::remove(EffectId id, std::uint64_t now, CombatEven
         }
     return {EffectError::None, id};
 }
-EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t now,
-                                     CombatEvents& events) noexcept {
+EffectError EffectController::validate(const EffectRequest& request) const noexcept {
     if (request.world != actors_.snapshot().world)
-        return {EffectError::InvalidWorld};
+        return EffectError::InvalidWorld;
     if (!canAct(request.caster))
-        return {EffectError::InvalidCaster};
+        return EffectError::InvalidCaster;
     if (request.kind >= EffectKind::Count)
-        return {EffectError::InvalidKind};
+        return EffectError::InvalidKind;
     if (request.difficulty < 1 || request.difficulty > 1000)
-        return {EffectError::InvalidDifficulty};
+        return EffectError::InvalidDifficulty;
     const auto maxTargets = request.kind == EffectKind::Bless || request.kind == EffectKind::Bane ? 3u : 1u;
     if (!request.count || request.count > maxTargets)
-        return {EffectError::InvalidTargets};
+        return EffectError::InvalidTargets;
     for (std::size_t i = 0; i < request.count; ++i) {
         const auto target = request.targets[i];
         if (!living(target) ||
             (request.kind == EffectKind::MageArmor && (target.npc || !unarmored(target.character))))
-            return {EffectError::InvalidTargets};
+            return EffectError::InvalidTargets;
         for (std::size_t j = 0; j < i; ++j)
             if (request.targets[j] == target)
-                return {EffectError::InvalidTargets};
+                return EffectError::InvalidTargets;
     }
     const auto old = concentrates(request.kind) ? concentration(request.caster) : EffectId{};
     std::size_t slot = capacity;
@@ -174,7 +173,18 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
         }
     if (slot == capacity || nextSerial_ == std::numeric_limits<std::uint64_t>::max() ||
         gameplayMs_ > std::numeric_limits<std::uint64_t>::max() - duration(request.kind))
-        return {EffectError::Capacity};
+        return EffectError::Capacity;
+    return EffectError::None;
+}
+EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t now,
+                                     CombatEvents& events) noexcept {
+    const auto error = validate(request);
+    if (error != EffectError::None)
+        return {error};
+    const auto old = concentrates(request.kind) ? concentration(request.caster) : EffectId{};
+    std::size_t slot = 0;
+    while (instances_[slot].active && (!old.serial || instances_[slot].id.serial != old.serial))
+        ++slot;
     if (old.serial)
         for (auto& e : instances_)
             if (e.active && e.id.serial == old.serial)
@@ -212,6 +222,9 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     return {EffectError::None, candidate.id};
 }
 void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexcept {
+    for (std::size_t i = 0; i < guidingUntil_.size(); ++i)
+        if (guidingUntil_[i] && !living(actors_.id(i)))
+            consumeGuiding(actors_.id(i), now, events);
     // Serial order is independent of slot reuse.
     std::uint64_t previous = 0;
     for (;;) {
@@ -265,6 +278,17 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
                 expiration = expires;
             }
         }
+        std::size_t marker = guidingUntil_.size();
+        for (std::size_t i = 0; i < guidingUntil_.size(); ++i)
+            if (guidingUntil_[i] && guidingUntil_[i] <= goal && guidingUntil_[i] < deadline) {
+                marker = i;
+                deadline = guidingUntil_[i];
+            }
+        if (marker != guidingUntil_.size()) {
+            gameplayMs_ = deadline;
+            consumeGuiding(actors_.id(marker), realTime ? session - (goal - deadline) : session, events);
+            continue;
+        }
         if (!next)
             break;
         gameplayMs_ = deadline;
@@ -299,5 +323,30 @@ void EffectController::damaged(rules::CharacterId id, std::int64_t damage, std::
                 end(e, EffectEnd::FailedSave, now, events);
             break;
         }
+}
+bool EffectController::guiding(ActorId id) const noexcept {
+    return id.world == actors_.snapshot().world && id.slot < guidingUntil_.size() &&
+           guidingUntil_[id.slot] > gameplayMs_ && living(id);
+}
+void EffectController::guide(ActorId id, std::uint64_t now, CombatEvents& events) noexcept {
+    if (!living(id))
+        return;
+    guidingUntil_[id.slot] = gameplayMs_ + 6000;
+    CombatOutcome out;
+    out.event = CombatEvent::GuidingMark;
+    out.enemy = id;
+    out.hit = true;
+    out.occurredMs = now;
+    events.append(out);
+}
+void EffectController::consumeGuiding(ActorId id, std::uint64_t now, CombatEvents& events) noexcept {
+    if (id.world != actors_.snapshot().world || id.slot >= guidingUntil_.size() || !guidingUntil_[id.slot])
+        return;
+    guidingUntil_[id.slot] = 0;
+    CombatOutcome out;
+    out.event = CombatEvent::GuidingMark;
+    out.enemy = id;
+    out.occurredMs = now;
+    events.append(out);
 }
 } // namespace blobber

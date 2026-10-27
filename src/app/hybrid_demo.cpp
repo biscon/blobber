@@ -92,7 +92,8 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
                     command.action = PartyAction::Defend;
                     command.world = st.world;
                     command.turn = st.turn;
-                    ui.record(s.submit(command));
+                    s.submit(command);
+                    ui.record(s.events());
                 } else
                     ui.record(s.update(.1, false));
             }
@@ -113,7 +114,8 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
             attack.target = s.actors().id(0);
             ui.hover(HoverKind::Enemy, 0, attack.target, 200, 180);
             save("diagonal-melee-ready");
-            ui.record(s.submit(attack));
+            s.submit(attack);
+            ui.record(s.events());
             save("diagonal-melee-hit");
             return;
         }
@@ -129,7 +131,8 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
                     command.action = PartyAction::Defend;
                     command.world = st.world;
                     command.turn = st.turn;
-                    ui.record(s.submit(command));
+                    s.submit(command);
+                    ui.record(s.events());
                 } else
                     ui.record(s.update(.1, false));
             }
@@ -160,7 +163,7 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
             const auto out = s.submit(attack);
             if (out.reason != CommandReason::Resolved)
                 throw std::runtime_error("Fighter cannot attack side arrival");
-            ui.record(out);
+            ui.record(s.events());
             save("fighter-attacks");
             return;
         }
@@ -220,7 +223,8 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
                 cmd.action = PartyAction::Defend;
                 cmd.world = st.world;
                 cmd.turn = st.turn;
-                ui.record(s.submit(cmd));
+                s.submit(cmd);
+                ui.record(s.events());
             }
         }
         if (mode == 6 && shots < 2)

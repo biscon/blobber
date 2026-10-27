@@ -28,6 +28,12 @@ constexpr UiRect detail(int i) {
     return {r.x + 114, r.y + 54, 12, 10};
 }
 
+constexpr UiRect spellbook{40, 36, 560, 258}, spellbookClose{578, 41, 14, 12};
+constexpr UiRect spellEntry(int row) {
+    return {52, 72 + row * 18, 210, 17};
+}
+constexpr UiRect spellPrevious{52, 256, 100, 18}, spellNext{162, 256, 100, 18};
+constexpr UiRect spellCast{414, 273, 82, 21}, spellTargetPanel{10, 247, 490, 50};
 constexpr UiRect header{4, 2, 632, 13}, gear{621, 2, 14, 13};
 constexpr UiRect actions{4, 304, 300, 54}, log{308, 304, 328, 54};
 constexpr UiRect logExpand{620, 306, 12, 10}, logLatest{578, 306, 38, 10};

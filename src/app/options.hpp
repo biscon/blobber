@@ -6,6 +6,7 @@ namespace blobber {
 struct Options {
     int width = 1920, height = 1080;
     std::filesystem::path assets, captureDirectory;
+    bool spellDemo = false, captureSpellsOnly = false;
     bool captureProjectilesOnly = false, captureReactionsOnly = false, captureHudOnly = false, help = false,
          uiDemo = false, combatDemo = false, aiDemo = false, captureAiOnly = false, hybridDemo = false,
          captureHybridOnly = false, capturePreparationOnly = false, checkPreparedOnly = false;

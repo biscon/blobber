@@ -8,6 +8,8 @@ struct PartyCharacter : rules::HealthState {
     rules::CharacterBuild build;
     rules::CharacterStats stats;
     int availableHitDice = 0;
+    int mana = 0, maxMana = 0;
+    bool secondWind = false, arcaneRecovery = false;
     std::uint32_t experience = 0;
 };
 struct PartySnapshot {
@@ -28,6 +30,10 @@ class Party {
     rules::HealthResult heal(rules::CharacterId id, std::int64_t amount) noexcept;
     rules::HealthResult stabilize(rules::CharacterId id) noexcept;
     rules::HealthResult deathSave(rules::CharacterId id, int face, int modifier = 0) noexcept;
+    bool spendMana(rules::CharacterId, int amount) noexcept;
+    bool useFeature(rules::CharacterId, rules::Feature) noexcept;
+    bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
+    int castingModifier(rules::CharacterId) const noexcept;
     void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
     const rules::Catalog& catalog() const noexcept { return *catalog_; }
 

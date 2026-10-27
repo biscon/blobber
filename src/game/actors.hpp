@@ -78,6 +78,7 @@ class ActorWorld {
     ActorResult cancelAttack(ActorId) noexcept;
     ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept;
     ActorResult remove(ActorId id) noexcept;
+    const Map& map() const noexcept { return map_; }
     const rules::Catalog& catalog() const noexcept { return catalog_; }
 
   private:

@@ -8,12 +8,29 @@
 
 namespace blobber {
 const char* actionName(PartyAction action) noexcept {
-    constexpr const char* names[]{"Melee", "Back-row melee", "Defend", "Ranged", "Spell", "Item", "Aid"};
+    constexpr const char* names[]{"Melee", "Back-row melee", "Defend", "Ranged",
+                                  "Spell", "Item",           "Aid",    "Ability"};
     const auto i = static_cast<unsigned>(action);
     return i < static_cast<unsigned>(PartyAction::Count) ? names[i] : "Invalid action";
 }
 const char* commandMessage(CommandReason reason) noexcept {
     switch (reason) {
+    case CommandReason::InsufficientMana:
+        return "Not enough mana.";
+    case CommandReason::NoCharges:
+        return "No uses left until rest (restart in this slice).";
+    case CommandReason::InvalidSpell:
+        return "Spell is not in this character's spellbook.";
+    case CommandReason::InvalidTargets:
+        return "Invalid target selection or dart assignment.";
+    case CommandReason::FullHealth:
+        return "Target is already at full health.";
+    case CommandReason::FullMana:
+        return "Mana is already full.";
+    case CommandReason::Unsafe:
+        return "Recovery requires exploration without active threats.";
+    case CommandReason::EffectCapacity:
+        return "No effect capacity available.";
     case CommandReason::AttackPending:
         return "This attack is still playing.";
     case CommandReason::Cooldown:
@@ -43,7 +60,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::LogOpen:
         return "Close the overlay to act.";
     case CommandReason::FeatureRequired:
-        return "Requires a future back-row feature.";
+        return "Requires the Rogue back-row feature.";
     case CommandReason::PreviewAccepted:
         return "Preview only: no costs or combat.";
     case CommandReason::InvalidCharacter:
@@ -167,7 +184,63 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Disengaged:
         std::snprintf(line, sizeof(line), "Contact broken. Ranged approach resumes.");
         break;
-    case CombatEvent::Effect: // Slice 09 exposes effects through headless diagnostics.
+    case CombatEvent::Cast: {
+        const auto* spell = rules::spellRules(out.spell);
+        std::snprintf(line, sizeof(line), "%s: %s.", name,
+                      spell                                       ? spell->name
+                      : out.feature == rules::Feature::SecondWind ? "Second Wind"
+                                                                  : "Arcane Recovery");
+        break;
+    }
+    case CombatEvent::Healing:
+    case CombatEvent::Recovery: {
+        std::snprintf(line, sizeof(line), "%s -> %s: +%lld %s.", name, target,
+                      static_cast<long long>(out.damage), out.event == CombatEvent::Healing ? "HP" : "mana");
+        if (out.event == CombatEvent::Healing) {
+            CombatFeedback f;
+            f.active = f.party = f.hit = f.healing = true;
+            f.character = out.recipient;
+            f.damage = out.damage;
+            f.startedMs = out.occurredMs;
+            showFeedback(f);
+        }
+        break;
+    }
+    case CombatEvent::SpellSave:
+        std::snprintf(line, sizeof(line), "Enemy #%u: %s save %d vs DC %d - %s.",
+                      unsigned(out.enemy.slot) + 1, rules::spellRules(out.spell)->name, out.saveTotal,
+                      out.saveDifficulty, out.hit ? "saved" : "failed");
+        break;
+    case CombatEvent::GuidingMark:
+        std::snprintf(line, sizeof(line), "Enemy #%u: guiding light %s.", unsigned(out.enemy.slot) + 1,
+                      out.hit ? "applied" : "ended");
+        break;
+    case CombatEvent::Effect: {
+        constexpr const char* effects[]{"Bless", "Bane", "Shield of Faith", "Mage Armor", "Hold Person"};
+        const auto& e = out.effect;
+        const char* effect =
+            static_cast<unsigned>(e.kind) < 5 ? effects[static_cast<unsigned>(e.kind)] : "Effect";
+        if (e.notice == EffectNotice::InitialSave || e.notice == EffectNotice::RepeatSave ||
+            e.notice == EffectNotice::ConcentrationSave)
+            std::snprintf(line, sizeof(line), "%s%s: save %lld vs %lld - %s.", effect,
+                          e.notice == EffectNotice::ConcentrationSave ? " concentration" : "",
+                          static_cast<long long>(e.total), static_cast<long long>(e.difficulty),
+                          e.succeeded ? "saved" : "failed");
+        else
+            std::snprintf(line, sizeof(line), "%s: %s.", effect,
+                          e.notice == EffectNotice::Applied ? "applied" : "ended / recipient removed");
+        if (e.notice == EffectNotice::Applied && !e.target.npc) {
+            constexpr const char* labels[]{"BLESS", "BANE", "FAITH", "ARMOR", "HELD"};
+            CombatFeedback f;
+            f.active = f.party = f.hit = true;
+            f.healing = e.kind != EffectKind::Bane && e.kind != EffectKind::HoldPerson;
+            f.character = e.target.character;
+            f.startedMs = out.occurredMs;
+            f.text = labels[static_cast<unsigned>(e.kind)];
+            showFeedback(f);
+        }
+        break;
+    }
     case CombatEvent::None:
         return;
     }
@@ -186,6 +259,9 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     next.active = true;
     next.party = out.enemyAttack;
     next.hit = out.hit;
+    const auto* spell = rules::spellRules(out.spell);
+    if (spell && !spell->attack && !out.hit)
+        next.text = "SAVED";
     next.character = out.recipient;
     next.enemy = out.enemy;
     next.damage = out.damage;
@@ -255,6 +331,13 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                 state_.selection.action = PartyAction::Melee;
             state_.selection.target.reset();
             state_.selection.ally.reset();
+            state_.selection.targetCount = 0;
+            state_.selection.spell = {};
+            state_.selection.feature = rules::Feature::None;
+            state_.magic.open = false;
+            if (state_.selection.action == PartyAction::Spell ||
+                state_.selection.action == PartyAction::Feature)
+                state_.selection.action = PartyAction::Melee;
             if (combat.activeCharacter && combat.turn != state_.combat.turn &&
                 combat.phase != CombatPhase::Facing && state_.combat.phase != CombatPhase::Facing) {
                 char line[96];
@@ -342,6 +425,9 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.className = party_.catalog().characterClass(member.build.characterClass)->name.c_str();
         card.hp = member.hitPoints;
         card.maxHp = member.stats.maxHitPoints;
+        card.mana = member.mana;
+        card.maxMana = member.maxMana;
+        card.hasMana = member.maxMana > 0;
         card.status = member.life == rules::Life::Conscious ? DisplayStatus::Ready
                       : member.life == rules::Life::Stable  ? DisplayStatus::Stable
                       : member.life == rules::Life::Dead    ? DisplayStatus::Dead
@@ -349,6 +435,14 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.successes = member.successes;
         card.failures = member.failures;
         if (session_) {
+            card.armorClass = session_->effects().armorClass(id);
+            card.concentrating = session_->effects().concentration(id).serial != 0;
+            constexpr const char* statusNames[]{"Bless ", "Bane ", "Faith ", "Armor ", "Held "};
+            std::size_t used = 0;
+            for (unsigned e = 0; e < 5; ++e)
+                if (session_->effects().has(id, static_cast<EffectKind>(e)))
+                    used += std::snprintf(card.effects.data() + used, card.effects.size() - used, "%s",
+                                          statusNames[e]);
             card.hasDeathSaves = member.life == rules::Life::Dying;
             card.active = realTime(state_.combat.phase)
                               ? state_.selection.character.index == id.index
@@ -385,6 +479,12 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     }
     const auto pages = (state_.targets.count + 3) / 4;
     state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
+    if (moving || !focused) {
+        state_.selection.targetCount = 0;
+        if (state_.magic.armed)
+            cancel();
+    }
+    refreshMagic();
     updateAvailability();
     updateHover();
 }
@@ -402,6 +502,9 @@ void CommandController::selectCharacter(std::size_t index) noexcept {
         updateAvailability();
         return;
     }
+    if (state_.magic.armed && index < rules::partySize &&
+        state_.selection.character.index != party_.snapshot().formation[index].index)
+        cancel();
     if (index < rules::partySize)
         state_.selection.character = party_.snapshot().formation[index];
     updateAvailability();
@@ -409,6 +512,9 @@ void CommandController::selectCharacter(std::size_t index) noexcept {
 void CommandController::selectAction(PartyAction action) noexcept {
     if (static_cast<unsigned>(action) >= static_cast<unsigned>(PartyAction::Count))
         return;
+    state_.selection.targetCount = 0;
+    state_.selection.spell = {};
+    state_.selection.feature = rules::Feature::None;
     state_.selection.action = action;
     if (action == PartyAction::Defend || action == PartyAction::Aid)
         state_.selection.target.reset();
@@ -467,6 +573,10 @@ void CommandController::scrollLog(int delta) noexcept {
         static_cast<std::int64_t>(state_.logOffset) + delta, 0, static_cast<std::int64_t>(maximum)));
 }
 void CommandController::cancel() noexcept {
+    state_.selection.targetCount = 0;
+    state_.selection.spell = {};
+    state_.selection.feature = rules::Feature::None;
+    state_.magic.armed = false;
     state_.selection.action = PartyAction::Melee;
     state_.selection.ally.reset();
     state_.selection.target.reset();
@@ -490,6 +600,14 @@ CommandReason CommandController::validate(const PartyCommand& command) const noe
         if ((command.action == PartyAction::Melee || command.action == PartyAction::Ranged) &&
             command.target && !visible(*command.target))
             return CommandReason::NotVisible;
+        if (command.action == PartyAction::Spell) {
+            const auto* spell = party_.catalog().spell(command.spell);
+            const auto* r = spell ? rules::spellRules(spell->kind) : nullptr;
+            if (r && r->hostile && !r->area)
+                for (std::size_t i = 0; i < command.targetCount; ++i)
+                    if (!visible(command.enemies[i]))
+                        return CommandReason::NotVisible;
+        }
         return CommandReason::Ready;
     }
     if (!party_.character(command.character))
@@ -522,7 +640,7 @@ CommandReason CommandController::submit(const PartyCommand& command) noexcept {
     const auto reason = validate(command);
     if (session_ && reason == CommandReason::Ready) {
         const auto out = session_->submit(command);
-        record(out);
+        record(session_->events());
         if (out.reason == CommandReason::Resolved)
             cancel();
         updateAvailability();

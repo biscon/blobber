@@ -93,6 +93,10 @@ class EffectController {
     const std::array<EffectInstance, capacity>& snapshot() const noexcept { return instances_; }
     const EffectInstance* find(EffectId) const noexcept;
     EffectId concentration(rules::CharacterId) const noexcept;
+    EffectError validate(const EffectRequest&) const noexcept;
+    bool guiding(ActorId) const noexcept;
+    void guide(ActorId, std::uint64_t now, CombatEvents&) noexcept;
+    void consumeGuiding(ActorId, std::uint64_t now, CombatEvents&) noexcept;
     EffectResult apply(const EffectRequest&, std::uint64_t sessionMs, CombatEvents&) noexcept;
     EffectResult remove(EffectId, std::uint64_t sessionMs, CombatEvents&) noexcept;
     void reconcile(std::uint64_t sessionMs, CombatEvents&) noexcept;
@@ -112,6 +116,7 @@ class EffectController {
     ActorWorld& actors_;
     rules::DiceRng& rng_;
     std::array<EffectInstance, capacity> instances_{};
+    std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil_{};
     std::uint64_t nextSerial_ = 1, gameplayMs_ = 0;
     bool living(EffectTarget) const noexcept;
     bool unarmored(rules::CharacterId) const noexcept;

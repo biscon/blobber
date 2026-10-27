@@ -410,7 +410,7 @@ void stress() {
             command.target = actors.id(NpcWorld::maxInstances - 1);
             command.world = combat.snapshot().world;
             command.turn = combat.snapshot().turn;
-            check(combat.submit(command, pose, 0).event == CombatEvent::AttackStarted,
+            check(combat.submit(command, pose, 0, events).event == CombatEvent::AttackStarted,
                   "Four party attacks coexist with full NPC population");
         }
         events.clear();

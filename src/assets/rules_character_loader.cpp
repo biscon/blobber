@@ -66,6 +66,24 @@ OwnedItemId ownedReference(const Json& value, const std::string& path) {
 } // namespace
 CharacterContent loadCharacterContent(const nlohmann::json& root) {
     CharacterContent out;
+    const bool spellsEnabled = root.at("schema_version") == 4;
+    if (spellsEnabled) {
+        array(root.at("spells"), "spells", Catalog::maxSpells);
+        for (const auto& j : root.at("spells")) {
+            fields(j, "spells[]", {"id", "name", "description", "kind"});
+            SpellDefinition spell;
+            spell.id = identifier(j.at("id"), "spells[].id");
+            spell.name = string(j.at("name"), "spells[].name");
+            spell.description = string(j.at("description"), "spells[].description");
+            const auto kind = string(j.at("kind"), "spells[].kind");
+            for (unsigned k = 0; k < static_cast<unsigned>(SpellKind::Count); ++k)
+                if (kind == spellRules(static_cast<SpellKind>(k))->id)
+                    spell.kind = static_cast<SpellKind>(k);
+            if (!spellRules(spell.kind))
+                fail("spells[].kind", "unknown concrete spell");
+            out.spells.push_back(std::move(spell));
+        }
+    }
     const auto& races = root.at("races");
     array(races, "races", Catalog::maxRaces);
     for (std::size_t i = 0; i < races.size(); ++i) {
@@ -82,13 +100,35 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < classes.size(); ++i) {
         const auto p = "classes[" + std::to_string(i) + "]";
         const auto& c = classes[i];
-        fields(c, p, {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense"});
+        if (spellsEnabled)
+            fields(c, p,
+                   {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense", "casting",
+                    "features", "spells"});
+        else
+            fields(c, p, {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense"});
         ClassDefinition cls;
         cls.id = identifier(c.at("id"), p + ".id");
         cls.name = string(c.at("name"), p + ".name");
         cls.hitDie = integer(c.at("hit_die"), p + ".hit_die");
         cls.weapons = training(c.at("weapons"), p + ".weapons");
         cls.allowsDefense = boolean(c.at("allows_defense"), p + ".allows_defense");
+        if (spellsEnabled) {
+            cls.casting =
+                static_cast<Casting>(choice(c.at("casting"), p + ".casting",
+                                            std::array<const char*, 3>{"none", "wisdom", "intelligence"}));
+            array(c.at("features"), p + ".features", 4);
+            for (const auto& f : c.at("features")) {
+                const auto bit = 1u << choice(f, p + ".features",
+                                              std::array<const char*, 4>{"second_wind", "life_domain",
+                                                                         "sneak_attack", "arcane_recovery"});
+                if (cls.features & bit)
+                    fail(p + ".features", "duplicate feature");
+                cls.features |= bit;
+            }
+            array(c.at("spells"), p + ".spells", cls.spells.size());
+            for (const auto& spell : c.at("spells"))
+                cls.spells[cls.spellCount++] = {reference(spell, p + ".spells", out.spells)};
+        }
         const auto& saves = c.at("saves");
         array(saves, p + ".saves", 2);
         if (saves.size() != 2)
@@ -163,7 +203,13 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < partySize; ++i) {
         const auto p = "preset_party.characters[" + std::to_string(i) + "]";
         const auto& c = characters[i];
-        fields(c, p, {"id", "name", "race", "class", "abilities", "level", "defense", "items", "equipment"});
+        if (spellsEnabled)
+            fields(c, p,
+                   {"id", "name", "race", "class", "abilities", "level", "defense", "items", "equipment",
+                    "life_domain"});
+        else
+            fields(c, p,
+                   {"id", "name", "race", "class", "abilities", "level", "defense", "items", "equipment"});
         auto& b = out.preset->characters[i];
         b.id = identifier(c.at("id"), p + ".id");
         b.name = string(c.at("name"), p + ".name");
@@ -172,6 +218,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         b.baseAbilities = scores(c.at("abilities"), p + ".abilities");
         b.level = integer(c.at("level"), p + ".level");
         b.defense = boolean(c.at("defense"), p + ".defense");
+        if (spellsEnabled)
+            b.lifeDomain = boolean(c.at("life_domain"), p + ".life_domain");
         const auto& owned = c.at("items");
         array(owned, p + ".items", maxStartingItems);
         b.itemCount = owned.size();
@@ -185,11 +233,11 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                           static_cast<std::uint16_t>(quantity)};
         }
         const auto& e = c.at("equipment");
-        if (root.at("schema_version") == 3)
+        if (root.at("schema_version") >= 3)
             fields(e, p + ".equipment", {"body", "main_hand", "off_hand", "ranged"});
         else
             fields(e, p + ".equipment", {"body", "main_hand", "off_hand"});
-        if (root.at("schema_version") == 3)
+        if (root.at("schema_version") >= 3)
             b.equipment.ranged = ownedReference(e.at("ranged"), p + ".equipment.ranged");
         b.equipment = {ownedReference(e.at("body"), p + ".equipment.body"),
                        ownedReference(e.at("main_hand"), p + ".equipment.main_hand"),

@@ -32,6 +32,8 @@ struct HudCard {
     rules::CharacterId id;
     const char *name = "", *className = "";
     int hp = 0, maxHp = 0, mana = 0, maxMana = 0;
+    std::array<char, 96> effects{};
+    bool concentrating = false;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
     bool incomingShot = false;
     std::uint8_t successes = 0, failures = 0;
@@ -55,12 +57,32 @@ struct HudHover {
 };
 struct CombatFeedback {
     static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
-    bool active = false, party = false, hit = false;
+    bool active = false, party = false, hit = false, healing = false;
     rules::CharacterId character;
     ActorId enemy;
+    const char* text = nullptr;
     TargetAnchor anchor;
     std::int64_t damage = 0;
     std::uint64_t startedMs = 0;
+};
+struct SpellBookEntry {
+    rules::SpellId spell;
+    rules::Feature feature = rules::Feature::None;
+    const char *name = "", *description = "";
+    int cost = 0;
+    CommandReason reason = CommandReason::Unavailable;
+    int charges = -1; // Negative for entries without a finite-use resource.
+};
+struct MagicHud {
+    bool open = false, armed = false, hostile = false, area = false, missiles = false;
+    std::array<SpellBookEntry, 20> entries{};
+    std::size_t count = 0, cursor = 0, offset = 0;
+    const char *name = "", *description = "";
+    int mana = 0, maxMana = 0, cost = 0, attackBonus = 0, difficulty = 0;
+    std::array<ActorId, 12> affected{};
+    std::size_t affectedCount = 0;
+    std::array<bool, 3> cells{};
+    std::array<char, 192> targets{};
 };
 struct HudSnapshot {
     std::array<HudCard, rules::partySize> cards{};
@@ -77,11 +99,12 @@ struct HudSnapshot {
     CombatSnapshot combat;
     std::array<rules::CharacterId, rules::partySize> allies{};
     std::size_t allyCount = 0;
-    std::array<CombatFeedback, 8> feedback{};
+    std::array<CombatFeedback, 16> feedback{};
+    MagicHud magic;
     HudHover hover;
     std::optional<rules::CharacterId> inspected;
     bool menuOpen = false, quitRequested = false;
-    bool modal() const noexcept { return logExpanded || inspected.has_value() || menuOpen; }
+    bool modal() const noexcept { return logExpanded || inspected.has_value() || menuOpen || magic.open; }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
                                                          PartyAction::Ranged, PartyAction::Spell,
@@ -100,6 +123,13 @@ class CommandController {
             record(out);
     }
     void selectAlly(std::size_t index) noexcept;
+    void openSpellbook() noexcept;
+    void browseSpellbook(int delta) noexcept;
+    void chooseSpellbook(std::size_t index) noexcept;
+    void magicEnemy(ActorId) noexcept;
+    void magicAlly(std::size_t formationIndex) noexcept;
+    bool magicSingleTarget() const noexcept;
+    void magicKeyboardTarget(int delta) noexcept;
     CommandController(Party&&, const ActorWorld&) = delete;
     CommandController(const Party&&, const ActorWorld&) = delete;
     CommandController(const Party&, ActorWorld&&) = delete;
@@ -138,6 +168,7 @@ class CommandController {
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    void refreshMagic() noexcept;
     bool visible(ActorId id) const noexcept;
     void updateAvailability() noexcept;
     void recordFeedback(const CombatOutcome& outcome) noexcept;

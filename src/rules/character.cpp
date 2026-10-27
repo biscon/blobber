@@ -35,7 +35,7 @@ const char* characterErrorMessage(CharacterError error) noexcept {
     case CharacterError::InvalidAbilities:
         return "base and final abilities must be 1..30";
     case CharacterError::InvalidFeature:
-        return "class does not support Defense";
+        return "class does not support selected feature (Defense or Life domain)";
     case CharacterError::InvalidItems:
         return "invalid item count or quantity";
     case CharacterError::InvalidEquipment:
@@ -57,6 +57,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
         return fail(CharacterError::InvalidReference);
     if (b.level != 1)
         return fail(CharacterError::UnsupportedLevel);
+    if (b.lifeDomain && !hasFeature(cls->features, ClassFeature::LifeDomain))
+        return {{}, CharacterError::InvalidFeature};
     if (b.defense && !cls->allowsDefense)
         return fail(CharacterError::InvalidFeature);
     CharacterStats stats;
@@ -109,7 +111,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
         return fail(CharacterError::InvalidEquipment);
     if (items[0]) {
         const auto& armor = *items[0];
-        if (!(cls->armor & armorBit(armor.armor)))
+        if (!((cls->armor | (b.lifeDomain ? armorBit(ArmorType::Heavy) : 0)) & armorBit(armor.armor)))
             return fail(CharacterError::ArmorProficiency);
         stats.armorClass = armor.baseArmorClass;
         if (armor.armor == ArmorType::Light)
@@ -120,7 +122,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
             ++stats.armorClass;
     }
     if (items[2]) {
-        if (!(cls->armor & armorBit(ArmorType::Shield)))
+        if (!((cls->armor | (b.lifeDomain ? armorBit(ArmorType::Heavy) : 0)) & armorBit(ArmorType::Shield)))
             return fail(CharacterError::ArmorProficiency);
         stats.armorClass += 2;
     }

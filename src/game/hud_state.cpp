@@ -97,6 +97,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    state_.magic.open = false;
     state_.inspected.reset();
     state_.logExpanded = false;
     state_.menuOpen = false;
@@ -133,6 +134,20 @@ void CommandController::updateHover() noexcept {
                       actors_.catalog().monster(a.monster)->id.c_str(), unsigned(h.enemy->slot) + 1);
         h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
+        if (state_.magic.armed) {
+            put(1, state_.magic.name);
+            if (state_.selection.action == PartyAction::Spell && !state_.magic.area) {
+                command.targetCount = 1;
+                command.enemies[0] = *h.enemy;
+                command.darts[0] = 3;
+            }
+            h.reason = validate(command);
+            std::snprintf(h.lines[2].data(), h.lines[2].size(), "%d mana / attack %+d / DC %d",
+                          state_.magic.cost, state_.magic.attackBonus, state_.magic.difficulty);
+            put(3, h.reason == CommandReason::Ready ? "Legal target / select to cast."
+                                                    : commandMessage(h.reason));
+            return;
+        }
         command.action =
             state_.selection.action == PartyAction::Ranged ? PartyAction::Ranged : PartyAction::Melee;
         command.target = h.enemy;
@@ -153,6 +168,10 @@ void CommandController::updateHover() noexcept {
                               0, std::int64_t(dice.count) * dice.sides + dice.modifier)));
         }
         put(2, realTime(state_.combat.phase) ? "Cost: 6-second cooldown" : "Cost: 1 action");
+        if (session_ && session_->combat().sneakPreview(command.character, *h.enemy,
+                                                        command.action == PartyAction::Ranged,
+                                                        session_->movement().player))
+            put(2, "Sneak Attack: +1d6 on hit / one action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
     } else if (h.kind == HoverKind::Action && h.index >= 0 && h.index < 6) {
         const auto action = dockActions[h.index];
@@ -161,10 +180,18 @@ void CommandController::updateHover() noexcept {
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s [%d]", actionName(action), h.index + 1);
         constexpr const char* effects[]{
             "Attack with your equipped weapon.",       "Attacks against you: disadvantage until next turn.",
-            "Ready bow: six-cell range, clear sight.", "Spells are not available yet.",
+            "Ready bow: six-cell range, clear sight.", "Open the paused spellbook and class abilities.",
             "Usable items are not available yet.",     "DC 10 Wisdom: stabilize a dying ally."};
         put(1, effects[h.index]);
-        put(2, (h.index == 3 || h.index == 4) ? "Unavailable" : "Cost: 1 action");
+        put(2, h.index == 3   ? "Browsing pauses; targeting resumes play."
+               : h.index == 4 ? "Unavailable"
+                              : "Cost: 1 action");
+        if (h.index == 3 && session_) {
+            put(3, "Click or press 4 to browse.");
+            return;
+        }
+        if (h.index == 0 && party_.hasFeature(command.character, rules::ClassFeature::SneakAttack))
+            put(1, "Rogue: melee can reach from the rear row.");
         if (h.reason != CommandReason::Ready && h.reason != CommandReason::MissingTarget &&
             h.reason != CommandReason::InvalidAlly && h.reason != CommandReason::PreviewAccepted)
             put(3, commandMessage(h.reason));

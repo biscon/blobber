@@ -58,7 +58,7 @@ void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
                         command.world = state.world;
                         command.turn = state.turn;
                         accepted = s.submit(command);
-                        ui.record(accepted);
+                        ui.record(s.events());
                         if (accepted.reason != CommandReason::Resolved)
                             throw std::runtime_error("Projectile capture shot rejected");
                     } else if (state.awaitingAction) {
@@ -67,7 +67,8 @@ void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
                         command.action = PartyAction::Defend;
                         command.world = state.world;
                         command.turn = state.turn;
-                        ui.record(s.submit(command));
+                        s.submit(command);
+                        ui.record(s.events());
                     } else {
                         const auto& events = s.update(.05, false);
                         ui.record(events);

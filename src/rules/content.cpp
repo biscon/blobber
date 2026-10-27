@@ -26,11 +26,25 @@ template <class T> void validateIds(const std::vector<T>& definitions, const cha
 } // namespace
 Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
                  std::vector<RaceDefinition> races, std::vector<ClassDefinition> classes,
-                 std::vector<ItemDefinition> items, std::optional<PresetParty> preset)
-    : attacks_(std::move(attacks)), monsters_(std::move(monsters)), races_(std::move(races)),
-      classes_(std::move(classes)), items_(std::move(items)), preset_(std::move(preset)) {
+                 std::vector<ItemDefinition> items, std::optional<PresetParty> preset,
+                 std::vector<SpellDefinition> spells)
+    : spells_(std::move(spells)), attacks_(std::move(attacks)), monsters_(std::move(monsters)),
+      races_(std::move(races)), classes_(std::move(classes)), items_(std::move(items)),
+      preset_(std::move(preset)) {
     if (attacks_.size() > maxAttacks || monsters_.size() > maxMonsters)
         throw std::runtime_error("catalog: exceeds 64 attacks or 32 monsters");
+    if (spells_.size() > maxSpells)
+        throw std::runtime_error("spells: exceeds 32 definitions");
+    validateIds(spells_, "spells");
+    for (std::size_t i = 0; i < spells_.size(); ++i) {
+        const auto& spell = spells_[i];
+        if (!spellRules(spell.kind) || !validDisplayText(spell.name, 64) ||
+            !validDisplayText(spell.description, 512))
+            throw std::runtime_error("spells: invalid kind/name/description");
+        for (std::size_t j = 0; j < i; ++j)
+            if (spells_[j].kind == spell.kind)
+                throw std::runtime_error("spells: duplicate concrete kind");
+    }
     validateIds(attacks_, "attacks");
     validateIds(monsters_, "monsters");
     if (races_.size() > maxRaces || classes_.size() > maxClasses || items_.size() > maxItems)
@@ -47,6 +61,20 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                 throw std::runtime_error("races." + r.id + ".ability_increases: expected 0..2");
     }
     for (const auto& c : classes_) {
+        if (static_cast<unsigned>(c.casting) > static_cast<unsigned>(Casting::Intelligence) ||
+            (c.features & ~15u) || c.spellCount > c.spells.size() ||
+            (hasFeature(c.features, ClassFeature::LifeDomain) && c.casting != Casting::Wisdom) ||
+            (hasFeature(c.features, ClassFeature::ArcaneRecovery) && c.casting != Casting::Intelligence))
+            throw std::runtime_error("classes: invalid casting/features");
+        for (std::size_t i = 0; i < c.spellCount; ++i) {
+            const auto* s = spell(c.spells[i]);
+            if (!s || spellRules(s->kind)->casting != c.casting)
+                throw std::runtime_error("classes: invalid spell reference or class eligibility");
+            for (std::size_t j = 0; j < i; ++j)
+                if (c.spells[j].index == c.spells[i].index)
+                    throw std::runtime_error("classes: duplicate spell reference");
+        }
+
         if (!validDisplayText(c.name, 64) ||
             (c.hitDie != 6 && c.hitDie != 8 && c.hitDie != 10 && c.hitDie != 12) ||
             (c.weapons & ~allWeaponTraining) || (c.armor & ~15u) ||
@@ -110,6 +138,15 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                     throw std::runtime_error("monsters." + m.id + ".attacks: duplicate reference");
         }
     }
+}
+const SpellDefinition* Catalog::spell(SpellId id) const noexcept {
+    return id.index < spells_.size() ? &spells_[id.index] : nullptr;
+}
+SpellId Catalog::findSpell(std::string_view id) const noexcept {
+    for (std::size_t i = 0; i < spells_.size(); ++i)
+        if (spells_[i].id == id)
+            return {static_cast<std::uint16_t>(i)};
+    return {};
 }
 const AttackDefinition* Catalog::attack(AttackId id) const noexcept {
     return id.index < attacks_.size() ? &attacks_[id.index] : nullptr;

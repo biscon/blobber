@@ -1,5 +1,6 @@
 #pragma once
 #include "rules/resolve.hpp"
+#include "rules/spells.hpp"
 #include <limits>
 #include <string>
 
@@ -69,6 +70,10 @@ struct ClassDefinition {
     WeaponTraining weapons = 0;
     std::uint8_t armor = 0;
     bool allowsDefense = false;
+    Casting casting = Casting::None;
+    ClassFeatures features = 0;
+    std::array<SpellId, 16> spells{};
+    std::size_t spellCount = 0;
 };
 struct ItemDefinition {
     std::string id, name, description;
@@ -100,6 +105,7 @@ struct CharacterBuild {
     std::array<OwnedItem, maxStartingItems> items{};
     std::size_t itemCount = 0;
     Equipment equipment;
+    bool lifeDomain = false;
 };
 struct PresetParty {
     std::array<CharacterBuild, partySize> characters;

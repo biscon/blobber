@@ -39,10 +39,14 @@ struct MonsterDefinition {
 class Catalog {
   public:
     static constexpr std::size_t maxMonsters = 32, maxAttacks = 64, maxIdBytes = 128;
-    static constexpr std::size_t maxRaces = 16, maxClasses = 16, maxItems = 64;
+    static constexpr std::size_t maxRaces = 16, maxClasses = 16, maxItems = 64, maxSpells = 32;
     Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
             std::vector<RaceDefinition> races = {}, std::vector<ClassDefinition> classes = {},
-            std::vector<ItemDefinition> items = {}, std::optional<PresetParty> preset = std::nullopt);
+            std::vector<ItemDefinition> items = {}, std::optional<PresetParty> preset = std::nullopt,
+            std::vector<SpellDefinition> spells = {});
+    const SpellDefinition* spell(SpellId) const noexcept;
+    SpellId findSpell(std::string_view) const noexcept;
+    std::size_t spellCount() const noexcept { return spells_.size(); }
     const RaceDefinition* race(RaceId id) const noexcept;
     const ClassDefinition* characterClass(ClassId id) const noexcept;
     const ItemDefinition* item(ItemId id) const noexcept;
@@ -61,6 +65,7 @@ class Catalog {
     std::size_t monsterCount() const noexcept { return monsters_.size(); }
 
   private:
+    std::vector<SpellDefinition> spells_;
     std::vector<AttackDefinition> attacks_;
     std::vector<MonsterDefinition> monsters_;
     std::vector<RaceDefinition> races_;

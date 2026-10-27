@@ -7,7 +7,7 @@ namespace blobber {
 inline bool sameActor(ActorId a, ActorId b) noexcept {
     return a.slot == b.slot && a.world == b.world;
 }
-enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Aid, Count };
+enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Aid, Feature, Count };
 enum class CommandReason : std::uint8_t {
     PreviewAccepted,
     Ready,
@@ -37,6 +37,14 @@ enum class CommandReason : std::uint8_t {
     OutOfRange,
     Blocked,
     AttackPending,
+    InsufficientMana,
+    NoCharges,
+    InvalidSpell,
+    InvalidTargets,
+    FullHealth,
+    FullMana,
+    Unsafe,
+    EffectCapacity,
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;
@@ -46,6 +54,12 @@ struct PartyCommand {
     std::optional<ActorId> target;
     std::optional<rules::CharacterId> ally{};
     std::uint64_t world = 0, turn = 0;
+    rules::SpellId spell{};
+    rules::Feature feature = rules::Feature::None;
+    std::array<ActorId, 3> enemies{};
+    std::array<rules::CharacterId, 3> allies{};
+    std::array<std::uint8_t, 3> darts{};
+    std::size_t targetCount = 0;
 };
 // Presentation visibility only. Combat independently validates range, rank, life and turn.
 struct TargetAnchor {

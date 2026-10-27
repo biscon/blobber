@@ -82,5 +82,7 @@ class HudPainter {
     void log(const HudSnapshot& h, bool expanded) const;
     void tooltip(const HudSnapshot& h) const;
     void details(const HudSnapshot& h) const;
+    void spellbook(const HudSnapshot& h) const;
+    void spellTargets(const HudSnapshot& h) const;
 };
 } // namespace blobber

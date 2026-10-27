@@ -24,7 +24,17 @@ struct Dice {
     std::int32_t modifier = 0;
 };
 bool validDice(Dice dice) noexcept;
-enum class DamageType : std::uint8_t { Bludgeoning, Piercing, Slashing };
+enum class DamageType : std::uint8_t {
+    Bludgeoning,
+    Piercing,
+    Slashing,
+    Acid,
+    Fire,
+    Force,
+    Radiant,
+    Necrotic,
+    Thunder
+};
 struct DiceRoll {
     std::array<std::uint8_t, 64> faces{};
     std::size_t count = 0;

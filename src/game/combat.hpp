@@ -37,7 +37,12 @@ enum class CombatEvent : std::uint8_t {
     Round,
     Spent,
     Disengaged,
-    Effect
+    Effect,
+    Cast,
+    Healing,
+    Recovery,
+    SpellSave,
+    GuidingMark
 };
 struct CombatOutcome {
     CombatEvent event = CombatEvent::None;
@@ -54,9 +59,13 @@ struct CombatOutcome {
     std::uint64_t occurredMs = 0;
     bool targetGone = false;
     EffectEvent effect;
+    rules::SpellKind spell = rules::SpellKind::Count;
+    rules::Feature feature = rules::Feature::None;
+    int saveTotal = 0, saveDifficulty = 0;
+    std::uint8_t darts = 0;
 };
 struct CombatEvents {
-    static constexpr std::size_t capacity = attackCapacity * 2 + 4 + EffectController::eventAllowance;
+    static constexpr std::size_t capacity = 2048;
     std::array<CombatOutcome, capacity> values{};
     std::size_t count = 0;
     CombatOutcome step; // The single automatic/phase step, separate from draining deadlines.
@@ -75,6 +84,11 @@ struct CombatEvents {
     const CombatOutcome* begin() const noexcept { return values.data(); }
     const CombatOutcome* end() const noexcept { return values.data() + count; }
 };
+// Original weapon burst, extra spell recipients, effects/cleanup, Guiding expiry,
+// and one synchronous area/phase operation. Revisit if adding NPC spellcasters.
+static_assert(attackCapacity * 2 + rules::partySize * 2 + EffectController::eventAllowance +
+                  NpcWorld::maxInstances + 64 <
+              CombatEvents::capacity);
 struct CombatParticipant {
     std::optional<rules::CharacterId> character;
     std::optional<ActorId> enemy;
@@ -115,7 +129,7 @@ class CombatController {
     std::array<bool, NpcWorld::maxInstances> movementLocks(std::uint64_t now) const noexcept;
     CombatOutcome update(Player pose, bool moving, std::uint64_t now, CombatEvents&) noexcept;
     CommandReason validate(const PartyCommand&, Player) const noexcept;
-    CombatOutcome submit(const PartyCommand&, Player, std::uint64_t now) noexcept;
+    CombatOutcome submit(const PartyCommand&, Player, std::uint64_t now, CombatEvents&) noexcept;
     bool continueExploring() noexcept;
     void previewTurns(CombatSnapshot&) const noexcept;
     bool member(ActorId) const noexcept;
@@ -123,6 +137,7 @@ class CombatController {
     bool exposed(ActorId) const noexcept;
     bool adjacent(Cell) const noexcept;
     bool occupiedFront(Player) const noexcept;
+    bool sneakPreview(rules::CharacterId, ActorId, bool ranged, Player) const noexcept;
 
   private:
     struct Entry {
@@ -147,9 +162,26 @@ class CombatController {
         bool turn = false, releaseNotice = false;
     };
     std::array<PendingAttack, attackCapacity> pending_{};
+    struct SpellPayload {
+        std::array<CombatOutcome, 3> outcomes{};
+        std::size_t count = 0;
+    };
+    std::array<SpellPayload, rules::partySize> spellPayloads_{};
+    std::array<std::uint64_t, rules::partySize> sneakReady_{};
+    CommandReason validateMagic(const PartyCommand&, Player) const noexcept;
+    CombatOutcome submitMagic(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
+    EffectRequest spellEffect(const PartyCommand&, rules::SpellKind) const noexcept;
+    bool safeRecovery(Player) const noexcept;
+    bool sneakEligible(rules::CharacterId, ActorId, rules::RollMode, bool ranged, Player) const noexcept;
+    void spellPulse(ActorId, rules::CharacterId, rules::SpellKind, Player, std::uint64_t) noexcept;
+    void applyDamage(CombatOutcome&, std::uint64_t, CombatEvents&) noexcept;
     AttackVisualSnapshot visuals_;
     std::uint64_t nextAttack_ = 1;
     bool drainedThisUpdate_ = false;
+    static constexpr std::size_t timelineCapacity = attackCapacity + rules::partySize * 2;
+    AttackVisual& visual(std::size_t slot) noexcept;
+    const AttackVisual& visual(std::size_t slot) const noexcept;
+    static std::size_t ownerSlot(std::size_t slot) noexcept;
     bool attackBusy(std::size_t slot) const noexcept;
     bool pendingImpacts() const noexcept;
     CombatOutcome queueAttack(CombatOutcome, Player, std::uint64_t now) noexcept;

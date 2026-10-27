@@ -84,12 +84,15 @@ void HudPainter::details(const HudSnapshot& h) const {
         std::snprintf(line, sizeof(line), "%s: %s", slots[i], c->equipment[i]);
         clipped(line, r.x + 12, r.y + 145 + i * 13, 320);
     }
+    clipped(c->effects.data(), r.x + 96, r.y + 115, 232, blue, UiTextStyle::Small);
     text("READ ONLY / PAUSED / ESC TO CLOSE", r.x + 12, r.y + 192, muted, UiTextStyle::Small);
 }
 namespace {
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
     if (!p.fonts) {
-        const Color color = feedback.hit ? Color{190, 24, 18, 255} : WHITE;
+        const Color color = feedback.healing ? Color{35, 140, 95, 255}
+                            : feedback.hit   ? Color{190, 24, 18, 255}
+                                             : WHITE;
         const Vector2 center{r.x + r.width * .5f, r.y + r.height * .5f};
         for (std::size_t i = 0; i < bloodSplat.size(); ++i) {
             const auto a = bloodSplat[i], b = bloodSplat[(i + 1) % bloodSplat.size()];
@@ -100,8 +103,11 @@ void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
         }
     } else {
         char label[32];
-        if (feedback.hit)
-            std::snprintf(label, sizeof(label), "%lld", static_cast<long long>(feedback.damage));
+        if (feedback.text)
+            std::snprintf(label, sizeof(label), "%s", feedback.text);
+        else if (feedback.hit)
+            std::snprintf(label, sizeof(label), feedback.healing ? "+%lld" : "%lld",
+                          static_cast<long long>(feedback.damage));
         else
             std::snprintf(label, sizeof(label), "MISS");
         const auto width = p.fonts->width(label, UiTextStyle::Heading);
@@ -164,6 +170,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             }
         }
     }
+    p.spellTargets(*h);
     for (const auto& feedback : h->feedback)
         if (const auto rect = feedbackRect(feedback, h->cards))
             splash(p, feedback, *rect);
@@ -197,6 +204,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.box(hudLayout::quit);
         p.label("QUIT GAME", hudLayout::quit);
     }
+    p.spellbook(*h);
     p.tooltip(*h);
     if (h->demo) {
         p.label("F2 NEXT", hudLayout::demoNext, gold, UiTextStyle::Small);

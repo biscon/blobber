@@ -175,3 +175,38 @@ accept up to three; upcasting remains deferred. Mage Armor is party-only because
 NPC armor currently has no equipment breakdown. Future spell commands must enforce
 class, humanoid, range/visibility and resource rules before requesting application.
 See [effects design](effects_design.md) for lifecycle, timestamp and capacity contracts.
+
+
+## Slice 10 spells and class identity
+
+Source remains the [official SRD 5.1 CC edition](https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf),
+spell descriptions under the names below and the Fighter, Life Domain, Rogue and
+Wizard class sections. Attribution remains with the executable catalog. Only the
+listed level-one mechanics are adopted; this is not full tabletop spellcasting.
+
+| Content | Adopted mechanics | Demo adaptation or omission |
+| --- | --- | --- |
+| Sacred Flame; Fire Bolt; Acid Splash | 1d8 radiant/Dex save; 1d10 fire/spell attack; 1d6 acid/Dex save | Six-cell visible-target range. Acid Splash allows one or two targets in the same cell. Cantrip scaling is deferred. |
+| Spare the Dying; Cure Wounds | Stabilize a dying creature; 1d8 + casting modifier healing | Party portraits are touch reach. Dead allies cannot be restored; full-health healing rejects without cost. |
+| Bless; Bane; Shield of Faith; Mage Armor | Existing slice 09 effects and durations; Bane uses a Charisma save | Up to three Bless/Bane recipients; other buffs one party recipient. Shield uses a full action. No material components. |
+| Guiding Bolt; Inflict Wounds | 4d6 radiant ranged spell attack and advantage for the next attack; 3d10 necrotic melee spell attack | Guiding advantage expires after six gameplay seconds, starting at impact; next accepted attack roll consumes it. Inflict uses exposed front-row melee reach. Healing Word was excluded by user decision. |
+| Magic Missile | Three automatic-hit force darts, each 1d4+1 | One shared damage roll per cast; distribute among up to three visible enemies. No Shield spell, counterspell or automatic retargeting. |
+| Burning Hands; Thunderwave | 3d6 fire/Dex save; 2d8 thunder/Con save; half damage on successful save | Both affect the three clear-sight front cells, including protected/occluded occupants, without friendly fire. Failed Thunderwave survivors push one cardinal cell; occupied/walled destinations block without extra damage. |
+| Fighter Second Wind | 1d10 + level self-healing | Full action; one charge until restart in this slice. Rest refresh is deferred. Defense remains active. |
+| Life Domain | Heavy armor proficiency; Disciple of Life adds 2 + spell level to healing | Fixed Cleric profile; no domain-selection UI or further domain abilities. |
+| Rogue Sneak Attack | Finesse/ranged eligibility, advantage or engaged ally, no final disadvantage; 1d6 extra damage, doubled on a critical | Rear-row melee does not change formation. An acting front ally engages the three-cell front. One accepted successful hit per six gameplay seconds, not once per individual tabletop turn. |
+| Wizard Arcane Recovery | Limited recovery of spellcasting resources | Once per restart, restores two mana at level one in safe Exploration: no pending attack and no aware or adjacent living hostile. No short-rest transaction yet. |
+
+Mana replaces spell slots: levels 1/2/3 have caps 4/6/14; cantrips cost zero and
+first-level spells cost two. The fourteen curated spells are always accessible to
+their class without preparation or spellbook management. Casting takes one action
+or the shared six-second real-time cooldown. Components, bonus actions, rituals,
+upcasting, second-level spells, advancement and new racial traits are omitted.
+Existing racial numeric and training passives remain active. Levels 2/3 mana caps
+are data support, not a delivered progression system.
+
+Projectile spells use immediate release and 180–450 ms travel; Inflict Wounds
+strikes at 200 ms; all other consequences occur at casting time. These timings,
+conservative grid visibility, pause/full-round clocks, UI confirmation rules and
+bounded capacities are project mechanics. See [spells design](spells_design.md)
+and [verification](slice10_verification.md).

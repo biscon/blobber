@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 is next eligible for planning.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 is Ready for review; user acceptance is pending.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 09 — Effects and concentration (2026-10-27) |
-| Active slice | None |
-| Awaiting user review | None |
+| Active slice | 10 — Spells and class identity (Ready for review) |
+| Awaiting user review | Slice 10 |
 | Blockers | None |
-| Next eligible slice | 10 — Spells and class identity (planning) |
-| Next action | Plan slice 10 in a clean context when requested |
+| Next eligible slice | None until slice 10 is accepted |
+| Next action | User reviews slice 10; do not advance |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -317,7 +317,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 8.2 | [Distinct goblin archer artwork and loadouts](#slice-82-distinct-goblin-archer-artwork-and-loadouts) | 8.1 | Accepted | B follow-up |
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Accepted | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
-| 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Planned | C |
+| 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Ready for review | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Planned | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
@@ -1173,7 +1173,21 @@ selection must demonstrate distinct class roles, not just differently named dama
 mana and usage limits, legal/illegal targeting, concentration, durations, healing,
 tile areas, pause behavior, and spell use in both approach and turn-based phases.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Stage / last updated:** Ready for review; 2026-10-27.
+**Approved plan:** User said “Implement the plan”. See [spells design](spells_design.md).
+Expanded roster with Inflict Wounds replacing Healing Word, 4/6/14 mana, Rogue
+back-row reach, safe Arcane Recovery, three-cell areas, live target selection,
+and class features only (existing racial passives retained).
+**Delivered:** All fourteen spells, mana, class features, live multi-target/area
+selection, prepared spell glints and complete event-batch consumption. No slice 11
+inventory/equipment changes, progression, resting or additional racial features.
+**Verification:** Debug/Release 26/26; focused ASan/UBSan 6/6; zero-allocation guard;
+full-population spell/weapon and effect-capacity stress; hidden GPU lifecycle,
+159 spell/feature captures and source-free startup. See [verification and handoff](slice10_verification.md)
+for exact coverage, review recipe and unexecuted checks.
+**Acceptance:** Pending. Interactive desktop review remains unverified.
+**Next-agent handoff:** Review or correct slice 10 only. Stop at Ready for review;
+slice 11 remains Planned until explicit acceptance.
 
 ### Slice 11: Inventory and equipment
 

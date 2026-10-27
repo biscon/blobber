@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -151,7 +151,12 @@
         "heavy",
         "shield"
       ],
-      "allows_defense": true
+      "allows_defense": true,
+      "casting": "none",
+      "features": [
+        "second_wind"
+      ],
+      "spells": []
     },
     {
       "id": "cleric",
@@ -169,7 +174,21 @@
         "medium",
         "shield"
       ],
-      "allows_defense": false
+      "allows_defense": false,
+      "casting": "wisdom",
+      "features": [
+        "life_domain"
+      ],
+      "spells": [
+        "sacred_flame",
+        "spare_the_dying",
+        "bless",
+        "bane",
+        "shield_of_faith",
+        "cure_wounds",
+        "guiding_bolt",
+        "inflict_wounds"
+      ]
     },
     {
       "id": "rogue",
@@ -189,7 +208,12 @@
       "armor": [
         "light"
       ],
-      "allows_defense": false
+      "allows_defense": false,
+      "casting": "none",
+      "features": [
+        "sneak_attack"
+      ],
+      "spells": []
     },
     {
       "id": "wizard",
@@ -207,7 +231,19 @@
         "light_crossbow"
       ],
       "armor": [],
-      "allows_defense": false
+      "allows_defense": false,
+      "casting": "intelligence",
+      "features": [
+        "arcane_recovery"
+      ],
+      "spells": [
+        "fire_bolt",
+        "acid_splash",
+        "mage_armor",
+        "magic_missile",
+        "burning_hands",
+        "thunderwave"
+      ]
     }
   ],
   "items": [
@@ -347,14 +383,14 @@
     {
       "id": "spellbook",
       "name": "Spellbook",
-      "description": "A book reserved for the wizard spell system; no spells are active yet.",
+      "description": "A book containing the curated wizard spells.",
       "weight": 300,
       "kind": "gear"
     },
     {
       "id": "arcane_focus",
       "name": "Arcane focus",
-      "description": "A crystal reserved for spellcasting.",
+      "description": "A crystal used for spellcasting; components are not consumed in this demo.",
       "weight": 100,
       "kind": "gear"
     }
@@ -395,7 +431,8 @@
           "main_hand": 0,
           "off_hand": 2,
           "ranged": null
-        }
+        },
+        "life_domain": false
       },
       {
         "id": "brunna",
@@ -435,7 +472,8 @@
           "main_hand": 0,
           "off_hand": 2,
           "ranged": null
-        }
+        },
+        "life_domain": true
       },
       {
         "id": "merrin",
@@ -475,7 +513,8 @@
           "main_hand": 0,
           "off_hand": null,
           "ranged": 2
-        }
+        },
+        "life_domain": false
       },
       {
         "id": "lethiel",
@@ -511,7 +550,8 @@
           "main_hand": 0,
           "off_hand": null,
           "ranged": null
-        }
+        },
+        "life_domain": false
       }
     ],
     "formation": [
@@ -520,5 +560,91 @@
       "merrin",
       "lethiel"
     ]
-  }
+  },
+  "spells": [
+    {
+      "id": "sacred_flame",
+      "name": "Sacred Flame",
+      "description": "One enemy. Dexterity save negates 1d8 radiant damage.",
+      "kind": "sacred_flame"
+    },
+    {
+      "id": "spare_the_dying",
+      "name": "Spare the Dying",
+      "description": "Stabilize one dying ally. Does not restore HP.",
+      "kind": "spare_the_dying"
+    },
+    {
+      "id": "bless",
+      "name": "Bless",
+      "description": "One to three allies gain 1d4 on attacks and saves. Concentration: 60 seconds.",
+      "kind": "bless"
+    },
+    {
+      "id": "bane",
+      "name": "Bane",
+      "description": "One to three enemies: Charisma save or subtract 1d4 from attacks and saves. Concentration: 60 seconds.",
+      "kind": "bane"
+    },
+    {
+      "id": "shield_of_faith",
+      "name": "Shield of Faith",
+      "description": "One ally gains 2 AC. Concentration: 10 minutes.",
+      "kind": "shield_of_faith"
+    },
+    {
+      "id": "cure_wounds",
+      "name": "Cure Wounds",
+      "description": "Heal one living ally for 1d8 + Wisdom, plus the Life domain bonus.",
+      "kind": "cure_wounds"
+    },
+    {
+      "id": "guiding_bolt",
+      "name": "Guiding Bolt",
+      "description": "Ranged attack: 4d6 radiant. The next attack against a surviving target gains advantage within six gameplay seconds.",
+      "kind": "guiding_bolt"
+    },
+    {
+      "id": "inflict_wounds",
+      "name": "Inflict Wounds",
+      "description": "Exposed melee spell attack: 3d10 necrotic. Respects paired protection.",
+      "kind": "inflict_wounds"
+    },
+    {
+      "id": "fire_bolt",
+      "name": "Fire Bolt",
+      "description": "Ranged spell attack: 1d10 fire damage.",
+      "kind": "fire_bolt"
+    },
+    {
+      "id": "acid_splash",
+      "name": "Acid Splash",
+      "description": "One or two enemies in one cell: Dexterity save negates 1d6 acid damage.",
+      "kind": "acid_splash"
+    },
+    {
+      "id": "mage_armor",
+      "name": "Mage Armor",
+      "description": "One unarmored ally gains base AC 13 + Dexterity for eight hours.",
+      "kind": "mage_armor"
+    },
+    {
+      "id": "magic_missile",
+      "name": "Magic Missile",
+      "description": "Assign three automatic-hit darts among up to three enemies; each deals 1d4+1 force damage.",
+      "kind": "magic_missile"
+    },
+    {
+      "id": "burning_hands",
+      "name": "Burning Hands",
+      "description": "Three clear front cells: 3d6 fire, Dexterity save for half. No friendly fire.",
+      "kind": "burning_hands"
+    },
+    {
+      "id": "thunderwave",
+      "name": "Thunderwave",
+      "description": "Three clear front cells: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one cell forward if space permits.",
+      "kind": "thunderwave"
+    }
+  ]
 }

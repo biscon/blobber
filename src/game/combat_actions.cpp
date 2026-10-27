@@ -19,9 +19,12 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::InvalidCharacter;
     if (static_cast<unsigned>(c.action) >= static_cast<unsigned>(PartyAction::Count))
         return CommandReason::InvalidAction;
-    if (c.action == PartyAction::BackMelee)
+    if (c.action == PartyAction::Spell || c.action == PartyAction::Feature)
+        return validateMagic(c, pose);
+    if (c.action == PartyAction::BackMelee &&
+        !party_.hasFeature(c.character, rules::ClassFeature::SneakAttack))
         return CommandReason::FeatureRequired;
-    if (c.action == PartyAction::Spell || c.action == PartyAction::Item)
+    if (c.action == PartyAction::Item)
         return CommandReason::Unavailable;
     if (c.world != state_.world || c.turn != state_.turn)
         return CommandReason::StaleTurn;
@@ -53,7 +56,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
     if (nextAttack_ == std::numeric_limits<std::uint64_t>::max() ||
         attackBusy(NpcWorld::maxInstances + c.character.index))
         return CommandReason::AttackPending;
-    if (!ranged && !exposed(c.character))
+    if (!ranged && !exposed(c.character) && !party_.hasFeature(c.character, rules::ClassFeature::SneakAttack))
         return CommandReason::RearBlocked;
     if (!weapon(c.character, ranged))
         return CommandReason::NoWeapon;
@@ -126,7 +129,10 @@ void CombatController::alert(ActorId target, Player pose) noexcept {
         state_.phase = CombatPhase::Approach;
     }
 }
-CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::uint64_t now) noexcept {
+CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::uint64_t now,
+                                       CombatEvents& events) noexcept {
+    if (c.action == PartyAction::Spell || c.action == PartyAction::Feature)
+        return submitMagic(c, pose, now, events);
     CombatOutcome out;
     out.reason = validate(c, pose);
     if (out.reason != CommandReason::Ready)
@@ -157,7 +163,10 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const bool advantage = ranged && realTime(state_.phase) && !ai_.aware(out.enemy) &&
                                !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
         const bool held = effects_.has(out.enemy, EffectKind::HoldPerson);
-        const auto roll = rng_.d20(rules::rollMode(advantage || held, ranged && adjacent(pose.cell))).value;
+        const auto mode =
+            rules::rollMode(advantage || held || effects_.guiding(out.enemy), ranged && adjacent(pose.cell));
+        const auto roll = rng_.d20(mode).value;
+        effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;
         const auto hit = rules::resolveAttack(roll, w.attackBonus + effects_.rollModifier(c.character),
                                               effects_.armorClass(out.enemy))
@@ -167,6 +176,10 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
                        (out.hit && held && combatAdjacent(map_, a->npc.cell, pose.cell));
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
+            if (sneakEligible(c.character, out.enemy, mode, ranged, pose)) {
+                out.damage += rng_.damage({1, 6, 0}, out.critical).value.total;
+                sneakReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            }
         }
         alert(out.enemy, pose);
         out = queueAttack(out, pose, now);

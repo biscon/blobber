@@ -54,10 +54,14 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         if (!root.is_object() || !root.contains("schema_version"))
             fail("schema_version", "missing version");
         const int version = integer(root.at("schema_version"), "schema_version");
-        if (version != 1 && version != 2 && version != 3)
-            fail("schema_version", "only versions 1, 2 and 3 are supported");
+        if (version != 1 && version != 2 && version != 3 && version != 4)
+            fail("schema_version", "only versions 1 through 4 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
+        else if (version == 4)
+            fields(root, "catalog",
+                   {"schema_version", "attacks", "monsters", "races", "classes", "items", "preset_party",
+                    "spells"});
         else
             fields(root, "catalog",
                    {"schema_version", "attacks", "monsters", "races", "classes", "items", "preset_party"});
@@ -101,13 +105,13 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         for (std::size_t i = 0; i < monsterJson.size(); ++i) {
             const auto p = "monsters[" + std::to_string(i) + "]";
             const auto& m = monsterJson[i];
-            if (version == 3)
+            if (version >= 3)
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks", "traits"});
             else
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks"});
             MonsterDefinition definition;
             definition.id = identifier(m.at("id"), p + ".id");
-            if (version == 3) {
+            if (version >= 3) {
                 array(m.at("traits"), p + ".traits", 1);
                 for (const auto& trait : m.at("traits")) {
                     if (string(trait, p + ".traits") != "nimble_escape")
@@ -142,7 +146,7 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         auto characters = loadCharacterContent(root);
         return Catalog(std::move(attacks), std::move(monsters), std::move(characters.races),
                        std::move(characters.classes), std::move(characters.items),
-                       std::move(characters.preset));
+                       std::move(characters.preset), std::move(characters.spells));
     } catch (const std::exception& e) {
         throw std::runtime_error("Loading rules " + path.string() + ": " + e.what());
     }
