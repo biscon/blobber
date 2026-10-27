@@ -1,8 +1,8 @@
 # Character sheet verification and handoff
 
-Status: **Ready for review**, 2026-10-27. The user accepted the generated visual
-mockup and authorized implementation. This remains part of slice 11; implementation
-acceptance is pending and no later slice has started.
+Status: **Accepted and closed**, 2026-10-27. The user accepted the generated visual
+mockup, authorized implementation, and subsequently accepted the completed result
+with slice 11. Slice 12 is next eligible for planning; no later slice has started.
 
 ## Delivered
 
@@ -50,7 +50,7 @@ incorrectly treated Mage Armor as concentration; the sheet correctly does not.
 
 Representative native/reduced captures were visually inspected, including actual
 armor/spell effects and the return to Inventory. No mouse/keyboard injection or
-window focus control was used. Interactive review remains unverified. Full CPU
+window focus control was used. Interactive desktop review was not automated; user acceptance is now recorded. Full CPU
 and sanitizer suites were not repeated for this UI change; the affected suites
 above and GPU integration were run.
 
@@ -70,5 +70,5 @@ Run `cmake-build-debug/blobber --inventory-demo --seed 5`, then click Character.
 For the portrait entry, close the overlay and click a portrait's i control.
 Reproduce all images with `--capture-inventory DIRECTORY --seed 5`.
 
-After user acceptance, update the slice 11 checkpoint/tracker/execution record.
-Do not infer slice acceptance from approval of the mockup or these checks.
+The slice 11 checkpoint, tracker and execution record now record explicit user
+acceptance. Continue with slice 12 planning using the [accepted handoff](slice11_verification.md#accepted-closeout-and-slice-12-handoff).

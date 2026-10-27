@@ -1,9 +1,9 @@
 # Slice 11 verification and handoff
 
-Status: **Ready for review**, 2026-10-27. User acceptance is pending.
+Status: **Accepted and closed** by the user on 2026-10-27, including inventory UI corrections and the tabbed Character sheet.
 The [inventory design](inventory_design.md) records the approved boundaries and
 implementation. Slice 10 was accepted before this work began. Slice 12 remains
-Planned and must not start before the user accepts slice 11.
+Planned and is now next eligible for planning in a fresh context.
 
 Latest approved extension: the portrait inspector is replaced by the
 [tabbed Character sheet](character_sheet_design.md), with its own
@@ -137,13 +137,13 @@ art, text, quantity badges, modal coverage, feedback and letterboxing.
 
 No loot, arrow recovery, resting, progression, save/resume, item dropping or layered
 clothing is delivered. See the [source/adaptation ledger](srd_content_ledger.md#slice-11-inventory-ammunition-and-potions).
-After user acceptance, record it in the checkpoint/tracker/execution record before
-planning slice 12. Do not infer acceptance from these checks or captured images.
+Explicit user acceptance is recorded in the checkpoint, tracker and execution
+record. Slice 12 planning is now eligible; the checks alone did not establish acceptance.
 
 ## Inventory review correction (2026-10-27)
 
-Implemented the user's screenshot feedback; **Ready for review**, acceptance still
-pending. This section supersedes the earlier button-split/keyboard-destination
+Implemented the user's screenshot feedback; **accepted and closed** with slice 11
+on 2026-10-27. This section supersedes the earlier button-split/keyboard-destination
 coverage and the earlier inventory screenshots above.
 
 - Holy symbols, spellbooks and focuses expose Transfer only. Equip/Unequip and
@@ -197,7 +197,7 @@ Selected replacement review images:
 - [Backpack dock and M map hint](screenshots/slice11-review/inventory-backpack-dock-1280.png).
 
 Reproduce with `cmake-build-debug/blobber --capture-inventory DIRECTORY --seed 5`.
-Continue review corrections within slice 11; do not start slice 12 until acceptance.
+These corrections are accepted. See the closeout below for the slice 12 handoff.
 
 Follow-up alignment review: Body moved 9 native pixels right to the silhouette's
 centerline. All four character boxes are now equally wider, with their original
@@ -206,5 +206,46 @@ button. The close button moved 3 native pixels left to keep those constraints ex
 The Debug application build and inventory test pass; all 53 hidden captures were
 regenerated and the retained images above refreshed. Inspected native and reduced
 examples, including the [matching focus view](screenshots/slice11-review/inventory-focus.png).
-Interactive review remains with the user; no broader tests were needed for this
+The user subsequently accepted the result; no broader tests were needed for this
 shared-layout-only adjustment.
+
+## Accepted closeout and slice 12 handoff
+
+The user explicitly accepted slice 11 on 2026-10-27 and requested that its
+documentation be closed before clearing context for slice 12. Acceptance covers
+inventory/equipment, ammunition/potions, the reviewed layout/control corrections,
+and the approved, implemented Inventory / Character tabs. The roadmap checkpoint,
+tracker, execution record and system overview now agree. No outstanding review
+request or blocker remains. Existing verification limitations remain recorded;
+this documentation-only closeout does not claim additional test execution.
+
+Slice 12 — Loot and recovery is **next eligible**, still **Planned / not started**.
+In the next session, read AGENTS.md, system_design.md, dnd5e_demo_design.md, this
+handoff and character_sheet_verification.md, then inspect relevant code and plan
+slice 12 only. Ask about material ambiguities and obtain plan approval before
+implementation. Do not interpret slice 11 acceptance as slice 12 plan approval.
+
+Preserve these integration contracts:
+
+- Party owns the four 48-cell bags, separate equipment and bounded live stacks.
+  Route changes through GameSession inventory access checks and authoritative
+  transaction previews/commits; handle full bags, weight and stack limits atomically.
+  Loot collection must not bypass ownership, generation/revision or conservation checks.
+- The accepted fullscreen UI shares character selection across Inventory and
+  Character. Keep inventory geometry/gestures and the reviewed tab behavior intact.
+  The sheet reads current resources, equipment-derived stats and effects; recovery
+  must update authoritative state so these displays remain accurate.
+- Healing/mana potions and finite party ammunition already work. Loot, arrow
+  recovery, camp supplies and rests do not. Define slice 12's corpse-independent
+  loot ownership, capacities, safety and exactly-once resource handling explicitly.
+  The user subsequently specified floor drops on monster death: visible items are
+  clicked to collect into the active gameplay character's bag. Drops outlive corpse
+  visuals; rejected pickup leaves them in place. See the slice 12 record for the
+  approved interaction and remaining reach/combat/picking design decisions.
+- Hit Dice and feature-use flags exist, but recovery rules must be designed in
+  slice 12. Character-sheet feature descriptions and resource labels must remain
+  consistent with whichever rest/reset behavior is approved.
+- XP on Character is read-only. XP awards, levels 2–3 and the future level-up flow
+  belong to slice 13; save/resume belongs to slice 14. Neither is authorized here.
+- Preserve allocation-free engine frame processing, test-owned fixtures, and
+  hidden application-owned capture verification. No OS desktop input automation.

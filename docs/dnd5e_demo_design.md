@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 is implemented and Ready for review; acceptance is pending.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 is next eligible for planning.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 10 — Spells and class identity (2026-10-27) |
-| Active slice | 11 — Inventory and equipment (Ready for review) |
-| Awaiting user review | 11 — Inventory and equipment |
+| Latest accepted slice | 11 — Inventory and equipment, including Character sheet (2026-10-27) |
+| Active slice | None |
+| Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None until slice 11 is accepted |
-| Next action | User reviews slice 11; record acceptance before planning slice 12 |
+| Next eligible slice | 12 — Loot and recovery (Planned) |
+| Next action | In a fresh context, read slice 11 handoffs and plan slice 12 only; obtain plan approval before implementation |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -256,6 +256,9 @@ Short rests spend Hit Dice and refresh supported features outside danger. Long
 rests require either a designated safe location or camp supplies and cannot occur
 during an active threat. Define resource amounts and safety checks in slice 12.
 Loot must have explicit ownership independent of a monster's visual corpse.
+Monsters drop visible items onto the floor when they die; clicking a floor item
+collects it into the active character's inventory. The slice 12 record defines
+this approved interaction and the remaining pickup design decisions.
 
 Provide one versioned, validated out-of-combat save covering party state,
 inventory, progression, party position, and persistent level changes, including
@@ -318,7 +321,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 8.3 | [Projectiles and impact-time consequences](#slice-83-projectiles-and-impact-time-consequences) | 8.2 | Accepted | B follow-up |
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
-| 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Ready for review | C |
+| 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Accepted | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Planned | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
@@ -1224,28 +1227,52 @@ invalid changes without partial mutation, and recalculate derived stats correctl
 Test full bags, weight limits, equipped-item ownership, split/merge boundaries,
 consumption/ammunition costs, and combat restrictions. Inspect the large-screen UI.
 
-**Stage / last updated:** Ready for review; 2026-10-27.
+**Stage / last updated:** Accepted and closed; 2026-10-27.
 **Approved plan:** User said “Implement the plan.” See [inventory design](inventory_design.md).
 **Implemented:** Four 48-cell bags and separate equipment, atomic weight/stack/equipment transactions, safe-only gear/transfers, paused bag organization, drag/button/keyboard controls, Shift-drag quantity default one, fifteen painted item icons and silhouette. Healing/mana potions and finite party arrows use existing action/readiness clocks. Schema 5 retains 1–4 compatibility; gear changes update stats and end Mage Armor when required.
 **Verification:** Debug/Release 27/27; affected suites rerun after refinements, ASan/UBSan, zero-allocation guard, 100,000 split/merge cycles, hidden GPU and 41 native/reduced/letterboxed captures. See [durable verification and handoff](slice11_verification.md), including test limitations and retained review images.
 **Review correction (2026-10-27):** Implemented the user's screenshot feedback: contextual actions with unavailable states, drag-only move/merge/split initiation, torso/ranged slot placement, centered captions and large split controls, right-aligned counts, I inventory/M map, and a painted backpack dock icon with an updated tooltip. No later-slice rules were added. Follow-up checks and replacement review images are recorded in the [correction handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
-**Approved Character tab extension (2026-10-27):** User accepted the image-generated mockup and authorized implementation. The fullscreen panel now shares Inventory / Character tabs and the character strip; portrait info opens Character, inventory controls open Inventory. Live read-only stats/resources/equipment replace the small inspector. XP displays progress but awards and advancement remain deferred. Focused Debug/Release 6/6, allocation and hidden GPU checks pass; 77 captures generated. See [design](character_sheet_design.md) and [verification](character_sheet_verification.md). Implementation is Ready for review, not yet accepted.
-**Acceptance:** Pending user review. Interactive desktop review was not automated.
-**Next-agent handoff:** Review/fix this slice only until user acceptance is explicit. Then update checkpoint, tracker and this record before planning slice 12. Loot/recovery/rest/progression/save work has not started.
+**Approved Character tab extension (2026-10-27):** User accepted the image-generated mockup and authorized implementation. The fullscreen panel now shares Inventory / Character tabs and the character strip; portrait info opens Character, inventory controls open Inventory. Live read-only stats/resources/equipment replace the small inspector. XP displays progress but awards and advancement remain deferred. Focused Debug/Release 6/6, allocation and hidden GPU checks pass; 77 captures generated. See [design](character_sheet_design.md) and [verification](character_sheet_verification.md). The implementation was accepted with slice 11 on 2026-10-27.
+**Acceptance:** Explicitly accepted by the user on 2026-10-27 after the inventory corrections and Character sheet implementation. The user requested documentation closure and a fresh context for slice 12. Interactive desktop review was not automated; recorded verification limits remain unchanged.
+**Next-agent handoff:** Slice 11 is accepted and closed. Slice 12 — Loot and recovery is next eligible, still Planned and unstarted. Read [slice 11 handoff](slice11_verification.md#accepted-closeout-and-slice-12-handoff) and [Character sheet handoff](character_sheet_verification.md) before planning it. Preserve the accepted UI, authoritative inventory transactions and bounded allocation contracts. Define loot/rest ownership, safety, capacities and recovery rules in the slice 12 plan; ask about material ambiguities and obtain plan approval before coding. XP awards/level-up remain slice 13; save/resume remains slice 14.
 
 ### Slice 12: Loot and recovery
 
 **Deliver:** Bounded loot ownership and collection, supplies/consumable acquisition,
 Hit Dice short rests, feature recovery, safe-location long rests, and camp supplies.
 
+**Approved loot interaction (2026-10-27):** When a monster dies, its loot drops onto
+the dungeon floor at its death location as visible, clickable items/stacks. Clicking
+a dropped item collects it into the active gameplay character's inventory. During
+exploration this is the selected character; if combat pickup is allowed, it is the
+current turn actor. The recipient is not the last character viewed in the fullscreen
+sheet, and collection must not silently redirect to another party member.
+
+Create drops exactly once from authoritative death, independently of corpse
+animation or disappearance. Uncollected loot remains on the floor after the corpse
+is gone. Route pickup through checked inventory transactions: remove floor loot
+only after successful collection, and leave it unchanged with clear feedback if
+collection is rejected, including bag/stack capacity, weight or eligibility failure.
+Use direct clicks on the floor items rather than requiring a corpse-loot window.
+
 **Boundary:** No shops or quest system. Define safety, resource quantities, corpse
 independence, rest eligibility, and full-inventory handling explicitly.
+The slice 12 plan must also specify pickup reach/visibility, combat eligibility and
+any action cost, drop contents/quantities, and presentation/picking of overlapping
+floor items. Those details remain planning decisions; the floor-drop/click-to-pick-up
+interaction and active-character recipient are user requirements.
 
 **Acceptance:** Several encounters can be played with meaningful recovery decisions.
 Test duplicate collection, full inventories, resource depletion, repeated rest,
 threat restrictions, dead characters, and exactly-once resource consumption.
+Verify that death creates one set of floor drops, corpse removal preserves them,
+clicking collects into the active character's bag, changing the selected character
+changes the recipient, failed collection preserves the drop, and repeated clicks
+cannot duplicate items. Verify visible floor placement and reliable item picking.
 
 **Execution record:** Not started; no verification or acceptance recorded.
+The user explicitly requested the floor-drop interaction above after accepting
+slice 11. Slice 12 remains Planned; its implementation plan has not been approved.
 
 ### Slice 13: Levels 2 and 3
 

@@ -1,9 +1,9 @@
 # Inventory and equipment — slice 11
 
-Status: implemented, **Ready for review** (2026-10-27); user acceptance pending.
+Status: implemented, **accepted and closed** by the user on 2026-10-27, including UI corrections and the Character tab.
 The user approved the planning conversation with “Implement the plan.” See
-[verification and handoff](slice11_verification.md). Slice 10 is accepted; slice 12
-must not begin before this slice's user acceptance.
+[verification and handoff](slice11_verification.md). Slice 12 is next eligible for
+planning and remains unstarted.
 
 ## Approved behavior
 
@@ -135,7 +135,7 @@ no external window or OS input is controlled.
 
 ## Review correction: simpler inventory controls (2026-10-27)
 
-Implemented from the user's screenshot review; Ready for review. This supersedes
+Implemented from the user's screenshot review; accepted with slice 11 on 2026-10-27. This supersedes
 slice 11's original Move/Split button and keyboard destination modes. Drag/drop
 organizes and merges stacks; Shift-drag opens the quantity dialog. Keep only
 contextual Equip/Unequip, Transfer and Use Potion actions. Gear-only items such as

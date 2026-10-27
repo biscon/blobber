@@ -108,7 +108,7 @@ cost none. Casting takes one action or the shared six-second cooldown in real ti
 Mana and feature charges do not reset after encounters. Resting is a later slice;
 Restart restores initial resources. Portrait selection is distinct from the active turn.
 
-Slice 11 review: `./cmake-build-debug/blobber --inventory-demo --seed 5` opens
+Inventory demo: `./cmake-build-debug/blobber --inventory-demo --seed 5` opens
 Merrin's inventory. Each character has 48 bag cells plus separate body, main-hand,
 shield and ranged slots. Weight includes both bag and equipment; the limit is
 Strength × 15 lb. Arrows stack to 100, potions to 20, and other items stay separate.
@@ -136,7 +136,7 @@ including misses and interrupted projectiles. Arrows and potions do not replenis
 between encounters; looting and rests remain deferred.
 
 `--capture-inventory DIRECTORY` exports hidden, scripted inventory captures.
-See [inventory design](docs/inventory_design.md) and [slice 11 review notes](docs/slice11_verification.md).
+See [inventory design](docs/inventory_design.md) and the [accepted slice 11 handoff](docs/slice11_verification.md).
 
 Slice 10 review: `./cmake-build-debug/blobber --spell-demo --seed 5` opens the
 Wizard's spellbook on the hybrid demo map. Browsing pauses; selecting an entry

@@ -1,21 +1,21 @@
 # System design
 
-Implemented, **Ready for review**: approved [tabbed inventory and character sheet](character_sheet_design.md),
+Implemented, **accepted and closed**: approved [tabbed inventory and character sheet](character_sheet_design.md),
 replacing the portrait inspector while preserving the current inventory layout.
 The shared paused overlay uses fixed snapshots of live stats, equipment, resources,
 features and effects; XP remains read-only. Both entry routes and tab directions
 preserve character identity. [Verification and captures](character_sheet_verification.md)
-record focused Debug/Release, allocation and hidden GPU checks. Slice 11 acceptance remains pending.
+record focused Debug/Release, allocation and hidden GPU checks. The user accepted slice 11 and this extension on 2026-10-27.
 
-Implemented, **Ready for review**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
+Implemented, **accepted and closed**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
 
-Implemented, **Ready for review** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).
+Implemented, **accepted and closed** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).
 Party owns bounded live stacks and separate gear, with atomic staged transactions,
 weight/stat/effect reconciliation and strict schema-5 content. Full-screen paused
 browsing supports drag, split, transfer and equipment controls. Potions and finite
 party arrows share authoritative combat costs. Native item art preserves prepared
 dungeon rendering. Debug/Release suites, focused sanitizers, allocation guards and
-hidden GPU/captures pass. User acceptance is pending; slice 12 remains Planned.
+hidden GPU/captures pass. The user accepted slice 11 on 2026-10-27. Slice 12 is next eligible for planning and remains unstarted.
 
 Implemented, **accepted and closed** (2026-10-27): [Class Features picker correction](spellcasting_ui_design.md#class-features-presentation).
 The shared picker distinguishes spells, activated features and read-only automatic
