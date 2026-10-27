@@ -1,5 +1,12 @@
 # System design
 
+Review correction **awaiting mockup approval** (2026-10-27): the user requested
+one loot bag per occupied floor cell and a grid-based loot dialog with tooltips,
+Take All and Close/Escape. See the [loot-bag correction and mockup](loot_recovery_design.md#loot-bag-review-correction).
+The current-cell scaling discontinuity is also recorded for correction. The user
+requires visual acceptance before implementation; the previous result below has
+not been accepted. No slice 13 work is eligible.
+
 Implemented, **Ready for review** (2026-10-27): slice 12
 [loot and recovery](loot_recovery_design.md), with [verification and handoff](slice12_verification.md).
 GameSession owns bounded, corpse-independent loot and checked rest transactions;

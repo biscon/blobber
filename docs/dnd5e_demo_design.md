@@ -9,11 +9,11 @@ user acceptance.
 | Field | Current value |
 | --- | --- |
 | Latest accepted slice | 11 — Inventory and equipment, including Character sheet (2026-10-27) |
-| Active slice | 12 — Loot and recovery; Ready for review |
-| Awaiting user review | 12 — Loot and recovery (implementation) |
+| Active slice | 12 — Loot and recovery; review correction at mockup checkpoint |
+| Awaiting user review | Loot-dialog mockup; acceptance required before correction implementation |
 | Blockers | None |
 | Next eligible slice | None until slice 12 is accepted; 13 remains Planned |
-| Next action | User reviews slice 12; address corrections without advancing |
+| Next action | User reviews loot-dialog mockup; wait before implementing requested correction |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -322,7 +322,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 09 | [Effects and concentration](#slice-09-effects-and-concentration) | 8.3 | Accepted | C |
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Accepted | C |
-| 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Ready for review | C |
+| 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | In progress | C |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
@@ -1238,6 +1238,8 @@ consumption/ammunition costs, and combat restrictions. Inspect the large-screen 
 
 ### Slice 12: Loot and recovery
 
+**Current review correction:** Individual floor icons are superseded by the user's requested one-bag-per-cell / grid loot dialog. [Mockup and correction notes](loot_recovery_design.md#loot-bag-review-correction) await explicit visual approval before implementation. The reported camp-kit approach scaling defect is recorded there. Earlier delivery/verification below describe the pre-correction implementation.
+
 **Deliver:** Bounded loot ownership and collection, supplies/consumable acquisition,
 Hit Dice short rests, feature recovery, safe-location long rests, and camp supplies.
 
@@ -1270,7 +1272,7 @@ clicking collects into the active character's bag, changing the selected charact
 changes the recipient, failed collection preserves the drop, and repeated clicks
 cannot duplicate items. Verify visible floor placement and reliable item picking.
 
-**Stage / last updated:** Ready for review; 2026-10-27.
+**Stage / last updated:** In progress — review correction, awaiting loot-dialog mockup approval; 2026-10-27.
 **Approved plan:** User said “Implement the plan.” See the [loot/recovery design](loot_recovery_design.md) for behavior, ownership, capacities and verification.
 **Decisions:** Safe-only whole-stack pickup into the selected character, current/three-front-cell reach, six-item floor paging; usable gear, weighted gold and occasional potions; three fixed camp kits and no sanctuary in normal dungeon play. One/eight-hour short/long rest skips advance effects/cooldowns without moving NPCs. Stable allies can recover; dead allies cannot. Future hub/shops remain out of scope.
 **Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.

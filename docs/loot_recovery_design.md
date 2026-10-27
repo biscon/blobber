@@ -1,6 +1,8 @@
 # Loot and recovery — slice 12
 
-Status: **implemented; Ready for review**, 2026-10-27.
+Status: **review correction requested; loot-dialog mockup awaiting approval**, 2026-10-27.
+The previous implementation and verification remain recorded below. The requested
+revision is described in [Loot-bag review correction](#loot-bag-review-correction).
 The user approved the implementation plan with “Implement the plan.” The first
 checkpoint is an image-generated camp-screen mockup, followed by explicit visual
 approval **before coding or producing animation frames**. This is the user's
@@ -224,3 +226,37 @@ cells and 64 valid ground stacks. Schema 6 rejects unknown IDs, oversized drops 
 bad percentile ranges. Catalog schemas 1–5 remain strict and readable without loot.
 `--recovery-demo` places three separated encounters in the normal map with a demo-only
 spawn sanctuary. Normal gameplay loads the authored no-sanctuary configuration.
+
+## Loot-bag review correction
+
+2026-10-27: the user rejected individual ground-item browsing and requested one
+loot-bag graphic per cell containing loot. Death locations and authoritative floor
+ownership remain unchanged. Clicking a nearby bag after combat should open a paused
+loot dialog with an item grid, click-to-take, hover stat tooltips, Take All and
+Close/Escape. Uncollected contents keep the bag present. This request supersedes
+the individual floor icons and wheel paging described above; it does not change
+rest mechanics or authorize slice 13.
+
+**Required checkpoint:** the user explicitly asked for an imagegen mockup, then a
+pause for acceptance before implementation. [Loot dialog v1](mockups/slice12/loot-dialog-v1.png)
+was produced with the built-in imagegen tool; [exact prompt/provenance](mockups/slice12/loot-dialog-v1.prompt.json)
+are retained. It shows a five-column grid with quantities, selected recipient and
+carry weight, a hover tooltip, Take All and Close/Escape while keeping the existing
+HUD visible. Item amounts and carry weight are illustrative. Runtime text will be
+native UI. Crowded cells will need scrollable grid access without taking unwanted
+items first; the visible grid size is not an ownership capacity limit.
+
+**Scaling defect:** inspection found a discontinuity in `PreparedLoot::compose`:
+current-cell sprites force size 32, while cells ahead use projected size up to 48.
+This can make an approaching item shrink on entry into its cell. The follow-up
+must replace this special-case size jump with consistent bag scale and positioning,
+including current-cell visibility and near/adjacent/diagonal regression checks.
+This diagnosis is from code inspection; the reported movement was not replayed.
+
+**Next step after approval:** finalize bounded cell grouping/dialog snapshots,
+reuse checked inventory transactions and stat descriptions, define Take All failure
+feedback without losing leftovers, replace world icons/picking with one bag per
+cell, and test partial/empty bag lifetime, recipient identity, duplicate requests,
+full/overweight inventory, scrolling, tooltips, Escape and approach scaling. Keep
+rest and accepted Inventory/Character controls intact. No gameplay, renderer or
+runtime asset changes were made during this mockup checkpoint.
