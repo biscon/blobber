@@ -1,5 +1,19 @@
 # System design
 
+Design accepted, **implementation planned/unstarted** (2026-10-28):
+[main menu and character-creation flow](character_creation_flow_proposal.md), with
+[sixteen approved imagegen mockups](mockups/character-creator-v1/index.html).
+The [12.1–12.4 roadmap](dnd5e_demo_design.md#character-creation-interlude-accepted-flow-and-shared-contracts)
+adds expanded level-one spells; pure build rules, per-character spell grants,
+versioned starting-build storage and twenty portraits; menu/library/party launch;
+and the creator plus shared preparation/advancement presentation. The user approved
+expanded spell selection and Color Spray in place of illustrative Ray of Sickness.
+Library blueprints and live party state have independent ownership; menu/session
+lifecycle and bounded draft/UI storage preserve existing rendering/allocation
+contracts. Detailed subsystem designs are written in each later planning pass.
+No gameplay implementation is implied. Slice 12.1 is next eligible for planning;
+12.1–12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
+
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
 Drop into the current cell, automatic Take All closure, and a small generated Rest
 icon beside Settings while restoring full log widths. Session validates floor
@@ -10,7 +24,7 @@ and modal input rules remain intact. See [design](loot_recovery_design.md#invent
 and [current verification](slice12_verification.md): Debug/Release 29/29, focused
 sanitizers 3/3, allocation/stress/hidden GPU checks and 108 hidden captures pass.
 The user accepted slice 12, including all review corrections, on 2026-10-27.
-Slice 13 is next eligible for planning and remains unstarted.
+This was the slice-12 checkpoint; the accepted 12.x interlude above now precedes slice 13.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12
 [loot and recovery](loot_recovery_design.md), including the approved loot-bag review

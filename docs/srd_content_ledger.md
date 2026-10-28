@@ -256,3 +256,26 @@ settled presentation/no dying ally. Skip gameplay time without AI movement.
 Camp kits, authored sanctuaries, instantaneous transactions and cosmetic camp
 playback are project adaptations. Implementation and checks are recorded in
 [slice 12 verification](slice12_verification.md).
+
+## Planned character-creation interlude (2026-10-28; not implemented)
+
+The user accepted expanded spell selection and the visual creator flow. See
+[slices 12.1–12.4](dnd5e_demo_design.md#character-creation-interlude-accepted-flow-and-shared-contracts)
+for the roster, source requirements and adaptation questions. This section records
+planned scope, not adopted or verified behavior; slice planning must add exact
+source locations and approved adaptations before implementation.
+
+The planned additions are Ray of Frost, Shocking Grasp, Poison Spray, Sleep,
+False Life, Grease, Color Spray, Guidance, Resistance and Sanctuary. The existing
+fourteen spells remain. The user explicitly selected Color Spray instead of the
+mockups' illustrative Ray of Sickness after source checking against the
+[official SRD 5.1 CC edition](https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf).
+Do not import Ray of Sickness from a different source by following the old image label.
+
+Normal creation selection counts, Life Domain prepared grants and the High Elf
+Intelligence-based cantrip are planned alongside per-character spell ownership.
+Point buy uses the [2014 Basic Rules character-creation variant](https://www.dndbeyond.com/sources/dnd/basic-rules-2014/step-by-step-characters)
+with existing racial bonuses. Mana, automatic one-shot buff consumption (if adopted),
+Guidance's initiative consumer, discrete slow/prone/area behavior and action-cost
+adaptations must be documented as project choices, not passed off as unchanged
+tabletop rules. Skills and reactions remain outside this interlude.

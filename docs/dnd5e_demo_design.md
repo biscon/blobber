@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. No slice is active; slice 13 is next eligible for planning and remains Planned/unstarted.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; no implementation slice is active. Slice 12.1 is next eligible for planning; all new slices and slice 13 remain Planned/unstarted.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -12,8 +12,9 @@ user acceptance.
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 13 — Levels 2 and 3; Planned/unstarted |
-| Next action | When requested, plan slice 13 in a clean context using the accepted slice 12 handoff |
+| Next eligible slice | 12.1 — Expanded level-one spell catalog; Planned/unstarted |
+| Next action | When requested, plan slice 12.1 only; read the accepted creator flow, linked mockups and interlude contracts below |
+| Accepted design | Character creator/menu visual flow and expanded spell catalog, 2026-10-28; Color Spray replaces the illustrative Ray of Sickness |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -63,7 +64,7 @@ override the session's permission or mode constraints.
 If a slice proves too large, propose a split with a useful review checkpoint.
 Preserve existing slice IDs; use suffixes such as 10a/10b rather than silently
 renumbering completed history. The user explicitly chose decimal IDs 8.1–8.3
-for the graphical interlude after slice 08. Record approved dependency and milestone changes.
+for the graphical interlude after slice 08 and 12.1–12.4 for character creation and expanded spells before slice 13. Record approved dependency and milestone changes.
 Do not quietly push unfinished requirements into another slice.
 
 ### Status meanings
@@ -119,8 +120,9 @@ long verification reports instead of filling the roadmap with raw command output
 
 ## Target and existing foundation
 
-The completed demo supports exploring the existing test level, fighting moving
-goblins, managing a four-character party, progressing through level 3, and saving
+The completed demo supports creating and storing characters, choosing a four-person
+party from the main menu, exploring the existing test level, fighting moving
+goblins, progressing through level 3, and saving
 and resuming outside combat. It uses a streamlined SRD 5.1 ruleset with a phased
 turn-based encounter loop, not continuous real-time melee combat.
 
@@ -171,16 +173,18 @@ called its mana model the official spell-points framework.
 ### Party and progression
 
 - Exactly four active characters occupy one world cell in a 2×2 formation.
-- Automatically create a balanced preset: Human Fighter, Dwarf Cleric, Halfling
-  Rogue, and Elf Wizard. Use fixed names, builds, and starting equipment chosen
-  in slice 02. Race and class are independent definitions; preset pairings are
-  not race/class restrictions.
+- Offer the balanced preset from slice 02 as the first-run library and explicit
+  default-party shortcut: Human Fighter, Dwarf Cleric, Halfling Rogue, Elf Wizard.
+  Slices 12.1–12.4 add persisted custom starting builds and party selection at
+  Start new game. Race and class remain independent; preset pairings are not
+  restrictions. The active party still contains exactly four characters.
 - Support levels 1–3 with regular XP thresholds and monster awards. Add a clearly
   development-only button granting each character enough XP for their next level;
   it must use normal advancement rather than directly overwriting derived stats.
-- Use preset advancement choices initially. The level-3 plan selects the supported
-  SRD subclasses and records adapted/deferred features. Character creation and
-  a general build editor are future work.
+- Slice 13 advances both presets and custom characters through the shared 12.4
+  selection/review flow. Its plan selects supported SRD subclasses and records
+  adapted/deferred features. General respec/build editing remains future work;
+  character creation is now in scope through the accepted 12.x interlude.
 
 ### Encounter rhythm and formation
 
@@ -246,7 +250,8 @@ for the actual selected spells rather than building a speculative spell engine.
 - Browsing inventory, equipment, and spellbooks pauses simulation, including the
   real-time approach phase. Casting/consuming still pays the appropriate action
   or cooldown cost. Equipment changes and inventory transfers occur outside combat.
-- Keep the current fantasy aesthetic. Deliver four portraits, item/spell icons,
+- Keep the current fantasy aesthetic. Deliver twenty portraits (five per supported
+  race, retaining the existing four), item/spell icons,
   a paper-doll silhouette with slot icons, readable status/action displays, and
   targeting/damage feedback. Layered illustrated clothing is not required.
 
@@ -275,7 +280,8 @@ way to bypass the out-of-combat restriction. Mid-fight restoration is deferred.
 | Combat and effects | Validates actions and resolves rolls, resource costs, damage, death, and timed effects independently of presentation. |
 | Inventory and progression | Owns item transactions, equipment-derived statistics, XP, and advancement invariants. Avoid duplicate authoritative state. |
 | Presentation | Reads snapshots and bounded visual events; owns HUD/screens, targeting feedback, and animation playback. |
-| Persistence | Serializes gameplay state using stable content IDs and restores it through validation; excludes GPU/prepared-image resources. |
+| Library and creation | Owns persistent level-one starting builds and isolated drafts; pure validation supplies previews; library instances never own live party state. |
+| Persistence | Library storage arrives in 12.2; slice 14 serializes independent gameplay state using stable content IDs and validates restoration. Neither stores GPU/prepared-image resources. |
 
 Keep interfaces small: commands enter simulation; read-only snapshots and bounded
 events leave it. A general ECS, event bus, scripting language, or inheritance
@@ -323,7 +329,11 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 10 | [Spells and class identity](#slice-10-spells-and-class-identity) | 09 | Accepted | C |
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Accepted | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Accepted | C |
-| 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12 | Planned | C |
+| 12.1 | [Expanded level-one spell catalog](#slice-121-expanded-level-one-spell-catalog) | 12 | Planned | C interlude |
+| 12.2 | [Character builds, library storage and portraits](#slice-122-character-builds-library-storage-and-portraits) | 12.1 | Planned | C interlude |
+| 12.3 | [Main menu, character library and party launch](#slice-123-main-menu-character-library-and-party-launch) | 12.2 | Planned | C interlude |
+| 12.4 | [Complete creator and reusable selection flow](#slice-124-complete-creator-and-reusable-selection-flow) | 12.3 | Planned | C interlude |
+| 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.4 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
 | 16 | [Demo integration](#slice-16-demo-integration) | 15 | Planned | D |
@@ -332,12 +342,16 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | --- | --- | --- |
 | A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Accepted |
 | B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Accepted |
-| C — RPG loop | Class abilities, spells, inventory, equipment, loot, recovery, and levels 1–3 work together. | Planned |
+| C — RPG loop | Menu, custom party creation, class abilities, expanded spells, inventory, equipment, loot, recovery and shared-flow advancement through levels 1–3 work together. | Planned |
 | D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
 
 The B follow-up subslices do not reopen accepted slice 08 or milestone B. Each
 is a separate planning, implementation and user-acceptance checkpoint. They must
 all be Accepted before slice 09 starts; IDs 09–16 retain their existing scope.
+
+The accepted 12.x interlude does not reopen slice 12. All four new slices require
+individual acceptance before slice 13 starts. Full session persistence remains
+slice 14; the new character library has separate ownership and storage.
 
 Every slice ends with user review. At milestone boundaries, also review the
 combined experience; passing isolated tests does not establish the intended feel.
@@ -1271,20 +1285,438 @@ cannot duplicate items. Verify visible floor placement and reliable item picking
 **Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.
 **Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared bags with occlusion, paused grid collection and visible Rest button; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
 **Verification:** Corrected implementation: Debug 29/29 and Release 29/29; focused recovery/inventory/render ASan+UBSan 3/3; zero tracked frame C++ allocations; separate full-capacity loot publication/render stress, hidden GPU lifecycle, and 108 native/reduced/letterboxed captures pass. The user accepted the result; automated verification limits remain unchanged. Earlier baseline checks remain recorded separately in the handoff.
-**Next-agent handoff:** Slice 12 is accepted and closed. Slice 13 — Levels 2 and 3 is next eligible for planning, still Planned/unstarted. Read the [accepted closeout](slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
+**Next-agent handoff (updated 2026-10-28):** Slice 12 is accepted and closed. The accepted character-creation interlude now makes slice 12.1 next eligible; 12.1–12.4 must be accepted before slice 13. The historical closeout predates this insertion. Read the [accepted closeout](slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
 **Acceptance:** Explicitly accepted on 2026-10-27: “thats better, record the slice as accepted in the doc”. Acceptance covers the completed slice and all loot-bag, Drop, Take All and Rest-icon corrections.
+
+### Character creation interlude: accepted flow and shared contracts
+
+The user accepted the [visual flow](character_creation_flow_proposal.md) and
+[sixteen-screen HTML gallery](mockups/character-creator-v1/index.html) on
+2026-10-28, explicitly including an expanded spell catalog and a dedicated slice
+for its missing spells before slice 13. This interlude comprises **three creation
+slices plus one spell-content slice**, numbered 12.1–12.4. All are Planned;
+visual/roadmap approval is not implementation acceptance. Each still receives its
+own planning pass, implementation authorization, verification and user review.
+
+**Mandatory visual references:** Open the gallery and the PNGs linked by the
+selected slice before planning UI or generating assets. Keep the approved dark
+green panels, restrained gold headings/borders, teal selections, painted portraits,
+readable native text, fixed navigation and scrollable content. Use shared layouts
+and existing fonts rather than reproducing imagegen's incidental typography or
+alignment differences. Preserve the fixed 1920×1080 presentation and prepared-image
+renderer. Mockups are concept images, not runtime textures. Preserve their originals
+and [prompt provenance](mockups/character-creator-v1/prompts.json).
+
+**Approved content correction:** The user chose **Color Spray instead of Ray of
+Sickness** after the latter was found absent from SRD 5.1. Screens 10 and 14 retain
+their historical illustrative label; their captions and the plan override it.
+Do not implement Ray of Sickness or silently change the project's source policy.
+
+**Shared completion target:** Launch into Main menu; Start new game opens a
+four-character party/formation picker and then the current test level. Character
+Creator opens the persistent library. Creation is Identity → Class → Abilities →
+Skills placeholder → conditional Spells → Equipment → Review. Save returns to the
+caller. Library deletion and discarding an unsaved draft require confirmation.
+Quit closes cleanly. No new campaign, skill system, respec or race/class roster.
+
+**Rules/data contracts to preserve across slices:**
+
+- Point buy: 27 points; base 8–15; costs 0/1/2/3/4/5/7/9; existing racial bonuses
+  applied separately. Recommended allocation spends all points. Completion requires
+  the full budget; no rerolls or point carryover. Names retain the existing 64-byte
+  printable-text validation; show the actual limit rather than the mockup's 32.
+- Four existing races and classes remain freely combinable. Fighter Defense and
+  Cleric Life Domain are the supported defaults. Five portraits per race, twenty
+  total; keep the current four and generate sixteen additions. Portraits are
+  cosmetic, independent of class and formation; include varied adult faces and
+  fighter/mage/cleric/rogue/general-adventurer clothing.
+- Wizard: three class cantrips, six learned level-one spells, and preparation up to
+  max(1, level + INT modifier). Cleric: three class cantrips, class-list preparation
+  up to max(1, level + WIS modifier), plus always-prepared Life Domain Bless/Cure
+  Wounds outside that allowance. Require at least one ordinary prepared spell;
+  choosing fewer than the maximum is legal. Defaults fill the allowance.
+- Activate High Elf's one additional wizard cantrip through a separate racial
+  grant using Intelligence, including on Fighters/Rogues/Clerics. No duplicated
+  cantrip choice across grants. This concrete grant is the only new racial
+  spell trait in scope; other inactive racial traits remain disclosed as inactive.
+  A racial cantrip costs no mana and does not grant a non-caster a mana pool.
+- Spell eligibility is per character and per grant, not the entire class catalog.
+  The same authoritative query must drive the picker, preview and cast validation.
+  Keep class mana caps 4/6/14 and cantrip/first-level costs 0/2. Level-two spell
+  costs and actual progression remain slice 13. Skills remain a non-blocking
+  reserved step; no backgrounds, skill proficiencies or skill selection mechanics.
+- Saved library entries are reusable level-one starting builds. Each dungeon run
+  owns a separate party copy. XP, spent supplies, injuries and level-ups never
+  overwrite the library. Persist content IDs and a separate saved-character ID,
+  not catalog indices, formation indices or runtime handles. Repeated display
+  names are legal. Deleting a blueprint does not delete an existing session/save.
+- Preserve ordinary class starting supplies and provide class-appropriate gear
+  choices. Assign the existing three party camp kits once at launch, irrespective
+  of class composition; include their weight/capacity in the launch transaction.
+  Each fresh run receives that initial grant exactly once; launch retry, resume or
+  level-up must not append another grant to an existing party.
+
+The 12.x plans must turn these contracts into small cohesive systems: pure build
+rules; versioned library I/O; an isolated creation draft; immutable portrait
+metadata/prepared assets; application menu/session orchestration; and existing
+Party/Combat ownership. No generic wizard framework, ECS or file I/O in rendering.
+Specify limits and exhaustion behavior before code. Menu input, searches, scrolls,
+draft edits and normal gameplay must use preallocated/reused storage; explicit
+load/save/content preparation phases may allocate. Maintain failure atomicity.
+
+### Slice 12.1: Expanded level-one spell catalog
+
+**Prerequisite:** Slice 12 accepted. **Deliver:** Implement the missing spells and
+their real effects, targeting, art and feedback before creation selects them.
+This is the dedicated spell-content slice requested on 2026-10-28; no second-level
+spells or advancement. Use the official SRD 5.1 source and record project-specific
+adaptations in the [ledger](srd_content_ledger.md) before implementing them.
+
+**Visual references:** [Cantrips 09](mockups/character-creator-v1/09-cantrips-v1.png),
+[spellbook 10](mockups/character-creator-v1/10-spellbook-v1.png),
+[preparation 11](mockups/character-creator-v1/11-prepared-spells-v1.png),
+[cleric variant 15](mockups/character-creator-v1/15-cleric-preparation-v1.png).
+These establish icon/detail/count presentation. Runtime casting must retain the
+accepted [spell UI](spellcasting_ui_design.md), not replace it with creator screens.
+
+**Content target:** Retain all fourteen existing spells and add these ten:
+
+| Class / tier | Additions | Concrete system needs for the detailed plan |
+| --- | --- | --- |
+| Wizard cantrips | Ray of Frost; Shocking Grasp; Poison Spray | Cold damage with a bounded slow; melee spell attack with metal-armor advantage; short-range Constitution save poison damage. Freeze supported targeting and timing adaptations. Reactions remain omitted, so disclose Shocking Grasp's unused reaction rider. |
+| Wizard level one | Sleep; False Life; Grease; Color Spray | HP-budget sleep, temporary HP, a persistent ground area with movement/prone consequences, and HP-budget blindness. These must have working gameplay consequences and visible state, not just spell entries/icons. |
+| Cleric cantrips | Guidance; Resistance | Concentration buffs consumed by one eligible ability check or save. Guidance must have an actual current consumer: initiative is an ability check. No skill system is required. |
+| Cleric level one | Sanctuary | A protective ward that changes hostile single-target attack eligibility, ends on the appropriate offensive action, and interacts correctly with AI and area effects. Adapt its bonus-action casting to the existing action/cooldown economy. |
+
+This yields 24 catalog spells: Wizard five cantrips/eight level-one spells, Cleric
+four cantrips/seven level-one spells. The extra Poison Spray keeps High Elf wizard
+choices meaningful after its additional racial cantrip; Sanctuary gives the
+Cleric a preparation alternative beyond the four non-domain spells shown in 15.
+Keep Healing Word's earlier deliberate exclusion. No cosmetic-only Light/Guidance
+entries pretending to work, no higher-tier imports, no automatic import of all SRD.
+
+**Planning responsibilities:** Inspect `rules/spells.*`, `rules/health.*`,
+`game/combat_spells.cpp`, `game/effects.*`, `game/npc_ai.*`, `game/movement.*`,
+`game/recovery.*`, `game/spell_commands.cpp`, catalog loading and prepared effect
+assets. Write a focused expanded-spells design, linked from system design. For
+each spell freeze range, recipients, friendly fire, LOS, pattern, save/attack,
+mana/action costs, concentration, duration, release/impact timing and expiry.
+Do not assume tabletop movement distances or turn boundaries map automatically.
+
+The detailed plan must explicitly resolve these interactions before implementation:
+
+- Sleep/Color Spray use current-HP budgets, deterministic HP ordering/ties and
+  complete area enumeration. Distinguish sleep from dying/dead; define waking by
+  damage and an action, attack advantages/criticals, paired protection and AI
+  occupancy. Blindness must affect attacks and sight-dependent targeting/AI.
+- Temporary HP are separate from actual/max HP, do not heal or revive, and do
+  not stack. Define replacement choice, expiry, rest and concentration damage
+  checks when the temporary buffer absorbs the entire hit.
+- Grease is a bounded persistent world area, not a three-recipient buff. Define
+  entry/creation/turn checks, difficult terrain, prone recovery and legal step
+  scheduling in both clocks. Ray of Frost needs a corresponding discrete slow
+  rule. Do not change camera movement, input or introduce freeform movement.
+- Guidance/Resistance need an explicit one-shot consumption policy (recommended
+  automatic next eligible roll, visibly disclosed), combination with Bless/Bane,
+  natural death-save results, concentration and expiry. Guidance cannot modify
+  attacks or saves; add no player-facing skill selection just to support it.
+- Sanctuary must not let AI repeatedly reroll a ward save until it succeeds,
+  double-spend an action, gain free retargets, or evade formation constraints.
+  Specify behavior when every legal target is warded and at delayed-impact ties.
+
+Recalculate effect/event/target capacities for the new conditions, areas and
+recipients; existing 64 effect slots, three-recipient effects and event-bound
+proofs are not automatically adequate. Prefer dedicated bounded data where a
+ground area differs from an ordinary buff. Preserve accepted roll-at-acceptance,
+impact-time damage, pause, concentration and alert contracts. The catalog limit
+32 and class-list limit 16 suffice for this target; audit UI icon/list limits too.
+
+**Boundary:** Keep existing class-wide spell access temporarily so every new spell
+is testable through the current casting UI. Slice 12.2 replaces that access with
+validated per-character choices; do not smuggle in creator or level-up UI here.
+Approval of the visual proposal does not approve an unstated movement/condition
+adaptation: present concrete adaptations in this slice's normal planning review.
+
+**Acceptance:** All ten spells can be cast in representative deterministic fixtures
+with correct costs and observable consequences. Cover save/miss/immune/no-target
+and exhaustion paths, low/high HP budgets, tied recipients, simultaneous impacts,
+stack/refresh/expiry, waking, temp-HP absorption, blind/prone/slow AI, ward failure,
+concentration loss, pause/phase/rest transitions and stale identities. Rejected
+commands leave resources/RNG unchanged. Test-owned CPU fixtures and allocation
+checks stay small; maximum area/effect/event loads are a separate stress check.
+Run Debug/Release, focused sanitizers and hidden GPU/presentation captures of all
+new spells/statuses with prepared art at native/reduced sizes. Report skipped
+hardware checks. Preserve the existing fourteen-spell behavior.
+
+**Handoff:** Publish spell IDs, class membership, effect/casting interfaces, source
+adaptations, capacities and reusable selection metadata for 12.2. Stop for review.
+**Execution record:** Planned/unstarted; no verification or implementation acceptance.
+
+### Slice 12.2: Character builds, library storage and portraits
+
+**Prerequisite:** 12.1 accepted. **Deliver:** Headless-testable character creation
+rules, persistent starting-build library, per-character spell access, twenty
+portraits and party construction from validated chosen builds. This is the data
+and asset foundation; normal startup still follows its existing route until 12.3.
+
+**Visual references:** [Library 02](mockups/character-creator-v1/02-character-library-v1.png),
+[identity/portraits 05](mockups/character-creator-v1/05-identity-and-portrait-v1.png),
+[class 06](mockups/character-creator-v1/06-class-v1.png),
+[point buy 07](mockups/character-creator-v1/07-point-buy-v1.png),
+[equipment 12](mockups/character-creator-v1/12-starting-equipment-v1.png),
+[review 13](mockups/character-creator-v1/13-review-and-save-v1.png).
+Generate production portrait assets through imagegen with preserved masters and
+prompts; never crop the mockup into runtime UI or replace the current four portraits.
+
+**Planning responsibilities:** Inspect `rules/character.*`, catalog/schema loading,
+`game/party.*`, inventory initialization/validation, spell command validation,
+HUD portrait lookup, `platform/presenter.*` and prepared asset ownership. Document the
+build/draft/library design before code; keep JSON/filesystem outside rules/core.
+Define a bounded draft containing identity, portrait ID, base abilities, supported
+feature selections, class/racial cantrips, learned/prepared/granted spell IDs, and
+starting item/equipment selections. Pure validation and preview return errors and
+derived values without constructing a live session or copying strings each frame.
+
+**Required behavior/contracts:**
+
+- Implement the shared point-buy, selection counts, class features and High Elf
+  grant. Casting ability belongs to the spell grant: an Elf Cleric's wizard cantrip
+  uses INT while cleric spells use WIS. Fighter/Rogue racial cantrips must appear
+  alongside features and cast legally without mana. Query-based validation must
+  also reject a forged direct command for an unlearned/unprepared spell.
+- Make supported gear choices data-driven and valid for all sixteen race/class
+  pairs. Freeze exact loadout options in the slice plan using implemented weapons,
+  armor and ammunition; add quarterstaff content/art if the catalog lacks the
+  mockup's choice. Include supplies, equipment slots, weights and launch camp kits
+  exactly once. Reuse inventory/stat validation, not a divergent preview calculator.
+- Introduce a stable portrait identity in builds and snapshots. Resolve it across
+  HUD, inventory, character sheet, spell targets and loot recipients; never select
+  portrait from party slot or class. Define missing/unknown portrait handling.
+- Separate library save format from rules catalog and future session saves. Use
+  versioned bounded records, stable content references, atomic replacement and
+  explicit read/write failure reporting. Freeze file path, byte/record limits,
+  ID-generation strategy and overflow policy in the detailed plan. A practical
+  initial target is 128 saved characters; expose capacity exhaustion clearly.
+- Seed four presets only when no library has ever been initialized. Preserve
+  intentional empty libraries and do not overwrite corrupt/unsupported files
+  with defaults. Decide recovery/backup behavior explicitly. Keep names, stats,
+  gear and existing portraits of presets, but author legal new spell selections
+  for them; document the deliberate transition from all-class-spell access.
+- Build an independent Party from exactly four validated starting builds plus
+  formation. No borrowing mutable library records into a session. Keep the
+  catalog alive for Party, and preserve generation-safe inventory identities.
+  Loading, deleting or editing a library must not invalidate an existing run.
+
+**Boundary:** No full session save/resume, campaign state, player skill mechanics,
+general build editor/respec, XP or actual leveling. Do not use legacy schema
+compatibility as a permanent loophole granting every class spell to new characters.
+Define migration/defaulting for existing authored presets and test fixtures;
+update captures that intentionally relied on unrestricted test spell access.
+
+**Acceptance:** Exhaust point-cost transitions and boundary budgets; test all
+race/class pairs and supported loadouts, separate racial casting stats, duplicate
+spells, invalid references/portraits, count/subset/domain rules, overweight or
+illegal gear, and independent session copies. Library tests own temporary files:
+first run vs empty, round-trip, repeated names, corrupt/truncated/unknown-version
+and oversized input, duplicate IDs, unavailable content, failed save/delete,
+interrupted replacement and capacity exhaustion. Errors preserve prior durable
+state. Check all twenty portrait masters/prepared outputs, crop readability and
+GPU lifetime; native/reduced HUD and sheet captures prove portrait identity after
+formation changes. Run focused/full CPU suites, allocation checks and relevant
+sanitizers; distinguish disk-operation allocations from steady-state frame work.
+
+**Handoff:** Record the schema and compatibility policy, IDs/capacities, pure draft
+API, library API, portrait manifest, explicit-party constructor, preset selections
+and verified spell-access migration. Supply a deterministic headless diagnostic
+or test scenario for inspection before the GUI lands. Stop for review.
+**Execution record:** Planned/unstarted; no verification or implementation acceptance.
+
+### Slice 12.3: Main menu, character library and party launch
+
+**Prerequisite:** 12.2 accepted. **Deliver:** Startup menu, persistent scrollable
+library with read-only detail and confirmed deletion, party selection/formation,
+and reliable launch of the current test level with the chosen builds.
+
+**Visual references:** [Main menu 01](mockups/character-creator-v1/01-main-menu-v1.png),
+[library 02](mockups/character-creator-v1/02-character-library-v1.png),
+[party selection 03](mockups/character-creator-v1/03-party-selection-v1.png),
+[delete confirmation 04](mockups/character-creator-v1/04-delete-confirmation-v1.png),
+[review layout 13](mockups/character-creator-v1/13-review-and-save-v1.png).
+Read the [gallery captions](mockups/character-creator-v1/index.html) for routing.
+
+**Planning responsibilities:** Refactor `app/application.cpp` into small menu,
+session preparation/lifetime and orchestration responsibilities; preserve `main`
+as startup/shutdown/error handling. Inspect window/presenter destruction order,
+input routing, native aspect-fit mapping, diagnostics and existing capture/demo
+entry points. Menu needs catalog/library/UI assets, not map/NPC/dungeon banks.
+Do not merely hide an already loaded or running level behind a menu.
+
+**Required behavior/contracts:**
+
+- Exactly the three requested main entries: Start new game, Character Creator,
+  Quit. Start opens the party picker. Creator opens the library. Quit and OS close
+  release resources in valid context order. Read-only View uses the review layout
+  with no misleading Save/Change controls.
+- Grid scrolling, search and filters preserve stable record selection; empty
+  library/no results and full capacity have clear messages. Delete identifies the
+  target by ID and name/portrait, defaults to Keep character, commits once and
+  preserves the card on disk failure. Filtering/reordering cannot change the target
+  of an open confirmation. Cancel/Escape does not activate underlying controls.
+- Choose four distinct valid records in a 2×2 formation, remove/replace/swap slots,
+  and show readiness. Two characters with identical names remain distinguishable
+  by ID/portrait. Never require one of each class. Default party is an explicit
+  shortcut and must work after user records are deleted, without silently
+  reseeding or mutating the library; stage the built-in four for that launch.
+- Enter dungeon validates everything again, stages party plus one launch supply
+  grant, prepares the existing map/scene, then publishes a live session. Show a
+  loading transition; failures return to the picker with selections and a useful
+  error. Double activation/retry cannot create two sessions or duplicate supplies.
+- Preserve debug/demo/capture command-line modes with explicit deterministic menu
+  bypass. Record their default-party/fixture behavior, seeds and asset lifetimes.
+  A menu/capture failure must not accidentally load the user's character library.
+
+**Boundary:** Creating new records is 12.4; its New character entry points arrive
+with the working editor rather than inert placeholders. This temporary staged
+omission must be recorded for review and does not count as final creator delivery.
+Library CRUD must already be complete/testable via 12.2's API. No save/resume or
+Continue menu entry. In-game exit/restart routes must have explicit semantics and
+retain the accepted combat/reset behavior; do not silently erase a live session.
+
+**Acceptance:** Verify default startup constructs no dungeon/session and shows
+the approved menu; seeded and empty library, many-row scrolling, search/filter,
+keyboard focus, View and delete confirm/cancel/failure; four-character selection,
+all-one-class parties, formation, duplicates/stale records and invalid launch.
+Verify correct live names/portraits/stats/equipment/spell access after launch,
+exactly three camp kits, fresh-run resources and independent library data.
+Exercise launch failure/retry, clean Quit, repeated menu/session lifecycle and
+legacy diagnostic/capture bypass without OS input automation. Use synthetic input
+tests, engine allocation guards and hidden captures at 1920×1080, 1280×720 and a
+letterboxed aspect. CPU checks remain headless; separately verify GPU cleanup.
+
+**Handoff:** Record application states and input ownership, selected-record and
+formation representation, launch transaction, error UI, default-party shortcut,
+menu capture fixtures and the return-to-caller hook needed by 12.4. Stop for review.
+**Execution record:** Planned/unstarted; no verification or implementation acceptance.
+
+### Slice 12.4: Complete creator and reusable selection flow
+
+**Prerequisite:** 12.3 accepted. **Deliver:** Complete the approved creation flow
+and its library/party entry points, integrate spell preparation with long rest,
+and leave a tested reuse boundary for slice-13 advancement.
+
+**Visual references:** [Identity 05](mockups/character-creator-v1/05-identity-and-portrait-v1.png),
+[class 06](mockups/character-creator-v1/06-class-v1.png),
+[abilities 07](mockups/character-creator-v1/07-point-buy-v1.png),
+[skills 08](mockups/character-creator-v1/08-skills-reserved-v1.png),
+[cantrips 09](mockups/character-creator-v1/09-cantrips-v1.png),
+[spellbook 10](mockups/character-creator-v1/10-spellbook-v1.png),
+[preparation 11](mockups/character-creator-v1/11-prepared-spells-v1.png),
+[equipment 12](mockups/character-creator-v1/12-starting-equipment-v1.png),
+[review 13](mockups/character-creator-v1/13-review-and-save-v1.png),
+[cleric preparation 15](mockups/character-creator-v1/15-cleric-preparation-v1.png),
+[discard confirmation 16](mockups/character-creator-v1/16-discard-draft-v1.png).
+[Level-up example 14](mockups/character-creator-v1/14-level-up-reuse-v1.png) defines
+the reuse target; it does not authorize implementing progression in this slice.
+
+**Planning responsibilities:** Build a cohesive draft controller and reusable
+panels using the 12.2 pure validation/query API. Define a short explicit step list
+for creation and context-specific spell preparation rather than a generic workflow
+engine. Inspect the accepted native overlays, input, recovery, party and spellbook
+interfaces. Document layout, ownership, capacities, validation and transactional
+commit before code. Actual widgets/text must remain crisp at native resolution.
+
+**Required behavior/contracts:**
+
+- New character from library returns there with the saved card visible; New
+  character from the party picker preserves already selected companions and
+  returns with the new character available for the intended empty slot. Do not
+  auto-launch the dungeon or auto-replace an occupied slot on Save.
+- Identity supports text editing/validation, race and five matching portraits.
+  Class presents real supported features. Point buy has recommendation, reset,
+  +/- costs, budget, racial bonuses and live final stats. Show validation reasons
+  adjacent to fields and retain a usable path back from incomplete steps.
+- Reserve Skills clearly and non-blockingly. Skip irrelevant spell stages:
+  ordinary Fighters/Rogues have none; High Elf martial characters choose the one
+  racial wizard cantrip; Clerics have cantrips/preparation; Wizards additionally
+  choose a spellbook. Separate the racial budget and INT source where applicable.
+- Spell cards show selection state/count, details and recommended picks; allow
+  list scrolling without moving navigation. Distinguish inspected from selected,
+  learned from prepared and domain/racial grants from user picks. A full budget
+  disables new picks without preventing deselection. Known/granted choices are
+  visibly locked in contexts where they cannot change.
+- Equipment options and included supplies feed the authoritative preview; show
+  equipped vs carried, weights, slots, AC and attacks. Use real existing stack
+  behavior; the mockup's separate potion pictures do not change stack rules.
+- Back/completed-step navigation preserves input. On race/class changes retain
+  valid choices, clear invalid dependent choices and mark what needs attention;
+  never silently save a stale portrait, old class spell or invalid loadout. Keep
+  the name. Explain material resets and make recommended choices explicit.
+- Review offers Change links and a final validation summary. Save is an atomic
+  one-time library commit. Disk failure keeps the entire draft editable; repeated
+  activation cannot create duplicates. Dirty Cancel/Escape uses screen 16; clean
+  cancellation simply returns. Confirmations capture input exclusively.
+- Add optional re-preparation to the existing safe Long Rest flow using the same
+  preparation panel. Stage party choices without changing learned spells/cantrips;
+  recheck safety, revision and camp supply before a single rest+preparation commit.
+  Cancellation preserves the previous prepared lists and does not spend a kit.
+  Keeping current preparation must allow the ordinary Long Rest path unchanged.
+  Short Rest does not grant re-preparation. Define the exact commit point relative
+  to the existing cosmetic camp playback and prevent duplicate recovery.
+
+**Reuse contract:** The selection panel accepts character identity, an immutable
+baseline, available options, already-known/locked grants, a choice allowance and
+a draft result. Summary can show before/after values. Commit belongs to its caller:
+library creation, safe rest, or later advancement. Write focused tests exercising
+an advancement-shaped selection context with locked existing spells and newly
+earned choices; do not enable XP controls, derived level-two stats or real level-up
+buttons until slice 13. No new point-buy budget, portrait reset, supplies or copied
+starting items on advancement. Preserve live session identity throughout.
+
+**Acceptance:** Create and launch all sixteen race/class combinations with selected
+portraits, legal point buy, spell counts/grants and equipment; inspect actual cast
+availability and spell ability source. Test backtracking/invalidation, selection
+limits, empty/filter results, minimum preparation, recommendation validity, dirty
+cancel, duplicate Save, library-full and failed writes. Restart the app and verify
+durable builds, names, portraits and independent live state. Exercise Long Rest
+keep/change/cancel/failure/stale-state paths with exactly-once supply/recovery.
+Capture every applicable approved screen, a non-caster, racial-only caster and
+Cleric, errors/disabled states and a many-row library at native/reduced/letterboxed
+sizes. Inspect the full menu → create → select four → dungeon loop. Run relevant
+CPU/sanitizer/allocation/GPU checks; no desktop input automation. User reviews the
+complete interlude before any slice-13 planning starts.
+
+**Handoff:** Record reusable flow interfaces, final supported spell/grant selections,
+library schema/portrait IDs, rest transaction, capture recipes, limitations and
+accepted UI corrections. Update the source ledger/system design with implemented
+status only after work lands. Slice 13 must use this flow and preserve custom
+builds; slice 14 must save actual run state, not just refer back to blueprints.
+**Execution record:** Planned/unstarted; no verification or implementation acceptance.
+
 
 ### Slice 13: Levels 2 and 3
 
-**Deliver:** XP awards, normal advancement, preset class/subclass choices, resources,
-supported higher features, and curated second-level spells. Add development-only
-next-level XP grants for every party member, capped to supported progression.
+**Prerequisite:** Slice 12.4 accepted; all 12.x spells, custom builds and creator
+contracts are implemented and accepted.
+
+**Deliver:** XP awards, normal advancement for presets and custom characters,
+supported class/subclass choices, resources, higher features and curated
+second-level spells. Reuse 12.4’s draft/choice/review flow; see the approved
+[level-up mockup](mockups/character-creator-v1/14-level-up-reuse-v1.png), with Color
+Spray replacing Ray of Sickness. Add development-only next-level XP grants for
+every party member, capped to supported progression.
 
 **Boundary:** Use normal XP mechanics, not custom objective scripts or milestone
 leveling. Freeze the supported feature/spell list in the plan and ledger; do not
-pretend unsupported features are functioning. Character creation remains deferred.
+pretend unsupported features are functioning. Preserve custom names, portraits,
+abilities, equipment, learned/prepared spells, domain/racial grants and casting
+ability sources. Level-up commits to the live session, never its library blueprint.
+Grant only newly earned choices (including two new wizard spellbook spells per
+level); do not repeat point buy, creation or starting supplies. Review class-list,
+spell/effect/icon/event capacities before adding second-level content; the 12.1
+catalog already contains 24 spells. First-level expansion belongs to 12.1.
 
-**Acceptance:** Each preset reaches level 3 through the normal advancement flow.
+**Acceptance:** Each preset and representative custom race/class parties reach
+level 3 through the shared advancement flow without losing their chosen identity.
 Test thresholds, repeat requests, exactly-once XP rewards and features, derived
 statistics/resources, and new spell behavior. User reviews the complete milestone C loop.
 
@@ -1294,7 +1726,11 @@ statistics/resources, and new spell behavior. User reviews the complete mileston
 
 **Deliver:** One versioned out-of-combat save, validated restoration, safe file
 replacement, and useful load/save failure reporting. Save authoritative gameplay
-state and reconstruct derived data and presentation resources.
+state and reconstruct derived data and presentation resources. Include custom
+identities/portraits and actual learned/prepared/domain/racial spells, not a pointer
+to a library entry. Restoration must work after its starting blueprint is deleted.
+Keep the 12.2 library format and run-save format separate; reconstruct transient
+effect/area identities rather than persisting runtime handles.
 
 **Boundary:** No mid-fight or active-approach saves, autosave framework, or historical
 version migration promise. Define unsupported-version behavior in the save plan.
@@ -1308,7 +1744,7 @@ Failures must not partially replace the running session or destroy a valid save.
 
 ### Slice 15: Cohesive presentation
 
-**Deliver:** Final four portraits, curated item/spell icons, paper-doll silhouette,
+**Deliver:** Polish the twenty-portrait library from 12.2, curated item/spell icons, paper-doll silhouette,
 readable management screens, targeting, damage/status feedback, and coherent art.
 Review a concrete layout/art sample with the user before producing the whole set.
 
@@ -1355,7 +1791,7 @@ Keep CPU checks headless. Run GPU lifecycle, input/presentation, animation, and
 deterministic visual checks separately when a desktop is available. Report what
 was actually executed; absence of hardware is not a test pass.
 
-Deferred beyond this roadmap: character creation, additional race/class content,
+Deferred beyond this roadmap: additional race/class content,
 levels beyond 3, multiclassing, a general build editor, layered clothing artwork,
 shops, campaigns/quests, procedural levels, multiplayer, and mid-combat saves.
 Support future expansion through concrete data boundaries, not by implementing
@@ -1380,7 +1816,19 @@ choices belong in their execution/design records unless they change this roadmap
 | 2026-10-25 | Pause while browsing; long rests at safe locations or with supplies; one out-of-combat save. | User planning answers. |
 | 2026-10-25 | Use ordinary XP plus a development next-level XP button; no custom objective system required. | User refinement superseding the earlier objective-award suggestion. |
 | 2026-10-25 | Cohesive portraits/icons and simple paper-doll artwork; add goblin hurt/death animations through the existing generation workflow. | User planning answer and explicit animation request. |
-| 2026-10-25 | Sixteen slices, four milestones, durable handoffs, and user acceptance between slices; no full-auto execution. | User requested self-tracking workflow and approved its documentation implementation. |
+| 2026-10-25 | Original sixteen slices, four milestones, durable handoffs, and user acceptance between slices; no full-auto execution. Later interludes retain this review workflow. | User requested self-tracking workflow and approved its documentation implementation. |
+| 2026-10-28 | Accepted the sixteen-screen character-creator proposal, main menu, Start-new-game party selection, persistent library, point buy, five portraits per race, skills placeholder, starting equipment and reusable spell-selection flow. Insert 12.1–12.4 before 13. | User: “Proposal accepted, go make the plan”; implementation still receives separate per-slice planning/review. |
+| 2026-10-28 | Expand the level-one/cantrip catalog in a dedicated 12.x slice before second-level spells in slice 13; normal creation selection counts replace unrestricted class-wide availability. | Explicit user approval of the expanded catalog assumption. |
+| 2026-10-28 | Color Spray replaces illustrative Ray of Sickness in screens 10/14 and the implementation target; retain SRD 5.1 scope. | User: “use color spray for now”. |
+
+Character-creation roadmap verification (2026-10-28): checked 212 local Markdown
+links/anchors across the roadmap, system overview, flow and source ledger; HTML
+gallery links; sixteen image/provenance records; 23 tracker entries; ordered
+12.1–12.4 dependencies and Planned records; slice 13's new prerequisite; and
+`git diff --check`. The visual acceptance and Color Spray correction are recorded
+in the flow, gallery captions, provenance and decision log. This was documentation
+work only: no gameplay builds/tests or desktop automation ran, and no new slice
+implementation or acceptance is claimed. The next task is planning slice 12.1.
 
 Initial documentation verification (2026-10-25): a Python standard-library check
 passed for local Markdown links/heading anchors in this file and the system

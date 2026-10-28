@@ -1,0 +1,256 @@
+{
+  "status": "Visual proposal accepted 2026-10-28; expanded catalog accepted; implementation planned in slices 12.1\u201312.4",
+  "date": "2026-10-28",
+  "generator": "Built-in image_gen",
+  "designCanvas": [
+    1920,
+    1080
+  ],
+  "images": [
+    {
+      "id": "01-main-menu",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 01 MAIN MENU. A very dark softly painted dungeon archway background, faint amber torch glow far in background. Centered gold title B L O B B E R in top third. Under title, three generously spaced wide rectangular dark buttons with gold outlines, exact labels: \"Start new game\", \"Character Creator\", \"Quit\". First button subtly teal-highlighted with keyboard focus border. A quiet caption below first button: \"Choose your party and enter the test dungeon\". Everything centered, ample negative space. At bottom small controls \"Arrow keys: navigate    Enter: select\". Main menu should feel elegant and accessible, preserving minimalist existing game UI.",
+      "title": "Main menu",
+      "caption": "Start new game opens party selection; Character Creator opens the saved-character library; Quit closes the app.",
+      "file": "01-main-menu-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-74ee6287-dc4a-47ee-920f-b8b5e03ce824.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "02-character-library",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 02: CHARACTER LIBRARY opened from Character Creator. Header \"CHARACTER CREATOR\" and subtitle \"Your saved characters\". Top right primary button \"+ New character\". Filter bar \"Search characters...\" \"All races\" \"All classes\". Main area a scrollable 4-column by 2-row grid of portrait cards, with narrow visible vertical scrollbar right and a partially clipped third row to communicate scrolling. Each card large painted bust portrait and clear name/race/class labels and bottom two small buttons \"View\" and \"Delete\". Example eight cards: Alden / Human / Fighter; Brunna / Hill Dwarf / Cleric; Merrin / Lightfoot Halfling / Rogue; Lethiel / High Elf / Wizard; Mira / Human / Wizard; Torren / Hill Dwarf / Fighter; Nessa / Lightfoot Halfling / Cleric; Vaelis / High Elf / Rogue. Portraits vary age, gender, skin tone, clothing. Mira is a woman with dark curly hair wearing blue mage robes. Footer fixed \"12 saved characters\" and button \"Back to menu\". Card Delete text muted red. No party slots on this screen. Portrait art is expressive, tasteful, high quality, matching classic fantasy RPG portrait paintings.",
+      "title": "Character library",
+      "caption": "Scrollable saved-character grid, search/filter controls, New character, View, and Delete. View reuses the review layout in read-only mode.",
+      "file": "02-character-library-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-3c262041-19d1-4cab-b711-1464ecc4684e.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "03-party-selection",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 03: CHOOSE YOUR PARTY, opened by Start new game. Subtitle \"Choose four adventurers for the test dungeon.\" Left two-thirds: searchable scrollable grid of eight painted portrait cards, 4 columns by 2 rows. Cards names Alden human fighter, Brunna hill dwarf cleric, Merrin lightfoot halfling rogue, Lethiel high elf wizard, Mira human wizard, Torren hill dwarf fighter, Nessa lightfoot halfling cleric, Vaelis high elf rogue. First four selected with teal checks and textual slot badges. Right one-third: gold heading \"FORMATION\", small forward arrow above two by two party slot arrangement, clearly labeled \"Front left\" Alden, \"Front right\" Brunna, \"Rear left\" Merrin, \"Rear right\" Lethiel. Slots small portrait and \"Remove\" text button; below helper \"Select a slot, then choose a character.\" Beneath party grid \"4 / 4 ready\". Footer left \"Back\", middle \"Use default party\" and \"+ Create character\", right prominent primary \"Enter dungeon\". Small subtitle beneath right panel \"Current test level\". No Delete actions here. Show sufficient whitespace and readable interface, not overly ornate.",
+      "title": "Choose your party",
+      "caption": "Choose four distinct saved characters and assign front/rear slots. Enter dungeon loads the current test level. Default party remains a shortcut.",
+      "file": "03-party-selection-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-7073c459-14c8-4735-bf58-86d9fb38c217.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "04-delete-confirmation",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 04 delete confirmation modal over dimmed CHARACTER CREATOR saved character library. Library behind shows portrait grid, darkened. Large centered restrained modal, thin gold border, painted small portrait of Mira dark curly hair human wizard at left. Heading \"Delete Mira?\" Text \"This removes Mira from your character library.\" Next line \"This cannot be undone.\" Two large buttons: \"Keep character\" left with clear teal default keyboard focus, \"Delete character\" right in muted red. No other bright controls. Dialog should be calm, readable, unmistakably confirmation for the named saved character.",
+      "title": "Confirm deletion",
+      "caption": "Names and previews the character being deleted. Keep character is the default; removal is committed only after confirmation.",
+      "file": "04-delete-confirmation-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-116d0ced-23ab-45ce-b805-d4e26377d7ac.png",
+      "edits": [
+        {
+          "id": "04-delete-confirmation",
+          "refs": [
+            "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-3c262041-19d1-4cab-b711-1464ecc4684e.png"
+          ],
+          "prompt": "Use case: ui-mockup. Edit the referenced full-screen Blobber CHARACTER CREATOR library mockup. Keep the exact library portraits, names, race/class labels, four columns, geometry and styling. Add a dim dark scrim over entire library and a centered large dark green modal with thin gold border. Heading \"Delete Mira?\" Text exactly \"This removes Mira from your character library.\" then \"This cannot be undone.\" Add a small thumbnail of the existing Mira portrait within modal. Buttons \"Keep character\" in teal keyboard focus, \"Delete character\" in muted red. Keep background character names and races exactly as reference. Do not invent any races or classes or change the existing background cards. This is a confirmation overlay."
+        }
+      ],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "05-identity-and-portrait",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 05 identity step active. Main heading \"Name, race & portrait\". Top row name input labeled \"Character name\", value \"Mira\", right small character count \"4 / 32\". Next section \"Race\", four large selectable text cards in one row: \"Human\" selected, \"Hill Dwarf\", \"Lightfoot Halfling\", \"High Elf\". Small human trait line \"+1 to each ability score\". Next section \"Choose a portrait\" subline \"5 human portraits \u2022 Appearance does not restrict your class\". Five large portrait thumbnails in one row, with distinct adult faces and outfits: stern dark-haired male armored warrior, Mira curly-haired female blue-robed mage selected teal check, older dark-skinned male priest in white and gold, pale auburn-haired female hooded rogue, middle-aged brown-skinned male practical traveler. Large left sidebar repeats selected Mira portrait. At bottom of workspace quiet label \"All portraits for your selected race are available.\" No appearance sliders, no full 3D body, no gender locks.",
+      "title": "Identity and portraits",
+      "caption": "Name, race, and five portraits per race. The example revisits Identity after choosing Wizard. Portrait style never restricts class.",
+      "file": "05-identity-and-portrait-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-29e6e9cc-d8b6-4360-9f1a-28eac84bfc49.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "06-class",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 06 Class step active. Heading \"Choose your class\". Four equally sized cards across upper workspace: \"Fighter\" crossed sword icon, \"Cleric\" sun icon, \"Rogue\" dagger icon, \"Wizard\" spellbook icon. Wizard selected teal check. Each card one-line role: \"Armored front line\", \"Healing & protection\", \"Precision & agility\", \"Damage & control\". Below selected details heading \"Wizard\", short description \"Study arcane magic and build your spellbook.\" Clear two-column facts \"Primary ability: Intelligence\", \"Hit Die: d6\", \"Armor training: None\", \"Saving throws: Intelligence, Wisdom\". Feature card \"Arcane Recovery\" with text \"Recover mana during safe exploration.\" Bottom line \"You will choose cantrips and starting spells next.\" No subclass controls for wizard at level one. Left sidebar shows Mira and Human Wizard. No extra unsupported classes.",
+      "title": "Class",
+      "caption": "The four implemented classes, useful role descriptions, and truthful features. Existing Defense and Life Domain are presented as supported defaults.",
+      "file": "06-class-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-95899dc4-64c3-46f6-8dfe-e913566e599e.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "07-point-buy",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 07 Abilities step active. Heading \"Build your abilities\" and prominent badge \"0 / 27 points remaining\". Subtitle \"Point buy \u2022 Base scores 8\u201315 \u2022 Racial bonuses added afterward\". Main well-spaced six-row ability table with columns \"Ability\", \"Base\", \"Race\", \"Final\", \"Modifier\". Base values have minus button and plus button each side. EXACT ROWS: Strength base 8 race +1 final 9 modifier -1; Dexterity base 14 race +1 final 15 modifier +2; Constitution base 13 race +1 final 14 modifier +2; Intelligence base 15 race +1 final 16 modifier +3; Wisdom base 12 race +1 final 13 modifier +1; Charisma base 10 race +1 final 11 modifier +0. Intelligence row softly teal highlighted with small tag \"Wizard priority\". Buttons below table \"Recommended for Wizard\" and \"Reset points\". Right narrow column beside table shows gold heading \"LIVE PREVIEW\", values \"HP 8\", \"Initiative +2\", \"Spell attack +5\", \"Spell save DC 13\". Bottom help \"Scores 14 and 15 cost 2 points per increase.\" Left sidebar Mira human wizard. Make data very legible and aligned, no duplicate rows.",
+      "title": "Point buy",
+      "caption": "27-point budget, base 8\u201315, racial adjustments shown separately, class recommendation, live derived previews. Example spends exactly 27.",
+      "file": "07-point-buy-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-b189b862-ba0e-4957-8208-718a2426deee.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "08-skills-reserved",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 08 Skills step active. Deliberately simple truthful placeholder. Heading \"Skills\". A large centered quiet panel with small outline book icon and heading \"Skill selection is coming later\". Text \"Skills are not used in the current demo.\" Next line \"Continue to choose your spells.\" At bottom of this panel a small muted label \"No selection required\". Generous whitespace. No interactive skills, no proficiency checkboxes, no list of fake bonuses, no background choices, no misleading skill mechanics. Left portrait Mira human wizard, creator top steps maintained, bottom Cancel Back Continue. Skills is a reserved future step, never blocks progress.",
+      "title": "Skills placeholder",
+      "caption": "Reserved, clearly unavailable, and non-blocking. No skill effects or fake selections.",
+      "file": "08-skills-reserved-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-0a85c5b0-8d0c-4cfc-8b69-c6eb58a45a51.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "09-cantrips",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 09 Spells step active, subnavigation \"Cantrips\" active, \"Spellbook\", \"Prepared spells\". Heading \"Choose your cantrips\" subtitle \"Cantrips cost no mana and are always ready.\" Selection badge \"3 / 3 selected\". Workspace middle panel is two-column grid of four large spell cards: \"Fire Bolt\" selected teal check, \"Acid Splash\" selected teal check, \"Ray of Frost\" selected teal check, \"Shocking Grasp\" unselected. Each card colorful painted spell icon and concise tag respectively \"Fire \u2022 Ranged\", \"Acid \u2022 Two nearby enemies\", \"Cold \u2022 Slows target\", \"Lightning \u2022 Melee\". Right detail panel selected preview \"Fire Bolt\", fire icon, exact text \"1d10 fire damage\", \"Ranged spell attack\", \"1 action\", \"0 mana\". Bottom of workspace button \"Recommended cantrips\". Three small selected chips below cards matching chosen cantrips. No fake unchecked cantrips that are also selected. Left portrait Mira human wizard. Labels large and practical.",
+      "title": "Cantrips",
+      "caption": "Choose cantrips with counts, detail preview, zero mana, and recommendation. Expanded catalog accepted; final roster is in slice 12.1.",
+      "file": "09-cantrips-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-7237543d-f5cd-462b-a40b-604136f56dc5.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "10-spellbook",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 10 Spells step active, subnavigation \"Cantrips\" completed, \"Spellbook\" active, \"Prepared spells\". Heading \"Build your spellbook\". Subtitle \"Choose six level-one spells to learn.\" Badge \"6 / 6 selected\". Central workspace scrollable two-column spell list, eight visible compact cards with small painted icons: \"Mage Armor\" selected; \"Magic Missile\" selected; \"Burning Hands\" selected; \"Thunderwave\" selected; \"Sleep\" selected; \"False Life\" selected; \"Grease\" unselected; \"Ray of Sickness\" unselected. Selected cards teal checks. Right detail panel title \"Magic Missile\", arcane darts icon, \"Three darts of force\", \"Each dart: 1d4 + 1 force\", \"1 action \u2022 2 mana\". Helpful bottom panel \"Learned spells stay in your spellbook. Next, choose which spells to prepare.\" Bottom recommended button \"Recommended spellbook\". Left sidebar Mira human wizard. Show visible narrow scrollbar and ample text spacing. No spell slots, keep mana.",
+      "title": "Wizard spellbook",
+      "caption": "Six starting learned spells. Expanded catalog accepted and planned; no new spells are implemented yet. Approved correction (2026-10-28): implement Color Spray wherever this original image says Ray of Sickness.",
+      "file": "10-spellbook-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-004f8023-a0a1-49a5-92be-d676c82c2d3f.png",
+      "edits": [
+        {
+          "id": "10-spellbook",
+          "refs": [
+            "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-139ef629-bfc9-4a5f-935c-167b160d0624.png"
+          ],
+          "prompt": "Use case: text-localization. Correct only the Ray of Sickness card description in this UI mockup. Replace its incorrect text \"A beam of necrotic energy saps a creature's strength.\" with exactly \"Poison \u2022 Ranged spell attack\". Keep card title Ray of Sickness. Preserve every other label, selected spell, count, portrait, panel layout, colors, and other text unchanged. Do not add any other content."
+        }
+      ],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "11-prepared-spells",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 11 Spells step active. Subnav \"Cantrips\" complete, \"Spellbook\" complete, \"Prepared spells\" active. Heading \"Prepare your starting spells\". Subtitle \"Prepared spells are available to cast.\" Badge \"4 / 4 prepared\". Clear formula \"Wizard level 1 + Intelligence modifier 3 = 4\". Six learned spell cards in two columns and three rows: \"Mage Armor\", \"Magic Missile\", \"Burning Hands\", \"Thunderwave\" all selected teal with check; \"Sleep\", \"False Life\" unselected gray circle. Each card only icon, title and \"Level 1 \u2022 2 mana\", no invented description. Right detail panel selected Mage Armor with icon, text \"Protect an unarmored ally\", \"Base AC becomes 13 + Dexterity\", \"1 action \u2022 2 mana\". Quiet help beneath list \"Your cantrips are always ready and do not count toward this limit.\" Button \"Recommended preparation\". Preserve same layout and Mira human wizard portrait.",
+      "title": "Wizard preparation",
+      "caption": "Choose up to level + Intelligence modifier (minimum one) from learned spells. Cantrips are separate. Full allowance selected in the example.",
+      "file": "11-prepared-spells-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-45b9aad9-41d1-40ce-afe6-9e5be91ce54f.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "12-starting-equipment",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 12 Equipment step active. Heading \"Choose starting equipment\". Workspace left column sections with radio choices and icons: \"Weapon\" choices \"Dagger\" selected and \"Quarterstaff\" unselected. \"Spellcasting gear\" fixed checked rows \"Spellbook\" and \"Arcane focus\". \"Basic supplies included\" with \"Healing potion \u00d72\" and \"Mana potion \u00d72\". Workspace right column heading \"STARTING LOADOUT\" with four equipment slot boxes \"Main hand \u2014 Dagger\", \"Off hand \u2014 Empty\", \"Body \u2014 Unarmored\", \"Ranged \u2014 Empty\". Below a small backpack grid with icon tiles spellbook, focus, two healing potions, two mana potions. Bottom right stat preview \"Armor Class 12\", \"Dagger +4\", \"Damage 1d4 + 2\", \"Weight 7 / 135 lb\". Equipment section no gold shopping, no unsupported armor options for Wizard. Footer primary button \"Review character\" instead of Continue. All text highly legible. Sidebar Mira Human level1 Wizard.",
+      "title": "Starting equipment",
+      "caption": "Choose from class-appropriate equipment; basic supplies included. Preview equipped slots, backpack, AC, attacks, and weight.",
+      "file": "12-starting-equipment-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-e8db7312-3c0b-4136-b09c-d5ebfc94b7b3.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "13-review-and-save",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Shared creator frame: top left \"CREATE CHARACTER\"; below a horizontal seven-step navigation \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\". Active step gold underline and teal numbered circle, completed steps checkmarks. Consistent left sidebar about 22% width with a large painted bust of Mira, a human woman with dark curly hair, warm brown skin and blue embroidered mage robes; name \"Mira\", labels \"Human\" and \"Level 1 Wizard\" (on Identity omit class until chosen). Main workspace right 75% width. Fixed bottom bar \"Cancel\" far left, \"Back\" near right and primary teal \"Continue\" far right. Spacious easy-to-scan controls, large sans-serif body type. Screen 13 Review step active. Replace footer Continue with primary \"Save character\". Main heading \"Ready for adventure\" and small line \"Review Mira before saving to your library.\" Top summary stat tiles \"HP 8\", \"AC 12\", \"Mana 4\", \"Spell save DC 13\". Below two-column review panels with clear \"Change\" links at top right of each: panel \"Identity & class\", value \"Mira \u2022 Human Wizard \u2022 Level 1\"; panel \"Abilities\", row \"STR 9   DEX 15   CON 14\" next row \"INT 16   WIS 13   CHA 11\", small \"27 / 27 points spent\"; panel \"Spells\", lines \"3 cantrips learned\", \"6 spellbook spells\", \"4 prepared spells\", list \"Mage Armor, Magic Missile, Burning Hands, Thunderwave\"; panel \"Equipment\", lines \"Equipped: Dagger\", \"Backpack: Spellbook, Arcane focus\", \"Healing potion \u00d72 \u2022 Mana potion \u00d72\". Below small muted \"Skills: not yet available\". Teal validation line \"All required choices complete\". Footer helper \"Saving adds Mira to your library.\" Bottom buttons Cancel left, Back right, Save character far right. No create-and-enter button, no automatic dungeon launch. Large Mira portrait sidebar.",
+      "title": "Review and save",
+      "caption": "Jump back to choices, inspect a coherent build, then save once into the persistent character library. Return to the calling library or party picker.",
+      "file": "13-review-and-save-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-d7f768eb-dde6-446b-a04a-434549c825f4.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "14-level-up-reuse",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 14 future LEVEL UP flow showing reuse of creator spell picker. Header \"LEVEL UP\" and short step navigation \"1 Overview   2 Class feature   3 Spells   4 Review\", Spells highlighted. Left sidebar same Mira painted portrait: human woman dark curly hair brown skin blue embroidered robes. Labels \"Mira\", \"Human Wizard\", \"Level 1 \u2192 2\". Below small preview \"HP 8 \u2192 14\", \"Mana 4 \u2192 6\". Main workspace title \"Learn two new spells\", subtitle \"Your existing spellbook is preserved.\" Counter \"2 / 2 selected\". Subtabs \"Learn spells\" active and \"Prepared spells\" inactive. Two selectable cards \"Grease\" checked, \"Ray of Sickness\" checked; each icon and \"Level 1\". Beneath heading \"ALREADY LEARNED\", six compact dimmer rows with lock symbol and names \"Mage Armor\", \"Magic Missile\", \"Burning Hands\", \"Thunderwave\", \"Sleep\", \"False Life\", each badge \"Known\". Right detail panel Grease with oil-on-floor spell icon and only short text \"Level 1 spell\", \"1 action \u2022 2 mana\". Footer left \"Cancel\", right \"Back\", primary \"Continue\". No ability point-buy reset, no new starting equipment grants, no cantrip picks at level two. This is the same reusable wizard flow visual style as character creation.",
+      "title": "Level-up reuse",
+      "caption": "Future slice 13 example: same spell picker with existing learned spells locked, new choices counted separately, and before/after values. No starting-kit duplication. Approved correction (2026-10-28): implement Color Spray wherever this original image says Ray of Sickness.",
+      "file": "14-level-up-reuse-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-217a8398-fff6-4747-8912-8554fbf55160.png",
+      "edits": [
+        {
+          "id": "14-level-up-reuse",
+          "refs": [
+            "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-be29e05b-a940-4b55-a5da-98994e4ad920.png"
+          ],
+          "prompt": "Use case: text-localization. Correct only the explanatory paragraph under the Grease illustration in the right detail panel. Replace the whole paragraph with exactly these two short lines: \"Creates a slippery area.\" and \"Review spell details before learning.\" Leave generous blank space below. Do not retain any text about disadvantage or Dexterity checks. Preserve all other content and layout, portrait, spell list, Level 1 \u2192 2, HP 8 \u2192 14, Mana 4 \u2192 6, buttons and labels. This is a visual flow proposal, no additional rules text."
+        }
+      ],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "15-cleric-preparation",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 15, CREATE CHARACTER cleric variant of Spells step. Header steps \"1 Identity   2 Class   3 Abilities   4 Skills   5 Spells   6 Equipment   7 Review\", Spells active. Left sidebar large painted portrait of Brunna, adult female hill dwarf with red braided hair wearing scale armor with gold holy symbol. Text \"Brunna\", \"Hill Dwarf\", \"Level 1 Cleric\", \"Life Domain\". Main subnavigation only \"Cantrips\" completed and \"Prepared spells\" active. Heading \"Prepare your starting spells\". Formula \"Cleric level 1 + Wisdom modifier 3 = 4\". Badge \"4 / 4 chosen\". Four selected large cards in two columns \"Bane\", \"Shield of Faith\", \"Guiding Bolt\", \"Inflict Wounds\"; teal checks. Below separate gold heading \"ALWAYS PREPARED \u2022 LIFE DOMAIN\". Two locked cards \"Bless\" and \"Cure Wounds\" with label \"Does not count toward your limit\". Right detail panel \"Guiding Bolt\" holy beam icon and exactly \"4d6 radiant damage\", \"Ranged spell attack\", \"1 action \u2022 2 mana\". Bottom explanatory text \"Clerics prepare from their class list. No spellbook required.\" Buttons Cancel, Back, Continue in fixed footer. No spellbook tab, no duplicate Bless or Cure Wounds among counted choices.",
+      "title": "Cleric preparation",
+      "caption": "No spellbook stage. Class-list preparation and always-prepared domain spells have separate counts. Sanctuary supplies an additional preparation choice in the planned expanded catalog.",
+      "file": "15-cleric-preparation-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-5dfdcf9a-71c8-49be-8c3b-d1b3c0ceb45c.png",
+      "edits": [],
+      "actual_size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "id": "16-discard-draft",
+      "prompt": "Use case: ui-mockup. Create one polished full-screen 16:9 PC dungeon RPG UI mockup for Blobber, designed at 1920x1080. Flat front-facing actual game screen, no monitor, no perspective, no collage. Match a restrained existing UI: nearly black green background #0d1716, subtle dark panel fills, thin antique gold rules/borders, gold serif headings, large readable ivory sans-serif labels, muted secondary labels, teal selection checkmarks. Painterly realistic fantasy portrait artwork, not 3D character models. Spacious practical layout, modest ornament, no busy filigree, no tiny unreadable text. Bottom buttons large and clear. All spelling accurate. Consistent style across screens. No operating system chrome, cursor, watermark, invented features or arbitrary text. Screen 16: modal over dimmed full-screen character creator review. Background is dark green UI with left portrait of Mira, adult curly dark-haired human woman in blue mage robes; seven-step top bar and review panels. Background should be subdued enough to be barely readable. Center large simple rectangular gold-bordered confirmation panel. Heading \"Discard this character?\" Body text exactly \"Mira has not been saved.\" Next line \"Your choices will be lost.\" Two buttons \"Keep creating\" on left with teal default focus, \"Discard draft\" on right with subdued red border. No other words within modal. Use same calm restrained fantasy UI confirmation treatment as delete character dialog.",
+      "title": "Discard draft",
+      "caption": "Cancel or Escape on a changed draft asks before discarding. Keep creating preserves every choice.",
+      "file": "16-discard-draft-v1.png",
+      "source": "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-00ce2a6c-8d59-400c-abd1-520e8b4643a8.png",
+      "edits": [
+        {
+          "id": "16-discard-draft",
+          "prompt": "Use case: ui-mockup. Edit the referenced Blobber character review screen only by adding a modal overlay. Preserve its exact background panels, top navigation, names, numbers, character portrait, Wizard class, bottom controls and all text unchanged, under a dim dark scrim. Center a dark green rectangular modal with thin gold border. Heading \"Discard this character?\" Body \"Mira has not been saved.\" then \"Your choices will be lost.\" Two buttons \"Keep creating\" with teal focus and \"Discard draft\" with muted red border. No other modal text. Never replace background with a different screen or introduce Background, Appearance, or Mage labels. Keep original seven steps and review as provided.",
+          "refs": [
+            "/home/bison/.codex/generated_images/01a18308-9f46-7071-b98a-57ee846405fd/exec-d7f768eb-dde6-446b-a04a-434549c825f4.png"
+          ]
+        }
+      ],
+      "actual_size": [
+        1672,
+        941
+      ]
+    }
+  ],
+  "accepted_corrections": [
+    "Color Spray replaces Ray of Sickness in screens 10 and 14; retain original PNGs as approved visual references.",
+    "Implementation preserves the current 64-byte name limit rather than the illustrative 32-character counter.",
+    "Final roster and racial/domain grant requirements are in docs/dnd5e_demo_design.md."
+  ]
+}
