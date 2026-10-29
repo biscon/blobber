@@ -35,7 +35,7 @@ struct HudDemo {
 struct HudCard {
     rules::CharacterId id;
     const char *name = "", *className = "";
-    int hp = 0, maxHp = 0, mana = 0, maxMana = 0;
+    int hp = 0, maxHp = 0, temporaryHp = 0, mana = 0, maxMana = 0;
     std::array<char, 96> effects{};
     bool concentrating = false;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
@@ -49,7 +49,8 @@ struct HudCard {
     std::uint64_t cooldownMs = 0;
     bool spent = false, selecting = false;
     unsigned portrait = 100;
-    bool castRecipient = false, castEligible = true, castCaster = false, castHovered = false;
+    bool castRisk = false, castRecipient = false, castEligible = true, castCaster = false,
+         castHovered = false;
     const char* castPreview = "";
 };
 enum class HoverKind { None, Enemy, Action, Portrait, Rest };
@@ -94,7 +95,8 @@ struct MagicHud {
     SpellArea footprint;
     std::array<char, 128> feedback{};
     unsigned assigned = 0, maximum = 0;
-    bool single = false;
+    bool single = false, ground = false, self = false;
+    std::optional<Cell> hoverCell;
     bool casting() const noexcept {
         return state == CastingState::Targeting || state == CastingState::Resolving;
     }
@@ -107,9 +109,9 @@ struct MagicHud {
     int mana = 0, maxMana = 0, cost = 0, attackBonus = 0, difficulty = 0;
     int charges = -1;
     bool spellcaster = false;
-    std::array<ActorId, 12> affected{};
+    std::array<ActorId, 36> affected{};
     std::size_t affectedCount = 0;
-    std::array<bool, 3> cells{};
+    std::array<bool, 9> cells{};
     std::array<char, 192> targets{};
 };
 struct HudSnapshot {
@@ -117,6 +119,7 @@ struct HudSnapshot {
     PartyCommand selection;
     TargetSnapshot targets;
     std::array<bool, NpcWorld::maxInstances> protectedTargets{};
+    std::array<std::uint16_t, NpcWorld::maxInstances> conditions{};
     std::size_t targetPage = 0, logOffset = 0;
     CommandReason availability = CommandReason::MissingTarget;
     std::array<CommandReason, static_cast<std::size_t>(PartyAction::Count)> actionAvailability{};
@@ -188,6 +191,7 @@ class CommandController {
     void magicAlly(std::size_t formationIndex) noexcept;
     bool magicSingleTarget() const noexcept;
     void magicKeyboardTarget(int delta) noexcept;
+    void magicGround(std::optional<Cell>, bool select = false) noexcept;
     CommandController(Party&&, const ActorWorld&) = delete;
     CommandController(const Party&&, const ActorWorld&) = delete;
     CommandController(const Party&, ActorWorld&&) = delete;

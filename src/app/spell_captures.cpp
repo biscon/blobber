@@ -27,7 +27,9 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                                                                           : rules::SpellKind::Thunderwave)
                    : static_cast<rules::SpellKind>(k);
         const auto& rule = *rules::spellRules(kind);
-        const bool close = rule.area || kind == rules::SpellKind::InflictWounds;
+        const bool close =
+            rule.area || (kind == rules::SpellKind::InflictWounds ||
+                          kind == rules::SpellKind::ShockingGrasp || kind == rules::SpellKind::PoisonSpray);
         std::vector<NpcInstance> instances;
         if (rule.hostile)
             for (int i = 0; i < (sparse ? 3 : rule.area ? 12 : 4); ++i)
@@ -44,6 +46,11 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                                      Heading::North});
         NpcWorld placements(map, spawn.cell, names, instances);
         GameSession s(map, catalog, placements, 5, spawn, false, timings);
+        if (kind == rules::SpellKind::ShockingGrasp) {
+            s.party().lockFormation(false);
+            s.party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
+            s.party().lockFormation(true);
+        }
         NpcAnimator animator(s.actors(), timings);
         FramePipeline frames;
         CommandController ui(s, timings);
@@ -66,6 +73,8 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             if (suffix == "book" || suffix == "target" || suffix == "partial" || suffix == "unfocused" ||
                 suffix == "limit" || suffix == "unavailable" || suffix == "concentration")
                 presenter.capture(directory / (name + "-1280.png"), 1280, 720);
+            if (k >= 14 && (suffix == "target" || suffix == "cast" || suffix == "book"))
+                presenter.capture(directory / (name + "-1024.png"), 1024, 768);
             trace << name << '\t' << s.timeMs() << '\t' << s.combat().snapshot().gameplayMs << '\t'
                   << s.party().character({1})->mana << '\t' << s.party().character({3})->mana << '\t'
                   << int(s.combat().snapshot().phase) << '\n';
@@ -90,7 +99,9 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         if (kind == rules::SpellKind::CureWounds || kind == rules::SpellKind::SpareTheDying)
             s.party().damage({0}, s.party().character({0})->hitPoints);
         refresh();
-        ui.selectCharacter(caster);
+        for (unsigned slot = 0; slot < rules::partySize; ++slot)
+            if (s.party().snapshot().formation[slot].index == caster)
+                ui.selectCharacter(slot);
         UiInput open;
         open.pressed[static_cast<std::size_t>(UiKey::Four)] = true;
         routeHudInput(ui, open);
@@ -108,12 +119,15 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         routeHudInput(ui, choose);
         if (kind == rules::SpellKind::MagicMissile)
             capture("empty");
-        if (!rule.area) {
+        if (rule.ground)
+            ui.magicGround(Cell{8, 10}, true);
+        if (!rule.area && !rule.self) {
             if (rule.hostile) {
                 // Pick visible bodies, as production UI does. Acid Splash shares their cell.
                 const auto targets = ui.snapshot().targets;
                 const auto count = std::min<std::size_t>(rule.maxTargets, targets.count);
-                if (kind == rules::SpellKind::InflictWounds) {
+                if ((kind == rules::SpellKind::InflictWounds || kind == rules::SpellKind::ShockingGrasp ||
+                     kind == rules::SpellKind::PoisonSpray)) {
                     for (std::size_t i = 0; i < targets.count; ++i)
                         if (s.combat().exposed(targets.ids[i])) {
                             ui.magicEnemy(targets.ids[i]);

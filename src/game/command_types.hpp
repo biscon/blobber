@@ -69,6 +69,7 @@ struct PartyCommand {
     std::array<rules::CharacterId, 3> allies{};
     std::array<std::uint8_t, 3> darts{};
     std::size_t targetCount = 0;
+    std::optional<Cell> aimedCell;
 };
 // Presentation visibility only. Combat independently validates range, rank, life and turn.
 struct TargetAnchor {

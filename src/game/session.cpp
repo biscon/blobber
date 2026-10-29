@@ -12,6 +12,9 @@ GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const Np
       enableAi_(enableAi) {
     if (map.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
+    ai_.bindEffects(&effects_);
+    movement_.bindEffects(&effects_);
+    effects_.partyCell(spawn.cell);
     combat_.enableRoaming(enableAi_);
     detectContact();
 }
@@ -39,7 +42,12 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     if (!effects_.mobileParty())
         movement_.clearPending();
     detectContact();
+    const auto oldCell = movement_.state().player.cell;
     movement_.update(map_, static_cast<float>(seconds), &actors_);
+    effects_.partyCell(movement_.state().player.cell);
+    if (!(oldCell == movement_.state().player.cell))
+        for (std::uint16_t i = 0; i < rules::partySize; ++i)
+            effects_.enter(rules::CharacterId{i}, movement_.state().player.cell, timeMs_);
     driveFacing();
     detectContact();
     if (enableAi_ && realTime(combat_.snapshot().phase)) {
@@ -60,7 +68,12 @@ void GameSession::move(Action action, bool fresh) noexcept {
     combat_.reconcileEffects(timeMs_, events_);
     if (!realTime(combat_.snapshot().phase) || !effects_.mobileParty())
         return;
+    const auto oldCell = movement_.state().player.cell;
     movement_.submit(map_, action, fresh, &actors_);
+    effects_.partyCell(movement_.state().player.cell);
+    if (!(oldCell == movement_.state().player.cell))
+        for (std::uint16_t i = 0; i < rules::partySize; ++i)
+            effects_.enter(rules::CharacterId{i}, movement_.state().player.cell, timeMs_);
     detectContact();
 }
 InventoryError GameSession::inventoryAccess(const InventoryRequest& request) const noexcept {

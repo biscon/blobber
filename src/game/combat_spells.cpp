@@ -8,11 +8,12 @@ namespace {
 using rules::SpellKind;
 bool effectSpell(SpellKind k) {
     return k == SpellKind::Bless || k == SpellKind::Bane || k == SpellKind::ShieldOfFaith ||
-           k == SpellKind::MageArmor;
+           k == SpellKind::MageArmor || k == SpellKind::Guidance || k == SpellKind::Resistance ||
+           k == SpellKind::Sanctuary;
 }
 bool delayed(SpellKind k) {
     return k == SpellKind::FireBolt || k == SpellKind::GuidingBolt || k == SpellKind::MagicMissile ||
-           k == SpellKind::InflictWounds;
+           k == SpellKind::InflictWounds || k == SpellKind::RayOfFrost || k == SpellKind::ShockingGrasp;
 }
 } // namespace
 SpellArea spellArea(const ActorWorld& actors, Player pose) noexcept {
@@ -49,7 +50,9 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         const auto* a = actors_.actor(c.enemies[i]);
         if (!a || a->life != ActorLife::Alive)
             return CommandReason::InvalidTarget;
-        if (kind == SpellKind::InflictWounds) {
+        if (!effects_.sees(c.character))
+            return CommandReason::NotVisible;
+        if (kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp) {
             if (!exposed(c.character))
                 return CommandReason::RearBlocked;
             if (!inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
@@ -62,6 +65,8 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
             if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell))
                 return CommandReason::NotVisible;
         }
+        if (kind == SpellKind::PoisonSpray && !inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
+            return CommandReason::OutOfRange;
         if (kind == SpellKind::AcidSplash && i &&
             (!actors_.actor(c.enemies[0]) || !(a->npc.cell == actors_.actor(c.enemies[0])->npc.cell)))
             return CommandReason::SameCellRequired;
@@ -70,6 +75,8 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         const auto* ally = party_.character(c.allies[i]);
         if (!ally || ally->life == rules::Life::Dead)
             return CommandReason::DeadAlly;
+        if (kind == SpellKind::Guidance && !effects_.conscious(c.allies[i]))
+            return CommandReason::CannotAct;
         if (kind == SpellKind::CureWounds && ally->hitPoints == ally->stats.maxHitPoints)
             return CommandReason::FullHealth;
         if (kind == SpellKind::SpareTheDying && ally->life != rules::Life::Dying)
@@ -90,10 +97,13 @@ EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kin
     request.world = c.world;
     request.caster = c.character;
     request.count = c.targetCount;
-    request.kind = kind == SpellKind::Bless       ? EffectKind::Bless
-                   : kind == SpellKind::Bane      ? EffectKind::Bane
-                   : kind == SpellKind::MageArmor ? EffectKind::MageArmor
-                                                  : EffectKind::ShieldOfFaith;
+    request.kind = kind == SpellKind::Bless        ? EffectKind::Bless
+                   : kind == SpellKind::Bane       ? EffectKind::Bane
+                   : kind == SpellKind::Guidance   ? EffectKind::Guidance
+                   : kind == SpellKind::Resistance ? EffectKind::Resistance
+                   : kind == SpellKind::Sanctuary  ? EffectKind::Sanctuary
+                   : kind == SpellKind::MageArmor  ? EffectKind::MageArmor
+                                                   : EffectKind::ShieldOfFaith;
     request.difficulty =
         8 + party_.character(c.character)->stats.proficiency + party_.castingModifier(c.character);
     for (std::size_t i = 0; i < std::min(c.targetCount, request.targets.size()); ++i)
@@ -170,10 +180,22 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     const auto& r = *rules::spellRules(definition->kind);
     if (ch->mana < r.level * 2)
         return CommandReason::InsufficientMana;
+    if (r.self && state_.gameplayMs > UINT64_MAX - 3600000)
+        return CommandReason::EffectCapacity;
+    if (r.self)
+        return c.targetCount ? CommandReason::InvalidTargets : CommandReason::Ready;
     if (r.area) {
+        if (!effects_.sees(c.character))
+            return CommandReason::NotVisible;
+        if (r.ground && (!c.aimedCell || !spellCell(map_, pose, *c.aimedCell)))
+            return CommandReason::MissingTarget;
         if (c.targetCount)
             return CommandReason::InvalidTargets;
-        return spellArea(actors_, pose).count ? CommandReason::Ready : CommandReason::MissingTarget;
+        if (definition->kind == SpellKind::Grease)
+            return effects_.canCreateArea() ? CommandReason::Ready : CommandReason::EffectCapacity;
+        const auto affected = area(c, pose);
+        return (affected.count || affected.recipientCount) ? CommandReason::Ready
+                                                           : CommandReason::MissingTarget;
     }
     if (!c.targetCount)
         return CommandReason::MissingTarget;
@@ -210,11 +232,11 @@ bool CombatController::sneakPreview(rules::CharacterId id, ActorId target, bool 
         return false;
     const bool opening = ranged && realTime(state_.phase) && !ai_.aware(target) &&
                          !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
-    return sneakEligible(
-        id, target,
-        rules::rollMode(opening || effects_.guiding(target) || effects_.has(target, EffectKind::HoldPerson),
-                        ranged && adjacent(pose.cell)),
-        ranged, pose);
+    return sneakEligible(id, target,
+                         effects_.attackMode(id, target, combatAdjacent(map_, pose.cell, a->npc.cell),
+                                             opening || effects_.guiding(target),
+                                             ranged && adjacent(pose.cell)),
+                         ranged, pose);
 }
 bool CombatController::sneakEligible(rules::CharacterId id, ActorId target, rules::RollMode mode, bool ranged,
                                      Player pose) const noexcept {
@@ -284,7 +306,53 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         const auto kind = out.spell;
         const auto& r = *rules::spellRules(kind);
         party_.spendMana(c.character, r.level * 2);
-        if (effectSpell(kind)) {
+        if (r.hostile)
+            effects_.breakWard(c.character, now, events);
+        if (kind == SpellKind::FalseLife) {
+            const auto amount = int(rng_.roll({1, 4, 4}).value.total);
+            party_.grantTemporary(c.character, amount, state_.gameplayMs + 3600000);
+            auto result = out;
+            result.event = CombatEvent::Healing;
+            result.recipient = c.character;
+            result.damage = amount;
+            result.hit = true;
+            events.append(result);
+        } else if (kind == SpellKind::Sleep || kind == SpellKind::ColorSpray) {
+            auto affected = area(c, pose);
+            const auto hp = [&](EffectTarget t) {
+                return t.npc ? actors_.actor(t.enemy)->hitPoints : party_.character(t.character)->hitPoints;
+            };
+            std::sort(affected.recipients.begin(), affected.recipients.begin() + affected.recipientCount,
+                      [&](EffectTarget a, EffectTarget b) {
+                          return hp(a) != hp(b)   ? hp(a) < hp(b)
+                                 : a.npc != b.npc ? a.npc < b.npc
+                                 : a.npc          ? a.enemy.slot < b.enemy.slot
+                                                  : a.character.index < b.character.index;
+                      });
+            auto budget = rng_.roll(r.dice).value.total;
+            for (std::size_t i = 0; i < affected.recipientCount; ++i) {
+                const auto t = affected.recipients[i];
+                if (t.npc)
+                    alert(t.enemy, pose);
+                if (hp(t) > budget)
+                    continue;
+                budget -= hp(t);
+                effects_.condition(t, kind == SpellKind::Sleep ? EffectKind::Sleep : EffectKind::Blind,
+                                   c.character, now, events);
+                if (t.npc)
+                    spellPulse(t.enemy, c.character, kind, pose, now);
+            }
+            reconcileEffects(now, events);
+        } else if (kind == SpellKind::Grease) {
+            effects_.createArea(*c.aimedCell, c.character,
+                                8 + ch->stats.proficiency + party_.castingModifier(c.character), now, events);
+            const auto affected = area(c, pose);
+            for (std::size_t i = 0; i < affected.recipientCount; ++i)
+                effects_.groundCheck(affected.recipients[i], *c.aimedCell, now, events);
+            for (std::size_t i = 0; i < affected.count; ++i)
+                alert(affected.actors[i], pose);
+            reconcileEffects(now, events);
+        } else if (effectSpell(kind)) {
             if (r.hostile)
                 for (std::size_t i = 0; i < c.targetCount; ++i)
                     alert(c.enemies[i], pose);
@@ -313,7 +381,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             }
             events.append(result);
         } else {
-            std::array<ActorId, 12> targets{};
+            std::array<ActorId, 36> targets{};
             std::size_t count = 0;
             if (r.area) {
                 const auto area = spellArea(actors_, pose);
@@ -326,7 +394,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                           [](ActorId a, ActorId b) { return a.slot < b.slot; });
             }
             const auto sharedDamage = r.attack ? 0 : rng_.roll(r.dice).value.total;
-            std::array<bool, 12> push{};
+            std::array<bool, 36> push{};
             auto& payload = spellPayloads_[c.character.index];
             payload = {};
             for (std::size_t i = 0; i < count; ++i) {
@@ -335,16 +403,20 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 auto result = out;
                 result.event = CombatEvent::Attack;
                 result.enemy = id;
-                result.kind =
-                    kind == SpellKind::InflictWounds ? rules::AttackKind::Melee : rules::AttackKind::Ranged;
+                result.kind = (kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp)
+                                  ? rules::AttackKind::Melee
+                                  : rules::AttackKind::Ranged;
                 result.hit = true;
                 if (r.attack) {
                     const bool ranged = result.kind == rules::AttackKind::Ranged;
                     const bool opening = ranged && realTime(state_.phase) && !ai_.aware(id) &&
                                          !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
-                    const bool held = effects_.has(id, EffectKind::HoldPerson);
-                    const auto mode = rules::rollMode(opening || held || effects_.guiding(id),
-                                                      ranged && adjacent(pose.cell));
+                    const bool held = effects_.helpless(id);
+                    const auto mode =
+                        effects_.attackMode(c.character, id, combatAdjacent(map_, pose.cell, a->npc.cell),
+                                            opening || effects_.guiding(id) ||
+                                                (kind == SpellKind::ShockingGrasp && effects_.metalArmor(id)),
+                                            ranged && adjacent(pose.cell));
                     const auto roll = rng_.d20(mode).value;
                     effects_.consumeGuiding(id, now, events);
                     result.roll = roll.selected;
@@ -402,7 +474,12 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                             continue;
                         subcell = {int(slot % 2), int(slot / 2)};
                     }
-                    if (actors_.walk(targets[i], destination, subcell, pose.cell, now).changed) {
+                    if (actors_
+                            .walk(targets[i], destination, subcell, pose.cell, now,
+                                  npcWalkDurationMs *
+                                      effects_.movementFactor(targets[i], a->npc.cell, destination))
+                            .changed) {
+                        effects_.groundCheck(targets[i], destination, now, events);
                         auto moved = out;
                         moved.event = CombatEvent::Move;
                         moved.enemy = targets[i];

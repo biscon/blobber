@@ -4,6 +4,9 @@
 namespace blobber {
 CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t now,
                                        CombatEvents& events) noexcept {
+    currentEvents_ = &events;
+    noticeTime_ = now;
+    effects_.bindEvents(events, now);
     CombatOutcome out;
     origin_ = pose;
     if (state_.phase == CombatPhase::Victory || state_.phase == CombatPhase::Defeat) {
@@ -110,8 +113,9 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
                 const auto id = actors_.id(i);
                 before[i] = actors_.snapshot().actors[i].npc.cell;
-                frozen[i] = !effects_.canAct(id) || (members_[i] && frontal(id)) || now < enemyBusy_[i] ||
-                            attackBusy(i) || enemyReady_[i] > state_.gameplayMs;
+                const bool stood = !(members_[i] && frontal(id)) && effects_.stand(id, now, events);
+                frozen[i] = stood || !effects_.canAct(id) || (members_[i] && frontal(id)) ||
+                            now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs;
             }
             if (enableRoaming_) {
                 const auto incapacitated = effects_.incapacitatedActors();
@@ -120,6 +124,9 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
                 if (!(before[i] == actors_.snapshot().actors[i].npc.cell))
                     enemyReady_[i] = state_.gameplayMs + combatRoundMs;
+            for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
+                if (!(members_[i] && frontal(actors_.id(i))))
+                    effects_.groundCheck(actors_.id(i), actors_.snapshot().actors[i].npc.cell, now, events);
             observe(pose);
             enroll(pose, false);
             addGroups();
@@ -150,6 +157,8 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
         } else if (now >= due_ && !moving) {
             if (state_.activeCharacter) {
                 const auto id = *state_.activeCharacter;
+                if (effects_.stand(id, now, events))
+                    state_.spent[id.index] = true;
                 if (effects_.canAct(id) && !state_.spent[id.index])
                     state_.awaitingAction = true;
                 else {

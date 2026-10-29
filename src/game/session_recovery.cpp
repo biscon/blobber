@@ -84,7 +84,7 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
         p.error = RestError::Stale;
     else if (movement().transition.active())
         p.error = RestError::Moving;
-    else if (!combat_.settledRecovery(movement().player, timeMs_))
+    else if (effects_.area(movement().player.cell) || !combat_.settledRecovery(movement().player, timeMs_))
         p.error = RestError::Unsafe;
     else if (!leader)
         p.error = RestError::NoLeader;

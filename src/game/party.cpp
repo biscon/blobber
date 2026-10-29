@@ -148,6 +148,21 @@ int Party::castingModifier(rules::CharacterId id) const noexcept {
     return casting == rules::Casting::None ? 0
                                            : c->stats.modifiers[casting == rules::Casting::Wisdom ? 4 : 3];
 }
+bool Party::grantTemporary(rules::CharacterId id, int amount, std::uint64_t until) noexcept {
+    if (!character(id) || amount < 0 || character(id)->life == rules::Life::Dead)
+        return false;
+    auto& c = state_.characters[id.index];
+    c.temporaryHitPoints = std::max(c.temporaryHitPoints, amount);
+    c.temporaryUntilMs = until;
+    return true;
+}
+void Party::expireTemporary(std::uint64_t now) noexcept {
+    for (auto& c : state_.characters)
+        if (c.temporaryUntilMs <= now || c.life == rules::Life::Dead) {
+            c.temporaryHitPoints = 0;
+            c.temporaryUntilMs = 0;
+        }
+}
 bool Party::spendMana(rules::CharacterId id, int amount) noexcept {
     const auto* c = character(id);
     if (!c || amount < 0 || amount > c->mana)

@@ -4,7 +4,7 @@
 #include "ui/loot_layout.hpp"
 namespace blobber {
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
-                   bool allowConfirm, std::optional<LootId> lootHit) noexcept {
+                   bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit) noexcept {
     if (!input.focused) {
         commands.hover(HoverKind::None);
         return;
@@ -181,6 +181,9 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                 commands.inspect(i);
                 return;
             }
+    if (state.magic.armed && state.magic.ground && input.pointer && (moved || click))
+        commands.magicGround(inside(hudLayout::viewport) ? groundHit : std::nullopt,
+                             click && inside(hudLayout::viewport));
     if (state.magic.casting()) {
         if (state.magic.state == CastingState::Resolving) {
             commands.hover(HoverKind::None);

@@ -66,8 +66,9 @@ atlas and no extra GPU texture. Reproduce with the normal build/test presets,
 
 ## Accepted closeout and next-agent handoff
 
-Slice 12 is accepted and closed. Slice 13 — Levels 2 and 3 is next eligible for
-planning and remains Planned/unstarted; this closeout does not begin implementation.
+Slice 12 is accepted and closed. The 2026-10-28 roadmap insertion supersedes the
+historical slice-13 pointer: slice 12.1 is now in progress, with separate review
+required before 12.2. Levels 2 and 3 remain slice 13 after the accepted interlude.
 Read AGENTS.md, the system design, roadmap and this handoff before planning it.
 Preserve the accepted loot/Inventory/Rest UI, checked ownership transactions, floor
 handle generations, bounded storage and allocation guarantees. XP awards, advancement,

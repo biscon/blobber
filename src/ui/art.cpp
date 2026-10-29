@@ -50,7 +50,17 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "items/healing_potion",
                                   "items/mana_potion",
                                   "items/silhouette",
-                                  "rest"};
+                                  "rest",
+                                  "spells/ray_of_frost",
+                                  "spells/shocking_grasp",
+                                  "spells/poison_spray",
+                                  "spells/sleep",
+                                  "spells/false_life",
+                                  "spells/grease",
+                                  "spells/color_spray",
+                                  "spells/guidance",
+                                  "spells/resistance",
+                                  "spells/sanctuary"};
     OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
     OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
     if (!campImage.value.data || !lootImage.value.data)
@@ -67,18 +77,22 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
         OwnedImage image(LoadImage(path.string().c_str()));
         if (!image.value.data)
             throw std::runtime_error("Missing UI art: " + path.string());
-        const int maximumWidth = i == silhouetteIcon ? 384
-                                 : i >= 29           ? 168
-                                 : i < 4             ? 216
-                                                     : (i == 4 ? 72 : 108);
+        const int maximumWidth = i >= 46               ? 108
+                                 : i == silhouetteIcon ? 384
+                                 : i >= 29             ? 168
+                                 : i < 4               ? 216
+                                                       : (i == 4 ? 72 : 108);
         const int maximumHeight = i == silhouetteIcon ? 600 : i < 4 ? 252 : maximumWidth;
         const float factor =
             std::min(float(maximumWidth) / image.value.width, float(maximumHeight) / image.value.height);
         const int w = std::max(1, int(std::round(image.value.width * factor)));
         const int h = std::max(1, int(std::round(image.value.height * factor)));
         ImageResize(&image.value, w, h);
-        const int x = i == 45 ? 1794 : i == silhouetteIcon ? 1026 : int(i % 8) * 256 + 2;
-        const int y = i == silhouetteIcon ? 1282 : int(i / 8) * 256 + 2;
+        const int x = i >= 46               ? 2 + int(i - 46) * 112
+                      : i == 45             ? 1794
+                      : i == silhouetteIcon ? 1026
+                                            : int(i % 8) * 256 + 2;
+        const int y = i >= 46 ? 1900 : i == silhouetteIcon ? 1282 : int(i / 8) * 256 + 2;
         regions_[i] = {float(x), float(y), float(w), float(h)};
         ImageDrawImage(&atlas.value, image.value, x, y, WHITE);
         // Extrude two pixels so bilinear sampling never reaches adjacent/blank cells.
@@ -92,7 +106,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     atlas_ = resources_.createTexture(atlas.value);
     SetTextureFilter(resources_.texture(atlas_), TEXTURE_FILTER_BILINEAR);
 }
-static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 14,
+static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 24,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
     if (item.id == "scimitar")
@@ -116,7 +130,8 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
         return 26;
     if (feature == rules::Feature::DismissConcentration)
         return 27;
-    return kind < rules::SpellKind::Count ? 11 + static_cast<unsigned>(kind) : 8;
+    const auto k = static_cast<unsigned>(kind);
+    return kind < rules::SpellKind::Count ? (k < 14 ? 11 + k : 49 + k - 14) : 8;
 }
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     constexpr float scale = float(gameWidth) / artWidth;
@@ -128,7 +143,9 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index == restIcon)
+    if (index >= 49 && index < 59)
+        index -= 3;
+    else if (index == restIcon)
         index = 45;
     if (index >= regions_.size()) {
         DrawRectangleRec(destination, {19, 26, 25, 255});

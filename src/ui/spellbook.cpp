@@ -113,6 +113,8 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         const auto* rules = rules::spellRules(e.kind);
         const char* targeting = automatic                           ? "No separate action or activation."
                                 : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)
+                                : rules && rules->ground            ? "Aim on floor / 1 action."
+                                : rules && rules->self              ? "Self / 1 action."
                                 : rules && rules->area              ? "Fixed area / 1 action."
                                 : rules && rules->hostile ? (e.kind == rules::SpellKind::InflictWounds
                                                                  ? "Exposed melee / 1 action."
@@ -168,6 +170,8 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         m.feedback[0] ? m.feedback.data()
         : m.single    ? "Click to cast / Esc: cancel"
         : m.missiles  ? (m.assigned == 3 ? "Remove a dart to reassign it." : "Assign all 3 darts to cast.")
+        : m.ground    ? "Click floor to aim; arrows cycle; Enter casts."
+        : m.self      ? "Self / confirm to cast."
         : m.area
             ? (m.affectedCount ? "Fixed area ahead. Inspect, then Cast." : "No enemies in the affected area.")
         : c.action == PartyAction::Feature ? "Confirm to use this ability."
@@ -198,7 +202,7 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     label("Cancel [Esc]", hudLayout::spellCancel, resolving ? muted : gold, UiTextStyle::Small);
     if (resolving)
         return;
-    if (m.area) {
+    if (m.area && !m.ground) {
         for (int i = 0; i < 3; ++i) {
             const UiRect tile{227 + i * 16, 321, 13, 7};
             fill(tile, m.cells[i] ? Color{115, 68, 24, 255} : background);

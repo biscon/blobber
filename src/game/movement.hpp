@@ -6,6 +6,7 @@
 #include <optional>
 
 namespace blobber {
+class EffectController;
 enum class Action { Forward, Back, Left, Right, TurnLeft, TurnRight };
 inline bool isStrafe(Action action) {
     return action == Action::Left || action == Action::Right;
@@ -22,8 +23,8 @@ struct Transition {
     static constexpr float duration = 0.160f;
     Player from{}, to{};
     Action action = Action::Forward;
-    float elapsed = duration;
-    bool active() const { return elapsed < duration; }
+    float elapsed = duration, durationSeconds = duration;
+    bool active() const { return elapsed < durationSeconds; }
     float progress() const;
 };
 struct MovementState {
@@ -40,9 +41,11 @@ class Controller {
     void update(const Map& map, float seconds, const ActorWorld* npcs = nullptr);
     void clearPending() noexcept { pending_.reset(); }
     void setAnimated(bool enabled);
+    void bindEffects(const EffectController* e) noexcept { effects_ = e; }
 
   private:
     MovementState state_;
+    const EffectController* effects_ = nullptr;
     std::optional<Action> pending_;
 };
 } // namespace blobber

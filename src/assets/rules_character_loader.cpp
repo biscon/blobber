@@ -92,11 +92,17 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < races.size(); ++i) {
         const auto p = "races[" + std::to_string(i) + "]";
         const auto& r = races[i];
-        fields(r, p, {"id", "name", "ability_increases", "hit_points_per_level", "weapons"});
+        if (version >= 7)
+            fields(r, p,
+                   {"id", "name", "ability_increases", "hit_points_per_level", "weapons", "sleep_immune"});
+        else
+            fields(r, p, {"id", "name", "ability_increases", "hit_points_per_level", "weapons"});
         out.races.push_back({identifier(r.at("id"), p + ".id"), string(r.at("name"), p + ".name"),
                              scores(r.at("ability_increases"), p + ".ability_increases"),
                              integer(r.at("hit_points_per_level"), p + ".hit_points_per_level"),
                              training(r.at("weapons"), p + ".weapons", version)});
+        if (version >= 7)
+            out.races.back().sleepImmune = boolean(r.at("sleep_immune"), p + ".sleep_immune");
     }
     const auto& classes = root.at("classes");
     array(classes, "classes", Catalog::maxClasses);
@@ -167,6 +173,10 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                                               "currency", "supply"}));
         if (version < 6 && item.kind > ItemKind::Consumable)
             fail(p + ".kind", "currency/supplies require schema 6");
+        if (version >= 7 && item.kind == ItemKind::Armor) {
+            item.metalArmor = boolean(j.at("metal_armor"), p + ".metal_armor");
+            j.erase("metal_armor");
+        }
         if (version >= 5) {
             if (!j.contains("stack_limit"))
                 fail(p + ".stack_limit", "missing field");

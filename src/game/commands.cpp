@@ -172,6 +172,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         std::snprintf(line, sizeof(line), "%s defends until their next turn.", name);
         break;
     case CombatEvent::Aid:
+        if (!out.roll && out.spell != rules::SpellKind::SpareTheDying) {
+            std::snprintf(line, sizeof(line), "%s wakes %s.", name, target);
+            break;
+        }
         std::snprintf(line, sizeof(line), "%s aids %s: %s (d20 %d, Wisdom vs DC 10).", name, target,
                       out.hit ? "stabilized" : "failed", out.roll);
         break;
@@ -211,7 +215,9 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         const auto* item = party_.catalog().item(out.item);
         std::snprintf(line, sizeof(line), "%s%s%s -> %s: +%lld %s.", name, item ? " uses " : "",
                       item ? item->name.c_str() : "", target, static_cast<long long>(out.damage),
-                      out.event == CombatEvent::Healing ? "HP" : "mana");
+                      out.spell == rules::SpellKind::FalseLife ? "temporary HP"
+                      : out.event == CombatEvent::Healing      ? "HP"
+                                                               : "mana");
         if (out.event == CombatEvent::Healing) {
             CombatFeedback f;
             f.active = f.party = f.hit = f.healing = true;
@@ -223,6 +229,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         break;
     }
     case CombatEvent::SpellSave:
+        if (out.enemyAttack) {
+            std::snprintf(line, sizeof(line), "%s: %s save %d vs DC %d - %s.", target,
+                          rules::spellRules(out.spell)->name, out.saveTotal, out.saveDifficulty,
+                          out.hit ? "saved" : "failed");
+            break;
+        }
         std::snprintf(line, sizeof(line), "Enemy #%u: %s save %d vs DC %d - %s.",
                       unsigned(out.enemy.slot) + 1, rules::spellRules(out.spell)->name, out.saveTotal,
                       out.saveDifficulty, out.hit ? "saved" : "failed");
@@ -232,10 +244,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                       out.hit ? "applied" : "ended");
         break;
     case CombatEvent::Effect: {
-        constexpr const char* effects[]{"Bless", "Bane", "Shield of Faith", "Mage Armor", "Hold Person"};
         const auto& e = out.effect;
-        const char* effect =
-            static_cast<unsigned>(e.kind) < 5 ? effects[static_cast<unsigned>(e.kind)] : "Effect";
+        const char* effect = effectName(e.kind);
         if (e.notice == EffectNotice::InitialSave || e.notice == EffectNotice::RepeatSave ||
             e.notice == EffectNotice::ConcentrationSave)
             std::snprintf(line, sizeof(line), "%s%s: save %lld vs %lld - %s.", effect,
@@ -246,13 +256,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             std::snprintf(line, sizeof(line), "%s: %s.", effect,
                           e.notice == EffectNotice::Applied ? "applied" : "ended / recipient removed");
         if (e.notice == EffectNotice::Applied && !e.target.npc) {
-            constexpr const char* labels[]{"BLESS", "BANE", "FAITH", "ARMOR", "HELD"};
             CombatFeedback f;
             f.active = f.party = f.hit = true;
             f.healing = e.kind != EffectKind::Bane && e.kind != EffectKind::HoldPerson;
             f.character = e.target.character;
             f.startedMs = out.occurredMs;
-            f.text = labels[static_cast<unsigned>(e.kind)];
+            f.text = effectName(e.kind);
             showFeedback(f);
         }
         break;
@@ -418,6 +427,12 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             feedback.anchor.valid = false;
     }
     state_.protectedTargets.fill(false);
+    state_.conditions.fill(0);
+    if (session_)
+        for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
+            for (unsigned k = unsigned(EffectKind::Sleep); k < unsigned(EffectKind::Count); ++k)
+                if (session_->effects().has(actors_.id(i), EffectKind(k)))
+                    state_.conditions[i] |= 1u << k;
     if (session_)
         for (std::size_t i = 0; i < state_.targets.count; ++i) {
             const auto* target = actors_.actor(state_.targets.ids[i]);
@@ -450,6 +465,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                 card.equipment[e] = item->name.c_str();
         card.className = party_.catalog().characterClass(member.build.characterClass)->name.c_str();
         card.hp = member.hitPoints;
+        card.temporaryHp = member.temporaryHitPoints;
         card.maxHp = member.stats.maxHitPoints;
         card.mana = member.mana;
         card.maxMana = member.maxMana;
@@ -463,12 +479,11 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         if (session_) {
             card.armorClass = session_->effects().armorClass(id);
             card.concentrating = session_->effects().concentration(id).serial != 0;
-            constexpr const char* statusNames[]{"Bless ", "Bane ", "Faith ", "Armor ", "Held "};
             std::size_t used = 0;
-            for (unsigned e = 0; e < 5; ++e)
+            for (unsigned e = 0; e < unsigned(EffectKind::Count) && used + 1 < card.effects.size(); ++e)
                 if (session_->effects().has(id, static_cast<EffectKind>(e)))
-                    used += std::snprintf(card.effects.data() + used, card.effects.size() - used, "%s",
-                                          statusNames[e]);
+                    used += std::snprintf(card.effects.data() + used, card.effects.size() - used, "%s ",
+                                          effectName(static_cast<EffectKind>(e)));
             card.hasDeathSaves = member.life == rules::Life::Dying;
             card.active = realTime(state_.combat.phase)
                               ? state_.selection.character.index == id.index
@@ -482,7 +497,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             for (const auto& shot : session_->combat().attacks().attacks)
                 card.incomingShot |= shot.incoming && shot.ranged && shot.character.index == id.index &&
                                      shot.stage == AttackStage::Flight;
-            if (member.life == rules::Life::Dying && id.index != state_.selection.character.index)
+            if ((member.life == rules::Life::Dying || session_->effects().has(id, EffectKind::Sleep)) &&
+                id.index != state_.selection.character.index)
                 state_.allies[state_.allyCount++] = id;
         }
         if (state_.demo) {
@@ -517,6 +533,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         const auto& m = state_.magic;
         card.castCaster = m.casting() && card.id.index == m.pending.character.index;
         card.castRecipient = m.armed && m.selectedAllies[i];
+        card.castRisk = card.castRecipient && m.hostile && m.area;
         card.castEligible = !m.armed || m.hostile || m.pending.action != PartyAction::Spell ||
                             m.allyReasons[i] == CommandReason::Ready;
         card.castHovered =

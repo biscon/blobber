@@ -238,6 +238,12 @@ void CommandController::updateHover() noexcept {
                                                         session_->movement().player))
             put(2, "Sneak Attack: +1d6 on hit / one action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
+        if (session_)
+            for (unsigned e = unsigned(EffectKind::Sleep); e < unsigned(EffectKind::Count); ++e)
+                if (session_->effects().has(*h.enemy, EffectKind(e))) {
+                    put(2, effectName(EffectKind(e)));
+                    break;
+                }
     } else if (h.kind == HoverKind::Action && h.index >= 0 && h.index < 6) {
         if (h.index == 4 && session_) {
             h.reason = CommandReason::Ready;
@@ -254,7 +260,7 @@ void CommandController::updateHover() noexcept {
         constexpr const char* effects[]{
             "Attack with your equipped weapon.",       "Attacks against you: disadvantage until next turn.",
             "Ready bow: six-cell range, clear sight.", "Open the paused spellbook and class abilities.",
-            "Usable items are not available yet.",     "DC 10 Wisdom: stabilize a dying ally."};
+            "Usable items are not available yet.",     "Wake a sleeper, or DC 10 Wisdom to stabilize."};
         put(1, effects[h.index]);
         put(2, h.index == 3   ? "Browsing pauses; targeting resumes play."
                : h.index == 4 ? "Unavailable"
@@ -274,7 +280,8 @@ void CommandController::updateHover() noexcept {
             put(3, commandMessage(h.reason));
         else if (action == PartyAction::Aid) {
             put(2, "Cost: 1 action / no healing");
-            put(3, state_.allyCount ? "Then click a dying ally's portrait." : "No dying allies to aid.");
+            put(3,
+                state_.allyCount ? "Then click the ally's portrait." : "No sleeping or dying allies to aid.");
         } else if (action == PartyAction::Defend)
             put(3, "Click or press 2 to defend.");
         else
@@ -289,7 +296,8 @@ void CommandController::updateHover() noexcept {
             if (m.pending.action == PartyAction::Feature)
                 put(1, "This feature needs no recipient selection.");
             else if (m.hostile)
-                put(1, "This spell does not target allies.");
+                put(1, m.selectedAllies[h.index] ? "WARNING: ally in affected area."
+                                                 : "This ally is outside the affected area.");
             else if (m.selectedAllies[h.index]) {
                 put(1, "Selected recipient");
                 put(2, "Click to remove.");

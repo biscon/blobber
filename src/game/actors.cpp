@@ -22,7 +22,7 @@ std::uint8_t bit(Cell subcell) noexcept {
 } // namespace
 bool actorWalking(const ActorState& a, std::uint64_t timeMs) noexcept {
     return a.hasTravel && a.life == ActorLife::Alive &&
-           (timeMs < a.walkTimeMs || timeMs - a.walkTimeMs < npcWalkDurationMs);
+           (timeMs < a.walkTimeMs || timeMs - a.walkTimeMs < a.walkDurationMs);
 }
 ActorPosition actorPosition(const ActorState& a, std::uint64_t timeMs) noexcept {
     const ActorPosition destination{a.npc.cell.x + .25f + a.npc.subcell.x * .5f,
@@ -32,7 +32,7 @@ ActorPosition actorPosition(const ActorState& a, std::uint64_t timeMs) noexcept 
     if (a.life == ActorLife::Dead)
         timeMs = std::min(timeMs, a.damageTimeMs);
     const float t =
-        timeMs < a.walkTimeMs ? 0.f : std::min(1.f, float(timeMs - a.walkTimeMs) / npcWalkDurationMs);
+        timeMs < a.walkTimeMs ? 0.f : std::min(1.f, float(timeMs - a.walkTimeMs) / a.walkDurationMs);
     return {a.walkFrom.x + (destination.x - a.walkFrom.x) * t,
             a.walkFrom.y + (destination.y - a.walkFrom.y) * t};
 }
@@ -78,9 +78,11 @@ bool ActorWorld::occupied(Cell c) const noexcept {
 std::uint8_t ActorWorld::occupiedSlots(Cell c) const noexcept {
     return map_.solid(c) ? 15 : occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x];
 }
-ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell,
-                             std::uint64_t timeMs) noexcept {
+ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs,
+                             std::uint64_t durationMs) noexcept {
     const auto* a = actor(id);
+    if (!durationMs)
+        return {ActorError::InvalidTime};
     if (!a)
         return {ActorError::InvalidHandle};
     if (a->hasWalk && timeMs < a->walkTimeMs)
@@ -93,6 +95,7 @@ ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell
         state_.actors[id.slot].walkFrom = from;
         state_.actors[id.slot].hasWalk = true;
         state_.actors[id.slot].walkTimeMs = timeMs;
+        state_.actors[id.slot].walkDurationMs = durationMs;
     }
     return result;
 }

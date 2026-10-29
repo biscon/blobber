@@ -65,6 +65,7 @@ struct RaceDefinition {
     Abilities abilityIncreases{};
     int hitPointsPerLevel = 0;
     WeaponTraining weapons = 0;
+    bool sleepImmune = false;
 };
 struct ClassDefinition {
     std::string id, name;
@@ -92,6 +93,7 @@ struct ItemDefinition {
     std::uint16_t stackMaximum = 0; // Zero selects legacy kind default.
     Ammunition ammunition = Ammunition::None;
     Consumable consumable = Consumable::None;
+    bool metalArmor = false;
 };
 unsigned stackLimit(const ItemDefinition&) noexcept;
 Ammunition ammunitionFor(const ItemDefinition&) noexcept;

@@ -111,11 +111,11 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
             } else if (actor.hasWalk && (!actor.hasAttack || actor.walkTimeMs > actor.attackTimeMs) &&
                        (!actor.hasDamage || actor.walkTimeMs > actor.damageTimeMs ||
                         (actor.life == ActorLife::Dead && !dying)) &&
-                       time >= actor.walkTimeMs && time - actor.walkTimeMs < npcWalkDurationMs &&
+                       time >= actor.walkTimeMs && time - actor.walkTimeMs < actor.walkDurationMs &&
                        timings[static_cast<std::size_t>(NpcAnimation::Walk)].count) {
                 next.clip = NpcAnimation::Walk;
-                next.active =
-                    sample(timings[static_cast<std::size_t>(NpcAnimation::Walk)], time - actor.walkTimeMs, 0);
+                next.active = sample(timings[static_cast<std::size_t>(NpcAnimation::Walk)],
+                                     (time - actor.walkTimeMs) * npcWalkDurationMs / actor.walkDurationMs, 0);
             } else {
                 const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
                 next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);

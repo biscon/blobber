@@ -11,6 +11,7 @@ struct PartyCharacter : rules::HealthState {
     int mana = 0, maxMana = 0;
     bool secondWind = false, arcaneRecovery = false;
     std::uint32_t experience = 0;
+    std::uint64_t temporaryUntilMs = 0;
 };
 struct PartySnapshot {
     std::array<PartyCharacter, rules::partySize> characters;
@@ -34,6 +35,8 @@ class Party {
     rules::HealthResult heal(rules::CharacterId id, std::int64_t amount) noexcept;
     rules::HealthResult stabilize(rules::CharacterId id) noexcept;
     rules::HealthResult deathSave(rules::CharacterId id, int face, int modifier = 0) noexcept;
+    bool grantTemporary(rules::CharacterId, int amount, std::uint64_t until) noexcept;
+    void expireTemporary(std::uint64_t now) noexcept;
     bool spendMana(rules::CharacterId, int amount) noexcept;
     bool useFeature(rules::CharacterId, rules::Feature) noexcept;
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;

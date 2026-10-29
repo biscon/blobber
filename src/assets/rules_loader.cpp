@@ -15,6 +15,11 @@ namespace {
 using Json = nlohmann::json;
 using namespace rules;
 using namespace rules_json;
+bool boolean(const Json& value, const std::string& path) {
+    if (!value.is_boolean())
+        fail(path, "expected boolean");
+    return value.get<bool>();
+}
 Json read(const std::filesystem::path& path) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream)
@@ -54,8 +59,9 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         if (!root.is_object() || !root.contains("schema_version"))
             fail("schema_version", "missing version");
         const int version = integer(root.at("schema_version"), "schema_version");
-        if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6)
-            fail("schema_version", "only versions 1 through 6 are supported");
+        if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
+            version != 7)
+            fail("schema_version", "only versions 1 through 7 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else if (version >= 4)
@@ -105,13 +111,21 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         for (std::size_t i = 0; i < monsterJson.size(); ++i) {
             const auto p = "monsters[" + std::to_string(i) + "]";
             const auto& m = monsterJson[i];
-            if (version >= 6)
+            if (version >= 7)
+                fields(m, p,
+                       {"id", "abilities", "armor_class", "hit_points", "attacks", "traits", "loot",
+                        "metal_armor", "sleep_immune"});
+            else if (version >= 6)
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks", "traits", "loot"});
             else if (version >= 3)
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks", "traits"});
             else
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks"});
             MonsterDefinition definition;
+            if (version >= 7) {
+                definition.metalArmor = boolean(m.at("metal_armor"), p + ".metal_armor");
+                definition.sleepImmune = boolean(m.at("sleep_immune"), p + ".sleep_immune");
+            }
             definition.id = identifier(m.at("id"), p + ".id");
             if (version >= 3) {
                 array(m.at("traits"), p + ".traits", 1);

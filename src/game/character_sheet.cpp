@@ -77,10 +77,9 @@ void CommandController::refreshCharacterSheet() noexcept {
         feature("Arcane Recovery", "Safe mana recovery; refreshes on long rest.",
                 c->arcaneRecovery ? "1 / 1 use" : "0 / 1 use");
     if (session_) {
-        constexpr const char* effects[]{"Bless", "Bane", "Shield of Faith", "Mage Armor", "Hold Person"};
-        for (unsigned n = 0; n < std::size(effects); ++n)
+        for (unsigned n = 0; n < unsigned(EffectKind::Count); ++n)
             if (session_->effects().has(i.character, static_cast<EffectKind>(n)))
-                append(out.effects, effects[n]);
+                append(out.effects, effectName(static_cast<EffectKind>(n)));
         if (session_->effects().concentration(i.character).serial)
             append(out.effects, "Concentrating");
     }

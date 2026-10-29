@@ -214,6 +214,32 @@ void inventoryLoading() {
     const auto newCat = files.load(six);
     check(newCat.monster({0})->lootCount == 1 && stackLimit(*newCat.item({5})) == 1000,
           "Schema six resolves loot and currency");
+    check(!newCat.race({0})->sleepImmune && !newCat.monster({0})->metalArmor,
+          "Legacy schema defaults capabilities off");
+    auto seven = six;
+    seven["schema_version"] = 7;
+    for (auto& race : seven["races"])
+        race["sleep_immune"] = true;
+    for (auto& item : seven["items"])
+        if (item["kind"] == "armor")
+            item["metal_armor"] = true;
+    seven["monsters"][0]["sleep_immune"] = true;
+    seven["monsters"][0]["metal_armor"] = true;
+    const auto capabilities = files.load(seven);
+    check(capabilities.race({0})->sleepImmune && capabilities.monster({0})->sleepImmune &&
+              capabilities.monster({0})->metalArmor && capabilities.item({1})->metalArmor,
+          "Schema seven loads explicit capabilities");
+    for (const auto field : {"sleep_immune", "metal_armor"}) {
+        auto bad = seven;
+        bad["monsters"][0][field] = "yes";
+        files.invalid(bad, field);
+    }
+    auto badArmor = seven;
+    badArmor["items"][1]["metal_armor"] = 1;
+    files.invalid(badArmor, "metal_armor");
+    auto badRace = seven;
+    badRace["races"][0]["sleep_immune"] = 1;
+    files.invalid(badRace, "sleep_immune");
     for (int fault = 0; fault < 5; ++fault) {
         auto bad = six;
         if (fault == 0)

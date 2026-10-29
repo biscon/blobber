@@ -1,5 +1,13 @@
 # System design
 
+Implemented, **Ready for review** (2026-10-28): [slice 12.1 expanded spells](expanded_spells_design.md).
+The ten additions use bounded conditions and ground areas, checked casts, temporary
+HP, turn-relative short effects and prepared presentation. [Local SRD](references/README.md)
+is the source for future planning. [Verification and handoff](slice121_verification.md):
+Debug/Release 30/30, focused sanitizers 4/4, zero tracked frame allocations,
+maximum-capacity stress and hidden GPU/capture checks pass. User acceptance is
+pending; 12.2 remains unstarted.
+
 Design accepted, **implementation planned/unstarted** (2026-10-28):
 [main menu and character-creation flow](character_creation_flow_proposal.md), with
 [sixteen approved imagegen mockups](mockups/character-creator-v1/index.html).
@@ -11,7 +19,7 @@ expanded spell selection and Color Spray in place of illustrative Ray of Sicknes
 Library blueprints and live party state have independent ownership; menu/session
 lifecycle and bounded draft/UI storage preserve existing rendering/allocation
 contracts. Detailed subsystem designs are written in each later planning pass.
-No gameplay implementation is implied. Slice 12.1 is next eligible for planning;
+The creation/menu systems remain unimplemented; slice 12.1 is awaiting review.
 12.1–12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory

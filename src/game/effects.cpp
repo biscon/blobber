@@ -6,7 +6,8 @@
 namespace blobber {
 namespace {
 bool concentrates(EffectKind kind) {
-    return kind != EffectKind::MageArmor;
+    return kind == EffectKind::Bless || kind == EffectKind::Bane || kind == EffectKind::ShieldOfFaith ||
+           kind == EffectKind::HoldPerson || kind == EffectKind::Guidance || kind == EffectKind::Resistance;
 }
 std::uint64_t duration(EffectKind kind) {
     return kind == EffectKind::MageArmor ? 28800000 : kind == EffectKind::ShieldOfFaith ? 600000 : 60000;
@@ -52,6 +53,10 @@ bool EffectController::unarmored(rules::CharacterId id) const noexcept {
 bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept {
     if (!living(target))
         return false;
+    if (kind >= EffectKind::Sleep && kind < EffectKind::Count) {
+        const auto i = conditionIndex(target);
+        return i < conditions_.size() && conditions_[i][unsigned(kind) - unsigned(EffectKind::Sleep)].active;
+    }
     for (const auto& e : instances_)
         if (e.active && e.kind == kind)
             for (std::size_t i = 0; i < e.count; ++i)
@@ -60,7 +65,7 @@ bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept 
     return false;
 }
 bool EffectController::canAct(EffectTarget t) const noexcept {
-    if (!living(t) || has(t, EffectKind::HoldPerson))
+    if (!conscious(t) || has(t, EffectKind::Knockdown))
         return false;
     return t.npc || party_.character(t.character)->life == rules::Life::Conscious;
 }
@@ -104,8 +109,7 @@ rules::SaveResult EffectController::save(EffectTarget target, rules::Ability abi
     const auto index = static_cast<std::size_t>(ability);
     if (!living(target) || index >= rules::abilityCount)
         return result;
-    if ((ability == rules::Ability::Strength || ability == rules::Ability::Dexterity) &&
-        has(target, EffectKind::HoldPerson))
+    if ((ability == rules::Ability::Strength || ability == rules::Ability::Dexterity) && helpless(target))
         return result; // Automatic failure consumes no dice.
     const int bonus =
         target.npc ? rules::abilityModifier(
@@ -113,7 +117,7 @@ rules::SaveResult EffectController::save(EffectTarget target, rules::Ability abi
                          .value
                    : party_.character(target.character)->stats.saves[index];
     result.roll = rng_.d20().value;
-    result.total = std::int64_t(result.roll.selected) + bonus + rollModifier(target);
+    result.total = std::int64_t(result.roll.selected) + bonus + saveModifier(target);
     result.succeeded = result.total >= dc;
     return result;
 }
@@ -148,7 +152,7 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
         return EffectError::InvalidWorld;
     if (!canAct(request.caster))
         return EffectError::InvalidCaster;
-    if (request.kind >= EffectKind::Count)
+    if (request.kind >= EffectKind::Sleep)
         return EffectError::InvalidKind;
     if (request.difficulty < 1 || request.difficulty > 1000)
         return EffectError::InvalidDifficulty;
@@ -178,6 +182,7 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
 }
 EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t now,
                                      CombatEvents& events) noexcept {
+    bindEvents(events, now);
     const auto error = validate(request);
     if (error != EffectError::None)
         return {error};
@@ -188,6 +193,10 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     if (old.serial)
         for (auto& e : instances_)
             if (e.active && e.id.serial == old.serial)
+                end(e, EffectEnd::Replaced, now, events);
+    if (request.kind == EffectKind::Sanctuary)
+        for (auto& e : instances_)
+            if (e.active && e.kind == EffectKind::Sanctuary && e.targets[0] == request.targets[0])
                 end(e, EffectEnd::Replaced, now, events);
     EffectInstance candidate;
     candidate.id = {request.world, nextSerial_++};
@@ -226,6 +235,7 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     return {EffectError::None, candidate.id};
 }
 void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexcept {
+    bindEvents(events, now);
     for (std::size_t i = 0; i < guidingUntil_.size(); ++i)
         if (guidingUntil_[i] && !living(actors_.id(i)))
             consumeGuiding(actors_.id(i), now, events);
@@ -240,7 +250,7 @@ void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexce
             break;
         auto& e = *next;
         previous = e.id.serial;
-        if (concentrates(e.kind) && !canAct(e.caster)) {
+        if (concentrates(e.kind) && !conscious(e.caster)) {
             end(e, EffectEnd::Incapacitated, now, events);
             continue;
         }
@@ -263,6 +273,8 @@ void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexce
 void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool realTime,
                                CombatEvents& events) noexcept {
     assert(goal >= gameplayMs_);
+    bindEvents(events, session);
+    party_.expireTemporary(goal);
     for (;;) {
         EffectInstance* next = nullptr;
         std::uint64_t deadline = std::numeric_limits<std::uint64_t>::max();
@@ -293,6 +305,12 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
             consumeGuiding(actors_.id(marker), realTime ? session - (goal - deadline) : session, events);
             continue;
         }
+        const auto extra = conditionDeadline(realTime);
+        if (extra <= goal && (!next || extra < deadline)) {
+            gameplayMs_ = extra;
+            advanceConditions(extra, realTime ? session - (goal - extra) : session, realTime, events);
+            continue;
+        }
         if (!next)
             break;
         gameplayMs_ = deadline;
@@ -314,6 +332,8 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
 }
 void EffectController::damaged(rules::CharacterId id, std::int64_t damage, std::uint64_t now,
                                CombatEvents& events) noexcept {
+    if (damage > 0)
+        wake(id, now, events);
     reconcile(now, events);
     if (damage <= 0)
         return;
@@ -323,7 +343,7 @@ void EffectController::damaged(rules::CharacterId id, std::int64_t damage, std::
             const auto dc = std::max(std::int64_t{10}, damage / 2);
             const auto saved = save(id, rules::Ability::Constitution, dc);
             emit(e, EffectNotice::ConcentrationSave, EffectEnd::None, id, saved, dc, now, events);
-            if (!saved.succeeded)
+            if (!saved.succeeded && e.active)
                 end(e, EffectEnd::FailedSave, now, events);
             break;
         }

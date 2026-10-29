@@ -86,6 +86,54 @@ void composition() {
     presentation.update(&shots, 180);
     check(actors.snapshot().actors[0].hitPoints == hp, "Cosmetic processing never changes health");
 }
+void groundLayers() {
+    const Map map({"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#",
+                   "#.......#", "#########"});
+    const Player player{{4, 6}, Heading::North};
+    const SceneRenderer renderer(testMaterials());
+    SpellArea area;
+    area.ground.revision = 1;
+    area.ground.areas[0] = {{1, 1}, {4, 5}, {3}, 12, 60000, true};
+    Frame plain, painted;
+    for (int phase = 0; phase <= 8; ++phase) {
+        const Player to{{5, 6}, Heading::North};
+        renderer.composeStrafe(map, player, to, phase / 8.f, plain);
+        renderer.composeStrafe(map, player, to, phase / 8.f, painted, nullptr, nullptr, nullptr, nullptr,
+                               &area);
+        check(!same(plain, painted), "Persistent ground visible throughout prepared strafe phases");
+    }
+    MovementState state;
+    state.player = player;
+    FramePipeline frames;
+    check(frames.update(renderer, map, state, nullptr, nullptr, nullptr, 0, &area),
+          "Persistent ground first frame");
+    check(!frames.update(renderer, map, state, nullptr, nullptr, nullptr, 0, &area),
+          "Unchanged ground reuses frame");
+    area.ground.areas[0].active = false;
+    ++area.ground.revision;
+    check(frames.update(renderer, map, state, nullptr, nullptr, nullptr, 0, &area),
+          "Ground expiry invalidates cached frame");
+    renderer.compose(map, player, plain);
+    check(same(plain, frames.frame()), "Expiry restores clean floor");
+    const Map wall({"#########", "#.......#", "#.......#", "#.......#", "#..###..#", "#.......#", "#.......#",
+                    "#.......#", "#########"});
+    area.ground.areas[0].active = true;
+    area.ground.areas[0].cell = {4, 3};
+    renderer.compose(wall, player, plain);
+    renderer.compose(wall, player, painted, nullptr, nullptr, nullptr, nullptr, &area);
+    check(same(plain, painted), "Walls occlude persistent ground");
+    check(!SceneRenderer::groundCell(map, player, 250, 30), "Ground picking excludes ceiling");
+    unsigned hits = 0;
+    for (int y = 100; y < viewHeight; y += 7)
+        for (int x = 0; x < viewWidth; x += 11) {
+            const auto cell = SceneRenderer::groundCell(wall, player, x, y);
+            if (cell) {
+                ++hits;
+                check(spellCell(wall, player, *cell), "Ground pick shares authoritative LOS/range query");
+            }
+        }
+    check(hits > 0, "Visible floor provides ground targets");
+}
 void capacityAndAnchors() {
     AttackVisualSnapshot shots;
     shots.world = 1;
@@ -126,6 +174,7 @@ void capacityAndAnchors() {
 int main() {
     try {
         composition();
+        groundLayers();
         capacityAndAnchors();
         std::cout << "Projectile checks passed\n";
     } catch (const std::exception& e) {

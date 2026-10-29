@@ -213,17 +213,22 @@ void composeProjectiles(const ProjectilePlayer& effects, const PreparedNpcs& pre
                             color.g = 114;
                             color.b = 38;
                             break;
+                        case rules::SpellKind::PoisonSpray:
                         case rules::SpellKind::AcidSplash:
                             color.r = 118;
                             color.g = 242;
                             color.b = 60;
                             break;
+                        case rules::SpellKind::Sleep:
+                        case rules::SpellKind::ColorSpray:
                         case rules::SpellKind::InflictWounds:
                         case rules::SpellKind::Bane:
                             color.r = 179;
                             color.g = 75;
                             color.b = 215;
                             break;
+                        case rules::SpellKind::RayOfFrost:
+                        case rules::SpellKind::ShockingGrasp:
                         case rules::SpellKind::Thunderwave:
                         case rules::SpellKind::MagicMissile:
                             color.r = 110;

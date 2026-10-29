@@ -28,7 +28,7 @@ struct ActorState {
     bool resumableAttack = false;
     std::uint64_t attackPausedMs = 0, attackPauseFromMs = 0, attackPauseUntilMs = 0;
     bool hasWalk = false;
-    std::uint64_t walkTimeMs = 0;
+    std::uint64_t walkTimeMs = 0, walkDurationMs = npcWalkDurationMs;
     bool hasTravel = false;
     ActorPosition walkFrom;
 };
@@ -72,7 +72,8 @@ class ActorWorld {
     bool occupied(Cell cell) const noexcept;
     std::uint8_t occupiedSlots(Cell cell) const noexcept;
     ActorResult move(ActorId id, Cell cell, Cell subcell, Cell partyCell) noexcept;
-    ActorResult walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs) noexcept;
+    ActorResult walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs,
+                     std::uint64_t durationMs = npcWalkDurationMs) noexcept;
     ActorResult face(ActorId id, Heading facing) noexcept;
     ActorResult attack(ActorId id, std::uint64_t timeMs, bool ranged = false) noexcept;
     ActorResult suspendAttack(ActorId, std::uint64_t when, std::uint64_t duration) noexcept;

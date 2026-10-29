@@ -3,8 +3,8 @@
 #include "ui/layout.hpp"
 namespace blobber {
 // Presentation-only placement. The badge never changes the body hit target.
-inline std::array<std::optional<UiRect>, 12> spellMarkerLayout(const HudSnapshot& h) noexcept {
-    std::array<std::optional<UiRect>, 12> result{};
+inline std::array<std::optional<UiRect>, 36> spellMarkerLayout(const HudSnapshot& h) noexcept {
+    std::array<std::optional<UiRect>, 36> result{};
     const int width = h.magic.missiles ? 23 : 12;
     for (std::size_t i = 0; i < h.magic.affectedCount; ++i) {
         const auto id = h.magic.affected[i];

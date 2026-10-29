@@ -4,7 +4,21 @@
 
 namespace blobber {
 struct CombatEvents;
-enum class EffectKind : std::uint8_t { Bless, Bane, ShieldOfFaith, MageArmor, HoldPerson, Count };
+enum class EffectKind : std::uint8_t {
+    Bless,
+    Bane,
+    ShieldOfFaith,
+    MageArmor,
+    HoldPerson,
+    Guidance,
+    Resistance,
+    Sanctuary,
+    Sleep,
+    Blind,
+    Slow,
+    Knockdown,
+    Count
+};
 struct EffectId {
     std::uint64_t world = 0, serial = 0;
 };
@@ -58,7 +72,10 @@ enum class EffectEnd : std::uint8_t {
     Saved,
     NoTargets,
     InvalidTarget,
-    Armor
+    Armor,
+    Consumed,
+    Woken,
+    Recovered
 };
 struct EffectEvent {
     EffectNotice notice = EffectNotice::Applied;
@@ -82,6 +99,27 @@ struct EffectInstance {
     std::uint64_t expiresMs = 0, retryMs = 0;
     bool active = false;
 };
+struct ConditionState {
+    rules::CharacterId caster{};
+    std::uint64_t untilMs = 0, remainingMs = 0, casterTurn = 0;
+    bool active = false, turnBound = false;
+};
+struct AreaId {
+    std::uint64_t world = 0, serial = 0;
+};
+struct GroundArea {
+    AreaId id{};
+    Cell cell{};
+    rules::CharacterId caster{};
+    int difficulty = 0;
+    std::uint64_t untilMs = 0;
+    bool active = false;
+};
+struct GroundSnapshot {
+    std::array<GroundArea, 16> areas{};
+    std::uint64_t revision = 0;
+};
+const char* effectName(EffectKind) noexcept;
 // Fixed concrete effects, not a spell executor. Owners/RNG outlive this object.
 class EffectController {
   public:
@@ -105,6 +143,38 @@ class EffectController {
     bool has(EffectTarget, EffectKind) const noexcept;
     bool canAct(EffectTarget) const noexcept;
     bool mobileParty() const noexcept;
+    bool conscious(EffectTarget) const noexcept;
+    bool sees(EffectTarget) const noexcept;
+    bool sleepImmune(EffectTarget) const noexcept;
+    bool metalArmor(EffectTarget) const noexcept;
+    bool helpless(EffectTarget) const noexcept;
+    rules::RollMode attackMode(EffectTarget attacker, EffectTarget target, bool close, bool advantage = false,
+                               bool disadvantage = false) const noexcept;
+    int oneShot(EffectTarget, EffectKind) noexcept;
+    int saveModifier(EffectTarget t) noexcept { return rollModifier(t) + oneShot(t, EffectKind::Resistance); }
+    void breakWard(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
+    bool wardAllows(EffectTarget attacker, EffectTarget target, std::uint64_t, CombatEvents&) noexcept;
+    void condition(EffectTarget, EffectKind, rules::CharacterId caster, std::uint64_t,
+                   CombatEvents&) noexcept;
+    void wake(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
+    bool stand(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
+    void casterTurn(rules::CharacterId, std::uint64_t, CombatEvents&) noexcept;
+    void clockMode(bool turns) noexcept;
+    void bindEvents(CombatEvents& events, std::uint64_t now) noexcept {
+        events_ = &events;
+        noticeMs_ = now;
+    }
+    const GroundSnapshot& ground() const noexcept { return ground_; }
+    bool canCreateArea() const noexcept;
+    AreaId createArea(Cell, rules::CharacterId, int difficulty, std::uint64_t, CombatEvents&) noexcept;
+    const GroundArea* area(Cell) const noexcept;
+    unsigned movementFactor(EffectTarget, Cell from, Cell to) const noexcept;
+    void enter(EffectTarget, Cell, std::uint64_t) noexcept;
+    void groundCheck(EffectTarget, Cell, std::uint64_t, CombatEvents&) noexcept;
+    void groundOccupants(Cell partyCell, std::uint64_t, CombatEvents&) noexcept;
+    void partyCell(Cell cell) noexcept { partyCell_ = cell; }
+    void skipHazards(std::uint64_t until) noexcept { groundDueMs_ = until + 6000; }
+
     std::array<bool, NpcWorld::maxInstances> incapacitatedActors() const noexcept;
     int armorClass(EffectTarget) const noexcept;
     int rollModifier(EffectTarget) noexcept;
@@ -118,6 +188,20 @@ class EffectController {
     std::array<EffectInstance, capacity> instances_{};
     std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil_{};
     std::uint64_t nextSerial_ = 1, gameplayMs_ = 0;
+    static constexpr std::size_t creatureCount = NpcWorld::maxInstances + rules::partySize;
+    std::array<std::array<ConditionState, 4>, creatureCount> conditions_{};
+    std::array<std::uint64_t, 4> casterTurns_{};
+    GroundSnapshot ground_{};
+    std::uint64_t nextArea_ = 1, groundDueMs_ = 6000, noticeMs_ = 0;
+    Cell partyCell_{};
+    bool turns_ = false;
+    CombatEvents* events_ = nullptr; // Borrowed only from the session's permanent event owner.
+    std::size_t conditionIndex(EffectTarget) const noexcept;
+    void conditionNotice(EffectTarget, EffectKind, EffectNotice, EffectEnd, rules::CharacterId, std::uint64_t,
+                         CombatEvents&) const noexcept;
+    std::uint64_t conditionDeadline(bool realTime) const noexcept;
+    void advanceConditions(std::uint64_t goal, std::uint64_t session, bool realTime, CombatEvents&) noexcept;
+
     bool living(EffectTarget) const noexcept;
     bool unarmored(rules::CharacterId) const noexcept;
     void end(EffectInstance&, EffectEnd, std::uint64_t sessionMs, CombatEvents&) noexcept;

@@ -1,4 +1,5 @@
 #include "game/npc_ai.hpp"
+#include "game/effects.hpp"
 #include "game/perception.hpp"
 #include <algorithm>
 #include <cstdlib>
@@ -51,7 +52,8 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
     const auto now = state_.timeMs;
     if (actor.life != ActorLife::Alive)
         return {};
-    if (npcSees(map_, here, actor.npc.facing, party.cell)) {
+    if ((!effects_ || effects_->sees(actors_.id(slot))) &&
+        npcSees(map_, here, actor.npc.facing, party.cell)) {
         if (a.awareness != Awareness::Pursuing)
             a.moveDueMs = std::min(a.moveDueMs, now + 600);
         a.awareness = Awareness::Pursuing;
@@ -66,7 +68,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
     }
     // Only a usable forward-view shot stops pursuit. Hidden enemies still close;
     // investigation never acquires a new party position through a wall.
-    if (rangedOnly_[slot] &&
+    if (rangedOnly_[slot] && (!effects_ || effects_->sees(actors_.id(slot))) &&
         (a.awareness == Awareness::Pursuing ||
          (a.awareness == Awareness::Investigating && a.lastSeen == party.cell)) &&
         inPartyView(map_, party.cell, party.heading, here)) {
@@ -140,13 +142,27 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::
         unsigned free = 0;
         while (free < 4 && (occupied & (1u << free)))
             ++free;
-        if (free == 4)
+        if (free == 4) {
+            prepared_[slot].reset();
             return false;
+        }
         subcell = {int(free % 2), int(free / 2)};
     }
     const auto old = actor.npc.cell;
-    if (!actors_.walk(actors_.id(slot), destination, subcell, party, now).changed)
+    if (map_.solid(destination) || destination == party) {
+        prepared_[slot].reset();
         return false;
+    }
+    const auto factor = effects_ ? effects_->movementFactor(actors_.id(slot), old, destination) : 1;
+    if (turnMovement_ && factor > 1 && (!prepared_[slot] || !(*prepared_[slot] == destination))) {
+        prepared_[slot] = destination;
+        return true;
+    }
+    prepared_[slot].reset();
+    if (!actors_.walk(actors_.id(slot), destination, subcell, party, now, npcWalkDurationMs * factor).changed)
+        return false;
+    if (effects_)
+        effects_->enter(actors_.id(slot), destination, now);
     // Face along the committed step, never turn toward a blocked attempted move.
     const auto delta = Cell{destination.x - old.x, destination.y - old.y};
     const auto heading = delta.x ? (delta.x > 0 ? Heading::East : Heading::West)
@@ -195,7 +211,10 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
             a.moveDueMs =
                 state_.timeMs +
                 ((a.awareness == Awareness::Pursuing || a.awareness == Awareness::Investigating) ? 600
-                                                                                                 : 1200);
+                                                                                                 : 1200) *
+                    (actor.hasWalk && actor.walkTimeMs == sessionTime
+                         ? actor.walkDurationMs / npcWalkDurationMs
+                         : 1);
         } else if (a.awareness == Awareness::Routine && a.config.routine == NpcRoutine::Wander) {
             std::array<Cell, 5> choices{};
             std::size_t count = 1;
@@ -213,7 +232,9 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
             } while (word < threshold);
             const auto choice = word % bound;
             step(i, choices[static_cast<std::size_t>(choice)], party.cell, sessionTime);
-            a.moveDueMs = state_.timeMs + 1200;
+            a.moveDueMs = state_.timeMs + 1200 * (actor.hasWalk && actor.walkTimeMs == sessionTime
+                                                      ? actor.walkDurationMs / npcWalkDurationMs
+                                                      : 1);
         }
     }
     if (state_.count)
@@ -240,11 +261,12 @@ bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noex
     const auto* actor = actors_.actor(id);
     if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
         return false;
-    const auto preferred = preferredFront(actor->npc.cell, party);
-    navigation_.request(id.slot, actor->npc.cell, party.cell, true, preferred);
+    const auto goal = effects_ && !effects_->sees(id) ? state_.actors[id.slot].lastSeen : party.cell;
+    const auto preferred = goal == party.cell ? preferredFront(actor->npc.cell, party) : std::nullopt;
+    navigation_.request(id.slot, actor->npc.cell, goal, true, preferred);
     navigation_.update(party.cell);
     const auto result = navigation_.take(id.slot);
-    return result.ready && result.found && result.from == actor->npc.cell && result.target == party.cell &&
+    return result.ready && result.found && result.from == actor->npc.cell && result.target == goal &&
            result.preferred == preferred && step(id.slot, result.step, party.cell, now);
 }
 bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexcept {

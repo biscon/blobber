@@ -66,8 +66,9 @@ struct CombatOutcome {
     std::uint8_t darts = 0;
 };
 struct CombatEvents {
-    static constexpr std::size_t capacity = 2048;
-    std::array<CombatOutcome, capacity> values{};
+    static constexpr std::size_t capacity = 8192;
+    // Allocate once at owner construction; never resize during simulation.
+    std::vector<CombatOutcome> values = std::vector<CombatOutcome>(capacity);
     std::size_t count = 0;
     CombatOutcome step; // The single automatic/phase step, separate from draining deadlines.
     void clear() noexcept {
@@ -88,7 +89,7 @@ struct CombatEvents {
 // Original weapon burst, extra spell recipients, effects/cleanup, Guiding expiry,
 // and one synchronous area/phase operation. Revisit if adding NPC spellcasters.
 static_assert(attackCapacity * 2 + rules::partySize * 2 + EffectController::eventAllowance +
-                  NpcWorld::maxInstances + 64 <
+                  NpcWorld::maxInstances + 4096 + 512 <
               CombatEvents::capacity);
 struct CombatParticipant {
     std::optional<rules::CharacterId> character;
@@ -115,12 +116,19 @@ struct CombatSnapshot {
 };
 struct SpellArea {
     rules::SpellKind kind = rules::SpellKind::Count;
-    std::array<Cell, 3> cells{};
-    std::array<bool, 3> eligible{};
-    std::array<ActorId, 12> actors{};
+    std::array<Cell, 9> cells{};
+    std::array<bool, 9> eligible{};
+    std::array<ActorId, 36> actors{};
+    std::array<EffectTarget, 40> recipients{};
+    std::size_t recipientCount = 0;
+    std::array<bool, 4> allies{};
+    GroundSnapshot ground{};
     std::size_t count = 0;
 };
 SpellArea spellArea(const ActorWorld&, Player) noexcept;
+SpellArea spellArea(const ActorWorld&, const Party&, const EffectController&, Player, rules::SpellKind,
+                    std::optional<Cell> = {}) noexcept;
+bool spellCell(const Map&, Player, Cell) noexcept;
 
 class CombatController {
   public:
@@ -149,6 +157,7 @@ class CombatController {
     bool occupiedFront(Player) const noexcept;
     CommandReason spellRecipient(const PartyCommand&, Player, std::size_t index) const noexcept;
     bool safeRecovery(Player) const noexcept;
+    SpellArea area(const PartyCommand& c, Player p) const noexcept;
     bool settledRecovery(Player pose, std::uint64_t now) const noexcept {
         return safeRecovery(pose) && !presentationBusy(now);
     }
@@ -238,6 +247,9 @@ class CombatController {
     const rules::WeaponPreview* weapon(rules::CharacterId, bool ranged = false) const noexcept;
     CombatOutcome enemyAttack(ActorId, bool ranged, std::uint64_t now, bool opening = false) noexcept;
     CombatOutcome enemyTurn(ActorId, std::uint64_t now) noexcept;
+    CombatEvents* currentEvents_ = nullptr;
+    std::uint64_t noticeTime_ = 0;
+    std::array<std::uint64_t, 4> processedCasterRound_{};
     CombatOutcome deathSave(rules::CharacterId, std::uint64_t now) noexcept;
 
   public:

@@ -20,6 +20,16 @@ enum class SpellKind : std::uint8_t {
     MagicMissile,
     BurningHands,
     Thunderwave,
+    RayOfFrost,
+    ShockingGrasp,
+    PoisonSpray,
+    Sleep,
+    FalseLife,
+    Grease,
+    ColorSpray,
+    Guidance,
+    Resistance,
+    Sanctuary,
     Count
 };
 enum class Casting : std::uint8_t { None, Wisdom, Intelligence };
@@ -47,6 +57,7 @@ struct SpellRules {
     Ability save;
     bool attack, hostile, area;
     unsigned maxTargets;
+    bool ground = false, self = false;
 };
 const SpellRules* spellRules(SpellKind) noexcept;
 int maximumMana(Casting, int level) noexcept;

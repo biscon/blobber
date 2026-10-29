@@ -279,3 +279,19 @@ with existing racial bonuses. Mana, automatic one-shot buff consumption (if adop
 Guidance's initiative consumer, discrete slow/prone/area behavior and action-cost
 adaptations must be documented as project choices, not passed off as unchanged
 tabletop rules. Skills and reactions remain outside this interlude.
+
+## Slice 12.1 — approved adaptations, implemented and Ready for review
+
+Use the [cached official SRD 5.1](references/README.md). The detailed
+[expanded-spell design](expanded_spells_design.md) records the approved gameplay
+adaptations before code: aimed 3×3 Sleep/one-cell Grease, friendly fire, automatic
+next-turn knockdown recovery costing the action, two-action slowed NPC steps and
+slower travel, caster-turn short expiry, automatic one-shot buffs, automatic best
+temporary-HP amount with refreshed duration, bounded Sanctuary retargeting, and
+High Elf magical-sleep immunity. Existing class-wide casting remains until 12.2.
+Reactions, other racial traits, progression and creation UI remain deferred.
+Source locations: Color Spray p.125; False Life p.142; Grease p.150; Guidance p.151;
+Poison Spray p.169; Ray of Frost p.174; Resistance p.175; Sanctuary p.176;
+Shocking Grasp p.179; Sleep p.180; temporary HP pp.98–99; conditions pp.358–359.
+Implementation and automated verification are recorded in the [handoff](slice121_verification.md).
+User acceptance remains pending; these are project adaptations, not unchanged tabletop rules.

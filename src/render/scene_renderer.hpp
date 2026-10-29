@@ -22,6 +22,7 @@ class SceneRenderer {
     std::size_t npcPreparedPixelBytes() const noexcept { return npcs_.preparedPixelBytes(); }
     SceneRenderer(const SceneRenderer&) = delete;
     SceneRenderer& operator=(const SceneRenderer&) = delete;
+    static std::optional<Cell> groundCell(const Map&, Player, int x, int y) noexcept;
     void compose(const Map& map, Player player, Frame& output, const ActorWorld* npcs = nullptr,
                  const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr,
                  const ProjectilePlayer* projectiles = nullptr, const SpellArea* area = nullptr,
@@ -36,8 +37,12 @@ class SceneRenderer {
                      const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr,
                      const ProjectilePlayer* projectiles = nullptr, const SpellArea* area = nullptr,
                      const LootSnapshot* loot = nullptr) const;
-    void prepareFloorPreview() noexcept;
-    std::array<std::uint8_t, viewWidth * viewHeight> floorMask_{};
+    void prepareFloorPreview();
+    struct FloorSample {
+        std::int8_t lateral = 0, forward = -1;
+        bool edge = false;
+    };
+    std::vector<std::array<FloorSample, viewWidth * viewHeight>> floorSamples_;
     std::array<float, viewHeight> floorDepth_{};
     PreparedScene views_;
     PreparedNpcs npcs_;

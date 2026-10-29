@@ -133,6 +133,8 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
     ++visuals_.revision;
 }
 void CombatController::reconcileEffects(std::uint64_t now, CombatEvents& events) noexcept {
+    currentEvents_ = &events;
+    noticeTime_ = now;
     effects_.reconcile(now, events);
     for (std::uint16_t i = 0; i < rules::partySize; ++i)
         if (!effects_.canAct(rules::CharacterId{i}))
@@ -148,6 +150,10 @@ void CombatController::reconcileEffects(std::uint64_t now, CombatEvents& events)
 }
 void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEvents& events,
                                       std::uint64_t elapsed) noexcept {
+    currentEvents_ = &events;
+    noticeTime_ = now;
+    effects_.clockMode(!realTime(state_.phase));
+    ai_.turnMovement(!realTime(state_.phase));
     drainedThisUpdate_ = false;
     auto cursor = now - elapsed;
     const bool realtime = realTime(state_.phase);
@@ -309,11 +315,15 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         }
     }
     events.append(out);
+    if (out.hit && out.damage > 0)
+        effects_.wake(out.enemyAttack ? EffectTarget(out.recipient) : EffectTarget(out.enemy), when, events);
     if (out.hit && out.enemyAttack)
         effects_.damaged(out.recipient, out.damage, when, events);
     else
         effects_.reconcile(when, events);
     if (out.hit && !out.targetGone && !out.died && out.spell == rules::SpellKind::GuidingBolt)
         effects_.guide(out.enemy, when, events);
+    if (out.hit && !out.targetGone && !out.died && out.spell == rules::SpellKind::RayOfFrost)
+        effects_.condition(out.enemy, EffectKind::Slow, out.character, when, events);
 }
 } // namespace blobber

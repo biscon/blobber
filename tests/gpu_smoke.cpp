@@ -70,7 +70,17 @@ void nativeUi() {
                                   "items/silhouette",
                                   "items/loot-sheet",
                                   "camp/bonfire-sheet",
-                                  "rest"};
+                                  "rest",
+                                  "spells/ray_of_frost",
+                                  "spells/shocking_grasp",
+                                  "spells/poison_spray",
+                                  "spells/sleep",
+                                  "spells/false_life",
+                                  "spells/grease",
+                                  "spells/color_spray",
+                                  "spells/guidance",
+                                  "spells/resistance",
+                                  "spells/sanctuary"};
     for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168

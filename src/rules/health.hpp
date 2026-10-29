@@ -7,6 +7,7 @@ struct HealthState {
     int hitPoints = 0;
     Life life = Life::Conscious;
     std::uint8_t successes = 0, failures = 0;
+    int temporaryHitPoints = 0;
 };
 enum class HealthError { None, InvalidState, InvalidAmount, InvalidRoll, NotEligible, InvalidCharacter };
 struct HealthResult {

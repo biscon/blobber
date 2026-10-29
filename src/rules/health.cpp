@@ -2,7 +2,8 @@
 #include <algorithm>
 namespace blobber::rules {
 bool validHealth(const HealthState& h, int maximum) noexcept {
-    if (maximum <= 0 || h.hitPoints < 0 || h.hitPoints > maximum || h.successes > 2 || h.failures > 3)
+    if (maximum <= 0 || h.hitPoints < 0 || h.hitPoints > maximum || h.successes > 2 || h.failures > 3 ||
+        h.temporaryHitPoints < 0)
         return false;
     switch (h.life) {
     case Life::Conscious:
@@ -23,6 +24,7 @@ HealthResult invalid(const HealthState& h, int maximum) noexcept {
 void kill(HealthResult& r) noexcept {
     r.state.hitPoints = 0;
     r.state.life = Life::Dead;
+    r.state.temporaryHitPoints = 0;
     r.changed = r.died = true;
 }
 } // namespace
@@ -37,6 +39,11 @@ HealthResult takeDamage(const HealthState& h, int maximum, std::int64_t amount, 
     if (!amount)
         return r;
     r.changed = true;
+    const auto absorbed = std::min<std::int64_t>(amount, h.temporaryHitPoints);
+    r.state.temporaryHitPoints -= int(absorbed);
+    amount -= absorbed;
+    if (!amount)
+        return r;
     if (amount >= std::int64_t(h.hitPoints) + maximum) {
         kill(r);
         return r;
@@ -64,7 +71,7 @@ HealthResult receiveHealing(const HealthState& h, int maximum, std::int64_t amou
     if (!amount)
         return r;
     const int gain = static_cast<int>(std::min<std::int64_t>(amount, maximum - h.hitPoints));
-    r.state = {h.hitPoints + gain, Life::Conscious, 0, 0};
+    r.state = {h.hitPoints + gain, Life::Conscious, 0, 0, h.temporaryHitPoints};
     r.changed = gain != 0;
     return r;
 }
@@ -76,7 +83,7 @@ HealthResult stabilize(const HealthState& h, int maximum) noexcept {
         return r;
     if (h.life != Life::Dying)
         return {h, HealthError::NotEligible};
-    r.state = {0, Life::Stable, 0, 0};
+    r.state = {0, Life::Stable, 0, 0, h.temporaryHitPoints};
     r.changed = true;
     return r;
 }
@@ -93,7 +100,7 @@ HealthResult deathSave(const HealthState& h, int maximum, int face, int modifier
     r.changed = true;
     if (face != 1 && std::int64_t(face) + modifier >= 10) {
         if (++r.state.successes == 3)
-            r.state = {0, Life::Stable, 0, 0};
+            r.state = {0, Life::Stable, 0, 0, h.temporaryHitPoints};
     } else {
         r.state.failures = static_cast<std::uint8_t>(std::min(3, int(h.failures) + (face == 1 ? 2 : 1)));
         if (r.state.failures == 3)

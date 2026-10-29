@@ -19,6 +19,6 @@ class UiArt {
   private:
     GpuResources& resources_;
     TextureHandle atlas_, camp_, loot_;
-    std::array<Rectangle, 46> regions_{};
+    std::array<Rectangle, 56> regions_{};
 };
 } // namespace blobber

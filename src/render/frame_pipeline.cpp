@@ -19,9 +19,12 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
     const auto animationRevision = animation ? animation->revision : 0;
     const auto actorRevision = npcs ? npcs->snapshot().revision : 0;
     const auto actorWorld = npcs ? npcs->snapshot().world : 0;
-    const SpellArea preview = area && !state.transition.active() ? *area : SpellArea{};
-    const bool previewChanged =
-        preview.cells != area_.cells || preview.eligible != area_.eligible || preview.kind != area_.kind;
+    SpellArea preview = area && !state.transition.active() ? *area : SpellArea{};
+    if (area)
+        preview.ground = area->ground;
+    const bool previewChanged = preview.cells != area_.cells || preview.eligible != area_.eligible ||
+                                preview.kind != area_.kind ||
+                                preview.ground.revision != area_.ground.revision;
     area_ = preview;
     const auto lw = loot ? loot->world : 0, lr = loot ? loot->revision : 0;
     const bool lootChanged = lw != lootWorld_ || lr != lootRevision_;
@@ -36,7 +39,7 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
                          loot);
         if (state.transition.active() && !isStrafe(state.transition.action))
             renderer.compose(map, state.transition.from, source_, npcs, animation,
-                             projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, nullptr, loot);
+                             projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, &area_, loot);
         revision_ = state.revision;
         actorRevision_ = actorRevision;
         actorWorld_ = actorWorld;
@@ -49,7 +52,7 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
         const auto& t = state.transition;
         if (isStrafe(t.action))
             renderer.composeStrafe(map, t.from, t.to, t.progress(), current_, npcs, animation,
-                                   projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, nullptr,
+                                   projectiles_.size() ? &effectPicking_ : nullptr, &projectiles_, &area_,
                                    loot);
         else
             composeTransition(source_, destination_, t.action, t.progress(), current_);

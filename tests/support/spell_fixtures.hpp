@@ -2,8 +2,11 @@
 #include "combat_fixtures.hpp"
 #include "hybrid_fixtures.hpp"
 namespace blobber {
-inline rules::Catalog spellCatalog(int hp = 1000, int ac = 1, int saveAbility = 10, bool stress = false) {
+inline rules::Catalog spellCatalog(int hp = 1000, int ac = 1, int saveAbility = 10, bool stress = false,
+                                   bool sleepImmune = false, bool metal = false) {
     auto f = partyFixture();
+    f.races[3].sleepImmune = sleepImmune;
+    f.items[7].metalArmor = metal;
     f.classes[0].features = static_cast<rules::ClassFeatures>(rules::ClassFeature::SecondWind);
     f.classes[1].features = static_cast<rules::ClassFeatures>(rules::ClassFeature::LifeDomain);
     f.classes[2].features = static_cast<rules::ClassFeatures>(rules::ClassFeature::SneakAttack);
@@ -31,6 +34,8 @@ inline rules::Catalog spellCatalog(int hp = 1000, int ac = 1, int saveAbility = 
     }
     rules::MonsterDefinition m;
     m.id = "goblin";
+    m.sleepImmune = sleepImmune;
+    m.metalArmor = metal;
     m.abilities.fill(saveAbility);
     m.armorClass = ac;
     m.hitPoints = hp;

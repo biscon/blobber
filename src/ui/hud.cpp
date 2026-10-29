@@ -24,8 +24,8 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
                c.castHovered ? Color{174, 238, 230, 255} : teal);
         checkmark({portrait.x + portrait.width - 10, portrait.y + 1, 9, 9});
         fill({portrait.x + 2, portrait.y + portrait.height - 17, portrait.width - 4, 15}, {12, 26, 26, 245});
-        clipped("Will receive", portrait.x + 3, portrait.y + portrait.height - 17, portrait.width - 6, teal,
-                UiTextStyle::Small);
+        clipped(c.castRisk ? "At risk" : "Will receive", portrait.x + 3, portrait.y + portrait.height - 17,
+                portrait.width - 6, teal, UiTextStyle::Small);
         clipped(c.castPreview, portrait.x + 3, portrait.y + portrait.height - 10, portrait.width - 6,
                 hudInk::text, UiTextStyle::Small);
     } else if (c.castHovered)
@@ -36,7 +36,10 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     clipped(slots[i], r.x + 56, r.y + 26, 68, muted, UiTextStyle::Small);
     health({r.x + 56, r.y + 36, 68, 5}, c.maxHp ? float(c.hp) / c.maxHp : 0);
     char line[64];
-    std::snprintf(line, sizeof(line), "HP %d/%d", c.hp, c.maxHp);
+    if (c.temporaryHp)
+        std::snprintf(line, sizeof(line), "HP %d/%d +%d", c.hp, c.maxHp, c.temporaryHp);
+    else
+        std::snprintf(line, sizeof(line), "HP %d/%d", c.hp, c.maxHp);
     text(line, r.x + 56, r.y + 43);
     const char* status = c.status == DisplayStatus::Dead          ? "DEAD"
                          : c.status == DisplayStatus::Stable      ? "STABLE"
@@ -61,6 +64,11 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
             : c.status == DisplayStatus::Ready ? muted
                                                : red,
             UiTextStyle::Small);
+    if (c.effects[0]) {
+        fill({portrait.x, portrait.y + portrait.height - 10, portrait.width, 10}, background);
+        clipped(c.effects.data(), portrait.x + 1, portrait.y + portrait.height - 9, portrait.width - 2, teal,
+                UiTextStyle::Small);
+    }
     if (c.concentrating) {
         fill({portrait.x, portrait.y, 6, 6}, blue);
     }

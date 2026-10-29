@@ -51,7 +51,7 @@ struct PlayView {
                          session.movement().transition.active(), debug, focused);
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
-            area.eligible != currentArea.eligible)
+            area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
             return frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
                                  &session.combat().attacks(), session.timeMs(), &currentArea,
                                  &session.loot().snapshot()) ||
@@ -139,7 +139,13 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                                    ? picking->pickLoot(int(sample.ui.pointer->x) - viewX,
                                                        int(sample.ui.pointer->y) - viewY)
                                    : std::nullopt;
-                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit);
+                const auto groundHit = sample.ui.pointer && !view.session.movement().transition.active()
+                                           ? SceneRenderer::groundCell(map, view.session.movement().player,
+                                                                       int(sample.ui.pointer->x) - viewX,
+                                                                       int(sample.ui.pointer->y) - viewY)
+                                           : std::nullopt;
+                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit,
+                              groundHit);
             }
             if (view.commands.snapshot().quitRequested)
                 return;

@@ -105,7 +105,8 @@ void HudPainter::characterSheet(const HudSnapshot& h) const {
         box(r);
         centered(stats[n], {r.x, r.y + 5, r.width, 10}, gold, UiTextStyle::Small);
         if (n == 0)
-            std::snprintf(value, sizeof(value), "%d / %d", c.hp, c.maxHp);
+            std::snprintf(value, sizeof(value), c.temporaryHp ? "%d/%d +%d temp" : "%d / %d", c.hp, c.maxHp,
+                          c.temporaryHp);
         else if (n == 1)
             std::snprintf(value, sizeof(value), "%d", i.armorClass);
         else

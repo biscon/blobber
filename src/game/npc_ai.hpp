@@ -28,6 +28,12 @@ class NpcAiController {
                 const std::array<bool, NpcWorld::maxInstances>* frozen = nullptr,
                 const std::array<bool, NpcWorld::maxInstances>* incapacitated = nullptr) noexcept;
     void alert(ActorId id, Cell party) noexcept;
+    void bindEffects(EffectController* e) noexcept { effects_ = e; }
+    void turnMovement(bool on) noexcept { turnMovement_ = on; }
+    void discardPreparation(ActorId id) noexcept {
+        if (id.slot < prepared_.size())
+            prepared_[id.slot].reset();
+    }
     bool aware(ActorId id) const noexcept;
     bool approach(ActorId id, Player party, std::uint64_t now) noexcept;
     bool escape(ActorId id, Player party, std::uint64_t now) noexcept;
@@ -37,6 +43,9 @@ class NpcAiController {
     const Map& map_;
     ActorWorld& actors_;
     Navigation navigation_;
+    EffectController* effects_ = nullptr;
+    bool turnMovement_ = false;
+    std::array<std::optional<Cell>, NpcWorld::maxInstances> prepared_{};
     std::mt19937 rng_;
     NpcAiSnapshot state_;
     std::array<bool, NpcWorld::maxInstances> rangedOnly_{};

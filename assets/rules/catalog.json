@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -98,7 +98,9 @@
             20
           ]
         }
-      ]
+      ],
+      "metal_armor": false,
+      "sleep_immune": false
     },
     {
       "id": "goblin.archer",
@@ -182,7 +184,9 @@
             20
           ]
         }
-      ]
+      ],
+      "metal_armor": false,
+      "sleep_immune": false
     }
   ],
   "races": [
@@ -198,7 +202,8 @@
         "charisma": 1
       },
       "hit_points_per_level": 0,
-      "weapons": []
+      "weapons": [],
+      "sleep_immune": false
     },
     {
       "id": "hill_dwarf",
@@ -217,7 +222,8 @@
         "handaxe",
         "light_hammer",
         "warhammer"
-      ]
+      ],
+      "sleep_immune": false
     },
     {
       "id": "lightfoot_halfling",
@@ -231,7 +237,8 @@
         "charisma": 1
       },
       "hit_points_per_level": 0,
-      "weapons": []
+      "weapons": [],
+      "sleep_immune": false
     },
     {
       "id": "high_elf",
@@ -250,7 +257,8 @@
         "shortsword",
         "shortbow",
         "longbow"
-      ]
+      ],
+      "sleep_immune": true
     }
   ],
   "classes": [
@@ -308,7 +316,10 @@
         "shield_of_faith",
         "cure_wounds",
         "guiding_bolt",
-        "inflict_wounds"
+        "inflict_wounds",
+        "guidance",
+        "resistance",
+        "sanctuary"
       ]
     },
     {
@@ -363,7 +374,14 @@
         "mage_armor",
         "magic_missile",
         "burning_hands",
-        "thunderwave"
+        "thunderwave",
+        "ray_of_frost",
+        "shocking_grasp",
+        "poison_spray",
+        "sleep",
+        "false_life",
+        "grease",
+        "color_spray"
       ]
     }
   ],
@@ -395,7 +413,8 @@
       "kind": "armor",
       "armor": "heavy",
       "base_ac": 16,
-      "stack_limit": 1
+      "stack_limit": 1,
+      "metal_armor": true
     },
     {
       "id": "shield",
@@ -432,7 +451,8 @@
       "kind": "armor",
       "armor": "medium",
       "base_ac": 14,
-      "stack_limit": 1
+      "stack_limit": 1,
+      "metal_armor": true
     },
     {
       "id": "holy_symbol",
@@ -469,7 +489,8 @@
       "kind": "armor",
       "armor": "light",
       "base_ac": 11,
-      "stack_limit": 1
+      "stack_limit": 1,
+      "metal_armor": false
     },
     {
       "id": "shortbow",
@@ -866,6 +887,66 @@
       "name": "Thunderwave",
       "description": "Three clear front cells: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one cell forward if space permits.",
       "kind": "thunderwave"
+    },
+    {
+      "id": "ray_of_frost",
+      "kind": "ray_of_frost",
+      "name": "Ray of Frost",
+      "description": "Ranged attack: 1d8 cold; slows movement until your next turn (6 seconds outside turns)."
+    },
+    {
+      "id": "shocking_grasp",
+      "kind": "shocking_grasp",
+      "name": "Shocking Grasp",
+      "description": "Exposed melee attack: 1d8 lightning; advantage against metal body armor. Reactions are not used."
+    },
+    {
+      "id": "poison_spray",
+      "kind": "poison_spray",
+      "name": "Poison Spray",
+      "description": "One visible front-cell enemy: Constitution save negates 1d12 poison."
+    },
+    {
+      "id": "sleep",
+      "kind": "sleep",
+      "name": "Sleep",
+      "description": "Aim within six cells. A 3x3 area sleeps creatures using a 5d8 HP budget, weakest first. Affects allies. Damage or Aid wakes. 60 seconds."
+    },
+    {
+      "id": "false_life",
+      "kind": "false_life",
+      "name": "False Life",
+      "description": "Self: 1d4+4 temporary HP for one hour. Keeps the larger pool and refreshes duration; never heals or stacks."
+    },
+    {
+      "id": "grease",
+      "kind": "grease",
+      "name": "Grease",
+      "description": "Aim at one cell within six cells. Difficult terrain; Dexterity saves or knockdown, automatically losing the next turn to stand. Allies affected. 60 seconds."
+    },
+    {
+      "id": "color_spray",
+      "kind": "color_spray",
+      "name": "Color Spray",
+      "description": "Three front cells: 6d10 HP budget blinds weakest seeing creatures until your next turn (6 seconds outside turns)."
+    },
+    {
+      "id": "guidance",
+      "kind": "guidance",
+      "name": "Guidance",
+      "description": "One ally: automatically add 1d4 to the next initiative or Aid ability check. Concentration, 60 seconds."
+    },
+    {
+      "id": "resistance",
+      "kind": "resistance",
+      "name": "Resistance",
+      "description": "One ally: automatically add 1d4 to the next rolled save, including concentration/death saves. Concentration, 60 seconds."
+    },
+    {
+      "id": "sanctuary",
+      "kind": "sanctuary",
+      "name": "Sanctuary",
+      "description": "Ward one ally for 60 seconds. Attackers must pass Wisdom or try another legal target. Offensive actions end it. Areas bypass it."
     }
   ]
 }

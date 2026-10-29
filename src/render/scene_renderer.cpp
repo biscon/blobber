@@ -4,25 +4,43 @@
 #include <stdexcept>
 
 namespace blobber {
-void SceneRenderer::prepareFloorPreview() noexcept {
-    const auto cell = [](int x, int y) {
-        if (y + 0.5f <= ViewProjection::horizon)
-            return 0;
-        const auto point = floorPoint(x, y);
-        if (int(std::floor(point.forward + 0.5f)) != 1)
-            return 0;
-        const int side = int(std::floor(point.lateral + 0.5f));
-        return side >= -1 && side <= 1 ? side + 2 : 0;
-    };
-    for (int y = int(ViewProjection::horizon) + 1; y < viewHeight; ++y) {
-        floorDepth_[y] = floorPoint(0, y).depth;
-        for (int x = 0; x < viewWidth; ++x) {
-            const auto value = cell(x, y);
-            if (!value)
-                continue;
-            const bool edge = cell(x - 1, y) != value || cell(x + 1, y) != value || cell(x, y - 1) != value ||
-                              cell(x, y + 1) != value;
-            floorMask_[y * viewWidth + x] = std::uint8_t(value | (edge ? 4 : 0));
+std::optional<Cell> SceneRenderer::groundCell(const Map& map, Player player, int x, int y) noexcept {
+    if (x < 0 || x >= viewWidth || y <= ViewProjection::horizon || y >= viewHeight)
+        return {};
+    const auto point = floorPoint(x, y);
+    if (point.forward > 7 || std::abs(point.lateral) > 7)
+        return {};
+    const auto cell = player.cell + forward(player.heading) * int(std::floor(point.forward + .5f)) +
+                      right(player.heading) * int(std::floor(point.lateral + .5f));
+    return spellCell(map, player, cell) ? std::optional<Cell>{cell} : std::nullopt;
+}
+void SceneRenderer::prepareFloorPreview() {
+    floorSamples_.resize(ViewProjection::strafeSteps);
+    for (int phase = 0; phase < ViewProjection::strafeSteps; ++phase) {
+        const auto cell = [&](int x, int y) {
+            FloorSample sample;
+            if (y + .5f <= ViewProjection::horizon)
+                return sample;
+            const auto p = floorPoint(x, y, float(phase) / ViewProjection::strafeSteps);
+            const int f = int(std::floor(p.forward + .5f)), r = int(std::floor(p.lateral + .5f));
+            if (f >= 0 && f <= 12 && r >= -12 && r <= 12) {
+                sample.forward = std::int8_t(f);
+                sample.lateral = std::int8_t(r);
+            }
+            return sample;
+        };
+        for (int y = int(ViewProjection::horizon) + 1; y < viewHeight; ++y) {
+            floorDepth_[y] = floorPoint(0, y).depth;
+            for (int x = 0; x < viewWidth; ++x) {
+                auto v = cell(x, y);
+                const auto different = [&](int a, int b) {
+                    const auto n = cell(a, b);
+                    return n.forward != v.forward || n.lateral != v.lateral;
+                };
+                v.edge =
+                    different(x - 1, y) || different(x + 1, y) || different(x, y - 1) || different(x, y + 1);
+                floorSamples_[phase][y * viewWidth + x] = v;
+            }
         }
     }
 }
@@ -95,19 +113,36 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
             }
         }
     }
-    if (area && phase == 0 &&
-        std::any_of(area->eligible.begin(), area->eligible.end(), [](bool v) { return v; })) {
-        const Color tint =
-            area->kind == rules::SpellKind::Thunderwave ? Color{76, 166, 221, 255} : Color{242, 134, 27, 255};
-        std::array<bool, 4> active{};
-        for (int i = 0; i < 3; ++i)
-            active[i + 1] = area->eligible[i] && area->cells[i] == player.cell + f + r * (i - 1);
+    if (area && (std::any_of(area->eligible.begin(), area->eligible.end(), [](bool v) { return v; }) ||
+                 std::any_of(area->ground.areas.begin(), area->ground.areas.end(),
+                             [](const GroundArea& a) { return a.active; }))) {
+        std::array<std::uint8_t, 25 * 13> active{};
+        const auto mark = [&](Cell cell, std::uint8_t flag) {
+            const auto d = cell + player.cell * -1;
+            const int depth = d.x * f.x + d.y * f.y, side = d.x * r.x + d.y * r.y;
+            if (depth >= 0 && depth <= 12 && side >= -12 && side <= 12 && !map.solid(cell))
+                active[depth * 25 + side + 12] |= flag;
+        };
+        for (const auto& patch : area->ground.areas)
+            if (patch.active)
+                mark(patch.cell, 1);
+        for (std::size_t i = 0; i < area->eligible.size(); ++i)
+            if (area->eligible[i])
+                mark(area->cells[i], 2);
+        const Color preview = area->kind == rules::SpellKind::Sleep         ? Color{139, 125, 222, 255}
+                              : area->kind == rules::SpellKind::ColorSpray  ? Color{218, 103, 196, 255}
+                              : area->kind == rules::SpellKind::Thunderwave ? Color{76, 166, 221, 255}
+                                                                            : Color{242, 134, 27, 255};
         for (int y = int(ViewProjection::horizon) + 1; y < viewHeight; ++y)
             for (int x = 0; x < viewWidth; ++x) {
-                const auto mask = floorMask_[y * viewWidth + x];
-                if (!active[mask & 3] || floorDepth_[y] >= coverage[x])
+                const auto sample = floorSamples_[phase][y * viewWidth + x];
+                if (sample.forward < 0 || floorDepth_[y] >= coverage[x])
                     continue;
-                const unsigned alpha = mask & 4 ? 155 : 38;
+                const auto flags = active[sample.forward * 25 + sample.lateral + 12];
+                if (!flags)
+                    continue;
+                const auto tint = flags & 2 ? preview : Color{115, 152, 77, 255};
+                const unsigned alpha = sample.edge ? 155 : flags & 2 ? 38 : 70;
                 auto& pixel = result[y * viewWidth + x];
                 pixel.r = (pixel.r * (255 - alpha) + tint.r * alpha) / 255;
                 pixel.g = (pixel.g * (255 - alpha) + tint.g * alpha) / 255;

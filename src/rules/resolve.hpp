@@ -33,7 +33,10 @@ enum class DamageType : std::uint8_t {
     Force,
     Radiant,
     Necrotic,
-    Thunder
+    Thunder,
+    Cold,
+    Lightning,
+    Poison
 };
 struct DiceRoll {
     std::array<std::uint8_t, 64> faces{};

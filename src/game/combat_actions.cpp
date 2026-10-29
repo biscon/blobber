@@ -30,7 +30,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::CannotAct;
     const bool ranged = c.action == PartyAction::Ranged;
     if (realTime(state_.phase)) {
-        if (!ranged)
+        if (!ranged && c.action != PartyAction::Aid)
             return CommandReason::NoEncounter;
         if (partyReady_[c.character.index] > state_.gameplayMs)
             return CommandReason::Cooldown;
@@ -47,7 +47,8 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::Ready;
     if (c.action == PartyAction::Aid) {
         const auto* ally = c.ally ? party_.character(*c.ally) : nullptr;
-        return ally && c.ally->index != c.character.index && ally->life == rules::Life::Dying
+        return ally && c.ally->index != c.character.index &&
+                       (ally->life == rules::Life::Dying || effects_.has(*c.ally, EffectKind::Sleep))
                    ? CommandReason::Ready
                    : CommandReason::InvalidAlly;
     }
@@ -135,6 +136,9 @@ void CombatController::alert(ActorId target, Player pose) noexcept {
 }
 CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::uint64_t now,
                                        CombatEvents& events) noexcept {
+    currentEvents_ = &events;
+    noticeTime_ = now;
+    effects_.bindEvents(events, now);
     if (c.action == PartyAction::Spell || c.action == PartyAction::Feature)
         return submitMagic(c, pose, now, events);
     if (c.action == PartyAction::Item)
@@ -164,11 +168,17 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     } else if (c.action == PartyAction::Aid) {
         out.event = CombatEvent::Aid;
         out.recipient = *c.ally;
-        out.roll = rng_.d20().value.selected;
-        out.hit = out.roll + party_.character(c.character)->stats.modifiers[4] >= 10;
+        const bool sleeping = effects_.has(out.recipient, EffectKind::Sleep);
+        out.roll = sleeping ? 0 : rng_.d20().value.selected;
+        out.hit = sleeping || out.roll + party_.character(c.character)->stats.modifiers[4] +
+                                      effects_.oneShot(c.character, EffectKind::Guidance) >=
+                                  10;
+        if (sleeping)
+            effects_.wake(out.recipient, now, events);
         if (out.hit)
             party_.stabilize(out.recipient);
     } else {
+        effects_.breakWard(c.character, now, events);
         out.event = CombatEvent::Attack;
         out.enemy = *c.target;
         const bool ranged = c.action == PartyAction::Ranged;
@@ -177,9 +187,10 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const auto* a = actors_.actor(out.enemy);
         const bool advantage = ranged && realTime(state_.phase) && !ai_.aware(out.enemy) &&
                                !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
-        const bool held = effects_.has(out.enemy, EffectKind::HoldPerson);
+        const bool held = effects_.helpless(out.enemy);
         const auto mode =
-            rules::rollMode(advantage || held || effects_.guiding(out.enemy), ranged && adjacent(pose.cell));
+            effects_.attackMode(c.character, out.enemy, combatAdjacent(map_, pose.cell, a->npc.cell),
+                                advantage || effects_.guiding(out.enemy), ranged && adjacent(pose.cell));
         const auto roll = rng_.d20(mode).value;
         effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;
@@ -217,8 +228,9 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
         nextAttack_ == std::numeric_limits<std::uint64_t>::max())
         return out;
     const auto* attack = actors_.catalog().attack(ranged ? ranged_[id.slot] : melee_[id.slot]);
-    if (!attack)
+    if (!attack || (ranged && !effects_.sees(id)))
         return out;
+    ai_.discardPreparation(id);
     std::array<rules::CharacterId, 4> targets{};
     std::size_t count = 0;
     for (const auto target : party_.snapshot().formation)
@@ -234,24 +246,38 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
         if (count == 2)
             choice %= 2;
     }
-    out.recipient = targets[choice];
+    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+    bool allowed = false;
+    for (std::size_t attempt = 0; attempt < count; ++attempt) {
+        const auto candidate = targets[(choice + attempt) % count];
+        if (!currentEvents_ || effects_.wardAllows(id, candidate, now, *currentEvents_)) {
+            out.recipient = candidate;
+            allowed = true;
+            break;
+        }
+    }
+    if (!allowed) {
+        out.event = CombatEvent::Spent;
+        return out;
+    }
     out.event = CombatEvent::Attack;
     out.kind = ranged ? rules::AttackKind::Ranged : rules::AttackKind::Melee;
     const auto& timing = presentation_[a->npc.type.index];
     out.impactMs = ranged ? timing.bowImpact : timing.impact;
     const auto roll =
-        rng_.d20(rules::rollMode(opening || effects_.has(out.recipient, EffectKind::HoldPerson),
-                                 state_.defending[out.recipient.index] ||
-                                     (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
+        rng_.d20(effects_.attackMode(id, out.recipient, combatAdjacent(map_, a->npc.cell, origin_.cell),
+                                     opening,
+                                     state_.defending[out.recipient.index] ||
+                                         (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
             .value;
     out.roll = roll.selected;
     const auto hit = rules::resolveAttack(roll, attack->bonus + effects_.rollModifier(id),
                                           effects_.armorClass(out.recipient))
                          .value;
     out.hit = hit.outcome != rules::AttackOutcome::Miss;
-    out.critical = hit.outcome == rules::AttackOutcome::Critical ||
-                   (out.hit && effects_.has(out.recipient, EffectKind::HoldPerson) &&
-                    combatAdjacent(map_, a->npc.cell, origin_.cell));
+    out.critical =
+        hit.outcome == rules::AttackOutcome::Critical ||
+        (out.hit && effects_.helpless(out.recipient) && combatAdjacent(map_, a->npc.cell, origin_.cell));
     actors_.face(id, headingToward(a->npc.cell, origin_.cell));
     actors_.attack(id, now, ranged);
     if (out.hit) {
@@ -267,6 +293,10 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
     const auto* a = actors_.actor(id);
     if (!frontal(id))
         return out;
+    if (currentEvents_ && effects_.stand(id, now, *currentEvents_)) {
+        out.event = CombatEvent::Spent;
+        return out;
+    }
     if (!effects_.canAct(id) || surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
         surprised_[id.slot] = false;
         out.event = CombatEvent::Spent;
@@ -278,8 +308,8 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
         a->hitPoints * 2 <= a->maxHitPoints;
     const bool melee = actors_.catalog().attack(melee_[id.slot]);
     const bool ranged = actors_.catalog().attack(ranged_[id.slot]);
-    const bool shot =
-        ranged && inBowRange(a->npc.cell, origin_.cell) && lineOfSight(map_, a->npc.cell, origin_.cell);
+    const bool shot = ranged && effects_.sees(id) && inBowRange(a->npc.cell, origin_.cell) &&
+                      lineOfSight(map_, a->npc.cell, origin_.cell);
     bool moved = false;
     if (adjacent && ranged && (!melee || wounded))
         moved = ai_.escape(id, origin_, now);
@@ -297,13 +327,23 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
         enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
         state_.resolvingAction = true;
         state_.awaitingAction = false;
-        due_ = now + npcWalkDurationMs;
+        due_ = now + (actorWalking(*a, now) ? a->walkDurationMs : actionDelayMs);
         return out;
     }
     if (shot) {
         closeNext_[id.slot] = melee && !wounded;
         return enemyAttack(id, true, now);
     }
+    if (currentEvents_)
+        for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+            const auto ally = actors_.id(i);
+            if (effects_.has(ally, EffectKind::Sleep) &&
+                (a->npc.cell == actors_.actor(ally)->npc.cell ||
+                 combatAdjacent(map_, a->npc.cell, actors_.actor(ally)->npc.cell))) {
+                effects_.wake(ally, now, *currentEvents_);
+                break;
+            }
+        }
     out.event = CombatEvent::Spent;
     return out;
 }
@@ -315,7 +355,7 @@ CombatOutcome CombatController::deathSave(rules::CharacterId id, std::uint64_t) 
         return out;
     out.event = CombatEvent::DeathSave;
     out.roll = rng_.d20().value.selected;
-    out.died = party_.deathSave(id, out.roll, effects_.rollModifier(id)).died;
+    out.died = party_.deathSave(id, out.roll, effects_.saveModifier(id)).died;
     saveDue_[id.index] = state_.gameplayMs + combatRoundMs;
     return out;
 }

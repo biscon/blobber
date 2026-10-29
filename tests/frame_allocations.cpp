@@ -248,9 +248,16 @@ int main() {
             spellUis;
         for (unsigned i = 0; i < spellSessions.size(); ++i) {
             const auto kind = static_cast<rules::SpellKind>(i);
-            const bool close = rules::spellRules(kind)->area || kind == rules::SpellKind::InflictWounds;
+            const bool close = rules::spellRules(kind)->area || (kind == rules::SpellKind::InflictWounds ||
+                                                                 kind == rules::SpellKind::ShockingGrasp ||
+                                                                 kind == rules::SpellKind::PoisonSpray);
             spellSessions[i] = std::make_unique<GameSession>(
                 hybridMap, spellRules, close ? spellNear : spellFar, 5, spellSpawn, false);
+            if (kind == rules::SpellKind::ShockingGrasp) {
+                spellSessions[i]->party().lockFormation(false);
+                spellSessions[i]->party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
+                spellSessions[i]->party().lockFormation(true);
+            }
             spellUis[i] = std::make_unique<CommandController>(*spellSessions[i]);
         }
         ProjectilePlayer spellVisuals;
@@ -397,25 +404,35 @@ int main() {
             const auto kind = static_cast<rules::SpellKind>(i);
             const auto& rule = *rules::spellRules(kind);
             const unsigned caster = rule.casting == rules::Casting::Wisdom ? 1 : 3;
-            if (rule.area || kind == rules::SpellKind::InflictWounds)
+            if (rule.area ||
+                (kind == rules::SpellKind::InflictWounds || kind == rules::SpellKind::ShockingGrasp ||
+                 kind == rules::SpellKind::PoisonSpray))
                 spellReady(s, caster);
             auto command = spellCommand(s, kind);
-            if (!rule.area) {
+            if (rule.ground)
+                command.aimedCell = Cell{6, 7};
+            if (!rule.area && !rule.self) {
                 command.targetCount = 1;
-                command.enemies[0] = s.actors().id(kind == rules::SpellKind::InflictWounds ? 2 : 0);
+                command.enemies[0] = s.actors().id((kind == rules::SpellKind::InflictWounds ||
+                                                    kind == rules::SpellKind::ShockingGrasp ||
+                                                    kind == rules::SpellKind::PoisonSpray)
+                                                       ? 2
+                                                       : 0);
                 command.darts[0] = 3;
                 command.allies[0] = {3};
             }
             if (kind == rules::SpellKind::CureWounds || kind == rules::SpellKind::SpareTheDying)
                 s.party().damage({3}, s.party().character({3})->hitPoints);
             ui.refresh(allCombatTargets(s), false, false, true);
-            ui.selectCharacter(caster);
+            ui.selectCharacter(kind == rules::SpellKind::ShockingGrasp ? 1 : caster);
             ui.openSpellbook();
             std::size_t entry = 0;
             while (entry < ui.snapshot().magic.count &&
                    ui.snapshot().magic.entries[entry].spell.index != command.spell.index)
                 ++entry;
             ui.chooseSpellbook(entry);
+            if (rule.ground)
+                ui.magicGround(command.aimedCell, true);
             if (rule.area) {
                 const auto area = ui.floorPreview();
                 spellFrames.update(renderer, hybridMap, s.movement(), &s.actors(), nullptr, nullptr,
@@ -438,6 +455,22 @@ int main() {
             ui.closeOverlay();
             okay &= s.submit(command).reason == CommandReason::Resolved;
             ui.record(s.events());
+            if (kind == rules::SpellKind::Grease) {
+                const auto ground = ui.floorPreview();
+                spellFrames.update(renderer, hybridMap, s.movement(), &s.actors(), nullptr, nullptr,
+                                   s.timeMs(), &ground);
+                spellFrames.update(renderer, hybridMap, s.movement(), &s.actors(), nullptr, nullptr,
+                                   s.timeMs(), &ground);
+                auto travel = s.movement();
+                travel.transition = {spellSpawn,
+                                     {spellSpawn.cell + right(spellSpawn.heading), spellSpawn.heading},
+                                     Action::Right,
+                                     .08f,
+                                     .32f};
+                ++travel.revision;
+                spellFrames.update(renderer, hybridMap, travel, &s.actors(), nullptr, nullptr, s.timeMs(),
+                                   &ground);
+            }
             spellVisuals.update(&s.combat().attacks(), s.timeMs());
             ui.record(s.update(.5, false));
             spellVisuals.update(&s.combat().attacks(), s.timeMs());
@@ -467,6 +500,17 @@ int main() {
             okay &= bool(effects.apply(effectRequest, 60100, effectEvents));
         okay &= effects.apply(effectRequest, 60100, effectEvents).error == EffectError::Capacity;
         okay &= effects.armorClass(rules::CharacterId{3}) == effectParty.character({3})->stats.armorClass + 3;
+        for (const auto kind :
+             {EffectKind::Sleep, EffectKind::Blind, EffectKind::Slow, EffectKind::Knockdown})
+            effects.condition(effectActors.id(0), kind, {3}, 60100, effectEvents);
+        effects.wake(effectActors.id(0), 60100, effectEvents);
+        effects.clockMode(true);
+        effects.casterTurn({3}, 60100, effectEvents);
+        effects.clockMode(false);
+        const auto groundCell = effectActors.actor(effectActors.id(0))->npc.cell;
+        okay &= effects.createArea(groundCell, {3}, 1000, 60100, effectEvents).serial != 0;
+        effects.groundCheck(effectActors.id(0), groundCell, 60100, effectEvents);
+        effects.advance(120000, 120100, true, effectEvents);
         effectParty.damage({3}, 999);
         effects.reconcile(60100, effectEvents);
         effectRequest.world = effectSession.actors().snapshot().world;

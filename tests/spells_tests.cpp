@@ -376,9 +376,9 @@ void ui() {
     UiInput open;
     open.pressed[static_cast<std::size_t>(UiKey::Four)] = true;
     routeHudInput(ui, open);
-    check(ui.snapshot().magic.entries[6].charges == 1, "Spellbook reports unused recovery charge");
-    check(ui.snapshot().modal() && ui.snapshot().magic.count == 7,
-          "Wizard book contains six spells and recovery");
+    check(ui.snapshot().magic.entries[13].charges == 1, "Spellbook reports unused recovery charge");
+    check(ui.snapshot().modal() && ui.snapshot().magic.count == 14,
+          "Wizard book contains thirteen spells and recovery");
     const auto time = s.timeMs();
     s.update(60, ui.snapshot().modal());
     check(s.timeMs() == time, "Book pauses simulation");
@@ -605,8 +605,8 @@ void uiRevision() {
     check(!ui.snapshot().modal() && !ui.snapshot().selection.target && s.party().character({3})->mana == 4,
           "Outside picker click dismisses without underlying attack");
     ui.openSpellbook();
-    ui.chooseSpellbook(6);
-    check(ui.snapshot().magic.open && ui.snapshot().magic.entries[6].reason == CommandReason::FullMana,
+    ui.chooseSpellbook(13);
+    check(ui.snapshot().magic.open && ui.snapshot().magic.entries[13].reason == CommandReason::FullMana,
           "Unavailable ability stays in picker with a specific reason");
     ui.chooseSpellbook(3);
     const auto a = s.actors().id(0), b = s.actors().id(1), c = s.actors().id(2);
@@ -723,8 +723,9 @@ void uiRevision() {
     ui.openSpellbook();
     ui.browseSpellbook(7);
     ui.chooseSpellbook(7);
+    const auto returnedOffset = ui.snapshot().magic.offset;
     key(UiKey::Back);
-    check(ui.snapshot().magic.offset == offset && ui.snapshot().magic.cursor == 7,
+    check(ui.snapshot().magic.offset == returnedOffset && ui.snapshot().magic.cursor == 7,
           "Back restores scrolled list position");
     ui.closeOverlay();
     s.update(6, false);

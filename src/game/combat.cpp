@@ -272,6 +272,8 @@ void CombatController::addGroups() noexcept {
     });
 }
 void CombatController::begin(std::uint64_t now) noexcept {
+    effects_.clockMode(true);
+    ai_.turnMovement(true);
     for (std::size_t i = 0; i < state_.enemyCount; ++i) {
         const auto* a = actors_.actor(state_.enemies[i]);
         if (a && effects_.canAct(state_.enemies[i]))
@@ -280,7 +282,9 @@ void CombatController::begin(std::uint64_t now) noexcept {
     if (!orderCount_) {
         for (std::uint16_t i = 0; i < rules::partySize; ++i) {
             const auto& c = *party_.character({i});
-            order_[orderCount_++] = {true, i, rng_.d20().value.selected + c.stats.initiative,
+            order_[orderCount_++] = {true, i,
+                                     rng_.d20().value.selected + c.stats.initiative +
+                                         effects_.oneShot(rules::CharacterId{i}, EffectKind::Guidance),
                                      c.stats.abilities[1]};
         }
     }
@@ -302,6 +306,11 @@ void CombatController::selectTurn() noexcept {
     while (position_ < orderCount_) {
         const auto& e = order_[position_];
         if (e.party) {
+            if (processedCasterRound_[e.index] != state_.round) {
+                processedCasterRound_[e.index] = state_.round;
+                if (currentEvents_)
+                    effects_.casterTurn({e.index}, noticeTime_, *currentEvents_);
+            }
             if (partyReady_[e.index] <= state_.gameplayMs)
                 state_.defending[e.index] = false;
             const auto life = party_.character({e.index})->life;
@@ -335,6 +344,13 @@ void CombatController::selectTurn() noexcept {
 }
 void CombatController::advance(std::uint64_t now) noexcept {
     due_ = now + actionDelayMs;
+    if (currentEvents_) {
+        if (state_.activeCharacter)
+            effects_.groundCheck(*state_.activeCharacter, origin_.cell, now, *currentEvents_);
+        else if (state_.activeEnemy)
+            effects_.groundCheck(*state_.activeEnemy, actors_.actor(*state_.activeEnemy)->npc.cell, now,
+                                 *currentEvents_);
+    }
     if (finish(now))
         return;
     if (state_.activeEnemy)
@@ -360,6 +376,9 @@ void CombatController::leave() noexcept {
     episodeActors_.fill(false);
     orderCount_ = groupCount_ = 0;
     state_.round = 0;
+    processedCasterRound_.fill(0);
+    effects_.clockMode(false);
+    ai_.turnMovement(false);
     party_.lockFormation(false);
     ++state_.turn;
 }
@@ -453,6 +472,7 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
 }
 void CombatController::restTime(std::uint64_t elapsed, std::uint64_t now, CombatEvents& events) noexcept {
     elapse(elapsed);
+    effects_.skipHazards(state_.gameplayMs);
     // Report skipped-time expiry at the current presentation instant, without underflow or AI steps.
     effects_.advance(state_.gameplayMs, now, false, events);
     reconcileEffects(now, events);

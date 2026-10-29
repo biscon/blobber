@@ -23,7 +23,7 @@ void CommandController::refreshMagic() noexcept {
     m.armed = m.state == CastingState::Targeting;
     m.kind = rules::SpellKind::Count;
     m.assigned = m.maximum = 0;
-    m.single = false;
+    m.single = m.ground = m.self = false;
     m.selectedAllies = {};
     m.allyReasons.fill(CommandReason::InvalidAlly);
     m.footprint = {};
@@ -123,7 +123,9 @@ void CommandController::refreshMagic() noexcept {
     const auto* r = s ? rules::spellRules(s->kind) : nullptr;
     if (state_.magic.pending.action == PartyAction::Spell && r) {
         m.kind = s->kind;
-        m.single = !r->area && r->maxTargets == 1;
+        m.single = !r->area && !r->self && r->maxTargets == 1;
+        m.ground = r->ground;
+        m.self = r->self;
         m.maximum = r->maxTargets;
         m.hostile = r->hostile;
         m.area = r->area;
@@ -132,13 +134,19 @@ void CommandController::refreshMagic() noexcept {
     if (m.state == CastingState::Resolving)
         return;
     if (m.area) {
-        m.footprint = spellArea(actors_, session_->movement().player);
+        auto aimed = m.pending;
+        if (m.hoverCell)
+            aimed.aimedCell = m.hoverCell;
+        m.footprint = session_->combat().area(aimed, session_->movement().player);
         m.cells = m.footprint.eligible;
         m.affected = m.footprint.actors;
         m.affectedCount = m.footprint.count;
         const auto cells = std::count(m.cells.begin(), m.cells.end(), true);
-        std::snprintf(m.targets.data(), m.targets.size(), "%d front cells / %zu %s / No friendly fire",
-                      int(cells), m.affectedCount, m.affectedCount == 1 ? "enemy" : "enemies");
+        const auto allies = std::count(m.footprint.allies.begin(), m.footprint.allies.end(), true);
+        for (std::size_t i = 0; i < rules::partySize; ++i)
+            m.selectedAllies[i] = m.footprint.allies[party_.snapshot().formation[i].index];
+        std::snprintf(m.targets.data(), m.targets.size(), "%d cells / %zu enemies / %d allies%s", int(cells),
+                      m.affectedCount, int(allies), m.ground && !m.pending.aimedCell ? " / aim first" : "");
     } else if (m.hostile) {
         for (std::size_t i = 0; i < m.pending.targetCount; ++i) {
             m.affected[m.affectedCount++] = m.pending.enemies[i];
@@ -147,7 +155,7 @@ void CommandController::refreshMagic() noexcept {
         std::snprintf(m.targets.data(), m.targets.size(),
                       m.missiles ? "Darts assigned %u/3" : "Enemies selected %u/%u",
                       m.missiles ? m.assigned : unsigned(m.pending.targetCount), m.maximum);
-    } else if (m.pending.action == PartyAction::Spell) {
+    } else if (m.pending.action == PartyAction::Spell && !m.self) {
         for (std::size_t i = 0; i < rules::partySize; ++i) {
             auto one = m.pending;
             one.targetCount = 1;
@@ -233,6 +241,8 @@ void CommandController::chooseSpellbook(std::size_t index) noexcept {
     m.pending.target.reset();
     m.pending.ally.reset();
     m.pending.targetCount = 0;
+    m.pending.aimedCell.reset();
+    m.hoverCell.reset();
     m.pending.action = entry.feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
     m.pending.spell = entry.spell;
     m.pending.feature = entry.feature;
@@ -321,7 +331,7 @@ void CommandController::magicEnemy(ActorId id, bool remove) noexcept {
 void CommandController::magicAlly(std::size_t formation) noexcept {
     auto& m = state_.magic;
     auto& c = m.pending;
-    if (!m.armed || m.hostile || state_.suspended || formation >= rules::partySize ||
+    if (!m.armed || m.hostile || m.self || state_.suspended || formation >= rules::partySize ||
         c.action != PartyAction::Spell)
         return;
     const auto id = party_.snapshot().formation[formation];
@@ -348,6 +358,23 @@ void CommandController::magicAlly(std::size_t formation) noexcept {
 }
 void CommandController::magicKeyboardTarget(int delta) noexcept {
     auto& m = state_.magic;
+    if (m.ground && session_) {
+        std::array<Cell, 169> cells{};
+        std::size_t count = 0, index = 0;
+        const auto pose = session_->movement().player;
+        for (int y = -6; y <= 6; ++y)
+            for (int x = -6; x <= 6; ++x) {
+                const auto cell = pose.cell + Cell{x, y};
+                if (!spellCell(actors_.map(), pose, cell))
+                    continue;
+                if (m.pending.aimedCell && *m.pending.aimedCell == cell)
+                    index = count;
+                cells[count++] = cell;
+            }
+        if (count)
+            magicGround(cells[(index + count + (delta < 0 ? -1 : 1)) % count], true);
+        return;
+    }
     if (m.hostile && state_.targets.count) {
         std::size_t index = delta < 0 ? 0 : state_.targets.count - 1;
         for (std::size_t i = 0; i < state_.targets.count; ++i)
@@ -364,12 +391,33 @@ void CommandController::magicKeyboardTarget(int delta) noexcept {
         m.pending.ally = party_.snapshot().formation[index];
     }
 }
+void CommandController::magicGround(std::optional<Cell> cell, bool select) noexcept {
+    auto& m = state_.magic;
+    if (!session_ || !m.armed || !m.ground || state_.suspended)
+        return;
+    if (cell && !spellCell(actors_.map(), session_->movement().player, *cell))
+        cell.reset();
+    m.hoverCell = cell;
+    if (select && cell) {
+        m.pending.aimedCell = cell;
+        m.hoverCell.reset();
+    }
+    refreshMagic();
+    updateAvailability();
+}
 SpellArea CommandController::floorPreview() const noexcept {
+    SpellArea result;
     const auto& m = state_.magic;
-    if (!session_ || !m.armed || !m.area || state_.modal() || session_->movement().transition.active())
-        return {};
-    auto result = spellArea(actors_, session_->movement().player);
-    result.kind = m.kind;
+    if (!session_)
+        return result;
+    if (m.armed && m.area && !state_.modal() && !session_->movement().transition.active()) {
+        auto aimed = m.pending;
+        if (m.hoverCell)
+            aimed.aimedCell = m.hoverCell;
+        result = session_->combat().area(aimed, session_->movement().player);
+        result.kind = m.kind;
+    }
+    result.ground = session_->effects().ground();
     return result;
 }
 void CommandController::reconcileMagic() noexcept {
