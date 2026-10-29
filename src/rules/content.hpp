@@ -45,6 +45,7 @@ struct MonsterDefinition {
     bool metalArmor = false, sleepImmune = false;
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
+struct CreationClass;
 class Catalog {
   public:
     static constexpr std::size_t maxMonsters = 32, maxAttacks = 64, maxIdBytes = 128;
@@ -52,7 +53,11 @@ class Catalog {
     Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
             std::vector<RaceDefinition> races = {}, std::vector<ClassDefinition> classes = {},
             std::vector<ItemDefinition> items = {}, std::optional<PresetParty> preset = std::nullopt,
-            std::vector<SpellDefinition> spells = {});
+            std::vector<SpellDefinition> spells = {}, std::vector<CreationClass> creation = {});
+    ~Catalog();
+    Catalog(const Catalog&);
+    Catalog(Catalog&&) noexcept;
+    const CreationClass* creation(ClassId) const noexcept;
     const SpellDefinition* spell(SpellId) const noexcept;
     SpellId findSpell(std::string_view) const noexcept;
     std::size_t spellCount() const noexcept { return spells_.size(); }
@@ -74,6 +79,7 @@ class Catalog {
     std::size_t monsterCount() const noexcept { return monsters_.size(); }
 
   private:
+    std::vector<CreationClass> creation_;
     std::vector<SpellDefinition> spells_;
     std::vector<AttackDefinition> attacks_;
     std::vector<MonsterDefinition> monsters_;

@@ -1,5 +1,6 @@
 #include "app/spell_captures.hpp"
 #include "app/ai_demo.hpp"
+#include "app/starting_build_diagnostics.hpp"
 #include "ui/interaction.hpp"
 #include <fstream>
 #include <stdexcept>
@@ -64,7 +65,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                                      {i % 2, (i / 2) % 2},
                                      Heading::North});
         NpcWorld placements(map, spawn.cell, names, instances);
-        GameSession s(map, catalog, placements, 5, spawn, false, timings);
+        GameSession s(map, catalog, spellCaptureParty(catalog, kind), placements, 5, spawn, false, timings);
         if (kind == rules::SpellKind::ShockingGrasp) {
             s.party().lockFormation(false);
             s.party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);

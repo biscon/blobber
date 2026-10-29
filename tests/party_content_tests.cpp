@@ -315,9 +315,18 @@ void spellsLoading() {
         c["life_domain"] = false;
         c["equipment"]["ranged"] = nullptr;
     }
+    files.invalid(good, "legacy caster");
+    for (auto kind :
+         {SpellKind::AcidSplash, SpellKind::RayOfFrost, SpellKind::MageArmor, SpellKind::MagicMissile,
+          SpellKind::BurningHands, SpellKind::Thunderwave, SpellKind::Sleep, SpellKind::Grease}) {
+        const auto& rule = *rules::spellRules(kind);
+        good["spells"].push_back(
+            {{"id", rule.id}, {"name", rule.name}, {"description", rule.description}, {"kind", rule.id}});
+        good["classes"][0]["spells"].push_back(rule.id);
+    }
     const auto catalog = files.load(good);
     const Party party(catalog);
-    check(catalog.spellCount() == 1 &&
+    check(catalog.spellCount() == 9 &&
               catalog.spell(catalog.findSpell("test.fire"))->kind == SpellKind::FireBolt &&
               party.character({0})->mana == 4,
           "Schema four loads typed spells and initializes casting resources");
@@ -351,7 +360,7 @@ void spellsLoading() {
             break;
         case 6:
             bad["spells"].push_back(bad["spells"][0]);
-            bad["spells"][1]["id"] = "another";
+            bad["spells"].back()["id"] = "another";
             files.invalid(bad, "duplicate");
             break;
         case 7:

@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace blobber::rules {
-bool validDisplayText(const std::string& text, std::size_t maximum) noexcept {
+bool validDisplayText(std::string_view text, std::size_t maximum) noexcept {
     if (text.empty() || text.size() > maximum)
         return false;
     bool nonspace = false;
@@ -78,6 +78,10 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b)
     return deriveCharacter(catalog, b, gear);
 }
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentity& b,
+                                const CharacterLoadout& gear) noexcept {
+    return deriveCharacter(catalog, b.view(), gear);
+}
+CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityView& b,
                                 const CharacterLoadout& gear) noexcept {
     const auto fail = [](CharacterError e) { return CharacterResult{{}, e}; };
     if (!validContentId(b.id) || !validDisplayText(b.name, 64))

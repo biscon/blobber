@@ -1,5 +1,6 @@
 #pragma once
 #include "game/recovery.hpp"
+#include "rules/creation.hpp"
 #include "rules/health.hpp"
 
 namespace blobber {
@@ -21,6 +22,9 @@ struct PartySnapshot {
 class Party {
   public:
     explicit Party(const rules::Catalog& catalog);
+    Party(const rules::Catalog&, const rules::PresetParty& startingParty);
+    Party(rules::Catalog&&, const rules::PresetParty&) = delete;
+    Party(const rules::Catalog&&, const rules::PresetParty&) = delete;
     Party(const Party&) = delete;
     Party& operator=(const Party&) = delete;
     Party(Party&&) = delete;
@@ -41,6 +45,7 @@ class Party {
     bool useFeature(rules::CharacterId, rules::Feature) noexcept;
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
     int castingModifier(rules::CharacterId) const noexcept;
+    rules::SpellAccess spellAccess(rules::CharacterId, rules::SpellId) const noexcept;
     void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
     const Inventory& inventory() const noexcept { return inventory_; }
     InventoryResult previewInventoryChange(const InventoryRequest&) const noexcept;

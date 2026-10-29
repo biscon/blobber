@@ -257,13 +257,12 @@ Camp kits, authored sanctuaries, instantaneous transactions and cosmetic camp
 playback are project adaptations. Implementation and checks are recorded in
 [slice 12 verification](slice12_verification.md).
 
-## Planned character-creation interlude (2026-10-28; not implemented)
+## Character-creation interlude (approved 2026-10-28; updated 2026-10-29)
 
 The user accepted expanded spell selection and the visual creator flow. See
 [slices 12.1–12.4](dnd5e_demo_design.md#character-creation-interlude-accepted-flow-and-shared-contracts)
-for the roster, source requirements and adaptation questions. This section records
-planned scope, not adopted or verified behavior; slice planning must add exact
-source locations and approved adaptations before implementation.
+for the roster, source requirements and adaptation questions. The following paragraphs record the original approved scope.
+The 12.1 and 12.2 implementation records below supersede their planned status.
 
 The planned additions are Ray of Frost, Shocking Grasp, Poison Spray, Sleep,
 False Life, Grease, Color Spray, Guidance, Resistance and Sanctuary. The existing
@@ -280,7 +279,7 @@ Guidance's initiative consumer, discrete slow/prone/area behavior and action-cos
 adaptations must be documented as project choices, not passed off as unchanged
 tabletop rules. Skills and reactions remain outside this interlude.
 
-## Slice 12.1 — approved adaptations, implemented and Ready for review
+## Slice 12.1 — approved adaptations, implemented and accepted
 
 Use the [cached official SRD 5.1](references/README.md). The detailed
 [expanded-spell design](expanded_spells_design.md) records the approved gameplay
@@ -288,10 +287,29 @@ adaptations before code: aimed 3×3 Sleep/one-cell Grease, friendly fire, automa
 next-turn knockdown recovery costing the action, two-action slowed NPC steps and
 slower travel, caster-turn short expiry, automatic one-shot buffs, automatic best
 temporary-HP amount with refreshed duration, bounded Sanctuary retargeting, and
-High Elf magical-sleep immunity. Existing class-wide casting remains until 12.2.
+High Elf magical-sleep immunity. Class-wide casting from this historical checkpoint
+is replaced by explicit per-character grants in 12.2.
 Reactions, other racial traits, progression and creation UI remain deferred.
 Source locations: Color Spray p.125; False Life p.142; Grease p.150; Guidance p.151;
 Poison Spray p.169; Ray of Frost p.174; Resistance p.175; Sanctuary p.176;
 Shocking Grasp p.179; Sleep p.180; temporary HP pp.98–99; conditions pp.358–359.
 Implementation and automated verification are recorded in the [handoff](slice121_verification.md).
 User acceptance remains pending; these are project adaptations, not unchanged tabletop rules.
+
+## Slice 12.2 — implemented, accepted and closed (2026-10-29)
+
+[Design and exact selections](character_builds_design.md),
+[verification/handoff](slice122_verification.md). The local SRD's High Elf cantrip,
+Wizard spellbook/preparation, Cleric preparation and Life Domain grants now feed
+explicit character-owned selections. Racial wizard cantrips use Intelligence,
+including on Clerics and martial classes. Mana and the existing class feature/action
+adaptations remain project rules; racial magic adds no martial mana pool.
+
+Point buy adopts the previously approved 27-point, 8–15 variant with existing racial
+bonuses. Requiring all 27 points and at least one ordinarily prepared spell are
+creation-flow constraints. Curated starting gear is a project selection menu, not
+an implementation of starting gold or every tabletop package. Two healing potions
+per character, two mana potions for casters and three camp kits per fresh party are
+approved demo supplies. Quarterstaff uses 4 lb, 1d6 bludgeoning and versatile 1d8;
+existing hand/proficiency/weight validation applies. Skills, creator/menu screens,
+rest-time spell changes and advancement remain later slices.

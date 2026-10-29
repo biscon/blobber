@@ -36,7 +36,7 @@ void CommandController::refreshMagic() noexcept {
     m.attackBonus = c->stats.proficiency + party_.castingModifier(caster);
     m.difficulty = 8 + m.attackBonus;
     const auto* cls = party_.catalog().characterClass(c->build.characterClass);
-    m.spellcaster = cls->casting != rules::Casting::None;
+    m.spellcaster = cls->casting != rules::Casting::None || c->build.spells.racial;
     static_assert(std::tuple_size<decltype(cls->spells)>::value + 6 <= MagicHud::capacity,
                   "Picker must hold all supported spells and features");
     const auto entry = [&](rules::SpellId spell, rules::Feature feature, const char* name, const char* desc,
@@ -62,10 +62,17 @@ void CommandController::refreshMagic() noexcept {
                                 feature == rules::Feature::None ? PickerEntryKind::Spell
                                                                 : PickerEntryKind::ActivatedFeature};
     };
-    for (std::size_t i = 0; i < cls->spellCount; ++i) {
-        const auto* s = party_.catalog().spell(cls->spells[i]);
-        entry(cls->spells[i], rules::Feature::None, s->name.c_str(), s->description.c_str(),
-              rules::spellRules(s->kind)->level * 2);
+    for (std::uint16_t i = 0; i < party_.catalog().spellCount(); ++i) {
+        const auto access = party_.spellAccess(caster, {i});
+        if (!access)
+            continue;
+        const auto* s = party_.catalog().spell({i});
+        entry({i}, rules::Feature::None, s->name.c_str(), s->description.c_str(), access.cost);
+        auto& row = m.entries[m.count - 1];
+        row.source = access.source;
+        row.casting = access.casting;
+        row.attack = access.attack;
+        row.difficulty = access.difficulty;
     }
     if (party_.hasFeature(caster, rules::ClassFeature::SecondWind))
         entry({}, rules::Feature::SecondWind, "Second Wind",
@@ -86,7 +93,7 @@ void CommandController::refreshMagic() noexcept {
         e.passive = id;
         m.entries[m.count++] = e;
     };
-    if (!m.spellcaster) {
+    if (cls->casting == rules::Casting::None) {
         if (c->build.defense)
             passive(PassiveFeature::Defense, "Defense",
                     "+1 Armor Class while wearing body armor. Already included in your armor class.");
@@ -118,6 +125,9 @@ void CommandController::refreshMagic() noexcept {
     const auto* s = party_.catalog().spell(state_.magic.pending.spell);
     const auto* r = s ? rules::spellRules(s->kind) : nullptr;
     if (state_.magic.pending.action == PartyAction::Spell && r) {
+        const auto access = party_.spellAccess(caster, state_.magic.pending.spell);
+        m.attackBonus = access.attack;
+        m.difficulty = access.difficulty;
         m.kind = s->kind;
         m.single = !r->area && !r->self && r->maxTargets == 1;
         m.ground = r->ground;

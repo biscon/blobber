@@ -4,10 +4,31 @@
 #include <utility>
 
 namespace blobber {
-Party::Party(const rules::Catalog& catalog) : catalog_(&catalog) {
-    const auto* preset = catalog.preset();
-    if (!preset)
-        throw std::runtime_error("Starting party: catalog has no preset_party (schema 2 required)");
+namespace {
+const rules::PresetParty& requiredPreset(const rules::Catalog& c) {
+    if (!c.preset())
+        throw std::runtime_error("Starting party: catalog has no preset_party");
+    return *c.preset();
+}
+} // namespace
+Party::Party(const rules::Catalog& catalog) : Party(catalog, requiredPreset(catalog)) {}
+Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingParty) : catalog_(&catalog) {
+    const auto* preset = &startingParty;
+    if (!rules::validFormation(preset->formation))
+        throw std::invalid_argument("Invalid starting formation");
+    for (std::size_t i = 0; i < 4; ++i) {
+        const auto& b = preset->characters[i];
+        for (std::size_t j = 0; j < i; ++j)
+            if (b.id == preset->characters[j].id)
+                throw std::invalid_argument("Duplicate starting character");
+        if (catalog.creation(b.characterClass)) {
+            rules::CharacterDraft draft;
+            if (!rules::draftFromBuild(catalog, b, draft))
+                throw std::invalid_argument("Invalid starting build");
+        }
+        if (rules::validateGrants(catalog, b.view(), b.spells, false) != rules::BuildError::None)
+            throw std::invalid_argument("Invalid spell grants");
+    }
     inventory_.initialize(catalog, *preset);
     state_.formation = preset->formation;
     for (std::size_t i = 0; i < rules::partySize; ++i) {
@@ -25,6 +46,27 @@ Party::Party(const rules::Catalog& catalog) : catalog_(&catalog) {
         c.secondWind = rules::hasFeature(cls->features, rules::ClassFeature::SecondWind);
         c.arcaneRecovery = rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery);
     }
+    // Only authored creation-enabled content grants launch supplies. Fixture/legacy parties
+    // retain their authored inventories; this path never mutates a saved blueprint.
+    if (catalog.creation(preset->characters[0].characterClass)) {
+        const auto kit = catalog.findItem("camp_kit");
+        if (!catalog.item(kit))
+            throw std::runtime_error("Missing launch camp kit content");
+        for (unsigned n = 0; n < 3; ++n) {
+            bool placed = false;
+            for (auto id : state_.formation)
+                if (acquire({id, kit, 1, inventory_.revision()})) {
+                    placed = true;
+                    break;
+                }
+            if (!placed)
+                throw std::runtime_error("Starting party cannot carry three camp kits");
+        }
+    }
+}
+rules::SpellAccess Party::spellAccess(rules::CharacterId id, rules::SpellId spell) const noexcept {
+    const auto* c = character(id);
+    return c ? rules::spellAccess(*catalog_, c->build, c->stats, spell) : rules::SpellAccess{};
 }
 InventoryResult Party::stageInventoryChange(const InventoryRequest& request, Inventory& candidate,
                                             std::array<rules::CharacterStats, 4>& stats) const noexcept {

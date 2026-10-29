@@ -1,5 +1,6 @@
 #include "assets/rules_character_loader.hpp"
 #include "assets/rules_json.hpp"
+#include "rules/creation.hpp"
 
 namespace blobber {
 namespace {
@@ -92,7 +93,11 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < races.size(); ++i) {
         const auto p = "races[" + std::to_string(i) + "]";
         const auto& r = races[i];
-        if (version >= 7)
+        if (version >= 8)
+            fields(r, p,
+                   {"id", "name", "ability_increases", "hit_points_per_level", "weapons", "sleep_immune",
+                    "wizard_cantrip"});
+        else if (version >= 7)
             fields(r, p,
                    {"id", "name", "ability_increases", "hit_points_per_level", "weapons", "sleep_immune"});
         else
@@ -103,6 +108,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                              training(r.at("weapons"), p + ".weapons", version)});
         if (version >= 7)
             out.races.back().sleepImmune = boolean(r.at("sleep_immune"), p + ".sleep_immune");
+        out.races.back().wizardCantrip = version >= 8 ? boolean(r.at("wizard_cantrip"), p + ".wizard_cantrip")
+                                                      : out.races.back().id == "high_elf";
     }
     const auto& classes = root.at("classes");
     array(classes, "classes", Catalog::maxClasses);
@@ -238,6 +245,56 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         item.weight = integer(j.at("weight"), p + ".weight");
         out.items.push_back(std::move(item));
     }
+    if (version >= 8) {
+        array(root.at("creation"), "creation", Catalog::maxClasses);
+        for (const auto& j : root.at("creation")) {
+            fields(j, "creation[]", {"class", "recommended", "groups", "supplies"});
+            CreationClass entry;
+            entry.characterClass = {reference(j.at("class"), "creation.class", out.classes)};
+            entry.recommended = scores(j.at("recommended"), "creation.recommended");
+            auto grant = [&](const Json& v) {
+                fields(v, "grant", {"item", "quantity", "slot"});
+                const int q = integer(v.at("quantity"), "grant.quantity");
+                if (q < 1 || q > 1000)
+                    fail("grant.quantity", "out of bounds");
+                const auto slot = string(v.at("slot"), "grant.slot");
+                std::uint8_t n = 255;
+                if (slot == "body")
+                    n = 0;
+                else if (slot == "main_hand")
+                    n = 1;
+                else if (slot == "off_hand")
+                    n = 2;
+                else if (slot == "ranged")
+                    n = 3;
+                else if (slot != "bag")
+                    fail("grant.slot", "unknown slot");
+                return StartingGrant{{reference(v.at("item"), "grant.item", out.items)}, std::uint16_t(q), n};
+            };
+            array(j.at("groups"), "creation.groups", 3);
+            for (const auto& group : j.at("groups")) {
+                array(group, "creation.group", 2);
+                if (group.empty())
+                    fail("creation.group", "empty choices");
+                auto& g = entry.groups[entry.groupCount++];
+                for (const auto& option : group) {
+                    fields(option, "option", {"id", "name", "items"});
+                    auto& o = g.options[g.count++];
+                    o.id = identifier(option.at("id"), "option.id");
+                    o.name = string(option.at("name"), "option.name");
+                    array(option.at("items"), "option.items", 2);
+                    for (const auto& v : option.at("items"))
+                        o.items[o.count++] = grant(v);
+                }
+            }
+            array(j.at("supplies"), "creation.supplies", 6);
+            for (const auto& v : j.at("supplies"))
+                entry.supplies[entry.supplyCount++] = grant(v);
+            out.creation.push_back(std::move(entry));
+        }
+    }
+    if (version >= 8 && out.creation.size() != out.classes.size())
+        fail("creation", "schema 8 requires creation metadata for every class");
     const auto& preset = root.at("preset_party");
     if (preset.is_null())
         return out;
@@ -250,7 +307,11 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < partySize; ++i) {
         const auto p = "preset_party.characters[" + std::to_string(i) + "]";
         const auto& c = characters[i];
-        if (spellsEnabled)
+        if (version >= 8)
+            fields(c, p,
+                   {"id", "name", "race", "class", "abilities", "level", "defense", "items", "equipment",
+                    "life_domain", "portrait", "spell_grants"});
+        else if (spellsEnabled)
             fields(c, p,
                    {"id", "name", "race", "class", "abilities", "level", "defense", "items", "equipment",
                     "life_domain"});
@@ -267,6 +328,24 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         b.defense = boolean(c.at("defense"), p + ".defense");
         if (spellsEnabled)
             b.lifeDomain = boolean(c.at("life_domain"), p + ".life_domain");
+        b.portrait = version >= 8 ? findPortrait(string(c.at("portrait"), p + ".portrait"))
+                                  : defaultPortrait(out.races[b.race.index].id);
+        if (version >= 8) {
+            const auto& grants = c.at("spell_grants");
+            fields(grants, p + ".spell_grants", {"cantrips", "learned", "prepared", "domain", "racial"});
+            auto mask = [&](const char* key) {
+                array(grants.at(key), key, 32);
+                std::uint32_t bits = 0;
+                for (const auto& id : grants.at(key)) {
+                    const auto bit = spellBit({reference(id, key, out.spells)});
+                    if (bits & bit)
+                        fail(key, "duplicate spell");
+                    bits |= bit;
+                }
+                return bits;
+            };
+            b.spells = {mask("cantrips"), mask("learned"), mask("prepared"), mask("domain"), mask("racial")};
+        }
         const auto& owned = c.at("items");
         array(owned, p + ".items", maxStartingItems);
         b.itemCount = owned.size();
@@ -307,6 +386,17 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         }
         if (!found)
             fail(p, "unknown character reference: " + id);
+    }
+    if (version < 8) {
+        Catalog catalog({}, {}, out.races, out.classes, out.items, std::nullopt, out.spells);
+        for (auto& b : out.preset->characters) {
+            const auto derived = deriveCharacter(catalog, b);
+            if (!derived)
+                fail("preset_party", characterErrorMessage(derived.error));
+            if (!recommendSpells(catalog, b.view(), b.spells))
+                fail("preset_party.spells",
+                     "legacy caster needs explicit legal selections and sufficient spell content (schema 8)");
+        }
     }
     return out;
 }

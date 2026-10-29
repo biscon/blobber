@@ -6,7 +6,13 @@ namespace blobber {
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                          std::uint32_t seed, Player spawn, bool enableAi,
                          const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery)
-    : map_(map), party_(catalog), actors_(map, catalog, placements), recovery_(recovery),
+    : GameSession(map, catalog,
+                  catalog.preset() ? *catalog.preset() : throw std::invalid_argument("Missing preset"),
+                  placements, seed, spawn, enableAi, timings, recovery) {}
+GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const rules::PresetParty& starting,
+                         const NpcWorld& placements, std::uint32_t seed, Player spawn, bool enableAi,
+                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery)
+    : map_(map), party_(catalog, starting), actors_(map, catalog, placements), recovery_(recovery),
       loot_(actors_, recovery, seed), movement_(spawn), rng_(seed), ai_(map, actors_, seed),
       effects_(party_, actors_, rng_), combat_(map, party_, actors_, rng_, ai_, effects_, timings),
       enableAi_(enableAi) {

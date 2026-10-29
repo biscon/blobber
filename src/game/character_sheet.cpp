@@ -31,8 +31,12 @@ void CommandController::refreshCharacterSheet() noexcept {
     // Presentation only for the currently supported level. Advancement owns no
     // behavior here; its future threshold query can replace this value.
     out.nextLevelExperience = c->build.level == 1 ? 300 : 0;
+    out.casting = cls.casting;
     out.spellAttack = party_.castingModifier(i.character) + out.proficiency;
     out.spellDifficulty = 8 + out.spellAttack;
+    out.racialCasting = c->build.spells.racial != 0;
+    out.racialAttack = c->stats.modifiers[3] + out.proficiency;
+    out.racialDifficulty = 8 + out.racialAttack;
     out.arrows = party_.inventory().count(i.character, rules::Ammunition::Arrow, party_.catalog());
     constexpr const char* armor[]{"Light armor", "Medium armor", "Heavy armor", "Shields"};
     for (unsigned n = 0; n < 4; ++n)

@@ -4,12 +4,14 @@
 #include "game/commands.hpp"
 #include "game/party.hpp"
 #include "input/key_repeat.hpp"
+#include "persistence/character_library.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
 #include "rules/content.hpp"
 #include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include "support/creation_fixtures.hpp"
 #include "support/hybrid_fixtures.hpp"
 #include "support/inventory_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
@@ -296,7 +298,35 @@ int main() {
         const auto deathPlaces = combatPlacements(map, Player{{3, 3}, Heading::North}, 4);
         ActorWorld deathActors(map, recoveryRules, deathPlaces);
         LootWorld deathLoot(deathActors, {}, 5);
+        const auto creationRules = creationCatalog();
+        auto draft = rules::recommendedDraft(creationRules, {3}, {1});
+        std::snprintf(draft.name.data(), draft.name.size(),
+                      "Long custom character name exercising bounded previews");
+        auto customParty = *creationRules.preset();
+        customParty.characters[1] = rules::finishBuild(creationRules, draft, "custom.cleric");
+        NpcWorld creationEmpty(hybridMap, spellSpawn.cell, {}, {});
+        auto creationSession = std::make_unique<GameSession>(hybridMap, creationRules, customParty,
+                                                             creationEmpty, 5, spellSpawn, false);
+        auto creationUi = std::make_unique<CommandController>(*creationSession);
+        LibrarySnapshot librarySnapshot;
+        librarySnapshot.count = 128;
+        librarySnapshot.records[127].id.text[0] = 'x';
+        const auto lookupId = librarySnapshot.records[127].id;
         tracking = true;
+        for (unsigned iteration = 0; iteration < 128; ++iteration) {
+            okay &= bool(rules::previewBuild(creationRules, draft));
+            okay &= librarySnapshot.find(lookupId) == &librarySnapshot.records[127];
+            for (std::uint16_t i = 0; i < creationRules.spellCount(); ++i)
+                creationSession->party().spellAccess({1}, {i});
+            creationUi->refresh({}, false, false, true);
+            creationUi->selectCharacter(1);
+            creationUi->openSpellbook();
+            creationUi->browseSpellbook(1);
+            creationUi->closeOverlay();
+            creationUi->openInventory(rules::CharacterId{1}, CharacterPage::Character);
+            creationUi->closeOverlay();
+        }
+
         for (std::size_t i = 0; i < 4; ++i)
             deathActors.damage(deathActors.id(i), 100, 0);
         deathLoot.reconcile(deathActors);

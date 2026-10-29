@@ -1,9 +1,19 @@
 #include "rules/content.hpp"
+#include "rules/creation.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
 
 namespace blobber::rules {
+Catalog::~Catalog() = default;
+Catalog::Catalog(const Catalog&) = default;
+Catalog::Catalog(Catalog&&) noexcept = default;
+const CreationClass* Catalog::creation(ClassId id) const noexcept {
+    for (const auto& c : creation_)
+        if (c.characterClass.index == id.index)
+            return &c;
+    return nullptr;
+}
 bool validContentId(std::string_view id) noexcept {
     if (id.empty() || id.size() > Catalog::maxIdBytes)
         return false;
@@ -27,10 +37,10 @@ template <class T> void validateIds(const std::vector<T>& definitions, const cha
 Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
                  std::vector<RaceDefinition> races, std::vector<ClassDefinition> classes,
                  std::vector<ItemDefinition> items, std::optional<PresetParty> preset,
-                 std::vector<SpellDefinition> spells)
-    : spells_(std::move(spells)), attacks_(std::move(attacks)), monsters_(std::move(monsters)),
-      races_(std::move(races)), classes_(std::move(classes)), items_(std::move(items)),
-      preset_(std::move(preset)) {
+                 std::vector<SpellDefinition> spells, std::vector<CreationClass> creation)
+    : creation_(std::move(creation)), spells_(std::move(spells)), attacks_(std::move(attacks)),
+      monsters_(std::move(monsters)), races_(std::move(races)), classes_(std::move(classes)),
+      items_(std::move(items)), preset_(std::move(preset)) {
     if (attacks_.size() > maxAttacks || monsters_.size() > maxMonsters)
         throw std::runtime_error("catalog: exceeds 64 attacks or 32 monsters");
     if (spells_.size() > maxSpells)
@@ -107,11 +117,50 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
              i.baseArmorClass < 1 || i.baseArmorClass > 30))
             throw std::runtime_error("items." + i.id + ": invalid armor properties");
     }
+    if (creation_.size() > maxClasses)
+        throw std::runtime_error("Too many creation classes");
+    for (std::size_t n = 0; n < creation_.size(); ++n) {
+        const auto& c = creation_[n];
+        if (!characterClass(c.characterClass) || c.groupCount > 3 || c.supplyCount > 6 ||
+            pointBuyCost(c.recommended) != 27)
+            throw std::runtime_error("Invalid creation class");
+        for (std::size_t j = 0; j < n; ++j)
+            if (creation_[j].characterClass.index == c.characterClass.index)
+                throw std::runtime_error("Duplicate creation class");
+        auto grant = [&](const StartingGrant& g) {
+            const auto* d = item(g.item);
+            if (!d || !g.quantity || g.quantity > stackLimit(*d) || (g.slot > 3 && g.slot != 255) ||
+                (g.slot < 4 && g.quantity != 1) || d->kind == ItemKind::Supply)
+                throw std::runtime_error("Invalid starting grant");
+        };
+        for (std::size_t g = 0; g < c.groupCount; ++g) {
+            const auto& group = c.groups[g];
+            if (!group.count || group.count > 2)
+                throw std::runtime_error("Invalid gear group");
+            for (std::size_t o = 0; o < group.count; ++o) {
+                const auto& option = group.options[o];
+                if (!validContentId(option.id) || !validDisplayText(option.name, 64) || !option.count ||
+                    option.count > 2)
+                    throw std::runtime_error("Invalid gear option");
+                if (o && option.id == group.options[0].id)
+                    throw std::runtime_error("Duplicate gear option");
+                for (std::size_t i = 0; i < option.count; ++i)
+                    grant(option.items[i]);
+            }
+        }
+        for (std::size_t i = 0; i < c.supplyCount; ++i)
+            grant(c.supplies[i]);
+    }
     if (preset_) {
         if (!validFormation(preset_->formation))
             throw std::runtime_error("preset_party.formation: expected permutation of four characters");
         for (std::size_t i = 0; i < partySize; ++i) {
             const auto& b = preset_->characters[i];
+            if (!creation_.empty()) {
+                CharacterDraft draft;
+                if (!draftFromBuild(*this, b, draft))
+                    throw std::runtime_error("Preset is not a valid curated starting build");
+            }
             const auto derived = deriveCharacter(*this, b);
             if (!derived)
                 throw std::runtime_error("preset_party.characters[" + std::to_string(i) +

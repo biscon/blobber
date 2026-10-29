@@ -1,8 +1,10 @@
 #include "ui/art.hpp"
 #include "assets/image.hpp"
+#include "assets/portrait_atlas.hpp"
 #include "game/effects.hpp"
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <stdexcept>
 namespace blobber {
 UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : resources_(resources) {
@@ -62,7 +64,31 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/guidance",
                                   "spells/resistance",
                                   "spells/sanctuary",
-                                  "spells/hold_person"};
+                                  "spells/hold_person",
+                                  "items/quarterstaff"};
+    const auto prepared = directory.parent_path() / "prepared";
+    auto loadPortraitAtlas = [&](const char* name, int height) {
+        const auto path = prepared / name;
+        std::ifstream input(path, std::ios::binary);
+        std::array<unsigned char, 14> header{};
+        input.read(reinterpret_cast<char*>(header.data()), header.size());
+        auto dimension = [&](int n) {
+            return (std::uint32_t(header[n]) << 24) | (std::uint32_t(header[n + 1]) << 16) |
+                   (std::uint32_t(header[n + 2]) << 8) | header[n + 3];
+        };
+        if (!input || dimension(0) != 0x716f6966 || dimension(4) != portraitAtlasWidth ||
+            dimension(8) != unsigned(height) || header[12] != 4 ||
+            std::filesystem::file_size(path) > std::uint64_t(portraitAtlasWidth) * height * 5 + 22)
+            throw std::runtime_error("Missing or invalid prepared portrait atlas header");
+        OwnedImage atlas(LoadImage(path.string().c_str()));
+        if (!atlas.value.data || atlas.value.width != portraitAtlasWidth || atlas.value.height != height)
+            throw std::runtime_error("Missing or invalid prepared portrait atlas");
+        auto handle = resources_.createTexture(atlas.value);
+        SetTextureFilter(resources_.texture(handle), TEXTURE_FILTER_BILINEAR);
+        return handle;
+    };
+    portraitSmall_ = loadPortraitAtlas("portraits-small.qoi", smallPortraitHeight);
+    portraitLarge_ = loadPortraitAtlas("portraits-large.qoi", largePortraitHeight);
     OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
     OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
     if (!campImage.value.data || !lootImage.value.data)
@@ -75,6 +101,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
     for (unsigned i = 0; i < regions_.size(); ++i) {
+        if (i < 4)
+            continue; // Portraits are prepared offline in their own bounded atlases.
         const auto path = directory / (std::string(names[i]) + ".png");
         OwnedImage image(LoadImage(path.string().c_str()));
         if (!image.value.data)
@@ -111,6 +139,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
 static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 24,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
+    if (item.id == "quarterstaff")
+        return quarterstaffIcon;
     if (item.id == "scimitar")
         return 45;
     if (item.kind == rules::ItemKind::Currency)
@@ -141,6 +171,26 @@ unsigned UiArt::effectIcon(EffectKind kind) noexcept {
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
+    if (index < 4)
+        index += 64; // Retain diagnostic compatibility for the original four art IDs.
+    if (index >= 64 && index < 64 + rules::portraitCount) {
+        const bool large = destination.width > 216 || destination.height > 252;
+        const auto region = portraitRegion(index - 64, large);
+        Rectangle source{float(region.x), float(region.y), float(region.width), float(region.height)};
+        const auto ratio = destination.width / destination.height;
+        if (source.width / source.height > ratio) {
+            auto w = source.height * ratio;
+            source.x += (source.width - w) * .5f;
+            source.width = w;
+        } else {
+            auto h = source.width / ratio;
+            source.y += (source.height - h) * .5f;
+            source.height = h;
+        }
+        DrawTexturePro(resources_.texture(large ? portraitLarge_ : portraitSmall_), source, destination,
+                       {0, 0}, 0, tint);
+        return;
+    }
     if (index >= 45 && index <= 47) {
         const auto& texture = resources_.texture(loot_);
         const int tile = index == 45 ? 0 : index == 46 ? 5 : 8;
@@ -148,7 +198,7 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index >= 49 && index < 60)
+    if (index >= 49 && index <= 60)
         index -= 3;
     else if (index == restIcon)
         index = 45;

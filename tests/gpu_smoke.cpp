@@ -1,4 +1,5 @@
 #include "assets/image.hpp"
+#include "assets/portrait_atlas.hpp"
 #include "platform/gpu_resources.hpp"
 #include "platform/window.hpp"
 #include "support/check.hpp"
@@ -12,13 +13,15 @@ struct FixtureDirectory {
         std::filesystem::temp_directory_path() /
         ("blobber-native-ui-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     FixtureDirectory() {
+        path /= "ui";
+        std::filesystem::create_directories(path.parent_path() / "prepared");
         std::filesystem::create_directories(path / "spells");
         std::filesystem::create_directories(path / "items");
         std::filesystem::create_directories(path / "camp");
     }
     ~FixtureDirectory() {
         std::error_code e;
-        std::filesystem::remove_all(path, e);
+        std::filesystem::remove_all(path.parent_path(), e);
     }
 };
 void nativeUi() {
@@ -81,7 +84,8 @@ void nativeUi() {
                                   "spells/guidance",
                                   "spells/resistance",
                                   "spells/sanctuary",
-                                  "spells/hold_person"};
+                                  "spells/hold_person",
+                                  "items/quarterstaff"};
     for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168
@@ -96,6 +100,15 @@ void nativeUi() {
                                i < 4 ? (x < 32 || x >= 184 ? RED : GREEN) : (x % 2 ? WHITE : BLACK));
         check(ExportImage(image.value, (fixture.path / (std::string(names[i]) + ".png")).string().c_str()),
               "Export generated UI fixture");
+    }
+    for (bool large : {false, true}) {
+        OwnedImage atlas(
+            GenImageColor(portraitAtlasWidth, large ? largePortraitHeight : smallPortraitHeight, GREEN));
+        check(ExportImage(atlas.value, (fixture.path.parent_path() / "prepared" /
+                                        (large ? "portraits-large.qoi" : "portraits-small.qoi"))
+                                           .string()
+                                           .c_str()),
+              "Export test-owned prepared portrait atlas");
     }
     GpuResources resources;
     const UiArt art(resources, fixture.path);

@@ -1,5 +1,15 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-29): [slice 12.2 character builds, library
+and portraits](character_builds_design.md). Fixed creation drafts/previews and curated
+gear reuse derivation; schema 8 authors explicit per-character class/domain/racial
+spell grants. A versioned 128-character starting-build library uses checked atomic
+POSIX transactions. Independent party/session construction adds three launch camp
+kits. Twenty stable portraits use offline padded QOI atlases (40 MiB), with no
+frame decode/resize. [Verification and handoff](slice122_verification.md): Debug and
+Release 34/34, focused sanitizers 5/5, allocation/GPU checks, 225 portrait/build
+captures and 482 spell captures. The user accepted slice 12.2 on 2026-10-29; 12.3 is next eligible for planning and remains unstarted.
+
 Implemented, **accepted and closed** (2026-10-29): portrait follow-up to the
 [12.1 visual review](spell_visual_review_design.md#portrait-follow-up). Timed status
 and concentration tooltips show turns in combat and seconds/minutes in real time;
@@ -18,9 +28,9 @@ temporary HP and turn-relative short effects. [Local SRD](references/README.md)
 is the source for future planning. [Verification and handoff](slice121_verification.md):
 Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations,
 capacity baking, hidden GPU checks and 470 captures pass. User acceptance on 2026-10-29 includes all visual and portrait
-follow-ups. Slice 12.2 is next eligible for planning and remains unstarted.
+follow-ups. Slice 12.2 is now accepted and closed, as recorded above.
 
-Design accepted, **implementation planned/unstarted** (2026-10-28):
+Design accepted (2026-10-28), **menu/creator GUI still planned**:
 [main menu and character-creation flow](character_creation_flow_proposal.md), with
 [sixteen approved imagegen mockups](mockups/character-creator-v1/index.html).
 The [12.1–12.4 roadmap](dnd5e_demo_design.md#character-creation-interlude-accepted-flow-and-shared-contracts)
@@ -31,8 +41,9 @@ expanded spell selection and Color Spray in place of illustrative Ray of Sicknes
 Library blueprints and live party state have independent ownership; menu/session
 lifecycle and bounded draft/UI storage preserve existing rendering/allocation
 contracts. Detailed subsystem designs are written in each later planning pass.
-The creation/menu systems remain unimplemented; slice 12.1 is accepted and closed.
-12.2–12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
+The data foundation is implemented in 12.2; menu/creator screens remain unimplemented.
+Slices 12.1 and 12.2 are accepted and closed.
+12.3–12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
 Drop into the current cell, automatic Take All closure, and a small generated Rest
@@ -522,7 +533,8 @@ Historical techniques and visual choices are documented in [research](research.m
 | Location | Responsibility |
 | --- | --- |
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
-| `src/rules/` | Deterministic dice, pure attack/save/damage and character derivation, immutable typed content catalog |
+| `src/rules/` | Deterministic rules, character derivation, bounded creation drafts/previews, per-grant spell queries and immutable typed catalog |
+| `src/persistence/` | Versioned starting-build codec, checked UUID/revision library transactions; independent of future run saves |
 | `src/game/` | Session/encounter ownership, runtime actors/occupancy, movement, animation state, bounded party/health/formation |
 | `src/input/` | Platform-independent key repeat timing |
 | `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
@@ -531,7 +543,7 @@ Historical techniques and visual choices are documented in [research](research.m
 | `src/platform/` | Window lifetime, keyboard adapter, GPU registry and presentation |
 | `src/ui/` | Portrait/action HUD, shared layout/input routing, targeting and bounded-log presentation |
 | `src/app/` | Startup/options, frame scheduling, diagnostic capture cases |
-| `tools/` | Offline texture normalization |
+| `tools/` | Offline asset/portrait preparation and headless build/library diagnostic |
 | `tests/` | Core, renderer, resource, NPC, allocation, and explicit desktop checks |
 
 NPC appearance indices remain stable for a prepared level lifetime. Runtime actor

@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 is next eligible for planning; slices 12.2–12.4 and 13 remain Planned/unstarted.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slices 12.3–12.4 and 13 remain Planned/unstarted.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,12 +8,12 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 12.1 — Expanded level-one spell catalog, including all visual and portrait corrections (2026-10-29) |
-| Active slice | None; 12.1 is accepted and closed |
+| Latest accepted slice | 12.2 — Character builds, library storage and portraits (2026-10-29) |
+| Active slice | None; 12.2 accepted and closed |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 12.2 — Character builds, library storage and portraits; planning only |
-| Next action | In a fresh context, read the [accepted 12.1 handoff](slice121_verification.md#accepted-closeout-and-next-agent-handoff), inspect relevant code and plan 12.2 only; obtain plan approval before implementation |
+| Next eligible slice | 12.3 — Main menu, character library and party launch; Planned/unstarted |
+| Next action | Read the [12.2 handoff](slice122_verification.md#next-agent-handoff), inspect relevant code and approved visual references, then plan 12.3 in a fresh context |
 | Accepted design | Character creator/menu visual flow and expanded spell catalog, 2026-10-28; Color Spray replaces the illustrative Ray of Sickness |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
@@ -330,7 +330,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 11 | [Inventory and equipment](#slice-11-inventory-and-equipment) | 10 | Accepted | C |
 | 12 | [Loot and recovery](#slice-12-loot-and-recovery) | 11 | Accepted | C |
 | 12.1 | [Expanded level-one spell catalog](#slice-121-expanded-level-one-spell-catalog) | 12 | Accepted | C interlude |
-| 12.2 | [Character builds, library storage and portraits](#slice-122-character-builds-library-storage-and-portraits) | 12.1 | Planned | C interlude |
+| 12.2 | [Character builds, library storage and portraits](#slice-122-character-builds-library-storage-and-portraits) | 12.1 | Accepted | C interlude |
 | 12.3 | [Main menu, character library and party launch](#slice-123-main-menu-character-library-and-party-launch) | 12.2 | Planned | C interlude |
 | 12.4 | [Complete creator and reusable selection flow](#slice-124-complete-creator-and-reusable-selection-flow) | 12.3 | Planned | C interlude |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.4 | Planned | C |
@@ -1285,7 +1285,7 @@ cannot duplicate items. Verify visible floor placement and reliable item picking
 **Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.
 **Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared bags with occlusion, paused grid collection and visible Rest button; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
 **Verification:** Corrected implementation: Debug 29/29 and Release 29/29; focused recovery/inventory/render ASan+UBSan 3/3; zero tracked frame C++ allocations; separate full-capacity loot publication/render stress, hidden GPU lifecycle, and 108 native/reduced/letterboxed captures pass. The user accepted the result; automated verification limits remain unchanged. Earlier baseline checks remain recorded separately in the handoff.
-**Next-agent handoff (updated 2026-10-29):** Slice 12 is accepted and closed. Slice 12.1 has since been [accepted and closed](slice121_verification.md#accepted-closeout-and-next-agent-handoff); 12.2 is next eligible for planning, and 12.2–12.4 must be accepted before slice 13. The historical closeout predates this insertion. Read the [accepted closeout](slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
+**Next-agent handoff (updated 2026-10-29):** Slice 12 is accepted and closed. Slice 12.1 has since been [accepted and closed](slice121_verification.md#accepted-closeout-and-next-agent-handoff); 12.2 is now accepted and closed; 12.3 is next eligible for planning, and 12.3–12.4 must be accepted before slice 13. The historical closeout predates this insertion. Read the [accepted closeout](slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
 **Acceptance:** Explicitly accepted on 2026-10-27: “thats better, record the slice as accepted in the doc”. Acceptance covers the completed slice and all loot-bag, Drop, Take All and Rest-icon corrections.
 
 ### Character creation interlude: accepted flow and shared contracts
@@ -1295,7 +1295,7 @@ The user accepted the [visual flow](character_creation_flow_proposal.md) and
 2026-10-28, explicitly including an expanded spell catalog and a dedicated slice
 for its missing spells before slice 13. This interlude comprises **three creation
 slices plus one spell-content slice**, numbered 12.1–12.4. Slice 12.1 is accepted and
-closed; 12.2–12.4 remain Planned;
+closed; 12.2 is also accepted and closed, while 12.3–12.4 remain Planned;
 visual/roadmap approval is not implementation acceptance. Each still receives its
 own planning pass, implementation authorization, verification and user review.
 
@@ -1451,11 +1451,11 @@ hardware checks. Preserve the existing fourteen-spell behavior.
 
 **Handoff:** Publish spell IDs, class membership, effect/casting interfaces, source
 adaptations, capacities and reusable selection metadata for 12.2. Stop for review.
-**Execution record:** Accepted and closed, 2026-10-29. Implemented the approved [design](expanded_spells_design.md): ten spells, ground targeting, conditions, temporary HP, one-shot buffs, Sanctuary, schema 7 and prepared art. Completed the [visual review corrections](spell_visual_review_design.md): level/Abilities tabs, status icons and duration tooltips, generated Grease pool, and required four-direction prone poses. [Verification/handoff](slice121_verification.md): Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations, capacity baking, hidden GPU checks and 470 captures. Portrait follow-up adds turn-based duration labels and a gold concentration emblem with spell/duration hover: focused Debug/Release 5/5, allocation/GPU checks and 482 captures pass. User acceptance is recorded below; 12.2 remains Planned/unstarted.
+**Execution record:** Accepted and closed, 2026-10-29. Implemented the approved [design](expanded_spells_design.md): ten spells, ground targeting, conditions, temporary HP, one-shot buffs, Sanctuary, schema 7 and prepared art. Completed the [visual review corrections](spell_visual_review_design.md): level/Abilities tabs, status icons and duration tooltips, generated Grease pool, and required four-direction prone poses. [Verification/handoff](slice121_verification.md): Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations, capacity baking, hidden GPU checks and 470 captures. Portrait follow-up adds turn-based duration labels and a gold concentration emblem with spell/duration hover: focused Debug/Release 5/5, allocation/GPU checks and 482 captures pass. User acceptance is recorded below; 12.2 has since been accepted and closed.
 
 **Acceptance:** 2026-10-29 — the user said “nice work, record the slice as accepted”. This accepts the completed spell catalog and all visual/portrait corrections, including spell-level tabs, Grease artwork, static prone poses, status icons, turn-duration tooltips and the concentration emblem. Recorded verification limitations remain unchanged.
 
-**Next-agent handoff:** Slice 12.1 is accepted and closed. Read its [accepted closeout](slice121_verification.md#accepted-closeout-and-next-agent-handoff) and the approved character-creation references, then inspect code and plan 12.2 in a fresh context. Implementation requires approval of that slice's plan. This closeout does not start 12.2.
+**Historical next-agent handoff at 12.1 closeout:** Slice 12.1 is accepted and closed. Read its [accepted closeout](slice121_verification.md#accepted-closeout-and-next-agent-handoff) and the approved character-creation references, then inspect code and plan 12.2 in a fresh context. Implementation requires approval of that slice's plan. This closeout does not start 12.2.
 
 ### Slice 12.2: Character builds, library storage and portraits
 
@@ -1534,7 +1534,9 @@ sanitizers; distinguish disk-operation allocations from steady-state frame work.
 API, library API, portrait manifest, explicit-party constructor, preset selections
 and verified spell-access migration. Supply a deterministic headless diagnostic
 or test scenario for inspection before the GUI lands. Stop for review.
-**Execution record:** Planned/unstarted; no verification or implementation acceptance.
+**Execution record:** **Accepted and closed**, 2026-10-29. [Implemented design](character_builds_design.md) and [verification/handoff](slice122_verification.md). Delivered strict builds, schema-8 grants/gear/portraits, version-1 atomic blueprint library, independent party/session constructors, three launch camp kits, twenty portrait masters and bounded prepared atlases. Full Debug/Release 34/34, focused sanitizers 5/5, zero tracked frame allocations, hidden GPU checks, 225 build/portrait captures and 482 spell captures pass. The user selected three kits, curated gear and a user-data library location.
+**Acceptance:** The user explicitly accepted slice 12.2 on 2026-10-29: “slice accepted, record it in the plan doc, so we can get started on the next slice”. Verification limitations remain as recorded.
+**Next-agent handoff:** Slice 12.2 is accepted and closed. Slice 12.3 is next eligible for planning and remains Planned/unstarted. Read the [durable API and ownership handoff](slice122_verification.md#next-agent-handoff), approved menu/library references and relevant code before proposing its plan. Obtain approval of that plan before implementation. Library CRUD and strict creation validation are already implemented; normal startup remains the dungeon route. This closeout does not start 12.3.
 
 ### Slice 12.3: Main menu, character library and party launch
 
@@ -1824,6 +1826,7 @@ choices belong in their execution/design records unless they change this roadmap
 | 2026-10-25 | Original sixteen slices, four milestones, durable handoffs, and user acceptance between slices; no full-auto execution. Later interludes retain this review workflow. | User requested self-tracking workflow and approved its documentation implementation. |
 | 2026-10-28 | Accepted the sixteen-screen character-creator proposal, main menu, Start-new-game party selection, persistent library, point buy, five portraits per race, skills placeholder, starting equipment and reusable spell-selection flow. Insert 12.1–12.4 before 13. | User: “Proposal accepted, go make the plan”; implementation still receives separate per-slice planning/review. |
 | 2026-10-29 | Accepted and closed slice 12.1, including all spell, visual and portrait follow-ups. Slice 12.2 becomes next eligible for planning; it remains unstarted. | User: “nice work, record the slice as accepted”. |
+| 2026-10-29 | Accepted and closed slice 12.2, including character builds, library storage, spell access and portraits. Slice 12.3 becomes next eligible for planning; it remains unstarted. | User: “slice accepted, record it in the plan doc, so we can get started on the next slice”. |
 | 2026-10-28 | Expand the level-one/cantrip catalog in a dedicated 12.x slice before second-level spells in slice 13; normal creation selection counts replace unrestricted class-wide availability. | Explicit user approval of the expanded catalog assumption. |
 | 2026-10-28 | Color Spray replaces illustrative Ray of Sickness in screens 10/14 and the implementation target; retain SRD 5.1 scope. | User: “use color spray for now”. |
 

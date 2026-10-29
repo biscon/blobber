@@ -60,10 +60,14 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
             fail("schema_version", "missing version");
         const int version = integer(root.at("schema_version"), "schema_version");
         if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
-            version != 7)
-            fail("schema_version", "only versions 1 through 7 are supported");
+            version != 7 && version != 8)
+            fail("schema_version", "only versions 1 through 8 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
+        else if (version >= 8)
+            fields(root, "catalog",
+                   {"schema_version", "attacks", "monsters", "races", "classes", "items", "preset_party",
+                    "spells", "creation"});
         else if (version >= 4)
             fields(root, "catalog",
                    {"schema_version", "attacks", "monsters", "races", "classes", "items", "preset_party",
@@ -193,7 +197,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         }
         return Catalog(std::move(attacks), std::move(monsters), std::move(characters.races),
                        std::move(characters.classes), std::move(characters.items),
-                       std::move(characters.preset), std::move(characters.spells));
+                       std::move(characters.preset), std::move(characters.spells),
+                       std::move(characters.creation));
     } catch (const std::exception& e) {
         throw std::runtime_error("Loading rules " + path.string() + ": " + e.what());
     }

@@ -3,6 +3,7 @@
 #include "rules/spells.hpp"
 #include <limits>
 #include <string>
+#include <string_view>
 
 namespace blobber::rules {
 struct RaceId {
@@ -60,12 +61,19 @@ constexpr std::uint8_t armorBit(ArmorType type) noexcept {
 enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable, Currency, Supply };
 enum class Ammunition : std::uint8_t { None, Arrow };
 enum class Consumable : std::uint8_t { None, Healing, Mana };
+struct PortraitId {
+    std::uint8_t index = UINT8_MAX;
+};
+struct SpellGrants {
+    std::uint32_t cantrips = 0, learned = 0, prepared = 0, domain = 0, racial = 0;
+};
 struct RaceDefinition {
     std::string id, name;
     Abilities abilityIncreases{};
     int hitPointsPerLevel = 0;
     WeaponTraining weapons = 0;
     bool sleepImmune = false;
+    bool wizardCantrip = false;
 };
 struct ClassDefinition {
     std::string id, name;
@@ -105,6 +113,37 @@ struct Equipment {
     OwnedItemId body, mainHand, offHand;
     OwnedItemId ranged{}; // Readied alternate weapon, not an additional hand.
 };
+struct StartingGrant {
+    ItemId item;
+    std::uint16_t quantity = 1;
+    std::uint8_t slot = 255;
+};
+struct GearOption {
+    std::string id, name;
+    std::array<StartingGrant, 2> items{};
+    std::size_t count = 0;
+};
+struct GearGroup {
+    std::array<GearOption, 2> options{};
+    std::size_t count = 0;
+};
+struct CreationClass {
+    ClassId characterClass;
+    Abilities recommended{};
+    std::array<GearGroup, 3> groups{};
+    std::size_t groupCount = 0;
+    std::array<StartingGrant, 6> supplies{};
+    std::size_t supplyCount = 0;
+};
+
+struct CharacterIdentityView {
+    std::string_view id, name;
+    RaceId race;
+    ClassId characterClass;
+    Abilities baseAbilities{};
+    int level = 1;
+    bool defense = false, lifeDomain = false;
+};
 struct CharacterIdentity {
     std::string id, name;
     RaceId race;
@@ -113,6 +152,11 @@ struct CharacterIdentity {
     int level = 1;
     bool defense = false;
     bool lifeDomain = false;
+    PortraitId portrait;
+    SpellGrants spells;
+    CharacterIdentityView view() const noexcept {
+        return {id, name, race, characterClass, baseAbilities, level, defense, lifeDomain};
+    }
 };
 struct CharacterBuild : CharacterIdentity {
     std::array<OwnedItem, maxStartingItems> items{};
@@ -166,5 +210,7 @@ class Catalog;
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& build) noexcept;
 CharacterResult deriveCharacter(const Catalog&, const CharacterIdentity&, const CharacterLoadout&) noexcept;
 bool validFormation(const std::array<CharacterId, partySize>& formation) noexcept;
-bool validDisplayText(const std::string& text, std::size_t maximum) noexcept;
+bool validDisplayText(std::string_view text, std::size_t maximum) noexcept;
+CharacterResult deriveCharacter(const Catalog&, const CharacterIdentityView&,
+                                const CharacterLoadout&) noexcept;
 } // namespace blobber::rules

@@ -104,8 +104,8 @@ EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kin
                    : kind == SpellKind::Sanctuary  ? EffectKind::Sanctuary
                    : kind == SpellKind::MageArmor  ? EffectKind::MageArmor
                                                    : EffectKind::ShieldOfFaith;
-    request.difficulty =
-        8 + party_.character(c.character)->stats.proficiency + party_.castingModifier(c.character);
+    request.difficulty = 8 + party_.character(c.character)->stats.proficiency +
+                         party_.spellAccess(c.character, c.spell).modifier;
     for (std::size_t i = 0; i < std::min(c.targetCount, request.targets.size()); ++i)
         request.targets[i] = kind == SpellKind::Bane ? EffectTarget(c.enemies[i]) : EffectTarget(c.allies[i]);
     return request;
@@ -171,11 +171,7 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     const auto* definition = party_.catalog().spell(c.spell);
     if (!definition)
         return CommandReason::InvalidSpell;
-    const auto* cls = party_.catalog().characterClass(ch->build.characterClass);
-    bool known = false;
-    for (std::size_t i = 0; i < cls->spellCount; ++i)
-        known |= cls->spells[i].index == c.spell.index;
-    if (!known)
+    if (!party_.spellAccess(c.character, c.spell))
         return CommandReason::InvalidSpell;
     const auto& r = *rules::spellRules(definition->kind);
     if (ch->mana < r.level * 2)
@@ -345,7 +341,8 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             reconcileEffects(now, events);
         } else if (kind == SpellKind::Grease) {
             effects_.createArea(*c.aimedCell, c.character,
-                                8 + ch->stats.proficiency + party_.castingModifier(c.character), now, events);
+                                8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier,
+                                now, events);
             const auto affected = area(c, pose);
             for (std::size_t i = 0; i < affected.recipientCount; ++i)
                 effects_.groundCheck(affected.recipients[i], *c.aimedCell, now, events);
@@ -371,7 +368,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 result.event = CombatEvent::Aid;
             } else {
                 const int bonus =
-                    party_.castingModifier(c.character) +
+                    party_.spellAccess(c.character, c.spell).modifier +
                     (party_.hasFeature(c.character, rules::ClassFeature::LifeDomain) ? 2 + r.level : 0);
                 const auto healing = std::max<std::int64_t>(0, rng_.roll({1, 8, bonus}).value.total);
                 const int hp = party_.character(recipient)->hitPoints;
@@ -422,7 +419,8 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     result.roll = roll.selected;
                     const auto hit =
                         rules::resolveAttack(roll,
-                                             ch->stats.proficiency + party_.castingModifier(c.character) +
+                                             ch->stats.proficiency +
+                                                 party_.spellAccess(c.character, c.spell).modifier +
                                                  effects_.rollModifier(c.character),
                                              effects_.armorClass(id))
                             .value;
@@ -437,7 +435,8 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                             result.darts = c.darts[j];
                     result.damage = sharedDamage * result.darts;
                 } else {
-                    const int dc = 8 + ch->stats.proficiency + party_.castingModifier(c.character);
+                    const int dc =
+                        8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier;
                     const auto save = effects_.save(id, r.save, dc);
                     auto notice = result;
                     notice.event = CombatEvent::SpellSave;

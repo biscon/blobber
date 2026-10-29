@@ -533,6 +533,13 @@ void classFeaturesUi() {
         cls.spells[cls.spellCount++] = {static_cast<std::uint16_t>(definitions.size())};
         definitions.push_back({rule.id, rule.name, rule.description, kind});
     }
+    for (std::uint16_t i = 0; i < definitions.size(); ++i) {
+        auto& grants = mixedFixture.preset.characters[1].spells;
+        if (rules::spellRules(definitions[i].kind)->level)
+            grants.prepared |= rules::spellBit({i});
+        else
+            grants.cantrips |= rules::spellBit({i});
+    }
     const rules::Catalog mixedCatalog({}, {}, mixedFixture.races, mixedFixture.classes, mixedFixture.items,
                                       mixedFixture.preset, definitions);
     GameSession mixed(map, mixedCatalog, empty, 5, spellSpawn, false);

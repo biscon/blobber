@@ -86,9 +86,13 @@ void HudPainter::characterSheet(const HudSnapshot& h) const {
     if (c.hasMana) {
         std::snprintf(value, sizeof(value), "Mana %d / %d", c.mana, c.maxMana);
         text(value, 16, 310, teal);
-        std::snprintf(value, sizeof(value), "Spell attack %+d / Save DC %d", s.spellAttack,
-                      s.spellDifficulty);
+        std::snprintf(value, sizeof(value), "Class %s %+d / Save DC %d",
+                      s.casting == rules::Casting::Wisdom ? "WIS" : "INT", s.spellAttack, s.spellDifficulty);
         clipped(value, 16, 323, 153, muted, UiTextStyle::Small);
+    }
+    if (s.racialCasting) {
+        std::snprintf(value, sizeof(value), "Racial INT %+d / DC %d", s.racialAttack, s.racialDifficulty);
+        clipped(value, 16, c.hasMana ? 335 : 323, 153, teal, UiTextStyle::Small);
     }
     if (c.status != DisplayStatus::Ready) {
         const char* status = c.status == DisplayStatus::Dead     ? "Dead"
@@ -96,7 +100,7 @@ void HudPainter::characterSheet(const HudSnapshot& h) const {
                                                                  : "Unconscious";
         std::snprintf(value, sizeof(value), "%s / Saves %u successes, %u failures", status,
                       unsigned(c.successes), unsigned(c.failures));
-        clipped(value, 16, 338, 153, red, UiTextStyle::Small);
+        clipped(value, 16, s.racialCasting && c.hasMana ? 350 : 338, 153, red, UiTextStyle::Small);
     }
     text("COMBAT", 188, 69, gold, UiTextStyle::Display);
     constexpr const char* stats[]{"HIT POINTS", "ARMOR CLASS", "INITIATIVE", "PROFICIENCY"};

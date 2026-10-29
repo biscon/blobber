@@ -10,6 +10,9 @@ class GameSession {
     GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements, std::uint32_t seed,
                 Player spawn = {}, bool enableAi = true, const std::vector<NpcTimings>& timings = {},
                 const RecoveryLevel& recovery = {});
+    GameSession(const Map&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&,
+                std::uint32_t seed, Player spawn = {}, bool enableAi = true,
+                const std::vector<NpcTimings>& timings = {}, const RecoveryLevel& recovery = {});
     GameSession(Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
                 const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
     GameSession(const Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
@@ -18,6 +21,18 @@ class GameSession {
                 const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
     GameSession(const Map&, const rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
                 const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
+    GameSession(Map&&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
+                const RecoveryLevel& = {}) = delete;
+    GameSession(const Map&&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
+                const RecoveryLevel& = {}) = delete;
+    GameSession(const Map&, rules::Catalog&&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
+                const RecoveryLevel& = {}) = delete;
+    GameSession(const Map&, const rules::Catalog&&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
+                const RecoveryLevel& = {}) = delete;
     GameSession(const GameSession&) = delete;
     GameSession& operator=(const GameSession&) = delete;
     Party& party() noexcept { return party_; }

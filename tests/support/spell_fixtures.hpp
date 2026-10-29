@@ -32,6 +32,27 @@ inline rules::Catalog spellCatalog(int hp = 1000, int ac = 1, int saveAbility = 
         }
         f.preset.characters[1].lifeDomain = false;
     }
+    // Explicit simulation fixture grants. Creation budgets are tested independently;
+    // this fixture covers every concrete spell without a production access bypass.
+    for (unsigned n = 0; n < 4; ++n) {
+        auto& b = f.preset.characters[n];
+        const auto& cls = f.classes[n];
+        for (std::size_t i = 0; i < cls.spellCount; ++i) {
+            const auto id = cls.spells[i];
+            const auto bit = std::uint32_t(1) << id.index;
+            const auto& r = *rules::spellRules(spells[id.index].kind);
+            if (!r.level)
+                b.spells.cantrips |= bit;
+            else if (b.lifeDomain && (spells[id.index].kind == rules::SpellKind::Bless ||
+                                      spells[id.index].kind == rules::SpellKind::CureWounds))
+                b.spells.domain |= bit;
+            else {
+                b.spells.prepared |= bit;
+                if (cls.casting == rules::Casting::Intelligence)
+                    b.spells.learned |= bit;
+            }
+        }
+    }
     rules::MonsterDefinition m;
     m.id = "goblin";
     m.sleepImmune = sleepImmune;

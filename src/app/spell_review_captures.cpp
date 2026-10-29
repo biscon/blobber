@@ -1,5 +1,6 @@
 #include "app/ai_demo.hpp"
 #include "app/spell_captures.hpp"
+#include "app/starting_build_diagnostics.hpp"
 #include "ui/interaction.hpp"
 #include <stdexcept>
 namespace blobber {
@@ -16,7 +17,8 @@ void captureSpellReview(const rules::Catalog& catalog, const NpcWorld& source,
     for (unsigned i = 0; i < names.size(); ++i)
         instances.push_back({{std::uint16_t(i)}, {8, 8}, {int(i % 2), 0}, Heading::South});
     NpcWorld placements(map, spawn.cell, names, instances);
-    GameSession s(map, catalog, placements, 5, spawn, false, timings);
+    GameSession s(map, catalog, spellCaptureParty(catalog, rules::SpellKind::Sleep), placements, 5, spawn,
+                  false, timings);
     CommandController ui(s, timings);
     NpcAnimator animator(s.actors(), timings);
     Frame frame;

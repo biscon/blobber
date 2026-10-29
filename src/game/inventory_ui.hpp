@@ -12,6 +12,9 @@ struct CharacterSheet {
     std::array<bool, 6> proficientSaves{};
     int initiative = 0, proficiency = 0, hitDice = 0, hitDie = 0;
     int spellAttack = 0, spellDifficulty = 0;
+    rules::Casting casting = rules::Casting::None;
+    bool racialCasting = false;
+    int racialAttack = 0, racialDifficulty = 0;
     std::uint32_t experience = 0, nextLevelExperience = 0;
     unsigned arrows = 0;
     std::array<char, 96> armor{};

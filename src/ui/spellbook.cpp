@@ -13,7 +13,7 @@ const char* featureAction(rules::Feature feature, CombatPhase phase) {
         return "6s cooldown / safe exploration";
     return realTime(phase) ? "6s cooldown" : "1 action";
 }
-void wrapped(const HudPainter& p, const char* text, int x, int y, int width, int rows) {
+void wrapped(const HudPainter& p, const char* text, int x, int y, int width, int rows, int rowHeight = 12) {
     const char* cursor = text;
     for (int row = 0; *cursor && row < rows; ++row) {
         char line[128]{};
@@ -35,7 +35,7 @@ void wrapped(const HudPainter& p, const char* text, int x, int y, int width, int
         if (!length)
             length = 1;
         line[length] = 0;
-        p.text(line, x, y + row * 12);
+        p.text(line, x, y + row * rowHeight);
         cursor += length;
         while (*cursor == ' ')
             ++cursor;
@@ -54,7 +54,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
             caster = c.name;
     std::snprintf(line, sizeof(line), "%s - %s", caster, m.spellcaster ? "SPELLS" : "CLASS FEATURES");
     clipped(line, 15, 120, 190, gold, UiTextStyle::Display);
-    if (m.spellcaster) {
+    if (m.maxMana > 0) {
         std::snprintf(line, sizeof(line), "Mana %d/%d", m.mana, m.maxMana);
         text(line, 220, 121, blue, UiTextStyle::Small);
     }
@@ -122,7 +122,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         else
             std::snprintf(line, sizeof(line), "Cantrip / %d mana", e.cost);
         clipped(line, dx + 34, dy + 16, dw - 34, blue, UiTextStyle::Small);
-        wrapped(*this, e.description, dx, dy + 34, dw, 5);
+        wrapped(*this, e.description, dx, dy + 34, dw, 5, 10);
         const auto* rules = rules::spellRules(e.kind);
         const char* targeting = automatic                           ? "No separate action or activation."
                                 : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)
@@ -133,13 +133,21 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
                                                                  ? "Exposed melee / 1 action."
                                                                  : "6 cells / clear sight / 1 action.")
                                                           : "Ally portraits / 1 action.";
-        clipped(targeting, dx, dy + 94, dw, blue, UiTextStyle::Small);
+        if (e.category == PickerEntryKind::Spell) {
+            std::snprintf(line, sizeof(line), "%s %s / Attack %+d / DC %d",
+                          e.source == rules::SpellSource::Racial   ? "Racial"
+                          : e.source == rules::SpellSource::Domain ? "Domain"
+                                                                   : "Class",
+                          e.casting == rules::Casting::Wisdom ? "WIS" : "INT", e.attack, e.difficulty);
+            clipped(line, dx, dy + 86, dw, teal, UiTextStyle::Small);
+        }
+        clipped(targeting, dx, dy + 98, dw, blue, UiTextStyle::Small);
         const bool available = e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
         wrapped(*this,
                 automatic   ? "Applies automatically when its conditions are met."
                 : available ? "Click or Enter to choose."
                             : commandMessage(e.reason),
-                dx, dy + 109, dw, 2);
+                dx, dy + 111, dw, 2);
     }
     if (m.visibleCount > hudLayout::spellRows) {
         label("Up / Down", hudLayout::spellPrevious, muted, UiTextStyle::Small);

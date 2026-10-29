@@ -454,10 +454,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.abilities = member.stats.abilities;
         card.armorClass = member.stats.armorClass;
         card.level = member.build.level;
-        constexpr const char* portraits[]{"alden", "brunna", "merrin", "lethiel"};
-        for (unsigned art = 0; art < 4; ++art)
-            if (member.build.id == portraits[art])
-                card.portrait = art;
+        card.portrait =
+            member.build.portrait.index < rules::portraitCount ? 64u + member.build.portrait.index : 255u;
         const std::array<EquipmentSlot, 4> equipped{EquipmentSlot::MainHand, EquipmentSlot::OffHand,
                                                     EquipmentSlot::Body, EquipmentSlot::Ranged};
         for (std::size_t e = 0; e < equipped.size(); ++e)

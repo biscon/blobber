@@ -2,6 +2,7 @@
 #include "app/actor_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/archer_captures.hpp"
+#include "app/build_captures.hpp"
 #include "app/captures.hpp"
 #include "app/gameplay.hpp"
 #include "app/hud_captures.hpp"
@@ -32,7 +33,8 @@ int run(int argc, char** argv) {
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-recovery DIRECTORY | --capture-inventory DIRECTORY | --capture-spells "
+                     "--capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
+                     "DIRECTORY | --capture-spells "
                      "DIRECTORY | --capture-hybrid DIRECTORY | "
                      "--capture-preparation "
                      "DIRECTORY | --capture-projectiles "
@@ -102,6 +104,11 @@ int run(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureBuildsOnly) {
+            captureBuilds(map, rules, loadedNpcs.world, timings, renderer, presenter,
+                          options.captureDirectory);
+            return 0;
+        }
         if (options.captureRecoveryOnly) {
             captureRecovery(rules, loadedNpcs.world, timings, renderer, presenter, options.captureDirectory);
             return 0;

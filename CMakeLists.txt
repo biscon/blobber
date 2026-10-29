@@ -46,9 +46,9 @@ function(blobber_warnings target)
     endif()
 endfunction()
 
-add_library(blobber_rules src/rules/spells.cpp src/rules/resolve.cpp src/rules/health.cpp src/rules/content.cpp src/rules/character.cpp)
+add_library(blobber_rules src/rules/creation.cpp src/rules/spells.cpp src/rules/resolve.cpp src/rules/health.cpp src/rules/content.cpp src/rules/character.cpp)
 target_include_directories(blobber_rules PUBLIC src)
-add_library(blobber_rules_io src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
+add_library(blobber_rules_io src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_core src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
@@ -63,13 +63,13 @@ add_library(blobber_render
     src/render/material.cpp src/render/npc_sprites.cpp src/render/npc_travel.cpp src/render/scene_cache.cpp src/render/scene_renderer.cpp
     src/render/transitions.cpp src/render/frame_pipeline.cpp)
 target_link_libraries(blobber_render PUBLIC blobber_core raylib)
-add_library(blobber_assets_io src/assets/prepared_loot.cpp src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp src/assets/npc_derivatives.cpp src/assets/preparation_profile.cpp src/assets/prepared_binary.cpp src/assets/prepared_scene.cpp src/assets/prepared_npcs.cpp src/assets/prepared_publication.cpp)
+add_library(blobber_assets_io src/assets/portrait_preparation.cpp src/assets/prepared_loot.cpp src/assets/material_loader.cpp src/assets/npc_loader.cpp src/assets/npc_sheet.cpp src/assets/npc_derivatives.cpp src/assets/preparation_profile.cpp src/assets/prepared_binary.cpp src/assets/prepared_scene.cpp src/assets/prepared_npcs.cpp src/assets/prepared_publication.cpp)
 target_link_libraries(blobber_assets_io PUBLIC blobber_render PRIVATE nlohmann_json::nlohmann_json)
 add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
     src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
 target_link_libraries(blobber_platform PUBLIC blobber_render)
-add_executable(blobber src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
+add_executable(blobber src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
 target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
 add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
 target_link_libraries(blobber_prepare_assets PRIVATE raylib)
@@ -132,20 +132,38 @@ add_custom_target(blobber_assets ALL
     COMMENT "Copying dungeon assets")
 add_dependencies(blobber blobber_assets)
 
+add_executable(blobber_bake_portraits tools/bake_portraits.cpp)
+target_link_libraries(blobber_bake_portraits PRIVATE blobber_assets_io blobber_rules)
+blobber_warnings(blobber_bake_portraits)
+file(GLOB PORTRAIT_MASTERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/portraits/*.png")
+set(PORTRAIT_OUTPUT "${BLOBBER_PREPARED_DIR}")
+add_custom_command(OUTPUT "${PORTRAIT_OUTPUT}/portraits-small.qoi" "${PORTRAIT_OUTPUT}/portraits-large.qoi" "${PORTRAIT_OUTPUT}/portraits.tsv"
+    COMMAND blobber_bake_portraits "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui" "${PORTRAIT_OUTPUT}"
+    DEPENDS blobber_bake_portraits ${PORTRAIT_MASTERS}
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/alden.png" "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/brunna.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/merrin.png" "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/lethiel.png"
+    VERBATIM)
+add_custom_target(blobber_portraits DEPENDS "${PORTRAIT_OUTPUT}/portraits-small.qoi" "${PORTRAIT_OUTPUT}/portraits-large.qoi" "${PORTRAIT_OUTPUT}/portraits.tsv")
+add_dependencies(blobber blobber_portraits)
+
+add_executable(blobber_build_diagnostic tools/build_diagnostic.cpp)
+target_link_libraries(blobber_build_diagnostic PRIVATE blobber_rules_io)
+blobber_warnings(blobber_build_diagnostic)
+
 include(CTest)
 if(BUILD_TESTING)
-    foreach(suite visual_review expanded_spells recovery loot_render inventory spells effects projectile impact prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
+    foreach(suite portraits creation library visual_review expanded_spells recovery loot_render inventory spells effects projectile impact prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
         if(suite STREQUAL "frame_allocations")
             set(source tests/frame_allocations.cpp)
         else()
             set(source tests/${suite}_tests.cpp)
         endif()
         add_executable(blobber_${suite}_tests ${source})
-        if(suite STREQUAL "loot_render")
+        if(suite STREQUAL "loot_render" OR suite STREQUAL "portraits")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_assets_io)
         elseif(suite STREQUAL "rules" OR suite STREQUAL "health")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules)
-        elseif(suite STREQUAL "rules_content" OR suite STREQUAL "party_content")
+        elseif(suite STREQUAL "rules_content" OR suite STREQUAL "party_content" OR suite STREQUAL "creation" OR suite STREQUAL "library")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
         elseif(suite STREQUAL "expanded_spells" OR suite STREQUAL "recovery" OR suite STREQUAL "inventory" OR suite STREQUAL "spells" OR suite STREQUAL "effects" OR suite STREQUAL "impact" OR suite STREQUAL "hybrid" OR suite STREQUAL "ai" OR suite STREQUAL "hud" OR suite STREQUAL "combat" OR suite STREQUAL "commands" OR suite STREQUAL "actors" OR suite STREQUAL "core" OR suite STREQUAL "party")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_core)
@@ -161,7 +179,7 @@ if(BUILD_TESTING)
             add_test(NAME ${suite} COMMAND blobber_${suite}_tests)
         endif()
     endforeach()
-    target_link_libraries(blobber_frame_allocations_tests PRIVATE blobber_rules blobber_assets_io)
+    target_link_libraries(blobber_frame_allocations_tests PRIVATE blobber_rules_io blobber_assets_io)
     # Explicit desktop check; not part of headless CTest.
     add_executable(blobber_gpu_smoke EXCLUDE_FROM_ALL tests/gpu_smoke.cpp)
     target_link_libraries(blobber_gpu_smoke PRIVATE blobber_platform)

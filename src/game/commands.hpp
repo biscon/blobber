@@ -84,6 +84,9 @@ struct SpellBookEntry {
     int charges = -1; // Negative for entries without a finite-use resource.
     PickerEntryKind category = PickerEntryKind::Spell;
     PassiveFeature passive = PassiveFeature::None;
+    rules::SpellSource source = rules::SpellSource::None;
+    rules::Casting casting = rules::Casting::None;
+    int attack = 0, difficulty = 0;
 };
 enum class CastingState : std::uint8_t { Normal, SpellPicker, Targeting, Resolving };
 struct MagicHud {
@@ -101,8 +104,8 @@ struct MagicHud {
         return state == CastingState::Targeting || state == CastingState::Resolving;
     }
     bool open = false, armed = false, hostile = false, area = false, missiles = false;
-    // 16 class spells + 3 activated features + 3 automatic features.
-    static constexpr std::size_t capacity = 22;
+    // 32 catalog spells plus six supported feature rows; explicit bounded insertion.
+    static constexpr std::size_t capacity = 38;
     std::array<SpellBookEntry, capacity> entries{};
     static constexpr unsigned abilityTab = 10, tabCapacity = 11;
     std::array<bool, tabCapacity> tabs{};
