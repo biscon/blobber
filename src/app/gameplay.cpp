@@ -37,8 +37,9 @@ struct PlayView {
     const SceneRenderer& renderer;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
-             bool enableAi = false, const RecoveryLevel& recovery = {})
-        : session(m, catalog, placements, seed, spawn, enableAi, timings, recovery),
+             bool enableAi = false, const RecoveryLevel& recovery = {},
+             const rules::PresetParty* starting = nullptr)
+        : session(m, catalog, starting ? *starting : *catalog.preset(), placements, seed, spawn, enableAi, timings, recovery),
           animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs(), &session.effects());
@@ -60,9 +61,9 @@ struct PlayView {
     }
 };
 } // namespace
-void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
+bool runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                  const std::vector<NpcTimings>& timings, const SceneRenderer& renderer, Presenter& presenter,
-                 const Options& options, const RecoveryLevel& recovery) {
+                 const Options& options, const RecoveryLevel& recovery, const rules::PresetParty* starting) {
     const auto idle = gameplayPlacements(map, placements);
     const Player spawn = options.combatDemo   ? combatCamera(map, idle)
                          : options.hybridDemo ? hybridDemoSpawn()
@@ -73,9 +74,11 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                                    ? 5u
                                    : std::random_device{}();
     std::cout << "Gameplay seed: " << seed << '\n';
+    bool inputArmed = false;
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     for (;;) {
-        PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo, recovery);
+        PlayView view(map, catalog, idle, timings, renderer, seed, spawn, !options.combatDemo, recovery, starting);
+        if (starting) view.commands.enableMainMenu();
         bool debug = false, first = true, restart = false;
         view.refresh();
         if (options.inventoryDemo)
@@ -87,6 +90,11 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
         while (!WindowShouldClose()) {
             const float dt = std::min(GetFrameTime(), 0.1f);
             auto sample = input.poll(dt);
+            if (!inputArmed) {
+                inputArmed = !IsKeyDown(KEY_ENTER) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+                sample.ui.pressed.fill(false);
+                sample.action.reset();
+            }
             if (debug && !view.commands.snapshot().modal() && sample.ui.has(UiKey::Cancel)) {
                 debug = false;
                 sample.ui.pressed[static_cast<std::size_t>(UiKey::Cancel)] = false;
@@ -147,8 +155,10 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
                 routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit,
                               groundHit);
             }
+            if (view.commands.snapshot().menuRequested)
+                return true;
             if (view.commands.snapshot().quitRequested)
-                return;
+                return false;
             changed |= view.refresh(debug, sample.ui.focused);
             presenter.present(view.frames.frame(), view.session.movement(), map, debug, changed || first,
                               &view.commands.snapshot(), view.frames.picking());
@@ -157,6 +167,7 @@ void runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
         if (!restart)
             break;
     }
+    return false;
 }
 void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                    const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,

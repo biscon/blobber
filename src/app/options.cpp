@@ -19,7 +19,10 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--check-prepared")
+        else if (arg == "--capture-menu" && i + 1 < argc) {
+            result.captureMenuOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--check-prepared")
             result.checkPreparedOnly = true;
         else if (arg == "--capture-builds" && i + 1 < argc) {
             result.captureBuildsOnly = true;
@@ -83,6 +86,13 @@ Options parseOptions(int argc, char** argv) {
         else
             throw std::runtime_error("Unknown or incomplete argument: " + arg);
     }
+    if (result.captureMenuOnly &&
+        (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo || result.inventoryDemo ||
+         result.recoveryDemo || result.checkPreparedOnly || result.captureBuildsOnly ||
+         result.captureSpellsOnly || result.captureInventoryOnly || result.captureRecoveryOnly ||
+         result.captureProjectilesOnly || result.captureReactionsOnly || result.captureHudOnly ||
+         result.captureAiOnly || result.captureHybridOnly || result.capturePreparationOnly))
+        throw std::runtime_error("Menu capture must run independently");
     if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) + int(result.hybridDemo) +
                 int(result.inventoryDemo) + int(result.recoveryDemo) >
             1 ||

@@ -64,8 +64,8 @@ constexpr UiRect header{4, 2, 632, 13}, gear{621, 2, 14, 13};
 constexpr UiRect actions{4, 304, 300, 54}, log{308, 304, 328, 54};
 constexpr UiRect logExpand{620, 306, 12, 10}, logLatest{578, 306, 38, 10};
 constexpr UiRect expandedLog{72, 48, 496, 244}, closeOverlay{551, 51, 14, 12};
-constexpr UiRect menu{222, 85, 196, 182}, resume{242, 130, 156, 24}, rest{242, 169, 156, 24},
-    quit{242, 208, 156, 24};
+constexpr UiRect menu{222, 65, 196, 230}, resume{242, 130, 156, 24}, rest{242, 169, 156, 24},
+    quit{242, 247, 156, 24}, mainMenu{242, 208, 156, 24};
 constexpr UiRect viewport{viewX, viewY, viewWidth, viewHeight};
 constexpr UiRect result{102, 118, 304, 91}, resultButton{174, 174, 160, 22};
 constexpr UiRect demoNext{400, 2, 50, 13}, demoReset{453, 2, 56, 13};

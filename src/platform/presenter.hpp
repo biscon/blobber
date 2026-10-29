@@ -13,6 +13,8 @@ class Presenter {
     explicit Presenter(const std::filesystem::path& assets);
     void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed,
                  const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr);
+    void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
+    void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
     // Diagnostic operation: readback and export may allocate; never used during normal play.
     void capture(const std::filesystem::path& path, int width = gameWidth, int height = gameHeight) const;
 
@@ -21,7 +23,8 @@ class Presenter {
     void drawGame(Rectangle destination) const;
     GpuResources resources_;
     TargetHandle game_, ui_;
-    TextureHandle viewport_;
+    TextureHandle viewport_, menuBackground_;
+    std::filesystem::path assetsMenuPath_;
     UiFonts fonts_;
     UiArt uiArt_;
 };

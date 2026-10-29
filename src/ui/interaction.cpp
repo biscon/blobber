@@ -10,6 +10,14 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         return;
     }
     const auto insideCamp = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
+    if (commands.snapshot().leaveConfirmation) {
+        if (input.has(UiKey::Cancel) || input.has(UiKey::Confirm) ||
+            (input.has(UiKey::Click) && insideCamp(hudLayout::resume)))
+            commands.confirmLeave(false);
+        else if (input.has(UiKey::Click) && insideCamp(hudLayout::mainMenu))
+            commands.requestMenu();
+        return;
+    }
     if (commands.snapshot().loot.open) {
         commands.hover(HoverKind::None);
         if (input.has(UiKey::Cancel) ||
@@ -177,9 +185,17 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             if (click && inside(hudLayout::logLatest))
                 commands.latestLog();
         } else if (state.menuOpen) {
-            if (click && (inside(hudLayout::resume) || inside(hudLayout::gear)))
+            if (state.canReturnToMenu && click && inside(hudLayout::mainMenu)) {
+                if (state.leaveConfirmation)
+                    commands.requestMenu();
+                else
+                    commands.confirmLeave(true);
+                return;
+            }
+            if (click && (inside(hudLayout::resume) || inside(hudLayout::gear))) {
+                commands.confirmLeave(false);
                 commands.closeOverlay();
-            else if (click && inside(hudLayout::rest))
+            } else if (click && inside(hudLayout::rest))
                 commands.openCamp();
             else if (click && inside(hudLayout::quit))
                 commands.requestQuit();

@@ -147,7 +147,7 @@ struct HudSnapshot {
     const char* restReason = "Rest unavailable.";
     std::array<char, 192> lootHover{};
     HudHover hover;
-    bool menuOpen = false, quitRequested = false;
+    bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false, canReturnToMenu = false;
     bool modal() const noexcept {
         return loot.open || camp.open || inventory.open || logExpanded || menuOpen || magic.open;
     }
@@ -238,6 +238,9 @@ class CommandController {
     void lootTake(unsigned) noexcept;
     void lootTakeAll() noexcept;
     void refreshRestAvailability() noexcept;
+    void enableMainMenu() noexcept { state_.canReturnToMenu = true; }
+    void requestMenu() noexcept { state_.menuRequested = true; }
+    void confirmLeave(bool value) noexcept { state_.leaveConfirmation = value; }
     void requestQuit() noexcept { state_.quitRequested = true; }
     bool pointerMoved(float x, float y) noexcept {
         const bool moved = !pointerKnown_ || x != pointerX_ || y != pointerY_;

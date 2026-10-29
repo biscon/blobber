@@ -1,4 +1,5 @@
 #include "app/application.hpp"
+#include "app/menu.hpp"
 #include "app/actor_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/archer_captures.hpp"
@@ -28,12 +29,12 @@
 #include <iostream>
 #include <stdexcept>
 namespace blobber {
-int run(int argc, char** argv) {
+int runLegacy(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
+                     "--capture-menu DIRECTORY | --capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
                      "DIRECTORY | --capture-spells "
                      "DIRECTORY | --capture-hybrid DIRECTORY | "
                      "--capture-preparation "
@@ -199,3 +200,12 @@ int run(int argc, char** argv) {
     return 0;
 }
 } // namespace blobber
+
+namespace blobber {
+int run(int argc, char** argv) {
+    const auto o = parseOptions(argc, argv);
+    if (o.captureMenuOnly) return runMenus(o);
+    if (o.help || o.checkPreparedOnly || !o.captureDirectory.empty() || o.uiDemo || o.combatDemo || o.aiDemo || o.hybridDemo || o.inventoryDemo || o.recoveryDemo || o.spellDemo) return runLegacy(argc, argv);
+    return runMenus(o);
+}
+}

@@ -1,3 +1,4 @@
+#include "app/menu_model.hpp"
 #include "assets/image.hpp"
 #include "assets/prepared_assets.hpp"
 #include "assets/prepared_loot.hpp"
@@ -312,7 +313,37 @@ int main() {
         librarySnapshot.count = 128;
         librarySnapshot.records[127].id.text[0] = 'x';
         const auto lookupId = librarySnapshot.records[127].id;
+        MenuModel menuModel;
+        MenuInteraction menuInteraction;
         tracking = true;
+        for (int i = 0; i < 100; ++i) {
+            menuModel.filter(librarySnapshot);
+            menuModel.defaults();
+            menuModel.activeSlot = i % 4;
+            menuModel.assign({});
+            menuModel.confirmDelete(librarySnapshot, librarySnapshot.records[0].id);
+        }
+        menuModel.deletion.reset();
+        menuModel.screen = MenuScreen::Picker;
+        for (int i = 0; i < 100; ++i) {
+            menuModel.defaults();
+            UiInput press;
+            press.pointer = ArtPoint{450, 120};
+            press.pointerHeld = true;
+            press.pressed[std::size_t(UiKey::Click)] = true;
+            menuInteraction.routeDrag(menuModel, librarySnapshot, press);
+            UiInput move;
+            move.pointer = ArtPoint{550, 230};
+            move.pointerHeld = true;
+            menuInteraction.routeDrag(menuModel, librarySnapshot, move);
+            UiInput release;
+            release.pointer = move.pointer;
+            release.pointerReleased = true;
+            menuInteraction.routeDrag(menuModel, librarySnapshot, release);
+            menuInteraction.focusSearch(true);
+            menuInteraction.tick(.6f, true);
+            menuInteraction.edited();
+        }
         for (unsigned iteration = 0; iteration < 128; ++iteration) {
             okay &= bool(rules::previewBuild(creationRules, draft));
             okay &= librarySnapshot.find(lookupId) == &librarySnapshot.records[127];

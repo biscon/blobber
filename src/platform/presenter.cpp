@@ -5,7 +5,8 @@
 #include <stdexcept>
 namespace blobber {
 Presenter::Presenter(const std::filesystem::path& assets)
-    : fonts_(assets / "fonts"), uiArt_(resources_, assets / "ui") {
+    : assetsMenuPath_(assets / "ui/menu-background.png"), fonts_(assets / "fonts"),
+      uiArt_(resources_, assets / "ui") {
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);
@@ -25,6 +26,7 @@ void Presenter::drawGame(Rectangle destination) const {
 }
 void Presenter::present(const Frame& frame, const MovementState& state, const Map& map, bool debug,
                         bool changed, const HudSnapshot* hud, const PickingBuffer* picking) {
+    SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_POINT);
     if (changed)
         UpdateTexture(resources_.texture(viewport_), frame.data());
     BeginTextureMode(resources_.target(game_));
@@ -53,6 +55,37 @@ void Presenter::present(const Frame& frame, const MovementState& state, const Ma
     if (rw > 0 && rh > 0 && !IsWindowMinimized()) {
         const float sx = float(GetScreenWidth()) / rw, sy = float(GetScreenHeight()) / rh;
         drawGame({fit.x * sx, fit.y * sy, fit.width * sx, fit.height * sy});
+    }
+    EndDrawing();
+}
+void Presenter::prepareMenu() {
+    if (!menuBackground_) {
+        OwnedImage background(LoadImage((assetsMenuPath_).string().c_str()));
+        if (!background.value.data)
+            throw std::runtime_error("Missing menu background");
+        menuBackground_ = resources_.createTexture(background.value);
+        SetTextureFilter(resources_.texture(menuBackground_), TEXTURE_FILTER_BILINEAR);
+    }
+}
+void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context) {
+    SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_BILINEAR);
+    BeginTextureMode(resources_.target(game_));
+    ClearBackground({12, 18, 18, 255});
+    const auto& background = resources_.texture(menuBackground_);
+    DrawTexturePro(background, {0, 0, float(background.width), float(background.height)},
+                   {0, 0, float(gameWidth), float(gameHeight)}, {0, 0}, 0, WHITE);
+    draw(context, fonts_, uiArt_);
+    EndTextureMode();
+    BeginTextureMode(resources_.target(ui_));
+    ClearBackground(BLANK);
+    EndTextureMode();
+    BeginDrawing();
+    ClearBackground(BLACK);
+    const int rw = GetRenderWidth(), rh = GetRenderHeight();
+    if (rw > 0 && rh > 0) {
+        const auto fit = aspectFit(rw, rh);
+        drawGame({fit.x * GetScreenWidth() / rw, fit.y * GetScreenHeight() / rh,
+                  fit.width * GetScreenWidth() / rw, fit.height * GetScreenHeight() / rh});
     }
     EndDrawing();
 }

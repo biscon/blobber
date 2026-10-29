@@ -218,13 +218,23 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     }
     if (h->menuOpen) {
         p.overlayBox(hudLayout::menu);
-        p.text("PAUSED", hudLayout::menu.x + 16, hudLayout::menu.y + 15, gold, UiTextStyle::Display);
+        p.text(h->leaveConfirmation ? "Discard current run?" : "PAUSED", hudLayout::menu.x + 16,
+               hudLayout::menu.y + 15, gold, UiTextStyle::Display);
         p.box(hudLayout::resume, gold);
-        p.label("RESUME", hudLayout::resume, gold);
-        p.box(hudLayout::rest, gold);
-        p.label("REST / R", hudLayout::rest, gold);
-        p.box(hudLayout::quit);
-        p.label("QUIT GAME", hudLayout::quit);
+        p.label(h->leaveConfirmation ? "STAY IN DUNGEON" : "RESUME", hudLayout::resume, gold);
+        if (!h->leaveConfirmation) {
+            p.box(hudLayout::rest, gold);
+            p.label("REST / R", hudLayout::rest, gold);
+        } else
+            p.text("Unsaved progress will be lost.", hudLayout::menu.x + 16, hudLayout::menu.y + 45, muted);
+        if(h->canReturnToMenu) {
+            p.box(hudLayout::mainMenu);
+            p.label(h->leaveConfirmation ? "DISCARD RUN" : "MAIN MENU", hudLayout::mainMenu);
+        }
+        if (!h->leaveConfirmation) {
+            p.box(hudLayout::quit);
+            p.label("QUIT GAME", hudLayout::quit);
+        }
     }
     if (h->lootHover[0] && !h->modal()) {
         p.fill({viewX + 3, viewY + viewHeight - 20, viewWidth - 6, 18}, {12, 18, 18, 235});

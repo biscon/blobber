@@ -176,6 +176,22 @@ void overlaysAndAid() {
     routeHudInput(ui, cancel);
     check(!ui.snapshot().modal(), "Escape closes history");
     ui.toggleMenu();
+    ui.enableMainMenu();
+    routeHudInput(ui, click(hudLayout::mainMenu));
+    check(ui.snapshot().leaveConfirmation && !ui.snapshot().menuRequested,
+          "Main menu requires discard confirmation");
+    UiInput keep;
+    keep.pressed[static_cast<std::size_t>(UiKey::Confirm)] = true;
+    routeHudInput(ui, keep);
+    check(!ui.snapshot().leaveConfirmation && !ui.snapshot().menuRequested, "Enter defaults to stay");
+    routeHudInput(ui, click(hudLayout::mainMenu));
+    UiInput restShortcut;
+    restShortcut.pressed[static_cast<std::size_t>(UiKey::Rest)] = true;
+    routeHudInput(ui, restShortcut);
+    check(ui.snapshot().leaveConfirmation && !ui.snapshot().camp.open, "Rest cannot bypass discard modal");
+    routeHudInput(ui, click(hudLayout::quit));
+    check(!ui.snapshot().quitRequested, "Discard confirmation captures underlying quit");
+    routeHudInput(ui, keep);
     routeHudInput(ui, click(hudLayout::quit));
     check(ui.snapshot().quitRequested, "Quit requires explicit menu action");
 }
