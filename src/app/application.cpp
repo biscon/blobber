@@ -34,7 +34,7 @@ int runLegacy(int argc, char** argv) {
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-creator DIRECTORY | --capture-menu DIRECTORY | --capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
+                     "--capture-arena DIRECTORY | --capture-creator DIRECTORY | --capture-menu DIRECTORY | --capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
                      "DIRECTORY | --capture-spells "
                      "DIRECTORY | --capture-hybrid DIRECTORY | "
                      "--capture-preparation "

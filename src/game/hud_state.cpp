@@ -145,7 +145,7 @@ void CommandController::closeOverlay() noexcept {
                                                                           : hudLayout::logColumns);
     state_.logExpanded = false;
     state_.menuOpen = false;
-    state_.leaveConfirmation = false;
+    state_.leaveConfirmation = state_.retryConfirmation = false;
     updateAvailability();
 }
 void CommandController::hover(HoverKind kind, int index, std::optional<ActorId> enemy, float x,

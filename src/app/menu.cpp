@@ -49,6 +49,7 @@ int runMenus(const Options& options) {
         };
     CharacterLibrary library(catalog, characterLibraryPath(libraryPath), hooks);
     MenuView v{catalog, library};
+    ArenaScenarioStore scenarioStore(catalog, characterLibraryPath(libraryPath).parent_path() / "scenarios");
     auto reload = [&] {
         const auto r = library.initialize();
         v.usable = bool(r);
@@ -56,6 +57,10 @@ int runMenus(const Options& options) {
         v.model.filter(library.snapshot());
     };
     reload();
+    if (options.captureArenaOnly) {
+        captureArena(v, presenter, options, scenarioStore);
+        return 0;
+    }
     if (options.captureCreatorOnly) {
         captureCreator(v, presenter, options);
         return 0;
@@ -139,6 +144,7 @@ int runMenus(const Options& options) {
         auto& m = v.model;
         v.interaction.tick(GetFrameTime(), sample.ui.focused);
         if (!sample.ui.focused) {
+            v.arena.blur();
             v.creation.model.nameEdit.tick(0, false);
             v.creation.model.searchEdit.tick(0, false);
             continue;
@@ -171,7 +177,20 @@ int runMenus(const Options& options) {
             }
             continue;
         }
-        if (v.interaction.searchFocused && !m.deletion) {
+        const bool arenaScreen = m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios;
+        if (arenaScreen) {
+            auto& a = v.arena;
+            const auto text = pollTextInput();
+            a.nameEdit.tick(GetFrameTime(), sample.ui.focused);
+            a.seedEdit.tick(GetFrameTime(), sample.ui.focused);
+            a.searchEdit.tick(GetFrameTime(), sample.ui.focused);
+            a.nameEdit.edit(a.scenario.name, text);
+            a.seedEdit.edit(a.seedText, text);
+            if (a.searchEdit.edit(a.search, text)) {
+                a.first = 0;
+                a.filter(catalog);
+            }
+        } else if (v.interaction.searchFocused && !m.deletion) {
             for (int ch = GetCharPressed(); ch; ch = GetCharPressed()) {
                 auto n = std::strlen(m.search.data());
                 if (ch >= 32 && ch < 127 && n < 64) {
@@ -191,9 +210,12 @@ int runMenus(const Options& options) {
         } else
             while (GetCharPressed()) {
             }
-        if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Down) || sample.ui.has(UiKey::Right))
+        const bool arenaEditing = arenaScreen && (v.arena.nameEdit.focused || v.arena.searchEdit.focused ||
+                                                  v.arena.seedEdit.focused);
+        if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Down) ||
+            (!arenaEditing && sample.ui.has(UiKey::Right)))
             v.focus = (v.focus + (sample.ui.shift ? std::max(1, v.count) - 1 : 1)) % std::max(1, v.count);
-        if (sample.ui.has(UiKey::Up) || sample.ui.has(UiKey::Left))
+        if (sample.ui.has(UiKey::Up) || (!arenaEditing && sample.ui.has(UiKey::Left)))
             v.focus = (v.focus + std::max(1, v.count) - 1) % std::max(1, v.count);
         if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Up) || sample.ui.has(UiKey::Down) ||
             sample.ui.has(UiKey::Left) || sample.ui.has(UiKey::Right))
@@ -212,16 +234,33 @@ int runMenus(const Options& options) {
                     break;
                 }
         if (IsKeyPressed(KEY_ESCAPE))
-            action = m.deletion ? 40 : 4;
-        if (!m.deletion && sample.ui.scroll)
+            action = v.arena.pendingLoad >= 0            ? 4501
+                     : m.deletion                        ? 40
+                     : m.screen == MenuScreen::Scenarios ? 4010
+                                                         : 4;
+        if (!arenaScreen && !m.deletion && sample.ui.scroll)
             action = m.screen == MenuScreen::Detail ? (sample.ui.scroll > 0 ? 33 : 34)
                                                     : (sample.ui.scroll > 0 ? 31 : 32);
-        if (!m.deletion && (sample.ui.has(UiKey::PreviousPage) || sample.ui.has(UiKey::NextPage))) {
+        if (!arenaScreen && !m.deletion &&
+            (sample.ui.has(UiKey::PreviousPage) || sample.ui.has(UiKey::NextPage))) {
             const bool previous = sample.ui.has(UiKey::PreviousPage);
             action = m.screen == MenuScreen::Detail ? (previous ? 33 : 34) : (previous ? 31 : 32);
         }
+        if (arenaScreen && v.arena.pendingLoad < 0 && sample.ui.scroll)
+            action = m.screen == MenuScreen::Scenarios ? (sample.ui.scroll > 0 ? 4014 : 4015)
+                                                       : (sample.ui.scroll > 0 ? 4007 : 4008);
         if (!action)
             continue;
+        if (arenaScreen)
+            v.arena.blur();
+        if (action >= 4000) {
+            if (!arenaAction(v, action, options, scenarioStore, presenter))
+                return 0;
+            if (action < 4011 || action > 4013)
+                v.focus = 0;
+            suppress = true;
+            continue;
+        }
         if (action != 5)
             v.interaction.focusSearch(false);
         if (action == 50 && v.usable && library.snapshot().count < LibrarySnapshot::capacity) {
@@ -233,14 +272,20 @@ int runMenus(const Options& options) {
             m.search = {};
             m.filterClass = m.filterRace = false;
             m.filter(library.snapshot());
-        } else if (action == 1)
+        } else if (action == 1) {
+            m.arenaPicker = false;
             m.screen = MenuScreen::Picker;
-        else if (action == 2)
+        } else if (action == 2)
             m.screen = MenuScreen::Library;
         else if (action == 3)
             return 0;
         else if (action == 4) {
-            m.screen = m.screen == MenuScreen::Detail ? v.detailCaller : MenuScreen::Main;
+            if (m.screen == MenuScreen::Picker && m.arenaPicker) {
+                m.arenaPicker = false;
+                m.choices = v.dungeonChoices;
+                m.screen = MenuScreen::Arena;
+            } else
+                m.screen = m.screen == MenuScreen::Detail ? v.detailCaller : MenuScreen::Main;
         } else if (action == 5)
             v.interaction.focusSearch(true);
         else if (action == 6) {
@@ -303,7 +348,7 @@ int runMenus(const Options& options) {
             try {
                 bool saved = false;
                 for (const auto& c : m.choices)
-                    saved |= c.preset < 0;
+                    saved |= c.preset < 0 && c.snapshot < 0;
                 if (saved) {
                     const auto before = library.snapshot().revision;
                     const auto r = library.load();
@@ -315,6 +360,21 @@ int runMenus(const Options& options) {
                     }
                 }
                 auto starting = m.resolve(catalog, library.snapshot());
+                if (m.arenaPicker) {
+                    for (unsigned i = 0; i < 4; ++i) {
+                        auto& member = v.arena.scenario.party[i];
+                        rules::draftFromBuild(catalog, starting.characters[i], member.draft);
+                        std::snprintf(member.id.data(), member.id.size(), "%s",
+                                      starting.characters[i].id.c_str());
+                    }
+                    m.arenaPicker = false;
+                    m.choices = v.dungeonChoices;
+                    m.screen = MenuScreen::Arena;
+                    v.message("");
+                    v.focus = 0;
+                    suppress = true;
+                    continue;
+                }
                 m.screen = MenuScreen::Loading;
                 presenter.presentMenu(drawMenu, &v);
                 if (!launchMenuParty(options, catalog, starting, presenter))

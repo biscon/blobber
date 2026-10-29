@@ -22,6 +22,46 @@ bool contains(const char* name, const char* query) noexcept {
     return false;
 }
 } // namespace
+const rules::CharacterDraft* MenuModel::draft(const rules::Catalog& c, const LibrarySnapshot& library,
+                                              PartyChoice choice,
+                                              rules::CharacterDraft& scratch) const noexcept {
+    if (choice.snapshot >= 0 && choice.snapshot < 4)
+        return &snapshots[choice.snapshot].draft;
+    if (choice.preset >= 0 && choice.preset < 4 && c.preset()) {
+        if (rules::draftFromBuild(c, c.preset()->characters[choice.preset], scratch))
+            return &scratch;
+    } else if (const auto* r = library.find(choice.saved))
+        return &r->draft;
+    return nullptr;
+}
+bool MenuModel::sameChoice(PartyChoice a, PartyChoice b) const noexcept {
+    if (a == b)
+        return true;
+    if (a.snapshot >= 0 && a.snapshot < 4) {
+        const char* id = snapshots[a.snapshot].id.data();
+        if (b.snapshot >= 0 && b.snapshot < 4)
+            return !std::strcmp(id, snapshots[b.snapshot].id.data());
+        if (b.preset >= 0)
+            return snapshotPresets[a.snapshot] == b.preset;
+        return b.saved.text[0] && !std::strcmp(id, b.saved.text.data());
+    }
+    if (b.snapshot >= 0 && b.snapshot < 4)
+        return sameChoice(b, a);
+    return false;
+}
+void MenuModel::beginArenaPicker(const ArenaScenario& arena, const rules::Catalog& catalog) {
+    snapshots = arena.party;
+    snapshotPresets.fill(-1);
+    if (catalog.preset())
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+                if (catalog.preset()->characters[j].id == snapshots[i].id.data())
+                    snapshotPresets[i] = j;
+    for (int i = 0; i < 4; ++i)
+        choices[i] = {{}, -1, i};
+    arenaPicker = true;
+    screen = MenuScreen::Picker;
+}
 void MenuModel::filter(const LibrarySnapshot& library) noexcept {
     visibleCount = 0;
     for (std::size_t i = 0; i < library.count; ++i) {
@@ -39,7 +79,7 @@ void MenuModel::assign(PartyChoice choice) noexcept {
         return;
     if (!choice.empty())
         for (std::size_t i = 0; i < choices.size(); ++i)
-            if (choices[i] == choice) {
+            if (sameChoice(choices[i], choice)) {
                 std::swap(choices[i], choices[activeSlot]);
                 return;
             }
@@ -52,10 +92,11 @@ void MenuModel::defaults() noexcept {
 bool MenuModel::ready(const LibrarySnapshot& library) const noexcept {
     for (std::size_t i = 0; i < choices.size(); ++i) {
         const auto& c = choices[i];
-        if (c.empty() || c.preset >= 4 || (c.preset < 0 && !library.find(c.saved)))
+        if (c.empty() || c.preset >= 4 || (c.snapshot >= 4) ||
+            (c.snapshot < 0 && c.preset < 0 && !library.find(c.saved)))
             return false;
         for (std::size_t j = 0; j < i; ++j)
-            if (choices[j] == c)
+            if (sameChoice(choices[j], c))
                 return false;
     }
     return true;
@@ -72,7 +113,10 @@ rules::PresetParty MenuModel::resolve(const rules::Catalog& catalog, const Libra
     rules::PresetParty result;
     for (std::size_t i = 0; i < choices.size(); ++i) {
         const auto& c = choices[i];
-        if (c.preset >= 0) {
+        if (c.snapshot >= 0) {
+            const auto& member = snapshots[c.snapshot];
+            result.characters[i] = rules::finishBuild(catalog, member.draft, member.id.data());
+        } else if (c.preset >= 0) {
             if (!catalog.preset())
                 throw std::invalid_argument("Default party unavailable");
             result.characters[i] = catalog.preset()->characters[static_cast<std::size_t>(c.preset)];
@@ -83,6 +127,9 @@ rules::PresetParty MenuModel::resolve(const rules::Catalog& catalog, const Libra
             const auto& record = *library.find(c.saved);
             result.characters[i] = rules::finishBuild(catalog, record.draft, record.id.text.data());
         }
+        for (std::size_t j = 0; j < i; ++j)
+            if (result.characters[i].id == result.characters[j].id)
+                throw std::invalid_argument("Choose four distinct characters");
         result.formation[i] = rules::CharacterId{static_cast<std::uint16_t>(i)};
     }
     return result;
@@ -137,7 +184,8 @@ bool MenuInteraction::routeDrag(MenuModel& m, const LibrarySnapshot& library, co
         dragging = true;
     target = dragging && input.pointer ? menuLayout::dropSlot(pointer) : -1;
     if (input.pointerReleased) {
-        if (dragging && target >= 0 && (carried.preset >= 0 || library.find(carried.saved))) {
+        if (dragging && target >= 0 &&
+            (carried.snapshot >= 0 || carried.preset >= 0 || library.find(carried.saved))) {
             m.activeSlot = std::size_t(target);
             m.assign(carried);
             if (carried.preset < 0)

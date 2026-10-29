@@ -1,13 +1,21 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-29): [slice 12.5 arena](arena_design.md).
+Main-menu setup, independent party/scenario snapshots, bounded portable file storage,
+generated safe-spawn room and Rematch/Edit Setup reuse normal gameplay and prepared
+rendering. [Verification and handoff](slice125_verification.md): Debug/Release 38/38,
+focused ASan/UBSan 5/5, zero tracked frame allocations, capacity stress, hidden GPU
+checks and 54 captures. The user accepted slice 12.5 on 2026-10-29. Level advancement
+and creature footprints remain deferred; slice 13 is next eligible for separate
+planning and remains unstarted.
+
 Implemented, **accepted and closed** (2026-10-29): [slice 12.4 creator and reusable selection](character_creator_design.md).
 Fixed drafts and shared choice panels integrate creation, checked library saving
 and atomic Long Rest preparation. A bounded 16 MiB detail-art atlas reuses existing
 masters. [Verification and handoff](slice124_verification.md): Debug/Release 37/37,
 focused ASan/UBSan 4/4 with leak detection, zero tracked frame allocations, hidden
 GPU checks and 187 captures. The user accepted slice 12.4 on 2026-10-29 and retained
-the current 27-point buy, 8–15 base scores and fixed racial bonuses. Slice 13 is
-next eligible for separate planning and remains unstarted.
+the current 27-point buy, 8–15 base scores and fixed racial bonuses. Arena slice 12.5 now precedes slice 13; slice 13 remains unstarted.
 
 Implemented, **accepted and closed** (2026-10-29): [slice 12.3 menu and launch](menu_launch_design.md).
 Normal startup loads catalog/library/UI only. Bounded library browsing, read-only
@@ -64,7 +72,7 @@ contracts. Detailed subsystem designs are written in each later planning pass.
 The data foundation is implemented in 12.2; menu/library/party launch is implemented
 in accepted slice 12.3. The creator is implemented and accepted in slice 12.4.
 Slices 12.1 and 12.2 are accepted and closed.
-The 12.4 prerequisite for slice 13 is satisfied; slice 13 remains unstarted. Earlier checkpoint history remains below.
+The creator prerequisite is satisfied; arena slice 12.5 now precedes slice 13, which remains unstarted. Earlier checkpoint history remains below.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
 Drop into the current cell, automatic Take All closure, and a small generated Rest

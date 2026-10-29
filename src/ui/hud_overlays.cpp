@@ -199,16 +199,28 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     if (combat.phase == CombatPhase::Victory || combat.phase == CombatPhase::Defeat) {
         p.overlayBox(hudLayout::result);
         const auto r = hudLayout::result;
-        p.text(combat.phase == CombatPhase::Victory ? "VICTORY" : "DEFEAT", r.x + 14, r.y + 12, gold,
-               UiTextStyle::Display);
-        p.text(combat.phase == CombatPhase::Victory ? "Surviving allies are stable." : "Nobody is conscious.",
+        const bool arenaVictory = h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory;
+        p.text(combat.phase == CombatPhase::Victory ? (arenaVictory ? "ARENA CLEARED" : "VICTORY") : "DEFEAT",
+               r.x + 14, r.y + 12, gold, UiTextStyle::Display);
+        p.text(arenaVictory                           ? "All selected monsters are defeated."
+               : combat.phase == CombatPhase::Victory ? "Surviving allies are stable."
+                                                      : "Nobody is conscious.",
                r.x + 14, r.y + 30);
-        p.text(combat.phase == CombatPhase::Victory ? "HP is not restored."
-                                                    : "Restart begins a fresh session.",
+        p.text(h->arena && (arenaVictory || combat.phase == CombatPhase::Defeat)
+                   ? "Rematch restores your starting setup."
+               : combat.phase == CombatPhase::Victory ? "HP is not restored."
+                                                      : "Restart begins a fresh session.",
                r.x + 14, r.y + 42, muted);
-        p.box(hudLayout::resultButton, gold);
-        p.label(combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER" : "RESTART / ENTER",
-                hudLayout::resultButton, gold);
+        if (h->arena && (h->arenaComplete || combat.phase == CombatPhase::Defeat)) {
+            p.box(hudLayout::arenaRematch, gold);
+            p.label("REMATCH / ENTER", hudLayout::arenaRematch, gold);
+            p.box(hudLayout::arenaEdit, gold);
+            p.label("EDIT SETUP", hudLayout::arenaEdit, gold);
+        } else {
+            p.box(hudLayout::resultButton, gold);
+            p.label(combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER" : "RESTART / ENTER",
+                    hudLayout::resultButton, gold);
+        }
     }
     if (h->modal() && !h->magic.open && !h->camp.open && !h->loot.open)
         p.fill({0, 16, 640, 344}, {0, 0, 0, 110});
@@ -224,12 +236,14 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.label(h->leaveConfirmation ? "STAY IN DUNGEON" : "RESUME", hudLayout::resume, gold);
         if (!h->leaveConfirmation) {
             p.box(hudLayout::rest, gold);
-            p.label("REST / R", hudLayout::rest, gold);
+            p.label(h->arena ? "REMATCH" : "REST / R", hudLayout::rest, gold);
         } else
             p.text("Unsaved progress will be lost.", hudLayout::menu.x + 16, hudLayout::menu.y + 45, muted);
-        if(h->canReturnToMenu) {
+        if (h->canReturnToMenu) {
             p.box(hudLayout::mainMenu);
-            p.label(h->leaveConfirmation ? "DISCARD RUN" : "MAIN MENU", hudLayout::mainMenu);
+            p.label(h->leaveConfirmation ? (h->retryConfirmation ? "RESTART ARENA" : "DISCARD RUN")
+                                         : (h->arena ? "EDIT SETUP" : "MAIN MENU"),
+                    hudLayout::mainMenu);
         }
         if (!h->leaveConfirmation) {
             p.box(hudLayout::quit);

@@ -160,11 +160,13 @@ void loadAnimations(const Json& definition, const std::filesystem::path& parent,
         }
     }
 }
-LoadedNpcs loadNpcsImpl(const std::filesystem::path& file, const Map& map, Cell spawn, bool decode) {
+LoadedNpcs loadNpcsImpl(const std::filesystem::path& file, const Map& map, Cell spawn, bool decode,
+                        bool includePlacements = true) {
     try {
         const Json level = readJson(file);
         const auto& files = level.at("definitions");
-        const auto& placements = level.at("instances");
+        const Json noPlacements = Json::array();
+        const auto& placements = includePlacements ? level.at("instances") : noPlacements;
         if (!files.is_array() || files.size() > NpcWorld::maxTypes || !placements.is_array() ||
             placements.size() > NpcWorld::maxInstances)
             throw std::runtime_error("NPC definitions/instances must be arrays within capacity");
@@ -275,6 +277,19 @@ LoadedNpcs loadNpcsImpl(const std::filesystem::path& file, const Map& map, Cell 
     }
 }
 } // namespace
+NpcDefinitions loadNpcDefinitions(const std::filesystem::path& file) {
+    const Map placeholder({"###", "#.#", "###"});
+    auto parsed = loadNpcsImpl(file, placeholder, {1, 1}, false, false);
+    NpcDefinitions out;
+    out.definitionFingerprint = parsed.definitionFingerprint;
+    for (std::size_t i = 0; i < parsed.world.typeCount(); ++i)
+        out.types.push_back(parsed.world.typeId({std::uint16_t(i)}));
+    for (const auto& appearance : parsed.appearances) {
+        out.timings.push_back(npcTimings(appearance));
+        out.attachments.push_back(appearance.attachments);
+    }
+    return out;
+}
 LoadedNpcs loadNpcs(const std::filesystem::path& file, const Map& map, Cell spawn) {
     return loadNpcsImpl(file, map, spawn, true);
 }

@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slice 12.3 was accepted and closed on 2026-10-29, including the formation dragging and search-caret corrections. Slice 12.4 was accepted and closed on 2026-10-29; slice 13 is next eligible for planning and remains Planned/unstarted.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slice 12.3 was accepted and closed on 2026-10-29, including the formation dragging and search-caret corrections. Slice 12.4 was accepted and closed on 2026-10-29. The user approved arena slice 12.5 before slice 13; 12.5 was accepted and closed on 2026-10-29. Slice 13 is next eligible for separate planning and remains Planned/unstarted.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,13 +8,13 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 12.4 — Complete creator and reusable selection flow (2026-10-29) |
+| Latest accepted slice | 12.5 — Arena (2026-10-29) |
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
 | Next eligible slice | 13 — Levels 2 and 3 (Planned; unstarted) |
-| Next action | Plan slice 13 separately when requested; read the [12.4 closeout](slice124_verification.md#accepted-closeout-and-next-agent-handoff) first |
-| Accepted design | Character creator/menu visual flow and expanded spell catalog, 2026-10-28; Color Spray replaces the illustrative Ray of Sickness |
+| Next action | Plan slice 13 separately when requested; read the [12.5 accepted closeout](slice125_verification.md#accepted-closeout-and-next-agent-handoff) first |
+| Accepted design | Arena implementation plan, 2026-10-29; existing creator/menu and spell contracts retained |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -333,7 +333,8 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 12.2 | [Character builds, library storage and portraits](#slice-122-character-builds-library-storage-and-portraits) | 12.1 | Accepted | C interlude |
 | 12.3 | [Main menu, character library and party launch](#slice-123-main-menu-character-library-and-party-launch) | 12.2 | Accepted | C interlude |
 | 12.4 | [Complete creator and reusable selection flow](#slice-124-complete-creator-and-reusable-selection-flow) | 12.3 | Accepted | C interlude |
-| 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.4 | Planned | C |
+| 12.5 | [Arena](arena_design.md) | 12.4 | Accepted | C interlude |
+| 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.5 | Planned | C |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
 | 16 | [Demo integration](#slice-16-demo-integration) | 15 | Planned | D |
@@ -1722,8 +1723,9 @@ and Long Rest preparation. After discussing BG3, the user chose to keep the curr
 assignable-bonus or higher starting-score house rule is authorized. Recorded automated
 verification and limitations remain as documented.
 
-**Next-agent handoff:** Slice 12.4 is accepted and closed. Slice 13 is next eligible
-for separate planning and remains Planned/unstarted. Read the
+**Historical handoff at 12.4 closeout:** Slice 12.4 is accepted and closed. Slice 13
+was next eligible; arena slice 12.5 has since been inserted, implemented and accepted. Slice 13
+remains Planned/unstarted. Read the
 [accepted closeout](slice124_verification.md#accepted-closeout-and-next-agent-handoff)
 and relevant code before proposing its plan. This documentation closeout does not
 start slice 13.
@@ -1731,8 +1733,8 @@ start slice 13.
 
 ### Slice 13: Levels 2 and 3
 
-**Prerequisite:** Slice 12.4 accepted; all 12.x spells, custom builds and creator
-contracts are implemented and accepted.
+**Prerequisite:** Slice 12.5 arena accepted, following accepted 12.4; all 12.x
+spells, custom builds and creator contracts are implemented and accepted.
 
 **Deliver:** XP awards, normal advancement for presets and custom characters,
 supported class/subclass choices, resources, higher features and curated
@@ -1934,3 +1936,26 @@ between accepted 08 and Planned 09, with clean-context planning and implementati
 for each. Their scope and shared decisions are recorded above. Dependency chain
 is 08 → 8.1 → 8.2 → 8.3 → 09; milestone B stays Accepted. The graphical
 interlude has not started, and no detailed implementation plan is yet approved.
+
+## Arena insertion decision (2026-10-29)
+
+The user chose arena before progression, level one initially, defaults plus saved
+characters, portable scenario files, and Rematch/Edit Setup. Creature-size footprints
+are explicitly deferred. This approved insertion changes slice 13’s prerequisite to
+12.5 without changing the content of the level 2–3 slice.
+
+## Slice 12.5 execution record
+
+Approved for implementation: arena before levels 2–3, default/saved level-one party,
+portable scenario files, generated room, Rematch/Edit Setup. Design and validation
+strategy: [arena](arena_design.md). Creature-size footprints explicitly deferred.
+User: “Implement the plan.” Status: **Accepted and closed**, 2026-10-29.
+
+Delivered the approved [design](arena_design.md): main-menu setup, default/saved
+party snapshots, monster quantities, seed, versioned portable scenarios, generated
+room, normal gameplay and Rematch/Edit Setup. [Verification/handoff](slice125_verification.md):
+Debug/Release 38/38, ASan/UBSan 5/5 with leak detection, zero tracked frame allocations,
+256-actor stress, hidden GPU checks and 54 captures. The user accepted the slice on
+2026-10-29: “slice accepted, record it in the doc”. Verification results and their
+limitations remain unchanged. Slice 13 is next eligible for separate planning and
+remains Planned/unstarted; this acceptance does not start it.

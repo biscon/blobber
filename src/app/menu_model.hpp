@@ -1,15 +1,17 @@
 #pragma once
+#include "game/arena.hpp"
 #include "input/ui_input.hpp"
 #include "persistence/character_library.hpp"
 #include <optional>
 namespace blobber {
-enum class MenuScreen { Main, Library, Detail, Picker, Loading };
+enum class MenuScreen { Main, Library, Detail, Picker, Loading, Arena, Scenarios };
 struct PartyChoice {
     SavedCharacterId saved{};
     int preset = -1;
-    bool empty() const noexcept { return preset < 0 && !saved.text[0]; }
+    int snapshot = -1;
+    bool empty() const noexcept { return preset < 0 && snapshot < 0 && !saved.text[0]; }
     friend bool operator==(const PartyChoice& a, const PartyChoice& b) noexcept {
-        return a.preset == b.preset && a.saved == b.saved;
+        return a.preset == b.preset && a.saved == b.saved && a.snapshot == b.snapshot;
     }
 };
 // Fixed menu state; filesystem operations belong to the application transition owner.
@@ -23,6 +25,13 @@ struct MenuModel {
     std::size_t visibleCount = 0, firstRow = 0;
     SavedCharacterId selected{};
     std::array<PartyChoice, 4> choices{};
+    std::array<StartingSnapshot, 4> snapshots{};
+    bool arenaPicker = false;
+    const rules::CharacterDraft* draft(const rules::Catalog&, const LibrarySnapshot&, PartyChoice,
+                                       rules::CharacterDraft& scratch) const noexcept;
+    std::array<int, 4> snapshotPresets{{-1, -1, -1, -1}};
+    bool sameChoice(PartyChoice, PartyChoice) const noexcept;
+    void beginArenaPicker(const ArenaScenario&, const rules::Catalog&);
     std::size_t activeSlot = 0;
     std::optional<SavedCharacter> deletion;
     std::uint64_t deletionRevision = 0;

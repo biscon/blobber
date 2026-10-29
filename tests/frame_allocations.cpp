@@ -1,3 +1,4 @@
+#include "app/arena_setup.hpp"
 #include "app/menu_model.hpp"
 #include "assets/image.hpp"
 #include "assets/prepared_assets.hpp"
@@ -319,8 +320,27 @@ int main() {
         CreatorModel creatorModel;
         FlowControls creatorControls;
         creatorModel.begin(creationRules);
+        auto arenaSetup = std::make_unique<ArenaSetup>();
+        arenaSetup->scenario = defaultArena(creationRules);
+        arenaSetup->scenario.adjust({0}, 1);
+        arenaSetup->available.fill(true);
+        arenaSetup->syncSeed();
+        const auto generatedArena = arenaMap();
+        const auto arenaNpcs = arenaPlacements(generatedArena, creationRules, arenaSetup->scenario,
+                                               {creationRules.monster({0})->id});
+        const auto arenaBuilds = arenaParty(creationRules, arenaSetup->scenario);
+        auto arenaSession = std::make_unique<GameSession>(generatedArena, creationRules, arenaBuilds,
+                                                          arenaNpcs, 5, arenaSpawn(), true);
         tracking = true;
         for (int i = 0; i < 100; ++i) {
+            arenaSetup->filter(creationRules);
+            arenaSetup->error(creationRules);
+            arenaSetup->scenario.adjust({0}, 1);
+            arenaSetup->scenario.adjust({0}, -1);
+            arenaSession->update(.1, false);
+            menuModel.beginArenaPicker(arenaSetup->scenario, creationRules);
+            menuModel.activeSlot = unsigned(i) % 4;
+            menuModel.assign(menuModel.choices[0]);
             menuModel.filter(librarySnapshot);
             menuModel.defaults();
             menuModel.activeSlot = i % 4;

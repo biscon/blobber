@@ -1,4 +1,5 @@
 #include "game/commands.hpp"
+#include "game/arena.hpp"
 #include "game/perception.hpp"
 #include "ui/layout.hpp"
 #include <algorithm>
@@ -272,7 +273,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     if (line[0])
         appendLog(line);
     if (out.phase == CombatPhase::Victory)
-        appendLog("Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
+        appendLog(
+            state_.arena && arenaCleared(actors_.snapshot())
+                ? "Arena cleared. Rematch restores the starting setup; Edit Setup changes the scenario."
+                : "Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
     if (out.phase == CombatPhase::Defeat)
         appendLog("Defeat: nobody is conscious. Restart begins a fresh session.");
 }

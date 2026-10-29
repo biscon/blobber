@@ -16,10 +16,13 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
     p.border({8, 8, 624, 344}, hudInk::edge);
     if (m.screen == MenuScreen::Main) {
         p.centered("B L O B B E R", {180, 60, 280, 50}, hudInk::gold, UiTextStyle::Control);
-        v.button(p, {210, 145, 220, 32}, "Start new game", 1);
-        v.button(p, {210, 194, 220, 32}, "Character Creator", 2);
-        v.button(p, {210, 243, 220, 32}, "Quit", 3);
+        v.button(p, {210, 133, 220, 30}, "Start new game", 1);
+        v.button(p, {210, 176, 220, 30}, "Arena", 4000);
+        v.button(p, {210, 219, 220, 30}, "Character Creator", 2);
+        v.button(p, {210, 262, 220, 30}, "Quit", 3);
         p.text("Arrows / Tab: navigate     Enter: select", 220, 310, hudInk::muted);
+    } else if (m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios) {
+        drawArena(v, p, art);
     } else if (m.screen == MenuScreen::Loading) {
         p.text("Preparing your adventure...", 210, 170, hudInk::gold, UiTextStyle::Control);
     } else if (m.screen == MenuScreen::Detail) {
@@ -92,11 +95,7 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
                 const auto& c = m.choices[i];
                 const rules::CharacterDraft* d = nullptr;
                 rules::CharacterDraft preset;
-                if (c.preset >= 0 && v.catalog.preset()) {
-                    rules::draftFromBuild(v.catalog, v.catalog.preset()->characters[c.preset], preset);
-                    d = &preset;
-                } else if (const auto* r = v.library.snapshot().find(c.saved))
-                    d = &r->draft;
+                d = m.draft(v.catalog, v.library.snapshot(), c, preset);
                 const int x = 415 + (i % 2) * 103, y = 80 + (i / 2) * 108;
                 const auto rect = menuLayout::formation(i);
                 p.box(rect,
@@ -116,7 +115,9 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
             }
             v.button(p, {180, 325, 120, 22}, "Use default party", 9);
             v.button(p, {470, 325, 150, 22},
-                     m.ready(v.library.snapshot()) ? "Enter dungeon" : "Choose four characters", 30);
+                     m.ready(v.library.snapshot()) ? (m.arenaPicker ? "Use party" : "Enter dungeon")
+                                                   : "Choose four characters",
+                     30);
         }
         if (v.usable && v.library.snapshot().count < LibrarySnapshot::capacity)
             v.button(p, {picker ? 310 : 470, 325, 150, 22}, "New character", 50);
@@ -135,11 +136,7 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
         const auto& choice = v.interaction.carried;
         rules::CharacterDraft preset;
         const rules::CharacterDraft* draft = nullptr;
-        if (choice.preset >= 0 && v.catalog.preset()) {
-            rules::draftFromBuild(v.catalog, v.catalog.preset()->characters[choice.preset], preset);
-            draft = &preset;
-        } else if (const auto* saved = v.library.snapshot().find(choice.saved))
-            draft = &saved->draft;
+        draft = m.draft(v.catalog, v.library.snapshot(), choice, preset);
         if (draft) {
             const int x = std::clamp(int(v.interaction.pointer.x) + 8, 0, 566),
                       y = std::clamp(int(v.interaction.pointer.y) - 20, 0, 274);

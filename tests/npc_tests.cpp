@@ -121,6 +121,16 @@ void testLoading() {
     check(metadata.attachments[0].release[2].x == .1f &&
               metadata.definitionFingerprint != loaded.definitionFingerprint,
           "Source-free directional attachments are fingerprinted");
+    auto definitionsOnly = level;
+    definitionsOnly["instances"] = "not a placement array";
+    write(directory / "level.json", definitionsOnly);
+    const auto catalogOnly = loadNpcDefinitions(directory / "level.json");
+    check(catalogOnly.types.size() == 1 && catalogOnly.types[0] == "test" &&
+              catalogOnly.definitionFingerprint == metadata.definitionFingerprint,
+          "Arena definitions ignore authored placements while preserving bank identity");
+    rejects([&] { loadNpcMetadata(directory / "level.json", map, {1, 1}); },
+            "Dungeon still validates placements");
+    write(directory / "level.json", level);
     for (const Json& badPoint :
          {Json::array({-1, 0}), Json::array({2, 0}), Json::array({0}), Json::array({"x", 0})}) {
         auto bad = attached;

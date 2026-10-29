@@ -1,5 +1,6 @@
 #include "persistence/library_codec.hpp"
 #include "assets/rules_json.hpp"
+#include "persistence/starting_codec.hpp"
 #include <set>
 
 namespace blobber {
@@ -48,35 +49,91 @@ Json gear(const Catalog& c, const CharacterBuild& b) {
               {"ranged", slot(b.equipment.ranged)}}}};
 }
 } // namespace
+Json encodeStartingDraft(const Catalog& c, const CharacterDraft& d, const std::string& id) {
+    const auto b = finishBuild(c, d, id);
+    const auto& s = d.spells;
+    const auto* options = c.creation(d.characterClass);
+    Json choices = Json::array();
+    for (std::size_t g = 0; g < options->groupCount; ++g)
+        choices.push_back(options->groups[g].options[d.gear[g]].id);
+    return {{"id", id},
+            {"name", d.name.data()},
+            {"race", c.race(d.race)->id},
+            {"class", c.characterClass(d.characterClass)->id},
+            {"portrait", portrait(d.portrait)->id},
+            {"abilities", d.abilities},
+            {"level", 1},
+            {"defense", d.defense},
+            {"life_domain", d.lifeDomain},
+            {"spells",
+             {{"cantrips", spells(c, s.cantrips)},
+              {"learned", spells(c, s.learned)},
+              {"prepared", spells(c, s.prepared)},
+              {"domain", spells(c, s.domain)},
+              {"racial", spells(c, s.racial)}}},
+            {"choices", choices},
+            {"gear", gear(c, b)}};
+}
+CharacterDraft decodeStartingDraft(const Catalog& c, const Json& j) {
+    fields(j, "character",
+           {"id", "name", "race", "class", "portrait", "abilities", "level", "defense", "life_domain",
+            "spells", "choices", "gear"});
+    const auto id = string(j.at("id"), "id");
+    if (id.empty() || id.size() > 128)
+        fail("id", "invalid character identity");
+    CharacterDraft d;
+    const auto name = string(j.at("name"), "name");
+    if (!validDisplayText(name, 64))
+        fail("name", "invalid printable name");
+    std::copy(name.begin(), name.end(), d.name.begin());
+    d.race = c.findRace(identifier(j.at("race"), "race"));
+    d.characterClass = c.findClass(identifier(j.at("class"), "class"));
+    d.portrait = findPortrait(identifier(j.at("portrait"), "portrait"));
+    array(j.at("abilities"), "abilities", 6);
+    if (j.at("abilities").size() != 6)
+        fail("abilities", "expected six values");
+    for (unsigned a = 0; a < 6; ++a)
+        d.abilities[a] = integer(j.at("abilities")[a], "ability");
+    if (integer(j.at("level"), "level") != 1)
+        fail("level", "only level-one blueprints");
+    if (!j.at("defense").is_boolean() || !j.at("life_domain").is_boolean())
+        fail("features", "expected booleans");
+    d.defense = j.at("defense");
+    d.lifeDomain = j.at("life_domain");
+    const auto& s = j.at("spells");
+    fields(s, "spells", {"cantrips", "learned", "prepared", "domain", "racial"});
+    d.spells = {spells(c, s.at("cantrips")), spells(c, s.at("learned")), spells(c, s.at("prepared")),
+                spells(c, s.at("domain")), spells(c, s.at("racial"))};
+    const auto* options = c.creation(d.characterClass);
+    if (!options)
+        fail("class", "missing creation content");
+    array(j.at("choices"), "choices", 3);
+    if (j.at("choices").size() != options->groupCount)
+        fail("choices", "wrong choice count");
+    for (std::size_t g = 0; g < options->groupCount; ++g) {
+        const auto option = identifier(j.at("choices")[g], "choice");
+        bool found = false;
+        for (std::uint8_t n = 0; n < options->groups[g].count; ++n)
+            if (options->groups[g].options[n].id == option) {
+                d.gear[g] = n;
+                found = true;
+            }
+        if (!found)
+            fail("choice", "unavailable gear choice");
+    }
+    if (!previewBuild(c, d))
+        fail("build", "invalid starting build");
+    const auto b = finishBuild(c, d, id);
+    if (j.at("gear") != gear(c, b))
+        fail("gear", "saved gear differs from validated starting choices");
+    return d;
+}
 std::string encodeLibrary(const rules::Catalog& c, const LibrarySnapshot& state) {
     using namespace rules;
     Json records = Json::array();
     for (std::size_t i = 0; i < state.count; ++i) {
         const auto& r = state.records[i];
-        const auto& d = r.draft;
-        const auto b = finishBuild(c, d, r.id.text.data());
-        const auto& s = d.spells;
-        const auto* options = c.creation(d.characterClass);
-        Json choices = Json::array();
-        for (std::size_t g = 0; g < options->groupCount; ++g)
-            choices.push_back(options->groups[g].options[d.gear[g]].id);
-        records.push_back({{"id", r.id.text.data()},
-                           {"name", d.name.data()},
-                           {"race", c.race(d.race)->id},
-                           {"class", c.characterClass(d.characterClass)->id},
-                           {"portrait", portrait(d.portrait)->id},
-                           {"abilities", d.abilities},
-                           {"level", 1},
-                           {"defense", d.defense},
-                           {"life_domain", d.lifeDomain},
-                           {"spells",
-                            {{"cantrips", spells(c, s.cantrips)},
-                             {"learned", spells(c, s.learned)},
-                             {"prepared", spells(c, s.prepared)},
-                             {"domain", spells(c, s.domain)},
-                             {"racial", spells(c, s.racial)}}},
-                           {"choices", choices},
-                           {"gear", gear(c, b)}});
+        records.push_back(encodeStartingDraft(c, r.draft, r.id.text.data()));
     }
     std::string text = Json{{"schema_version", 1},
                             {"initialized", true},
@@ -126,51 +183,7 @@ LibrarySnapshot decodeLibrary(const rules::Catalog& c, const std::string& text) 
         std::copy(id.begin(), id.end(), r.id.text.begin());
         if (!validSavedCharacterId(r.id) || out.find(r.id))
             fail("id", "invalid or duplicate UUIDv4");
-        auto& d = r.draft;
-        const auto name = string(j.at("name"), "name");
-        if (!validDisplayText(name, 64))
-            fail("name", "invalid printable name");
-        std::copy(name.begin(), name.end(), d.name.begin());
-        d.race = c.findRace(identifier(j.at("race"), "race"));
-        d.characterClass = c.findClass(identifier(j.at("class"), "class"));
-        d.portrait = findPortrait(identifier(j.at("portrait"), "portrait"));
-        array(j.at("abilities"), "abilities", 6);
-        if (j.at("abilities").size() != 6)
-            fail("abilities", "expected six values");
-        for (unsigned a = 0; a < 6; ++a)
-            d.abilities[a] = integer(j.at("abilities")[a], "ability");
-        if (integer(j.at("level"), "level") != 1)
-            fail("level", "only level-one blueprints");
-        if (!j.at("defense").is_boolean() || !j.at("life_domain").is_boolean())
-            fail("features", "expected booleans");
-        d.defense = j.at("defense");
-        d.lifeDomain = j.at("life_domain");
-        const auto& s = j.at("spells");
-        fields(s, "spells", {"cantrips", "learned", "prepared", "domain", "racial"});
-        d.spells = {spells(c, s.at("cantrips")), spells(c, s.at("learned")), spells(c, s.at("prepared")),
-                    spells(c, s.at("domain")), spells(c, s.at("racial"))};
-        const auto* options = c.creation(d.characterClass);
-        if (!options)
-            fail("class", "missing creation content");
-        array(j.at("choices"), "choices", 3);
-        if (j.at("choices").size() != options->groupCount)
-            fail("choices", "wrong choice count");
-        for (std::size_t g = 0; g < options->groupCount; ++g) {
-            const auto option = identifier(j.at("choices")[g], "choice");
-            bool found = false;
-            for (std::uint8_t n = 0; n < options->groups[g].count; ++n)
-                if (options->groups[g].options[n].id == option) {
-                    d.gear[g] = n;
-                    found = true;
-                }
-            if (!found)
-                fail("choice", "unavailable gear choice");
-        }
-        if (!previewBuild(c, d))
-            fail("build", "invalid starting build");
-        const auto b = finishBuild(c, d, id);
-        if (j.at("gear") != gear(c, b))
-            fail("gear", "saved gear differs from validated starting choices");
+        r.draft = decodeStartingDraft(c, j);
         out.records[out.count++] = r;
     }
     return out;

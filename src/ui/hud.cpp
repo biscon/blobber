@@ -137,7 +137,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .", headingName(state.player.heading));
     headerText(line, 245, gold, UiTextStyle::Small);
     if (!h || !h->demo)
-        headerText("Depth I", 449, gold, UiTextStyle::Small);
+        headerText(h && h->arena ? "Arena" : "Depth I", 449, gold, UiTextStyle::Small);
     p.gear(hudLayout::gear);
     p.border({viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2}, edge);
     p.box(hudLayout::actions);
@@ -174,7 +174,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         else if (h->combat.phase == CombatPhase::RoundEnd)
             actor = "ROUND END";
         else if (h->combat.phase == CombatPhase::Victory)
-            actor = "VICTORY";
+            actor = h->arena && h->arenaComplete ? "ARENA CLEARED" : "VICTORY";
         else if (h->combat.phase == CombatPhase::Defeat)
             actor = "DEFEAT";
         std::snprintf(line, sizeof(line), "%s%s", actor,
@@ -203,8 +203,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             p.text(key, r.x + 2, r.y + r.height - 9, available ? gold : muted, UiTextStyle::Small);
         }
         const char* hint =
-            h->combat.phase == CombatPhase::Facing    ? "Turning to the next group. Your action is preserved."
-            : h->combat.phase == CombatPhase::Victory ? "Continue to explore with your surviving party."
+            h->combat.phase == CombatPhase::Facing ? "Turning to the next group. Your action is preserved."
+            : h->combat.phase == CombatPhase::Victory
+                ? (h->arena && h->arenaComplete ? "Rematch or edit your arena setup."
+                                                : "Continue to explore with your surviving party.")
             : h->combat.phase == CombatPhase::Defeat  ? "Restart to begin a fresh session."
             : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
             : h->production && h->combat.awaitingAction ? "Click a reachable enemy to attack."

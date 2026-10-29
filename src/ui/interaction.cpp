@@ -15,7 +15,7 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             (input.has(UiKey::Click) && insideCamp(hudLayout::resume)))
             commands.confirmLeave(false);
         else if (input.has(UiKey::Click) && insideCamp(hudLayout::mainMenu))
-            commands.requestMenu();
+            commands.confirmExit();
         return;
     }
     if (commands.snapshot().loot.open) {
@@ -209,9 +209,12 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             if (click && (inside(hudLayout::resume) || inside(hudLayout::gear))) {
                 commands.confirmLeave(false);
                 commands.closeOverlay();
-            } else if (click && inside(hudLayout::rest))
-                commands.openCamp();
-            else if (click && inside(hudLayout::quit))
+            } else if (click && inside(hudLayout::rest)) {
+                if (state.arena)
+                    commands.confirmRetry();
+                else
+                    commands.openCamp();
+            } else if (click && inside(hudLayout::quit))
                 commands.requestQuit();
         }
         return;

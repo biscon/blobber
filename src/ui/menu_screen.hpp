@@ -1,13 +1,17 @@
 #pragma once
-#include "app/menu_model.hpp"
+#include "app/arena_setup.hpp"
 #include "app/creator_flow.hpp"
+#include "app/menu_model.hpp"
 #include "ui/creator_screen.hpp"
 #include "ui/hud_painter.hpp"
 #include <cstdio>
 namespace blobber {
 struct MenuView {
-    MenuView(const rules::Catalog& c, CharacterLibrary& l) : catalog(c), library(l), creator{c, creation.model, {}} {}
+    MenuView(const rules::Catalog& c, CharacterLibrary& l)
+        : catalog(c), library(l), creator{c, creation.model, {}} {}
     MenuModel model;
+    ArenaSetup arena;
+    std::array<PartyChoice, 4> dungeonChoices{};
     CreatorFlow creation;
     const rules::Catalog& catalog;
     CharacterLibrary& library;
@@ -40,5 +44,6 @@ struct MenuView {
         ++count;
     }
 };
+void drawArena(MenuView&, const HudPainter&, const UiArt&);
 void drawMenu(void*, const UiFonts&, const UiArt&);
 } // namespace blobber
