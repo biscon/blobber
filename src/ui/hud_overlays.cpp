@@ -8,7 +8,9 @@ namespace blobber {
 using namespace hudInk;
 void HudPainter::tooltip(const HudSnapshot& h) const {
     const auto& hover = h.hover;
-    if (hover.kind == HoverKind::None || (h.modal() && !(h.magic.open && hover.kind == HoverKind::Status)) ||
+    if (hover.kind == HoverKind::None ||
+        (h.modal() &&
+         !(h.magic.open && (hover.kind == HoverKind::Status || hover.kind == HoverKind::Concentration))) ||
         h.suspended)
         return;
     int rows = 0;
@@ -45,7 +47,7 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
             continue;
         clipped(hover.lines[i].data(), r.x + 6, lineY, width - 12,
                 i == 0 ? gold
-                : i == 3 && hover.kind != HoverKind::Status
+                : i == 3 && hover.kind != HoverKind::Status && hover.kind != HoverKind::Concentration
                     ? (hover.reason == CommandReason::Ready ? bright : muted)
                     : hudInk::text,
                 i == 0 ? UiTextStyle::Heading : UiTextStyle::Label);

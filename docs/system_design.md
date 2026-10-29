@@ -1,6 +1,13 @@
 # System design
 
-Implemented, **Ready for review** (2026-10-29): [slice 12.1 expanded spells](expanded_spells_design.md)
+Implemented, **accepted and closed** (2026-10-29): portrait follow-up to the
+[12.1 visual review](spell_visual_review_design.md#portrait-follow-up). Timed status
+and concentration tooltips show turns in combat and seconds/minutes in real time;
+a framed gold concentration emblem replaces the blue portrait block. Focused
+Debug/Release 5/5, allocation and GPU checks pass; 482 captures include the follow-up.
+The full-suite/sanitizer results below record the preceding visual correction baseline.
+
+Implemented, **accepted and closed** (2026-10-29): [slice 12.1 expanded spells](expanded_spells_design.md)
 and its [visual review corrections](spell_visual_review_design.md). Spell-level
 and Abilities tabs preserve selection per character/tab. Bounded status summaries
 supply portrait icons and duration tooltips; enemy badges reuse spell art. Prepared
@@ -10,8 +17,8 @@ The ten spell additions retain checked casts, bounded conditions/ground areas,
 temporary HP and turn-relative short effects. [Local SRD](references/README.md)
 is the source for future planning. [Verification and handoff](slice121_verification.md):
 Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations,
-capacity baking, hidden GPU checks and 470 captures pass. User acceptance is
-pending; 12.2 remains unstarted.
+capacity baking, hidden GPU checks and 470 captures pass. User acceptance on 2026-10-29 includes all visual and portrait
+follow-ups. Slice 12.2 is next eligible for planning and remains unstarted.
 
 Design accepted, **implementation planned/unstarted** (2026-10-28):
 [main menu and character-creation flow](character_creation_flow_proposal.md), with
@@ -24,8 +31,8 @@ expanded spell selection and Color Spray in place of illustrative Ray of Sicknes
 Library blueprints and live party state have independent ownership; menu/session
 lifecycle and bounded draft/UI storage preserve existing rendering/allocation
 contracts. Detailed subsystem designs are written in each later planning pass.
-The creation/menu systems remain unimplemented; slice 12.1 is awaiting review.
-12.1–12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
+The creation/menu systems remain unimplemented; slice 12.1 is accepted and closed.
+12.2–12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
 Drop into the current cell, automatic Take All closure, and a small generated Rest

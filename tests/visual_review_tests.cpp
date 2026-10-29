@@ -96,12 +96,24 @@ void tabsAndHover() {
     check(std::strstr(ui.snapshot().hover.lines[0].data(), "More") &&
               std::strstr(ui.snapshot().hover.lines[3].data(), "False Life"),
           "Overflow exposes names and durations");
+    const auto emblem = hudLayout::concentration(1);
+    hover.pointer = ArtPoint{float(emblem.x + 1), float(emblem.y + 1)};
+    routeHudInput(ui, hover);
+    check(ui.snapshot().hover.kind == HoverKind::Concentration &&
+              std::strstr(ui.snapshot().hover.lines[1].data(), "Bless") &&
+              std::strstr(ui.snapshot().hover.lines[2].data(), "1m 00s") &&
+              !ui.snapshot().cards[1].effects.count && m.open,
+          "Concentration hover identifies a spell maintained on someone else while browsing");
+    ui.hover(HoverKind::Concentration, 3);
     ui.selectSpellbookTab(10);
     s.endConcentration(s.actors().snapshot().world, {3});
     refresh();
+    check(!ui.snapshot().cards[3].concentration && ui.snapshot().hover.kind == HoverKind::None,
+          "Ending concentration clears its emblem and stale tooltip");
     check(m.visibleCount == 1 && m.entries[m.cursor].feature == rules::Feature::ArcaneRecovery,
           "Disappearing End Concentration reconciles ability selection");
     const auto mana = s.party().character({3})->mana;
+    hover.pointer = ArtPoint{float(overflow.x + 1), float(overflow.y + 1)};
     hover.pressed[unsigned(UiKey::Click)] = true;
     routeHudInput(ui, hover);
     check(!m.open && s.party().character({3})->mana == mana && !m.armed,
@@ -185,6 +197,59 @@ void summaryAndPose() {
     effects.advance(28801000, 28801000, true, events);
     check(!effects.statuses(rules::CharacterId{3}).count, "Expired status disappears");
 }
+void durationModes() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    const auto places = spellPlacements(map, 1);
+    Party party(catalog);
+    ActorWorld actors(map, catalog, places);
+    rules::DiceRng rng(7);
+    EffectController effects(party, actors, rng);
+    CombatEvents events;
+    EffectRequest request;
+    request.world = actors.snapshot().world;
+    request.kind = EffectKind::Bless;
+    request.caster = {1};
+    request.targets[0] = rules::CharacterId{3};
+    request.count = 1;
+    check(bool(effects.apply(request, 0, events)), "Timed buff fixture");
+    const auto label = [](const StatusEntry& entry, const char* expected) {
+        char text[96];
+        statusDuration(entry, text, sizeof(text));
+        check(!std::strcmp(text, expected), "Duration uses active mode and rounds up partial units");
+    };
+    label(effects.statuses(rules::CharacterId{3}).entries[0], "1m 00s remaining");
+    label(*effects.concentrationStatus({1}), "1m 00s remaining");
+    effects.advance(1, 1, true, events);
+    effects.condition(rules::CharacterId{2}, EffectKind::Knockdown, {3}, 1, events);
+    effects.clockMode(true);
+    label(effects.statuses(rules::CharacterId{3}).entries[0], "10 turns remaining");
+    label(*effects.concentrationStatus({1}), "10 turns remaining");
+    effects.condition(actors.id(0), EffectKind::Sleep, {3}, 1, events);
+    label(effects.statuses(actors.id(0)).entries[0], "10 turns remaining");
+    effects.guide(actors.id(0), 1, events);
+    label(effects.statuses(actors.id(0)).entries[1], "1 turn remaining");
+    party.grantTemporary({3}, 5, 3600001);
+    label(effects.statuses(rules::CharacterId{3}).entries[1], "600 turns remaining");
+    effects.condition(rules::CharacterId{0}, EffectKind::Blind, {3}, 1, events);
+    label(effects.statuses(rules::CharacterId{0}).entries[0], "Until caster's next turn");
+    label(effects.statuses(rules::CharacterId{2}).entries[0], "Until standing on next turn");
+    effects.advance(combatRoundMs, combatRoundMs, false, events);
+    label(effects.statuses(rules::CharacterId{3}).entries[0], "9 turns remaining");
+    effects.advance(54001, 54001, false, events);
+    label(effects.statuses(rules::CharacterId{3}).entries[0], "1 turn remaining");
+    effects.clockMode(false);
+    label(effects.statuses(rules::CharacterId{3}).entries[0], "6s remaining");
+    label(*effects.concentrationStatus({1}), "6s remaining");
+    request.kind = EffectKind::ShieldOfFaith;
+    check(bool(effects.apply(request, 54001, events)), "Concentration replacement");
+    check(effects.concentrationStatus({1})->effect == EffectKind::ShieldOfFaith,
+          "Concentration summary follows the maintained spell, not the old recipient buff");
+    effects.clockMode(true);
+    label(*effects.concentrationStatus({1}), "100 turns remaining");
+    effects.remove(effects.concentration({1}), 54001, events);
+    check(!effects.concentrationStatus({1}), "Removed concentration has no summary");
+}
 void badgeLayout() {
     HudSnapshot hud;
     hud.targets.world = 1;
@@ -213,6 +278,7 @@ void badgeLayout() {
 int main() {
     try {
         tabsAndHover();
+        durationModes();
         summaryAndPose();
         badgeLayout();
     } catch (const std::exception& e) {

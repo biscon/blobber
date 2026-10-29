@@ -1,7 +1,8 @@
 # Slice 12.1 visual review corrections
 
-Status: Implemented, **Ready for review**, 2026-10-29. User approved the plan and
-selected an Abilities tab and a shared sleeping/knocked-down pose.
+Status: Implemented, **accepted and closed** with slice 12.1 on 2026-10-29,
+including the portrait follow-up. User approved the plan and selected an
+Abilities tab and a shared sleeping/knocked-down pose.
 
 ## Presentation ownership
 
@@ -60,5 +61,27 @@ bytes, below the unchanged 512 MiB limits. These exclude driver/dependency memor
 
 See the [verification and handoff](slice121_verification.md) for commands, captures,
 asset provenance and review instructions. Interactive desktop play remains
-unverified; no desktop input was automated. Slice 12.1 awaits user acceptance;
-12.2 remains unstarted.
+unverified; no desktop input was automated. Slice 12.1 is accepted and closed;
+12.2 is next eligible for planning and remains unstarted.
+
+## Portrait follow-up
+
+Implemented and **accepted** with slice 12.1. Timed status summaries select a Turns clock during turn-based combat
+and Seconds during real-time exploration. Duration formatting rounds up remaining
+gameplay milliseconds by the existing six-second `combatRoundMs`: one complete
+combat round equals one remaining turn for this UI, not each actor's action.
+Caster-next-turn and standing expiry descriptions stay explicit. Switching modes
+changes presentation only; pause, expiry, consumption and stacking stay authoritative.
+
+The portrait's upper-right corner replaces the blue block with the existing painted
+gold concentration emblem, in the same bordered frame style as spell icons. A
+read-only concentration summary supplies a hover tooltip naming the maintained
+spell and its duration even when the caster is not a recipient. This is separate
+from recipient status slots and supports spellbook hover without click-through.
+Snapshots own optional fixed-size summary values; no new textures or frame-time
+allocations. Regression checks cover real-time/turn mode transitions, partial-turn
+rounding, short expiry rules (including entering combat while prone), concentration
+replacement/removal and hover while browsing. Focused Debug/Release suites pass
+5/5, including zero tracked frame allocations; hidden GPU checks pass. All 482
+captures completed, including 12 new concentration/turn-duration views; native,
+reduced and letterboxed follow-up images were visually inspected.

@@ -20,6 +20,10 @@ constexpr UiRect portrait(int i) {
     const auto r = card(i);
     return {r.x + 5, r.y + 4, 46, 56};
 }
+constexpr UiRect concentration(int cardIndex) {
+    const auto p = portrait(cardIndex);
+    return {p.x + p.width - 11, p.y + 1, 10, 10};
+}
 constexpr int statusSlots = 6;
 constexpr UiRect status(int cardIndex, int slot) {
     const auto p = portrait(cardIndex);

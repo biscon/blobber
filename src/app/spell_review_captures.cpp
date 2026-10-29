@@ -52,34 +52,36 @@ void captureSpellReview(const rules::Catalog& catalog, const NpcWorld& source,
     NpcWorld empty(map, spawn.cell, names, {});
     GameSession buffs(map, catalog, empty, 5, spawn, false, timings);
     CommandController cards(buffs, timings);
-    const auto apply = [&](EffectKind kind, unsigned caster) {
+    const auto apply = [&](GameSession& session, EffectKind kind, unsigned caster) {
         EffectRequest r;
-        r.world = buffs.actors().snapshot().world;
+        r.world = session.actors().snapshot().world;
         r.kind = kind;
         r.caster = {std::uint16_t(caster)};
         r.targets[0] = rules::CharacterId{3};
         r.count = 1;
         r.difficulty = 1000;
-        if (!buffs.applyEffect(r))
+        if (!session.applyEffect(r))
             throw std::runtime_error("Status capture effect failed");
     };
-    apply(EffectKind::Bless, 1);
-    apply(EffectKind::Bane, 2);
-    apply(EffectKind::ShieldOfFaith, 0);
-    apply(EffectKind::MageArmor, 3);
-    apply(EffectKind::Resistance, 3);
-    apply(EffectKind::Sanctuary, 3);
+    apply(buffs, EffectKind::Bless, 1);
+    apply(buffs, EffectKind::Bane, 2);
+    apply(buffs, EffectKind::ShieldOfFaith, 0);
+    apply(buffs, EffectKind::MageArmor, 3);
+    apply(buffs, EffectKind::Resistance, 3);
+    apply(buffs, EffectKind::Sanctuary, 3);
     buffs.party().grantTemporary({3}, 5, 3600000);
     renderer.compose(map, spawn, frame);
     cards.refresh({}, false, false, true);
     cards.selectCharacter(3);
     cards.openSpellbook();
-    const auto capture = [&](const char* name) {
-        presenter.present(frame, buffs.movement(), map, false, true, &cards.snapshot());
+    const auto save = [&](const char* name, const GameSession& session, const CommandController& controls,
+                          const PickingBuffer* pick = nullptr) {
+        presenter.present(frame, session.movement(), map, false, true, &controls.snapshot(), pick);
         presenter.capture(directory / (std::string(name) + ".png"));
         presenter.capture(directory / (std::string(name) + "-1280.png"), 1280, 720);
         presenter.capture(directory / (std::string(name) + "-1024.png"), 1024, 768);
     };
+    const auto capture = [&](const char* name) { save(name, buffs, cards); };
     capture("review-tabs-cantrips");
     cards.selectSpellbookTab(1);
     capture("review-tabs-level-one");
@@ -94,5 +96,37 @@ void captureSpellReview(const rules::Catalog& catalog, const NpcWorld& source,
                 : n == 1 ? "review-status-hostile"
                          : "review-status-overflow");
     }
+    const auto hoverAt = [](CommandController& controls, UiRect r) {
+        UiInput input;
+        input.pointer = ArtPoint{float(r.x + 1), float(r.y + 1)};
+        routeHudInput(controls, input);
+    };
+    hoverAt(cards, hudLayout::concentration(1));
+    capture("review-concentration-realtime");
+
+    NpcWorld close(map, spawn.cell, names, {{{0}, {8, 10}, {0, 0}, Heading::South}});
+    GameSession fight(map, catalog, close, 5, spawn, false, timings);
+    for (unsigned n = 0; n < 100 && !fight.combat().snapshot().awaitingAction; ++n)
+        fight.update(.1, false);
+    if (realTime(fight.combat().snapshot().phase) || !fight.combat().snapshot().awaitingAction)
+        throw std::runtime_error("Portrait capture did not enter turn-based combat");
+    apply(fight, EffectKind::Bless, 1);
+    apply(fight, EffectKind::Bane, 2);
+    apply(fight, EffectKind::ShieldOfFaith, 0);
+    apply(fight, EffectKind::MageArmor, 3);
+    apply(fight, EffectKind::Resistance, 3);
+    apply(fight, EffectKind::Sanctuary, 3);
+    fight.party().grantTemporary({3}, 5, fight.effects().gameplayMs() + 3600000);
+    CommandController turns(fight, timings);
+    NpcAnimator combatAnimator(fight.actors(), timings);
+    combatAnimator.setTime(fight.timeMs(), &fight.effects());
+    renderer.compose(map, spawn, frame, &fight.actors(), &combatAnimator.snapshot(), &picking);
+    turns.refresh(picking.targets(), false, false, true);
+    hoverAt(turns, hudLayout::status(3, 0));
+    save("review-status-turns", fight, turns, &picking);
+    hoverAt(turns, hudLayout::status(3, 5));
+    save("review-status-overflow-turns", fight, turns, &picking);
+    hoverAt(turns, hudLayout::concentration(1));
+    save("review-concentration-turns", fight, turns, &picking);
 }
 } // namespace blobber

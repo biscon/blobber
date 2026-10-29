@@ -1,9 +1,10 @@
 # Slice 12.1: expanded level-one spells
 
-Status: **Ready for review**, 2026-10-28. Implemented after the user approved the
-plan and requested implementation. [Verification and handoff](slice121_verification.md).
-Slice 12 is accepted; 12.2–12.4 and 13 remain unstarted.
-Source: [local SRD 5.1](references/README.md). No implementation acceptance implied.
+Status: **Accepted and closed**, 2026-10-29, including all
+[visual and portrait follow-ups](spell_visual_review_design.md).
+[Verification and accepted handoff](slice121_verification.md).
+Slice 12.2 is next eligible for planning; 12.2–12.4 and 13 remain unstarted.
+Source: [local SRD 5.1](references/README.md).
 
 ## Approved mechanics
 
@@ -116,7 +117,8 @@ Run full Debug/Release, focused ASan/UBSan and first/repeated frame allocations;
 separate maximum-capacity stress. Hidden GPU lifecycle and all new spell/status
 captures at 1920×1080, 1280×720 and letterboxed 1024×768. No desktop automation.
 Record exact commands/results/limitations and review recipe in slice121_verification.md.
-Stop at Ready for review; only the user can accept. Do not advance to 12.2.
+The user accepted the completed slice on 2026-10-29. Slice 12.2 is eligible for
+planning only and remains unstarted.
 
 ## Completed visual review correction, 2026-10-29
 

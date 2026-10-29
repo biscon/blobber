@@ -485,6 +485,9 @@ int main() {
                 const auto r = hudLayout::status(c, 0);
                 hover.pointer = ArtPoint{float(r.x + 1), float(r.y + 1)};
                 routeHudInput(ui, hover);
+                const auto emblem = hudLayout::concentration(c);
+                hover.pointer = ArtPoint{float(emblem.x + 1), float(emblem.y + 1)};
+                routeHudInput(ui, hover);
             }
             ui.closeOverlay();
         }
@@ -523,6 +526,9 @@ int main() {
             statusDuration(statusSummary.entries[i], duration, sizeof(duration));
         effects.wake(effectActors.id(0), 60100, effectEvents);
         effects.clockMode(true);
+        const auto turnStatuses = effects.statuses(effectActors.id(0));
+        for (std::size_t i = 0; i < turnStatuses.count; ++i)
+            statusDuration(turnStatuses.entries[i], duration, sizeof(duration));
         effects.casterTurn({3}, 60100, effectEvents);
         effects.clockMode(false);
         const auto groundCell = effectActors.actor(effectActors.id(0))->npc.cell;

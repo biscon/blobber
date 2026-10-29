@@ -1,9 +1,52 @@
 # Slice 12.1 verification and handoff
 
-Status: **Ready for review**, 2026-10-29, including the approved
-[visual review corrections](spell_visual_review_design.md). Implementation and
-verification are complete. This is not user acceptance. Slice 12 remains the
-latest accepted slice; do not begin 12.2 until 12.1 is accepted.
+Status: **Accepted and closed**, 2026-10-29. The user said “nice work, record the
+slice as accepted”. Acceptance includes the expanded spell catalog and all
+[visual review corrections](spell_visual_review_design.md), including the final
+turn-duration and concentration portrait follow-up. Slice 12.2 is next eligible
+for planning and remains Planned/unstarted. Verification limitations below remain
+unchanged; acceptance does not turn unexecuted checks into passes.
+
+## Portrait follow-up, 2026-10-29
+
+Implemented and accepted with slice 12.1. Status and overflow tooltips now use turns in
+turn-based combat, rounded up from the authoritative remaining lifetime by the
+existing six-second round. Counts decrement per complete round, not per individual
+actor action. Exploration retains seconds/minutes. Explicit caster-next-turn and
+standing expiry labels remain; entering combat while already prone correctly
+reports standing on the next turn.
+
+The upper-right portrait corner now displays the existing painted gold
+concentration emblem in a matching gold frame. Hover shows the maintained spell,
+its remaining turns/time and a concentration reminder, including when the caster
+is not a recipient and while the spellbook is open. Recipient icons remain separate.
+No new artwork, textures or gameplay timing changes were required.
+
+Focused Debug **5/5** (15.84s) and Release **5/5** (2.17s) pass: `visual_review`,
+`effects`, `expanded_spells`, `spells`, `frame_allocations`. The allocation check
+still reports zero tracked C++ allocations. Tests cover mode transitions, partial
+turns, singular/plural labels, Sleep, temporary HP, Guiding Bolt, short-effect rules,
+concentration replacement/removal and paused hover. Hidden GPU lifecycle checks
+pass. The prior full suites and sanitizer results below are baseline verification;
+this follow-up reran the affected suites and GPU checks.
+
+`--capture-spells /tmp/blobber121-portrait-captures` completed **482 PNGs** and
+`spells.tsv`. Twelve added captures cover `review-status-turns`,
+`review-status-overflow-turns`, `review-concentration-turns` and
+`review-concentration-realtime`, each at native, `-1280` and `-1024` sizes.
+Native concentration/status, reduced real-time concentration and letterboxed
+turn-overflow captures were visually inspected. All capture input is application
+owned; interactive desktop play remains unverified. Logs use
+`/tmp/blobber121-portrait-{tests,release-tests,gpu,captures}.log`.
+
+Reproduce focused checks with:
+
+```sh
+ctest --preset debug -R '^(visual_review|effects|expanded_spells|spells|frame_allocations)$' -j4 --output-on-failure
+ctest --preset release -R '^(visual_review|effects|expanded_spells|spells|frame_allocations)$' -j4 --output-on-failure
+cmake-build-debug/blobber_gpu_smoke
+cmake-build-release/blobber --capture-spells /tmp/blobber121-portrait-captures
+```
 
 ## Visual review corrections delivered
 
@@ -30,7 +73,7 @@ latest accepted slice; do not begin 12.2 until 12.1 is accepted.
   Registered derivatives remain build outputs. Source masters were inspected;
   transparent alpha, registration and final rendered views were checked.
 
-## Current verification, 2026-10-29
+## Visual correction baseline verification, 2026-10-29
 
 Final Debug **31/31** (60.89s) and Release **31/31** (6.03s) pass. The allocation
 suite reports **zero tracked C++ frame allocations**, now including tab switching,
@@ -182,9 +225,17 @@ The final allocation extension also passes independently in both builds.
 `git diff --check` and 218 local documentation file links passed; the cached PDF
 checksum matches its recorded source checksum.
 
-## Review and next-agent handoff
+## Accepted closeout and next-agent handoff
 
-Review Sleep's floor targeting and ally-risk display, Grease's persistent floor
+Slice 12.1 is accepted and closed on 2026-10-29. The user explicitly accepted the
+completed slice, including the spell catalog, level/Abilities tabs, Grease pool,
+prone poses, status icons, turn-duration tooltips and concentration emblem.
+
+Plan slice 12.2 next in a fresh context. Read the roadmap's 12.2 requirements,
+[approved creator flow](character_creation_flow_proposal.md), local SRD references
+and relevant code before proposing that slice's implementation plan. Obtain plan
+approval before implementation; this documentation closeout does not start 12.2.
+Preserve Sleep's floor targeting and ally-risk display, Grease's persistent floor
 and automatic standing, slow travel, the spell icons and duration tooltips, False Life's
 HP display, and cleric buff/ward feedback. Shocking Grasp requires an exposed
 caster; the capture fixture explicitly places the wizard in the front row.
@@ -192,7 +243,7 @@ The runtime keeps the approved fixed presentation and discrete movement.
 No new stand button, bonus actions, reactions, skill system, creator, spell-grant
 selection, persistence or advancement was introduced.
 
-Useful integration boundaries for 12.2, after acceptance:
+Integration boundaries for planning 12.2:
 
 - Stable spell IDs: `ray_of_frost`, `shocking_grasp`, `poison_spray`, `sleep`,
   `false_life`, `grease`, `color_spray`, `guidance`, `resistance`, `sanctuary`.
@@ -218,5 +269,6 @@ Useful integration boundaries for 12.2, after acceptance:
   Prepared bank format/renderer revision 2 and the 2,048-square icon atlas
   require no per-frame image generation or resizing.
 
-Only the user can accept this slice. Update the checkpoint and acceptance record
-when that happens; do not infer acceptance from this handoff or passing tests.
+Acceptance is explicit, not inferred from passing tests. Prior verification and
+interactive-desktop limitations remain documented. Slice 12.2 is eligible for
+planning only; 12.2–12.4 must be accepted before slice 13.

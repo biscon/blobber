@@ -160,7 +160,9 @@ void CommandController::hover(HoverKind kind, int index, std::optional<ActorId> 
 void CommandController::updateHover() noexcept {
     auto& h = state_.hover;
     h.lines = {};
-    if ((state_.modal() && !(state_.magic.open && h.kind == HoverKind::Status)) || state_.suspended) {
+    if ((state_.modal() &&
+         !(state_.magic.open && (h.kind == HoverKind::Status || h.kind == HoverKind::Concentration))) ||
+        state_.suspended) {
         h.kind = HoverKind::None;
         return;
     }
@@ -168,6 +170,18 @@ void CommandController::updateHover() noexcept {
     auto put = [&](int line, const char* text) {
         std::snprintf(h.lines[line].data(), h.lines[line].size(), "%s", text);
     };
+    if (h.kind == HoverKind::Concentration) {
+        if (unsigned(h.index) >= state_.cards.size() || !state_.cards[h.index].concentration) {
+            h.kind = HoverKind::None;
+            return;
+        }
+        const auto& e = *state_.cards[h.index].concentration;
+        put(0, "Concentration");
+        put(1, e.name);
+        statusDuration(e, h.lines[2].data(), h.lines[2].size());
+        put(3, e.ending);
+        return;
+    }
     if (h.kind == HoverKind::Status) {
         const unsigned card = unsigned(h.index) / 6, slot = unsigned(h.index) % 6;
         if (card >= state_.cards.size() || slot >= state_.cards[card].effects.count) {

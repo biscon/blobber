@@ -37,7 +37,7 @@ struct HudCard {
     const char *name = "", *className = "";
     int hp = 0, maxHp = 0, temporaryHp = 0, mana = 0, maxMana = 0;
     StatusSummary effects;
-    bool concentrating = false;
+    std::optional<StatusEntry> concentration;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
     bool incomingShot = false;
     std::uint8_t successes = 0, failures = 0;
@@ -53,7 +53,7 @@ struct HudCard {
          castHovered = false;
     const char* castPreview = "";
 };
-enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status };
+enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration };
 struct HudHover {
     HoverKind kind = HoverKind::None;
     int index = 0;

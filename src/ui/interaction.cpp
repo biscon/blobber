@@ -102,13 +102,18 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     const auto statusHover = [&]() {
         if (!input.pointer || state.suspended)
             return false;
-        for (unsigned c = 0; c < state.cards.size(); ++c)
+        for (unsigned c = 0; c < state.cards.size(); ++c) {
+            if (state.cards[c].concentration && inside(hudLayout::concentration(int(c)))) {
+                commands.hover(HoverKind::Concentration, int(c), {}, input.pointer->x, input.pointer->y);
+                return true;
+            }
             for (unsigned n = 0;
                  n < std::min(state.cards[c].effects.count, std::size_t(hudLayout::statusSlots)); ++n)
                 if (inside(hudLayout::status(int(c), int(n)))) {
                     commands.hover(HoverKind::Status, int(c * 6 + n), {}, input.pointer->x, input.pointer->y);
                     return true;
                 }
+        }
         return false;
     };
     // Read-only status hover does not select a target or consume a keyboard action.

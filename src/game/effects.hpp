@@ -2,6 +2,7 @@
 #include "game/actors.hpp"
 #include "game/party.hpp"
 #include "rules/spells.hpp"
+#include <optional>
 
 namespace blobber {
 struct CombatEvents;
@@ -20,7 +21,7 @@ enum class EffectKind : std::uint8_t {
     Knockdown,
     Count
 };
-enum class StatusClock : std::uint8_t { Seconds, CasterTurn, Standing };
+enum class StatusClock : std::uint8_t { Seconds, Turns, CasterTurn, Standing };
 struct StatusEntry {
     EffectKind effect = EffectKind::Count;
     rules::SpellKind spell = rules::SpellKind::Count;
@@ -161,6 +162,7 @@ class EffectController {
     void damaged(rules::CharacterId, std::int64_t damage, std::uint64_t sessionMs, CombatEvents&) noexcept;
     bool has(EffectTarget, EffectKind) const noexcept;
     StatusSummary statuses(EffectTarget) const noexcept;
+    std::optional<StatusEntry> concentrationStatus(rules::CharacterId) const noexcept;
     bool canAct(EffectTarget) const noexcept;
     bool mobileParty() const noexcept;
     bool conscious(EffectTarget) const noexcept;

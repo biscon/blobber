@@ -478,7 +478,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.failures = member.failures;
         if (session_) {
             card.armorClass = session_->effects().armorClass(id);
-            card.concentrating = session_->effects().concentration(id).serial != 0;
+            card.concentration = session_->effects().concentrationStatus(id);
             card.effects = session_->effects().statuses(id);
             card.hasDeathSaves = member.life == rules::Life::Dying;
             card.active = realTime(state_.combat.phase)

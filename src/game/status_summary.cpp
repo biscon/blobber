@@ -1,3 +1,4 @@
+#include "game/combat.hpp"
 #include "game/effects.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -17,7 +18,11 @@ void statusDuration(const StatusEntry& s, char* output, std::size_t bytes) noexc
         std::snprintf(output, bytes, "Until caster's next turn");
     else if (s.clock == StatusClock::Standing)
         std::snprintf(output, bytes, "Until standing on next turn");
-    else {
+    else if (s.clock == StatusClock::Turns) {
+        const auto turns = s.remainingMs / combatRoundMs + (s.remainingMs % combatRoundMs != 0);
+        std::snprintf(output, bytes, "%llu turn%s remaining", static_cast<unsigned long long>(turns),
+                      turns == 1 ? "" : "s");
+    } else {
         const auto seconds = s.remainingMs / 1000 + (s.remainingMs % 1000 != 0);
         if (seconds >= 60)
             std::snprintf(output, bytes, "%llum %02llus remaining",
@@ -37,6 +42,7 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
         if (!has(target, kind))
             continue;
         StatusEntry status;
+        status.clock = turns_ ? StatusClock::Turns : StatusClock::Seconds;
         status.effect = kind;
         status.spell = effectSpell(kind);
         status.name = kind == EffectKind::Blind       ? "Color Spray - Blinded"
@@ -47,10 +53,10 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
         if (kind >= EffectKind::Sleep) {
             const auto& c = conditions_[conditionIndex(target)][k - unsigned(EffectKind::Sleep)];
             status.remainingMs = remaining(c.untilMs);
-            if (c.turnBound)
-                status.clock = StatusClock::CasterTurn;
-            else if (kind == EffectKind::Knockdown && turns_)
+            if (kind == EffectKind::Knockdown && turns_)
                 status.clock = StatusClock::Standing;
+            else if (c.turnBound)
+                status.clock = StatusClock::CasterTurn;
         } else {
             for (const auto& e : instances_)
                 if (e.active && e.kind == kind)
@@ -73,7 +79,7 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
                                           "Guiding Bolt",
                                           "Consumed by the next attack.",
                                           remaining(guidingUntil_[target.enemy.slot]),
-                                          StatusClock::Seconds,
+                                          turns_ ? StatusClock::Turns : StatusClock::Seconds,
                                           true};
     if (!target.npc) {
         const auto* c = party_.character(target.character);
@@ -83,9 +89,21 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
                                               "False Life",
                                               "Ends early when temporary HP is depleted.",
                                               remaining(c->temporaryUntilMs),
-                                              StatusClock::Seconds,
+                                              turns_ ? StatusClock::Turns : StatusClock::Seconds,
                                               false};
     }
     return result;
+}
+std::optional<StatusEntry> EffectController::concentrationStatus(rules::CharacterId caster) const noexcept {
+    const auto* effect = find(concentration(caster));
+    if (!effect)
+        return std::nullopt;
+    return StatusEntry{effect->kind,
+                       effectSpell(effect->kind),
+                       effectName(effect->kind),
+                       "May break when taking damage.",
+                       effect->expiresMs > gameplayMs_ ? effect->expiresMs - gameplayMs_ : 0,
+                       turns_ ? StatusClock::Turns : StatusClock::Seconds,
+                       harmfulEffect(effect->kind)};
 }
 } // namespace blobber

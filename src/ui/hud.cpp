@@ -81,8 +81,11 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
             }
         }
     }
-    if (c.concentrating) {
-        fill({portrait.x, portrait.y, 6, 6}, blue);
+    if (c.concentration) {
+        const auto badge = hudLayout::concentration(i);
+        box(badge, gold);
+        picture(UiArt::spellIcon(rules::SpellKind::Count, rules::Feature::DismissConcentration),
+                {badge.x + 1, badge.y + 1, badge.width - 2, badge.height - 2});
     }
     box(hudLayout::detail(i));
     label("i", hudLayout::detail(i), gold, UiTextStyle::Small);
