@@ -313,3 +313,24 @@ per character, two mana potions for casters and three camp kits per fresh party 
 approved demo supplies. Quarterstaff uses 4 lb, 1d6 bludgeoning and versatile 1d8;
 existing hand/proficiency/weight validation applies. Skills, creator/menu screens,
 rest-time spell changes and advancement remain later slices.
+
+
+## Slice 12.4 — implemented, accepted and closed (2026-10-29)
+
+The [creator and preparation design](character_creator_design.md) exposes the
+already adopted 12.2 race/class, 27-point buy, curated gear and spell-grant rules.
+It adds no spell, racial trait, skill, feat or progression rule. High Elf picks remain
+Intelligence-based and separate from class cantrips; Life Domain grants remain
+locked and outside the ordinary preparation allowance. Wizard preparation uses
+that character's learned spellbook. Names/portraits and library schema are unchanged.
+
+Long Rest can replace living Cleric/Wizard preparation using the same 1..allowance
+constraint. The user explicitly approved a changed legal preparation as a sufficient
+rest benefit even at full resources. Existing safety, eight-hour advancement and
+one camp kit outside sanctuaries still apply. Staging/Cancel is free; only the checked
+rest commit changes live lists. Short Rest never changes preparation. These are
+project UI/recovery adaptations, not claims of unchanged tabletop preparation
+procedures. Library blueprints are never modified by a live rest. The user accepted
+slice 12.4 on 2026-10-29 and explicitly retained the current 27-point buy, 8–15 base
+scores and fixed racial bonuses for now. No BG3-style assignable bonuses or higher
+starting-score cap was adopted. Slice 13 remains unstarted.

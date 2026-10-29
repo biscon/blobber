@@ -4,6 +4,10 @@
 namespace blobber {
 void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
     auto& v = *static_cast<MenuView*>(context);
+    if (v.creation.active) {
+        drawCreator(&v.creator, fonts, art);
+        return;
+    }
     auto& m = v.model;
     HudPainter p(&fonts, &art);
     v.count = 0;
@@ -22,90 +26,7 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
         p.text("CHARACTER REVIEW", 20, 18, hudInk::gold, UiTextStyle::Control);
         const auto* record = v.library.snapshot().find(m.selected);
         if (record) {
-            const auto& d = record->draft;
-            auto preview = rules::previewBuild(v.catalog, d);
-            art.draw(64 + d.portrait.index, {20, 55, 145, 218});
-            p.clipped(d.name.data(), 20, 280, 145, hudInk::gold);
-            char line[192];
-            const auto* race = v.catalog.race(d.race);
-            const auto* cls = v.catalog.characterClass(d.characterClass);
-            std::snprintf(line, sizeof(line), "%s / %s / Level 1", race->name.c_str(), cls->name.c_str());
-            p.text(line, 185, 60);
-            std::snprintf(line, sizeof(line), "HP %d     AC %d     Point buy %d / 27",
-                          preview.stats.maxHitPoints, preview.stats.armorClass, preview.points);
-            p.text(line, 185, 85);
-            p.text("Final abilities (including racial bonuses)", 185, 110, hudInk::gold);
-            std::snprintf(line, sizeof(line), "STR %d  DEX %d  CON %d  INT %d  WIS %d  CHA %d",
-                          preview.stats.abilities[0], preview.stats.abilities[1], preview.stats.abilities[2],
-                          preview.stats.abilities[3], preview.stats.abilities[4], preview.stats.abilities[5]);
-            p.text(line, 185, 128);
-            p.text("Skills: not available", 185, 153, hudInk::muted);
-            int row = 0;
-            auto detail = [&](const char* value) {
-                if (row >= v.detailOffset && row < v.detailOffset + 11)
-                    p.clipped(value, 185, 170 + (row - v.detailOffset) * 12, 430);
-                ++row;
-                v.detailRows = row;
-            };
-            detail(d.defense      ? "Fighter: Defense"
-                   : d.lifeDomain ? "Cleric: Life Domain"
-                                  : "Class features apply in play");
-            std::snprintf(line, sizeof(line), "Weight %.2f / %.2f lb", preview.stats.carriedWeight / 100.0,
-                          preview.stats.carryingCapacity / 100.0);
-            detail(line);
-            if (rules::hasFeature(cls->features, rules::ClassFeature::SecondWind))
-                detail("Second Wind");
-            if (rules::hasFeature(cls->features, rules::ClassFeature::SneakAttack))
-                detail("Sneak Attack");
-            if (rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery))
-                detail("Arcane Recovery");
-            std::snprintf(line, sizeof(line), "Mana %d", rules::maximumMana(cls->casting, 1));
-            detail(line);
-            if (cls->casting != rules::Casting::None) {
-                const int mod = preview.stats.modifiers[cls->casting == rules::Casting::Intelligence ? 3 : 4];
-                std::snprintf(line, sizeof(line), "Class spell DC %d / attack %+d / prepared %u of %d",
-                              8 + preview.stats.proficiency + mod, preview.stats.proficiency + mod,
-                              rules::spellCount(d.spells.prepared), preview.preparation);
-                detail(line);
-            }
-            if (d.spells.racial) {
-                std::snprintf(line, sizeof(line), "Racial INT spell DC %d / attack %+d",
-                              8 + preview.stats.proficiency + preview.stats.modifiers[3],
-                              preview.stats.proficiency + preview.stats.modifiers[3]);
-                detail(line);
-            }
-            for (std::size_t i = 0; i < v.catalog.spellCount(); ++i) {
-                const rules::SpellId id{static_cast<std::uint16_t>(i)};
-                const auto bit = rules::spellBit(id);
-                const auto& g = d.spells;
-                if ((g.cantrips | g.learned | g.prepared | g.domain | g.racial) & bit) {
-                    std::snprintf(line, sizeof(line), "%s: %s",
-                                  g.racial & bit     ? "Racial (INT)"
-                                  : g.domain & bit   ? "Domain"
-                                  : g.cantrips & bit ? "Cantrip"
-                                  : g.prepared & bit ? "Prepared"
-                                                     : "Learned",
-                                  v.catalog.spell(id)->name.c_str());
-                    detail(line);
-                }
-            }
-            for (std::size_t i = 0; i < preview.loadout.itemCount; ++i) {
-                const auto& item = preview.loadout.items[i];
-                if (!item.quantity)
-                    continue;
-                const auto* def = v.catalog.item(item.item);
-                if (!def)
-                    continue;
-                std::snprintf(line, sizeof(line), "%s: %s x %u",
-                              (preview.loadout.equipment.body.index == i ||
-                               preview.loadout.equipment.mainHand.index == i ||
-                               preview.loadout.equipment.offHand.index == i ||
-                               preview.loadout.equipment.ranged.index == i)
-                                  ? "Equipped"
-                                  : "Carried",
-                              def->name.c_str(), unsigned(item.quantity));
-                detail(line);
-            }
+            v.detailRows = int(drawBuildReview(p, v.catalog, record->draft, unsigned(v.detailOffset)));
             v.button(p, {390, 325, 80, 22}, "Up", 33);
             v.button(p, {480, 325, 80, 22}, "Down", 34);
         }
@@ -160,8 +81,12 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
                 v.button(p, {x + width / 2, y + 87, (width - 12) / 2, 17}, "Delete", 3000 + index);
             }
         }
-        if (!m.visibleCount)
+        if (!m.visibleCount) {
             p.text("No matching saved characters", 24, 100, hudInk::muted);
+            v.button(p, {24, 124, 125, 22}, "Reset filters", 42);
+            if (v.usable && v.library.snapshot().count < LibrarySnapshot::capacity)
+                v.button(p, {160, 124, 140, 22}, "New character", 50);
+        }
         if (picker) {
             for (int i = 0; i < 4; ++i) {
                 const auto& c = m.choices[i];
@@ -193,6 +118,13 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
             v.button(p, {470, 325, 150, 22},
                      m.ready(v.library.snapshot()) ? "Enter dungeon" : "Choose four characters", 30);
         }
+        if (v.usable && v.library.snapshot().count < LibrarySnapshot::capacity)
+            v.button(p, {picker ? 310 : 470, 325, 150, 22}, "New character", 50);
+        else
+            p.clipped(v.library.snapshot().count == LibrarySnapshot::capacity
+                          ? "Library full: delete a character to create another."
+                          : "Reload the library after resolving its error.",
+                      picker ? 310 : 180, 315, picker ? 150 : 440, hudInk::muted, UiTextStyle::Small);
         v.button(p, {20, 325, 90, 22}, "Back", 4);
         v.button(p, {270, 300, 65, 18}, "Previous", 31);
         v.button(p, {340, 300, 55, 18}, "Next", 32);

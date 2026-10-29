@@ -90,6 +90,7 @@ bool runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
         while (!WindowShouldClose()) {
             const float dt = std::min(GetFrameTime(), 0.1f);
             auto sample = input.poll(dt);
+            sample.ui.text = pollTextInput();
             if (!inputArmed) {
                 inputArmed = !IsKeyDown(KEY_ENTER) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
                 sample.ui.pressed.fill(false);
@@ -101,7 +102,7 @@ bool runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& 
             }
             if (sample.clearPending)
                 view.session.clearPending();
-            if (sample.toggleMap)
+            if (sample.toggleMap && !view.commands.snapshot().modal())
                 debug = !debug;
             const bool campWasOpen = view.commands.snapshot().camp.open;
             view.commands.tickCamp(dt, sample.ui.focused);

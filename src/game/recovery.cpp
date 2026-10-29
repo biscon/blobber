@@ -1,4 +1,5 @@
 #include "game/party.hpp"
+#include "rules/spell_selection.hpp"
 #include <algorithm>
 namespace blobber {
 const char* restMessage(RestError e) noexcept {
@@ -21,6 +22,10 @@ const char* restMessage(RestError e) noexcept {
         return "No recovery needed. Choose Hit Dice or another rest.";
     case RestError::NoSupplies:
         return "A field long rest requires one camp kit.";
+    case RestError::InvalidPreparation:
+        return "Choose legal prepared spells for living casters.";
+    case RestError::PreparationFull:
+        return "Preparation revision capacity exhausted.";
     case RestError::ClockFull:
         return "Rest time capacity exhausted.";
     }
@@ -43,10 +48,57 @@ InventoryResult Party::acquire(const AcquisitionRequest& request, bool preview) 
     }
     return result;
 }
+PreparationRequest Party::preparationRequest() const noexcept {
+    PreparationRequest p;
+    p.enabled = true;
+    p.inventoryRevision = inventory_.revision();
+    p.revision = preparationRevision_;
+    for (unsigned i = 0; i < 4; ++i)
+        p.prepared[i] = state_.characters[i].build.spells.prepared;
+    return p;
+}
+bool Party::alternativePreparation(RestRequest& r) const noexcept {
+    r.preparation = preparationRequest();
+    for (unsigned i = 0; i < 4; ++i) {
+        const auto& ch = state_.characters[i];
+        if (ch.life == rules::Life::Dead || ch.life == rules::Life::Dying)
+            continue;
+        auto options = rules::preparationOptions(*catalog_, ch.build.view(), ch.build.spells);
+        for (std::uint16_t j = 0; j < catalog_->spellCount(); ++j) {
+            const auto candidate = options & rules::spellBit({j});
+            if (candidate != ch.build.spells.prepared &&
+                rules::validPreparation(*catalog_, ch.build.view(), ch.build.spells, candidate)) {
+                r.preparation.prepared[i] = candidate;
+                return true;
+            }
+        }
+    }
+    r.preparation = {};
+    return false;
+}
 RestError Party::recoveryBenefits(const RestRequest& r) const noexcept {
     if (r.kind != RestKind::Short && r.kind != RestKind::Long)
         return RestError::InvalidDice;
     bool benefit = false;
+    if (r.preparation.enabled) {
+        if (r.kind != RestKind::Long)
+            return RestError::InvalidPreparation;
+        if (r.preparation.revision != preparationRevision_ ||
+            r.preparation.inventoryRevision != inventory_.revision())
+            return RestError::Stale;
+        for (unsigned i = 0; i < 4; ++i) {
+            const auto& c = state_.characters[i];
+            if (r.preparation.prepared[i] == c.build.spells.prepared)
+                continue;
+            if (c.life == rules::Life::Dead || c.life == rules::Life::Dying ||
+                !rules::validPreparation(*catalog_, c.build.view(), c.build.spells,
+                                         r.preparation.prepared[i]))
+                return RestError::InvalidPreparation;
+            benefit = true;
+        }
+        if (benefit && preparationRevision_ == UINT64_MAX)
+            return RestError::PreparationFull;
+    }
     for (std::uint16_t i = 0; i < 4; ++i) {
         const auto& c = state_.characters[i];
         if (c.life == rules::Life::Dying)
@@ -75,6 +127,15 @@ RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRn
             catalog_->item(stack->item)->kind != rules::ItemKind::Supply || !consumeItem(supply))
             return {RestError::NoSupplies};
         out.usedSupply = true;
+    }
+    if (r.preparation.enabled) {
+        for (unsigned i = 0; i < 4; ++i) {
+            auto& prepared = state_.characters[i].build.spells.prepared;
+            out.preparationChanged |= prepared != r.preparation.prepared[i];
+            prepared = r.preparation.prepared[i];
+        }
+        if (out.preparationChanged)
+            ++preparationRevision_;
     }
     // Every failure precedes RNG and recovery mutation. All class dice are validated at loading.
     for (std::uint16_t i = 0; i < 4; ++i) {

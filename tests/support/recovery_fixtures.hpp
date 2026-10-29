@@ -41,7 +41,7 @@ inline rules::Catalog recoveryCatalog(bool kits = true, bool fullLoot = false) {
             f.preset};
 }
 inline RestRequest restRequest(const GameSession& s, RestKind kind = RestKind::Long) {
-    return {kind, {}, s.actors().snapshot().world, s.restToken()};
+    return {kind, {}, s.actors().snapshot().world, s.restToken(), {}};
 }
 inline unsigned inventoryQuantity(const Party& p, std::uint16_t c, std::uint16_t item) {
     unsigned n = 0;

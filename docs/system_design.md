@@ -1,5 +1,14 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-29): [slice 12.4 creator and reusable selection](character_creator_design.md).
+Fixed drafts and shared choice panels integrate creation, checked library saving
+and atomic Long Rest preparation. A bounded 16 MiB detail-art atlas reuses existing
+masters. [Verification and handoff](slice124_verification.md): Debug/Release 37/37,
+focused ASan/UBSan 4/4 with leak detection, zero tracked frame allocations, hidden
+GPU checks and 187 captures. The user accepted slice 12.4 on 2026-10-29 and retained
+the current 27-point buy, 8–15 base scores and fixed racial bonuses. Slice 13 is
+next eligible for separate planning and remains unstarted.
+
 Implemented, **accepted and closed** (2026-10-29): [slice 12.3 menu and launch](menu_launch_design.md).
 Normal startup loads catalog/library/UI only. Bounded library browsing, read-only
 review, confirmed deletion and a four-character picker precede transactional dungeon
@@ -9,7 +18,7 @@ records Debug/Release 35/35, focused sanitizers, allocation/GPU checks and hidde
 captures. Review correction adds direct card-to-slot dragging, swaps, drop feedback and
 focused search carets; focused Debug/Release, sanitizer, allocation and hidden
 capture checks pass. The user accepted slice 12.3, including both review corrections, on 2026-10-29.
-Slice 12.4 is next eligible for planning and remains unstarted.
+Slice 12.4 is accepted and closed above.
 
 Implemented, **accepted and closed** (2026-10-29): [slice 12.2 character builds, library
 and portraits](character_builds_design.md). Fixed creation drafts/previews and curated
@@ -41,7 +50,7 @@ Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations,
 capacity baking, hidden GPU checks and 470 captures pass. User acceptance on 2026-10-29 includes all visual and portrait
 follow-ups. Slice 12.2 is now accepted and closed, as recorded above.
 
-Design accepted (2026-10-28), **creator GUI still planned**:
+Design accepted (2026-10-28), **implemented across slices 12.1–12.4**:
 [main menu and character-creation flow](character_creation_flow_proposal.md), with
 [sixteen approved imagegen mockups](mockups/character-creator-v1/index.html).
 The [12.1–12.4 roadmap](dnd5e_demo_design.md#character-creation-interlude-accepted-flow-and-shared-contracts)
@@ -53,9 +62,9 @@ Library blueprints and live party state have independent ownership; menu/session
 lifecycle and bounded draft/UI storage preserve existing rendering/allocation
 contracts. Detailed subsystem designs are written in each later planning pass.
 The data foundation is implemented in 12.2; menu/library/party launch is implemented
-in accepted slice 12.3. The creator remains unimplemented.
+in accepted slice 12.3. The creator is implemented and accepted in slice 12.4.
 Slices 12.1 and 12.2 are accepted and closed.
-12.4 must be accepted before slice 13. Earlier checkpoint history remains below.
+The 12.4 prerequisite for slice 13 is satisfied; slice 13 remains unstarted. Earlier checkpoint history remains below.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
 Drop into the current cell, automatic Take All closure, and a small generated Rest

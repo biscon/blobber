@@ -1,4 +1,5 @@
 #include "app/menu.hpp"
+#include "app/creator_captures.hpp"
 #include "app/menu_model.hpp"
 #include "assets/rules_loader.hpp"
 #include "platform/input.hpp"
@@ -16,15 +17,27 @@ int runMenus(const Options& options) {
     Window window(options.width, options.height, options.captureMenuOnly);
     Presenter presenter(options.assets);
     presenter.prepareMenu();
+    struct CaptureDirectory {
+        std::filesystem::path path;
+        ~CaptureDirectory() {
+            if (!path.empty()) {
+                std::error_code ignored;
+                std::filesystem::remove_all(path, ignored);
+            }
+        }
+    } captureDirectory;
     std::filesystem::path libraryPath;
     if (options.captureMenuOnly) {
         char pattern[] = "/tmp/blobber-menu-XXXXXX";
         const auto* dir = mkdtemp(pattern);
         if (!dir)
             throw std::runtime_error("Cannot create isolated capture library");
-        libraryPath = std::filesystem::path(dir) / "characters.json";
+        captureDirectory.path = dir;
+        libraryPath = captureDirectory.path / "characters.json";
     }
     LibraryIoHooks hooks;
+    if (options.captureCreatorOnly)
+        hooks.fail = creatorCaptureFailStage;
     if (options.captureMenuOnly)
         hooks.entropy = [](std::array<std::uint8_t, 16>& bytes) {
             static unsigned id = 0;
@@ -43,6 +56,10 @@ int runMenus(const Options& options) {
         v.model.filter(library.snapshot());
     };
     reload();
+    if (options.captureCreatorOnly) {
+        captureCreator(v, presenter, options);
+        return 0;
+    }
     if (options.captureMenuOnly) {
         std::filesystem::create_directories(options.captureDirectory);
         auto capture = [&](const char* name) {
@@ -121,13 +138,32 @@ int runMenus(const Options& options) {
         auto sample = input.poll(GetFrameTime());
         auto& m = v.model;
         v.interaction.tick(GetFrameTime(), sample.ui.focused);
-        if (!sample.ui.focused)
+        if (!sample.ui.focused) {
+            v.creation.model.nameEdit.tick(0, false);
+            v.creation.model.searchEdit.tick(0, false);
             continue;
+        }
         if (suppress) {
             while (GetCharPressed()) {
             };
             if (!IsKeyDown(KEY_ENTER) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
                 suppress = false;
+            continue;
+        }
+        if (v.creation.active) {
+            const auto textInput = pollTextInput();
+            routeCreator(v.creation.model, v.creator.controls, catalog, sample.ui, textInput, GetFrameTime());
+            if (v.creation.model.canceled) {
+                v.creation.cancel(m);
+                suppress = true;
+            } else if (v.creation.model.saveRequested) {
+                const auto result = v.creation.save(library, m);
+                if (result.committed) {
+                    v.usable = bool(result);
+                    v.message(result ? "Character saved." : result.message.data());
+                    suppress = true;
+                }
+            }
             continue;
         }
         if (v.interaction.routeDrag(m, library.snapshot(), sample.ui)) {
@@ -188,7 +224,16 @@ int runMenus(const Options& options) {
             continue;
         if (action != 5)
             v.interaction.focusSearch(false);
-        if (action == 1)
+        if (action == 50 && v.usable && library.snapshot().count < LibrarySnapshot::capacity) {
+            v.creation.begin(catalog, m, library.snapshot());
+            v.creator.controls = {};
+            v.interaction.cancelDrag();
+            v.interaction.focusSearch(false);
+        } else if (action == 42) {
+            m.search = {};
+            m.filterClass = m.filterRace = false;
+            m.filter(library.snapshot());
+        } else if (action == 1)
             m.screen = MenuScreen::Picker;
         else if (action == 2)
             m.screen = MenuScreen::Library;
@@ -224,7 +269,7 @@ int runMenus(const Options& options) {
             if (v.detailOffset)
                 --v.detailOffset;
         } else if (action == 34) {
-            if (v.detailOffset + 11 < v.detailRows)
+            if (v.detailOffset + 13 < v.detailRows)
                 ++v.detailOffset;
         } else if (action == 31) {
             if (m.firstRow)

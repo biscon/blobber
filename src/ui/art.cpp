@@ -1,4 +1,5 @@
 #include "ui/art.hpp"
+#include "assets/creator_art.hpp"
 #include "assets/image.hpp"
 #include "assets/portrait_atlas.hpp"
 #include "game/effects.hpp"
@@ -67,7 +68,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/hold_person",
                                   "items/quarterstaff"};
     const auto prepared = directory.parent_path() / "prepared";
-    auto loadPortraitAtlas = [&](const char* name, int height) {
+    auto loadPreparedAtlas = [&](const char* name, int height) {
         const auto path = prepared / name;
         std::ifstream input(path, std::ios::binary);
         std::array<unsigned char, 14> header{};
@@ -79,16 +80,17 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
         if (!input || dimension(0) != 0x716f6966 || dimension(4) != portraitAtlasWidth ||
             dimension(8) != unsigned(height) || header[12] != 4 ||
             std::filesystem::file_size(path) > std::uint64_t(portraitAtlasWidth) * height * 5 + 22)
-            throw std::runtime_error("Missing or invalid prepared portrait atlas header");
+            throw std::runtime_error("Missing or invalid prepared UI atlas header");
         OwnedImage atlas(LoadImage(path.string().c_str()));
         if (!atlas.value.data || atlas.value.width != portraitAtlasWidth || atlas.value.height != height)
-            throw std::runtime_error("Missing or invalid prepared portrait atlas");
+            throw std::runtime_error("Missing or invalid prepared UI atlas");
         auto handle = resources_.createTexture(atlas.value);
         SetTextureFilter(resources_.texture(handle), TEXTURE_FILTER_BILINEAR);
         return handle;
     };
-    portraitSmall_ = loadPortraitAtlas("portraits-small.qoi", smallPortraitHeight);
-    portraitLarge_ = loadPortraitAtlas("portraits-large.qoi", largePortraitHeight);
+    creator_ = loadPreparedAtlas("creator.qoi", creatorAtlasSize);
+    portraitSmall_ = loadPreparedAtlas("portraits-small.qoi", smallPortraitHeight);
+    portraitLarge_ = loadPreparedAtlas("portraits-large.qoi", largePortraitHeight);
     OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
     OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
     if (!campImage.value.data || !lootImage.value.data)
@@ -233,6 +235,16 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         destination.height = height;
     }
     DrawTexturePro(resources_.texture(atlas_), source, destination, {0, 0}, 0, tint);
+}
+void UiArt::creator(unsigned index, UiRect r, Color tint) const {
+    if (index >= creatorArtNames.size())
+        return;
+    const Rectangle source{float(2 + (index % 6) * creatorTileStride),
+                           float(2 + (index / 6) * creatorTileStride), float(creatorTileSize),
+                           float(creatorTileSize)};
+    DrawTexturePro(resources_.texture(creator_), source,
+                   {float(r.x * 3), float(r.y * 3), float(r.width * 3), float(r.height * 3)}, {0, 0}, 0,
+                   tint);
 }
 void UiArt::camp(unsigned frame, UiRect r, Color tint) const {
     constexpr float scale = float(gameWidth) / artWidth;

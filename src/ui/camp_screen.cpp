@@ -1,9 +1,14 @@
 #include "ui/camp_layout.hpp"
+#include "ui/creator_screen.hpp"
 #include "ui/hud_painter.hpp"
 namespace blobber {
 void HudPainter::camp(const HudSnapshot& h) const {
     using namespace hudInk;
     const auto& c = h.camp;
+    if (c.preparing) {
+        drawPreparation(*this, c);
+        return;
+    }
     // During the final fade-in, expose the dungeon while retaining a black veil.
     if (c.playing && c.elapsedMs >= 1950) {
         const auto alpha = static_cast<unsigned char>(255 * std::clamp((2300 - c.elapsedMs) / 350., 0., 1.));
@@ -32,7 +37,10 @@ void HudPainter::camp(const HudSnapshot& h) const {
     for (int i = 0; i < 4; ++i) {
         const auto& m = c.members[i];
         const int x = 21 + i * 119;
-        centered(m.name, {x, 225, 104, 12}, gold, UiTextStyle::Display);
+        if (fonts && fonts->width(m.name, UiTextStyle::Display) > 96)
+            label(m.name, {x, 225, 104, 12}, gold, UiTextStyle::Display);
+        else
+            centered(m.name, {x, 225, 104, 12}, gold, UiTextStyle::Display);
         if (c.playing) {
             std::snprintf(line, sizeof(line), "+%d HP  |  +%d mana", c.result.healed[i], c.result.mana[i]);
             centered(line, {x, 241, 104, 11}, gold);
@@ -52,9 +60,19 @@ void HudPainter::camp(const HudSnapshot& h) const {
         }
         centered(line, {x, c.playing || shortRest ? 256 : 241, 104, 11}, muted, UiTextStyle::Small);
     }
-    centered(shortRest ? "Second Wind refreshes. Mana does not recover."
-                       : "Full HP and mana. Hit Dice and class features recover.",
-             {viewX, 267, viewWidth, 10}, gold, UiTextStyle::Small);
+    bool changedPreparation = false;
+    if (c.request.preparation.enabled)
+        for (unsigned i = 0; i < 4; ++i)
+            changedPreparation |= c.request.preparation.prepared[i] != c.contexts[i].baseline;
+    centered(shortRest            ? "Second Wind refreshes. Mana does not recover."
+             : changedPreparation ? "Prepared spell changes will apply with this rest."
+                                  : "Full HP and mana. Hit Dice and class features recover.",
+             {viewX, 267, shortRest ? viewWidth : 337, 10}, gold, UiTextStyle::Small);
+    if (!shortRest && !c.playing) {
+        box(campLayout::prepare, c.canPrepare ? teal : edge);
+        centered("Prepare spells [Tab]", campLayout::prepare, c.canPrepare ? gold : muted,
+                 UiTextStyle::Small);
+    }
     if (c.playing) {
         centered("Rest complete", {12, 278, 320, 18}, bright);
     } else {

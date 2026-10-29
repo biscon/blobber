@@ -51,6 +51,9 @@ class Party {
     InventoryResult previewInventoryChange(const InventoryRequest&) const noexcept;
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     InventoryResult acquire(const AcquisitionRequest&, bool preview = false) noexcept;
+    PreparationRequest preparationRequest() const noexcept;
+    bool alternativePreparation(RestRequest&) const noexcept;
+    std::uint64_t preparationRevision() const noexcept { return preparationRevision_; }
     RestError recoveryBenefits(const RestRequest&) const noexcept;
     RestResult recover(const RestRequest&, ItemHandle supply, rules::DiceRng&) noexcept;
     InventoryResult releaseItem(ItemHandle, std::uint64_t revision, bool preview = false) noexcept;
@@ -64,6 +67,7 @@ class Party {
     PartySnapshot state_;
     Inventory inventory_;
     bool formationLocked_ = false;
+    std::uint64_t preparationRevision_ = 0;
     InventoryResult stageInventoryChange(const InventoryRequest&, Inventory&,
                                          std::array<rules::CharacterStats, 4>&) const noexcept;
     rules::HealthResult commit(rules::CharacterId id, rules::HealthResult result) noexcept;

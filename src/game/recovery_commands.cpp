@@ -21,6 +21,11 @@ void CommandController::refreshCamp() noexcept {
         return;
     auto& h = state_.camp;
     h.preview = session_->previewRest(h.request);
+    h.catalog = &party_.catalog();
+    auto probe = h.request;
+    probe.kind = RestKind::Long;
+    probe.dice = {};
+    h.canPrepare = party_.alternativePreparation(probe) && bool(session_->previewRest(probe));
     h.supplier = h.preview.supplier.index < 4 ? party_.character(h.preview.supplier)->build.name.c_str() : "";
     for (std::uint16_t i = 0; i < 4; ++i) {
         const auto& c = *party_.character({i});
@@ -38,6 +43,10 @@ void CommandController::refreshCamp() noexcept {
 void CommandController::campKind(RestKind kind) noexcept {
     if (!state_.camp.open || state_.camp.playing)
         return;
+    auto& h = state_.camp;
+    if (h.request.kind == RestKind::Long)
+        h.staged = h.request.preparation;
+    h.request.preparation = kind == RestKind::Long ? h.staged : PreparationRequest{};
     state_.camp.request.kind = kind;
     state_.camp.request.dice = {};
     refreshCamp();
@@ -53,7 +62,7 @@ void CommandController::campDice(unsigned c, int delta) noexcept {
 }
 void CommandController::startRest() noexcept {
     auto& h = state_.camp;
-    if (!session_ || !h.open || h.playing)
+    if (!session_ || !h.open || h.playing || h.preparing)
         return;
     refreshCamp();
     if (!h.preview)
@@ -76,11 +85,15 @@ void CommandController::startRest() noexcept {
                       h.result.healed[i], h.result.mana[i], h.result.diceSpent[i]);
         state_.log.append(line);
     }
+    if (h.result.preparationChanged)
+        state_.log.append("Prepared spells updated.");
     if (h.result.usedSupply)
         state_.log.append("One camp kit consumed.");
 }
 void CommandController::tickCamp(double seconds, bool focused) noexcept {
     auto& h = state_.camp;
+    if (h.open && h.preparing)
+        h.searchEdit.tick(float(seconds), focused);
     if (!h.open || !h.playing || !focused || !std::isfinite(seconds) || seconds < 0)
         return;
     h.elapsedMs += std::min(seconds, .1) * 1000;
@@ -127,7 +140,7 @@ void CommandController::refreshRestAvailability() noexcept {
     state_.restReason = "Rest unavailable.";
     if (!session_)
         return;
-    RestRequest request{RestKind::Short, {}, actors_.snapshot().world, session_->restToken()};
+    RestRequest request{RestKind::Short, {}, actors_.snapshot().world, session_->restToken(), {}};
     for (std::uint16_t i = 0; i < 4; ++i) {
         const auto& c = *party_.character({i});
         if (c.life != rules::Life::Dead && c.hitPoints < c.stats.maxHitPoints && c.availableHitDice > 0)
@@ -136,10 +149,12 @@ void CommandController::refreshRestAvailability() noexcept {
     const auto shortRest = session_->previewRest(request);
     request.kind = RestKind::Long;
     request.dice = {};
-    const auto longRest = session_->previewRest(request);
+    auto longRest = session_->previewRest(request);
+    if (!longRest && party_.alternativePreparation(request))
+        longRest = session_->previewRest(request);
     state_.restAvailable = !state_.suspended && !state_.modal() && (shortRest || longRest);
     state_.restReason =
-        state_.restAvailable ? "Make camp to recover HP and resources."
+        state_.restAvailable ? "Make camp to recover or prepare spells."
         : state_.modal()     ? "Close the current window first."
         : state_.suspended
             ? "Wait until movement ends and the game is active."

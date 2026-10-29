@@ -226,6 +226,8 @@ class CommandController {
     void campKind(RestKind) noexcept;
     void campDice(unsigned character, int delta) noexcept;
     void startRest() noexcept;
+    void openPreparation() noexcept;
+    void routePreparation(const UiInput&) noexcept;
     void tickCamp(double seconds, bool focused) noexcept;
     void refreshCamp() noexcept;
     void floorHover(std::optional<LootId>) noexcept;

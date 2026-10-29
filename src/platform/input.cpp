@@ -1,6 +1,20 @@
 #include "platform/input.hpp"
 #include "raylib.h"
 namespace blobber {
+TextInput pollTextInput() {
+    TextInput t;
+    std::size_t n = 0;
+    for (int ch = GetCharPressed(); ch; ch = GetCharPressed())
+        if (ch >= 32 && ch < 127 && n < 64)
+            t.text[n++] = char(ch);
+    t.backspace = IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE);
+    t.erase = IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE);
+    t.left = IsKeyPressed(KEY_LEFT) || IsKeyPressedRepeat(KEY_LEFT);
+    t.right = IsKeyPressed(KEY_RIGHT) || IsKeyPressedRepeat(KEY_RIGHT);
+    t.home = IsKeyPressed(KEY_HOME);
+    t.end = IsKeyPressed(KEY_END);
+    return t;
+}
 InputSample Input::poll(float seconds) {
     InputSample result;
     const bool focused = IsWindowFocused();

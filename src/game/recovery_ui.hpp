@@ -1,5 +1,6 @@
 #pragma once
 #include "game/recovery.hpp"
+#include "game/creator.hpp"
 namespace blobber {
 struct CampMember {
     const char* name = "";
@@ -14,5 +15,17 @@ struct CampHud {
     std::array<CampMember, 4> members{};
     const char* supplier = "";
     RestResult result;
+    bool preparing = false, canPrepare = false;
+    const rules::Catalog* catalog = nullptr;
+    std::array<rules::SpellSelectionContext,4> contexts{};
+    std::array<bool,4> casters{};
+    std::array<std::uint32_t,4> editing{};
+    unsigned preparationMember = 0;
+    PreparationRequest staged, editingRequest;
+    rules::SpellSelection selection;
+    FlowControls controls;
+    TextEdit searchEdit;
+    std::array<char,192> preparationMessage{};
 };
+void layoutPreparation(FlowControls&, const CampHud&) noexcept;
 } // namespace blobber

@@ -1,5 +1,6 @@
 #pragma once
 #include "ui/layout.hpp"
+#include "input/text_edit.hpp"
 #include <array>
 namespace blobber {
 enum class UiKey : std::size_t {
@@ -35,6 +36,7 @@ struct UiInput {
     std::array<bool, uiKeyCount> pressed{};
     std::optional<ArtPoint> pointer;
     int scroll = 0;
+    TextInput text;
     bool focused = true, shift = false;
     bool pointerHeld = false, pointerReleased = false;
     bool has(UiKey key) const noexcept { return pressed[static_cast<std::size_t>(key)]; }

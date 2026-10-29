@@ -59,6 +59,20 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         return;
     }
     if (commands.snapshot().camp.open) {
+        if (commands.snapshot().camp.preparing) {
+            commands.routePreparation(input);
+            return;
+        }
+        if (!commands.snapshot().camp.playing && commands.snapshot().camp.request.kind == RestKind::Long &&
+            input.has(UiKey::Click) && insideCamp(campLayout::prepare)) {
+            commands.openPreparation();
+            return;
+        }
+        if (!commands.snapshot().camp.playing && commands.snapshot().camp.request.kind == RestKind::Long &&
+            input.has(UiKey::Tab)) {
+            commands.openPreparation();
+            return;
+        }
         if (input.has(UiKey::Cancel) || (input.has(UiKey::Click) && insideCamp(campLayout::cancel))) {
             commands.closeOverlay();
             return;

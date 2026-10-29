@@ -110,8 +110,17 @@ void nativeUi() {
                                            .c_str()),
               "Export test-owned prepared portrait atlas");
     }
+    {
+        OwnedImage atlas(GenImageColor(2048, 2048, BLUE));
+        check(
+            ExportImage(atlas.value, (fixture.path.parent_path() / "prepared/creator.qoi").string().c_str()),
+            "Generated creator atlas");
+    }
     GpuResources resources;
     const UiArt art(resources, fixture.path);
+    OwnedImage extra(GenImageColor(2, 2, WHITE));
+    const auto viewport = resources.createTexture(extra.value), menu = resources.createTexture(extra.value);
+    check(bool(viewport) && bool(menu), "Creator plus viewport and menu fit eight texture slots");
     const HudPainter painter(nullptr, &art);
     const auto target = resources.createTarget(400, 400);
     BeginTextureMode(resources.target(target));
@@ -124,6 +133,7 @@ void nativeUi() {
     painter.overlayBox({100, 40, 20, 20});
     painter.fill({101, 41, 18, 18}, RED);
     painter.overlayBox({100, 40, 20, 20});
+    art.creator(10, {100, 80, 25, 25});
     EndTextureMode();
     OwnedImage result(LoadImageFromTexture(resources.target(target).texture));
     ImageFlipVertical(&result.value);
@@ -131,6 +141,8 @@ void nativeUi() {
         const auto c = GetImageColor(result.value, x, 50);
         check(x % 2 ? c.r > 240 : c.r < 15, "One-native-pixel source detail survives the UI atlas and draw");
     }
+    const auto creatorPixel = GetImageColor(result.value, 330, 270);
+    check(creatorPixel.b > 200 && creatorPixel.r < 15, "Large creator atlas draws through native pipeline");
     const auto left = GetImageColor(result.value, 0, 50), right = GetImageColor(result.value, 107, 50);
     check(left.r < 15 && left.b < 15 && right.r > 240 && right.g > 240,
           "Atlas edge padding does not bleed neighboring/blank texels");

@@ -19,7 +19,10 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--capture-menu" && i + 1 < argc) {
+        else if (arg == "--capture-creator" && i + 1 < argc) {
+            result.captureCreatorOnly = result.captureMenuOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture-menu" && i + 1 < argc) {
             result.captureMenuOnly = true;
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         } else if (arg == "--check-prepared")

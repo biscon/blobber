@@ -13,13 +13,21 @@ enum class RestError : std::uint8_t {
     InvalidDice,
     NoBenefit,
     NoSupplies,
-    ClockFull
+    ClockFull,
+    InvalidPreparation,
+    PreparationFull
 };
 const char* restMessage(RestError) noexcept;
+struct PreparationRequest {
+    bool enabled = false;
+    std::array<std::uint32_t, 4> prepared{};
+    std::uint64_t inventoryRevision = 0, revision = 0;
+};
 struct RestRequest {
     RestKind kind = RestKind::Short;
     std::array<std::uint8_t, 4> dice{};
     std::uint64_t world = 0, token = 0;
+    PreparationRequest preparation{};
 };
 struct RestPreview {
     RestError error = RestError::None;
@@ -33,7 +41,7 @@ struct RestPreview {
 struct RestResult {
     RestError error = RestError::None;
     std::array<int, 4> healed{}, mana{}, diceSpent{};
-    bool usedSupply = false;
+    bool usedSupply = false, preparationChanged = false;
     explicit operator bool() const noexcept { return error == RestError::None; }
 };
 struct GroundPlacement {

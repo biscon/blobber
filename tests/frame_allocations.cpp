@@ -3,6 +3,7 @@
 #include "assets/prepared_assets.hpp"
 #include "assets/prepared_loot.hpp"
 #include "game/commands.hpp"
+#include "game/creator.hpp"
 #include "game/party.hpp"
 #include "input/key_repeat.hpp"
 #include "persistence/character_library.hpp"
@@ -315,6 +316,9 @@ int main() {
         const auto lookupId = librarySnapshot.records[127].id;
         MenuModel menuModel;
         MenuInteraction menuInteraction;
+        CreatorModel creatorModel;
+        FlowControls creatorControls;
+        creatorModel.begin(creationRules);
         tracking = true;
         for (int i = 0; i < 100; ++i) {
             menuModel.filter(librarySnapshot);
@@ -346,6 +350,20 @@ int main() {
         }
         for (unsigned iteration = 0; iteration < 128; ++iteration) {
             okay &= bool(rules::previewBuild(creationRules, draft));
+            creatorModel.begin(creationRules);
+            std::snprintf(creatorModel.draft.name.data(), 65, "Allocated outside? No.");
+            creatorModel.characterClass(creationRules, {3});
+            creatorModel.go(creationRules, CreatorStep::Learned);
+            creatorModel.recommend(creationRules);
+            routeCreator(creatorModel, creatorControls, creationRules, {}, {}, .01f);
+            creatorModel.go(creationRules, CreatorStep::Prepared);
+            creatorModel.recommend(creationRules);
+            creatorModel.race(creationRules, {3});
+            creationUi->openCamp();
+            creationUi->campKind(RestKind::Long);
+            creationUi->openPreparation();
+            creationUi->routePreparation({});
+            creationUi->closeOverlay();
             okay &= librarySnapshot.find(lookupId) == &librarySnapshot.records[127];
             for (std::uint16_t i = 0; i < creationRules.spellCount(); ++i)
                 creationSession->party().spellAccess({1}, {i});
@@ -357,6 +375,14 @@ int main() {
             creationUi->openInventory(rules::CharacterId{1}, CharacterPage::Character);
             creationUi->closeOverlay();
         }
+
+        RestRequest preparationRest;
+        preparationRest.kind = RestKind::Long;
+        preparationRest.world = creationSession->actors().snapshot().world;
+        preparationRest.token = creationSession->restToken();
+        okay &= creationSession->party().alternativePreparation(preparationRest);
+        const auto preparationResult = creationSession->rest(preparationRest);
+        okay &= bool(preparationResult) && preparationResult.preparationChanged;
 
         for (std::size_t i = 0; i < 4; ++i)
             deathActors.damage(deathActors.id(i), 100, 0);

@@ -1,13 +1,17 @@
 #pragma once
 #include "app/menu_model.hpp"
+#include "app/creator_flow.hpp"
+#include "ui/creator_screen.hpp"
 #include "ui/hud_painter.hpp"
 #include <cstdio>
 namespace blobber {
 struct MenuView {
-    MenuView(const rules::Catalog& c, CharacterLibrary& l) : catalog(c), library(l) {}
+    MenuView(const rules::Catalog& c, CharacterLibrary& l) : catalog(c), library(l), creator{c, creation.model, {}} {}
     MenuModel model;
+    CreatorFlow creation;
     const rules::Catalog& catalog;
     CharacterLibrary& library;
+    CreatorView creator;
     std::array<char, 192> error{};
     std::array<UiRect, 160> buttons{};
     std::array<int, 160> actions{};
