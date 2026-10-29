@@ -3,6 +3,7 @@
 #include <array>
 
 namespace blobber {
+class EffectController;
 constexpr std::size_t npcMaxFrames = 4;
 struct NpcClipTiming {
     std::array<std::uint32_t, npcMaxFrames> durationMs{};
@@ -31,7 +32,7 @@ class NpcAnimator {
     NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings);
     NpcAnimator(ActorWorld&&, const std::vector<NpcTimings>&) = delete;
     NpcAnimator(const ActorWorld&&, const std::vector<NpcTimings>&) = delete;
-    void setTime(std::uint64_t elapsedMs) noexcept;
+    void setTime(std::uint64_t elapsedMs, const EffectController* effects = nullptr) noexcept;
     const NpcAnimationSnapshot& snapshot() const noexcept { return snapshot_; }
 
   private:

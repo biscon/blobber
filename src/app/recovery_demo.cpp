@@ -65,7 +65,7 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
     NpcAnimator animator(s.actors(), timings);
     FramePipeline frames;
     auto save = [&](const std::string& name) {
-        animator.setTime(s.timeMs());
+        animator.setTime(s.timeMs(), &s.effects());
         frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(), &s.combat().attacks(),
                       s.timeMs(), nullptr, &s.loot().snapshot());
         ui.refresh(frames.picking()->targets(), false, false, true);
@@ -208,7 +208,7 @@ void captureRecovery(const rules::Catalog& catalog, const NpcWorld& source,
         NpcAnimator poses(dead.actors(), timings);
         FramePipeline images;
         const auto shot = [&](const char* name) {
-            poses.setTime(dead.timeMs());
+            poses.setTime(dead.timeMs(), &dead.effects());
             images.update(renderer, map, dead.movement(), &dead.actors(), &poses.snapshot(),
                           &dead.combat().attacks(), dead.timeMs(), nullptr, &dead.loot().snapshot());
             hud.refresh(images.picking()->targets(), false, false, true);

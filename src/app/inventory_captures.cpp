@@ -29,7 +29,7 @@ void captureInventory(const Map& map, const rules::Catalog& catalog, const NpcWo
     NpcAnimator animator(session.actors(), timings);
     FramePipeline frames;
     auto refresh = [&](bool focused = true) {
-        animator.setTime(session.timeMs());
+        animator.setTime(session.timeMs(), &session.effects());
         frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
                       &session.combat().attacks(), session.timeMs());
         ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false, focused);

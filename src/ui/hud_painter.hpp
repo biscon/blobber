@@ -69,7 +69,7 @@ class HudPainter {
         if (!fonts)
             return;
         char copy[192];
-        std::snprintf(copy, sizeof(copy), "%s", value);
+        std::snprintf(copy, sizeof(copy), "%.*s", int(sizeof(copy) - 1), value);
         auto n = std::strlen(copy);
         if (fonts->width(copy, style) > width) {
             while (n && fonts->width(copy, style) > width - fonts->width("...", style))

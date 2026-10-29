@@ -1,0 +1,5 @@
+{
+  "tool": "built-in imagegen",
+  "prompt": "Use case: stylized-concept. Asset type: directional static prone game sprite, back view. Reference is the approved FRONT view of this SAME motionless sleeping/knocked-out goblin. Preserve its identity, clothing, equipment, lying-on-side body pose, closed eyes, hand-painted rendering, warm overhead lighting and physical body proportions. Change ONLY the camera viewing direction: Camera has moved 180 degrees around the body to see its BACK: back of head/hood, spine/back of vest and back of legs, face hidden, head on image RIGHT, feet on LEFT. This must depict the same pose seen from the new camera, not a rotated flat image. Full body and all equipment visible, generous transparent margins, one goblin only, no ground/scenery/text/blood/particles. Genuine alpha-transparent background. Low three-quarter overhead view suitable for a dungeon billboard sprite. Keep ragged brown vest, boots and dagger beside body.",
+  "source": "/home/bison/.codex/generated_images/01a1833a-760b-7711-a986-2185b2ee40cb/exec-f89a23ae-cfe0-4a79-94b0-a300514fecee.png"
+}

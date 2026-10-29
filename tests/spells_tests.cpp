@@ -382,8 +382,9 @@ void ui() {
     const auto time = s.timeMs();
     s.update(60, ui.snapshot().modal());
     check(s.timeMs() == time, "Book pauses simulation");
+    ui.selectSpellbookTab(1);
     UiInput choose;
-    choose.pointer = ArtPoint{hudLayout::spellEntry(3).x + 2, hudLayout::spellEntry(3).y + 2};
+    choose.pointer = ArtPoint{hudLayout::spellEntry(1).x + 2, hudLayout::spellEntry(1).y + 2};
     choose.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
     routeHudInput(ui, choose, s.actors().id(0)); // Modal click must not also target/cast.
     check(ui.snapshot().magic.pending.targetCount == 0, "Picker closing click does not select a target");
@@ -547,22 +548,23 @@ void classFeaturesUi() {
     mixedUi.refresh({}, false, false, true);
     mixedUi.selectCharacter(1);
     mixedUi.openSpellbook();
+    mixedUi.selectSpellbookTab(MagicHud::abilityTab);
     mixedUi.scrollSpellbook(100);
     const auto mixedCount = mixedUi.snapshot().magic.count;
     check(mixedCount == definitions.size() + 2 && mixedCount <= MagicHud::capacity &&
-              mixedUi.snapshot().magic.offset == mixedCount - hudLayout::spellRows &&
+              mixedUi.snapshot().magic.offset == 0 && mixedUi.snapshot().magic.visibleCount == 2 &&
               mixedUi.snapshot().magic.entries[mixedCount - 1].feature ==
                   rules::Feature::DismissConcentration,
-          "Mixed spell/feature list scrolls to its final entry within bounded storage");
+          "Abilities are separately filtered within bounded catalog storage");
     mixedUi.chooseSpellbook(mixedCount - 2);
     check(mixedUi.snapshot().magic.armed &&
               mixedUi.snapshot().magic.pending.feature == rules::Feature::SecondWind,
           "Scrolled activated feature creates the correct command");
     mixedUi.backToSpellbook();
     check(mixedUi.snapshot().magic.open && mixedUi.snapshot().magic.cursor == mixedCount - 2 &&
-              mixedUi.snapshot().magic.offset == mixedCount - hudLayout::spellRows &&
+              mixedUi.snapshot().magic.offset == 0 && mixedUi.snapshot().magic.visibleCount == 2 &&
               mixed.party().character({1})->secondWind,
-          "Back restores mixed-list cursor and scroll without spending the feature");
+          "Back restores the ability tab and cursor without spending the feature");
 
     const auto nearby = spellPlacements(map, 1, true);
     GameSession combat(map, catalog, nearby, 5, spellSpawn, false);
@@ -701,7 +703,7 @@ void uiRevision() {
     ui.openSpellbook();
     ui.browseSpellbook(7);
     const auto offset = ui.snapshot().magic.offset;
-    check(offset == 1, "Cleric list scrolls beyond seven entries");
+    check(offset == 0, "Cantrip list fits without scrolling");
     ui.chooseSpellbook(2);
     click(hudLayout::card(0));
     click(hudLayout::card(1));

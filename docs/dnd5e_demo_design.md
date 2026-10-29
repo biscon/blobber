@@ -1,6 +1,6 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 is implemented and Ready for review. Slices 12.2–12.4 and 13 remain Planned/unstarted; do not advance before acceptance.
+Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1, including its visual review corrections, is Ready for review. Slices 12.2–12.4 and 13 remain Planned/unstarted; do not advance before acceptance.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -10,10 +10,10 @@ user acceptance.
 | --- | --- |
 | Latest accepted slice | 12 — Loot and recovery, including all review corrections (2026-10-27) |
 | Active slice | 12.1 — Expanded level-one spell catalog |
-| Awaiting user review | 12.1 — [verification and handoff](slice121_verification.md) |
+| Awaiting user review | 12.1, including completed visual review corrections |
 | Blockers | None |
 | Next eligible slice | None until 12.1 is accepted; then plan 12.2 only |
-| Next action | User review of 12.1; do not start 12.2 |
+| Next action | Review the completed [visual corrections](spell_visual_review_design.md) and [handoff](slice121_verification.md); do not start 12.2 |
 | Accepted design | Character creator/menu visual flow and expanded spell catalog, 2026-10-28; Color Spray replaces the illustrative Ray of Sickness |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
@@ -1451,7 +1451,7 @@ hardware checks. Preserve the existing fourteen-spell behavior.
 
 **Handoff:** Publish spell IDs, class membership, effect/casting interfaces, source
 adaptations, capacities and reusable selection metadata for 12.2. Stop for review.
-**Execution record:** Ready for review, 2026-10-28. Implemented the approved [design](expanded_spells_design.md): ten spells, ground targeting, conditions, temporary HP, one-shot buffs, Sanctuary, schema 7 and prepared art. [Verification/handoff](slice121_verification.md): Debug/Release 30/30, sanitizers 4/4, zero tracked frame allocations, maximum-capacity stress, hidden GPU checks and 440 captures. User acceptance remains pending; do not advance to 12.2.
+**Execution record:** Ready for review, 2026-10-29. Implemented the approved [design](expanded_spells_design.md): ten spells, ground targeting, conditions, temporary HP, one-shot buffs, Sanctuary, schema 7 and prepared art. Completed the [visual review corrections](spell_visual_review_design.md): level/Abilities tabs, status icons and duration tooltips, generated Grease pool, and required four-direction prone poses. [Verification/handoff](slice121_verification.md): Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations, capacity baking, hidden GPU checks and 470 captures. User acceptance remains pending; do not advance to 12.2.
 
 ### Slice 12.2: Character builds, library storage and portraits
 

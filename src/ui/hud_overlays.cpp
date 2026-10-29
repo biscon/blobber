@@ -2,12 +2,14 @@
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
 #include "ui/inventory_layout.hpp"
+#include "ui/spell_layout.hpp"
 #include <cstring>
 namespace blobber {
 using namespace hudInk;
 void HudPainter::tooltip(const HudSnapshot& h) const {
     const auto& hover = h.hover;
-    if (hover.kind == HoverKind::None || h.modal() || h.suspended)
+    if (hover.kind == HoverKind::None || (h.modal() && !(h.magic.open && hover.kind == HoverKind::Status)) ||
+        h.suspended)
         return;
     int rows = 0;
     for (const auto& line : hover.lines)
@@ -42,9 +44,10 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
         if (!hover.lines[i][0])
             continue;
         clipped(hover.lines[i].data(), r.x + 6, lineY, width - 12,
-                i == 0   ? gold
-                : i == 3 ? (hover.reason == CommandReason::Ready ? bright : muted)
-                         : hudInk::text,
+                i == 0 ? gold
+                : i == 3 && hover.kind != HoverKind::Status
+                    ? (hover.reason == CommandReason::Ready ? bright : muted)
+                    : hudInk::text,
                 i == 0 ? UiTextStyle::Heading : UiTextStyle::Label);
         lineY += 11;
     }
@@ -87,46 +90,28 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     const HudPainter p(fonts, art, metrics);
     const auto& combat = h->combat;
     if (!h->modal() && picking && (!h->suspended || h->magic.armed)) {
-        std::array<UiRect, NpcWorld::maxInstances> conditionLabels{};
-        std::size_t labelCount = 0;
-        for (const auto id : h->targets.ids) {
-            if (id.slot >= h->conditions.size() || !h->conditions[id.slot])
-                continue;
-            const auto anchor = picking->targets().anchors[id.slot];
-            if (!anchor.valid)
-                continue;
-            for (unsigned k = unsigned(EffectKind::Sleep); k < unsigned(EffectKind::Count); ++k)
-                if (h->conditions[id.slot] & (1u << k)) {
-                    const auto* name = effectName(EffectKind(k));
-                    const int width = std::min(64, int(std::strlen(name)) * 4 + 6);
-                    const int x = viewX + std::clamp(anchor.badgeX - width / 2, 1, viewWidth - width - 1),
-                              y = viewY + std::clamp(anchor.badgeTop - 12, 1, viewHeight - 12);
-                    UiRect box{x, y, width, 11};
-                    bool placed = false;
-                    for (int attempt = 0; attempt < 25 && !placed; ++attempt) {
-                        bool overlaps = false;
-                        for (std::size_t n = 0; n < labelCount; ++n) {
-                            const auto other = conditionLabels[n];
-                            overlaps |=
-                                box.x < other.x + other.width + 2 && box.x + box.width + 2 > other.x &&
-                                box.y < other.y + other.height + 2 && box.y + box.height + 2 > other.y;
+        const auto statuses = statusMarkerLayout(*h);
+        for (std::size_t slot = 0; slot < statuses.size(); ++slot)
+            if (statuses[slot]) {
+                const auto row = *statuses[slot];
+                unsigned n = 0, count = 0;
+                for (unsigned k = 0; k < unsigned(EffectKind::Count); ++k)
+                    count += (h->conditions[slot] >> k) & 1;
+                for (unsigned k = 0; k < unsigned(EffectKind::Count) && n < 6; ++k)
+                    if (h->conditions[slot] & (1u << k)) {
+                        const UiRect r{row.x + int(n) * 12, row.y, 12, 12};
+                        if (n == 5 && count > 6) {
+                            char label[16];
+                            std::snprintf(label, sizeof(label), "+%u", count - 5);
+                            p.box(r, gold);
+                            p.centered(label, r, gold, UiTextStyle::Small);
+                        } else {
+                            p.box(r, harmfulEffect(EffectKind(k)) ? red : teal);
+                            p.picture(UiArt::effectIcon(EffectKind(k)), {r.x + 1, r.y + 1, 10, 10});
                         }
-                        if (!overlaps)
-                            placed = true;
-                        else {
-                            const int step = (attempt / 2 + 1) * 13;
-                            box.y = std::clamp(y + (attempt % 2 ? step : -step), viewY + 1,
-                                               viewY + viewHeight - 12);
-                        }
+                        ++n;
                     }
-                    if (placed) {
-                        conditionLabels[labelCount++] = box;
-                        p.box(box, teal);
-                        p.clipped(name, box.x + 2, box.y + 1, width - 4, teal, UiTextStyle::Small);
-                    }
-                    break;
-                }
-        }
+            }
         std::array<std::uint8_t, NpcWorld::maxInstances> marks{};
         if (h->magic.armed) {
             for (std::size_t i = 0; i < h->magic.affectedCount; ++i) {

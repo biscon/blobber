@@ -117,3 +117,12 @@ separate maximum-capacity stress. Hidden GPU lifecycle and all new spell/status
 captures at 1920×1080, 1280×720 and letterboxed 1024×768. No desktop automation.
 Record exact commands/results/limitations and review recipe in slice121_verification.md.
 Stop at Ready for review; only the user can accept. Do not advance to 12.2.
+
+## Completed visual review correction, 2026-10-29
+
+The [presentation design](spell_visual_review_design.md) supersedes the initial
+status labels and Grease tint: spell-level/Abilities tabs, portrait spell icons
+with authoritative lifetime tooltips, enemy spell badges, prepared oily floor
+art, and a required static four-direction Prone clip shared by sleeping and
+knocked-down actors. These changes preserve the gameplay contracts above.
+See the [current handoff](slice121_verification.md) for verification and assets.

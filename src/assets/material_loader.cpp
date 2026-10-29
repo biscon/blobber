@@ -19,7 +19,11 @@ Material loadMaterial(const std::filesystem::path& path) {
     return Material(image.value.width, image.value.height, std::move(pixels));
 }
 Materials loadMaterials(const std::filesystem::path& directory) {
-    return {loadMaterial(directory / "wall.png"), loadMaterial(directory / "floor.png"),
-            loadMaterial(directory / "ceiling.png")};
+    Materials result{loadMaterial(directory / "wall.png"), loadMaterial(directory / "floor.png"),
+                     loadMaterial(directory / "ceiling.png")};
+    const auto grease = directory.parent_path() / "effects/grease.png";
+    if (std::filesystem::exists(grease))
+        result.grease = loadMaterial(grease);
+    return result;
 }
 } // namespace blobber

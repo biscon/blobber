@@ -430,7 +430,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.conditions.fill(0);
     if (session_)
         for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
-            for (unsigned k = unsigned(EffectKind::Sleep); k < unsigned(EffectKind::Count); ++k)
+            for (unsigned k = 0; k < unsigned(EffectKind::Count); ++k)
                 if (session_->effects().has(actors_.id(i), EffectKind(k)))
                     state_.conditions[i] |= 1u << k;
     if (session_)
@@ -479,11 +479,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         if (session_) {
             card.armorClass = session_->effects().armorClass(id);
             card.concentrating = session_->effects().concentration(id).serial != 0;
-            std::size_t used = 0;
-            for (unsigned e = 0; e < unsigned(EffectKind::Count) && used + 1 < card.effects.size(); ++e)
-                if (session_->effects().has(id, static_cast<EffectKind>(e)))
-                    used += std::snprintf(card.effects.data() + used, card.effects.size() - used, "%s ",
-                                          effectName(static_cast<EffectKind>(e)));
+            card.effects = session_->effects().statuses(id);
             card.hasDeathSaves = member.life == rules::Life::Dying;
             card.active = realTime(state_.combat.phase)
                               ? state_.selection.character.index == id.index

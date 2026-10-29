@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <optional>
 #include <raylib.h>
 #include <vector>
 
@@ -18,5 +19,6 @@ class Material {
 // A concrete, fixed set; no dynamic material manager is needed yet.
 struct Materials {
     Material wall, floor, ceiling;
+    std::optional<Material> grease{};
 };
 } // namespace blobber

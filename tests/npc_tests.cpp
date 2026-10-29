@@ -342,6 +342,26 @@ void testLoading() {
         write(directory / "level.json", badLevel);
         rejects(load, "Invalid reaction dimensions/directions/placement rejected");
     }
+    auto prone = clip;
+    prone["durations_ms"] = {1000};
+    for (auto& frames : prone["views"])
+        frames.erase(frames.begin() + 1, frames.end());
+    prone["width"] = .9;
+    animated["animations"]["prone"] = prone;
+    write(directory / "type/test.json", animated);
+    write(directory / "level.json", level);
+    check(npcTimings(load().appearances[0])[unsigned(NpcAnimation::Prone)].count == 1,
+          "Single-frame prone loads");
+    for (const char* side : {"front", "back", "left", "right"}) {
+        auto bad = animated;
+        bad["animations"]["prone"]["views"].erase(side);
+        write(directory / "type/test.json", bad);
+        rejects(load, "Prone requires every viewing direction");
+    }
+    auto badProne = animated;
+    badProne["animations"]["prone"] = clip;
+    write(directory / "type/test.json", badProne);
+    rejects(load, "Prone rejects animated multi-frame clips");
     animated["animations"]["ranged_attack"] = clip;
     animated["animations"]["ranged_attack"]["width"] = 0.6;
     write(directory / "type/test.json", animated);

@@ -312,3 +312,18 @@ six simultaneous nearest-row targets and interpolated outer-slot retreats in all
 headings, and wall occlusion.
 Shipped-art hidden captures check six clickable targets and melee acceptance in
 all four headings, then resolve an outer diagonal attack.
+
+## Slice 12.1: static prone presentation
+
+The [visual review correction](spell_visual_review_design.md) appends `Prone` to
+`NpcAnimation`, preserving existing animation indices. Gameplay asset baking now
+requires exactly one Prone frame in front/back/left/right for every appearance.
+Melee goblins and archers include generated, registered frames; future monsters
+must supply this clip. Legacy static diagnostic loading remains supported.
+`NpcAnimator::setTime` accepts a read-only EffectController: death takes priority,
+then living Sleep or Knockdown holds Prone frame zero. Waking/standing restores
+normal selection; neither life nor occupancy changes. Badge anchors follow the
+low prone raster and prepared silhouettes remain authoritative for picking.
+Four-direction pose selection, stable revisions, waking/standing/death priority,
+registration, clipping, bundle publication and frame allocations are covered by
+CPU fixtures. Hidden captures verify the real prepared appearances.

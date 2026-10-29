@@ -362,5 +362,65 @@
     "anchor_y": 512,
     "rows": 2,
     "split_y": 750
+  },
+  {
+    "name": "prone-front",
+    "columns": 1,
+    "scale": 0.36,
+    "pivot_x": [
+      914.5
+    ],
+    "ground_y": [
+      737
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512
+  },
+  {
+    "name": "prone-back",
+    "columns": 1,
+    "scale": 0.36,
+    "pivot_x": [
+      972.5
+    ],
+    "ground_y": [
+      723
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512
+  },
+  {
+    "name": "prone-left",
+    "columns": 1,
+    "scale": 0.3,
+    "pivot_x": [
+      771.0
+    ],
+    "ground_y": [
+      1006
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512
+  },
+  {
+    "name": "prone-right",
+    "columns": 1,
+    "scale": 0.3,
+    "pivot_x": [
+      770.0
+    ],
+    "ground_y": [
+      995
+    ],
+    "canvas_width": 768,
+    "canvas_height": 536,
+    "anchor_x": 384,
+    "anchor_y": 512
   }
 ]

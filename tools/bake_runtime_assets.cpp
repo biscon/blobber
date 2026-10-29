@@ -17,7 +17,7 @@ using namespace blobber;
 using Json = nlohmann::json;
 Json inputs(const fs::path& root) {
     Json result = Json::object();
-    for (const auto& directory : {"npcs", "textures"})
+    for (const auto& directory : {"npcs", "textures", "effects"})
         for (const auto& entry : fs::recursive_directory_iterator(root / directory))
             if (entry.is_regular_file() &&
                 (entry.path().extension() == ".json" || entry.path().extension() == ".png"))
@@ -28,9 +28,15 @@ Json inputs(const fs::path& root) {
 }
 int bake(const fs::path& root, const fs::path& output, bool capacity) {
     const auto start = std::chrono::steady_clock::now();
+    if (!fs::exists(root / "effects/grease.png"))
+        throw std::runtime_error("Missing Grease ground artwork");
     const auto profile = loadPreparationProfile(root / "preparation.json");
     const auto map = Map::load((root / "maze.txt").string());
     const auto metadata = loadNpcMetadata(root / "npcs/level.json", map, Player{}.cell);
+    for (const auto& timing : metadata.timings)
+        if (timing[static_cast<std::size_t>(NpcAnimation::Prone)].count != 1)
+            throw std::runtime_error(
+                "Every gameplay NPC appearance requires a single-frame four-direction prone clip");
     const auto inputHashes = inputs(root);
     fs::create_directories(output);
     // Publish the manifest last; an interrupted bake cannot look complete to CMake.

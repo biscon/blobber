@@ -391,6 +391,50 @@
         ]
       },
       "width": 0.9
+    },
+    "prone": {
+      "width": 0.9,
+      "durations_ms": [
+        1000
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/prone-front-0.png",
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "animation/frames/prone-back-0.png",
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "animation/frames/prone-left-0.png",
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "animation/frames/prone-right-0.png",
+            "anchor": [
+              0.5,
+              0.9552238805970149
+            ]
+          }
+        ]
+      }
     }
   }
 }

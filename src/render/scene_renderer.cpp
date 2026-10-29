@@ -141,12 +141,20 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
                 const auto flags = active[sample.forward * 25 + sample.lateral + 12];
                 if (!flags)
                     continue;
-                const auto tint = flags & 2 ? preview : Color{115, 152, 77, 255};
-                const unsigned alpha = sample.edge ? 155 : flags & 2 ? 38 : 70;
                 auto& pixel = result[y * viewWidth + x];
-                pixel.r = (pixel.r * (255 - alpha) + tint.r * alpha) / 255;
-                pixel.g = (pixel.g * (255 - alpha) + tint.g * alpha) / 255;
-                pixel.b = (pixel.b * (255 - alpha) + tint.b * alpha) / 255;
+                const auto blend = [&](Color source) {
+                    const unsigned alpha = source.a;
+                    pixel.r = (pixel.r * (255 - alpha) + source.r * alpha) / 255;
+                    pixel.g = (pixel.g * (255 - alpha) + source.g * alpha) / 255;
+                    pixel.b = (pixel.b * (255 - alpha) + source.b * alpha) / 255;
+                };
+                if (flags & 1)
+                    blend(view.grease[unsigned(player.heading)][y * viewWidth + x]);
+                if (flags & 2) {
+                    auto tint = preview;
+                    tint.a = sample.edge ? 155 : 38;
+                    blend(tint);
+                }
             }
     }
     if (npcs)

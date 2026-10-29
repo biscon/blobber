@@ -80,7 +80,8 @@ void nativeUi() {
                                   "spells/color_spray",
                                   "spells/guidance",
                                   "spells/resistance",
-                                  "spells/sanctuary"};
+                                  "spells/sanctuary",
+                                  "spells/hold_person"};
     for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168

@@ -25,6 +25,7 @@ struct PreparedView {
     std::vector<PreparedColumn> columns;
     std::vector<Color> pixels;
     std::array<Frame, 16> backgrounds;
+    std::array<Frame, 4> grease; // Per-heading world-cell anchored floor decal; baked RGBA.
 };
 using PreparedScene = std::array<PreparedView, ViewProjection::strafeSteps>;
 struct ScenePreparationStats {

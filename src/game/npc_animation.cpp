@@ -1,9 +1,12 @@
 #include "game/npc_animation.hpp"
+#include "game/effects.hpp"
 #include <stdexcept>
 namespace blobber {
 void validateNpcTimings(const NpcTimings& timings) {
     if (!timings[0].count)
         throw std::runtime_error("NPC requires idle animation");
+    if (timings[static_cast<std::size_t>(NpcAnimation::Prone)].count > 1)
+        throw std::runtime_error("NPC prone clip requires exactly one frame");
     for (const auto& clip : timings) {
         if (clip.count > npcMaxFrames)
             throw std::runtime_error("NPC clips require 1..4 frames");
@@ -63,7 +66,7 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
     snapshot_.world = world.snapshot().world;
     setTime(0);
 }
-void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
+void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effects) noexcept {
     bool changed = false;
     for (std::size_t i = 0; i < snapshot_.count; ++i) {
         const auto& actor = world_.snapshot().actors[i];
@@ -102,6 +105,12 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs) noexcept {
             if (dying) {
                 next.clip = NpcAnimation::Death;
                 next.active = sample(death, time - actor.damageTimeMs, 0);
+            } else if (actor.life == ActorLife::Alive && effects &&
+                       (effects->has(world_.id(i), EffectKind::Sleep) ||
+                        effects->has(world_.id(i), EffectKind::Knockdown)) &&
+                       timings[static_cast<std::size_t>(NpcAnimation::Prone)].count) {
+                next.clip = NpcAnimation::Prone;
+                next.active = 0;
             } else if (hurtWins && time - actor.damageTimeMs < npcClipDuration(hurt)) {
                 next.clip = NpcAnimation::Hurt;
                 next.active = sample(hurt, time - actor.damageTimeMs, 0);

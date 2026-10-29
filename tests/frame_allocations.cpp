@@ -92,7 +92,7 @@ int main() {
     try {
         static_assert(!std::is_copy_constructible_v<Frame>);
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
-        const auto appearance = testReactionAppearance();
+        const auto appearance = testProneAppearance();
         const auto archerAppearance = testArcherAppearance();
         const std::vector<NpcTimings> roleTimings{npcTimings(appearance), npcTimings(archerAppearance)};
         const auto bundleDirectory =
@@ -107,7 +107,7 @@ int main() {
             }
         } cleanup{bundleDirectory};
         {
-            savePreparedScene(bundleDirectory / "scene.bin", prepareScene(testMaterials()), 31);
+            savePreparedScene(bundleDirectory / "scene.bin", prepareScene(testGreaseMaterials()), 31);
             savePreparedNpcs(bundleDirectory / "npcs.bin", PreparedNpcs({appearance}),
                              {npcTimings(appearance)}, 19, 31);
             savePreparedNpcs(bundleDirectory / "roles.bin", PreparedNpcs({appearance, archerAppearance}),
@@ -236,6 +236,7 @@ int main() {
         rules::DiceRng effectRng(5);
         EffectController effects(effectParty, effectActors, effectRng);
         CombatEvents effectEvents;
+        NpcAnimator effectAnimator(effectActors, {npcTimings(appearance)});
         auto effectSessionStorage = std::unique_ptr<GameSession>(
             new GameSession(hybridMap, hybridRules, hybridPlaces, 5, {{5, 8}, Heading::North}, false));
         auto& effectSession = *effectSessionStorage;
@@ -426,6 +427,9 @@ int main() {
             ui.refresh(allCombatTargets(s), false, false, true);
             ui.selectCharacter(kind == rules::SpellKind::ShockingGrasp ? 1 : caster);
             ui.openSpellbook();
+            ui.cycleSpellbookTab(1);
+            ui.cycleSpellbookTab(1);
+            ui.cycleSpellbookTab(-1);
             std::size_t entry = 0;
             while (entry < ui.snapshot().magic.count &&
                    ui.snapshot().magic.entries[entry].spell.index != command.spell.index)
@@ -475,6 +479,14 @@ int main() {
             ui.record(s.update(.5, false));
             spellVisuals.update(&s.combat().attacks(), s.timeMs());
             ui.refresh(allCombatTargets(s), false, false, true);
+            ui.openSpellbook();
+            for (unsigned c = 0; c < 4; ++c) {
+                UiInput hover;
+                const auto r = hudLayout::status(c, 0);
+                hover.pointer = ArtPoint{float(r.x + 1), float(r.y + 1)};
+                routeHudInput(ui, hover);
+            }
+            ui.closeOverlay();
         }
         EffectRequest effectRequest;
         effectRequest.world = effectActors.snapshot().world;
@@ -503,6 +515,12 @@ int main() {
         for (const auto kind :
              {EffectKind::Sleep, EffectKind::Blind, EffectKind::Slow, EffectKind::Knockdown})
             effects.condition(effectActors.id(0), kind, {3}, 60100, effectEvents);
+        effectAnimator.setTime(60100, &effects);
+        okay &= effectAnimator.snapshot().frames[0].clip == NpcAnimation::Prone;
+        const auto statusSummary = effects.statuses(effectActors.id(0));
+        char duration[96];
+        for (std::size_t i = 0; i < statusSummary.count; ++i)
+            statusDuration(statusSummary.entries[i], duration, sizeof(duration));
         effects.wake(effectActors.id(0), 60100, effectEvents);
         effects.clockMode(true);
         effects.casterTurn({3}, 60100, effectEvents);

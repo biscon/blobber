@@ -39,7 +39,7 @@ void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
                 FramePipeline frames;
                 CommandController ui(s, timings);
                 auto refresh = [&] {
-                    animator.setTime(s.timeMs());
+                    animator.setTime(s.timeMs(), &s.effects());
                     frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
                                   &s.combat().attacks(), s.timeMs());
                     ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},

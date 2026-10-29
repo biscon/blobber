@@ -149,7 +149,7 @@ verification/handoff. The user accepted and closed this slice on 2026-10-26; 8.2
   reserves account for transient old/new vector storage. `ScenePreparationStats`
   reports material storage and preparation high water. Loading allocates exact
   serialized counts, so its resident capacity is lower than the baker's capacity.
-- `save/loadPreparedScene`, `save/loadPreparedNpcs` use separate version-1 binary
+- `save/loadPreparedScene`, `save/loadPreparedNpcs` use separate version-2 binary
   formats (`BLBSCN01`/`BLBNPC01`). Fixed-width little-endian scalar fields precede
   flat RGBA8/alpha arrays; offsets are explicit, never serialized C++ layouts.
   Shared headers carry renderer revision, viewport/projection signature and
@@ -174,3 +174,27 @@ Process peak RSS is reported separately. Sheet scratch is capped at 256 MiB;
 derivative, scene and NPC bake stages do not retain each other's raster buffers.
 Runtime streams each uncompressed bank directly into final arrays, validates before
 use, then renders without file I/O, resampling or engine-owned frame allocations.
+
+## Slice 12.1 visual asset extensions
+
+[Visual review corrections](spell_visual_review_design.md) add one-column source
+sheets (`columns: 1`) for static Prone clips; the default remains two columns.
+Single images require no split position and retain explicit pivots/ground rows.
+Gameplay publication rejects any appearance without a one-frame, four-direction
+Prone clip. The master and prompt live beside each other; derivatives remain in
+the build tree.
+
+`assets/effects/grease.png` is a required production input, fingerprinted with NPC
+and surface sources. Scene preparation samples its RGBA into four heading-specific
+floor frames in every prepared view/strafe phase. World-cell coordinates prevent
+mirroring between neighboring cells; composition uses existing wall depth and
+blends before actors and loot. Target selection remains a separate overlay.
+Legacy generated-fixture Materials may omit Grease and receive transparent banks.
+Prepared format version and renderer revision are 2 (magic identifiers unchanged).
+CMake rebakes old bundles; no image decoding or resampling enters frame processing.
+
+Production scene/NPC resident sizes are 140,655,424 / 69,010,094 bytes, total
+209,665,518; tracked loading high-water is 150,419,024. The two-complete-set capacity
+check totals 278,669,284 resident bytes, with 200,068,708 NPC raster loading bytes.
+Both stay within the existing 512 MiB budgets. Round-trip, projection/alpha,
+overlap, clipping and allocation tests use small generated fixtures.

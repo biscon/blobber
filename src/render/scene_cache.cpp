@@ -15,7 +15,7 @@ namespace {
 const float focal = ViewProjection::focalLength();
 constexpr float horizon = ViewProjection::horizon, setback = ViewProjection::cameraSetback;
 constexpr float farDepth = ViewProjection::visibleRows + 0.5f + setback;
-constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 16u * Frame::pixelCount * sizeof(Color);
+constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 20u * Frame::pixelCount * sizeof(Color);
 struct Storage {
     std::size_t resident, source, highWater;
     PreparationLimits limits;
@@ -134,6 +134,28 @@ void bakeBackgrounds(const Material& floor, const Material& ceiling, float offse
         }
     }
 }
+void bakeGrease(const std::optional<Material>& source, float offset, PreparedView& view) {
+    for (int direction = 0; direction < 4; ++direction) {
+        auto& image = view.grease[direction];
+        std::fill(image.begin(), image.end(), BLANK);
+        if (!source)
+            continue;
+        const auto f = forward(Heading(direction)), r = right(Heading(direction));
+        for (int y = int(horizon) + 1; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto p = floorPoint(x, y, offset);
+                if (p.depth > farDepth)
+                    continue;
+                const float wx = .5f + r.x * p.lateral + f.x * p.forward;
+                const float wy = .5f + r.y * p.lateral + f.y * p.forward;
+                auto pixel =
+                    shadeScene(source->sample(wx - std::floor(wx), wy - std::floor(wy)), p.depth, .85f);
+                pixel.a = unsigned(pixel.a) * 210 / 255;
+                image[y * viewWidth + x] = pixel;
+            }
+    }
+}
+
 } // namespace
 std::size_t sceneStorageBytes(const PreparedScene& scene) noexcept {
     std::size_t bytes = sizeof(scene) + backgroundBytes;
@@ -144,8 +166,9 @@ std::size_t sceneStorageBytes(const PreparedScene& scene) noexcept {
 }
 PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
                            ScenePreparationStats* stats) {
-    const auto source =
-        materials.wall.storageBytes() + materials.floor.storageBytes() + materials.ceiling.storageBytes();
+    const auto source = materials.wall.storageBytes() + materials.floor.storageBytes() +
+                        materials.ceiling.storageBytes() +
+                        (materials.grease ? materials.grease->storageBytes() : 0);
     Storage storage{sizeof(PreparedScene) + backgroundBytes, source, 0, limits};
     requirePreparationBytes(0, storage.resident, limits.residentBytes);
     requirePreparationBytes(source, storage.resident, limits.loadingBytes);
@@ -155,6 +178,7 @@ PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
         const float offset = float(phase) / ViewProjection::strafeSteps;
         bakeWalls(materials.wall, offset, views[phase], storage);
         bakeBackgrounds(materials.floor, materials.ceiling, offset, views[phase]);
+        bakeGrease(materials.grease, offset, views[phase]);
     }
     if (stats)
         *stats = {source, storage.highWater};

@@ -99,16 +99,42 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         commands.hover(HoverKind::None);
         return;
     }
+    const auto statusHover = [&]() {
+        if (!input.pointer || state.suspended)
+            return false;
+        for (unsigned c = 0; c < state.cards.size(); ++c)
+            for (unsigned n = 0;
+                 n < std::min(state.cards[c].effects.count, std::size_t(hudLayout::statusSlots)); ++n)
+                if (inside(hudLayout::status(int(c), int(n)))) {
+                    commands.hover(HoverKind::Status, int(c * 6 + n), {}, input.pointer->x, input.pointer->y);
+                    return true;
+                }
+        return false;
+    };
+    // Read-only status hover does not select a target or consume a keyboard action.
+    if (!click && std::none_of(input.pressed.begin(), input.pressed.end(), [](bool v) { return v; }) &&
+        (!state.modal() || state.magic.open) && statusHover())
+        return;
     // An overlay owns the entire input frame, including its closing click.
     if (state.modal()) {
         commands.hover(HoverKind::None);
         if (state.magic.open) {
             if (moved)
                 for (int i = 0; i < hudLayout::spellRows; ++i)
-                    if (inside(hudLayout::spellEntry(i)) && state.magic.offset + i < state.magic.count)
-                        commands.browseSpellbook(int(state.magic.offset + i) - int(state.magic.cursor));
+                    if (inside(hudLayout::spellEntry(i)) &&
+                        state.magic.offset + i < state.magic.visibleCount) {
+                        std::size_t row = 0;
+                        while (row < state.magic.visibleCount &&
+                               state.magic.visible[row] != state.magic.cursor)
+                            ++row;
+                        commands.browseSpellbook(int(state.magic.offset + i) - int(row));
+                    }
             if (input.scroll && inside(hudLayout::spellbook))
                 commands.scrollSpellbook(-input.scroll);
+            if (input.has(UiKey::Left))
+                commands.cycleSpellbookTab(-1);
+            if (input.has(UiKey::Right))
+                commands.cycleSpellbookTab(1);
             if (input.has(UiKey::Up))
                 commands.browseSpellbook(-1);
             if (input.has(UiKey::Down))
@@ -116,6 +142,16 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             if (input.has(UiKey::Confirm))
                 commands.chooseSpellbook(state.magic.cursor);
             if (click) {
+                int tabX = 14;
+                for (unsigned t = 0; t < state.magic.tabs.size(); ++t)
+                    if (state.magic.tabs[t]) {
+                        const auto r = hudLayout::spellTab(int(t), tabX);
+                        if (inside(r)) {
+                            commands.selectSpellbookTab(t);
+                            return;
+                        }
+                        tabX += r.width + 2;
+                    }
                 if (inside(hudLayout::spellbookClose) || !inside(hudLayout::spellbook))
                     commands.closeOverlay();
                 else if (inside(hudLayout::spellPrevious))
@@ -124,8 +160,9 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                     commands.scrollSpellbook(7);
                 else
                     for (int i = 0; i < hudLayout::spellRows; ++i)
-                        if (inside(hudLayout::spellEntry(i)))
-                            commands.chooseSpellbook(state.magic.offset + i);
+                        if (inside(hudLayout::spellEntry(i)) &&
+                            state.magic.offset + i < state.magic.visibleCount)
+                            commands.chooseSpellbook(state.magic.visible[state.magic.offset + i]);
             }
         } else if (state.logExpanded) {
             if (input.scroll && (inside(hudLayout::expandedLog) || inside(hudLayout::log)))

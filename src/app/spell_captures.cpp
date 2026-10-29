@@ -4,6 +4,25 @@
 #include <fstream>
 #include <stdexcept>
 namespace blobber {
+namespace {
+void focusSpellEntry(CommandController& ui, std::size_t index) {
+    const auto& m = ui.snapshot().magic;
+    if (index >= m.count)
+        throw std::runtime_error("Capture picker index out of range");
+    const auto& e = m.entries[index];
+    ui.selectSpellbookTab(e.category == PickerEntryKind::Spell ? unsigned(rules::spellRules(e.kind)->level)
+                                                               : MagicHud::abilityTab);
+    std::size_t oldRow = 0, newRow = 0;
+    for (std::size_t i = 0; i < m.visibleCount; ++i) {
+        if (m.visible[i] == m.cursor)
+            oldRow = i;
+        if (m.visible[i] == index)
+            newRow = i;
+    }
+    ui.browseSpellbook(int(newRow) - int(oldRow));
+}
+} // namespace
+
 void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                    const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
                    Presenter& presenter, const std::filesystem::path& directory) {
@@ -57,7 +76,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         const unsigned caster = rule.casting == rules::Casting::Wisdom ? 1 : 3;
         bool focused = true;
         auto refresh = [&](std::uint64_t animationOffset = 0) {
-            animator.setTime(s.timeMs() + animationOffset);
+            animator.setTime(s.timeMs() + animationOffset, &s.effects());
             const auto area = ui.floorPreview();
             frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
                           &s.combat().attacks(), s.timeMs(), &area);
@@ -112,7 +131,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                 entry = i;
         if (entry == ui.snapshot().magic.count)
             throw std::runtime_error("Capture spellbook missing entry");
-        ui.browseSpellbook(int(entry) - int(ui.snapshot().magic.cursor));
+        focusSpellEntry(ui, entry);
         capture("book");
         UiInput choose;
         choose.pressed[static_cast<std::size_t>(UiKey::Confirm)] = true;
@@ -175,7 +194,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         capture("cast");
         if (kind == rules::SpellKind::Bless) {
             ui.openSpellbook();
-            ui.browseSpellbook(int(ui.snapshot().magic.count) - 1 - int(ui.snapshot().magic.cursor));
+            focusSpellEntry(ui, ui.snapshot().magic.count - 1);
             capture("concentration");
             ui.closeOverlay();
         }
@@ -190,7 +209,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             s.party().spendMana({3}, s.party().character({3})->mana);
             ui.selectCharacter(3);
             ui.openSpellbook();
-            ui.browseSpellbook(3 - int(ui.snapshot().magic.cursor));
+            focusSpellEntry(ui, 3);
             capture("unavailable");
         }
     }
@@ -208,7 +227,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         FramePipeline frames;
         CommandController ui(s, timings);
         const auto refresh = [&] {
-            animator.setTime(s.timeMs());
+            animator.setTime(s.timeMs(), &s.effects());
             frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
                           &s.combat().attacks(), s.timeMs());
             ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false, true);
@@ -296,9 +315,10 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             refresh();
             ui.selectCharacter(member);
             ui.openSpellbook();
-            ui.browseSpellbook(int(index) - int(ui.snapshot().magic.cursor));
+            focusSpellEntry(ui, index);
             capture("used");
         }
     }
+    captureSpellReview(catalog, source, timings, renderer, presenter, directory);
 }
 } // namespace blobber

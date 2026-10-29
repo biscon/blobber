@@ -160,7 +160,7 @@ void CommandController::hover(HoverKind kind, int index, std::optional<ActorId> 
 void CommandController::updateHover() noexcept {
     auto& h = state_.hover;
     h.lines = {};
-    if (state_.modal() || state_.suspended) {
+    if ((state_.modal() && !(state_.magic.open && h.kind == HoverKind::Status)) || state_.suspended) {
         h.kind = HoverKind::None;
         return;
     }
@@ -168,6 +168,27 @@ void CommandController::updateHover() noexcept {
     auto put = [&](int line, const char* text) {
         std::snprintf(h.lines[line].data(), h.lines[line].size(), "%s", text);
     };
+    if (h.kind == HoverKind::Status) {
+        const unsigned card = unsigned(h.index) / 6, slot = unsigned(h.index) % 6;
+        if (card >= state_.cards.size() || slot >= state_.cards[card].effects.count) {
+            h.kind = HoverKind::None;
+            return;
+        }
+        const auto& effects = state_.cards[card].effects;
+        if (slot == 5 && effects.count > 6) {
+            put(0, "More active effects");
+            for (std::size_t i = 5; i < effects.count; ++i) {
+                put(int(1 + (i - 5) * 2), effects.entries[i].name);
+                statusDuration(effects.entries[i], h.lines[2 + (i - 5) * 2].data(), h.lines[0].size());
+            }
+        } else {
+            const auto& e = effects.entries[slot];
+            put(0, e.name);
+            statusDuration(e, h.lines[1].data(), h.lines[1].size());
+            put(2, e.ending);
+        }
+        return;
+    }
     if (h.kind == HoverKind::Rest) {
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "Rest [R]");
         std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s", state_.restReason);

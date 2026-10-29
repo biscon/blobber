@@ -1,6 +1,7 @@
 #pragma once
 #include "game/actors.hpp"
 #include "game/party.hpp"
+#include "rules/spells.hpp"
 
 namespace blobber {
 struct CombatEvents;
@@ -19,6 +20,24 @@ enum class EffectKind : std::uint8_t {
     Knockdown,
     Count
 };
+enum class StatusClock : std::uint8_t { Seconds, CasterTurn, Standing };
+struct StatusEntry {
+    EffectKind effect = EffectKind::Count;
+    rules::SpellKind spell = rules::SpellKind::Count;
+    const char* name = "";
+    const char* ending = "";
+    std::uint64_t remainingMs = 0;
+    StatusClock clock = StatusClock::Seconds;
+    bool harmful = false;
+};
+struct StatusSummary {
+    static constexpr std::size_t capacity = static_cast<std::size_t>(EffectKind::Count) + 2;
+    std::array<StatusEntry, capacity> entries{};
+    std::size_t count = 0;
+};
+rules::SpellKind effectSpell(EffectKind) noexcept;
+bool harmfulEffect(EffectKind) noexcept;
+void statusDuration(const StatusEntry&, char* output, std::size_t bytes) noexcept;
 struct EffectId {
     std::uint64_t world = 0, serial = 0;
 };
@@ -141,6 +160,7 @@ class EffectController {
     void advance(std::uint64_t gameplayMs, std::uint64_t sessionMs, bool realTime, CombatEvents&) noexcept;
     void damaged(rules::CharacterId, std::int64_t damage, std::uint64_t sessionMs, CombatEvents&) noexcept;
     bool has(EffectTarget, EffectKind) const noexcept;
+    StatusSummary statuses(EffectTarget) const noexcept;
     bool canAct(EffectTarget) const noexcept;
     bool mobileParty() const noexcept;
     bool conscious(EffectTarget) const noexcept;

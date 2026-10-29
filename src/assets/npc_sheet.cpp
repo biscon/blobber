@@ -51,7 +51,11 @@ void prepareNpcAnimation(const fs::path& configPath, const NpcSheetOptions& opti
                                                                     UnloadImageColors);
         if (!source)
             throw std::runtime_error("Cannot decode sheet " + name);
-        const int split = entry.at("split_x"), rows = entry.value("rows", 1);
+        const int columns = entry.value("columns", 2);
+        if (columns != 1 && columns != 2)
+            throw std::runtime_error("Sheet columns must be 1 or 2: " + name);
+        const int split = columns == 1 ? sheet.value.width : entry.at("split_x").get<int>();
+        const int rows = entry.value("rows", 1);
         if (rows != 1 && rows != 2)
             throw std::runtime_error("Sheet rows must be 1 or 2: " + name);
         const int splitY = entry.value("split_y", sheet.value.height / 2);
@@ -73,17 +77,17 @@ void prepareNpcAnimation(const fs::path& configPath, const NpcSheetOptions& opti
             anchorY <= 0 || anchorY > canvasHeight ||
             (entry.contains("ground_y") &&
              (!entry.at("ground_y").is_array() ||
-              entry.at("ground_y").size() != static_cast<std::size_t>(rows * 2))))
+              entry.at("ground_y").size() != static_cast<std::size_t>(rows * columns))))
             throw std::runtime_error("Invalid sheet canvas/registration: " + name);
-        if (split <= 0 || split >= sheet.value.width ||
+        if (split <= 0 || (columns == 2 && split >= sheet.value.width) ||
             (rows == 2 && (splitY <= 0 || splitY >= sheet.value.height)) || !std::isfinite(scale) ||
-            scale <= 0 || scale > 2 || entry.at("pivot_x").size() != static_cast<std::size_t>(rows * 2))
+            scale <= 0 || scale > 2 || entry.at("pivot_x").size() != static_cast<std::size_t>(rows * columns))
             throw std::runtime_error("Invalid sheet geometry: " + name);
-        for (int f = 0; f < rows * 2; ++f) {
-            const int originX = f % 2 ? split : 0, originY = f >= 2 ? splitY : 0;
+        for (int f = 0; f < rows * columns; ++f) {
+            const int originX = f % columns ? split : 0, originY = f >= columns ? splitY : 0;
             const int cellHeight =
-                rows == 1 ? sheet.value.height : (f >= 2 ? sheet.value.height - splitY : splitY);
-            const int width = f % 2 ? sheet.value.width - split : split;
+                rows == 1 ? sheet.value.height : (f >= columns ? sheet.value.height - splitY : splitY);
+            const int width = f % columns ? sheet.value.width - split : split;
             const double pivot = entry.at("pivot_x")[f];
             if (!std::isfinite(pivot) || pivot < 0 || pivot > width)
                 throw std::runtime_error("Invalid pivot: " + name);

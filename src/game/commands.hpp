@@ -36,7 +36,7 @@ struct HudCard {
     rules::CharacterId id;
     const char *name = "", *className = "";
     int hp = 0, maxHp = 0, temporaryHp = 0, mana = 0, maxMana = 0;
-    std::array<char, 96> effects{};
+    StatusSummary effects;
     bool concentrating = false;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
     bool incomingShot = false;
@@ -53,14 +53,14 @@ struct HudCard {
          castHovered = false;
     const char* castPreview = "";
 };
-enum class HoverKind { None, Enemy, Action, Portrait, Rest };
+enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status };
 struct HudHover {
     HoverKind kind = HoverKind::None;
     int index = 0;
     std::optional<ActorId> enemy;
     float x = 0, y = 0, health = 0;
     CommandReason reason = CommandReason::Unavailable;
-    std::array<std::array<char, 96>, 4> lines{};
+    std::array<std::array<char, 96>, StatusSummary::capacity * 2 + 1> lines{};
 };
 struct CombatFeedback {
     static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
@@ -104,6 +104,11 @@ struct MagicHud {
     // 16 class spells + 3 activated features + 3 automatic features.
     static constexpr std::size_t capacity = 22;
     std::array<SpellBookEntry, capacity> entries{};
+    static constexpr unsigned abilityTab = 10, tabCapacity = 11;
+    std::array<bool, tabCapacity> tabs{};
+    std::array<std::size_t, capacity> visible{};
+    unsigned tab = 0;
+    std::size_t visibleCount = 0;
     std::size_t count = 0, cursor = 0, offset = 0;
     const char *name = "", *description = "";
     int mana = 0, maxMana = 0, cost = 0, attackBonus = 0, difficulty = 0;
@@ -181,6 +186,8 @@ class CommandController {
     void selectAlly(std::size_t index) noexcept;
     void openSpellbook() noexcept;
     void browseSpellbook(int delta) noexcept;
+    void selectSpellbookTab(unsigned tab) noexcept;
+    void cycleSpellbookTab(int delta) noexcept;
     void chooseSpellbook(std::size_t index) noexcept;
     SpellArea floorPreview() const noexcept;
     void backToSpellbook() noexcept;
@@ -256,7 +263,11 @@ class CommandController {
     void reconcileMagic() noexcept;
     void magicFeedback(const char*) noexcept;
     void setCastingState(CastingState) noexcept;
-    std::array<std::size_t, rules::partySize> bookCursors_{}, bookOffsets_{};
+    void filterSpellbook() noexcept;
+    void rememberSpellbook() noexcept;
+    std::array<unsigned, rules::partySize> bookTabs_{};
+    std::array<std::array<std::size_t, MagicHud::tabCapacity>, rules::partySize> bookCursors_{},
+        bookOffsets_{};
     bool visible(ActorId id) const noexcept;
     void updateAvailability() noexcept;
     void recordFeedback(const CombatOutcome& outcome) noexcept;

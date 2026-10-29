@@ -21,7 +21,7 @@ struct CaptureView {
         refresh();
     }
     void refresh(bool debug = false) {
-        animator.setTime(session.timeMs());
+        animator.setTime(session.timeMs(), &session.effects());
         frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
                       &session.combat().attacks(), session.timeMs());
         commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, debug,

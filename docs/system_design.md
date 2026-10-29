@@ -1,11 +1,16 @@
 # System design
 
-Implemented, **Ready for review** (2026-10-28): [slice 12.1 expanded spells](expanded_spells_design.md).
-The ten additions use bounded conditions and ground areas, checked casts, temporary
-HP, turn-relative short effects and prepared presentation. [Local SRD](references/README.md)
+Implemented, **Ready for review** (2026-10-29): [slice 12.1 expanded spells](expanded_spells_design.md)
+and its [visual review corrections](spell_visual_review_design.md). Spell-level
+and Abilities tabs preserve selection per character/tab. Bounded status summaries
+supply portrait icons and duration tooltips; enemy badges reuse spell art. Prepared
+Grease floor banks and required four-direction static prone clips preserve offline
+image preparation and frame allocation guarantees. Binary bundles now use format 2.
+The ten spell additions retain checked casts, bounded conditions/ground areas,
+temporary HP and turn-relative short effects. [Local SRD](references/README.md)
 is the source for future planning. [Verification and handoff](slice121_verification.md):
-Debug/Release 30/30, focused sanitizers 4/4, zero tracked frame allocations,
-maximum-capacity stress and hidden GPU/capture checks pass. User acceptance is
+Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations,
+capacity baking, hidden GPU checks and 470 captures pass. User acceptance is
 pending; 12.2 remains unstarted.
 
 Design accepted, **implementation planned/unstarted** (2026-10-28):

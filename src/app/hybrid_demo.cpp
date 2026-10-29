@@ -53,7 +53,7 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
         FramePipeline frames;
         CommandController ui(s, timings);
         auto save = [&](const std::string& suffix) {
-            animator.setTime(s.timeMs());
+            animator.setTime(s.timeMs(), &s.effects());
             frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
                           &s.combat().attacks(), s.timeMs());
             ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
@@ -279,8 +279,7 @@ void captureHybrid(const Map& map, const rules::Catalog& catalog, const NpcWorld
             const auto f = forward(p.heading);
             const auto name = "diagonal-contact-" + std::to_string(d) + "-" + std::to_string(side);
             run(name.c_str(), {p.cell + f * -1, p.heading},
-                {{t, p.cell + f + right(p.heading) * side, {0, 0},
-                  static_cast<Heading>((d + 1) % 4)}}, 9);
+                {{t, p.cell + f + right(p.heading) * side, {0, 0}, static_cast<Heading>((d + 1) % 4)}}, 9);
         }
     }
     run("demo", hybridDemoSpawn(), source.instances(), 7);

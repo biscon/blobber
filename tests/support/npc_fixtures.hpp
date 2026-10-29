@@ -98,3 +98,21 @@ inline blobber::NpcAppearance testArcherAppearance() {
                     std::swap(pixel.r, pixel.g);
     return a;
 }
+
+// A low, wide silhouette distinguishes posture and picking from ordinary idle art.
+inline blobber::NpcAppearance testProneAppearance(bool archer = false) {
+    auto a = archer ? testArcherAppearance() : testReactionAppearance();
+    auto& clip = a.animations[static_cast<unsigned>(blobber::NpcAnimation::Prone)];
+    clip.width = .9f;
+    clip.timing = {{1000, 0, 0, 0}, 1};
+    for (unsigned side = 0; side < 4; ++side) {
+        auto image = testNpcAppearance().views[side];
+        image.width = 16;
+        image.pixels.assign(16 * image.height, BLANK);
+        for (int y = 8; y < 12; ++y)
+            for (int x = 1; x < 15; ++x)
+                image.pixels[y * 16 + x] = {static_cast<unsigned char>(60 + side * 40), 150, 80, 255};
+        clip.views[side].push_back(std::move(image));
+    }
+    return a;
+}

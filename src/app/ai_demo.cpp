@@ -70,7 +70,7 @@ void captureAi(const Map& map, const rules::Catalog& catalog, const NpcWorld& pl
             if (!travelFrame && !approachFrame && time != 0 && time != 700 && time != 1000 && time != 1900 &&
                 time != 2500 && time != 3700 && time != 4900 && time != 7200)
                 continue;
-            animator.setTime(session.timeMs());
+            animator.setTime(session.timeMs(), &session.effects());
             frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot());
             const auto* picking = frames.picking();
             commands.refresh(picking ? picking->targets() : TargetSnapshot{}, false, mapView, true);

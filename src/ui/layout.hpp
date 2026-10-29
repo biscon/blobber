@@ -20,6 +20,11 @@ constexpr UiRect portrait(int i) {
     const auto r = card(i);
     return {r.x + 5, r.y + 4, 46, 56};
 }
+constexpr int statusSlots = 6;
+constexpr UiRect status(int cardIndex, int slot) {
+    const auto p = portrait(cardIndex);
+    return {p.x + 2 + slot * 7, p.y + p.height - 8, 6, 7};
+}
 constexpr UiRect action(int i, bool = false) {
     return {12 + i * 47, 319, 34, 30};
 }
@@ -29,7 +34,16 @@ constexpr UiRect detail(int i) {
 }
 
 constexpr int spellRows = 7;
-constexpr UiRect spellbook{8, 132, 306, 168}, spellbookClose{296, 137, 12, 11};
+constexpr UiRect spellbook{8, 114, 306, 186}, spellbookClose{296, 119, 12, 11};
+// Full-width tab row has room for levels 0..9 and abilities without shrinking entries.
+constexpr UiRect spellTab(int tab, int x) {
+    return {x, 136, tab == 0 ? 41 : tab == 10 ? 42 : 20, 13};
+}
+constexpr const char* spellTabName(unsigned tab) {
+    constexpr const char* names[]{"Cantrips", "I",   "II",   "III", "IV",       "V",
+                                  "VI",       "VII", "VIII", "IX",  "Abilities"};
+    return tab < 11 ? names[tab] : "";
+}
 constexpr UiRect spellDetails{143, 153, 165, 140};
 constexpr UiRect spellEntry(int row) {
     return {14, 154 + row * 18, 123, 17};

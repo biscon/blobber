@@ -41,7 +41,7 @@ struct PlayView {
         : session(m, catalog, placements, seed, spawn, enableAi, timings, recovery),
           animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
-        animator.setTime(session.timeMs());
+        animator.setTime(session.timeMs(), &session.effects());
         const auto area = debug ? SpellArea{} : commands.floorPreview();
         const bool changed =
             frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),

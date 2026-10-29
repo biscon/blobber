@@ -90,7 +90,7 @@ void groundLayers() {
     const Map map({"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#",
                    "#.......#", "#########"});
     const Player player{{4, 6}, Heading::North};
-    const SceneRenderer renderer(testMaterials());
+    const SceneRenderer renderer(testGreaseMaterials());
     SpellArea area;
     area.ground.revision = 1;
     area.ground.areas[0] = {{1, 1}, {4, 5}, {3}, 12, 60000, true};
@@ -102,6 +102,39 @@ void groundLayers() {
                                &area);
         check(!same(plain, painted), "Persistent ground visible throughout prepared strafe phases");
     }
+    // One patch is composited once even where multiple gameplay areas overlap.
+    renderer.compose(map, player, painted, nullptr, nullptr, nullptr, nullptr, &area);
+    area.ground.areas[1] = area.ground.areas[0];
+    area.ground.areas[1].id.serial = 2;
+    Frame overlap;
+    renderer.compose(map, player, overlap, nullptr, nullptr, nullptr, nullptr, &area);
+    check(same(painted, overlap), "Overlapping grease patches do not multiply opacity");
+    area.ground.areas[1].active = false;
+    area.cells[0] = area.ground.areas[0].cell;
+    area.eligible[0] = true;
+    renderer.compose(map, player, overlap, nullptr, nullptr, nullptr, nullptr, &area);
+    check(!same(painted, overlap), "Target preview is a separate layer above persistent art");
+    area.eligible[0] = false;
+    for (unsigned heading = 0; heading < 4; ++heading) {
+        const Player around{Cell{4, 4} + forward(Heading(heading)) * -2, Heading(heading)};
+        area.ground.areas[0].cell = {4, 4};
+        renderer.compose(map, around, plain);
+        renderer.compose(map, around, painted, nullptr, nullptr, nullptr, nullptr, &area);
+        unsigned clear = 0, colored = 0;
+        for (int y = int(ViewProjection::horizon) + 1; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto hit = SceneRenderer::groundCell(map, around, x, y);
+                if (hit && *hit == Cell{4, 4}) {
+                    const auto a = plain[y * viewWidth + x], b = painted[y * viewWidth + x];
+                    if (a.r == b.r && a.g == b.g && a.b == b.b)
+                        ++clear;
+                    else
+                        ++colored;
+                }
+            }
+        check(clear && colored, "Every heading preserves transparent pool edges and painted interior");
+    }
+    area.ground.areas[0].cell = {4, 5};
     MovementState state;
     state.player = player;
     FramePipeline frames;

@@ -6,8 +6,11 @@ brown leather, left-hand shortbow and right-shoulder quiver distinguish this
 bow-only role from the original melee goblin.
 
 `goblin-archer.json` binds appearance `goblin.archer` to the catalog monster of
-the same name. Twenty preserved imagegen master sheets contain 48 poses:
+the same name. Twenty original imagegen master sheets contain 48 poses:
 four directions each of idle, walk, bow draw/release, hurt and death/corpse.
+Four additional single-frame prone masters bring the total to 24 masters and
+52 poses. Their exact requests are in `animation/sheets/prone-*.prompt.json`;
+sleeping and knocked-down living archers share this static pose.
 `animation/prompts.json` records the twenty requests and five correction requests;
 `animation/revisions/` preserves superseded sheets. The final front bow points
 its nocked arrow toward the camera; its release pose contains no flying arrow.
@@ -16,6 +19,7 @@ Reference requests live separately in `reference/prompts.json`.
 `animation/sheets.json` is the measured registration: one uniform scale per
 sheet, body-centered pivots, explicit local ground rows and unclipped canvases.
 Death sheets use a 750-pixel row split to preserve the taller top poses.
+Prone sheets use `columns: 1`, one registered frame and a 768×536 canvas.
 Bow and corpse canvases are wider, with proportional world widths; every canvas
 uses the same 512/536 vertical anchor. Collapsing poses are not individually
 normalized to standing height. The extractor rejects visible footprint clipping.

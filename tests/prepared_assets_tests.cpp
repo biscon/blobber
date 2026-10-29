@@ -4,6 +4,7 @@
 #include "assets/npc_loader.hpp"
 #include "assets/preparation_profile.hpp"
 #include "assets/prepared_assets.hpp"
+#include "assets/prepared_binary.hpp"
 #include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/npc_fixtures.hpp"
@@ -154,7 +155,7 @@ void roundTrip(const fs::path& root) {
         check(restored.preparedPixelBytes() == empty.preparedPixelBytes(),
               "Empty crops survive bundle validation");
     }
-    auto appearance = testReactionAppearance();
+    auto appearance = testProneAppearance();
     appearance.sampling = ImageSampling::Area;
     // Asymmetric padding and off-center pivot make crop offsets observable.
     for (auto& clip : appearance.animations)
@@ -176,7 +177,7 @@ void roundTrip(const fs::path& root) {
     check(loaded.preparedPixelBytes() == prepared.preparedPixelBytes(),
           "Roundtrip owns exact compact pixels");
     corruptions(root, timings);
-    auto scene = prepareScene(testMaterials());
+    auto scene = prepareScene(testGreaseMaterials());
     rejects([&] { prepareScene(testMaterials(), {1, 1}); },
             "Offline scene preflight rejects inadequate budget");
     savePreparedScene(root / "scene.bin", scene, 29);
@@ -185,7 +186,10 @@ void roundTrip(const fs::path& root) {
             "Scene bound before fixed frame allocation");
     auto sceneLoaded = loadPreparedScene(root / "scene.bin", 29);
     rejects([&] { validatePreparedPublication(root, 29, 17); }, "An interrupted bake has no publication");
-    Json publication{{"format", 1}, {"renderer_revision", 1}, {"profile", 29}, {"definitions", 17}};
+    Json publication{{"format", prepared_io::formatVersion},
+                     {"renderer_revision", prepared_io::rendererRevision},
+                     {"profile", 29},
+                     {"definitions", 17}};
     for (const auto* name : {"scene.bin", "npcs.bin"})
         publication["outputs"][name] = {{"bytes", fs::file_size(root / name)},
                                         {"checksum", preparedBundleChecksum(root / name)}};
@@ -219,6 +223,8 @@ void roundTrip(const fs::path& root) {
                         check(expectedPick.slot(x, y) == actualPick.slot(x, y),
                               "Loaded body picking remains pixel exact");
             }
+    SpellArea ground;
+    ground.ground.areas[0] = {{1, 1}, {4, 5}, {3}, 10, 60000, true};
     for (int heading = 0; heading < 4; ++heading)
         for (unsigned time : {0, 60, 140, 300}) {
             animation.setTime(time);
@@ -229,8 +235,10 @@ void roundTrip(const fs::path& root) {
             auto to = player;
             to.cell = to.cell + right(player.heading);
             for (int phase = 0; phase <= 8; ++phase) {
-                direct.composeStrafe(map, player, to, phase / 8.f, expected, &actors, &animation.snapshot());
-                restored.composeStrafe(map, player, to, phase / 8.f, actual, &actors, &animation.snapshot());
+                direct.composeStrafe(map, player, to, phase / 8.f, expected, &actors, &animation.snapshot(),
+                                     nullptr, nullptr, &ground);
+                restored.composeStrafe(map, player, to, phase / 8.f, actual, &actors, &animation.snapshot(),
+                                       nullptr, nullptr, &ground);
                 check(same(expected, actual), "Loaded bundle preserves every strafe phase and endpoint");
             }
         }

@@ -1,5 +1,6 @@
 #include "ui/art.hpp"
 #include "assets/image.hpp"
+#include "game/effects.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -60,7 +61,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/color_spray",
                                   "spells/guidance",
                                   "spells/resistance",
-                                  "spells/sanctuary"};
+                                  "spells/sanctuary",
+                                  "spells/hold_person"};
     OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
     OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
     if (!campImage.value.data || !lootImage.value.data)
@@ -133,6 +135,9 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
     const auto k = static_cast<unsigned>(kind);
     return kind < rules::SpellKind::Count ? (k < 14 ? 11 + k : 49 + k - 14) : 8;
 }
+unsigned UiArt::effectIcon(EffectKind kind) noexcept {
+    return kind == EffectKind::HoldPerson ? holdPersonIcon : spellIcon(effectSpell(kind));
+}
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
@@ -143,7 +148,7 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index >= 49 && index < 59)
+    if (index >= 49 && index < 60)
         index -= 3;
     else if (index == restIcon)
         index = 45;

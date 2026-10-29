@@ -23,10 +23,10 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
         border({portrait.x + 1, portrait.y + 1, portrait.width - 2, portrait.height - 2},
                c.castHovered ? Color{174, 238, 230, 255} : teal);
         checkmark({portrait.x + portrait.width - 10, portrait.y + 1, 9, 9});
-        fill({portrait.x + 2, portrait.y + portrait.height - 17, portrait.width - 4, 15}, {12, 26, 26, 245});
-        clipped(c.castRisk ? "At risk" : "Will receive", portrait.x + 3, portrait.y + portrait.height - 17,
+        fill({portrait.x + 2, portrait.y + portrait.height - 25, portrait.width - 4, 15}, {12, 26, 26, 245});
+        clipped(c.castRisk ? "At risk" : "Will receive", portrait.x + 3, portrait.y + portrait.height - 25,
                 portrait.width - 6, teal, UiTextStyle::Small);
-        clipped(c.castPreview, portrait.x + 3, portrait.y + portrait.height - 10, portrait.width - 6,
+        clipped(c.castPreview, portrait.x + 3, portrait.y + portrait.height - 18, portrait.width - 6,
                 hudInk::text, UiTextStyle::Small);
     } else if (c.castHovered)
         border(portrait, {170, 208, 204, 255});
@@ -64,10 +64,22 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
             : c.status == DisplayStatus::Ready ? muted
                                                : red,
             UiTextStyle::Small);
-    if (c.effects[0]) {
-        fill({portrait.x, portrait.y + portrait.height - 10, portrait.width, 10}, background);
-        clipped(c.effects.data(), portrait.x + 1, portrait.y + portrait.height - 9, portrait.width - 2, teal,
-                UiTextStyle::Small);
+    if (c.effects.count) {
+        fill({portrait.x, portrait.y + portrait.height - 9, portrait.width, 9}, background);
+        for (std::size_t n = 0; n < std::min(c.effects.count, std::size_t(hudLayout::statusSlots)); ++n) {
+            const auto r = hudLayout::status(i, int(n));
+            if (n == 5 && c.effects.count > 6) {
+                char count[24];
+                std::snprintf(count, sizeof(count), "+%zu", c.effects.count - 5);
+                centered(count, r, gold, UiTextStyle::Small);
+            } else {
+                const auto& e = c.effects.entries[n];
+                picture(e.effect == EffectKind::Count ? UiArt::spellIcon(e.spell)
+                                                      : UiArt::effectIcon(e.effect),
+                        r);
+                border(r, e.harmful ? red : teal);
+            }
+        }
     }
     if (c.concentrating) {
         fill({portrait.x, portrait.y, 6, 6}, blue);

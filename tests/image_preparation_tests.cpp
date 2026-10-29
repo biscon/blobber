@@ -112,6 +112,19 @@ void derivatives() {
         check(frames["poses"][0]["anchor"] == Json::array({.5, .875}),
               "Normalized anchors survive common resizing");
     }
+    auto single = registration;
+    single[0]["columns"] = 1;
+    single[0].erase("split_x");
+    single[0]["pivot_x"] = {16};
+    single[0]["ground_y"] = {14};
+    single[0]["canvas_width"] = 32;
+    single[0]["anchor_x"] = 16;
+    std::ofstream(root / "single.json") << single.dump();
+    prepareNpcAnimation(root / "single.json", {ImageSampling::Area, .5, root / "single"});
+    Json one;
+    std::ifstream(root / "single/frames.json") >> one;
+    check(one["poses"].size() == 1 && !fs::exists(root / "single/frames/poses-1.png"),
+          "Single-frame extraction preserves the whole canvas without splitting or duplicating poses");
     check(original == fingerprintFile(root / "sheets/poses.png") && !fs::exists(root / "frames"),
           "Separate output preserves masters and original derivative destination");
     rejects([&] { prepareNpcAnimation(root / "sheets.json", {ImageSampling::Area, .3, root / "bad"}); },

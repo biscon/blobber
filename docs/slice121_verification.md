@@ -1,10 +1,93 @@
 # Slice 12.1 verification and handoff
 
-Status: **Ready for review**, 2026-10-28. Implementation was explicitly requested
-following approval of the detailed plan. This is not user acceptance. Slice 12
-remains the latest accepted slice; do not begin 12.2 until 12.1 is accepted.
+Status: **Ready for review**, 2026-10-29, including the approved
+[visual review corrections](spell_visual_review_design.md). Implementation and
+verification are complete. This is not user acceptance. Slice 12 remains the
+latest accepted slice; do not begin 12.2 until 12.1 is accepted.
 
-## Delivered
+## Visual review corrections delivered
+
+- The picker has populated Cantrips, Roman-numeral level and Abilities tabs,
+  explicit spell levels in the detail pane, keyboard/click navigation and
+  remembered selection/scroll per character and tab. Cast identities and costs
+  are unchanged; currently only Cantrips and level I contain spells.
+- Enemy effects use miniature spell icons. Portraits hold six icons with teal
+  beneficial/red harmful borders; more than six become five icons plus +N.
+  Hover shows the spell name and actual remaining duration, or the governing
+  turn/consumption rule. Overflow lists every remaining effect. Hover also works
+  while the spellbook pauses gameplay. Harmful party effects use this same path.
+- Grease is a generated transparent oily pool, projected and lit offline into
+  prepared floor banks. It blends beneath actors/loot, respects walls, survives
+  strafing and remains separate from target selection. Overlap does not multiply
+  opacity.
+- Living sleeping or knocked-down melee goblins and archers use a static prone
+  pose in all four directions. Death takes priority; waking/standing restores
+  normal poses. Picking uses the real prepared silhouette. Gameplay baking
+  requires this one-frame, four-direction clip for every future appearance.
+- Imagegen produced the Grease master, eight prone masters and a Hold Person
+  status icon. PNGs and exact `.prompt.json` requests are under `assets/effects/`,
+  `assets/npcs/{goblin,goblin-archer}/animation/sheets/` and `assets/ui/spells/`.
+  Registered derivatives remain build outputs. Source masters were inspected;
+  transparent alpha, registration and final rendered views were checked.
+
+## Current verification, 2026-10-29
+
+Final Debug **31/31** (60.89s) and Release **31/31** (6.03s) pass. The allocation
+suite reports **zero tracked C++ frame allocations**, now including tab switching,
+status summaries/hover, prepared Grease and prone pose changes. Six focused
+ASan/UBSan suites pass: visual review, spells, projectile, NPC, image preparation
+and prepared assets (159.30s). Leak detection remains disabled for the existing
+dependency environment. These tests do not claim graphics drivers or third-party
+internals never allocate.
+
+Generated fixtures exercise filtering/identity, tab memory, disappearing abilities,
+status grouping and actual clocks, hostile effects and overflow, modal hover
+without click-through, four-direction prone picking, independent Sleep/Knockdown,
+wake/stand/death priority, single-column extraction, prepared round trips, Grease
+alpha/anchoring/wall occlusion/overlap/strafe/expiry and source validation.
+
+The production capacity bake passes the unchanged 512 MiB resident/loading
+limits: scene 140,655,424 bytes; NPCs 69,010,094; total 209,665,518. Tracked loading
+high-water is 150,419,024. Two complete appearance sets use 278,669,284 resident
+bytes and 200,068,708 NPC raster loading bytes. Binary format/renderer revision 2
+invalidate old bundles; a normal CMake build rebakes them.
+
+The hidden GPU smoke passes texture/font/atlas/presentation lifecycle checks.
+Application-owned captures produce **470 PNGs** plus `spells.tsv`, including 30
+new tab/status/four-direction pose views at 1920×1080, 1280×720 and letterboxed
+1024×768. Representative Grease, Sleep, all prone directions, tabs, hostile status
+and overflow captures were visually inspected. The +N count and overflow tooltip
+were corrected and recaptured. No OS input or window switching was used;
+interactive desktop gameplay remains unverified.
+
+Capture directory: `/tmp/blobber121-visual-captures/`. Useful review files:
+`spell-grease-650.png`, `spell-sleep-650.png`, `review-prone-{0,1,2,3}.png`,
+`review-tabs-{cantrips,level-one,abilities}.png`,
+`review-status-{benefit,hostile,overflow}.png`; review files also have `-1280` and
+`-1024` variants. Review tabs with Left/Right, navigate entries with Up/Down, hover
+portrait icons, and verify waking/standing returns a living actor to normal art.
+
+```sh
+cmake --build --preset debug -j6
+ctest --preset debug -j6
+cmake --build --preset release -j6
+ctest --preset release -j6
+cmake --build --preset debug --target blobber_gpu_smoke -j6
+cmake-build-debug/blobber_gpu_smoke
+cmake-build-release/blobber_bake_assets assets /tmp/blobber121-visual-capacity --capacity-check
+cmake-build-release/blobber --capture-spells /tmp/blobber121-visual-captures
+ASAN_OPTIONS=detect_leaks=0 ctest --test-dir /tmp/blobber121-visual-asan \
+  -R '^(visual_review|spells|projectile|npc|image_preparation|prepared_assets)$' --output-on-failure -j2
+```
+
+Sanitizer configuration uses `-fsanitize=address,undefined -fno-omit-frame-pointer
+-fno-pie` and linker flags `-fsanitize=address,undefined -no-pie`. Logs are
+`/tmp/blobber121-visual-{tests,release-tests,asan-tests,capacity,gpu,captures}.log`.
+`git diff --check` and all 210 local file links in changed documentation pass.
+The original spell implementation/verification is preserved below as history;
+this section is the current presentation and verification checkpoint.
+
+## Original spell delivery, 2026-10-28
 
 All fourteen earlier spells remain available, alongside Ray of Frost, Shocking
 Grasp, Poison Spray, Sleep, False Life, Grease, Color Spray, Guidance, Resistance
@@ -37,7 +120,7 @@ approved targeting, timing, condition and movement adaptations. The
   URL and checksum are now in [docs/references](references/README.md). Read these
   before downloading the rules again.
 
-## Verification
+## Original verification, 2026-10-28
 
 All tests use test-owned rules/maps/art rather than editable game assets. Full
 Debug and Release suites passed **30/30**; focused ASan/UBSan passed **4/4**
@@ -102,7 +185,7 @@ checksum matches its recorded source checksum.
 ## Review and next-agent handoff
 
 Review Sleep's floor targeting and ally-risk display, Grease's persistent floor
-and automatic standing, slow travel, the new icons and status labels, False Life's
+and automatic standing, slow travel, the spell icons and duration tooltips, False Life's
 HP display, and cleric buff/ward feedback. Shocking Grasp requires an exposed
 caster; the capture fixture explicitly places the wizard in the front row.
 The runtime keeps the approved fixed presentation and discrete movement.
@@ -121,12 +204,18 @@ Useful integration boundaries for 12.2, after acceptance:
 - `EffectController` owns condition and ground lifetimes, ability/save one-shots,
   sight/action checks and ward saves. Party owns temporary health. Neither
   creator nor saved blueprints should copy live condition/area/effect state.
+- `EffectController::statuses` is the read-only status presentation boundary;
+  summary capacity is 14, portrait slots six, tooltip storage 29×96 bytes.
+  `MagicHud` retains stable complete entries plus filtered indices and 11 tabs.
+  Future NPC appearances must have one Prone frame per direction; session-owned
+  animation must receive the authoritative EffectController.
 - Capacities remain 32 catalog spells, 16 class spells and 22 picker entries;
   64 ordinary effects with three recipients; 260 × four condition records;
   16 ground patches with world/serial identity; nine cells, 36 NPCs and 40 combined
   recipient slots. Cosmetic pulse exhaustion cannot discard gameplay effects.
 - Prepared floor projection occupies 3,384,000 bytes plus row-depth data, allocated
-  during scene preparation. The eight strafe banks and 2,048-square icon atlas
+  during scene preparation. The eight strafe banks now also contain four Grease RGBA frames per view.
+  Prepared bank format/renderer revision 2 and the 2,048-square icon atlas
   require no per-frame image generation or resizing.
 
 Only the user can accept this slice. Update the checkpoint and acceptance record

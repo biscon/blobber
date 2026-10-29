@@ -53,23 +53,34 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         if (c.id.index == h.selection.character.index)
             caster = c.name;
     std::snprintf(line, sizeof(line), "%s - %s", caster, m.spellcaster ? "SPELLS" : "CLASS FEATURES");
-    clipped(line, 15, 138, 190, gold, UiTextStyle::Display);
+    clipped(line, 15, 120, 190, gold, UiTextStyle::Display);
     if (m.spellcaster) {
         std::snprintf(line, sizeof(line), "Mana %d/%d", m.mana, m.maxMana);
-        text(line, 220, 139, blue, UiTextStyle::Small);
+        text(line, 220, 121, blue, UiTextStyle::Small);
     }
     box(hudLayout::spellbookClose);
     label("X", hudLayout::spellbookClose, gold, UiTextStyle::Small);
+    int tabX = 14;
+    for (unsigned t = 0; t < m.tabs.size(); ++t)
+        if (m.tabs[t]) {
+            const auto r = hudLayout::spellTab(int(t), tabX);
+            box(r, t == m.tab ? gold : edge);
+            if (t == m.tab)
+                fill({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, {49, 41, 23, 255});
+            label(hudLayout::spellTabName(t), r, t == m.tab ? bright : muted, UiTextStyle::Small);
+            tabX += r.width + 2;
+        }
     const auto details = hudLayout::spellDetails;
     const int dx = details.x + 6, dy = details.y + 6, dw = details.width - 12;
     box(details);
-    for (std::size_t i = m.offset; i < m.count && i < m.offset + hudLayout::spellRows; ++i) {
-        const auto& e = m.entries[i];
+    for (std::size_t i = m.offset; i < m.visibleCount && i < m.offset + hudLayout::spellRows; ++i) {
+        const auto index = m.visible[i];
+        const auto& e = m.entries[index];
         const auto r = hudLayout::spellEntry(int(i - m.offset));
         const bool automatic = e.category == PickerEntryKind::AutomaticFeature;
         const bool available =
             automatic || e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
-        box(r, i == m.cursor ? teal : edge);
+        box(r, index == m.cursor ? teal : edge);
         picture(automatic ? UiArt::classFeaturesIcon : UiArt::spellIcon(e.kind, e.feature),
                 {r.x + 3, r.y + 3, r.height - 6, r.height - 6},
                 available ? WHITE : Color{100, 108, 106, 255});
@@ -91,7 +102,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
             text("-", r.x + 10, r.y + 8, muted, UiTextStyle::Small);
         }
     }
-    if (!m.count) {
+    if (!m.visibleCount) {
         wrapped(*this,
                 m.spellcaster ? "No spells or class features available." : "No class features available.", dx,
                 dy, dw, 8);
@@ -106,8 +117,10 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
             usesLabel(line, sizeof(line), e.charges);
         else if (e.category == PickerEntryKind::ActivatedFeature)
             std::snprintf(line, sizeof(line), "No resource cost");
+        else if (const auto level = rules::spellRules(e.kind)->level; level)
+            std::snprintf(line, sizeof(line), "Level %d / %d mana", level, e.cost);
         else
-            std::snprintf(line, sizeof(line), "%d mana", e.cost);
+            std::snprintf(line, sizeof(line), "Cantrip / %d mana", e.cost);
         clipped(line, dx + 34, dy + 16, dw - 34, blue, UiTextStyle::Small);
         wrapped(*this, e.description, dx, dy + 34, dw, 5);
         const auto* rules = rules::spellRules(e.kind);
@@ -128,10 +141,10 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
                             : commandMessage(e.reason),
                 dx, dy + 109, dw, 2);
     }
-    if (m.count > hudLayout::spellRows) {
+    if (m.visibleCount > hudLayout::spellRows) {
         label("Up / Down", hudLayout::spellPrevious, muted, UiTextStyle::Small);
         std::snprintf(line, sizeof(line), "%zu-%zu / %zu", m.offset + 1,
-                      std::min(m.count, m.offset + hudLayout::spellRows), m.count);
+                      std::min(m.visibleCount, m.offset + hudLayout::spellRows), m.visibleCount);
         label(line, hudLayout::spellNext, muted, UiTextStyle::Small);
     } else
         text("Esc: close / Browsing pauses", 15, 284, muted, UiTextStyle::Small);

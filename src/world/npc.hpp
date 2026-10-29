@@ -11,8 +11,8 @@ namespace blobber {
 struct NpcTypeId {
     std::uint16_t index = 0;
 };
-enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack };
-constexpr std::size_t npcAnimationCount = 6;
+enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack, Prone };
+constexpr std::size_t npcAnimationCount = 7;
 enum class NpcRoutine : std::uint8_t { Guard, Patrol, Wander };
 struct NpcAiConfig {
     NpcRoutine routine = NpcRoutine::Guard;

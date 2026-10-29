@@ -99,11 +99,7 @@ void CommandController::refreshMagic() noexcept {
                     "the three front cells and respect enemy front-row protection.");
         }
     }
-    if (m.count) {
-        m.cursor = std::min(m.cursor, m.count - 1);
-        m.offset = std::min(m.offset, m.count > 7 ? m.count - 7 : 0);
-    } else
-        m.cursor = m.offset = 0;
+    filterSpellbook();
     if (!m.casting())
         return;
     for (std::size_t i = 0; i < m.count; ++i) {
@@ -192,8 +188,9 @@ void CommandController::openSpellbook() noexcept {
     cancel();
     refreshMagic();
     auto& m = state_.magic;
-    m.cursor = bookCursors_[state_.selection.character.index];
-    m.offset = bookOffsets_[state_.selection.character.index];
+    m.tab = bookTabs_[state_.selection.character.index];
+    m.cursor = bookCursors_[state_.selection.character.index][m.tab];
+    m.offset = bookOffsets_[state_.selection.character.index][m.tab];
     setCastingState(CastingState::SpellPicker);
     state_.hover = {};
     refreshMagic();
@@ -204,30 +201,104 @@ void CommandController::backToSpellbook() noexcept {
         return;
     openSpellbook();
 }
+namespace {
+unsigned entryTab(const SpellBookEntry& e) noexcept {
+    const auto* spell = rules::spellRules(e.kind);
+    return e.category == PickerEntryKind::Spell && spell ? unsigned(spell->level) : MagicHud::abilityTab;
+}
+} // namespace
+void CommandController::filterSpellbook() noexcept {
+    auto& m = state_.magic;
+    m.tabs = {};
+    for (std::size_t i = 0; i < m.count; ++i)
+        m.tabs[entryTab(m.entries[i])] = true;
+    if (m.tab >= m.tabs.size() || !m.tabs[m.tab]) {
+        m.tab = 0;
+        while (m.tab + 1 < m.tabs.size() && !m.tabs[m.tab])
+            ++m.tab;
+        m.cursor = bookCursors_[state_.selection.character.index][m.tab];
+        m.offset = bookOffsets_[state_.selection.character.index][m.tab];
+    }
+    m.visibleCount = 0;
+    bool selected = false;
+    for (std::size_t i = 0; i < m.count; ++i)
+        if (entryTab(m.entries[i]) == m.tab) {
+            m.visible[m.visibleCount++] = i;
+            selected |= m.cursor == i;
+        }
+    if (!selected)
+        m.cursor = m.visibleCount ? m.visible[0] : 0;
+    m.offset = std::min(m.offset, m.visibleCount > 7 ? m.visibleCount - 7 : 0);
+    for (std::size_t row = 0; row < m.visibleCount; ++row)
+        if (m.visible[row] == m.cursor) {
+            if (row < m.offset)
+                m.offset = row;
+            if (row >= m.offset + 7)
+                m.offset = row - 6;
+        }
+}
+void CommandController::rememberSpellbook() noexcept {
+    const auto& m = state_.magic;
+    const auto c = state_.selection.character.index;
+    bookTabs_[c] = m.tab;
+    bookCursors_[c][m.tab] = m.cursor;
+    bookOffsets_[c][m.tab] = m.offset;
+}
+void CommandController::selectSpellbookTab(unsigned tab) noexcept {
+    auto& m = state_.magic;
+    if (!m.open || tab >= m.tabs.size() || !m.tabs[tab] || tab == m.tab)
+        return;
+    rememberSpellbook();
+    m.tab = tab;
+    m.cursor = bookCursors_[state_.selection.character.index][tab];
+    m.offset = bookOffsets_[state_.selection.character.index][tab];
+    filterSpellbook();
+    rememberSpellbook();
+}
+void CommandController::cycleSpellbookTab(int delta) noexcept {
+    const auto& m = state_.magic;
+    const int direction = delta < 0 ? -1 : 1;
+    for (int t = int(m.tab) + direction; t >= 0 && t < int(m.tabs.size()); t += direction)
+        if (m.tabs[t]) {
+            selectSpellbookTab(unsigned(t));
+            return;
+        }
+}
 void CommandController::browseSpellbook(int delta) noexcept {
     auto& m = state_.magic;
-    if (!m.count)
+    if (!m.visibleCount)
         return;
-    m.cursor = static_cast<std::size_t>(std::clamp<int>(int(m.cursor) + delta, 0, int(m.count) - 1));
-    if (m.cursor < m.offset)
-        m.offset = m.cursor;
-    if (m.cursor >= m.offset + 7)
-        m.offset = m.cursor - 6;
-    bookCursors_[state_.selection.character.index] = m.cursor;
-    bookOffsets_[state_.selection.character.index] = m.offset;
+    std::size_t row = 0;
+    while (row + 1 < m.visibleCount && m.visible[row] != m.cursor)
+        ++row;
+    row = std::size_t(std::clamp<int>(int(row) + delta, 0, int(m.visibleCount) - 1));
+    m.cursor = m.visible[row];
+    if (row < m.offset)
+        m.offset = row;
+    if (row >= m.offset + 7)
+        m.offset = row - 6;
+    rememberSpellbook();
 }
 void CommandController::scrollSpellbook(int delta) noexcept {
     auto& m = state_.magic;
-    m.offset = std::size_t(std::clamp<int>(int(m.offset) + delta, 0, std::max(0, int(m.count) - 7)));
-    m.cursor = std::clamp(m.cursor, m.offset, std::min(m.count ? m.count - 1 : 0, m.offset + 6));
-    bookCursors_[state_.selection.character.index] = m.cursor;
-    bookOffsets_[state_.selection.character.index] = m.offset;
+    if (!m.visibleCount)
+        return;
+    std::size_t row = 0;
+    while (row + 1 < m.visibleCount && m.visible[row] != m.cursor)
+        ++row;
+    m.offset = std::size_t(std::clamp<int>(int(m.offset) + delta, 0, std::max(0, int(m.visibleCount) - 7)));
+    row = std::clamp(row, m.offset, std::min(m.visibleCount - 1, m.offset + 6));
+    m.cursor = m.visible[row];
+    rememberSpellbook();
 }
 void CommandController::chooseSpellbook(std::size_t index) noexcept {
     auto& m = state_.magic;
     if (!m.open || state_.suspended || index >= m.count)
         return;
-    browseSpellbook(int(index) - int(m.cursor));
+    selectSpellbookTab(entryTab(m.entries[index]));
+    m.cursor = index;
+    filterSpellbook();
+    rememberSpellbook();
     const auto entry = m.entries[index];
     if (entry.category == PickerEntryKind::AutomaticFeature) {
         magicFeedback("");

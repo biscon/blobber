@@ -59,8 +59,8 @@ Heading heading(const std::string& name) {
     throw std::runtime_error("Invalid NPC facing: " + name);
 }
 NpcAnimation animationName(const std::string& name) {
-    const std::array<const char*, npcAnimationCount> names{"idle", "walk",  "attack",
-                                                           "hurt", "death", "ranged_attack"};
+    const std::array<const char*, npcAnimationCount> names{"idle",  "walk",          "attack", "hurt",
+                                                           "death", "ranged_attack", "prone"};
     for (std::size_t i = 0; i < names.size(); ++i)
         if (name == names[i])
             return static_cast<NpcAnimation>(i);
@@ -129,6 +129,8 @@ void loadAnimations(const Json& definition, const std::filesystem::path& parent,
                 throw std::runtime_error("NPC clip width must be positive");
         }
         const auto& durations = it.value().at("durations_ms");
+        if (it.key() == "prone" && durations.size() != 1)
+            throw std::runtime_error("NPC prone clip requires exactly one frame");
         if (!durations.is_array() || durations.empty() || durations.size() > npcMaxFrames)
             throw std::runtime_error("NPC clips require 1..4 durations");
         clip.timing.count = static_cast<std::uint8_t>(durations.size());

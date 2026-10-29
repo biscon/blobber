@@ -45,7 +45,9 @@ std::size_t validateAppearance(const NpcAppearance& a, bool requirePixels) {
             throw std::runtime_error("NPC cannot mix static views and animations");
     for (std::size_t clip = 0; clip < npcAnimationCount; ++clip) {
         const auto& c = a.animations[clip];
-        const float maxWidth = clip == static_cast<std::size_t>(NpcAnimation::Death)          ? 1.0f
+        const float maxWidth = (clip == static_cast<std::size_t>(NpcAnimation::Death) ||
+                                clip == static_cast<std::size_t>(NpcAnimation::Prone))
+                                   ? 1.0f
                                : clip == static_cast<std::size_t>(NpcAnimation::RangedAttack) ? 0.6f
                                                                                               : 0.5f;
         if (!std::isfinite(c.width) || c.width < 0 || c.width > maxWidth || (c.width && !c.timing.count))

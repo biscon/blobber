@@ -76,12 +76,17 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
         if (picking) {
             // Fixed front-idle geometry keeps badges still as silhouettes breathe or turn.
             // finish() publishes this position only if the body has visible pixels.
-            const auto& idle = travelSprites_[type.travelFirst[0][0]];
+            const bool prone = animation && animation->frames[i].clip == NpcAnimation::Prone &&
+                               type.count[unsigned(NpcAnimation::Prone)][unsigned(side)];
+            const auto& idle =
+                travelSprites_[prone ? type.travelFirst[unsigned(NpcAnimation::Prone)][unsigned(side)]
+                                     : type.travelFirst[0][0]];
+            const float top = prone ? float(idle.cropY) / idle.height : 0.f;
             const float scale = focal / depth;
             picking->badgeAnchor(
                 static_cast<std::uint16_t>(i), int(std::round(viewWidth * .5f + scale * lateral)),
-                int(std::round(ViewProjection::horizon +
-                               scale * (ViewProjection::eyeHeight - idle.worldHeight * idle.anchorY))));
+                int(std::round(ViewProjection::horizon + scale * (ViewProjection::eyeHeight +
+                                                                  idle.worldHeight * (top - idle.anchorY)))));
         }
         const int slot = traveling ? 0 : row * 2 + (subDepth > 0 ? 1 : 0);
         auto clip = static_cast<std::size_t>(animation ? animation->frames[i].clip : npc.animation);
