@@ -1,5 +1,21 @@
 #include "automation/codec.hpp"
 namespace blobber::automation {
+Json describeTravel(const CampaignRun& run) {
+    const auto recall = run.previewTravel(run.recallRequest());
+    Json out = {{"recall",
+                 {{"ready", recall.accepted},
+                  {"reason", recall.reason},
+                  {"cost", 1},
+                  {"kits", run.game().party().campSupplies().kits}}},
+                {"waypoints", Json::array()}};
+    for (unsigned depth = 1; depth <= 3; ++depth)
+        if (run.location(depth).visited) {
+            const auto check = run.previewTravel(run.waypointRequest(depth));
+            out["waypoints"].push_back(
+                {{"depth", depth}, {"ready", check.accepted}, {"reason", check.reason}, {"cost", 0}});
+        }
+    return out;
+}
 Json describeActions(const GameSession& g, const Observation& o) {
     const auto& cat = g.party().catalog();
     Json result = {
@@ -8,6 +24,11 @@ Json describeActions(const GameSession& g, const Observation& o) {
         {"movement", {"forward", "back", "left", "right", "turn_left", "turn_right"}},
         {"note",
          "Descriptors are not complete combinations. Preview a fully specified action before submission."}};
+    if (g.campaign()) {
+        result["management"].push_back("recall");
+        result["management"].push_back("waypoint");
+        result["travel"] = describeTravel(*g.campaign());
+    }
     const char* featureIds[]{
         "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
         "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",

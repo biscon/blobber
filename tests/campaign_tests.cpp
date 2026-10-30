@@ -1,6 +1,8 @@
 #include "game/campaign.hpp"
 #include "game/commands.hpp"
 #include "support/automation_fixtures.hpp"
+#include "ui/interaction.hpp"
+#include "ui/travel_layout.hpp"
 #include <iostream>
 #include <queue>
 using namespace blobber;
@@ -408,7 +410,8 @@ void allPortableEffects() {
         e.caster = {0};
         e.count = 1;
         e.difficulty = 1000;
-        const rules::CharacterId target{std::uint16_t(kind == EffectKind::MirrorImage ? 0 : 3)};
+        const rules::CharacterId target{
+            std::uint16_t(kind == EffectKind::MirrorImage || kind == EffectKind::Aid ? 0 : 3)};
         e.targets[0] = target;
         const auto applied = run.game().applyEffect(e);
         check(bool(applied) && applied.id.serial, "portable effect fixture actually applies");
@@ -420,6 +423,16 @@ void allPortableEffects() {
         check(restored.count == status.count &&
                   restored.entries[0].remainingMs == status.entries[0].remainingMs,
               "transfer preserves effect duration");
+        for (unsigned transition = 0; transition < 2; ++transition) {
+            const auto r = transition == 0 ? run.recallRequest() : run.waypointRequest(1);
+            auto next = run.prepareTravel(r);
+            check(run.commitTravel(next) && run.game().effects().has(target, kind),
+                  "every portable instance survives recall and waypoint return");
+            const auto statusAfter = run.game().effects().statuses(target);
+            check(statusAfter.count == status.count &&
+                      statusAfter.entries[0].remainingMs == status.entries[0].remainingMs,
+                  "recall and waypoint preserve portable duration");
+        }
     }
     for (const auto kind : {EffectKind::Sleep, EffectKind::Blind, EffectKind::Slow, EffectKind::Knockdown}) {
         CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
@@ -429,6 +442,11 @@ void allPortableEffects() {
         auto ticket = run.prepareTravel(run.request(run.game().nearbyFixture()));
         check(run.commitTravel(ticket) && run.game().effects().has(rules::CharacterId{1}, kind),
               "party condition transfers");
+        for (unsigned transition = 0; transition < 2; ++transition) {
+            auto next = run.prepareTravel(transition == 0 ? run.recallRequest() : run.waypointRequest(1));
+            check(run.commitTravel(next) && run.game().effects().has(rules::CharacterId{1}, kind),
+                  "party conditions survive recall and waypoint return");
+        }
     }
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
     auto initial = run.prepareTravel(run.request(run.game().nearbyFixture()));
@@ -478,6 +496,367 @@ void allPortableEffects() {
     check(run.commitTravel(fits), "exact combined effect capacity succeeds");
 }
 
+void recallAndWaypoints() {
+    const auto cat = catalog(false, 50, 7);
+    const auto defs = definitions();
+    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    auto& party = run.party();
+    const auto identity = party.inventory().identity();
+    auto source = std::make_unique<FloorState>();
+    const auto rejects = [&](TravelRequest request) {
+        run.game().exportFloor(*source);
+        const auto digest = source->digest();
+        const auto world = run.game().actors().snapshot().world;
+        const auto kits = party.campSupplies().kits;
+        const auto revision = party.inventory().revision();
+        check(!run.previewTravel(request), "invalid travel preview rejected");
+        bool threw = false;
+        try {
+            (void)run.prepareTravel(request);
+        } catch (const std::invalid_argument&) {
+            threw = true;
+        }
+        run.game().exportFloor(*source);
+        check(threw && source->digest() == digest && run.game().actors().snapshot().world == world &&
+                  party.campSupplies().kits == kits && party.inventory().revision() == revision,
+              "travel rejection preserves canonical source and resources");
+    };
+    rejects(run.recallRequest());
+    rejects(run.waypointRequest(1));
+    rejects(run.waypointRequest(0));
+    rejects(run.waypointRequest(4));
+    auto first = run.prepareTravel(run.request(run.game().nearbyFixture()));
+    check(!run.location(1).visited, "preparation does not unlock entry");
+    check(run.commitTravel(first) && run.location(1).visited, "stairs alone unlock entry on commit");
+    rejects(run.waypointRequest(1));
+    auto stale = run.recallRequest();
+    check(bool(party.acquire({{1}, cat.findItem("camp_kit"), 1, party.inventory().revision()})),
+          "fixture adds separate supplier stack");
+    rejects(stale);
+    const auto originalSupply = party.campSupplies().supply;
+    ItemLocation freeCell;
+    freeCell.character = party.inventory().locate(originalSupply).character;
+    for (std::uint16_t i = 0; i < bagCells; ++i)
+        if (!party.inventory().at({freeCell.character, i})) {
+            freeCell.cell = i;
+            break;
+        }
+    check(bool(party.inventoryChange(
+              {InventoryOp::Split, originalSupply, freeCell, 1, party.inventory().revision()})),
+          "owned supply split");
+    check(party.campSupplies().kits == 4, "shared supply query counts split and separate stacks");
+    auto staged = run.prepareTravel(run.recallRequest());
+    const auto kitsBefore = party.campSupplies().kits;
+    check(party.consumeItem(party.campSupplies().supply), "mutate staged supply");
+    check(!run.commitTravel(staged) && run.activeLocation() == 1 &&
+              party.campSupplies().kits == kitsBefore - 1,
+          "stale commit never additionally charges");
+    auto wrongWorld = run.recallRequest();
+    ++wrongWorld.world;
+    rejects(wrongWorld);
+    auto wrongSupply = run.recallRequest();
+    ++wrongSupply.supply.generation;
+    rejects(wrongSupply);
+    // Each depth returns through an entry waypoint; no new rewards or floor simulation.
+    for (unsigned depth = 1; depth <= 3; ++depth) {
+        check(run.activeLocation() == depth, "owned route reaches each depth");
+        if (depth < 3) {
+            kill(run.game()); // lifecycle fixture, not encounter calibration
+            for (unsigned i = 0; i < run.game().fixtures().definition().count; ++i)
+                if (run.game().fixtures().definition().entries[i].kind == FixtureKind::Key) {
+                    walk(run.game(), run.game().fixtures().definition().entries[i].cell);
+                    check(bool(run.game().interact(
+                              {run.game().fixtures().id(i), run.game().fixtures().revision()})),
+                          "owned required key collected");
+                }
+            walk(run.game(), run.location(depth).generated->layout.optionalSupply);
+        }
+        party.damage({0}, 1);
+        if (depth == 1) {
+            RestRequest rest;
+            rest.kind = RestKind::Long;
+            rest.world = run.game().actors().snapshot().world;
+            rest.token = run.game().restToken();
+            const auto pose = run.game().movement().player;
+            const auto kits = party.campSupplies().kits;
+            const auto clock = run.gameplayMs();
+            check(bool(run.game().rest(rest)) && party.campSupplies().kits == kits - 1 &&
+                      run.game().movement().player == pose && run.gameplayMs() == clock + 28800000,
+                  "field rest consumes one kit, advances once, preserves position");
+            party.damage({0}, 1);
+        }
+        if (!party.campSupplies().kits)
+            check(bool(party.acquire({{1}, cat.findItem("camp_kit"), 1, party.inventory().revision()})),
+                  "owned recall supply");
+        const auto request = run.recallRequest();
+        const auto quantity = party.inventory().stack(request.supply)->quantity;
+        const auto supplier = party.inventory().locate(request.supply).character;
+        const auto weight = party.character(supplier)->stats.carriedWeight;
+        const auto unitWeight = cat.item(party.inventory().stack(request.supply)->item)->weight;
+        run.game().exportFloor(*source);
+        const auto digest = source->digest();
+        const auto hp = party.character({0})->hitPoints;
+        const auto xp = party.character({0})->experience;
+        const auto kits = party.campSupplies().kits;
+        const auto clock = run.gameplayMs();
+        for (unsigned i = 0; i < 3; ++i)
+            check(bool(run.previewTravel(request)), "repeat preview remains legal");
+        auto ticket = run.prepareTravel(request);
+        check(run.activeLocation() == depth && party.campSupplies().kits == kits,
+              "recall preparation is uncharged");
+        check(run.commitTravel(ticket) && !run.commitTravel(ticket), "recall commits once");
+        check(run.activeLocation() == 0 && party.campSupplies().kits == kits - 1 &&
+                  party.inventory().identity() == identity && party.character({0})->hitPoints == hp &&
+                  run.gameplayMs() == clock && run.game().movement().player == run.location(0).entry,
+              "recall charges once without recovery, clock advance or new Party");
+        const auto* remaining = party.inventory().stack(request.supply);
+        check((quantity == 1 ? !remaining : remaining && remaining->quantity == quantity - 1) &&
+                  party.character(supplier)->stats.carriedWeight == weight - unitWeight,
+              "charge preserves live stack identity or invalidates the last kit and updates weight");
+        rejects(request);
+        rejects(run.waypointRequest(depth + 1));
+        // Wrong facing/proximity cannot turn the selector into an anywhere-in-hub warp.
+        run.game().setAnimated(false);
+        run.game().move(Action::TurnLeft);
+        rejects(run.waypointRequest(depth));
+        face(run.game(), Heading::East);
+        auto back = run.prepareTravel(run.waypointRequest(depth));
+        check(run.commitTravel(back) && run.game().movement().player == run.location(depth).entry &&
+                  party.campSupplies().kits == kits - 1 && party.character({0})->experience == xp,
+              "free waypoint uses original entry and preserves XP and kits");
+        run.game().exportFloor(*source);
+        check(source->digest() == digest, "recall and waypoint preserve complete canonical floor state");
+        if (depth < 3)
+            travel(run, FixtureKind::Downstairs);
+    }
+    // Unsafe local effects and movement use the same checked departure authority.
+    auto& g = run.game();
+    EffectRequest e;
+    e.world = g.actors().snapshot().world;
+    e.kind = EffectKind::SpiritualWeapon;
+    e.caster = {0};
+    e.targets[0] = rules::CharacterId{0};
+    e.count = 1;
+    const auto weapon = g.applyEffect(e);
+    check(bool(weapon), "recall summon restriction fixture");
+    rejects(run.recallRequest());
+    check(bool(g.removeEffect(weapon.id)), "explicit fixture dismissal");
+    g.setAnimated(true);
+    g.move(Action::TurnLeft);
+    rejects(run.recallRequest());
+    run.update(1, false);
+    g.setAnimated(false);
+    while (party.campSupplies().supply)
+        check(party.consumeItem(party.campSupplies().supply), "deplete finite kits");
+    rejects(run.recallRequest());
+    travel(run, FixtureKind::Upstairs);
+    travel(run, FixtureKind::Upstairs);
+    travel(run, FixtureKind::Upstairs);
+    check(run.activeLocation() == 0 && !party.campSupplies().kits, "zero-kit walking remains free");
+    party.damage({0}, 1);
+    RestRequest rest;
+    rest.kind = RestKind::Long;
+    rest.world = run.game().actors().snapshot().world;
+    rest.token = run.game().restToken();
+    const auto clock = run.gameplayMs();
+    check(bool(run.game().rest(rest)) && !party.campSupplies().kits && run.gameplayMs() == clock + 28800000,
+          "explicit sanctuary rest restores without kit refill");
+    CommandController selector(run.game());
+    selector.refresh({}, false, false, true);
+    selector.openTravel();
+    check(selector.snapshot().travel.count == 3, "all legally unlocked entries fit fixed selector");
+    UiInput down;
+    down.pressed[std::size_t(UiKey::Down)] = true;
+    routeHudInput(selector, down);
+    routeHudInput(selector, down);
+    check(selector.snapshot().travel.rows[selector.snapshot().travel.cursor].depth == 3,
+          "keyboard browses deep entries");
+    UiInput row;
+    row.pressed[std::size_t(UiKey::Click)] = true;
+    row.pointer = ArtPoint{float(travelLayout::row(1).x + 1), float(travelLayout::row(1).y + 1)};
+    routeHudInput(selector, row);
+    check(selector.snapshot().travel.cursor == 1 && !selector.snapshot().travelRequested,
+          "row click selects without implicit travel");
+    UiInput confirm;
+    confirm.pressed[std::size_t(UiKey::Confirm)] = true;
+    routeHudInput(selector, confirm);
+    check(selector.snapshot().travelRequested && selector.snapshot().travelRequested->depth == 2,
+          "selector confirms the selected unlocked entry");
+    auto warp = run.prepareTravel(run.waypointRequest(3));
+    check(run.commitTravel(warp) && !party.campSupplies().kits, "zero-kit deep entry return is free");
+    for (std::uint16_t i = 0; i < 4; ++i)
+        party.damage({i}, 100000);
+    rejects(run.recallRequest());
+    rejects(run.waypointRequest(1));
+    std::cout << "PreparedTravel bounded bytes: " << sizeof(CampaignRun::PreparedTravel) << '\n';
+}
+void recallSafetyAndRollback() {
+    const auto cat = catalog();
+    const auto defs = definitions();
+    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    travel(run, FixtureKind::Downstairs);
+    auto& game = run.game();
+    const auto denied = [&](const char* reason) {
+        const auto result = run.previewTravel(run.recallRequest());
+        check(!result && std::string_view(result.reason).find(reason) != std::string_view::npos,
+              "recall reports the actual safety restriction");
+    };
+    run.party().damage({0}, 1);
+    PartyCommand wind;
+    wind.character = {0};
+    wind.action = PartyAction::Feature;
+    wind.feature = rules::Feature::SecondWind;
+    wind.world = game.actors().snapshot().world;
+    wind.turn = game.combat().snapshot().turn;
+    check(game.submit(wind).reason == CommandReason::Resolved, "owned feature starts presentation");
+    game.update(.7, false);
+    denied("settled safe exploration");
+    game.update(.4, false);
+    auto& phase = const_cast<CombatSnapshot&>(game.combat().snapshot()).phase;
+    for (const auto state : {CombatPhase::Contact, CombatPhase::Turns, CombatPhase::Approach,
+                             CombatPhase::Facing, CombatPhase::RoundEnd, CombatPhase::Victory}) {
+        phase = state;
+        denied("settled safe exploration");
+    }
+    phase = CombatPhase::Exploration;
+    CombatEvents events;
+    auto& effects = const_cast<EffectController&>(game.effects());
+    effects.createArea(game.movement().player.cell, {0}, 10, game.timeMs(), events);
+    denied("settled safe exploration");
+    const_cast<GroundSnapshot&>(effects.ground()).areas[0].active = false;
+    for (std::uint16_t i = 0; i < 4; ++i)
+        effects.condition(rules::CharacterId{i}, EffectKind::Sleep, {0}, game.timeMs(), events);
+    denied("able conscious");
+    for (std::uint16_t i = 0; i < 4; ++i)
+        effects.wake(rules::CharacterId{i}, game.timeMs(), events);
+    EffectRequest local;
+    local.world = game.actors().snapshot().world;
+    local.kind = EffectKind::Bane;
+    local.caster = {0};
+    local.count = 2;
+    local.difficulty = 1000;
+    local.targets[0] = rules::CharacterId{0};
+    local.targets[1] = game.actors().id(0);
+    const auto concentration = game.applyEffect(local);
+    check(bool(concentration), "mixed concentration fixture");
+    denied("concentration attached to local enemies");
+    check(bool(game.removeEffect(concentration.id)), "explicit mixed concentration dismissal");
+    // Seed a malformed hub record, then a real local landing hazard. Neither failure charges.
+    auto& hub = *run.location(0).saved;
+    const auto count = hub.actors.count;
+    const auto kits = run.party().campSupplies().kits;
+    const auto inventory = run.party().inventory().revision();
+    const auto world = game.actors().snapshot().world;
+    auto snapshot = std::make_unique<FloorState>();
+    game.exportFloor(*snapshot);
+    const auto digest = snapshot->digest();
+    const auto fail = [&] {
+        bool threw = false;
+        try {
+            (void)run.prepareTravel(run.recallRequest());
+        } catch (const std::invalid_argument&) {
+            threw = true;
+        }
+        game.exportFloor(*snapshot);
+        check(threw && run.activeLocation() == 1 && run.party().campSupplies().kits == kits &&
+                  run.party().inventory().revision() == inventory &&
+                  game.actors().snapshot().world == world && snapshot->digest() == digest,
+              "failed recall destination retains source and kit");
+    };
+    hub.actors.count = 257;
+    fail();
+    hub.actors.count = count;
+    auto& area = hub.effects.ground.areas[0];
+    area.active = true;
+    area.cell = run.location(0).entry.cell;
+    area.id.serial = hub.effects.nextArea++;
+    area.untilMs = 60000;
+    area.caster = {0};
+    fail();
+    area.active = false;
+    auto ticket = run.prepareTravel(run.recallRequest());
+    ticket.game().setAnimated(false);
+    ticket.game().move(Action::TurnLeft);
+    check(!run.commitTravel(ticket) && run.party().campSupplies().kits == kits,
+          "mutated staged destination is rejected without charging");
+}
+void travelUi() {
+    const auto cat = catalog();
+    const auto defs = definitions();
+    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    UiInput open, confirm, cancel;
+    open.pressed[std::size_t(UiKey::Travel)] = true;
+    open.pressed[std::size_t(UiKey::TransferItem)] = true;
+    confirm.pressed[std::size_t(UiKey::Confirm)] = true;
+    cancel.pressed[std::size_t(UiKey::Cancel)] = true;
+    CommandController hub(run.game());
+    hub.refresh({}, false, false, true);
+    auto both = open;
+    both.pressed[std::size_t(UiKey::Confirm)] = true;
+    routeHudInput(hub, both);
+    check(hub.snapshot().travel.open && hub.snapshot().travel.count == 1 &&
+              hub.snapshot().travel.rows[0].request.kind == TravelKind::Stairs &&
+              !hub.snapshot().travelRequested,
+          "opening fresh selector cannot confirm");
+    routeHudInput(hub, cancel);
+    hub.interactFixture();
+    check(hub.snapshot().travel.open && !hub.snapshot().travelRequested, "hub F opens selector");
+    routeHudInput(hub, confirm);
+    check(bool(hub.snapshot().travelRequested), "selector explicit confirmation emits typed intent");
+    auto enter = run.prepareTravel(*hub.snapshot().travelRequested);
+    check(run.commitTravel(enter), "confirmed first entry commits");
+    CommandController ui(run.game());
+    ui.refresh({}, false, false, true);
+    const auto supply = run.party().inventory().locate(run.party().campSupplies().supply);
+    ui.openInventory(supply.character);
+    ui.inventorySelect(supply.cell);
+    routeHudInput(ui, open);
+    check(ui.snapshot().inventory.open && !ui.snapshot().travel.open &&
+              ui.snapshot().inventory.mode == InventoryMode::Transfer,
+          "physical T retains Inventory transfer without opening Travel");
+    ui.closeOverlay();
+    routeHudInput(ui, both);
+    const auto kits = run.party().campSupplies().kits;
+    check(ui.snapshot().travel.open && ui.snapshot().travel.preview && !ui.snapshot().travelRequested,
+          "full-health recall can open but does not execute on opening");
+    routeHudInput(ui, cancel);
+    check(!ui.snapshot().modal() && run.party().campSupplies().kits == kits, "recall cancel is uncharged");
+    UiInput click;
+    click.pressed[std::size_t(UiKey::Click)] = true;
+    click.pointer = ArtPoint{float(hudLayout::travelButton.x + 1), float(hudLayout::travelButton.y + 1)};
+    routeHudInput(ui, click);
+    check(ui.snapshot().travel.open, "header opens recall panel");
+    run.party().consumeItem(run.party().campSupplies().supply);
+    ui.refresh({}, false, false, true);
+    routeHudInput(ui, confirm);
+    check(ui.snapshot().travel.open && !ui.snapshot().travelRequested && !ui.snapshot().travel.preview,
+          "stale panel cannot silently select another kit");
+    routeHudInput(ui, cancel);
+    routeHudInput(ui, open);
+    click.pointer = ArtPoint{float(travelLayout::confirm.x + 1), float(travelLayout::confirm.y + 1)};
+    routeHudInput(ui, click);
+    check(ui.snapshot().travelRequested && !ui.snapshot().modal(), "click confirms recall intent");
+    auto ticket = run.prepareTravel(*ui.snapshot().travelRequested);
+    check(run.commitTravel(ticket), "UI recall commits");
+    CommandController returned(run.game());
+    returned.refresh({}, false, false, true);
+    returned.interactFixture();
+    check(returned.snapshot().travel.open && returned.snapshot().travel.count == 1 &&
+              returned.snapshot().travel.rows[0].request.kind == TravelKind::Waypoint,
+          "hub selector offers unlocked entry only");
+    UiInputEdges edges;
+    std::array<bool, uiKeyCount> down{};
+    down[std::size_t(UiKey::Travel)] = true;
+    check(edges.sample(down, true).has(UiKey::Travel) && !edges.sample(down, true).has(UiKey::Travel),
+          "held Travel has one edge");
+    check(!edges.sample(down, false).has(UiKey::Travel) && !edges.sample(down, true).has(UiKey::Travel),
+          "blur/refocus does not rearm held Travel");
+    down.fill(false);
+    edges.sample(down, true);
+    down[std::size_t(UiKey::Travel)] = true;
+    check(edges.sample(down, true).has(UiKey::Travel), "release rearms Travel");
+}
+
 Json campaignScenario(const rules::Catalog& cat) {
     auto j = generatedScenario(cat);
     j["kind"] = "campaign";
@@ -490,7 +869,7 @@ void adapters(const std::filesystem::path& retain) {
     Client client(cat, defs);
     Directory directory;
     const auto tracePath = directory.path / "campaign.jsonl";
-    const Json header = {{"fixture", "pc04"}};
+    const Json header = {{"fixture", "pc05"}};
     TraceWriter trace(tracePath);
     trace.append("header", header);
     client.trace = &trace;
@@ -500,6 +879,16 @@ void adapters(const std::filesystem::path& retain) {
     check(preview.at("ok") && preview.at("data").at("accepted"), "wire stair preview");
     check(client.act({{"kind", "interact"}, {"fixture", 0}}).at("data").at("accepted"), "wire stair travel");
     check(client.protocol.state().at("campaign").at("location") == 1, "wire campaign location");
+    const auto kitCount = client.protocol.session()->game().party().campSupplies().kits;
+    check(client.request("preview", {{"action", {{"kind", "recall"}}}}).at("data").at("accepted"),
+          "wire recall preview");
+    check(client.act({{"kind", "recall"}}).at("data").at("accepted") &&
+              client.protocol.session()->game().party().campSupplies().kits == kitCount - 1,
+          "wire recall charges exactly one kit");
+    check(!client.act({{"kind", "recall"}}).at("data").at("accepted").get<bool>() &&
+              client.protocol.session()->game().party().campSupplies().kits == kitCount - 1,
+          "repeated wire recall at hub does not charge again");
+    check(client.act({{"kind", "waypoint"}, {"depth", 1}}).at("data").at("accepted"), "wire entry return");
     auto upstairs = stair(client.protocol.session()->game(), FixtureKind::Upstairs);
     check(client.act({{"kind", "interact"}, {"fixture", upstairs.id.slot}}).at("data").at("accepted"),
           "wire free ascent");
@@ -508,6 +897,28 @@ void adapters(const std::filesystem::path& retain) {
           "inactive integrity digest included");
     trace.finish();
     client.trace = nullptr;
+    unsigned unlocks = 0, recallEvents = 0, warpEvents = 0;
+    std::istringstream wire(client.recordedOutput.str());
+    for (std::string line; std::getline(wire, line);) {
+        const auto record = Json::parse(line);
+        if (record.at("type") != "events")
+            continue;
+        for (const auto& event : record.at("events")) {
+            if (event.at("event") == "entry_unlocked")
+                ++unlocks;
+            if (event.at("event") != "campaign_transition")
+                continue;
+            if (event.at("kind") == "recall") {
+                ++recallEvents;
+                check(event.at("kit_charge") == 1, "recall event reports actual single charge");
+            } else if (event.at("kind") == "waypoint") {
+                ++warpEvents;
+                check(event.at("kit_charge") == 0, "waypoint event reports zero charge");
+            }
+        }
+    }
+    check(unlocks == 1 && recallEvents == 1 && warpEvents == 1,
+          "only committed first arrival unlocks; rejected recall emits no transition");
     Protocol replayed(cat, defs, Mode::Diagnostic);
     replay(replayed, tracePath, header);
     check(replayed.state() == state, "strict campaign replay restores active and inactive state");
@@ -558,6 +969,19 @@ void adapters(const std::filesystem::path& retain) {
     check(failed.at("ok") && !failed.at("data").at("accepted") &&
               failure.protocol.state().at("campaign") == original.at("campaign"),
           "view preparation failure preserves campaign");
+    int recallCalls = -1;
+    Client recallFailure(cat, defs, Mode::Visual, factory, &recallCalls);
+    check(recallFailure.request("start", {{"scenario", campaignScenario(cat)}}).at("ok"),
+          "recall view failure fixture starts");
+    check(recallFailure.act({{"kind", "interact"}, {"fixture", 0}}).at("data").at("accepted"),
+          "recall failure fixture enters floor");
+    const auto recallBefore = recallFailure.protocol.state();
+    const auto inv = recallFailure.protocol.session()->game().party().inventory().revision();
+    const auto failedRecall = recallFailure.act({{"kind", "recall"}});
+    check(!failedRecall.at("data").at("accepted").get<bool>() &&
+              recallFailure.protocol.state().at("campaign") == recallBefore.at("campaign") &&
+              recallFailure.protocol.session()->game().party().inventory().revision() == inv,
+          "recall view allocation failure retains kit and canonical campaign");
 }
 
 } // namespace
@@ -567,7 +991,7 @@ int main(int argc, char** argv) {
             const auto cat = catalog();
             const auto defs = definitions();
             Protocol protocol(cat, defs, Mode::Diagnostic);
-            replay(protocol, argv[2], Json{{"fixture", "pc04"}});
+            replay(protocol, argv[2], Json{{"fixture", "pc05"}});
             std::cout << "campaign fresh-process replay passed\n";
             return 0;
         }
@@ -577,6 +1001,9 @@ int main(int argc, char** argv) {
         transferFailuresAndEffects();
         inventoryAndLifecycle();
         allPortableEffects();
+        recallAndWaypoints();
+        recallSafetyAndRollback();
+        travelUi();
         adapters(retain);
         std::cout << "campaign checks passed\n";
         return 0;

@@ -82,18 +82,10 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     p.elapsedMs = r.kind == RestKind::Short ? 3600000 : 28800000;
     for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
         p.sanctuary |= recovery_.sanctuaries[i] == movement().player.cell;
-    for (std::uint16_t c = 0; c < 4; ++c)
-        for (std::uint16_t i = 0; i < bagCells; ++i) {
-            const auto h = party_.inventory().at({{c}, i});
-            const auto* s = party_.inventory().stack(h);
-            if (!s || party_.catalog().item(s->item)->kind != rules::ItemKind::Supply)
-                continue;
-            p.kits += s->quantity;
-            if (!p.supply) {
-                p.supply = h;
-                p.supplier = {c};
-            }
-        }
+    const auto supplies = party_.campSupplies();
+    p.kits = supplies.kits;
+    p.supply = supplies.supply;
+    p.supplier = supplies.supplier;
     if (p.sanctuary || r.kind == RestKind::Short)
         p.supply = {};
     bool leader = false;

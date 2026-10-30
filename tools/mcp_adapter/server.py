@@ -147,7 +147,7 @@ def create_server(runner, assets, output_root, capacity=8192*MIB):
 
     @tool()
     def session_act(handle: str, session: str, revision: str, action: dict) -> dict:
-        """Submit a checked headless action, including interact for known fixtures. Check response.ok AND accepted; rejected acts can consume revision."""
+        """Submit a checked headless action, including fixture interact and campaign recall/waypoint. Check response.ok AND accepted; rejected acts can consume revision."""
         return sessions.request(handle, 'act', session, revision, cancelled, action=action)
 
     @tool()

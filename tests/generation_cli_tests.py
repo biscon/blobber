@@ -148,6 +148,17 @@ def main(generator, runner):
             returned = request('act', action=dict(kind='interact', fixture=up))['data']
             assert returned['accepted'] and returned['observation']['campaign']['location'] == 0
             assert returned['observation']['campaign']['visited_entries'] == [1]
+            assert not request('act', action=dict(kind='waypoint', depth=2))['data']['accepted']
+            back = request('act', action=dict(kind='waypoint', depth=1))['data']
+            assert back['accepted'] and back['observation']['campaign']['location'] == 1
+            eligibility = back['observation']['campaign']['travel']['recall']
+            kits = eligibility['kits']
+            assert kits > 0 and eligibility['ready']
+            assert request('preview', action=dict(kind='recall'))['data']['accepted']
+            recalled = request('act', action=dict(kind='recall'))['data']
+            assert recalled['accepted'] and recalled['observation']['campaign']['location'] == 0
+            assert recalled['observation']['campaign']['travel']['recall']['kits'] == kits - 1
+            assert request('act', action=dict(kind='waypoint', depth=1))['data']['accepted']
         campaign_trace = root / 'campaign.jsonl'
         with Client(runner, root, record=campaign_trace) as client:
             check_campaign(client.request)

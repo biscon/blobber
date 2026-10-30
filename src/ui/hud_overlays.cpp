@@ -286,6 +286,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.inventory(*h);
     if (h->camp.open)
         p.camp(*h);
+    if (h->travel.open)
+        p.travel(*h);
     if (h->advancement.open)
         drawAdvancement(p, h->advancement);
     if (h->demo) {

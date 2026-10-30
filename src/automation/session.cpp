@@ -164,29 +164,15 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
     case Operation::Interact: {
         const auto* fixture = game().fixtures().find(r.fixture.id);
         if (campaign_ && fixture && CampaignRun::stairs(fixture->kind)) {
-            const auto request = campaign_->request(r.fixture);
-            const auto check = campaign_->previewTravel(request);
-            if (!check || preview)
-                return {check.accepted, check.reason};
-            try {
-                auto travel = campaign_->prepareTravel(request);
-                auto view = visibility_
-                                ? factory_(factoryContext_, campaign_->location(travel.destination()).map(),
-                                           travel.game())
-                                : nullptr;
-                if (visibility_ && !view)
-                    return {false, "Destination view preparation failed"};
-                if (!campaign_->commitTravel(travel))
-                    return {false, "Stale travel"};
-                visibility_.swap(view); // old view dies before ticket's old session
-                return {true, "Travel completed"};
-            } catch (const std::exception&) {
-                return {false, "Destination preparation failed; current floor retained"};
-            }
+            return travel(campaign_->request(r.fixture), preview);
         }
         const auto result = game().interact(r.fixture, preview);
         return {result.accepted, result.reason};
     }
+    case Operation::Travel:
+        if (!campaign_)
+            return {false, "Travel requires a campaign"};
+        return travel(r.travel, preview);
     case Operation::Continue:
         if (game().combat().snapshot().phase != CombatPhase::Victory)
             return {false, "No partial victory"};
@@ -197,5 +183,24 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
         return {true, "Ready"};
     }
     return {false, "Unsupported operation"};
+}
+ActionResult Session::travel(const TravelRequest& request, bool preview) {
+    const auto check = campaign_->previewTravel(request);
+    if (!check || preview)
+        return {check.accepted, check.reason};
+    try {
+        auto ticket = campaign_->prepareTravel(request);
+        auto view = visibility_ ? factory_(factoryContext_, campaign_->location(ticket.destination()).map(),
+                                           ticket.game())
+                                : nullptr;
+        if (visibility_ && !view)
+            return {false, "Destination view preparation failed"};
+        if (!campaign_->commitTravel(ticket))
+            return {false, "Stale travel"};
+        visibility_.swap(view); // old view dies before ticket's old session
+        return {true, "Travel completed"};
+    } catch (const std::exception&) {
+        return {false, "Destination preparation failed; current floor and supplies retained"};
+    }
 }
 } // namespace blobber::automation

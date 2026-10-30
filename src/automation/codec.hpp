@@ -15,6 +15,7 @@ Scenario decodeScenario(const rules::Catalog&, const Json&);
 ActionRequest decodeAction(const Json&, const GameSession&);
 Json encodeObservation(const Observation&);
 Json encodeEvent(const CombatOutcome&, const rules::Catalog&, bool diagnostic);
+Json describeTravel(const CampaignRun&);
 Json describeActions(const GameSession&, const Observation&);
 const char* phaseName(CombatPhase) noexcept;
 Json spellList(const rules::Catalog&, std::uint32_t);

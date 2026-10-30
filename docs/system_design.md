@@ -1,5 +1,25 @@
 # System design
 
+PC05 **Accepted and closed** (2026-10-30):
+[paid recall and entry waypoints](procedural_campaign_recall_design.md).
+User approved the reviewed plan with “Implement the plan.” Confirmed one-kit
+recall and free unlocked-entry returns share the existing staged transaction;
+Party supply/derived stats commit atomically with travel. A dedicated paused Travel
+panel preserves Inventory T. First stairs arrivals alone unlock entries; ordinary
+stairs remain free at zero kits. Existing persistent floors, clocks/effects,
+prepared banks and single-Party ownership remain authoritative.
+[Verification/handoff](pc05_verification.md) and [gallery](screenshots/pc05/index.html):
+headless Debug/Release 39/39 each, graphics Debug/Release 58/58 each, focused
+ASan/UBSan 3/3 plus final campaign reruns, zero tracked frame C++ allocations,
+9/14 preparation failure points per travel kind, strict replay, CLI/client/local
+MCP, hidden GPU and 14 repeat-identical captures pass. Interactive human and live
+Codex-host MCP remain unverified. No balance experiments, saves or PC06 work.
+User accepted PC05 on 2026-10-30: “slice accepted, record it in the plan doc”.
+Verification results and limitations are unchanged; no additional interactive
+play-coverage details were supplied. PC04/P-A remain accepted; P-B remains Planned.
+PC06 is next eligible for its own reviewed detailed plan only, when requested.
+This record supersedes historical PC05 next-planning directions below.
+
 PC04 **Accepted and closed** (2026-10-30):
 [persistent descent and fixed hub](procedural_campaign_travel_design.md).
 One travelling Party, authored sanctuary hub and three persistent generated floors

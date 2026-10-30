@@ -112,6 +112,7 @@ class HudPainter {
     void tooltip(const HudSnapshot& h) const;
     void characterSheet(const HudSnapshot& h) const;
     void camp(const HudSnapshot& h) const;
+    void travel(const HudSnapshot& h) const;
     void inventory(const HudSnapshot& h) const;
     void loot(const HudSnapshot& h) const;
     void itemSlot(const rules::ItemDefinition* definition, unsigned quantity, UiRect r, Color edgeColor,

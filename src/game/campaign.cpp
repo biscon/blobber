@@ -94,12 +94,51 @@ const char* CampaignRun::name() const noexcept {
     constexpr const char* names[]{"Sanctuary hub", "Dungeon floor 1", "Dungeon floor 2", "Dungeon floor 3"};
     return names[location_];
 }
+TravelRequest CampaignRun::request(FixtureRequest fixture) const noexcept {
+    TravelRequest r;
+    r.revision = revision_;
+    r.world = game().actors().snapshot().world;
+    r.fixture = fixture;
+    return r;
+}
+TravelRequest CampaignRun::recallRequest() const noexcept {
+    auto r = request({});
+    r.kind = TravelKind::Recall;
+    r.supply = party_.campSupplies().supply;
+    r.inventoryRevision = party_.inventory().revision();
+    return r;
+}
+TravelRequest CampaignRun::waypointRequest(unsigned depth) const noexcept {
+    auto r = request(game().nearbyFixture());
+    r.kind = TravelKind::Waypoint;
+    r.depth = depth;
+    return r;
+}
 FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept {
-    if (status() != CampaignStatus::Active)
+    if (status() != CampaignStatus::Active || !game().runActive())
         return {false, false, "Campaign has ended."};
-    if (r.revision != revision_ || revision_ == UINT64_MAX)
+    if (r.revision != revision_ || revision_ == UINT64_MAX || r.world != game().actors().snapshot().world)
         return {false, false, "Stale campaign travel request."};
     const auto& g = game();
+    if (r.kind == TravelKind::Recall) {
+        if (!location_)
+            return {false, false, "Already in the sanctuary hub."};
+        if (const auto* reason = g.travelSafety())
+            return {false, false, reason};
+        if (r.inventoryRevision != party_.inventory().revision())
+            return {false, false, "Inventory changed; reopen Travel."};
+        const auto* stack = party_.inventory().stack(r.supply);
+        if (!stack || party_.inventory().locate(r.supply).cell >= bagCells ||
+            party_.catalog().item(stack->item)->kind != rules::ItemKind::Supply ||
+            party_.inventory().revision() == UINT64_MAX)
+            return {false, false, "Recall requires one camp kit."};
+        return {true, false, "Recall to the sanctuary hub: one camp kit."};
+    }
+    if (r.kind != TravelKind::Stairs && r.kind != TravelKind::Waypoint)
+        return {false, false, "Invalid travel kind."};
+    if (r.kind == TravelKind::Waypoint &&
+        (location_ != 0 || r.depth < 1 || r.depth > 3 || !locations_[r.depth].visited))
+        return {false, false, "Return requires the hub entrance and an unlocked entry."};
     const auto* f = g.fixtures().find(r.fixture.id);
     if (!f || !stairs(f->kind) || r.fixture.revision != g.fixtures().revision() ||
         (g.fixtures().definition().discovery && !g.fixtures().known(r.fixture.id.slot)))
@@ -108,6 +147,8 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
         return {false, false, "Move closer and face the stairs."};
     if (const auto* reason = g.travelSafety())
         return {false, false, reason};
+    if (r.kind == TravelKind::Waypoint)
+        return {f->kind == FixtureKind::Downstairs, false, "Return to the unlocked floor entry for free."};
     if (f->kind == FixtureKind::Downstairs) {
         if (location_ == 3)
             return {false, false, "No deeper floor."};
@@ -132,14 +173,23 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
     PreparedTravel ticket;
     ticket.request = r;
     ticket.from = location_;
-    const bool down = game().fixtures().find(r.fixture.id)->kind == FixtureKind::Downstairs;
-    ticket.to = down ? location_ + 1 : location_ - 1;
+    const bool stair = r.kind == TravelKind::Stairs;
+    const bool down = stair && game().fixtures().find(r.fixture.id)->kind == FixtureKind::Downstairs;
+    ticket.to = stair ? (down ? location_ + 1 : location_ - 1) : (r.kind == TravelKind::Recall ? 0 : r.depth);
+    ticket.landing = stair && !down && ticket.to != 0 ? 1 : 0;
+    ticket.arrival = ticket.landing ? locations_[ticket.to].exit : locations_[ticket.to].entry;
+    if (r.kind == TravelKind::Recall) {
+        ticket.chargedInventory.emplace(party_.inventory());
+        if (!party_.stageCampSupply(r.supply, r.inventoryRevision, *ticket.chargedInventory, ticket.supplier,
+                                    ticket.supplierStats))
+            throw std::invalid_argument("Camp kit could not be staged; current floor retained.");
+    }
     ticket.mutation = game().mutation_;
     ticket.actorRevision = game().actors().snapshot().revision;
     ticket.partyStamp = partyStamp();
     ticket.source = std::make_unique<FloorState>();
     game().exportFloor(*ticket.source);
-    ticket.session = prepare(ticket.to, down ? locations_[ticket.to].entry : locations_[ticket.to].exit);
+    ticket.session = prepare(ticket.to, ticket.arrival);
     ticket.session->enableDevelopment(game().development());
     ticket.session->setAnimated(game().movement().animated);
     auto destination = std::make_unique<FloorState>();
@@ -188,8 +238,7 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
     c.state.spent = old.state.spent;
     c.state.cooldownMs = old.state.cooldownMs;
     ticket.session->importFloor(*destination);
-    const unsigned landing = down || ticket.to == 0 ? 0 : 1;
-    const auto safe = ticket.session->landingSafety(landing);
+    const auto safe = ticket.session->landingSafety(ticket.landing);
     if (!safe.safe)
         throw std::invalid_argument(safe.reason);
     ticket.session->discover();
@@ -198,15 +247,22 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
 bool CampaignRun::commitTravel(PreparedTravel& ticket) noexcept {
     if (!ticket.session || !ticket.source || ticket.from != location_ ||
         ticket.mutation != game().mutation_ || ticket.actorRevision != game().actors().snapshot().revision ||
-        ticket.partyStamp != partyStamp() || !previewTravel(ticket.request))
+        ticket.partyStamp != partyStamp() || !previewTravel(ticket.request) ||
+        !(ticket.session->movement().player == ticket.arrival) ||
+        !ticket.session->landingSafety(ticket.landing).safe)
         return false;
     elapsed_ = gameplayMs();
+    if (ticket.chargedInventory) {
+        party_.inventory_ = *ticket.chargedInventory;
+        party_.state_.characters[ticket.supplier.index].stats = ticket.supplierStats;
+    }
     for (unsigned i = 0; i < 4; ++i)
         party_.state_.characters[i].temporaryUntilMs = ticket.temporaryUntil[i];
     locations_[location_].saved.swap(ticket.source);
     active_.swap(ticket.session);
     location_ = ticket.to;
-    locations_[location_].visited = true;
+    if (ticket.request.kind == TravelKind::Stairs)
+        locations_[location_].visited = true;
     baseClock_ = game().combat().snapshot().gameplayMs;
     ++revision_;
     game().campaign_ = this;

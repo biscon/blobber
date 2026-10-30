@@ -31,6 +31,41 @@ const char* restMessage(RestError e) noexcept {
     }
     return "Rest unavailable.";
 }
+CampSupplies Party::campSupplies() const noexcept {
+    CampSupplies out;
+    for (std::uint16_t c = 0; c < rules::partySize; ++c)
+        for (std::uint16_t i = 0; i < bagCells; ++i) {
+            const auto h = inventory_.at({{c}, i});
+            const auto* stack = inventory_.stack(h);
+            if (!stack || catalog_->item(stack->item)->kind != rules::ItemKind::Supply)
+                continue;
+            out.kits += stack->quantity;
+            if (!out.supply) {
+                out.supply = h;
+                out.supplier = {c};
+            }
+        }
+    return out;
+}
+bool Party::stageCampSupply(ItemHandle h, std::uint64_t revision, Inventory& candidate,
+                            rules::CharacterId& supplier, rules::CharacterStats& stats) const noexcept {
+    const auto* stack = inventory_.stack(h);
+    const auto location = inventory_.locate(h);
+    if (revision != inventory_.revision() || !stack || location.cell >= bagCells ||
+        catalog_->item(stack->item)->kind != rules::ItemKind::Supply)
+        return false;
+    candidate = inventory_;
+    if (!candidate.consume(h, 1))
+        return false;
+    supplier = location.character;
+    const auto derived = rules::deriveCharacter(*catalog_, state_.characters[supplier.index].build,
+                                                candidate.loadout(supplier));
+    if (!derived)
+        return false;
+    stats = derived.value;
+    stats.maxHitPoints += state_.characters[supplier.index].aidBonus;
+    return true;
+}
 InventoryResult Party::acquire(const AcquisitionRequest& request, bool preview) noexcept {
     auto candidate = inventory_;
     const auto result = candidate.acquire(request, *catalog_);

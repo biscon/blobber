@@ -12,6 +12,7 @@
 #include "platform/presenter.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/preparation_limits.hpp"
+#include "ui/interaction.hpp"
 #include <chrono>
 #include <iostream>
 #include <random>
@@ -137,7 +138,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         return true;
     }
     if (options.captureMenuOnly && !arena) {
-        auto capture = [&](const char* name, bool camp = false, bool victoryReconstruction = false) {
+        auto capture = [&](const char* name, bool camp = false, bool victoryReconstruction = false,
+                           bool travelPanel = false) {
             auto& session = campaign->game();
             session.enableDevelopment(options.development);
             NpcAnimator animator(session.actors(), timings);
@@ -154,6 +156,11 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                 commands.openCamp();
                 commands.campKind(RestKind::Long);
             }
+            if (travelPanel) {
+                UiInput input;
+                input.pressed[std::size_t(UiKey::Travel)] = true;
+                routeHudInput(commands, input);
+            }
             auto hud = commands.snapshot();
             // Explicit presentation reconstruction; CPU owned fixtures prove final-guardian victory.
             if (victoryReconstruction) {
@@ -168,11 +175,29 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
             presenter.capture(options.captureDirectory / (std::string(name) + "-1280.png"), 1280, 720);
         };
         capture("launch");
+        capture("travel-fresh-selector", false, false, true);
         auto ticket = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
         if (!campaign->commitTravel(ticket))
             throw std::runtime_error("Capture travel failed");
         capture("campaign-floor1");
-        // Return from at-feet entrance stairs, without any combat or expedition.
+        capture("travel-recall-confirmation", false, false, true);
+        const auto kits = campaign->party().campSupplies().kits;
+        campaign->party().damage({0}, 2);
+        const auto hp = campaign->party().character({0})->hitPoints;
+        auto paid = campaign->prepareTravel(campaign->recallRequest());
+        if (!campaign->commitTravel(paid) || campaign->party().campSupplies().kits != kits - 1 ||
+            campaign->party().character({0})->hitPoints != hp)
+            throw std::runtime_error("Capture paid recall failed");
+        capture("travel-recalled-hub");
+        capture("travel-unlocked-selector", false, false, true);
+        auto warp = campaign->prepareTravel(campaign->waypointRequest(1));
+        if (!campaign->commitTravel(warp) || campaign->party().campSupplies().kits != kits - 1)
+            throw std::runtime_error("Capture waypoint return failed");
+        capture("travel-waypoint-entry");
+        while (campaign->party().campSupplies().supply)
+            campaign->party().consumeItem(campaign->party().campSupplies().supply);
+        capture("travel-no-kits", false, false, true);
+        // Return from at-feet entrance stairs with zero kits, without a balance expedition.
         auto back = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
         if (!campaign->commitTravel(back))
             throw std::runtime_error("Capture ascent failed");

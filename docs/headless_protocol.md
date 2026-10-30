@@ -345,8 +345,8 @@ summon during safe exploration. Nothing is silently removed to permit travel.
 
 Campaign observations add `campaign.status` (`active`, `victory`, `defeat`),
 `location` (0 for hub, 1–3 for depths), `location_name`, decimal-string `revision`
-and `gameplay_ms`, and `visited_entries`. These entry records do not provide
-waypoint travel. Only diagnostic inspection/traces add location fingerprints and
+and `gameplay_ms`, and `visited_entries`. PC05 adds free entry waypoint travel
+from the reachable hub entrance. Only diagnostic inspection/traces add location fingerprints and
 canonical state digests covering inactive actors, effects, RNG and reward ledgers.
 Player output does not reveal unvisited floors. `campaign_transition` and
 `campaign_result` events use the existing events envelope. Terminal campaigns
@@ -359,3 +359,31 @@ The existing Python client and local MCP session tools accept it without a new
 transport or tool. Strict replay remains executable/content/version-sensitive;
 changing an inactive location digest must fail replay. Existing tick, mutation,
 trace-byte, cancellation and output limits remain unchanged.
+
+
+## PC05 recall and entry waypoints
+
+Campaign actions add `{"kind":"recall"}` and
+`{"kind":"waypoint","depth":1}` (depth 1–3). Use normal session/revision tokens.
+Preview checks source eligibility without spending resources; explicit act confirms.
+Recall costs exactly one existing camp kit, reaches the sanctuary, and does not
+heal or advance time. Full health is legal. Rest separately at the sanctuary.
+Waypoint return is free, requires a known unlocked entry and the reachable/faced
+hub entrance, and always arrives at the original entry. It is unavailable from
+dungeon floors. Stairs remain free with zero kits. Only committed stairs arrival
+unlocks an entry; previews/failed requests never do. No departure bookmark or save.
+
+`campaign.travel` and the `actions` response's `travel` expose `recall` with
+`ready`, `reason`, `cost` (1), `kits`, and `waypoints` containing only unlocked
+`depth` choices with `ready`, `reason`, `cost` (0). No inactive map/actors are
+exposed. Eligibility previews do not promise successful destination preparation.
+Restoration, landing, capacity and view failures preserve source and supplies.
+Source/inventory/Party stamps reject stale prepared work. The existing concentration,
+area, summon and settled-exploration travel restrictions apply to both actions.
+
+Committed `campaign_transition` events additionally carry `kind` (`stairs`,
+`recall`, `waypoint`) and actual `kit_charge`. First committed stairs entry emits
+`entry_unlocked` with `depth`. Repeated previews, rejected actions and revisits
+cannot emit an unlock or charge twice. Protocol/scenario stay version 1; existing
+client/MCP tools pass these payloads unchanged. Strict replay records new fields;
+older executable-sensitive traces are not a save or cross-build compatibility promise.

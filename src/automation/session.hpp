@@ -26,7 +26,7 @@ struct Observation {
     bool diagnostic = false;
 };
 // A fixed-shape request uses the same typed commands as the live game. Parsing/JSON is external.
-enum class Operation { Combat, Move, Inventory, Drop, Pickup, Rest, Advancement, Continue, Interact };
+enum class Operation { Combat, Move, Inventory, Drop, Pickup, Rest, Advancement, Continue, Interact, Travel };
 struct ActionRequest {
     Operation operation = Operation::Combat;
     PartyCommand combat;
@@ -37,6 +37,7 @@ struct ActionRequest {
     RestRequest rest;
     AdvancementRequest advancement;
     FixtureRequest fixture;
+    TravelRequest travel;
 };
 struct ActionResult {
     bool accepted = false;
@@ -72,6 +73,7 @@ class Session {
     Mode mode() const noexcept { return mode_; }
 
   private:
+    ActionResult travel(const TravelRequest&, bool preview);
     Scenario scenario_;
     std::optional<generation::GeneratedFloor> generated_;
     std::optional<Map> arenaMap_;

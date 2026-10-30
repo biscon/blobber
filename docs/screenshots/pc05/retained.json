@@ -1,0 +1,109 @@
+{
+  "seed": 5,
+  "images": [
+    {
+      "file": "travel-fresh-selector.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "042e5ca9dc18de1da4641d1760dc85bc9bfe1ed92839a56d22b168df4151ea2d",
+      "caption": "Fresh hub: no unlocked entry; ordinary first descent is offered."
+    },
+    {
+      "file": "travel-fresh-selector-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "b624b1ffcdfa4469d62cdb54cf6bd6e565a0a04584ef74ef72235f636d51c456",
+      "caption": "Fresh hub: no unlocked entry; ordinary first descent is offered."
+    },
+    {
+      "file": "travel-recall-confirmation.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "2f5886043b8d504a355a8fa8e74ba80c4c13843bc46ba48d6d1bdeef3e927fc6",
+      "caption": "Real floor-1 arrival: explicit recall confirmation, three kits before and two after."
+    },
+    {
+      "file": "travel-recall-confirmation-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "29454b1edd0c312aad9570cffbf30b22939ee1ec9d0864495ebede7076cc21a8",
+      "caption": "Real floor-1 arrival: explicit recall confirmation, three kits before and two after."
+    },
+    {
+      "file": "travel-recalled-hub.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "880ceed9062f7adf3acc598654c4916054c307fbf47d3b09c75488a786fe844c",
+      "caption": "Actual one-kit recall: the diagnostically injured fighter remains at 10/12 HP; no arrival recovery."
+    },
+    {
+      "file": "travel-recalled-hub-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "32efb8ac47ecaece361981275567f6bc2a6dc1674afdc42d20cfa36ba9da39e4",
+      "caption": "Actual one-kit recall: the diagnostically injured fighter remains at 10/12 HP; no arrival recovery."
+    },
+    {
+      "file": "travel-unlocked-selector.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "7ef901b0a0e1ca0acf9ea284e1e4b30dd1bacc31dc16f1300baa8c2a223f24bd",
+      "caption": "Actual recalled hub: floor 1 entry is unlocked; no hidden depth is offered."
+    },
+    {
+      "file": "travel-unlocked-selector-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "c5e3e1092062978e1b0a5d34c609d0e943bf56bc34ebdfb10f1ccd405485aa27",
+      "caption": "Actual recalled hub: floor 1 entry is unlocked; no hidden depth is offered."
+    },
+    {
+      "file": "travel-waypoint-entry.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "fe44c5c4c9a659c255731675ad30be4bc3fe385da5e9a6af6a86f3d2ab11abc7",
+      "caption": "Actual free waypoint return to the original floor-1 entry, retaining injury and kit count."
+    },
+    {
+      "file": "travel-waypoint-entry-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f080e8b8ce2f21a1f01aae2e4baee951ad16afffd081201c39670d3540f1f03d",
+      "caption": "Actual free waypoint return to the original floor-1 entry, retaining injury and kit count."
+    },
+    {
+      "file": "travel-no-kits.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "22c4f61be5f68b6a3f7463aab38d1337eaf97fd9d1b34f2fd240dfd7e19486b7",
+      "caption": "Supplies deliberately depleted by the capture fixture: recall disabled; current run retained."
+    },
+    {
+      "file": "travel-no-kits-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "d737d8564d63676a9ac1bd5173278a6c68b8962a07fc725cd872e7aef5865f33",
+      "caption": "Supplies deliberately depleted by the capture fixture: recall disabled; current run retained."
+    },
+    {
+      "file": "campaign-hub-return.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "880ceed9062f7adf3acc598654c4916054c307fbf47d3b09c75488a786fe844c",
+      "caption": "Actual free stairs ascent after fixture kit depletion; zero kits do not trap the party."
+    },
+    {
+      "file": "campaign-hub-return-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "32efb8ac47ecaece361981275567f6bc2a6dc1674afdc42d20cfa36ba9da39e4",
+      "caption": "Actual free stairs ascent after fixture kit depletion; zero kits do not trap the party."
+    }
+  ],
+  "trace": {
+    "file": "owned-travel.jsonl.gz",
+    "uncompressed_bytes": 136677,
+    "sha256": "48d854bb8bca6460a86abf8c06d7303f8ba8d6ddc7066a4b6ca826e8a2c5e2c9"
+  },
+  "notes": "Application-owned hidden Release captures, no OS input/focus automation. Real entry/recall/waypoint/ascent transitions; diagnostic injury and supply depletion explicitly labelled. No fought expedition, balance evidence or disk save."
+}

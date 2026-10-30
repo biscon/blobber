@@ -80,6 +80,7 @@ constexpr UiRect target(int) {
 }
 constexpr UiRect previousPage{-100, -100, 0, 0}, nextPage{-100, -100, 0, 0}, confirm{-100, -100, 0, 0};
 constexpr UiRect feedback{10, 350, 284, 8};
+constexpr UiRect travelButton{528, 2, 66, 13};
 constexpr UiRect restButton{600, 2, 16, 13};
 constexpr int logColumns = 76, expandedLogColumns = 116;
 } // namespace hudLayout

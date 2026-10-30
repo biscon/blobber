@@ -29,6 +29,11 @@ struct RestRequest {
     std::uint64_t world = 0, token = 0;
     PreparationRequest preparation{};
 };
+struct CampSupplies {
+    ItemHandle supply{};
+    rules::CharacterId supplier{};
+    unsigned kits = 0;
+};
 struct RestPreview {
     RestError error = RestError::None;
     ItemHandle supply{};

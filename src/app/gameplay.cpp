@@ -122,9 +122,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             auto sample = input.poll(dt);
             sample.ui.text = pollTextInput();
             if (!inputArmed) {
-                inputArmed = !IsKeyDown(KEY_ENTER) && !IsKeyDown(KEY_F) && !IsKeyDown(KEY_W) &&
-                             !IsKeyDown(KEY_S) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) &&
-                             !IsKeyDown(KEY_Q) && !IsKeyDown(KEY_E) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+                inputArmed = !IsKeyDown(KEY_T) && !IsKeyDown(KEY_ENTER) && !IsKeyDown(KEY_F) &&
+                             !IsKeyDown(KEY_W) && !IsKeyDown(KEY_S) && !IsKeyDown(KEY_A) &&
+                             !IsKeyDown(KEY_D) && !IsKeyDown(KEY_Q) && !IsKeyDown(KEY_E) &&
+                             !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
                 sample.ui.pressed.fill(false);
                 sample.action.reset();
             }
@@ -214,7 +215,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                   : std::nullopt);
             }
             if (campaign && view.commands.snapshot().travelRequested) {
-                const auto request = campaign->request(*view.commands.snapshot().travelRequested);
+                const auto request = *view.commands.snapshot().travelRequested;
                 view.commands.cancelTravel();
                 try {
                     auto ticket = campaign->prepareTravel(request);
@@ -227,12 +228,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     replacement->refresh();
                     replacement->commands.enableMainMenu();
                     if (campaign->commitTravel(ticket)) {
+                        replacement->commands.travelMessage(
+                            request.kind == TravelKind::Recall
+                                ? "Recalled to the sanctuary hub. One camp kit consumed. Rest separately."
+                                : "Travel complete. No camp kit consumed.");
                         current.swap(replacement);
                         replacement.reset(); // old view before old session in ticket
                         inputArmed = false;
                         first = true;
                         continue;
                     }
+                    view.commands.travelMessage("Travel changed; reopen Travel and try again.");
                 } catch (const std::exception& e) {
                     view.commands.travelMessage(e.what());
                 }

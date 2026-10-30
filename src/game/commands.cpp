@@ -407,13 +407,18 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             (!session_->fixtures().definition().discovery || session_->fixtures().known(request.id.slot))) {
             const auto result = session_->interact(request, true);
             std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s%sF / %s - %s",
-                          locationHint, state_.campaign ? " | " : "", fixtureName(*f), result.reason);
+                          locationHint, state_.campaign ? " | " : "", fixtureName(*f),
+                          state_.campaign && session_->campaign()->activeLocation() == 0 && result
+                              ? "Choose a floor entry."
+                              : result.reason);
         }
     }
     state_.production = session_ != nullptr;
     state_.development = session_ && session_->development();
     if (state_.camp.open)
         refreshCamp();
+    if (state_.travel.open)
+        refreshTravel();
     if (!focused) {
         state_.inventory.pointerDown = false;
         state_.inventory.dragging = false;

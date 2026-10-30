@@ -13,8 +13,13 @@ void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
     const auto* fixture = session_->fixtures().find(request.id);
     const bool travel = session_->campaign() && fixture && CampaignRun::stairs(fixture->kind);
     const auto result = session_->interact(request, travel);
-    if (travel && result.accepted)
-        state_.travelRequested = request;
+    if (travel && result.accepted) {
+        if (session_->campaign()->activeLocation() == 0) {
+            openTravel();
+            return;
+        }
+        state_.travelRequested = session_->campaign()->request(request);
+    }
     state_.log.append(result.reason);
 }
 

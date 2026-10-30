@@ -2,6 +2,7 @@
 #include "ui/camp_layout.hpp"
 #include "ui/inventory_interaction.hpp"
 #include "ui/loot_layout.hpp"
+#include "ui/travel_layout.hpp"
 namespace blobber {
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
@@ -11,6 +12,33 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         return;
     }
     const auto insideCamp = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
+    if (commands.snapshot().travel.open) {
+        if (input.has(UiKey::Cancel) || (input.has(UiKey::Click) && insideCamp(travelLayout::cancel))) {
+            commands.closeOverlay();
+            return;
+        }
+        const auto& h = commands.snapshot().travel;
+        if (h.hub) {
+            if (input.has(UiKey::Up))
+                commands.selectTravel(h.cursor ? h.cursor - 1 : h.count - 1);
+            if (input.has(UiKey::Down))
+                commands.selectTravel((h.cursor + 1) % h.count);
+            for (unsigned i = 0; i < h.count; ++i)
+                if (input.has(UiKey::Click) && insideCamp(travelLayout::row(i))) {
+                    commands.selectTravel(i);
+                    return;
+                }
+        }
+        if (input.has(UiKey::Confirm) || (input.has(UiKey::Click) && insideCamp(travelLayout::confirm)))
+            commands.confirmTravel();
+        return;
+    }
+    if (!commands.snapshot().modal() &&
+        (input.has(UiKey::Travel) || (input.has(UiKey::Click) && insideCamp(hudLayout::travelButton))) &&
+        commands.snapshot().campaign) {
+        commands.openTravel();
+        return;
+    }
     if (commands.snapshot().advancement.open) {
         commands.routeAdvancement(input);
         return;

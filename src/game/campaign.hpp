@@ -1,12 +1,9 @@
 #pragma once
 #include "game/session.hpp"
+#include "game/travel.hpp"
 #include "generation/population.hpp"
 namespace blobber {
 enum class CampaignStatus : std::uint8_t { Active, Victory, Defeat };
-struct TravelRequest {
-    std::uint64_t revision = 0;
-    FixtureRequest fixture;
-};
 struct CampaignLocation {
     std::optional<generation::GeneratedFloor> generated;
     std::optional<Map> authored;
@@ -35,6 +32,11 @@ class CampaignRun {
         std::unique_ptr<GameSession> session;
         std::unique_ptr<FloorState> source;
         TravelRequest request;
+        std::optional<Inventory> chargedInventory;
+        rules::CharacterId supplier;
+        rules::CharacterStats supplierStats;
+        Player arrival;
+        unsigned landing = 0;
         unsigned from = 0, to = 0;
         std::uint64_t mutation = 0, actorRevision = 0;
         std::array<std::uint64_t, 100> partyStamp{};
@@ -54,7 +56,9 @@ class CampaignRun {
     std::uint64_t gameplayMs() const noexcept;
     CampaignStatus status() const noexcept;
     const char* name() const noexcept;
-    TravelRequest request(FixtureRequest r) const noexcept { return {revision_, r}; }
+    TravelRequest request(FixtureRequest) const noexcept;
+    TravelRequest recallRequest() const noexcept;
+    TravelRequest waypointRequest(unsigned depth) const noexcept;
     FixtureResult previewTravel(const TravelRequest&) const noexcept;
     PreparedTravel prepareTravel(const TravelRequest&); // Throws; source remains unchanged.
     bool commitTravel(PreparedTravel&) noexcept;        // Old session retained in ticket until its view dies.

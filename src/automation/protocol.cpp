@@ -39,6 +39,7 @@ Json Protocol::observation(bool diagnostic) {
         for (unsigned i = 1; i <= 3; ++i)
             if (campaign->location(i).visited)
                 j["campaign"]["visited_entries"].push_back(i);
+        j["campaign"]["travel"] = describeTravel(*campaign);
         if (observation_.diagnostic) {
             j["campaign"]["locations"] = Json::array();
             auto state = std::make_unique<FloorState>();
@@ -164,6 +165,11 @@ Json Protocol::perform(const Json& r, Output& output) {
         const auto* campaign = session_->game().campaign();
         const auto oldLocation = campaign ? campaign->activeLocation() : 0;
         const auto oldStatus = campaign ? campaign->status() : CampaignStatus::Active;
+        const auto oldKits = session_->game().party().campSupplies().kits;
+        std::array<bool, 4> oldVisited{};
+        if (campaign)
+            for (unsigned i = 0; i < 4; ++i)
+                oldVisited[i] = campaign->location(i).visited;
         const auto result = session_->action(action, op == "preview");
         if (op == "act") {
             ++mutations_;
@@ -176,6 +182,15 @@ Json Protocol::perform(const Json& r, Output& output) {
                                                        {"from", oldLocation},
                                                        {"to", campaign->activeLocation()},
                                                        {"status", unsigned(campaign->status())}}})}};
+                if (oldLocation != campaign->activeLocation()) {
+                    auto& transition = event["events"][0];
+                    transition["kind"] = travelKindName(
+                        action.operation == Operation::Travel ? action.travel.kind : TravelKind::Stairs);
+                    transition["kit_charge"] = oldKits - session_->game().party().campSupplies().kits;
+                    if (!oldVisited[campaign->activeLocation()] && campaign->activeLocation() != 0)
+                        event["events"].push_back(
+                            {{"event", "entry_unlocked"}, {"depth", campaign->activeLocation()}});
+                }
                 output.emit(event, event);
             }
             if (result.accepted && action.operation != Operation::Continue)

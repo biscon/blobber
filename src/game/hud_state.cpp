@@ -135,6 +135,7 @@ void CommandController::closeOverlay() noexcept {
     state_.advancement.open = false;
     state_.loot.open = false;
     state_.camp.open = false;
+    state_.travel.open = false;
     state_.inventory.open = false;
     state_.inventory.pointerDown = state_.inventory.dragging = false;
     state_.inventory.mode = InventoryMode::Browse;

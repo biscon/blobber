@@ -5,6 +5,7 @@
 #include "game/npc_animation.hpp"
 #include "game/recovery_ui.hpp"
 #include "game/session.hpp"
+#include "game/travel.hpp"
 #include <optional>
 
 namespace blobber {
@@ -123,6 +124,16 @@ struct MagicHud {
     std::array<bool, 9> cells{};
     std::array<char, 192> targets{};
 };
+struct TravelHud {
+    bool open = false, hub = false;
+    struct Row {
+        unsigned depth = 0;
+        TravelRequest request;
+    };
+    std::array<Row, 3> rows{};
+    unsigned count = 0, cursor = 0, kits = 0;
+    FixtureResult preview;
+};
 struct HudSnapshot {
     std::array<HudCard, rules::partySize> cards{};
     PartyCommand selection;
@@ -143,6 +154,7 @@ struct HudSnapshot {
     MagicHud magic;
     InventoryHud inventory;
     CampHud camp;
+    TravelHud travel;
     AdvancementHud advancement;
     bool development = false;
     LootHud loot;
@@ -150,7 +162,7 @@ struct HudSnapshot {
     const char* restReason = "Rest unavailable.";
     std::array<char, 192> lootHover{};
     std::array<char, 192> fixturePrompt{};
-    std::optional<FixtureRequest> travelRequested;
+    std::optional<TravelRequest> travelRequested;
     bool campaign = false, campaignTerminal = false, campaignVictory = false;
     const char* locationName = "";
     const FloorGeometry* floor = nullptr; // Borrowed from the controller's session.
@@ -160,8 +172,8 @@ struct HudSnapshot {
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
     bool modal() const noexcept {
-        return advancement.open || loot.open || camp.open || inventory.open || logExpanded || menuOpen ||
-               magic.open;
+        return travel.open || advancement.open || loot.open || camp.open || inventory.open || logExpanded ||
+               menuOpen || magic.open;
     }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
@@ -234,6 +246,10 @@ class CommandController {
     void inspect(std::size_t formationIndex) noexcept;
     void toggleMenu() noexcept;
     void closeOverlay() noexcept;
+    void openTravel() noexcept;
+    void refreshTravel() noexcept;
+    void selectTravel(unsigned) noexcept;
+    void confirmTravel() noexcept;
     void openCamp() noexcept;
     void campKind(RestKind) noexcept;
     void campDice(unsigned character, int delta) noexcept;

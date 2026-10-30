@@ -11,7 +11,7 @@ The adapter does not change gameplay rules, provide arbitrary state mutation, or
 implement slice 14's save/resume. Replay and policy rerun start from the beginning.
 
 PC01 extends `session_start` with the explicit
-[`generated_floor` scenario](headless_protocol.md#pc01-generated-floor-scenarios).
+[`generated_floor` scenario](headless_protocol.md#generated-floor-scenarios-pc01pc03).
 The normal session/reset/actions/replay/capture lifecycle works for generated
 floors. Diagnostic captures include a labelled full-map companion image; no hidden
 map is added to visual player observations. Existing experiment policies remain
@@ -296,7 +296,7 @@ action discovery. Player observations contain discovered cells, remembered fixtu
 and acquired quest keys; diagnostic inspection remains explicit and does not reveal
 cells to later player observations. Strict replay includes these states. Generated
 captures now include scene, discovered map and diagnostic map PNGs.
-See [protocol and rules](headless_protocol.md#generated-floor-scenarios-pc01pc02) and
+See [protocol and rules](headless_protocol.md#generated-floor-scenarios-pc01pc03) and
 [PC02 verification](pc02_verification.md). No new MCP tools or balance policy are needed.
 
 ## PC03 guardian progression
@@ -305,5 +305,22 @@ The same session tools now expose learned objective completion/reward status and
 visible guardian labels; full membership and protected landing metadata remain
 explicit diagnostics. Fight through ordinary checked combat actions; there is no
 force-complete tool. Guardian gates open automatically after the designated deaths.
-Travel is still unavailable. No new MCP tool or balance policy is introduced.
-See [the protocol](headless_protocol.md#generated-floor-scenarios-pc01pc02).
+At this historical PC03 checkpoint travel was unavailable; PC04/PC05 now provide
+the campaign flow described below. No new MCP tool or balance policy is introduced.
+See [the protocol](headless_protocol.md#generated-floor-scenarios-pc01pc03).
+
+
+## PC05 campaign recall and return
+
+Start a `campaign` scenario using the existing session tools. Use `session_preview`
+and `session_act` with `action={"kind":"recall"}` for one-kit recall and
+`action={"kind":"waypoint","depth":1}` for free entry return from the reachable
+hub entrance. Inspect `campaign.travel`/`session_actions` for eligibility, kit count
+and unlocked choices; normal identity/revision handling remains mandatory. An act
+is explicit confirmation. Preview does not charge, unlock, heal or travel.
+
+Ordinary `interact` stairs remain supported and free at zero kits. Recall does not
+rest automatically or store a departure portal. Both paths preserve the existing
+safe-travel/effect restrictions, staged rollback and strict replay integrity.
+See [the protocol](headless_protocol.md#pc05-recall-and-entry-waypoints). No new MCP
+service, autonomous campaign policy or balance experiment is introduced.

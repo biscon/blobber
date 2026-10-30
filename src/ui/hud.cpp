@@ -162,13 +162,20 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
                    (h->loot.open && h->loot.recipient.index == h->cards[i].id.index));
     }
+    if (h->campaign) {
+        p.box(hudLayout::travelButton);
+        p.label("Travel [T]", hudLayout::travelButton,
+                h->campaignTerminal || h->suspended || h->modal() ? muted : gold, UiTextStyle::Small);
+    }
     p.picture(UiArt::restIcon, hudLayout::restButton, h->restAvailable ? WHITE : Color{110, 110, 110, 125});
     if (h->inventory.itemTargeting) {
         p.itemTargets(*h);
     } else if (h->magic.casting()) {
         p.spellTargets(*h);
     } else {
-        const char* actor = h->camp.open ? "CAMP / PAUSED" : "EXPLORATION";
+        const char* actor = h->travel.open ? "TRAVEL / PAUSED"
+                            : h->camp.open ? "CAMP / PAUSED"
+                                           : "EXPLORATION";
         for (const auto& c : h->cards)
             if ((h->combat.activeCharacter && c.id.index == h->combat.activeCharacter->index) ||
                 (!h->production && c.id.index == h->selection.character.index))

@@ -125,6 +125,16 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
         r.operation = Operation::Continue;
         return r;
     }
+    if (op == "recall" || op == "waypoint") {
+        fields(j, op == "recall" ? std::initializer_list<const char*>{"kind"}
+                                 : std::initializer_list<const char*>{"kind", "depth"});
+        if (!g.campaign())
+            throw std::invalid_argument("Travel requires a campaign");
+        r.operation = Operation::Travel;
+        r.travel = op == "recall" ? g.campaign()->recallRequest()
+                                  : g.campaign()->waypointRequest(bounded(j.at("depth"), 3));
+        return r;
+    }
     if (op == "interact") {
         fields(j, {"kind", "fixture"});
         r.operation = Operation::Interact;
