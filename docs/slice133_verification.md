@@ -1,5 +1,12 @@
 # Slice 13.3 verification and handoff
 
+**Roadmap update (2026-10-30):** The user subsequently closed the static-demo
+roadmap. Its unimplemented save/resume slice 14 moves to
+[campaign PC06](procedural_campaign_plan.md#pc06-campaign-save-and-resume), after
+generation and persistent travel. Earlier next-slice directions below are historical;
+13.3 acceptance and verification limits are unchanged.
+
+
 Status: implemented, **Accepted and closed**, 2026-10-30. User authorized implementation
 with “Implement the plan.” The user accepted after reviewing the capture gallery:
 “I accept the slice, record it in the doc”. Slices 13.1/13.2 remain Accepted

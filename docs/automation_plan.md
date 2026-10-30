@@ -7,7 +7,7 @@ is implemented; [verification/handoff](slice131_verification.md) and the
 (2026-10-30), following approval of the [detailed plan](automated_players_design.md)
 and the user’s “close up the slice” instruction. [Verification/handoff](slice132_verification.md)
 records delivery and unchanged limitations. 13.3 is implemented, **Accepted and closed** (2026-10-30); [design](mcp_design.md), [usage](mcp_usage.md)
-and [verification/handoff](slice133_verification.md). The user accepted after reviewing the capture gallery. Slice 14 is next eligible for separate planning and remains unstarted.
+and [verification/handoff](slice133_verification.md). The user accepted after reviewing the capture gallery. The static-demo roadmap is now closed; save/resume moves to [campaign PC06](procedural_campaign_plan.md#pc06-campaign-save-and-resume) after generation/travel.
 
 ## Delivery order and tracking
 
@@ -25,7 +25,7 @@ slices form a tooling interlude rather than reopening gameplay acceptance.
 
 Each slice receives its detailed design before implementation and its own durable
 verification/handoff record. Update the corresponding record below and the demo
-checkpoint/tracker together. Slice 14 follows acceptance of 13.3.
+checkpoint/tracker together. That historical sequence is superseded by the [campaign roadmap](procedural_campaign_plan.md); all three automation slices remain closed.
 
 ## Purpose and existing foundation
 
@@ -233,7 +233,7 @@ Live Codex-host and interactive desktop review remain unverified. Prior slices s
 closed; save/resume remains 14 and unstarted. The user reviewed the capture gallery
 and accepted: “I accept the slice, record it in the doc”.
 [Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff).
-Slice 14 is next eligible for separate planning; no commit requested.
+The subsequent [demo-roadmap closeout](dnd5e_demo_design.md#roadmap-closeout-2026-10-30) moves save/resume to campaign PC06; no commit requested.
 
 ## Extension policy and deferred work
 
@@ -244,6 +244,6 @@ misleading results. Avoid forcing every subsystem to know about automation.
 
 Deferred: arbitrary mid-fight snapshots, event-deadline skipping until equivalence
 is demonstrated, sophisticated search/learned policies, full dungeon expeditions,
-and balancing content not yet implemented. Slice 14 still owns player-facing
-out-of-combat save/resume. Arena automation can later exercise those operations
+and balancing content not yet implemented. The proposed [campaign roadmap](procedural_campaign_plan.md) now sequences dungeon extensions and owns
+player-facing out-of-combat save/resume in PC06. Arena automation can later exercise those operations
 through their normal interfaces.

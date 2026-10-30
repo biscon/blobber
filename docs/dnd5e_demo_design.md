@@ -1,6 +1,13 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
-Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slice 12.3 was accepted and closed on 2026-10-29, including the formation dragging and search-caret corrections. Slice 12.4 was accepted and closed on 2026-10-29. The user approved arena slice 12.5 before slice 13; 12.5 was accepted and closed on 2026-10-29. Slice 13 and milestone C were accepted and closed on 2026-10-30, including the development-flag and spell-picker review corrections.
+**Closed / superseded delivery roadmap — 2026-10-30.** The user ended the
+static-demo workstream in favor of a procedural crawler. Accepted slices through
+13.3 and milestones A/B/C remain accepted. This does **not** claim completion of
+unimplemented slices 14–16 or milestone D. See the [closeout](#roadmap-closeout-2026-10-30)
+and the successor [procedural campaign roadmap](procedural_campaign_plan.md).
+The detailed scope and execution history below are retained as historical records.
+
+Historical delivery status: slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slice 12.3 was accepted and closed on 2026-10-29, including the formation dragging and search-caret corrections. Slice 12.4 was accepted and closed on 2026-10-29. The user approved arena slice 12.5 before slice 13; 12.5 was accepted and closed on 2026-10-29. Slice 13 and milestone C were accepted and closed on 2026-10-30, including the development-flag and spell-picker review corrections.
 Slices 13.1, 13.2 and 13.3 were accepted and closed on 2026-10-30.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
@@ -13,17 +20,46 @@ user acceptance.
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 14 — Save/resume (separate planning) |
-| Next action | Plan slice 14 separately in a clean context when requested; review its detailed plan before implementation |
+| Next eligible slice | None in this closed roadmap; successor PC01 awaits [campaign roadmap review](procedural_campaign_plan.md) |
+| Next action | Review the procedural campaign roadmap; do not start demo slice 14, 15 or 16 |
 | Accepted design | Slices 13.1–13.3 implemented and accepted, 2026-10-30; [13.3 design](mcp_design.md) and [closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff) |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
 
+## Roadmap closeout (2026-10-30)
+
+The user considers the presentation polish sufficient and no longer wants a separate
+slice 15. Improving/tuning the static dungeon in slice 16 would be discarded by the
+planned procedural crawler. Close those tasks as retired, not implemented/accepted.
+Keep the save/resume requirement, but implement it only after generated floors and
+persistent travel establish the actual campaign state.
+
+| Old work | Disposition | Successor |
+| --- | --- | --- |
+| 14 — Save/resume | Superseded; never implemented under this slice | [PC06 — Campaign save/resume](procedural_campaign_plan.md#pc06-campaign-save-and-resume), after PC01–PC05 |
+| 15 — Cohesive presentation | Retired by user; existing polish is sufficient for moving on | Only feature-specific presentation in campaign slices; no replacement polish project |
+| 16 — Demo integration | Retired; static-level tuning no longer desired | [PC09](procedural_campaign_plan.md#pc09-integrated-expedition-and-mvp-acceptance) verifies the new procedural campaign, not the old static demo |
+| D — Finished demo | Retired as a delivery milestone; not accepted/completed | New campaign milestones P-A/P-B/P-C |
+
+The long-term direction is an authored town with shops over a procedural dungeon
+and a lowest-floor boss. The [MVP spec](procedural_campaign_mvp.md) deliberately
+limits the first milestone; shops remain later work. The new roadmap also records
+agreed paid recall/entry return, optional walking ascent, no respawns and finite
+optional encounters as an XP/resource fallback. All accepted gameplay/tooling
+contracts and verification limits remain intact. No gameplay implementation or
+new verification is implied by this documentation closeout.
+
+Current authority for future delivery is the [campaign roadmap](procedural_campaign_plan.md).
+Older future-tense references to slice 14 below or in dated handoffs describe the
+previous sequence and are superseded by this closeout. Do not reopen accepted
+slices or follow an old next-agent prompt to start 14 automatically.
+
 ## How agents must use this document
 
-This is the authoritative delivery roadmap and cross-context handoff for the
-demo. [System design](system_design.md) describes implemented architecture;
+The workflow below is retained as the historical delivery process for the demo;
+use the successor campaign roadmap's checkpoint and workflow for new work. This
+was the authoritative delivery roadmap and cross-context handoff for the demo. [System design](system_design.md) describes implemented architecture;
 this document distinguishes intended behavior from delivered behavior. Read
 [AGENTS.md](../AGENTS.md) first. Later user instructions take precedence over
 this document; record changes so the next agent inherits them.
@@ -77,6 +113,8 @@ Do not quietly push unfinished requirements into another slice.
 | Blocked | A named decision or prerequisite prevents further progress; record what can unblock it. |
 | Ready for review | Implementation and required available checks are complete; user acceptance is pending. |
 | Accepted | The user accepted the result and any recorded limitations. |
+| Superseded | Unimplemented work transferred to the successor roadmap; not accepted as delivered. |
+| Retired | User removed remaining work or a milestone from scope; not a claim of implementation. |
 
 Failed required checks are unfinished work, not a passing checkpoint. Unavailable
 desktop checks must be identified as unexecuted. They may be presented for review
@@ -309,7 +347,8 @@ mapping through the existing aspect-fit presentation.
 
 ## Slice tracker and milestones
 
-Execute sequentially. Each slice requires all preceding slices to be Accepted,
+**Historical sequence, now closed:** do not execute the remaining retired/superseded rows.
+During delivery, each slice required all preceding slices to be Accepted,
 unless the user explicitly approves a dependency change. The prerequisite column
 names the immediate checkpoint, not permission to ignore earlier incomplete work.
 
@@ -339,16 +378,16 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 13.1 | [Headless arena sessions and reproducible play](automation_plan.md#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Accepted | Tooling interlude |
 | 13.2 | [Automated players and balance experiments](automation_plan.md#slice-132-automated-players-and-balance-experiments) | 13.1 | Accepted | Tooling interlude |
 | 13.3 | [MCP play and investigation](automation_plan.md#slice-133-mcp-play-and-investigation) | 13.2 | Accepted | Tooling interlude |
-| 14 | [Save and resume](#slice-14-save-and-resume) | 13.3 | Planned | D |
-| 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
-| 16 | [Demo integration](#slice-16-demo-integration) | 15 | Planned | D |
+| 14 | [Save and resume](#slice-14-save-and-resume) | 13.3 | Superseded → PC06 | D (retired) |
+| 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Retired | D (retired) |
+| 16 | [Demo integration](#slice-16-demo-integration) | 15 | Retired | D (retired) |
 
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
 | A — First fight | A preset party can fight stationary goblins, win, or lose through actual combat rules. | Accepted |
 | B — Dungeon skirmishes | Goblins approach, move, attack, react to hits, and die through the hybrid encounter loop. | Accepted |
 | C — RPG loop | Menu, custom party creation, class abilities, expanded spells, inventory, equipment, loot, recovery and shared-flow advancement through levels 1–3 work together. | Accepted |
-| D — Finished demo | The test level is playable, resumable, visually coherent, documented, and verified. | Planned |
+| D — Finished demo | Historical static-demo target; replaced by procedural campaign milestones. | Retired |
 
 The B follow-up subslices do not reopen accepted slice 08 or milestone B. Each
 is a separate planning, implementation and user-acceptance checkpoint. They must
@@ -1811,6 +1850,10 @@ implementation plans. The subsequent 13.1 delivery and acceptance are recorded a
 
 ### Slice 14: Save and resume
 
+**Disposition (2026-10-30): Superseded, unimplemented.** Requirements transfer to
+[PC06](procedural_campaign_plan.md#pc06-campaign-save-and-resume) after generation
+and persistent travel. The original scope below is retained for reference.
+
 **Prerequisite:** Slice 13.3 accepted, following 13.1 and 13.2.
 
 **Deliver:** One versioned out-of-combat save, validated restoration, safe file
@@ -1829,9 +1872,12 @@ progression, and persistent monster/loot state. Test corrupt/truncated files,
 unknown content, unsupported versions, failed writes, and invalid ownership.
 Failures must not partially replace the running session or destroy a valid save.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Execution record:** Superseded on 2026-10-30; unimplemented. Save/resume transfers to PC06; no verification or acceptance claimed.
 
 ### Slice 15: Cohesive presentation
+
+**Disposition (2026-10-30): Retired by user.** Existing polish is sufficient; no
+separate implementation or acceptance of this slice is claimed. Historical scope:
 
 **Deliver:** Polish the twenty-portrait library from 12.2, curated item/spell icons, paper-doll silhouette,
 readable management screens, targeting, damage/status feedback, and coherent art.
@@ -1845,9 +1891,12 @@ rest, advancement, defeat, and save/load flows. Check scaling, input coordinates
 overlays, legibility, focus, no-clipping, and generated-art consistency through
 deterministic captures and desktop interaction where available.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Execution record:** Retired on 2026-10-30 by user direction; no separate implementation, verification or acceptance claimed.
 
 ### Slice 16: Demo integration
+
+**Disposition (2026-10-30): Retired by user.** Static-dungeon tuning is obsolete
+for the new direction. New campaign integration belongs to PC09. Historical scope:
 
 **Deliver:** Configure encounters and recovery resources in the existing test
 level, tune pacing, finish player-facing documentation, and verify the integrated demo.
@@ -1861,7 +1910,7 @@ resuming. Exercise defeat and restart/load. Run relevant Debug/Release tests,
 allocation checks, and available desktop/capture checks. Record limits and obtain
 user acceptance of milestone D before declaring the demo complete.
 
-**Execution record:** Not started; no verification or acceptance recorded.
+**Execution record:** Retired on 2026-10-30 by user direction; static-demo integration not executed or accepted.
 
 ## Validation and deferred work
 
@@ -1894,6 +1943,7 @@ choices belong in their execution/design records unless they change this roadmap
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | Close this roadmap; retire 15/16 and milestone D, transfer unimplemented save/resume 14 to campaign PC06 after generation/travel. Preserve all accepted history. [Successor roadmap](procedural_campaign_plan.md). | User says existing polish is sufficient, static-dungeon improvements are obsolete, and requests a multi-slice procedural MVP plan before saving. |
 | 2026-10-30 | Accepted and closed 13.3 after capture-gallery review. [Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged; tooling use stays open-ended and all balance experiments remain opt-in. Slice 14 is next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the doc”. |
 | 2026-10-30 | Accepted and closed 13.2. [Closeout/handoff](slice132_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged. Use remains open-ended wherever relevant to project work; examples neither restrict its purpose nor add requirements. 13.3 is next eligible for separate planning; 14 stays after 13.3. | User accepted the executed checks as sufficient and instructed “close up the slice”; clarified examples must not restrict the tooling’s uses. |
 | 2026-10-30 | Implemented 13.2 and marked Ready for review. [Verification](slice132_verification.md). Three policies/party packages, bounded serial experiments, honest reports and reproducible traces. All balance playthroughs remain opt-in, outside routine tests; no gameplay tuning. 13.3/14 remain unstarted. | User approved the detailed plan with “implement the plan”. Implementation acceptance remains pending. |

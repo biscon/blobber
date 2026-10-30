@@ -1,5 +1,12 @@
 # Slice 13.3: local MCP play and investigation
 
+**Roadmap update (2026-10-30):** The user subsequently closed the static-demo
+roadmap. Its unimplemented save/resume slice 14 moves to
+[campaign PC06](procedural_campaign_plan.md#pc06-campaign-save-and-resume), after
+generation and persistent travel. Earlier next-slice directions below are historical;
+13.3 acceptance and verification limits are unchanged.
+
+
 Status: implemented, **Accepted and closed**, 2026-10-30. The user approved the reviewed
 plan with “Implement the plan.” 13.1/13.2 remain Accepted and closed; save/resume
 remains slice 14 and unstarted. After reviewing the capture gallery, the user accepted:

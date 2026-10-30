@@ -2,7 +2,19 @@
 
 Date: 2026-10-30.
 
-Status: **Proposed MVP specification for implementation planning. Not implemented.**
+Status: **MVP specification with agreed scope amendments; not implemented.**
+The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is proposed
+for review. It supersedes the closed static-demo roadmap for future delivery.
+
+### Scope clarification and amendments (2026-10-30)
+
+The user clarifies that an authored town with shops and a bottom-floor boss is the
+long-term destination; this document defines the smaller first MVP. Shops remain
+outside it. During roadmap planning the user endorsed paid recall using a camp kit,
+return at unlocked floor entrances rather than the recall position, free walking
+ascent as a fallback, and no respawns for this MVP. Finite optional encounters should
+provide approachable extra XP/resources if a party struggles on the direct route.
+The roadmap distinguishes these agreed concepts from detailed proposed mechanics.
 
 This document captures the intended first procedural dungeon/campaign milestone
 following the static dungeon demo. It describes the player experience, scope,
@@ -63,7 +75,14 @@ The hub is a small fixed safe location, not a town simulation. It provides acces
 to recovery, entry into the dungeon and the normal run/menu flow. Shops, NPC
 dialogue, crafting and a hub economy are outside scope.
 
-Floors connect through stairs. Floors 1 and 2 have a guarded descent; floor 3
+Floors connect through stairs. Paid recall also returns a safely settled party to
+the hub using a camp kit. Return travel from town uses already unlocked floor-entry
+waypoints, never the exact recall location. This preserves a tradeoff with camping
+in place. Ordinary walking ascent remains a free fallback when kits run out; the
+user accepts its time cost. Exact eligibility, atomic cost handling and waypoint
+unlock semantics are detailed proposals in the roadmap.
+
+Floors 1 and 2 have a guarded descent; floor 3
 culminates in the final guardian and a clear victory state. Players can ascend
 through previously visited floors and return to the hub when travel is legal.
 
@@ -75,8 +94,9 @@ Entering a floor must not grant starting equipment or camp supplies again.
 
 ### Proposed recovery and defeat defaults
 
-These are explicit proposal defaults from the brainstorming, not historical
-accepted decisions. The implementation plan should call out any change to them.
+These began as explicit proposal defaults from the brainstorming. The no-respawn
+baseline is now agreed; the remaining defaults still need their slice review.
+The implementation plan should call out any change to them.
 
 - The hub offers existing sanctuary-style free recovery for living characters.
 - Field long rests continue to consume camp kits under existing recovery rules.
@@ -89,9 +109,10 @@ accepted decisions. The implementation plan should call out any change to them.
 
 Free hub recovery means attrition primarily creates pressure between hub visits,
 not an irreversible resource countdown across the whole campaign. Accept and
-measure this consequence. If optimal play becomes returning after every fight,
-revisit recovery economics explicitly; do not hide the problem behind long walks
-or unannounced respawns.
+measure this consequence. Paid recall and returning at entrances provide a cost
+and loss of position; free walking remains an intentional fallback. If optimal
+play becomes returning after every fight, revisit recovery economics explicitly;
+do not pad the map with long walks or introduce unannounced respawns.
 
 ## 4. Floor structure and progression
 
@@ -115,7 +136,12 @@ Exact creatures, mechanics and artwork belong to the later content/design plan.
 Adapted variants must be identified as adaptations rather than unmodified SRD
 stat blocks. A large new bestiary is not a prerequisite for generation.
 
-Optional routes provide useful but nonessential rewards. The required route must
+Optional routes provide useful but nonessential rewards and a finite reserve of
+approachable encounters. A party that struggles at a guardian can backtrack to
+previously skipped enemies for additional XP, supplies or equipment. Keep this
+reserve accessible before the guardian; do not require respawns or a mandatory
+full clear. At the level-3 cap, further XP cannot provide another level, so useful
+supplies/gear and reasonable encounter tuning still matter. The required route must
 remain viable without rare loot or killing every optional enemy. Boss bypasses,
 secret mandatory passages and multiple endings are deferred.
 
@@ -253,7 +279,8 @@ whose resources diverge between floors.
 
 Save/resume must retain authoritative campaign state: party state, active floor
 and position, generated floor identity/layout, enemies, remaining loot, doors,
-keys, completed objectives and rewards already granted. Preserve exploration
+keys, completed objectives, unlocked entry waypoints, spent recall supplies and
+rewards already granted. Preserve exploration
 discovery if present. A seed alone is not a run save. Starting-build library
 entries remain independent of live campaign saves.
 
@@ -363,7 +390,8 @@ review still decides whether exploration is readable and enjoyable.
 
 The MVP is complete when a player can start a party in the hub, explore and descend
 through three generated floors, revisit earlier locations without state resets,
-use keys and recovery, earn normal progression, save/resume a valid active run,
+use keys, field recovery and paid recall/entry return, earn normal progression,
+save/resume a valid active run,
 and reach an unambiguous final victory or run-ending defeat.
 
 Acceptance must establish:
@@ -421,7 +449,7 @@ combination, not a reproduction of any one game's generator.
   local pattern constraints are useful but do not themselves establish this MVP's
   global progression or pacing requirements.
 
-The requested next artifact is a separate multi-slice implementation plan based
-on this specification and the current repository. That plan should surface any
-material unresolved gameplay choices, define implementation designs and validation,
-and preserve the existing project's acceptance process.
+The [separate multi-slice roadmap](procedural_campaign_plan.md) is now drafted
+for review from this specification and current code. It surfaces unresolved
+choices, proposed system boundaries, per-slice validation and the existing
+acceptance process. Its individual implementation plans remain to be reviewed.

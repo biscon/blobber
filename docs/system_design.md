@@ -1,10 +1,18 @@
 # System design
 
-Proposed MVP, **not implemented** (2026-10-30):
-[procedural dungeon and campaign specification](procedural_campaign_mvp.md).
-Defines the post-demo three-floor run, generation and persistence requirements,
-scope exclusions and acceptance criteria as input to a separate implementation
-plan; it does not change the current demo roadmap or acceptance status.
+Proposed architecture/roadmap, **not implemented** (2026-10-30):
+[procedural campaign delivery plan](procedural_campaign_plan.md), based on the
+[MVP specification](procedural_campaign_mvp.md). The user closed the remaining
+[static-demo roadmap](dnd5e_demo_design.md#roadmap-closeout-2026-10-30): retire its
+polish/static integration slices and move save/resume after generation and travel.
+All prior accepted slices remain closed. Nine proposed slices cover bounded
+room-graph/template generation, shared door geometry/discovery, designated guardian
+gates, one travelling Party with persistent floor snapshots, fixed hub, paid recall
+and entry waypoints, then campaign saves, depth content and expedition investigation.
+No respawns; finite optional encounters provide XP/resource fallback. Shops are a
+later milestone. The plan records ownership, clocks, transactional failures and
+validation; roadmap review and the PC01 detailed plan precede implementation.
+The implemented architecture below remains unchanged until those slices deliver.
 
 Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter](mcp_design.md).
 Optional official-SDK stdio tools reuse accepted sessions, experiments/reports and
@@ -16,7 +24,7 @@ focused sanitizer replay/capture checks, SDK lifecycle/cancellation integration,
 explicit opt-in smoke/rerun/replay, hidden GPU checks and seven retained captures.
 Live Codex-host interaction and interactive desktop review remain unverified.
 The user accepted 13.3 after reviewing the capture gallery. 13.1/13.2 remain closed;
-save/resume remains slice 14, next eligible for separate planning and unstarted.
+save/resume is unimplemented and now planned as campaign PC06, after generation/travel.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13.2 automated players and
 balance experiments](automated_players_design.md). A stdlib Python policy/experiment
@@ -30,7 +38,7 @@ rules changed. [Usage](../experiments/arena/README.md) and
 Debug/Release 5/5, manual fixture integration, 18/216-trial comparisons, selected
 policy rerun/engine replay, CPU visual mode and measured Release workloads. The
 user accepted and closed the slice on 2026-10-30: “close up the slice”. It is general-purpose project tooling for agents to use wherever relevant.
-Verification results and coverage limits remain unchanged. MCP 13.3 is Accepted and closed above; save/resume remains 14 and unstarted.
+Verification results and coverage limits remain unchanged. MCP 13.3 is Accepted and closed above; save/resume has moved to the proposed campaign PC06 and remains unimplemented.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13.1 headless arena sessions](headless_design.md).
 A graphics-independent NPC metadata loader and bounded typed session host adapt the
@@ -43,7 +51,7 @@ zero tracked allocations, 256-actor capacity, shipped-content record/replay in b
 modes without a display, and hidden GPU lifecycle checks. The user accepted slice 13.1
 on 2026-10-30: “slice accepted, update the docs.” Verification limits remain unchanged.
 [13.2](automation_plan.md#slice-132-automated-players-and-balance-experiments) is now
-Accepted above; 13.3 is Accepted and closed above; slice 14 remains unstarted.
+Accepted above; 13.3 is Accepted and closed above; demo slice 14 is superseded by campaign PC06.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
 Session-owned exactly-once XP feeds checked live-party advancement through levels
@@ -54,8 +62,8 @@ Schema 9 and prepared bundle/renderer revision 3 retain the accepted library, ar
 1920×1080 and prepared-image contracts. [Verification and handoff](slice13_verification.md)
 records Debug/Release 41/41, focused sanitizer 8/8, zero tracked allocations,
 capacity/GPU checks and 69 initial captures. The user accepted slice 13 and milestone C
-on 2026-10-30. Slice 14 remains unstarted and now follows the planned automation
-interlude above. The subsequent spell-picker review adds
+on 2026-10-30. The automation interlude is now accepted; the remaining static-demo
+roadmap is closed and unimplemented save/resume moves to campaign PC06. The subsequent spell-picker review adds
 clear preparation-slot messaging, actionable-only advancement lists, blue card
 outlines, measured compact descriptions and shared scrollbars with aligned panels.
 These corrections and existing Action Surge activation were accepted with the slice.
