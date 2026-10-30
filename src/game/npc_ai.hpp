@@ -39,7 +39,17 @@ class NpcAiController {
     bool escape(ActorId id, Player party, std::uint64_t now) noexcept;
     const NpcAiSnapshot& snapshot() const noexcept { return state_; }
 
+    // Preparation-only owned values; no borrowed pointers or navigation workspace.
+    struct Saved {
+        NpcAiSnapshot state;
+        std::array<std::optional<Cell>, NpcWorld::maxInstances> prepared{};
+        std::mt19937 rng;
+        std::uint64_t tickDue = 100;
+        std::size_t priority = 0;
+    };
+
   private:
+    friend class GameSession;
     GeometryView map_;
     ActorWorld& actors_;
     Navigation navigation_;

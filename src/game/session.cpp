@@ -1,4 +1,5 @@
 #include "game/session.hpp"
+#include "game/campaign.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -14,11 +15,27 @@ GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const ru
                          const NpcWorld& placements, std::uint32_t seed, Player spawn, bool enableAi,
                          const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
                          const FloorFixtures& fixtures, const FloorObjectiveDefinition& objective)
-    : floor_(map, fixtures), objectiveDefinition_(objective), map_(floor_.view()), party_(catalog, starting),
-      actors_(map_, catalog, placements), recovery_(recovery),
+    : GameSession(map, std::make_unique<Party>(catalog, starting), placements, seed, spawn, enableAi, timings,
+                  recovery, fixtures, objective) {}
+GameSession::GameSession(const Map& map, std::unique_ptr<Party> party, const NpcWorld& placements,
+                         std::uint32_t seed, Player spawn, bool enableAi,
+                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
+                         const FloorFixtures& fixtures, const FloorObjectiveDefinition& objective)
+    : GameSession(map, *party, placements, seed, spawn, timings, recovery, fixtures, objective) {
+    ownedParty_ = std::move(party);
+    enableAi_ = enableAi;
+    combat_.enableRoaming(enableAi_);
+    detectContact();
+    discover();
+}
+GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placements, std::uint32_t seed,
+                         Player spawn, const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
+                         const FloorFixtures& fixtures, const FloorObjectiveDefinition& objective)
+    : floor_(map, fixtures), objectiveDefinition_(objective), map_(floor_.view()), party_(party),
+      actors_(map_, party.catalog(), placements), recovery_(recovery),
       loot_(actors_, recovery, objective.count ? objective.lootSeed : seed), movement_(spawn), rng_(seed),
       ai_(map_, actors_, seed), effects_(party_, actors_, rng_),
-      combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(enableAi) {
+      combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(true) {
     if (map_.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     prepareObjective();
@@ -26,8 +43,6 @@ GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const ru
     movement_.bindEffects(&effects_);
     effects_.partyCell(spawn.cell);
     combat_.enableRoaming(enableAi_);
-    detectContact();
-    discover();
 }
 void GameSession::detectContact() noexcept {
     combat_.observe(movement_.state().player);
@@ -35,6 +50,12 @@ void GameSession::detectContact() noexcept {
         movement_.clearPending();
 }
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
+    if (campaign_ && campaign_->status() != CampaignStatus::Active) {
+        events_.clear();
+        return events_;
+    }
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     loot_.reconcile(actors_);
     reconcileRewards();
@@ -51,6 +72,15 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     timeMs_ += elapsed;
     remainderMs_ -= static_cast<double>(elapsed);
     combat_.resolveImpacts(movement_.state().player, timeMs_, events_, elapsed);
+    // Final objective completion closes command admission immediately. Drain already
+    // accepted consequences/presentation, without starting another movement, AI or turn.
+    reconcileRewards();
+    if (!runActive()) {
+        movement_.clearPending();
+        loot_.reconcile(actors_);
+        discover();
+        return events_;
+    }
     if (!effects_.mobileParty())
         movement_.clearPending();
     detectContact();
@@ -83,6 +113,10 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
+    if (!runActive())
+        return;
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     combat_.reconcileEffects(timeMs_, events_);
     if (!realTime(combat_.snapshot().phase) || !effects_.mobileParty())
@@ -97,6 +131,8 @@ void GameSession::move(Action action, bool fresh) noexcept {
     discover();
 }
 InventoryError GameSession::inventoryAccess(const InventoryRequest& request) const noexcept {
+    if (!runActive())
+        return InventoryError::Unavailable;
     if (movement_.state().transition.active())
         return InventoryError::Moving;
     const auto source = party_.inventory().locate(request.source);
@@ -113,6 +149,8 @@ InventoryError GameSession::inventoryAccess(const InventoryRequest& request) con
     return InventoryError::None;
 }
 InventoryResult GameSession::inventoryChange(const InventoryRequest& request) noexcept {
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     const auto access = inventoryAccess(request);
     if (access != InventoryError::None)
@@ -123,6 +161,13 @@ InventoryResult GameSession::inventoryChange(const InventoryRequest& request) no
     return result;
 }
 CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
+    if (!runActive()) {
+        CombatOutcome out;
+        out.reason = CommandReason::Unavailable;
+        return out;
+    }
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     combat_.reconcileEffects(timeMs_, events_);
     if (movement_.state().transition.active()) {
@@ -138,6 +183,10 @@ CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
     return out;
 }
 EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
+    if (!runActive())
+        return {EffectError::InvalidWorld};
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     combat_.reconcileEffects(timeMs_, events_);
     const auto result = effects_.apply(request, timeMs_, events_);
@@ -148,11 +197,17 @@ EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
     return result;
 }
 EffectResult GameSession::removeEffect(EffectId id) noexcept {
+    if (!runActive())
+        return {EffectError::InvalidWorld};
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     combat_.reconcileEffects(timeMs_, events_);
     return effects_.remove(id, timeMs_, events_);
 }
 EffectResult GameSession::endConcentration(std::uint64_t world, rules::CharacterId caster) noexcept {
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     if (world != actors_.snapshot().world) {
         events_.clear();
         return {EffectError::InvalidWorld};

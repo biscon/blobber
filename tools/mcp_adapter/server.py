@@ -117,7 +117,7 @@ def create_server(runner, assets, output_root, capacity=8192*MIB):
     def session_start(scenario: dict | None = None, scenario_path: str | None = None,
                       mode: str = 'diagnostic', seed: int | None = None,
                       handle: str | None = None, session: str | None = None, revision: str | None = None) -> dict:
-        """Start a recorded arena or generated_floor with doors, keys and discovery. Choose scenario object OR path. Replacement requires current tokens."""
+        """Start a recorded arena, generated_floor or persistent campaign with doors, keys, discovery and checked stairs. Choose scenario object OR path. Replacement requires current tokens."""
         return sessions.start(scenario, scenario_path, mode, seed, handle, session, revision, cancelled)
 
     @tool(True)

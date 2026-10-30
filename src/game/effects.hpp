@@ -243,7 +243,21 @@ class EffectController {
     rules::SaveResult save(EffectTarget, rules::Ability, std::int64_t difficulty) noexcept;
     std::uint64_t gameplayMs() const noexcept { return gameplayMs_; }
 
+    // Preparation-only owned values; no borrowed pointers or navigation workspace.
+    struct Saved {
+        std::array<EffectInstance, capacity> instances{};
+        std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil{};
+        std::uint64_t nextSerial = 1, gameplayMs = 0;
+        std::array<std::array<ConditionState, 4>, NpcWorld::maxInstances + rules::partySize> conditions{};
+        std::array<std::uint64_t, 4> casterTurns{};
+        GroundSnapshot ground;
+        std::array<Restraint, NpcWorld::maxInstances + rules::partySize> restrained{};
+        std::uint64_t nextArea = 1, groundDueMs = 6000;
+        bool turns = false;
+    };
+
   private:
+    friend class GameSession;
     Party& party_;
     ActorWorld& actors_;
     rules::DiceRng& rng_;

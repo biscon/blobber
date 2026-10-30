@@ -118,6 +118,9 @@ void CommandController::refreshMagic() noexcept {
               "destination. Click a floor cell or an enemy, then confirm.",
               0);
     }
+    if (session_->effects().spiritualWeapon(caster))
+        entry({}, rules::Feature::DismissSpiritualWeapon, "Dismiss Spiritual Weapon",
+              "End this local summon before safe floor travel. No action, mana or cooldown cost.", 0);
     if (session_->effects().concentration(caster).serial)
         entry({}, rules::Feature::DismissConcentration, "End concentration",
               "End your concentration voluntarily. No action, mana or cooldown cost.", 0);

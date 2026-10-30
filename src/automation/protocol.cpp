@@ -1,4 +1,5 @@
 #include "automation/protocol.hpp"
+#include "game/campaign.hpp"
 #include "generation/report.hpp"
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
@@ -25,6 +26,37 @@ Json Protocol::observation(bool diagnostic) {
     if (const auto* generated = session_->generated()) {
         j["scenario_kind"] = "generated_floor";
         j["generation"] = generation::report(*generated, observation_.diagnostic);
+    }
+    if (const auto* campaign = session_->game().campaign()) {
+        j["scenario_kind"] = "campaign";
+        const char* names[]{"active", "victory", "defeat"};
+        j["campaign"] = {{"status", names[unsigned(campaign->status())]},
+                         {"location", campaign->activeLocation()},
+                         {"location_name", campaign->name()},
+                         {"revision", std::to_string(campaign->revision())},
+                         {"gameplay_ms", std::to_string(campaign->gameplayMs())},
+                         {"visited_entries", Json::array()}};
+        for (unsigned i = 1; i <= 3; ++i)
+            if (campaign->location(i).visited)
+                j["campaign"]["visited_entries"].push_back(i);
+        if (observation_.diagnostic) {
+            j["campaign"]["locations"] = Json::array();
+            auto state = std::make_unique<FloorState>();
+            for (unsigned i = 0; i < 4; ++i) {
+                const auto& location = campaign->location(i);
+                Json record = {{"location", i},
+                               {"visited", location.visited},
+                               {"fingerprint", location.generated
+                                                   ? std::to_string(location.generated->fingerprint)
+                                                   : "hub-v1"}};
+                if (i == campaign->activeLocation()) {
+                    session_->game().exportFloor(*state);
+                    record["state_digest"] = std::to_string(state->digest());
+                } else if (location.saved)
+                    record["state_digest"] = std::to_string(location.saved->digest());
+                j["campaign"]["locations"].push_back(record);
+            }
+        }
     }
     return j;
 }
@@ -129,10 +161,23 @@ Json Protocol::perform(const Json& r, Output& output) {
         const auto action = decodeAction(r.at("action"), session_->game());
         if (op == "act" && mutations_ >= maxMutations)
             return {{"accepted", false}, {"reason", "mutation_limit"}};
+        const auto* campaign = session_->game().campaign();
+        const auto oldLocation = campaign ? campaign->activeLocation() : 0;
+        const auto oldStatus = campaign ? campaign->status() : CampaignStatus::Active;
         const auto result = session_->action(action, op == "preview");
         if (op == "act") {
             ++mutations_;
             ++revision_;
+            if (campaign && (oldLocation != campaign->activeLocation() || oldStatus != campaign->status())) {
+                Json event = {{"version", 1},
+                              {"type", "events"},
+                              {"id", r.at("id")},
+                              {"events", Json::array({{{"event", "campaign_transition"},
+                                                       {"from", oldLocation},
+                                                       {"to", campaign->activeLocation()},
+                                                       {"status", unsigned(campaign->status())}}})}};
+                output.emit(event, event);
+            }
             if (result.accepted && action.operation != Operation::Continue)
                 emitEvents(r.at("id"), session_->events(), output);
         }
@@ -150,12 +195,22 @@ Json Protocol::perform(const Json& r, Output& output) {
             return {{"ticks", 0}, {"stop", "mutation_limit"}, {"observation", observation(false)}};
         ++mutations_;
         ++revision_;
+        const auto* campaign = session_->game().campaign();
+        const auto oldStatus = campaign ? campaign->status() : CampaignStatus::Active;
         unsigned done = 0;
         while (done < ticks && session_->ticks() < maxRunTicks && !session_->result() &&
                !(decision && session_->decision())) {
             const auto& events = session_->tick();
             ++done;
             emitEvents(r.at("id"), events, output);
+        }
+        if (campaign && oldStatus != campaign->status()) {
+            Json event = {{"version", 1},
+                          {"type", "events"},
+                          {"id", r.at("id")},
+                          {"events", Json::array({{{"event", "campaign_result"},
+                                                   {"status", unsigned(campaign->status())}}})}};
+            output.emit(event, event);
         }
         const char* stop = session_->terminal()               ? "terminal"
                            : session_->result()               ? "encounter_result"

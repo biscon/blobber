@@ -2,6 +2,11 @@
 #include "game/session.hpp"
 namespace blobber {
 PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bool preview) noexcept {
+    if (!runActive())
+        return {InventoryError::Unavailable, "Campaign has ended."};
+    if (!preview)
+        if (mutation_ != UINT64_MAX)
+            ++mutation_;
     if (!preview)
         events_.clear();
     if (movement().transition.active())
@@ -32,6 +37,8 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
     return {InventoryError::None, "Dropped in a loot bag at your feet."};
 }
 PickupResult GameSession::lootAccess(LootId id) const noexcept {
+    if (!runActive())
+        return {InventoryError::Unavailable, "Campaign has ended."};
     const auto* s = loot_.find(id);
     if (!s || loot_.snapshot().revision == UINT64_MAX)
         return {InventoryError::Stale, "That loot bag is no longer available."};
@@ -45,6 +52,9 @@ PickupResult GameSession::lootAccess(LootId id) const noexcept {
     return {};
 }
 PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept {
+    if (!preview)
+        if (mutation_ != UINT64_MAX)
+            ++mutation_;
     if (!preview) {
         events_.clear();
         loot_.reconcile(actors_);
@@ -63,6 +73,11 @@ PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept 
     return {};
 }
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
+    if (!runActive()) {
+        RestPreview out;
+        out.error = RestError::Unsafe;
+        return out;
+    }
     RestPreview p;
     p.elapsedMs = r.kind == RestKind::Short ? 3600000 : 28800000;
     for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
@@ -102,6 +117,8 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     return p;
 }
 RestResult GameSession::rest(const RestRequest& r) noexcept {
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     const auto p = previewRest(r);
     if (!p)

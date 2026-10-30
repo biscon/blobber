@@ -148,6 +148,10 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         return CommandReason::StaleTurn;
     if (!effects_.canAct(c.character))
         return CommandReason::CannotAct;
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSpiritualWeapon)
+        return effects_.spiritualWeapon(c.character) && settledRecovery(pose, noticeTime_)
+                   ? CommandReason::Ready
+                   : CommandReason::Unsafe;
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissConcentration)
         return effects_.concentration(c.character).serial ? CommandReason::Ready : CommandReason::Unavailable;
     if (realTime(state_.phase)) {
@@ -346,6 +350,11 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
     out.occurredMs = now;
     out.feature = c.feature;
     out.phase = state_.phase;
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSpiritualWeapon) {
+        if (const auto* e = effects_.spiritualWeapon(c.character))
+            effects_.remove(e->id, now, events);
+        return out;
+    }
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissConcentration) {
         effects_.remove(effects_.concentration(c.character), now, events);
         return out;

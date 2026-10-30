@@ -85,6 +85,8 @@ class ActorWorld {
     const rules::Catalog& catalog() const noexcept { return catalog_; }
 
   private:
+    friend class GameSession;
+    friend class CampaignRun;
     GeometryView map_;
     const rules::Catalog& catalog_;
     ActorSnapshot state_;

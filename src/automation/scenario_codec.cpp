@@ -14,6 +14,15 @@ Scenario decodeScenario(const rules::Catalog& catalog, const Json& j) {
         arena.erase("kind");
         return decodeArena(catalog, arena.dump());
     }
+    if (j.at("kind") == "campaign") {
+        fields(j, {"kind", "schema_version", "generator_version", "template_version", "seed", "party"});
+        auto floor = j;
+        floor["kind"] = "generated_floor";
+        floor["depth"] = 1;
+        const auto decoded = decodeScenario(catalog, floor);
+        const auto& generated = std::get<GeneratedScenario>(decoded);
+        return CampaignScenario{generated.party, generated.generation.seed};
+    }
     if (j.at("kind") != "generated_floor")
         throw std::invalid_argument("Unknown scenario kind");
     fields(j, {"kind", "schema_version", "generator_version", "template_version", "seed", "depth", "party",

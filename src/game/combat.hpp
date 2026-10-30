@@ -159,6 +159,9 @@ class CombatController {
     CommandReason spellRecipient(const PartyCommand&, Player, std::size_t index) const noexcept;
     bool safeRecovery(Player) const noexcept;
     SpellArea area(const PartyCommand& c, Player p) const noexcept;
+    bool settledActions(std::uint64_t now) const noexcept {
+        return !pendingImpacts() && !presentationBusy(now);
+    }
     bool settledRecovery(Player pose, std::uint64_t now) const noexcept {
         return safeRecovery(pose) && !presentationBusy(now);
     }
@@ -168,7 +171,20 @@ class CombatController {
     bool casterResolving(rules::CharacterId id) const noexcept;
     bool sneakPreview(rules::CharacterId, ActorId, bool ranged, Player) const noexcept;
 
+    // Preparation-only owned values; no borrowed pointers or navigation workspace.
+    struct Saved {
+        CombatSnapshot state;
+        std::array<std::uint64_t, 4> sneakReady{}, cunningReady{}, extraUntil{}, partyReady{}, saveDue{},
+            defendDue{}, processedCasterRound{};
+        std::array<bool, 4> extraAction{};
+        std::array<bool, NpcWorld::maxInstances> known{}, episodeActors{};
+        std::array<std::uint64_t, NpcWorld::maxInstances> knownUntil{}, enemyReady{}, enemyBusy{};
+        std::uint64_t nextAttack = 1;
+        std::size_t autoCursor = 0;
+    };
+
   private:
+    friend class GameSession;
     struct Entry {
         bool party = true;
         std::uint16_t index = 0;

@@ -2,6 +2,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <ostream>
 #include <random>
 
 namespace blobber::rules {
@@ -57,6 +58,7 @@ struct D20Roll {
 class DiceRng {
   public:
     explicit DiceRng(std::uint32_t seed) : engine_(seed) {}
+    void describe(std::ostream& out) const { out << engine_; }
     Result<DiceRoll> roll(Dice dice) noexcept;
     Result<DiceRoll> damage(Dice dice, bool critical) noexcept;
     Result<D20Roll> d20(RollMode mode = RollMode::Normal) noexcept;

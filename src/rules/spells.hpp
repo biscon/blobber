@@ -51,7 +51,8 @@ enum class Feature : std::uint8_t {
     CunningAction,
     SpiritualWeapon,
     EscapeWeb,
-    EndTurn
+    EndTurn,
+    DismissSpiritualWeapon
 };
 enum class ClassFeature : std::uint8_t {
     SecondWind = 1,

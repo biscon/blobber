@@ -434,9 +434,10 @@ const SpellRules* spellRules(SpellKind kind) noexcept {
     return n < static_cast<unsigned>(SpellKind::Count) ? &spells[n] : nullptr;
 }
 const char* featureName(Feature f) noexcept {
-    constexpr const char* names[]{"Ability",      "Second Wind",   "Arcane Recovery", "End concentration",
-                                  "Action Surge", "Preserve Life", "Cunning Action",  "Spiritual Weapon",
-                                  "Escape Web",   "End Turn"};
+    constexpr const char* names[]{
+        "Ability",      "Second Wind",   "Arcane Recovery",         "End concentration",
+        "Action Surge", "Preserve Life", "Cunning Action",          "Spiritual Weapon",
+        "Escape Web",   "End Turn",      "Dismiss Spiritual Weapon"};
     return unsigned(f) < std::size(names) ? names[unsigned(f)] : "Ability";
 }
 int spellManaCost(int level) noexcept {

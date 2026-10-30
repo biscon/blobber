@@ -1,5 +1,25 @@
 # System design
 
+PC04 **Accepted and closed** (2026-10-30):
+[persistent descent and fixed hub](procedural_campaign_travel_design.md).
+One travelling Party, authored sanctuary hub and three persistent generated floors
+share checked staged stairs in graphical/headless play. Floor-local snapshots,
+portable effects/deadline rebasing, fresh runtime identities, campaign terminal
+results and strict inactive-state replay integrity preserve the accepted systems.
+Prepared banks remain shared; no recall, disk saves, content tuning or balance
+experiments. [Verification/handoff](pc04_verification.md) and
+[capture gallery](screenshots/pc04/index.html). User approval: “Implement the plan.”
+Final headless Debug/Release checks pass 39/39 each; graphics 58/58 each;
+ASan/UBSan 3/3, zero tracked steady-frame C++ allocations, 9/14 preparation
+allocation-failure points, strict replay and hidden GPU/captures pass. Twelve
+retained PNGs distinguish real travel from the victory presentation reconstruction.
+The user accepted PC04 on 2026-10-30: “slice accepted, record it in the plan doc”.
+PC03/P-A stay accepted; milestone P-B remains Planned. PC05 is next eligible for
+its own reviewed detailed plan only, in a fresh context when requested. Verification
+results and limitations are unchanged; no additional play-coverage details were supplied.
+The milestone records below describe acceptance-time states; this PC04 record
+supersedes their historical no-travel/next-planning notes.
+
 PC03 **Accepted and closed** (2026-10-30):
 [guardians and protected progression](procedural_guardians_design.md).
 User approved the detailed plan with “Implement the plan.” Easy placeholder
@@ -24,7 +44,7 @@ are expected until PC04; basic door art is not considered final visual quality.
 PC03 is now Accepted and closed under its implemented design above.
 
 
-Roadmap **accepted by the user; campaign architecture remains planned** (2026-10-30):
+Roadmap **accepted by the user; PC04 campaign architecture implemented and accepted in PC04** (2026-10-30):
 [procedural campaign delivery plan](procedural_campaign_plan.md), based on the
 [MVP specification](procedural_campaign_mvp.md). The user closed the remaining
 [static-demo roadmap](dnd5e_demo_design.md#roadmap-closeout-2026-10-30): retire its
@@ -427,8 +447,9 @@ checks and limits.
 - **World:** compact immutable row-major solid-cell storage and immutable NPC
   loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
-- **Session/combat:** an immovable owner borrows the map/catalog and owns party,
-  actors, movement, AI, combat RNG and elapsed time. Actors and encounter membership
+- **Session/combat:** an immovable owner borrows map/catalog and owns actors,
+  movement, AI, combat RNG and elapsed time. Standalone sessions own Party;
+  campaign sessions borrow the single Party owned by CampaignRun. Actors and encounter membership
   are bounded at 256; initiative groups use catalog monster identities. Contact
   clears queued movement; commands validate turn tokens, life, equipment, range,
   formation and attacker availability before RNG. Acceptance returns synchronously;
@@ -518,9 +539,14 @@ There is no ECS, generic event bus, virtual renderer hierarchy, or service locat
 
 ## Ownership, storage, and limits
 
-Maps own contiguous cell bytes. The application owns the map and renderer for
-the session. Movement and UI borrow them only during calls. A scene change would
-prepare a replacement outside the frame loop; live streaming is not implemented.
+Maps own contiguous cell bytes. CampaignRun retains four stable locations and the
+travelling Party; the application owns shared prepared rendering. One active
+session borrows its location/Party, with value snapshots for inactive locations.
+Travel stages replacement simulation/view owners at an explicit preparation
+boundary and commits before the next simulation tick. Only active/staged owners
+have navigation/frame scratch; there is no live streaming or inactive simulation.
+Standalone authored/arena sessions retain their existing map/catalog lifetime
+contract. See the PC04 design for snapshot validation and clock ownership.
 
 Prepared sprites refer to ranges in contiguous column and color arrays, replacing
 per-column pixel vectors. These are immutable offsets with cache-local lifetime,
@@ -558,8 +584,10 @@ integer hundredths of pounds with int64 totals. Catalog bounds remain 16 races,
 16 classes and 64 items; all preparation bounds reject explicitly.
 
 Party construction may copy strings; frame callers borrow const snapshots. The
-catalog outlives sessions/parties. Restart reconstructs session borrowers while
-reusing prepared assets; that preparation boundary may allocate. Character IDs are
+catalog outlives sessions/parties. Campaign travel retains actual Party/inventory
+identity and rebases portable deadlines without recreating starting builds. Arena
+restart reconstructs borrowers while reusing prepared assets. These preparation
+boundaries may allocate; ordinary engine-owned frames may not. Character IDs are
 party-local; startup owned-item indices are character-local; catalog IDs remain
 catalog-local. See [inventory design](inventory_design.md) for schema 5, live item
 commands, safety, UI storage and tests.
@@ -673,7 +701,7 @@ Historical techniques and visual choices are documented in [research](research.m
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
 | `src/rules/` | Deterministic rules, character derivation, bounded creation drafts/previews, per-grant spell queries and immutable typed catalog |
 | `src/persistence/` | Versioned starting-build codec, checked UUID/revision library transactions; independent of future run saves |
-| `src/game/` | Session/encounter ownership, runtime actors/occupancy, movement, animation state, bounded party/health/formation |
+| `src/game/` | Campaign/active-session ownership, checked travel and floor snapshots, encounters, runtime actors/occupancy, movement, animation state, bounded party/health/formation |
 | `src/input/` | Platform-independent key repeat timing |
 | `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
 | `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |

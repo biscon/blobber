@@ -78,6 +78,7 @@ class Party {
 
   private:
     friend class GameSession;
+    friend class CampaignRun;
     std::uint8_t questKeys_ = 0;
     const rules::Catalog* catalog_;
     PartySnapshot state_;

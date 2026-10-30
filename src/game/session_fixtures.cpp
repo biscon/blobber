@@ -1,3 +1,4 @@
+#include "game/campaign.hpp"
 #include "game/session.hpp"
 namespace blobber {
 void GameSession::discover() noexcept {
@@ -31,6 +32,11 @@ FixtureRequest GameSession::nearbyFixture() const noexcept {
     return {i < 0 ? FixtureId{} : floor_.id(unsigned(i)), floor_.revision()};
 }
 FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexcept {
+    if (!runActive())
+        return {false, false, "Campaign has ended."};
+    if (!preview)
+        if (mutation_ != UINT64_MAX)
+            ++mutation_;
     if (!preview)
         events_.clear();
     const auto* f = floor_.find(r.id);
@@ -51,6 +57,8 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         able |= effects_.canAct(rules::CharacterId{i});
     if (!able)
         return {false, false, "An able companion is required."};
+    if (campaign_ && CampaignRun::stairs(f->kind))
+        return campaign_->previewTravel(campaign_->request(r));
     if (f->kind == FixtureKind::GuardianGate)
         return {objective_.completed, false,
                 objective_.completed ? "Guardians defeated. Gate open; rewards beyond."
@@ -77,7 +85,9 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         discover();
     }
     if (objective_.count && r.id.slot == objectiveDefinition_.approachDoor)
-        return {true, !preview, "Guardians beyond! Combat prevents movement."};
+        return {true, !preview,
+                floor_.definition().depth == 3 ? "Final guardians beyond! Combat prevents movement."
+                                               : "Guardians beyond! Combat prevents movement."};
     return {true, !preview,
             f->kind == FixtureKind::Door ? (preview ? "Open permanently." : "Door opened permanently.")
                                          : (preview ? "Collect quest key." : "Quest key collected.")};

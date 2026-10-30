@@ -1,8 +1,9 @@
 # Procedural campaign MVP: design and delivery roadmap
 
 Created / last updated: 2026-10-30.
-Status: **Roadmap accepted; PC01–PC03 Accepted and closed; milestone P-A Accepted on 2026-10-30.**
-PC04 is next eligible for detailed planning only. Later slice plans still require review before implementation.
+Status: **Roadmap accepted; PC01–PC04 Accepted and closed; milestone P-A Accepted (2026-10-30).**
+PC05 is next eligible for detailed planning only. PC05–PC09 detailed plans remain
+unapproved; do not advance automatically.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -40,14 +41,14 @@ arena and test fixtures; it does not imply retaining the old game mode.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC03 and milestone P-A accepted (2026-10-30) |
-| Active slice | None; PC03 Accepted and closed |
+| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC04 and milestone P-A accepted (2026-10-30) |
+| Active slice | None; PC04 Accepted and closed |
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
-| Next eligible slice | PC04 — Persistent descent and fixed hub; detailed planning only |
-| Next action | In a fresh context when requested, inspect current code and plan PC04 only for review |
+| Next eligible slice | PC05 — Paid recall and entry waypoints; detailed planning only |
+| Next action | In a fresh context when requested, inspect current code and plan PC05 only for review |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC03 Accepted and closed; milestone P-A Accepted; PC04–PC09 detailed plans remain unapproved |
+| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC04 Accepted and closed; milestone P-A Accepted; PC05–PC09 plans unapproved |
 
 Update this checkpoint, tracker and affected execution record together. Roadmap
 acceptance is not slice implementation or evidence of delivered gameplay acceptance.
@@ -335,7 +336,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | PC01 | [Generated-floor walking prototype](#pc01-generated-floor-walking-prototype) | Roadmap accepted (2026-10-30) | Accepted (2026-10-30) | P-A |
 | PC02 | [Doors, keys and discovered navigation](#pc02-doors-keys-and-discovered-navigation) | PC01 | Accepted | P-A |
 | PC03 | [Guardians and structurally safe progression](#pc03-guardians-and-structurally-safe-progression) | PC02 | Accepted (2026-10-30) | P-A |
-| PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Planned | P-B |
+| PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Accepted (2026-10-30) | P-B |
 | PC05 | [Paid recall and entry waypoints](#pc05-paid-recall-and-entry-waypoints) | PC04 | Planned | P-B |
 | PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Planned | P-B |
 | PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters) | PC06 | Planned | P-C |
@@ -497,8 +498,19 @@ leave loot, ascend and re-enter. Compare canonical state except documented clock
 new runtime IDs. Walk all the way back with zero kits. Exercise final victory and
 wipe with small owned fixtures; this is a lifecycle check, not a balance run.
 
-**Execution record:** Not started. PC03 is accepted; PC04 is eligible for detailed
-planning only and still requires review of its plan before implementation.
+**Execution record:** **Accepted and closed**, 2026-10-30. User approved:
+“Implement the plan.” [Implemented design](procedural_campaign_travel_design.md),
+[verification/handoff](pc04_verification.md), [gallery](screenshots/pc04/index.html).
+New Game starts in the authored hub; shared campaign ownership, three persistent
+floors, checked free stairs, portable effects/clocks and terminal Main Menu flow
+are delivered through graphical/headless/client/replay/MCP adapters. Final full
+headless Debug/Release 39/39 each, graphics 58/58 each, ASan/UBSan 3/3, allocation
+checks and 9/14 preparation failure points, strict replay and hidden GPU/captures
+pass. Interactive play coverage/live-host MCP remain unverified. No balance
+experiments or later-slice work. **Acceptance:** User: “slice accepted, record it in the plan doc”
+(2026-10-30). No additional interactive play-coverage details were supplied; recorded
+verification results and limitations remain unchanged. PC05 is eligible for its own
+reviewed detailed plan only; milestone P-B remains Planned.
 
 ### PC05: Paid recall and entry waypoints
 
@@ -673,6 +685,8 @@ boundaries should accommodate them without building their systems now.
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | PC04 Accepted and closed; PC05 next for detailed planning only. | User: “slice accepted, record it in the plan doc”. Verification results and limitations unchanged; milestone P-B remains Planned. |
+| 2026-10-30 | PC04 plan approved with “Implement the plan”; implementation Ready for review. | One Party, authored hub, persistent checked descent and final lifecycle; full checks and handoff recorded. User acceptance pending; do not advance. |
 | 2026-10-30 | PC03 Accepted and closed; milestone P-A Accepted. PC04 is next for detailed planning only. | User played through the accessible floor, defeated the guardian, collected the loot and explicitly accepted the slice. |
 | 2026-10-30 | Roadmap accepted as the scope, sequence and design/default baseline. PC01–PC09 remain Planned; next step is detailed PC01 planning in a fresh context. | User: “Ive read through and accept the plan/roadmap”; asks to record acceptance before a fresh context plans the first slice. |
 | 2026-10-30 | Campaign replaces the static New Game mode; remove obsolete mode-specific code/content/tests during delivery. Arena tooling and shared engine behavior remain useful. | User explicitly says the existing static-map game mode need not be kept and this system will replace it. |
@@ -754,7 +768,7 @@ Codex-host MCP interaction remains unverified. All working-tree changes are pres
 no builds, gameplay tests, captures, balance experiments or commits were made.
 
 
-### PC03 accepted closeout and next-agent handoff (2026-10-30, current)
+### PC03 accepted closeout and next-agent handoff (2026-10-30, historical)
 
 PC03 is **Accepted and closed**; milestone **P-A is Accepted**. The user played
 through the accessible floor, defeated the guardian and collected the loot, then
@@ -775,3 +789,38 @@ are supplemented by the user's accessible-floor playthrough; other depths remain
 covered by separate automated scenarios. Live Codex-host MCP remains unverified.
 All working-tree changes are preserved; no builds, gameplay tests, captures,
 balance experiments or commits were made during this closeout.
+
+
+### PC04 accepted closeout and next-agent handoff (2026-10-30, current)
+
+PC04 is **Accepted and closed**. The user accepted on 2026-10-30:
+“slice accepted, record it in the plan doc”. Implementation was approved earlier
+with “Implement the plan.” The [implemented design](procedural_campaign_travel_design.md),
+[verification/review recipe](pc04_verification.md) and
+[12-image gallery](screenshots/pc04/index.html) describe delivery and limitations.
+This checkpoint supersedes the historical PC03 instruction to plan PC04.
+
+Normal New Game starts in the fixed hub; one Party travels through three persistent
+floors using free checked stairs. Effects and clocks have an explicit portable/local
+boundary; final guardian completion closes new actions while accepted consequences
+settle. Run victory/defeat returns to Main Menu. Existing arena/investigation tools
+remain supported. Starting supplies, loot/XP, doors, keys, resources and discovery
+persist without respawns or refills. No recall, waypoint selector, disk save or tuning.
+
+Final headless Debug/Release 39/39 each and graphics 58/58 each pass; focused
+ASan/UBSan 3/3, zero tracked runtime C++ allocations, 9/14 preparation allocation
+failure points, strict replay/corruption rejection, direct/client/local MCP adapter
+checks, hidden GPU and application-owned captures pass. Interactive play coverage
+and live Codex-host MCP remain unverified. The victory image is explicitly a HUD
+reconstruction, not a fought expedition. No balance experiment or broad sweep ran.
+
+Next action: in a fresh context when requested, read AGENTS.md, the system overview,
+MVP specification, current checkpoint and PC04 handoff; inspect current code and
+plan **PC05 — Paid recall and entry waypoints — only for review**. Do not implement
+or advance automatically. PC05–PC09 and milestones P-B/P-C remain Planned.
+
+This acceptance closeout changes documentation only. Verification results and
+recorded limitations are unchanged; acceptance supplies no additional interactive
+play-coverage details. All working-tree changes are preserved. No builds, gameplay
+tests, captures, balance experiments, commits, resets or stashes were performed
+during this closeout.

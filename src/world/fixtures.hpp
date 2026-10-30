@@ -94,7 +94,15 @@ class FloorGeometry {
     std::uint64_t discoveryRevision() const noexcept { return discoveryRevision_; }
     std::size_t storageBytes() const noexcept { return sizeof(*this) + index_.capacity(); }
 
+    // Preparation-only owned values; no borrowed pointers or navigation workspace.
+    struct Saved {
+        std::array<bool, fixtureCapacity> completed{}, known{}, remembered{};
+        std::bitset<discoveryCapacity> discovered;
+        std::uint64_t revision = 0, geometryRevision = 0, discoveryRevision = 0;
+    };
+
   private:
+    friend class GameSession;
     friend class GameSession;
     const Map& map_;
     FloorFixtures definition_;

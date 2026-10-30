@@ -43,7 +43,15 @@ class LootWorld {
     void reconcile(const ActorWorld&) noexcept;
     bool collect(LootId) noexcept;
 
+    // Preparation-only owned values; no borrowed pointers or navigation workspace.
+    struct Saved {
+        LootSnapshot state;
+        std::array<bool, NpcWorld::maxInstances> deaths{};
+        std::uint64_t actorRevision = 0;
+    };
+
   private:
+    friend class GameSession;
     friend class GameSession;
     LootId availableDrop() const noexcept;
     void publishDrop(LootId, Cell, rules::ItemId, std::uint16_t) noexcept;

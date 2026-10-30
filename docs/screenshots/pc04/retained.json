@@ -1,0 +1,94 @@
+{
+  "seed": 5,
+  "command": "cmake-build-debug/blobber --assets cmake-build-debug/assets --development --seed 5 --capture-menu /tmp/blobber-pc04-captures-review",
+  "generator_version": 3,
+  "template_version": 3,
+  "images": [
+    {
+      "file": "launch.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "8a0c84ad2a9676db0f5de4722be9a43b34c948bd595116f7872d1ec321c51de5",
+      "caption": "Normal New Game: fixed sanctuary hub"
+    },
+    {
+      "file": "launch-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "065cb59e81c55aeb30b3bfccb1a8ff2f51008bbab18fdc4a0d64ed0fa4a9ed1a",
+      "caption": "Normal New Game: fixed sanctuary hub"
+    },
+    {
+      "file": "campaign-floor1.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "1c7f2de39a978b8642ce6190b09b6b15b39b9af602cc28891b82f4ce88ad165b",
+      "caption": "Checked descent: floor 1 protected entrance"
+    },
+    {
+      "file": "campaign-floor1-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "0c640e3ac7c0105a12c46894fe3fbe3522e3d66401f67e09844c3f301908dc9a",
+      "caption": "Checked descent: floor 1 protected entrance"
+    },
+    {
+      "file": "campaign-hub-return.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "8a0c84ad2a9676db0f5de4722be9a43b34c948bd595116f7872d1ec321c51de5",
+      "caption": "Checked free ascent: persistent hub return"
+    },
+    {
+      "file": "campaign-hub-return-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "065cb59e81c55aeb30b3bfccb1a8ff2f51008bbab18fdc4a0d64ed0fa4a9ed1a",
+      "caption": "Checked free ascent: persistent hub return"
+    },
+    {
+      "file": "campaign-sanctuary-rest.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9eef7c4e18f4936cce281da500dca30ba5ffceff4b96004f9eca90edbe5d9fc1",
+      "caption": "Explicit sanctuary Long Rest: no kit cost"
+    },
+    {
+      "file": "campaign-sanctuary-rest-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "6d2906e3fd1a862cea95dd70f5407223156486bb038f3f4777b0dd6edf0cd90d",
+      "caption": "Explicit sanctuary Long Rest: no kit cost"
+    },
+    {
+      "file": "campaign-victory-reconstruction.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4037cc9f23beba27a61704c7150988a42e83387863cbaf1518c46961c7c81f09",
+      "caption": "Victory HUD reconstruction (hub backdrop; not a played final fight)"
+    },
+    {
+      "file": "campaign-victory-reconstruction-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "437c0b425f9452206a812049ab95465cb8ae671a00ed66f8ac4a90136e4dd698",
+      "caption": "Victory HUD reconstruction (hub backdrop; not a played final fight)"
+    },
+    {
+      "file": "campaign-defeat.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "ba5bdb712370c12b44e9a0d468a0bd2803c45555d67eb030dd39070da974ef5c",
+      "caption": "Terminal defeat after diagnostic authoritative party damage"
+    },
+    {
+      "file": "campaign-defeat-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "f45cf09da50ad6852bf30b47df4f61b68a656e07aa177a0325ad0c4d66e7dd9b",
+      "caption": "Terminal defeat after diagnostic authoritative party damage"
+    }
+  ],
+  "trace_sha256": "7eb1893a04e3efcd6e779e012adb4e798863bc173e266a549354a7d6b99062d0",
+  "provenance": "Hidden application-owned captures with isolated temporary library. Actual hub-floor1-hub travel; sanctuary preview; separately reconstructed victory HUD; diagnostic party-damage defeat. No balance experiment or OS input/focus automation."
+}

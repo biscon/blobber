@@ -136,6 +136,38 @@ def main(generator, runner):
         finally:
             sessions.shutdown()
         assert not sessions.live
+        campaign = dict(setup, kind='campaign')
+        campaign.pop('depth')
+        def check_campaign(request):
+            started = request('start', scenario=campaign)
+            assert started['ok'] and started['data']['campaign']['location'] == 0
+            assert request('preview', action=dict(kind='interact', fixture=0))['data']['accepted']
+            entered = request('act', action=dict(kind='interact', fixture=0))['data']
+            assert entered['accepted'] and entered['observation']['campaign']['location'] == 1
+            up = next(f['fixture'] for f in entered['observation']['fixtures'] if f['kind'] == 2)
+            returned = request('act', action=dict(kind='interact', fixture=up))['data']
+            assert returned['accepted'] and returned['observation']['campaign']['location'] == 0
+            assert returned['observation']['campaign']['visited_entries'] == [1]
+        campaign_trace = root / 'campaign.jsonl'
+        with Client(runner, root, record=campaign_trace) as client:
+            check_campaign(client.request)
+        replay = subprocess.run([runner, '--assets', str(root), '--replay', str(campaign_trace)],
+                                capture_output=True, text=True, timeout=15)
+        assert replay.returncode == 0, (replay.stdout, replay.stderr)
+        sessions = Sessions(runner, root, Storage(root / 'campaign-adapter', 1024 * MIB))
+        active = {}
+        def campaign_request(op, **fields):
+            if op == 'start':
+                result = sessions.start(**fields)
+            else:
+                result = sessions.request(op=op, **active, **fields)
+            active.update(handle=result['handle'], **result['identity'])
+            return result['response']
+        try:
+            check_campaign(campaign_request)
+            assert sessions.close(active['handle'])['trace_complete']
+        finally:
+            sessions.shutdown()
     print('Generator CLI, direct client, strict replay and real MCP session adapter passed')
 
 

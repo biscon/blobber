@@ -142,10 +142,11 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     headerText(line, 245, gold, UiTextStyle::Small);
     if (!h || !h->demo) {
         const auto depth = h && h->floor ? h->floor->definition().depth : 1;
-        headerText(h && h->arena ? "Arena"
-                   : depth == 2  ? "Depth II"
-                   : depth == 3  ? "Depth III"
-                                 : "Depth I",
+        headerText(h && h->campaign && depth == 0 ? "Sanctuary hub"
+                   : h && h->arena                ? "Arena"
+                   : depth == 2                   ? "Depth II"
+                   : depth == 3                   ? "Depth III"
+                                                  : "Depth I",
                    449, gold, UiTextStyle::Small);
     }
     p.gear(hudLayout::gear);
@@ -187,6 +188,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             actor = h->arena && h->arenaComplete ? "ARENA CLEARED" : "VICTORY";
         else if (h->combat.phase == CombatPhase::Defeat)
             actor = "DEFEAT";
+        if (h->campaignTerminal)
+            actor = h->campaignVictory ? "CAMPAIGN COMPLETE" : "DEFEAT";
         std::snprintf(line, sizeof(line), "%s%s", actor,
                       h->combat.resolvingAction  ? "  /  RESOLVING"
                       : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
@@ -197,7 +200,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             const auto action = dockActions[i];
             const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
             const bool available =
-                (i >= 0 && i < 6) && !h->suspended && !h->modal() &&
+                (i >= 0 && i < 6) && !h->campaignTerminal && !h->suspended && !h->modal() &&
                 (i == 3 || (i == 4 && h->production) || reason == CommandReason::Ready ||
                  reason == CommandReason::MissingTarget || reason == CommandReason::InvalidAlly ||
                  reason == CommandReason::PreviewAccepted);
@@ -213,11 +216,14 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             p.text(key, r.x + 2, r.y + r.height - 9, available ? gold : muted, UiTextStyle::Small);
         }
         const char* hint =
-            h->combat.phase == CombatPhase::Facing ? "Turning to the next group. Your action is preserved."
+            h->campaignTerminal                      ? "This expedition has ended. Return to Main Menu."
+            : h->combat.phase == CombatPhase::Facing ? "Turning to the next group. Your action is preserved."
             : h->combat.phase == CombatPhase::Victory
                 ? (h->arena && h->arenaComplete ? "Rematch or edit your arena setup."
                                                 : "Continue to explore with your surviving party.")
-            : h->combat.phase == CombatPhase::Defeat  ? "Restart to begin a fresh session."
+            : h->combat.phase == CombatPhase::Defeat
+                ? (h->campaign ? "This expedition has ended. Return to Main Menu."
+                               : "Restart to begin a fresh session.")
             : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
             : h->production && h->combat.awaitingAction ? "Click a reachable enemy to attack."
             : h->production && h->combat.phase == CombatPhase::Turns

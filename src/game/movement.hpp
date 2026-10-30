@@ -44,6 +44,8 @@ class Controller {
     void bindEffects(const EffectController* e) noexcept { effects_ = e; }
 
   private:
+    friend class GameSession;
+    friend class CampaignRun;
     MovementState state_;
     const EffectController* effects_ = nullptr;
     std::optional<Action> pending_;

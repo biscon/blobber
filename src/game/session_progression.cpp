@@ -19,6 +19,8 @@ AdvancementRequest GameSession::advancementRequest(rules::CharacterId id) const 
     return r;
 }
 AdvancementError GameSession::advancementEligibility(const AdvancementRequest& r) const noexcept {
+    if (!runActive())
+        return AdvancementError::Unavailable;
     if (r.world != actors_.snapshot().world)
         return AdvancementError::Stale;
     if (movement().transition.active())
@@ -36,6 +38,8 @@ AdvancementResult GameSession::previewAdvancement(const AdvancementRequest& r) n
     return error == AdvancementError::None ? party_.advance(r, true) : AdvancementResult{error, {}};
 }
 AdvancementResult GameSession::advance(const AdvancementRequest& r) noexcept {
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     events_.clear();
     const auto error = advancementEligibility(r);
     if (error != AdvancementError::None)
@@ -49,6 +53,10 @@ AdvancementResult GameSession::advance(const AdvancementRequest& r) noexcept {
     return result;
 }
 bool GameSession::grantNextLevelExperience() noexcept {
+    if (!runActive())
+        return false;
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
     if (!development_ || !combat_.settledRecovery(movement().player, timeMs_) ||
         movement().transition.active())
         return false;

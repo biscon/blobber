@@ -1,3 +1,4 @@
+#include "game/campaign.hpp"
 #include "game/commands.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -9,7 +10,11 @@ void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
     auto request = session_->nearbyFixture();
     if (id)
         request = {*id, session_->fixtures().revision()};
-    const auto result = session_->interact(request);
+    const auto* fixture = session_->fixtures().find(request.id);
+    const bool travel = session_->campaign() && fixture && CampaignRun::stairs(fixture->kind);
+    const auto result = session_->interact(request, travel);
+    if (travel && result.accepted)
+        state_.travelRequested = request;
     state_.log.append(result.reason);
 }
 

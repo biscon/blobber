@@ -3,11 +3,36 @@
 #include "game/floor_objective.hpp"
 #include "game/loot.hpp"
 #include "game/npc_ai.hpp"
+#include <memory>
 
 namespace blobber {
 // Map/catalog outlive this owner and every UI/animation borrower of its members.
+class CampaignRun;
+struct FloorState {
+    FloorGeometry::Saved fixtures;
+    ActorSnapshot actors;
+    LootWorld::Saved loot;
+    NpcAiController::Saved ai;
+    EffectController::Saved effects;
+    CombatController::Saved combat;
+    FloorObjectiveSnapshot objective;
+    std::array<bool, NpcWorld::maxInstances> creditedDeaths{};
+    std::uint64_t rewardRevision = UINT64_MAX, timeMs = 0, restToken = 1;
+    double remainderMs = 0;
+    rules::DiceRng rng{0};
+    std::uint64_t digest() const; // Diagnostic only: canonical fields, excludes runtime world identities.
+};
 class GameSession {
   public:
+    // Staged borrowed-party construction does not observe/reconcile/mutate Party.
+    GameSession(const Map&, Party&, const NpcWorld&, std::uint32_t seed, Player,
+                const std::vector<NpcTimings>&, const RecoveryLevel&, const FloorFixtures&,
+                const FloorObjectiveDefinition&);
+    void exportFloor(FloorState&) const noexcept;
+    void importFloor(const FloorState&); // Preparation only; rejects invalid values.
+    CampaignRun* campaign() const noexcept { return campaign_; }
+    const char* travelSafety() const noexcept;
+    bool runActive() const noexcept;
     GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements, std::uint32_t seed,
                 Player spawn = {}, bool enableAi = true, const std::vector<NpcTimings>& timings = {},
                 const RecoveryLevel& recovery = {}, const FloorFixtures& fixtures = {},
@@ -91,13 +116,20 @@ class GameSession {
     bool grantNextLevelExperience() noexcept;
 
   private:
+    GameSession(const Map&, std::unique_ptr<Party>, const NpcWorld&, std::uint32_t, Player, bool,
+                const std::vector<NpcTimings>&, const RecoveryLevel&, const FloorFixtures&,
+                const FloorObjectiveDefinition&);
+    friend class CampaignRun;
+    CampaignRun* campaign_ = nullptr;
+    std::uint64_t mutation_ = 0;
     FloorGeometry floor_;
     FloorObjectiveDefinition objectiveDefinition_;
     FloorObjectiveSnapshot objective_;
     void prepareObjective();
     void reconcileObjective() noexcept;
     GeometryView map_;
-    Party party_;
+    std::unique_ptr<Party> ownedParty_;
+    Party& party_;
     ActorWorld actors_;
     RecoveryLevel recovery_;
     LootWorld loot_;

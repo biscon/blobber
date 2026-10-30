@@ -12,11 +12,13 @@
 #endif
 namespace {
 bool tracking = false;
-std::size_t allocations = 0, requestedBytes = 0;
+std::size_t allocations = 0, requestedBytes = 0, failAt = 0;
 void* allocate(std::size_t size) {
     if (tracking) {
         ++allocations;
         requestedBytes += size;
+        if (failAt && allocations == failAt)
+            throw std::bad_alloc();
     }
     if (void* p = std::malloc(size ? size : 1))
         return p;
@@ -45,6 +47,8 @@ void* operator new(std::size_t size, std::align_val_t alignment) {
     if (tracking) {
         ++allocations;
         requestedBytes += size;
+        if (failAt && allocations == failAt)
+            throw std::bad_alloc();
     }
     const auto align = static_cast<std::size_t>(alignment);
 #ifdef _MSC_VER
@@ -180,7 +184,63 @@ int main(int argc, char**) {
 #ifdef BLOBBER_AUTOMATION_VISUAL
         FramePipeline guardianFrames;
 #endif
+        auto campaign = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
+        for (unsigned visit = 0; visit < 3; ++visit) {
+            auto travel = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
+            check(campaign->commitTravel(travel), "allocation fixture prepares repeated travel");
+        }
+        // Inject each preparation allocation failure in turn, before touching the live owner.
+        auto rollback = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
+        auto before = std::make_unique<FloorState>();
+        rollback->game().exportFloor(*before);
+        const auto fingerprint = before->digest();
+        const auto world = rollback->game().actors().snapshot().world;
+        const auto stage = [&] {
+            auto ticket = rollback->prepareTravel(rollback->request(rollback->game().nearbyFixture()));
+#ifdef BLOBBER_AUTOMATION_VISUAL
+            FramePipeline frames;
+            frames.update(renderer, ticket.game().geometry(), ticket.game().movement(),
+                          &ticket.game().actors());
+#endif
+        };
+        allocations = requestedBytes = 0;
         tracking = true;
+        stage();
+        tracking = false;
+        const auto preparationAllocations = allocations;
+        for (std::size_t failure = 1; failure <= preparationAllocations; ++failure) {
+            allocations = 0;
+            failAt = failure;
+            bool rejected = false;
+            tracking = true;
+            try {
+                stage();
+            } catch (const std::bad_alloc&) {
+                rejected = true;
+            }
+            tracking = false;
+            failAt = 0;
+            rollback->game().exportFloor(*before);
+            check(rejected && rollback->activeLocation() == 0 &&
+                      rollback->game().actors().snapshot().world == world && before->digest() == fingerprint,
+                  "every destination/source/view allocation failure preserves the current floor");
+        }
+        std::cout << "Travel rollback: " << preparationAllocations << " allocation failure points checked\n";
+        allocations = requestedBytes = 0;
+        CommandController campaignUi(campaign->game(), defs.timings);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        FramePipeline campaignFrames;
+#endif
+        tracking = true;
+        for (unsigned i = 0; i < 40; ++i) {
+            campaign->update(.01, false);
+            campaignUi.refresh({}, false, false, true);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+            campaignFrames.update(renderer, campaign->game().geometry(), campaign->game().movement(),
+                                  &campaign->game().actors(), nullptr, nullptr, campaign->game().timeMs(),
+                                  nullptr, &campaign->game().loot().snapshot());
+#endif
+        }
         auto& guardianGame = generated.replayGame();
         guardianGame.actors().damage(guardianGame.actors().id(2), 100000, 0);
         guardianGame.actors().damage(guardianGame.actors().id(3), 100000, 0);

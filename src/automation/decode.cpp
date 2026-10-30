@@ -232,19 +232,12 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (j.contains("spell"))
         c.spell = spell(j.at("spell"), cat);
     if (j.contains("feature")) {
-        const std::array<const char*, 11> names{"none",
-                                                "second_wind",
-                                                "arcane_recovery",
-                                                "dismiss_concentration",
-                                                "action_surge",
-                                                "preserve_life",
-                                                "cunning_action",
-                                                "spiritual_weapon",
-                                                "escape_web",
-                                                "end_turn",
-                                                nullptr};
+        const std::array<const char*, 11> names{
+            "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
+            "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",
+            "escape_web",   "end_turn",      "dismiss_spiritual_weapon"};
         bool matched = false;
-        for (unsigned i = 1; i < 10; ++i)
+        for (unsigned i = 1; i < 11; ++i)
             if (j.at("feature") == names[i]) {
                 c.feature = rules::Feature(i);
                 matched = true;

@@ -30,7 +30,7 @@
 #include <iostream>
 #include <stdexcept>
 namespace blobber {
-int runLegacy(int argc, char** argv) {
+int runDiagnostics(int argc, char** argv) {
     const Options options = parseOptions(argc, argv);
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
@@ -215,7 +215,7 @@ int run(int argc, char** argv) {
         return runMenus(o);
     if (o.help || o.checkPreparedOnly || !o.captureDirectory.empty() || o.uiDemo || o.combatDemo ||
         o.aiDemo || o.hybridDemo || o.inventoryDemo || o.recoveryDemo || o.spellDemo)
-        return runLegacy(argc, argv);
+        return runDiagnostics(argc, argv);
     return runMenus(o);
 }
 } // namespace blobber

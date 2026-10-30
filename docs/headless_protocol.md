@@ -325,3 +325,37 @@ The capture manifest includes trace/header/prepared identity and operation token
 Only the optional capture path creates a hidden application-owned window. Ordinary
 visual play/replay still runs without a display. Missing graphics support is explicit;
 no focus, desktop or OS input automation is used. See [MCP usage](mcp_usage.md).
+
+## PC04 persistent campaign scenarios
+
+`kind: "campaign"` uses scenario schema 1, `generator_version: 3`,
+`template_version: 3`, a uint32 `seed` and the existing four-entry `party` array.
+There is no `depth` input: launch starts in the fixed sanctuary hub and eagerly
+prepares all three depths. Arena and single generated-floor diagnostic scenarios
+remain supported. Normal graphical New Game uses this same campaign owner.
+
+Use `interact` on a known reachable stair fixture. Preview checks current settled
+safety; act stages/restores the adjacent destination and commits only after landing
+and view preparation succeed. Walking is free, including with zero camp kits.
+Travel changes runtime world IDs and the protocol revision; use the returned
+observation and current request tokens. Inventory belongs to the travelling Party.
+Concentration attached to NPCs/mixed targets/Web must be dismissed first. The
+`dismiss_spiritual_weapon` feature explicitly ends that local non-concentration
+summon during safe exploration. Nothing is silently removed to permit travel.
+
+Campaign observations add `campaign.status` (`active`, `victory`, `defeat`),
+`location` (0 for hub, 1–3 for depths), `location_name`, decimal-string `revision`
+and `gameplay_ms`, and `visited_entries`. These entry records do not provide
+waypoint travel. Only diagnostic inspection/traces add location fingerprints and
+canonical state digests covering inactive actors, effects, RNG and reward ledgers.
+Player output does not reveal unvisited floors. `campaign_transition` and
+`campaign_result` events use the existing events envelope. Terminal campaigns
+reject actions; ordinary encounter results still use Continue. Reset is an
+explicit tooling fresh run, not save/resume. No campaign save format is introduced.
+
+A minimal scenario replaces `kind: "generated_floor"` with `kind: "campaign"`
+and removes `depth` from an existing current-version generated-floor scenario.
+The existing Python client and local MCP session tools accept it without a new
+transport or tool. Strict replay remains executable/content/version-sensitive;
+changing an inactive location digest must fail replay. Existing tick, mutation,
+trace-byte, cancellation and output limits remain unchanged.

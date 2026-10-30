@@ -1,5 +1,6 @@
 #include "game/commands.hpp"
 #include "game/arena.hpp"
+#include "game/campaign.hpp"
 #include "game/perception.hpp"
 #include "game/target_visibility.hpp"
 #include "ui/layout.hpp"
@@ -297,7 +298,9 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                 ? "Arena cleared. Rematch restores the starting setup; Edit Setup changes the scenario."
                 : "Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
     if (out.phase == CombatPhase::Defeat)
-        appendLog("Defeat: nobody is conscious. Restart begins a fresh session.");
+        appendLog(session_ && session_->campaign()
+                      ? "Defeat: this expedition has ended. Return to Main Menu."
+                      : "Defeat: nobody is conscious. Restart begins a fresh session.");
 }
 void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     const auto* actor = actors_.actor(out.enemy);
@@ -382,18 +385,29 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             objectiveFailureReported_ = true;
         }
     }
-    state_.fixturePrompt[0] = 0;
+    state_.campaign = session_ && session_->campaign();
+    state_.campaignTerminal = state_.campaign && session_->campaign()->status() != CampaignStatus::Active;
+    state_.campaignVictory = state_.campaign && session_->campaign()->status() == CampaignStatus::Victory;
+    state_.locationName = state_.campaign ? session_->campaign()->name() : "";
+    const bool sanctuary = state_.campaign && !state_.campaignTerminal &&
+                           session_->movement().player.cell == Cell{4, 4} &&
+                           session_->campaign()->activeLocation() == 0;
+    const char* locationHint = sanctuary ? "Sanctuary hub (R: rest)" : state_.locationName;
+    std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s", locationHint);
+    if (state_.campaignTerminal)
+        std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
+                      "This expedition has ended. Return to Main Menu.");
     state_.floor = session_ ? &session_->fixtures() : nullptr;
     state_.questKeys = session_ ? session_->party().questKeys() : 0;
-    if (session_ && !moving && !mapOpen && focused && !state_.modal() && !state_.magic.casting() &&
-        !state_.magic.armed && !state_.inventory.itemTargeting) {
+    if (session_ && !state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
+        !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
         const auto request = session_->nearbyFixture();
         const auto* f = session_->fixtures().find(request.id);
         if (f &&
             (!session_->fixtures().definition().discovery || session_->fixtures().known(request.id.slot))) {
             const auto result = session_->interact(request, true);
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / %s - %s",
-                          fixtureName(*f), result.reason);
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s%sF / %s - %s",
+                          locationHint, state_.campaign ? " | " : "", fixtureName(*f), result.reason);
         }
     }
     state_.production = session_ != nullptr;

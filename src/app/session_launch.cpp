@@ -1,11 +1,11 @@
 #include "app/gameplay.hpp"
-#include "app/guardian_captures.hpp"
 #include "app/menu.hpp"
 #include "app/options.hpp"
 #include "assets/npc_loader.hpp"
 #include "assets/preparation_profile.hpp"
 #include "assets/prepared_assets.hpp"
 #include "assets/prepared_loot.hpp"
+#include "game/campaign.hpp"
 #include "game/party.hpp"
 #include "generation/diagnostic_view.hpp"
 #include "generation/population.hpp"
@@ -25,36 +25,23 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                       : options.seed            ? *options.seed
                       : options.captureMenuOnly ? 5u
                                                 : std::random_device{}();
-    std::optional<generation::GeneratedFloor> generated;
+    const auto loadStart = std::chrono::steady_clock::now();
+    auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
+    std::unique_ptr<CampaignRun> campaign;
     std::optional<Map> arenaFloor;
     if (arena)
         arenaFloor.emplace(arenaMap());
-    else {
-        auto result = generation::generate({seed});
-        if (!result)
-            throw std::runtime_error(std::string("Floor generation failed: ") +
-                                     generation::errorName(result.diagnostics.failure.code));
-        generated = std::move(result.floor);
-    }
-    const Map& map = arena ? *arenaFloor : generated->map;
-    const Player spawn = arena ? arenaSpawn() : generated->layout.spawn;
-    const auto runtimeSeed = arena ? seed : generated->runtimeSeed;
-    const auto diagnostics =
-        generated ? generation::diagnosticView(*generated) : generation::DiagnosticView{};
-    if (generated)
-        std::cout << "Generated floor seed=" << seed << " fingerprint=" << generated->fingerprint
-                  << " attempts=" << generated->diagnostics.attempts
-                  << " fallback=" << generated->diagnostics.fallbackId << '\n';
-    const auto loadStart = std::chrono::steady_clock::now();
-    auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
-    auto population = generated ? std::optional<generation::PreparedPopulation>(
-                                      generation::preparePopulation(*generated, rules, definitions.types))
-                                : std::nullopt;
+    else
+        campaign =
+            std::make_unique<CampaignRun>(rules, starting, definitions.types, definitions.timings, seed);
+    const Map& map = arena ? *arenaFloor : campaign->map();
+    const Player spawn = arena ? arenaSpawn() : campaign->game().movement().player;
+    const auto runtimeSeed = seed;
     LoadedNpcMetadata loadedNpcs{arena ? arenaPlacements(map, rules, *arena, definitions.types)
-                                       : std::move(population->placements),
+                                       : *campaign->location(0).placements,
                                  std::move(definitions.timings), std::move(definitions.attachments),
                                  definitions.definitionFingerprint};
-    const RecoveryLevel recovery = population ? population->recovery : RecoveryLevel{};
+    const RecoveryLevel recovery = campaign ? campaign->location(0).recovery : RecoveryLevel{};
 
     const auto& timings = loadedNpcs.timings;
     const auto profile = loadPreparationProfile(options.assets / "preparation.json");
@@ -150,53 +137,56 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         return true;
     }
     if (options.captureMenuOnly && !arena) {
-        for (int repeat = 0; repeat < 2; ++repeat) {
-            GameSession session(map, rules, starting, loadedNpcs.world, runtimeSeed, spawn, true, timings,
-                                recovery, generated->layout.fixtures, population->objective);
-            NpcAnimator animator(session.actors(), timings);
-            FramePipeline frames;
+        auto capture = [&](const char* name, bool camp = false, bool victoryReconstruction = false) {
+            auto& session = campaign->game();
             session.enableDevelopment(options.development);
+            NpcAnimator animator(session.actors(), timings);
+            animator.setTime(session.timeMs(), &session.effects());
             CommandController commands(session, timings);
+            commands.enableMainMenu();
+            FramePipeline frames;
             frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
-                          &animator.snapshot());
+                          &animator.snapshot(), &session.combat().attacks(), session.timeMs(), nullptr,
+                          &session.loot().snapshot());
             commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false,
                              true);
-            presenter.present(frames.frame(), session.movement(), map, false, true, &commands.snapshot(),
-                              frames.picking());
-            presenter.capture(options.captureDirectory / (repeat ? "launch-restart.png" : "launch.png"));
-            if (!repeat) {
-                commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false,
-                                 true, true);
-                presenter.present(frames.frame(), session.movement(), map, true, false, &commands.snapshot(),
-                                  frames.picking(), &diagnostics, false);
-                presenter.capture(options.captureDirectory / "launch-discovered-map.png");
-                presenter.present(frames.frame(), session.movement(), map, true, false, &commands.snapshot(),
-                                  frames.picking(), &diagnostics, true);
-                presenter.capture(options.captureDirectory / "launch-diagnostic-map.png");
-                commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false,
-                                 false, true);
-                commands.enableMainMenu();
-                commands.toggleMenu();
-                presenter.present(frames.frame(), session.movement(), map, false, false, &commands.snapshot(),
-                                  frames.picking());
-                presenter.capture(options.captureDirectory / "pause-menu.png");
-                commands.confirmLeave(true);
-                presenter.present(frames.frame(), session.movement(), map, false, false, &commands.snapshot(),
-                                  frames.picking());
-                presenter.capture(options.captureDirectory / "discard-run.png");
+            if (camp) {
+                commands.openCamp();
+                commands.campKind(RestKind::Long);
             }
-        }
-        captureGuardians(*generated, *population, loadedNpcs.world, rules, starting, timings, renderer,
-                         presenter, options.captureDirectory);
+            auto hud = commands.snapshot();
+            // Explicit presentation reconstruction; CPU owned fixtures prove final-guardian victory.
+            if (victoryReconstruction) {
+                hud.campaignTerminal = hud.campaignVictory = true;
+                hud.combat.phase = CombatPhase::Victory;
+                std::snprintf(hud.fixturePrompt.data(), hud.fixturePrompt.size(), "%s",
+                              "This expedition has ended. Return to Main Menu.");
+            }
+            presenter.present(frames.frame(), session.movement(), campaign->map(), false, true, &hud,
+                              frames.picking());
+            presenter.capture(options.captureDirectory / (std::string(name) + ".png"));
+            presenter.capture(options.captureDirectory / (std::string(name) + "-1280.png"), 1280, 720);
+        };
+        capture("launch");
+        auto ticket = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
+        if (!campaign->commitTravel(ticket))
+            throw std::runtime_error("Capture travel failed");
+        capture("campaign-floor1");
+        // Return from at-feet entrance stairs, without any combat or expedition.
+        auto back = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
+        if (!campaign->commitTravel(back))
+            throw std::runtime_error("Capture ascent failed");
+        capture("campaign-hub-return");
+        campaign->party().damage({0}, 2);
+        capture("campaign-sanctuary-rest", true);
+        capture("campaign-victory-reconstruction", false, true);
+        for (std::uint16_t i = 0; i < 4; ++i)
+            campaign->party().damage({i}, 100000);
+        capture("campaign-defeat");
         return true;
     }
-    const GameplayLaunch launch{spawn,
-                                runtimeSeed,
-                                bool(arena),
-                                true,
-                                generated ? &diagnostics : nullptr,
-                                generated ? &generated->layout.fixtures : nullptr,
-                                population ? &population->objective : nullptr};
+    const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena), true,
+                                nullptr, nullptr,     nullptr,     campaign.get()};
     return runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options, recovery,
                        &starting, &launch) != PlayOutcome::Quit;
 }

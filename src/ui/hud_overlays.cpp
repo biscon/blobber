@@ -203,17 +203,21 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     for (const auto& feedback : h->feedback)
         if (const auto rect = feedbackRect(feedback, h->cards))
             splash(p, feedback, *rect);
-    if (combat.phase == CombatPhase::Victory || combat.phase == CombatPhase::Defeat) {
+    if (h->campaignTerminal || combat.phase == CombatPhase::Victory || combat.phase == CombatPhase::Defeat) {
         p.overlayBox(hudLayout::result);
         const auto r = hudLayout::result;
         const bool arenaVictory = h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory;
-        p.text(combat.phase == CombatPhase::Victory ? (arenaVictory ? "ARENA CLEARED" : "VICTORY") : "DEFEAT",
+        p.text(h->campaignVictory                     ? "CAMPAIGN COMPLETE"
+               : combat.phase == CombatPhase::Victory ? (arenaVictory ? "ARENA CLEARED" : "VICTORY")
+                                                      : "DEFEAT",
                r.x + 14, r.y + 12, gold, UiTextStyle::Display);
-        p.text(arenaVictory                           ? "All selected monsters are defeated."
+        p.text(h->campaignVictory                     ? "The final guardians are defeated."
+               : arenaVictory                         ? "All selected monsters are defeated."
                : combat.phase == CombatPhase::Victory ? "Surviving allies are stable."
                                                       : "Nobody is conscious.",
                r.x + 14, r.y + 30);
-        p.text(h->arena && (arenaVictory || combat.phase == CombatPhase::Defeat)
+        p.text(h->campaignTerminal ? "This expedition has ended."
+               : h->arena && (arenaVictory || combat.phase == CombatPhase::Defeat)
                    ? "Rematch restores your starting setup."
                : combat.phase == CombatPhase::Victory ? "HP is not restored."
                                                       : "Restart begins a fresh session.",
@@ -225,7 +229,9 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             p.label("EDIT SETUP", hudLayout::arenaEdit, gold);
         } else {
             p.box(hudLayout::resultButton, gold);
-            p.label(combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER" : "RESTART / ENTER",
+            p.label(h->campaignTerminal                    ? "MAIN MENU / ENTER"
+                    : combat.phase == CombatPhase::Victory ? "CONTINUE / ENTER"
+                                                           : "RESTART / ENTER",
                     hudLayout::resultButton, gold);
         }
     }

@@ -8,9 +8,10 @@ Json describeActions(const GameSession& g, const Observation& o) {
         {"movement", {"forward", "back", "left", "right", "turn_left", "turn_right"}},
         {"note",
          "Descriptors are not complete combinations. Preview a fully specified action before submission."}};
-    const char* featureIds[]{"none",         "second_wind",   "arcane_recovery", "dismiss_concentration",
-                             "action_surge", "preserve_life", "cunning_action",  "spiritual_weapon",
-                             "escape_web",   "end_turn"};
+    const char* featureIds[]{
+        "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
+        "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",
+        "escape_web",   "end_turn",      "dismiss_spiritual_weapon"};
     const char* names[]{"melee", "back_melee", "defend", "ranged", "spell", "item", "aid", "feature"};
     const auto eligibility = [&](const PartyCommand& c) {
         auto reason = g.movement().transition.active() ? CommandReason::Moving
@@ -72,7 +73,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
         }
         c.spell = {};
         c.action = PartyAction::Feature;
-        for (unsigned f = 1; f < 10; ++f) {
+        for (unsigned f = 1; f < 11; ++f) {
             c.feature = rules::Feature(f);
             c.spell = {};
             if (c.feature == rules::Feature::SpiritualWeapon)

@@ -106,7 +106,7 @@ struct MagicHud {
     }
     bool open = false, armed = false, hostile = false, area = false, missiles = false;
     // 32 catalog spells plus six supported feature rows; explicit bounded insertion.
-    static constexpr std::size_t capacity = 38;
+    static constexpr std::size_t capacity = 39;
     std::array<SpellBookEntry, capacity> entries{};
     static constexpr unsigned abilityTab = 10, tabCapacity = 11;
     std::array<bool, tabCapacity> tabs{};
@@ -150,6 +150,9 @@ struct HudSnapshot {
     const char* restReason = "Rest unavailable.";
     std::array<char, 192> lootHover{};
     std::array<char, 192> fixturePrompt{};
+    std::optional<FixtureRequest> travelRequested;
+    bool campaign = false, campaignTerminal = false, campaignVictory = false;
+    const char* locationName = "";
     const FloorGeometry* floor = nullptr; // Borrowed from the controller's session.
     std::uint8_t questKeys = 0;
     HudHover hover;
@@ -249,6 +252,8 @@ class CommandController {
     void openLoot(LootId) noexcept;
     void refreshLoot() noexcept;
     void interactFixture(std::optional<FixtureId> = {}) noexcept;
+    void travelMessage(const char* text) noexcept { state_.log.append(text); }
+    void cancelTravel() noexcept { state_.travelRequested.reset(); }
     void lootHover(int) noexcept;
     void lootPage(int) noexcept;
     void lootRecipient(std::size_t) noexcept;

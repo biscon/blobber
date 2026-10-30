@@ -2,6 +2,7 @@
 #include "app/ai_demo.hpp"
 #include "app/hybrid_demo.hpp"
 #include "game/arena.hpp"
+#include "game/campaign.hpp"
 #include "platform/input.hpp"
 #include "ui/interaction.hpp"
 #include <algorithm>
@@ -30,20 +31,30 @@ Player combatCamera(const Map& map, const NpcWorld& placements) {
 }
 namespace {
 struct PlayView {
-    GameSession session;
+    std::unique_ptr<GameSession> ownedSession;
+    GameSession& session;
     NpcAnimator animator;
     FramePipeline frames;
     CommandController commands;
     const Map& map;
     const SceneRenderer& renderer;
+    std::optional<generation::DiagnosticView> diagnostics;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
              bool enableAi = false, const RecoveryLevel& recovery = {},
              const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {},
              const FloorObjectiveDefinition& objective = {})
-        : session(m, catalog, starting ? *starting : *catalog.preset(), placements, seed, spawn, enableAi,
-                  timings, recovery, fixtures, objective),
-          animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
+        : ownedSession(std::make_unique<GameSession>(m, catalog, starting ? *starting : *catalog.preset(),
+                                                     placements, seed, spawn, enableAi, timings, recovery,
+                                                     fixtures, objective)),
+          session(*ownedSession), animator(session.actors(), timings), commands(session, timings), map(m),
+          renderer(r) {}
+    PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, const SceneRenderer& r,
+             const generation::GeneratedFloor* floor = nullptr)
+        : session(game), animator(game.actors(), timings), commands(game, timings), map(m), renderer(r) {
+        if (floor)
+            diagnostics = generation::diagnosticView(*floor);
+    }
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs(), &session.effects());
         const auto area = debug ? SpellArea{} : commands.floorPreview();
@@ -82,30 +93,38 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     std::cout << "Gameplay seed: " << seed << '\n';
     bool inputArmed = false;
     Input input; // Keep edge latches across restart, so held confirmation never replays.
+    auto* campaign = launch ? launch->campaign : nullptr;
     for (;;) {
-        PlayView view(map, catalog, idle, timings, renderer, seed, spawn,
-                      launch ? launch->enableAi : !options.combatDemo, recovery, starting,
-                      launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
-                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
-        view.session.enableDevelopment(options.development);
+        auto current =
+            campaign ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, renderer)
+                     : std::make_unique<PlayView>(
+                           map, catalog, idle, timings, renderer, seed, spawn,
+                           launch ? launch->enableAi : !options.combatDemo, recovery, starting,
+                           launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
+                           launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
+        auto& initial = *current;
+        initial.session.enableDevelopment(options.development);
         if (starting)
-            view.commands.enableMainMenu();
+            initial.commands.enableMainMenu();
         bool debug = false, reveal = false, first = true, restart = false;
         if (launch && launch->arena)
-            view.commands.arenaContext(false);
-        view.refresh();
+            initial.commands.arenaContext(false);
+        initial.refresh();
         if (options.inventoryDemo)
-            view.commands.openInventory(rules::CharacterId{2});
+            initial.commands.openInventory(rules::CharacterId{2});
         if (options.spellDemo) {
-            view.commands.selectCharacter(3);
-            view.commands.openSpellbook();
+            initial.commands.selectCharacter(3);
+            initial.commands.openSpellbook();
         }
         while (!WindowShouldClose()) {
+            auto& view = *current;
             const float dt = std::min(GetFrameTime(), 0.1f);
             auto sample = input.poll(dt);
             sample.ui.text = pollTextInput();
             if (!inputArmed) {
-                inputArmed = !IsKeyDown(KEY_ENTER) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+                inputArmed = !IsKeyDown(KEY_ENTER) && !IsKeyDown(KEY_F) && !IsKeyDown(KEY_W) &&
+                             !IsKeyDown(KEY_S) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) &&
+                             !IsKeyDown(KEY_Q) && !IsKeyDown(KEY_E) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
                 sample.ui.pressed.fill(false);
                 sample.action.reset();
             }
@@ -126,9 +145,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             view.commands.tickCamp(dt, sample.ui.focused);
             const bool paused =
                 campWasOpen || !sample.ui.focused || debug || view.commands.snapshot().modal();
+            const bool presentedCampaignTerminal = view.commands.snapshot().campaignTerminal;
             const auto presentedCombat = view.commands.snapshot().combat;
             const auto previous = view.session.movement().player;
-            view.commands.record(view.session.update(dt, paused));
+            view.commands.record(campaign ? campaign->update(dt, paused) : view.session.update(dt, paused));
             if (!paused) {
                 if (sample.toggleAnimation)
                     view.session.setAnimated(!view.session.movement().animated);
@@ -149,8 +169,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                  (phase == CombatPhase::Victory && arenaCleared(view.session.actors().snapshot())));
             if (launch && launch->arena)
                 view.commands.arenaContext(arenaCleared(view.session.actors().snapshot()));
-            const bool result = phase == CombatPhase::Victory || phase == CombatPhase::Defeat;
-            const bool confirmResult = sample.ui.focused && !paused &&
+            const bool terminalCampaign = campaign && campaign->status() != CampaignStatus::Active;
+            const bool result =
+                terminalCampaign || phase == CombatPhase::Victory || phase == CombatPhase::Defeat;
+            const bool confirmResult = (!terminalCampaign || presentedCampaignTerminal) &&
+                                       sample.ui.focused && !paused &&
                                        (sample.ui.has(UiKey::Confirm) ||
                                         (sample.ui.has(UiKey::Click) && sample.ui.pointer &&
                                          (arenaResult ? hudLayout::arenaRematch : hudLayout::resultButton)
@@ -158,6 +181,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (arenaResult && samePresentedTurn && !paused && sample.ui.has(UiKey::Click) &&
                 sample.ui.pointer && hudLayout::arenaEdit.contains(*sample.ui.pointer))
                 return PlayOutcome::ArenaSetup;
+            if (terminalCampaign && samePresentedTurn && confirmResult)
+                return PlayOutcome::MainMenu;
             if (result && samePresentedTurn && confirmResult) {
                 if (phase == CombatPhase::Defeat || arenaResult) {
                     restart = true;
@@ -166,7 +191,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 view.session.combat().continueExploring();
                 view.commands.cancel();
                 view.session.clearPending();
-            } else if (!(campWasOpen && !view.commands.snapshot().camp.open)) {
+            } else if (!terminalCampaign && !(campWasOpen && !view.commands.snapshot().camp.open)) {
                 const auto* picking = view.frames.picking();
                 const auto hit =
                     picking && sample.ui.pointer
@@ -188,6 +213,30 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                                          int(sample.ui.pointer->y) - viewY)
                                   : std::nullopt);
             }
+            if (campaign && view.commands.snapshot().travelRequested) {
+                const auto request = campaign->request(*view.commands.snapshot().travelRequested);
+                view.commands.cancelTravel();
+                try {
+                    auto ticket = campaign->prepareTravel(request);
+                    auto replacement = std::make_unique<PlayView>(
+                        ticket.game(), campaign->location(ticket.destination()).map(), timings, renderer,
+                        campaign->location(ticket.destination()).generated
+                            ? &*campaign->location(ticket.destination()).generated
+                            : nullptr);
+                    // Compose destination before commit; refresh does not mutate Party.
+                    replacement->refresh();
+                    replacement->commands.enableMainMenu();
+                    if (campaign->commitTravel(ticket)) {
+                        current.swap(replacement);
+                        replacement.reset(); // old view before old session in ticket
+                        inputArmed = false;
+                        first = true;
+                        continue;
+                    }
+                } catch (const std::exception& e) {
+                    view.commands.travelMessage(e.what());
+                }
+            }
             if (view.commands.snapshot().retryRequested) {
                 restart = true;
                 break;
@@ -197,9 +246,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (view.commands.snapshot().quitRequested)
                 return PlayOutcome::Quit;
             changed |= view.refresh(debug, sample.ui.focused);
-            presenter.present(view.frames.frame(), view.session.movement(), map, debug, changed || first,
+            presenter.present(view.frames.frame(), view.session.movement(), view.map, debug, changed || first,
                               &view.commands.snapshot(), view.frames.picking(),
-                              launch ? launch->diagnostics : nullptr, reveal);
+                              view.diagnostics ? &*view.diagnostics
+                              : launch         ? launch->diagnostics
+                                               : nullptr,
+                              reveal);
             first = false;
         }
         if (!restart)
