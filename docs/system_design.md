@@ -1,17 +1,21 @@
 # System design
 
-Proposed architecture/roadmap, **not implemented** (2026-10-30):
+Roadmap **accepted by the user; architecture not implemented** (2026-10-30):
 [procedural campaign delivery plan](procedural_campaign_plan.md), based on the
 [MVP specification](procedural_campaign_mvp.md). The user closed the remaining
 [static-demo roadmap](dnd5e_demo_design.md#roadmap-closeout-2026-10-30): retire its
 polish/static integration slices and move save/resume after generation and travel.
-All prior accepted slices remain closed. Nine proposed slices cover bounded
+The campaign replaces the static-map New Game flow; preserving that old mode is
+not required. Remove obsolete mode-specific wiring/content as the replacement lands;
+retain shared systems, authored hub support and arena/investigation tooling.
+All prior accepted slices remain closed. Nine planned slices cover bounded
 room-graph/template generation, shared door geometry/discovery, designated guardian
 gates, one travelling Party with persistent floor snapshots, fixed hub, paid recall
 and entry waypoints, then campaign saves, depth content and expedition investigation.
 No respawns; finite optional encounters provide XP/resource fallback. Shops are a
 later milestone. The plan records ownership, clocks, transactional failures and
-validation; roadmap review and the PC01 detailed plan precede implementation.
+validation. The user accepted the roadmap; the next step is a PC01-only detailed
+plan for review in a fresh context. No campaign slice has started implementation.
 The implemented architecture below remains unchanged until those slices deliver.
 
 Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter](mcp_design.md).

@@ -2,9 +2,9 @@
 
 Date: 2026-10-30.
 
-Status: **MVP specification with agreed scope amendments; not implemented.**
-The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is proposed
-for review. It supersedes the closed static-demo roadmap for future delivery.
+Status: **MVP specification and amendments incorporated in the roadmap accepted
+on 2026-10-30; not implemented.**
+The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
 
 ### Scope clarification and amendments (2026-10-30)
 
@@ -14,14 +14,21 @@ outside it. During roadmap planning the user endorsed paid recall using a camp k
 return at unlocked floor entrances rather than the recall position, free walking
 ascent as a fallback, and no respawns for this MVP. Finite optional encounters should
 provide approachable extra XP/resources if a party struggles on the direct route.
-The roadmap distinguishes these agreed concepts from detailed proposed mechanics.
+The user subsequently accepted the full roadmap as the planning baseline; detailed
+implementation plans still receive per-slice review.
+
+The user also explicitly confirms that this campaign replaces the existing static
+New Game dungeon. Keeping the old mode, its menu entry or launch compatibility is
+not required. Remove obsolete mode-specific code/content as the replacement lands;
+retain shared systems, useful test fixtures and separate arena/investigation tooling.
+Normal New Game will launch the campaign in the fixed hub.
 
 This document captures the intended first procedural dungeon/campaign milestone
 following the static dungeon demo. It describes the player experience, scope,
 constraints and completion criteria. It is **not an implementation plan**: it
 does not assign slices, prescribe delivery order or authorize implementation.
-The planning agent should inspect the current project before proposing a separate
-multi-slice plan. Existing accepted gameplay contracts remain authoritative unless
+Planning agents should inspect the current project before writing each detailed
+slice plan under the accepted multi-slice roadmap. Existing accepted gameplay contracts remain authoritative unless
 a change is explicitly identified and approved.
 
 The central proposal is a short, replayable descent: a four-character party leaves
@@ -95,7 +102,8 @@ Entering a floor must not grant starting equipment or camp supplies again.
 ### Proposed recovery and defeat defaults
 
 These began as explicit proposal defaults from the brainstorming. The no-respawn
-baseline is now agreed; the remaining defaults still need their slice review.
+baseline and the roadmap defaults are now accepted for planning; detailed mechanics
+and implementation still receive their slice review.
 The implementation plan should call out any change to them.
 
 - The hub offers existing sanctuary-style free recovery for living characters.
@@ -449,7 +457,7 @@ combination, not a reproduction of any one game's generator.
   local pattern constraints are useful but do not themselves establish this MVP's
   global progression or pacing requirements.
 
-The [separate multi-slice roadmap](procedural_campaign_plan.md) is now drafted
-for review from this specification and current code. It surfaces unresolved
+The [separate multi-slice roadmap](procedural_campaign_plan.md), based on this
+specification and current code, was accepted by the user on 2026-10-30. It surfaces unresolved
 choices, proposed system boundaries, per-slice validation and the existing
 acceptance process. Its individual implementation plans remain to be reviewed.

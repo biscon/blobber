@@ -20,8 +20,8 @@ user acceptance.
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | None in this closed roadmap; successor PC01 awaits [campaign roadmap review](procedural_campaign_plan.md) |
-| Next action | Review the procedural campaign roadmap; do not start demo slice 14, 15 or 16 |
+| Next eligible slice | None in this closed roadmap; successor PC01 is eligible for detailed planning under the [accepted campaign roadmap](procedural_campaign_plan.md) |
+| Next action | Fresh context plans campaign PC01 only for review; do not start demo slice 14, 15 or 16 |
 | Accepted design | Slices 13.1–13.3 implemented and accepted, 2026-10-30; [13.3 design](mcp_design.md) and [closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff) |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
@@ -34,6 +34,12 @@ slice 15. Improving/tuning the static dungeon in slice 16 would be discarded by 
 planned procedural crawler. Close those tasks as retired, not implemented/accepted.
 Keep the save/resume requirement, but implement it only after generated floors and
 persistent travel establish the actual campaign state.
+
+The user also explicitly authorizes replacing the existing static-map New Game
+mode. Future campaign slices may remove its obsolete launch path and exclusive
+content/code/tests; no legacy mode or compatibility option is required. Accepted
+history remains recorded, while shared engine systems and arena tooling continue
+into the new campaign. This closeout does not itself remove gameplay code.
 
 | Old work | Disposition | Successor |
 | --- | --- | --- |
@@ -50,7 +56,9 @@ optional encounters as an XP/resource fallback. All accepted gameplay/tooling
 contracts and verification limits remain intact. No gameplay implementation or
 new verification is implied by this documentation closeout.
 
-Current authority for future delivery is the [campaign roadmap](procedural_campaign_plan.md).
+Current authority for future delivery is the [campaign roadmap](procedural_campaign_plan.md),
+accepted by the user on 2026-10-30. Its next step is detailed PC01 planning in a fresh
+context; no campaign implementation has started.
 Older future-tense references to slice 14 below or in dated handoffs describe the
 previous sequence and are superseded by this closeout. Do not reopen accepted
 slices or follow an old next-agent prompt to start 14 automatically.

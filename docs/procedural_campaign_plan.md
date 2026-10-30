@@ -1,7 +1,8 @@
 # Procedural campaign MVP: design and delivery roadmap
 
 Created / last updated: 2026-10-30.
-Status: **Proposed multi-slice roadmap, awaiting user review. No implementation started.**
+Status: **Roadmap accepted by the user on 2026-10-30. No implementation started.**
+Individual slice plans still require review before implementation.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -18,21 +19,38 @@ The demo's accepted slices stay closed. Its save/resume requirement moves here,
 after playable generation and persistent travel; its polish and static-level
 integration slices are retired without claiming they were implemented as slices.
 
+### Replacement of the static New Game flow
+
+The user explicitly authorizes the procedural campaign to **replace** the existing
+static-map New Game mode. There is no requirement to keep that mode playable,
+retain a legacy menu option, or build a compatibility layer for its launch path.
+Remove obsolete static-demo launch code, exclusive content/configuration and
+mode-specific tests as the replacement lands; retain shared gameplay systems,
+useful self-owned regression fixtures and the separate arena/investigation tools.
+Preserving accepted history does not require preserving an obsolete product mode.
+
+PC01 may replace the static launch with its generated-floor prototype; temporary
+coexistence is allowed only if useful during delivery, not an acceptance requirement.
+By PC04, normal New Game launches the campaign in the authored hub, and obsolete
+static-mode wiring is removed. PC09 verifies the shipped flow has no leftover
+legacy option or dependency. Authored map support still serves the fixed hub,
+arena and test fixtures; it does not imply retaining the old game mode.
+
 ## Current checkpoint
 
 | Field | Current value |
 | --- | --- |
 | Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; no campaign slice accepted |
-| Active slice | None; roadmap planning only |
-| Awaiting user review | This multi-slice roadmap and the proposed defaults identified below |
-| Blockers | None for roadmap review; individual implementation plans still required |
-| Next eligible slice | PC01 — Generated-floor walking prototype, after roadmap review |
-| Next action | Review this roadmap, then plan PC01 only in a clean context; do not implement automatically |
-| Accepted direction | Replace the remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Proposed design | Architecture, capacities and remaining gameplay defaults below; not implemented or blanket-approved |
+| Active slice | None; roadmap planning complete and accepted |
+| Awaiting user review | None; PC01 detailed planning has not started |
+| Blockers | None; individual implementation plans still required |
+| Next eligible slice | PC01 — Generated-floor walking prototype (detailed planning only) |
+| Next action | Fresh context: inspect the code and plan PC01 only for review; do not implement automatically |
+| Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
+| Accepted roadmap | Scope, sequence and design/defaults below accepted as the planning baseline; detailed slice plans and implementation remain unapproved |
 
-Update this checkpoint, tracker and affected execution record together. A proposed
-roadmap is not a completed slice or evidence of gameplay acceptance.
+Update this checkpoint, tracker and affected execution record together. Roadmap
+acceptance is not slice implementation or evidence of delivered gameplay acceptance.
 
 ## How agents must use this document
 
@@ -120,8 +138,9 @@ remain open-ended wherever relevant to project work; examples are not restrictio
 
 ### Concrete defaults to carry into detailed plans
 
-The user endorsed the recall concept and no-respawn baseline. Exact command
-semantics below are proposed refinements, not claims that every detail was agreed.
+The user accepted this roadmap, including these defaults as the planning baseline.
+Detailed command semantics and implementation choices still receive their own slice
+review; material changes must be called out rather than silently changing the baseline.
 
 | Topic | Proposed MVP rule / review consequence |
 | --- | --- |
@@ -213,8 +232,8 @@ unmatched ports, blocked fixtures, duplicate IDs and overlaps explicitly.
 ### Geometry, fixtures and discovery
 
 Prefer adding a bounded floor-fixture layer and an effective collision/revision
-view to the current map query path; retain static authored maps and empty-fixture
-behavior. Do not maintain separate combat, AI and renderer copies of door truth.
+view to the current map query path; support authored hub/arena/test maps and
+empty-fixture behavior without preserving the obsolete static New Game mode. Do not maintain separate combat, AI and renderer copies of door truth.
 A single-cell closed door blocks occupancy and sight; an opened door stays open
 for the run. Opening is an explicit nearby faced interaction through a checked
 command, not automatic wall removal or a debug mutation.
@@ -269,7 +288,7 @@ must show how safety is maintained, rather than treating a spawn-only check as p
 Maintain separate campaign party-effect time and floor-local frozen time. Serialize
 remaining durations and logical references, then rebase deadlines without extra
 expiry, saves or RNG draws. Existing short/long rest skips must still apply once.
-**Proposed boundary needing review in PC04:** portable party-only effects and
+**Accepted roadmap boundary to specify in the PC04 detailed plan:** portable party-only effects and
 concentration travel with the party; concentration attached to local enemies,
 areas or a spectral weapon must be explicitly dismissed before travel. Explain
 this in eligibility feedback; never silently discard it. Other local effects
@@ -313,7 +332,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 
 | ID | Slice | Prerequisite | Status | Milestone |
 | --- | --- | --- | --- | --- |
-| PC01 | [Generated-floor walking prototype](#pc01-generated-floor-walking-prototype) | Roadmap review | Planned | P-A |
+| PC01 | [Generated-floor walking prototype](#pc01-generated-floor-walking-prototype) | Roadmap accepted (2026-10-30) | Planned | P-A |
 | PC02 | [Doors, keys and discovered navigation](#pc02-doors-keys-and-discovered-navigation) | PC01 | Planned | P-A |
 | PC03 | [Guardians and structurally safe progression](#pc03-guardians-and-structurally-safe-progression) | PC02 | Planned | P-A |
 | PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Planned | P-B |
@@ -339,7 +358,8 @@ several generated layouts; this is the first generation checkpoint before saving
 
 **Boundary:** No campaign travel, disk saves, gameplay keys/doors or tuned population.
 Objective metadata is provisional until PC02/PC03 validate actual gates. Existing
-arena/static starts still work; this is not a new main-menu redesign.
+arena tooling remains supported. The static New Game launch may be replaced now;
+it is not a compatibility requirement. Avoid an unrelated main-menu redesign.
 
 **Acceptance / validation:** Fixed self-owned fixtures cover determinism, seed
 separation, all allowed rotations, enclosed bounds, capacity failures, useful loops,
@@ -409,7 +429,9 @@ representative pre/post-gate captures. Obtain P-A acceptance separately from bal
 records; fixed authored safe hub and three generated floors connected by checked
 stairs. New-run party creation uses existing library/formation flow exactly once.
 Revisits retain mutations and resources; floor 3's designated guardian ends the run
-in victory, a party wipe in defeat. Add campaign launch/status/travel to headless,
+in victory, a party wipe in defeat. Normal New Game now enters the authored hub;
+remove obsolete static-mode launch wiring and exclusive dependencies. Add campaign
+launch/status/travel to headless,
 client/replay/MCP via existing adapters. Document clocks/effect portability first.
 
 **Boundary:** In-memory persistence only; no save file, shops, recall yet, respawns
@@ -424,7 +446,8 @@ without party loss. Validate arrivals after enemies have moved, not just spawn.
 Check borrower destruction/rebinding with sanitizers and repeated travel; verify
 prepared assets are shared and no steady-frame allocation regression.
 
-**Review recipe:** Start in town, descend to two floors, change HP/gear/formation,
+**Review recipe:** Use normal New Game and confirm it starts in town rather than
+the old static dungeon. Descend to two floors, change HP/gear/formation,
 leave loot, ascend and re-enter. Compare canonical state except documented clocks/
 new runtime IDs. Walk all the way back with zero kits. Exercise final victory and
 wipe with small owned fixtures; this is a lifecycle check, not a balance run.
@@ -547,7 +570,8 @@ application-owned captures only where supported. Report untested decisions hones
 **Deliver:** Cohesive new-run/hub/descent/recall/save/result flow, player-facing
 instructions, retained reproduction cases and measured MVP scope. Fix defects in
 this campaign experience; this does not resurrect the retired general polish or
-static-dungeon integration slice. Keep the hub modest and authored.
+static-dungeon integration slice. Confirm no obsolete static-mode menu option,
+launch dependency or compatibility-only code remains. Keep the hub modest and authored.
 
 **Acceptance / validation:** Relevant Debug/Release headless and graphics suites,
 allocation checks, focused lifetime sanitizers and available hidden GPU/capture
@@ -603,6 +627,8 @@ boundaries should accommodate them without building their systems now.
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | Roadmap accepted as the scope, sequence and design/default baseline. PC01–PC09 remain Planned; next step is detailed PC01 planning in a fresh context. | User: “Ive read through and accept the plan/roadmap”; asks to record acceptance before a fresh context plans the first slice. |
+| 2026-10-30 | Campaign replaces the static New Game mode; remove obsolete mode-specific code/content/tests during delivery. Arena tooling and shared engine behavior remain useful. | User explicitly says the existing static-map game mode need not be kept and this system will replace it. |
 | 2026-10-30 | Close the static-demo delivery roadmap. Retire demo 15/16; transfer save/resume from 14 to PC06 after playable generation/travel. Preserve all prior acceptance history. | User says remaining static work is obsolete and requests a new multi-slice MVP plan. |
 | 2026-10-30 | Long-term town has shops; first MVP follows the brainstorm and excludes them. | User clarifies expanded description is the eventual destination, not expanded MVP scope. |
 | 2026-10-30 | Recall consumes a camp kit; return at an unlocked floor entry rather than departure position. Free walking ascent remains fallback. | User endorses the proposal and accepts walking time as the fallback cost. Exact refinements remain reviewable. |
@@ -621,7 +647,23 @@ task; graphics behavior is unverified here. Documentation validation passed:
 heading anchors across the seven changed/new documents. Tracker dependencies and
 supersession dispositions were also reviewed. The user-approved scope amendments are recorded above and in the spec.
 
-Next action is user review of this roadmap, then a detailed PC01 plan. The old demo
-roadmap is closed, not an instruction to implement demo slice 14. Prior verification
-records remain historical evidence with unchanged limitations. Do not start PC01,
-run an experiment or infer acceptance of the proposed defaults automatically.
+### Roadmap acceptance and fresh-context handoff
+
+2026-10-30: The user explicitly accepted: “Ive read through and accept the
+plan/roadmap”, and requested recording it before a fresh context plans the first
+slice. Roadmap planning is complete and accepted. All nine slices and all three
+campaign milestones remain **Planned**; no slice implementation or delivery
+acceptance is implied.
+
+Next action: in the fresh context requested by the user, read AGENTS.md, the system
+overview, the MVP specification and this roadmap; inspect relevant current code,
+then produce the detailed **PC01-only** implementation plan for review. Preserve
+working-tree changes. Do not repeat roadmap approval or implement PC01 before its
+detailed plan is reviewed. The reusable planning prompt above is ready to use.
+
+The old demo roadmap stays closed. Static New Game replacement is authorized;
+there is no legacy-mode preservation requirement. Save/resume remains PC06 after
+generation/travel. Balance experiments remain opt-in, and desktop restrictions
+remain in force. Prior verification evidence and limitations are unchanged.
+This acceptance update changes documentation only; no builds, gameplay tests,
+experiments or graphics checks were run, and no commit was requested or created.
