@@ -60,7 +60,15 @@ struct AcquisitionRequest {
 // Value storage; Party stages a copy before committing. Catalog and character strings stay outside it.
 class Inventory {
   public:
+    struct Saved {
+        std::array<ItemStack, inventoryCapacity> stacks{};
+        std::array<std::array<std::uint16_t, 52>, rules::partySize> locations{};
+        std::uint64_t revision = 1;
+    };
     Inventory();
+    Saved checkpoint() const noexcept;
+    void restore(const Saved&, const rules::Catalog&); // Preparation only; fresh owner identity.
+
     const ItemStack* stack(ItemHandle) const noexcept;
     ItemHandle at(ItemLocation) const noexcept;
     ItemLocation locate(ItemHandle) const noexcept;

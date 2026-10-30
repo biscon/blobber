@@ -36,8 +36,10 @@ class Client:
     STDERR_TAIL = 1024 * 1024
 
     def __init__(self, executable, assets, mode="diagnostic", record=None, on_event=None,
-                 *, timeout=10, startup_timeout=30, deadline=None, cancelled=None):
+                 *, timeout=10, startup_timeout=30, deadline=None, cancelled=None, campaign_save=None):
         command = [str(executable), "--assets", str(assets), "--mode", mode]
+        if campaign_save is not None:
+            command += ["--campaign-save", str(campaign_save)]
         if record is not None:
             command += ["--record", str(record)]
         self.process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -125,7 +127,7 @@ class Client:
         end = min(started + duration, self.deadline if self.deadline is not None else float("inf"))
         request = dict(fields, version=1, id=str(self.sequence), op=op)
         self.sequence += 1
-        if self.identity and op in ("start", "reset", "advance", "act", "preview"):
+        if self.identity and op in ("start", "reset", "advance", "act", "preview", "preview_save", "save", "load", "retry_terminal"):
             request.update(self.identity)
         payload = (json.dumps(request, allow_nan=False, separators=(",", ":")) + "\n").encode()
         if len(payload) - 1 > self.MAX_REQUEST:

@@ -1,8 +1,23 @@
+#include "game/campaign.hpp"
 #include "game/session.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 namespace blobber {
+const char* GameSession::saveSafety() const noexcept {
+    if (!runActive())
+        return "Campaign has ended.";
+    if (timeMs_ > maxCheckpointClock || combat_.snapshot().gameplayMs > maxCheckpointClock ||
+        (campaign_ && campaign_->gameplayMs() > maxCheckpointClock))
+        return "Save clock capacity exhausted.";
+    if (mutation_ == UINT64_MAX)
+        return "Session revision exhausted.";
+    if (movement_.pending_ || movement().transition.active())
+        return "Wait until movement finishes.";
+    if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
+        return "Saving requires settled safe exploration.";
+    return nullptr;
+}
 const char* GameSession::travelSafety() const noexcept {
     if (mutation_ == UINT64_MAX)
         return "Session revision exhausted.";

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <stdexcept>
 namespace blobber {
+std::string campaignRunId();
 bool GameSession::runActive() const noexcept {
     return !campaign_ || (campaign_->status() == CampaignStatus::Active &&
                           !(campaign_->activeLocation() == 3 && objective_.completed));
@@ -27,7 +28,7 @@ bool portable(const EffectInstance& e) noexcept {
 CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty& starting,
                          const std::vector<std::string>& types, const std::vector<NpcTimings>& timings,
                          std::uint32_t seed)
-    : party_(catalog, starting), timings_(timings) {
+    : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
     auto& hub = locations_[0];
     hub.authored.emplace(std::vector<std::string>{"#########", "#.......#", "#.......#", "#.......#",
                                                   "#.......#", "#.......#", "#.......#", "#.......#",
@@ -68,12 +69,15 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     active_->campaign_ = this;
     active_->discover();
 }
-std::unique_ptr<GameSession> CampaignRun::prepare(unsigned index, Player arrival) {
+std::unique_ptr<GameSession> CampaignRun::prepare(unsigned index, Player arrival, bool validate) {
     const auto& l = locations_[index];
     auto game = std::make_unique<GameSession>(l.map(), party_, *l.placements, l.seed, arrival, timings_,
                                               l.recovery, l.fixtures, l.objective);
-    if (l.saved)
+    if (l.saved) {
+        if (validate)
+            game->validateCheckpoint(*l.saved);
         game->importFloor(*l.saved);
+    }
     return game;
 }
 std::uint64_t CampaignRun::gameplayMs() const noexcept {

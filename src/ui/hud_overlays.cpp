@@ -3,6 +3,7 @@
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
 #include "ui/inventory_layout.hpp"
+#include "ui/save_screen.hpp"
 #include "ui/spell_layout.hpp"
 #include "ui/status_occlusion.hpp"
 #include <cstring>
@@ -245,7 +246,9 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.box(hudLayout::endTurn, gold);
         p.label("END TURN", hudLayout::endTurn, gold);
     }
-    if (h->menuOpen) {
+    if (h->menuOpen && h->save.enabled)
+        drawSaveMenu(p, h->save);
+    if (h->menuOpen && !h->save.enabled) {
         if (h->development && !h->leaveConfirmation) {
             p.box(hudLayout::developmentXp, gold);
             p.label("DEV: GRANT NEXT LEVEL XP", hudLayout::developmentXp, gold);

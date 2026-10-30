@@ -8,6 +8,8 @@
 namespace blobber {
 // Map/catalog outlive this owner and every UI/animation borrower of its members.
 class CampaignRun;
+// Save schema 1 keeps the upper half free for checked deadline arithmetic.
+inline constexpr std::uint64_t maxCheckpointClock = UINT64_MAX / 2;
 struct FloorState {
     FloorGeometry::Saved fixtures;
     ActorSnapshot actors;
@@ -29,8 +31,13 @@ class GameSession {
                 const std::vector<NpcTimings>&, const RecoveryLevel&, const FloorFixtures&,
                 const FloorObjectiveDefinition&);
     void exportFloor(FloorState&) const noexcept;
+    void validateCheckpoint(const FloorState&) const;
     void importFloor(const FloorState&); // Preparation only; rejects invalid values.
     CampaignRun* campaign() const noexcept { return campaign_; }
+    void restorePose(Player, bool animated); // Preparation only.
+    const char* saveSafety() const noexcept;
+    Navigation::Saved navigationCheckpoint() const { return ai_.navigation_.checkpoint(); }
+    void restoreNavigation(const Navigation::Saved& s) { ai_.navigation_.restore(s); }
     const char* travelSafety() const noexcept;
     bool runActive() const noexcept;
     GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements, std::uint32_t seed,

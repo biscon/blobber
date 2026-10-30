@@ -66,7 +66,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/resistance",
                                   "spells/sanctuary",
                                   "spells/hold_person",
-                                  "items/quarterstaff"};
+                                  "items/quarterstaff",
+                                  "travel"};
     const auto prepared = directory.parent_path() / "prepared";
     auto loadPreparedAtlas = [&](const char* name, int height) {
         const auto path = prepared / name;
@@ -206,7 +207,7 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index >= 49 && index <= 60)
+    if (index >= 49 && index <= travelIcon)
         index -= 3;
     else if (index == restIcon)
         index = 45;

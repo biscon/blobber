@@ -6,6 +6,7 @@
 #include "ui/hud_painter.hpp"
 #include <chrono>
 #include <iostream>
+#include <string_view>
 using namespace blobber;
 namespace {
 struct FixtureDirectory {
@@ -85,7 +86,8 @@ void nativeUi() {
                                   "spells/resistance",
                                   "spells/sanctuary",
                                   "spells/hold_person",
-                                  "items/quarterstaff"};
+                                  "items/quarterstaff",
+                                  "travel"};
     for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168
@@ -97,7 +99,9 @@ void nativeUi() {
         for (int y = 0; y < image.value.height; ++y)
             for (int x = 0; x < image.value.width; ++x)
                 ImageDrawPixel(&image.value, x, y,
-                               i < 4 ? (x < 32 || x >= 184 ? RED : GREEN) : (x % 2 ? WHITE : BLACK));
+                               std::string_view(names[i]) == "travel" ? RED
+                               : i < 4                                ? (x < 32 || x >= 184 ? RED : GREEN)
+                                                                      : (x % 2 ? WHITE : BLACK));
         check(ExportImage(image.value, (fixture.path / (std::string(names[i]) + ".png")).string().c_str()),
               "Export generated UI fixture");
     }
@@ -130,6 +134,7 @@ void nativeUi() {
     painter.picture(0, {0, 40, 30, 84});
     // A wide icon destination must fit rather than stretch the square artwork.
     painter.picture(6, {40, 0, 60, 36});
+    painter.picture(UiArt::travelIcon, {100, 0, 16, 13});
     painter.overlayBox({100, 40, 20, 20});
     painter.fill({101, 41, 18, 18}, RED);
     painter.overlayBox({100, 40, 20, 20});
@@ -142,6 +147,9 @@ void nativeUi() {
         check(x % 2 ? c.r > 240 : c.r < 15, "One-native-pixel source detail survives the UI atlas and draw");
     }
     const auto creatorPixel = GetImageColor(result.value, 330, 270);
+    const auto travelPixel = GetImageColor(result.value, 320, 20);
+    check(travelPixel.r > 200 && travelPixel.g < 80 && travelPixel.b < 80,
+          "Travel icon resolves to its own atlas region through the native HUD pipeline");
     check(creatorPixel.b > 200 && creatorPixel.r < 15, "Large creator atlas draws through native pipeline");
     const auto left = GetImageColor(result.value, 0, 50), right = GetImageColor(result.value, 107, 50);
     check(left.r < 15 && left.b < 15 && right.r > 240 && right.g > 240,

@@ -3,8 +3,9 @@
 Date: 2026-10-30.
 
 Status: **MVP specification and amendments incorporated in the roadmap accepted
-on 2026-10-30; delivery is tracked separately. PC01–PC05 are Accepted
-and closed; PC06–PC09 remain unimplemented.**
+on 2026-10-30; delivery is tracked separately. PC01–PC06 and milestones P-A/P-B
+are Accepted and closed;
+PC07–PC09 remain unimplemented.**
 The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
 
 ### Scope clarification and amendments (2026-10-30)

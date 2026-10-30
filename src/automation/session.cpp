@@ -50,6 +50,20 @@ Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definition
             throw std::runtime_error("Visual backend construction failed");
     }
 }
+Session::Session(const rules::Catalog&, const NpcDefinitions&, std::unique_ptr<CampaignRun> run, Mode mode,
+                 VisibilityFactory factory, void* context)
+    : resumed_(true), scenario_(CampaignScenario{}), campaign_(std::move(run)), factory_(factory),
+      factoryContext_(context), mode_(mode) {
+    if (!campaign_)
+        throw std::invalid_argument("Missing restored campaign");
+    if (mode_ == Mode::Visual) {
+        if (!factory_)
+            throw std::runtime_error("Visual backend unavailable in this build");
+        visibility_ = factory_(factoryContext_, map(), game());
+        if (!visibility_)
+            throw std::runtime_error("Visual backend construction failed");
+    }
+}
 void Session::observe(Observation& out, bool diagnostic) {
     out = {};
     out.session = &game();

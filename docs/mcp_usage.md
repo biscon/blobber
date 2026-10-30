@@ -324,3 +324,41 @@ rest automatically or store a departure portal. Both paths preserve the existing
 safe-travel/effect restrictions, staged rollback and strict replay integrity.
 See [the protocol](headless_protocol.md#pc05-recall-and-entry-waypoints). No new MCP
 service, autonomous campaign policy or balance experiment is introduced.
+
+
+## PC06 campaign save and resume
+
+Every session has an isolated campaign slot under its retained output directory;
+MCP never implicitly writes the graphical user's campaign slot. `session_start`
+accepts exactly one of `scenario`, `scenario_path`, or `campaign_save_path`. A save
+input is bounded to 16 MiB and copied into a new isolated session; no seed override
+or existing-handle replacement is allowed with this input. To reload the current
+isolated slot, use `session_load` with current tokens and `replace: true`.
+
+`session_save_status` returns the observed slot revision. `session_preview_save`
+checks the common safe boundary. `session_save` takes current tokens plus
+`slot_revision`; `replace: true` explicitly confirms replacing a different run.
+Check both `published` and `durable`. A published save returns `save_artifact`;
+failed publication returns no new artifact. `session_load` rotates the handle and
+session epoch only on success. `session_retry_terminal` retries a failed terminal
+marker; normal Continue cannot resume a matching ended run in the same process.
+A failed marker can leave an older active disk file after restart; this limitation
+is explicitly reported rather than hidden.
+
+The Python Client accepts `campaign_save=PATH` for explicit direct CLI use. Save and
+load use the same bounded transport and cancellation behavior as other mutations;
+timeout/cancellation can mean a mutation completed before the response. Session
+reservation is now 290 MiB for the existing trace, maximum slot/temp and metadata.
+Retained saves/traces include hidden diagnostic state; artifact access is not a
+player-discovery API. Replay jobs recognize persistence traces and use recorded
+file I/O, with no original save file required and no user-slot writes.
+
+Explicit optional SDK verification, with the existing pinned environment:
+
+```sh
+.venv/bin/python tests/campaign_save_mcp_tests.py cmake-build-headless-release/blobber_headless
+```
+
+This exercises schemas, preview, save artifact, stale-handle rejection, fresh
+resume and strict replay. It runs no policy or balance experiment. Live Codex-host
+interaction and human desktop review are separate, unverified evidence.

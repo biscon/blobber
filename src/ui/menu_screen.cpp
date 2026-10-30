@@ -15,7 +15,12 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
         p.fill({0, 0, 640, 360}, {12, 18, 18, 245});
     p.border({8, 8, 624, 344}, hudInk::edge);
     if (m.screen == MenuScreen::Main) {
-        p.centered("B L O B B E R", {180, 60, 280, 50}, hudInk::gold, UiTextStyle::Control);
+        p.centered("B L O B B E R", {180, v.canContinue ? 35 : 60, 280, 50}, hudInk::gold,
+                   UiTextStyle::Control);
+        if (v.canContinue) {
+            v.button(p, {210, 96, 220, 30}, "Continue", 60);
+            p.clipped(v.continueSummary.data(), 125, 80, 390, hudInk::muted, UiTextStyle::Small);
+        }
         v.button(p, {210, 133, 220, 30}, "Start new game", 1);
         v.button(p, {210, 176, 220, 30}, "Arena", 4000);
         v.button(p, {210, 219, 220, 30}, "Character Creator", 2);

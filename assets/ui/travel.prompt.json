@@ -1,0 +1,7 @@
+{
+  "tool": "image_gen.imagegen",
+  "mode": "built-in",
+  "purpose": "Top-bar Travel icon",
+  "style_reference": "assets/ui/rest.png",
+  "prompt": "Use case: stylized-concept. Asset type: small fantasy dungeon game HUD Travel button icon, transparent background. Reference image 1 is STYLE REFERENCE ONLY: match the existing hand-painted campfire icon's rich warm colors, refined material shading, bold clean silhouette and readable small-scale form. Primary request: a single compact antique brass compass, viewed almost face-on with a slight natural perspective, a thick warm golden brass rim and a simple dark charcoal face, one clear ivory-and-burnished-red directional needle. Centered square composition, object filling about 88% of image. Immediately recognizable at 36 by 36 pixels, strong simple shapes, minimal face details. No letters, no cardinal text, no tiny ticks, no map, no frame or button background, no scenery, no people, no additional objects, no watermark, no ground plane or cast shadow. True transparent background outside the compass. This is a new Travel icon to display beside the reference Camp icon on a charcoal and antique-gold dungeon HUD; do not include fire."
+}

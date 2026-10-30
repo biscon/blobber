@@ -4,6 +4,7 @@
 #include "game/loot_ui.hpp"
 #include "game/npc_animation.hpp"
 #include "game/recovery_ui.hpp"
+#include "game/save_ui.hpp"
 #include "game/session.hpp"
 #include "game/travel.hpp"
 #include <optional>
@@ -55,7 +56,7 @@ struct HudCard {
          castHovered = false;
     const char* castPreview = "";
 };
-enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration };
+enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration, Travel };
 struct HudHover {
     HoverKind kind = HoverKind::None;
     int index = 0;
@@ -155,6 +156,7 @@ struct HudSnapshot {
     InventoryHud inventory;
     CampHud camp;
     TravelHud travel;
+    SaveHud save;
     AdvancementHud advancement;
     bool development = false;
     LootHud loot;
@@ -244,6 +246,8 @@ class CommandController {
     void toggleLog() noexcept;
     void latestLog() noexcept { state_.logOffset = 0; }
     void inspect(std::size_t formationIndex) noexcept;
+    SaveHud& saveMenu() noexcept { return state_.save; }
+    void routeSaveMenu(const UiInput&) noexcept;
     void toggleMenu() noexcept;
     void closeOverlay() noexcept;
     void openTravel() noexcept;

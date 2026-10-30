@@ -1,5 +1,53 @@
 # System design
 
+Incremental asset build follow-up **implemented** (2026-10-30): narrowed the creator atlas dependency
+list to the 36 PNGs consumed by `creatorArtNames` (keep both lists in sync).
+Replaced the always-running raw asset directory copies with one source-dependent
+output command per file, preserving the current copied directories and per-config
+asset locations. File globs still detect added/removed raw inputs at configure
+time; ordinary no-change builds perform no copies. Full atlas packing and baking
+tool/library dependencies stay unchanged. Release configuration/build passes;
+timestamp probes confirm Travel copies just its PNG and Sacred Flame copies its
+PNG plus repacks only the creator atlas. Source timestamps were restored and the
+subsequent build does no work. Isolated generated fixtures pass single- and
+multi-config copying, no-op/changed/touched inputs, missing outputs, added files,
+paths with spaces and independent Debug/Release outputs. The explicit list was
+checked against all 36 consumed images. Logs: `/tmp/incremental-assets-fixtures.log`,
+`/tmp/incremental-assets-travel-probe.log`, `/tmp/incremental-assets-creator-probe.log`
+and `/tmp/incremental-assets-post-probes.log`. Gameplay code is unaffected.
+
+Travel HUD icon follow-up **implemented** (2026-10-30): replaced the text button with a generated,
+transparent brass compass matching the painted Camp icon. UiArt prepares it in
+the existing startup atlas (one additional 108-pixel region, no new GPU resource).
+The shared logical click rectangle moves beside Camp at the same 16×13 size;
+the existing T shortcut and travel validation remain authoritative. A bounded
+hover tooltip retains the Travel label and shortcut without frame allocations.
+Focused Release HUD/campaign/allocation checks and the hidden GPU check pass;
+application-owned captures were inspected at native and reduced resolution.
+See [captures, prompt and verification](screenshots/travel-icon/README.md). No OS input.
+
+PC06 **Accepted and closed** (2026-10-30):
+[campaign save and resume](procedural_campaign_save_design.md). User approved the
+reviewed plan with “Implement the plan.” One manual slot, safe Save/Save and Main
+Menu, staged Continue independent of starting builds, exact campaign snapshots,
+checked content/schema/clock ownership and terminal markers are implemented.
+Headless/client/local MCP and byte-safe strict replay share the same authority.
+[Verification and handoff](pc06_verification.md) and [gallery](screenshots/pc06/index.html):
+full headless Debug/Release 41/41 each; graphics 60/60 each; focused ASan/UBSan 3/3
+plus final 1/1, final protocol checks 3/3 in all four presets, zero tracked frame C++
+allocations and 55/60 owned restore/view allocation failure points pass. Fresh-process
+and cross-build saves, retained positive/negative strict replay, local SDK stdio,
+hidden GPU and all 19 repeat-identical captures pass; 14 PNGs are retained.
+PC06 presentation review correction: hide unavailable Continue, use compact shared
+confirmation geometry, and describe failed save writes in plain language; see the
+[design correction](procedural_campaign_save_design.md#pc06-presentation-review-correction-2026-10-30).
+Human interactive/native-close event and live Codex-host MCP remain unverified.
+User accepted the save/load slice on 2026-10-30; accepted PC04–PC06 complete
+milestone P-B. Review corrections are included; verification and limitations remain
+unchanged, with no additional interactive play-coverage details supplied. No balance
+experiments or PC07 work. PC07 is next for detailed planning only, in a fresh context
+when requested. This supersedes historical review-pending/next-planning notes below.
+
 PC05 **Accepted and closed** (2026-10-30):
 [paid recall and entry waypoints](procedural_campaign_recall_design.md).
 User approved the reviewed plan with “Implement the plan.” Confirmed one-kit

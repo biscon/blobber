@@ -52,9 +52,9 @@ endfunction()
 
 add_library(blobber_rules src/rules/progression.cpp src/rules/spell_selection.cpp src/rules/creation.cpp src/rules/spells.cpp src/rules/resolve.cpp src/rules/health.cpp src/rules/content.cpp src/rules/character.cpp)
 target_include_directories(blobber_rules PUBLIC src)
-add_library(blobber_rules_io src/persistence/arena_store.cpp src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
+add_library(blobber_rules_io src/persistence/campaign_store.cpp src/persistence/campaign_codec.cpp src/persistence/arena_store.cpp src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
-add_library(blobber_core src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/fixtures.cpp src/generation/templates.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
+add_library(blobber_core src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/fixtures.cpp src/generation/templates.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules)
 # Level recovery loading validates world cells and exposes core recovery data.
@@ -80,9 +80,9 @@ if(BLOBBER_BUILD_GRAPHICS)
     target_link_libraries(blobber_assets_io PUBLIC blobber_render blobber_npc_io PRIVATE nlohmann_json::nlohmann_json)
     add_library(blobber_platform
         src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
-        src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
+        src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_render)
-    add_executable(blobber src/app/guardian_captures.cpp src/app/progression_captures.cpp src/app/arena_model.cpp src/app/arena_captures.cpp src/app/arena_setup.cpp src/ui/arena_screen.cpp src/app/creator_captures.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp src/app/menu.cpp src/app/menu_model.cpp src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
+    add_executable(blobber src/app/save_captures.cpp src/app/campaign_saves.cpp src/app/guardian_captures.cpp src/app/progression_captures.cpp src/app/arena_model.cpp src/app/arena_captures.cpp src/app/arena_setup.cpp src/ui/arena_screen.cpp src/app/creator_captures.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp src/app/menu.cpp src/app/menu_model.cpp src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
     target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
     add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
     target_link_libraries(blobber_prepare_assets PRIVATE raylib)
@@ -128,22 +128,32 @@ if(BLOBBER_BUILD_GRAPHICS)
         blobber_warnings(${target})
     endforeach()
 
-    add_custom_target(blobber_assets ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/preparation.json" "$<TARGET_FILE_DIR:blobber>/assets/preparation.json"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" "$<TARGET_FILE_DIR:blobber>/assets/fonts"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules" "$<TARGET_FILE_DIR:blobber>/assets/rules"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures" "$<TARGET_FILE_DIR:blobber>/assets/textures"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/maze.txt" "$<TARGET_FILE_DIR:blobber>/assets/maze.txt"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs" "$<TARGET_FILE_DIR:blobber>/assets/npcs"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui" "$<TARGET_FILE_DIR:blobber>/assets/ui"
-        COMMENT "Copying dungeon assets")
+    set(BLOBBER_RAW_ASSET_DIR "${CMAKE_CURRENT_BINARY_DIR}/assets")
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(BLOBBER_RAW_ASSET_DIR "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/assets")
+    endif()
+    file(GLOB_RECURSE BLOBBER_COPY_INPUTS CONFIGURE_DEPENDS LIST_DIRECTORIES false
+        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/*")
+    list(APPEND BLOBBER_COPY_INPUTS preparation.json maze.txt)
+    set(BLOBBER_COPY_OUTPUTS)
+    foreach(asset IN LISTS BLOBBER_COPY_INPUTS)
+        set(source "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}")
+        set(destination "${BLOBBER_RAW_ASSET_DIR}/${asset}")
+        get_filename_component(destination_directory "${destination}" DIRECTORY)
+        # Refresh the output timestamp even when a touched source has identical bytes.
+        add_custom_command(OUTPUT "${destination}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${destination_directory}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${source}" "${destination}"
+            DEPENDS "${source}"
+            COMMENT "Copying asset ${asset}" VERBATIM)
+        list(APPEND BLOBBER_COPY_OUTPUTS "${destination}")
+    endforeach()
+    add_custom_target(blobber_assets ALL DEPENDS ${BLOBBER_COPY_OUTPUTS})
     add_dependencies(blobber blobber_assets)
 
     add_executable(blobber_bake_portraits tools/bake_portraits.cpp)
@@ -230,7 +240,45 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_executable(blobber_bake_creator tools/bake_creator.cpp)
     target_link_libraries(blobber_bake_creator PRIVATE blobber_assets_io)
     blobber_warnings(blobber_bake_creator)
-    file(GLOB_RECURSE CREATOR_MASTERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/*.png")
+    # Keep in sync with creatorArtNames in src/assets/creator_art.hpp.
+    set(CREATOR_MASTERS
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/sacred_flame.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/spare_the_dying.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/bless.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/bane.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/shield_of_faith.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/cure_wounds.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/guiding_bolt.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/inflict_wounds.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/fire_bolt.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/acid_splash.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/mage_armor.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/magic_missile.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/burning_hands.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/thunderwave.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/ray_of_frost.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/shocking_grasp.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/poison_spray.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/sleep.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/false_life.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/grease.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/color_spray.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/guidance.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/resistance.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/sanctuary.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/aid.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/hold_person.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/lesser_restoration.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/spiritual_weapon.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/scorching_ray.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/shatter.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/mirror_image.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/spells/web.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/melee.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/holy_symbol.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/dagger.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/spellbook.png"
+    )
     add_custom_command(OUTPUT "${BLOBBER_PREPARED_DIR}/creator.qoi"
         COMMAND blobber_bake_creator "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui" "${BLOBBER_PREPARED_DIR}"
         DEPENDS blobber_bake_creator ${CREATOR_MASTERS} VERBATIM)
@@ -263,7 +311,7 @@ endif()
 add_library(blobber_automation src/automation/session.cpp)
 target_link_libraries(blobber_automation PUBLIC blobber_core blobber_rules_io blobber_npc_io)
 blobber_warnings(blobber_automation)
-add_library(blobber_automation_io src/automation/scenario_codec.cpp src/automation/decode.cpp src/automation/observe.cpp
+add_library(blobber_automation_io src/automation/persistence_trace.cpp src/automation/scenario_codec.cpp src/automation/decode.cpp src/automation/observe.cpp
     src/automation/actions.cpp src/automation/protocol.cpp src/automation/trace.cpp)
 target_link_libraries(blobber_automation_io PUBLIC blobber_automation nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_automation_io)
@@ -374,4 +422,15 @@ if(BUILD_TESTING)
     target_link_libraries(blobber_campaign_tests PRIVATE blobber_automation_io)
     blobber_warnings(blobber_campaign_tests)
     add_test(NAME campaign COMMAND blobber_campaign_tests)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(blobber_campaign_save_tests tests/campaign_save_tests.cpp src/app/campaign_saves.cpp)
+    target_link_libraries(blobber_campaign_save_tests PRIVATE blobber_automation_io)
+    blobber_warnings(blobber_campaign_save_tests)
+    add_test(NAME campaign_save COMMAND blobber_campaign_save_tests)
+endif()
+if(BUILD_TESTING AND Python3_Interpreter_FOUND)
+    add_test(NAME campaign_save_cli COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/campaign_save_cli_tests.py $<TARGET_FILE:blobber_headless>)
 endif()

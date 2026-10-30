@@ -328,6 +328,8 @@ class Jobs:
                     target.write(data)
             command = [str(self.runner), '--assets', str(self.assets), '--mode', recorded_mode,
                        '--replay', str(root/'trace.jsonl')]
+            if header['data'].get('campaign_persistence') == 1:
+                command += ['--campaign-save', str(root/'replay-memory-slot.json')]
             if operations is not None:
                 command += ['--capture-dir', str(root/'captures')]
                 for op in operations:

@@ -1,4 +1,5 @@
 #include "game/commands.hpp"
+#include "persistence/campaign_codec.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/fixture_world.hpp"
 #include <cstdlib>
@@ -247,8 +248,46 @@ int main(int argc, char**) {
             std::cout << travelKindName(kind) << " rollback: " << preparationAllocations
                       << " allocation failure points checked\n";
         }
+        // Restore and optional view preparation are explicit allocation boundaries.
+        auto checkpoint = campaign->checkpoint();
+        const auto saveText = encodeCampaign(cat, defs, {"owned", 0}, *checkpoint);
+        const auto restoreStage = [&](std::unique_ptr<CampaignCheckpoint> state) {
+            auto restored = std::make_unique<CampaignRun>(cat, std::move(*state), defs.timings);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+            FramePipeline frames;
+            frames.update(renderer, restored->game().geometry(), restored->game().movement(),
+                          &restored->game().actors());
+#endif
+        };
+        auto stagedState = decodeCampaign(cat, defs, {"owned", 0}, saveText);
+        allocations = 0;
+        tracking = true;
+        restoreStage(std::move(stagedState));
+        tracking = false;
+        const auto restoreAllocations = allocations;
+        const auto oldWorld = campaign->game().actors().snapshot().world;
+        for (std::size_t failure = 1; failure <= restoreAllocations; ++failure) {
+            auto state = campaign->checkpoint();
+            allocations = 0;
+            failAt = failure;
+            bool rejected = false;
+            tracking = true;
+            try {
+                restoreStage(std::move(state));
+            } catch (const std::bad_alloc&) {
+                rejected = true;
+            }
+            tracking = false;
+            failAt = 0;
+            check(rejected && campaign->game().actors().snapshot().world == oldWorld,
+                  "every restore/view allocation failure preserves current owner");
+        }
+        std::cout << "restore rollback: " << restoreAllocations << " allocation failure points checked\n";
+        auto resumedState = decodeCampaign(cat, defs, {"owned", 0}, saveText);
+        campaign = std::make_unique<CampaignRun>(cat, std::move(*resumedState), defs.timings);
         allocations = requestedBytes = 0;
         CommandController campaignUi(campaign->game(), defs.timings);
+        campaignUi.saveMenu().enabled = true;
 #ifdef BLOBBER_AUTOMATION_VISUAL
         FramePipeline campaignFrames;
 #endif
@@ -256,6 +295,12 @@ int main(int argc, char**) {
         for (unsigned i = 0; i < 40; ++i) {
             campaign->update(.01, false);
             campaignUi.refresh({}, false, false, true);
+            campaignUi.hover(HoverKind::Travel, 0, {}, 579, 3);
+            okay &= campaignUi.snapshot().hover.kind == HoverKind::Travel;
+            campaignUi.toggleMenu();
+            campaignUi.routeSaveMenu(UiInput{});
+            campaignUi.closeOverlay();
+            okay &= !campaign->saveSafety();
             campaignUi.openTravel();
             campaignUi.refreshTravel();
             campaignUi.selectTravel(0);

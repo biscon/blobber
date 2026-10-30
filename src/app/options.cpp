@@ -19,9 +19,14 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
+        else if (arg == "--campaign-save" && i + 1 < argc)
+            result.campaignSave = std::filesystem::absolute(argv[++i]);
         else if (arg == "--development")
             result.development = true;
-        else if (arg == "--capture-progression" && i + 1 < argc) {
+        else if (arg == "--capture-campaign-save" && i + 1 < argc) {
+            result.captureSaveOnly = result.captureMenuOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture-progression" && i + 1 < argc) {
             result.captureProgressionOnly = true;
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         } else if (arg == "--capture-arena" && i + 1 < argc) {

@@ -1,0 +1,162 @@
+{
+  "slice": "PC06",
+  "date": "2026-10-30",
+  "producer": "hidden application-owned --capture-campaign-save with isolated temporary slots",
+  "command": "cmake-build-release/blobber --assets cmake-build-release/assets --development --seed 5 --capture-campaign-save NEW_DIR",
+  "binary_sha256": "fd0533e32b7d673635c08dbdfbc06088efe57c4b4b9209d840cdfe517e3e269d",
+  "all_capture_count": 19,
+  "repeat_identical": true,
+  "retained_capture_count": 14,
+  "images": [
+    {
+      "file": "save-error-rename.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "443506491371edc05920742498d343d98318bb21a53506c978449e5ad33fc1e1",
+      "caption": "Actual injected rename failure preserves the preceding slot and the live run."
+    },
+    {
+      "file": "save-main-continue.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "402ccae02b02f60a242ff45135786e7512c2bfe589c8adaef09daaf90cb57044",
+      "caption": "A freshly saved new run enables Continue with a validated location and party summary."
+    },
+    {
+      "file": "save-main-empty.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "371686a0934d7e173c240a9ebdb951b40af9feb027ce48869072b53174c9c2cd",
+      "caption": "No resumable save: the main menu shows its four normal actions."
+    },
+    {
+      "file": "save-main-terminal.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "371686a0934d7e173c240a9ebdb951b40af9feb027ce48869072b53174c9c2cd",
+      "caption": "Ended run: Continue is absent."
+    },
+    {
+      "file": "save-overwrite-dialog-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "2dcdf0fd0e527d6d229ff494ee29aaf1ee694dac3a8cb0fc6574f99450ec5c9a",
+      "caption": "Overwrite dialog presentation setup. Owned CPU flow verifies confirmation for a different run."
+    },
+    {
+      "file": "save-overwrite-dialog.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "29bbdcbc201131d3fb101440643572eedb4bcc5fd48436bb5de77d7a735e0c72",
+      "caption": "Overwrite dialog presentation setup. Owned CPU flow verifies confirmation for a different run."
+    },
+    {
+      "file": "save-paused-hub-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "1f8efc16dbe219a3784a84d225f628461da7af14fcfc6a6f03224ba7dbeba1aa",
+      "caption": "Paused campaign controls: Save, Save and Main Menu, recovery, and confirmed unsaved exits."
+    },
+    {
+      "file": "save-paused-hub.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "efbe24708b4d65b0ceffc3f99bcf64ea513c5b7fae5a4ae297b752f7b30f7b16",
+      "caption": "Paused campaign controls: Save, Save and Main Menu, recovery, and confirmed unsaved exits."
+    },
+    {
+      "file": "save-published.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "5c1a27980035b0224e71ded34422be456949149c4e6d8a150759554f7071bb9a",
+      "caption": "Successful manual save; play remains paused at the same location."
+    },
+    {
+      "file": "save-recall-resumed.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "d7137a56c56a2e250b6d40e254bc9227914723d64010e4fa7b115401660a2b91",
+      "caption": "Actual load after paid recall: injury and entry unlock persist; arrival did not heal."
+    },
+    {
+      "file": "save-resumed-floor1.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "6fd0eeabe8da658b4cd92f7c3eb01139aab5fe814c3d1252e580fe92d39386b1",
+      "caption": "Actual saved floor-1 load with diagnostic 2-HP injury retained. No fought expedition."
+    },
+    {
+      "file": "save-terminal-closed.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "6f7d8f1478d0a3c9229c93052760ab7209a1297b7a457f235536a02c4b7f0bed",
+      "caption": "Successful save-write retry after diagnostic defeat. This is a lifecycle check, not a played expedition."
+    },
+    {
+      "file": "save-terminal-warning-1280.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "d77bf909a24d804d8347c647c637a4ed3c9e92a0c6d69312e76117f67d5a5148",
+      "caption": "Injected save-write failure after diagnostic defeat. The panel explains the failure and offers Retry; leaving requires acknowledgement."
+    },
+    {
+      "file": "save-terminal-warning.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9f7883d14738069afb969cc80391fbd7c90bd4219e40adce45c139bd5154f03e",
+      "caption": "Injected save-write failure after diagnostic defeat. The panel explains the failure and offers Retry; leaving requires acknowledgement."
+    }
+  ],
+  "owned_artifacts": [
+    {
+      "file": "owned-assets/npcs/enemy.json",
+      "bytes": 211,
+      "sha256": "b3e9893d28bb5da34060797e081b74113003893509d4a5fd4d2b9202aaa461df"
+    },
+    {
+      "file": "owned-assets/npcs/goblin.archer.json",
+      "bytes": 211,
+      "sha256": "2bae72d5615ca8601c4a8cafec51e32929690b0de5081535ac13e75b0bc482d7"
+    },
+    {
+      "file": "owned-assets/npcs/goblin.json",
+      "bytes": 204,
+      "sha256": "1df45fd509d1ae145500fa9227e2a443b2a936dcadf321d198ad06c12ac26a58"
+    },
+    {
+      "file": "owned-assets/npcs/level.json",
+      "bytes": 85,
+      "sha256": "2bfce45db017ce58c52995492a7ca0a85d3213b90e7a06f2c5707141c046ed4d"
+    },
+    {
+      "file": "owned-assets/rules/catalog.json",
+      "bytes": 3050,
+      "sha256": "700a53cbc38185c3d0e848ee136947db84af604fcd541ac8f4876b718891162a"
+    },
+    {
+      "file": "owned-campaign.json.gz",
+      "bytes": 31357,
+      "sha256": "b4fcd22468b14ea1547757d92169ffe31c36b8bd49793cd86cbc791dd6783c09"
+    },
+    {
+      "file": "owned-save.jsonl.gz",
+      "bytes": 208990,
+      "sha256": "3d4fda268ef2d2424f6f5216f8e64b1d5711eb99eef1fe50dd77a23f881db4cb"
+    }
+  ],
+  "limitations": [
+    "No OS input/focus automation",
+    "No interactive human or live-host MCP review",
+    "No balance experiment or full expedition",
+    "Overwrite dialog presentation is explicit setup; save/load/recall/failure/terminal outcomes are real transactions"
+  ],
+  "persistence_evidence": {
+    "source": "/tmp/blobber-pc06-evidence-ss_wqc1i",
+    "save_bytes": 1437457,
+    "trace_bytes": 12237531,
+    "retained_replay": "matched without source file or original assets path",
+    "negative_replay": "rejected poisoned inactive fingerprint",
+    "cross_build": "Release save loaded in Debug with equal party/resources/pose/unlocks",
+    "runner_sha256": "62ce1eb6746e58ac9d96d93b37e49bee29e678378e66ebee0ed82a6210e399ab"
+  }
+}

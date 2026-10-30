@@ -12,7 +12,7 @@ using namespace blobber;
 using namespace blobber::automation;
 int main(int argc, char** argv) {
     try {
-        std::filesystem::path assets = "assets", record, playback, capture;
+        std::filesystem::path assets = "assets", record, playback, capture, campaignSave;
         std::vector<std::size_t> operations;
         Mode mode = Mode::Diagnostic;
         for (int i = 1; i < argc; ++i) {
@@ -34,6 +34,8 @@ int main(int argc, char** argv) {
             if (option == "--help") {
                 std::cout << "blobber_headless --assets DIR --mode diagnostic|visual [--record FILE | "
                              "--replay FILE [--capture-dir NEW_DIR --capture-operation N (repeat up to 8)]]\n"
+                             "[--campaign-save FILE] enables explicit isolated save/load; replay uses "
+                             "recorded I/O.\n"
                              "--capabilities reports optional backend support without a window.\n"
                              "Version 1 JSON lines on stdin/stdout; see docs/headless_protocol.md.\n";
                 return 0;
@@ -43,6 +45,8 @@ int main(int argc, char** argv) {
             const std::string value = argv[++i];
             if (option == "--assets")
                 assets = value;
+            else if (option == "--campaign-save")
+                campaignSave = std::filesystem::absolute(value);
             else if (option == "--record")
                 record = value;
             else if (option == "--replay")
@@ -103,13 +107,26 @@ int main(int argc, char** argv) {
                              {"mode", mode == Mode::Visual ? "visual" : "diagnostic"},
                              {"binary", fingerprintFile(ec ? std::filesystem::path(argv[0]) : executable)},
                              {"content", content}};
-        Protocol protocol(catalog, definitions, mode, factory, context);
+        Json runtimeHeader = header;
+        if (!campaignSave.empty())
+            runtimeHeader["campaign_persistence"] = 1;
+        CampaignDisk campaignDisk(campaignSave);
+        TraceCampaignFiles campaignFiles(&campaignDisk);
+        std::unique_ptr<CampaignStore> saves;
+        if (!campaignSave.empty())
+            saves = std::make_unique<CampaignStore>(
+                catalog, definitions,
+                CampaignContent{fingerprintFile(assets / "rules/catalog.json"),
+                                definitions.definitionFingerprint},
+                campaignFiles);
+        Protocol protocol(catalog, definitions, mode, factory, context, saves.get());
         if (!playback.empty()) {
-            replay(protocol, playback, header);
+            replay(protocol, playback, runtimeHeader, nullptr, saves ? &campaignFiles : nullptr);
 #ifdef BLOBBER_HEADLESS_VISUAL
             if (!capture.empty()) {
-                Protocol captureProtocol(catalog, definitions, mode, factory, context);
-                captureReplay(captureProtocol, playback, header, assets, definitions, capture, operations);
+                Protocol captureProtocol(catalog, definitions, mode, factory, context, saves.get());
+                captureReplay(captureProtocol, playback, runtimeHeader, assets, definitions, capture,
+                              operations, saves ? &campaignFiles : nullptr);
             }
 #endif
             std::cout << Json{{"replay", "matched"}}.dump() << '\n';
@@ -118,7 +135,8 @@ int main(int argc, char** argv) {
         std::unique_ptr<TraceWriter> trace;
         if (!record.empty()) {
             trace = std::make_unique<TraceWriter>(record);
-            trace->append("header", header);
+            trace->append("header", runtimeHeader);
+            campaignFiles.record(trace.get());
         }
         RecordedOutput output(std::cout, trace.get());
         std::string line;

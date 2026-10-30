@@ -12,6 +12,26 @@ class Navigation {
         bool adjacent = false;
         std::optional<Cell> preferred{};
     };
+    struct Request {
+        bool pending = false;
+        Cell from{}, target{};
+        bool adjacent = false;
+        std::optional<Cell> preferred{};
+    };
+    struct Saved {
+        std::vector<std::uint32_t> queue;
+        std::vector<std::uint8_t> seen, first;
+        std::array<Request, NpcWorld::maxInstances> requests{};
+        std::array<Result, NpcWorld::maxInstances> results{};
+        Request active;
+        std::uint64_t geometryRevision = 0;
+        std::size_t owner = NpcWorld::maxInstances, cursor = 0;
+        std::size_t head = 0, tail = 0, cleanup = 0, work = 0, completed = 0;
+        bool cleaning = false, canceled = false, preferAvailable = false, centerAvailable = false;
+        std::optional<Cell> fallbackStep, frontStep;
+    };
+    Saved checkpoint() const;
+    void restore(const Saved&); // Preparation only; checked workspace reconstruction.
     Navigation(GeometryView map, const ActorWorld& actors);
     Navigation(Map&&, const ActorWorld&) = delete;
     Navigation(const Map&&, const ActorWorld&) = delete;
@@ -29,12 +49,6 @@ class Navigation {
     std::size_t storageBytes() const noexcept { return queue_.size() * 6; }
 
   private:
-    struct Request {
-        bool pending = false;
-        Cell from{}, target{};
-        bool adjacent = false;
-        std::optional<Cell> preferred{};
-    };
     GeometryView map_;
     const ActorWorld& actors_;
     std::vector<std::uint32_t> queue_;

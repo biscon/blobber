@@ -1,5 +1,6 @@
 #include "app/gameplay.hpp"
 #include "app/ai_demo.hpp"
+#include "app/campaign_saves.hpp"
 #include "app/hybrid_demo.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
@@ -103,8 +104,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                            launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
                            launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
         auto& initial = *current;
+        CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
+        initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
         initial.session.enableDevelopment(options.development);
-        if (starting)
+        if (starting || campaign)
             initial.commands.enableMainMenu();
         bool debug = false, reveal = false, first = true, restart = false;
         if (launch && launch->arena)
@@ -116,8 +119,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             initial.commands.selectCharacter(3);
             initial.commands.openSpellbook();
         }
-        while (!WindowShouldClose()) {
+        for (;;) {
             auto& view = *current;
+            if (WindowShouldClose() && (!campaign || saveFlow.closeRequested(*campaign, view.commands)))
+                return PlayOutcome::Quit;
             const float dt = std::min(GetFrameTime(), 0.1f);
             auto sample = input.poll(dt);
             sample.ui.text = pollTextInput();
@@ -182,7 +187,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (arenaResult && samePresentedTurn && !paused && sample.ui.has(UiKey::Click) &&
                 sample.ui.pointer && hudLayout::arenaEdit.contains(*sample.ui.pointer))
                 return PlayOutcome::ArenaSetup;
-            if (terminalCampaign && samePresentedTurn && confirmResult)
+            if (terminalCampaign && !view.commands.snapshot().save.terminalWarning && samePresentedTurn &&
+                confirmResult)
                 return PlayOutcome::MainMenu;
             if (result && samePresentedTurn && confirmResult) {
                 if (phase == CombatPhase::Defeat || arenaResult) {
@@ -192,7 +198,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 view.session.combat().continueExploring();
                 view.commands.cancel();
                 view.session.clearPending();
-            } else if (!terminalCampaign && !(campWasOpen && !view.commands.snapshot().camp.open)) {
+            } else if ((!terminalCampaign || view.commands.snapshot().save.terminalWarning) &&
+                       !(campWasOpen && !view.commands.snapshot().camp.open)) {
                 const auto* picking = view.frames.picking();
                 const auto hit =
                     picking && sample.ui.pointer
@@ -214,6 +221,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                                          int(sample.ui.pointer->y) - viewY)
                                   : std::nullopt);
             }
+            if (campaign && saveFlow.poll(*campaign, view.commands))
+                return PlayOutcome::MainMenu;
             if (campaign && view.commands.snapshot().travelRequested) {
                 const auto request = *view.commands.snapshot().travelRequested;
                 view.commands.cancelTravel();
@@ -227,6 +236,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     // Compose destination before commit; refresh does not mutate Party.
                     replacement->refresh();
                     replacement->commands.enableMainMenu();
+                    replacement->commands.saveMenu().enabled = launch && launch->saves;
                     if (campaign->commitTravel(ticket)) {
                         replacement->commands.travelMessage(
                             request.kind == TravelKind::Recall

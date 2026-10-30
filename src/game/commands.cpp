@@ -385,6 +385,10 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             objectiveFailureReported_ = true;
         }
     }
+    if (state_.save.enabled && session_) {
+        state_.save.reason = session_->saveSafety();
+        state_.save.allowed = !state_.save.reason;
+    }
     state_.campaign = session_ && session_->campaign();
     state_.campaignTerminal = state_.campaign && session_->campaign()->status() != CampaignStatus::Active;
     state_.campaignVictory = state_.campaign && session_->campaign()->status() == CampaignStatus::Victory;

@@ -122,18 +122,26 @@ class Sessions:
             if 'graphics_unavailable' in str(exc):
                 code = 'graphics_unavailable'
             raise AdapterError(code, str(exc), session_unusable=True,
-                               mutation_may_have_completed=op in ('start', 'reset', 'act', 'advance'),
+                               mutation_may_have_completed=op in ('start', 'reset', 'act', 'advance', 'save', 'load', 'retry_terminal'),
                                trace=str(s.root/'trace.jsonl')) from exc
 
     def start(self, scenario=None, scenario_path=None, mode='diagnostic', seed=None,
-              handle=None, session=None, revision=None, check_cancel=None):
-        if mode not in ('diagnostic', 'visual') or (scenario is None) == (scenario_path is None):
-            raise AdapterError('invalid_input', 'Choose diagnostic/visual and exactly one scenario or scenario_path')
+              handle=None, session=None, revision=None, check_cancel=None, campaign_save_path=None):
+        if mode not in ('diagnostic', 'visual') or sum(x is not None for x in (scenario, scenario_path, campaign_save_path)) != 1:
+            raise AdapterError('invalid_input', 'Choose diagnostic/visual and exactly one scenario, scenario_path or campaign_save_path')
         if scenario_path:
             scenario = read_json(input_file(scenario_path, MIB))
-        if not isinstance(scenario, dict) or len(json.dumps(scenario, allow_nan=False).encode()) > MIB:
+        if campaign_save_path is None and (not isinstance(scenario, dict) or len(json.dumps(scenario, allow_nan=False).encode()) > MIB):
             raise AdapterError('invalid_input', 'Scenario must be an object no larger than 1 MiB')
-        fields = dict(scenario=scenario)
+        if campaign_save_path is not None and (handle or seed is not None):
+            raise AdapterError('invalid_input', 'Resume into a new session without a seed override')
+        saved_bytes = None
+        if campaign_save_path is not None:
+            with input_file(campaign_save_path, 16*MIB).open('rb') as source:
+                saved_bytes = source.read(16*MIB+1)
+            if len(saved_bytes) > 16*MIB:
+                raise AdapterError('invalid_input', 'Campaign save exceeds 16 MiB')
+        fields = dict(scenario=scenario) if saved_bytes is None else {}
         if seed is not None:
             fields['seed'] = integer(seed, 0, 2**32-1, 'seed')
         if handle:
@@ -147,15 +155,18 @@ class Sessions:
                 raise AdapterError('shutdown', 'Server is closing')
             if len(self.live) >= 2:
                 raise AdapterError('session_capacity', 'At most two live sessions')
-            s = Live(self.storage.reserve('session', 258*MIB))
+            s = Live(self.storage.reserve('session', 290*MIB))
             s.mode = mode
             s.lock.acquire()
             self.live[s.handle] = s
         try:
             s.check_cancel = check_cancel or (lambda: False)
+            slot = s.root/'campaign.json'
+            if saved_bytes is not None:
+                slot.write_bytes(saved_bytes)
             s.client = self.factory(self.runner, self.assets, mode, s.root/'trace.jsonl', s.events.append,
-                                    timeout=10, startup_timeout=30, cancelled=s.cancelled)
-            result = self._request(s, 'start', **fields)
+                                    timeout=10, startup_timeout=30, cancelled=s.cancelled, campaign_save=slot)
+            result = self._request(s, 'load' if saved_bytes is not None else 'start', **fields)
             if not result['response']['ok']:
                 self._dispose(s)
                 result['handle'] = None
@@ -178,14 +189,16 @@ class Sessions:
         return result
 
     def request(self, handle, op, session=None, revision=None, check_cancel=None, **fields):
-        if op not in ('observe', 'inspect', 'actions', 'preview', 'act', 'advance', 'reset'):
+        if op not in ('observe', 'inspect', 'actions', 'preview', 'act', 'advance', 'reset', 'save_status', 'preview_save', 'save', 'load', 'retry_terminal'):
             raise AdapterError('invalid_input', 'Unsupported session operation')
         if op == 'advance':
             integer(fields.get('ticks'), 0, 1000, 'ticks')
-        expected = dict(session=session, revision=revision) if op in ('preview', 'act', 'advance', 'reset') else None
+        expected = dict(session=session, revision=revision) if op in ('preview', 'act', 'advance', 'reset', 'preview_save', 'save', 'load', 'retry_terminal') else None
         with self.access(handle, expected, check_cancel) as s:
             result = self._request(s, op, **fields)
-            return self._rotate(s, result) if op == 'reset' else result
+            if op == 'save' and result['response'].get('ok') and result['response'].get('data', {}).get('published'):
+                result['save_artifact'] = str(s.root/'campaign.json')
+            return self._rotate(s, result) if op in ('reset', 'load') else result
 
     def events(self, handle, cursor=0, limit=256):
         with self.access(handle) as s:

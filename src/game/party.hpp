@@ -25,6 +25,14 @@ struct PartySnapshot {
 // The immutable catalog must outlive this party. Item handles are generation checked.
 class Party {
   public:
+    struct Saved {
+        PartySnapshot state;
+        Inventory::Saved inventory;
+        std::uint8_t questKeys = 0;
+        std::uint64_t preparationRevision = 0, progressionRevision = 0;
+    };
+    Saved checkpoint() const;
+    Party(const rules::Catalog&, const Saved&); // Live restore, no starting grants.
     explicit Party(const rules::Catalog& catalog);
     Party(const rules::Catalog&, const rules::PresetParty& startingParty);
     Party(rules::Catalog&&, const rules::PresetParty&) = delete;

@@ -4,8 +4,9 @@
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
 namespace blobber::automation {
-Protocol::Protocol(const rules::Catalog& c, const NpcDefinitions& d, Mode m, VisibilityFactory f, void* x)
-    : catalog_(c), definitions_(d), mode_(m), factory_(f), context_(x) {}
+Protocol::Protocol(const rules::Catalog& c, const NpcDefinitions& d, Mode m, VisibilityFactory f, void* x,
+                   CampaignStore* saves)
+    : catalog_(c), definitions_(d), mode_(m), factory_(f), context_(x), saves_(saves) {}
 void Protocol::checkIdentity(const Json& r) const {
     if (!session_)
         throw std::invalid_argument("No session");
@@ -40,6 +41,11 @@ Json Protocol::observation(bool diagnostic) {
             if (campaign->location(i).visited)
                 j["campaign"]["visited_entries"].push_back(i);
         j["campaign"]["travel"] = describeTravel(*campaign);
+        const auto* saveReason = campaign->saveSafety();
+        j["campaign"]["save"] = {{"configured", bool(saves_)},
+                                 {"eligible", !saveReason},
+                                 {"reason", saveReason ? saveReason : "Ready"},
+                                 {"warning", persistenceWarning_}};
         if (observation_.diagnostic) {
             j["campaign"]["locations"] = Json::array();
             auto state = std::make_unique<FloorState>();
@@ -94,11 +100,24 @@ Json Protocol::request(const Json& r, Output& output) {
         if (closed_)
             throw std::invalid_argument("Protocol is closed");
         response["data"] = perform(r, output);
+        if (saves_ && session_ && session_->game().campaign() && session_->terminal() && !terminalRecorded_) {
+            terminalRecorded_ = true;
+            const auto result = saves_->terminal(*session_->game().campaign());
+            persistenceWarning_ = result.durable ? "" : result.error;
+            if (!persistenceWarning_.empty())
+                response["data"]["persistence_warning"] = persistenceWarning_;
+        }
         response["ok"] = true;
     } catch (const Json::exception& e) {
-        response["error"] = {{"code", "invalid_request"}, {"message", e.what()}};
+        response["error"] = {{"code", "invalid_request"}, {"message", campaignError(e.what())}};
     } catch (const std::invalid_argument& e) {
-        response["error"] = {{"code", "invalid_request"}, {"message", e.what()}};
+        response["error"] = {{"code", "invalid_request"}, {"message", campaignError(e.what())}};
+    } catch (const std::runtime_error& e) {
+        response["error"] = {{"code", "persistence_failure"}, {"message", campaignError(e.what())}};
+    } catch (const std::bad_alloc&) {
+        response["error"] = {
+            {"code", "preparation_failed"},
+            {"message", "Operation ran out of memory; observe current state before retrying"}};
     }
     return response;
 }
@@ -108,6 +127,41 @@ Json Protocol::perform(const Json& r, Output& output) {
         fields(r, {"version", "id", "op"});
         closed_ = true;
         return {{"closed", true}};
+    }
+    if (op == "save_status") {
+        fields(r, {"version", "id", "op"});
+        if (!saves_)
+            return {{"configured", false}};
+        const auto slot = saves_->inspect();
+        return {{"configured", true},
+                {"exists", slot.exists},
+                {"active", slot.active},
+                {"terminal", slot.terminal},
+                {"slot_revision", slot.revision},
+                {"location", slot.location},
+                {"party_summary", slot.partySummary},
+                {"reason", slot.error}};
+    }
+    if (op == "load") {
+        fields(r, {"version", "id", "op", "session", "revision", "replace"});
+        if (!saves_)
+            throw std::invalid_argument("Campaign save path is not configured");
+        if (session_) {
+            checkIdentity(r);
+            if (!r.value("replace", false))
+                throw std::invalid_argument("Confirm replacement of the live session");
+        }
+        auto run = saves_->load();
+        auto candidate =
+            std::make_unique<Session>(catalog_, definitions_, std::move(run), mode_, factory_, context_);
+        session_.swap(candidate);
+        ++epoch_;
+        revision_ = 1;
+        mutations_ = 0;
+        inspected_ = false;
+        terminalRecorded_ = false;
+        persistenceWarning_.clear();
+        return observation(false);
     }
     if (op == "start" || op == "reset") {
         fields(r, {"version", "id", "op", "session", "revision", "scenario", "seed"});
@@ -125,12 +179,19 @@ Json Protocol::perform(const Json& r, Output& output) {
             } else {
                 if (r.contains("scenario"))
                     throw std::invalid_argument("Reset does not replace scenario");
+                if (session_->resumed())
+                    throw std::invalid_argument(
+                        "Resumed campaign has no reset scenario; start a new campaign explicitly");
                 scenario = session_->scenario();
             }
             if (r.contains("seed"))
                 replaceSeed(scenario, bounded(r.at("seed"), UINT32_MAX));
             auto candidate =
                 std::make_unique<Session>(catalog_, definitions_, scenario, mode_, factory_, context_);
+            if (saves_ && candidate->game().campaign()) {
+                auto* run = candidate->game().campaign();
+                run->preparePersistenceIdentity(saves_->synchronizeIdentity(run->runId()));
+            }
             session_.swap(candidate);
         } catch (const std::runtime_error& e) {
             throw std::invalid_argument(e.what());
@@ -139,10 +200,40 @@ Json Protocol::perform(const Json& r, Output& output) {
         revision_ = 1;
         mutations_ = 0;
         inspected_ = false;
+        terminalRecorded_ = false;
+        persistenceWarning_.clear();
         return observation(false);
     }
     if (!session_)
         throw std::invalid_argument("No session");
+    if (op == "preview_save" || op == "save" || op == "retry_terminal") {
+        fields(r, {"version", "id", "op", "session", "revision", "slot_revision", "replace"});
+        checkIdentity(r);
+        auto* run = session_->game().campaign();
+        if (!run || !saves_)
+            throw std::invalid_argument("Campaign save path is not configured for this session");
+        if (op == "preview_save") {
+            const auto* error = run->saveSafety();
+            return {{"eligible", !error}, {"reason", error ? error : "Ready"}};
+        }
+        if (mutations_ >= maxMutations)
+            throw std::invalid_argument("mutation_limit");
+        CampaignWrite result;
+        if (op == "save")
+            result = saves_->save(*run, r.at("slot_revision").get<std::string>(), r.value("replace", false));
+        else {
+            result = saves_->terminal(*run);
+            persistenceWarning_ = result.durable ? "" : result.error;
+            terminalRecorded_ = true;
+        }
+        ++revision_;
+        ++mutations_;
+        return {{"published", result.published},
+                {"durable", result.durable},
+                {"slot_revision", result.revision},
+                {"reason", result.error},
+                {"observation", observation(false)}};
+    }
     if (op == "observe" || op == "inspect" || op == "actions") {
         fields(r, {"version", "id", "op"});
         if (op == "inspect")

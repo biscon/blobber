@@ -1,9 +1,8 @@
 # Procedural campaign MVP: design and delivery roadmap
 
 Created / last updated: 2026-10-30.
-Status: **Roadmap accepted; PC01–PC05 Accepted and closed; milestone P-A Accepted (2026-10-30).**
-PC06 is next eligible for detailed planning only, in a fresh context when requested.
-PC06–PC09 detailed plans remain unapproved; do not advance automatically.
+Status: **Roadmap accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted (2026-10-30).**
+PC07–PC09 plans remain unapproved; do not advance automatically.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -41,14 +40,14 @@ arena and test fixtures; it does not imply retaining the old game mode.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC05 and milestone P-A accepted (2026-10-30) |
-| Active slice | None; PC05 Accepted and closed |
+| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06 and milestones P-A/P-B accepted (2026-10-30) |
+| Active slice | None; PC06 Accepted and closed |
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
-| Next eligible slice | PC06 — Campaign save and resume; detailed planning only |
-| Next action | In a fresh context when requested, inspect current code and plan PC06 only for review |
+| Next eligible slice | PC07 — Depth bands and finite recovery encounters; detailed planning only |
+| Next action | In a fresh context when requested, inspect current code and plan PC07 only for review; do not implement or advance automatically |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC05 Accepted and closed; milestone P-A Accepted; PC06–PC09 plans unapproved |
+| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted; PC07–PC09 plans unapproved |
 
 Update this checkpoint, tracker and affected execution record together. Roadmap
 acceptance is not slice implementation or evidence of delivered gameplay acceptance.
@@ -338,7 +337,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | PC03 | [Guardians and structurally safe progression](#pc03-guardians-and-structurally-safe-progression) | PC02 | Accepted (2026-10-30) | P-A |
 | PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Accepted (2026-10-30) | P-B |
 | PC05 | [Paid recall and entry waypoints](#pc05-paid-recall-and-entry-waypoints) | PC04 | Accepted (2026-10-30) | P-B |
-| PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Planned | P-B |
+| PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Accepted (2026-10-30) | P-B |
 | PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters) | PC06 | Planned | P-C |
 | PC08 | [Campaign agents and expedition reports](#pc08-campaign-agents-and-expedition-reports) | PC07 | Planned | P-C |
 | PC09 | [Integrated expedition and MVP acceptance](#pc09-integrated-expedition-and-mvp-acceptance) | PC08 | Planned | P-C |
@@ -346,7 +345,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
 | P-A — Generated floor | Explore a seeded readable floor, obtain a key where required, defeat its guardian and unlock its objective without clearing every enemy. | Accepted (2026-10-30) |
-| P-B — Persistent expedition | Travel among the fixed hub and three persistent floors, recall at a cost, revisit entry waypoints and resume an interrupted run. | Planned |
+| P-B — Persistent expedition | Travel among the fixed hub and three persistent floors, recall at a cost, revisit entry waypoints and resume an interrupted run. | Accepted (2026-10-30); PC04–PC06 accepted |
 | P-C — Campaign MVP | A calibrated, reproducible three-floor descent with optional recovery encounters, normal XP, readable final guardian, victory/defeat and useful investigation evidence. | Planned |
 
 ### PC01: Generated-floor walking prototype
@@ -575,8 +574,21 @@ process, resume, revisit mutations and verify exact resources/unlocks. Try a bad
 file and a removed library entry. Verify a defeated run is not offered as active.
 Obtain P-B acceptance with actual persistence and documented failure behavior.
 
-**Execution record:** Not started; depends on PC05 acceptance. No demo save work was
-implemented or accepted under the retired delivery sequence.
+**Execution record:** **Accepted and closed**, 2026-10-30. User approved the
+[detailed design](procedural_campaign_save_design.md) with “Implement the plan.”
+Save + Save and Main Menu selected; a new run replaces the slot only on its first
+confirmed successful save. Versioned checked snapshots, independent Party restore,
+atomic single-slot publication, staged Continue, bounded terminal denial and
+headless/client/local MCP/strict replay are implemented.
+[Verification and handoff](pc06_verification.md), [14-image gallery](screenshots/pc06/index.html):
+full headless Debug/Release 41/41 each, graphics 60/60 each; focused ASan/UBSan 3/3
+plus final 1/1; final protocol follow-up 3/3 in all four presets, zero tracked frame
+C++ allocations and 55/60 restore/view allocation failure points pass. Cross-build
+and fresh-process saves, corrupted UTF-8 rejection, retained replay/corruption,
+local SDK stdio, hidden GPU and all 19 repeat-identical captures pass. Human
+interactive/native-close event and live-host MCP remain unverified. No balance
+experiments, broad sweep, expedition experiment, commits or later-slice work.
+**Acceptance:** User accepted the save/load slice on 2026-10-30: “I accept the save and love slice”. PC06 is closed, completing accepted PC04–PC06 for milestone P-B. The review corrections are included; verification results and limitations remain unchanged. No additional interactive play-coverage details were supplied. PC07 is next for detailed planning only, when requested.
 
 ### PC07: Depth bands and finite recovery encounters
 
@@ -605,7 +617,7 @@ Show a direct route and a struggling-party optional detour, including fewer-magi
 compositions. Retain representative failures. If playtesting was not authorized,
 report it as pending evidence rather than inventing balance confidence.
 
-**Execution record:** Not started; depends on PC06 acceptance.
+**Execution record:** Not started; PC06 is accepted. Next eligible for detailed planning only, in a fresh context when requested.
 
 ### PC08: Campaign agents and expedition reports
 
@@ -698,6 +710,8 @@ boundaries should accommodate them without building their systems now.
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | PC06 Accepted and closed; milestone P-B complete through accepted PC04–PC06. PC07 next for detailed planning only. | User: “I accept the save and love slice, record it in the plan doc”. Review corrections included; verification and limitations unchanged. No new play-coverage details or balance authorization. |
+| 2026-10-30 | PC06 implemented and Ready for review; PC06/P-B acceptance pending. | Approved plan: “Implement the plan.” Exact saved campaign ownership, staged Continue, single-slot atomic writes/terminal handling and matching automation; verification/handoff recorded. No balance or PC07 work. |
 | 2026-10-30 | PC05 Accepted and closed; PC06 next for detailed planning only. | User: “slice accepted, record it in the plan doc”. Verification results and limitations unchanged; milestone P-B remains Planned. |
 | 2026-10-30 | PC05 detailed plan approved with “Implement the plan”; implementation Ready for review. | One-kit recall, free unlocked-entry returns and dedicated Travel panel; verification/handoff recorded. Acceptance pending; do not advance to PC06. |
 | 2026-10-30 | PC04 Accepted and closed; PC05 next for detailed planning only. | User: “slice accepted, record it in the plan doc”. Verification results and limitations unchanged; milestone P-B remains Planned. |
@@ -841,7 +855,7 @@ tests, captures, balance experiments, commits, resets or stashes were performed
 during this closeout.
 
 
-### PC05 accepted closeout and next-agent handoff (2026-10-30, current)
+### PC05 accepted closeout and next-agent handoff (2026-10-30, historical)
 
 PC05 is **Accepted and closed**. The user accepted on 2026-10-30:
 “slice accepted, record it in the plan doc”. Implementation was approved earlier with
@@ -872,3 +886,60 @@ limitations are unchanged; acceptance supplies no additional interactive play-co
 details. All existing working-tree changes are preserved. No builds, gameplay tests,
 captures, balance experiments, commits, resets or stashes were performed during
 this closeout.
+
+
+### PC06 implementation and next-agent handoff (2026-10-30, historical)
+
+PC06 is **Ready for review**, not Accepted. The user approved its reviewed plan
+with “Implement the plan.” The [implemented design](procedural_campaign_save_design.md),
+[verification/review recipe](pc06_verification.md) and [gallery](screenshots/pc06/index.html)
+record delivery. The current checkpoint supersedes PC05's historical next-planning
+instruction. PC05/P-A stay accepted; PC07–PC09 and P-B remain Planned.
+
+The single manual slot retains all actual campaign/party/location state and legal
+save clocks; Continue does not recreate starting builds or rerun generation.
+Checked validation and staged presentation preserve valid owners on load failure.
+Publication/uncertain durability and terminal-marker failure/retry are explicit.
+Keep the travelling Party, exact navigation/RNG continuation, fresh runtime epochs,
+content names and player/diagnostic boundary. Strict replay records external I/O
+and uses a memory backend; it remains separate from save compatibility.
+
+All four full suites, final focused protocol/sanitizer checks, tracked frame
+allocation guards, preparation fault injection, fresh-process/cross-build saves,
+CLI/client/local SDK MCP, retained replay/corruption and hidden GPU/captures pass.
+No human interactive/native-close event or live-host review is claimed. No balance
+experiment, broad sweep or full expedition experiment ran. All existing changes
+were preserved; no commits, resets, stashes or installed configuration changes.
+
+Next action: user review of PC06/P-B. Do not self-accept or start PC07. Only after
+acceptance, in a fresh context when requested, inspect current code and plan PC07
+for its own review; balance experiments still require explicit opt-in.
+
+PC06 presentation review correction: unavailable Continue is hidden, confirmation
+panels are compact, and failed writes use plain language with Retry. Four focused
+Release checks pass; all 19 refreshed captures match a repeat, with 14 retained.
+See the [review correction verification](pc06_verification.md#pc06-presentation-review-correction-2026-10-30).
+Acceptance remains pending.
+
+
+### PC06 accepted closeout and next-agent handoff (2026-10-30, current)
+
+PC06 — Campaign save and resume — is **Accepted and closed**. The user accepted
+the save/load slice on 2026-10-30: “I accept the save and love slice, record it in the
+plan doc”. This includes the reviewed UI corrections: hidden unavailable Continue,
+compact confirmations and plain save-write failure language. Accepted PC04–PC06
+complete milestone **P-B — Persistent expedition**. PC01–PC05/P-A stay closed.
+See the [implemented design](procedural_campaign_save_design.md),
+[verification/handoff](pc06_verification.md) and [gallery](screenshots/pc06/index.html).
+This record supersedes historical PC06 review-pending and next-planning notes.
+
+PC07 — Depth bands and finite recovery encounters — is next eligible for its own
+reviewed detailed plan, in a fresh context when requested. Read AGENTS.md, the
+system overview, MVP specification, current checkpoint and PC06 handoff; inspect
+current code before planning. PC07–PC09 and milestone P-C remain Planned. Do not
+implement or advance automatically; balance experiments still require explicit opt-in.
+
+This closeout changes documentation only. Existing verification and limitations
+remain unchanged; no additional interactive play-coverage details were supplied.
+All working-tree changes were preserved. No builds, gameplay tests, captures,
+balance experiments, commits, resets or stashes were performed during this closeout.

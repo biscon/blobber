@@ -1,7 +1,9 @@
 #include "app/menu.hpp"
 #include "app/creator_captures.hpp"
 #include "app/menu_model.hpp"
+#include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
+#include "persistence/campaign_store.hpp"
 #include "platform/input.hpp"
 #include "platform/window.hpp"
 #include "ui/hud_painter.hpp"
@@ -49,6 +51,20 @@ int runMenus(const Options& options) {
         };
     CharacterLibrary library(catalog, characterLibraryPath(libraryPath), hooks);
     MenuView v{catalog, library};
+    const auto saveDefinitions = loadNpcDefinitions(options.assets / "npcs/level.json");
+    CampaignDisk saveDisk(options.captureMenuOnly ? captureDirectory.path / "campaign.json"
+                                                  : campaignSavePath(options.campaignSave));
+    CampaignStore saves(
+        catalog, saveDefinitions,
+        {fingerprintFile(options.assets / "rules/catalog.json"), saveDefinitions.definitionFingerprint},
+        saveDisk);
+    const auto refreshContinue = [&] {
+        const auto slot = saves.inspect();
+        v.canContinue = slot.active;
+        std::snprintf(v.continueSummary.data(), v.continueSummary.size(), "%s",
+                      slot.active ? (slot.location + " | " + slot.partySummary).c_str() : slot.error.c_str());
+    };
+    refreshContinue();
     ArenaScenarioStore scenarioStore(catalog, characterLibraryPath(libraryPath).parent_path() / "scenarios");
     auto reload = [&] {
         const auto r = library.initialize();
@@ -57,6 +73,27 @@ int runMenus(const Options& options) {
         v.model.filter(library.snapshot());
     };
     reload();
+    if (options.captureSaveOnly) {
+        std::filesystem::create_directories(options.captureDirectory);
+        presenter.presentMenu(drawMenu, &v);
+        presenter.capture(options.captureDirectory / "save-main-empty.png");
+        auto captureOptions = options;
+        captureOptions.campaignSave = captureDirectory.path / "campaign.json";
+        v.model.defaults();
+        launchMenuParty(captureOptions, catalog, v.model.resolve(catalog, library.snapshot()), presenter,
+                        &saves);
+        refreshContinue();
+        presenter.presentMenu(drawMenu, &v);
+        presenter.capture(options.captureDirectory / "save-main-terminal.png");
+        const auto freshParty = v.model.resolve(catalog, library.snapshot());
+        CampaignRun fresh(catalog, freshParty, saveDefinitions.types, saveDefinitions.timings, 5);
+        if (!saves.save(fresh, saves.inspect().revision, true).durable)
+            throw std::runtime_error("Capture fresh campaign save failed");
+        refreshContinue();
+        presenter.presentMenu(drawMenu, &v);
+        presenter.capture(options.captureDirectory / "save-main-continue.png");
+        return 0;
+    }
     if (options.captureArenaOnly) {
         captureArena(v, presenter, options, scenarioStore);
         return 0;
@@ -133,7 +170,7 @@ int runMenus(const Options& options) {
         v.message("Launch failed: prepared dungeon assets unavailable. Retry after repair.");
         v.model.screen = MenuScreen::Picker;
         capture("launch-error");
-        launchMenuParty(options, catalog, v.model.resolve(catalog, library.snapshot()), presenter);
+        launchMenuParty(options, catalog, v.model.resolve(catalog, library.snapshot()), presenter, &saves);
         return 0;
     }
     Input input;
@@ -263,6 +300,22 @@ int runMenus(const Options& options) {
         }
         if (action != 5)
             v.interaction.focusSearch(false);
+        if (action == 60) {
+            m.screen = MenuScreen::Loading;
+            presenter.presentMenu(drawMenu, &v);
+            try {
+                if (!launchSavedCampaign(options, catalog, presenter, saves))
+                    return 0;
+                v.message("");
+            } catch (const std::exception& e) {
+                v.message(e.what());
+            }
+            m.screen = MenuScreen::Main;
+            refreshContinue();
+            suppress = true;
+            v.focus = 0;
+            continue;
+        }
         if (action == 50 && v.usable && library.snapshot().count < LibrarySnapshot::capacity) {
             v.creation.begin(catalog, m, library.snapshot());
             v.creator.controls = {};
@@ -377,9 +430,10 @@ int runMenus(const Options& options) {
                 }
                 m.screen = MenuScreen::Loading;
                 presenter.presentMenu(drawMenu, &v);
-                if (!launchMenuParty(options, catalog, starting, presenter))
+                if (!launchMenuParty(options, catalog, starting, presenter, &saves))
                     return 0;
                 m.screen = MenuScreen::Main;
+                refreshContinue();
             } catch (const std::exception& e) {
                 m.screen = MenuScreen::Picker;
                 v.message(e.what());

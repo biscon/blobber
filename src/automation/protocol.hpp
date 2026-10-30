@@ -1,5 +1,6 @@
 #pragma once
 #include "automation/codec.hpp"
+#include "persistence/campaign_store.hpp"
 namespace blobber::automation {
 struct Output {
     virtual ~Output() = default;
@@ -8,8 +9,8 @@ struct Output {
 };
 class Protocol {
   public:
-    Protocol(const rules::Catalog&, const NpcDefinitions&, Mode, VisibilityFactory = nullptr,
-             void* = nullptr);
+    Protocol(const rules::Catalog&, const NpcDefinitions&, Mode, VisibilityFactory = nullptr, void* = nullptr,
+             CampaignStore* = nullptr);
     Json request(const Json&, Output&);
     Json state(); // Diagnostic normalized boundary state, not a player observation.
     bool closed() const noexcept { return closed_; }
@@ -30,6 +31,8 @@ class Protocol {
     Observation observation_;
     std::uint64_t epoch_ = 0, revision_ = 0;
     unsigned mutations_ = 0;
-    bool inspected_ = false, closed_ = false;
+    bool inspected_ = false, closed_ = false, terminalRecorded_ = false;
+    CampaignStore* saves_ = nullptr;
+    std::string persistenceWarning_;
 };
 } // namespace blobber::automation

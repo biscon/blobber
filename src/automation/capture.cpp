@@ -81,7 +81,8 @@ class Capture final : public ReplayObserver {
 } // namespace
 void captureReplay(Protocol& protocol, const std::filesystem::path& trace, const Json& header,
                    const std::filesystem::path& assets, const NpcDefinitions& definitions,
-                   const std::filesystem::path& output, const std::vector<std::size_t>& operations) {
+                   const std::filesystem::path& output, const std::vector<std::size_t>& operations,
+                   TraceCampaignFiles* files) {
     if (operations.empty() || operations.size() > 8 ||
         std::set<std::size_t>(operations.begin(), operations.end()).size() != operations.size() ||
         *std::min_element(operations.begin(), operations.end()) == 0)
@@ -100,7 +101,7 @@ void captureReplay(Protocol& protocol, const std::filesystem::path& trace, const
         throw std::runtime_error(std::string("graphics_unavailable: ") + e.what());
     }
     Capture capture(*renderer, definitions, *presenter, output, operations);
-    replay(protocol, trace, header, &capture);
+    replay(protocol, trace, header, &capture, files);
     if (!capture.pending.empty())
         throw std::runtime_error("capture_invalid_point: operation exceeds recording");
     Json prepared = Json::object();

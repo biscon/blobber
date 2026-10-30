@@ -1,5 +1,6 @@
 #include "rules/resolve.hpp"
 #include <algorithm>
+#include <istream>
 
 namespace blobber::rules {
 namespace {
@@ -107,5 +108,18 @@ Result<SaveResult> resolveSave(D20Roll roll, std::int32_t bonus, std::int32_t di
         return {{}, Error::InvalidRoll};
     const auto total = static_cast<std::int64_t>(roll.selected) + bonus;
     return {{roll, total, total >= difficulty}};
+}
+} // namespace blobber::rules
+
+namespace blobber::rules {
+bool DiceRng::restore(std::istream& in) {
+    std::mt19937 candidate;
+    if (!(in >> candidate))
+        return false;
+    in >> std::ws;
+    if (!in.eof())
+        return false;
+    engine_ = candidate;
+    return true;
 }
 } // namespace blobber::rules

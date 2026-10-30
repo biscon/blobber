@@ -6,8 +6,8 @@ namespace blobber {
 struct Options {
     bool development = false, captureProgressionOnly = false;
     int width = 1920, height = 1080;
-    std::filesystem::path assets, captureDirectory;
-    bool captureArenaOnly = false;
+    std::filesystem::path assets, captureDirectory, campaignSave;
+    bool captureArenaOnly = false, captureSaveOnly = false;
     bool captureMenuOnly = false, captureCreatorOnly = false;
     bool captureBuildsOnly = false;
     bool recoveryDemo = false, captureRecoveryOnly = false;

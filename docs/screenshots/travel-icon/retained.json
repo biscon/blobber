@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-30",
+  "producer": "hidden application-owned --capture-campaign-save",
+  "command": "cmake-build-release/blobber --assets cmake-build-release/assets --development --seed 5 --capture-campaign-save /tmp/blobber-travel-icon-captures",
+  "binary_sha256": "9f153409823149723e6b10d7e7e4713aa6be93a54b92197c43433026cef2c3f5",
+  "images": [
+    {
+      "file": "travel-hud.png",
+      "sha256": "0310bac3ecbd5add0546dacc983a0f9523e70e56701309d088d3c10ed3328d8b"
+    },
+    {
+      "file": "travel-hud-1280.png",
+      "sha256": "06f11e53defe428fdf1a05cfd0f84834f1daa4028961531b80d56ee232a53c5a"
+    }
+  ],
+  "notes": [
+    "Application-owned captures with in-process setup, no OS input.",
+    "Floor 1 after save/load; diagnostic two-HP injury, no played expedition.",
+    "Earlier PC06 captures and replay evidence remain unchanged."
+  ]
+}

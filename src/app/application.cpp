@@ -35,7 +35,8 @@ int runDiagnostics(int argc, char** argv) {
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-arena DIRECTORY | --capture-creator DIRECTORY | --capture-menu DIRECTORY | "
+                     "--capture-campaign-save DIRECTORY | --capture-arena DIRECTORY | --capture-creator "
+                     "DIRECTORY | --capture-menu DIRECTORY | "
                      "--capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
                      "DIRECTORY | --capture-spells "
                      "DIRECTORY | --capture-hybrid DIRECTORY | "
@@ -45,7 +46,7 @@ int runDiagnostics(int argc, char** argv) {
                      "[--ui-demo | "
                      "--recovery-demo | --inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | "
                      "--spell-demo] [--seed UINT32] [--development] "
-                     "[--check-prepared]\n";
+                     "[--check-prepared] [--campaign-save FILE]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.

@@ -5,6 +5,7 @@
 #include "render/frame_pipeline.hpp"
 namespace blobber {
 class CampaignRun;
+class CampaignStore;
 NpcWorld gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn = Player{}.cell);
 Player combatCamera(const Map& map, const NpcWorld& placements);
 enum class PlayOutcome { MainMenu, ArenaSetup, Quit };
@@ -16,6 +17,7 @@ struct GameplayLaunch {
     const FloorFixtures* fixtures = nullptr;
     const FloorObjectiveDefinition* objective = nullptr;
     CampaignRun* campaign = nullptr;
+    CampaignStore* saves = nullptr;
 };
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                         const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,

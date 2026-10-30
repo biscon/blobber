@@ -95,12 +95,21 @@ class ReplayOutput final : public Output {
 };
 } // namespace
 void replay(Protocol& protocol, const std::filesystem::path& path, const Json& expectedHeader,
-            ReplayObserver* observer) {
+            ReplayObserver* observer, TraceCampaignFiles* files) {
     std::ifstream input(path);
     if (!input)
         throw std::runtime_error("Cannot open recording");
     ReplayOutput out(input);
     out.check("header", expectedHeader);
+    struct ResetReader {
+        TraceCampaignFiles* files;
+        ~ResetReader() {
+            if (files)
+                files->replayReader({});
+        }
+    } reset{files};
+    if (files)
+        files->replayReader([&](const char* type) { return out.next(type); });
     while (true) {
         if (!readLine(input, out.line, maxTraceRecordBytes))
             throw std::runtime_error("Incomplete recording: no complete footer");

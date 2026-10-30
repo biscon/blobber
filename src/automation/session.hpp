@@ -47,6 +47,9 @@ class Session {
   public:
     Session(const rules::Catalog&, const NpcDefinitions&, const Scenario&, Mode, VisibilityFactory = nullptr,
             void* factoryContext = nullptr);
+    Session(const rules::Catalog&, const NpcDefinitions&, std::unique_ptr<CampaignRun>, Mode,
+            VisibilityFactory = nullptr, void* factoryContext = nullptr);
+    bool resumed() const noexcept { return resumed_; }
     const Scenario& scenario() const noexcept { return scenario_; }
     GameSession& replayGame() noexcept {
         return campaign_ ? campaign_->game() : *game_;
@@ -74,6 +77,7 @@ class Session {
 
   private:
     ActionResult travel(const TravelRequest&, bool preview);
+    bool resumed_ = false;
     Scenario scenario_;
     std::optional<generation::GeneratedFloor> generated_;
     std::optional<Map> arenaMap_;

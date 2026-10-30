@@ -387,3 +387,59 @@ Committed `campaign_transition` events additionally carry `kind` (`stairs`,
 cannot emit an unlock or charge twice. Protocol/scenario stay version 1; existing
 client/MCP tools pass these payloads unchanged. Strict replay records new fields;
 older executable-sensitive traces are not a save or cross-build compatibility promise.
+
+
+## PC06 campaign save and resume
+
+PC06 adds one explicit slot via `--campaign-save FILE`. Omit it to disable save
+I/O; the ordinary arena/generated-floor paths remain available. Graphical play
+uses `campaign.json` beside the character library unless the same option overrides
+it. Normal writes are manual, except the matching saved run's terminal marker.
+
+| Operation | Inputs and result |
+| --- | --- |
+| `save_status` | No session required; returns configured/exists/active/terminal, `slot_revision`, location/party summary and reason. Reads and validates without creating files. |
+| `preview_save` | Current session/revision; reports shared save eligibility without I/O or time/resource costs. |
+| `save` | Current session/revision, observed `slot_revision`, optional `replace: true` to confirm a different/unreadable slot. Reports `published`, `durable`, reason and new observation. |
+| `load` | A configured slot; initial load needs no session tokens. Replacing an existing session requires current session/revision and explicit `replace: true`. Success publishes a fresh epoch. |
+| `retry_terminal` | Current session/revision of a terminal campaign; retries its marker and clears warning only when resolved. |
+
+Use the usual `version: 1`, string `id` and `op` envelope. For example, after starting:
+
+```json
+{"version":1,"id":"status","op":"save_status"}
+{"version":1,"id":"save","op":"save","session":"1","revision":"1","slot_revision":"missing"}
+{"version":1,"id":"load","op":"load","session":"1","revision":"2","replace":true}
+```
+
+Use actual returned tokens, not the illustrative values above. Save spends no
+gameplay time; successful save updates the host revision. Rejection preserves the
+run and prior slot; directory-flush uncertainty reports publication separately.
+Load validates all four actual layouts/states, party and logical references before
+replacing simulation/visibility owners. It advances no clock and grants no starting
+supplies. A resumed session has no starting scenario for `reset`; explicitly `start`
+a new campaign instead. Save compatibility uses schema/simulation/content identities,
+so matching-content Debug and Release builds can share saves. No migration exists.
+
+Eligibility requires stationary settled safe Exploration, no pending movement,
+impact/presentation or party-cell area hazard, and an active run. Saving in place
+retains local concentration/summons that still block departure. Player observations
+add `campaign.save` eligibility/configuration/warning without exposing hidden floors.
+Terminal failures preserve in-process denial and an honest warning: an older file
+may still resume after restart if the marker could not be published.
+
+Persistence traces have `campaign_persistence: 1` in the header and bounded
+`persistence_request`, `persistence_payload`, `persistence_result` and
+`persistence_chunk` records inside request/response boundaries. Raw file bytes use
+256 KiB hexadecimal chunks, including invalid UTF-8 corruption. Replay requires
+`--campaign-save` to enable the recorded backend but never reads/writes that path:
+
+```sh
+blobber_headless --assets OWNED_ASSETS --campaign-save /tmp/unused-campaign.json --replay TRACE.jsonl
+```
+
+Existing 2 MiB request-line and 256 MiB trace limits remain. A trace stays strict
+and executable-sensitive; it is separate from the save schema. Save files and
+persistence trace payloads contain full diagnostic state and must not feed hidden
+knowledge to player-visible policies. Owned CLI/MCP and fresh-process contracts
+live in `campaign_save_cli_tests.py`; the optional SDK test is separate from CTest.

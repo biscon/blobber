@@ -129,6 +129,7 @@ void CommandController::toggleMenu() noexcept {
     if (!state_.magic.casting())
         cancel();
     state_.menuOpen = open;
+    state_.save.cursor = 0;
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
@@ -147,6 +148,7 @@ void CommandController::closeOverlay() noexcept {
                                                                           : hudLayout::logColumns);
     state_.logExpanded = false;
     state_.menuOpen = false;
+    state_.save.confirmation = SaveConfirmation::None;
     state_.leaveConfirmation = state_.retryConfirmation = false;
     updateAvailability();
 }
@@ -206,7 +208,10 @@ void CommandController::updateHover() noexcept {
         }
         return;
     }
-    if (h.kind == HoverKind::Rest) {
+    if (h.kind == HoverKind::Travel) {
+        put(0, "Travel [T]");
+        put(1, "Open travel options.");
+    } else if (h.kind == HoverKind::Rest) {
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "Rest [R]");
         std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s", state_.restReason);
     } else if (h.kind == HoverKind::Enemy) {

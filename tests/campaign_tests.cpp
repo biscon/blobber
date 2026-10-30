@@ -822,8 +822,13 @@ void travelUi() {
     routeHudInput(ui, cancel);
     check(!ui.snapshot().modal() && run.party().campSupplies().kits == kits, "recall cancel is uncharged");
     UiInput click;
-    click.pressed[std::size_t(UiKey::Click)] = true;
     click.pointer = ArtPoint{float(hudLayout::travelButton.x + 1), float(hudLayout::travelButton.y + 1)};
+    routeHudInput(ui, click);
+    check(ui.snapshot().hover.kind == HoverKind::Travel &&
+              std::string(ui.snapshot().hover.lines[0].data()) == "Travel [T]" &&
+              !ui.snapshot().travel.open && run.party().campSupplies().kits == kits,
+          "travel icon hover identifies its shortcut without opening or spending supplies");
+    click.pressed[std::size_t(UiKey::Click)] = true;
     routeHudInput(ui, click);
     check(ui.snapshot().travel.open, "header opens recall panel");
     run.party().consumeItem(run.party().campSupplies().supply);

@@ -11,6 +11,10 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         commands.hover(HoverKind::None);
         return;
     }
+    if (commands.snapshot().menuOpen && commands.snapshot().save.enabled) {
+        commands.routeSaveMenu(input);
+        return;
+    }
     const auto insideCamp = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
     if (commands.snapshot().travel.open) {
         if (input.has(UiKey::Cancel) || (input.has(UiKey::Click) && insideCamp(travelLayout::cancel))) {
@@ -276,6 +280,10 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             commands.openLoot(*lootHit);
             return;
         }
+    }
+    if (state.campaign && inside(hudLayout::travelButton)) {
+        commands.hover(HoverKind::Travel, 0, {}, input.pointer->x, input.pointer->y);
+        return;
     }
     if (inside(hudLayout::restButton)) {
         commands.hover(HoverKind::Rest, 0, {}, input.pointer->x, input.pointer->y);

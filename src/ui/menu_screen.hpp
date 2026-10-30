@@ -21,7 +21,8 @@ struct MenuView {
     std::array<int, 160> actions{};
     MenuInteraction interaction;
     int count = 0, focus = 0, detailOffset = 0, detailRows = 0;
-    bool usable = false;
+    bool usable = false, canContinue = false;
+    std::array<char, 192> continueSummary{};
     MenuScreen detailCaller = MenuScreen::Library;
     void message(const char* s) { std::snprintf(error.data(), error.size(), "%s", s); }
     void hit(UiRect r, int action) {

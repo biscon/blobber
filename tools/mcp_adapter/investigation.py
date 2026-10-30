@@ -10,7 +10,7 @@ def replay_inspect(trace, cursor=0, limit=64, operation=None, kinds=None, check_
     integer(limit, 1, 256, 'limit')
     if operation is not None:
         integer(operation, 1, 10000000, 'operation')
-    allowed = {'header', 'request', 'event', 'response', 'state', 'complete'}
+    allowed = {'header', 'request', 'event', 'response', 'state', 'complete', 'persistence_request', 'persistence_payload', 'persistence_result', 'persistence_chunk'}
     if kinds is not None and (not kinds or set(kinds)-allowed):
         raise AdapterError('invalid_input', 'Unknown or empty trace record filter')
     result = dict(trace=str(trace), verification='not_checked', visibility='diagnostic',

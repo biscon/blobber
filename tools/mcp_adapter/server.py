@@ -111,14 +111,15 @@ def create_server(runner, assets, output_root, capacity=8192*MIB):
         return dict(runner=str(runner), assets=str(assets), output_root=str(storage.root),
                     engine=result, sessions=2, active_jobs=1, terminal_jobs=64,
                     output_bytes=storage.capacity, replay_seconds=300, capture_points=8,
-                    save_resume=False, balance_experiments='explicit_opt_in')
+                    save_resume=True, balance_experiments='explicit_opt_in')
 
     @tool()
     def session_start(scenario: dict | None = None, scenario_path: str | None = None,
                       mode: str = 'diagnostic', seed: int | None = None,
-                      handle: str | None = None, session: str | None = None, revision: str | None = None) -> dict:
-        """Start a recorded arena, generated_floor or persistent campaign with doors, keys, discovery and checked stairs. Choose scenario object OR path. Replacement requires current tokens."""
-        return sessions.start(scenario, scenario_path, mode, seed, handle, session, revision, cancelled)
+                      handle: str | None = None, session: str | None = None, revision: str | None = None,
+                      campaign_save_path: str | None = None) -> dict:
+        """Start a recorded arena, generated_floor or persistent campaign with doors, keys, discovery and checked stairs. Choose scenario object, scenario path OR campaign_save_path. Resume uses an isolated slot; replacement requires current tokens."""
+        return sessions.start(scenario, scenario_path, mode, seed, handle, session, revision, cancelled, campaign_save_path)
 
     @tool(True)
     def session_list() -> dict:
@@ -160,6 +161,33 @@ def create_server(runner, assets, output_root, capacity=8192*MIB):
     def session_reset(handle: str, session: str, revision: str, seed: int | None = None) -> dict:
         """Reconstruct the original scenario; successful reset returns a new handle and invalidates old tokens."""
         return sessions.request(handle, 'reset', session, revision, cancelled, **({'seed': seed} if seed is not None else {}))
+
+    @tool(True)
+    def session_save_status(handle: str) -> dict:
+        """Inspect this session's isolated campaign slot. Does not advance gameplay."""
+        return sessions.request(handle, 'save_status', check_cancel=cancelled)
+
+    @tool(True)
+    def session_preview_save(handle: str, session: str, revision: str) -> dict:
+        """Check the authoritative stationary safe save boundary without writing."""
+        return sessions.request(handle, 'preview_save', session, revision, cancelled)
+
+    @tool()
+    def session_save(handle: str, session: str, revision: str, slot_revision: str,
+                     replace: bool = False) -> dict:
+        """Explicitly save to the isolated campaign slot; replace confirms overwriting a different run. Returns the save artifact."""
+        return sessions.request(handle, 'save', session, revision, cancelled,
+                                slot_revision=slot_revision, replace=replace)
+
+    @tool()
+    def session_load(handle: str, session: str, revision: str, replace: bool = False) -> dict:
+        """Resume the isolated slot, explicitly replacing a live session. Success rotates the handle."""
+        return sessions.request(handle, 'load', session, revision, cancelled, replace=replace)
+
+    @tool()
+    def session_retry_terminal(handle: str, session: str, revision: str) -> dict:
+        """Retry persistence of a terminal marker after an explicitly reported I/O failure."""
+        return sessions.request(handle, 'retry_terminal', session, revision, cancelled)
 
     @tool(True)
     def session_events(handle: str, cursor: int = 0, limit: int = 256) -> dict:
