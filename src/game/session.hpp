@@ -9,32 +9,42 @@ class GameSession {
   public:
     GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements, std::uint32_t seed,
                 Player spawn = {}, bool enableAi = true, const std::vector<NpcTimings>& timings = {},
-                const RecoveryLevel& recovery = {});
+                const RecoveryLevel& recovery = {}, const FloorFixtures& fixtures = {});
     GameSession(const Map&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&,
                 std::uint32_t seed, Player spawn = {}, bool enableAi = true,
-                const std::vector<NpcTimings>& timings = {}, const RecoveryLevel& recovery = {});
+                const std::vector<NpcTimings>& timings = {}, const RecoveryLevel& recovery = {},
+                const FloorFixtures& fixtures = {});
     GameSession(Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const Map&, rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const Map&, const rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(Map&&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
-                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
-                const RecoveryLevel& = {}) = delete;
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const Map&&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
-                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
-                const RecoveryLevel& = {}) = delete;
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const Map&, rules::Catalog&&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
-                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
-                const RecoveryLevel& = {}) = delete;
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const Map&, const rules::Catalog&&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
-                Player = {}, bool = true, const std::vector<NpcTimings>& = {},
-                const RecoveryLevel& = {}) = delete;
+                Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
+                const FloorFixtures& = {}) = delete;
     GameSession(const GameSession&) = delete;
     GameSession& operator=(const GameSession&) = delete;
+    GeometryView geometry() const noexcept { return map_; }
+    const FloorGeometry& fixtures() const noexcept { return floor_; }
+    FixtureResult interact(const FixtureRequest&, bool preview = false) noexcept;
+    FixtureRequest nearbyFixture() const noexcept;
+    void discover() noexcept;
     Party& party() noexcept { return party_; }
     const Party& party() const noexcept { return party_; }
     ActorWorld& actors() noexcept { return actors_; }
@@ -53,7 +63,10 @@ class GameSession {
     const CombatEvents& update(double seconds, bool paused) noexcept;
     void move(Action action, bool fresh = true) noexcept;
     void clearPending() noexcept { movement_.clearPending(); }
-    void setAnimated(bool enabled) noexcept { movement_.setAnimated(enabled); }
+    void setAnimated(bool enabled) noexcept {
+        movement_.setAnimated(enabled);
+        discover();
+    }
     InventoryError inventoryAccess(const InventoryRequest&) const noexcept;
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     CombatOutcome submit(const PartyCommand& command) noexcept;
@@ -73,7 +86,8 @@ class GameSession {
     bool grantNextLevelExperience() noexcept;
 
   private:
-    const Map& map_;
+    FloorGeometry floor_;
+    GeometryView map_;
     Party party_;
     ActorWorld actors_;
     RecoveryLevel recovery_;
@@ -90,6 +104,9 @@ class GameSession {
     void reconcileRewards() noexcept;
     std::uint64_t timeMs_ = 0, restToken_ = 1;
     double remainderMs_ = 0;
+    Player discoveredPose_;
+    bool discoveredReady_ = false;
+    std::uint64_t discoveredFixtures_ = 0;
     void detectContact() noexcept;
     void driveFacing() noexcept;
 };

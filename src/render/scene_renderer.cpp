@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace blobber {
-std::optional<Cell> SceneRenderer::groundCell(const Map& map, Player player, int x, int y) noexcept {
+std::optional<Cell> SceneRenderer::groundCell(GeometryView map, Player player, int x, int y) noexcept {
     if (x < 0 || x >= viewWidth || y <= ViewProjection::horizon || y >= viewHeight)
         return {};
     const auto point = floorPoint(x, y);
@@ -44,13 +44,13 @@ void SceneRenderer::prepareFloorPreview() {
         }
     }
 }
-void SceneRenderer::compose(const Map& map, Player player, Frame& result, const ActorWorld* npcs,
+void SceneRenderer::compose(GeometryView map, Player player, Frame& result, const ActorWorld* npcs,
                             const NpcAnimationSnapshot* animation, PickingBuffer* picking,
                             const ProjectilePlayer* projectiles, const SpellArea* area,
                             const LootSnapshot* loot) const {
     composeView(map, player, 0, result, npcs, animation, picking, projectiles, area, loot);
 }
-void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float t, Frame& result,
+void SceneRenderer::composeStrafe(GeometryView map, Player from, Player to, float t, Frame& result,
                                   const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                                   PickingBuffer* picking, const ProjectilePlayer* projectiles,
                                   const SpellArea* area, const LootSnapshot* loot) const {
@@ -77,14 +77,17 @@ void SceneRenderer::composeStrafe(const Map& map, Player from, Player to, float 
     }
     composeView(map, base, phase, result, npcs, animation, picking, projectiles, area, loot);
 }
-void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame& result,
+void SceneRenderer::composeView(GeometryView map, Player player, int phase, Frame& result,
                                 const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                                 PickingBuffer* picking, const ProjectilePlayer* projectiles,
                                 const SpellArea* area, const LootSnapshot* loot) const {
-    if ((loot || area) && !picking)
+    if ((loot || area || map.fixtures()) && !picking)
         picking = &lootScratch_;
-    if (picking)
+    if (picking) {
         picking->clear();
+        if (map.fixtures())
+            picking->fixtureWorld(map.fixtures()->world());
+    }
     const PreparedView& view = views_[phase];
     const int parity = (player.cell.x & 1) * 2 + (player.cell.y & 1);
     result.copyFrom(view.backgrounds[static_cast<int>(player.heading) * 4 + parity]);
@@ -99,6 +102,9 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
         const Cell neighbor = sprite.sideNeighbor ? cell + r * sprite.sideNeighbor : cell + f * -1;
         if (map.solid(neighbor))
             continue;
+        const auto* fixtures = map.fixtures();
+        const int fixture = fixtures ? fixtures->at(cell) : -1;
+        const bool door = fixture >= 0 && fixtures->definition().entries[fixture].kind == FixtureKind::Door;
         for (std::uint32_t c = 0; c < sprite.columnCount; ++c) {
             const PreparedColumn& column = view.columns[sprite.firstColumn + c];
             if (column.depth >= coverage[column.x])
@@ -108,7 +114,13 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
             coverage[column.x] = column.depth;
             int index = column.top * viewWidth + column.x;
             for (std::uint32_t i = 0; i < column.length; ++i) {
-                result[index] = view.pixels[column.pixelOffsets[wallParity] + i];
+                result[index] = door ? view.doors[fixtures->definition().entries[fixture].key ? 1 : 0]
+                                                 [column.doorOffset + i]
+                                     : view.pixels[column.pixelOffsets[wallParity] + i];
+                if (picking)
+                    picking->write(std::size_t(index),
+                                   door ? PickingBuffer::fixtureBase + std::uint16_t(fixture)
+                                        : PickingBuffer::empty);
                 index += viewWidth;
             }
         }
@@ -165,8 +177,10 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
         npcs_.compose(*npcs, player, phase, coverage, result, animation, picking);
     if (area && picking)
         composeWeapons(view, area->ground, player, phase, coverage, npcs, animation, result, *picking);
-    if (loot && picking)
-        loot_.compose(*loot, player, phase, coverage, npcs, animation, result, *picking);
+    static const LootSnapshot emptyLoot;
+    if (picking && (loot || map.fixtures()))
+        loot_.compose(loot ? *loot : emptyLoot, player, phase, coverage, npcs, animation, result, *picking,
+                      map.fixtures());
     if (picking)
         picking->finish(npcs);
     if (projectiles && npcs)

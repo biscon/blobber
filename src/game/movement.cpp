@@ -3,7 +3,7 @@
 #include <algorithm>
 
 namespace blobber {
-bool tryAction(const Map& map, Player& player, Action action, const ActorWorld* npcs) {
+bool tryAction(GeometryView map, Player& player, Action action, const ActorWorld* npcs) {
     if (action == Action::TurnLeft || action == Action::TurnRight) {
         player.heading = static_cast<Heading>(
             (static_cast<int>(player.heading) + (action == Action::TurnLeft ? 3 : 1)) % 4);
@@ -34,7 +34,7 @@ bool tryAction(const Map& map, Player& player, Action action, const ActorWorld* 
 float Transition::progress() const {
     return std::clamp(elapsed / durationSeconds, 0.0f, 1.0f);
 }
-void Controller::submit(const Map& map, Action action, bool fresh, const ActorWorld* npcs) {
+void Controller::submit(GeometryView map, Action action, bool fresh, const ActorWorld* npcs) {
     if (state_.transition.active()) {
         if (fresh)
             pending_ = action;
@@ -52,7 +52,7 @@ void Controller::submit(const Map& map, Action action, bool fresh, const ActorWo
     state_.transition = {old, state_.player, action, state_.animated ? 0.0f : duration, duration};
     ++state_.revision;
 }
-void Controller::update(const Map& map, float seconds, const ActorWorld* npcs) {
+void Controller::update(GeometryView map, float seconds, const ActorWorld* npcs) {
     state_.transition.elapsed =
         std::min(state_.transition.durationSeconds, state_.transition.elapsed + std::max(0.0f, seconds));
     if (!state_.transition.active() && pending_) {

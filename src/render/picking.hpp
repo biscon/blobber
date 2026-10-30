@@ -9,6 +9,7 @@ namespace blobber {
 // One fixed allocation; never resized. Slot IDs are meaningful only with targets.world.
 class PickingBuffer {
   public:
+    static constexpr std::uint16_t fixtureBase = NpcWorld::maxInstances + lootCapacity;
     static constexpr std::uint16_t empty = UINT16_MAX;
     PickingBuffer() : pixels_(std::make_unique<std::uint16_t[]>(viewWidth * viewHeight)) { clear(); }
     void clear() noexcept {
@@ -18,6 +19,7 @@ class PickingBuffer {
         bodyDepth_.fill(std::numeric_limits<float>::infinity());
         wallDepth_.fill(std::numeric_limits<float>::infinity());
         lootWorld_ = 0;
+        fixtureWorld_ = 0;
         lootAnchors_ = {};
         lootGenerations_ = {};
     }
@@ -96,12 +98,19 @@ class PickingBuffer {
                           lootGenerations_[s - NpcWorld::maxInstances]};
         return {};
     }
+    void fixtureWorld(std::uint64_t world) noexcept { fixtureWorld_ = world; }
+    std::optional<FixtureId> pickFixture(int x, int y) const noexcept {
+        const auto s = slot(x, y);
+        if (fixtureWorld_ && s >= fixtureBase && s < fixtureBase + fixtureCapacity)
+            return FixtureId{fixtureWorld_, std::uint16_t(s - fixtureBase)};
+        return {};
+    }
     const TargetSnapshot& targets() const noexcept { return targets_; }
 
   private:
     std::unique_ptr<std::uint16_t[]> pixels_;
     TargetSnapshot targets_;
-    std::uint64_t lootWorld_ = 0;
+    std::uint64_t lootWorld_ = 0, fixtureWorld_ = 0;
     std::array<Cell, lootCapacity> lootAnchors_{};
     std::array<std::uint64_t, lootCapacity> lootGenerations_{};
     std::array<Cell, NpcWorld::maxInstances> badgeAnchors_{};

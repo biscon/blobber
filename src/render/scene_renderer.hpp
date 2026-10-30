@@ -22,21 +22,21 @@ class SceneRenderer {
     std::size_t npcPreparedPixelBytes() const noexcept { return npcs_.preparedPixelBytes(); }
     SceneRenderer(const SceneRenderer&) = delete;
     SceneRenderer& operator=(const SceneRenderer&) = delete;
-    static std::optional<Cell> groundCell(const Map&, Player, int x, int y) noexcept;
-    void compose(const Map& map, Player player, Frame& output, const ActorWorld* npcs = nullptr,
+    static std::optional<Cell> groundCell(GeometryView, Player, int x, int y) noexcept;
+    void compose(GeometryView map, Player player, Frame& output, const ActorWorld* npcs = nullptr,
                  const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr,
                  const ProjectilePlayer* projectiles = nullptr, const SpellArea* area = nullptr,
                  const LootSnapshot* loot = nullptr) const;
-    void composeStrafe(const Map& map, Player from, Player to, float t, Frame& output,
+    void composeStrafe(GeometryView map, Player from, Player to, float t, Frame& output,
                        const ActorWorld* npcs = nullptr, const NpcAnimationSnapshot* animation = nullptr,
                        PickingBuffer* picking = nullptr, const ProjectilePlayer* projectiles = nullptr,
                        const SpellArea* area = nullptr, const LootSnapshot* loot = nullptr) const;
 
   private:
-    void composeView(const Map& map, Player base, int phase, Frame& output, const ActorWorld* npcs = nullptr,
-                     const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr,
-                     const ProjectilePlayer* projectiles = nullptr, const SpellArea* area = nullptr,
-                     const LootSnapshot* loot = nullptr) const;
+    void composeView(GeometryView map, Player base, int phase, Frame& output,
+                     const ActorWorld* npcs = nullptr, const NpcAnimationSnapshot* animation = nullptr,
+                     PickingBuffer* picking = nullptr, const ProjectilePlayer* projectiles = nullptr,
+                     const SpellArea* area = nullptr, const LootSnapshot* loot = nullptr) const;
     static void composeWeapons(const PreparedView&, const GroundSnapshot&, Player, int,
                                const std::array<float, viewWidth>&, const ActorWorld*,
                                const NpcAnimationSnapshot*, Frame&, PickingBuffer&) noexcept;

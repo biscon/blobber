@@ -1,0 +1,34 @@
+{
+  "bytes": {
+    "derivative_loading_high_water": 63438352,
+    "npc_metadata_capacity": 119224,
+    "npc_raster_loading_high_water": 101694558,
+    "npc_resident": 69010094,
+    "npc_shadow_pixels": 25594,
+    "npc_source_decode_high_water": 30187520,
+    "npc_source_pixels": 29364224,
+    "npc_stationary_pixels": 59594072,
+    "npc_travel_pixels": 9271204,
+    "resident_total_bake": 285009262,
+    "scene_loading_high_water": 236194664,
+    "scene_resident_bake": 215999168,
+    "scene_source": 20181168,
+    "tracked_loading_high_water": 236194664
+  },
+  "definitions": 15378577391153559251,
+  "format": 4,
+  "outputs": {
+    "npcs.bin": {
+      "bytes": 69007386,
+      "checksum": 17391147751274535841,
+      "fingerprint": "17891870412245581235"
+    },
+    "scene.bin": {
+      "bytes": 201346524,
+      "checksum": 15175207217937262637,
+      "fingerprint": "14632090476009346355"
+    }
+  },
+  "profile": 8781740339989982100,
+  "renderer_revision": 4
+}

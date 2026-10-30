@@ -2,6 +2,17 @@
 #include <algorithm>
 #include <cstdio>
 namespace blobber {
+void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
+    if (!session_ || state_.modal() || state_.suspended || state_.magic.casting() || state_.magic.armed ||
+        state_.inventory.itemTargeting)
+        return;
+    auto request = session_->nearbyFixture();
+    if (id)
+        request = {*id, session_->fixtures().revision()};
+    const auto result = session_->interact(request);
+    state_.log.append(result.reason);
+}
+
 void CommandController::openLoot(LootId id) noexcept {
     if (!session_ || state_.modal() || state_.suspended)
         return;

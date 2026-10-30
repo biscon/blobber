@@ -39,7 +39,8 @@ Color shadeOpaque(Color color, float depth, float face = 1.0f) {
     color.a = 255;
     return shadeScene(color, depth, face);
 }
-void bakeWalls(const Material& material, float offset, PreparedView& view, Storage& storage) {
+void bakeWalls(const Material& material, const std::array<std::optional<Material>, 2>& doors, float offset,
+               PreparedView& view, Storage& storage) {
     // At fixed cardinal views the projected geometry is invariant. Prepare it once.
     // The near faces and inward-facing sides of solid cells are the only visible faces.
     // Wider FOVs need more lateral slots in the distant rows, not just new scaling.
@@ -90,6 +91,17 @@ void bakeWalls(const Material& material, float offset, PreparedView& view, Stora
                             view.pixels.push_back(
                                 shadeOpaque(material.sample(u + ((lateral + parity) & 1), v), depth,
                                             side ? 0.78f : 1.0f));
+                        }
+                    }
+                    column.doorOffset = std::uint32_t(view.doors[0].size());
+                    for (unsigned variant = 0; variant < 2; ++variant) {
+                        auto& pixels = view.doors[variant];
+                        storage.reserve(pixels, pixels.size() + count, PreparedView::maxPixels / 2);
+                        for (int y = y0; y < y1; ++y) {
+                            const float v = (y + .5f - top) / (bottom - top);
+                            pixels.push_back(
+                                shadeOpaque((doors[variant] ? *doors[variant] : material).sample(u, v), depth,
+                                            side ? .78f : 1.f));
                         }
                     }
                     view.columns.push_back(column);
@@ -162,7 +174,9 @@ std::size_t sceneStorageBytes(const PreparedScene& scene) noexcept {
     for (const auto& view : scene)
         bytes += view.sprites.capacity() * sizeof(PreparedSprite) +
                  view.columns.capacity() * sizeof(PreparedColumn) +
-                 (view.pixels.capacity() + view.weapon.capacity()) * sizeof(Color);
+                 (view.pixels.capacity() + view.weapon.capacity() + view.doors[0].capacity() +
+                  view.doors[1].capacity()) *
+                     sizeof(Color);
     return bytes;
 }
 PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
@@ -171,7 +185,9 @@ PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
                         materials.ceiling.storageBytes() +
                         (materials.grease ? materials.grease->storageBytes() : 0) +
                         (materials.web ? materials.web->storageBytes() : 0) +
-                        (materials.weapon ? materials.weapon->storageBytes() : 0);
+                        (materials.weapon ? materials.weapon->storageBytes() : 0) +
+                        (materials.doors[0] ? materials.doors[0]->storageBytes() : 0) +
+                        (materials.doors[1] ? materials.doors[1]->storageBytes() : 0);
     Storage storage{sizeof(PreparedScene) + backgroundBytes, source, 0, limits};
     requirePreparationBytes(0, storage.resident, limits.residentBytes);
     requirePreparationBytes(source, storage.resident, limits.loadingBytes);
@@ -179,7 +195,7 @@ PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
     PreparedScene views;
     for (int phase = 0; phase < ViewProjection::strafeSteps; ++phase) {
         const float offset = float(phase) / ViewProjection::strafeSteps;
-        bakeWalls(materials.wall, offset, views[phase], storage);
+        bakeWalls(materials.wall, materials.doors, offset, views[phase], storage);
         bakeBackgrounds(materials.floor, materials.ceiling, offset, views[phase]);
         bakeGround(materials.grease, offset, views[phase].grease);
         bakeGround(materials.web, offset, views[phase].web);

@@ -1,5 +1,6 @@
 #pragma once
 #include "app/options.hpp"
+#include "generation/diagnostic_view.hpp"
 #include "platform/presenter.hpp"
 #include "render/frame_pipeline.hpp"
 namespace blobber {
@@ -10,6 +11,8 @@ struct GameplayLaunch {
     Player spawn;
     std::uint32_t seed = 5;
     bool arena = false, enableAi = true;
+    const generation::DiagnosticView* diagnostics = nullptr;
+    const FloorFixtures* fixtures = nullptr;
 };
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                         const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,

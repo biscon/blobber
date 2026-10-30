@@ -53,7 +53,7 @@ the runner is protocol JSON. Do not mix console text into stdin.
 
 | op | Additional request fields | Result |
 | --- | --- | --- |
-| `start` | `scenario` (existing arena schema-1 document), optional uint32 `seed`; session/revision when replacing | New observation; transactional replacement |
+| `start` | `scenario` (arena schema-1 or generated-floor document), optional uint32 `seed`; session/revision when replacing | New observation; transactional replacement |
 | `reset` | session/revision, optional `seed` | Reconstruct current initial scenario; new observation |
 | `observe` | none | Current observation for selected mode |
 | `inspect` | none | Full diagnostic observation; permanently marks inspection use in this run |
@@ -63,7 +63,7 @@ the runner is protocol JSON. Do not mix console text into stdin.
 | `advance` | session/revision, `ticks` (0–1000), optional `until_decision` (default false) | `{ticks,stop,observation}`; ticks is actual progress |
 | `close` | none | `{closed:true}`, finish recording and exit |
 
-Scenario documents use the existing [arena format](arena_design.md). Four distinct,
+Untagged scenario documents use the existing [arena format](arena_design.md). Four distinct,
 valid level-one builds and 1–256 monsters are required. Formation is their initial
 order. There are no teleport, damage, XP-grant, arbitrary-state or custom-map verbs.
 Changes to party composition go in a new scenario. Earned advancement uses normal
@@ -84,6 +84,67 @@ changing revision. An act at that limit omits observation; use observe. No event
 silently discarded. Event chunks contain at most 256 events. Input lines are bounded
 at 2 MiB and JSON nesting at 32. Closing/EOF ends a recording even if play is unfinished.
 
+<a id="pc01-generated-floor-scenarios"></a>
+
+## Generated-floor scenarios (PC01–PC02)
+
+`start` also accepts the following scenario shape (the four party objects use the
+same starting-draft codec as arena `party`):
+
+```json
+{
+  "kind": "generated_floor",
+  "schema_version": 1,
+  "generator_version": 2,
+  "template_version": 2,
+  "seed": 5,
+  "depth": 1,
+  "party": ["replace with four existing starting-draft objects"]
+}
+```
+
+This skeleton is illustrative; `party` must actually contain four distinct, valid
+level-one draft objects. Do not include arena `name`, `layout_version` or `monsters`.
+Depths 1–3 are separate generation identities, not connected campaign locations.
+Each empty floor has one permanent-open door: depth 1 is unlocked; depths 2 and 3
+require their Bronze/Silver seal key from an upstream cycle room. Stairs and the
+depth-3 endpoint are inert markers. There are no encounters, rewards or victory yet.
+Generator/template versions are now 2/2; old 1/1 scenarios and traces are rejected.
+The generated scenario schema and JSON-lines protocol remain version 1.
+`reset` reuses the same inputs; optional `seed` explicitly regenerates the floor.
+Failed generation/version/party validation preserves an existing session and tokens.
+An optional boolean `force_fallback` is accepted **only in diagnostic mode** for
+fallback verification/capture. It is not exposed in normal New Game or visual play.
+
+Generated observations add `scenario_kind` and `generation`. Both perspectives
+include seed, depth, generator/template versions and a decimal-string fingerprint.
+Diagnostic observations additionally include ASCII tiles, role/room/connection
+metadata, immutable fixture definitions, spawn, runtime seed, attempts, fallback
+and rejection reasons. `inspect`
+does not enable hidden information in later visual observations. Strict recording
+compares full generation metadata in normalized boundary state; it remains a
+version/build-sensitive replay, not a save.
+
+The Python client and MCP `session_start` accept this scenario without a new command.
+Arena policies/experiment manifests remain arena-only. Capturing a generated replay
+exports the usual scene, `-discovered-map.png` and explicitly labelled
+`-diagnostic-map.png` at each requested boundary, within the unchanged 64 MiB
+total capture limit. Export does not change discovery. Prepared bundle format and
+renderer revision are 4; rebuild prepared assets with the normal graphics build.
+
+For standalone seed inspection (no assets or window):
+
+```sh
+cmake --build --preset headless-debug --target blobber_generate_floor
+cmake-build-headless-debug/blobber_generate_floor --seed 5 --format ascii
+cmake-build-headless-debug/blobber_generate_floor --seed 5 --format json --force-fallback
+```
+
+`--depth 1..3` defaults to 1. Explicit `--count N` supports at most 100,000 sequential
+seeds, rejects uint32 overflow, streams per-seed JSON and ends with a bounded summary
+of distinct fingerprints, errors, retry/fallback counts and timing. This is an opt-in
+structural investigation, never a default broad sweep or balance test.
+
 ## Action objects
 
 All actions have `kind`. Fields in brackets below are optional. Character indices
@@ -102,6 +163,7 @@ of spell recipients, inventory destinations or preparation choices.
 | `rest` | `type`: short/long, [`dice`: four counts 0–3], [`prepared`: four spell-ID arrays] |
 | `advancement` | `character`, [`learned`: new spell IDs], [`prepared`: newly prepared spell IDs] |
 | `continue` | no extra fields |
+| `interact` | `fixture`: session-local fixture slot from observations/actions |
 
 Inventory cells 0–47 are backpack slots; 48 body, 49 main hand, 50 off hand, 51 ranged.
 Use move to equip/unequip or rearrange, split with quantity, transfer with a recipient
@@ -110,6 +172,15 @@ repeat checked pickups. Rest preparation arrays are complete desired selections;
 advancement arrays are **additions** to the retained build. Wizard advancement requires
 its ordinary new learned spells. Discovery gives learn bounds and initial new
 preparation choices; learning can unlock more candidates, checked by preview.
+
+`interact` accepts current-cell or directly-ahead keys, and directly-ahead doors.
+It requires settled, stationary safe exploration, no party-cell area hazard and an
+able companion. Keys use party quest bits, never inventory capacity or weight.
+Opening has no turn/item cost and is permanent; keys remain acquired. Preview is
+pure, and repeated completed interactions have no second effect. Unknown/undiscovered
+IDs return the same unavailable result. The host supplies internal floor/revision
+tokens after checking the ordinary session/revision guard. F and visible-fixture
+clicks use this same command in the game.
 
 Combat `action` is melee, back_melee, defend, ranged, spell, item, aid or feature.
 Optional fields are:
@@ -134,6 +205,7 @@ Example action payloads (wrap in an act/preview request with tokens):
 {"kind":"combat","action":"feature","character":0,"feature":"end_turn"}
 {"kind":"inventory","operation":"move","item":{"slot":7,"generation":"1"},"character":0,"cell":49}
 {"kind":"rest","type":"short","dice":[1,0,1,0]}
+{"kind":"interact","fixture":0}
 ```
 
 ## Observation and event information
@@ -145,6 +217,17 @@ Heading is north=0, east=1, south=2, west=3. Time/serial fields that can grow to
 are strings. Some fixed simulation enums (life, effect clock/kind) are numeric v1
 values from the corresponding C++ enums; clients should primarily use provided names
 and eligibility results. Party-created ground zones include known placement/duration.
+
+Generated observations include `discovered` triples `[x,y,base_wall]` (0 floor,
+1 wall), remembered `fixtures` and party `quest_keys` bits (bit 2 Bronze, bit 3 Silver).
+Fixture fields are `fixture`, `kind`, `name`, `position`, `key`, `completed`; kinds
+are door=0, key=1, upstairs=2, downstairs=3, endpoint=4. Player fixtures include only
+known entries and remembered completion. Diagnostic views additionally expose all
+fixtures, geometry/fixture/discovery revisions and fixture knowledge. Discovery
+updates from settled party poses with six-cell facing sight and blocking endpoints;
+observing, inspecting, drawing and the development full-map toggle never discover.
+Reset rebuilds knowledge and keys. `actions.fixtures` lists reachable known entries;
+preview supplies the actual eligibility/reason.
 
 Visual observations include only currently body-pickable living enemies, with the
 health-bar fraction and visible statuses. They omit exact enemy HP, AI awareness,

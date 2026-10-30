@@ -4,7 +4,8 @@
 #include "ui/loot_layout.hpp"
 namespace blobber {
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
-                   bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit) noexcept {
+                   bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
+                   std::optional<FixtureId> fixtureHit) noexcept {
     if (!input.focused) {
         commands.hover(HoverKind::None);
         return;
@@ -234,6 +235,11 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     }
     if (state.suspended) {
         commands.hover(HoverKind::None);
+        return;
+    }
+    if (allowConfirm && (input.has(UiKey::Interact) || (click && fixtureHit)) && !state.magic.casting() &&
+        !state.magic.armed && !state.inventory.itemTargeting) {
+        commands.interactFixture(input.has(UiKey::Interact) ? std::nullopt : fixtureHit);
         return;
     }
     if (lootHit && !state.magic.casting() && !state.magic.armed && !state.inventory.itemTargeting) {

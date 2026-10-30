@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace blobber {
-CombatController::CombatController(const Map& map, Party& party, ActorWorld& actors, rules::DiceRng& rng,
+CombatController::CombatController(GeometryView map, Party& party, ActorWorld& actors, rules::DiceRng& rng,
                                    NpcAiController& ai, EffectController& effects,
                                    const std::vector<NpcTimings>& timings)
     : map_(map), party_(party), actors_(actors), rng_(rng), ai_(ai), effects_(effects) {

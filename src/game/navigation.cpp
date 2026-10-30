@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <utility>
 namespace blobber {
-Navigation::Navigation(const Map& map, const ActorWorld& actors)
+Navigation::Navigation(GeometryView map, const ActorWorld& actors)
     : map_(map), actors_(actors), queue_(std::size_t(map.width()) * map.height()), seen_(queue_.size()),
       first_(queue_.size()) {}
 std::uint32_t Navigation::index(Cell c) const noexcept {
@@ -12,8 +12,20 @@ std::uint32_t Navigation::index(Cell c) const noexcept {
 Cell Navigation::cell(std::uint32_t i) const noexcept {
     return {int(i % map_.width()), int(i / map_.width())};
 }
+void Navigation::invalidateGeometry() noexcept {
+    if (geometryRevision_ == map_.revision())
+        return;
+    geometryRevision_ = map_.revision();
+    requests_ = {};
+    results_ = {};
+    if (owner_ != requests_.size()) {
+        canceled_ = true;
+        cleaning_ = true;
+    }
+}
 void Navigation::request(std::size_t slot, Cell from, Cell target, bool adjacent,
                          std::optional<Cell> preferred) noexcept {
+    invalidateGeometry();
     if (slot >= requests_.size() || owner_ == slot || results_[slot].ready)
         return;
     requests_[slot] = {true, from, target, adjacent, preferred};
@@ -27,6 +39,7 @@ void Navigation::cancel(std::size_t slot) noexcept {
         canceled_ = true;
 }
 Navigation::Result Navigation::take(std::size_t slot) noexcept {
+    invalidateGeometry();
     if (slot >= results_.size())
         return {};
     const auto r = results_[slot];
@@ -78,6 +91,7 @@ void Navigation::finish(bool found, Cell step) noexcept {
     ++completed_;
 }
 void Navigation::update(Cell party) noexcept {
+    invalidateGeometry();
     work_ = completed_ = 0;
     while (work_ < nodeBudget) {
         if (cleaning_) {

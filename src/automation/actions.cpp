@@ -4,7 +4,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
     const auto& cat = g.party().catalog();
     Json result = {
         {"combat", Json::array()},
-        {"management", {"inventory", "drop", "pickup", "rest", "advancement", "continue"}},
+        {"management", {"inventory", "drop", "pickup", "rest", "advancement", "continue", "interact"}},
         {"movement", {"forward", "back", "left", "right", "turn_left", "turn_right"}},
         {"note",
          "Descriptors are not complete combinations. Preview a fully specified action before submission."}};
@@ -97,6 +97,16 @@ Json describeActions(const GameSession& g, const Observation& o) {
                                 {"note", "Prepared choices are additions. Wizard choices may unlock further "
                                          "preparation; preview the complete selection."}};
         result["combat"].push_back(entry);
+    }
+    result["fixtures"] = Json::array();
+    const auto& fixtures = g.fixtures();
+    for (unsigned i = 0; i < fixtures.definition().count; ++i) {
+        if (!o.diagnostic && !fixtures.known(i))
+            continue;
+        const auto& f = fixtures.definition().entries[i];
+        if (!fixtureReachable(f, g.movement().player.cell, g.movement().player.heading))
+            continue;
+        result["fixtures"].push_back({{"fixture", i}, {"name", fixtureName(f)}});
     }
     result["targets"] = Json::array();
     for (std::size_t i = 0; i < o.targets.count; ++i)

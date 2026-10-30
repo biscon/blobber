@@ -1,4 +1,5 @@
 #include "automation/protocol.hpp"
+#include "generation/report.hpp"
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
 namespace blobber::automation {
@@ -21,6 +22,10 @@ Json Protocol::observation(bool diagnostic) {
     j["mutations"] = mutations_;
     j["terminal"] = session_->terminal();
     j["decision"] = session_->decision();
+    if (const auto* generated = session_->generated()) {
+        j["scenario_kind"] = "generated_floor";
+        j["generation"] = generation::report(*generated, observation_.diagnostic);
+    }
     return j;
 }
 Json Protocol::state() {
@@ -77,20 +82,20 @@ Json Protocol::perform(const Json& r, Output& output) {
             checkIdentity(r);
         else if (op == "reset")
             throw std::invalid_argument("No session");
-        ArenaScenario scenario;
+        Scenario scenario;
         try {
             if (op == "start") {
                 const auto serialized = r.at("scenario").dump();
                 if (serialized.size() > arenaMaxBytes)
                     throw std::invalid_argument("Scenario exceeds 1 MiB");
-                scenario = decodeArena(catalog_, serialized);
+                scenario = decodeScenario(catalog_, r.at("scenario"));
             } else {
                 if (r.contains("scenario"))
                     throw std::invalid_argument("Reset does not replace scenario");
                 scenario = session_->scenario();
             }
             if (r.contains("seed"))
-                scenario.seed = bounded(r.at("seed"), UINT32_MAX);
+                replaceSeed(scenario, bounded(r.at("seed"), UINT32_MAX));
             auto candidate =
                 std::make_unique<Session>(catalog_, definitions_, scenario, mode_, factory_, context_);
             session_.swap(candidate);

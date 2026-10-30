@@ -22,12 +22,12 @@ namespace {
 class Visual final : public Visibility {
   public:
     Visual(VisualContext& c, const GameSession& g) : context_(c), animator_(g.actors(), c.timings) {}
-    const TargetSnapshot& sample(const Map& map, const GameSession& g) override {
+    const TargetSnapshot& sample(const Map&, const GameSession& g) override {
         animator_.setTime(g.timeMs(), &g.effects());
         SpellArea area;
         area.ground = g.effects().ground();
         const bool changed =
-            frames_.update(context_.renderer, map, g.movement(), &g.actors(), &animator_.snapshot(),
+            frames_.update(context_.renderer, g.geometry(), g.movement(), &g.actors(), &animator_.snapshot(),
                            &g.combat().attacks(), g.timeMs(), &area, &g.loot().snapshot());
         if (!changed)
             return targets_;

@@ -23,6 +23,9 @@ void validate(const PreparedScene& scene) {
                             column.top <= viewHeight && column.depth > 0 &&
                             column.depth <= ViewProjection::visibleRows + 2 &&
                             column.length <= static_cast<unsigned>(viewHeight - column.top));
+            for (const auto& doors : view.doors)
+                Reader::require(column.doorOffset <= doors.size() &&
+                                column.length <= doors.size() - column.doorOffset);
             for (const auto first : column.pixelOffsets)
                 Reader::require(first <= view.pixels.size() && column.length <= view.pixels.size() - first);
         }
@@ -49,9 +52,14 @@ void savePreparedScene(const std::filesystem::path& path, const PreparedScene& s
             out.u32(c.length);
             for (const auto first : c.pixelOffsets)
                 out.u32(first);
+            out.u32(c.doorOffset);
         }
         out.u64(view.pixels.size());
         out.bytes(view.pixels.data(), view.pixels.size() * sizeof(Color));
+        for (const auto& doors : view.doors) {
+            out.u64(doors.size());
+            out.bytes(doors.data(), doors.size() * sizeof(Color));
+        }
         for (const auto& background : view.backgrounds)
             out.bytes(background.data(), Frame::pixelCount * sizeof(Color));
         for (const auto& grease : view.grease)
@@ -77,7 +85,7 @@ PreparedScene loadPreparedScene(const std::filesystem::path& path, std::uint64_t
             s.firstColumn = in.u32();
             s.columnCount = in.u32();
         }
-        view.columns.resize(in.count(PreparedView::maxColumns, sizeof(PreparedColumn), 24));
+        view.columns.resize(in.count(PreparedView::maxColumns, sizeof(PreparedColumn), 28));
         for (auto& c : view.columns) {
             c.x = in.i32();
             c.top = in.i32();
@@ -85,9 +93,14 @@ PreparedScene loadPreparedScene(const std::filesystem::path& path, std::uint64_t
             c.length = in.u32();
             for (auto& first : c.pixelOffsets)
                 first = in.u32();
+            c.doorOffset = in.u32();
         }
         view.pixels.resize(in.count(PreparedView::maxPixels, sizeof(Color), 4));
         in.bytes(view.pixels.data(), view.pixels.size() * sizeof(Color));
+        for (auto& doors : view.doors) {
+            doors.resize(in.count(PreparedView::maxPixels / 2, sizeof(Color), 4));
+            in.bytes(doors.data(), doors.size() * sizeof(Color));
+        }
         for (auto& background : view.backgrounds)
             in.bytes(background.data(), Frame::pixelCount * sizeof(Color));
         for (auto& grease : view.grease)

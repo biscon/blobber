@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 namespace blobber {
-bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const MovementState& state,
+bool FramePipeline::update(const SceneRenderer& renderer, GeometryView map, const MovementState& state,
                            const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                            const AttackVisualSnapshot* attacks, std::uint64_t now, const SpellArea* area,
                            const LootSnapshot* loot) {
@@ -30,7 +30,13 @@ bool FramePipeline::update(const SceneRenderer& renderer, const Map& map, const 
     const bool lootChanged = lw != lootWorld_ || lr != lootRevision_;
     lootWorld_ = lw;
     lootRevision_ = lr;
-    const bool newContent = lootChanged || previewChanged || effectsChanged || !ready_ ||
+    const auto fixtureRevision = map.fixtures() ? map.fixtures()->revision() : 0;
+    const bool geometryChanged = geometryWorld_ != map.world() || geometryRevision_ != map.revision() ||
+                                 fixtureRevision_ != fixtureRevision;
+    geometryWorld_ = map.world();
+    geometryRevision_ = map.revision();
+    fixtureRevision_ = fixtureRevision;
+    const bool newContent = geometryChanged || lootChanged || previewChanged || effectsChanged || !ready_ ||
                             revision_ != state.revision || actorRevision_ != actorRevision ||
                             actorWorld_ != actorWorld || hadAnimation_ != (animation != nullptr) ||
                             animationRevision_ != animationRevision;

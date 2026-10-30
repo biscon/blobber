@@ -1,5 +1,6 @@
 #include "automation/capture.hpp"
 #include "assets/fingerprint.hpp"
+#include "generation/diagnostic_view.hpp"
 #include "platform/presenter.hpp"
 #include "platform/window.hpp"
 #include "render/frame_pipeline.hpp"
@@ -30,28 +31,43 @@ class Capture final : public ReplayObserver {
         FramePipeline frames;
         SpellArea area;
         area.ground = game.effects().ground();
-        frames.update(renderer, session->map(), game.movement(), &game.actors(), &animator.snapshot(),
+        frames.update(renderer, game.geometry(), game.movement(), &game.actors(), &animator.snapshot(),
                       &game.combat().attacks(), game.timeMs(), &area, &game.loot().snapshot());
         CommandController hud(game, definitions.timings);
-        hud.arenaContext(arenaCleared(game.actors().snapshot()));
+        if (session->arena())
+            hud.arenaContext(arenaCleared(game.actors().snapshot()));
         hud.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
                     game.movement().transition.active(), false, true);
         presenter.present(frames.frame(), game.movement(), session->map(), false, true, &hud.snapshot(),
                           frames.picking());
-        const auto name = "operation-" + std::to_string(operation) + ".png";
-        presenter.capture(output / name);
-        bytes += std::filesystem::file_size(output / name);
-        if (bytes > 64u * 1024u * 1024u) {
-            std::filesystem::remove(output / name);
-            throw std::runtime_error("capture_output_limit");
+        const auto save = [&](const char* suffix) {
+            const auto name = "operation-" + std::to_string(operation) + suffix + ".png";
+            presenter.capture(output / name);
+            bytes += std::filesystem::file_size(output / name);
+            if (bytes > 64u * 1024u * 1024u) {
+                std::filesystem::remove(output / name);
+                throw std::runtime_error("capture_output_limit");
+            }
+            images.push_back({{"file", name},
+                              {"operation", operation},
+                              {"ticks", state.at("ticks")},
+                              {"session", state.at("session")},
+                              {"revision", state.at("revision")},
+                              {"width", gameWidth},
+                              {"height", gameHeight}});
+        };
+        save("");
+        if (const auto* floor = session->generated()) {
+            const auto diagnostic = generation::diagnosticView(*floor);
+            hud.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
+                        game.movement().transition.active(), true, true);
+            presenter.present(frames.frame(), game.movement(), session->map(), true, false, &hud.snapshot(),
+                              frames.picking(), &diagnostic, true);
+            save("-diagnostic-map");
+            presenter.present(frames.frame(), game.movement(), session->map(), true, false, &hud.snapshot(),
+                              frames.picking(), &diagnostic, false);
+            save("-discovered-map");
         }
-        images.push_back({{"file", name},
-                          {"operation", operation},
-                          {"ticks", state.at("ticks")},
-                          {"session", state.at("session")},
-                          {"revision", state.at("revision")},
-                          {"width", gameWidth},
-                          {"height", gameHeight}});
         pending.erase(operation);
     }
     const SceneRenderer& renderer;

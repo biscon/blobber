@@ -75,12 +75,7 @@ const char* arenaError(const rules::Catalog& c, const ArenaScenario& s) noexcept
 rules::PresetParty arenaParty(const rules::Catalog& c, const ArenaScenario& s) {
     if (const auto* error = arenaError(c, s))
         throw std::runtime_error(error);
-    rules::PresetParty p;
-    for (unsigned i = 0; i < 4; ++i) {
-        p.characters[i] = rules::finishBuild(c, s.party[i].draft, s.party[i].id.data());
-        p.formation[i] = {std::uint16_t(i)};
-    }
-    return p;
+    return startingParty(c, s.party);
 }
 Map arenaMap() {
     std::vector<std::string> rows(25, std::string(21, '.'));

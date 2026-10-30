@@ -9,7 +9,7 @@ int distance(Cell a, Cell b) noexcept {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 } // namespace
-NpcAiController::NpcAiController(const Map& map, ActorWorld& actors, std::uint32_t seed)
+NpcAiController::NpcAiController(GeometryView map, ActorWorld& actors, std::uint32_t seed)
     : map_(map), actors_(actors), navigation_(map, actors), rng_(seed ^ 0x41493037u) {
     state_.count = actors.snapshot().count;
     for (std::size_t i = 0; i < state_.count; ++i) {
@@ -173,6 +173,13 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::
 void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime, Player party,
                              const std::array<bool, NpcWorld::maxInstances>* frozen,
                              const std::array<bool, NpcWorld::maxInstances>* incapacitated) noexcept {
+    if (geometryRevision_ != map_.revision()) {
+        geometryRevision_ = map_.revision();
+        prepared_ = {};
+        for (std::size_t i = 0; i < state_.count; ++i)
+            navigation_.cancel(i);
+    }
+
     state_.timeMs += elapsedMs;
     state_.searchWork = state_.completedSearches = 0;
     if (state_.timeMs < tickDue_)

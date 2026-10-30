@@ -36,7 +36,7 @@ ActorPosition actorPosition(const ActorState& a, std::uint64_t timeMs) noexcept 
     return {a.walkFrom.x + (destination.x - a.walkFrom.x) * t,
             a.walkFrom.y + (destination.y - a.walkFrom.y) * t};
 }
-ActorWorld::ActorWorld(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements)
+ActorWorld::ActorWorld(GeometryView map, const rules::Catalog& catalog, const NpcWorld& placements)
     : map_(map), catalog_(catalog), occupancy_(static_cast<std::size_t>(map.width()) * map.height(), 0) {
     state_.world = nextWorld();
     state_.count = placements.instances().size();

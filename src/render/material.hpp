@@ -20,5 +20,6 @@ class Material {
 struct Materials {
     Material wall, floor, ceiling;
     std::optional<Material> grease{}, web{}, weapon{};
+    std::array<std::optional<Material>, 2> doors{};
 };
 } // namespace blobber

@@ -5,24 +5,27 @@
 namespace blobber {
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                          std::uint32_t seed, Player spawn, bool enableAi,
-                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery)
+                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
+                         const FloorFixtures& fixtures)
     : GameSession(map, catalog,
                   catalog.preset() ? *catalog.preset() : throw std::invalid_argument("Missing preset"),
-                  placements, seed, spawn, enableAi, timings, recovery) {}
+                  placements, seed, spawn, enableAi, timings, recovery, fixtures) {}
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const rules::PresetParty& starting,
                          const NpcWorld& placements, std::uint32_t seed, Player spawn, bool enableAi,
-                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery)
-    : map_(map), party_(catalog, starting), actors_(map, catalog, placements), recovery_(recovery),
-      loot_(actors_, recovery, seed), movement_(spawn), rng_(seed), ai_(map, actors_, seed),
-      effects_(party_, actors_, rng_), combat_(map, party_, actors_, rng_, ai_, effects_, timings),
-      enableAi_(enableAi) {
-    if (map.solid(spawn.cell) || actors_.occupied(spawn.cell))
+                         const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
+                         const FloorFixtures& fixtures)
+    : floor_(map, fixtures), map_(floor_.view()), party_(catalog, starting),
+      actors_(map_, catalog, placements), recovery_(recovery), loot_(actors_, recovery, seed),
+      movement_(spawn), rng_(seed), ai_(map_, actors_, seed), effects_(party_, actors_, rng_),
+      combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(enableAi) {
+    if (map_.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     ai_.bindEffects(&effects_);
     movement_.bindEffects(&effects_);
     effects_.partyCell(spawn.cell);
     combat_.enableRoaming(enableAi_);
     detectContact();
+    discover();
 }
 void GameSession::detectContact() noexcept {
     combat_.observe(movement_.state().player);
@@ -50,6 +53,11 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
         movement_.clearPending();
     detectContact();
     const auto oldCell = movement_.state().player.cell;
+    // A queued step may immediately start another transition at this boundary.
+    // Remember the settled endpoint before Controller consumes that queued step.
+    const auto& transition = movement().transition;
+    if (transition.active() && transition.elapsed + static_cast<float>(seconds) >= transition.durationSeconds)
+        floor_.discover(movement().player.cell, movement().player.heading);
     movement_.update(map_, static_cast<float>(seconds), &actors_);
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))
@@ -69,6 +77,7 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     driveFacing();
     loot_.reconcile(actors_);
     reconcileRewards();
+    discover();
     return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
@@ -83,6 +92,7 @@ void GameSession::move(Action action, bool fresh) noexcept {
         for (std::uint16_t i = 0; i < rules::partySize; ++i)
             effects_.enter(rules::CharacterId{i}, movement_.state().player.cell, timeMs_);
     detectContact();
+    discover();
 }
 InventoryError GameSession::inventoryAccess(const InventoryRequest& request) const noexcept {
     if (movement_.state().transition.active())

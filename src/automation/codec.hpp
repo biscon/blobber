@@ -11,6 +11,7 @@ Json parseRequest(const std::string&);
 // Trace envelopes add two structural levels and bounded metadata to an input request.
 constexpr std::size_t maxTraceRecordBytes = maxRequestBytes + 4096;
 Json parseTraceRecord(const std::string&);
+Scenario decodeScenario(const rules::Catalog&, const Json&);
 ActionRequest decodeAction(const Json&, const GameSession&);
 Json encodeObservation(const Observation&);
 Json encodeEvent(const CombatOutcome&, const rules::Catalog&, bool diagnostic);

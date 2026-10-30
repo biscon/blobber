@@ -1,0 +1,22 @@
+[
+  {
+    "operation": 1,
+    "label": "entrance"
+  },
+  {
+    "operation": 125,
+    "label": "closed-door"
+  },
+  {
+    "operation": 126,
+    "label": "opened-door"
+  },
+  {
+    "operation": 129,
+    "label": "open-threshold"
+  },
+  {
+    "operation": 171,
+    "label": "endpoint"
+  }
+]

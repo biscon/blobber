@@ -1,8 +1,8 @@
 # Procedural campaign MVP: design and delivery roadmap
 
 Created / last updated: 2026-10-30.
-Status: **Roadmap accepted by the user on 2026-10-30. No implementation started.**
-Individual slice plans still require review before implementation.
+Status: **Roadmap accepted; PC01 and PC02 Accepted and closed on 2026-10-30.**
+PC03 is next eligible for detailed planning when requested. Later slice plans still require review before implementation.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -40,14 +40,14 @@ arena and test fixtures; it does not imply retaining the old game mode.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; no campaign slice accepted |
-| Active slice | None; roadmap planning complete and accepted |
-| Awaiting user review | None; PC01 detailed planning has not started |
-| Blockers | None; individual implementation plans still required |
-| Next eligible slice | PC01 — Generated-floor walking prototype (detailed planning only) |
-| Next action | Fresh context: inspect the code and plan PC01 only for review; do not implement automatically |
+| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01 and PC02 accepted (2026-10-30) |
+| Active slice | None; PC02 Accepted and closed |
+| Awaiting user review | None |
+| Blockers | None; later slices require their own plans and approvals |
+| Next eligible slice | PC03 — Guardians and structurally safe progression; planning only |
+| Next action | Plan PC03 for review in a fresh context when requested; do not implement automatically |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Accepted roadmap | Scope, sequence and design/defaults below accepted as the planning baseline; detailed slice plans and implementation remain unapproved |
+| Accepted roadmap | Scope, sequence and defaults accepted; PC01 and PC02 Accepted and closed; PC03–PC09 detailed plans remain unapproved |
 
 Update this checkpoint, tracker and affected execution record together. Roadmap
 acceptance is not slice implementation or evidence of delivered gameplay acceptance.
@@ -332,8 +332,8 @@ individual detailed plan before implementation; a roadmap approval is not that p
 
 | ID | Slice | Prerequisite | Status | Milestone |
 | --- | --- | --- | --- | --- |
-| PC01 | [Generated-floor walking prototype](#pc01-generated-floor-walking-prototype) | Roadmap accepted (2026-10-30) | Planned | P-A |
-| PC02 | [Doors, keys and discovered navigation](#pc02-doors-keys-and-discovered-navigation) | PC01 | Planned | P-A |
+| PC01 | [Generated-floor walking prototype](#pc01-generated-floor-walking-prototype) | Roadmap accepted (2026-10-30) | Accepted (2026-10-30) | P-A |
+| PC02 | [Doors, keys and discovered navigation](#pc02-doors-keys-and-discovered-navigation) | PC01 | Accepted | P-A |
 | PC03 | [Guardians and structurally safe progression](#pc03-guardians-and-structurally-safe-progression) | PC02 | Planned | P-A |
 | PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Planned | P-B |
 | PC05 | [Paid recall and entry waypoints](#pc05-paid-recall-and-entry-waypoints) | PC04 | Planned | P-B |
@@ -372,7 +372,16 @@ unavailability if applicable. No claim of combat balance or full progression yet
 and readable routes, inspect a forced fallback and a rejected invalid template.
 Verify the ordinary arena still launches through existing tooling.
 
-**Execution record:** Not started; detailed plan and implementation approval pending.
+**Execution record:** Accepted and closed, 2026-10-30.
+[Approved and implemented design](procedural_generation_design.md); user authorized
+implementation with “Implement the plan.” New Game now launches empty seeded floors;
+bounded generation/validation/fallback, diagnostic maps and strict replay are delivered.
+[Verification and handoff](pc01_verification.md): headless Debug/Release 35/35,
+graphics Debug/Release 53/53, focused sanitizers and zero tracked frame allocations,
+hidden GPU/menu/arena checks, and thirteen retained review PNGs. No balance experiments
+or broad seed sweep. User accepted: “slice accepted, record it in the doc” (2026-10-30).
+Verification limitations remain unchanged; acceptance does not establish interactive
+desktop execution. At this closeout PC02 remained Planned; the current PC02 record below supersedes that next action.
 
 ### PC02: Doors, keys and discovered navigation
 
@@ -396,7 +405,25 @@ before completing the fixture set; no OS input automation.
 repeat the request, and compare AI path/sight plus the first-person door image.
 Show the discovered map and a separately labelled diagnostic map.
 
-**Execution record:** Not started; depends on PC01 acceptance.
+**Execution record:** Accepted and closed, 2026-10-30. User approved the
+[PC02 detailed design](procedural_fixtures_design.md): “Implement the plan.”
+Facing discovery, safe settled interaction and isolated full-map debug reveal confirmed.
+Shared geometry, permanent doors, party keys, prepared fixture art, discovery/maps,
+checked F/click/headless/MCP interaction and strict replay are implemented.
+[Verification/handoff](pc02_verification.md) records full headless Debug/Release
+37/37 and graphics Debug/Release 56/56, final focused 3/3 in each preset, focused
+ASan/UBSan 4/4, final threshold-prompt checks (headless 4/4, graphics 5/5 each;
+sanitizer 2/2), zero tracked runtime C++ allocations, hidden GPU/captures and
+[capture gallery](screenshots/pc02/index.html). One test-owned temporary lifetime
+bug was corrected following sanitizer detection. No balance experiments, broad
+seed sweep or OS input automation. The user subsequently tested the available
+gameplay and reported it working; this does not claim exhaustive interactive coverage.
+Generator/templates 2/2; prepared format/renderer 4/4; scenario/protocol remain 1.
+**Acceptance:** User: “okay in that case I accept the slice, ive tested as far as I could
+and it is working, update the doc” (2026-10-30). The user understands that the gallery
+shows separate test floors and traversal is not implemented until PC04. Basic door
+art is accepted for this functional slice, not as final visual quality; no renderer
+redesign is authorized by this closeout. PC03 is now eligible for its own reviewed plan.
 
 ### PC03: Guardians and structurally safe progression
 
@@ -421,7 +448,8 @@ objective guarantees. Malformed seeds fail usefully, never quietly remove a lock
 group, then all designated guardians and unlock descent. Retain strict replay and
 representative pre/post-gate captures. Obtain P-A acceptance separately from balance.
 
-**Execution record:** Not started; depends on PC02 acceptance.
+**Execution record:** Not started. PC02 is accepted; eligible for detailed planning
+when requested, with plan approval required before implementation.
 
 ### PC04: Persistent descent and fixed hub
 
@@ -667,3 +695,41 @@ generation/travel. Balance experiments remain opt-in, and desktop restrictions
 remain in force. Prior verification evidence and limitations are unchanged.
 This acceptance update changes documentation only; no builds, gameplay tests,
 experiments or graphics checks were run, and no commit was requested or created.
+
+
+### PC01 accepted closeout and next-agent handoff (2026-10-30, historical)
+
+The user explicitly accepted: “slice accepted, record it in the doc”. PC01 is
+**Accepted and closed**. See [verification/handoff](pc01_verification.md) and
+[capture gallery](screenshots/pc01/index.html). Earlier roadmap-planning directions
+above are historical. Existing verification evidence and limitations are unchanged.
+
+PC02 — Doors, keys and discovered navigation — is next eligible for detailed planning
+in a fresh context when requested. Read AGENTS.md, the system overview, MVP spec,
+this checkpoint and the PC01 handoff; inspect current code, then plan PC02 only for
+review. Do not implement or advance automatically. PC02–PC09 and milestones P-A/P-B/P-C
+remain Planned.
+
+This acceptance update changes documentation only. All existing working-tree changes
+are preserved; no builds, gameplay tests, captures, experiments or commits were made.
+
+### PC02 accepted closeout and next-agent handoff (2026-10-30)
+
+The user explicitly accepted: “okay in that case I accept the slice, ive tested as
+far as I could and it is working, update the doc”. PC02 is **Accepted and closed**.
+The user tested the available gameplay and confirmed it works. Gallery floors are
+separate scenarios; no traversal is expected before PC04. The door visuals remain
+basic and are not treated as finished art. A renderer redesign needs its own scope.
+
+The checkpoint and PC02 execution record above supersede historical PC01 next-agent
+instructions. See the [handoff](pc02_verification.md), [design](procedural_fixtures_design.md)
+and [gallery](screenshots/pc02/index.html). PC01 remains Accepted and closed.
+PC03–PC09 and milestones P-A/P-B/P-C remain Planned. PC03 is next eligible for detailed
+planning in a fresh context when requested: read AGENTS.md, the system overview,
+MVP spec, this checkpoint and the PC02 handoff, then inspect code and plan PC03 only
+for review. Do not implement or advance automatically.
+
+This acceptance update changes documentation only. Existing verification results
+remain unchanged, supplemented by the user's limited interactive testing. Live
+Codex-host MCP interaction remains unverified. All working-tree changes are preserved;
+no builds, gameplay tests, captures, balance experiments or commits were made.

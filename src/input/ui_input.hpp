@@ -1,6 +1,6 @@
 #pragma once
-#include "ui/layout.hpp"
 #include "input/text_edit.hpp"
+#include "ui/layout.hpp"
 #include <array>
 namespace blobber {
 enum class UiKey : std::size_t {
@@ -29,6 +29,7 @@ enum class UiKey : std::size_t {
     UseItem,
     Tab,
     Rest,
+    Interact,
     Count
 };
 constexpr auto uiKeyCount = static_cast<std::size_t>(UiKey::Count);

@@ -149,6 +149,9 @@ struct HudSnapshot {
     bool restAvailable = false;
     const char* restReason = "Rest unavailable.";
     std::array<char, 192> lootHover{};
+    std::array<char, 192> fixturePrompt{};
+    const FloorGeometry* floor = nullptr; // Borrowed from the controller's session.
+    std::uint8_t questKeys = 0;
     HudHover hover;
     bool arena = false, arenaComplete = false, retryConfirmation = false, retryRequested = false;
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
@@ -245,6 +248,7 @@ class CommandController {
     void collectLoot(LootId) noexcept;
     void openLoot(LootId) noexcept;
     void refreshLoot() noexcept;
+    void interactFixture(std::optional<FixtureId> = {}) noexcept;
     void lootHover(int) noexcept;
     void lootPage(int) noexcept;
     void lootRecipient(std::size_t) noexcept;

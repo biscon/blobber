@@ -1,0 +1,34 @@
+[
+  {
+    "operation": 1,
+    "label": "entrance"
+  },
+  {
+    "operation": 67,
+    "label": "closed-door"
+  },
+  {
+    "operation": 130,
+    "label": "key-before"
+  },
+  {
+    "operation": 131,
+    "label": "key-collected"
+  },
+  {
+    "operation": 194,
+    "label": "door-with-key"
+  },
+  {
+    "operation": 195,
+    "label": "opened-door"
+  },
+  {
+    "operation": 198,
+    "label": "open-threshold"
+  },
+  {
+    "operation": 240,
+    "label": "endpoint"
+  }
+]

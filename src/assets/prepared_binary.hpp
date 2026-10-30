@@ -10,7 +10,7 @@
 namespace blobber::prepared_io {
 // Field encoding is little-endian; floats are IEEE binary32 and colors are RGBA8.
 // Bump revision when projection, lighting or preparation semantics change.
-constexpr std::uint32_t formatVersion = 3, rendererRevision = 3;
+constexpr std::uint32_t formatVersion = 4, rendererRevision = 4;
 class Writer {
   public:
     Writer(const std::filesystem::path& destination, std::string_view magic, std::uint64_t profile,

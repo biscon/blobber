@@ -16,10 +16,10 @@ struct NpcAiSnapshot {
     std::size_t count = 0, searchWork = 0, completedSearches = 0;
     std::uint64_t timeMs = 0;
 };
-bool npcSees(const Map& map, Cell from, Heading facing, Cell target) noexcept;
+bool npcSees(GeometryView map, Cell from, Heading facing, Cell target) noexcept;
 class NpcAiController {
   public:
-    NpcAiController(const Map& map, ActorWorld& actors, std::uint32_t seed);
+    NpcAiController(GeometryView map, ActorWorld& actors, std::uint32_t seed);
     NpcAiController(Map&&, ActorWorld&, std::uint32_t) = delete;
     NpcAiController(const Map&&, ActorWorld&, std::uint32_t) = delete;
     NpcAiController(const NpcAiController&) = delete;
@@ -40,7 +40,7 @@ class NpcAiController {
     const NpcAiSnapshot& snapshot() const noexcept { return state_; }
 
   private:
-    const Map& map_;
+    GeometryView map_;
     ActorWorld& actors_;
     Navigation navigation_;
     EffectController* effects_ = nullptr;
@@ -49,7 +49,7 @@ class NpcAiController {
     std::mt19937 rng_;
     NpcAiSnapshot state_;
     std::array<bool, NpcWorld::maxInstances> rangedOnly_{};
-    std::uint64_t tickDue_ = 100;
+    std::uint64_t tickDue_ = 100, geometryRevision_ = 0;
     std::size_t priority_ = 0;
     struct Goal {
         bool active = false, adjacent = false;

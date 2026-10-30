@@ -1,0 +1,153 @@
+{
+  "note": "Selected final 1920x1080 hidden application-owned captures; original capture manifests list all exported images, not all retained here.",
+  "images": [
+    {
+      "file": "depth-2-entrance.png",
+      "label": "Depth 2: entrance",
+      "sha256": "4ce814c18dc4a05b3072c67982e6b5bf4394c610f41077a86d84c221a3494d28",
+      "depth": 2,
+      "operation": 1
+    },
+    {
+      "file": "depth-2-closed-door.png",
+      "label": "Depth 2: closed door",
+      "sha256": "671b5454b8a003b44b3c894bd18c4fb184e161d0d25fe6895cc2b985f29c3631",
+      "depth": 2,
+      "operation": 97
+    },
+    {
+      "file": "depth-2-key-before.png",
+      "label": "Depth 2: key before",
+      "sha256": "9237d6010fe940a58da9f48373b498025c62556feaf0895246ec596474c91cc3",
+      "depth": 2,
+      "operation": 186
+    },
+    {
+      "file": "depth-2-key-collected.png",
+      "label": "Depth 2: key collected",
+      "sha256": "636aae9830e84bd9237084747288db4b598d8899ec822c7617a942f8a9846f96",
+      "depth": 2,
+      "operation": 187
+    },
+    {
+      "file": "depth-2-door-with-key.png",
+      "label": "Depth 2: door with key",
+      "sha256": "1919d8508ed915a9b3fb185ee0334d4f9830dfc2366bba6f1e0c28f2dc971ffb",
+      "depth": 2,
+      "operation": 276
+    },
+    {
+      "file": "depth-2-opened-door.png",
+      "label": "Depth 2: opened door",
+      "sha256": "68497f6c76e903dda32e89af862e08fef698ef99aaddd5c711b328c167c8cdd9",
+      "depth": 2,
+      "operation": 277
+    },
+    {
+      "file": "depth-2-open-threshold.png",
+      "label": "Depth 2: open threshold",
+      "sha256": "fe6237102de2338e30ae314916eb5e9a55915fef88a64571c4098a8ac252beaa",
+      "depth": 2,
+      "operation": 280
+    },
+    {
+      "file": "depth-2-endpoint.png",
+      "label": "Depth 2: endpoint",
+      "sha256": "82c0f2b21d02b507eeab79aad594152d7186d13e7f18be0d2810b7cdf82cc409",
+      "depth": 2,
+      "operation": 310
+    },
+    {
+      "file": "depth-2-entrance-discovered-map.png",
+      "label": "Depth 2: entrance discovered map",
+      "sha256": "5c249e3e220cf022d2325ff9d86f20de3a0a2b81810a8b6979b2360c00b55968",
+      "depth": 2,
+      "operation": 1
+    },
+    {
+      "file": "depth-2-opened-door-discovered-map.png",
+      "label": "Depth 2: opened door discovered map",
+      "sha256": "d10f48d932146d217e0c61f9ddc3cd09bd1d2509cfb946637b5dbd0307324528",
+      "depth": 2,
+      "operation": 277
+    },
+    {
+      "file": "depth-2-opened-door-diagnostic-map.png",
+      "label": "Depth 2: opened door diagnostic map",
+      "sha256": "f01dd5ce808de0b3cf8ee9454547e0cc1db37daa7b13e3911d1c468d8d3969db",
+      "depth": 2,
+      "operation": 277
+    },
+    {
+      "file": "depth-3-closed-door.png",
+      "label": "Depth 3: closed door",
+      "sha256": "fd0784197f1dbedc125a58a1dcb874de381e8314a6bd3bdbdd93d3ae0ecc7646",
+      "depth": 3,
+      "operation": 67
+    },
+    {
+      "file": "depth-3-key-before.png",
+      "label": "Depth 3: key before",
+      "sha256": "f0b4243c3aaad014ace85cbfa6e075590d184738323b45dbe92d95fa569e0e58",
+      "depth": 3,
+      "operation": 130
+    },
+    {
+      "file": "depth-3-opened-door.png",
+      "label": "Depth 3: opened door",
+      "sha256": "2307135bc4c382b945d20085daf9d40c68d1d17f41a91bceb8e0266c20475fce",
+      "depth": 3,
+      "operation": 195
+    },
+    {
+      "file": "depth-3-endpoint.png",
+      "label": "Depth 3: endpoint",
+      "sha256": "b55980fa7b3bcddb33a5e948485b43dfd316b6448c153703f6698670a7a1d747",
+      "depth": 3,
+      "operation": 240
+    },
+    {
+      "file": "depth-3-endpoint-discovered-map.png",
+      "label": "Depth 3: endpoint discovered map",
+      "sha256": "6ee1efc4be29aee7b37137048f4794f6f9020f192ed5154c5caecbcb6f11cd45",
+      "depth": 3,
+      "operation": 240
+    },
+    {
+      "file": "depth-1-closed-door.png",
+      "label": "Depth 1: closed door",
+      "sha256": "4fc2a79a12e645b9fde53454861381bd74327941f73841df21ed921bcfe2b121",
+      "depth": 1,
+      "operation": 125
+    },
+    {
+      "file": "depth-1-open-threshold.png",
+      "label": "Depth 1: open threshold",
+      "sha256": "37da88ae1bfcfdc5421a7e31798bf167084ed7dcbf42fe7065e3cd58edb0c101",
+      "depth": 1,
+      "operation": 129
+    },
+    {
+      "file": "depth-1-endpoint.png",
+      "label": "Depth 1: endpoint",
+      "sha256": "fc3a56277a5f1ce18f4d528063993886d3c662e418fb95783d6972de9acfb825",
+      "depth": 1,
+      "operation": 171
+    },
+    {
+      "file": "menu-launch.png",
+      "label": "Normal launch: launch",
+      "sha256": "fe1e437c52d2e1110c2564356e6ba0687643fdda009e4721fffe212f28118d31"
+    },
+    {
+      "file": "menu-launch-discovered-map.png",
+      "label": "Normal launch: launch discovered map",
+      "sha256": "a71af13f0184b0a94edff8215ac3cc2f85d4fcd76c0f37fe60a75ea725cfc3da"
+    },
+    {
+      "file": "menu-launch-diagnostic-map.png",
+      "label": "Normal launch: launch diagnostic map",
+      "sha256": "fff1c799a66333229cb964900d91c3a2b63824c464a0be418cb707dabf551cd4"
+    }
+  ]
+}

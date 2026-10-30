@@ -25,7 +25,8 @@ void Presenter::drawGame(Rectangle destination) const {
     EndBlendMode();
 }
 void Presenter::present(const Frame& frame, const MovementState& state, const Map& map, bool debug,
-                        bool changed, const HudSnapshot* hud, const PickingBuffer* picking) {
+                        bool changed, const HudSnapshot* hud, const PickingBuffer* picking,
+                        const generation::DiagnosticView* generation, bool reveal) {
     SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_POINT);
     if (changed)
         UpdateTexture(resources_.texture(viewport_), frame.data());
@@ -43,7 +44,7 @@ void Presenter::present(const Frame& frame, const MovementState& state, const Ma
     BeginBlendMode(BLEND_CUSTOM_SEPARATE);
     drawUI(state, debug, map, hud, &fonts_, &uiArt_);
     if (debug)
-        drawMapOverlay(state, map, &fonts_);
+        drawMapOverlay(state, map, &fonts_, generation, hud, reveal);
     drawHudOverlay(hud, picking, &fonts_, &uiArt_);
     EndBlendMode();
     EndTextureMode();

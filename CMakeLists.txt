@@ -54,7 +54,7 @@ add_library(blobber_rules src/rules/progression.cpp src/rules/spell_selection.cp
 target_include_directories(blobber_rules PUBLIC src)
 add_library(blobber_rules_io src/persistence/arena_store.cpp src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
-add_library(blobber_core src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
+add_library(blobber_core src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/fixtures.cpp src/generation/templates.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules)
 # Level recovery loading validates world cells and exposes core recovery data.
@@ -114,11 +114,12 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_custom_target(blobber_bake_runtime_assets
         DEPENDS "${BLOBBER_PREPARED_DIR}/scene.bin" "${BLOBBER_PREPARED_DIR}/npcs.bin"
                 "${BLOBBER_PREPARED_DIR}/metadata.json")
+    file(GLOB BLOBBER_FIXTURE_ART CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/fixtures/*.png")
     add_executable(blobber_bake_loot tools/bake_loot.cpp)
     target_link_libraries(blobber_bake_loot PRIVATE blobber_assets_io)
     add_custom_command(OUTPUT "${BLOBBER_PREPARED_DIR}/loot.bin"
-        COMMAND blobber_bake_loot "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/loot-bag.png" "${BLOBBER_PREPARED_DIR}/loot.bin"
-        DEPENDS blobber_bake_loot "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/loot-bag.png"
+        COMMAND blobber_bake_loot "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/loot-bag.png" "${BLOBBER_PREPARED_DIR}/loot.bin" "${CMAKE_CURRENT_SOURCE_DIR}/assets/fixtures"
+        DEPENDS blobber_bake_loot "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/items/loot-bag.png" ${BLOBBER_FIXTURE_ART}
         COMMENT "Baking floor loot sprites offline" VERBATIM)
     add_custom_target(blobber_bake_floor_loot DEPENDS "${BLOBBER_PREPARED_DIR}/loot.bin")
     add_dependencies(blobber blobber_bake_floor_loot)
@@ -262,7 +263,7 @@ endif()
 add_library(blobber_automation src/automation/session.cpp)
 target_link_libraries(blobber_automation PUBLIC blobber_core blobber_rules_io blobber_npc_io)
 blobber_warnings(blobber_automation)
-add_library(blobber_automation_io src/automation/decode.cpp src/automation/observe.cpp
+add_library(blobber_automation_io src/automation/scenario_codec.cpp src/automation/decode.cpp src/automation/observe.cpp
     src/automation/actions.cpp src/automation/protocol.cpp src/automation/trace.cpp)
 target_link_libraries(blobber_automation_io PUBLIC blobber_automation nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_automation_io)
@@ -317,4 +318,46 @@ if(BUILD_TESTING)
     add_test(NAME mcp_adapter_tools COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/mcp_adapter_tests.py)
     set_tests_properties(mcp_adapter_tools PROPERTIES TIMEOUT 20 LABELS "tooling")
+endif()
+
+# Preparation-only generator inspection: no window, content files or balance simulation.
+add_library(blobber_generation_io src/generation/report.cpp)
+target_link_libraries(blobber_generation_io PUBLIC blobber_core nlohmann_json::nlohmann_json)
+blobber_warnings(blobber_generation_io)
+add_executable(blobber_generate_floor tools/generate_floor.cpp)
+target_link_libraries(blobber_generate_floor PRIVATE blobber_generation_io)
+blobber_warnings(blobber_generate_floor)
+
+target_link_libraries(blobber_automation_io PUBLIC blobber_generation_io)
+if(BUILD_TESTING)
+    if(BLOBBER_BUILD_GRAPHICS)
+        add_executable(blobber_fixtures_render_tests tests/fixtures_render_tests.cpp)
+        target_link_libraries(blobber_fixtures_render_tests PRIVATE blobber_assets_io)
+        blobber_warnings(blobber_fixtures_render_tests)
+        add_test(NAME fixtures_render COMMAND blobber_fixtures_render_tests)
+    endif()
+    add_executable(blobber_fixtures_automation_tests tests/fixtures_automation_tests.cpp)
+    target_link_libraries(blobber_fixtures_automation_tests PRIVATE blobber_automation_io)
+    blobber_warnings(blobber_fixtures_automation_tests)
+    add_test(NAME fixtures_automation COMMAND blobber_fixtures_automation_tests)
+    add_executable(blobber_fixtures_tests tests/fixtures_tests.cpp)
+    target_link_libraries(blobber_fixtures_tests PRIVATE blobber_core)
+    blobber_warnings(blobber_fixtures_tests)
+    add_test(NAME fixtures COMMAND blobber_fixtures_tests)
+    add_executable(blobber_generation_tests tests/generation_tests.cpp)
+    target_link_libraries(blobber_generation_tests PRIVATE blobber_core)
+    blobber_warnings(blobber_generation_tests)
+    add_test(NAME generation COMMAND blobber_generation_tests)
+endif()
+if(BUILD_TESTING)
+    add_executable(blobber_generation_automation_tests tests/generation_automation_tests.cpp)
+    target_link_libraries(blobber_generation_automation_tests PRIVATE blobber_automation_io)
+    blobber_warnings(blobber_generation_automation_tests)
+    add_test(NAME generation_automation COMMAND blobber_generation_automation_tests)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME generation_cli COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/generation_cli_tests.py
+        $<TARGET_FILE:blobber_generate_floor> $<TARGET_FILE:blobber_headless>)
+    set_tests_properties(generation_cli PROPERTIES TIMEOUT 30)
 endif()

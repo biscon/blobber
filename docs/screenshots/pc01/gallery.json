@@ -1,0 +1,130 @@
+{
+  "images": [
+    {
+      "file": "seed-5-operation-1.png",
+      "caption": "seed-5: Entrance",
+      "source": "/tmp/blobber-pc01-review/seed-5/captures/operation-1.png",
+      "sha256": "45368a50135ec6a315c29e35626950c224ffc6fe1eba8d44f7c94c79af7d8144"
+    },
+    {
+      "file": "seed-5-operation-61.png",
+      "caption": "seed-5: Pillar room",
+      "source": "/tmp/blobber-pc01-review/seed-5/captures/operation-61.png",
+      "sha256": "dc34bdd8045a1a34a8eaf22f262ad4df4c947b6557c9269b157e6200f28e825a"
+    },
+    {
+      "file": "seed-5-operation-121.png",
+      "caption": "seed-5: Provisional objective",
+      "source": "/tmp/blobber-pc01-review/seed-5/captures/operation-121.png",
+      "sha256": "d8219d7fff0c7754aa0ad063ad769abdeca940d92e1067586de13dd7cadffdf4"
+    },
+    {
+      "file": "seed-1-operation-1.png",
+      "caption": "seed-1: Entrance, eight-room cycle",
+      "source": "/tmp/blobber-pc01-review/seed-1/captures/operation-1.png",
+      "sha256": "c571e185273ad7e5e92ae8c82fa9d92d8e16d163444fd008954d28ca85065c04"
+    },
+    {
+      "file": "seed-1-operation-35.png",
+      "caption": "seed-1: Pillar occlusion",
+      "source": "/tmp/blobber-pc01-review/seed-1/captures/operation-35.png",
+      "sha256": "70c6346da046ae587069adac72a74f3de0a193c8d365e5ceb35fe9adf81823cf"
+    },
+    {
+      "file": "seed-1-operation-177.png",
+      "caption": "seed-1: Provisional objective",
+      "source": "/tmp/blobber-pc01-review/seed-1/captures/operation-177.png",
+      "sha256": "762846c7f126c14557fc102f78e5774aea547dff529b51541e0029d7966d7aab"
+    },
+    {
+      "file": "fallback-5-operation-1.png",
+      "caption": "fallback-5: Authored fallback",
+      "source": "/tmp/blobber-pc01-review/fallback-5/captures/operation-1.png",
+      "sha256": "47d4a178660cd1586e5dda9f1aae73acd778872471849da442e4716c00de51e6"
+    },
+    {
+      "file": "seed-5-diagnostic-map.png",
+      "caption": "seed-5: full diagnostic map and generation provenance",
+      "source": "/tmp/blobber-pc01-review/seed-5/captures/operation-1-diagnostic-map.png",
+      "sha256": "a10539eed759486149c2c50124dab2371884c1251f85682910444da11246a242"
+    },
+    {
+      "file": "seed-1-diagnostic-map.png",
+      "caption": "seed-1: full diagnostic map and generation provenance",
+      "source": "/tmp/blobber-pc01-review/seed-1/captures/operation-1-diagnostic-map.png",
+      "sha256": "97752979d19e618ebed356325bff4e69c4364b53b6d55a151ed56683560a01c9"
+    },
+    {
+      "file": "seed-8-diagnostic-map.png",
+      "caption": "seed-8: full diagnostic map and generation provenance",
+      "source": "/tmp/blobber-pc01-review/seed-8/captures/operation-1-diagnostic-map.png",
+      "sha256": "b6155b252c2fb27e3676482aabb6f18552920fb7bc7373aad74cc0c86fa4e0c4"
+    },
+    {
+      "file": "fallback-5-diagnostic-map.png",
+      "caption": "fallback-5: full diagnostic map and generation provenance",
+      "source": "/tmp/blobber-pc01-review/fallback-5/captures/operation-1-diagnostic-map.png",
+      "sha256": "39397cbb7f46a057500cc1568f3eb25521098ceafd8d38d899a5afc25ed44f41"
+    },
+    {
+      "file": "menu-launch.png",
+      "caption": "Normal party-picker launch, seed 5",
+      "source": "/tmp/blobber-pc01-menu-captures/launch.png",
+      "sha256": "e3aabbf44c93650648475c0c3ad43d5e80a2af910d99bc5813e6a662461485d9"
+    },
+    {
+      "file": "menu-launch-restart.png",
+      "caption": "Normal party-picker launch-restart, seed 5",
+      "source": "/tmp/blobber-pc01-menu-captures/launch-restart.png",
+      "sha256": "e3aabbf44c93650648475c0c3ad43d5e80a2af910d99bc5813e6a662461485d9"
+    }
+  ],
+  "runs": [
+    {
+      "name": "seed-5",
+      "seed": 5,
+      "forced": false,
+      "operations": [
+        1,
+        61,
+        121,
+        122
+      ],
+      "fingerprint": "8955331068716827512"
+    },
+    {
+      "name": "seed-8",
+      "seed": 8,
+      "forced": false,
+      "operations": [
+        1,
+        69,
+        129,
+        130
+      ],
+      "fingerprint": "10972961193643475412"
+    },
+    {
+      "name": "fallback-5",
+      "seed": 5,
+      "forced": true,
+      "operations": [
+        1,
+        2
+      ],
+      "fingerprint": "15555746629466345479"
+    },
+    {
+      "name": "seed-1",
+      "seed": 1,
+      "forced": false,
+      "operations": [
+        1,
+        35,
+        177,
+        178
+      ],
+      "fingerprint": "8789648654042291559"
+    }
+  ]
+}

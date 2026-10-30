@@ -35,6 +35,7 @@ class Party {
     Party& operator=(Party&&) = delete;
     Party(rules::Catalog&&) = delete;
     Party(const rules::Catalog&&) = delete;
+    std::uint8_t questKeys() const noexcept { return questKeys_; }
     const PartySnapshot& snapshot() const noexcept { return state_; }
     const PartyCharacter* character(rules::CharacterId id) const noexcept;
     const PartyCharacter* occupant(FormationSlot slot) const noexcept;
@@ -76,6 +77,8 @@ class Party {
     std::uint64_t progressionRevision() const noexcept { return progressionRevision_; }
 
   private:
+    friend class GameSession;
+    std::uint8_t questKeys_ = 0;
     const rules::Catalog* catalog_;
     PartySnapshot state_;
     Inventory inventory_;

@@ -234,7 +234,7 @@ def main():
     parser.add_argument("--runner", default="cmake-build-headless-debug/blobber_headless")
     parser.add_argument("--assets", default="assets")
     parser.add_argument("--mode", choices=("diagnostic", "visual"), default="diagnostic")
-    parser.add_argument("--scenario", required=True, type=Path)
+    parser.add_argument("--scenario", required=True, type=Path, help="Arena or generated_floor scenario JSON")
     parser.add_argument("--record", type=Path)
     parser.add_argument("--script", type=Path, help="JSON lines with op/fields; default stdin")
     args = parser.parse_args()

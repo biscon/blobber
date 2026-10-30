@@ -1,0 +1,278 @@
+{
+  "kind": "generated_floor",
+  "schema_version": 1,
+  "generator_version": 2,
+  "template_version": 2,
+  "depth": 1,
+  "seed": 5,
+  "party": [
+    {
+      "abilities": [
+        15,
+        13,
+        14,
+        8,
+        12,
+        10
+      ],
+      "choices": [
+        "longsword",
+        "chain_mail",
+        "shield"
+      ],
+      "class": "fighter",
+      "defense": true,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": 2,
+          "ranged": null
+        },
+        "items": [
+          {
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "item": "shield",
+            "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "alden",
+      "level": 1,
+      "life_domain": false,
+      "name": "Alden",
+      "portrait": "alden",
+      "race": "human",
+      "spells": {
+        "cantrips": [],
+        "domain": [],
+        "learned": [],
+        "prepared": [],
+        "racial": []
+      }
+    },
+    {
+      "abilities": [
+        13,
+        10,
+        14,
+        8,
+        15,
+        12
+      ],
+      "choices": [
+        "mace",
+        "scale_mail",
+        "shield"
+      ],
+      "class": "cleric",
+      "defense": false,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": 2,
+          "ranged": null
+        },
+        "items": [
+          {
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "item": "shield",
+            "quantity": 1
+          },
+          {
+            "item": "holy_symbol",
+            "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "item": "mana_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "brunna",
+      "level": 1,
+      "life_domain": true,
+      "name": "Brunna",
+      "portrait": "brunna",
+      "race": "hill_dwarf",
+      "spells": {
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "learned": [],
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "racial": []
+      }
+    },
+    {
+      "abilities": [
+        8,
+        15,
+        14,
+        12,
+        13,
+        10
+      ],
+      "choices": [
+        "shortsword",
+        "leather",
+        "bow_kit"
+      ],
+      "class": "rogue",
+      "defense": false,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": null,
+          "ranged": 2
+        },
+        "items": [
+          {
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "item": "shortbow",
+            "quantity": 1
+          },
+          {
+            "item": "arrow",
+            "quantity": 20
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "merrin",
+      "level": 1,
+      "life_domain": false,
+      "name": "Merrin",
+      "portrait": "merrin",
+      "race": "lightfoot_halfling",
+      "spells": {
+        "cantrips": [],
+        "domain": [],
+        "learned": [],
+        "prepared": [],
+        "racial": []
+      }
+    },
+    {
+      "abilities": [
+        8,
+        14,
+        13,
+        15,
+        12,
+        10
+      ],
+      "choices": [
+        "dagger"
+      ],
+      "class": "wizard",
+      "defense": false,
+      "gear": {
+        "equipment": {
+          "body": null,
+          "main_hand": 0,
+          "off_hand": null,
+          "ranged": null
+        },
+        "items": [
+          {
+            "item": "dagger",
+            "quantity": 1
+          },
+          {
+            "item": "spellbook",
+            "quantity": 1
+          },
+          {
+            "item": "arcane_focus",
+            "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "item": "mana_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "lethiel",
+      "level": 1,
+      "life_domain": false,
+      "name": "Lethiel",
+      "portrait": "lethiel",
+      "race": "high_elf",
+      "spells": {
+        "cantrips": [
+          "fire_bolt",
+          "acid_splash",
+          "ray_of_frost"
+        ],
+        "domain": [],
+        "learned": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave",
+          "sleep",
+          "grease"
+        ],
+        "prepared": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave"
+        ],
+        "racial": [
+          "shocking_grasp"
+        ]
+      }
+    }
+  ]
+}

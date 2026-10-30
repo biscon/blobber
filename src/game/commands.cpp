@@ -372,6 +372,20 @@ bool CommandController::visible(ActorId id) const noexcept {
 }
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
                                 const HudDemo* demo) noexcept {
+    state_.fixturePrompt[0] = 0;
+    state_.floor = session_ ? &session_->fixtures() : nullptr;
+    state_.questKeys = session_ ? session_->party().questKeys() : 0;
+    if (session_ && !moving && !mapOpen && focused && !state_.modal() && !state_.magic.casting() &&
+        !state_.magic.armed && !state_.inventory.itemTargeting) {
+        const auto request = session_->nearbyFixture();
+        const auto* f = session_->fixtures().find(request.id);
+        if (f &&
+            (!session_->fixtures().definition().discovery || session_->fixtures().known(request.id.slot))) {
+            const auto result = session_->interact(request, true);
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / %s - %s",
+                          fixtureName(*f), result.reason);
+        }
+    }
     state_.production = session_ != nullptr;
     state_.development = session_ && session_->development();
     if (state_.camp.open)

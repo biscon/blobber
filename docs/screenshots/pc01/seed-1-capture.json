@@ -1,0 +1,98 @@
+{
+  "assets": "/home/bison/Projects/blobber/cmake-build-debug/assets",
+  "header": {
+    "binary": "14505353288962568282",
+    "content": {
+      "catalog": "5471453669825073813",
+      "npc_definitions": "15378577391153559251"
+    },
+    "mode": "diagnostic",
+    "protocol": 1,
+    "timing": "fixed-10ms-v1"
+  },
+  "images": [
+    {
+      "file": "operation-1.png",
+      "height": 1080,
+      "operation": 1,
+      "revision": "1",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-1-diagnostic-map.png",
+      "height": 1080,
+      "operation": 1,
+      "revision": "1",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-35.png",
+      "height": 1080,
+      "operation": 35,
+      "revision": "35",
+      "session": "1",
+      "ticks": 272,
+      "width": 1920
+    },
+    {
+      "file": "operation-35-diagnostic-map.png",
+      "height": 1080,
+      "operation": 35,
+      "revision": "35",
+      "session": "1",
+      "ticks": 272,
+      "width": 1920
+    },
+    {
+      "file": "operation-177.png",
+      "height": 1080,
+      "operation": 177,
+      "revision": "177",
+      "session": "1",
+      "ticks": 1408,
+      "width": 1920
+    },
+    {
+      "file": "operation-177-diagnostic-map.png",
+      "height": 1080,
+      "operation": 177,
+      "revision": "177",
+      "session": "1",
+      "ticks": 1408,
+      "width": 1920
+    },
+    {
+      "file": "operation-178.png",
+      "height": 1080,
+      "operation": 178,
+      "revision": "1",
+      "session": "2",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-178-diagnostic-map.png",
+      "height": 1080,
+      "operation": 178,
+      "revision": "1",
+      "session": "2",
+      "ticks": 0,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "preparation.json": "12428054850885865074",
+    "prepared/loot.bin": "6795145884858974791",
+    "prepared/metadata.json": "7022229179963557372",
+    "prepared/npcs.bin": "5951312856646699037",
+    "prepared/scene.bin": "4658194504534055067"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "/tmp/blobber-pc01-review/seed-1/walk.jsonl",
+  "trace_fingerprint": "17200521406108315504"
+}

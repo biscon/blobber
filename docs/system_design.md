@@ -1,6 +1,18 @@
 # System design
 
-Roadmap **accepted by the user; architecture not implemented** (2026-10-30):
+PC02 **Accepted and closed** (2026-10-30):
+[doors, keys and discovered navigation](procedural_fixtures_design.md).
+User: “Implement the plan.” Shared effective geometry, checked permanent fixtures,
+facing-based discovery and isolated diagnostic reveal. [Verification/handoff](pc02_verification.md)
+records headless Debug/Release 37/37, graphics Debug/Release 56/56, focused sanitizer
+and allocation checks, strict replay and hidden captures. Generator/templates are
+2/2 and prepared format/renderer 4/4. The user accepted after testing the available
+gameplay and reporting it working (2026-10-30). Separate test floors and inert stairs
+are expected until PC04; basic door art is not considered final visual quality.
+PC03 is eligible for separate planning when requested and remains unstarted.
+
+
+Roadmap **accepted by the user; campaign architecture remains planned** (2026-10-30):
 [procedural campaign delivery plan](procedural_campaign_plan.md), based on the
 [MVP specification](procedural_campaign_mvp.md). The user closed the remaining
 [static-demo roadmap](dnd5e_demo_design.md#roadmap-closeout-2026-10-30): retire its
@@ -14,9 +26,18 @@ gates, one travelling Party with persistent floor snapshots, fixed hub, paid rec
 and entry waypoints, then campaign saves, depth content and expedition investigation.
 No respawns; finite optional encounters provide XP/resource fallback. Shops are a
 later milestone. The plan records ownership, clocks, transactional failures and
-validation. The user accepted the roadmap; the next step is a PC01-only detailed
-plan for review in a fresh context. No campaign slice has started implementation.
-The implemented architecture below remains unchanged until those slices deliver.
+validation. The user approved the [PC01 detailed design](procedural_generation_design.md) with
+“Implement the plan.” PC01 is **Accepted and closed** (2026-10-30); the user
+confirmed “slice accepted, record it in the doc”. PC02 is Accepted and closed above; PC03–PC09 remain Planned. [PC01 verification/handoff](pc01_verification.md) records full
+headless Debug/Release 35/35, graphics Debug/Release 53/53, focused sanitizers,
+zero tracked frame allocations, hidden GPU/capture checks and thirteen retained PNGs.
+New Game now enters an empty seeded 36×36 floor through the existing party picker.
+Bounded graph/templates, tile validation, deterministic fallback/diagnostics and
+strict generated-floor replay are implemented. PC02 adds checked doors/keys and
+a discovered map, with a separate development diagnostic reveal. Stairs/objectives
+remain inert pending later slices. No balance experiments or broad seed sweep were
+run. PC03 planning is next eligible when requested; do not advance automatically.
+The user has tested the available PC02 gameplay; live Codex-host MCP remains unverified.
 
 Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter](mcp_design.md).
 Optional official-SDK stdio tools reuse accepted sessions, experiments/reports and
@@ -633,6 +654,7 @@ Historical techniques and visual choices are documented in [research](research.m
 
 | Location | Responsibility |
 | --- | --- |
+| `src/generation/` | Bounded deterministic floor templates/topology, tile validation, preparation diagnostics and JSON report adapter |
 | `src/world/` | Grid values, immutable map and NPC placements/occupancy |
 | `src/rules/` | Deterministic rules, character derivation, bounded creation drafts/previews, per-grant spell queries and immutable typed catalog |
 | `src/persistence/` | Versioned starting-build codec, checked UUID/revision library transactions; independent of future run saves |

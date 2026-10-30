@@ -129,12 +129,12 @@ struct SpellArea {
 SpellArea spellArea(const ActorWorld&, Player) noexcept;
 SpellArea spellArea(const ActorWorld&, const Party&, const EffectController&, Player, rules::SpellKind,
                     std::optional<Cell> = {}) noexcept;
-bool spellCell(const Map&, Player, Cell) noexcept;
+bool spellCell(GeometryView, Player, Cell) noexcept;
 
 class CombatController {
   public:
     static constexpr std::uint64_t actionDelayMs = 450;
-    CombatController(const Map&, Party&, ActorWorld&, rules::DiceRng&, NpcAiController&, EffectController&,
+    CombatController(GeometryView, Party&, ActorWorld&, rules::DiceRng&, NpcAiController&, EffectController&,
                      const std::vector<NpcTimings>& timings = {});
     CombatController(const CombatController&) = delete;
     CombatController& operator=(const CombatController&) = delete;
@@ -178,7 +178,7 @@ class CombatController {
     struct Timing {
         std::uint32_t attack = 0, impact = 0, hurt = 0, death = 0, bow = 0, bowImpact = 0;
     };
-    const Map& map_;
+    GeometryView map_;
     Party& party_;
     ActorWorld& actors_;
     rules::DiceRng& rng_;

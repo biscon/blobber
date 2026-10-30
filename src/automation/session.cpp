@@ -1,12 +1,35 @@
 #include "automation/session.hpp"
 #include <stdexcept>
 namespace blobber::automation {
-Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definitions,
-                 const ArenaScenario& scenario, Mode mode, VisibilityFactory factory, void* context)
-    : scenario_(scenario), map_(arenaMap()),
-      placements_(arenaPlacements(map_, catalog, scenario_, definitions.types)),
-      game_(map_, catalog, arenaParty(catalog, scenario_), placements_, scenario_.seed, arenaSpawn(), true,
-            definitions.timings),
+namespace {
+std::optional<generation::GeneratedFloor> prepare(const Scenario& s, Mode mode) {
+    if (const auto* generated = std::get_if<GeneratedScenario>(&s)) {
+        if (generated->forceFallback && mode != Mode::Diagnostic)
+            throw std::runtime_error("Forced fallback requires diagnostic mode");
+        auto result =
+            generation::generate(generated->generation, generation::templates(), generated->forceFallback);
+        if (!result)
+            throw std::runtime_error(std::string("Generation failed: ") +
+                                     generation::errorName(result.diagnostics.failure.code));
+        return std::move(result.floor);
+    }
+    return std::nullopt;
+}
+} // namespace
+Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definitions, const Scenario& scenario,
+                 Mode mode, VisibilityFactory factory, void* context)
+    : scenario_(scenario), generated_(prepare(scenario_, mode)),
+      arenaMap_(generated_ ? std::nullopt : std::optional<Map>(arenaMap())),
+      map_(generated_ ? generated_->map : *arenaMap_),
+      placements_(
+          generated_ ? NpcWorld(map_, generated_->layout.spawn.cell, definitions.types, {})
+                     : arenaPlacements(map_, catalog, std::get<ArenaScenario>(scenario_), definitions.types)),
+      game_(map_, catalog,
+            generated_ ? startingParty(catalog, std::get<GeneratedScenario>(scenario_).party)
+                       : arenaParty(catalog, std::get<ArenaScenario>(scenario_)),
+            placements_, generated_ ? generated_->runtimeSeed : std::get<ArenaScenario>(scenario_).seed,
+            generated_ ? generated_->layout.spawn : arenaSpawn(), true, definitions.timings, {},
+            generated_ ? generated_->layout.fixtures : FloorFixtures{}),
       mode_(mode) {
     if (mode_ == Mode::Visual) {
         if (!factory)
@@ -47,7 +70,7 @@ bool Session::result() const noexcept {
 }
 bool Session::terminal() const noexcept {
     return game_.combat().snapshot().phase == CombatPhase::Defeat ||
-           (game_.combat().snapshot().phase == CombatPhase::Victory &&
+           (arena() && game_.combat().snapshot().phase == CombatPhase::Victory &&
             arenaCleared(game_.actors().snapshot()));
 }
 bool Session::decision() const noexcept {
@@ -87,7 +110,7 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
         if (!realTime(game_.combat().snapshot().phase) || !game_.effects().mobileParty())
             return {false, "Cannot move in this phase or condition"};
         auto player = game_.movement().player;
-        if (!tryAction(map_, player, r.movement, &game_.actors()))
+        if (!tryAction(game_.geometry(), player, r.movement, &game_.actors()))
             return {false, "Blocked"};
         if (!preview)
             game_.move(r.movement);
@@ -124,6 +147,10 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
     case Operation::Advancement: {
         const auto res = preview ? game_.previewAdvancement(r.advancement) : game_.advance(r.advancement);
         return okay(bool(res), advancementMessage(res.error));
+    }
+    case Operation::Interact: {
+        const auto result = game_.interact(r.fixture, preview);
+        return {result.accepted, result.reason};
     }
     case Operation::Continue:
         if (game_.combat().snapshot().phase != CombatPhase::Victory)

@@ -1,56 +1,55 @@
-#include "app/ai_demo.hpp"
 #include "app/gameplay.hpp"
-#include "app/hybrid_demo.hpp"
 #include "app/menu.hpp"
 #include "app/options.hpp"
-#include "app/recovery_demo.hpp"
 #include "assets/npc_loader.hpp"
 #include "assets/preparation_profile.hpp"
 #include "assets/prepared_assets.hpp"
 #include "assets/prepared_loot.hpp"
-#include "assets/recovery_loader.hpp"
 #include "game/party.hpp"
+#include "generation/diagnostic_view.hpp"
 #include "platform/presenter.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/preparation_limits.hpp"
 #include <chrono>
 #include <iostream>
+#include <random>
 #include <stdexcept>
 
 namespace blobber {
 static bool launchSession(const Options& options, const rules::Catalog& rules,
                           const rules::PresetParty& starting, Presenter& presenter,
                           const ArenaScenario* arena) {
-    const Map sourceMap = arena ? arenaMap() : Map::load((options.assets / "maze.txt").string());
-    const bool aiScenario = options.aiDemo || options.captureAiOnly;
-    const bool hybridScenario = options.hybridDemo || options.captureHybridOnly;
-    const Map map = hybridScenario ? hybridDemoMap() : aiScenario ? aiDemoMap() : sourceMap;
-    Controller controller(arena            ? arenaSpawn()
-                          : hybridScenario ? hybridDemoSpawn()
-                          : aiScenario     ? aiDemoSpawn()
-                                           : Player{});
-    if (map.solid(controller.state().player.cell) || !map.connected(controller.state().player.cell))
-        throw std::runtime_error("Spawn is blocked or map contains unreachable floors");
+    const auto seed = arena                     ? arena->seed
+                      : options.seed            ? *options.seed
+                      : options.captureMenuOnly ? 5u
+                                                : std::random_device{}();
+    std::optional<generation::GeneratedFloor> generated;
+    std::optional<Map> arenaFloor;
+    if (arena)
+        arenaFloor.emplace(arenaMap());
+    else {
+        auto result = generation::generate({seed});
+        if (!result)
+            throw std::runtime_error(std::string("Floor generation failed: ") +
+                                     generation::errorName(result.diagnostics.failure.code));
+        generated = std::move(result.floor);
+    }
+    const Map& map = arena ? *arenaFloor : generated->map;
+    const Player spawn = arena ? arenaSpawn() : generated->layout.spawn;
+    const auto runtimeSeed = arena ? seed : generated->runtimeSeed;
+    const auto diagnostics =
+        generated ? generation::diagnosticView(*generated) : generation::DiagnosticView{};
+    if (generated)
+        std::cout << "Generated floor seed=" << seed << " fingerprint=" << generated->fingerprint
+                  << " attempts=" << generated->diagnostics.attempts
+                  << " fallback=" << generated->diagnostics.fallbackId << '\n';
     const auto loadStart = std::chrono::steady_clock::now();
-    auto load = [&]() -> LoadedNpcMetadata {
-        if (!arena)
-            return loadNpcMetadata(options.assets / "npcs/level.json", sourceMap, Player{}.cell);
-        auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
-        return {arenaPlacements(map, rules, *arena, definitions.types), std::move(definitions.timings),
-                std::move(definitions.attachments), definitions.definitionFingerprint};
-    };
-    auto loadedNpcs = load();
-    if (aiScenario)
-        loadedNpcs.world = aiDemoPlacements(map, loadedNpcs.world);
-    if (hybridScenario)
-        loadedNpcs.world = hybridDemoPlacements(map, loadedNpcs.world, rules);
-    if (options.recoveryDemo)
-        loadedNpcs.world = recoveryDemoPlacements(map, loadedNpcs.world);
-    const auto recovery = options.recoveryDemo
-                              ? recoveryDemoLevel(rules)
-                              : (arena || aiScenario || hybridScenario
-                                     ? RecoveryLevel{}
-                                     : loadRecoveryLevel(options.assets / "rules/recovery.json", map, rules));
+    auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
+    LoadedNpcMetadata loadedNpcs{arena ? arenaPlacements(map, rules, *arena, definitions.types)
+                                       : NpcWorld(map, spawn.cell, definitions.types, {}),
+                                 std::move(definitions.timings), std::move(definitions.attachments),
+                                 definitions.definitionFingerprint};
+    const RecoveryLevel recovery;
 
     const auto& timings = loadedNpcs.timings;
     const auto profile = loadPreparationProfile(options.assets / "preparation.json");
@@ -82,8 +81,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
             NpcAnimator animator(session.actors(), timings);
             animator.setTime(session.timeMs(), &session.effects());
             FramePipeline frames;
-            frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                          &session.combat().attacks(), session.timeMs());
+            frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
+                          &animator.snapshot(), &session.combat().attacks(), session.timeMs());
             commands.arenaContext(arenaCleared(session.actors().snapshot()));
             commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false,
                              true);
@@ -147,17 +146,30 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     }
     if (options.captureMenuOnly && !arena) {
         for (int repeat = 0; repeat < 2; ++repeat) {
-            GameSession session(map, rules, starting, loadedNpcs.world, 5, Player{}, true, timings, recovery);
+            GameSession session(map, rules, starting, loadedNpcs.world, runtimeSeed, spawn, true, timings,
+                                recovery, generated->layout.fixtures);
             NpcAnimator animator(session.actors(), timings);
             FramePipeline frames;
+            session.enableDevelopment(options.development);
             CommandController commands(session, timings);
-            frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot());
+            frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
+                          &animator.snapshot());
             commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false,
                              true);
             presenter.present(frames.frame(), session.movement(), map, false, true, &commands.snapshot(),
                               frames.picking());
             presenter.capture(options.captureDirectory / (repeat ? "launch-restart.png" : "launch.png"));
             if (!repeat) {
+                commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false,
+                                 true, true);
+                presenter.present(frames.frame(), session.movement(), map, true, false, &commands.snapshot(),
+                                  frames.picking(), &diagnostics, false);
+                presenter.capture(options.captureDirectory / "launch-discovered-map.png");
+                presenter.present(frames.frame(), session.movement(), map, true, false, &commands.snapshot(),
+                                  frames.picking(), &diagnostics, true);
+                presenter.capture(options.captureDirectory / "launch-diagnostic-map.png");
+                commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false,
+                                 false, true);
                 commands.enableMainMenu();
                 commands.toggleMenu();
                 presenter.present(frames.frame(), session.movement(), map, false, false, &commands.snapshot(),
@@ -171,10 +183,14 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         }
         return true;
     }
-    const GameplayLaunch launch{controller.state().player, arena ? arena->seed : options.seed.value_or(5),
-                                bool(arena), true};
+    const GameplayLaunch launch{spawn,
+                                runtimeSeed,
+                                bool(arena),
+                                true,
+                                generated ? &diagnostics : nullptr,
+                                generated ? &generated->layout.fixtures : nullptr};
     return runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options, recovery,
-                       &starting, arena ? &launch : nullptr) != PlayOutcome::Quit;
+                       &starting, &launch) != PlayOutcome::Quit;
 }
 bool launchMenuParty(const Options& o, const rules::Catalog& c, const rules::PresetParty& p,
                      Presenter& presenter) {

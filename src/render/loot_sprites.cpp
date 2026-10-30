@@ -6,13 +6,14 @@
 namespace blobber {
 void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
                            const std::array<float, viewWidth>& walls, const ActorWorld* actors,
-                           const NpcAnimationSnapshot* animation, Frame& frame,
-                           PickingBuffer& picking) const noexcept {
+                           const NpcAnimationSnapshot* animation, Frame& frame, PickingBuffer& picking,
+                           const FloorGeometry* fixtures) const noexcept {
     if (pixels.size() != icons * pixelsPerIcon)
         return;
     picking.lootWorld(loot.world);
     struct Visible {
         std::uint16_t slot;
+        unsigned icon;
         float lateral, depth;
     };
     std::array<std::uint16_t, lootCapacity> order{};
@@ -28,7 +29,7 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
             return ca.x < cb.x;
         return a < b;
     });
-    std::array<Visible, lootCapacity> visible{};
+    std::array<Visible, lootCapacity + fixtureCapacity> visible{};
     std::size_t n = 0;
     const auto f = forward(player.heading), r = right(player.heading);
     for (std::size_t begin = 0; begin < count;) {
@@ -45,9 +46,31 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
                 const float limit = (viewWidth * .5f - maxSize / 2) * depth / ViewProjection::focalLength();
                 lateral = side * std::min(1.f, limit) - float(phase) / ViewProjection::strafeSteps;
             }
-            visible[n++] = {order[begin], lateral, depth};
+            visible[n++] = {order[begin], 0, lateral, depth};
         }
         begin = end;
+    }
+    if (fixtures) {
+        picking.fixtureWorld(fixtures->world());
+        for (unsigned i = 0; i < fixtures->definition().count; ++i) {
+            const auto& item = fixtures->definition().entries[i];
+            if (item.kind == FixtureKind::Key && fixtures->completed(i))
+                continue;
+            if (item.kind == FixtureKind::Door && !fixtures->completed(i))
+                continue;
+            const auto delta = item.cell + player.cell * -1;
+            const int row = delta.x * f.x + delta.y * f.y, side = delta.x * r.x + delta.y * r.y;
+            if (row < 0 || row > ViewProjection::visibleRows || (!row && side))
+                continue;
+            unsigned icon = item.kind == FixtureKind::Key          ? (item.key == 2 ? 1 : 2)
+                            : item.kind == FixtureKind::Upstairs   ? 3
+                            : item.kind == FixtureKind::Downstairs ? 4
+                            : item.kind == FixtureKind::Endpoint   ? 5
+                                                                   : 6;
+            visible[n++] = {std::uint16_t(lootCapacity + i), icon,
+                            side - float(phase) / ViewProjection::strafeSteps,
+                            row + ViewProjection::cameraSetback};
+        }
     }
     std::sort(visible.begin(), visible.begin() + n, [](const auto& a, const auto& b) {
         return a.depth != b.depth ? a.depth > b.depth : a.slot < b.slot;
@@ -65,7 +88,8 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
     const float focal = ViewProjection::focalLength();
     for (std::size_t i = 0; i < n; ++i) {
         const auto& v = visible[i];
-        picking.lootGeneration(v.slot, loot.stacks[v.slot].generation);
+        if (!v.icon)
+            picking.lootGeneration(v.slot, loot.stacks[v.slot].generation);
         const int size = std::clamp(int(std::round(focal * .25f / v.depth)), minSize, maxSize);
         const int left = int(std::round(viewWidth * .5f + focal * v.lateral / v.depth)) - size / 2;
         const int foot =
@@ -81,7 +105,7 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
                 const auto body = picking.slot(x, y);
                 if (actors && body < actors->snapshot().count && bodyDepth[body] <= v.depth)
                     continue;
-                auto src = pixels[offset + (y - top) * size + x - left];
+                auto src = pixels[v.icon * pixelsPerIcon + offset + (y - top) * size + x - left];
                 if (src.a < 16)
                     continue;
                 src = shadeScene(src, v.depth);
@@ -93,7 +117,7 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
                 picking.write(y * viewWidth + x, static_cast<std::uint16_t>(NpcWorld::maxInstances + v.slot));
                 seen = true;
             }
-        if (seen)
+        if (seen && !v.icon)
             picking.lootAnchor(v.slot, std::clamp(left + size / 2, 0, viewWidth - 1),
                                std::clamp(top + size, 0, viewHeight - 1));
     }

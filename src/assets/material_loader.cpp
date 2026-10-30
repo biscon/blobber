@@ -30,6 +30,11 @@ Materials loadMaterials(const std::filesystem::path& directory) {
     const auto weapon = directory.parent_path() / "effects/spiritual_weapon.png";
     if (std::filesystem::exists(weapon))
         result.weapon = loadMaterial(weapon);
+    for (unsigned i = 0; i < 2; ++i) {
+        const auto door = directory / (i ? "door-locked.png" : "door.png");
+        if (std::filesystem::exists(door))
+            result.doors[i] = loadMaterial(door);
+    }
     return result;
 }
 } // namespace blobber

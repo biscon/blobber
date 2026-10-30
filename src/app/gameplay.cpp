@@ -39,25 +39,25 @@ struct PlayView {
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
              bool enableAi = false, const RecoveryLevel& recovery = {},
-             const rules::PresetParty* starting = nullptr)
+             const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {})
         : session(m, catalog, starting ? *starting : *catalog.preset(), placements, seed, spawn, enableAi,
-                  timings, recovery),
+                  timings, recovery, fixtures),
           animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs(), &session.effects());
         const auto area = debug ? SpellArea{} : commands.floorPreview();
-        const bool changed =
-            frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                          &session.combat().attacks(), session.timeMs(), &area, &session.loot().snapshot());
+        const bool changed = frames.update(
+            renderer, session.geometry(), session.movement(), &session.actors(), &animator.snapshot(),
+            &session.combat().attacks(), session.timeMs(), &area, &session.loot().snapshot());
         const auto* picking = frames.picking();
         commands.refresh(picking ? picking->targets() : TargetSnapshot{},
                          session.movement().transition.active(), debug, focused);
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
-            return frames.update(renderer, map, session.movement(), &session.actors(), &animator.snapshot(),
-                                 &session.combat().attacks(), session.timeMs(), &currentArea,
-                                 &session.loot().snapshot()) ||
+            return frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
+                                 &animator.snapshot(), &session.combat().attacks(), session.timeMs(),
+                                 &currentArea, &session.loot().snapshot()) ||
                    changed;
         return changed;
     }
@@ -83,11 +83,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     for (;;) {
         PlayView view(map, catalog, idle, timings, renderer, seed, spawn,
-                      launch ? launch->enableAi : !options.combatDemo, recovery, starting);
+                      launch ? launch->enableAi : !options.combatDemo, recovery, starting,
+                      launch && launch->fixtures ? *launch->fixtures : FloorFixtures{});
         view.session.enableDevelopment(options.development);
         if (starting)
             view.commands.enableMainMenu();
-        bool debug = false, first = true, restart = false;
+        bool debug = false, reveal = false, first = true, restart = false;
         if (launch && launch->arena)
             view.commands.arenaContext(false);
         view.refresh();
@@ -114,6 +115,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 view.session.clearPending();
             if (sample.toggleMap && !view.commands.snapshot().modal())
                 debug = !debug;
+            if (debug && options.development && sample.ui.has(UiKey::Click) && sample.ui.pointer &&
+                hudLayout::diagnosticMap.contains(*sample.ui.pointer)) {
+                reveal = !reveal;
+                sample.ui.pressed[std::size_t(UiKey::Click)] = false;
+            }
             const bool campWasOpen = view.commands.snapshot().camp.open;
             view.commands.tickCamp(dt, sample.ui.focused);
             const bool paused =
@@ -168,13 +174,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                    ? picking->pickLoot(int(sample.ui.pointer->x) - viewX,
                                                        int(sample.ui.pointer->y) - viewY)
                                    : std::nullopt;
-                const auto groundHit = sample.ui.pointer && !view.session.movement().transition.active()
-                                           ? SceneRenderer::groundCell(map, view.session.movement().player,
-                                                                       int(sample.ui.pointer->x) - viewX,
-                                                                       int(sample.ui.pointer->y) - viewY)
-                                           : std::nullopt;
-                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit,
-                              groundHit);
+                const auto groundHit =
+                    sample.ui.pointer && !view.session.movement().transition.active()
+                        ? SceneRenderer::groundCell(view.session.geometry(), view.session.movement().player,
+                                                    int(sample.ui.pointer->x) - viewX,
+                                                    int(sample.ui.pointer->y) - viewY)
+                        : std::nullopt;
+                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
+                              picking && sample.ui.pointer
+                                  ? picking->pickFixture(int(sample.ui.pointer->x) - viewX,
+                                                         int(sample.ui.pointer->y) - viewY)
+                                  : std::nullopt);
             }
             if (view.commands.snapshot().retryRequested) {
                 restart = true;
@@ -186,7 +196,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 return PlayOutcome::Quit;
             changed |= view.refresh(debug, sample.ui.focused);
             presenter.present(view.frames.frame(), view.session.movement(), map, debug, changed || first,
-                              &view.commands.snapshot(), view.frames.picking());
+                              &view.commands.snapshot(), view.frames.picking(),
+                              launch ? launch->diagnostics : nullptr, reveal);
             first = false;
         }
         if (!restart)

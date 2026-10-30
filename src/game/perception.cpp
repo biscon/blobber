@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <cstdlib>
 namespace blobber {
-bool lineOfSight(const Map& map, Cell from, Cell target) noexcept {
-    if (map.solid(from) || map.solid(target))
+static bool sight(GeometryView map, Cell from, Cell target, bool blockingEndpoint) noexcept {
+    if (map.solid(from) || (!blockingEndpoint && map.solid(target)))
         return false;
     const int dx = target.x - from.x, dy = target.y - from.y;
     // Integer supercover ray between cell centers. Exact corner crossings test
@@ -27,17 +27,29 @@ bool lineOfSight(const Map& map, Cell from, Cell target) noexcept {
             c.y += sy;
             ++iy;
         }
-        if (map.solid(c))
+        if (map.solid(c) && !(blockingEndpoint && c == target))
             return false;
     }
     return true;
+}
+
+bool lineOfSight(GeometryView map, Cell from, Cell target) noexcept {
+    return sight(map, from, target, false);
+}
+bool discoveryVisible(GeometryView map, Cell from, Heading facing, Cell target) noexcept {
+    if (unsigned(facing) >= 4 || !inBowRange(from, target))
+        return false;
+    const auto f = forward(facing), delta = target + from * -1;
+    const int ahead = delta.x * f.x + delta.y * f.y, side = delta.x * f.y - delta.y * f.x;
+    return ((ahead == 1 && std::abs(side) <= 1) || (ahead > 0 && std::abs(side) < ahead)) &&
+           sight(map, from, target, true);
 }
 
 bool inBowRange(Cell from, Cell to) noexcept {
     const auto dx = to.x - from.x, dy = to.y - from.y;
     return (dx || dy) && dx * dx + dy * dy <= 36;
 }
-bool npcSees(const Map& map, Cell from, Heading facing, Cell target) noexcept {
+bool npcSees(GeometryView map, Cell from, Heading facing, Cell target) noexcept {
     if (static_cast<unsigned>(facing) >= 4 || !inBowRange(from, target))
         return false;
     const auto f = forward(facing);
@@ -45,7 +57,7 @@ bool npcSees(const Map& map, Cell from, Heading facing, Cell target) noexcept {
     const int ahead = dx * f.x + dy * f.y, side = dx * f.y - dy * f.x;
     return ahead > 0 && std::abs(side) <= ahead && lineOfSight(map, from, target);
 }
-bool combatAdjacent(const Map& map, Cell from, Cell target) noexcept {
+bool combatAdjacent(GeometryView map, Cell from, Cell target) noexcept {
     const int dx = std::abs(target.x - from.x), dy = std::abs(target.y - from.y);
     return std::max(dx, dy) == 1 && lineOfSight(map, from, target);
 }
@@ -57,10 +69,10 @@ bool inFrontBand(Cell from, Heading heading, Cell target) noexcept {
     const int ahead = delta.x * f.x + delta.y * f.y, side = delta.x * f.y - delta.y * f.x;
     return ahead == 1 && std::abs(side) <= 1;
 }
-bool inMeleeFront(const Map& map, Cell from, Heading heading, Cell target) noexcept {
+bool inMeleeFront(GeometryView map, Cell from, Heading heading, Cell target) noexcept {
     return inFrontBand(from, heading, target) && lineOfSight(map, from, target);
 }
-bool inPartyView(const Map& map, Cell from, Heading facing, Cell target) noexcept {
+bool inPartyView(GeometryView map, Cell from, Heading facing, Cell target) noexcept {
     if (static_cast<unsigned>(facing) >= 4 || !inBowRange(from, target))
         return false;
     const auto f = forward(facing);

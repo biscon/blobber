@@ -140,8 +140,14 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     char line[96];
     std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .", headingName(state.player.heading));
     headerText(line, 245, gold, UiTextStyle::Small);
-    if (!h || !h->demo)
-        headerText(h && h->arena ? "Arena" : "Depth I", 449, gold, UiTextStyle::Small);
+    if (!h || !h->demo) {
+        const auto depth = h && h->floor ? h->floor->definition().depth : 1;
+        headerText(h && h->arena ? "Arena"
+                   : depth == 2  ? "Depth II"
+                   : depth == 3  ? "Depth III"
+                                 : "Depth I",
+                   449, gold, UiTextStyle::Small);
+    }
     p.gear(hudLayout::gear);
     p.border({viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2}, edge);
     p.box(hudLayout::actions);
@@ -230,24 +236,74 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                       h->combat.pendingCount ? " / arrivals" : "");
         p.text(threats, viewX + 6, viewY + 5, gold, UiTextStyle::Small);
     }
+    if (h->fixturePrompt[0]) {
+        p.fill({viewX + 4, viewY + viewHeight - 17, viewWidth - 8, 15}, background);
+        p.clipped(h->fixturePrompt.data(), viewX + 8, viewY + viewHeight - 15, viewWidth - 16, gold,
+                  UiTextStyle::Small);
+    }
     p.log(*h, false);
     (void)debug;
     (void)map;
 }
-void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* fonts) {
+void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* fonts,
+                    const generation::DiagnosticView* generation, const HudSnapshot* hud, bool reveal) {
     const HudPainter p(fonts, nullptr);
-    {
-        p.overlayBox({12, 32, 176, 242}, gold);
-        p.text("SURVEY / M CLOSE", 22, 40, gold, UiTextStyle::Display);
-        const float scale = std::min(152.0f / map.width(), 200.0f / map.height());
-        {
-            for (int y = 0; y < map.height(); ++y)
-                for (int x = 0; x < map.width(); ++x)
-                    if (map.solid({x, y}))
-                        p.rectangle({22 + x * scale, 58 + y * scale, scale, scale}, edge);
-            p.rectangle({22 + state.player.cell.x * scale, 58 + state.player.cell.y * scale, scale, scale},
-                        bright);
+    const auto* floor = hud ? hud->floor : nullptr;
+    const bool player = floor && floor->definition().discovery && !reveal;
+    p.overlayBox({12, 32, 610, 252}, gold);
+    p.text(player ? "DISCOVERED MAP / M CLOSE" : "DIAGNOSTIC FULL MAP / M CLOSE", 22, 40, gold,
+           UiTextStyle::Display);
+    const float scale = std::min(220.f / map.width(), 210.f / map.height());
+    const float ox = 25, oy = 65;
+    for (int y = 0; y < map.height(); ++y)
+        for (int x = 0; x < map.width(); ++x) {
+            const Cell c{x, y};
+            Color ink = background;
+            if (!player || floor->discovered(c))
+                ink = map.solid(c) ? edge : Color{64, 79, 73, 255};
+            p.rectangle({ox + x * scale, oy + y * scale, scale - .4f, scale - .4f}, ink);
         }
+    if (floor)
+        for (unsigned i = 0; i < floor->definition().count; ++i) {
+            if (player && !floor->known(i))
+                continue;
+            const auto& f = floor->definition().entries[i];
+            const bool done = player ? floor->rememberedComplete(i) : floor->completed(i);
+            if (f.kind == FixtureKind::Key && done)
+                continue;
+            const char* mark = f.kind == FixtureKind::Door         ? (done ? "/" : "+")
+                               : f.kind == FixtureKind::Key        ? "K"
+                               : f.kind == FixtureKind::Upstairs   ? "U"
+                               : f.kind == FixtureKind::Downstairs ? "D"
+                                                                   : "O";
+            p.text(mark, ox + f.cell.x * scale, oy + f.cell.y * scale - 1, done ? teal : bright,
+                   UiTextStyle::Small);
+        }
+    const auto pos = state.player.cell, dir = forward(state.player.heading);
+    const Vector2 center{ox + (pos.x + .5f) * scale, oy + (pos.y + .5f) * scale};
+    p.rectangle({center.x - 1.8f, center.y - 1.8f, 3.6f, 3.6f}, teal);
+    p.line(center, {center.x + dir.x * scale, center.y + dir.y * scale}, teal, 3);
+    if (!player && generation) {
+        for (unsigned i = 0; i < generation->lines.size(); ++i)
+            p.clipped(generation->lines[i].data(), 260, 68 + i * 18, 345, text, UiTextStyle::Label);
+    } else {
+        p.text("Your explored routes", 270, 70, gold, UiTextStyle::Display);
+        p.text("Dark space has not been seen.", 270, 96, muted);
+        p.text("+ Closed door    / Open door", 270, 119, text);
+        p.text("K Key    U Up    D Down    O Objective", 270, 140, text, UiTextStyle::Small);
+        p.text("Quest keys", 270, 170, gold);
+        if (hud && (hud->questKeys & (1u << 2)))
+            p.text("Bronze seal key", 270, 190, text);
+        else if (hud && (hud->questKeys & (1u << 3)))
+            p.text("Silver seal key", 270, 190, text);
+        else
+            p.text("None collected", 270, 190, muted);
+        p.text("Stairs and objectives: travel not yet available.", 270, 218, muted, UiTextStyle::Small);
+    }
+    if (hud && hud->development) {
+        p.box(hudLayout::diagnosticMap);
+        p.label(reveal ? "Hide full map - diagnostic" : "Reveal full map - diagnostic",
+                hudLayout::diagnosticMap, gold, UiTextStyle::Small);
     }
 }
 } // namespace blobber

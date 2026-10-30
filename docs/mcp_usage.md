@@ -10,6 +10,13 @@ building, running ordinary tests, or making an unrelated change never starts one
 The adapter does not change gameplay rules, provide arbitrary state mutation, or
 implement slice 14's save/resume. Replay and policy rerun start from the beginning.
 
+PC01 extends `session_start` with the explicit
+[`generated_floor` scenario](headless_protocol.md#pc01-generated-floor-scenarios).
+The normal session/reset/actions/replay/capture lifecycle works for empty generated
+floors. Diagnostic captures include a labelled full-map companion image; no hidden
+map is added to visual player observations. Existing experiment policies remain
+arena-only; connecting the adapter does not launch a prototype or seed sweep.
+
 ## Install and invoke
 
 Linux/POSIX is the supported process environment for this slice, matching the
@@ -278,3 +285,16 @@ when investigating victory/defeat. Disconnect and verify owned processes stop an
 artifacts remain. Record unavailable graphics checks as unexecuted; interactive
 agent-host/desktop review belongs to the user. [Design](mcp_design.md) and
 [verification/handoff](slice133_verification.md) record the implemented boundary and evidence.
+
+## PC02 fixture interactions
+
+Generated-floor scenarios now require generator/template versions **2/2**, with
+scenario schema 1 unchanged. `session_preview` and `session_act` accept
+`{"kind":"interact","fixture":0}` through the same checked host command as F/click
+in the game. Use current observation tokens and fixture IDs from observations or
+action discovery. Player observations contain discovered cells, remembered fixtures
+and acquired quest keys; diagnostic inspection remains explicit and does not reveal
+cells to later player observations. Strict replay includes these states. Generated
+captures now include scene, discovered map and diagnostic map PNGs.
+See [protocol and rules](headless_protocol.md#generated-floor-scenarios-pc01pc02) and
+[PC02 verification](pc02_verification.md). No new MCP tools or balance policy are needed.

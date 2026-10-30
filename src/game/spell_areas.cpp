@@ -1,7 +1,7 @@
 #include "game/combat.hpp"
 #include "game/perception.hpp"
 namespace blobber {
-bool spellCell(const Map& map, Player pose, Cell cell) noexcept {
+bool spellCell(GeometryView map, Player pose, Cell cell) noexcept {
     return !map.solid(cell) && (cell == pose.cell || inBowRange(pose.cell, cell)) &&
            (cell == pose.cell || inPartyView(map, pose.cell, pose.heading, cell)) &&
            lineOfSight(map, pose.cell, cell);

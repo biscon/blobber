@@ -1,6 +1,7 @@
 #pragma once
 #include "game/commands.hpp"
 #include "game/movement.hpp"
+#include "generation/diagnostic_view.hpp"
 #include "platform/gpu_resources.hpp"
 #include "render/frame.hpp"
 #include "render/picking.hpp"
@@ -12,7 +13,8 @@ class Presenter {
   public:
     explicit Presenter(const std::filesystem::path& assets);
     void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed,
-                 const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr);
+                 const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
+                 const generation::DiagnosticView* generation = nullptr, bool reveal = false);
     void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
     void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
     // Diagnostic operation: readback and export may allocate; never used during normal play.

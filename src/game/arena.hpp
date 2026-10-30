@@ -1,13 +1,9 @@
 #pragma once
 #include "game/actors.hpp"
 #include "game/movement.hpp"
-#include "rules/creation.hpp"
+#include "game/starting_party.hpp"
 #include "world/npc.hpp"
 namespace blobber {
-struct StartingSnapshot {
-    std::array<char, 129> id{};
-    rules::CharacterDraft draft;
-};
 struct ArenaMonster {
     rules::MonsterId monster;
     unsigned quantity = 0;

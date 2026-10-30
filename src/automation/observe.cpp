@@ -57,6 +57,36 @@ Json encodeObservation(const Observation& o) {
               {"loot", Json::array()},
               {"targets", Json::array()},
               {"active_character", nullptr}};
+    const auto& fixtures = g.fixtures();
+    j["quest_keys"] = g.party().questKeys();
+    j["fixtures"] = Json::array();
+    for (unsigned i = 0; i < fixtures.definition().count; ++i) {
+        if (!o.diagnostic && !fixtures.known(i))
+            continue;
+        const auto& f = fixtures.definition().entries[i];
+        j["fixtures"].push_back(
+            {{"fixture", i},
+             {"kind", unsigned(f.kind)},
+             {"name", fixtureName(f)},
+             {"position", xy(f.cell)},
+             {"key", f.key},
+             {"completed", o.diagnostic ? fixtures.completed(i) : fixtures.rememberedComplete(i)}});
+    }
+    if (fixtures.definition().discovery) {
+        j["discovered"] = Json::array();
+        for (int y = 0; y < o.map->height(); ++y)
+            for (int x = 0; x < o.map->width(); ++x)
+                if (fixtures.discovered({x, y}))
+                    j["discovered"].push_back({x, y, o.map->solid({x, y}) ? 1 : 0});
+    }
+    if (o.diagnostic) {
+        j["fixture_revision"] = u(fixtures.revision());
+        j["geometry_revision"] = u(fixtures.geometryRevision());
+        j["discovery_revision"] = u(fixtures.discoveryRevision());
+        j["fixture_knowledge"] = Json::array();
+        for (unsigned i = 0; i < fixtures.definition().count; ++i)
+            j["fixture_knowledge"].push_back({fixtures.known(i), fixtures.rememberedComplete(i)});
+    }
     if (combat.activeCharacter)
         j["active_character"] = combat.activeCharacter->index;
     j["formation"] = Json::array();

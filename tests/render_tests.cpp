@@ -1,3 +1,4 @@
+#include "generation/floor.hpp"
 #include "support/check.hpp"
 #include "support/render_fixtures.hpp"
 #include <cmath>
@@ -55,6 +56,42 @@ float firstBlock(const Map& map, Player p, float slope, float offset = 0) {
                 nearest = std::min(nearest, enter);
         }
     return nearest;
+}
+void generatedRooms() {
+    const auto generated = generation::generate({5});
+    check(bool(generated), "generated render fixture");
+    const auto& f = *generated.floor;
+    SceneRenderer renderer(testMaterials());
+    for (unsigned room = 0; room < f.layout.roomCount; ++room) {
+        for (unsigned heading = 0; heading < 4; ++heading) {
+            const Player from{f.layout.rooms[room].anchor, Heading(heading)};
+            const auto frame = compose(renderer, f.map, from);
+            for (int x = 0; x < viewWidth; x += 5) {
+                const float focal = ViewProjection::focalLength();
+                const auto depth = firstBlock(f.map, from, (x + .5f - viewWidth * .5f) / focal);
+                if (depth >= 9)
+                    continue;
+                const auto top = ViewProjection::horizon -
+                                 focal * (ViewProjection::wallHeight - ViewProjection::eyeHeight) / depth;
+                const auto bottom = ViewProjection::horizon + focal * ViewProjection::eyeHeight / depth;
+                for (int y = 0; y < viewHeight; y += 5) {
+                    if (std::abs(y + .5f - top) < .0001f || std::abs(y + .5f - bottom) < .0001f)
+                        continue;
+                    const auto color = frame[y * viewWidth + x];
+                    check((y + .5f > top && y + .5f < bottom) == (color.r > 0 && !color.g && !color.b),
+                          "generated room and pillar occlusion agree with independent ray geometry");
+                }
+            }
+            const Player to{from.cell + right(from.heading), from.heading};
+            if (!f.map.solid(to.cell)) {
+                check(same(strafe(renderer, f.map, from, to, 0), frame), "generated strafe source");
+                check(same(strafe(renderer, f.map, from, to, 1), compose(renderer, f.map, to)),
+                      "generated strafe destination");
+                check(same(strafe(renderer, f.map, from, to, .5f), strafe(renderer, f.map, to, from, .5f)),
+                      "generated strafe reversal matches");
+            }
+        }
+    }
 }
 void testOcclusion(const Map& map) {
     SceneRenderer renderer(testMaterials());
@@ -180,6 +217,7 @@ int main(int argc, char** argv) {
     try {
         check(argc == 2, "Expected test map fixture");
         testTransitions();
+        generatedRooms();
         testOcclusion(Map::load(argv[1]));
         std::cout << "Render checks passed\n";
         return 0;

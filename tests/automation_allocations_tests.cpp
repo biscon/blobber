@@ -1,18 +1,23 @@
+#include "game/commands.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/fixture_world.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <new>
 #ifdef BLOBBER_AUTOMATION_VISUAL
 #include "automation/visual.hpp"
+#include "render/frame_pipeline.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
 #endif
 namespace {
 bool tracking = false;
-std::size_t allocations = 0;
+std::size_t allocations = 0, requestedBytes = 0;
 void* allocate(std::size_t size) {
-    if (tracking)
+    if (tracking) {
         ++allocations;
+        requestedBytes += size;
+    }
     if (void* p = std::malloc(size ? size : 1))
         return p;
     throw std::bad_alloc();
@@ -37,8 +42,10 @@ void operator delete[](void* p, std::size_t) noexcept {
     std::free(p);
 }
 void* operator new(std::size_t size, std::align_val_t alignment) {
-    if (tracking)
+    if (tracking) {
         ++allocations;
+        requestedBytes += size;
+    }
     const auto align = static_cast<std::size_t>(alignment);
 #ifdef _MSC_VER
     void* p = _aligned_malloc(size ? size : 1, align);
@@ -74,16 +81,30 @@ using namespace blobber::automation;
 using namespace blobber::automation::test;
 int main(int argc, char**) {
     try {
+        tracking = true;
+        const auto preparedFloor = generation::generate({5});
+        tracking = false;
+        check(bool(preparedFloor), "allocation measurement generates fixture");
+        std::cout << "Generation preparation: " << allocations << " allocations / " << requestedBytes
+                  << " requested bytes (not peak resident memory)\n";
+        allocations = requestedBytes = 0;
         const auto cat = catalog();
         auto defs = definitions();
         auto setup = scenario(cat, argc > 1 ? 256 : 1);
         Session session(cat, defs, setup, Mode::Diagnostic);
 #ifdef BLOBBER_AUTOMATION_VISUAL
         auto art = testNpcAppearance();
-        SceneRenderer renderer(testMaterials(), {art});
+        PreparedLoot markerBank;
+        markerBank.pixels.assign(PreparedLoot::icons * PreparedLoot::pixelsPerIcon, Color{220, 190, 90, 255});
+        SceneRenderer renderer(prepareScene(testMaterials()), PreparedNpcs({art}), {}, std::move(markerBank));
         defs.timings = {npcTimings(art)};
         VisualContext context{renderer, defs.timings};
         Session visual(cat, defs, setup, Mode::Visual, makeVisual, &context);
+#endif
+        const GeneratedScenario generatedSetup{setup.party, {5}};
+        Session generated(cat, defs, generatedSetup, Mode::Diagnostic);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        Session generatedVisual(cat, defs, generatedSetup, Mode::Visual, makeVisual, &context);
 #endif
         Observation observation;
         unsigned events = 0, accepted = 0;
@@ -123,7 +144,56 @@ int main(int argc, char**) {
                 }
             }
         };
+        const auto walk = [&](Session& s) {
+            for (unsigned i = 0; i < 48; ++i) {
+                ActionRequest r;
+                r.operation = Operation::Move;
+                constexpr Action actions[]{Action::Forward, Action::Left, Action::TurnRight,
+                                           Action::Right,   Action::Back, Action::TurnLeft};
+                r.movement = actions[i % 6];
+                (void)s.action(r, true);
+                (void)s.action(r, false);
+                for (unsigned tick = 0; tick < 17; ++tick) {
+                    s.tick();
+                    s.observe(observation);
+                }
+                okay &= !s.terminal();
+            }
+        };
+        const auto fixtureRules = fixtureCatalog();
+        const auto fixtureFloor = fixtureMap();
+        const NpcWorld empty(fixtureFloor, {2, 3}, {"goblin"}, {});
+        auto fixtureGame = std::make_unique<GameSession>(
+            fixtureFloor, fixtureRules, empty, 5, Player{{2, 3}, Heading::East}, false,
+            std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions());
+        CommandController fixtureUi(*fixtureGame);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        FramePipeline fixtureFrames;
+        const auto fixtureFrame = [&] {
+            fixtureFrames.update(renderer, fixtureGame->geometry(), fixtureGame->movement(),
+                                 &fixtureGame->actors(), nullptr, nullptr, fixtureGame->timeMs(), nullptr,
+                                 &fixtureGame->loot().snapshot());
+        };
+#endif
         tracking = true;
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        fixtureFrame();
+#endif
+        collectFixtureKey(*fixtureGame);
+        okay &= fixtureGame->party().questKeys() == 4;
+        okay &= fixtureGame->interact(fixtureRequest(*fixtureGame, 0), true).accepted;
+        okay &= fixtureGame->interact(fixtureRequest(*fixtureGame, 0)).changed;
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        fixtureFrame();
+#endif
+        fixtureUi.refresh({}, false, false, true);
+        fixtureUi.interactFixture();
+        fixtureGame->move(Action::Forward);
+        fixtureUi.refresh({}, false, true, true);
+        walk(generated);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        walk(generatedVisual);
+#endif
         exercise(session, argc > 1 ? 60000 : 6000);
 #ifdef BLOBBER_AUTOMATION_VISUAL
         // Representative visual decisions; full runs are covered by integration tests.

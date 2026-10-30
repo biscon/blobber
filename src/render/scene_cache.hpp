@@ -14,6 +14,7 @@ struct PreparedColumn {
     float depth;
     std::uint32_t length;
     std::array<std::uint32_t, 2> pixelOffsets;
+    std::uint32_t doorOffset = 0;
 };
 struct PreparedSprite {
     int lateral, distance, sideNeighbor;
@@ -24,6 +25,7 @@ struct PreparedView {
     std::vector<PreparedSprite> sprites;
     std::vector<PreparedColumn> columns;
     std::vector<Color> pixels;
+    std::array<std::vector<Color>, 2> doors; // Unlocked / sealed, sharing wall geometry.
     std::array<Frame, 16> backgrounds;
     static constexpr int weaponMinSize = 4, weaponMaxSize = 96;
     static constexpr std::size_t weaponPixelCount = 96 * 97 * 193 / 6 - 14;

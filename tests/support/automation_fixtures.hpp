@@ -68,6 +68,12 @@ inline ArenaScenario scenario(const rules::Catalog& c, unsigned count = 1) {
     s.seed = 5;
     return s;
 }
+inline Json generatedScenario(const rules::Catalog& c, unsigned seed = 5) {
+    const auto arena = Json::parse(encodeArena(c, scenario(c)));
+    return {{"kind", "generated_floor"}, {"schema_version", 1}, {"generator_version", 2},
+            {"template_version", 2},     {"seed", seed},        {"depth", 1},
+            {"party", arena.at("party")}};
+}
 struct Sink : Output {
     Json events = Json::array();
     void emit(const Json& full, const Json&) override {

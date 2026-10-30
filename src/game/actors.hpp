@@ -1,5 +1,6 @@
 #pragma once
 #include "rules/content.hpp"
+#include "world/fixtures.hpp"
 #include "world/npc.hpp"
 #include <array>
 #include <limits>
@@ -59,11 +60,11 @@ struct ActorResult {
 // Placement-only slots never recycle. Map/catalog must outlive this immovable owner.
 class ActorWorld {
   public:
-    ActorWorld(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements);
+    ActorWorld(GeometryView map, const rules::Catalog& catalog, const NpcWorld& placements);
     ActorWorld(Map&&, const rules::Catalog&, const NpcWorld&) = delete;
-    ActorWorld(const Map&, rules::Catalog&&, const NpcWorld&) = delete;
+    ActorWorld(GeometryView, rules::Catalog&&, const NpcWorld&) = delete;
     ActorWorld(const Map&&, const rules::Catalog&, const NpcWorld&) = delete;
-    ActorWorld(const Map&, const rules::Catalog&&, const NpcWorld&) = delete;
+    ActorWorld(GeometryView, const rules::Catalog&&, const NpcWorld&) = delete;
     ActorWorld(const ActorWorld&) = delete;
     ActorWorld& operator=(const ActorWorld&) = delete;
     const ActorSnapshot& snapshot() const noexcept { return state_; }
@@ -80,11 +81,11 @@ class ActorWorld {
     ActorResult cancelAttack(ActorId) noexcept;
     ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept;
     ActorResult remove(ActorId id) noexcept;
-    const Map& map() const noexcept { return map_; }
+    GeometryView map() const noexcept { return map_; }
     const rules::Catalog& catalog() const noexcept { return catalog_; }
 
   private:
-    const Map& map_;
+    GeometryView map_;
     const rules::Catalog& catalog_;
     ActorSnapshot state_;
     std::vector<std::uint8_t> occupancy_;

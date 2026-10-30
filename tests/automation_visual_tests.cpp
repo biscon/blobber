@@ -51,6 +51,25 @@ int main() {
         VisualContext context{renderer, timings};
         auto defs = definitions();
         defs.timings = timings;
+        Client prototype(cat, defs, Mode::Visual, makeVisual, &context);
+        auto forced = generatedScenario(cat);
+        forced["force_fallback"] = true;
+        check(!prototype.request("start", {{"scenario", forced}}).at("ok"),
+              "forced fallback is diagnostic only");
+        const auto generatedStart =
+            prototype.request("start", {{"scenario", generatedScenario(cat)}}).at("data");
+        check(generatedStart.at("generation").contains("fingerprint") &&
+                  !generatedStart.at("generation").contains("map") &&
+                  !generatedStart.at("generation").contains("rooms") &&
+                  !generatedStart.at("generation").contains("rejections"),
+              "player-visible prototype observes identity, not hidden topology/roles");
+        check(prototype.request("inspect").at("data").at("generation").contains("rooms"),
+              "explicit diagnostic prototype inspection includes role metadata");
+        check(!prototype.request("observe").at("data").at("generation").contains("rooms"),
+              "diagnostic inspection cannot disable subsequent player filtering");
+        check(prototype.act({{"kind", "move"}, {"direction", "forward"}}).at("data").at("accepted"),
+              "visual prototype movement uses existing checked actions");
+        prototype.advance();
         Client player(cat, defs, Mode::Visual, makeVisual, &context);
         const auto start = player.start(cat).at("data");
         check(start.at("enemies").empty() && !start.contains("attacks"),

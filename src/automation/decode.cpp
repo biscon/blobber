@@ -125,6 +125,13 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
         r.operation = Operation::Continue;
         return r;
     }
+    if (op == "interact") {
+        fields(j, {"kind", "fixture"});
+        r.operation = Operation::Interact;
+        r.fixture = {{g.fixtures().world(), std::uint16_t(bounded(j.at("fixture"), UINT16_MAX))},
+                     g.fixtures().revision()};
+        return r;
+    }
     if (op == "inventory") {
         fields(j, {"kind", "operation", "item", "character", "cell", "quantity"});
         r.operation = Operation::Inventory;
