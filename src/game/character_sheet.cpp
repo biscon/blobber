@@ -28,9 +28,7 @@ void CommandController::refreshCharacterSheet() noexcept {
     out.hitDice = c->availableHitDice;
     out.hitDie = cls.hitDie;
     out.experience = c->experience;
-    // Presentation only for the currently supported level. Advancement owns no
-    // behavior here; its future threshold query can replace this value.
-    out.nextLevelExperience = c->build.level == 1 ? 300 : 0;
+    out.nextLevelExperience = rules::nextLevelExperience(c->build.level);
     out.casting = cls.casting;
     out.spellAttack = party_.castingModifier(i.character) + out.proficiency;
     out.spellDifficulty = 8 + out.spellAttack;
@@ -74,12 +72,31 @@ void CommandController::refreshCharacterSheet() noexcept {
         feature("Second Wind", "Heal 1d10 + level; refreshes on rest.",
                 c->secondWind ? "1 / 1 use" : "0 / 1 use");
     if (party_.hasFeature(i.character, rules::ClassFeature::SneakAttack))
-        feature("Sneak Attack", "Conditional extra damage; once per round.", "+1d6");
+        feature("Sneak Attack", "Conditional extra damage; once per round.",
+                c->build.level >= 3 ? "+2d6" : "+1d6");
     if (party_.hasFeature(i.character, rules::ClassFeature::LifeDomain))
         feature("Life Domain", "Bonus to healing spells of level 1 or higher.", "+2 + spell level");
     if (party_.hasFeature(i.character, rules::ClassFeature::ArcaneRecovery))
         feature("Arcane Recovery", "Safe mana recovery; refreshes on long rest.",
                 c->arcaneRecovery ? "1 / 1 use" : "0 / 1 use");
+    if (c->build.level >= 2) {
+        if (cls.progression == rules::ProgressionClass::Fighter) {
+            feature("Action Surge", "One extra action; refreshes on rest.",
+                    c->actionSurge ? "1 / 1 use" : "0 / 1 use");
+            if (c->build.level >= 3)
+                feature("Champion", "Weapon critical range.", "19-20");
+        }
+        if (cls.progression == rules::ProgressionClass::Cleric && c->build.lifeDomain)
+            feature("Preserve Life", "Lowest HP first; half-max HP cap.",
+                    c->channelDivinity ? "1 / 1 use" : "0 / 1 use");
+        if (cls.progression == rules::ProgressionClass::Rogue)
+            feature(c->build.level >= 3 ? "Thief / Fast Hands" : "Cunning Action",
+                    c->build.level >= 3 ? "Free Defend or potion once per turn."
+                                        : "Free Defend once per turn.",
+                    "Optional");
+        if (cls.progression == rules::ProgressionClass::Wizard)
+            feature("Evocation / Sculpt", "Shatter protects companions, not caster.", "Automatic");
+    }
     if (session_) {
         for (unsigned n = 0; n < unsigned(EffectKind::Count); ++n)
             if (session_->effects().has(i.character, static_cast<EffectKind>(n)))

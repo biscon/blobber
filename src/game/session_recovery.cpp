@@ -108,6 +108,8 @@ RestResult GameSession::rest(const RestRequest& r) noexcept {
     ++restToken_;
     movement_.clearPending();
     combat_.restTime(p.elapsedMs, timeMs_, events_);
+    loot_.reconcile(actors_);
+    reconcileRewards();
     return out;
 }
 } // namespace blobber

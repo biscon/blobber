@@ -3,6 +3,7 @@
 #include "ui/layout.hpp"
 namespace blobber::inventoryLayout {
 constexpr UiRect panel{4, 2, 632, 356}, close{606, 9, 20, 17};
+constexpr UiRect levelUp{16, 249, 152, 16};
 constexpr UiRect inventoryPage{14, 9, 65, 17}, characterPage{88, 9, 78, 17};
 constexpr UiRect tab(int i) {
     return {14 + i * 154, 33, 150, 28};

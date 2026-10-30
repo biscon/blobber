@@ -15,7 +15,7 @@ namespace {
 const float focal = ViewProjection::focalLength();
 constexpr float horizon = ViewProjection::horizon, setback = ViewProjection::cameraSetback;
 constexpr float farDepth = ViewProjection::visibleRows + 0.5f + setback;
-constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 20u * Frame::pixelCount * sizeof(Color);
+constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 24u * Frame::pixelCount * sizeof(Color);
 struct Storage {
     std::size_t resident, source, highWater;
     PreparationLimits limits;
@@ -134,9 +134,9 @@ void bakeBackgrounds(const Material& floor, const Material& ceiling, float offse
         }
     }
 }
-void bakeGrease(const std::optional<Material>& source, float offset, PreparedView& view) {
+void bakeGround(const std::optional<Material>& source, float offset, std::array<Frame, 4>& output) {
     for (int direction = 0; direction < 4; ++direction) {
-        auto& image = view.grease[direction];
+        auto& image = output[direction];
         std::fill(image.begin(), image.end(), BLANK);
         if (!source)
             continue;
@@ -161,14 +161,17 @@ std::size_t sceneStorageBytes(const PreparedScene& scene) noexcept {
     std::size_t bytes = sizeof(scene) + backgroundBytes;
     for (const auto& view : scene)
         bytes += view.sprites.capacity() * sizeof(PreparedSprite) +
-                 view.columns.capacity() * sizeof(PreparedColumn) + view.pixels.capacity() * sizeof(Color);
+                 view.columns.capacity() * sizeof(PreparedColumn) +
+                 (view.pixels.capacity() + view.weapon.capacity()) * sizeof(Color);
     return bytes;
 }
 PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
                            ScenePreparationStats* stats) {
     const auto source = materials.wall.storageBytes() + materials.floor.storageBytes() +
                         materials.ceiling.storageBytes() +
-                        (materials.grease ? materials.grease->storageBytes() : 0);
+                        (materials.grease ? materials.grease->storageBytes() : 0) +
+                        (materials.web ? materials.web->storageBytes() : 0) +
+                        (materials.weapon ? materials.weapon->storageBytes() : 0);
     Storage storage{sizeof(PreparedScene) + backgroundBytes, source, 0, limits};
     requirePreparationBytes(0, storage.resident, limits.residentBytes);
     requirePreparationBytes(source, storage.resident, limits.loadingBytes);
@@ -178,7 +181,18 @@ PreparedScene prepareScene(const Materials& materials, PreparationLimits limits,
         const float offset = float(phase) / ViewProjection::strafeSteps;
         bakeWalls(materials.wall, offset, views[phase], storage);
         bakeBackgrounds(materials.floor, materials.ceiling, offset, views[phase]);
-        bakeGrease(materials.grease, offset, views[phase]);
+        bakeGround(materials.grease, offset, views[phase].grease);
+        bakeGround(materials.web, offset, views[phase].web);
+        auto& weapon = views[phase].weapon;
+        storage.reserve(weapon, PreparedView::weaponPixelCount, PreparedView::weaponPixelCount);
+        weapon.resize(PreparedView::weaponPixelCount, BLANK);
+        std::size_t pixel = 0;
+        for (int size = PreparedView::weaponMinSize; size <= PreparedView::weaponMaxSize; ++size)
+            for (int y = 0; y < size; ++y)
+                for (int x = 0; x < size; ++x)
+                    weapon[pixel++] = materials.weapon
+                                          ? materials.weapon->sample((x + .5f) / size, (y + .5f) / size)
+                                          : BLANK;
     }
     if (stats)
         *stats = {source, storage.highWater};

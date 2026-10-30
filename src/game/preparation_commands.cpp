@@ -53,8 +53,10 @@ void CommandController::openPreparation() noexcept {
 void CommandController::routePreparation(const UiInput& input) noexcept {
     auto& h = state_.camp;
     if (!h.preparing || !input.focused) {
-        if (!input.focused)
+        if (!input.focused) {
             h.searchEdit.focused = false;
+            h.selection.dragging = 0;
+        }
         return;
     }
     if (h.searchEdit.edit(h.selection.search, input.text)) {
@@ -71,15 +73,10 @@ void CommandController::routePreparation(const UiInput& input) noexcept {
     auto a = h.controls.input(routed);
     if (routed.has(UiKey::Cancel))
         a.action = FlowAction::Cancel;
-    if (input.scroll) {
-        a.action = input.pointer && UiRect{458, 104, 164, 169}.contains(*input.pointer)
-                       ? FlowAction::DetailsScroll
-                       : FlowAction::Scroll;
-        a.value = -input.scroll * (a.action == FlowAction::DetailsScroll ? 1 : 2);
+    if (scrollSelection(h.selection, party_.catalog(), input, a)) {
+        h.searchEdit.focused = false;
+        return;
     }
-    if (input.pointerHeld && input.pointer && UiRect{444, 109, 7, 153}.contains(*input.pointer) &&
-        h.selection.count > 6)
-        a.action = FlowAction::Scrollbar;
     if (input.has(UiKey::Tab))
         h.searchEdit.focus(h.controls.entries[h.controls.focus].action == FlowAction::Search,
                            h.selection.search);
@@ -125,23 +122,10 @@ void CommandController::routePreparation(const UiInput& input) noexcept {
     case FlowAction::Recommend:
         h.selection.selected =
             rules::recommendedChoices(party_.catalog(), h.selection.context, rules::SpellChoice::Prepared);
+        h.selection.inspectSelected();
         break;
     case FlowAction::Search:
         h.searchEdit.focus(true, h.selection.search);
-        break;
-    case FlowAction::Scroll:
-        h.selection.offset = std::size_t(std::max(0, int(h.selection.offset) + a.value));
-        h.selection.filter(party_.catalog());
-        break;
-    case FlowAction::Scrollbar:
-        if (input.pointer && h.selection.count > 6) {
-            h.selection.offset = std::size_t(std::clamp((input.pointer->y - 109) / 153.f, 0.f, 1.f) *
-                                             float(h.selection.count - 6));
-            h.selection.filter(party_.catalog());
-        }
-        break;
-    case FlowAction::DetailsScroll:
-        h.selection.detailOffset = unsigned(std::clamp(int(h.selection.detailOffset) + a.value, 0, 24));
         break;
     default:
         break;

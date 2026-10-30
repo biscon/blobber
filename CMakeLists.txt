@@ -46,16 +46,17 @@ function(blobber_warnings target)
     endif()
 endfunction()
 
-add_library(blobber_rules src/rules/spell_selection.cpp src/rules/creation.cpp src/rules/spells.cpp src/rules/resolve.cpp src/rules/health.cpp src/rules/content.cpp src/rules/character.cpp)
+add_library(blobber_rules src/rules/progression.cpp src/rules/spell_selection.cpp src/rules/creation.cpp src/rules/spells.cpp src/rules/resolve.cpp src/rules/health.cpp src/rules/content.cpp src/rules/character.cpp)
 target_include_directories(blobber_rules PUBLIC src)
 add_library(blobber_rules_io src/persistence/arena_store.cpp src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
-add_library(blobber_core src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
+add_library(blobber_core src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules)
 # Level recovery loading validates world cells and exposes core recovery data.
 target_link_libraries(blobber_rules_io PUBLIC blobber_core)
 add_library(blobber_render
+    src/render/spectral_weapons.cpp
     src/render/loot_sprites.cpp
     src/render/projectiles.cpp
     src/render/image_sampling.cpp
@@ -69,7 +70,7 @@ add_library(blobber_platform
     src/platform/gpu_resources.cpp src/platform/window.cpp src/platform/input.cpp
     src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
 target_link_libraries(blobber_platform PUBLIC blobber_render)
-add_executable(blobber src/app/arena_model.cpp src/app/arena_captures.cpp src/app/arena_setup.cpp src/ui/arena_screen.cpp src/app/creator_captures.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp src/app/menu.cpp src/app/menu_model.cpp src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
+add_executable(blobber src/app/progression_captures.cpp src/app/arena_model.cpp src/app/arena_captures.cpp src/app/arena_setup.cpp src/ui/arena_screen.cpp src/app/creator_captures.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp src/app/menu.cpp src/app/menu_model.cpp src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
 target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io)
 add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
 target_link_libraries(blobber_prepare_assets PRIVATE raylib)
@@ -152,7 +153,13 @@ blobber_warnings(blobber_build_diagnostic)
 
 include(CTest)
 if(BUILD_TESTING)
-    foreach(suite portraits creation library visual_review expanded_spells recovery loot_render inventory spells effects projectile impact prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
+    add_executable(blobber_options_tests tests/options_tests.cpp src/app/options.cpp)
+    target_include_directories(blobber_options_tests PRIVATE src)
+    target_link_libraries(blobber_options_tests PRIVATE raylib)
+    blobber_warnings(blobber_options_tests)
+    add_test(NAME options COMMAND blobber_options_tests)
+    add_test(NAME development_cli COMMAND blobber --development --help)
+    foreach(suite progression_allocations level_spells progression portraits creation library visual_review expanded_spells recovery loot_render inventory spells effects projectile impact prepared_assets image_preparation hybrid ai health combat hud commands picking actors actor_render core render resource frame_allocations npc npc_animation npc_reactions rules rules_content party party_content)
         if(suite STREQUAL "frame_allocations")
             set(source tests/frame_allocations.cpp)
         else()
@@ -165,7 +172,7 @@ if(BUILD_TESTING)
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules)
         elseif(suite STREQUAL "rules_content" OR suite STREQUAL "party_content" OR suite STREQUAL "creation" OR suite STREQUAL "library")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
-        elseif(suite STREQUAL "expanded_spells" OR suite STREQUAL "recovery" OR suite STREQUAL "inventory" OR suite STREQUAL "spells" OR suite STREQUAL "effects" OR suite STREQUAL "impact" OR suite STREQUAL "hybrid" OR suite STREQUAL "ai" OR suite STREQUAL "hud" OR suite STREQUAL "combat" OR suite STREQUAL "commands" OR suite STREQUAL "actors" OR suite STREQUAL "core" OR suite STREQUAL "party")
+        elseif(suite STREQUAL "progression_allocations" OR suite STREQUAL "level_spells" OR suite STREQUAL "progression" OR suite STREQUAL "expanded_spells" OR suite STREQUAL "recovery" OR suite STREQUAL "inventory" OR suite STREQUAL "spells" OR suite STREQUAL "effects" OR suite STREQUAL "impact" OR suite STREQUAL "hybrid" OR suite STREQUAL "ai" OR suite STREQUAL "hud" OR suite STREQUAL "combat" OR suite STREQUAL "commands" OR suite STREQUAL "actors" OR suite STREQUAL "core" OR suite STREQUAL "party")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_core)
         elseif(suite STREQUAL "resource" OR suite STREQUAL "npc" OR suite STREQUAL "image_preparation" OR suite STREQUAL "prepared_assets")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_assets_io nlohmann_json::nlohmann_json)

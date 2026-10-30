@@ -118,6 +118,7 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
                                     bool targetGone) noexcept {
     auto& v = visuals_.attacks[slot];
     auto out = pending_[slot].result;
+    effects_.resolveMirror(out.mirror, true, when, events);
     out.event = CombatEvent::AttackCanceled;
     out.occurredMs = when;
     out.targetGone = targetGone;
@@ -163,7 +164,14 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             elapse(when - cursor);
             cursor = when;
         }
+        const auto firstEvent = events.count;
         effects_.advance(state_.gameplayMs, when, realtime, events);
+        for (std::size_t i = firstEvent; i < events.count; ++i) {
+            const auto& event = events.values[i];
+            if (event.event == CombatEvent::Attack && event.spell == rules::SpellKind::Web &&
+                !event.enemyAttack && event.damage > 0)
+                interruptWindup(event.enemy, event.occurredMs);
+        }
     };
     for (std::size_t i = 0; i < attackCapacity; ++i) {
         auto& p = pending_[i];
@@ -303,6 +311,9 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
     if (out.targetGone) {
         out.hit = out.critical = out.died = false;
         out.damage = 0;
+    } else if (out.mirror.effect.serial) {
+        effects_.resolveMirror(out.mirror, false, when, events);
+        out.damage = 0;
     } else if (out.hit) {
         if (out.enemyAttack) {
             out.died = party_.damage(out.recipient, out.damage, out.critical).died;
@@ -314,6 +325,11 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
                 interruptWindup(out.enemy, when);
         }
     }
+    if (out.targetGone)
+        effects_.resolveMirror(out.mirror, true, when, events);
+    if (out.hit && !out.targetGone && out.spell != rules::SpellKind::Count &&
+        rules::spellRules(out.spell)->damage == rules::DamageType::Fire)
+        effects_.ignite(out.enemyAttack ? origin_.cell : target->npc.cell);
     events.append(out);
     if (out.hit && out.damage > 0)
         effects_.wake(out.enemyAttack ? EffectTarget(out.recipient) : EffectTarget(out.enemy), when, events);

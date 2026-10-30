@@ -204,6 +204,8 @@ void CreatorModel::recommend(const Catalog& c) noexcept {
     }
     refresh(c);
     notify("Recommended choices applied to this step.");
+    if (step >= CreatorStep::Cantrips && step <= CreatorStep::Prepared)
+        selection.inspectSelected();
 }
 void CreatorModel::toggleSpell(const Catalog& c, SpellId id) noexcept {
     if (!selection.toggle(id))
@@ -248,25 +250,6 @@ FlowControl FlowControls::input(const UiInput& in) noexcept {
     if (in.has(UiKey::Confirm) && entries[focus].enabled)
         return entries[focus];
     return {};
-}
-void layoutSelection(FlowControls& w, const SpellSelection& s) noexcept {
-    w.add({174, 79, 266, 18}, FlowAction::Search);
-    for (std::size_t j = 0; j < 6 && j + s.offset < s.count; ++j) {
-        const int id = s.visible[j + s.offset].index;
-        const UiRect r{174 + int(j % 2) * 137, 109 + int(j / 2) * 53, 129, 47};
-        w.add({r.x, r.y, r.width - 23, r.height}, FlowAction::Inspect, id);
-        const auto bit = spellBit({std::uint16_t(id)});
-        w.add({r.x + r.width - 23, r.y, 23, r.height}, FlowAction::Toggle, id,
-              !(s.context.locked & bit) &&
-                  ((s.selected & bit) || spellCount(s.selected) < s.context.maximum));
-    }
-    w.add({174, 276, 40, 18}, FlowAction::Scroll, -2, s.offset > 0);
-    w.add({400, 276, 40, 18}, FlowAction::Scroll, 2, s.offset + 6 < s.count);
-    w.add({458, 282, 164, 20}, FlowAction::Recommend);
-    if (s.count > 6)
-        w.add({444, 109, 7, 153}, FlowAction::Scrollbar);
-    w.add({593, 233, 25, 17}, FlowAction::DetailsScroll, -1, s.detailOffset > 0);
-    w.add({593, 252, 25, 17}, FlowAction::DetailsScroll, 1);
 }
 void layoutCreator(FlowControls& w, const CreatorModel& m, const Catalog& c) noexcept {
     w.clear();
@@ -364,8 +347,10 @@ void routeCreator(CreatorModel& m, FlowControls& w, const Catalog& c, const UiIn
                   const TextInput& text, float dt) noexcept {
     m.nameEdit.tick(dt, input.focused);
     m.searchEdit.tick(dt, input.focused);
-    if (!input.focused)
+    if (!input.focused) {
+        m.selection.dragging = 0;
         return;
+    }
     layoutCreator(w, m, c);
     if (m.discard) {
         const auto a = w.input(input).action;
@@ -400,17 +385,15 @@ void routeCreator(CreatorModel& m, FlowControls& w, const Catalog& c, const UiIn
         m.nameEdit.focus(w.entries[w.focus].action == FlowAction::Name, m.draft.name);
         m.searchEdit.focus(w.entries[w.focus].action == FlowAction::Search, m.selection.search);
     }
-    if (input.scroll) {
-        a.action = m.step >= CreatorStep::Cantrips && m.step <= CreatorStep::Prepared && input.pointer &&
-                           UiRect{458, 104, 164, 169}.contains(*input.pointer)
-                       ? FlowAction::DetailsScroll
-                       : FlowAction::Scroll;
-        a.value =
-            -input.scroll * (a.action == FlowAction::DetailsScroll || m.step == CreatorStep::Review ? 1 : 2);
+    const bool selecting = m.step >= CreatorStep::Cantrips && m.step <= CreatorStep::Prepared;
+    if (selecting && scrollSelection(m.selection, c, input, a)) {
+        m.searchEdit.focused = false;
+        return;
     }
-    if (input.pointerHeld && input.pointer && UiRect{444, 109, 7, 153}.contains(*input.pointer) &&
-        m.selection.count > 6)
-        a.action = FlowAction::Scrollbar;
+    if (!selecting && input.scroll) {
+        a.action = FlowAction::Scroll;
+        a.value = -input.scroll * (m.step == CreatorStep::Review ? 1 : 2);
+    }
     if (a.action == FlowAction::None) {
         if (input.has(UiKey::Click))
             m.nameEdit.focused = m.searchEdit.focused = false;
@@ -482,16 +465,6 @@ void routeCreator(CreatorModel& m, FlowControls& w, const Catalog& c, const UiIn
             m.selection.offset = std::size_t(std::max(0, int(m.selection.offset) + a.value));
             m.selection.filter(c);
         }
-        break;
-    case FlowAction::Scrollbar:
-        if (input.pointer && m.selection.count > 6) {
-            m.selection.offset = std::size_t(std::clamp((input.pointer->y - 109) / 153.f, 0.f, 1.f) *
-                                             float(m.selection.count - 6));
-            m.selection.filter(c);
-        }
-        break;
-    case FlowAction::DetailsScroll:
-        m.selection.detailOffset = unsigned(std::clamp(int(m.selection.detailOffset) + a.value, 0, 24));
         break;
     case FlowAction::Save:
         if (!m.saved && m.preview)

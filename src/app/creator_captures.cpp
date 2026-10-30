@@ -82,7 +82,10 @@ void captureCreator(MenuView& v, Presenter& presenter, const Options& options) {
     v.creation.model.selection.filter(v.catalog);
     activate(v, FlowAction::Next);
     capture("10-spellbook");
-    activate(v, FlowAction::Scroll, 2);
+    UiInput scroll;
+    scroll.scroll = -1;
+    scroll.pointer = ArtPoint{300, 150};
+    routeCreator(v.creation.model, v.creator.controls, v.catalog, scroll, {}, 0);
     capture("10-spellbook-scrolled");
     activate(v, FlowAction::Next);
     capture("11-preparation");

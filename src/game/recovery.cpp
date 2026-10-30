@@ -45,6 +45,7 @@ InventoryResult Party::acquire(const AcquisitionRequest& request, bool preview) 
     if (!preview) {
         inventory_ = candidate;
         state_.characters[id.index].stats = derived.value;
+        state_.characters[id.index].stats.maxHitPoints += state_.characters[id.index].aidBonus;
     }
     return result;
 }
@@ -108,6 +109,10 @@ RestError Party::recoveryBenefits(const RestRequest& r) const noexcept {
             return RestError::InvalidDice;
         if (c.life == rules::Life::Dead)
             continue;
+        benefit |= c.build.level >= 2 &&
+                   ((progressionClass({i}) == rules::ProgressionClass::Fighter && !c.actionSurge) ||
+                    (progressionClass({i}) == rules::ProgressionClass::Cleric && c.build.lifeDomain &&
+                     !c.channelDivinity));
         benefit |= r.dice[i] || (hasFeature({i}, rules::ClassFeature::SecondWind) && !c.secondWind);
         if (r.kind == RestKind::Long)
             benefit |= c.hitPoints < c.stats.maxHitPoints || c.mana < c.maxMana ||
@@ -161,6 +166,12 @@ RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRn
         }
         if (hasFeature({i}, rules::ClassFeature::SecondWind))
             c.secondWind = true;
+        if (c.build.level >= 2) {
+            if (progressionClass({i}) == rules::ProgressionClass::Fighter)
+                c.actionSurge = true;
+            if (progressionClass({i}) == rules::ProgressionClass::Cleric && c.build.lifeDomain)
+                c.channelDivinity = true;
+        }
         out.healed[i] = c.hitPoints - beforeHp;
         out.mana[i] = c.mana - beforeMana;
     }

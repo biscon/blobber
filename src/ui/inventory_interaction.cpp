@@ -82,8 +82,11 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
             return true;
         }
     }
-    if (i.page == CharacterPage::Character)
+    if (i.page == CharacterPage::Character) {
+        if (click && inside(inventoryLayout::levelUp))
+            commands.openAdvancement(i.character);
         return true;
+    }
     if (in.scroll)
         commands.inventoryDescription(in.scroll > 0 ? -1 : 1);
     if (in.has(UiKey::PreviousPage))

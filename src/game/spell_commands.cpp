@@ -48,9 +48,14 @@ void CommandController::refreshMagic() noexcept {
         command.action = feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
         const auto reason = session_->combat().validate(command, session_->movement().player);
         const int charges = feature == rules::Feature::SecondWind       ? int(c->secondWind)
+                            : feature == rules::Feature::ActionSurge    ? int(c->actionSurge)
+                            : feature == rules::Feature::PreserveLife   ? int(c->channelDivinity)
                             : feature == rules::Feature::ArcaneRecovery ? int(c->arcaneRecovery)
                                                                         : -1;
         const auto* definition = party_.catalog().spell(spell);
+        assert(m.count < m.entries.size());
+        if (m.count == m.entries.size())
+            return;
         m.entries[m.count++] = {spell,
                                 feature,
                                 name,
@@ -76,12 +81,43 @@ void CommandController::refreshMagic() noexcept {
     }
     if (party_.hasFeature(caster, rules::ClassFeature::SecondWind))
         entry({}, rules::Feature::SecondWind, "Second Wind",
-              "Heal yourself for 1d10 + level. One action; one use per run.", 0);
+              "Heal yourself for 1d10 + level. One action; refreshes on a Short or Long Rest.", 0);
     if (party_.hasFeature(caster, rules::ClassFeature::ArcaneRecovery))
         entry({}, rules::Feature::ArcaneRecovery, "Arcane Recovery",
-              "Recover 2 mana at level one. One use per run. Requires "
+              "Recover 2 mana at levels 1-2, 4 at level 3. Refreshes on Long Rest. Requires "
               "exploration without active threats.",
               0);
+    if (c->build.level >= 2) {
+        if (cls->progression == rules::ProgressionClass::Fighter)
+            entry({}, rules::Feature::ActionSurge, "Action Surge",
+                  "One extra normal action; activate before or after your normal action. Refreshes on a "
+                  "Short or Long Rest.",
+                  0);
+        if (cls->progression == rules::ProgressionClass::Cleric && c->build.lifeDomain)
+            entry({}, rules::Feature::PreserveLife, "Preserve Life",
+                  "Heal a pool of 5 x level, lowest HP percentage first; capped at half maximum HP. One "
+                  "action. Refreshes on rest.",
+                  0);
+        if (cls->progression == rules::ProgressionClass::Rogue)
+            entry({}, rules::Feature::CunningAction, "Cunning Action / Defend",
+                  c->build.level >= 3
+                      ? "Defend freely once per turn. Thief may use this allowance for a potion instead."
+                      : "Defend freely once per turn, before or after your normal action.",
+                  0);
+    }
+    if (session_->effects().has(caster, EffectKind::Restrained))
+        entry({}, rules::Feature::EscapeWeb, "Escape Web",
+              "One action: Strength check against Web DC to end restraint.", 0);
+    if (session_->effects().spiritualWeapon(caster)) {
+        rules::SpellId id;
+        for (std::uint16_t i = 0; i < party_.catalog().spellCount(); ++i)
+            if (party_.catalog().spell({i})->kind == rules::SpellKind::SpiritualWeapon)
+                id = {i};
+        entry(id, rules::Feature::SpiritualWeapon, "Command Spiritual Weapon",
+              "Free once per turn: move up to two clear floor steps and optionally attack an enemy in its "
+              "destination. Click a floor cell or an enemy, then confirm.",
+              0);
+    }
     if (session_->effects().concentration(caster).serial)
         entry({}, rules::Feature::DismissConcentration, "End concentration",
               "End your concentration voluntarily. No action, mana or cooldown cost.", 0);
@@ -91,16 +127,22 @@ void CommandController::refreshMagic() noexcept {
         e.description = description;
         e.category = PickerEntryKind::AutomaticFeature;
         e.passive = id;
-        m.entries[m.count++] = e;
+        assert(m.count < m.entries.size());
+        if (m.count < m.entries.size())
+            m.entries[m.count++] = e;
     };
     if (cls->casting == rules::Casting::None) {
         if (c->build.defense)
             passive(PassiveFeature::Defense, "Defense",
                     "+1 Armor Class while wearing body armor. Already included in your armor class.");
         if (party_.hasFeature(caster, rules::ClassFeature::SneakAttack)) {
-            passive(PassiveFeature::SneakAttack, "Sneak Attack",
-                    "Finesse or ranged hits add 1d6 with advantage, or an acting front ally engaging "
-                    "the target. No disadvantage. Once per 6 gameplay seconds; criticals double the die.");
+            passive(
+                PassiveFeature::SneakAttack, "Sneak Attack",
+                c->build.level >= 3
+                    ? "Finesse/ranged hits add 2d6 once per round with advantage or an acting front ally; no "
+                      "disadvantage."
+                    : "Finesse or ranged hits add 1d6 with advantage, or an acting front ally engaging "
+                      "the target. No disadvantage. Once per 6 gameplay seconds; criticals double the die.");
             passive(PassiveFeature::RearRowMelee, "Rear-row melee",
                     "Your normal melee attack works from the rear row. Targets must still be in "
                     "the three front cells and respect enemy front-row protection.");
@@ -135,7 +177,13 @@ void CommandController::refreshMagic() noexcept {
         m.maximum = r->maxTargets;
         m.hostile = r->hostile;
         m.area = r->area;
-        m.missiles = s->kind == rules::SpellKind::MagicMissile;
+        m.missiles = s->kind == rules::SpellKind::MagicMissile || s->kind == rules::SpellKind::ScorchingRay;
+    }
+    if (m.pending.feature == rules::Feature::SpiritualWeapon) {
+        m.kind = rules::SpellKind::SpiritualWeapon;
+        m.hostile = true;
+        m.ground = true;
+        m.maximum = 1;
     }
     if (m.state == CastingState::Resolving)
         return;
@@ -159,7 +207,9 @@ void CommandController::refreshMagic() noexcept {
             m.assigned += m.pending.darts[i];
         }
         std::snprintf(m.targets.data(), m.targets.size(),
-                      m.missiles ? "Darts assigned %u/3" : "Enemies selected %u/%u",
+                      m.missiles ? (m.kind == rules::SpellKind::ScorchingRay ? "Rays assigned %u/3"
+                                                                             : "Darts assigned %u/3")
+                                 : "Enemies selected %u/%u",
                       m.missiles ? m.assigned : unsigned(m.pending.targetCount), m.maximum);
     } else if (m.pending.action == PartyAction::Spell && !m.self) {
         for (std::size_t i = 0; i < rules::partySize; ++i) {
@@ -172,6 +222,10 @@ void CommandController::refreshMagic() noexcept {
         }
         std::snprintf(m.targets.data(), m.targets.size(), "Allies selected %zu/%u", m.pending.targetCount,
                       m.maximum);
+    } else if (m.pending.feature == rules::Feature::PreserveLife) {
+        const auto pool = party_.preserveLifePreview(caster);
+        std::snprintf(m.targets.data(), m.targets.size(), "Healing: %d / %d / %d / %d HP (character order)",
+                      pool[0], pool[1], pool[2], pool[3]);
     } else
         std::snprintf(m.targets.data(), m.targets.size(), "Self / confirm to use");
 }
@@ -403,6 +457,8 @@ void CommandController::magicEnemy(ActorId id, bool remove) noexcept {
             c.darts[selected] = 0;
         }
         c.enemies[selected] = id;
+        if (c.feature == rules::Feature::SpiritualWeapon)
+            c.aimedCell = actors_.actor(id)->npc.cell;
         if (m.missiles)
             ++c.darts[selected];
     }

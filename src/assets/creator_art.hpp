@@ -5,7 +5,7 @@
 namespace blobber {
 inline constexpr int creatorAtlasSize = 2048, creatorTileSize = 324, creatorTileStride = 328;
 inline constexpr std::size_t creatorWorkspaceLimit = 64u * 1024 * 1024;
-inline constexpr std::array<const char*, 28> creatorArtNames{{"spells/sacred_flame",
+inline constexpr std::array<const char*, 36> creatorArtNames{{"spells/sacred_flame",
                                                               "spells/spare_the_dying",
                                                               "spells/bless",
                                                               "spells/bane",
@@ -29,6 +29,14 @@ inline constexpr std::array<const char*, 28> creatorArtNames{{"spells/sacred_fla
                                                               "spells/guidance",
                                                               "spells/resistance",
                                                               "spells/sanctuary",
+                                                              "spells/aid",
+                                                              "spells/hold_person",
+                                                              "spells/lesser_restoration",
+                                                              "spells/spiritual_weapon",
+                                                              "spells/scorching_ray",
+                                                              "spells/shatter",
+                                                              "spells/mirror_image",
+                                                              "spells/web",
                                                               "melee",
                                                               "items/holy_symbol",
                                                               "items/dagger",

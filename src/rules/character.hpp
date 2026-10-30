@@ -75,6 +75,7 @@ struct RaceDefinition {
     bool sleepImmune = false;
     bool wizardCantrip = false;
 };
+enum class ProgressionClass : std::uint8_t { None, Fighter, Cleric, Rogue, Wizard };
 struct ClassDefinition {
     std::string id, name;
     int hitDie = 6;
@@ -84,8 +85,9 @@ struct ClassDefinition {
     bool allowsDefense = false;
     Casting casting = Casting::None;
     ClassFeatures features = 0;
-    std::array<SpellId, 16> spells{};
+    std::array<SpellId, 32> spells{};
     std::size_t spellCount = 0;
+    ProgressionClass progression = ProgressionClass::None;
 };
 struct ItemDefinition {
     std::string id, name, description;

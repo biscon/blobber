@@ -209,6 +209,7 @@ void composeProjectiles(const ProjectilePlayer& effects, const PreparedNpcs& pre
                         switch (shot.spell) {
                         case rules::SpellKind::FireBolt:
                         case rules::SpellKind::BurningHands:
+                        case rules::SpellKind::ScorchingRay:
                             color.r = 255;
                             color.g = 114;
                             color.b = 38;

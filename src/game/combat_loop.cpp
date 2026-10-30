@@ -26,7 +26,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
     if (state_.resolvingAction) {
         if (now >= due_ && !pendingImpacts() && !drainedThisUpdate_) {
             state_.resolvingAction = false;
-            advance(now);
+            completeAction(now);
             if (state_.phase == CombatPhase::Victory || state_.phase == CombatPhase::Defeat)
                 out.event = CombatEvent::Finished;
         }
@@ -46,6 +46,14 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             out.event = CombatEvent::Finished;
             out.phase = state_.phase;
             return out;
+        }
+        for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+            const auto id = actors_.id(i);
+            if (enemyReady_[i] <= state_.gameplayMs && effects_.has(id, EffectKind::Restrained) &&
+                effects_.canAct(id)) {
+                effects_.escapeWeb(id, now, events);
+                enemyReady_[i] = state_.gameplayMs + combatRoundMs;
+            }
         }
         bool conscious = false;
         for (const auto& c : party_.snapshot().characters)
@@ -113,6 +121,11 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
                 const auto id = actors_.id(i);
                 before[i] = actors_.snapshot().actors[i].npc.cell;
+                if (!(members_[i] && frontal(id)) && enemyReady_[i] <= state_.gameplayMs &&
+                    effects_.has(id, EffectKind::Restrained) && effects_.canAct(id)) {
+                    effects_.escapeWeb(id, now, events);
+                    enemyReady_[i] = state_.gameplayMs + combatRoundMs;
+                }
                 const bool stood = !(members_[i] && frontal(id)) && effects_.stand(id, now, events);
                 frozen[i] = stood || !effects_.canAct(id) || (members_[i] && frontal(id)) ||
                             now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs;
@@ -159,12 +172,12 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                 const auto id = *state_.activeCharacter;
                 if (effects_.stand(id, now, events))
                     state_.spent[id.index] = true;
-                if (effects_.canAct(id) && !state_.spent[id.index])
+                if (hasActions(id))
                     state_.awaitingAction = true;
                 else {
                     state_.awaitingAction = false;
                     out = deathSave(id, now);
-                    if (effects_.canAct(id) && !state_.spent[id.index])
+                    if (hasActions(id))
                         state_.awaitingAction = true;
                     else {
                         if (out.event == CombatEvent::None) {

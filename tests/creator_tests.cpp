@@ -165,6 +165,82 @@ void model(const Catalog& c) {
             }
         }
 }
+void selectionScrolling(const Catalog& c) {
+    CreatorModel m;
+    m.begin(c);
+    m.race(c, {3});
+    m.characterClass(c, {3});
+    m.go(c, CreatorStep::Learned);
+    FlowControls controls;
+    layoutCreator(controls, m, c);
+    check(m.selection.count > 6, "spellbook fixture overflows visible list");
+    for (unsigned i = 0; i < controls.count; ++i)
+        check(controls.entries[i].action != FlowAction::Scroll,
+              "spell picker has no redundant Up/Down buttons");
+    const auto selected = m.selection.selected;
+    UiInput input;
+    input.pointer = ArtPoint{300, 150};
+    input.scroll = -1;
+    routeCreator(m, controls, c, input, {}, 0);
+    check(m.selection.offset == m.selection.count - 6 && m.selection.selected == selected,
+          "wheel scrolls the list without changing picks");
+    auto thumb = selectionThumb(selectionLayout::listTrack, unsigned(m.selection.count), 6,
+                                unsigned(m.selection.offset));
+    input = {};
+    input.pointer = ArtPoint{float(thumb.x + 2), float(thumb.y + 2)};
+    input.pointerHeld = true;
+    input.pressed[std::size_t(UiKey::Click)] = true;
+    routeCreator(m, controls, c, input, {}, 0);
+    input.pressed = {};
+    input.pointer = ArtPoint{600, 0};
+    routeCreator(m, controls, c, input, {}, 0);
+    check(m.selection.offset == 0, "captured thumb drag clamps to start even outside track");
+    input.pointerReleased = true;
+    input.pointerHeld = false;
+    routeCreator(m, controls, c, input, {}, 0);
+    check(!m.selection.dragging, "release ends scrollbar drag");
+    // Renderer supplies measured wrapped-line metrics; the headless test owns this fixture.
+    m.selection.detailLines = 12;
+    m.selection.detailPageLines = 3;
+    input = {};
+    input.pointer = ArtPoint{500, 240};
+    input.scroll = -30;
+    routeCreator(m, controls, c, input, {}, 0);
+    check(m.selection.detailOffset == 9 && m.selection.offset == 0,
+          "detail wheel clamps to final page and never scrolls spell list");
+    thumb = selectionThumb(selectionLayout::detailTrack, 12, 3, 9);
+    input = {};
+    input.pointer = ArtPoint{float(thumb.x + 2), float(thumb.y + 2)};
+    input.pointerHeld = true;
+    input.pressed[std::size_t(UiKey::Click)] = true;
+    routeCreator(m, controls, c, input, {}, 0);
+    input.pressed = {};
+    input.pointer = ArtPoint{500, 0};
+    routeCreator(m, controls, c, input, {}, 0);
+    check(m.selection.detailOffset == 0, "description scrollbar drag reaches first line");
+    input.focused = false;
+    routeCreator(m, controls, c, input, {}, 0);
+    check(!m.selection.dragging, "losing focus cancels drag");
+    m.selection.dragging = 2;
+    input = {};
+    input.pointerHeld = true;
+    input.pressed[std::size_t(UiKey::Cancel)] = true;
+    check(!scrollSelection(m.selection, c, input, {}) && !m.selection.dragging,
+          "Escape ends dragging and remains available to close the dialog");
+    m.selection.detailLines = 2;
+    layoutCreator(controls, m, c);
+    for (unsigned i = 0; i < controls.count; ++i)
+        check(controls.entries[i].action != FlowAction::DetailsScrollbar,
+              "fitting description needs no scrollbar");
+    const auto id = m.selection.visible[0];
+    const bool wasSelected = (m.selection.selected & spellBit(id)) != 0;
+    input = {};
+    input.pointer = ArtPoint{190, 130};
+    input.pressed[std::size_t(UiKey::Click)] = true;
+    routeCreator(m, controls, c, input, {}, 0);
+    check(m.selection.inspected.index == id.index && bool(m.selection.selected & spellBit(id)) != wasSelected,
+          "whole card toggles selection and inspects its description");
+}
 void selection(const Catalog& c) {
     auto d = recommendedDraft(c, {3}, {3});
     SpellSelection s;
@@ -399,6 +475,7 @@ int main() {
         const auto c = creationCatalog();
         model(c);
         selection(c);
+        selectionScrolling(c);
         persistence(c);
         preparation(c);
         std::cout << "Creator and rest preparation checks passed\n";

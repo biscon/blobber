@@ -19,7 +19,12 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--capture-arena" && i + 1 < argc) {
+        else if (arg == "--development")
+            result.development = true;
+        else if (arg == "--capture-progression" && i + 1 < argc) {
+            result.captureProgressionOnly = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--capture-arena" && i + 1 < argc) {
             result.captureArenaOnly = result.captureMenuOnly = true;
             result.captureDirectory = std::filesystem::absolute(argv[++i]);
         } else if (arg == "--capture-creator" && i + 1 < argc) {
@@ -95,9 +100,10 @@ Options parseOptions(int argc, char** argv) {
     if (result.captureMenuOnly &&
         (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo || result.inventoryDemo ||
          result.recoveryDemo || result.checkPreparedOnly || result.captureBuildsOnly ||
-         result.captureSpellsOnly || result.captureInventoryOnly || result.captureRecoveryOnly ||
-         result.captureProjectilesOnly || result.captureReactionsOnly || result.captureHudOnly ||
-         result.captureAiOnly || result.captureHybridOnly || result.capturePreparationOnly))
+         result.captureProgressionOnly || result.captureSpellsOnly || result.captureInventoryOnly ||
+         result.captureRecoveryOnly || result.captureProjectilesOnly || result.captureReactionsOnly ||
+         result.captureHudOnly || result.captureAiOnly || result.captureHybridOnly ||
+         result.capturePreparationOnly))
         throw std::runtime_error("Menu capture must run independently");
     if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) + int(result.hybridDemo) +
                 int(result.inventoryDemo) + int(result.recoveryDemo) >
@@ -108,7 +114,7 @@ Options parseOptions(int argc, char** argv) {
             int(result.captureHybridOnly) + int(result.capturePreparationOnly) +
             int(result.captureProjectilesOnly) + int(result.captureSpellsOnly) +
             int(result.captureInventoryOnly) + int(result.captureRecoveryOnly) +
-            int(result.captureBuildsOnly) >
+            int(result.captureBuildsOnly) + int(result.captureProgressionOnly) >
         1)
         throw std::runtime_error("Choose only one focused capture mode");
     if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)

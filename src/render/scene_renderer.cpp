@@ -81,7 +81,7 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
                                 const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                                 PickingBuffer* picking, const ProjectilePlayer* projectiles,
                                 const SpellArea* area, const LootSnapshot* loot) const {
-    if (loot && !picking)
+    if ((loot || area) && !picking)
         picking = &lootScratch_;
     if (picking)
         picking->clear();
@@ -125,7 +125,7 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
         };
         for (const auto& patch : area->ground.areas)
             if (patch.active)
-                mark(patch.cell, 1);
+                mark(patch.cell, patch.web ? (patch.burnMs ? 12 : 4) : 1);
         for (std::size_t i = 0; i < area->eligible.size(); ++i)
             if (area->eligible[i])
                 mark(area->cells[i], 2);
@@ -150,6 +150,10 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
                 };
                 if (flags & 1)
                     blend(view.grease[unsigned(player.heading)][y * viewWidth + x]);
+                if (flags & 4)
+                    blend(view.web[unsigned(player.heading)][y * viewWidth + x]);
+                if (flags & 8)
+                    blend({255, 105, 30, 65});
                 if (flags & 2) {
                     auto tint = preview;
                     tint.a = sample.edge ? 155 : 38;
@@ -159,6 +163,8 @@ void SceneRenderer::composeView(const Map& map, Player player, int phase, Frame&
     }
     if (npcs)
         npcs_.compose(*npcs, player, phase, coverage, result, animation, picking);
+    if (area && picking)
+        composeWeapons(view, area->ground, player, phase, coverage, npcs, animation, result, *picking);
     if (loot && picking)
         loot_.compose(*loot, player, phase, coverage, npcs, animation, result, *picking);
     if (picking)

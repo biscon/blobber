@@ -24,6 +24,12 @@ Materials loadMaterials(const std::filesystem::path& directory) {
     const auto grease = directory.parent_path() / "effects/grease.png";
     if (std::filesystem::exists(grease))
         result.grease = loadMaterial(grease);
+    const auto web = directory.parent_path() / "effects/web.png";
+    if (std::filesystem::exists(web))
+        result.web = loadMaterial(web);
+    const auto weapon = directory.parent_path() / "effects/spiritual_weapon.png";
+    if (std::filesystem::exists(weapon))
+        result.weapon = loadMaterial(weapon);
     return result;
 }
 } // namespace blobber

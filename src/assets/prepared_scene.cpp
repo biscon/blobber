@@ -9,7 +9,7 @@ using prepared_io::Writer;
 static_assert(sizeof(Color) == 4 && offsetof(Color, r) == 0 && offsetof(Color, g) == 1 &&
                   offsetof(Color, b) == 2 && offsetof(Color, a) == 3,
               "Bundle colors require explicit RGBA8 layout");
-constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 20u * Frame::pixelCount * sizeof(Color);
+constexpr std::size_t backgroundBytes = ViewProjection::strafeSteps * 24u * Frame::pixelCount * sizeof(Color);
 void validate(const PreparedScene& scene) {
     for (const auto& view : scene) {
         for (const auto& sprite : view.sprites) {
@@ -56,6 +56,10 @@ void savePreparedScene(const std::filesystem::path& path, const PreparedScene& s
             out.bytes(background.data(), Frame::pixelCount * sizeof(Color));
         for (const auto& grease : view.grease)
             out.bytes(grease.data(), Frame::pixelCount * sizeof(Color));
+        for (const auto& web : view.web)
+            out.bytes(web.data(), Frame::pixelCount * sizeof(Color));
+        Reader::require(view.weapon.size() == PreparedView::weaponPixelCount);
+        out.bytes(view.weapon.data(), view.weapon.size() * sizeof(Color));
     }
     out.finish();
 }
@@ -88,6 +92,11 @@ PreparedScene loadPreparedScene(const std::filesystem::path& path, std::uint64_t
             in.bytes(background.data(), Frame::pixelCount * sizeof(Color));
         for (auto& grease : view.grease)
             in.bytes(grease.data(), Frame::pixelCount * sizeof(Color));
+        for (auto& web : view.web)
+            in.bytes(web.data(), Frame::pixelCount * sizeof(Color));
+        in.claim(PreparedView::weaponPixelCount * sizeof(Color));
+        view.weapon.resize(PreparedView::weaponPixelCount);
+        in.bytes(view.weapon.data(), view.weapon.size() * sizeof(Color));
     }
     in.finish();
     validate(scene);

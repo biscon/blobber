@@ -37,6 +37,9 @@ class SceneRenderer {
                      const NpcAnimationSnapshot* animation = nullptr, PickingBuffer* picking = nullptr,
                      const ProjectilePlayer* projectiles = nullptr, const SpellArea* area = nullptr,
                      const LootSnapshot* loot = nullptr) const;
+    static void composeWeapons(const PreparedView&, const GroundSnapshot&, Player, int,
+                               const std::array<float, viewWidth>&, const ActorWorld*,
+                               const NpcAnimationSnapshot*, Frame&, PickingBuffer&) noexcept;
     void prepareFloorPreview();
     struct FloorSample {
         std::int8_t lateral = 0, forward = -1;

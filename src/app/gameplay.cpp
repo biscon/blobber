@@ -84,6 +84,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     for (;;) {
         PlayView view(map, catalog, idle, timings, renderer, seed, spawn,
                       launch ? launch->enableAi : !options.combatDemo, recovery, starting);
+        view.session.enableDevelopment(options.development);
         if (starting)
             view.commands.enableMainMenu();
         bool debug = false, first = true, restart = false;

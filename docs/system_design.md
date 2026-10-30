@@ -1,13 +1,27 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
+Session-owned exactly-once XP feeds checked live-party advancement through levels
+2–3, shared new-choice/review screens, fixed subclass features and eight second-level
+spells. Bounded effects add Aid, Mirror reservations, spectral weapon positions and
+concentration-linked Web cells; optional activations preserve normal turn ownership.
+Schema 9 and prepared bundle/renderer revision 3 retain the accepted library, arena,
+1920×1080 and prepared-image contracts. [Verification and handoff](slice13_verification.md)
+records Debug/Release 41/41, focused sanitizer 8/8, zero tracked allocations,
+capacity/GPU checks and 69 initial captures. The user accepted slice 13 and milestone C
+on 2026-10-30. Slice 14 is next eligible for separate planning and remains unstarted. The subsequent spell-picker review adds
+clear preparation-slot messaging, actionable-only advancement lists, blue card
+outlines, measured compact descriptions and shared scrollbars with aligned panels.
+These corrections and existing Action Surge activation were accepted with the slice.
+See the handoff for focused verification, refreshed captures and the accepted closeout.
+
 Implemented, **accepted and closed** (2026-10-29): [slice 12.5 arena](arena_design.md).
 Main-menu setup, independent party/scenario snapshots, bounded portable file storage,
 generated safe-spawn room and Rematch/Edit Setup reuse normal gameplay and prepared
 rendering. [Verification and handoff](slice125_verification.md): Debug/Release 38/38,
 focused ASan/UBSan 5/5, zero tracked frame allocations, capacity stress, hidden GPU
-checks and 54 captures. The user accepted slice 12.5 on 2026-10-29. Level advancement
-and creature footprints remain deferred; slice 13 is next eligible for separate
-planning and remains unstarted.
+checks and 54 captures. The user accepted slice 12.5 on 2026-10-29. Creature-size
+footprints remain deferred; the subsequent progression work is recorded above.
 
 Implemented, **accepted and closed** (2026-10-29): [slice 12.4 creator and reusable selection](character_creator_design.md).
 Fixed drafts and shared choice panels integrate creation, checked library saving
@@ -15,7 +29,7 @@ and atomic Long Rest preparation. A bounded 16 MiB detail-art atlas reuses exist
 masters. [Verification and handoff](slice124_verification.md): Debug/Release 37/37,
 focused ASan/UBSan 4/4 with leak detection, zero tracked frame allocations, hidden
 GPU checks and 187 captures. The user accepted slice 12.4 on 2026-10-29 and retained
-the current 27-point buy, 8–15 base scores and fixed racial bonuses. Arena slice 12.5 now precedes slice 13; slice 13 remains unstarted.
+the current 27-point buy, 8–15 base scores and fixed racial bonuses. Arena slice 12.5 was subsequently accepted; progression is recorded above.
 
 Implemented, **accepted and closed** (2026-10-29): [slice 12.3 menu and launch](menu_launch_design.md).
 Normal startup loads catalog/library/UI only. Bounded library browsing, read-only
@@ -50,7 +64,7 @@ and its [visual review corrections](spell_visual_review_design.md). Spell-level
 and Abilities tabs preserve selection per character/tab. Bounded status summaries
 supply portrait icons and duration tooltips; enemy badges reuse spell art. Prepared
 Grease floor banks and required four-direction static prone clips preserve offline
-image preparation and frame allocation guarantees. Binary bundles now use format 2.
+image preparation and frame allocation guarantees. That checkpoint used bundle format 2; slice 13 advances it to format 3.
 The ten spell additions retain checked casts, bounded conditions/ground areas,
 temporary HP and turn-relative short effects. [Local SRD](references/README.md)
 is the source for future planning. [Verification and handoff](slice121_verification.md):
@@ -72,7 +86,7 @@ contracts. Detailed subsystem designs are written in each later planning pass.
 The data foundation is implemented in 12.2; menu/library/party launch is implemented
 in accepted slice 12.3. The creator is implemented and accepted in slice 12.4.
 Slices 12.1 and 12.2 are accepted and closed.
-The creator prerequisite is satisfied; arena slice 12.5 now precedes slice 13, which remains unstarted. Earlier checkpoint history remains below.
+The creator and arena prerequisites are satisfied. Slice 13 is accepted and closed above. Earlier checkpoint history remains below.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
 Drop into the current cell, automatic Take All closure, and a small generated Rest
@@ -594,3 +608,24 @@ uses idle placements plus timestamped walk, attack and damage cues while AI and
 combat independently resolve movement and turns. Controlled actor movement and
 health/lifecycle mutation are described in the actor design; prepared caches stay
 immutable and are reused at each runtime position.
+
+## Enemy status-icon occlusion follow-up (2026-10-30)
+
+Implemented correction to the accepted slice 13 presentation: enemy condition icons
+remain native-resolution UI art, but their visible pixels must respect their
+owner's projected depth. PickingBuffer retains the existing alpha-aware body IDs
+(including visible corpses), plus 256 projected actor depths and 500 wall-column
+depths (about 3 KiB per buffer). NPC composition publishes these alongside stable
+badge anchors, including travel offsets. A bounded 12×12 icon clipping helper
+compares each covered dungeon pixel against nearer bodies/walls, excluding the
+owner itself; transparent holes and farther bodies leave the icon visible.
+Equal-depth other bodies occlude consistently. Identical visibility rows merge
+into scissor rectangles, so a fully visible icon draws once. No per-frame heap
+storage, new GPU resources, image baking or changes to picking/target identities.
+Status rows retain their existing non-overlap placement; casting/target UI remains
+an overlay. Generated-fixture depth, silhouette, wall, corpse and reset cases,
+clipping coverage and allocation guards cover the CPU contract. Hidden
+application-owned captures exercise sleeping rear enemies behind standing front
+enemies. See the [follow-up verification](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30).
+The user accepted this follow-up on 2026-10-30; it is closed alongside slice 13
+and milestone C. Slice 14 remains next eligible for separate planning and unstarted.

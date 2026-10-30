@@ -12,10 +12,12 @@ bool match(std::string_view name, std::string_view query) noexcept {
 } // namespace
 void SpellSelection::filter(const Catalog& c) noexcept {
     count = 0;
-    for (std::uint16_t i = 0; i < c.spellCount(); ++i)
-        if (((context.available | context.locked) & spellBit({i})) &&
-            match(c.spell({i})->name, search.data()))
-            visible[count++] = {i};
+    for (unsigned pass = 0; pass < (context.editableFirst ? 2u : 1u); ++pass)
+        for (std::uint16_t i = 0; i < c.spellCount(); ++i)
+            if (((context.available | (context.showLocked ? context.locked : 0)) & spellBit({i})) &&
+                (!context.editableFirst || bool(context.locked & spellBit({i})) == bool(pass)) &&
+                match(c.spell({i})->name, search.data()))
+                visible[count++] = {i};
     offset = std::min(offset, count > 6 ? count - 6 : 0);
     if (!c.spell(inspected)) {
         if (count)
@@ -37,10 +39,23 @@ bool SpellSelection::toggle(SpellId id) noexcept {
         selected &= ~bit;
         return true;
     }
+    if (context.maximum == 1) {
+        selected = bit;
+        return true;
+    }
     if (spellCount(selected) >= context.maximum)
         return false;
     selected |= bit;
     return true;
+}
+void SpellSelection::inspectSelected() noexcept {
+    inspected = {};
+    detailOffset = 0;
+    for (std::uint16_t i = 0; i < 32; ++i)
+        if (selected & spellBit({i})) {
+            inspected = {i};
+            break;
+        }
 }
 CharacterIdentityView draftIdentity(const CharacterDraft& d) noexcept {
     const auto n = std::find(d.name.begin(), d.name.end(), '\0') - d.name.begin();
@@ -61,7 +76,7 @@ std::uint32_t preparationOptions(const Catalog& c, const CharacterIdentityView& 
     const auto* cls = c.characterClass(b.characterClass);
     if (!cls || cls->casting == Casting::None)
         return 0;
-    const auto eligible = classSpells(c, b.characterClass, 1);
+    const auto eligible = eligibleLeveledSpells(c, b);
     return (cls->casting == Casting::Intelligence ? eligible & g.learned : eligible) & ~g.domain;
 }
 bool validPreparation(const Catalog& c, const CharacterIdentityView& b, const SpellGrants& g,

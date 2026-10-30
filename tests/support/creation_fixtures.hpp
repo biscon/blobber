@@ -3,7 +3,7 @@
 #include "spell_fixtures.hpp"
 #include <cstdio>
 namespace blobber {
-inline rules::Catalog creationCatalog() {
+inline rules::Catalog creationCatalog(bool progression = false) {
     using namespace rules;
     const auto base = spellCatalog();
     std::vector<RaceDefinition> races;
@@ -22,6 +22,19 @@ inline rules::Catalog creationCatalog() {
         items.push_back(*base.item({i}));
     for (std::uint16_t i = 0; i < base.spellCount(); ++i)
         spells.push_back(*base.spell({i}));
+    if (progression) {
+        for (unsigned i = 0; i < 4; ++i)
+            classes[i].progression = ProgressionClass(i + 1);
+        for (unsigned i = unsigned(SpellKind::Aid); i < unsigned(SpellKind::Count); ++i) {
+            const auto kind = SpellKind(i);
+            const auto& r = *spellRules(kind);
+            const SpellId id{std::uint16_t(spells.size())};
+            spells.push_back({r.id, r.name, r.description, kind});
+            for (auto& cls : classes)
+                if (spellClass(kind, cls.casting))
+                    cls.spells[cls.spellCount++] = id;
+        }
+    }
     ItemDefinition staff = items[1];
     staff.id = "quarterstaff";
     staff.weapon = WeaponType::Quarterstaff;
@@ -95,6 +108,11 @@ inline rules::Catalog creationCatalog() {
         std::snprintf(d.name.data(), d.name.size(), "Fixture %u", i);
         preset.characters[i] = finishBuild(staging, d, "fixture." + std::to_string(i));
     }
-    return {{*base.attack({0})}, {*base.monster({0})}, races, classes, items, preset, spells, creation};
+    auto monster = *base.monster({0});
+    if (progression) {
+        monster.experience = 50;
+        monster.humanoid = true;
+    }
+    return {{*base.attack({0})}, {monster}, races, classes, items, preset, spells, creation};
 }
 } // namespace blobber

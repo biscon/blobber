@@ -22,6 +22,9 @@ time or explicit turn/consumption descriptions, including while the picker is op
 Enemy conditions use collision-aware spell badges coordinated with target markers.
 Each visible actor gets at most six badges; a bounded 25-position search omits a
 row if no nonoverlapping position fits. Badge placement never changes body picking.
+The [2026-10-30 occlusion follow-up](system_design.md#enemy-status-icon-occlusion-follow-up-2026-10-30)
+clips enemy status tiles against nearer body silhouettes and wall columns using
+projected owner depths; native icon art and the existing badge layout are retained.
 
 ## Ground artwork
 

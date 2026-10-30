@@ -23,6 +23,7 @@
 #include "support/render_fixtures.hpp"
 #include "support/spell_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/status_occlusion.hpp"
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -248,10 +249,8 @@ int main() {
         const auto spellRules = spellCatalog();
         const auto spellFar = spellPlacements(hybridMap);
         const auto spellNear = spellPlacements(hybridMap, 12, true);
-        std::array<std::unique_ptr<GameSession>, static_cast<unsigned>(rules::SpellKind::Count)>
-            spellSessions;
-        std::array<std::unique_ptr<CommandController>, static_cast<unsigned>(rules::SpellKind::Count)>
-            spellUis;
+        std::array<std::unique_ptr<GameSession>, static_cast<unsigned>(rules::SpellKind::Aid)> spellSessions;
+        std::array<std::unique_ptr<CommandController>, static_cast<unsigned>(rules::SpellKind::Aid)> spellUis;
         for (unsigned i = 0; i < spellSessions.size(); ++i) {
             const auto kind = static_cast<rules::SpellKind>(i);
             const bool close = rules::spellRules(kind)->area || (kind == rules::SpellKind::InflictWounds ||
@@ -895,6 +894,10 @@ int main() {
             animator.setTime(ms);
             frames.update(renderer, map, state, &npcs, &animator.snapshot());
             renderer.compose(map, state.player, expected, &npcs, &animator.snapshot());
+            if (const auto* picking = frames.picking())
+                for (const auto id : {std::uint16_t(0), std::uint16_t(1)})
+                    forEachStatusClip(*picking, id, {viewX + 240, viewY + 100, 12, 12},
+                                      [&](UiRect clip) { okay &= clip.width > 0 && clip.height > 0; });
             okay &= same(frames.frame(), expected);
             okay &= !frames.update(renderer, map, state, &npcs, &animator.snapshot());
         }

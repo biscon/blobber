@@ -71,7 +71,7 @@ enum class FlowAction {
     Search,
     Scroll,
     Scrollbar,
-    DetailsScroll,
+    DetailsScrollbar,
     Member,
     Done
 };
@@ -93,6 +93,12 @@ struct FlowControls {
     FlowControl input(const UiInput&) noexcept;
 };
 void layoutSelection(FlowControls&, const rules::SpellSelection&) noexcept;
+namespace selectionLayout {
+inline constexpr UiRect listTrack{444, 109, 7, 153}, detailTrack{614, 230, 6, 27};
+inline constexpr UiRect listPanel{174, 104, 277, 170}, detailPanel{458, 109, 164, 153};
+} // namespace selectionLayout
+UiRect selectionThumb(UiRect, unsigned count, unsigned page, unsigned offset) noexcept;
+bool scrollSelection(rules::SpellSelection&, const rules::Catalog&, const UiInput&, FlowControl) noexcept;
 void layoutCreator(FlowControls&, const CreatorModel&, const rules::Catalog&) noexcept;
 void routeCreator(CreatorModel&, FlowControls&, const rules::Catalog&, const UiInput&, const TextInput&,
                   float) noexcept;

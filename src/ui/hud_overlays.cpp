@@ -1,8 +1,10 @@
 #include "ui/combat_feedback.hpp"
+#include "ui/creator_screen.hpp"
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
 #include "ui/inventory_layout.hpp"
 #include "ui/spell_layout.hpp"
+#include "ui/status_occlusion.hpp"
 #include <cstring>
 namespace blobber {
 using namespace hudInk;
@@ -102,15 +104,20 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                 for (unsigned k = 0; k < unsigned(EffectKind::Count) && n < 6; ++k)
                     if (h->conditions[slot] & (1u << k)) {
                         const UiRect r{row.x + int(n) * 12, row.y, 12, 12};
-                        if (n == 5 && count > 6) {
-                            char label[16];
-                            std::snprintf(label, sizeof(label), "+%u", count - 5);
-                            p.box(r, gold);
-                            p.centered(label, r, gold, UiTextStyle::Small);
-                        } else {
-                            p.box(r, harmfulEffect(EffectKind(k)) ? red : teal);
-                            p.picture(UiArt::effectIcon(EffectKind(k)), {r.x + 1, r.y + 1, 10, 10});
-                        }
+                        forEachStatusClip(*picking, static_cast<std::uint16_t>(slot), r, [&](UiRect clip) {
+                            BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
+                                             clip.width * HudPainter::scale, clip.height * HudPainter::scale);
+                            if (n == 5 && count > 6) {
+                                char label[16];
+                                std::snprintf(label, sizeof(label), "+%u", count - 5);
+                                p.box(r, gold);
+                                p.centered(label, r, gold, UiTextStyle::Small);
+                            } else {
+                                p.box(r, harmfulEffect(EffectKind(k)) ? red : teal);
+                                p.picture(UiArt::effectIcon(EffectKind(k)), {r.x + 1, r.y + 1, 10, 10});
+                            }
+                            EndScissorMode();
+                        });
                         ++n;
                     }
             }
@@ -228,7 +235,15 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.overlayBox(hudLayout::expandedLog);
         p.log(*h, true);
     }
+    if (h->combat.canEndTurn && !h->modal() && !h->magic.casting()) {
+        p.box(hudLayout::endTurn, gold);
+        p.label("END TURN", hudLayout::endTurn, gold);
+    }
     if (h->menuOpen) {
+        if (h->development && !h->leaveConfirmation) {
+            p.box(hudLayout::developmentXp, gold);
+            p.label("DEV: GRANT NEXT LEVEL XP", hudLayout::developmentXp, gold);
+        }
         p.overlayBox(hudLayout::menu);
         p.text(h->leaveConfirmation ? "Discard current run?" : "PAUSED", hudLayout::menu.x + 16,
                hudLayout::menu.y + 15, gold, UiTextStyle::Display);
@@ -265,6 +280,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.inventory(*h);
     if (h->camp.open)
         p.camp(*h);
+    if (h->advancement.open)
+        drawAdvancement(p, h->advancement);
     if (h->demo) {
         p.label("F2 NEXT", hudLayout::demoNext, gold, UiTextStyle::Small);
         p.label("F3 RESET", hudLayout::demoReset, gold, UiTextStyle::Small);

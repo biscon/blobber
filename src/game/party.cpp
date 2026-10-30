@@ -18,6 +18,8 @@ Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingPa
         throw std::invalid_argument("Invalid starting formation");
     for (std::size_t i = 0; i < 4; ++i) {
         const auto& b = preset->characters[i];
+        if (b.level != 1)
+            throw std::invalid_argument("Starting party must be level one");
         for (std::size_t j = 0; j < i; ++j)
             if (b.id == preset->characters[j].id)
                 throw std::invalid_argument("Duplicate starting character");
@@ -80,6 +82,7 @@ InventoryResult Party::stageInventoryChange(const InventoryRequest& request, Inv
             return {derived.error == rules::CharacterError::Overweight ? InventoryError::Overweight
                                                                        : InventoryError::Equipment};
         stats[i] = derived.value;
+        stats[i].maxHitPoints += state_.characters[i].aidBonus;
     }
     return result;
 }
@@ -116,6 +119,8 @@ InventoryResult Party::releaseItem(ItemHandle handle, std::uint64_t revision, bo
     if (!preview) {
         inventory_ = candidate;
         state_.characters[location.character.index].stats = derived.value;
+        state_.characters[location.character.index].stats.maxHitPoints +=
+            state_.characters[location.character.index].aidBonus;
     }
     return {InventoryError::None, true};
 }
@@ -125,6 +130,7 @@ bool Party::consumeItem(ItemHandle h, unsigned q) noexcept {
         return false;
     auto& c = state_.characters[location.character.index];
     c.stats = rules::deriveCharacter(*catalog_, c.build, inventory_.loadout(location.character)).value;
+    c.stats.maxHitPoints += c.aidBonus;
     return true;
 }
 bool Party::restoreMana(rules::CharacterId id, int amount) noexcept {
@@ -216,6 +222,14 @@ bool Party::useFeature(rules::CharacterId id, rules::Feature feature) noexcept {
     if (!character(id))
         return false;
     auto& c = state_.characters[id.index];
+    if (feature == rules::Feature::ActionSurge && c.actionSurge) {
+        c.actionSurge = false;
+        return true;
+    }
+    if (feature == rules::Feature::PreserveLife && c.channelDivinity) {
+        c.channelDivinity = false;
+        return true;
+    }
     if (feature == rules::Feature::SecondWind && c.secondWind) {
         c.secondWind = false;
         return true;
@@ -226,5 +240,17 @@ bool Party::useFeature(rules::CharacterId id, rules::Feature feature) noexcept {
         return true;
     }
     return false;
+}
+void Party::aidBonus(rules::CharacterId id, int bonus) noexcept {
+    if (!character(id))
+        return;
+    auto& c = state_.characters[id.index];
+    const int difference = bonus - c.aidBonus;
+    c.stats.maxHitPoints += difference;
+    c.aidBonus = bonus;
+    if (difference > 0)
+        heal(id, difference);
+    else
+        c.hitPoints = std::min(c.hitPoints, c.stats.maxHitPoints);
 }
 } // namespace blobber

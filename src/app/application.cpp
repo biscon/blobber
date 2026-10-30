@@ -1,5 +1,4 @@
 #include "app/application.hpp"
-#include "app/menu.hpp"
 #include "app/actor_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/archer_captures.hpp"
@@ -9,7 +8,9 @@
 #include "app/hud_captures.hpp"
 #include "app/hybrid_demo.hpp"
 #include "app/inventory_captures.hpp"
+#include "app/menu.hpp"
 #include "app/options.hpp"
+#include "app/progression_captures.hpp"
 #include "app/projectile_captures.hpp"
 #include "app/recovery_demo.hpp"
 #include "app/spell_captures.hpp"
@@ -34,7 +35,8 @@ int runLegacy(int argc, char** argv) {
     if (options.help) {
         std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--capture DIRECTORY | "
                      "--capture-hud DIRECTORY | --capture-reactions DIRECTORY | --capture-ai DIRECTORY | "
-                     "--capture-arena DIRECTORY | --capture-creator DIRECTORY | --capture-menu DIRECTORY | --capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
+                     "--capture-arena DIRECTORY | --capture-creator DIRECTORY | --capture-menu DIRECTORY | "
+                     "--capture-builds DIRECTORY | --capture-recovery DIRECTORY | --capture-inventory "
                      "DIRECTORY | --capture-spells "
                      "DIRECTORY | --capture-hybrid DIRECTORY | "
                      "--capture-preparation "
@@ -42,7 +44,7 @@ int runLegacy(int argc, char** argv) {
                      "DIRECTORY] "
                      "[--ui-demo | "
                      "--recovery-demo | --inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | "
-                     "--spell-demo] [--seed UINT32] "
+                     "--spell-demo] [--seed UINT32] [--development] "
                      "[--check-prepared]\n";
         return 0;
     }
@@ -105,6 +107,11 @@ int runLegacy(int argc, char** argv) {
         FramePipeline frames;
         CommandController commands(party, npcs);
         std::filesystem::create_directories(options.captureDirectory);
+        if (options.captureProgressionOnly) {
+            captureProgression(rules, loadedNpcs.world, timings, renderer, presenter,
+                               options.captureDirectory);
+            return 0;
+        }
         if (options.captureBuildsOnly) {
             captureBuilds(map, rules, loadedNpcs.world, timings, renderer, presenter,
                           options.captureDirectory);
@@ -204,8 +211,11 @@ int runLegacy(int argc, char** argv) {
 namespace blobber {
 int run(int argc, char** argv) {
     const auto o = parseOptions(argc, argv);
-    if (o.captureMenuOnly) return runMenus(o);
-    if (o.help || o.checkPreparedOnly || !o.captureDirectory.empty() || o.uiDemo || o.combatDemo || o.aiDemo || o.hybridDemo || o.inventoryDemo || o.recoveryDemo || o.spellDemo) return runLegacy(argc, argv);
+    if (o.captureMenuOnly)
+        return runMenus(o);
+    if (o.help || o.checkPreparedOnly || !o.captureDirectory.empty() || o.uiDemo || o.combatDemo ||
+        o.aiDemo || o.hybridDemo || o.inventoryDemo || o.recoveryDemo || o.spellDemo)
+        return runLegacy(argc, argv);
     return runMenus(o);
 }
-}
+} // namespace blobber

@@ -5,16 +5,20 @@
 namespace blobber {
 rules::SpellKind effectSpell(EffectKind kind) noexcept {
     using S = rules::SpellKind;
-    constexpr S spells[]{S::Bless, S::Bane,       S::ShieldOfFaith, S::MageArmor,
-                         S::Count, S::Guidance,   S::Resistance,    S::Sanctuary,
-                         S::Sleep, S::ColorSpray, S::RayOfFrost,    S::Grease};
+    constexpr S spells[]{S::Bless,      S::Bane,           S::ShieldOfFaith, S::MageArmor,   S::HoldPerson,
+                         S::Guidance,   S::Resistance,     S::Sanctuary,     S::Sleep,       S::ColorSpray,
+                         S::RayOfFrost, S::Grease,         S::Aid,           S::MirrorImage, S::Web,
+                         S::Web,        S::SpiritualWeapon};
     return unsigned(kind) < std::size(spells) ? spells[unsigned(kind)] : S::Count;
 }
 bool harmfulEffect(EffectKind kind) noexcept {
-    return kind == EffectKind::Bane || kind == EffectKind::HoldPerson || kind >= EffectKind::Sleep;
+    return kind == EffectKind::Bane || kind == EffectKind::HoldPerson ||
+           (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) || kind == EffectKind::Restrained;
 }
 void statusDuration(const StatusEntry& s, char* output, std::size_t bytes) noexcept {
-    if (s.clock == StatusClock::CasterTurn)
+    if (s.clock == StatusClock::Escape)
+        std::snprintf(output, bytes, "Until escape or leaving Web");
+    else if (s.clock == StatusClock::CasterTurn)
         std::snprintf(output, bytes, "Until caster's next turn");
     else if (s.clock == StatusClock::Standing)
         std::snprintf(output, bytes, "Until standing on next turn");
@@ -30,6 +34,11 @@ void statusDuration(const StatusEntry& s, char* output, std::size_t bytes) noexc
                           static_cast<unsigned long long>(seconds % 60));
         else
             std::snprintf(output, bytes, "%llus remaining", static_cast<unsigned long long>(seconds));
+    }
+    if (s.stacks) {
+        const auto used = std::char_traits<char>::length(output);
+        if (used < bytes)
+            std::snprintf(output + used, bytes - used, " / %u images", s.stacks);
     }
 }
 StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
@@ -50,7 +59,7 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
                       : kind == EffectKind::Knockdown ? "Grease - Prone"
                                                       : effectName(kind);
         status.harmful = harmfulEffect(kind);
-        if (kind >= EffectKind::Sleep) {
+        if (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) {
             const auto& c = conditions_[conditionIndex(target)][k - unsigned(EffectKind::Sleep)];
             status.remainingMs = remaining(c.untilMs);
             if (kind == EffectKind::Knockdown && turns_)
@@ -61,16 +70,26 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
             for (const auto& e : instances_)
                 if (e.active && e.kind == kind)
                     for (std::size_t t = 0; t < e.count; ++t)
-                        if (e.targets[t] == target)
+                        if (e.targets[t] == target) {
                             status.remainingMs = std::max(status.remainingMs, remaining(e.expiresMs));
+                            if (kind == EffectKind::MirrorImage)
+                                status.stacks = unsigned(bool(e.duplicates & 1)) +
+                                                unsigned(bool(e.duplicates & 2)) +
+                                                unsigned(bool(e.duplicates & 4));
+                        }
         }
-        status.ending = kind == EffectKind::Sleep        ? "Ends early on damage or Aid."
-                        : kind == EffectKind::Guidance   ? "Consumed by the next ability check."
-                        : kind == EffectKind::Resistance ? "Consumed by the next saving throw."
-                        : kind == EffectKind::Sanctuary
-                            ? "Ends when the recipient attacks or casts offensively."
-                        : kind == EffectKind::HoldPerson ? "A successful repeat save ends it early."
-                                                         : "";
+        if (kind == EffectKind::Restrained)
+            status.clock = StatusClock::Escape;
+        status.ending =
+            kind == EffectKind::Restrained    ? "Escape uses an action and Strength check."
+            : kind == EffectKind::Aid         ? "Maximum HP +5. Does not stack or heal on refresh."
+            : kind == EffectKind::MirrorImage ? "Attacks can destroy duplicates; areas bypass them."
+            : kind == EffectKind::Sleep       ? "Ends early on damage or Aid."
+            : kind == EffectKind::Guidance    ? "Consumed by the next ability check."
+            : kind == EffectKind::Resistance  ? "Consumed by the next saving throw."
+            : kind == EffectKind::Sanctuary   ? "Ends when the recipient attacks or casts offensively."
+            : kind == EffectKind::HoldPerson  ? "A successful repeat save ends it early."
+                                              : "";
         result.entries[result.count++] = status;
     }
     if (target.npc && guiding(target.enemy))

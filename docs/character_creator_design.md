@@ -117,3 +117,15 @@ guarantee. Prepared tiles are drawn directly; there is no frame-time image resiz
 
 [Verification, retained captures and next-agent handoff](slice124_verification.md). The user accepted the slice on 2026-10-29 and chose to retain the current
 27-point buy, 8–15 base scores and fixed racial bonuses for now.
+
+
+## Shared picker review correction (slice 13, 2026-10-30)
+
+The [progression review](progression_design.md#slice-13-review-spell-selection-clarity-implemented-2026-10-30)
+also updates the shared creation/Long Rest picker: blue card outlines replace
+checkboxes, plain grant labels replace L controls, descriptions use measured compact
+line spacing, and list/detail panels have matching top/bottom edges. Wheel, track
+paging and captured thumb dragging replace the redundant Up/Down controls. View-only
+wrapped-line metrics remain separate from grants and gameplay state. Advancement
+hides baseline cards; creation/rest still display granted spells for inspection.
+The accepted creation rules and rest transaction boundaries are unchanged.

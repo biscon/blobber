@@ -116,13 +116,21 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < classes.size(); ++i) {
         const auto p = "classes[" + std::to_string(i) + "]";
         const auto& c = classes[i];
-        if (spellsEnabled)
+        if (version >= 9)
+            fields(c, p,
+                   {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense", "casting",
+                    "features", "spells", "progression"});
+        else if (spellsEnabled)
             fields(c, p,
                    {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense", "casting",
                     "features", "spells"});
         else
             fields(c, p, {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense"});
         ClassDefinition cls;
+        if (version >= 9)
+            cls.progression = static_cast<ProgressionClass>(
+                choice(c.at("progression"), p + ".progression",
+                       std::array<const char*, 5>{"none", "fighter", "cleric", "rogue", "wizard"}));
         cls.id = identifier(c.at("id"), p + ".id");
         cls.name = string(c.at("name"), p + ".name");
         cls.hitDie = integer(c.at("hit_die"), p + ".hit_die");

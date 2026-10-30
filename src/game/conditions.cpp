@@ -5,9 +5,10 @@
 
 namespace blobber {
 const char* effectName(EffectKind kind) noexcept {
-    constexpr const char* names[]{"Bless",    "Bane",       "Shield of Faith", "Mage Armor", "Hold Person",
-                                  "Guidance", "Resistance", "Sanctuary",       "Sleep",      "Blind",
-                                  "Slow",     "Knockdown"};
+    constexpr const char* names[]{
+        "Bless",     "Bane",       "Shield of Faith", "Mage Armor", "Hold Person", "Guidance", "Resistance",
+        "Sanctuary", "Sleep",      "Blind",           "Slow",       "Knockdown",   "Aid",      "Mirror Image",
+        "Web",       "Restrained", "Spiritual Weapon"};
     return unsigned(kind) < std::size(names) ? names[unsigned(kind)] : "Effect";
 }
 std::size_t EffectController::conditionIndex(EffectTarget t) const noexcept {
@@ -41,10 +42,10 @@ bool EffectController::metalArmor(EffectTarget t) const noexcept {
 }
 rules::RollMode EffectController::attackMode(EffectTarget attacker, EffectTarget target, bool close,
                                              bool advantage, bool disadvantage) const noexcept {
-    advantage |=
-        helpless(target) || has(target, EffectKind::Blind) || (close && has(target, EffectKind::Knockdown));
-    disadvantage |= has(attacker, EffectKind::Blind) || has(attacker, EffectKind::Knockdown) ||
-                    (!close && has(target, EffectKind::Knockdown));
+    advantage |= has(target, EffectKind::Restrained) || helpless(target) || has(target, EffectKind::Blind) ||
+                 (close && has(target, EffectKind::Knockdown));
+    disadvantage |= has(attacker, EffectKind::Restrained) || has(attacker, EffectKind::Blind) ||
+                    has(attacker, EffectKind::Knockdown) || (!close && has(target, EffectKind::Knockdown));
     return rules::rollMode(advantage, disadvantage);
 }
 int EffectController::oneShot(EffectTarget target, EffectKind kind) noexcept {
@@ -105,7 +106,7 @@ void EffectController::condition(EffectTarget t, EffectKind kind, rules::Charact
                                  std::uint64_t now, CombatEvents& events) noexcept {
     const auto i = conditionIndex(t);
     if (i >= conditions_.size() || !living(t) || !party_.character(caster) || kind < EffectKind::Sleep ||
-        kind >= EffectKind::Count || (kind == EffectKind::Sleep && sleepImmune(t)))
+        kind > EffectKind::Knockdown || (kind == EffectKind::Sleep && sleepImmune(t)))
         return;
     auto& c = conditions_[i][unsigned(kind) - unsigned(EffectKind::Sleep)];
     if (kind == EffectKind::Knockdown && c.active)
@@ -219,26 +220,43 @@ void EffectController::enter(EffectTarget t, Cell cell, std::uint64_t now) noexc
 }
 void EffectController::groundCheck(EffectTarget target, Cell cell, std::uint64_t now,
                                    CombatEvents& events) noexcept {
-    const auto* a = area(cell);
-    if (!a || !living(target) ||
-        (!target.npc && party_.character(target.character)->life != rules::Life::Conscious))
+    if (!living(target))
         return;
-    const auto result = save(target, rules::Ability::Dexterity, a->difficulty);
-    CombatOutcome out;
-    out.event = CombatEvent::SpellSave;
-    out.spell = rules::SpellKind::Grease;
-    out.enemyAttack = !target.npc;
-    out.enemy = target.enemy;
-    out.recipient = target.character;
-    out.character = a->caster;
-    out.roll = result.roll.selected;
-    out.saveTotal = int(result.total);
-    out.saveDifficulty = a->difficulty;
-    out.hit = result.succeeded;
-    out.occurredMs = now;
-    events.append(out);
-    if (!result.succeeded)
-        condition(target, EffectKind::Knockdown, a->caster, now, events);
+    reconcileWeb(now, events);
+    for (bool web : {false, true}) {
+        const GroundArea* a = nullptr;
+        for (const auto& g : ground_.areas)
+            if (g.active && g.web == web && g.cell == cell &&
+                (!a || g.difficulty > a->difficulty ||
+                 (g.difficulty == a->difficulty && g.id.serial < a->id.serial)))
+                a = &g;
+        if (!a || (web && has(target, EffectKind::Restrained)))
+            continue;
+        if (!web && !target.npc && party_.character(target.character)->life != rules::Life::Conscious)
+            continue;
+        const auto result = save(target, rules::Ability::Dexterity, a->difficulty);
+        CombatOutcome out;
+        out.event = CombatEvent::SpellSave;
+        out.spell = web ? rules::SpellKind::Web : rules::SpellKind::Grease;
+        out.enemyAttack = !target.npc;
+        out.enemy = target.enemy;
+        out.recipient = target.character;
+        out.character = a->caster;
+        out.roll = result.roll.selected;
+        out.saveTotal = int(result.total);
+        out.saveDifficulty = a->difficulty;
+        out.hit = result.succeeded;
+        out.occurredMs = now;
+        events.append(out);
+        if (!result.succeeded) {
+            if (web) {
+                restrained_[conditionIndex(target)] = {a->id, cell, a->difficulty, a->caster};
+                conditionNotice(target, EffectKind::Restrained, EffectNotice::Applied, EffectEnd::None,
+                                a->caster, now, events);
+            } else
+                condition(target, EffectKind::Knockdown, a->caster, now, events);
+        }
+    }
 }
 void EffectController::groundOccupants(Cell partyCell, std::uint64_t now, CombatEvents& events) noexcept {
     for (std::uint16_t i = 0; i < rules::partySize; ++i)
@@ -262,6 +280,8 @@ std::uint64_t EffectController::conditionDeadline(bool realTime) const noexcept 
         if (a.active) {
             ground = true;
             due = std::min(due, a.untilMs);
+            if (a.burnMs)
+                due = std::min(due, a.burnMs);
         }
     if (ground && realTime)
         due = std::min(due, groundDueMs_);
@@ -269,6 +289,7 @@ std::uint64_t EffectController::conditionDeadline(bool realTime) const noexcept 
 }
 void EffectController::advanceConditions(std::uint64_t goal, std::uint64_t now, bool realTime,
                                          CombatEvents& events) noexcept {
+    burnWeb(now, events);
     for (auto& a : ground_.areas)
         if (a.active && a.untilMs <= goal) {
             a.active = false;
@@ -288,6 +309,7 @@ void EffectController::advanceConditions(std::uint64_t goal, std::uint64_t now, 
             }
         }
     }
+    reconcileWeb(now, events);
     if (realTime && groundDueMs_ <= goal) {
         groundDueMs_ = goal + 6000;
         groundOccupants(partyCell_, now, events);

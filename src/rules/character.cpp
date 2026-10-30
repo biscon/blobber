@@ -31,7 +31,7 @@ const char* characterErrorMessage(CharacterError error) noexcept {
     case CharacterError::InvalidReference:
         return "invalid race, class, or item reference";
     case CharacterError::UnsupportedLevel:
-        return "only character level 1 is supported";
+        return "only character levels 1 through 3 are supported";
     case CharacterError::InvalidAbilities:
         return "base and final abilities must be 1..30";
     case CharacterError::InvalidFeature:
@@ -90,7 +90,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
     const auto* cls = catalog.characterClass(b.characterClass);
     if (!race || !cls)
         return fail(CharacterError::InvalidReference);
-    if (b.level != 1)
+    if (b.level < 1 || b.level > 3)
         return fail(CharacterError::UnsupportedLevel);
     if (b.lifeDomain && !hasFeature(cls->features, ClassFeature::LifeDomain))
         return {{}, CharacterError::InvalidFeature};
@@ -110,7 +110,9 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
     }
     const int strength = stats.modifiers[0], dexterity = stats.modifiers[1];
     stats.initiative = dexterity;
-    stats.maxHitPoints = std::max(1, cls->hitDie + stats.modifiers[2]) + race->hitPointsPerLevel;
+    stats.maxHitPoints = std::max(1, cls->hitDie + stats.modifiers[2]) +
+                         (b.level - 1) * std::max(1, cls->hitDie / 2 + 1 + stats.modifiers[2]) +
+                         b.level * race->hitPointsPerLevel;
     stats.carryingCapacity = std::int64_t(stats.abilities[0]) * 1500;
     stats.armorClass = 10 + dexterity;
     if (gear.itemCount > maxCarriedItems)

@@ -318,12 +318,138 @@ constexpr SpellRules spells[]{
      false,
      1,
      false,
+     false},
+    {"aid",
+     "Aid",
+     "Up to three allies gain 5 maximum and current HP for eight hours. Does not stack or heal on refresh.",
+     Casting::Wisdom,
+     2,
+     {1, 4, 0},
+     DamageType::Radiant,
+     Ability::Wisdom,
+     false,
+     false,
+     false,
+     3},
+    {"hold_person",
+     "Hold Person",
+     "One humanoid: Wisdom save or paralysis. Concentration, 60 seconds; repeat saves every round or six "
+     "seconds.",
+     Casting::Wisdom,
+     2,
+     {1, 4, 0},
+     DamageType::Force,
+     Ability::Wisdom,
+     false,
+     true,
+     false,
+     1},
+    {"lesser_restoration",
+     "Lesser Restoration",
+     "End one selected blindness or paralysis on a living ally. Disease, deafness and poison conditions are "
+     "not supported.",
+     Casting::Wisdom,
+     2,
+     {1, 4, 0},
+     DamageType::Radiant,
+     Ability::Wisdom,
+     false,
+     false,
+     false,
+     1},
+    {"spiritual_weapon",
+     "Spiritual Weapon",
+     "Create a spectral weapon and attack for 1d8 + Wisdom force. Lasts 60 seconds without concentration. "
+     "Later moves/attacks are free once per turn or six seconds.",
+     Casting::Wisdom,
+     2,
+     {1, 8, 0},
+     DamageType::Force,
+     Ability::Wisdom,
+     true,
+     true,
+     false,
+     1},
+    {"scorching_ray",
+     "Scorching Ray",
+     "Allocate three independent ranged spell attacks among up to three enemies; each hit deals 2d6 fire.",
+     Casting::Intelligence,
+     2,
+     {2, 6, 0},
+     DamageType::Fire,
+     Ability::Dexterity,
+     true,
+     true,
+     false,
+     3},
+    {"shatter",
+     "Shatter",
+     "Aim a 3x3 area within six cells: 3d8 thunder, Constitution save for half. Affects allies and caster; "
+     "Evocation protects other companions.",
+     Casting::Intelligence,
+     2,
+     {3, 8, 0},
+     DamageType::Thunder,
+     Ability::Constitution,
+     false,
+     true,
+     true,
+     0,
+     true,
+     false},
+    {"mirror_image",
+     "Mirror Image",
+     "Self: three illusory duplicates redirect attacks for 60 seconds. No concentration. Areas and blind "
+     "attackers bypass them.",
+     Casting::Intelligence,
+     2,
+     {1, 4, 0},
+     DamageType::Force,
+     Ability::Wisdom,
+     false,
+     false,
+     false,
+     0,
+     false,
+     true},
+    {"web",
+     "Web",
+     "Aim a 2x2 floor area: difficult terrain and Dexterity saves against restraint. Escape with a Strength "
+     "action. Affects allies, burns in fire; concentration, one hour.",
+     Casting::Intelligence,
+     2,
+     {2, 4, 0},
+     DamageType::Fire,
+     Ability::Dexterity,
+     false,
+     true,
+     true,
+     0,
+     true,
      false}};
 static_assert(sizeof(spells) / sizeof(*spells) == static_cast<unsigned>(SpellKind::Count));
 } // namespace
 const SpellRules* spellRules(SpellKind kind) noexcept {
     const auto n = static_cast<unsigned>(kind);
     return n < static_cast<unsigned>(SpellKind::Count) ? &spells[n] : nullptr;
+}
+const char* featureName(Feature f) noexcept {
+    constexpr const char* names[]{"Ability",      "Second Wind",   "Arcane Recovery", "End concentration",
+                                  "Action Surge", "Preserve Life", "Cunning Action",  "Spiritual Weapon",
+                                  "Escape Web",   "End Turn"};
+    return unsigned(f) < std::size(names) ? names[unsigned(f)] : "Ability";
+}
+int spellManaCost(int level) noexcept {
+    constexpr int costs[]{0, 2, 3};
+    return level >= 0 && level < 3 ? costs[level] : -1;
+}
+bool spellClass(SpellKind kind, Casting casting) noexcept {
+    const auto* rule = spellRules(kind);
+    return rule &&
+           (rule->casting == casting || (kind == SpellKind::HoldPerson && casting == Casting::Intelligence));
+}
+int maximumSpellLevel(int level) noexcept {
+    return level >= 1 && level <= 3 ? (level == 3 ? 2 : 1) : 0;
 }
 int maximumMana(Casting casting, int level) noexcept {
     constexpr int caps[]{4, 6, 14};

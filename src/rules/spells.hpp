@@ -30,10 +30,29 @@ enum class SpellKind : std::uint8_t {
     Guidance,
     Resistance,
     Sanctuary,
+    Aid,
+    HoldPerson,
+    LesserRestoration,
+    SpiritualWeapon,
+    ScorchingRay,
+    Shatter,
+    MirrorImage,
+    Web,
     Count
 };
 enum class Casting : std::uint8_t { None, Wisdom, Intelligence };
-enum class Feature : std::uint8_t { None, SecondWind, ArcaneRecovery, DismissConcentration };
+enum class Feature : std::uint8_t {
+    None,
+    SecondWind,
+    ArcaneRecovery,
+    DismissConcentration,
+    ActionSurge,
+    PreserveLife,
+    CunningAction,
+    SpiritualWeapon,
+    EscapeWeb,
+    EndTurn
+};
 enum class ClassFeature : std::uint8_t {
     SecondWind = 1,
     LifeDomain = 2,
@@ -59,6 +78,10 @@ struct SpellRules {
     unsigned maxTargets;
     bool ground = false, self = false;
 };
+const char* featureName(Feature) noexcept;
 const SpellRules* spellRules(SpellKind) noexcept;
 int maximumMana(Casting, int level) noexcept;
+int spellManaCost(int spellLevel) noexcept;
+bool spellClass(SpellKind, Casting) noexcept;
+int maximumSpellLevel(int characterLevel) noexcept;
 } // namespace blobber::rules

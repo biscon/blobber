@@ -333,4 +333,24 @@ project UI/recovery adaptations, not claims of unchanged tabletop preparation
 procedures. Library blueprints are never modified by a live rest. The user accepted
 slice 12.4 on 2026-10-29 and explicitly retained the current 27-point buy, 8–15 base
 scores and fixed racial bonuses for now. No BG3-style assignable bonuses or higher
-starting-score cap was adopted. Slice 13 remains unstarted.
+starting-score cap was adopted. Progression is recorded separately below.
+
+## Slice 13 approved adaptations (implemented, accepted and closed, 2026-10-30)
+
+See [progression design](progression_design.md) for the frozen feature/spell roster,
+action economy, targeting and limitations. Sources: local SRD 5.1, character
+advancement pp. 56–57; Cleric/Life pp. 15–17, Fighter/Champion pp. 24–25, Rogue/Thief
+pp. 39–41, Wizard/Evocation pp. 51–55; Aid p. 114, Hold Person pp. 154–155, Lesser
+Restoration p. 158, Mirror Image p. 165, Scorching Ray p. 176, Shatter p. 178,
+Spiritual Weapon p. 182, Web p. 192. Page locations checked against the cached
+official SRD text extraction. XP splitting in exact twelfths, 900 cap, deficit-preserving
+advancement, Cunning Defend/Fast Hands potions, automatic Preserve Life allocation,
+free limited Spiritual Weapon activation, grid areas/clocks and Web burning are
+explicit project adaptations. No bonus-action/reaction framework or unsupported
+features are claimed. Fixed subclass paths are Champion, Life, Thief and Evocation;
+Turn Undead, skills/Expertise, locks/traps/climbing, spell copying/Evocation Savant,
+upcasting and scenery destruction remain deferred. The eight spell implementations
+and limits are documented in the design; [verification and review](slice13_verification.md)
+record the delivered behavior. The user accepted slice 13 and milestone C on
+2026-10-30, including existing Action Surge activation through class features.
+No further rule adaptation was introduced by acceptance.

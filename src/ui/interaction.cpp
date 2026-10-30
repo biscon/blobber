@@ -10,6 +10,10 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
         return;
     }
     const auto insideCamp = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
+    if (commands.snapshot().advancement.open) {
+        commands.routeAdvancement(input);
+        return;
+    }
     if (commands.snapshot().leaveConfirmation) {
         if (input.has(UiKey::Cancel) || input.has(UiKey::Confirm) ||
             (input.has(UiKey::Click) && insideCamp(hudLayout::resume)))
@@ -199,6 +203,10 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             if (click && inside(hudLayout::logLatest))
                 commands.latestLog();
         } else if (state.menuOpen) {
+            if (state.development && click && inside(hudLayout::developmentXp)) {
+                commands.developmentExperience();
+                return;
+            }
             if (state.canReturnToMenu && click && inside(hudLayout::mainMenu)) {
                 if (state.leaveConfirmation)
                     commands.requestMenu();
@@ -217,6 +225,11 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
             } else if (click && inside(hudLayout::quit))
                 commands.requestQuit();
         }
+        return;
+    }
+    if (!state.modal() && !state.magic.casting() && state.combat.canEndTurn && click &&
+        inside(hudLayout::endTurn)) {
+        commands.endTurn();
         return;
     }
     if (state.suspended) {
@@ -262,6 +275,11 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
     if (state.magic.casting()) {
         if (state.magic.state == CastingState::Resolving) {
             commands.hover(HoverKind::None);
+            return;
+        }
+        if (state.magic.kind == rules::SpellKind::LesserRestoration &&
+            (input.has(UiKey::Tab) || (click && inside(hudLayout::restorationChoice)))) {
+            commands.restorationChoice();
             return;
         }
         if (input.has(UiKey::Back) || (click && inside(hudLayout::spellBack))) {

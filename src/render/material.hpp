@@ -19,6 +19,6 @@ class Material {
 // A concrete, fixed set; no dynamic material manager is needed yet.
 struct Materials {
     Material wall, floor, ceiling;
-    std::optional<Material> grease{};
+    std::optional<Material> grease{}, web{}, weapon{};
 };
 } // namespace blobber

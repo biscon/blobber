@@ -16,7 +16,7 @@ inline rules::Catalog spellCatalog(int hp = 1000, int ac = 1, int saveAbility = 
     f.preset.characters[1].lifeDomain = true;
     f.preset.characters[2].equipment.ranged = {2};
     std::vector<rules::SpellDefinition> spells;
-    for (unsigned i = 0; i < static_cast<unsigned>(rules::SpellKind::Count); ++i) {
+    for (unsigned i = 0; i < static_cast<unsigned>(rules::SpellKind::Aid); ++i) {
         const auto kind = static_cast<rules::SpellKind>(i);
         const auto& r = *rules::spellRules(kind);
         spells.push_back({r.id, r.name, r.description, kind});

@@ -64,6 +64,13 @@ class GameSession {
     RestPreview previewRest(const RestRequest&) const noexcept;
     RestResult rest(const RestRequest&) noexcept;
     std::uint64_t restToken() const noexcept { return restToken_; }
+    AdvancementRequest advancementRequest(rules::CharacterId) const noexcept;
+    AdvancementError advancementEligibility(const AdvancementRequest&) const noexcept;
+    AdvancementResult previewAdvancement(const AdvancementRequest&) noexcept;
+    AdvancementResult advance(const AdvancementRequest&) noexcept;
+    void enableDevelopment(bool enabled) noexcept { development_ = enabled; }
+    bool development() const noexcept { return development_; }
+    bool grantNextLevelExperience() noexcept;
 
   private:
     const Map& map_;
@@ -77,7 +84,10 @@ class GameSession {
     EffectController effects_;
     CombatController combat_;
     CombatEvents events_;
-    bool enableAi_ = true;
+    bool enableAi_ = true, development_ = false;
+    std::array<bool, NpcWorld::maxInstances> creditedDeaths_{};
+    std::uint64_t rewardRevision_ = UINT64_MAX;
+    void reconcileRewards() noexcept;
     std::uint64_t timeMs_ = 0, restToken_ = 1;
     double remainderMs_ = 0;
     void detectContact() noexcept;

@@ -5,10 +5,88 @@
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
 #include "ui/spell_layout.hpp"
+#include "ui/status_occlusion.hpp"
 #include <iostream>
 #include <limits>
 using namespace blobber;
 namespace {
+void statusOcclusion() {
+    const auto appearance = testAnimatedNpcAppearance();
+    const PreparedNpcs prepared({appearance});
+    const Map room({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
+    const Player camera{{3, 5}, Heading::North};
+    // Deliberately reverse slot/depth order: owner 0 is behind actor 1.
+    auto actors = testActors(room, camera.cell, {"test"},
+                             {{{0}, {3, 2}, {0, 0}, Heading::South}, {{0}, {3, 3}, {0, 0}, Heading::South}});
+    NpcAnimator animator(actors, {npcTimings(appearance)});
+    PickingBuffer picking;
+    Frame frame;
+    std::array<float, viewWidth> walls;
+    walls.fill(std::numeric_limits<float>::infinity());
+    const auto verify = [&](const NpcAnimationSnapshot& animation) {
+        picking.clear();
+        prepared.compose(actors, camera, 0, walls, frame, &animation, &picking);
+        picking.finish(&actors);
+        unsigned blocked = 0, holes = 0;
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                const auto body = picking.slot(x, y);
+                check(picking.badgeVisible(0, x, y) == (body != 1),
+                      "Only nearer silhouette pixels occlude the rear icon");
+                check(picking.badgeVisible(1, x, y),
+                      "Owner and farther silhouettes never obscure the front icon");
+                blocked += body == 1;
+                holes += body == 0;
+            }
+        check(blocked > 100 && holes > 10, "Fixture exercises foreground silhouette and visible rear pixels");
+    };
+    animator.setTime(0);
+    verify(animator.snapshot());
+    auto traveling = animator.snapshot();
+    traveling.frames[1].offsetY = .2f;
+    verify(traveling);
+    actors.damage(actors.id(1), 999, 1);
+    animator.setTime(1);
+    verify(animator.snapshot());
+    check(picking.targets().count == 1 && picking.targets().ids[0] == actors.id(0),
+          "Occluding corpse does not become a selectable target, while the rear actor remains selectable");
+
+    // A synthetic 12x12 tile exercises exact clip coverage, holes, walls and edges.
+    picking.clear();
+    picking.badgeAnchor(0, 0, 0, 3.f);
+    picking.badgeAnchor(1, 0, 0, 1.f);
+    picking.badgeAnchor(2, 0, 0, 5.f);
+    walls[104] = 2.f;
+    picking.wallDepths(walls);
+    for (int y = 100; y < 112; ++y)
+        for (int x = 100; x < 112; ++x)
+            if ((x + y) % 3)
+                picking.write(y * viewWidth + x, x < 106 ? 1 : 2);
+    std::array<unsigned, 144> painted{};
+    forEachStatusClip(picking, 0, {viewX + 100, viewY + 100, 12, 12}, [&](UiRect clip) {
+        for (int y = clip.y; y < clip.y + clip.height; ++y)
+            for (int x = clip.x; x < clip.x + clip.width; ++x)
+                ++painted[(y - viewY - 100) * 12 + x - viewX - 100];
+    });
+    for (int y = 0; y < 12; ++y)
+        for (int x = 0; x < 12; ++x) {
+            const bool visible = x != 4 && (x >= 6 || (x + y + 200) % 3 == 0);
+            check(painted[y * 12 + x] == unsigned(visible),
+                  "Scissor rectangles cover each visible pixel exactly once and no hidden pixels");
+        }
+    check(!picking.badgeVisible(0, -1, 100) && !picking.badgeVisible(0, 100, viewHeight) &&
+              !picking.badgeVisible(UINT16_MAX, 100, 100),
+          "Offscreen and invalid owners are rejected");
+    picking.clear();
+    check(!picking.badgeVisible(0, 100, 100), "Reset discards stale depth metadata");
+    picking.badgeAnchor(0, 0, 0, 3.f);
+    unsigned draws = 0;
+    forEachStatusClip(picking, 0, {viewX + 100, viewY + 100, 12, 12}, [&](UiRect clip) {
+        ++draws;
+        check(clip.width == 12 && clip.height == 12, "Unobstructed tile uses one full rectangle");
+    });
+    check(draws == 1, "Unobstructed status needs only one draw");
+}
 void stableSpellBadges() {
     auto appearance = testAnimatedNpcAppearance();
     // The second idle silhouette is narrower and shorter: visible bounds genuinely move.
@@ -265,6 +343,7 @@ int main() {
         occludedFlash(renderer, timing);
         spellFloorPreview(renderer);
         stableSpellBadges();
+        statusOcclusion();
         std::cout << "Actor presentation checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

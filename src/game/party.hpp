@@ -1,4 +1,5 @@
 #pragma once
+#include "game/advancement.hpp"
 #include "game/recovery.hpp"
 #include "rules/creation.hpp"
 #include "rules/health.hpp"
@@ -12,6 +13,9 @@ struct PartyCharacter : rules::HealthState {
     int mana = 0, maxMana = 0;
     bool secondWind = false, arcaneRecovery = false;
     std::uint32_t experience = 0;
+    int aidBonus = 0;
+    std::uint8_t experienceFraction = 0;
+    bool actionSurge = false, channelDivinity = false;
     std::uint64_t temporaryUntilMs = 0;
 };
 struct PartySnapshot {
@@ -42,6 +46,8 @@ class Party {
     bool grantTemporary(rules::CharacterId, int amount, std::uint64_t until) noexcept;
     void expireTemporary(std::uint64_t now) noexcept;
     bool spendMana(rules::CharacterId, int amount) noexcept;
+    std::array<int, 4> preserveLifePreview(rules::CharacterId) const noexcept;
+    void aidBonus(rules::CharacterId, int) noexcept;
     bool useFeature(rules::CharacterId, rules::Feature) noexcept;
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
     int castingModifier(rules::CharacterId) const noexcept;
@@ -61,13 +67,20 @@ class Party {
     bool restoreMana(rules::CharacterId, int amount) noexcept;
     const rules::ItemDefinition* equipped(rules::CharacterId, EquipmentSlot) const noexcept;
     const rules::Catalog& catalog() const noexcept { return *catalog_; }
+    rules::ProgressionClass progressionClass(rules::CharacterId) const noexcept;
+    AdvancementRequest advancementRequest(rules::CharacterId) const noexcept;
+    AdvancementError advancementEligibility(const AdvancementRequest&) const noexcept;
+    AdvancementResult advance(const AdvancementRequest&, bool preview = false) noexcept;
+    void awardExperience(std::uint32_t) noexcept;
+    bool grantNextLevelExperience() noexcept;
+    std::uint64_t progressionRevision() const noexcept { return progressionRevision_; }
 
   private:
     const rules::Catalog* catalog_;
     PartySnapshot state_;
     Inventory inventory_;
     bool formationLocked_ = false;
-    std::uint64_t preparationRevision_ = 0;
+    std::uint64_t preparationRevision_ = 0, progressionRevision_ = 0;
     InventoryResult stageInventoryChange(const InventoryRequest&, Inventory&,
                                          std::array<rules::CharacterStats, 4>&) const noexcept;
     rules::HealthResult commit(rules::CharacterId id, rules::HealthResult result) noexcept;

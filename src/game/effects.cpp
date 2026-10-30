@@ -7,10 +7,14 @@ namespace blobber {
 namespace {
 bool concentrates(EffectKind kind) {
     return kind == EffectKind::Bless || kind == EffectKind::Bane || kind == EffectKind::ShieldOfFaith ||
-           kind == EffectKind::HoldPerson || kind == EffectKind::Guidance || kind == EffectKind::Resistance;
+           kind == EffectKind::Web || kind == EffectKind::HoldPerson || kind == EffectKind::Guidance ||
+           kind == EffectKind::Resistance;
 }
 std::uint64_t duration(EffectKind kind) {
-    return kind == EffectKind::MageArmor ? 28800000 : kind == EffectKind::ShieldOfFaith ? 600000 : 60000;
+    return kind == EffectKind::Web                                      ? 3600000
+           : (kind == EffectKind::MageArmor || kind == EffectKind::Aid) ? 28800000
+           : kind == EffectKind::ShieldOfFaith                          ? 600000
+                                                                        : 60000;
 }
 bool targetLess(EffectTarget a, EffectTarget b) {
     if (a.npc != b.npc)
@@ -53,10 +57,12 @@ bool EffectController::unarmored(rules::CharacterId id) const noexcept {
 bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept {
     if (!living(target))
         return false;
-    if (kind >= EffectKind::Sleep && kind < EffectKind::Count) {
+    if (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) {
         const auto i = conditionIndex(target);
         return i < conditions_.size() && conditions_[i][unsigned(kind) - unsigned(EffectKind::Sleep)].active;
     }
+    if (kind == EffectKind::Restrained)
+        return restrained_[conditionIndex(target)].area.serial != 0;
     for (const auto& e : instances_)
         if (e.active && e.kind == kind)
             for (std::size_t i = 0; i < e.count; ++i)
@@ -71,14 +77,14 @@ bool EffectController::canAct(EffectTarget t) const noexcept {
 }
 bool EffectController::mobileParty() const noexcept {
     for (std::uint16_t i = 0; i < rules::partySize; ++i)
-        if (canAct(rules::CharacterId{i}))
+        if (mobile(rules::CharacterId{i}))
             return true;
     return false;
 }
 std::array<bool, NpcWorld::maxInstances> EffectController::incapacitatedActors() const noexcept {
     std::array<bool, NpcWorld::maxInstances> result{};
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
-        result[i] = !canAct(actors_.id(i));
+        result[i] = !mobile(actors_.id(i));
     return result;
 }
 int EffectController::armorClass(EffectTarget t) const noexcept {
@@ -116,7 +122,10 @@ rules::SaveResult EffectController::save(EffectTarget target, rules::Ability abi
                          actors_.catalog().monster(actors_.actor(target.enemy)->monster)->abilities, ability)
                          .value
                    : party_.character(target.character)->stats.saves[index];
-    result.roll = rng_.d20().value;
+    result.roll = rng_.d20(ability == rules::Ability::Dexterity && has(target, EffectKind::Restrained)
+                               ? rules::RollMode::Disadvantage
+                               : rules::RollMode::Normal)
+                      .value;
     result.total = std::int64_t(result.roll.selected) + bonus + saveModifier(target);
     result.succeeded = result.total >= dc;
     return result;
@@ -136,6 +145,20 @@ void EffectController::end(EffectInstance& e, EffectEnd why, std::uint64_t now,
                            CombatEvents& events) noexcept {
     emit(e, EffectNotice::Ended, why, {}, {}, 0, now, events);
     e.active = false;
+    if (e.kind == EffectKind::SpiritualWeapon) {
+        ground_.weapons[e.caster.index].active = false;
+        ++ground_.revision;
+    }
+    if (e.kind == EffectKind::Aid)
+        reconcileAid();
+    if (e.kind == EffectKind::Web) {
+        for (auto& a : ground_.areas)
+            if (a.active && a.effect.serial == e.id.serial) {
+                a.active = false;
+                ++ground_.revision;
+            }
+        reconcileWeb(now, events);
+    }
 }
 EffectResult EffectController::remove(EffectId id, std::uint64_t now, CombatEvents& events) noexcept {
     if (!find(id))
@@ -152,16 +175,23 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
         return EffectError::InvalidWorld;
     if (!canAct(request.caster))
         return EffectError::InvalidCaster;
-    if (request.kind >= EffectKind::Sleep)
+    if (request.kind >= EffectKind::Count || request.kind == EffectKind::Restrained ||
+        (request.kind >= EffectKind::Sleep && request.kind <= EffectKind::Knockdown))
         return EffectError::InvalidKind;
     if (request.difficulty < 1 || request.difficulty > 1000)
         return EffectError::InvalidDifficulty;
-    const auto maxTargets = request.kind == EffectKind::Bless || request.kind == EffectKind::Bane ? 3u : 1u;
+    const auto maxTargets = request.kind == EffectKind::Bless || request.kind == EffectKind::Bane ||
+                                    request.kind == EffectKind::Aid
+                                ? 3u
+                                : 1u;
     if (!request.count || request.count > maxTargets)
         return EffectError::InvalidTargets;
     for (std::size_t i = 0; i < request.count; ++i) {
         const auto target = request.targets[i];
-        if (!living(target) ||
+        if (!living(target) || (request.kind == EffectKind::Aid && target.npc) ||
+            ((request.kind == EffectKind::MirrorImage || request.kind == EffectKind::SpiritualWeapon ||
+              request.kind == EffectKind::Web) &&
+             !(target == EffectTarget(request.caster))) ||
             (request.kind == EffectKind::MageArmor && (target.npc || !unarmored(target.character))))
             return EffectError::InvalidTargets;
         for (std::size_t j = 0; j < i; ++j)
@@ -194,9 +224,10 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
         for (auto& e : instances_)
             if (e.active && e.id.serial == old.serial)
                 end(e, EffectEnd::Replaced, now, events);
-    if (request.kind == EffectKind::Sanctuary)
+    if (request.kind == EffectKind::Sanctuary || request.kind == EffectKind::MirrorImage ||
+        request.kind == EffectKind::SpiritualWeapon)
         for (auto& e : instances_)
-            if (e.active && e.kind == EffectKind::Sanctuary && e.targets[0] == request.targets[0])
+            if (e.active && e.kind == request.kind && e.targets[0] == request.targets[0])
                 end(e, EffectEnd::Replaced, now, events);
     EffectInstance candidate;
     candidate.id = {request.world, nextSerial_++};
@@ -228,14 +259,20 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     if (!candidate.count)
         return {};
     candidate.active = true;
+    if (candidate.kind == EffectKind::MirrorImage)
+        candidate.duplicates = 7;
     instances_[slot] = candidate;
     for (std::size_t i = 0; i < candidate.count; ++i)
         emit(candidate, EffectNotice::Applied, EffectEnd::None, candidate.targets[i], {}, 0, now, events);
+    if (candidate.kind == EffectKind::Aid)
+        reconcileAid();
     reconcile(now, events);
     return {EffectError::None, candidate.id};
 }
 void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexcept {
     bindEvents(events, now);
+    reconcileWeb(now, events);
+    reconcileAid();
     for (std::size_t i = 0; i < guidingUntil_.size(); ++i)
         if (guidingUntil_[i] && !living(actors_.id(i)))
             consumeGuiding(actors_.id(i), now, events);

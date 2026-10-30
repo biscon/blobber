@@ -143,7 +143,7 @@ void failuresAndBounds() {
             b.characterClass = {};
             break;
         case 2:
-            b.level = 2;
+            b.level = 4;
             break;
         case 3:
             b.baseAbilities[0] = INT32_MAX;

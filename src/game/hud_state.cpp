@@ -132,6 +132,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    state_.advancement.open = false;
     state_.loot.open = false;
     state_.camp.open = false;
     state_.inventory.open = false;

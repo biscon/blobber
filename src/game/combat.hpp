@@ -64,6 +64,7 @@ struct CombatOutcome {
     rules::ItemId item{};
     int saveTotal = 0, saveDifficulty = 0;
     std::uint8_t darts = 0;
+    MirrorReservation mirror;
 };
 struct CombatEvents {
     static constexpr std::size_t capacity = 8192;
@@ -101,7 +102,7 @@ struct CombatSnapshot {
     std::uint64_t world = 0, turn = 0, round = 0;
     std::optional<rules::CharacterId> activeCharacter;
     std::optional<ActorId> activeEnemy;
-    bool awaitingAction = false, resolvingAction = false;
+    bool awaitingAction = false, resolvingAction = false, canEndTurn = false;
     std::array<bool, rules::partySize> defending{};
     std::array<ActorId, NpcWorld::maxInstances> enemies{};
     std::size_t enemyCount = 0;
@@ -196,9 +197,19 @@ class CombatController {
     };
     std::array<SpellPayload, rules::partySize> spellPayloads_{};
     std::array<std::uint64_t, rules::partySize> sneakReady_{};
+    std::array<std::uint64_t, 4> cunningReady_{}, extraUntil_{};
+    std::array<bool, 4> extraAction_{};
+    bool normalAction(rules::CharacterId) const noexcept;
+    bool cunningAvailable(rules::CharacterId) const noexcept;
+    bool hasActions(rules::CharacterId) const noexcept;
+    bool freeAction(const PartyCommand&) const noexcept;
+    void spendAction(const PartyCommand&) noexcept;
+    void completeAction(std::uint64_t) noexcept;
     CommandReason validateMagic(const PartyCommand&, Player) const noexcept;
     CombatOutcome submitMagic(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     EffectRequest spellEffect(const PartyCommand&, rules::SpellKind) const noexcept;
+    CombatOutcome spectralAttack(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
+    void shatter(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     bool sneakEligible(rules::CharacterId, ActorId, rules::RollMode, bool ranged, Player) const noexcept;
     void spellPulse(ActorId, rules::CharacterId, rules::SpellKind, Player, std::uint64_t) noexcept;
     void applyDamage(CombatOutcome&, std::uint64_t, CombatEvents&) noexcept;

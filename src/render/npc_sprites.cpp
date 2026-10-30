@@ -38,6 +38,8 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
     if (animation &&
         (animation->world != npcs.snapshot().world || animation->actorRevision != npcs.snapshot().revision))
         throw std::invalid_argument("NPC animation snapshot belongs to another world or revision");
+    if (picking)
+        picking->wallDepths(walls);
     struct Visible {
         const Sprite* sprite;
         const Shadow* shadow;
@@ -86,7 +88,8 @@ void PreparedNpcs::compose(const ActorWorld& npcs, Player player, int phase,
             picking->badgeAnchor(
                 static_cast<std::uint16_t>(i), int(std::round(viewWidth * .5f + scale * lateral)),
                 int(std::round(ViewProjection::horizon + scale * (ViewProjection::eyeHeight +
-                                                                  idle.worldHeight * (top - idle.anchorY)))));
+                                                                  idle.worldHeight * (top - idle.anchorY)))),
+                depth);
         }
         const int slot = traveling ? 0 : row * 2 + (subDepth > 0 ? 1 : 0);
         auto clip = static_cast<std::size_t>(animation ? animation->frames[i].clip : npc.animation);

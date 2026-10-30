@@ -13,6 +13,9 @@ struct UiRect {
     }
 };
 namespace hudLayout {
+constexpr UiRect restorationChoice{180, 280, 210, 20};
+constexpr UiRect endTurn{410, 278, 86, 19};
+constexpr UiRect developmentXp{200, 300, 240, 20};
 constexpr UiRect card(int i) {
     return {508, 18 + i * 70, 128, 66};
 }

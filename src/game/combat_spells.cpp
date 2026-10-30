@@ -9,11 +9,13 @@ using rules::SpellKind;
 bool effectSpell(SpellKind k) {
     return k == SpellKind::Bless || k == SpellKind::Bane || k == SpellKind::ShieldOfFaith ||
            k == SpellKind::MageArmor || k == SpellKind::Guidance || k == SpellKind::Resistance ||
-           k == SpellKind::Sanctuary;
+           k == SpellKind::Sanctuary || k == SpellKind::Aid || k == SpellKind::HoldPerson ||
+           k == SpellKind::MirrorImage;
 }
 bool delayed(SpellKind k) {
     return k == SpellKind::FireBolt || k == SpellKind::GuidingBolt || k == SpellKind::MagicMissile ||
-           k == SpellKind::InflictWounds || k == SpellKind::RayOfFrost || k == SpellKind::ShockingGrasp;
+           k == SpellKind::ScorchingRay || k == SpellKind::SpiritualWeapon || k == SpellKind::InflictWounds ||
+           k == SpellKind::RayOfFrost || k == SpellKind::ShockingGrasp;
 }
 } // namespace
 SpellArea spellArea(const ActorWorld& actors, Player pose) noexcept {
@@ -47,6 +49,9 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
     const auto kind = definition->kind;
     const auto* r = rules::spellRules(kind);
     if (r->hostile) {
+        if (kind == SpellKind::HoldPerson && actors_.actor(c.enemies[i]) &&
+            !actors_.catalog().monster(actors_.actor(c.enemies[i])->monster)->humanoid)
+            return CommandReason::InvalidTarget;
         const auto* a = actors_.actor(c.enemies[i]);
         if (!a || a->life != ActorLife::Alive)
             return CommandReason::InvalidTarget;
@@ -75,6 +80,9 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         const auto* ally = party_.character(c.allies[i]);
         if (!ally || ally->life == rules::Life::Dead)
             return CommandReason::DeadAlly;
+        if (kind == SpellKind::LesserRestoration &&
+            !effects_.has(c.allies[i], c.restoreParalysis ? EffectKind::HoldPerson : EffectKind::Blind))
+            return CommandReason::InvalidTargets;
         if (kind == SpellKind::Guidance && !effects_.conscious(c.allies[i]))
             return CommandReason::CannotAct;
         if (kind == SpellKind::CureWounds && ally->hitPoints == ally->stats.maxHitPoints)
@@ -97,17 +105,27 @@ EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kin
     request.world = c.world;
     request.caster = c.character;
     request.count = c.targetCount;
-    request.kind = kind == SpellKind::Bless        ? EffectKind::Bless
-                   : kind == SpellKind::Bane       ? EffectKind::Bane
-                   : kind == SpellKind::Guidance   ? EffectKind::Guidance
-                   : kind == SpellKind::Resistance ? EffectKind::Resistance
-                   : kind == SpellKind::Sanctuary  ? EffectKind::Sanctuary
-                   : kind == SpellKind::MageArmor  ? EffectKind::MageArmor
-                                                   : EffectKind::ShieldOfFaith;
+    request.kind = kind == SpellKind::Aid               ? EffectKind::Aid
+                   : kind == SpellKind::HoldPerson      ? EffectKind::HoldPerson
+                   : kind == SpellKind::MirrorImage     ? EffectKind::MirrorImage
+                   : kind == SpellKind::SpiritualWeapon ? EffectKind::SpiritualWeapon
+                   : kind == SpellKind::Bless           ? EffectKind::Bless
+                   : kind == SpellKind::Bane            ? EffectKind::Bane
+                   : kind == SpellKind::Guidance        ? EffectKind::Guidance
+                   : kind == SpellKind::Resistance      ? EffectKind::Resistance
+                   : kind == SpellKind::Sanctuary       ? EffectKind::Sanctuary
+                   : kind == SpellKind::MageArmor       ? EffectKind::MageArmor
+                                                        : EffectKind::ShieldOfFaith;
     request.difficulty = 8 + party_.character(c.character)->stats.proficiency +
                          party_.spellAccess(c.character, c.spell).modifier;
     for (std::size_t i = 0; i < std::min(c.targetCount, request.targets.size()); ++i)
-        request.targets[i] = kind == SpellKind::Bane ? EffectTarget(c.enemies[i]) : EffectTarget(c.allies[i]);
+        request.targets[i] = (kind == SpellKind::Bane || kind == SpellKind::HoldPerson)
+                                 ? EffectTarget(c.enemies[i])
+                                 : EffectTarget(c.allies[i]);
+    if (kind == SpellKind::MirrorImage || kind == SpellKind::SpiritualWeapon) {
+        request.count = 1;
+        request.targets[0] = c.character;
+    }
     return request;
 }
 bool CombatController::safeRecovery(Player pose) const noexcept {
@@ -133,7 +151,7 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissConcentration)
         return effects_.concentration(c.character).serial ? CommandReason::Ready : CommandReason::Unavailable;
     if (realTime(state_.phase)) {
-        if (partyReady_[c.character.index] > state_.gameplayMs)
+        if (!normalAction(c.character) && !freeAction(c))
             return CommandReason::Cooldown;
     } else {
         if (state_.phase != CombatPhase::Turns)
@@ -144,12 +162,55 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         if (!(pose == origin_))
             return CommandReason::Moving;
     }
+    if (!normalAction(c.character) && !freeAction(c))
+        return CommandReason::Cooldown;
     if (attackBusy(NpcWorld::maxInstances + c.character.index) ||
         nextAttack_ > std::numeric_limits<std::uint64_t>::max() - 3)
         return CommandReason::AttackPending;
     if (c.action == PartyAction::Feature) {
+        if (c.feature == rules::Feature::SpiritualWeapon) {
+            const auto* spell = party_.catalog().spell(c.spell);
+            if (!spell || spell->kind != SpellKind::SpiritualWeapon)
+                return CommandReason::InvalidSpell;
+            const auto* weapon = effects_.spiritualWeapon(c.character);
+            if (!weapon)
+                return CommandReason::Unavailable;
+            if (weapon->readyMs > state_.gameplayMs)
+                return CommandReason::Cooldown;
+            if (c.targetCount > 1)
+                return CommandReason::InvalidTargets;
+            const auto* target = c.targetCount ? actors_.actor(c.enemies[0]) : nullptr;
+            const auto destination = c.aimedCell ? c.aimedCell
+                                     : target    ? std::optional<Cell>(target->npc.cell)
+                                                 : std::nullopt;
+            if (!destination)
+                return CommandReason::MissingTarget;
+            if (!effects_.weaponCanMove(c.character, *destination) || !spellCell(map_, pose, *destination))
+                return CommandReason::OutOfRange;
+            if (c.targetCount && (!target || !(target->npc.cell == *destination)))
+                return CommandReason::InvalidTarget;
+            return c.targetCount ? spellRecipient(c, pose, 0) : CommandReason::Ready;
+        }
         if (c.targetCount)
             return CommandReason::InvalidTargets;
+        if (c.feature == rules::Feature::EscapeWeb)
+            return effects_.has(c.character, EffectKind::Restrained) ? CommandReason::Ready
+                                                                     : CommandReason::Unavailable;
+        if (c.feature == rules::Feature::EndTurn)
+            return state_.phase == CombatPhase::Turns ? CommandReason::Ready : CommandReason::NoEncounter;
+        if (c.feature == rules::Feature::ActionSurge)
+            return ch->actionSurge && !extraAction_[c.character.index] ? CommandReason::Ready
+                                                                       : CommandReason::NoCharges;
+        if (c.feature == rules::Feature::CunningAction)
+            return cunningAvailable(c.character) ? CommandReason::Ready : CommandReason::Cooldown;
+        if (c.feature == rules::Feature::PreserveLife) {
+            if (!ch->channelDivinity)
+                return CommandReason::NoCharges;
+            const auto healing = party_.preserveLifePreview(c.character);
+            return std::any_of(healing.begin(), healing.end(), [](int hp) { return hp > 0; })
+                       ? CommandReason::Ready
+                       : CommandReason::FullHealth;
+        }
         if (c.feature == rules::Feature::SecondWind) {
             if (!party_.hasFeature(c.character, rules::ClassFeature::SecondWind))
                 return CommandReason::FeatureRequired;
@@ -174,12 +235,18 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     if (!party_.spellAccess(c.character, c.spell))
         return CommandReason::InvalidSpell;
     const auto& r = *rules::spellRules(definition->kind);
-    if (ch->mana < r.level * 2)
+    if (ch->mana < rules::spellManaCost(r.level))
         return CommandReason::InsufficientMana;
     if (r.self && state_.gameplayMs > UINT64_MAX - 3600000)
         return CommandReason::EffectCapacity;
-    if (r.self)
-        return c.targetCount ? CommandReason::InvalidTargets : CommandReason::Ready;
+    if (r.self) {
+        if (c.targetCount)
+            return CommandReason::InvalidTargets;
+        if (definition->kind == SpellKind::MirrorImage &&
+            effects_.validate(spellEffect(c, definition->kind)) != EffectError::None)
+            return CommandReason::EffectCapacity;
+        return CommandReason::Ready;
+    }
     if (r.area) {
         if (!effects_.sees(c.character))
             return CommandReason::NotVisible;
@@ -190,6 +257,15 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         if (definition->kind == SpellKind::Grease)
             return effects_.canCreateArea() ? CommandReason::Ready : CommandReason::EffectCapacity;
         const auto affected = area(c, pose);
+        if (definition->kind == SpellKind::Web) {
+            std::array<Cell, 4> cells{};
+            std::size_t n = 0;
+            for (unsigned i = 0; i < affected.cells.size(); ++i)
+                if (affected.eligible[i])
+                    cells[n++] = affected.cells[i];
+            return effects_.canCreateWeb(cells.data(), n, c.character) ? CommandReason::Ready
+                                                                       : CommandReason::EffectCapacity;
+        }
         return (affected.count || affected.recipientCount) ? CommandReason::Ready
                                                            : CommandReason::MissingTarget;
     }
@@ -202,7 +278,7 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         const auto eligibility = spellRecipient(c, pose, i);
         if (eligibility != CommandReason::Ready)
             return eligibility;
-        if (definition->kind == SpellKind::MagicMissile) {
+        if ((definition->kind == SpellKind::MagicMissile || definition->kind == SpellKind::ScorchingRay)) {
             if (!c.darts[i] || c.darts[i] > 3)
                 return CommandReason::InvalidTargets;
             darts += c.darts[i];
@@ -211,9 +287,10 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
             if (r.hostile ? sameActor(c.enemies[i], c.enemies[j]) : c.allies[i].index == c.allies[j].index)
                 return CommandReason::InvalidTargets;
     }
-    if (definition->kind == SpellKind::MagicMissile && darts != 3)
+    if ((definition->kind == SpellKind::MagicMissile || definition->kind == SpellKind::ScorchingRay) &&
+        darts != 3)
         return CommandReason::InvalidTargets;
-    if (effectSpell(definition->kind)) {
+    if (effectSpell(definition->kind) || definition->kind == SpellKind::SpiritualWeapon) {
         const auto error = effects_.validate(spellEffect(c, definition->kind));
         if (error != EffectError::None)
             return error == EffectError::Capacity ? CommandReason::EffectCapacity
@@ -275,19 +352,53 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
     }
     const auto* ch = party_.character(c.character);
     const bool turn = state_.phase == CombatPhase::Turns;
-    partyReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
-    state_.spent[c.character.index] = true;
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::EndTurn) {
+        extraAction_[c.character.index] = false;
+        state_.spent[c.character.index] = true;
+        advance(now);
+        out.event = CombatEvent::Spent;
+        return out;
+    }
+    spendAction(c);
     out.event = CombatEvent::Cast;
     if (c.action == PartyAction::Spell)
         out.spell = party_.catalog().spell(c.spell)->kind;
     events.append(out);
-    if (c.action == PartyAction::Feature) {
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::SpiritualWeapon) {
+        const Cell destination = c.aimedCell ? *c.aimedCell : actors_.actor(c.enemies[0])->npc.cell;
+        effects_.moveWeapon(c.character, destination);
+        if (c.targetCount)
+            out = spectralAttack(c, pose, now, events);
+    } else if (c.action == PartyAction::Feature) {
+        const auto healingPool = party_.preserveLifePreview(c.character);
         const int oldMana = ch->mana;
         party_.useFeature(c.character, c.feature);
         auto result = out;
         result.recipient = c.character;
         result.hit = true;
-        if (c.feature == rules::Feature::SecondWind) {
+        if (c.feature == rules::Feature::EscapeWeb) {
+            effects_.escapeWeb(c.character, now, events);
+            result.event = CombatEvent::None;
+        } else if (c.feature == rules::Feature::ActionSurge) {
+            extraAction_[c.character.index] = true;
+            extraUntil_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            result.event = CombatEvent::Recovery;
+        } else if (c.feature == rules::Feature::CunningAction) {
+            state_.defending[c.character.index] = true;
+            defendDue_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            result.event = CombatEvent::Defend;
+        } else if (c.feature == rules::Feature::PreserveLife) {
+            for (std::uint16_t i = 0; i < 4; ++i)
+                if (healingPool[i]) {
+                    party_.heal({i}, healingPool[i]);
+                    auto heal = result;
+                    heal.event = CombatEvent::Healing;
+                    heal.recipient = {i};
+                    heal.damage = healingPool[i];
+                    events.append(heal);
+                }
+            result.event = CombatEvent::None;
+        } else if (c.feature == rules::Feature::SecondWind) {
             const auto healing = rng_.roll({1, 10, ch->build.level}).value.total;
             const int hp = ch->hitPoints;
             party_.heal(c.character, healing);
@@ -301,10 +412,31 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
     } else {
         const auto kind = out.spell;
         const auto& r = *rules::spellRules(kind);
-        party_.spendMana(c.character, r.level * 2);
+        party_.spendMana(c.character, rules::spellManaCost(r.level));
         if (r.hostile)
             effects_.breakWard(c.character, now, events);
-        if (kind == SpellKind::FalseLife) {
+        if (kind == SpellKind::SpiritualWeapon) {
+            effects_.apply(spellEffect(c, kind), now, events);
+            effects_.moveWeapon(c.character, actors_.actor(c.enemies[0])->npc.cell, true);
+            out = spectralAttack(c, pose, now, events);
+        } else if (kind == SpellKind::Web) {
+            const auto affected = area(c, pose);
+            std::array<Cell, 4> cells{};
+            std::size_t n = 0;
+            for (unsigned i = 0; i < affected.cells.size(); ++i)
+                if (affected.eligible[i])
+                    cells[n++] = affected.cells[i];
+            effects_.createWeb(cells.data(), n, c.character,
+                               8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier,
+                               now, events);
+            for (std::size_t i = 0; i < affected.count; ++i)
+                alert(affected.actors[i], pose);
+        } else if (kind == SpellKind::Shatter) {
+            shatter(c, pose, now, events);
+        } else if (kind == SpellKind::LesserRestoration) {
+            effects_.restoreCondition(
+                c.allies[0], c.restoreParalysis ? EffectKind::HoldPerson : EffectKind::Blind, now, events);
+        } else if (kind == SpellKind::FalseLife) {
             const auto amount = int(rng_.roll({1, 4, 4}).value.total);
             party_.grantTemporary(c.character, amount, state_.gameplayMs + 3600000);
             auto result = out;
@@ -385,10 +517,22 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 targets = area.actors;
                 count = area.count;
             } else {
-                count = c.targetCount;
-                std::copy_n(c.enemies.begin(), count, targets.begin());
+                if (kind == SpellKind::ScorchingRay) {
+                    for (std::size_t j = 0; j < c.targetCount; ++j)
+                        for (unsigned ray = 0; ray < c.darts[j]; ++ray)
+                            targets[count++] = c.enemies[j];
+                } else {
+                    count = c.targetCount;
+                    std::copy_n(c.enemies.begin(), count, targets.begin());
+                }
                 std::sort(targets.begin(), targets.begin() + count,
                           [](ActorId a, ActorId b) { return a.slot < b.slot; });
+            }
+            if (kind == SpellKind::BurningHands) {
+                const auto footprint = spellArea(actors_, pose);
+                for (unsigned i = 0; i < footprint.cells.size(); ++i)
+                    if (footprint.eligible[i])
+                        effects_.ignite(footprint.cells[i]);
             }
             const auto sharedDamage = r.attack ? 0 : rng_.roll(r.dice).value.total;
             std::array<bool, 36> push{};

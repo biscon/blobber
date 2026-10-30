@@ -19,9 +19,14 @@ enum class EffectKind : std::uint8_t {
     Blind,
     Slow,
     Knockdown,
+    Aid,
+    MirrorImage,
+    Web,
+    Restrained,
+    SpiritualWeapon,
     Count
 };
-enum class StatusClock : std::uint8_t { Seconds, Turns, CasterTurn, Standing };
+enum class StatusClock : std::uint8_t { Seconds, Turns, CasterTurn, Standing, Escape };
 struct StatusEntry {
     EffectKind effect = EffectKind::Count;
     rules::SpellKind spell = rules::SpellKind::Count;
@@ -30,6 +35,7 @@ struct StatusEntry {
     std::uint64_t remainingMs = 0;
     StatusClock clock = StatusClock::Seconds;
     bool harmful = false;
+    unsigned stacks = 0;
 };
 struct StatusSummary {
     static constexpr std::size_t capacity = static_cast<std::size_t>(EffectKind::Count) + 2;
@@ -118,6 +124,9 @@ struct EffectInstance {
     int difficulty = 10;
     std::uint64_t expiresMs = 0, retryMs = 0;
     bool active = false;
+    std::uint8_t duplicates = 0, reserved = 0;
+    Cell cell{};
+    std::uint64_t readyMs = 0;
 };
 struct ConditionState {
     rules::CharacterId caster{};
@@ -134,8 +143,27 @@ struct GroundArea {
     int difficulty = 0;
     std::uint64_t untilMs = 0;
     bool active = false;
+    bool web = false;
+    EffectId effect{};
+    std::uint64_t burnMs = 0;
+};
+struct MirrorReservation {
+    EffectId effect;
+    std::uint8_t duplicate = 0;
+    bool hit = false;
+};
+struct Restraint {
+    AreaId area;
+    Cell cell{};
+    int difficulty = 0;
+    rules::CharacterId caster;
+};
+struct SpectralWeapon {
+    Cell cell{};
+    bool active = false;
 };
 struct GroundSnapshot {
+    std::array<SpectralWeapon, 4> weapons{};
     std::array<GroundArea, 16> areas{};
     std::uint64_t revision = 0;
 };
@@ -188,6 +216,18 @@ class EffectController {
     }
     const GroundSnapshot& ground() const noexcept { return ground_; }
     bool canCreateArea() const noexcept;
+    bool canCreateWeb(const Cell*, std::size_t, rules::CharacterId) const noexcept;
+    bool createWeb(const Cell*, std::size_t, rules::CharacterId, int, std::uint64_t, CombatEvents&) noexcept;
+    void ignite(Cell) noexcept;
+    bool escapeWeb(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
+    bool mobile(EffectTarget t) const noexcept { return canAct(t) && !has(t, EffectKind::Restrained); }
+    MirrorReservation mirror(EffectTarget attacker, rules::CharacterId target, int attackRoll,
+                             int bonus) noexcept;
+    void resolveMirror(MirrorReservation, bool canceled, std::uint64_t, CombatEvents&) noexcept;
+    bool restoreCondition(rules::CharacterId, EffectKind, std::uint64_t, CombatEvents&) noexcept;
+    const EffectInstance* spiritualWeapon(rules::CharacterId) const noexcept;
+    bool moveWeapon(rules::CharacterId, Cell, bool initial = false) noexcept;
+    bool weaponCanMove(rules::CharacterId, Cell) const noexcept;
     AreaId createArea(Cell, rules::CharacterId, int difficulty, std::uint64_t, CombatEvents&) noexcept;
     const GroundArea* area(Cell) const noexcept;
     unsigned movementFactor(EffectTarget, Cell from, Cell to) const noexcept;
@@ -214,6 +254,10 @@ class EffectController {
     std::array<std::array<ConditionState, 4>, creatureCount> conditions_{};
     std::array<std::uint64_t, 4> casterTurns_{};
     GroundSnapshot ground_{};
+    std::array<Restraint, creatureCount> restrained_{};
+    void reconcileAid() noexcept;
+    void reconcileWeb(std::uint64_t, CombatEvents&) noexcept;
+    void burnWeb(std::uint64_t, CombatEvents&) noexcept;
     std::uint64_t nextArea_ = 1, groundDueMs_ = 6000, noticeMs_ = 0;
     Cell partyCell_{};
     bool turns_ = false;

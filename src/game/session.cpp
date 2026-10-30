@@ -32,6 +32,7 @@ void GameSession::detectContact() noexcept {
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     events_.clear();
     loot_.reconcile(actors_);
+    reconcileRewards();
     if (paused) {
         movement_.clearPending();
         return events_;
@@ -67,6 +68,7 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     events_.append(events_.step);
     driveFacing();
     loot_.reconcile(actors_);
+    reconcileRewards();
     return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
@@ -120,6 +122,7 @@ CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
     if (out.event != CombatEvent::Cast)
         events_.append(out);
     loot_.reconcile(actors_);
+    reconcileRewards();
     return out;
 }
 EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
@@ -127,6 +130,7 @@ EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
     combat_.reconcileEffects(timeMs_, events_);
     const auto result = effects_.apply(request, timeMs_, events_);
     combat_.reconcileEffects(timeMs_, events_);
+    reconcileRewards();
     if (!effects_.mobileParty())
         movement_.clearPending();
     return result;

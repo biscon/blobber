@@ -164,7 +164,11 @@ std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupie
     return {};
 }
 void CombatController::refreshReadiness() noexcept {
+    state_.canEndTurn =
+        state_.phase == CombatPhase::Turns && state_.awaitingAction && state_.activeCharacter.has_value();
     for (std::size_t i = 0; i < rules::partySize; ++i) {
+        if (state_.gameplayMs >= extraUntil_[i])
+            extraAction_[i] = false;
         state_.cooldownMs[i] = partyReady_[i] > state_.gameplayMs ? partyReady_[i] - state_.gameplayMs : 0;
         if (state_.defending[i] && state_.gameplayMs >= defendDue_[i])
             state_.defending[i] = false;
@@ -317,8 +321,7 @@ void CombatController::selectTurn() noexcept {
             if (life == rules::Life::Conscious || life == rules::Life::Dying) {
                 state_.activeCharacter = rules::CharacterId{e.index};
                 state_.spent[e.index] = state_.spent[e.index] || partyReady_[e.index] > state_.gameplayMs;
-                state_.awaitingAction =
-                    effects_.canAct(rules::CharacterId{e.index}) && !state_.spent[e.index];
+                state_.awaitingAction = hasActions(rules::CharacterId{e.index});
                 ++state_.turn;
                 return;
             }
@@ -343,6 +346,8 @@ void CombatController::selectTurn() noexcept {
     ++state_.turn;
 }
 void CombatController::advance(std::uint64_t now) noexcept {
+    if (state_.activeCharacter)
+        extraAction_[state_.activeCharacter->index] = false;
     due_ = now + actionDelayMs;
     if (currentEvents_) {
         if (state_.activeCharacter)

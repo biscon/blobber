@@ -96,7 +96,7 @@ void loading() {
         std::string field;
         switch (fault) {
         case 0:
-            bad["schema_version"] = 9;
+            bad["schema_version"] = 10;
             field = "schema_version";
             break;
         case 1:

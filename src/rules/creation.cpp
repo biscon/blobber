@@ -141,6 +141,20 @@ std::uint32_t classSpells(const Catalog& c, ClassId id, int level) noexcept {
         }
     return out;
 }
+std::uint32_t eligibleLeveledSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
+    std::uint32_t mask = 0;
+    for (int level = 1; level <= maximumSpellLevel(b.level); ++level)
+        mask |= classSpells(c, b.characterClass, level);
+    return mask;
+}
+std::uint32_t domainSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
+    if (!b.lifeDomain)
+        return 0;
+    auto bits = kindBit(c, SpellKind::Bless) | kindBit(c, SpellKind::CureWounds);
+    if (b.level >= 3)
+        bits |= kindBit(c, SpellKind::LesserRestoration) | kindBit(c, SpellKind::SpiritualWeapon);
+    return bits;
+}
 int preparationLimit(const Catalog& c, const CharacterIdentityView& b) noexcept {
     const auto* cls = c.characterClass(b.characterClass);
     const auto* race = c.race(b.race);
@@ -192,13 +206,14 @@ BuildError validateGrants(const Catalog& c, const CharacterIdentityView& b, cons
     if ((s.cantrips & ~classSpells(c, b.characterClass, 0)) || (!caster && s.cantrips) ||
         (counts && caster && spellCount(s.cantrips) != 3))
         return BuildError::Cantrips;
-    if ((s.learned & ~classSpells(c, b.characterClass, 1)) || (!wizard && s.learned) ||
-        (counts && wizard && spellCount(s.learned) != 6))
+    if ((s.learned & ~eligibleLeveledSpells(c, b)) || (!wizard && s.learned) ||
+        (counts && wizard && spellCount(s.learned) != unsigned(4 + 2 * b.level)))
         return BuildError::Learned;
-    const auto domain = b.lifeDomain ? kindBit(c, SpellKind::Bless) | kindBit(c, SpellKind::CureWounds) : 0;
-    if (s.domain != domain || (counts && b.lifeDomain && spellCount(domain) != 2))
+    const auto domain = domainSpells(c, b);
+    if (s.domain != domain ||
+        (counts && b.lifeDomain && spellCount(domain) != unsigned(b.level >= 3 ? 4 : 2)))
         return BuildError::Domain;
-    const auto available = wizard ? s.learned : classSpells(c, b.characterClass, 1);
+    const auto available = wizard ? s.learned : eligibleLeveledSpells(c, b);
     if ((s.prepared & ~available) || (s.prepared & s.domain) || (!caster && s.prepared) ||
         (counts && caster && (!s.prepared || spellCount(s.prepared) > unsigned(preparationLimit(c, b)))))
         return BuildError::Prepared;
@@ -216,13 +231,14 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
         return {};
     const auto bit = spellBit(id);
     const auto& r = *spellRules(spell->kind);
+    if (r.level > maximumSpellLevel(b.level))
+        return {};
     SpellAccess out;
     if ((b.spells.racial & bit) && race->wizardCantrip && !r.level && r.casting == Casting::Intelligence) {
         out.source = SpellSource::Racial;
         out.casting = Casting::Intelligence;
     } else if ((b.spells.domain & bit) && b.lifeDomain &&
-               hasFeature(cls->features, ClassFeature::LifeDomain) &&
-               (spell->kind == SpellKind::Bless || spell->kind == SpellKind::CureWounds)) {
+               hasFeature(cls->features, ClassFeature::LifeDomain) && (domainSpells(cat, b.view()) & bit)) {
         out.source = SpellSource::Domain;
         out.casting = cls->casting;
     } else if ((classSpells(cat, b.characterClass, r.level) & bit) &&
@@ -237,7 +253,7 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
     out.modifier = stats.modifiers[out.casting == Casting::Wisdom ? 4 : 3];
     out.attack = stats.proficiency + out.modifier;
     out.difficulty = 8 + out.attack;
-    out.cost = r.level * 2;
+    out.cost = spellManaCost(r.level);
     return out;
 }
 const CreationClass* creationClass(const Catalog& c, ClassId id) noexcept {

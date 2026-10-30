@@ -7,6 +7,9 @@ void usesLabel(char* output, std::size_t size, int charges) {
     std::snprintf(output, size, "%d %s remaining", charges, charges == 1 ? "use" : "uses");
 }
 const char* featureAction(rules::Feature feature, CombatPhase phase) {
+    if (feature == rules::Feature::ActionSurge || feature == rules::Feature::CunningAction ||
+        feature == rules::Feature::SpiritualWeapon)
+        return "Free activation";
     if (feature == rules::Feature::DismissConcentration)
         return "No action cost";
     if (feature == rules::Feature::ArcaneRecovery)
@@ -163,6 +166,11 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         return;
     overlayBox(hudLayout::spellTargetPanel);
     const auto& c = m.pending;
+    if (m.kind == rules::SpellKind::LesserRestoration && m.armed) {
+        box(hudLayout::restorationChoice, gold);
+        label(c.restoreParalysis ? "Cure paralysis / Tab to change" : "Cure blindness / Tab to change",
+              hudLayout::restorationChoice, gold);
+    }
     const char* caster = "";
     for (const auto& card : h.cards)
         if (card.id.index == c.character.index)

@@ -138,7 +138,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     atlas_ = resources_.createTexture(atlas.value);
     SetTextureFilter(resources_.texture(atlas_), TEXTURE_FILTER_BILINEAR);
 }
-static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 24,
+static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 32,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
     if (item.id == "quarterstaff")
@@ -165,12 +165,18 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
     if (feature == rules::Feature::DismissConcentration)
         return 27;
     const auto k = static_cast<unsigned>(kind);
+    if (k >= 24 && k < 32)
+        return 128 + k;
     return kind < rules::SpellKind::Count ? (k < 14 ? 11 + k : 49 + k - 14) : 8;
 }
 unsigned UiArt::effectIcon(EffectKind kind) noexcept {
     return kind == EffectKind::HoldPerson ? holdPersonIcon : spellIcon(effectSpell(kind));
 }
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
+    if (index >= 128 && index < 160) {
+        creator(index - 128, r, tint);
+        return;
+    }
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
     if (index < 4)

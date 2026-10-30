@@ -10,7 +10,7 @@ CommandReason CombatController::validateItem(const PartyCommand& c, Player pose)
     if (!effects_.canAct(c.character))
         return CommandReason::CannotAct;
     if (realTime(state_.phase)) {
-        if (partyReady_[c.character.index] > state_.gameplayMs)
+        if (!normalAction(c.character) && !freeAction(c))
             return CommandReason::Cooldown;
     } else {
         if (state_.phase != CombatPhase::Turns)
@@ -21,6 +21,8 @@ CommandReason CombatController::validateItem(const PartyCommand& c, Player pose)
         if (!(pose == origin_))
             return CommandReason::Moving;
     }
+    if (!normalAction(c.character) && !freeAction(c))
+        return CommandReason::Cooldown;
     if (casterResolving(c.character) || attackBusy(NpcWorld::maxInstances + c.character.index))
         return CommandReason::AttackPending;
     const auto& inv = party_.inventory();
@@ -75,8 +77,7 @@ CombatOutcome CombatController::submitItem(const PartyCommand& c, Player pose, s
         out.event = CombatEvent::Recovery;
         out.damage = ally->mana - mana;
     }
-    partyReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
-    state_.spent[c.character.index] = true;
+    spendAction(c);
     refreshReadiness();
     partyBusy_ = std::max(partyBusy_, now + combatFeedbackDurationMs);
     if (state_.phase == CombatPhase::Turns) {

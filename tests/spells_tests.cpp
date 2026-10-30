@@ -525,7 +525,7 @@ void classFeaturesUi() {
     cls.casting = rules::Casting::Wisdom;
     cls.features = static_cast<rules::ClassFeatures>(rules::ClassFeature::SecondWind);
     std::vector<rules::SpellDefinition> definitions;
-    for (unsigned i = 0; i < static_cast<unsigned>(SpellKind::Count); ++i) {
+    for (unsigned i = 0; i < static_cast<unsigned>(SpellKind::Aid); ++i) {
         const auto kind = static_cast<SpellKind>(i);
         const auto& rule = *rules::spellRules(kind);
         if (rule.casting != cls.casting)

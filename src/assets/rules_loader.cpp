@@ -60,8 +60,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
             fail("schema_version", "missing version");
         const int version = integer(root.at("schema_version"), "schema_version");
         if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
-            version != 7 && version != 8)
-            fail("schema_version", "only versions 1 through 8 are supported");
+            version != 7 && version != 8 && version != 9)
+            fail("schema_version", "only versions 1 through 9 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else if (version >= 8)
@@ -115,7 +115,11 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         for (std::size_t i = 0; i < monsterJson.size(); ++i) {
             const auto p = "monsters[" + std::to_string(i) + "]";
             const auto& m = monsterJson[i];
-            if (version >= 7)
+            if (version >= 9)
+                fields(m, p,
+                       {"id", "abilities", "armor_class", "hit_points", "attacks", "traits", "loot",
+                        "metal_armor", "sleep_immune", "experience", "humanoid"});
+            else if (version >= 7)
                 fields(m, p,
                        {"id", "abilities", "armor_class", "hit_points", "attacks", "traits", "loot",
                         "metal_armor", "sleep_immune"});
@@ -126,6 +130,13 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
             else
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks"});
             MonsterDefinition definition;
+            if (version >= 9) {
+                const int xp = integer(m.at("experience"), p + ".experience");
+                if (xp < 0)
+                    fail(p + ".experience", "must be nonnegative");
+                definition.experience = std::uint32_t(xp);
+                definition.humanoid = boolean(m.at("humanoid"), p + ".humanoid");
+            }
             if (version >= 7) {
                 definition.metalArmor = boolean(m.at("metal_armor"), p + ".metal_armor");
                 definition.sleepImmune = boolean(m.at("sleep_immune"), p + ".sleep_immune");

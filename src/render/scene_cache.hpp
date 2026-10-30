@@ -25,6 +25,10 @@ struct PreparedView {
     std::vector<PreparedColumn> columns;
     std::vector<Color> pixels;
     std::array<Frame, 16> backgrounds;
+    static constexpr int weaponMinSize = 4, weaponMaxSize = 96;
+    static constexpr std::size_t weaponPixelCount = 96 * 97 * 193 / 6 - 14;
+    std::vector<Color> weapon; // All square sizes 4..96, prepared offline.
+    std::array<Frame, 4> web;
     std::array<Frame, 4> grease; // Per-heading world-cell anchored floor decal; baked RGBA.
 };
 using PreparedScene = std::array<PreparedView, ViewProjection::strafeSteps>;

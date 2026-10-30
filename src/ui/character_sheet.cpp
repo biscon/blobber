@@ -1,4 +1,5 @@
 #include "ui/hud_painter.hpp"
+#include "ui/inventory_layout.hpp"
 
 namespace blobber {
 using namespace hudInk;
@@ -74,7 +75,11 @@ void HudPainter::characterSheet(const HudSnapshot& h) const {
         fill({18, 239, int(148 * progress), 6}, gold);
         const auto remaining = s.nextLevelExperience - std::min(s.experience, s.nextLevelExperience);
         std::snprintf(value, sizeof(value), "%u XP to level %d", remaining, c.level + 1);
-        text(value, 16, 251, muted, UiTextStyle::Small);
+        if (c.levelEligible) {
+            box(inventoryLayout::levelUp, gold);
+            centered("LEVEL UP", inventoryLayout::levelUp, gold);
+        } else
+            text(value, 16, 251, muted, UiTextStyle::Small);
     } else {
         std::snprintf(value, sizeof(value), "%u XP", s.experience);
         text(value, 16, 223);

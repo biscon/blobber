@@ -81,6 +81,10 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
             }
         }
     }
+    if (c.levelEligible && !c.castRecipient) {
+        fill({portrait.x + 1, portrait.y + 1, 33, 10}, background);
+        text("LEVEL UP", portrait.x + 2, portrait.y + 2, gold, UiTextStyle::Small);
+    }
     if (c.concentration) {
         const auto badge = hudLayout::concentration(i);
         box(badge, gold);

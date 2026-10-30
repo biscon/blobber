@@ -2,6 +2,7 @@
 #include "game/commands.hpp"
 #include "render/layout.hpp"
 #include <algorithm>
+#include <limits>
 #include <memory>
 
 namespace blobber {
@@ -14,11 +15,26 @@ class PickingBuffer {
         std::fill_n(pixels_.get(), viewWidth * viewHeight, empty);
         targets_ = {};
         badgeAnchors_ = {};
+        bodyDepth_.fill(std::numeric_limits<float>::infinity());
+        wallDepth_.fill(std::numeric_limits<float>::infinity());
         lootWorld_ = 0;
         lootAnchors_ = {};
         lootGenerations_ = {};
     }
-    void badgeAnchor(std::uint16_t slot, int x, int top) noexcept { badgeAnchors_[slot] = {x, top}; }
+    void badgeAnchor(std::uint16_t slot, int x, int top, float depth) noexcept {
+        badgeAnchors_[slot] = {x, top};
+        bodyDepth_[slot] = depth;
+    }
+    void wallDepths(const std::array<float, viewWidth>& depths) noexcept { wallDepth_ = depths; }
+    bool badgeVisible(std::uint16_t owner, int x, int y) const noexcept {
+        if (owner >= bodyDepth_.size() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight)
+            return false;
+        const auto depth = bodyDepth_[owner];
+        if (depth >= wallDepth_[x])
+            return false;
+        const auto body = slot(x, y);
+        return body == owner || body >= bodyDepth_.size() || bodyDepth_[body] > depth;
+    }
     void write(std::size_t pixel, std::uint16_t slot) noexcept { pixels_[pixel] = slot; }
     std::uint16_t slot(int x, int y) const noexcept {
         return x >= 0 && x < viewWidth && y >= 0 && y < viewHeight ? pixels_[y * viewWidth + x] : empty;
@@ -89,5 +105,7 @@ class PickingBuffer {
     std::array<Cell, lootCapacity> lootAnchors_{};
     std::array<std::uint64_t, lootCapacity> lootGenerations_{};
     std::array<Cell, NpcWorld::maxInstances> badgeAnchors_{};
+    std::array<float, NpcWorld::maxInstances> bodyDepth_{};
+    std::array<float, viewWidth> wallDepth_{};
 };
 } // namespace blobber

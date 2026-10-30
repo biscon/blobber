@@ -71,6 +71,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                 throw std::runtime_error("races." + r.id + ".ability_increases: expected 0..2");
     }
     for (const auto& c : classes_) {
+        if (unsigned(c.progression) > unsigned(ProgressionClass::Wizard))
+            throw std::runtime_error("Invalid class progression");
         if (static_cast<unsigned>(c.casting) > static_cast<unsigned>(Casting::Intelligence) ||
             (c.features & ~15u) || c.spellCount > c.spells.size() ||
             (hasFeature(c.features, ClassFeature::LifeDomain) && c.casting != Casting::Wisdom) ||
@@ -78,7 +80,7 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
             throw std::runtime_error("classes: invalid casting/features");
         for (std::size_t i = 0; i < c.spellCount; ++i) {
             const auto* s = spell(c.spells[i]);
-            if (!s || spellRules(s->kind)->casting != c.casting)
+            if (!s || !spellClass(s->kind, c.casting))
                 throw std::runtime_error("classes: invalid spell reference or class eligibility");
             for (std::size_t j = 0; j < i; ++j)
                 if (c.spells[j].index == c.spells[i].index)
@@ -161,6 +163,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                 if (!draftFromBuild(*this, b, draft))
                     throw std::runtime_error("Preset is not a valid curated starting build");
             }
+            if (b.level != 1)
+                throw std::runtime_error("Starting builds must be level one");
             const auto derived = deriveCharacter(*this, b);
             if (!derived)
                 throw std::runtime_error("preset_party.characters[" + std::to_string(i) +

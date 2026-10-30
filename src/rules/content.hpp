@@ -43,6 +43,8 @@ struct MonsterDefinition {
     std::array<LootEntry, 8> loot{};
     std::size_t lootCount = 0;
     bool metalArmor = false, sleepImmune = false;
+    std::uint32_t experience = 0;
+    bool humanoid = false;
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
 struct CreationClass;

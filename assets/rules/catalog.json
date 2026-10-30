@@ -1,5 +1,5 @@
 {
-  "schema_version": 8,
+  "schema_version": 9,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -100,7 +100,9 @@
         }
       ],
       "metal_armor": false,
-      "sleep_immune": false
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": true
     },
     {
       "id": "goblin.archer",
@@ -186,7 +188,9 @@
         }
       ],
       "metal_armor": false,
-      "sleep_immune": false
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": true
     }
   ],
   "races": [
@@ -289,7 +293,8 @@
       "features": [
         "second_wind"
       ],
-      "spells": []
+      "spells": [],
+      "progression": "fighter"
     },
     {
       "id": "cleric",
@@ -323,8 +328,13 @@
         "inflict_wounds",
         "guidance",
         "resistance",
-        "sanctuary"
-      ]
+        "sanctuary",
+        "aid",
+        "hold_person",
+        "lesser_restoration",
+        "spiritual_weapon"
+      ],
+      "progression": "cleric"
     },
     {
       "id": "rogue",
@@ -349,7 +359,8 @@
       "features": [
         "sneak_attack"
       ],
-      "spells": []
+      "spells": [],
+      "progression": "rogue"
     },
     {
       "id": "wizard",
@@ -385,8 +396,14 @@
         "sleep",
         "false_life",
         "grease",
-        "color_spray"
-      ]
+        "color_spray",
+        "hold_person",
+        "scorching_ray",
+        "shatter",
+        "mirror_image",
+        "web"
+      ],
+      "progression": "wizard"
     }
   ],
   "items": [
@@ -1028,6 +1045,54 @@
       "kind": "sanctuary",
       "name": "Sanctuary",
       "description": "Ward one ally for 60 seconds. Attackers must pass Wisdom or try another legal target. Offensive actions end it. Areas bypass it."
+    },
+    {
+      "id": "aid",
+      "kind": "aid",
+      "name": "Aid",
+      "description": "Up to three allies gain 5 maximum and current HP for eight hours. Does not stack or heal on refresh."
+    },
+    {
+      "id": "hold_person",
+      "kind": "hold_person",
+      "name": "Hold Person",
+      "description": "One humanoid: Wisdom save or paralysis. Concentration, 60 seconds; repeat saves every round or six seconds."
+    },
+    {
+      "id": "lesser_restoration",
+      "kind": "lesser_restoration",
+      "name": "Lesser Restoration",
+      "description": "End one selected blindness or paralysis on a living ally. Disease, deafness and poison conditions are not supported."
+    },
+    {
+      "id": "spiritual_weapon",
+      "kind": "spiritual_weapon",
+      "name": "Spiritual Weapon",
+      "description": "Create a spectral weapon and attack for 1d8 + Wisdom force. Lasts 60 seconds without concentration. Later moves/attacks are free once per turn or six seconds."
+    },
+    {
+      "id": "scorching_ray",
+      "kind": "scorching_ray",
+      "name": "Scorching Ray",
+      "description": "Allocate three independent ranged spell attacks among up to three enemies; each hit deals 2d6 fire."
+    },
+    {
+      "id": "shatter",
+      "kind": "shatter",
+      "name": "Shatter",
+      "description": "Aim a 3x3 area within six cells: 3d8 thunder, Constitution save for half. Affects allies and caster; Evocation protects other companions."
+    },
+    {
+      "id": "mirror_image",
+      "kind": "mirror_image",
+      "name": "Mirror Image",
+      "description": "Self: three illusory duplicates redirect attacks for 60 seconds. No concentration. Areas and blind attackers bypass them."
+    },
+    {
+      "id": "web",
+      "kind": "web",
+      "name": "Web",
+      "description": "Aim a 2x2 floor area: difficult terrain and Dexterity saves against restraint. Escape with a Strength action. Affects allies, burns in fire; concentration, one hour."
     }
   ],
   "creation": [

@@ -32,7 +32,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
     if (realTime(state_.phase)) {
         if (!ranged && c.action != PartyAction::Aid)
             return CommandReason::NoEncounter;
-        if (partyReady_[c.character.index] > state_.gameplayMs)
+        if (!normalAction(c.character))
             return CommandReason::Cooldown;
     } else {
         if (state_.phase != CombatPhase::Turns)
@@ -43,6 +43,8 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         if (!(pose == origin_))
             return CommandReason::Moving;
     }
+    if (!normalAction(c.character))
+        return CommandReason::Cooldown;
     if (c.action == PartyAction::Defend)
         return CommandReason::Ready;
     if (c.action == PartyAction::Aid) {
@@ -159,8 +161,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     out.reason = CommandReason::Resolved;
     out.character = c.character;
     const bool turn = state_.phase == CombatPhase::Turns;
-    partyReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
-    state_.spent[c.character.index] = true;
+    spendAction(c);
     if (c.action == PartyAction::Defend) {
         out.event = CombatEvent::Defend;
         state_.defending[c.character.index] = true;
@@ -198,12 +199,18 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
                                               effects_.armorClass(out.enemy))
                              .value;
         out.hit = hit.outcome != rules::AttackOutcome::Miss;
-        out.critical = hit.outcome == rules::AttackOutcome::Critical ||
-                       (out.hit && held && combatAdjacent(map_, a->npc.cell, pose.cell));
+        out.critical =
+            hit.outcome == rules::AttackOutcome::Critical ||
+            (out.roll == 19 && party_.progressionClass(c.character) == rules::ProgressionClass::Fighter &&
+             party_.character(c.character)->build.level >= 3) ||
+            (out.hit && held && combatAdjacent(map_, a->npc.cell, pose.cell));
+        out.hit |= out.critical;
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
             if (sneakEligible(c.character, out.enemy, mode, ranged, pose)) {
-                out.damage += rng_.damage({1, 6, 0}, out.critical).value.total;
+                out.damage +=
+                    rng_.damage({party_.character(c.character)->build.level >= 3 ? 2 : 1, 6, 0}, out.critical)
+                        .value.total;
                 sneakReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
             }
         }
@@ -212,7 +219,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     refreshReadiness();
     if (turn) {
         if (out.event != CombatEvent::AttackStarted)
-            advance(now);
+            completeAction(now);
     } else
         ++state_.turn;
     out.phase = state_.phase;
@@ -271,16 +278,20 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
                                          (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
             .value;
     out.roll = roll.selected;
-    const auto hit = rules::resolveAttack(roll, attack->bonus + effects_.rollModifier(id),
-                                          effects_.armorClass(out.recipient))
-                         .value;
+    const int attackBonus = attack->bonus + effects_.rollModifier(id);
+    out.mirror = effects_.mirror(id, out.recipient, roll.selected, attackBonus);
+    const auto hit = rules::resolveAttack(roll, attackBonus, effects_.armorClass(out.recipient)).value;
     out.hit = hit.outcome != rules::AttackOutcome::Miss;
     out.critical =
         hit.outcome == rules::AttackOutcome::Critical ||
         (out.hit && effects_.helpless(out.recipient) && combatAdjacent(map_, a->npc.cell, origin_.cell));
     actors_.face(id, headingToward(a->npc.cell, origin_.cell));
     actors_.attack(id, now, ranged);
-    if (out.hit) {
+    if (out.mirror.effect.serial) {
+        out.hit = out.mirror.hit;
+        out.critical = false;
+    }
+    if (out.hit && !out.mirror.effect.serial) {
         out.damage = rng_.damage(attack->damage, out.critical).value.total;
     }
     enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
@@ -299,6 +310,10 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
     }
     if (!effects_.canAct(id) || surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
         surprised_[id.slot] = false;
+        out.event = CombatEvent::Spent;
+        return out;
+    }
+    if (currentEvents_ && effects_.escapeWeb(id, now, *currentEvents_)) {
         out.event = CombatEvent::Spent;
         return out;
     }

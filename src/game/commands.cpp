@@ -154,6 +154,17 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             break;
         }
         recordFeedback(out);
+        if (out.mirror.effect.serial) {
+            std::snprintf(line, sizeof(line), "%s: attack redirected; duplicate %s.", target,
+                          out.hit ? "destroyed" : "missed");
+            break;
+        }
+        if (out.enemyAttack && out.spell != rules::SpellKind::Count) {
+            std::snprintf(line, sizeof(line), "%s -> %s: %s, %lld damage%s.", name, target,
+                          rules::spellRules(out.spell)->name, static_cast<long long>(out.damage),
+                          out.died ? ", dead" : "");
+            break;
+        }
         if (out.enemyAttack) {
             std::snprintf(line, sizeof(line), "Goblin #%u -> %s: %s (d20 %d), %lld damage%s.",
                           unsigned(out.enemy.slot) + 1, target,
@@ -206,13 +217,15 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Cast: {
         const auto* spell = rules::spellRules(out.spell);
         std::snprintf(line, sizeof(line), "%s: %s.", name,
-                      spell                                       ? spell->name
-                      : out.feature == rules::Feature::SecondWind ? "Second Wind"
-                                                                  : "Arcane Recovery");
+                      spell ? spell->name : rules::featureName(out.feature));
         break;
     }
     case CombatEvent::Healing:
     case CombatEvent::Recovery: {
+        if (out.feature == rules::Feature::ActionSurge) {
+            std::snprintf(line, sizeof(line), "%s gains one extra action.", name);
+            break;
+        }
         const auto* item = party_.catalog().item(out.item);
         std::snprintf(line, sizeof(line), "%s%s%s -> %s: +%lld %s.", name, item ? " uses " : "",
                       item ? item->name.c_str() : "", target, static_cast<long long>(out.damage),
@@ -230,6 +243,11 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         break;
     }
     case CombatEvent::SpellSave:
+        if (out.feature == rules::Feature::EscapeWeb) {
+            std::snprintf(line, sizeof(line), "Web escape: Strength check %d vs DC %d - %s.", out.saveTotal,
+                          out.saveDifficulty, out.hit ? "escaped" : "restrained");
+            break;
+        }
         if (out.enemyAttack) {
             std::snprintf(line, sizeof(line), "%s: %s save %d vs DC %d - %s.", target,
                           rules::spellRules(out.spell)->name, out.saveTotal, out.saveDifficulty,
@@ -282,7 +300,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
 }
 void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     const auto* actor = actors_.actor(out.enemy);
-    if (!session_ || !actor || (out.enemyAttack && !party_.character(out.recipient)))
+    if (!session_ || (!out.enemyAttack && !actor) || (out.enemyAttack && !party_.character(out.recipient)))
         return;
     CombatFeedback next;
     next.active = true;
@@ -291,6 +309,8 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     const auto* spell = rules::spellRules(out.spell);
     if (spell && !spell->attack && !out.hit)
         next.text = "SAVED";
+    if (out.mirror.effect.serial)
+        next.text = out.hit ? "IMAGE LOST" : "IMAGE MISSED";
     next.character = out.recipient;
     next.enemy = out.enemy;
     next.damage = out.damage;
@@ -352,6 +372,7 @@ bool CommandController::visible(ActorId id) const noexcept {
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
                                 const HudDemo* demo) noexcept {
     state_.production = session_ != nullptr;
+    state_.development = session_ && session_->development();
     if (state_.camp.open)
         refreshCamp();
     if (!focused) {
@@ -458,6 +479,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.abilities = member.stats.abilities;
         card.armorClass = member.stats.armorClass;
         card.level = member.build.level;
+        card.levelEligible = session_ && session_->advancementEligibility(session_->advancementRequest(id)) ==
+                                             AdvancementError::None;
         card.portrait =
             member.build.portrait.index < rules::portraitCount ? 64u + member.build.portrait.index : 255u;
         const std::array<EquipmentSlot, 4> equipped{EquipmentSlot::MainHand, EquipmentSlot::OffHand,

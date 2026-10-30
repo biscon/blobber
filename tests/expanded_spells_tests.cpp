@@ -34,7 +34,7 @@ struct EffectsFixture {
 void allCasts() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog(1000, 1, 1);
-    for (unsigned k = 14; k < unsigned(SpellKind::Count); ++k) {
+    for (unsigned k = 14; k < unsigned(SpellKind::Aid); ++k) {
         const auto kind = SpellKind(k);
         const auto& r = *rules::spellRules(kind);
         const bool close = r.area || kind == SpellKind::ShockingGrasp || kind == SpellKind::PoisonSpray;

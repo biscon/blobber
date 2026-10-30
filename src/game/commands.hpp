@@ -1,4 +1,5 @@
 #pragma once
+#include "game/advancement_ui.hpp"
 #include "game/inventory_ui.hpp"
 #include "game/loot_ui.hpp"
 #include "game/npc_animation.hpp"
@@ -47,7 +48,7 @@ struct HudCard {
     rules::Abilities abilities{};
     int armorClass = 0, level = 1;
     std::uint64_t cooldownMs = 0;
-    bool spent = false, selecting = false;
+    bool spent = false, selecting = false, levelEligible = false;
     unsigned portrait = 100;
     bool castRisk = false, castRecipient = false, castEligible = true, castCaster = false,
          castHovered = false;
@@ -127,7 +128,7 @@ struct HudSnapshot {
     PartyCommand selection;
     TargetSnapshot targets;
     std::array<bool, NpcWorld::maxInstances> protectedTargets{};
-    std::array<std::uint16_t, NpcWorld::maxInstances> conditions{};
+    std::array<std::uint32_t, NpcWorld::maxInstances> conditions{};
     std::size_t targetPage = 0, logOffset = 0;
     CommandReason availability = CommandReason::MissingTarget;
     std::array<CommandReason, static_cast<std::size_t>(PartyAction::Count)> actionAvailability{};
@@ -142,6 +143,8 @@ struct HudSnapshot {
     MagicHud magic;
     InventoryHud inventory;
     CampHud camp;
+    AdvancementHud advancement;
+    bool development = false;
     LootHud loot;
     bool restAvailable = false;
     const char* restReason = "Rest unavailable.";
@@ -151,7 +154,8 @@ struct HudSnapshot {
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
     bool modal() const noexcept {
-        return loot.open || camp.open || inventory.open || logExpanded || menuOpen || magic.open;
+        return advancement.open || loot.open || camp.open || inventory.open || logExpanded || menuOpen ||
+               magic.open;
     }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
@@ -228,6 +232,11 @@ class CommandController {
     void campKind(RestKind) noexcept;
     void campDice(unsigned character, int delta) noexcept;
     void startRest() noexcept;
+    void openAdvancement(rules::CharacterId) noexcept;
+    void routeAdvancement(const UiInput&) noexcept;
+    void restorationChoice() noexcept;
+    void endTurn() noexcept;
+    void developmentExperience() noexcept;
     void openPreparation() noexcept;
     void routePreparation(const UiInput&) noexcept;
     void tickCamp(double seconds, bool focused) noexcept;
