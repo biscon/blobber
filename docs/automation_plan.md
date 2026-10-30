@@ -3,8 +3,10 @@
 Status: **13.1 Accepted and closed** (2026-10-30); its [detailed design](headless_design.md)
 is implemented; [verification/handoff](slice131_verification.md) and the
 [protocol guide](headless_protocol.md) are available. The user accepted 13.1 on
-2026-10-30: “slice accepted, update the docs.” Slice 13.2 is next eligible for separate
-planning; 13.2/13.3 remain Planned and unstarted.
+2026-10-30: “slice accepted, update the docs.” Slice 13.2 is **Accepted and closed**
+(2026-10-30), following approval of the [detailed plan](automated_players_design.md)
+and the user’s “close up the slice” instruction. [Verification/handoff](slice132_verification.md)
+records delivery and unchanged limitations. 13.3 is next eligible for planning and remains Planned.
 
 ## Delivery order and tracking
 
@@ -17,7 +19,7 @@ slices form a tooling interlude rather than reopening gameplay acceptance.
 | ID | Slice | Prerequisite | Status |
 | --- | --- | --- | --- |
 | 13.1 | [Headless arena sessions and reproducible play](#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Accepted |
-| 13.2 | [Automated players and balance experiments](#slice-132-automated-players-and-balance-experiments) | 13.1 | Planned |
+| 13.2 | [Automated players and balance experiments](#slice-132-automated-players-and-balance-experiments) | 13.1 | Accepted |
 | 13.3 | [MCP play and investigation](#slice-133-mcp-play-and-investigation) | 13.2 | Planned |
 
 Each slice receives its detailed design before implementation and its own durable
@@ -30,6 +32,13 @@ Support repeatable arena play now, while the dungeon is still a test level, and
 extend the interface alongside later gameplay. Compare party compositions,
 equipment, tactics, and encounter rosters over many trials. Let an agent play
 individual sessions and investigate outcomes without desktop input automation.
+
+This is general-purpose project tooling. Agents may use it wherever relevant,
+including feature development, investigation, regression diagnosis and playtesting.
+These are examples, not an exclusive list or a prerequisite for use. Human-readable
+reports help explain findings without requiring manual trace inspection. Assess
+coverage and assumptions for the question at hand; extend coverage when needed.
+Balance matrices remain opt-in rather than automatic checks for every change.
 
 Inspected foundation (2026-10-30): `blobber_core` and `blobber_rules` have no raylib
 dependency. `GameSession` owns simulation state, accepts checked requests, advances
@@ -127,7 +136,8 @@ commands, fixed-step advancement, strict recording/replay and a scripted client 
 delivered. [Design](headless_design.md), [protocol/client guide](headless_protocol.md),
 [verification/handoff](slice131_verification.md). The user accepted the slice with
 “slice accepted, update the docs.” Recorded verification results and limitations
-remain unchanged. 13.2 is next eligible for separate planning; 13.2/13.3 remain unstarted.
+remain unchanged. At that closeout 13.2 became next eligible; its subsequent
+implementation record follows below. 13.3 remains unstarted.
 
 ## Slice 13.2: Automated players and balance experiments
 
@@ -154,12 +164,42 @@ party without mages, across repeatable trials and emits a report with reproducib
 individual runs. Use comparable level/equipment and more than one policy; label
 information/reaction assumptions. Test policy competence on representative healing,
 targeting, resource and feature situations; test report aggregation, denominators,
-failure classification, repeatability, and cancellation. Keep a small routine
-matrix separate from larger statistical/performance runs. Report policy coverage
+failure classification, repeatability, and cancellation. Per the user's 2026-10-30
+clarification, **all balance matrices, including small smoke matrices, are opt-in
+playtesting, not routine tests**. Do not register them in default CTest, build/CI
+presets, or unrelated-change verification. Small fixture-owned policy/transport/
+report contract checks are separate from playthrough experiments. Report policy coverage
 limitations so strategy defects are not presented as game-balance evidence.
 
-**Execution record:** Not started. Detailed implementation plan, verification,
-and user acceptance pending.
+**Execution record:** **Accepted and closed**, 2026-10-30.
+
+- **Approved plan:** [Automated players and balance experiments](automated_players_design.md).
+  User authorized implementation with “implement the plan”.
+- **Delivered:** Bounded stdlib Python client/serial runner, three deterministic
+  player policies and sensible party packages, coverage/failure classification,
+  JSON/CSV/Markdown reports with uncertainty, streamed traces/decision explanations,
+  selected retention, strict fresh-start policy rerun and existing engine replay.
+  [Usage](../experiments/arena/README.md).
+- **User constraints:** All matrices, including smoke, remain explicit playtesting
+  outside ordinary tests/builds/CI and unrelated-change checks. The new routine
+  check uses short owned contracts, with no game or autonomous fight. No weak-build
+  sweep, universal party viability target or automatic balance tuning.
+- **Verification:** [Full record](slice132_verification.md): 27 tooling contracts;
+  focused graphics-disabled Debug/Release 5/5; manual owned-fixture win/loss,
+  classification, cancellation, replay and rerun; 18/216-trial diagnostic comparisons;
+  visual CPU run/replay; selected deterministic reruns; allocation stress and
+  Release recording/capacity measurements. No new full-suite or sanitizer claim.
+- **Limits:** Fixed level-one loadouts and explicit supported spell subset; no
+  expedition/rest/advancement policy or worker pool. All final exploratory trials
+  won, sometimes with casualties; eight seeds per group do not establish balance.
+  No gameplay rules were tuned. Desktop interaction is unverified and was not used.
+- **Next action:** Plan 13.3 separately in a clean context. Keep 13.1/13.2 closed
+  and save/resume in 14. Preserve existing working-tree changes; no commit requested.
+- **Acceptance:** 2026-10-30. User accepted the executed verification as sufficient
+  and instructed “close up the slice”. The user requested open-ended use of the
+  tooling wherever relevant to project work; examples do not restrict its purpose
+  or create new requirements. Recorded verification scope and limitations remain
+  unchanged.
 
 ## Slice 13.3: MCP play and investigation
 

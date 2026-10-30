@@ -307,4 +307,9 @@ if(BUILD_TESTING)
     add_test(NAME headless_cli COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/headless_cli_tests.py $<TARGET_FILE:blobber_headless>)
     set_tests_properties(headless_cli PROPERTIES TIMEOUT 60)
+    # Fast policy/transport/report contracts only. Balance playthroughs and even
+    # smoke matrices are explicit tools/arena_experiment.py commands, never CTest.
+    add_test(NAME arena_experiment_tools COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/arena_experiment_tests.py)
+    set_tests_properties(arena_experiment_tools PROPERTIES TIMEOUT 20 LABELS "tooling")
 endif()

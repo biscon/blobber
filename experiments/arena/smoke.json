@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "parties": [
+    {
+      "id": "balanced",
+      "scenario": "parties/balanced.json"
+    },
+    {
+      "id": "no_wizard",
+      "scenario": "parties/no_wizard.json"
+    },
+    {
+      "id": "no_spells",
+      "scenario": "parties/no_spells.json"
+    }
+  ],
+  "rosters": [
+    {
+      "id": "light_melee",
+      "monsters": [
+        {
+          "monster": "goblin",
+          "quantity": 2
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "focus",
+      "kind": "focus",
+      "version": 1
+    },
+    {
+      "id": "conservative",
+      "kind": "conservative",
+      "version": 1
+    },
+    {
+      "id": "aggressive",
+      "kind": "aggressive",
+      "version": 1
+    }
+  ],
+  "seeds": [
+    5,
+    17
+  ],
+  "mode": "diagnostic",
+  "reaction_ticks": 25,
+  "retention": "selected",
+  "comparisons": [
+    [
+      "balanced",
+      "no_wizard"
+    ],
+    [
+      "balanced",
+      "no_spells"
+    ]
+  ]
+}

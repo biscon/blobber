@@ -1,0 +1,246 @@
+{
+  "layout_version": 1,
+  "monsters": [
+    {
+      "monster": "goblin",
+      "quantity": 1
+    }
+  ],
+  "name": "Spell-free party",
+  "party": [
+    {
+      "abilities": [
+        15,
+        13,
+        14,
+        8,
+        12,
+        10
+      ],
+      "choices": [
+        "longsword",
+        "chain_mail",
+        "shield"
+      ],
+      "class": "fighter",
+      "defense": true,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": 2,
+          "ranged": null
+        },
+        "items": [
+          {
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "item": "shield",
+            "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "alden",
+      "level": 1,
+      "life_domain": false,
+      "name": "Alden",
+      "portrait": "alden",
+      "race": "human",
+      "spells": {
+        "cantrips": [],
+        "domain": [],
+        "learned": [],
+        "prepared": [],
+        "racial": []
+      }
+    },
+    {
+      "abilities": [
+        15,
+        13,
+        14,
+        8,
+        12,
+        10
+      ],
+      "choices": [
+        "longsword",
+        "chain_mail",
+        "shield"
+      ],
+      "class": "fighter",
+      "defense": true,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": 2,
+          "ranged": null
+        },
+        "items": [
+          {
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "item": "shield",
+            "quantity": 1
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "experiment.fighter.two",
+      "level": 1,
+      "life_domain": false,
+      "name": "Rowan",
+      "portrait": "alden",
+      "race": "human",
+      "spells": {
+        "cantrips": [],
+        "domain": [],
+        "learned": [],
+        "prepared": [],
+        "racial": []
+      }
+    },
+    {
+      "abilities": [
+        8,
+        15,
+        14,
+        12,
+        13,
+        10
+      ],
+      "choices": [
+        "shortsword",
+        "leather",
+        "bow_kit"
+      ],
+      "class": "rogue",
+      "defense": false,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": null,
+          "ranged": 2
+        },
+        "items": [
+          {
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "item": "shortbow",
+            "quantity": 1
+          },
+          {
+            "item": "arrow",
+            "quantity": 20
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "merrin",
+      "level": 1,
+      "life_domain": false,
+      "name": "Merrin",
+      "portrait": "merrin",
+      "race": "lightfoot_halfling",
+      "spells": {
+        "cantrips": [],
+        "domain": [],
+        "learned": [],
+        "prepared": [],
+        "racial": []
+      }
+    },
+    {
+      "abilities": [
+        8,
+        15,
+        14,
+        12,
+        13,
+        10
+      ],
+      "choices": [
+        "shortsword",
+        "leather",
+        "bow_kit"
+      ],
+      "class": "rogue",
+      "defense": false,
+      "gear": {
+        "equipment": {
+          "body": 1,
+          "main_hand": 0,
+          "off_hand": null,
+          "ranged": 2
+        },
+        "items": [
+          {
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "item": "shortbow",
+            "quantity": 1
+          },
+          {
+            "item": "arrow",
+            "quantity": 20
+          },
+          {
+            "item": "healing_potion",
+            "quantity": 2
+          }
+        ]
+      },
+      "id": "experiment.rogue.two",
+      "level": 1,
+      "life_domain": false,
+      "name": "Pip",
+      "portrait": "merrin",
+      "race": "lightfoot_halfling",
+      "spells": {
+        "cantrips": [],
+        "domain": [],
+        "learned": [],
+        "prepared": [],
+        "racial": []
+      }
+    }
+  ],
+  "schema_version": 1,
+  "seed": 5
+}

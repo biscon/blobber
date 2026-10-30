@@ -1,5 +1,20 @@
 # System design
 
+Implemented, **accepted and closed** (2026-10-30): [slice 13.2 automated players and
+balance experiments](automated_players_design.md). A stdlib Python policy/experiment
+layer reuses accepted headless commands and strict replay, with bounded serial trials,
+explicit outcome/coverage/uncertainty reports, deterministic decision records and
+selected trace retention. The client adds I/O deadlines and cancellation. Three
+sensible party packages and three policies support separate opt-in playtesting;
+**even small balance matrices stay outside routine tests**. No gameplay or rendering
+rules changed. [Usage](../experiments/arena/README.md) and
+[verification/handoff](slice132_verification.md): 27 fast tooling contracts, focused
+Debug/Release 5/5, manual fixture integration, 18/216-trial comparisons, selected
+policy rerun/engine replay, CPU visual mode and measured Release workloads. The
+user accepted and closed the slice on 2026-10-30: “close up the slice”. It is general-purpose project tooling for agents to use wherever relevant.
+Verification results and coverage limits remain unchanged. MCP in 13.3 is next
+eligible for planning; save/resume remains 14. Neither has started.
+
 Implemented, **accepted and closed** (2026-10-30): [slice 13.1 headless arena sessions](headless_design.md).
 A graphics-independent NPC metadata loader and bounded typed session host adapt the
 existing simulation to JSON-lines commands, fixed 10 ms stepping, player/diagnostic
@@ -10,8 +25,8 @@ full Debug/Release 48/48, graphics-disabled Debug/Release 30/30, focused sanitiz
 zero tracked allocations, 256-actor capacity, shipped-content record/replay in both
 modes without a display, and hidden GPU lifecycle checks. The user accepted slice 13.1
 on 2026-10-30: “slice accepted, update the docs.” Verification limits remain unchanged.
-[13.2](automation_plan.md#slice-132-automated-players-and-balance-experiments) is next
-eligible for separate planning; 13.2/13.3 remain Planned and unstarted before slice 14.
+[13.2](automation_plan.md#slice-132-automated-players-and-balance-experiments) is now
+Accepted above; 13.3 remains Planned and unstarted before slice 14.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
 Session-owned exactly-once XP feeds checked live-party advancement through levels
