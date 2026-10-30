@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/npc_metadata.hpp"
 #include "game/actors.hpp"
 #include "game/movement.hpp"
 #include "game/npc_animation.hpp"
@@ -22,12 +23,6 @@ struct NpcClipImages {
     NpcClipTiming timing;
     float width = 0; // Zero inherits appearance canvas width; never a per-frame scale.
     std::array<std::vector<NpcImage>, 4> views;
-};
-struct NpcAttachment {
-    float x = .5f, y = .45f;
-};
-struct NpcAttachments {
-    std::array<NpcAttachment, 4> release{}, torso{};
 };
 struct NpcAppearance {
     NpcAttachments attachments;

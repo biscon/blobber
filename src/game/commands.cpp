@@ -1,6 +1,7 @@
 #include "game/commands.hpp"
 #include "game/arena.hpp"
 #include "game/perception.hpp"
+#include "game/target_visibility.hpp"
 #include "ui/layout.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -682,18 +683,7 @@ CommandReason CommandController::validate(const PartyCommand& command) const noe
         const auto reason = session_->combat().validate(command, session_->movement().player);
         if (reason != CommandReason::Ready)
             return reason;
-        if ((command.action == PartyAction::Melee || command.action == PartyAction::Ranged) &&
-            command.target && !visible(*command.target))
-            return CommandReason::NotVisible;
-        if (command.action == PartyAction::Spell) {
-            const auto* spell = party_.catalog().spell(command.spell);
-            const auto* r = spell ? rules::spellRules(spell->kind) : nullptr;
-            if (r && r->hostile && !r->area)
-                for (std::size_t i = 0; i < command.targetCount; ++i)
-                    if (!visible(command.enemies[i]))
-                        return CommandReason::NotVisible;
-        }
-        return CommandReason::Ready;
+        return targetVisibility(command, party_.catalog(), state_.targets, actors_.snapshot());
     }
     if (!party_.character(command.character))
         return CommandReason::InvalidCharacter;

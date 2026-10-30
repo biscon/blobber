@@ -1,8 +1,10 @@
 # Arena automation: headless play and balance testing
 
-Status: **Planned, unstarted**. Roadmap insertion requested on 2026-10-30;
-this is the shared direction and slice scope, not an approved detailed
-implementation plan or a claim of delivered functionality.
+Status: **13.1 Accepted and closed** (2026-10-30); its [detailed design](headless_design.md)
+is implemented; [verification/handoff](slice131_verification.md) and the
+[protocol guide](headless_protocol.md) are available. The user accepted 13.1 on
+2026-10-30: “slice accepted, update the docs.” Slice 13.2 is next eligible for separate
+planning; 13.2/13.3 remain Planned and unstarted.
 
 ## Delivery order and tracking
 
@@ -14,7 +16,7 @@ slices form a tooling interlude rather than reopening gameplay acceptance.
 
 | ID | Slice | Prerequisite | Status |
 | --- | --- | --- | --- |
-| 13.1 | [Headless arena sessions and reproducible play](#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Planned |
+| 13.1 | [Headless arena sessions and reproducible play](#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Accepted |
 | 13.2 | [Automated players and balance experiments](#slice-132-automated-players-and-balance-experiments) | 13.1 | Planned |
 | 13.3 | [MCP play and investigation](#slice-133-mcp-play-and-investigation) | 13.2 | Planned |
 
@@ -118,8 +120,14 @@ fixture-owned CPU tests and allocation guards; retain separate optional renderin
 checks where the chosen visibility mode requires them. A clean headless target
 must build/run without creating a window or baking graphical assets.
 
-**Execution record:** Not started. Detailed implementation plan, verification,
-and user acceptance pending.
+**Execution record:** Implemented, **Accepted and closed**, 2026-10-30. The user approved
+implementation with “Implement the plan.” Both diagnostic and prepared CPU visual
+modes, filtered observations/explicit inspection, level-one scenario starts, checked
+commands, fixed-step advancement, strict recording/replay and a scripted client are
+delivered. [Design](headless_design.md), [protocol/client guide](headless_protocol.md),
+[verification/handoff](slice131_verification.md). The user accepted the slice with
+“slice accepted, update the docs.” Recorded verification results and limitations
+remain unchanged. 13.2 is next eligible for separate planning; 13.2/13.3 remain unstarted.
 
 ## Slice 13.2: Automated players and balance experiments
 

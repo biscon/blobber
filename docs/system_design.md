@@ -1,11 +1,17 @@
 # System design
 
-Planned, **unstarted** (2026-10-30): [arena automation slices 13.1–13.3](automation_plan.md).
-Proposed headless sessions and replay reuse the authoritative game core, followed
-by automated player policies/balance reports and a thin MCP adapter. The plan
-records timing, visibility, ownership, bounded work, and verification requirements;
-these interfaces are not implemented. The [demo roadmap](dnd5e_demo_design.md#current-checkpoint)
-places this interlude before slice 14. Slice 13.1 is next for detailed planning.
+Implemented, **accepted and closed** (2026-10-30): [slice 13.1 headless arena sessions](headless_design.md).
+A graphics-independent NPC metadata loader and bounded typed session host adapt the
+existing simulation to JSON-lines commands, fixed 10 ms stepping, player/diagnostic
+observations and strict replay. Optional prepared CPU picking shares visibility
+validation with the UI; graphics-disabled builds need no raylib or image assets.
+[Protocol/client guide](headless_protocol.md) and [verification/handoff](slice131_verification.md):
+full Debug/Release 48/48, graphics-disabled Debug/Release 30/30, focused sanitizers,
+zero tracked allocations, 256-actor capacity, shipped-content record/replay in both
+modes without a display, and hidden GPU lifecycle checks. The user accepted slice 13.1
+on 2026-10-30: “slice accepted, update the docs.” Verification limits remain unchanged.
+[13.2](automation_plan.md#slice-132-automated-players-and-balance-experiments) is next
+eligible for separate planning; 13.2/13.3 remain Planned and unstarted before slice 14.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
 Session-owned exactly-once XP feeds checked live-party advancement through levels

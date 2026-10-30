@@ -1,24 +1,93 @@
 {
   "version": 5,
-  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
   "configurePresets": [
     {
-      "name": "debug", "displayName": "Debug", "generator": "Ninja",
+      "name": "debug",
+      "displayName": "Debug",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/cmake-build-debug",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "BUILD_TESTING": "ON" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON"
+      }
     },
     {
-      "name": "release", "displayName": "Release", "inherits": "debug",
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "debug",
       "binaryDir": "${sourceDir}/cmake-build-release",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "headless-debug",
+      "inherits": "debug",
+      "binaryDir": "${sourceDir}/cmake-build-headless-debug",
+      "cacheVariables": {
+        "BLOBBER_BUILD_GRAPHICS": "OFF"
+      }
+    },
+    {
+      "name": "headless-release",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/cmake-build-headless-release",
+      "cacheVariables": {
+        "BLOBBER_BUILD_GRAPHICS": "OFF"
+      }
     }
   ],
   "buildPresets": [
-    { "name": "debug", "configurePreset": "debug" },
-    { "name": "release", "configurePreset": "release" }
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "headless-debug",
+      "configurePreset": "headless-debug"
+    },
+    {
+      "name": "headless-release",
+      "configurePreset": "headless-release"
+    }
   ],
   "testPresets": [
-    { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },
-    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } }
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "headless-debug",
+      "configurePreset": "headless-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "headless-release",
+      "configurePreset": "headless-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ]
 }

@@ -1,6 +1,7 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
 Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slice 12.3 was accepted and closed on 2026-10-29, including the formation dragging and search-caret corrections. Slice 12.4 was accepted and closed on 2026-10-29. The user approved arena slice 12.5 before slice 13; 12.5 was accepted and closed on 2026-10-29. Slice 13 and milestone C were accepted and closed on 2026-10-30, including the development-flag and spell-picker review corrections.
+Slice 13.1 was accepted and closed on 2026-10-30; 13.2 is next eligible for separate planning.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -8,13 +9,13 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 13 — Levels 2 and 3 (2026-10-30); milestone C Accepted |
-| Active slice | None |
+| Latest accepted slice | 13.1 — Headless arena sessions (2026-10-30); slice 13 and milestone C remain Accepted |
+| Active slice | None; 13.1 accepted and closed |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 13.1 — Headless arena sessions and reproducible play (Planned, unstarted) |
-| Next action | Read the accepted slice 13 handoff, including the [status-icon correction](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30), and the [automation plan](automation_plan.md); separately plan 13.1 before implementation |
-| Accepted design | Slice 13 implementation and review corrections accepted, 2026-10-30; three-slice automation insertion requested, detailed implementation plans pending |
+| Next eligible slice | 13.2 — Automated players and balance experiments (Planned) |
+| Next action | Make a separate implementation plan for 13.2; read the [accepted 13.1 handoff](slice131_verification.md#accepted-closeout-and-next-agent-handoff) |
+| Accepted design | Slice 13.1 implementation accepted, 2026-10-30; 13.2/13.3 detailed plans remain pending |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -335,7 +336,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 12.4 | [Complete creator and reusable selection flow](#slice-124-complete-creator-and-reusable-selection-flow) | 12.3 | Accepted | C interlude |
 | 12.5 | [Arena](arena_design.md) | 12.4 | Accepted | C interlude |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.5 | Accepted | C |
-| 13.1 | [Headless arena sessions and reproducible play](automation_plan.md#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Planned | Tooling interlude |
+| 13.1 | [Headless arena sessions and reproducible play](automation_plan.md#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Accepted | Tooling interlude |
 | 13.2 | [Automated players and balance experiments](automation_plan.md#slice-132-automated-players-and-balance-experiments) | 13.1 | Planned | Tooling interlude |
 | 13.3 | [MCP play and investigation](automation_plan.md#slice-133-mcp-play-and-investigation) | 13.2 | Planned | Tooling interlude |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13.3 | Planned | D |
@@ -1781,18 +1782,27 @@ The subsequent enemy status-icon occlusion correction was also accepted and clos
 on 2026-10-30: “yes that works, if this needs to be recorded as accepted do so”.
 [Accepted closeout and next-agent handoff](slice13_verification.md#accepted-closeout-and-next-agent-handoff).
 At closeout, slice 14 became next eligible. The subsequent
-[automation insertion](automation_plan.md) places Planned slices 13.1–13.3 first;
-13.1 is now next eligible. Slice 14 remains Planned and unstarted.
+[automation insertion](automation_plan.md) places slices 13.1–13.3 first;
+13.1 is now Accepted; 13.2 is next eligible for separate planning. 13.2/13.3 and slice 14 remain Planned and unstarted.
 
 ### Arena automation interlude: slices 13.1–13.3
+
+Slice 13.1 is implemented and **Accepted and closed** (2026-10-30), following the user's
+“Implement the plan” instruction and subsequent “slice accepted, update the docs.” [Design](headless_design.md),
+[protocol/client guide](headless_protocol.md), [verification/handoff](slice131_verification.md).
+Diagnostic and visual headless sessions, checked action coverage, bounded stepping,
+record/replay and graphics-free builds are delivered. Verification includes normal
+Debug/Release 48/48 and graphics-disabled Debug/Release 30/30. The recorded verification
+limitations remain unchanged. 13.2 is next eligible for separate planning; 13.2/13.3
+remain Planned and unstarted.
 
 On 2026-10-30 the user requested recording the agreed three-slice direction before
 the next gameplay slice. The dedicated [automation plan](automation_plan.md)
 contains proposed shared contracts, scope, acceptance criteria, deferred work,
 and per-slice execution records. Sequence: headless/reproducible arena play →
 automated players and balance experiments → MCP play and investigation → slice 14.
-All three are Planned and unstarted; this insertion does not approve detailed
-implementation plans or mark any tooling as delivered.
+At insertion all three were Planned and unstarted; it did not approve their detailed
+implementation plans. The subsequent 13.1 delivery and acceptance are recorded above.
 
 ### Slice 14: Save and resume
 
@@ -1879,7 +1889,9 @@ choices belong in their execution/design records unless they change this roadmap
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | Accepted and closed slice 13.1. Verification scope/limitations unchanged. 13.2 becomes next eligible for separate planning; 13.2/13.3 remain Planned and unstarted. [Closeout/handoff](slice131_verification.md#accepted-closeout-and-next-agent-handoff). | User: “slice accepted, update the docs.” Requested a next-slice prompt for a fresh context. |
 | 2026-10-30 | Insert tooling slices 13.1–13.3 before save/resume: headless reproducible arena play, automated players/balance experiments, then MCP play/investigation. Separate [plan](automation_plan.md); all Planned, detailed implementation plans pending. Milestone C stays Accepted. | User requested recording the three-slice direction in the demo plan before the next slice or in a dedicated plan. |
+| 2026-10-30 | Slice 13.1 implemented and Ready for review: headless arena protocol, shared metadata/visibility, bounded stepping, strict replay and scripted client. [Verification](slice131_verification.md). 13.2/13.3 remain Planned; no acceptance claimed. | User: “Implement the plan.” |
 | 2026-10-30 | Accepted and closed the enemy status-icon occlusion follow-up. No review remains pending; slice 14 stays unstarted. | User: “yes that works, if this needs to be recorded as accepted do so”. |
 | 2026-10-30 | Accepted and closed slice 13 and milestone C, including the development flag and spell-picker corrections. Existing Action Surge behavior accepted. Slice 14 becomes next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the documentation.” |
 | 2026-10-25 | Slice 05 uses frontal single-cell contact, Dodge-style Defend, Wisdom Aid, conscious-target priority, immediate defeat and post-victory stabilization without HP recovery. | User's slice 05 planning selections. |
