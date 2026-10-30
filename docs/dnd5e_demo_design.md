@@ -12,9 +12,9 @@ user acceptance.
 | Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 14 — Save and resume (Planned, unstarted) |
-| Next action | Read the accepted slice 13 handoff, including the [status-icon correction](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30), then separately plan slice 14; obtain plan approval before implementation |
-| Accepted design | Slice 13 implementation and review corrections accepted, 2026-10-30 |
+| Next eligible slice | 13.1 — Headless arena sessions and reproducible play (Planned, unstarted) |
+| Next action | Read the accepted slice 13 handoff, including the [status-icon correction](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30), and the [automation plan](automation_plan.md); separately plan 13.1 before implementation |
+| Accepted design | Slice 13 implementation and review corrections accepted, 2026-10-30; three-slice automation insertion requested, detailed implementation plans pending |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -335,7 +335,10 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 12.4 | [Complete creator and reusable selection flow](#slice-124-complete-creator-and-reusable-selection-flow) | 12.3 | Accepted | C interlude |
 | 12.5 | [Arena](arena_design.md) | 12.4 | Accepted | C interlude |
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.5 | Accepted | C |
-| 14 | [Save and resume](#slice-14-save-and-resume) | 13 | Planned | D |
+| 13.1 | [Headless arena sessions and reproducible play](automation_plan.md#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Planned | Tooling interlude |
+| 13.2 | [Automated players and balance experiments](automation_plan.md#slice-132-automated-players-and-balance-experiments) | 13.1 | Planned | Tooling interlude |
+| 13.3 | [MCP play and investigation](automation_plan.md#slice-133-mcp-play-and-investigation) | 13.2 | Planned | Tooling interlude |
+| 14 | [Save and resume](#slice-14-save-and-resume) | 13.3 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
 | 16 | [Demo integration](#slice-16-demo-integration) | 15 | Planned | D |
 
@@ -353,6 +356,11 @@ all be Accepted before slice 09 starts; IDs 09–16 retain their existing scope.
 The accepted 12.x interlude does not reopen slice 12. All four new slices require
 individual acceptance before slice 13 starts. Full session persistence remains
 slice 14; the new character library has separate ownership and storage.
+
+The [arena automation interlude](automation_plan.md) inserts 13.1–13.3 before
+slice 14. Each requires separate planning, implementation, verification, and user
+acceptance. Milestone C remains Accepted; slices 14–16 retain their scope. Replay
+from an initial scenario is separate from player-facing run persistence.
 
 Every slice ends with user review. At milestone boundaries, also review the
 combined experience; passing isolated tests does not establish the intended feel.
@@ -1772,9 +1780,23 @@ slice 13 and milestone C. No additional Action Surge change was requested.
 The subsequent enemy status-icon occlusion correction was also accepted and closed
 on 2026-10-30: “yes that works, if this needs to be recorded as accepted do so”.
 [Accepted closeout and next-agent handoff](slice13_verification.md#accepted-closeout-and-next-agent-handoff).
-Slice 14 is next eligible for separate planning and remains Planned and unstarted.
+At closeout, slice 14 became next eligible. The subsequent
+[automation insertion](automation_plan.md) places Planned slices 13.1–13.3 first;
+13.1 is now next eligible. Slice 14 remains Planned and unstarted.
+
+### Arena automation interlude: slices 13.1–13.3
+
+On 2026-10-30 the user requested recording the agreed three-slice direction before
+the next gameplay slice. The dedicated [automation plan](automation_plan.md)
+contains proposed shared contracts, scope, acceptance criteria, deferred work,
+and per-slice execution records. Sequence: headless/reproducible arena play →
+automated players and balance experiments → MCP play and investigation → slice 14.
+All three are Planned and unstarted; this insertion does not approve detailed
+implementation plans or mark any tooling as delivered.
 
 ### Slice 14: Save and resume
+
+**Prerequisite:** Slice 13.3 accepted, following 13.1 and 13.2.
 
 **Deliver:** One versioned out-of-combat save, validated restoration, safe file
 replacement, and useful load/save failure reporting. Save authoritative gameplay
@@ -1857,6 +1879,7 @@ choices belong in their execution/design records unless they change this roadmap
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | Insert tooling slices 13.1–13.3 before save/resume: headless reproducible arena play, automated players/balance experiments, then MCP play/investigation. Separate [plan](automation_plan.md); all Planned, detailed implementation plans pending. Milestone C stays Accepted. | User requested recording the three-slice direction in the demo plan before the next slice or in a dedicated plan. |
 | 2026-10-30 | Accepted and closed the enemy status-icon occlusion follow-up. No review remains pending; slice 14 stays unstarted. | User: “yes that works, if this needs to be recorded as accepted do so”. |
 | 2026-10-30 | Accepted and closed slice 13 and milestone C, including the development flag and spell-picker corrections. Existing Action Surge behavior accepted. Slice 14 becomes next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the documentation.” |
 | 2026-10-25 | Slice 05 uses frontal single-cell contact, Dodge-style Defend, Wisdom Aid, conscious-target priority, immediate defeat and post-victory stabilization without HP recovery. | User's slice 05 planning selections. |

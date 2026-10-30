@@ -1,5 +1,12 @@
 # System design
 
+Planned, **unstarted** (2026-10-30): [arena automation slices 13.1–13.3](automation_plan.md).
+Proposed headless sessions and replay reuse the authoritative game core, followed
+by automated player policies/balance reports and a thin MCP adapter. The plan
+records timing, visibility, ownership, bounded work, and verification requirements;
+these interfaces are not implemented. The [demo roadmap](dnd5e_demo_design.md#current-checkpoint)
+places this interlude before slice 14. Slice 13.1 is next for detailed planning.
+
 Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
 Session-owned exactly-once XP feeds checked live-party advancement through levels
 2–3, shared new-choice/review screens, fixed subclass features and eight second-level
@@ -9,7 +16,8 @@ Schema 9 and prepared bundle/renderer revision 3 retain the accepted library, ar
 1920×1080 and prepared-image contracts. [Verification and handoff](slice13_verification.md)
 records Debug/Release 41/41, focused sanitizer 8/8, zero tracked allocations,
 capacity/GPU checks and 69 initial captures. The user accepted slice 13 and milestone C
-on 2026-10-30. Slice 14 is next eligible for separate planning and remains unstarted. The subsequent spell-picker review adds
+on 2026-10-30. Slice 14 remains unstarted and now follows the planned automation
+interlude above. The subsequent spell-picker review adds
 clear preparation-slot messaging, actionable-only advancement lists, blue card
 outlines, measured compact descriptions and shared scrollbars with aligned panels.
 These corrections and existing Action Surge activation were accepted with the slice.
@@ -628,4 +636,5 @@ clipping coverage and allocation guards cover the CPU contract. Hidden
 application-owned captures exercise sleeping rear enemies behind standing front
 enemies. See the [follow-up verification](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30).
 The user accepted this follow-up on 2026-10-30; it is closed alongside slice 13
-and milestone C. Slice 14 remains next eligible for separate planning and unstarted.
+and milestone C. The subsequent automation interlude above makes slice 13.1 next
+eligible for separate planning; slice 14 remains unstarted.
