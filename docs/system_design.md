@@ -1,5 +1,22 @@
 # System design
 
+Renderer direction **accepted; delivery roadmap proposed** (2026-10-30):
+[low-resolution 3D renderer plan](renderer_plan.md). Six proposed slices cover
+visual/motion proof, production meshes/assets, billboards/picking/windowless visual
+automation, doors/effects/campaign integration, single-layer heights/outdoor hub/
+decoration, then production cutover and retirement of obsolete perspective banks.
+Static chunk meshes and shared textures replace prepared perspective color images;
+discrete gameplay and the native 1920×1080 HUD remain. Stacked cells are explicitly
+deferred. The user approved the direction and requested this roadmap, not automatic
+implementation. No renderer slice has started; R01 detailed planning is next when
+requested. Existing implemented designs below remain authoritative until replaced
+by accepted slices; their image-renderer preservation notes describe the current
+implementation, not a prohibition on this explicitly requested replacement.
+
+The [procedural campaign roadmap](procedural_campaign_plan.md) remains paused after
+accepted P-B (PC01–PC06 closed). Renderer/presentation work, then additional monsters,
+precede a return to campaign work. Do not advance PC07 automatically.
+
 Incremental asset build follow-up **implemented** (2026-10-30): narrowed the creator atlas dependency
 list to the 36 PNGs consumed by `creatorArtNames` (keep both lists in sync).
 Replaced the always-running raw asset directory copies with one source-dependent
