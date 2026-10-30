@@ -1,17 +1,26 @@
 # System design
 
-Renderer direction **accepted; delivery roadmap proposed** (2026-10-30):
-[low-resolution 3D renderer plan](renderer_plan.md). Six proposed slices cover
-visual/motion proof, production meshes/assets, billboards/picking/windowless visual
-automation, doors/effects/campaign integration, single-layer heights/outdoor hub/
-decoration, then production cutover and retirement of obsolete perspective banks.
-Static chunk meshes and shared textures replace prepared perspective color images;
-discrete gameplay and the native 1920×1080 HUD remain. Stacked cells are explicitly
-deferred. The user approved the direction and requested this roadmap, not automatic
-implementation. No renderer slice has started; R01 detailed planning is next when
-requested. Existing implemented designs below remain authoritative until replaced
-by accepted slices; their image-renderer preservation notes describe the current
-implementation, not a prohibition on this explicitly requested replacement.
+R01 **implemented; Ready for review** (2026-10-31):
+[visual and motion proof](renderer_probe_design.md), approved with “Implement the
+plan.” The isolated manual/hidden probe provides low-resolution GPU geometry,
+source-art billboards, three filtering profiles, legacy comparison and door/sky/
+decoration specimens. [Verification/handoff](r01_verification.md) and
+[review gallery](screenshots/r01/index.html): focused graphics 6/6 Debug/Release,
+headless 3/3 each, final CPU/GPU checks, CPU ASan/UBSan, zero tracked warmed C++
+allocations and fresh-process benchmark reports. User review (2026-10-31) selects
+supersampling (button 3) as default, retaining native filtered (button 2) as the
+Supersampling off option; the user reports both look good without flickering.
+The probe startup default now follows that preference. Detailed manual coverage
+and other GPU devices remain unverified; formal R01 acceptance is pending.
+Production gameplay, renderer, assets and saves remain unchanged.
+
+Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R02–R06
+remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
+effects/doors/campaign integration, single-layer heights/outdoor hub/decoration and
+production cutover follow only through their own reviewed slices. Stacked cells are
+explicitly deferred. Existing implemented systems below remain authoritative until
+replaced; their prepared-image preservation notes describe the current production
+implementation, not a prohibition on the explicitly requested replacement.
 
 The [procedural campaign roadmap](procedural_campaign_plan.md) remains paused after
 accepted P-B (PC01–PC06 closed). Renderer/presentation work, then additional monsters,

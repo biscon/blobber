@@ -1,7 +1,7 @@
 # Low-resolution 3D renderer: design and delivery roadmap
 
-Created / last updated: 2026-10-30.
-Status: **Direction accepted; six-slice roadmap proposed for review. No slice implemented.**
+Created: 2026-10-30. Last updated: 2026-10-31.
+Status: **Roadmap accepted; R01 implemented and Ready for review. No renderer slice accepted yet.**
 
 The user agreed to replace the prepared perspective-image world renderer with a
 low-resolution GPU 3D world, retaining billboard monster/item artwork and discrete
@@ -21,10 +21,10 @@ for the explicit, bounded elevation extensions described below.
 | --- | --- |
 | Latest accepted foundation | Campaign P-A/P-B and prior demo/automation slices; current renderer remains production |
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
-| Active slice | None |
-| Awaiting review | This six-slice roadmap and its scope/defaults |
-| Next eligible slice | R01 — Visual and motion proof; detailed planning only |
-| Next action | Review roadmap; when requested, inspect current code and write the R01 detailed design before implementation |
+| Active slice | R01 — Visual and motion proof; Ready for review |
+| Awaiting review | R01 slice acceptance; user reviewed the demo and selected supersampling, retaining native filtered as an option |
+| Next eligible slice | R02 detailed planning only, after user acceptance of R01 |
+| Next action | User review of R01; do not self-accept or advance |
 | Blockers | None known; filtering, picking parity and performance require evidence from the slices |
 | Campaign status | Paused after P-B; do not start PC07 |
 
@@ -87,6 +87,12 @@ are implied by this roadmap.
   World-texture minification and final image enlargement are separate decisions.
   MSAA may be an additional measured candidate, not a substitute for texture
   filtering. No temporal jitter/TAA or camera bob in the initial baseline.
+- **User-selected quality policy (2026-10-31):** supersampling is the default.
+  Retain a user-facing Supersampling on/off option: on renders at 1000×564 and
+  resolves to 500×282; off uses native filtered 500×282 rendering (probe button 2).
+  Both retain mip filtering and nearest final enlargement. Raw nearest (button 1)
+  remains a diagnostic control, not the production “off” setting. Quality changes
+  must preserve camera pose, logical viewport, UI coordinates and gameplay picking.
 - Support single-layer floor/ceiling variation, outdoor sky, wall decorations,
   simple static mesh props and procedural slab doors. No stacked traversable cells,
   bridges over passages, jumping, flying, falling, climbing or free-look controls.
@@ -246,7 +252,7 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 
 | ID | Slice | Dependency | Status | Milestone |
 | --- | --- | --- | --- | --- |
-| R01 | [Visual and motion proof](#r01-visual-and-motion-proof) | Accepted direction | Planned | R-A |
+| R01 | [Visual and motion proof](#r01-visual-and-motion-proof) | Accepted direction | Ready for review (2026-10-31) | R-A |
 | R02 | [Production world rendering and assets](#r02-production-world-rendering-and-assets) | R01 accepted | Planned | R-B |
 | R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Planned | R-B |
 | R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Planned | R-B |
@@ -255,7 +261,7 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 
 | Milestone | User-visible outcome | Status |
 | --- | --- | --- |
-| R-A — Look established | Representative room and moving comparisons establish camera, filtering and art compatibility | Planned |
+| R-A — Look established | Representative room and moving comparisons establish camera, filtering and art compatibility | Ready for review; R01 acceptance pending |
 | R-B — Playable replacement | Current campaign/arena work through the GPU renderer, including combat, interactions, travel and automation | Planned |
 | R-C — Renderer delivered | Outdoor hub, single-layer height variation and decoration work; production uses the replacement and obsolete renderer dependencies are retired | Planned |
 
@@ -284,7 +290,18 @@ moving and stationary work separately; no unmeasured efficiency claim.
 candidate, with a short recommendation. User accepts the look and selected default
 before the production architecture is expanded around it.
 
-**Execution record:** Not started. R01 detailed planning is next when requested.
+**Execution record:** Implemented; **Ready for review**, 2026-10-31. User approved the
+[R01 detailed design](renderer_probe_design.md) with “Implement the plan.” Standalone
+manual/hidden probe, three sampling profiles, unchanged legacy comparison, source-art
+billboard, slab door/sky/decoration specimens and deterministic motion gallery are
+implemented. [Verification/handoff](r01_verification.md) records focused graphics
+6/6 each in Debug/Release, headless 3/3 each, final CPU/GPU checks, CPU ASan/UBSan,
+zero tracked warmed C++ allocations, shipped/generated captures and fresh-process
+benchmarks. [Review gallery](screenshots/r01/index.html). Detailed manual coverage
+and other GPUs remain unverified. No production renderer replacement or later-slice
+work. The user prefers supersampling and requests retaining native filtered as an off
+option; this supersedes the provisional native-filtered recommendation. The user
+reports both modes look good without flickering. Formal slice acceptance is pending.
 
 ### R02: Production world rendering and assets
 
@@ -294,6 +311,8 @@ GPU ownership. Versioned material/sprite texture preparation replaces perspectiv
 baking for the new path. Wire a development-selectable world view into Presenter
 with unchanged UI, coordinate conversion and captures; legacy play remains default.
 Define and test the active/staged scene lifecycle and resource budgets now.
+Retain both approved quality paths with supersampling on by default and an off
+option selecting native filtered; switching must not change simulation or picking.
 
 **Boundary:** Flat production maps first. Prototype actors may be shown for
 diagnostics, but full interaction is R03 and gameplay-complete integration is R04.
@@ -474,17 +493,23 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-31 | Supersampling default; retain native filtered as the user-facing off option. Raw nearest remains diagnostic. | User prefers button 3 for distant detail and reports buttons 2 and 3 look good without flickering; requests keeping both. This is quality-policy feedback, not recorded whole-slice acceptance. |
+| 2026-10-31 | R01 implemented and Ready for review; retain native filtered as provisional default pending appearance acceptance | Approved detailed plan: “Implement the plan.” Verification and review gallery recorded; no production cutover or R02 work |
 | 2026-10-30 | Campaign paused after accepted P-B; rendering/presentation, then more monsters, precede campaign resumption | Explicit user direction |
 | 2026-10-30 | Low-resolution GPU world with retained billboard artwork; stacked cells deferred | User: “okay I agree with your proposal and yes lets put stacked cells off for now” |
 | 2026-10-30 | Propose six delivery slices and three milestones, with detailed design and acceptance per slice | User requested a roadmap analogous to the campaign/demo plans and invited judgment on count |
 
 ## Current next-agent handoff
 
-This is a documentation-only proposed roadmap. No renderer slice is implemented,
-no new tests/captures/benchmarks have been run, and no performance or visual parity
-has been established. The working renderer and accepted P-B gameplay remain current.
+R01 is implemented and **Ready for review**, not Accepted. Read its
+[design](renderer_probe_design.md), [verification/handoff](r01_verification.md) and
+[review gallery](screenshots/r01/index.html). The user approved implementation with
+“Implement the plan.” The roadmap is accepted; R02–R06 remain Planned.
 
-Review this roadmap, then plan **R01 only** when requested. Read current projection,
-lighting, preparation, Presenter and capture code. Produce the R01 detailed design
-with bounded prototype scope, generated test fixtures, motion comparisons and
-measurement procedure. Do not start R02, new monsters, PC07 or balance experiments.
+Next action: user acceptance of R01. Appearance feedback selects supersampling
+by default with native filtered retained as the off option; the user reports both
+look good without flickering.
+Correct review issues within R01. Only after explicit acceptance should a fresh
+context plan **R02 — Production world rendering and assets**, for review before
+implementation. Do not self-accept, start R02, add monsters, resume PC07 or run
+balance experiments. Production rendering and accepted P-B gameplay remain unchanged.

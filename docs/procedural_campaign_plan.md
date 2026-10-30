@@ -1,6 +1,6 @@
 # Procedural campaign MVP: design and delivery roadmap
 
-Created / last updated: 2026-10-30.
+Created: 2026-10-30. Last updated: 2026-10-31.
 Status: **Roadmap accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted (2026-10-30).**
 PC07–PC09 plans remain unapproved; do not advance automatically.
 
@@ -8,7 +8,8 @@ PC07–PC09 plans remain unapproved; do not advance automatically.
 rendering and presentation, followed by additional monsters, before returning
 to the procedural campaign. The user has accepted the low-resolution 3D renderer
 direction with stacked cells deferred; its [six-slice roadmap](renderer_plan.md)
-is proposed for review, with no renderer slice implemented. This pause supersedes
+is accepted; R01 is implemented and [Ready for review](r01_verification.md), with
+no production renderer cutover. This pause supersedes
 earlier next-action instructions to plan PC07.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
@@ -52,7 +53,7 @@ arena and test fixtures; it does not imply retaining the old game mode.
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
 | Next eligible slice | PC07 — Depth bands and finite recovery encounters; detailed planning only |
-| Next action | Campaign paused after P-B: review the renderer roadmap and plan R01 when requested, then additional monsters after rendering; resume PC07 planning only when the user returns to the campaign |
+| Next action | Campaign paused after P-B: review the implemented R01 renderer probe, then additional monsters after rendering; resume PC07 planning only when the user returns to the campaign |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
 | Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted; PC07–PC09 plans unapproved |
 
@@ -944,7 +945,7 @@ This record supersedes historical PC06 review-pending and next-planning notes.
 
 Campaign work is **paused after P-B** at the user's request: the
 [renderer roadmap](renderer_plan.md) comes next, followed by additional monsters,
-before returning here. Renderer direction is accepted; its slices remain unimplemented.
+before returning here. Renderer roadmap is accepted; R01 is Ready for review and later slices remain Planned.
 PC07 — Depth bands and finite recovery encounters — remains next eligible for its own
 reviewed detailed plan when the user resumes campaign work. Read AGENTS.md, the
 system overview, MVP specification, current checkpoint and PC06 handoff; inspect

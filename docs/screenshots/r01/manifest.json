@@ -1,0 +1,82 @@
+{
+  "environment": {
+    "anisotropy": 4,
+    "art": "shipped",
+    "assetFingerprint": "4277068945717556928",
+    "build": "Release",
+    "driver": "NVIDIA Corporation | NVIDIA GeForce RTX 3060/PCIe/SSE2 | 3.3.0 NVIDIA 615.78.08",
+    "far": 16.0,
+    "logicalSize": [
+      500,
+      282
+    ],
+    "near": 0.02500000037252903,
+    "presentationSize": [
+      1920,
+      1080
+    ],
+    "simulationTickMs": 10,
+    "sourceBytes": 7782400
+  },
+  "series": [
+    {
+      "name": "flat-legacy",
+      "shots": [
+        0,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "flat-nearest",
+      "shots": [
+        0,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "flat-native",
+      "shots": [
+        0,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "flat-supersampled",
+      "shots": [
+        0,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "specimen-nearest",
+      "shots": [
+        6,
+        10,
+        11
+      ]
+    },
+    {
+      "name": "specimen-native",
+      "shots": [
+        6,
+        10,
+        11
+      ]
+    },
+    {
+      "name": "specimen-supersampled",
+      "shots": [
+        6,
+        10,
+        11
+      ]
+    }
+  ],
+  "sourceCapture": "/tmp/blobber-r01-shipped",
+  "durationMs": 9600,
+  "video": "VP9 GBR CRF 18, 100 fps; motion preview is compressed; PNG stills and original capture are exact"
+}
