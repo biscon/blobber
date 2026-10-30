@@ -22,7 +22,8 @@ struct Directory {
         std::filesystem::remove_all(path, error);
     }
 };
-inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 5) {
+inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 5,
+                              bool rangedArcher = false) {
     const auto base = creationCatalog(true);
     std::vector<rules::RaceDefinition> races;
     std::vector<rules::ClassDefinition> classes;
@@ -48,17 +49,29 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
     auto attack = *base.attack({0});
     attack.bonus = deadly ? 100 : -100;
     attack.damage = {1, 4, deadly ? 1000 : -100};
-    return {{attack}, {monster}, races, classes, items, *base.preset(), spells, creation};
+    auto archer = monster;
+    archer.id = "goblin.archer";
+    auto guardian = monster;
+    guardian.id = "goblin.guardian.placeholder";
+    guardian.hitPoints = hp * 2;
+    auto bow = attack;
+    bow.id = "fixture.bow";
+    bow.kind = rules::AttackKind::Ranged;
+    if (rangedArcher)
+        archer.attacks[0] = {1};
+    return {{attack, bow}, {monster, archer, guardian}, races, classes, items, *base.preset(), spells,
+            creation};
 }
 inline NpcDefinitions definitions() {
     NpcDefinitions d;
-    d.types = {"goblin"};
-    d.timings.resize(1);
-    d.attachments.resize(1);
+    d.types = {"goblin", "goblin.archer"};
+    d.timings.resize(2);
+    d.attachments.resize(2);
     d.timings[0][0] = {{{100, 0, 0, 0}}, 1};
     for (auto clip :
          {NpcAnimation::Attack, NpcAnimation::Hurt, NpcAnimation::Death, NpcAnimation::RangedAttack})
         d.timings[0][std::size_t(clip)] = {{{50, 50, 0, 0}}, 2};
+    d.timings[1] = d.timings[0];
     return d;
 }
 inline ArenaScenario scenario(const rules::Catalog& c, unsigned count = 1) {
@@ -70,8 +83,8 @@ inline ArenaScenario scenario(const rules::Catalog& c, unsigned count = 1) {
 }
 inline Json generatedScenario(const rules::Catalog& c, unsigned seed = 5) {
     const auto arena = Json::parse(encodeArena(c, scenario(c)));
-    return {{"kind", "generated_floor"}, {"schema_version", 1}, {"generator_version", 2},
-            {"template_version", 2},     {"seed", seed},        {"depth", 1},
+    return {{"kind", "generated_floor"}, {"schema_version", 1}, {"generator_version", 3},
+            {"template_version", 3},     {"seed", seed},        {"depth", 1},
             {"party", arena.at("party")}};
 }
 struct Sink : Output {

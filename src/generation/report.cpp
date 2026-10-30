@@ -58,6 +58,28 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                                  {"key", v.key},
                                  {"name", fixtureName(v)}});
     }
+    j["population"] = nlohmann::json::array();
+    for (unsigned i = 0; i < l.populationCount; ++i) {
+        const auto& p = l.population[i];
+        j["population"].push_back({{"id", p.id},
+                                   {"recipe", unsigned(p.recipe)},
+                                   {"guardian", p.guardian},
+                                   {"position", {p.cell.x, p.cell.y}},
+                                   {"subcell", {p.subcell.x, p.subcell.y}},
+                                   {"heading", unsigned(p.facing)}});
+    }
+    j["landings"] = nlohmann::json::array();
+    j["npc_excluded"] = nlohmann::json::array();
+    for (unsigned i = 0; i < l.fixtures.landingCount; ++i)
+        j["landings"].push_back({l.fixtures.landings[i].x, l.fixtures.landings[i].y});
+    for (int y = 0; y < l.height; ++y)
+        for (int x = 0; x < l.width; ++x)
+            if (l.fixtures.npcExcluded[unsigned(y * l.width + x)])
+                j["npc_excluded"].push_back({x, y});
+    j["objective"] = {{"gate", l.guardianGate},
+                      {"approach_door", l.approachDoor},
+                      {"approach", {l.guardianApproach.x, l.guardianApproach.y}},
+                      {"reward", {l.guardianReward.x, l.guardianReward.y}}};
     j["connections"] = nlohmann::json::array();
     for (unsigned i = 0; i < l.connectionCount; ++i)
         j["connections"].push_back({l.connections[i].a, l.connections[i].b});

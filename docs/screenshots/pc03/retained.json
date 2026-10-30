@@ -1,0 +1,209 @@
+{
+  "status": "Accepted and closed; milestone P-A Accepted",
+  "acceptance": "2026-10-30: User completed the accessible floor, defeated the guardian, collected the loot and explicitly accepted the slice.",
+  "date": "2026-10-30",
+  "capture_command": "cmake-build-debug/blobber --assets cmake-build-debug/assets --development --seed 5 --capture-menu /tmp/blobber-pc03-captures-review",
+  "capture_provenance": "Application-owned hidden targets. PC03 views are independent diagnostic pose reconstructions; direct actor damage demonstrates partial/completed objectives. Not a fought expedition. Launch views use the normal party-picker capture flow. No OS input automation.",
+  "generator_version": 3,
+  "template_version": 3,
+  "seed": 5,
+  "depth": 1,
+  "fingerprint": "1178095383652031389",
+  "attempts": 1,
+  "fallback": false,
+  "prepared_format": 4,
+  "renderer_revision": 5,
+  "images": [
+    {
+      "file": "pc03-stairs-door-closed.png",
+      "caption": "Stairs room: initially closed unlocked door",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 705435,
+      "sha256": "96f52b0352033d230b3c8d60d05081aade531682c440841f98dcd82c49cae199"
+    },
+    {
+      "file": "pc03-stairs-door-closed-1280.png",
+      "caption": "Stairs room: initially closed unlocked door",
+      "width": 1280,
+      "height": 720,
+      "bytes": 438907,
+      "sha256": "fe7b55375efbfa825ce2a906499496efbf7ea4e80d7e72a60046d7a0d3d40561"
+    },
+    {
+      "file": "pc03-stairs-door-open.png",
+      "caption": "Stairs room: door remains open after use",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 987882,
+      "sha256": "4cc14240e0447f497a640142d0a96f1df175a07356597360911824184a13cd53"
+    },
+    {
+      "file": "pc03-stairs-door-open-1280.png",
+      "caption": "Stairs room: door remains open after use",
+      "width": 1280,
+      "height": 720,
+      "bytes": 702328,
+      "sha256": "2cc1687e5fd92434f05ae7a629878aa2eee0275948044e6418e69a7c71b47525"
+    },
+    {
+      "file": "pc03-guardian-warning.png",
+      "caption": "Approach warning before opening",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 705231,
+      "sha256": "a1312c0a8c49c22d8573abb94abbb34acfee4fa16ba53bb48fc015ff4a32f5f1"
+    },
+    {
+      "file": "pc03-guardian-warning-1280.png",
+      "caption": "Approach warning before opening",
+      "width": 1280,
+      "height": 720,
+      "bytes": 439377,
+      "sha256": "8b5f8f743955329465b5863d1e71f7349b44d84bf7d031959f24d1621633b7fc"
+    },
+    {
+      "file": "pc03-guardian-pair.png",
+      "caption": "Designated melee lead and archer",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1029423,
+      "sha256": "f33160f52f851c6c7fc0e8a3c96d615c20e88b869da5c1c89f3a482c2c00276f"
+    },
+    {
+      "file": "pc03-guardian-pair-1280.png",
+      "caption": "Designated melee lead and archer",
+      "width": 1280,
+      "height": 720,
+      "bytes": 732917,
+      "sha256": "8da6544caae05ea397b75fcd56e57722c9d440e319c840e2f5a3dbf42bb8b291"
+    },
+    {
+      "file": "pc03-guardian-label.png",
+      "caption": "Visible guardian identity",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1018729,
+      "sha256": "e79096216ab448297e9db33e6422f22edec92dab604bfb8e1e221dd807c40747"
+    },
+    {
+      "file": "pc03-guardian-label-1280.png",
+      "caption": "Visible guardian identity",
+      "width": 1280,
+      "height": 720,
+      "bytes": 724580,
+      "sha256": "5b372b7522c264fc47a2b6e6220bcc31ed1f9ce10ee8d4de002c86ee01edc3a9"
+    },
+    {
+      "file": "pc03-gate-sealed.png",
+      "caption": "Sealed guardian gate",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 716565,
+      "sha256": "6d27c051aeb70d3ae32632997341e1b51576edc3302283d87624ecfc17e93c5f"
+    },
+    {
+      "file": "pc03-gate-sealed-1280.png",
+      "caption": "Sealed guardian gate",
+      "width": 1280,
+      "height": 720,
+      "bytes": 451174,
+      "sha256": "bfa3560f7a49f87578e38aa7140d61f41539676f2dee0560306ec56d9e24d16a"
+    },
+    {
+      "file": "pc03-gate-partial.png",
+      "caption": "One guardian defeated: gate remains sealed",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 716565,
+      "sha256": "6d27c051aeb70d3ae32632997341e1b51576edc3302283d87624ecfc17e93c5f"
+    },
+    {
+      "file": "pc03-gate-partial-1280.png",
+      "caption": "One guardian defeated: gate remains sealed",
+      "width": 1280,
+      "height": 720,
+      "bytes": 451174,
+      "sha256": "bfa3560f7a49f87578e38aa7140d61f41539676f2dee0560306ec56d9e24d16a"
+    },
+    {
+      "file": "pc03-gate-open-reward.png",
+      "caption": "Both guardians defeated: gate opens and supplies appear",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 986346,
+      "sha256": "c33ba13872b6b763910fb808757e327d1c2516c2a99059ef85740d50579e3174"
+    },
+    {
+      "file": "pc03-gate-open-reward-1280.png",
+      "caption": "Both guardians defeated: gate opens and supplies appear",
+      "width": 1280,
+      "height": 720,
+      "bytes": 701186,
+      "sha256": "040f993285948fbf3459c2a7292a6cb12fb0dfef9fa2f2450770fa8320f687f7"
+    },
+    {
+      "file": "pc03-reward.png",
+      "caption": "Reward bag before the next unlocked stairs-room door",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 942114,
+      "sha256": "2da57b7ebde290f4248be259bca5363e4281e13e2399398e2c86d6ddb50559a5"
+    },
+    {
+      "file": "pc03-reward-1280.png",
+      "caption": "Reward bag before the next unlocked stairs-room door",
+      "width": 1280,
+      "height": 720,
+      "bytes": 659500,
+      "sha256": "8945df3833824a11b25bd66834f025d7bcea5f542d62d0103121cbd744d0f3a3"
+    },
+    {
+      "file": "launch.png",
+      "caption": "Normal party-picker launch in the arrival alcove",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1037784,
+      "sha256": "515f323355f6309f2ff69b8bfcac8a8d6852bd83d57da0fe0260ce5f6d366a26"
+    },
+    {
+      "file": "launch-discovered-map.png",
+      "caption": "Discovered map at entry",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 291036,
+      "sha256": "5cc22b42da9d60a4fb89c3f4d1702db5c615f5e2c86169d7a8faa8fecdb4dc96"
+    },
+    {
+      "file": "launch-diagnostic-map.png",
+      "caption": "Explicit diagnostic full map",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 309724,
+      "sha256": "d741249d25e8da5c9c9e0eef6f324654b2b6add1f3d2d23b1ec10a6ffea68883"
+    }
+  ],
+  "trace": {
+    "file": "guardian-review.jsonl.gz",
+    "uncompressed_bytes": 8626493,
+    "sha256_uncompressed": "5f67dd416e2180a46c5aacf4d241a37ee094b99eeecfbf7bc36d892bf9082a63",
+    "sha256_compressed": "bcf77492578ff7c14db386ffc824963ebe344207d33a02780ab88d2dc7407607",
+    "record_command": "cmake-build-headless-debug/blobber_fixtures_automation_tests --retain /tmp/blobber-pc03-guardian-review.jsonl",
+    "replay_command": "cmake-build-headless-debug/blobber_fixtures_automation_tests --replay /tmp/blobber-pc03-guardian-review.jsonl",
+    "provenance": "Separate checked-command combat and strict replay with test-owned content, not the screenshot source or a balance trial."
+  },
+  "source_sha256": {
+    "src/app/guardian_captures.cpp": "e1d071e8cc8362df7659c062e5c64f5aaa2ce9eb5aed8bfa5a456fd54b5c5cb7",
+    "assets/rules/catalog.json": "5be0f0b7aa128998199c29faf7d85474af8a49da1867ef2e78259108dafd134b",
+    "tests/fixtures_automation_tests.cpp": "22cde95eb21c32e61e0e9f4adbe776708d688d91513a903dcf183dca02d4348f",
+    "tests/support/automation_fixtures.hpp": "00300f9293b77cdda3be2cd5dd38118f9fd5c562ec7a5f2ec97a1d2c8e6831b6"
+  },
+  "prepared_launch_bytes": {
+    "scene": 201348816,
+    "npc": 69010094,
+    "projectiles": 1012160,
+    "loot_and_markers": 2503928,
+    "total": 273874998,
+    "budget": 536870912
+  }
+}

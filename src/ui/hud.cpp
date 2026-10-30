@@ -271,7 +271,8 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
             const bool done = player ? floor->rememberedComplete(i) : floor->completed(i);
             if (f.kind == FixtureKind::Key && done)
                 continue;
-            const char* mark = f.kind == FixtureKind::Door         ? (done ? "/" : "+")
+            const char* mark = f.kind == FixtureKind::GuardianGate ? (done ? "/" : "G")
+                               : f.kind == FixtureKind::Door       ? (done ? "/" : "+")
                                : f.kind == FixtureKind::Key        ? "K"
                                : f.kind == FixtureKind::Upstairs   ? "U"
                                : f.kind == FixtureKind::Downstairs ? "D"

@@ -12,7 +12,7 @@ implement slice 14's save/resume. Replay and policy rerun start from the beginni
 
 PC01 extends `session_start` with the explicit
 [`generated_floor` scenario](headless_protocol.md#pc01-generated-floor-scenarios).
-The normal session/reset/actions/replay/capture lifecycle works for empty generated
+The normal session/reset/actions/replay/capture lifecycle works for generated
 floors. Diagnostic captures include a labelled full-map companion image; no hidden
 map is added to visual player observations. Existing experiment policies remain
 arena-only; connecting the adapter does not launch a prototype or seed sweep.
@@ -288,7 +288,7 @@ agent-host/desktop review belongs to the user. [Design](mcp_design.md) and
 
 ## PC02 fixture interactions
 
-Generated-floor scenarios now require generator/template versions **2/2**, with
+Generated-floor scenarios now require generator/template versions **3/3**, with
 scenario schema 1 unchanged. `session_preview` and `session_act` accept
 `{"kind":"interact","fixture":0}` through the same checked host command as F/click
 in the game. Use current observation tokens and fixture IDs from observations or
@@ -298,3 +298,12 @@ cells to later player observations. Strict replay includes these states. Generat
 captures now include scene, discovered map and diagnostic map PNGs.
 See [protocol and rules](headless_protocol.md#generated-floor-scenarios-pc01pc02) and
 [PC02 verification](pc02_verification.md). No new MCP tools or balance policy are needed.
+
+## PC03 guardian progression
+
+The same session tools now expose learned objective completion/reward status and
+visible guardian labels; full membership and protected landing metadata remain
+explicit diagnostics. Fight through ordinary checked combat actions; there is no
+force-complete tool. Guardian gates open automatically after the designated deaths.
+Travel is still unavailable. No new MCP tool or balance policy is introduced.
+See [the protocol](headless_protocol.md#generated-floor-scenarios-pc01pc02).

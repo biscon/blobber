@@ -191,6 +191,85 @@
       "sleep_immune": false,
       "experience": 50,
       "humanoid": true
+    },
+    {
+      "id": "goblin.guardian.placeholder",
+      "abilities": {
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 10,
+        "intelligence": 10,
+        "wisdom": 8,
+        "charisma": 8
+      },
+      "armor_class": 15,
+      "hit_points": 14,
+      "attacks": [
+        "goblin.scimitar"
+      ],
+      "traits": [
+        "nimble_escape"
+      ],
+      "loot": [
+        {
+          "item": "scimitar",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "leather",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "gold",
+          "quantity": 1,
+          "sides": 6,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            15
+          ]
+        },
+        {
+          "item": "mana_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            16,
+            20
+          ]
+        }
+      ],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": true
     }
   ],
   "races": [

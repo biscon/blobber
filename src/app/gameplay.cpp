@@ -39,9 +39,10 @@ struct PlayView {
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
              bool enableAi = false, const RecoveryLevel& recovery = {},
-             const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {})
+             const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {},
+             const FloorObjectiveDefinition& objective = {})
         : session(m, catalog, starting ? *starting : *catalog.preset(), placements, seed, spawn, enableAi,
-                  timings, recovery, fixtures),
+                  timings, recovery, fixtures, objective),
           animator(session.actors(), timings), commands(session, timings), map(m), renderer(r) {}
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs(), &session.effects());
@@ -84,7 +85,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     for (;;) {
         PlayView view(map, catalog, idle, timings, renderer, seed, spawn,
                       launch ? launch->enableAi : !options.combatDemo, recovery, starting,
-                      launch && launch->fixtures ? *launch->fixtures : FloorFixtures{});
+                      launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
+                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
         view.session.enableDevelopment(options.development);
         if (starting)
             view.commands.enableMainMenu();

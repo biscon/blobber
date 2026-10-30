@@ -104,7 +104,9 @@ void SceneRenderer::composeView(GeometryView map, Player player, int phase, Fram
             continue;
         const auto* fixtures = map.fixtures();
         const int fixture = fixtures ? fixtures->at(cell) : -1;
-        const bool door = fixture >= 0 && fixtures->definition().entries[fixture].kind == FixtureKind::Door;
+        const bool door =
+            fixture >= 0 && (fixtures->definition().entries[fixture].kind == FixtureKind::Door ||
+                             fixtures->definition().entries[fixture].kind == FixtureKind::GuardianGate);
         for (std::uint32_t c = 0; c < sprite.columnCount; ++c) {
             const PreparedColumn& column = view.columns[sprite.firstColumn + c];
             if (column.depth >= coverage[column.x])
@@ -114,8 +116,11 @@ void SceneRenderer::composeView(GeometryView map, Player player, int phase, Fram
             coverage[column.x] = column.depth;
             int index = column.top * viewWidth + column.x;
             for (std::uint32_t i = 0; i < column.length; ++i) {
-                result[index] = door ? view.doors[fixtures->definition().entries[fixture].key ? 1 : 0]
-                                                 [column.doorOffset + i]
+                result[index] = door ? view.doors[(fixtures->definition().entries[fixture].key ||
+                                                   fixtures->definition().entries[fixture].kind ==
+                                                       FixtureKind::GuardianGate)
+                                                      ? 1
+                                                      : 0][column.doorOffset + i]
                                      : view.pixels[column.pixelOffsets[wallParity] + i];
                 if (picking)
                     picking->write(std::size_t(index),

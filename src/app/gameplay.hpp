@@ -13,6 +13,7 @@ struct GameplayLaunch {
     bool arena = false, enableAi = true;
     const generation::DiagnosticView* diagnostics = nullptr;
     const FloorFixtures* fixtures = nullptr;
+    const FloorObjectiveDefinition* objective = nullptr;
 };
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                         const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,

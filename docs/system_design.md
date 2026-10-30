@@ -1,5 +1,17 @@
 # System design
 
+PC03 **Accepted and closed** (2026-10-30):
+[guardians and protected progression](procedural_guardians_design.md).
+User approved the detailed plan with “Implement the plan.” Easy placeholder
+encounters, designated guardian gate/reward, and safe stairs rooms; no balance
+experiments, travel or PC04 work. PC01/PC02 remain accepted.
+[Verification/handoff](pc03_verification.md) records headless Debug/Release 38/38,
+graphics Debug/Release 57/57, five focused sanitizer checks, zero tracked runtime
+allocations, strict guardian combat replay and hidden captures. Generator/templates
+are now 3/3; prepared format/renderer are 4/5. The user accepted PC03 after playing
+through the accessible floor, defeating the guardian and collecting the loot
+(2026-10-30). Milestone P-A is Accepted. PC04 is next for detailed planning only.
+
 PC02 **Accepted and closed** (2026-10-30):
 [doors, keys and discovered navigation](procedural_fixtures_design.md).
 User: “Implement the plan.” Shared effective geometry, checked permanent fixtures,
@@ -9,7 +21,7 @@ and allocation checks, strict replay and hidden captures. Generator/templates ar
 2/2 and prepared format/renderer 4/4. The user accepted after testing the available
 gameplay and reporting it working (2026-10-30). Separate test floors and inert stairs
 are expected until PC04; basic door art is not considered final visual quality.
-PC03 is eligible for separate planning when requested and remains unstarted.
+PC03 is now Accepted and closed under its implemented design above.
 
 
 Roadmap **accepted by the user; campaign architecture remains planned** (2026-10-30):
@@ -28,16 +40,19 @@ No respawns; finite optional encounters provide XP/resource fallback. Shops are 
 later milestone. The plan records ownership, clocks, transactional failures and
 validation. The user approved the [PC01 detailed design](procedural_generation_design.md) with
 “Implement the plan.” PC01 is **Accepted and closed** (2026-10-30); the user
-confirmed “slice accepted, record it in the doc”. PC02 is Accepted and closed above; PC03–PC09 remain Planned. [PC01 verification/handoff](pc01_verification.md) records full
+confirmed “slice accepted, record it in the doc”. PC02 is Accepted and closed above; PC03 and milestone P-A are Accepted; PC04–PC09 remain Planned. [PC01 verification/handoff](pc01_verification.md) records full
 headless Debug/Release 35/35, graphics Debug/Release 53/53, focused sanitizers,
 zero tracked frame allocations, hidden GPU/capture checks and thirteen retained PNGs.
-New Game now enters an empty seeded 36×36 floor through the existing party picker.
+New Game now enters a populated seeded 36×36 floor through the existing party picker.
 Bounded graph/templates, tile validation, deterministic fallback/diagnostics and
 strict generated-floor replay are implemented. PC02 adds checked doors/keys and
-a discovered map, with a separate development diagnostic reveal. Stairs/objectives
-remain inert pending later slices. No balance experiments or broad seed sweep were
-run. PC03 planning is next eligible when requested; do not advance automatically.
-The user has tested the available PC02 gameplay; live Codex-host MCP remains unverified.
+a discovered map, with a separate development diagnostic reveal. PC03 adds a designated
+guardian pair, once-only gate/rewards and protected stairs rooms. Stairs travel
+remains inert pending PC04. No balance experiments or broad seed sweep were run.
+PC03 is accepted; PC04 is eligible for detailed planning in a fresh context when
+requested, with plan review required before implementation. The user has tested the
+available PC02 gameplay and completed the accessible PC03 floor through guardian
+defeat and loot collection; live Codex-host MCP remains unverified.
 
 Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter](mcp_design.md).
 Optional official-SDK stdio tools reuse accepted sessions, experiments/reports and

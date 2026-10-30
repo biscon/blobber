@@ -3,6 +3,7 @@
 #include "automation/scenario.hpp"
 #include "game/session.hpp"
 #include "game/target_visibility.hpp"
+#include "generation/population.hpp"
 #include <memory>
 namespace blobber::automation {
 constexpr unsigned tickMs = 10, maxRequestTicks = 1000, maxRunTicks = 360000, maxMutations = 100000;
@@ -67,6 +68,7 @@ class Session {
     std::optional<generation::GeneratedFloor> generated_;
     std::optional<Map> arenaMap_;
     const Map& map_;
+    std::optional<generation::PreparedPopulation> population_;
     NpcWorld placements_;
     GameSession game_;
     Mode mode_;

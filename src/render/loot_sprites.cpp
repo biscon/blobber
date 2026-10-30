@@ -56,7 +56,8 @@ void PreparedLoot::compose(const LootSnapshot& loot, Player player, int phase,
             const auto& item = fixtures->definition().entries[i];
             if (item.kind == FixtureKind::Key && fixtures->completed(i))
                 continue;
-            if (item.kind == FixtureKind::Door && !fixtures->completed(i))
+            if ((item.kind == FixtureKind::Door || item.kind == FixtureKind::GuardianGate) &&
+                !fixtures->completed(i))
                 continue;
             const auto delta = item.cell + player.cell * -1;
             const int row = delta.x * f.x + delta.y * f.y, side = delta.x * r.x + delta.y * r.y;

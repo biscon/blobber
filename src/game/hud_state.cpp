@@ -214,7 +214,8 @@ void CommandController::updateHover() noexcept {
             return;
         }
         const auto& a = *actors_.actor(*h.enemy);
-        std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s #%u",
+        std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s%s #%u",
+                      session_ && session_->guardian(*h.enemy) ? "Guardian: " : "",
                       actors_.catalog().monster(a.monster)->id.c_str(), unsigned(h.enemy->slot) + 1);
         h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;

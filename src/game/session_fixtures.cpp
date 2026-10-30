@@ -9,6 +9,11 @@ void GameSession::discover() noexcept {
     discoveredReady_ = true;
     discoveredPose_ = pose;
     discoveredFixtures_ = floor_.revision();
+    if (objective_.count && !objective_.known &&
+        (floor_.known(objectiveDefinition_.approachDoor) || floor_.known(objectiveDefinition_.gate))) {
+        objective_.known = true;
+        ++objective_.revision;
+    }
 }
 FixtureRequest GameSession::nearbyFixture() const noexcept {
     const auto pose = movement().player;
@@ -46,8 +51,14 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         able |= effects_.canAct(rules::CharacterId{i});
     if (!able)
         return {false, false, "An able companion is required."};
+    if (f->kind == FixtureKind::GuardianGate)
+        return {objective_.completed, false,
+                objective_.completed ? "Guardians defeated. Gate open; rewards beyond."
+                                     : "Defeat all designated guardians to open this gate."};
     if (f->kind != FixtureKind::Door && f->kind != FixtureKind::Key)
-        return {false, false, "Travel and floor objectives are not available yet."};
+        return {false, false,
+                objective_.completed ? "Objective secured. Travel is not available yet."
+                                     : "Travel is not available yet."};
     if (floor_.completed(r.id.slot))
         return {true, false, "Already completed."};
     if (f->kind == FixtureKind::Door && f->key && !(party_.questKeys_ & (1u << f->key)))
@@ -65,6 +76,8 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         detectContact();
         discover();
     }
+    if (objective_.count && r.id.slot == objectiveDefinition_.approachDoor)
+        return {true, !preview, "Guardians beyond! Combat prevents movement."};
     return {true, !preview,
             f->kind == FixtureKind::Door ? (preview ? "Open permanently." : "Door opened permanently.")
                                          : (preview ? "Collect quest key." : "Quest key collected.")};

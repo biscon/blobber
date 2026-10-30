@@ -15,7 +15,7 @@ from mcp_adapter.storage import Storage, MIB, AdapterError
 
 def open_door(request, state):
     """One diagnostic, unpopulated fixture route through the real transport."""
-    door = next(f for f in state['generation']['fixtures'] if f['kind'] == 0)
+    door = next(f for f in state['generation']['fixtures'] if f['kind'] == 0 and f['id'] != 0)
     rows = state['generation']['map'].splitlines()
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     dx, dy = directions[door['heading']]
@@ -79,13 +79,26 @@ def main(generator, runner):
     with tempfile.TemporaryDirectory(prefix='blobber-pc01-cli-') as temp:
         root = Path(temp)
         arena = fixture(root)
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=2,
-                     template_version=2, seed=5, depth=1, party=arena['party'])
+        catalog_path = root / 'rules/catalog.json'
+        cat = json.loads(catalog_path.read_text())
+        enemy = cat['monsters'][0]
+        for name in ('goblin', 'goblin.archer', 'goblin.guardian.placeholder'):
+            cat['monsters'].append(dict(enemy, id=name))
+        for name in ('healing_potion', 'mana_potion'):
+            cat['items'].append(dict(cat['items'][1], id=name))
+        catalog_path.write_text(json.dumps(cat))
+        npc = json.loads((root / 'npcs/enemy.json').read_text())
+        for name in ('goblin', 'goblin.archer'):
+            (root / f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name)))
+        (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', 'goblin.json', 'goblin.archer.json'], instances=[])))
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=3,
+                     template_version=3, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
             start = client.request('start', scenario=setup)
             assert start['ok'] and start['data']['generation']['fingerprint'] == a['fingerprint']
             initial = start['data']
+            assert initial['objective']['members'] == [2, 3] and not initial['objective']['completed']
             assert client.request('act', action=dict(kind='move', direction='forward'))['data']['accepted']
             assert client.request('advance', ticks=100, until_decision=True)['ok']
             state = client.request('observe')['data']
@@ -102,6 +115,7 @@ def main(generator, runner):
             result = sessions.start(scenario=setup)
             assert result['response']['ok']
             assert result['response']['data']['generation'] == initial['generation']
+            assert result['response']['data']['objective'] == initial['objective']
             tokens = dict(handle=result['handle'], **result['identity'])
             bad = sessions.start(scenario=dict(setup, depth=0), **tokens)
             assert not bad['response']['ok'] and bad['handle'] == result['handle']

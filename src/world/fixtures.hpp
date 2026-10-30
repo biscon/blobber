@@ -6,7 +6,7 @@
 
 namespace blobber {
 constexpr unsigned fixtureCapacity = 32, discoveryCapacity = 1600;
-enum class FixtureKind : std::uint8_t { Door, Key, Upstairs, Downstairs, Endpoint };
+enum class FixtureKind : std::uint8_t { Door, Key, Upstairs, Downstairs, Endpoint, GuardianGate };
 struct FixtureDefinition {
     Cell cell{};
     Heading facing = Heading::North;
@@ -17,6 +17,9 @@ struct FloorFixtures {
     std::array<FixtureDefinition, fixtureCapacity> entries{};
     unsigned count = 0, depth = 0;
     bool discovery = false;
+    std::array<Cell, 2> landings{};
+    unsigned landingCount = 0;
+    std::bitset<discoveryCapacity> npcExcluded;
 };
 struct FixtureId {
     std::uint64_t world = 0;
@@ -35,10 +38,11 @@ struct FixtureResult {
     explicit operator bool() const noexcept { return accepted; }
 };
 inline bool fixtureReachable(const FixtureDefinition& f, Cell cell, Heading heading) noexcept {
-    return f.cell == cell + forward(heading) || (f.kind != FixtureKind::Door && f.cell == cell);
+    return f.cell == cell + forward(heading) ||
+           (f.kind != FixtureKind::Door && f.kind != FixtureKind::GuardianGate && f.cell == cell);
 }
 inline bool fixtureBlocks(const FixtureDefinition& f, bool completed) noexcept {
-    return f.kind == FixtureKind::Door && !completed;
+    return (f.kind == FixtureKind::Door || f.kind == FixtureKind::GuardianGate) && !completed;
 }
 const char* fixtureName(const FixtureDefinition&) noexcept;
 class FloorGeometry;
@@ -49,6 +53,7 @@ class GeometryView {
     GeometryView(Map&&) = delete;
     GeometryView(const Map&&) = delete;
     bool solid(Cell) const noexcept;
+    bool npcAllowed(Cell) const noexcept;
     int width() const noexcept { return map_->width(); }
     int height() const noexcept { return map_->height(); }
     const Map& base() const noexcept { return *map_; }

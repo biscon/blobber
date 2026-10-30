@@ -1,4 +1,5 @@
 #include "app/gameplay.hpp"
+#include "app/guardian_captures.hpp"
 #include "app/menu.hpp"
 #include "app/options.hpp"
 #include "assets/npc_loader.hpp"
@@ -7,6 +8,7 @@
 #include "assets/prepared_loot.hpp"
 #include "game/party.hpp"
 #include "generation/diagnostic_view.hpp"
+#include "generation/population.hpp"
 #include "platform/presenter.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/preparation_limits.hpp"
@@ -45,11 +47,14 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                   << " fallback=" << generated->diagnostics.fallbackId << '\n';
     const auto loadStart = std::chrono::steady_clock::now();
     auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
+    auto population = generated ? std::optional<generation::PreparedPopulation>(
+                                      generation::preparePopulation(*generated, rules, definitions.types))
+                                : std::nullopt;
     LoadedNpcMetadata loadedNpcs{arena ? arenaPlacements(map, rules, *arena, definitions.types)
-                                       : NpcWorld(map, spawn.cell, definitions.types, {}),
+                                       : std::move(population->placements),
                                  std::move(definitions.timings), std::move(definitions.attachments),
                                  definitions.definitionFingerprint};
-    const RecoveryLevel recovery;
+    const RecoveryLevel recovery = population ? population->recovery : RecoveryLevel{};
 
     const auto& timings = loadedNpcs.timings;
     const auto profile = loadPreparationProfile(options.assets / "preparation.json");
@@ -147,7 +152,7 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     if (options.captureMenuOnly && !arena) {
         for (int repeat = 0; repeat < 2; ++repeat) {
             GameSession session(map, rules, starting, loadedNpcs.world, runtimeSeed, spawn, true, timings,
-                                recovery, generated->layout.fixtures);
+                                recovery, generated->layout.fixtures, population->objective);
             NpcAnimator animator(session.actors(), timings);
             FramePipeline frames;
             session.enableDevelopment(options.development);
@@ -181,6 +186,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                 presenter.capture(options.captureDirectory / "discard-run.png");
             }
         }
+        captureGuardians(*generated, *population, loadedNpcs.world, rules, starting, timings, renderer,
+                         presenter, options.captureDirectory);
         return true;
     }
     const GameplayLaunch launch{spawn,
@@ -188,7 +195,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                                 bool(arena),
                                 true,
                                 generated ? &diagnostics : nullptr,
-                                generated ? &generated->layout.fixtures : nullptr};
+                                generated ? &generated->layout.fixtures : nullptr,
+                                population ? &population->objective : nullptr};
     return runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options, recovery,
                        &starting, &launch) != PlayOutcome::Quit;
 }

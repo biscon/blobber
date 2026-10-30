@@ -117,7 +117,7 @@ NpcWorld arenaPlacements(const Map& map, const rules::Catalog& c, const ArenaSce
     for (std::size_t r = 0; r < s.count; ++r) {
         const auto& entry = s.roster[r];
         const auto& id = c.monster(entry.monster)->id;
-        const auto found = std::find(types.begin(), types.end(), id);
+        const auto found = std::find(types.begin(), types.end(), monsterAppearance(id));
         if (found == types.end())
             throw std::runtime_error("Monster appearance unavailable: " + id);
         for (unsigned n = 0; n < entry.quantity; ++n) {

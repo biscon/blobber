@@ -149,7 +149,7 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::
         subcell = {int(free % 2), int(free / 2)};
     }
     const auto old = actor.npc.cell;
-    if (map_.solid(destination) || destination == party) {
+    if (!map_.npcAllowed(destination) || destination == party) {
         prepared_[slot].reset();
         return false;
     }

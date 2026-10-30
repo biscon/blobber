@@ -21,15 +21,20 @@ Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definition
     : scenario_(scenario), generated_(prepare(scenario_, mode)),
       arenaMap_(generated_ ? std::nullopt : std::optional<Map>(arenaMap())),
       map_(generated_ ? generated_->map : *arenaMap_),
+      population_(generated_ ? std::optional<generation::PreparedPopulation>(
+                                   generation::preparePopulation(*generated_, catalog, definitions.types))
+                             : std::nullopt),
       placements_(
-          generated_ ? NpcWorld(map_, generated_->layout.spawn.cell, definitions.types, {})
+          generated_ ? std::move(population_->placements)
                      : arenaPlacements(map_, catalog, std::get<ArenaScenario>(scenario_), definitions.types)),
       game_(map_, catalog,
             generated_ ? startingParty(catalog, std::get<GeneratedScenario>(scenario_).party)
                        : arenaParty(catalog, std::get<ArenaScenario>(scenario_)),
             placements_, generated_ ? generated_->runtimeSeed : std::get<ArenaScenario>(scenario_).seed,
-            generated_ ? generated_->layout.spawn : arenaSpawn(), true, definitions.timings, {},
-            generated_ ? generated_->layout.fixtures : FloorFixtures{}),
+            generated_ ? generated_->layout.spawn : arenaSpawn(), true, definitions.timings,
+            population_ ? population_->recovery : RecoveryLevel{},
+            generated_ ? generated_->layout.fixtures : FloorFixtures{},
+            population_ ? population_->objective : FloorObjectiveDefinition{}),
       mode_(mode) {
     if (mode_ == Mode::Visual) {
         if (!factory)

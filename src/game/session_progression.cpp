@@ -2,6 +2,7 @@
 namespace blobber {
 void GameSession::reconcileRewards() noexcept {
     const auto& world = actors_.snapshot();
+    reconcileObjective();
     if (rewardRevision_ == world.revision)
         return;
     rewardRevision_ = world.revision;

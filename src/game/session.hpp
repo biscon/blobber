@@ -1,5 +1,6 @@
 #pragma once
 #include "game/combat.hpp"
+#include "game/floor_objective.hpp"
 #include "game/loot.hpp"
 #include "game/npc_ai.hpp"
 
@@ -9,37 +10,41 @@ class GameSession {
   public:
     GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements, std::uint32_t seed,
                 Player spawn = {}, bool enableAi = true, const std::vector<NpcTimings>& timings = {},
-                const RecoveryLevel& recovery = {}, const FloorFixtures& fixtures = {});
+                const RecoveryLevel& recovery = {}, const FloorFixtures& fixtures = {},
+                const FloorObjectiveDefinition& objective = {});
     GameSession(const Map&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&,
                 std::uint32_t seed, Player spawn = {}, bool enableAi = true,
                 const std::vector<NpcTimings>& timings = {}, const RecoveryLevel& recovery = {},
-                const FloorFixtures& fixtures = {});
+                const FloorFixtures& fixtures = {}, const FloorObjectiveDefinition& objective = {});
     GameSession(Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}, const FloorFixtures& = {},
+                const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const Map&&, const rules::Catalog&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}, const FloorFixtures& = {},
+                const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const Map&, rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}, const FloorFixtures& = {},
+                const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const Map&, const rules::Catalog&&, const NpcWorld&, std::uint32_t, Player = {}, bool = true,
-                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {}, const FloorFixtures& = {},
+                const FloorObjectiveDefinition& = {}) = delete;
     GameSession(Map&&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
                 Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const FloorFixtures& = {}, const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const Map&&, const rules::Catalog&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
                 Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const FloorFixtures& = {}, const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const Map&, rules::Catalog&&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
                 Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const FloorFixtures& = {}, const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const Map&, const rules::Catalog&&, const rules::PresetParty&, const NpcWorld&, std::uint32_t,
                 Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
-                const FloorFixtures& = {}) = delete;
+                const FloorFixtures& = {}, const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const GameSession&) = delete;
     GameSession& operator=(const GameSession&) = delete;
+    const FloorObjectiveSnapshot& objective() const noexcept { return objective_; }
+    bool guardian(ActorId id) const noexcept;
+    LandingSafety landingSafety(unsigned index) const noexcept;
     GeometryView geometry() const noexcept { return map_; }
     const FloorGeometry& fixtures() const noexcept { return floor_; }
     FixtureResult interact(const FixtureRequest&, bool preview = false) noexcept;
@@ -87,6 +92,10 @@ class GameSession {
 
   private:
     FloorGeometry floor_;
+    FloorObjectiveDefinition objectiveDefinition_;
+    FloorObjectiveSnapshot objective_;
+    void prepareObjective();
+    void reconcileObjective() noexcept;
     GeometryView map_;
     Party party_;
     ActorWorld actors_;

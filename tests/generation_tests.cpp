@@ -29,6 +29,24 @@ FloorLayout rotated(const FloorLayout& source, unsigned turn) {
         v.cell = rotate(v.cell, f.width, turn);
         v.facing = Heading((unsigned(v.facing) + turn) % 4);
     }
+    f.fixtures.npcExcluded.reset();
+    for (int y = 0; y < f.height; ++y)
+        for (int x = 0; x < f.width; ++x)
+            if (source.fixtures.npcExcluded[unsigned(y * f.width + x)]) {
+                auto c = rotate({x, y}, f.width, turn);
+                f.fixtures.npcExcluded.set(unsigned(c.y * f.width + c.x));
+            }
+    for (unsigned i = 0; i < f.fixtures.landingCount; ++i)
+        f.fixtures.landings[i] = rotate(f.fixtures.landings[i], f.width, turn);
+    for (unsigned i = 0; i < f.populationCount; ++i) {
+        auto& p = f.population[i];
+        p.cell = rotate(p.cell, f.width, turn);
+        p.subcell = rotate(p.subcell, 2, turn);
+        p.facing = Heading((unsigned(p.facing) + turn) % 4);
+    }
+    f.guardianReward = rotate(f.guardianReward, f.width, turn);
+    f.optionalSupply = rotate(f.optionalSupply, f.width, turn);
+    f.guardianApproach = rotate(f.guardianApproach, f.width, turn);
     f.spawn.cell = rotate(f.spawn.cell, f.width, turn);
     f.spawn.heading = Heading((unsigned(f.spawn.heading) + turn) % 4);
     return f;
@@ -56,7 +74,7 @@ void deterministic() {
             check(!validate(rotated(a.floor->layout, turn)),
                   "all four full-layout rotations preserve routes and facing");
     }
-    check(identities.size() >= 8 && families.size() == 2 && shapes.size() == 4 && rotations.size() == 4,
+    check(identities.size() >= 8 && families.size() == 2 && shapes.size() == 5 && rotations.size() == 4,
           "fixed fixtures exercise meaningful topology/interior/orientation variation");
     std::set<std::uint64_t> streams;
     for (unsigned domain = 1; domain <= 5; ++domain)

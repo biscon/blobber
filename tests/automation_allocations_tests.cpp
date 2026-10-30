@@ -96,8 +96,9 @@ int main(int argc, char**) {
         auto art = testNpcAppearance();
         PreparedLoot markerBank;
         markerBank.pixels.assign(PreparedLoot::icons * PreparedLoot::pixelsPerIcon, Color{220, 190, 90, 255});
-        SceneRenderer renderer(prepareScene(testMaterials()), PreparedNpcs({art}), {}, std::move(markerBank));
-        defs.timings = {npcTimings(art)};
+        SceneRenderer renderer(prepareScene(testMaterials()), PreparedNpcs({art, art}), {},
+                               std::move(markerBank));
+        defs.timings = {npcTimings(art), npcTimings(art)};
         VisualContext context{renderer, defs.timings};
         Session visual(cat, defs, setup, Mode::Visual, makeVisual, &context);
 #endif
@@ -160,9 +161,9 @@ int main(int argc, char**) {
                 okay &= !s.terminal();
             }
         };
-        const auto fixtureRules = fixtureCatalog();
+        const auto& fixtureRules = cat;
         const auto fixtureFloor = fixtureMap();
-        const NpcWorld empty(fixtureFloor, {2, 3}, {"goblin"}, {});
+        const NpcWorld empty(fixtureFloor, {2, 3}, defs.types, {});
         auto fixtureGame = std::make_unique<GameSession>(
             fixtureFloor, fixtureRules, empty, 5, Player{{2, 3}, Heading::East}, false,
             std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions());
@@ -175,8 +176,21 @@ int main(int argc, char**) {
                                  &fixtureGame->loot().snapshot());
         };
 #endif
-        tracking = true;
+        CommandController guardianUi(generated.replayGame());
 #ifdef BLOBBER_AUTOMATION_VISUAL
+        FramePipeline guardianFrames;
+#endif
+        tracking = true;
+        auto& guardianGame = generated.replayGame();
+        guardianGame.actors().damage(guardianGame.actors().id(2), 100000, 0);
+        guardianGame.actors().damage(guardianGame.actors().id(3), 100000, 0);
+        guardianGame.update(0, false);
+        okay &= guardianGame.objective().completed && guardianGame.landingSafety(0).safe;
+        guardianUi.refresh({}, false, false, true);
+#ifdef BLOBBER_AUTOMATION_VISUAL
+        guardianFrames.update(renderer, guardianGame.geometry(), guardianGame.movement(),
+                              &guardianGame.actors(), nullptr, nullptr, 0, nullptr,
+                              &guardianGame.loot().snapshot());
         fixtureFrame();
 #endif
         collectFixtureKey(*fixtureGame);

@@ -14,3 +14,8 @@ art is a visual difference. Unrepresented features, including Nimble Escape,
 are not implemented. Project limits on supported levels, dice counts, and content
 capacities are engineering choices. See docs/srd_content_ledger.md in the source
 distribution for the adopted rules, printed page references, and deferred work.
+
+PC03 adds `goblin.guardian.placeholder`, a clearly labelled project adaptation:
+14 HP instead of 7; other melee goblin statistics, 50 XP and drops unchanged.
+It reuses goblin artwork and is temporary procedural-progression content, not an
+unmodified SRD monster or a calibrated challenge rating.

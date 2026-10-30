@@ -354,3 +354,11 @@ and limits are documented in the design; [verification and review](slice13_verif
 record the delivered behavior. The user accepted slice 13 and milestone C on
 2026-10-30, including existing Action Surge activation through class features.
 No further rule adaptation was introduced by acceptance.
+
+## PC03 placeholder guardian adaptation
+
+`goblin.guardian.placeholder` reuses the existing melee goblin definition and art,
+with 14 HP instead of 7. Other stats, attacks, loot and 50 XP remain unchanged.
+This is an intentionally easy, uncalibrated project adaptation for progression
+verification. It is not a new SRD stat block, monster level system or final depth
+band. One ordinary archer escorts it; both designated deaths unlock the gate.

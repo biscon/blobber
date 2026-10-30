@@ -372,6 +372,16 @@ bool CommandController::visible(ActorId id) const noexcept {
 }
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
                                 const HudDemo* demo) noexcept {
+    if (session_ && session_->objective().known) {
+        if (session_->objective().completed && !objectiveReported_) {
+            state_.log.append("Guardians defeated. Gate opened; supplies await beyond.");
+            objectiveReported_ = true;
+        }
+        if (session_->objective().capacityFailure && !objectiveFailureReported_) {
+            state_.log.append("Objective could not commit: floor revision capacity exhausted.");
+            objectiveFailureReported_ = true;
+        }
+    }
     state_.fixturePrompt[0] = 0;
     state_.floor = session_ ? &session_->fixtures() : nullptr;
     state_.questKeys = session_ ? session_->party().questKeys() : 0;

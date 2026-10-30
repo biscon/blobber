@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 2, templateVersion = 2;
+constexpr unsigned generatorVersion = 3, templateVersion = 3;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 constexpr int floorDimension = 36;
 constexpr std::size_t fixtureScratchBytes = maxCells * 4 * (sizeof(std::uint8_t) + sizeof(std::uint16_t));
@@ -19,7 +19,7 @@ struct RoomTemplate {
     std::array<std::uint8_t, 49> floor{}; // Closed rim; cardinal sockets are opened by stamping.
     Cell anchor{3, 3};
 };
-using TemplateCatalog = std::array<RoomTemplate, 4>;
+using TemplateCatalog = std::array<RoomTemplate, 5>;
 const TemplateCatalog& templates() noexcept;
 struct Room {
     Cell site;
@@ -31,6 +31,14 @@ struct Room {
 struct Connection {
     std::uint8_t a = 0, b = 0;
 };
+enum class ActorRecipe : std::uint8_t { Goblin, Archer, Guardian };
+struct PopulationPlacement {
+    Cell cell{}, subcell{};
+    Heading facing = Heading::North;
+    ActorRecipe recipe = ActorRecipe::Goblin;
+    std::uint8_t id = 0;
+    bool guardian = false;
+};
 struct FloorLayout {
     int width = floorDimension, height = floorDimension;
     std::array<std::uint8_t, maxCells> floor{};
@@ -41,6 +49,10 @@ struct FloorLayout {
     Player spawn;
     unsigned depth = 1;
     FloorFixtures fixtures;
+    std::array<PopulationPlacement, 32> population{};
+    unsigned populationCount = 0;
+    Cell optionalSupply{}, guardianReward{}, guardianApproach{};
+    std::uint8_t approachDoor = 0, guardianGate = 0;
 };
 enum class Error : std::uint8_t {
     None,
@@ -57,6 +69,8 @@ enum class Error : std::uint8_t {
     Branch,
     Fixture,
     Progression,
+    Population,
+    Landing,
     ForcedFallback
 };
 struct Failure {
@@ -90,6 +104,7 @@ GenerationResult generate(GenerationRequest, const TemplateCatalog& = templates(
 Failure validate(const FloorLayout&) noexcept;
 Failure validateFixtures(const FloorLayout&) noexcept;
 void placeFixtures(FloorLayout&) noexcept;
+void placePopulation(FloorLayout&, GenerationRequest, unsigned attempt, bool fallback) noexcept;
 Failure validateTemplates(const TemplateCatalog&) noexcept;
 std::uint64_t seedFor(GenerationRequest, Domain, unsigned stableId = 0, unsigned attempt = 0) noexcept;
 std::uint64_t fingerprint(const FloorLayout&) noexcept;

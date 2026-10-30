@@ -57,6 +57,19 @@ Json encodeObservation(const Observation& o) {
               {"loot", Json::array()},
               {"targets", Json::array()},
               {"active_character", nullptr}};
+    const auto& objective = g.objective();
+    if (objective.count && (o.diagnostic || objective.known)) {
+        j["objective"] = {{"known", objective.known},
+                          {"completed", objective.completed},
+                          {"reward_issued", objective.rewardIssued},
+                          {"capacity_failure", objective.capacityFailure}};
+        if (o.diagnostic) {
+            j["objective"]["revision"] = u(objective.revision);
+            j["objective"]["members"] = Json::array();
+            for (unsigned i = 0; i < objective.count; ++i)
+                j["objective"]["members"].push_back(objective.members[i].slot);
+        }
+    }
     const auto& fixtures = g.fixtures();
     j["quest_keys"] = g.party().questKeys();
     j["fixtures"] = Json::array();
@@ -168,7 +181,8 @@ Json encodeObservation(const Observation& o) {
                   {"heading", unsigned(a.npc.facing)},
                   {"health_fraction", a.maxHitPoints ? double(a.hitPoints) / a.maxHitPoints : 0},
                   {"statuses", status(g.effects().statuses(g.actors().id(i)))},
-                  {"targetable", o.visible[i]}};
+                  {"targetable", o.visible[i]},
+                  {"guardian", g.guardian(g.actors().id(i))}};
         if (o.diagnostic) {
             const auto& ai = g.ai().actors[i];
             e.update({{"hp", a.hitPoints},

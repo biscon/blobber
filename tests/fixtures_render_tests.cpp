@@ -75,6 +75,28 @@ void run() {
         check(frames.picking()->targets().count == 1 && picked(frames.picking(), 2),
               "Opening reveals both actor and farther stair marker");
         check(!update(), "Open door frame caches normally");
+        auto gateFixtures = fixtures;
+        gateFixtures.entries[0].kind = FixtureKind::GuardianGate;
+        gateFixtures.entries[0].key = 0;
+        gateFixtures.entries[1] = {rotate({2, 2}), Heading(turn), FixtureKind::Door, 0};
+        FloorObjectiveDefinition objective;
+        objective.count = 1;
+        objective.members[0] = 0;
+        objective.gate = 0;
+        objective.approachDoor = 1;
+        GameSession guarded(map, cat, placements, 5, spawn, false, timings, {}, gateFixtures, objective);
+        FramePipeline gateFrames;
+        gateFrames.update(renderer, guarded.geometry(), guarded.movement(), &guarded.actors());
+        Frame sealed;
+        sealed.copyFrom(gateFrames.frame());
+        check(picked(gateFrames.picking(), 0) && !picked(gateFrames.picking(), 2),
+              "guardian gate blocks fixture picking");
+        guarded.actors().damage(guarded.actors().id(0), 10000, 0);
+        guarded.update(0, false);
+        check(gateFrames.update(renderer, guarded.geometry(), guarded.movement(), &guarded.actors()) &&
+                  !same(sealed, gateFrames.frame()),
+              "automatic guardian gate opening invalidates stationary image");
+        check(picked(gateFrames.picking(), 2), "opened guardian gate reveals objective marker");
         // Strafe endpoints/reversal use exactly the same opened geometry.
         const Player from = spawn, to{spawn.cell + right(spawn.heading), spawn.heading};
         Frame a, b, c;

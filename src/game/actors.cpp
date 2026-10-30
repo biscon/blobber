@@ -51,7 +51,7 @@ ActorWorld::ActorWorld(GeometryView map, const rules::Catalog& catalog, const Np
     for (std::size_t i = 0; i < state_.count; ++i) {
         auto& actor = state_.actors[i];
         actor.npc = placements.instances()[i];
-        if (map.solid(actor.npc.cell))
+        if (!map.npcAllowed(actor.npc.cell))
             throw std::runtime_error("Actor placement overlaps runtime map wall or boundary");
         actor.monster = actor.npc.monster.value_or(bindings[actor.npc.type.index]);
         if (!catalog.monster(actor.monster))
@@ -111,7 +111,7 @@ ActorResult ActorWorld::move(ActorId id, Cell cell, Cell subcell, Cell partyCell
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
-    if (map_.solid(cell) || subcell.x < 0 || subcell.x > 1 || subcell.y < 0 || subcell.y > 1)
+    if (!map_.npcAllowed(cell) || subcell.x < 0 || subcell.x > 1 || subcell.y < 0 || subcell.y > 1)
         return {ActorError::InvalidDestination};
     if (std::abs(cell.x - old->npc.cell.x) + std::abs(cell.y - old->npc.cell.y) > 1)
         return {ActorError::InvalidDestination};

@@ -86,7 +86,9 @@ at 2 MiB and JSON nesting at 32. Closing/EOF ends a recording even if play is un
 
 <a id="pc01-generated-floor-scenarios"></a>
 
-## Generated-floor scenarios (PC01–PC02)
+<a id="generated-floor-scenarios-pc01pc02"></a>
+
+## Generated-floor scenarios (PC01–PC03)
 
 `start` also accepts the following scenario shape (the four party objects use the
 same starting-draft codec as arena `party`):
@@ -95,8 +97,8 @@ same starting-draft codec as arena `party`):
 {
   "kind": "generated_floor",
   "schema_version": 1,
-  "generator_version": 2,
-  "template_version": 2,
+  "generator_version": 3,
+  "template_version": 3,
   "seed": 5,
   "depth": 1,
   "party": ["replace with four existing starting-draft objects"]
@@ -106,10 +108,14 @@ same starting-draft codec as arena `party`):
 This skeleton is illustrative; `party` must actually contain four distinct, valid
 level-one draft objects. Do not include arena `name`, `layout_version` or `monsters`.
 Depths 1–3 are separate generation identities, not connected campaign locations.
-Each empty floor has one permanent-open door: depth 1 is unlocked; depths 2 and 3
-require their Bronze/Silver seal key from an upstream cycle room. Stairs and the
-depth-3 endpoint are inert markers. There are no encounters, rewards or victory yet.
-Generator/template versions are now 2/2; old 1/1 scenarios and traces are rejected.
+Each floor has an intentionally small placeholder population: one ordinary melee
+goblin, one optional melee goblin, and a designated 14-HP melee guardian plus archer.
+Depth 1 has an unlocked guardian approach; depths 2–3 require their Bronze/Silver key.
+A separate guardian gate opens and publishes reserved supplies only after all
+designated deaths. Ordinary victories do not complete the floor. Protected stairs
+rooms have permanent-open unlocked doors. Stairs remain inert until PC04; floor
+completion is nonterminal and depth 3 does not yet produce campaign victory.
+Generator/template versions are 3/3; older generated scenarios/traces are rejected.
 The generated scenario schema and JSON-lines protocol remain version 1.
 `reset` reuses the same inputs; optional `seed` explicitly regenerates the floor.
 Failed generation/version/party validation preserves an existing session and tokens.
@@ -120,7 +126,8 @@ Generated observations add `scenario_kind` and `generation`. Both perspectives
 include seed, depth, generator/template versions and a decimal-string fingerprint.
 Diagnostic observations additionally include ASCII tiles, role/room/connection
 metadata, immutable fixture definitions, spawn, runtime seed, attempts, fallback
-and rejection reasons. `inspect`
+and rejection reasons, population recipes/membership, protected landing cells and
+objective associations. `inspect`
 does not enable hidden information in later visual observations. Strict recording
 compares full generation metadata in normalized boundary state; it remains a
 version/build-sensitive replay, not a save.
@@ -221,13 +228,21 @@ and eligibility results. Party-created ground zones include known placement/dura
 Generated observations include `discovered` triples `[x,y,base_wall]` (0 floor,
 1 wall), remembered `fixtures` and party `quest_keys` bits (bit 2 Bronze, bit 3 Silver).
 Fixture fields are `fixture`, `kind`, `name`, `position`, `key`, `completed`; kinds
-are door=0, key=1, upstairs=2, downstairs=3, endpoint=4. Player fixtures include only
+are door=0, key=1, upstairs=2, downstairs=3, endpoint=4, guardian gate=5. Player fixtures include only
 known entries and remembered completion. Diagnostic views additionally expose all
 fixtures, geometry/fixture/discovery revisions and fixture knowledge. Discovery
 updates from settled party poses with six-cell facing sight and blocking endpoints;
 observing, inspecting, drawing and the development full-map toggle never discover.
 Reset rebuilds knowledge and keys. `actions.fixtures` lists reachable known entries;
 preview supplies the actual eligibility/reason.
+
+PC03 adds `objective` once the approach door or gate is learned (always in
+diagnostics): `known`, `completed`, `reward_issued`, and `capacity_failure`.
+Diagnostics additionally include its revision and stable designated actor slots.
+Visible enemies include a `guardian` boolean. Hidden membership/counts are not
+exposed through player observations; inspecting never changes objective knowledge.
+There is no command that completes a guardian objective. Normal combat deaths drive
+it, and existing `interact` previews explain gates and unavailable travel.
 
 Visual observations include only currently body-pickable living enemies, with the
 health-bar fraction and visible statuses. They omit exact enemy HP, AI awareness,

@@ -3,34 +3,7 @@
 #include <cstdlib>
 namespace blobber {
 static bool sight(GeometryView map, Cell from, Cell target, bool blockingEndpoint) noexcept {
-    if (map.solid(from) || (!blockingEndpoint && map.solid(target)))
-        return false;
-    const int dx = target.x - from.x, dy = target.y - from.y;
-    // Integer supercover ray between cell centers. Exact corner crossings test
-    // both neighboring cells, so two diagonal floors cannot see through a seam.
-    const int nx = std::abs(dx), ny = std::abs(dy), sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1;
-    int ix = 0, iy = 0;
-    Cell c = from;
-    while (ix < nx || iy < ny) {
-        const int xCross = (1 + 2 * ix) * ny, yCross = (1 + 2 * iy) * nx;
-        if (xCross == yCross) {
-            if (map.solid({c.x + sx, c.y}) || map.solid({c.x, c.y + sy}))
-                return false;
-            c.x += sx;
-            c.y += sy;
-            ++ix;
-            ++iy;
-        } else if (xCross < yCross) {
-            c.x += sx;
-            ++ix;
-        } else {
-            c.y += sy;
-            ++iy;
-        }
-        if (map.solid(c) && !(blockingEndpoint && c == target))
-            return false;
-    }
-    return true;
+    return gridSight([&](Cell c) { return map.solid(c); }, from, target, blockingEndpoint);
 }
 
 bool lineOfSight(GeometryView map, Cell from, Cell target) noexcept {

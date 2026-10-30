@@ -13,6 +13,10 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
         return {InventoryError::Stale, inventoryMessage(InventoryError::Stale)};
     if (!stack)
         return {InventoryError::InvalidItem, inventoryMessage(InventoryError::InvalidItem)};
+    const auto cell = movement().player.cell;
+    const auto& defs = floor_.definition();
+    if (defs.landingCount && defs.npcExcluded[std::size_t(cell.y * map_.width() + cell.x)])
+        return {InventoryError::Unavailable, "Keep the protected stairs room clear."};
     const auto ticket = loot_.availableDrop();
     if (!ticket)
         return {InventoryError::Full, "Floor loot is full. Pick up a dropped stack first."};

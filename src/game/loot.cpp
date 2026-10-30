@@ -43,6 +43,8 @@ void LootWorld::reconcile(const ActorWorld& actors) noexcept {
         const auto& a = actors.snapshot().actors[i];
         if (!a.hasDeath || deaths_[i])
             continue;
+        if (state_.revision == UINT64_MAX)
+            return;
         deaths_[i] = true;
         for (std::size_t j = 0; j < lootPerActor; ++j) {
             auto& s = state_.stacks[i * lootPerActor + j];

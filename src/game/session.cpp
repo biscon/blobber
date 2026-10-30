@@ -6,20 +6,22 @@ namespace blobber {
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                          std::uint32_t seed, Player spawn, bool enableAi,
                          const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
-                         const FloorFixtures& fixtures)
+                         const FloorFixtures& fixtures, const FloorObjectiveDefinition& objective)
     : GameSession(map, catalog,
                   catalog.preset() ? *catalog.preset() : throw std::invalid_argument("Missing preset"),
-                  placements, seed, spawn, enableAi, timings, recovery, fixtures) {}
+                  placements, seed, spawn, enableAi, timings, recovery, fixtures, objective) {}
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const rules::PresetParty& starting,
                          const NpcWorld& placements, std::uint32_t seed, Player spawn, bool enableAi,
                          const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
-                         const FloorFixtures& fixtures)
-    : floor_(map, fixtures), map_(floor_.view()), party_(catalog, starting),
-      actors_(map_, catalog, placements), recovery_(recovery), loot_(actors_, recovery, seed),
-      movement_(spawn), rng_(seed), ai_(map_, actors_, seed), effects_(party_, actors_, rng_),
+                         const FloorFixtures& fixtures, const FloorObjectiveDefinition& objective)
+    : floor_(map, fixtures), objectiveDefinition_(objective), map_(floor_.view()), party_(catalog, starting),
+      actors_(map_, catalog, placements), recovery_(recovery),
+      loot_(actors_, recovery, objective.count ? objective.lootSeed : seed), movement_(spawn), rng_(seed),
+      ai_(map_, actors_, seed), effects_(party_, actors_, rng_),
       combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(enableAi) {
     if (map_.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
+    prepareObjective();
     ai_.bindEffects(&effects_);
     movement_.bindEffects(&effects_);
     effects_.partyCell(spawn.cell);

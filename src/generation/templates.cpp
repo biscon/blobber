@@ -18,6 +18,14 @@ const TemplateCatalog& templates() noexcept {
             for (int x = 4; x < 6; ++x)
                 t[2].floor[y * 7 + x] = 0; // Three-cell-wide bent interior.
         t[3].floor[1 * 7 + 1] = t[3].floor[1 * 7 + 5] = t[3].floor[5 * 7 + 1] = 0;
+        t[4].floor.fill(0);
+        for (int y = 1; y <= 3; ++y)
+            for (int x = 1; x <= 3; ++x)
+                t[4].floor[y * 7 + x] = 1;
+        t[4].floor[4 * 7 + 1] = 1;
+        for (int x = 1; x <= 5; ++x)
+            t[4].floor[5 * 7 + x] = 1;
+        t[4].anchor = {2, 2}; // Bent southern exit; rotate toward the sole port.
         return t;
     }();
     return catalog;
@@ -80,6 +88,10 @@ const char* errorName(Error e) noexcept {
         return "invalid_fixture";
     case Error::Progression:
         return "invalid_progression";
+    case Error::Population:
+        return "invalid_population";
+    case Error::Landing:
+        return "unsafe_landing";
     case Error::ForcedFallback:
         return "forced_fallback";
     }

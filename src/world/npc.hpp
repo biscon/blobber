@@ -5,9 +5,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace blobber {
+// Explicit temporary content alias; ordinary IDs retain their own appearance.
+inline std::string_view monsterAppearance(std::string_view id) noexcept {
+    return id == "goblin.guardian.placeholder" ? "goblin" : id;
+}
 struct NpcTypeId {
     std::uint16_t index = 0;
 };

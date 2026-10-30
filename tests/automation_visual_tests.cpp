@@ -46,8 +46,8 @@ int main() {
         const auto cat = catalog();
         auto appearance = testNpcAppearance();
         appearance.width = .5f;
-        const SceneRenderer renderer(testMaterials(), {appearance});
-        std::vector<NpcTimings> timings{npcTimings(appearance)};
+        const SceneRenderer renderer(testMaterials(), {appearance, appearance});
+        std::vector<NpcTimings> timings{npcTimings(appearance), npcTimings(appearance)};
         VisualContext context{renderer, timings};
         auto defs = definitions();
         defs.timings = timings;
@@ -81,7 +81,7 @@ int main() {
               "inspection does not disable player filtering");
         const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
         const Player spawn{{3, 4}, Heading::North};
-        const NpcWorld placements(map, spawn.cell, {"goblin"},
+        const NpcWorld placements(map, spawn.cell, {"goblin", "goblin.archer"},
                                   {{{0}, {3, 2}, {0, 1}, Heading::South},
                                    {{0}, {3, 1}, {0, 1}, Heading::South},
                                    {{0}, {3, 5}, {0, 0}, Heading::North}});
@@ -114,7 +114,8 @@ int main() {
         g.update(.2, false);
         compare(*visual, renderer, timings, map, g);
         const Map wall({"#######", "#.....#", "###.###", "#.....#", "#.....#", "#.....#", "#######"});
-        const NpcWorld blocked(wall, spawn.cell, {"goblin"}, {{{0}, {1, 1}, {0, 1}, Heading::South}});
+        const NpcWorld blocked(wall, spawn.cell, {"goblin", "goblin.archer"},
+                               {{{0}, {1, 1}, {0, 1}, Heading::South}});
         GameSession behindWall(wall, cat, blocked, 5, spawn, false, timings);
         auto hidden = makeVisual(&context, wall, behindWall);
         compare(*hidden, renderer, timings, wall, behindWall);

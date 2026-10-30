@@ -14,8 +14,8 @@ void run(const char* executable) {
     check(c.request("start", {{"scenario", setup}}).at("ok"), "prototype start");
     const auto first = c.protocol.state();
     check(first.at("generation").contains("map") && !first.at("terminal") &&
-              c.protocol.session()->game().actors().snapshot().count == 0,
-          "empty generated floor stays nonterminal");
+              c.protocol.session()->game().actors().snapshot().count == 4,
+          "populated generated floor stays nonterminal");
     const auto pose = c.protocol.session()->game().movement().player;
     const auto movement = Json{{"kind", "move"}, {"direction", "forward"}};
     check(c.request("preview", {{"action", movement}}).at("data").at("accepted") &&

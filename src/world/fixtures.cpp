@@ -25,6 +25,8 @@ const char* fixtureName(const FixtureDefinition& f) noexcept {
         return "Stairs up";
     case FixtureKind::Downstairs:
         return "Stairs down";
+    case FixtureKind::GuardianGate:
+        return "Guardian gate";
     case FixtureKind::Endpoint:
         return "Floor objective";
     }
@@ -32,7 +34,9 @@ const char* fixtureName(const FixtureDefinition& f) noexcept {
 }
 FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
     : map_(map), definition_(defs), world_(nextFloor()) {
-    if (defs.depth > 3 || defs.count > fixtureCapacity ||
+    if (defs.depth > 3 || defs.count > fixtureCapacity || defs.landingCount > defs.landings.size() ||
+        ((defs.landingCount || defs.npcExcluded.any()) &&
+         map.width() * map.height() > int(discoveryCapacity)) ||
         (defs.discovery && map.width() * map.height() > int(discoveryCapacity)))
         throw std::invalid_argument("Floor fixture/discovery capacity exceeded");
     if (defs.count)
@@ -40,7 +44,7 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
     unsigned keys = 0, locks = 0;
     for (unsigned i = 0; i < defs.count; ++i) {
         const auto& f = defs.entries[i];
-        if (map.solid(f.cell) || unsigned(f.kind) > unsigned(FixtureKind::Endpoint) ||
+        if (map.solid(f.cell) || unsigned(f.kind) > unsigned(FixtureKind::GuardianGate) ||
             unsigned(f.facing) > 3 || (f.key != 0 && f.key != 2 && f.key != 3) ||
             (f.kind == FixtureKind::Key && !f.key) ||
             (f.kind != FixtureKind::Key && f.kind != FixtureKind::Door && f.key))
@@ -55,6 +59,11 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
                 throw std::invalid_argument("Duplicate key or lock");
             bits |= 1u << f.key;
         }
+    }
+    for (unsigned i = 0; i < defs.landingCount; ++i) {
+        const auto c = defs.landings[i];
+        if (map.solid(c) || !defs.npcExcluded[std::size_t(c.y * map.width() + c.x)])
+            throw std::invalid_argument("Invalid protected landing");
     }
     if (keys != locks)
         throw std::invalid_argument("Unmatched key and lock");
@@ -75,6 +84,14 @@ bool GeometryView::solid(Cell c) const noexcept {
     return i >= 0 &&
            fixtureBlocks(fixtures_->definition().entries[unsigned(i)], fixtures_->completed(unsigned(i)));
 }
+bool GeometryView::npcAllowed(Cell c) const noexcept {
+    if (solid(c))
+        return false;
+    if (!fixtures_)
+        return true;
+    const auto index = std::size_t(c.y * width() + c.x);
+    return index >= discoveryCapacity || !fixtures_->definition().npcExcluded[index];
+}
 std::uint64_t GeometryView::world() const noexcept {
     return fixtures_ ? fixtures_->world() : 0;
 }
@@ -86,7 +103,8 @@ bool FloorGeometry::complete(unsigned i) noexcept {
         return false;
     completed_[i] = true;
     ++revision_;
-    if (definition_.entries[i].kind == FixtureKind::Door)
+    if (definition_.entries[i].kind == FixtureKind::Door ||
+        definition_.entries[i].kind == FixtureKind::GuardianGate)
         ++geometryRevision_;
     return true;
 }

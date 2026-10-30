@@ -1,8 +1,8 @@
 # Procedural campaign MVP: design and delivery roadmap
 
 Created / last updated: 2026-10-30.
-Status: **Roadmap accepted; PC01 and PC02 Accepted and closed on 2026-10-30.**
-PC03 is next eligible for detailed planning when requested. Later slice plans still require review before implementation.
+Status: **Roadmap accepted; PC01–PC03 Accepted and closed; milestone P-A Accepted on 2026-10-30.**
+PC04 is next eligible for detailed planning only. Later slice plans still require review before implementation.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -40,14 +40,14 @@ arena and test fixtures; it does not imply retaining the old game mode.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01 and PC02 accepted (2026-10-30) |
-| Active slice | None; PC02 Accepted and closed |
+| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC03 and milestone P-A accepted (2026-10-30) |
+| Active slice | None; PC03 Accepted and closed |
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
-| Next eligible slice | PC03 — Guardians and structurally safe progression; planning only |
-| Next action | Plan PC03 for review in a fresh context when requested; do not implement automatically |
+| Next eligible slice | PC04 — Persistent descent and fixed hub; detailed planning only |
+| Next action | In a fresh context when requested, inspect current code and plan PC04 only for review |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Accepted roadmap | Scope, sequence and defaults accepted; PC01 and PC02 Accepted and closed; PC03–PC09 detailed plans remain unapproved |
+| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC03 Accepted and closed; milestone P-A Accepted; PC04–PC09 detailed plans remain unapproved |
 
 Update this checkpoint, tracker and affected execution record together. Roadmap
 acceptance is not slice implementation or evidence of delivered gameplay acceptance.
@@ -334,7 +334,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | --- | --- | --- | --- | --- |
 | PC01 | [Generated-floor walking prototype](#pc01-generated-floor-walking-prototype) | Roadmap accepted (2026-10-30) | Accepted (2026-10-30) | P-A |
 | PC02 | [Doors, keys and discovered navigation](#pc02-doors-keys-and-discovered-navigation) | PC01 | Accepted | P-A |
-| PC03 | [Guardians and structurally safe progression](#pc03-guardians-and-structurally-safe-progression) | PC02 | Planned | P-A |
+| PC03 | [Guardians and structurally safe progression](#pc03-guardians-and-structurally-safe-progression) | PC02 | Accepted (2026-10-30) | P-A |
 | PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Planned | P-B |
 | PC05 | [Paid recall and entry waypoints](#pc05-paid-recall-and-entry-waypoints) | PC04 | Planned | P-B |
 | PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Planned | P-B |
@@ -344,7 +344,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 
 | Milestone | Acceptance experience | Status |
 | --- | --- | --- |
-| P-A — Generated floor | Explore a seeded readable floor, obtain a key where required, defeat its guardian and unlock its objective without clearing every enemy. | Planned |
+| P-A — Generated floor | Explore a seeded readable floor, obtain a key where required, defeat its guardian and unlock its objective without clearing every enemy. | Accepted (2026-10-30) |
 | P-B — Persistent expedition | Travel among the fixed hub and three persistent floors, recall at a cost, revisit entry waypoints and resume an interrupted run. | Planned |
 | P-C — Campaign MVP | A calibrated, reproducible three-floor descent with optional recovery encounters, normal XP, readable final guardian, victory/defeat and useful investigation evidence. | Planned |
 
@@ -448,8 +448,25 @@ objective guarantees. Malformed seeds fail usefully, never quietly remove a lock
 group, then all designated guardians and unlock descent. Retain strict replay and
 representative pre/post-gate captures. Obtain P-A acceptance separately from balance.
 
-**Execution record:** Not started. PC02 is accepted; eligible for detailed planning
-when requested, with plan approval required before implementation.
+**Execution record:** Accepted and closed, 2026-10-30. User approved
+[the detailed design](procedural_guardians_design.md) with “Implement the plan.”
+Easy placeholder encounters and permanent-open stairs doors with protected alcoves
+were confirmed during planning and implemented. All depths use two ordinary goblin
+encounters plus a 14-HP melee guardian and an archer guardian. Only their permanent
+deaths open the separate gate and publish reserved supplies once. Normal doors,
+key dependencies, optional routes and protected arrival rooms are validated together.
+
+[Verification/handoff](pc03_verification.md): headless Debug/Release 38/38 each,
+graphics Debug/Release 57/57 each, five targeted ASan/UBSan suites, zero tracked
+runtime C++ allocations, hidden GPU lifecycle, strict checked-combat replay and
+[21 retained captures](screenshots/pc03/index.html). Generator/templates 3/3;
+prepared format/renderer 4/5; protocol/scenario 1. Caption-only follow-up checks and
+limits are recorded in the handoff. No balance experiments, broad seed sweep,
+OS input automation or later-slice work. Stairs travel is still unavailable.
+**Acceptance:** PC03 and milestone P-A accepted on 2026-10-30. The user played
+through the accessible floor, defeated the guardian and collected the loot:
+“I played through the floor that I can access and defeated the guardian, got the loot yay :) slice accepted, record it in the doc”. This accepts the functional slice; difficulty tuning remains deferred.
+PC04 is next eligible for its own detailed plan, not implementation.
 
 ### PC04: Persistent descent and fixed hub
 
@@ -480,7 +497,8 @@ leave loot, ascend and re-enter. Compare canonical state except documented clock
 new runtime IDs. Walk all the way back with zero kits. Exercise final victory and
 wipe with small owned fixtures; this is a lifecycle check, not a balance run.
 
-**Execution record:** Not started; depends on PC03 acceptance.
+**Execution record:** Not started. PC03 is accepted; PC04 is eligible for detailed
+planning only and still requires review of its plan before implementation.
 
 ### PC05: Paid recall and entry waypoints
 
@@ -655,6 +673,7 @@ boundaries should accommodate them without building their systems now.
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | PC03 Accepted and closed; milestone P-A Accepted. PC04 is next for detailed planning only. | User played through the accessible floor, defeated the guardian, collected the loot and explicitly accepted the slice. |
 | 2026-10-30 | Roadmap accepted as the scope, sequence and design/default baseline. PC01–PC09 remain Planned; next step is detailed PC01 planning in a fresh context. | User: “Ive read through and accept the plan/roadmap”; asks to record acceptance before a fresh context plans the first slice. |
 | 2026-10-30 | Campaign replaces the static New Game mode; remove obsolete mode-specific code/content/tests during delivery. Arena tooling and shared engine behavior remain useful. | User explicitly says the existing static-map game mode need not be kept and this system will replace it. |
 | 2026-10-30 | Close the static-demo delivery roadmap. Retire demo 15/16; transfer save/resume from 14 to PC06 after playable generation/travel. Preserve all prior acceptance history. | User says remaining static work is obsolete and requests a new multi-slice MVP plan. |
@@ -713,7 +732,7 @@ remain Planned.
 This acceptance update changes documentation only. All existing working-tree changes
 are preserved; no builds, gameplay tests, captures, experiments or commits were made.
 
-### PC02 accepted closeout and next-agent handoff (2026-10-30)
+### PC02 accepted closeout and next-agent handoff (2026-10-30, historical)
 
 The user explicitly accepted: “okay in that case I accept the slice, ive tested as
 far as I could and it is working, update the doc”. PC02 is **Accepted and closed**.
@@ -733,3 +752,26 @@ This acceptance update changes documentation only. Existing verification results
 remain unchanged, supplemented by the user's limited interactive testing. Live
 Codex-host MCP interaction remains unverified. All working-tree changes are preserved;
 no builds, gameplay tests, captures, balance experiments or commits were made.
+
+
+### PC03 accepted closeout and next-agent handoff (2026-10-30, current)
+
+PC03 is **Accepted and closed**; milestone **P-A is Accepted**. The user played
+through the accessible floor, defeated the guardian and collected the loot, then
+explicitly accepted the slice. See [verification and reproduction](pc03_verification.md),
+[implemented design](procedural_guardians_design.md) and [gallery](screenshots/pc03/index.html).
+This checkpoint supersedes the historical PC02 handoff's instruction to plan PC03.
+
+PC04 — Persistent descent and fixed hub — is next eligible for detailed planning
+in a fresh context when requested. Read AGENTS.md, the system overview, MVP spec,
+this checkpoint and the PC03 handoff; inspect current code and plan PC04 only for
+review. Do not implement or advance automatically. PC04–PC09 and milestones P-B/P-C
+remain Planned. Travel, hub, persistence and campaign victory remain unimplemented.
+Intentionally easy placeholder content is accepted for functional progression;
+more monsters and difficulty tuning remain later work, with balance experiments opt-in.
+
+This acceptance update changes documentation only. Existing verification results
+are supplemented by the user's accessible-floor playthrough; other depths remain
+covered by separate automated scenarios. Live Codex-host MCP remains unverified.
+All working-tree changes are preserved; no builds, gameplay tests, captures,
+balance experiments or commits were made during this closeout.

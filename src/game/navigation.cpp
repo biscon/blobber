@@ -64,8 +64,8 @@ bool Navigation::start() noexcept {
             const auto heading = headingToward(active_.target, *active_.preferred);
             for (int side = -1; side <= 1; ++side) {
                 const auto cell = *active_.preferred + right(heading) * side;
-                const bool available =
-                    combatAdjacent(map_, active_.target, cell) && actors_.occupiedSlots(cell) != 15;
+                const bool available = map_.npcAllowed(cell) && combatAdjacent(map_, active_.target, cell) &&
+                                       actors_.occupiedSlots(cell) != 15;
                 preferAvailable_ |= available;
                 if (!side)
                     centerAvailable_ = available;
@@ -148,7 +148,7 @@ void Navigation::update(Cell party) noexcept {
         }
         for (const int d : directions) {
             const auto next = c + forward(static_cast<Heading>(d));
-            if (map_.solid(next) || next == party || actors_.occupiedSlots(next) == 15)
+            if (!map_.npcAllowed(next) || next == party || actors_.occupiedSlots(next) == 15)
                 continue;
             const auto nextIndex = index(next);
             if (seen_[nextIndex])

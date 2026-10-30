@@ -66,14 +66,28 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, const Templat
         room(f, {2, 3}, Role::Optional);
         edge(f, 4, 11);
     }
+    for (unsigned i = 0; i < f.roomCount; ++i)
+        f.rooms[i].site = rotate(f.rooms[i].site, 4, f.rotation);
     for (unsigned i = 0; i < f.roomCount; ++i) {
         auto& r = f.rooms[i];
-        r.site = rotate(r.site, 4, f.rotation);
         Random interior{seedFor(request, Domain::Interior, r.id, attempt)};
         r.shape = fallback || (r.role != Role::Junction && r.role != Role::Optional)
                       ? 0
                       : std::uint8_t(interior.next(4));
         r.rotation = fallback ? std::uint8_t(f.rotation) : std::uint8_t(interior.next(4));
+        if (r.role == Role::Entrance || r.role == Role::Objective) {
+            r.shape = 4;
+            for (unsigned e = 0; e < f.connectionCount; ++e) {
+                const auto edge = f.connections[e];
+                const auto other = edge.a == i ? edge.b : edge.b == i ? edge.a : maxRooms;
+                if (other == maxRooms)
+                    continue;
+                const auto site = f.rooms[other].site;
+                for (unsigned d = 0; d < 4; ++d)
+                    if (r.site + forward(Heading(d)) == site)
+                        r.rotation = std::uint8_t((d + 2) % 4);
+            }
+        }
         const auto base = origin(r.site);
         r.anchor = base + rotate(catalog[r.shape].anchor, 7, r.rotation);
         r.facing = static_cast<Heading>(f.rotation);
@@ -109,6 +123,7 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, const Templat
         if (f.rooms[i].role == Role::Entrance)
             f.spawn = {f.rooms[i].anchor, f.rooms[i].facing};
     placeFixtures(f);
+    placePopulation(f, request, attempt, fallback);
     return f;
 }
 } // namespace
@@ -144,6 +159,31 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
         number(unsigned(v.facing));
         number(v.key);
     }
+    number(f.fixtures.landingCount);
+    for (unsigned i = 0; i < f.fixtures.landingCount; ++i) {
+        number(unsigned(f.fixtures.landings[i].x));
+        number(unsigned(f.fixtures.landings[i].y));
+    }
+    for (unsigned i = 0; i < maxCells; ++i)
+        number(f.fixtures.npcExcluded[i]);
+    number(f.populationCount);
+    for (unsigned i = 0; i < f.populationCount; ++i) {
+        const auto& p = f.population[i];
+        number(p.id);
+        number(unsigned(p.recipe));
+        number(p.guardian);
+        number(unsigned(p.cell.x));
+        number(unsigned(p.cell.y));
+        number(unsigned(p.subcell.x));
+        number(unsigned(p.subcell.y));
+        number(unsigned(p.facing));
+    }
+    for (auto c : {f.optionalSupply, f.guardianReward, f.guardianApproach}) {
+        number(unsigned(c.x));
+        number(unsigned(c.y));
+    }
+    number(f.approachDoor);
+    number(f.guardianGate);
     number(f.family);
     number(f.rotation);
     number(f.roomCount);

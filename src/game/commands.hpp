@@ -313,6 +313,7 @@ class CommandController {
     void refreshFeedback(bool clear) noexcept;
     void updateHover() noexcept;
     void appendLog(const char* message) noexcept;
+    bool objectiveReported_ = false, objectiveFailureReported_ = false;
     bool pointerKnown_ = false;
     float pointerX_ = 0, pointerY_ = 0;
     GameSession* session_ = nullptr;
