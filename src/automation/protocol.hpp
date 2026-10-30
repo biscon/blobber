@@ -13,6 +13,7 @@ class Protocol {
     Json request(const Json&, Output&);
     Json state(); // Diagnostic normalized boundary state, not a player observation.
     bool closed() const noexcept { return closed_; }
+    Session* replaySession() noexcept { return session_.get(); } // Internal diagnostic rendering only.
     const Session* session() const noexcept { return session_.get(); }
 
   private:

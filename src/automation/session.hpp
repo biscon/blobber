@@ -44,6 +44,7 @@ class Session {
     Session(const rules::Catalog&, const NpcDefinitions&, const ArenaScenario&, Mode,
             VisibilityFactory = nullptr, void* factoryContext = nullptr);
     const ArenaScenario& scenario() const noexcept { return scenario_; }
+    GameSession& replayGame() noexcept { return game_; } // For existing HUD presentation; never wire-exposed.
     const GameSession& game() const noexcept { return game_; }
     const Map& map() const noexcept { return map_; }
     void observe(Observation&, bool diagnostic = false);

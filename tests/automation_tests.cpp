@@ -340,6 +340,32 @@ void recordings(const char* executable) {
     }
     Protocol p(cat, defs, Mode::Diagnostic);
     replay(p, path, header);
+    struct Observer final : ReplayObserver {
+        std::size_t calls = 0;
+        std::string firstSession;
+        bool reset = false, mutate = false;
+        void boundary(Session* session, std::size_t operation, const Json& state) override {
+            check(operation == ++calls, "observer receives consecutive checked operation boundaries");
+            if (firstSession.empty())
+                firstSession = state.at("session").get<std::string>();
+            reset |= state.at("session") != firstSession;
+            if (mutate && session)
+                session->replayGame().move(Action::TurnLeft);
+        }
+    } observer;
+    Protocol observed(cat, defs, Mode::Diagnostic);
+    replay(observed, path, header, &observer);
+    check(observer.calls > 4 && observer.reset, "observer covers reset across a complete recording");
+    Observer mutation;
+    mutation.mutate = true;
+    Protocol guarded(cat, defs, Mode::Diagnostic);
+    bool mutated = false;
+    try {
+        replay(guarded, path, header, &mutation);
+    } catch (const std::runtime_error& e) {
+        mutated = std::string(e.what()).find("observer mutated state") != std::string::npos;
+    }
+    check(mutated, "observer cannot mutate replay state unnoticed");
     const auto child = fork();
     check(child >= 0, "fork replay subprocess");
     if (child == 0) {

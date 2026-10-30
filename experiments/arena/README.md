@@ -152,3 +152,7 @@ runner memory. For a bounded capacity exercise, use `--scenario FILE --ticks 200
 in place of `--trace`; this need not finish a battle and provides no balance evidence.
 Use Release for performance results. OS caches are not controlled; no pure simulation
 or frame-rate speedup claim follows. No worker pool or desktop automation is involved.
+
+The optional [local MCP adapter](../../docs/mcp_usage.md) exposes these same explicit
+commands as bounded jobs with status/cancellation/results and replay investigation.
+Connecting an agent never runs a matrix automatically.

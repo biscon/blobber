@@ -28,5 +28,12 @@ class RecordedOutput final : public Output {
     std::ostream& out_;
     TraceWriter* trace_;
 };
-void replay(Protocol&, const std::filesystem::path&, const Json& expectedHeader);
+// Diagnostic observer; called only at checked request boundaries. No state mutation.
+class ReplayObserver {
+  public:
+    virtual ~ReplayObserver() = default;
+    virtual void boundary(Session*, std::size_t operation, const Json& state) = 0;
+};
+void replay(Protocol&, const std::filesystem::path&, const Json& expectedHeader,
+            ReplayObserver* observer = nullptr);
 } // namespace blobber::automation

@@ -3,20 +3,38 @@
 #include "automation/protocol.hpp"
 #include "automation/trace.hpp"
 #ifdef BLOBBER_HEADLESS_VISUAL
+#include "automation/capture.hpp"
 #include "automation/visual.hpp"
 #endif
 #include <iostream>
+#include <vector>
 using namespace blobber;
 using namespace blobber::automation;
 int main(int argc, char** argv) {
     try {
-        std::filesystem::path assets = "assets", record, playback;
+        std::filesystem::path assets = "assets", record, playback, capture;
+        std::vector<std::size_t> operations;
         Mode mode = Mode::Diagnostic;
         for (int i = 1; i < argc; ++i) {
             const std::string option = argv[i];
+            if (option == "--capabilities") {
+#ifdef BLOBBER_HEADLESS_VISUAL
+                constexpr bool graphics = true;
+#else
+                constexpr bool graphics = false;
+#endif
+                std::cout << Json{{"protocol", 1},
+                                  {"visual", graphics},
+                                  {"capture", graphics},
+                                  {"graphics_runtime", "unchecked"}}
+                                 .dump()
+                          << '\n';
+                return 0;
+            }
             if (option == "--help") {
                 std::cout << "blobber_headless --assets DIR --mode diagnostic|visual [--record FILE | "
-                             "--replay FILE]\n"
+                             "--replay FILE [--capture-dir NEW_DIR --capture-operation N (repeat up to 8)]]\n"
+                             "--capabilities reports optional backend support without a window.\n"
                              "Version 1 JSON lines on stdin/stdout; see docs/headless_protocol.md.\n";
                 return 0;
             }
@@ -29,13 +47,29 @@ int main(int argc, char** argv) {
                 record = value;
             else if (option == "--replay")
                 playback = value;
-            else if (option == "--mode" && (value == "visual" || value == "diagnostic"))
+            else if (option == "--capture-dir")
+                capture = value;
+            else if (option == "--capture-operation") {
+                std::size_t consumed = 0;
+                const auto n = std::stoull(value, &consumed);
+                if (consumed != value.size() || value.empty() || value[0] == '-' || !n || n > 10000000 ||
+                    operations.size() == 8)
+                    throw std::runtime_error("Invalid capture operation");
+                operations.push_back(static_cast<std::size_t>(n));
+            } else if (option == "--mode" && (value == "visual" || value == "diagnostic"))
                 mode = value == "visual" ? Mode::Visual : Mode::Diagnostic;
             else
                 throw std::runtime_error("Unknown option or mode: " + option);
         }
         if (!record.empty() && !playback.empty())
             throw std::runtime_error("Recording and replay are exclusive");
+        if ((!capture.empty() || !operations.empty()) &&
+            (playback.empty() || capture.empty() || operations.empty()))
+            throw std::runtime_error("Captures require replay, output directory and operations");
+#ifndef BLOBBER_HEADLESS_VISUAL
+        if (!capture.empty())
+            throw std::runtime_error("graphics_unavailable: configure BLOBBER_BUILD_GRAPHICS=ON");
+#endif
         const auto catalog = loadRules(assets / "rules/catalog.json");
         const auto definitions = loadNpcDefinitions(assets / "npcs/level.json");
         VisibilityFactory factory = nullptr;
@@ -46,7 +80,11 @@ int main(int argc, char** argv) {
         std::unique_ptr<SceneRenderer> renderer;
         std::unique_ptr<VisualContext> visual;
         if (mode == Mode::Visual) {
-            renderer = loadVisualRenderer(assets, definitions);
+            try {
+                renderer = loadVisualRenderer(assets, definitions);
+            } catch (const std::exception& e) {
+                throw std::runtime_error(std::string("graphics_unavailable: ") + e.what());
+            }
             visual = std::make_unique<VisualContext>(VisualContext{*renderer, definitions.timings});
             context = visual.get();
             factory = makeVisual;
@@ -56,7 +94,7 @@ int main(int argc, char** argv) {
         }
 #else
         if (mode == Mode::Visual)
-            throw std::runtime_error("Visual backend unavailable: configure BLOBBER_BUILD_GRAPHICS=ON");
+            throw std::runtime_error("graphics_unavailable: configure BLOBBER_BUILD_GRAPHICS=ON");
 #endif
         std::error_code ec;
         const auto executable = std::filesystem::read_symlink("/proc/self/exe", ec);
@@ -68,6 +106,12 @@ int main(int argc, char** argv) {
         Protocol protocol(catalog, definitions, mode, factory, context);
         if (!playback.empty()) {
             replay(protocol, playback, header);
+#ifdef BLOBBER_HEADLESS_VISUAL
+            if (!capture.empty()) {
+                Protocol captureProtocol(catalog, definitions, mode, factory, context);
+                captureReplay(captureProtocol, playback, header, assets, definitions, capture, operations);
+            }
+#endif
             std::cout << Json{{"replay", "matched"}}.dump() << '\n';
             return 0;
         }

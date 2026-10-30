@@ -1,0 +1,72 @@
+{
+  "assets": "/home/bison/Projects/blobber/cmake-build-release/assets",
+  "header": {
+    "binary": "4708833791826836226",
+    "content": {
+      "catalog": "5471453669825073813",
+      "npc_definitions": "15378577391153559251",
+      "preparation.json": "12428054850885865074",
+      "prepared/loot.bin": "6795145884858974791",
+      "prepared/metadata.json": "7022229179963557372",
+      "prepared/npcs.bin": "5951312856646699037",
+      "prepared/scene.bin": "4658194504534055067"
+    },
+    "mode": "visual",
+    "protocol": 1,
+    "timing": "fixed-10ms-v1"
+  },
+  "images": [
+    {
+      "file": "visual-operation-1.png",
+      "height": 1080,
+      "operation": 1,
+      "revision": "1",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920,
+      "original_file": "operation-1.png"
+    },
+    {
+      "file": "visual-operation-2.png",
+      "height": 1080,
+      "operation": 2,
+      "revision": "2",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920,
+      "original_file": "operation-2.png"
+    },
+    {
+      "file": "visual-operation-3.png",
+      "height": 1080,
+      "operation": 3,
+      "revision": "3",
+      "session": "1",
+      "ticks": 25,
+      "width": 1920,
+      "original_file": "operation-3.png"
+    },
+    {
+      "file": "visual-operation-22.png",
+      "height": 1080,
+      "operation": 22,
+      "revision": "22",
+      "session": "1",
+      "ticks": 250,
+      "width": 1920,
+      "original_file": "operation-22.png"
+    }
+  ],
+  "prepared": {
+    "preparation.json": "12428054850885865074",
+    "prepared/loot.bin": "6795145884858974791",
+    "prepared/metadata.json": "7022229179963557372",
+    "prepared/npcs.bin": "5951312856646699037",
+    "prepared/scene.bin": "4658194504534055067"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "/tmp/blobber133-visual-final/capture-a2cb5d37771144d9825a1800581b4a4c/trace.jsonl",
+  "trace_fingerprint": "12965180687586640337",
+  "gallery_note": "Image names prefixed for this review gallery; original_file preserves exported name."
+}

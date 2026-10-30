@@ -94,7 +94,8 @@ class ReplayOutput final : public Output {
     std::size_t operation = 0, bytes = 0;
 };
 } // namespace
-void replay(Protocol& protocol, const std::filesystem::path& path, const Json& expectedHeader) {
+void replay(Protocol& protocol, const std::filesystem::path& path, const Json& expectedHeader,
+            ReplayObserver* observer) {
     std::ifstream input(path);
     if (!input)
         throw std::runtime_error("Cannot open recording");
@@ -118,7 +119,14 @@ void replay(Protocol& protocol, const std::filesystem::path& path, const Json& e
         ++out.operation;
         const auto response = protocol.request(record.at("data"), out);
         out.check("response", response);
-        out.check("state", protocol.state());
+        const auto state = protocol.state();
+        out.check("state", state);
+        if (observer) {
+            observer->boundary(protocol.replaySession(), out.operation, state);
+            if (protocol.state() != state)
+                throw std::runtime_error("Replay observer mutated state at operation " +
+                                         std::to_string(out.operation));
+        }
     }
 }
 } // namespace blobber::automation

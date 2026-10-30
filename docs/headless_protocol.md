@@ -2,7 +2,8 @@
 
 Slice 13.1 implements a local, synchronous JSON-lines transport to the real arena
 simulation. See [design](headless_design.md) and [verification](slice131_verification.md).
-MCP, autonomous policies and batch experiments belong to later slices.
+The [experiment tooling](../experiments/arena/README.md) and optional
+[local MCP adapter](mcp_usage.md) reuse this protocol.
 
 ## Build and launch
 
@@ -203,3 +204,26 @@ consumed before the next simulation operation. C++ simulation/typed observation 
 is allocation-guarded separately from JSON construction, encoding, transport and
 trace I/O, which may allocate. No production throughput claim follows from those
 allocation checks.
+
+
+## Optional replay captures (slice 13.3)
+
+`blobber_headless --capabilities` reports protocol/compiled visual/capture support
+without loading assets or opening a window. Runtime graphics availability remains
+unchecked. The normal graphics build can verify and capture a recorded trace:
+
+```sh
+cmake-build-release/blobber_headless --assets cmake-build-release/assets \
+  --mode visual --replay /tmp/recording.jsonl \
+  --capture-dir /tmp/new-captures --capture-operation 1 --capture-operation 12
+```
+
+Use 1–8 distinct positive request-operation indices, an exclusive output directory,
+and the same executable/content/mode as recording. Full strict verification precedes
+a second reconstruction with captures at checked boundaries. The observer cannot
+change normalized gameplay state. PNGs use the existing prepared scene and current
+HUD at 1920×1080; historical cursor/dialog/log interaction is not reconstructed.
+The capture manifest includes trace/header/prepared identity and operation tokens.
+Only the optional capture path creates a hidden application-owned window. Ordinary
+visual play/replay still runs without a display. Missing graphics support is explicit;
+no focus, desktop or OS input automation is used. See [MCP usage](mcp_usage.md).

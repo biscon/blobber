@@ -273,7 +273,8 @@ if(BLOBBER_BUILD_GRAPHICS)
         add_library(blobber_automation_visual src/automation/visual.cpp)
         target_link_libraries(blobber_automation_visual PUBLIC blobber_automation blobber_assets_io)
         blobber_warnings(blobber_automation_visual)
-        target_link_libraries(blobber_headless PRIVATE blobber_automation_visual)
+        target_sources(blobber_headless PRIVATE src/automation/capture.cpp)
+        target_link_libraries(blobber_headless PRIVATE blobber_automation_visual blobber_platform)
         target_compile_definitions(blobber_headless PRIVATE BLOBBER_HEADLESS_VISUAL=1)
 endif()
 if(BUILD_TESTING)
@@ -312,4 +313,8 @@ if(BUILD_TESTING)
     add_test(NAME arena_experiment_tools COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/arena_experiment_tests.py)
     set_tests_properties(arena_experiment_tools PROPERTIES TIMEOUT 20 LABELS "tooling")
+    # Stdlib process/adapter contracts only: no SDK install, engine fight or matrix.
+    add_test(NAME mcp_adapter_tools COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/mcp_adapter_tests.py)
+    set_tests_properties(mcp_adapter_tools PROPERTIES TIMEOUT 20 LABELS "tooling")
 endif()

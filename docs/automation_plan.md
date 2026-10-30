@@ -6,7 +6,8 @@ is implemented; [verification/handoff](slice131_verification.md) and the
 2026-10-30: “slice accepted, update the docs.” Slice 13.2 is **Accepted and closed**
 (2026-10-30), following approval of the [detailed plan](automated_players_design.md)
 and the user’s “close up the slice” instruction. [Verification/handoff](slice132_verification.md)
-records delivery and unchanged limitations. 13.3 is next eligible for planning and remains Planned.
+records delivery and unchanged limitations. 13.3 is implemented, **Accepted and closed** (2026-10-30); [design](mcp_design.md), [usage](mcp_usage.md)
+and [verification/handoff](slice133_verification.md). The user accepted after reviewing the capture gallery. Slice 14 is next eligible for separate planning and remains unstarted.
 
 ## Delivery order and tracking
 
@@ -20,7 +21,7 @@ slices form a tooling interlude rather than reopening gameplay acceptance.
 | --- | --- | --- | --- |
 | 13.1 | [Headless arena sessions and reproducible play](#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Accepted |
 | 13.2 | [Automated players and balance experiments](#slice-132-automated-players-and-balance-experiments) | 13.1 | Accepted |
-| 13.3 | [MCP play and investigation](#slice-133-mcp-play-and-investigation) | 13.2 | Planned |
+| 13.3 | [MCP play and investigation](#slice-133-mcp-play-and-investigation) | 13.2 | Accepted |
 
 Each slice receives its detailed design before implementation and its own durable
 verification/handoff record. Update the corresponding record below and the demo
@@ -222,8 +223,17 @@ cancellation, and equivalence with direct runner requests. Verify selected captu
 when graphics are available without desktop input automation; explicitly report
 unexecuted checks. Document installation, invocation, and a concrete review recipe.
 
-**Execution record:** Not started. Detailed implementation plan, verification,
-and user acceptance pending.
+**Execution record:** Implemented, **Accepted and closed** (2026-10-30). Implementation authorized with “Implement the plan.”
+[Design](mcp_design.md), [installation/review guide](mcp_usage.md),
+[verification/handoff](slice133_verification.md). Session tools, bounded explicit jobs,
+reports/retained-trial investigation, strict replay and hidden scene/HUD captures.
+19 contracts; focused headless Debug/Release 6/6, graphics 7/7; sanitizer and SDK
+lifecycle/cancellation checks; explicit 18-trial smoke/reproduction and seven captures.
+Live Codex-host and interactive desktop review remain unverified. Prior slices stay
+closed; save/resume remains 14 and unstarted. The user reviewed the capture gallery
+and accepted: “I accept the slice, record it in the doc”.
+[Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff).
+Slice 14 is next eligible for separate planning; no commit requested.
 
 ## Extension policy and deferred work
 

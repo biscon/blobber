@@ -1,5 +1,23 @@
 # System design
 
+Proposed MVP, **not implemented** (2026-10-30):
+[procedural dungeon and campaign specification](procedural_campaign_mvp.md).
+Defines the post-demo three-floor run, generation and persistence requirements,
+scope exclusions and acceptance criteria as input to a separate implementation
+plan; it does not change the current demo roadmap or acceptance status.
+
+Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter](mcp_design.md).
+Optional official-SDK stdio tools reuse accepted sessions, experiments/reports and
+strict replay, with stale-safe handles, bounded jobs, cancellation and artifact access.
+An optional replay observer exports hidden application-owned current scene/HUD captures.
+[Installation/review guide](mcp_usage.md) and [verification/handoff](slice133_verification.md):
+19 fast adapter contracts, headless Debug/Release 6/6, graphics Debug/Release 7/7,
+focused sanitizer replay/capture checks, SDK lifecycle/cancellation integration,
+explicit opt-in smoke/rerun/replay, hidden GPU checks and seven retained captures.
+Live Codex-host interaction and interactive desktop review remain unverified.
+The user accepted 13.3 after reviewing the capture gallery. 13.1/13.2 remain closed;
+save/resume remains slice 14, next eligible for separate planning and unstarted.
+
 Implemented, **accepted and closed** (2026-10-30): [slice 13.2 automated players and
 balance experiments](automated_players_design.md). A stdlib Python policy/experiment
 layer reuses accepted headless commands and strict replay, with bounded serial trials,
@@ -12,8 +30,7 @@ rules changed. [Usage](../experiments/arena/README.md) and
 Debug/Release 5/5, manual fixture integration, 18/216-trial comparisons, selected
 policy rerun/engine replay, CPU visual mode and measured Release workloads. The
 user accepted and closed the slice on 2026-10-30: “close up the slice”. It is general-purpose project tooling for agents to use wherever relevant.
-Verification results and coverage limits remain unchanged. MCP in 13.3 is next
-eligible for planning; save/resume remains 14. Neither has started.
+Verification results and coverage limits remain unchanged. MCP 13.3 is Accepted and closed above; save/resume remains 14 and unstarted.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13.1 headless arena sessions](headless_design.md).
 A graphics-independent NPC metadata loader and bounded typed session host adapt the
@@ -26,7 +43,7 @@ zero tracked allocations, 256-actor capacity, shipped-content record/replay in b
 modes without a display, and hidden GPU lifecycle checks. The user accepted slice 13.1
 on 2026-10-30: “slice accepted, update the docs.” Verification limits remain unchanged.
 [13.2](automation_plan.md#slice-132-automated-players-and-balance-experiments) is now
-Accepted above; 13.3 remains Planned and unstarted before slice 14.
+Accepted above; 13.3 is Accepted and closed above; slice 14 remains unstarted.
 
 Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
 Session-owned exactly-once XP feeds checked live-party advancement through levels

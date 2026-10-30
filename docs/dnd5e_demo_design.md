@@ -1,7 +1,7 @@
 # SRD 5.1 goblin demo: design and delivery roadmap
 
 Status: gameplay roadmap; slices 01–08 and milestones A/B are Accepted. Slice 08 was accepted on 2026-10-26, including the three-cell melee front and edge-visibility correction. Graphical slice 8.1 was accepted and closed on 2026-10-26; 8.2 was accepted and closed on 2026-10-26; 8.3 was accepted and closed on 2026-10-27, including the front-cell spacing correction. Slice 09 was accepted and closed on 2026-10-27. Slice 10 was accepted and closed on 2026-10-27, including the spellcasting UI, native-resolution HUD and impact-triggered alerts. Slice 11 was accepted and closed on 2026-10-27, including inventory UI corrections and the tabbed Character sheet. Slice 12 was accepted and closed on 2026-10-27, including loot bags, Inventory Drop, Take All auto-close and the top-bar Rest icon. The character-creation visual proposal and expanded spell catalog were accepted on 2026-10-28. Slices 12.1–12.4 are inserted before slice 13; slice 12.1 was accepted and closed on 2026-10-29, including all visual and portrait follow-ups. Slice 12.2 was accepted and closed on 2026-10-29. Slice 12.3 was accepted and closed on 2026-10-29, including the formation dragging and search-caret corrections. Slice 12.4 was accepted and closed on 2026-10-29. The user approved arena slice 12.5 before slice 13; 12.5 was accepted and closed on 2026-10-29. Slice 13 and milestone C were accepted and closed on 2026-10-30, including the development-flag and spell-picker review corrections.
-Slice 13.1 was accepted and closed on 2026-10-30; 13.2 was accepted and closed on 2026-10-30.
+Slices 13.1, 13.2 and 13.3 were accepted and closed on 2026-10-30.
 Created: 2026-10-25. Execution records below distinguish implementation from
 user acceptance.
 
@@ -9,13 +9,13 @@ user acceptance.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted slice | 13.2 — Automated players and balance experiments (2026-10-30); slice 13 and milestone C remain Accepted |
-| Active slice | None; 13.2 accepted and closed |
+| Latest accepted slice | 13.3 — MCP play and investigation (2026-10-30); slice 13 and milestone C remain Accepted |
+| Active slice | None |
 | Awaiting user review | None |
 | Blockers | None |
-| Next eligible slice | 13.3 — MCP play and investigation |
-| Next action | Plan 13.3 in a clean context; review its plan before implementation |
-| Accepted design | Slices 13.1 and 13.2 implemented and accepted, 2026-10-30; 13.3 plan pending |
+| Next eligible slice | 14 — Save/resume (separate planning) |
+| Next action | Plan slice 14 separately in a clean context when requested; review its detailed plan before implementation |
+| Accepted design | Slices 13.1–13.3 implemented and accepted, 2026-10-30; [13.3 design](mcp_design.md) and [closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff) |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -338,7 +338,7 @@ names the immediate checkpoint, not permission to ignore earlier incomplete work
 | 13 | [Levels 2–3](#slice-13-levels-2-and-3) | 12.5 | Accepted | C |
 | 13.1 | [Headless arena sessions and reproducible play](automation_plan.md#slice-131-headless-arena-sessions-and-reproducible-play) | 13 | Accepted | Tooling interlude |
 | 13.2 | [Automated players and balance experiments](automation_plan.md#slice-132-automated-players-and-balance-experiments) | 13.1 | Accepted | Tooling interlude |
-| 13.3 | [MCP play and investigation](automation_plan.md#slice-133-mcp-play-and-investigation) | 13.2 | Planned | Tooling interlude |
+| 13.3 | [MCP play and investigation](automation_plan.md#slice-133-mcp-play-and-investigation) | 13.2 | Accepted | Tooling interlude |
 | 14 | [Save and resume](#slice-14-save-and-resume) | 13.3 | Planned | D |
 | 15 | [Cohesive presentation](#slice-15-cohesive-presentation) | 14 | Planned | D |
 | 16 | [Demo integration](#slice-16-demo-integration) | 15 | Planned | D |
@@ -1798,7 +1798,8 @@ limitations remain unchanged. 13.2 is now implemented and Accepted; its
 [design](automated_players_design.md), [usage](../experiments/arena/README.md) and
 [verification](slice132_verification.md) record the delivered tools, explicit-only
 playtesting workflow and limits. The user accepted and closed 13.2 on 2026-10-30:
-“close up the slice”. 13.3 is next eligible for planning and remains unstarted.
+“close up the slice”. 13.3 is now implemented, Accepted and closed; see its
+[design](mcp_design.md), [usage](mcp_usage.md) and [verification/handoff](slice133_verification.md).
 
 On 2026-10-30 the user requested recording the agreed three-slice direction before
 the next gameplay slice. The dedicated [automation plan](automation_plan.md)
@@ -1893,6 +1894,7 @@ choices belong in their execution/design records unless they change this roadmap
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-30 | Accepted and closed 13.3 after capture-gallery review. [Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged; tooling use stays open-ended and all balance experiments remain opt-in. Slice 14 is next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the doc”. |
 | 2026-10-30 | Accepted and closed 13.2. [Closeout/handoff](slice132_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged. Use remains open-ended wherever relevant to project work; examples neither restrict its purpose nor add requirements. 13.3 is next eligible for separate planning; 14 stays after 13.3. | User accepted the executed checks as sufficient and instructed “close up the slice”; clarified examples must not restrict the tooling’s uses. |
 | 2026-10-30 | Implemented 13.2 and marked Ready for review. [Verification](slice132_verification.md). Three policies/party packages, bounded serial experiments, honest reports and reproducible traces. All balance playthroughs remain opt-in, outside routine tests; no gameplay tuning. 13.3/14 remain unstarted. | User approved the detailed plan with “implement the plan”. Implementation acceptance remains pending. |
 | 2026-10-30 | Start 13.2 planning only. [Proposed design](automated_players_design.md). Balance experiments, even small matrices, are explicit playtesting tools outside default CTest/build/CI and unrelated-change verification. Short fixture-owned tooling checks remain separate. Compare a few sensible, competently built parties; no universal viability/win-rate target or weak-build sweep. 13.3 and 14 stay unstarted. | User requested a detailed 13.2 plan for review, rejected running balance playthroughs on every change, and clarified that deliberately weak/novelty parties need not win. |
@@ -2018,3 +2020,17 @@ Debug/Release 38/38, ASan/UBSan 5/5 with leak detection, zero tracked frame allo
 limitations remain unchanged. At that closeout, slice 13 became next eligible for
 separate planning; its subsequent implementation is recorded in the current
 checkpoint and slice 13 execution record.
+
+## Slice 13.3 execution record
+
+2026-10-30: Implemented, **Accepted and closed**. User authorized with “Implement the plan.”
+[Design](mcp_design.md), [usage/configuration](mcp_usage.md), [verification/handoff](slice133_verification.md).
+Session play, bounded explicit jobs, honest results, strict reproduction/investigation
+and application-owned replay captures reuse the accepted systems. 19 fast contracts;
+focused headless Debug/Release 6/6 and graphics 7/7; sanitizer, SDK lifecycle/cancellation,
+opt-in smoke/reproduction, hidden GPU checks and seven captures. Live Codex-host and
+interactive desktop review remain unverified. No OS input/focus control; no automatic
+balance checks or gameplay changes. 13.1/13.2 remain closed; 14 remains unstarted.
+The user reviewed the capture gallery and accepted: “I accept the slice, record it in the doc”.
+[Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff).
+Slice 14 is next eligible for separate planning; do not start it automatically. No commit requested.
