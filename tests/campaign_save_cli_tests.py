@@ -26,7 +26,7 @@ def setup(root):
     for name in ('goblin','goblin.archer'):
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc,id=name)))
     (root/'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json','goblin.json','goblin.archer.json'],instances=[])))
-    return dict(kind='campaign',schema_version=1,generator_version=3,template_version=3,seed=5,party=arena['party'])
+    return dict(kind='campaign',schema_version=1,generator_version=4,template_version=4,seed=5,party=arena['party'])
 
 
 def main(runner):

@@ -1,12 +1,15 @@
 #include "platform/presenter.hpp"
 #include "assets/image.hpp"
+#include "assets/prepared_image.hpp"
 #include "rlgl.h"
 #include "ui/hud.hpp"
+#include <cmath>
+#include <cstdio>
 #include <stdexcept>
 namespace blobber {
-Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets)
-    : resources_(resources), assetsMenuPath_(assets / "ui/menu-background.png"), fonts_(assets / "fonts"),
-      uiArt_(resources_, assets / "ui") {
+Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets, PreparationWorker* worker)
+    : worker_(worker), resources_(resources), assetsMenuPath_(assets / "ui/menu-background.png"),
+      fonts_(assets / "fonts"), uiArt_(resources_, assets / "ui") {
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);
@@ -21,10 +24,35 @@ void Presenter::drawGame(Rectangle destination) const {
     BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
     drawTarget(ui_, destination);
     EndBlendMode();
+    if (fade_ > 0)
+        DrawRectangleRec(destination, {0, 0, 0, static_cast<unsigned char>(std::round(fade_ * 255))});
+    if (loadingLabel_[0]) {
+        rlPushMatrix();
+        rlTranslatef(destination.x, destination.y, 0);
+        rlScalef(destination.width / gameWidth, destination.height / gameHeight, 1);
+        fonts_.draw(loadingLabel_.data(),
+                    (artWidth - fonts_.width(loadingLabel_.data(), UiTextStyle::Label)) * .5f,
+                    artHeight * .5f, {202, 178, 118, 255}, UiTextStyle::Label);
+        rlPopMatrix();
+    }
+}
+void Presenter::presentCached(float fade, const char* status) {
+    fade_ = std::clamp(fade, 0.f, 1.f);
+    std::snprintf(loadingLabel_.data(), loadingLabel_.size(), "%s", status ? status : "");
+    BeginDrawing();
+    ClearBackground(BLACK);
+    const int rw = GetRenderWidth(), rh = GetRenderHeight();
+    if (rw > 0 && rh > 0 && !IsWindowMinimized()) {
+        const auto fit = aspectFit(rw, rh);
+        drawGame({fit.x * float(GetScreenWidth()) / rw, fit.y * float(GetScreenHeight()) / rh,
+                  fit.width * float(GetScreenWidth()) / rw, fit.height * float(GetScreenHeight()) / rh});
+    }
+    EndDrawing();
 }
 void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
                              const Map& map, const HudSnapshot* hud, const PickingBuffer* picking, bool debug,
                              const generation::DiagnosticView* diagnostic, bool reveal) {
+    loadingLabel_[0] = 0;
     const auto& target = resources_.target(logical);
     if (!revision || target.texture.width != viewWidth || target.texture.height != viewHeight)
         throw std::invalid_argument("Invalid world image publication");
@@ -65,7 +93,7 @@ void Presenter::compose(const Texture2D& texture, bool flipped, const MovementSt
 }
 void Presenter::prepareMenu() {
     if (!menuBackground_) {
-        OwnedImage background(LoadImage((assetsMenuPath_).string().c_str()));
+        OwnedImage background(preparedImage(assetsMenuPath_));
         if (!background.value.data)
             throw std::runtime_error("Missing menu background");
         menuBackground_ = resources_.createTexture(background.value);
@@ -73,6 +101,8 @@ void Presenter::prepareMenu() {
     }
 }
 void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context) {
+    loadingLabel_[0] = 0;
+    fade_ = 0;
     SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_BILINEAR);
     BeginTextureMode(resources_.target(game_));
     ClearBackground({12, 18, 18, 255});

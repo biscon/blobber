@@ -184,8 +184,8 @@ void doorsAndEffects() {
     game.update(.15, false);
     auto end = input(300);
     visibility.update(end);
-    check(visibility.picking() && visibility.frame().doors[3].id == PickingBuffer::empty,
-          "settled leaf is opaque without a picking ID");
+    check(visibility.picking() && visibility.frame().doors[3].id == PickingBuffer::fixtureBase,
+          "settled open leaf remains opaque and clickable for closing");
 }
 void authoredFixtureKnowledge() {
     const auto map = fixtureMap();

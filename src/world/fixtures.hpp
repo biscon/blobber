@@ -38,11 +38,20 @@ struct FixtureResult {
     explicit operator bool() const noexcept { return accepted; }
 };
 inline bool fixtureReachable(const FixtureDefinition& f, Cell cell, Heading heading) noexcept {
+    if (f.kind == FixtureKind::Upstairs || f.kind == FixtureKind::Downstairs)
+        return cell == f.cell + forward(f.facing) * -1 && heading == f.facing;
     return f.cell == cell + forward(heading) ||
            (f.kind != FixtureKind::Door && f.kind != FixtureKind::GuardianGate && f.cell == cell);
 }
-inline bool fixtureBlocks(const FixtureDefinition& f, bool completed) noexcept {
-    return (f.kind == FixtureKind::Door || f.kind == FixtureKind::GuardianGate) && !completed;
+inline bool stairFixture(FixtureKind k) noexcept {
+    return k == FixtureKind::Upstairs || k == FixtureKind::Downstairs;
+}
+inline Cell stairLanding(const FixtureDefinition& f) noexcept {
+    return f.cell + forward(f.facing) * -1;
+}
+inline bool fixtureBlocks(const FixtureDefinition& f, bool open) noexcept {
+    return stairFixture(f.kind) ||
+           ((f.kind == FixtureKind::Door || f.kind == FixtureKind::GuardianGate) && !open);
 }
 const char* fixtureName(const FixtureDefinition&) noexcept;
 // Transient session-owned presentation, never persisted as world geometry.
@@ -104,6 +113,15 @@ class FloorGeometry {
     const FixtureDefinition* find(FixtureId) const noexcept;
     int at(Cell) const noexcept;
     bool completed(unsigned slot) const noexcept { return slot < definition_.count && completed_[slot]; }
+    bool open(unsigned slot) const noexcept {
+        return slot < definition_.count &&
+               (definition_.entries[slot].kind == FixtureKind::Door
+                    ? open_[slot]
+                    : definition_.entries[slot].kind == FixtureKind::GuardianGate && completed_[slot]);
+    }
+    bool rememberedOpen(unsigned slot) const noexcept {
+        return slot < definition_.count && (definition_.discovery ? rememberedOpen_[slot] : open(slot));
+    }
     std::uint64_t world() const noexcept { return world_; }
     std::uint64_t revision() const noexcept { return revision_; }
     std::uint64_t geometryRevision() const noexcept { return geometryRevision_; }
@@ -119,18 +137,17 @@ class FloorGeometry {
 
     // Preparation-only owned values; no borrowed pointers or navigation workspace.
     struct Saved {
-        std::array<bool, fixtureCapacity> completed{}, known{}, remembered{};
+        std::array<bool, fixtureCapacity> completed{}, known{}, remembered{}, open{}, rememberedOpen{};
         std::bitset<discoveryCapacity> discovered;
         std::uint64_t revision = 0, geometryRevision = 0, discoveryRevision = 0;
     };
 
   private:
     friend class GameSession;
-    friend class GameSession;
     const Map& map_;
     FloorFixtures definition_;
     std::vector<std::uint8_t> index_;
-    std::array<bool, fixtureCapacity> completed_{}, known_{}, remembered_{};
+    std::array<bool, fixtureCapacity> completed_{}, known_{}, remembered_{}, open_{}, rememberedOpen_{};
     std::bitset<discoveryCapacity> discovered_;
     std::uint64_t world_, revision_ = 0, geometryRevision_ = 0, discoveryRevision_ = 0;
     bool complete(unsigned) noexcept;

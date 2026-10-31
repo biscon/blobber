@@ -1,5 +1,6 @@
 #include "assets/world_assets.hpp"
 #include "assets/fingerprint.hpp"
+#include "core/preparation.hpp"
 #include <algorithm>
 #include <cmath>
 #include <nlohmann/json.hpp>
@@ -30,6 +31,24 @@ void boundedAdd(std::uint64_t& n, std::uint64_t add, std::uint64_t limit) {
 void validAnchor(Anchor a) {
     require(std::isfinite(a.x) && std::isfinite(a.y) && a.x >= 0 && a.x <= 1 && a.y > 0 && a.y <= 1);
 }
+void validPack(const Pack& p, const std::vector<Texture>& textures) {
+    require(!p.id.empty() && p.id.size() <= 32 && p.materialCount >= 3 && p.materialCount <= 32 &&
+            std::all_of(p.id.begin(), p.id.end(),
+                        [](unsigned char c) {
+                            return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+                        }) &&
+            std::isfinite(p.worldScale) && p.worldScale > 0 && p.worldScale <= 16);
+    for (unsigned i = 0; i < p.materialCount; ++i)
+        require(p.materials[i] < textures.size() && textures[p.materials[i]].material &&
+                !textures[p.materials[i]].clamp);
+    for (auto i : {p.door, p.lockedDoor, p.doorEdge, p.sky})
+        require(i < textures.size() && !textures[i].clamp && !textures[i].material);
+    for (auto i : {p.crest, p.vine})
+        require(i < textures.size() && textures[i].clamp && !textures[i].material);
+    for (float c : p.horizon)
+        require(std::isfinite(c) && c >= 0 && c <= 1);
+}
+
 Json appearanceJson(const Appearance& a) {
     Json clips = Json::array();
     for (const auto& c : a.clips)
@@ -131,21 +150,22 @@ void Writer::bytes(const std::vector<unsigned char>& b) {
     offset_ += b.size();
 }
 unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprite,
-                     const std::vector<unsigned char>& rgba, unsigned cutoff, Anchor anchor) {
+                     const std::vector<unsigned char>& rgba, unsigned cutoff, Anchor anchor, bool material) {
     require(publication_.textures.size() < textureCapacity && !name.empty() && name.size() <= 256);
     for (const auto& t : publication_.textures)
         require(t.name != name);
     validAnchor(anchor);
     unsigned sprites = 0, materials = 0;
     for (const auto& t : publication_.textures)
-        t.clamp ? ++sprites : ++materials;
-    require(sprite ? sprites < 448 : materials < 32);
+        t.clamp ? ++sprites : materials += unsigned(t.material);
+    require(sprite ? sprites < 448 : (!material || materials < 256));
     std::vector<unsigned char> alpha;
     auto pixels = preparePixels(rgba, w, h, cutoff, sprite, alpha);
     boundedAdd(publication_.textureBytes, pixels.size(), textureBudget);
     boundedAdd(publication_.alphaBytes, alpha.size(), alphaBudget);
     Texture t{name,        w, h, mipLevels(w, h), sprite, offset_, pixels.size(), offset_ + pixels.size(),
               alpha.size()};
+    t.material = material && !sprite;
     t.checksum = fingerprintBasis;
     t.alphaChecksum = fingerprintBasis;
     fingerprintBytes(t.checksum, pixels.data(), pixels.size());
@@ -156,8 +176,14 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
     publication_.anchors.push_back(anchor);
     return unsigned(publication_.textures.size() - 1);
 }
-void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t definitions) {
-    require(appearances.size() <= 32);
+void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t definitions,
+                    const std::vector<Pack>& packs) {
+    require(appearances.size() <= 32 && packs.size() <= 8);
+    std::set<std::string> ids;
+    for (const auto& p : packs) {
+        validPack(p, publication_.textures);
+        require(ids.insert(p.id).second);
+    }
     Json textures = Json::array(), actors = Json::array();
     for (unsigned i = 0; i < publication_.textures.size(); ++i) {
         const auto& t = publication_.textures[i];
@@ -167,6 +193,7 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"height", t.height},
                             {"levels", t.levels},
                             {"clamp", t.clamp},
+                            {"material", t.material},
                             {"offset", t.offset},
                             {"bytes", t.bytes},
                             {"alpha_offset", t.alphaOffset},
@@ -177,10 +204,23 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
     }
     for (const auto& a : appearances)
         actors.push_back(appearanceJson(a));
+    Json packJson = Json::array();
+    for (const auto& p : packs)
+        packJson.push_back({{"id", p.id},
+                            {"materials", std::vector<std::uint16_t>(p.materials.begin(),
+                                                                     p.materials.begin() + p.materialCount)},
+                            {"door", p.door},
+                            {"lockedDoor", p.lockedDoor},
+                            {"doorEdge", p.doorEdge},
+                            {"crest", p.crest},
+                            {"vine", p.vine},
+                            {"sky", p.sky},
+                            {"worldScale", p.worldScale},
+                            {"horizon", p.horizon}});
     const Json manifest{{"format", version},          {"appearance_revision", appearanceRevision},
                         {"definitions", definitions}, {"bytes", offset_},
                         {"checksum", hash_},          {"textures", textures},
-                        {"appearances", actors}};
+                        {"appearances", actors},      {"packs", packJson}};
     const auto text = manifest.dump(2);
     require(text.size() <= 256 * 1024);
     out_.close();
@@ -215,11 +255,15 @@ Publication load(const std::filesystem::path& directory) {
                 integer(j.at("appearance_revision")) == appearanceRevision);
         Publication p;
         p.payload = directory / "textures.bin";
-        p.fingerprint = integer(j.at("checksum"));
+        const auto payloadChecksum = integer(j.at("checksum"));
         p.definitions = integer(j.at("definitions"));
         const auto length = integer(j.at("bytes"));
         require(length <= textureBudget + alphaBudget && std::filesystem::file_size(p.payload) == length);
-        require(fingerprintFile(p.payload) == std::to_string(p.fingerprint));
+        require(fingerprintFile(p.payload) == std::to_string(payloadChecksum));
+        // Publication identity includes bindings/sampling as well as the checked payload checksum.
+        const auto canonical = j.dump();
+        p.fingerprint = fingerprintBasis;
+        fingerprintBytes(p.fingerprint, canonical.data(), canonical.size());
         const auto& ts = j.at("textures");
         require(ts.is_array() && !ts.empty() && ts.size() <= textureCapacity);
         p.textures.reserve(ts.size());
@@ -248,8 +292,10 @@ Publication load(const std::filesystem::path& directory) {
             boundedAdd(offset, t.alphaBytes, length);
             boundedAdd(p.textureBytes, t.bytes, textureBudget);
             boundedAdd(p.alphaBytes, t.alphaBytes, alphaBudget);
-            t.clamp ? ++sprites : ++materials;
-            require(sprites <= 448 && materials <= 32);
+            t.material = v.at("material").get<bool>();
+            require(!t.clamp || !t.material);
+            t.clamp ? ++sprites : materials += unsigned(t.material);
+            require(sprites <= 448 && materials <= 256);
             const auto& a = v.at("anchor");
             require(a.is_array() && a.size() == 2);
             Anchor anchor{a[0].get<float>(), a[1].get<float>()};
@@ -258,6 +304,43 @@ Publication load(const std::filesystem::path& directory) {
             p.anchors.push_back(anchor);
         }
         require(offset == length);
+        require(j.at("packs").is_array() && j.at("packs").size() <= 8);
+        std::set<std::string> packIds;
+        for (const auto& v : j.at("packs")) {
+            Pack pack;
+            pack.id = v.at("id").get<std::string>();
+            require(!pack.id.empty() && pack.id.size() <= 32 && packIds.insert(pack.id).second &&
+                    std::all_of(pack.id.begin(), pack.id.end(), [](unsigned char c) {
+                        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+                    }));
+            const auto ref = [&](const char* name, bool sprite) {
+                const auto n = unsigned(integer(v.at(name), textureCapacity - 1));
+                require(n < p.textures.size() && p.textures[n].clamp == sprite);
+                return std::uint16_t(n);
+            };
+            const auto& palette = v.at("materials");
+            require(palette.is_array() && palette.size() >= 3 && palette.size() <= 32);
+            for (const auto& n : palette) {
+                const auto i = unsigned(integer(n, textureCapacity - 1));
+                require(i < p.textures.size() && p.textures[i].material);
+                pack.materials[pack.materialCount++] = std::uint16_t(i);
+            }
+            pack.door = ref("door", false);
+            pack.lockedDoor = ref("lockedDoor", false);
+            pack.doorEdge = ref("doorEdge", false);
+            pack.crest = ref("crest", true);
+            pack.vine = ref("vine", true);
+            pack.sky = ref("sky", false);
+            pack.worldScale = v.at("worldScale").get<float>();
+            require(std::isfinite(pack.worldScale) && pack.worldScale > 0 && pack.worldScale <= 16);
+            require(v.at("horizon").size() == 3);
+            for (unsigned i = 0; i < 3; ++i) {
+                pack.horizon[i] = v.at("horizon")[i].get<float>();
+                require(std::isfinite(pack.horizon[i]) && pack.horizon[i] >= 0 && pack.horizon[i] <= 1);
+            }
+            validPack(pack, p.textures);
+            p.packs.push_back(std::move(pack));
+        }
         const auto& actors = j.at("appearances");
         require(actors.is_array() && actors.size() <= 32);
         names.clear();
@@ -346,6 +429,12 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
     require(publication.textures.size() <= textureCapacity && publication.appearances.size() <= 32 &&
             publication.anchors.size() == publication.textures.size() &&
             publication.alphaBytes <= alphaBudget && publication.textureBytes <= textureBudget);
+    require(publication.packs.size() <= 8);
+    std::set<std::string> ids;
+    for (const auto& p : publication.packs) {
+        validPack(p, publication.textures);
+        require(ids.insert(p.id).second);
+    }
     std::uint64_t totalAlpha = 0;
     for (const auto& t : publication.textures) {
         require(t.width && t.height && t.width <= 4096 && t.height <= 4096 &&
@@ -379,6 +468,7 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
     masks.reserve(publication.textures.size());
     bounds.reserve(publication.textures.size());
     for (unsigned i = 0; i < publication.textures.size(); ++i) {
+        preparationPoint("Preparing artwork");
         const auto& t = publication.textures[i];
         masks.push_back(publication.read(i, true));
         AlphaBounds b{t.width, t.height, 0, 0};
@@ -413,17 +503,47 @@ unsigned CpuAssets::named(const char* name) const {
             return i;
     throw std::invalid_argument(std::string("Missing world sprite: ") + name);
 }
+Pack CpuAssets::pack(const std::string& id) const {
+    for (const auto& p : publication.packs)
+        if (p.id == id)
+            return p;
+    // Small standalone generated publications used by CPU/GPU fixtures retain a local palette.
+    if (!publication.packs.empty() || id != "dungeon")
+        throw std::invalid_argument("Unavailable world asset pack: " + id);
+    Pack p;
+    for (unsigned i = 0; i < publication.textures.size(); ++i)
+        if (publication.textures[i].material && !publication.textures[i].clamp) {
+            require(p.materialCount < p.materials.size());
+            p.materials[p.materialCount++] = std::uint16_t(i);
+        }
+    auto optional = [&](const char* name) {
+        for (unsigned i = 0; i < publication.textures.size(); ++i)
+            if (publication.textures[i].name == name)
+                return std::uint16_t(i);
+        return std::uint16_t(0);
+    };
+    p.door = optional("door");
+    p.lockedDoor = optional("door-locked");
+    p.doorEdge = p.door;
+    p.crest = optional("decoration/crest");
+    p.vine = optional("decoration/vine");
+    p.sky = optional("sky");
+    return p;
+}
 std::size_t CpuAssets::bytes() const noexcept {
-    std::size_t n =
-        sizeof(*this) + masks.capacity() * sizeof(masks[0]) + bounds.capacity() * sizeof(AlphaBounds) +
-        publication.textures.capacity() * sizeof(Texture) + publication.anchors.capacity() * sizeof(Anchor) +
-        publication.appearances.capacity() * sizeof(Appearance);
+    std::size_t n = sizeof(*this) + publication.packs.capacity() * sizeof(Pack) +
+                    masks.capacity() * sizeof(masks[0]) + bounds.capacity() * sizeof(AlphaBounds) +
+                    publication.textures.capacity() * sizeof(Texture) +
+                    publication.anchors.capacity() * sizeof(Anchor) +
+                    publication.appearances.capacity() * sizeof(Appearance);
     for (const auto& m : masks)
         n += m.capacity();
     for (const auto& t : publication.textures)
         n += t.name.capacity();
     for (const auto& a : publication.appearances)
         n += a.id.capacity();
+    for (const auto& p : publication.packs)
+        n += p.id.capacity();
     return n;
 }
 } // namespace blobber::world_assets

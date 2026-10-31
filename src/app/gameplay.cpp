@@ -1,5 +1,7 @@
 #include "app/gameplay.hpp"
 #include "app/campaign_saves.hpp"
+#include "app/loading.hpp"
+#include "app/travel_fade.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
 #include "platform/game_view.hpp"
@@ -72,6 +74,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     auto* campaign = launch ? launch->campaign : nullptr;
     for (;;) {
+        auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
         auto current =
             campaign
                 ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, world)
@@ -90,6 +93,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             initial.commands.arenaContext(false);
         initial.refresh();
         initial.frames.activate();
+        if (loading->closing())
+            return PlayOutcome::Quit;
+        loading.reset();
+        presenter.fade(0);
         for (;;) {
             auto& view = *current;
             if (WindowShouldClose() && (!campaign || saveFlow.closeRequested(*campaign, view.commands)))
@@ -196,34 +203,68 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (campaign && view.commands.snapshot().travelRequested) {
                 const auto request = *view.commands.snapshot().travelRequested;
                 view.commands.cancelTravel();
-                try {
-                    auto ticket = campaign->prepareTravel(request);
-                    auto replacement = std::make_unique<PlayView>(
-                        ticket.game(), campaign->location(ticket.destination()).map(), timings, world,
-                        campaign->location(ticket.destination()).generated
-                            ? &*campaign->location(ticket.destination()).generated
-                            : nullptr);
-                    // Compose destination before commit; refresh does not mutate Party.
-                    replacement->refresh();
-                    replacement->commands.enableMainMenu();
-                    replacement->commands.saveMenu().enabled = launch && launch->saves;
-                    if (campaign->commitTravel(ticket)) {
-                        replacement->frames.activate();
-                        replacement->commands.travelMessage(
-                            request.kind == TravelKind::Recall
-                                ? "Recalled to the sanctuary hub. One camp kit consumed. Rest separately."
-                                : "Travel complete. No camp kit consumed.");
-                        current.swap(replacement);
-                        replacement.reset(); // old view before old session in ticket
-                        inputArmed = false;
-                        first = true;
-                        continue;
-                    }
-                    view.commands.travelMessage("Travel changed; reopen Travel and try again.");
-                } catch (const std::exception& e) {
-                    view.commands.travelMessage(e.what());
+                // No simulation or Party readers run while loading borrows their owners.
+                TravelFade fade;
+                while (fade.phase() == TravelFade::Phase::Out) {
+                    if (WindowShouldClose())
+                        return PlayOutcome::Quit;
+                    fade.advance(GetFrameTime());
+                    presenter.presentCached(fade.alpha());
                 }
+                presenter.presentCached(1); // A fully black frame precedes any destination work.
+                fade.blackPresented();
+                bool closing = false;
+                {
+                    LoadingScreen travelLoading(presenter.loadingWorker(), &presenter, true);
+                    try {
+                        auto ticket = prepareCpu([&] { return campaign->prepareTravel(request); });
+                        auto replacement = prepareCpu([&] {
+                            return std::make_unique<PlayView>(
+                                ticket.game(), campaign->location(ticket.destination()).map(), timings, world,
+                                campaign->location(ticket.destination()).generated
+                                    ? &*campaign->location(ticket.destination()).generated
+                                    : nullptr);
+                        });
+                        replacement->refresh();
+                        replacement->commands.enableMainMenu();
+                        replacement->commands.saveMenu().enabled = launch && launch->saves;
+                        if (campaign->commitTravel(ticket)) {
+                            replacement->frames.activate();
+                            replacement->commands.travelMessage(
+                                request.kind == TravelKind::Recall
+                                    ? "Recalled to the sanctuary hub. One camp kit consumed. Rest separately."
+                                    : "Travel complete. No camp kit consumed.");
+                            current.swap(replacement);
+                            replacement.reset(); // Source view dies before the source session in ticket.
+                        } else {
+                            current->commands.travelMessage("Travel changed; reopen Travel and try again.");
+                        }
+                    } catch (const std::exception& e) {
+                        current->commands.travelMessage(e.what());
+                    }
+                    closing = travelLoading.closing();
+                }
+                if (closing)
+                    return PlayOutcome::Quit;
+                auto& arrived = *current;
+                arrived.refresh(debug, sample.ui.focused);
+                presenter.fade(1);
+                arrived.frames.present(presenter, arrived.session, arrived.map, debug, true,
+                                       &arrived.commands.snapshot(),
+                                       arrived.diagnostics ? &*arrived.diagnostics : nullptr, reveal);
+                fade.prepared();
+                while (fade.phase() == TravelFade::Phase::In) {
+                    if (WindowShouldClose())
+                        return PlayOutcome::Quit;
+                    fade.advance(GetFrameTime());
+                    presenter.presentCached(fade.alpha());
+                }
+                presenter.fade(0);
+                inputArmed = false;
+                first = true;
+                continue;
             }
+
             if (view.commands.snapshot().retryRequested) {
                 restart = true;
                 break;

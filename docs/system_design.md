@@ -9,9 +9,12 @@ documents the delivered ownership, interfaces and deletion inventory;
 without describing current defaults. Additional monsters require separate planning;
 the campaign roadmap remains paused after P-B, with no automatic PC07 work.
 
+Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
+
 ## Boundaries and data flow
 
-- **World:** compact immutable row-major solid-cell storage and immutable NPC
+- **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID
+  (default `dungeon`); compact row-major solid-cell storage and immutable NPC
   loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
 - **Session/combat:** an immovable owner borrows map/catalog and owns actors,
@@ -58,12 +61,20 @@ the campaign roadmap remains paused after P-B, with no automatic PC07 work.
   invariants. Key repetition is a separate graphics-independent input component.
 - **Assets and preparation:** the offline world baker extracts registered source
   frames, prepares reusable material/sprite mip chains and CPU alpha masks, and
-  publishes bounded versioned world metadata/textures. Runtime validates publication
+  publishes bounded versioned world metadata/textures, including up to eight pack
+  manifests with local material palettes, door/edge/decal/sky bindings and world UV scale.
+  Texture purpose is independent of sprite alpha/sampling; panoramas do not occupy
+  terrain palette slots. Publication identity hashes canonical metadata including the
+  checked payload checksum, so binding-only edits invalidate replay too. Runtime validates publication
   fingerprints and definitions before creating immutable shared CPU assets and GPU
   texture leases. Native portrait/creator atlases have independent retained bakers.
 - **World rendering:** bounded static chunk/material meshes plus per-view CPU
   visibility and effects consume the same camera, actor animation, loot, doors and
-  surface snapshots as GPU drawing. Picking has full per-pixel depth/IDs, with
+  surface snapshots as GPU drawing. Prepared one-cell stairwells contain eight steps,
+  lined shafts, exterior shells and dark terminations; their full bounds and fixture
+  IDs use the same triangles on CPU/GPU. Stair cells block movement; F uses the
+  designated adjacent landing. Frames use wall-density world UVs, leaves fitted
+  rectangular artwork and separate edge sampling. Picking has full per-pixel depth/IDs, with
   transparent holes, corpse occlusion and native status/health clipping. World
   effects never write picking IDs. A changed view invalidates rendering; idle views
   reuse their target without frame uploads. See the accepted R02–R05 designs.
@@ -95,12 +106,26 @@ the campaign roadmap remains paused after P-B, with no automatic PC07 work.
   visual observations use the same CPU depth/ID pipeline without a graphics context.
   Replay capture owns a hidden context and exports application-owned targets.
   Standalone demos, preview/showcase scenarios and focused capture runners are gone.
+  One application-owned CPU worker runs loading I/O, parsing, campaign preparation,
+  alpha preparation and scene construction while the window thread presents cached
+  targets and pumps events. Explicit preparation scopes publish phase text; GPU/font
+  work and one-at-a-time raylib image decoding stay on the window thread with a 4ms
+  soft checkpoint budget. Individual driver/decoder operations remain indivisible.
+  Stairs/recall/waypoints fade the entire presentation out over 250ms, publish black,
+  prepare and commit, then fade in over 250ms. Failure returns to the source view;
+  simulation clocks freeze, costs commit once and held input must release.
 
 Dependencies flow from application/presentation toward platform, CPU rendering,
 movement, and world values. World/movement/input timing have no raylib dependency.
 There is no ECS, generic event bus, virtual renderer hierarchy, or service locator.
 
 ## Ownership, storage, and limits
+
+FloorGeometry retains fixed current/remembered open
+bits separately from first-opening completion. Ordinary doors toggle from adjacent
+cells, reject occupied or moving-through thresholds, preserve acquired keys and share
+a 300ms motion barrier. Guardian gates remain automatic. Discovery, navigation and
+picking invalidate on both opening and closing; settled state survives save/travel.
 
 Maps own contiguous cell bytes. CampaignRun retains four stable locations and the
 travelling Party; the application owns shared prepared rendering. One active
@@ -163,7 +188,9 @@ for ordinary grid coordinates or transient references.
 
 The allocation guarantee covers engine-owned CPU gameplay processing. The test
 intercepts ordinary and aligned C++ `new`/`new[]`; it does not intercept C
-`malloc` calls. Engine-owned frame code uses no C allocation APIs. Loading,
+`malloc` calls. Engine-owned frame code uses no C allocation APIs. Loading uses one queued CPU task and one consumed result, not an unbounded queue;
+UI/font payloads reject above 64 MiB, prepared textures retain their existing 128 MiB
+per-read ceiling and validated dimensions. Loading,
 cache preparation, exceptional error reporting, captures, and driver/raylib
 internals are outside it. A targeted allocation guard is more useful here than
 a Vulkan-style benchmark or stress-testing framework.
@@ -176,8 +203,10 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation remain 2/2; world publication format 1, appearance 4,
-visibility world-visibility-v3 and terrain-rules-v1 remain. Strict trace replay
+Campaign schema/simulation are 3/3 and generator/templates 4/4. Older saves reject
+without being modified; no migration. World publication is format 2, appearance 4,
+visibility world-visibility-v4 and terrain-rules-v2. Door scheduling identity is
+shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.
 

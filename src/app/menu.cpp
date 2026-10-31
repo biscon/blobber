@@ -1,4 +1,5 @@
 #include "app/menu.hpp"
+#include "app/loading.hpp"
 #include "app/menu_model.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
@@ -12,22 +13,34 @@
 #include <cstring>
 #include <random>
 namespace blobber {
-int runMenus(const Options& options) {
-    const auto catalog = loadRules(options.assets / "rules/catalog.json");
+int runMenus(const Options& options) try {
     Window window(options.width, options.height);
+    PreparationWorker worker;
+    auto loading = std::make_unique<LoadingScreen>(&worker);
+    const auto catalog = prepareCpu([&] {
+        preparationPoint("Reading rules");
+        return loadRules(options.assets / "rules/catalog.json");
+    });
     GpuResources resources;
-    Presenter presenter(resources, options.assets);
+    Presenter presenter(resources, options.assets, &worker);
+    loading->attach(presenter);
     presenter.prepareMenu();
     CharacterLibrary library(catalog, characterLibraryPath());
     MenuView v{catalog, library};
-    const auto saveDefinitions = loadNpcDefinitions(options.assets / "npcs/level.json");
+    const auto saveDefinitions = prepareCpu([&] {
+        preparationPoint("Reading creature definitions");
+        return loadNpcDefinitions(options.assets / "npcs/level.json");
+    });
     CampaignDisk saveDisk(campaignSavePath(options.campaignSave));
     CampaignStore saves(
         catalog, saveDefinitions,
         {fingerprintFile(options.assets / "rules/catalog.json"), saveDefinitions.definitionFingerprint},
         saveDisk);
     const auto refreshContinue = [&] {
-        const auto slot = saves.inspect();
+        const auto slot = prepareCpu([&] {
+            preparationPoint("Reading saved campaign");
+            return saves.inspect();
+        });
         v.canContinue = slot.active;
         std::snprintf(v.continueSummary.data(), v.continueSummary.size(), "%s",
                       slot.active ? (slot.location + " | " + slot.partySummary).c_str() : slot.error.c_str());
@@ -40,7 +53,14 @@ int runMenus(const Options& options) {
         v.message(r ? "" : r.message.data());
         v.model.filter(library.snapshot());
     };
-    reload();
+    prepareCpu([&] {
+        preparationPoint("Reading character library");
+        reload();
+    });
+    if (loading->closing())
+        return 0;
+    loading.reset();
+    presenter.fade(0);
     Input input;
     bool suppress = true;
     while (!WindowShouldClose()) {
@@ -311,6 +331,8 @@ int runMenus(const Options& options) {
             v.focus = 0;
         suppress = true;
     }
+    return 0;
+} catch (const PreparationCancelled&) {
     return 0;
 }
 } // namespace blobber

@@ -66,6 +66,8 @@ class WorldRenderer {
   private:
     struct View {
         world_render::Scene cpu;
+        world_assets::Pack pack;
+        std::array<TextureHandle, 32> materials{};
         std::unique_ptr<world_render::VisibilityPipeline> visibility;
         std::unique_ptr<world_render::EffectsPipeline> effects;
         std::uint64_t effectRevision = 0;
@@ -82,8 +84,6 @@ class WorldRenderer {
     std::shared_ptr<const world_assets::CpuAssets> assets_;
     const world_assets::Publication& publication_;
     std::vector<GpuLease<TextureHandle>> textures_;
-    std::array<TextureHandle, 32> materials_{};
-    unsigned materialCount_ = 0;
     GpuLease<ShaderHandle> world_, resolve_, billboard_, sky_;
     GpuLease<MeshHandle> quad_, proxy_;
     std::array<int, 7> billboardLocations_{};
@@ -91,7 +91,7 @@ class WorldRenderer {
     void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool,
                         const world_render::Scene*);
     void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground);
-    int model_ = -1, idMode_ = -1, idColor_ = -1;
+    int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1;
     GpuLease<TargetHandle> high_;
     std::unique_ptr<View> active_, staged_;
     world_render::DrawList draws_;

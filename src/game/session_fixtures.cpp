@@ -1,5 +1,6 @@
 #include "game/campaign.hpp"
 #include "game/session.hpp"
+#include <cmath>
 namespace blobber {
 bool GameSession::completeFixture(unsigned slot) noexcept {
     if (!floor_.complete(slot))
@@ -61,7 +62,8 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
     if (r.revision != floor_.revision())
         return {false, false, "Stale fixture request."};
     if (actionBusy())
-        return {false, false, opening() ? "Wait until the door opens." : "Wait until movement finishes."};
+        return {false, false,
+                opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};
     const auto pose = movement().player;
     if (!fixtureReachable(*f, pose.cell, pose.heading) || !map_.reach(pose.cell, f->cell))
         return {false, false, "Move closer and face the fixture."};
@@ -82,16 +84,38 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         return {false, false,
                 objective_.completed ? "Objective secured. Travel is not available yet."
                                      : "Travel is not available yet."};
-    if (floor_.completed(r.id.slot))
+    if (floor_.completed(r.id.slot) && f->kind != FixtureKind::Door)
         return {true, false, "Already completed."};
     if (f->kind == FixtureKind::Door && f->key && !(party_.questKeys_ & (1u << f->key)))
         return {false, false,
                 f->key == 2 ? "Requires the Bronze seal key." : "Requires the Silver seal key."};
+    const bool closing = f->kind == FixtureKind::Door && floor_.open(r.id.slot);
+    if (closing) {
+        if (pose.cell == f->cell || actors_.occupied(f->cell))
+            return {false, false, "The doorway is occupied."};
+        for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+            const auto& a = actors_.snapshot().actors[i];
+            if (a.life == ActorLife::Alive && actorWalking(a, timeMs_) &&
+                int(std::floor(a.walkFrom.x)) == f->cell.x && int(std::floor(a.walkFrom.y)) == f->cell.y)
+                return {false, false, "Someone is moving through the doorway."};
+        }
+    }
+    const bool firstOpening = !floor_.completed(r.id.slot);
     if (floor_.revision() == UINT64_MAX || floor_.geometryRevision() == UINT64_MAX)
         return {false, false, "Fixture revision exhausted."};
     if (!preview) {
         events_.clear();
-        if (!completeFixture(r.id.slot))
+        if (f->kind == FixtureKind::Door && !firstOpening) {
+            floor_.open_[r.id.slot] = !closing;
+            ++floor_.revision_;
+            ++floor_.geometryRevision_;
+            clearPending();
+            doors_.now = timeMs_;
+            if (movement().animated && timeMs_ <= UINT64_MAX - DoorSnapshot::durationMs) {
+                doors_.until[r.id.slot] = timeMs_ + DoorSnapshot::durationMs;
+                ++doors_.revision;
+            }
+        } else if (!completeFixture(r.id.slot))
             return {false, false, "Fixture unavailable."};
         if (f->kind == FixtureKind::Key)
             party_.questKeys_ |= std::uint8_t(1u << f->key);
@@ -99,12 +123,13 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         detectContact();
         discover();
     }
-    if (objective_.count && r.id.slot == objectiveDefinition_.approachDoor)
+    if (firstOpening && objective_.count && r.id.slot == objectiveDefinition_.approachDoor)
         return {true, !preview,
                 floor_.definition().depth == 3 ? "Final guardians beyond! Combat prevents movement."
                                                : "Guardians beyond! Combat prevents movement."};
     return {true, !preview,
-            f->kind == FixtureKind::Door ? (preview ? "Open permanently." : "Door opened permanently.")
+            f->kind == FixtureKind::Door ? (closing ? (preview ? "Close door." : "Door closed.")
+                                                    : (preview ? "Open door." : "Door opened."))
                                          : (preview ? "Collect quest key." : "Quest key collected.")};
 }
 } // namespace blobber

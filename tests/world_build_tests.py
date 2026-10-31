@@ -17,6 +17,7 @@ def run(*args, okay=True):
 
 def main():
     parser=argparse.ArgumentParser(); parser.add_argument('baker', type=pathlib.Path); parser.add_argument('rule', type=pathlib.Path)
+    parser.add_argument('--single-config',action='store_true')
     args=parser.parse_args(); baker=args.baker.resolve(); rule=args.rule.resolve()
     with tempfile.TemporaryDirectory(prefix='blobber world build ') as temp:
         root=pathlib.Path(temp); source=root/'source assets'; source.mkdir()
@@ -24,6 +25,14 @@ def main():
         for name in ['grease','web','spiritual_weapon']: png(source/'effects'/f'{name}.png')
         for name in ['key-bronze','key-silver','upstairs','downstairs','endpoint','threshold']: png(source/'fixtures'/f'{name}.png')
         png(source/'ui/items/loot-bag.png'); png(source/'npcs/body.png')
+        pack=source/'packs/dungeon'; pack.mkdir(parents=True)
+        for name in ['crest','vine','sky']: png(pack/f'{name}.png')
+        (pack/'pack.json').write_text(json.dumps(dict(id='dungeon',worldScale=1,horizon=[.6,.65,.7],
+            wall='textures/wall.png',floor='textures/floor.png',ceiling='textures/ceiling.png',
+            stairWall='textures/wall.png',stairFloor='textures/floor.png',
+            door='textures/door.png',lockedDoor='textures/door-locked.png',doorEdge='textures/door.png',
+            crest='packs/dungeon/crest.png',vine='packs/dungeon/vine.png',sky='packs/dungeon/sky.png')))
+
         (source/'npcs/level.json').write_text(json.dumps({'definitions':['actor.json'],'instances':[]}))
         (source/'npcs/actor.json').write_text(json.dumps({'id':'fixture','width':.45,'height':.65,'alpha_cutoff':15,'animations':{clip:{'durations_ms':[100], 'views':dict.fromkeys(['front','back','left','right'],['body.png'])} for clip in ('idle','prone')}}))
         project=root/'project'; project.mkdir()
@@ -37,7 +46,7 @@ endif()
 blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}" "${{destination}}")
 ''')
         effect_revision=40
-        for generator in ['Ninja','Ninja Multi-Config']:
+        for generator in (['Ninja'] if args.single_config else ['Ninja','Ninja Multi-Config']):
             build=root/generator; run('cmake','-S',str(project),'-B',str(build),'-G',generator)
             configs=['Debug','Release'] if 'Multi' in generator else ['Debug']
             for config in configs:
@@ -66,7 +75,9 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 assert (output/'textures.bin').read_bytes()==prior_payload, 'Failed bake replaced prior payload'
                 (source/'textures/wall.png').write_bytes(good); run(*command)
                 manifest=json.loads((output/'metadata.json').read_text())
-                assert len(manifest['appearances'])==1 and len(manifest['textures'])==25 and manifest['appearance_revision']==4
+                assert len(manifest['appearances'])==1 and len(manifest['textures'])==27 and len(manifest['packs'])==1 and manifest['format']==2 and manifest['appearance_revision']==4
+                prior=stamp(); manifest_path=pack/'pack.json'; data=json.loads(manifest_path.read_text()); data['worldScale']=1.25; manifest_path.write_text(json.dumps(data)); run(*command)
+                assert stamp()!=prior, 'Changed pack manifest did not rebuild publication'
                 print(generator,config,'clean/no-op/change/touch/missing/add/remove/failure: pass')
     print('World build fixtures passed')
 if __name__=='__main__': main()

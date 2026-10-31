@@ -410,7 +410,7 @@ void applicationFlow() {
     cancel.pressed[std::size_t(UiKey::Cancel)] = true;
     routeHudInput(nextUi, cancel);
     nextUi.closeOverlay();
-    next.game().move(Action::Forward);
+    next.game().move(Action::Back);
     check(next.saveSafety() != nullptr, "moving save denied");
     rejects([&] { next.checkpoint(); }, "moving export cannot mutate slot");
     next.game().update(.2, false);

@@ -1,4 +1,5 @@
 #include "app/gameplay.hpp"
+#include "app/loading.hpp"
 #include "app/menu.hpp"
 #include "app/options.hpp"
 #include "assets/npc_metadata.hpp"
@@ -20,15 +21,22 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                           const rules::PresetParty* starting, Presenter& presenter,
                           const ArenaScenario* arena, CampaignStore* saves = nullptr,
                           std::unique_ptr<CampaignRun> restored = {}) {
+    auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
     const auto seed = arena ? arena->seed : options.seed ? *options.seed : std::random_device{}();
-    auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
+    auto definitions = prepareCpu([&] {
+        preparationPoint("Reading creature definitions");
+        return loadNpcDefinitions(options.assets / "npcs/level.json");
+    });
     std::unique_ptr<CampaignRun> campaign = std::move(restored);
     std::optional<Map> arenaFloor;
     if (arena)
         arenaFloor.emplace(arenaMap());
     else if (!campaign)
-        campaign =
-            std::make_unique<CampaignRun>(rules, *starting, definitions.types, definitions.timings, seed);
+        campaign = prepareCpu([&] {
+            preparationPoint("Building campaign");
+            return std::make_unique<CampaignRun>(rules, *starting, definitions.types, definitions.timings,
+                                                 seed);
+        });
     const Map& map = arena ? *arenaFloor : campaign->map();
     const Player spawn = arena ? arenaSpawn() : campaign->game().movement().player;
     const auto runtimeSeed = seed;
@@ -40,13 +48,20 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         campaign ? campaign->location(campaign->activeLocation()).recovery : RecoveryLevel{};
 
     const auto& timings = loadedNpcs.timings;
-    auto publication = world_assets::load(options.assets / "prepared/world");
+    auto publication = prepareCpu([&] {
+        preparationPoint("Validating prepared world assets");
+        return world_assets::load(options.assets / "prepared/world");
+    });
     if (publication.definitions != loadedNpcs.definitionFingerprint)
         throw std::runtime_error("World NPC definitions differ; rebuild world assets");
     WorldRenderer world(presenter.resources(), std::move(publication));
     world.supersampling(options.supersampling);
     const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena),    true, nullptr,
                                 nullptr, nullptr,     campaign.get(), saves};
+    if (loading->closing())
+        return false;
+    loading.reset();
+    presenter.fade(0);
     return runGameplay(map, rules, loadedNpcs.world, timings, presenter, options, world, recovery, starting,
                        &launch) != PlayOutcome::Quit;
 }
@@ -61,7 +76,15 @@ bool launchArena(const Options& o, const rules::Catalog& c, const ArenaScenario&
 }
 bool launchSavedCampaign(const Options& o, const rules::Catalog& c, Presenter& presenter,
                          CampaignStore& saves) {
-    auto run = saves.load();
+    std::unique_ptr<CampaignRun> run;
+    {
+        LoadingScreen loading(presenter.loadingWorker(), &presenter);
+        run = prepareCpu([&] {
+            preparationPoint("Restoring campaign");
+            return saves.load();
+        });
+    }
+    presenter.fade(0);
     return launchSession(o, c, nullptr, presenter, nullptr, &saves, std::move(run));
 }
 } // namespace blobber

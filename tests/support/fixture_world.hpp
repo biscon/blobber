@@ -12,7 +12,7 @@ inline FloorFixtures fixtureDefinitions(bool locked = true) {
     f.entries[f.count++] = {{4, 3}, Heading::East, FixtureKind::Door, std::uint8_t(locked ? 2 : 0)};
     if (locked)
         f.entries[f.count++] = {{2, 2}, Heading::North, FixtureKind::Key, 2};
-    f.entries[f.count++] = {{6, 3}, Heading::North, FixtureKind::Downstairs, 0};
+    f.entries[f.count++] = {{7, 3}, Heading::East, FixtureKind::Downstairs, 0};
     return f;
 }
 inline rules::Catalog fixtureCatalog() {

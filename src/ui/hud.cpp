@@ -274,7 +274,9 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
             if (player && !floor->known(i))
                 continue;
             const auto& f = floor->definition().entries[i];
-            const bool done = player ? floor->rememberedComplete(i) : floor->completed(i);
+            const bool done = f.kind == FixtureKind::Door
+                                  ? (player ? floor->rememberedOpen(i) : floor->open(i))
+                                  : (player ? floor->rememberedComplete(i) : floor->completed(i));
             if (f.kind == FixtureKind::Key && done)
                 continue;
             const char* mark = f.kind == FixtureKind::GuardianGate ? (done ? "/" : "G")

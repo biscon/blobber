@@ -79,6 +79,12 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
             reject("discovery");
     for (unsigned i = 0; i < floor_.definition_.count; ++i) {
         const auto& f = floor_.definition_.entries[i];
+        if ((f.kind != FixtureKind::Door && s.fixtures.open[i]) ||
+            (s.fixtures.open[i] && !s.fixtures.completed[i]) ||
+            (s.fixtures.rememberedOpen[i] && (!s.fixtures.known[i] || !s.fixtures.remembered[i])) ||
+            (f.kind != FixtureKind::Door && f.kind != FixtureKind::GuardianGate &&
+             s.fixtures.rememberedOpen[i]))
+            reject("door state");
         if (f.kind == FixtureKind::Key && s.fixtures.completed[i] && !(party_.questKeys() & (1u << f.key)))
             reject("fixture/objective ledger");
         if (f.kind == FixtureKind::Door && f.key && s.fixtures.completed[i] &&

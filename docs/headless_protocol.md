@@ -30,10 +30,10 @@ supported observation policy.
 
 Capabilities advertise `visibility_backends:["world"]`; capture is separate and
 available only in graphics builds. World traces record backend `world`, visibility
-`world-visibility-v3`, publication fingerprint, format 1 and appearance revision 4,
-plus `door_scheduling="shared-opening-300ms-v1"` and `terrain_rules="terrain-rules-v1"`.
+`world-visibility-v4`, publication fingerprint, format 2 and appearance revision 4,
+plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation remain 2/2. Replay images own a
+Protocol remains v1 and campaign schema/simulation are 3/3 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -42,12 +42,12 @@ regressions use test-owned fixtures; supported scenarios are arena, generated_fl
 and campaign.
 
 R04 adds `door_opening` to observations and opening deadlines/pending movement to
-strict diagnostic state. Fixture completion remains permanent and immediate, with a
-300 ms shared barrier before new movement, attacks and AI actions. Accepted impacts
+strict diagnostic state. First-opening completion remains permanent; ordinary door open state toggles
+immediately, with a 300 ms shared barrier before new movement, attacks and AI actions. Accepted impacts
 and effect deadlines continue; pause freezes the opening. Animation-off settles it.
 Movement actions during opening reject without queuing in headless mode. Preview,
-action eligibility, save and travel use the same barrier. Completed doors restore
-settled; no transient opening state enters the save format.
+action eligibility, save and travel use the same barrier. Doors restore their saved open/closed state settled; no transient motion enters
+the save format. The legacy `door_opening` field covers both opening and closing.
 
 ## Transport and identities
 
@@ -136,7 +136,7 @@ goblin, one optional melee goblin, and a designated 14-HP melee guardian plus ar
 Depth 1 has an unlocked guardian approach; depths 2–3 require their Bronze/Silver key.
 A separate guardian gate opens and publishes reserved supplies only after all
 designated deaths. Ordinary victories do not complete the floor. Protected stairs
-rooms have permanent-open unlocked doors. Stairs remain inert until PC04; floor
+rooms have ordinary reusable unlocked doors. Campaign stairs use protected landings; floor
 completion is nonterminal and depth 3 does not yet produce campaign victory.
 Generator/template versions are 3/3; older generated scenarios/traces are rejected.
 The generated scenario schema and JSON-lines protocol remain version 1.
@@ -206,8 +206,10 @@ preparation choices; learning can unlock more candidates, checked by preview.
 `interact` accepts current-cell or directly-ahead keys, and directly-ahead doors.
 It requires settled, stationary safe exploration, no party-cell area hazard and an
 able companion. Keys use party quest bits, never inventory capacity or weight.
-Opening has no turn/item cost and is permanent; keys remain acquired. Preview is
-pure, and repeated completed interactions have no second effect. Unknown/undiscovered
+Ordinary doors toggle open/closed without turn/item cost; acquired keys persist and
+closing never relocks a keyed door. Occupied/moving-through thresholds reject closing.
+Guardian gates remain objective controlled. Preview is pure; collected keys cannot
+be collected twice. Unknown/undiscovered
 IDs return the same unavailable result. The host supplies internal floor/revision
 tokens after checking the ordinary session/revision guard. F and visible-fixture
 clicks use this same command in the game.
@@ -250,7 +252,8 @@ and eligibility results. Party-created ground zones include known placement/dura
 
 Generated observations include `discovered` triples `[x,y,base_wall]` (0 floor,
 1 wall), remembered `fixtures` and party `quest_keys` bits (bit 2 Bronze, bit 3 Silver).
-Fixture fields are `fixture`, `kind`, `name`, `position`, `key`, `completed`; kinds
+Fixture fields are `fixture`, `kind`, `name`, `position`, `key`, `completed`, `open`, `unlocked`; `completed` records first opening for doors,
+while `open` reports current/remembered state. Kinds
 are door=0, key=1, upstairs=2, downstairs=3, endpoint=4, guardian gate=5. Player fixtures include only
 known entries and remembered completion. Diagnostic views additionally expose all
 fixtures, geometry/fixture/discovery revisions and fixture knowledge. Discovery
@@ -357,9 +360,11 @@ There is no `depth` input: launch starts in the fixed sanctuary hub and eagerly
 prepares all three depths. Arena and single generated-floor diagnostic scenarios
 remain supported. Normal graphical New Game uses this same campaign owner.
 
-Use `interact` on a known reachable stair fixture. Preview checks current settled
+Use `interact` on a known stair fixture from its designated adjacent landing, facing
+into the stairs. Stair cells block movement. Preview checks current settled
 safety; act stages/restores the adjacent destination and commits only after landing
-and view preparation succeed. Walking is free, including with zero camp kits.
+and view preparation succeed. Stair travel is free, including with zero camp kits. Graphical travel fades through
+black; headless travel remains synchronous without presentation delays.
 Travel changes runtime world IDs and the protocol revision; use the returned
 observation and current request tokens. Inventory belongs to the travelling Party.
 Concentration attached to NPCs/mixed targets/Web must be dismissed first. The

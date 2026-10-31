@@ -1,19 +1,22 @@
+#include "app/options.hpp"
 #include "assets/image.hpp"
 #include "assets/rules_loader.hpp"
-#include "app/options.hpp"
-#include "ui/menu_screen.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
 #include "support/allocations.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/check.hpp"
+#include "support/dungeon_art_review.hpp"
 #include "support/fixture_world.hpp"
 #include "support/world_visibility_fixtures.hpp"
+#include "ui/menu_screen.hpp"
 #include <iostream>
 using namespace blobber;
 namespace {
 unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
+    static unsigned sample = 0;
+    ++sample;
     renderer.diagnosticIds(ids);
     OwnedImage image(LoadImageFromTexture(r.target(ids).texture));
     check(image.value.data, "Diagnostic ID readback");
@@ -38,8 +41,12 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
             for (int dy = -1; dy <= 1; ++dy)
                 for (int dx = -1; dx <= 1; ++dx)
                     edge |= picking.slot(x + dx, y + dy) == actual;
-            if (!edge)
+            if (!edge) {
+                if (interior < 4)
+                    std::cerr << "sample=" << sample << " x=" << x << " y=" << y << " cpu=" << expected
+                              << " gpu=" << actual << "\n";
                 ++interior;
+            }
         }
     if (interior)
         std::cerr << "Interior mismatches " << interior << " / total " << mismatch << '\n';
@@ -156,6 +163,26 @@ int main(int argc, char** argv) {
                 check(effectDifference() > 16, "Open doorway reveals airborne effect color");
                 renderer.clear();
             }
+            for (unsigned heading = 0; heading < 4; ++heading)
+                for (auto kind : {FixtureKind::Upstairs, FixtureKind::Downstairs}) {
+                    const auto map = test::worldRoom(9, 9);
+                    FloorFixtures fixtures;
+                    fixtures.count = 1;
+                    fixtures.entries[0] = {{4, 4}, Heading(heading), kind};
+                    const Player spawn{stairLanding(fixtures.entries[0]), Heading(heading)};
+                    NpcWorld none(map, spawn.cell, definitions.types, {});
+                    GameSession game(map, catalog, none, 5, spawn, false, fixture.timings, {}, fixtures);
+                    const world_render::FrameInput input{game.geometry(), game.movement(), nullptr,
+                                                         nullptr,         nullptr,         &game.doors()};
+                    renderer.stage(input);
+                    renderer.commit();
+                    for (bool quality : {false, true}) {
+                        renderer.supersampling(quality);
+                        renderer.render(input);
+                        differences += compare(resources, renderer, ids.get());
+                    }
+                    renderer.clear();
+                }
             {
                 const auto map = test::worldRoom(9, 9);
                 const Player spawn{{4, 6}, Heading::North};
@@ -308,6 +335,7 @@ int main(int argc, char** argv) {
             menu.model.screen = MenuScreen::Library;
             presenter.presentMenu(drawMenu, &menu);
             presenter.capture(output / "character-library.png");
+            test::dungeonArtReview(source, output, rules);
         }
     } catch (const std::exception& e) {
         watching = false;

@@ -1,4 +1,5 @@
 #include "game/campaign.hpp"
+#include "core/preparation.hpp"
 #include "world/environment_maps.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -46,6 +47,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     hub.seed = seed;
     hub.visited = true;
     for (unsigned depth = 1; depth <= 3; ++depth) {
+        preparationPoint("Generating dungeon floors");
         auto result = generation::generate({seed, depth});
         if (!result)
             throw std::runtime_error("Campaign generation failed");
@@ -60,7 +62,9 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
         floor.exit.cell = floor.fixtures.landings[1];
         // Objective-side arrival faces back into the stairs room.
         for (unsigned i = 0; i < floor.fixtures.count; ++i)
-            if (floor.fixtures.entries[i].cell == floor.exit.cell)
+            if ((stairFixture(floor.fixtures.entries[i].kind)
+                     ? stairLanding(floor.fixtures.entries[i])
+                     : floor.fixtures.entries[i].cell) == floor.exit.cell)
                 floor.exit.heading = Heading((unsigned(floor.fixtures.entries[i].facing) + 2) % 4);
         floor.seed = floor.generated->runtimeSeed;
     }
@@ -172,6 +176,7 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
                              : "Ascend to floor 2."};
 }
 CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
+    preparationPoint("Preparing destination");
     const auto check = previewTravel(r);
     if (!check)
         throw std::invalid_argument(check.reason);

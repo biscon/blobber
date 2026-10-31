@@ -20,13 +20,14 @@ def open_door(request, state):
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     dx, dy = directions[door['heading']]
     target = door['position'][0]-dx, door['position'][1]-dy
+    blocked = {tuple(f['position']) for f in state['generation']['fixtures'] if f['kind'] in (2,3)}
     start = tuple(state['position'])
     queue, previous = deque([start]), {start: None}
     while queue:
         here = queue.popleft()
         for dx, dy in directions:
             nxt = here[0]+dx, here[1]+dy
-            if nxt not in previous and nxt != tuple(door['position']) and rows[nxt[1]][nxt[0]] != '#':
+            if nxt not in previous and nxt not in blocked and nxt != tuple(door['position']) and rows[nxt[1]][nxt[0]] != '#':
                 previous[nxt] = here
                 queue.append(nxt)
     assert target in previous
@@ -55,7 +56,12 @@ def open_door(request, state):
     assert opened['accepted'] and next(f for f in opened['observation']['fixtures'] if f['fixture'] == door['id'])['completed']
     assert not request('act', action=action)['data']['accepted']
     state = request('advance', ticks=30, until_decision=False)['data']['observation']
+    closed = request('act', action=action)['data']
+    assert closed['accepted'] and not next(f for f in closed['observation']['fixtures'] if f['fixture'] == door['id'])['open']
+    assert not request('act', action=dict(kind='move', direction='forward'))['data']['accepted']
+    state = request('advance', ticks=30, until_decision=False)['data']['observation']
     assert request('act', action=action)['data']['accepted']
+    state = request('advance', ticks=30, until_decision=False)['data']['observation']
     move('forward')
     assert state['position'] == door['position']
 
@@ -93,8 +99,8 @@ def main(generator, runner):
         for name in ('goblin', 'goblin.archer'):
             (root / f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name)))
         (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', 'goblin.json', 'goblin.archer.json'], instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=3,
-                     template_version=3, seed=5, depth=1, party=arena['party'])
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=4,
+                     template_version=4, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
             start = client.request('start', scenario=setup)
@@ -147,6 +153,10 @@ def main(generator, runner):
             entered = request('act', action=dict(kind='interact', fixture=0))['data']
             assert entered['accepted'] and entered['observation']['campaign']['location'] == 1
             up = next(f['fixture'] for f in entered['observation']['fixtures'] if f['kind'] == 2)
+            # Arrival faces into the room; turn back toward the dedicated stairwell.
+            for _ in range(2):
+                assert request('act', action=dict(kind='move', direction='turn_right'))['data']['accepted']
+                request('advance', ticks=17, until_decision=False)
             returned = request('act', action=dict(kind='interact', fixture=up))['data']
             assert returned['accepted'] and returned['observation']['campaign']['location'] == 0
             assert returned['observation']['campaign']['visited_entries'] == [1]

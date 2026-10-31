@@ -13,7 +13,7 @@ const char* GameSession::saveSafety() const noexcept {
     if (mutation_ == UINT64_MAX)
         return "Session revision exhausted.";
     if (movement_.pending_ || doorPending_ || actionBusy())
-        return opening() ? "Wait until the door opens." : "Wait until movement finishes.";
+        return opening() ? "Wait until the door finishes moving." : "Wait until movement finishes.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
         return "Saving requires settled safe exploration.";
     return nullptr;
@@ -22,7 +22,7 @@ const char* GameSession::travelSafety() const noexcept {
     if (mutation_ == UINT64_MAX)
         return "Session revision exhausted.";
     if (movement_.pending_ || doorPending_ || actionBusy())
-        return opening() ? "Wait until the door opens." : "Wait until movement finishes.";
+        return opening() ? "Wait until the door finishes moving." : "Wait until movement finishes.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
         return "Travel requires settled safe exploration.";
     bool able = false;
@@ -52,6 +52,8 @@ const char* GameSession::travelSafety() const noexcept {
 }
 void GameSession::exportFloor(FloorState& s) const noexcept {
     s.fixtures.completed = floor_.completed_;
+    s.fixtures.open = floor_.open_;
+    s.fixtures.rememberedOpen = floor_.rememberedOpen_;
     s.fixtures.known = floor_.known_;
     s.fixtures.remembered = floor_.remembered_;
     s.fixtures.discovered = floor_.discovered_;
@@ -130,7 +132,8 @@ void GameSession::importFloor(const FloorState& s) {
     };
     // Import is preparation-only: rebuild the staged world occupancy after validating bounds.
     for (unsigned i = floor_.definition_.count; i < fixtureCapacity; ++i)
-        if (s.fixtures.completed[i] || s.fixtures.known[i] || s.fixtures.remembered[i])
+        if (s.fixtures.completed[i] || s.fixtures.known[i] || s.fixtures.remembered[i] ||
+            s.fixtures.open[i] || s.fixtures.rememberedOpen[i])
             reject();
     std::fill(actors_.occupancy_.begin(), actors_.occupancy_.end(), 0);
     for (std::size_t i = 0; i < s.actors.count; ++i) {
@@ -149,7 +152,10 @@ void GameSession::importFloor(const FloorState& s) {
                 reject();
             for (unsigned f = 0; f < floor_.definition_.count; ++f)
                 if (floor_.definition_.entries[f].cell == a.npc.cell &&
-                    fixtureBlocks(floor_.definition_.entries[f], s.fixtures.completed[f]))
+                    fixtureBlocks(floor_.definition_.entries[f],
+                                  floor_.definition_.entries[f].kind == FixtureKind::Door
+                                      ? s.fixtures.open[f]
+                                      : s.fixtures.completed[f]))
                     reject();
             auto& mask = actors_.mask(a.npc.cell);
             const auto bit = std::uint8_t(1u << (a.npc.subcell.x + 2 * a.npc.subcell.y));
@@ -230,6 +236,8 @@ void GameSession::importFloor(const FloorState& s) {
                 reject();
     }
     floor_.completed_ = s.fixtures.completed;
+    floor_.open_ = s.fixtures.open;
+    floor_.rememberedOpen_ = s.fixtures.rememberedOpen;
     floor_.known_ = s.fixtures.known;
     floor_.remembered_ = s.fixtures.remembered;
     floor_.discovered_ = s.fixtures.discovered;

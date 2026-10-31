@@ -1,4 +1,5 @@
 #include "platform/world_renderer.hpp"
+#include "core/preparation.hpp"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include "raymath.h"
@@ -12,40 +13,43 @@
 namespace blobber {
 namespace {
 constexpr const char* vertex = R"(#version 330
-in vec3 vertexPosition;in vec2 vertexTexCoord;in vec3 vertexNormal;
+in vec3 vertexPosition;in vec2 vertexTexCoord;in vec3 vertexNormal;layout(location=3) in float vertexShade;
 uniform mat4 mvp;uniform mat4 matView;uniform mat4 matModel;
-out vec2 uv;out vec3 normal;out float depth;
-void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4 p=matModel*vec4(vertexPosition,1);depth=-(matView*p).z;gl_Position=mvp*p;})";
+out vec2 uv;out vec3 normal;out float depth;out vec3 worldPosition;out float shade;
+void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4 p=matModel*vec4(vertexPosition,1);worldPosition=p.xyz;shade=vertexShade;depth=-(matView*p).z;gl_Position=mvp*p;})";
 constexpr const char* fragment = R"(#version 330
-in vec2 uv;in vec3 normal;in float depth;out vec4 finalColor;
-uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;
-void main(){if(idPass!=0){finalColor=idColor;return;}vec4 c=texture(texture0,uv);
+in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
+uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;
+void main(){if(idPass!=0){finalColor=idColor;return;}vec2 mapped=uv;
+if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
+if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
+if(uvMode<2) mapped*=worldScale;
+vec4 c=texture(texture0,mapped);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
 float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
-finalColor=vec4(c.rgb*light*(1.0-fog)+mix(vec3(15,18,20),vec3(153,181,193),daylight)/255.0*fog,1);})";
+finalColor=vec4((c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;out vec4 finalColor;
-uniform float daylight;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
+uniform float daylight;uniform vec3 horizon;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 void main(){
 float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
 if(kind==5){vec4 c=texture(texture0,uv)*idColor;float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
-finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20),vec3(153,181,193),daylight)/255.0*fog*c.a,c.a);return;}
+finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
 ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(uv*vec2(size))),ivec2(0),size-1);
 float base=texelFetch(texture0,p,0).a;bool covered=base*255.0+0.01>=float(threshold);
 vec4 c=texture(texture0,uv);
 if(kind==2){if(covered||c.a<=0.001)discard;}else{if(!covered)discard;}
 if(kind==4){finalColor=idColor;return;}
 float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
-finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20),vec3(153,181,193),daylight)/255.0*fog*c.a,c.a);
+finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);
 })";
 constexpr const char* skyFragment = R"(#version 330
-out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;
+out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;uniform sampler2D panorama;
 void main(){vec2 p=gl_FragCoord.xy/viewport;float f=250.0/tan(radians(42.0));
 vec3 ray=normalize(forward+right*((p.x-0.5)*500.0/f)+vec3(0,(p.y-0.66)*282.0/f,0));
-float up=clamp(ray.y*2.0,0.0,1.0);vec3 c=mix(vec3(153,181,193),vec3(78,116,145),up)/255.0;
-float cloud=smoothstep(0.35,0.75,sin(ray.x*7.0+ray.z*3.0)*sin(ray.z*9.0-ray.x*2.0))*smoothstep(0.03,0.2,ray.y);
-finalColor=vec4(mix(c,vec3(0.73,0.77,0.79),cloud*0.22),1);})";
+vec2 st=vec2(fract(atan(ray.x,-ray.z)/6.28318530718+0.5),acos(clamp(ray.y,-1.0,1.0))/3.14159265359);
+finalColor=vec4(texture(panorama,st).rgb,1);})";
 constexpr const char* resolveFragment = R"(#version 330
 in vec2 fragTexCoord;out vec4 finalColor;uniform sampler2D texture0;
 void main(){ivec2 p=clamp(ivec2(fragTexCoord*vec2(500,282)),ivec2(0),ivec2(499,281))*2;
@@ -74,7 +78,10 @@ int anisotropy() {
 }
 } // namespace
 WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publication)
-    : WorldRenderer(r, std::make_shared<const world_assets::CpuAssets>(std::move(publication))) {}
+    : WorldRenderer(r, prepareCpu([&] {
+                        preparationPoint("Preparing dungeon artwork");
+                        return std::make_shared<const world_assets::CpuAssets>(std::move(publication));
+                    })) {}
 WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets::CpuAssets> assets)
     : resources_(r), assets_(std::move(assets)),
       publication_(assets_ ? assets_->publication : throw std::invalid_argument("Missing world CPU assets")) {
@@ -100,7 +107,11 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     textures_.reserve(publication_.textures.size());
     for (unsigned i = 0; i < publication_.textures.size(); ++i) {
         const auto& t = publication_.textures[i];
-        auto pixels = publication_.read(i);
+        preparationPoint("Loading dungeon artwork");
+        auto pixels = prepareCpu([&] {
+            preparationPoint("Loading dungeon artwork");
+            return publication_.read(i);
+        });
         Image im{pixels.data(), int(t.width), int(t.height), int(t.levels),
                  PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
         textures_.emplace_back(r, r.createTexture(im));
@@ -110,11 +121,6 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
         rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
         if (!t.clamp && anisotropy_ > 1)
             rlTextureParameters(texture.id, RL_TEXTURE_FILTER_ANISOTROPIC, anisotropy_);
-        if (!t.clamp) {
-            if (materialCount_ == materials_.size())
-                throw std::runtime_error("World material capacity exceeded");
-            materials_[materialCount_++] = textures_.back().get();
-        }
     }
     world_ = {r, r.createShader(vertex, fragment)};
     sky_ = {r, r.createShader(nullptr, skyFragment)};
@@ -124,6 +130,7 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     view_ = GetShaderLocation(shader, "matView");
     forward_ = GetShaderLocation(shader, "forward");
     model_ = GetShaderLocation(shader, "matModel");
+    uvMode_ = GetShaderLocation(shader, "uvMode");
     idMode_ = GetShaderLocation(shader, "idPass");
     idColor_ = GetShaderLocation(shader, "idColor");
     if (mvp_ < 0 || view_ < 0 || forward_ < 0)
@@ -139,11 +146,22 @@ void WorldRenderer::stage(GeometryView geometry, const MovementState& state, wor
     using Clock = std::chrono::steady_clock;
     const auto begin = Clock::now();
     auto candidate = std::make_unique<View>();
-    candidate->cpu = world_render::prepare(geometry, surfaces, overrides, limits);
+    candidate->pack = assets_->pack(geometry.base().definition().assetPack);
+    for (unsigned i = 0; i < candidate->pack.materialCount; ++i)
+        candidate->materials[i] = textures_.at(candidate->pack.materials[i]).get();
+    if (!publication_.packs.empty() && candidate->pack.materialCount >= 5) {
+        surfaces.stairWall = 3;
+        surfaces.stairFloor = 4;
+    }
+    candidate->cpu = prepareCpu([&] {
+        preparationPoint("Preparing dungeon");
+        return world_render::prepare(geometry, surfaces, overrides, limits);
+    });
     for (const auto& range : candidate->cpu.ranges)
-        if (range.material >= materialCount_)
+        if (range.material >= candidate->pack.materialCount)
             throw std::runtime_error("Scene references an unavailable world material");
     const auto built = Clock::now();
+    preparationPoint("Preparing dungeon");
     candidate->mesh = {resources_, resources_.createMesh(candidate->cpu)};
     candidate->output = {resources_, resources_.createTarget(viewWidth, viewHeight)};
     const auto uploaded = Clock::now();
@@ -183,9 +201,12 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
     const bool hadBillboards = bool(billboard_);
     try {
         prepareBillboards();
-        stage(GeometryView(in.geometry.base()), in.movement);
-        staged_->visibility = std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
-        staged_->visibility->update(in);
+        stage(in.geometry, in.movement);
+        staged_->visibility = prepareCpu([&] {
+            preparationPoint("Preparing dungeon");
+            return std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
+        });
+        prepareCpu([&] { staged_->visibility->update(in); });
         if (in.attacks || in.area) {
             staged_->effects = std::make_unique<world_render::EffectsPipeline>(*assets_);
             staged_->effects->update(in, staged_->visibility->frame());
@@ -288,14 +309,22 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         SetShaderValue(sky, GetShaderLocation(sky, "viewport"), viewport, SHADER_UNIFORM_VEC2);
         SetShaderValue(sky, GetShaderLocation(sky, "forward"), &camera.forward, SHADER_UNIFORM_VEC3);
         SetShaderValue(sky, GetShaderLocation(sky, "right"), &camera.right, SHADER_UNIFORM_VEC3);
+        const auto skyTexture = resources_.texture(textures_[v.pack.sky].get());
+        rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_REPEAT);
+        rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_T, RL_TEXTURE_WRAP_CLAMP);
+        SetTextureFilter(skyTexture, TEXTURE_FILTER_BILINEAR);
         BeginShaderMode(sky);
+        SetShaderValueTexture(sky, GetShaderLocation(sky, "panorama"), skyTexture);
         DrawRectangle(0, 0, target.texture.width, target.texture.height, WHITE);
         EndShaderMode();
     }
     SetShaderValue(shader, GetShaderLocation(shader, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, GetShaderLocation(shader, "worldScale"), &v.pack.worldScale, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, GetShaderLocation(shader, "horizon"), v.pack.horizon.data(), SHADER_UNIFORM_VEC3);
     if (billboard_) {
         const auto b = resources_.shader(billboard_.get());
         SetShaderValue(b, GetShaderLocation(b, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(b, GetShaderLocation(b, "horizon"), v.pack.horizon.data(), SHADER_UNIFORM_VEC3);
     }
     Camera3D rc{
         {camera.position.x, camera.position.y, camera.position.z},
@@ -321,13 +350,17 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     const float emptyColor[]{1, 1, 0, 1};
     rlSetUniform(idMode_, &idPass, SHADER_UNIFORM_INT, 1);
     rlSetUniform(idColor_, emptyColor, SHADER_UNIFORM_VEC4, 1);
+    const int staticUv = 0;
+    rlSetUniform(uvMode_, &staticUv, SHADER_UNIFORM_INT, 1);
     rlActiveTextureSlot(0);
     rlEnableDepthTest();
     rlEnableDepthMask();
     rlEnableBackfaceCulling();
     for (unsigned i = 0; i < draws_.count; ++i) {
         const auto& range = v.cpu.ranges[draws_.ranges[i]];
-        rlEnableTexture(resources_.texture(materials_[range.material]).id);
+        const float color[]{float(range.id & 255) / 255, float(range.id >> 8) / 255, 0, 1};
+        rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
+        rlEnableTexture(resources_.texture(v.materials[range.material]).id);
         resources_.draw(v.mesh.get(), range.first, range.count);
         ++stats.draws;
     }
@@ -348,13 +381,22 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
             model.m13 = box.origin.y;
             model.m14 = box.origin.z;
             rlSetUniformMatrix(model_, model);
+            const int mode = box.worldMapped ? 1 : 3;
+            rlSetUniform(uvMode_, &mode, SHADER_UNIFORM_INT, 1);
             const auto id = box.id;
             const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
             rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
             rlEnableTexture(resources_.texture(textures_[box.texture].get()).id);
             rlDisableBackfaceCulling();
-            resources_.draw(proxy_.get(), 0, 36);
+            resources_.draw(proxy_.get(), 0, box.worldMapped ? 36 : 12);
             ++stats.draws;
+            if (!box.worldMapped) {
+                const int edgeMode = 2;
+                rlSetUniform(uvMode_, &edgeMode, SHADER_UNIFORM_INT, 1);
+                rlEnableTexture(resources_.texture(textures_[box.edgeTexture].get()).id);
+                resources_.draw(proxy_.get(), 12, 24);
+                ++stats.draws;
+            }
         }
         const auto vp = MatrixMultiply(rlGetMatrixModelview(), projection);
         const auto view = rlGetMatrixModelview();
@@ -429,7 +471,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
     };
     if (scene)
         for (const auto& d : scene->decals) {
-            const auto texture = assets_->named(d.motif ? "decoration/vine" : "decoration/crest");
+            const auto texture = d.motif ? frame.vineTexture : frame.crestTexture;
             rlEnableTexture(resources_.texture(textures_[texture].get()).id);
             const auto& a = d.vertices[0].position;
             const auto& b = d.vertices[1].position;

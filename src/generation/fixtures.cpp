@@ -80,9 +80,13 @@ void placeFixtures(FloorLayout& f) noexcept {
             defs.entries[defs.count++] = {f.rooms[chosen].anchor, f.rooms[chosen].facing, FixtureKind::Key,
                                           std::uint8_t(f.depth)};
     }
-    defs.entries[defs.count++] = {f.rooms[entry].anchor, f.rooms[entry].facing, FixtureKind::Upstairs, 0};
-    defs.entries[defs.count++] = {f.rooms[objective].anchor, f.rooms[objective].facing,
-                                  f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs, 0};
+    const auto upFacing = Heading(f.rooms[entry].rotation);
+    const auto downFacing = Heading(f.rooms[objective].rotation);
+    defs.entries[defs.count++] = {f.rooms[entry].anchor + forward(upFacing), upFacing, FixtureKind::Upstairs,
+                                  0};
+    defs.entries[defs.count++] = {f.rooms[objective].anchor + (f.depth == 3 ? Cell{} : forward(downFacing)),
+                                  downFacing, f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs,
+                                  0};
     const auto entranceCenter = center(f.rooms[entry]), neighbor = center(f.rooms[ea]);
     const Cell entryDirection{(neighbor.x - entranceCenter.x) / 9, (neighbor.y - entranceCenter.y) / 9};
     defs.entries[defs.count++] = {entranceCenter + entryDirection * 4, f.rooms[entry].facing,
@@ -186,14 +190,16 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
     if (doors != 3 || gates != 1 || up < 0 || goal < 0 || (key >= 0) != (f.depth > 1) ||
         defs.entries[f.approachDoor].kind != FixtureKind::Door ||
         defs.entries[f.guardianGate].kind != FixtureKind::GuardianGate ||
-        !(defs.entries[up].cell == f.spawn.cell) ||
+        !(stairLanding(defs.entries[up]) == f.spawn.cell) ||
         defs.entries[goal].kind != (f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs))
         return {Error::Fixture};
     bool approachPort = false, gatePort = false, goalAnchor = false;
     for (unsigned i = 0; i < f.roomCount; ++i) {
         const auto& r = f.rooms[i];
         if (r.role == Role::Objective)
-            goalAnchor |= r.anchor == defs.entries[goal].cell;
+            goalAnchor |=
+                r.anchor == (stairFixture(defs.entries[goal].kind) ? stairLanding(defs.entries[goal])
+                                                                   : defs.entries[goal].cell);
     }
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         const auto e = f.connections[i];
@@ -251,16 +257,19 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
             for (unsigned i = 0; i < defs.count; ++i)
                 if (defs.entries[i].cell == next) {
                     const auto& d = defs.entries[i];
-                    blocked |= d.kind == FixtureKind::GuardianGate
-                                   ? !(state & 2)
-                                   : d.kind == FixtureKind::Door && d.key && !(state & 1);
+                    blocked |=
+                        stairFixture(d.kind) || (d.kind == FixtureKind::GuardianGate
+                                                     ? !(state & 2)
+                                                     : d.kind == FixtureKind::Door && d.key && !(state & 1));
                 }
             if (!blocked)
                 push(next, state);
         }
     }
     const auto index = [&](Cell c) { return unsigned(c.y * f.width + c.x); };
-    const auto target = index(defs.entries[goal].cell), done = f.depth > 1 ? 3u : 2u;
+    const auto goalCell =
+        stairFixture(defs.entries[goal].kind) ? stairLanding(defs.entries[goal]) : defs.entries[goal].cell;
+    const auto target = index(goalCell), done = f.depth > 1 ? 3u : 2u;
     if (seen[target] || seen[target + maxCells] || !seen[target + done * maxCells] ||
         (f.depth > 1 && seen[target + 2 * maxCells]) || !seen[index(f.spawn.cell) + done * maxCells])
         return {Error::Progression};
@@ -319,7 +328,7 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
     const auto sight = [&](Cell from, Cell to) {
         return gridSight([&](Cell c) { return !floorCell(f, c); }, from, to);
     };
-    if (!(defs.landings[0] == f.spawn.cell) || !(defs.landings[1] == defs.entries[goal].cell))
+    if (!(defs.landings[0] == f.spawn.cell) || !(defs.landings[1] == goalCell))
         return {Error::Landing};
     for (auto landing : defs.landings) {
         if (!floorCell(f, landing) || !defs.npcExcluded[index(landing)])

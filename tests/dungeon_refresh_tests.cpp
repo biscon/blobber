@@ -1,0 +1,280 @@
+#include "app/travel_fade.hpp"
+#include "assets/preparation_file.hpp"
+#include "core/preparation.hpp"
+#include "render/world_doors.hpp"
+#include "support/allocations.hpp"
+#include "support/check.hpp"
+#include "support/fixture_world.hpp"
+#include "support/world_visibility_fixtures.hpp"
+#include <atomic>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <nlohmann/json.hpp>
+using namespace blobber;
+namespace {
+template <class F> void rejects(F f, const char* message) {
+    bool rejected = false;
+    try {
+        f();
+    } catch (const std::exception&) {
+        rejected = true;
+    }
+    check(rejected, message);
+}
+void doors() {
+    auto catalog = fixtureCatalog();
+    auto map = fixtureMap();
+    NpcWorld empty(map, {3, 3}, {"goblin"}, {});
+    auto game =
+        std::make_unique<GameSession>(map, catalog, empty, 5, Player{{3, 3}, Heading::East}, false,
+                                      std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions(false));
+    game->setAnimated(false);
+    auto request = [&] { return fixtureRequest(*game, 0); };
+    const auto stale = request();
+    check(game->interact(request()).changed && game->fixtures().open(0), "Door opens");
+    check(!game->interact(stale), "Old request cannot toggle a changed door");
+    game->setAnimated(true);
+    check(game->interact(request()).changed && game->opening() && game->geometry().solid({4, 3}),
+          "Closing changes collision atomically and starts a motion barrier");
+    std::array<world_render::DoorBox, world_render::doorBoxCapacity> boxes;
+    world_render::doorBoxes(game->geometry(), &game->doors(), boxes, 0, 0, 0);
+    const auto begin = boxes[3].x;
+    game->update(.15, false);
+    world_render::doorBoxes(game->geometry(), &game->doors(), boxes, 0, 0, 0);
+    const auto middle = boxes[3].x;
+    check(std::abs(begin.x) > .8f && std::abs(middle.x) > .4f && std::abs(middle.z) > .4f,
+          "Closing animates from open through a halfway angle");
+    check(!game->interact(request()), "Motion barrier rejects repeated interaction");
+    game->update(.15, false);
+    check(!game->opening() && game->fixtures().completed(0) && !game->fixtures().open(0),
+          "Closed state retains first-opening completion");
+    auto saved = std::make_unique<FloorState>();
+    game->exportFloor(*saved);
+    const auto digest = saved->digest();
+    game->setAnimated(false);
+    check(game->interact(request()).changed, "Door reopens");
+    game->importFloor(*saved);
+    check(!game->fixtures().open(0) && game->geometry().solid({4, 3}), "Closed state restores");
+    game->exportFloor(*saved);
+    check(saved->digest() == digest, "Door snapshot roundtrip is canonical");
+    check(game->interact(request()).changed, "Restored closed door opens");
+    game->move(Action::Forward);
+    game->move(Action::Forward);
+    game->move(Action::TurnRight);
+    game->move(Action::TurnRight);
+    check(game->movement().player.cell == Cell{5, 3} && game->interact(request()).changed,
+          "Door closes from opposite threshold side");
+    check(!game->fixtures().rememberedOpen(0), "Discovery remembers closing independently of completion");
+    // Occupancy can change independently of the player's last simulation tick.
+    check(game->interact(request()).changed, "Open before occupancy test");
+    NpcWorld occupied(map, {3, 3}, {"goblin"}, {{{0}, {6, 3}, {0, 0}, Heading::East}});
+    GameSession crowded(map, catalog, occupied, 5, {{3, 3}, Heading::East}, false, {}, {},
+                        fixtureDefinitions(false));
+    crowded.setAnimated(false);
+    check(crowded.interact(fixtureRequest(crowded, 0)).changed, "Open crowded fixture");
+    check(crowded.actors().move(crowded.actors().id(0), {5, 3}, {0, 0}, {3, 3}).changed,
+          "Actor approaches threshold");
+    check(crowded.actors().move(crowded.actors().id(0), {4, 3}, {0, 0}, {3, 3}).changed,
+          "Actor occupies threshold");
+    const auto revision = crowded.geometry().revision();
+    check(!crowded.interact(fixtureRequest(crowded, 0)) && !crowded.geometry().solid({4, 3}) &&
+              crowded.geometry().revision() == revision,
+          "Occupied threshold cannot close");
+}
+void stairsAndFrames() {
+    test::VisibilityFixture fixture;
+    world_assets::CpuAssets assets(fixture.publication());
+    auto catalog = fixtureCatalog();
+    const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
+    for (unsigned h = 0; h < 4; ++h)
+        for (auto kind : {FixtureKind::Upstairs, FixtureKind::Downstairs}) {
+            FloorFixtures definitions;
+            definitions.count = 1;
+            definitions.entries[0] = {{3, 3}, Heading(h), kind};
+            const auto landing = stairLanding(definitions.entries[0]);
+            NpcWorld empty(map, landing, {"goblin"}, {});
+            GameSession game(map, catalog, empty, 5, {landing, Heading(h)}, false, {}, {}, definitions);
+            game.setAnimated(false);
+            check(game.geometry().solid({3, 3}) && game.nearbyFixture().id == game.fixtures().id(0),
+                  "Stair entrance is blocked and exposes its faced landing interaction");
+            game.move(Action::Forward);
+            check(game.movement().player.cell == landing, "Cannot enter stair geometry");
+            check(!fixtureReachable(definitions.entries[0], {3, 3}, Heading(h)),
+                  "No current-cell stair interaction");
+            auto scene = world_render::prepare(game.geometry());
+            bool below = false, above = false, black = false;
+            unsigned treads = 0;
+            for (const auto& range : scene.ranges)
+                if (range.id == PickingBuffer::fixtureBase) {
+                    for (unsigned i = range.first; i < range.first + range.count; i += 6) {
+                        const auto& v = scene.vertices[scene.indices[i]];
+                        if (v.normal.y == 1 && range.material == 1)
+                            ++treads;
+                    }
+                    for (unsigned i = range.first; i < range.first + range.count; ++i) {
+                        const auto& v = scene.vertices[scene.indices[i]];
+                        below |= v.position.y < -.24f;
+                        above |= v.position.y > 1.1f;
+                        black |= v.shade == 0;
+                        check(v.shade >= 0 && v.shade <= 1, "Prepared stair shading is bounded");
+                    }
+                }
+            check(treads == 8 && black && (kind == FixtureKind::Upstairs ? above : below),
+                  "Eight steps extend in the requested vertical direction and end in darkness");
+            world_render::VisibilityPipeline visibility(scene, assets);
+            world_render::FrameInput input{game.geometry(), game.movement(), nullptr,
+                                           nullptr,         nullptr,         &game.doors()};
+            visibility.update(input);
+            bool pickable = false;
+            for (int y = 0; y < viewHeight; ++y)
+                for (int x = 0; x < viewWidth; ++x)
+                    pickable |= visibility.frame().picking.slot(x, y) == PickingBuffer::fixtureBase;
+            check(pickable, "Stair triangles publish fixture picking IDs");
+            watching = true;
+            allocations = 0;
+            for (unsigned i = 0; i < 4; ++i) {
+                game.move(Action::TurnRight);
+                visibility.update(input);
+            }
+            watching = false;
+            check(allocations == 0, "Warmed stair views allocate no engine C++ storage");
+            definitions.entries[0].kind = FixtureKind::Door;
+            FloorGeometry door(map, definitions);
+            std::array<world_render::DoorBox, world_render::doorBoxCapacity> boxes;
+            check(world_render::doorBoxes(door.view(), nullptr, boxes, 0, 0, 0) == 4,
+                  "Frame has three strips and one leaf");
+            for (unsigned i = 0; i < 3; ++i)
+                check(boxes[i].worldMapped, "All frame strips use world UV mapping");
+            check(!boxes[3].worldMapped, "Leaf uses fitted art independently of frame density");
+        }
+}
+void packs() {
+    test::WorldFixture fixture;
+    world_assets::Writer writer(fixture.directory);
+    std::vector<unsigned char> pixels(4 * 4 * 4, 255);
+    world_assets::Pack pack;
+    for (const char* name : {"wall", "floor", "ceiling"})
+        pack.materials[pack.materialCount++] = std::uint16_t(writer.add(name, 4, 4, false, pixels));
+    pack.door = pack.lockedDoor = pack.doorEdge =
+        std::uint16_t(writer.add("door", 4, 4, false, pixels, 0, {}, false));
+    pack.crest = pack.vine = std::uint16_t(writer.add("decal", 4, 4, true, pixels));
+    pack.sky = std::uint16_t(writer.add("sky", 4, 4, false, pixels, 0, {}, false));
+    writer.finish({}, 0, {pack});
+    world_assets::CpuAssets assets(world_assets::load(fixture.directory));
+    check(assets.pack("dungeon").materialCount == 3 && !assets.publication.textures[pack.sky].material,
+          "Sky and door images remain outside the terrain palette");
+    rejects([&] { assets.pack("missing"); }, "Missing map pack rejects explicitly");
+    auto world = Map({"###", "#.#", "###"}).definition();
+    const auto previous = world.fingerprint();
+    world.assetPack = "future";
+    check(previous != world.fingerprint(), "Pack selection participates in world identity");
+    world.assetPack = "../escape";
+    rejects([&] { Map invalid({"###", "#.#", "###"}, world); }, "Invalid map pack ID rejects");
+    const auto metadata = fixture.directory / "metadata.json";
+    nlohmann::json corrupt;
+    {
+        std::ifstream input(metadata);
+        input >> corrupt;
+    }
+    corrupt["packs"][0]["worldScale"] = 2;
+    {
+        std::ofstream output(metadata);
+        output << corrupt;
+    }
+    check(world_assets::load(fixture.directory).fingerprint != assets.publication.fingerprint,
+          "Pack bindings and sampling participate in publication identity even with identical pixels");
+    corrupt["packs"][0]["materials"][1] = pack.sky;
+    {
+        std::ofstream output(metadata);
+        output << corrupt;
+    }
+    rejects([&] { world_assets::load(fixture.directory); }, "Non-terrain pack palette entry rejects");
+}
+void loading() {
+    TravelFade fade;
+    fade.prepared();
+    check(fade.phase() == TravelFade::Phase::Out, "Cannot skip blackout before preparing");
+    for (unsigned i = 0; i < 25; ++i)
+        fade.advance(.01f);
+    fade.advance(.01f);
+    check(fade.phase() == TravelFade::Phase::Black && fade.alpha() == 1, "Fade reaches full black");
+    fade.advance(10);
+    check(fade.phase() == TravelFade::Phase::Black, "Elapsed time cannot start loading");
+    fade.blackPresented();
+    check(fade.phase() == TravelFade::Phase::Loading, "Presented black frame admits loading");
+    fade.prepared();
+    for (unsigned i = 0; i < 26; ++i)
+        fade.advance(.01f);
+    check(fade.phase() == TravelFade::Phase::Done && fade.alpha() == 0, "Prepared destination fades in");
+    PreparationWorker worker;
+    unsigned pumps = 0;
+    const auto main = std::this_thread::get_id();
+    PreparationScope scope(
+        {[](void* context, const char*) { ++*static_cast<unsigned*>(context); }, &pumps, &worker});
+    auto thread = prepareCpu([&] {
+        preparationPoint("Owned CPU fixture");
+        std::this_thread::sleep_for(std::chrono::milliseconds(8));
+        return std::this_thread::get_id();
+    });
+    check(thread != main && pumps > 0, "CPU work runs off the pumping thread");
+    rejects([&] { prepareCpu([]() -> int { throw std::runtime_error("fixture failure"); }); },
+            "Worker propagates failure");
+    check(prepareCpu([] { return 17; }) == 17, "Worker remains reusable after failure");
+    worker.cancel();
+    rejects(
+        [&] {
+            prepareCpu([] {
+                preparationPoint("Cancelled");
+                return 0;
+            });
+        },
+        "Cancellation joins work before propagating");
+    worker.reset();
+    check(prepareCpu([] { return 23; }) == 23, "Worker can begin a new loading boundary");
+    test::WorldFixture files;
+    const auto path = files.directory / "bounded-art.bin";
+    {
+        std::ofstream output(path, std::ios::binary);
+        output << "asset";
+    }
+    rejects([&] { preparationFile(path, 4); }, "Oversized file rejects before decode or upload");
+    const auto bytes = preparationFile(path, 5);
+    check(std::string(bytes.begin(), bytes.end()) == "asset",
+          "Exact-limit file transfers through the CPU worker");
+    struct Cancel {
+        PreparationWorker& worker;
+        std::atomic<bool> started{false};
+    } cancel{worker};
+    PreparationScope cancelling({[](void* owner, const char*) {
+                                     auto& c = *static_cast<Cancel*>(owner);
+                                     if (c.started)
+                                         c.worker.cancel();
+                                 },
+                                 &cancel, &worker});
+    rejects(
+        [&] {
+            prepareCpu([&] {
+                cancel.started = true;
+                for (unsigned i = 0; i < 50; ++i) {
+                    preparationPoint("Owned cancellable loading");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
+            });
+        },
+        "Window-thread cancellation interrupts a running CPU preparation task");
+}
+} // namespace
+int main() {
+    try {
+        doors();
+        stairsAndFrames();
+        packs();
+        loading();
+        std::cout << "Dungeon refresh CPU contracts passed\n";
+    } catch (const std::exception& e) {
+        watching = false;
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+}

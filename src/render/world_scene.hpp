@@ -28,14 +28,16 @@ bool sameCamera(const Camera&, const Camera&) noexcept;
 struct Vertex {
     Vec position, normal;
     float u, v;
+    float shade = 1;
 };
-static_assert(sizeof(Vertex) == 32);
+static_assert(sizeof(Vertex) == 36);
 struct Surfaces {
-    std::uint8_t wall = 0, floor = 1, ceiling = 2;
+    std::uint8_t wall = 0, floor = 1, ceiling = 2, stairWall = 0, stairFloor = 1;
 };
 struct Range {
     std::uint32_t first = 0, count = 0;
     std::uint8_t material = 0;
+    std::uint16_t id = UINT16_MAX;
 };
 struct Chunk {
     std::uint32_t first = 0, count = 0;
@@ -65,7 +67,7 @@ struct Scene {
 Scene prepare(GeometryView, Surfaces = {}, const std::vector<Surfaces>& overrides = {}, Limits = {});
 bool visible(const Camera&, int x, int z, int width, int height, float low = 0, float high = 1) noexcept;
 struct DrawList {
-    std::array<std::uint32_t, 49 * materialCapacity> ranges{};
+    std::array<std::uint32_t, 49 * materialCapacity + fixtureCapacity * 3> ranges{};
     unsigned count = 0, tested = 0;
 };
 void cull(const Scene&, const Camera&, DrawList&) noexcept;

@@ -2,6 +2,8 @@
 #include "assets/creator_art.hpp"
 #include "assets/image.hpp"
 #include "assets/portrait_atlas.hpp"
+#include "assets/prepared_image.hpp"
+#include "core/preparation.hpp"
 #include "game/effects.hpp"
 #include <algorithm>
 #include <cmath>
@@ -70,6 +72,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "travel"};
     const auto prepared = directory.parent_path() / "prepared";
     auto loadPreparedAtlas = [&](const char* name, int height) {
+        preparationPoint("Loading interface atlases");
         const auto path = prepared / name;
         std::ifstream input(path, std::ios::binary);
         std::array<unsigned char, 14> header{};
@@ -82,7 +85,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
             dimension(8) != unsigned(height) || header[12] != 4 ||
             std::filesystem::file_size(path) > std::uint64_t(portraitAtlasWidth) * height * 5 + 22)
             throw std::runtime_error("Missing or invalid prepared UI atlas header");
-        OwnedImage atlas(LoadImage(path.string().c_str()));
+        OwnedImage atlas(preparedImage(path));
         if (!atlas.value.data || atlas.value.width != portraitAtlasWidth || atlas.value.height != height)
             throw std::runtime_error("Missing or invalid prepared UI atlas");
         auto handle = resources_.createTexture(atlas.value);
@@ -92,8 +95,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     creator_ = loadPreparedAtlas("creator.qoi", creatorAtlasSize);
     portraitSmall_ = loadPreparedAtlas("portraits-small.qoi", smallPortraitHeight);
     portraitLarge_ = loadPreparedAtlas("portraits-large.qoi", largePortraitHeight);
-    OwnedImage campImage(LoadImage((directory / "camp/bonfire-sheet.png").string().c_str()));
-    OwnedImage lootImage(LoadImage((directory / "items/loot-sheet.png").string().c_str()));
+    OwnedImage campImage(preparedImage(directory / "camp/bonfire-sheet.png"));
+    OwnedImage lootImage(preparedImage(directory / "items/loot-sheet.png"));
     if (!campImage.value.data || !lootImage.value.data)
         throw std::runtime_error("Missing camp/loot art");
     camp_ = resources_.createTexture(campImage.value);
@@ -104,10 +107,11 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
     for (unsigned i = 0; i < regions_.size(); ++i) {
+        preparationPoint("Preparing interface artwork");
         if (i < 4)
             continue; // Portraits are prepared offline in their own bounded atlases.
         const auto path = directory / (std::string(names[i]) + ".png");
-        OwnedImage image(LoadImage(path.string().c_str()));
+        OwnedImage image(preparedImage(path));
         if (!image.value.data)
             throw std::runtime_error("Missing UI art: " + path.string());
         const int maximumWidth = i >= 46               ? 108

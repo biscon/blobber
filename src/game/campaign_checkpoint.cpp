@@ -1,3 +1,4 @@
+#include "core/preparation.hpp"
 #include "game/campaign.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -30,7 +31,7 @@ void validateSurfaceProgression(const CampaignLocation& location) {
                     const auto& f = defs.entries[i];
                     if (!(f.cell == to))
                         continue;
-                    blocked |= f.kind == FixtureKind::GuardianGate ||
+                    blocked |= stairFixture(f.kind) || f.kind == FixtureKind::GuardianGate ||
                                (f.kind == FixtureKind::Door && f.key && !(keys & (1u << f.key)));
                 }
                 if (!blocked) {
@@ -92,6 +93,7 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     out->runId = runId_;
     out->navigation = game().navigationCheckpoint();
     for (unsigned i = 0; i < 4; ++i) {
+        preparationPoint("Restoring campaign locations");
         const auto& from = locations_[i];
         auto& to = out->locations[i];
         to.world = from.map().definition();
@@ -136,6 +138,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
         !s.locations[0].visited || !s.locations[location_].visited || !s.locations[location_].state)
         throw std::invalid_argument("Invalid campaign checkpoint");
     for (unsigned i = 0; i < 4; ++i) {
+        preparationPoint("Restoring campaign locations");
         auto& from = s.locations[i];
         auto& to = locations_[i];
         if (from.generated != (i != 0) || from.rows.empty() || from.rows.size() > 40 ||
@@ -235,6 +238,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
     baseClock_ = game().combat().snapshot().gameplayMs;
     active_->campaign_ = this;
     for (unsigned i = 0; i < 4; ++i) {
+        preparationPoint("Restoring campaign locations");
         bool aided = false;
         for (const auto& e : game().effects().snapshot())
             if (e.active && e.kind == EffectKind::Aid)

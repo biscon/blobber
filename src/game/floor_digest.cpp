@@ -88,6 +88,8 @@ struct Canonical {
     }
     void add(const FloorGeometry::Saved& v) {
         add(v.completed);
+        add(v.open);
+        add(v.rememberedOpen);
         add(v.known);
         add(v.remembered);
         add(v.discovered);

@@ -84,9 +84,13 @@ void deterministic() {
     check(seedFor({5}, Domain::Interior, 1) != seedFor({5}, Domain::Interior, 2) &&
               seedFor({5}, Domain::Topology, 0, 0) != seedFor({5}, Domain::Topology, 0, 1),
           "stable room IDs and attempt number separate draws");
+    const auto original = generate({5});
     auto changed = templates();
-    changed[3].floor[5 * 7 + 5] = 0;
-    const auto original = generate({5}), altered = generate({5}, changed);
+    // Mutate a template this owned layout actually uses, independently of version-dependent seed selection.
+    const auto used = original.floor->layout.rooms[0].shape;
+    check(used < 4, "First junction uses an ordinary interior template");
+    changed[used].floor[5 * 7 + 5] = 0;
+    const auto altered = generate({5}, changed);
     check(bool(altered) && original.floor->runtimeSeed == altered.floor->runtimeSeed,
           "interior edits cannot consume runtime random draws");
     check(original.floor->fingerprint != altered.floor->fingerprint,

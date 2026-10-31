@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <string>
 #include <vector>
 namespace blobber {
 constexpr std::int16_t noCeiling = INT16_MAX;
@@ -24,10 +25,11 @@ struct Decoration {
     bool cutout() const noexcept { return kind == DecorationKind::Crest || kind == DecorationKind::Vine; }
 };
 struct WorldDefinition {
+    std::string assetPack = "dungeon";
     std::vector<CellSurface> surfaces;
     std::vector<Decoration> decorations;
     std::size_t bytes() const noexcept {
-        return sizeof(*this) + surfaces.capacity() * sizeof(CellSurface) +
+        return sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
                decorations.capacity() * sizeof(Decoration);
     }
     std::uint64_t fingerprint() const noexcept;

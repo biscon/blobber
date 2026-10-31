@@ -16,7 +16,7 @@ Map sanctuaryMap() {
             }
         }
     w.decorations.push_back({{1, 2}, Heading::West, DecorationKind::Crest});
-    w.decorations.push_back({{7, 2}, Heading::East, DecorationKind::Vine});
+    w.decorations.push_back({{7, 2}, Heading::East, DecorationKind::Vine, 0, .5f, .5f, .6f, .9f});
     w.decorations.push_back({{1, 6}, Heading::West, DecorationKind::Bench, 0, .5f, 0, .7f, .2f, .2f});
     w.decorations.push_back({{7, 6}, Heading::East, DecorationKind::Urn, 0, .5f, 0, .2f, .25f, .2f});
     return Map(rows, std::move(w));

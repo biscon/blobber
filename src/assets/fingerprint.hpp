@@ -1,4 +1,5 @@
 #pragma once
+#include "core/preparation.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -19,8 +20,10 @@ inline std::string fingerprintFile(const std::filesystem::path& path) {
         throw std::runtime_error("Cannot fingerprint " + path.string());
     std::uint64_t hash = fingerprintBasis;
     char block[16384];
-    while (input.read(block, sizeof(block)) || input.gcount())
+    while (input.read(block, sizeof(block)) || input.gcount()) {
+        preparationPoint("Checking game files");
         fingerprintBytes(hash, block, static_cast<std::size_t>(input.gcount()));
+    }
     if (input.bad())
         throw std::runtime_error("Cannot read " + path.string());
     return std::to_string(hash);

@@ -38,6 +38,8 @@ void walk(GameSession& g, Cell to) {
             if (map.solid(next) || parent[index(next)] >= 0)
                 continue;
             const auto f = g.fixtures().at(next);
+            if (f >= 0 && stairFixture(g.fixtures().definition().entries[unsigned(f)].kind))
+                continue;
             if (f >= 0 && g.fixtures().definition().entries[unsigned(f)].kind == FixtureKind::GuardianGate &&
                 !g.objective().completed)
                 continue;
@@ -58,7 +60,8 @@ void walk(GameSession& g, Cell to) {
                                   : Heading::North;
         face(g, h);
         auto fixture = g.fixtures().at(*i);
-        if (fixture >= 0 && g.fixtures().definition().entries[unsigned(fixture)].kind == FixtureKind::Door)
+        if (fixture >= 0 && g.fixtures().definition().entries[unsigned(fixture)].kind == FixtureKind::Door &&
+            !g.fixtures().open(unsigned(fixture)))
             check(g.interact({g.fixtures().id(unsigned(fixture)), g.fixtures().revision()}).accepted,
                   "open traversed door");
         g.move(Action::Forward);
@@ -73,8 +76,9 @@ void kill(GameSession& g) {
 void travel(CampaignRun& run, FixtureKind kind) {
     auto& g = run.game();
     auto r = stair(g, kind);
-    const auto c = g.fixtures().find(r.id)->cell;
-    walk(g, c);
+    const auto f = *g.fixtures().find(r.id);
+    walk(g, stairLanding(f));
+    face(g, f.facing);
     r = stair(g, kind);
     auto ticket = run.prepareTravel(run.request(r));
     check(run.commitTravel(ticket), "checked travel commits");
@@ -895,6 +899,12 @@ void adapters(const std::filesystem::path& retain) {
           "repeated wire recall at hub does not charge again");
     check(client.act({{"kind", "waypoint"}, {"depth", 1}}).at("data").at("accepted"), "wire entry return");
     auto upstairs = stair(client.protocol.session()->game(), FixtureKind::Upstairs);
+    const auto stairFacing = client.protocol.session()->game().fixtures().find(upstairs.id)->facing;
+    while (client.protocol.session()->game().movement().player.heading != stairFacing) {
+        check(client.act({{"kind", "move"}, {"direction", "turn_right"}}).at("data").at("accepted"),
+              "face staircase");
+        client.advance();
+    }
     check(client.act({{"kind", "interact"}, {"fixture", upstairs.id.slot}}).at("data").at("accepted"),
           "wire free ascent");
     const auto state = client.protocol.state();

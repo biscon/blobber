@@ -11,7 +11,7 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
         events_.clear();
     if (actionBusy())
         return {InventoryError::Moving,
-                opening() ? "Wait until the door opens." : "Wait until movement finishes."};
+                opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};
     if (!combat_.safeRecovery(movement().player))
         return {InventoryError::Unsafe, "Dropping requires safe exploration."};
     const auto* stack = party_.inventory().stack(handle);
@@ -45,7 +45,7 @@ PickupResult GameSession::lootAccess(LootId id) const noexcept {
         return {InventoryError::Stale, "That loot bag is no longer available."};
     if (actionBusy())
         return {InventoryError::Moving,
-                opening() ? "Wait until the door opens." : "Wait until movement finishes."};
+                opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};
     if (!combat_.safeRecovery(movement().player))
         return {InventoryError::Unsafe, "Loot requires safe exploration."};
     if (!(s->cell == movement().player.cell) &&

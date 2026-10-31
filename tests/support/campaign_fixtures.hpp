@@ -32,6 +32,8 @@ inline void walk(GameSession& g, Cell to) {
             if (map.solid(next) || parent[index(next)] >= 0)
                 continue;
             const auto f = g.fixtures().at(next);
+            if (f >= 0 && stairFixture(g.fixtures().definition().entries[unsigned(f)].kind))
+                continue;
             if (f >= 0 && g.fixtures().definition().entries[unsigned(f)].kind == FixtureKind::Door &&
                 g.fixtures().definition().entries[unsigned(f)].key &&
                 !(g.party().questKeys() & (1u << g.fixtures().definition().entries[unsigned(f)].key)))
@@ -58,7 +60,8 @@ inline void walk(GameSession& g, Cell to) {
                                   : Heading::North;
         face(g, h);
         auto fixture = g.fixtures().at(*i);
-        if (fixture >= 0 && g.fixtures().definition().entries[unsigned(fixture)].kind == FixtureKind::Door)
+        if (fixture >= 0 && g.fixtures().definition().entries[unsigned(fixture)].kind == FixtureKind::Door &&
+            !g.fixtures().open(unsigned(fixture)))
             check(g.interact({g.fixtures().id(unsigned(fixture)), g.fixtures().revision()}).accepted,
                   "open traversed door");
         g.move(Action::Forward);
@@ -73,8 +76,9 @@ inline void kill(GameSession& g) {
 inline void travel(CampaignRun& run, FixtureKind kind) {
     auto& g = run.game();
     auto r = stair(g, kind);
-    const auto c = g.fixtures().find(r.id)->cell;
-    walk(g, c);
+    const auto f = *g.fixtures().find(r.id);
+    walk(g, stairLanding(f));
+    face(g, f.facing);
     r = stair(g, kind);
     auto ticket = run.prepareTravel(run.request(r));
     check(run.commitTravel(ticket), "checked travel commits");

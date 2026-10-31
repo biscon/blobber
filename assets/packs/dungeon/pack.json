@@ -1,0 +1,16 @@
+{
+  "id": "dungeon",
+  "worldScale": 1.0,
+  "horizon": [0.60, 0.65, 0.71],
+  "wall": "textures/wall.png",
+  "floor": "textures/floor.png",
+  "ceiling": "textures/ceiling.png",
+  "stairWall": "textures/wall.png",
+  "stairFloor": "textures/floor.png",
+  "door": "packs/dungeon/source/door.png",
+  "lockedDoor": "packs/dungeon/source/door-locked.png",
+  "doorEdge": "packs/dungeon/source/door.png",
+  "crest": "packs/dungeon/source/crest.png",
+  "vine": "packs/dungeon/source/vine.png",
+  "sky": "packs/dungeon/source/sky.png"
+}

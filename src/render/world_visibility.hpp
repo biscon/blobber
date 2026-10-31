@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v3";
+constexpr const char* visibilityVersion = "world-visibility-v4";
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;
@@ -33,6 +33,7 @@ struct WorldFrame {
     unsigned count = 0;
     std::array<DoorBox, doorBoxCapacity> doors{};
     unsigned doorCount = 0;
+    std::uint16_t crestTexture = 0, vineTexture = 0;
     std::array<Cell, fixtureCapacity> proxies{};
     std::array<std::uint16_t, fixtureCapacity> proxyIds{};
     unsigned proxyCount = 0;
@@ -59,9 +60,10 @@ class VisibilityPipeline {
     const Scene& scene_;
     const Map* map_ = nullptr;
     const world_assets::CpuAssets& assets_;
+    world_assets::Pack pack_;
     std::array<WorldFrame, 2> frames_;
     std::array<std::uint16_t, lootCapacity> lootOrder_{};
-    std::array<unsigned, 7> icons_{};
+    std::array<unsigned, 5> icons_{};
     std::array<std::uint64_t, 10> stamp_{};
     PickingBuffer opaqueCache_;
     unsigned current_ = 0;

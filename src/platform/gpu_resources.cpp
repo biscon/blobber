@@ -1,4 +1,5 @@
 #include "platform/gpu_resources.hpp"
+#include "core/preparation.hpp"
 #include "rlgl.h"
 #include <algorithm>
 #include <stdexcept>
@@ -48,6 +49,7 @@ void GpuResources::finishPreparation() {
         throw std::runtime_error("GPU preparation or initial rendering failed");
 }
 TextureHandle GpuResources::createTexture(const Image& image) {
+    preparationPoint("Loading artwork");
     if (!textures_.available())
         throw std::runtime_error("Texture capacity exhausted (512)");
     if (!image.data || image.width <= 0 || image.height <= 0 || image.width > 8192 || image.height > 8192 ||
@@ -68,6 +70,7 @@ TextureHandle GpuResources::createTexture(const Image& image) {
     return textures_.insert(t);
 }
 TargetHandle GpuResources::createTarget(int w, int h) {
+    preparationPoint("Preparing presentation");
     if (!targets_.available())
         throw std::runtime_error("Render target capacity exhausted (8)");
     if (w <= 0 || h <= 0 || w > 8192 || h > 8192)
@@ -84,6 +87,7 @@ TargetHandle GpuResources::createTarget(int w, int h) {
     return targets_.insert(t);
 }
 MeshHandle GpuResources::createMesh(const world_render::Scene& s) {
+    preparationPoint("Preparing dungeon");
     if (!meshes_.available())
         throw std::runtime_error("Mesh capacity exhausted (8)");
     if (s.meshBytes() > 40u * 1024 * 1024 || s.vertices.size() > 1048576 || s.indices.size() > 1572864)
@@ -108,12 +112,14 @@ MeshHandle GpuResources::createMesh(const world_render::Scene& s) {
                                             int(s.vertices.size() * sizeof(world_render::Vertex)), false);
             if (!m.vertices)
                 throw std::runtime_error("Cannot create world vertex buffer");
-            rlSetVertexAttribute(0, 3, RL_FLOAT, false, 32, 0);
+            rlSetVertexAttribute(0, 3, RL_FLOAT, false, sizeof(world_render::Vertex), 0);
             rlEnableVertexAttribute(0);
-            rlSetVertexAttribute(1, 2, RL_FLOAT, false, 32, 24);
+            rlSetVertexAttribute(1, 2, RL_FLOAT, false, sizeof(world_render::Vertex), 24);
             rlEnableVertexAttribute(1);
-            rlSetVertexAttribute(2, 3, RL_FLOAT, false, 32, 12);
+            rlSetVertexAttribute(2, 3, RL_FLOAT, false, sizeof(world_render::Vertex), 12);
             rlEnableVertexAttribute(2);
+            rlSetVertexAttribute(3, 1, RL_FLOAT, false, sizeof(world_render::Vertex), 32);
+            rlEnableVertexAttribute(3);
             checkpoint();
             m.indices = rlLoadVertexBufferElement(s.indices.data(), int(s.indices.size() * 4), false);
             if (!m.indices)
@@ -138,6 +144,7 @@ MeshHandle GpuResources::createMesh(const world_render::Scene& s) {
     return meshes_.insert(m);
 }
 ShaderHandle GpuResources::createShader(const char* vs, const char* fs) {
+    preparationPoint("Preparing scene");
     if (!shaders_.available())
         throw std::runtime_error("Shader capacity exhausted (8)");
     checkpoint();

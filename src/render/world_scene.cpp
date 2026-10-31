@@ -1,4 +1,7 @@
 #include "render/world_scene.hpp"
+#include "core/preparation.hpp"
+#include "render/picking.hpp"
+#include "render/world_stairs.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -61,6 +64,7 @@ namespace {
 struct Face {
     std::array<Vertex, 4> v;
     std::uint8_t material;
+    std::uint16_t id = UINT16_MAX;
 };
 template <class F>
 void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides,
@@ -74,7 +78,7 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
     };
     for (int z = cz; z < std::min(cz + 8, m.height()); ++z)
         for (int x = cx; x < std::min(cx + 8, m.width()); ++x) {
-            if (m.solid({x, z}))
+            if (m.base().solid({x, z}))
                 continue;
             const auto h = m.surface({x, z});
             auto s = overrides.empty() ? Surfaces{h.wallMaterial, h.floorMaterial, h.ceilingMaterial}
@@ -83,6 +87,18 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 s = defaults;
             const float a = float(x), b = float(z), lo = elevation(h.floor),
                         hi = h.ceiling == noCeiling ? m.base().upper() : elevation(h.ceiling);
+            const auto* fixtureOwner = m.fixtures();
+            const int fixtureSlot = fixtureOwner ? fixtureOwner->at({x, z}) : -1;
+            if (fixtureSlot >= 0 &&
+                stairFixture(fixtureOwner->definition().entries[unsigned(fixtureSlot)].kind)) {
+                const auto stairs =
+                    stairGeometry(m, fixtureOwner->definition().entries[unsigned(fixtureSlot)],
+                                  {s.wall, s.floor, s.ceiling, defaults.stairWall, defaults.stairFloor});
+                for (unsigned i = 0; i < stairs.count; ++i)
+                    emit(Face{stairs.quads[i].vertices, stairs.quads[i].material,
+                              std::uint16_t(PickingBuffer::fixtureBase + fixtureSlot)});
+                continue;
+            }
             add({Vec{a, lo, b}, Vec{a, lo, b + 1}, Vec{a + 1, lo, b + 1}, Vec{a + 1, lo, b}}, {0, 1, 0},
                 s.floor, false);
             if (h.ceiling != noCeiling)
@@ -101,7 +117,7 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                          Vec{px - r.x * .5f, high, pz - r.y * .5f}},
                         {float(-f.x), 0, float(-f.y)}, s.wall, true);
                 };
-                if (m.solid(next))
+                if (m.base().solid(next))
                     wall(lo, hi);
                 else {
                     wall(lo, std::min(hi, elevation(n.floor)));
@@ -148,7 +164,9 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
 Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& overrides, Limits limits) {
     if (!overrides.empty() && overrides.size() != std::size_t(m.width()) * m.height())
         throw std::invalid_argument("World material grid dimensions differ");
-    auto valid = [](Surfaces s) { return s.wall < 32 && s.floor < 32 && s.ceiling < 32; };
+    auto valid = [](Surfaces s) {
+        return s.wall < 32 && s.floor < 32 && s.ceiling < 32 && s.stairWall < 32 && s.stairFloor < 32;
+    };
     if (!valid(defaults) || !std::all_of(overrides.begin(), overrides.end(), valid))
         throw std::invalid_argument("World material index exceeds 32");
     limits.quads = std::min(limits.quads, std::size_t(262144));
@@ -179,19 +197,22 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     std::size_t quads = 0, ranges = 0, maxLocal = 0;
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
-            std::array<bool, 32> used{};
+            preparationPoint("Preparing dungeon");
+            std::array<bool, 32 * (fixtureCapacity + 1)> used{};
             std::size_t localCount = 0;
             faces(m, x, z, defaults, overrides, [&](const Face& f) {
                 ++quads;
                 ++localCount;
-                used[f.material] = true;
+                used[f.material +
+                     32 * (f.id == UINT16_MAX ? 0u : unsigned(f.id - PickingBuffer::fixtureBase) + 1)] = true;
             });
             maxLocal = std::max(maxLocal, localCount);
             ranges += std::count(used.begin(), used.end(), true);
             if (quads > limits.quads || ranges > limits.ranges)
                 throw std::runtime_error("World geometry capacity exceeded");
         }
-    const std::size_t required = sizeof(s) + s.decals.capacity() * sizeof(Decal) + quads * 152 +
+    const std::size_t required = sizeof(s) + s.decals.capacity() * sizeof(Decal) +
+                                 quads * (4 * sizeof(Vertex) + 6 * sizeof(std::uint32_t)) +
                                  ranges * sizeof(Range) + std::size_t(s.columns) * s.rows * sizeof(Chunk);
     if (required > limits.cpuBytes)
         throw std::runtime_error("World CPU scene budget exceeded");
@@ -202,10 +223,12 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     std::vector<Face> local(maxLocal);
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
+            preparationPoint("Preparing dungeon");
             unsigned count = 0;
             faces(m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; });
-            std::sort(local.begin(), local.begin() + count,
-                      [](const Face& a, const Face& b) { return a.material < b.material; });
+            std::sort(local.begin(), local.begin() + count, [](const Face& a, const Face& b) {
+                return a.material != b.material ? a.material < b.material : a.id < b.id;
+            });
             auto& chunk = s.chunks[(z / 8) * s.columns + x / 8];
             chunk.low = m.base().upper();
             chunk.high = m.base().lower();
@@ -227,8 +250,8 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
             }
             chunk.first = std::uint32_t(s.ranges.size());
             for (unsigned i = 0; i < count; ++i) {
-                if (!i || local[i].material != local[i - 1].material) {
-                    s.ranges.push_back({std::uint32_t(s.indices.size()), 0, local[i].material});
+                if (!i || (local[i].material != local[i - 1].material || local[i].id != local[i - 1].id)) {
+                    s.ranges.push_back({std::uint32_t(s.indices.size()), 0, local[i].material, local[i].id});
                     ++chunk.count;
                 }
                 const auto first = std::uint32_t(s.vertices.size());

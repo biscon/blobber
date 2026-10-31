@@ -45,6 +45,12 @@ void interactions() {
     check(g.interact(key).changed && g.party().questKeys() == 4 &&
               g.party().inventory().revision() == inventory,
           "Full inventory acquires unweighted quest key without inventory mutation");
+    check(!g.fixtures().rememberedOpen(1), "Collected keys never acquire door-open memory");
+    {
+        auto saved = std::make_unique<FloorState>();
+        g.exportFloor(*saved);
+        g.validateCheckpoint(*saved);
+    }
     check(!g.interact(key), "Old revision rejected");
     check(g.interact(fixtureRequest(g, 1)).accepted && !g.interact(fixtureRequest(g, 1)).changed,
           "Key cannot be collected twice");
@@ -58,8 +64,12 @@ void interactions() {
           "Opening publishes geometry exactly once");
     check(g.fixtures().known(2) && g.fixtures().discovered({6, 3}), "Stationary opening updates discovery");
     const auto again = g.interact(fixtureRequest(g, 0));
-    check(again.accepted && !again.changed && g.party().questKeys() == 4,
-          "Opening never consumes the key or repeats mutation");
+    check(again.accepted && again.changed && g.party().questKeys() == 4 && g.geometry().solid({4, 3}),
+          "Keyed door closes without consuming key or resetting first-opening completion");
+    check(g.fixtures().completed(0) && !g.fixtures().open(0) && !g.fixtures().rememberedOpen(0),
+          "Completion and remembered current door state are independent");
+    check(g.interact(fixtureRequest(g, 0)).changed && !g.geometry().solid({4, 3}),
+          "Collected key reopens a closed door");
     g.move(Action::Forward);
     check(g.movement().player.cell == Cell{4, 3}, "Opened door admits player");
     check(!g.nearbyFixture().id.world, "Standing on an open threshold has no faced-door prompt");

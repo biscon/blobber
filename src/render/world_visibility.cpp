@@ -176,19 +176,14 @@ float fit(float lateral, float depth, float halfWidth) {
 } // namespace
 VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::CpuAssets& assets)
     : scene_(scene), assets_(assets) {
-    unsigned materials = 0;
-    for (const auto& texture : assets.publication.textures)
-        materials += !texture.clamp;
+    pack_ = assets_.pack(scene_.map ? scene_.map->definition().assetPack : "dungeon");
     for (const auto& range : scene.ranges)
-        if (range.material >= materials)
-            throw std::invalid_argument("Scene references an unavailable world material");
-    for (const auto& decal : scene.decals)
-        (void)assets.named(decal.motif ? "decoration/vine" : "decoration/crest");
+        if (range.material >= pack_.materialCount)
+            throw std::invalid_argument("Scene references an unavailable pack material");
     icons_.fill(UINT16_MAX);
-    constexpr const char* names[]{"loot/bag",         "fixture/key-bronze", "fixture/key-silver",
-                                  "fixture/upstairs", "fixture/downstairs", "fixture/endpoint",
+    constexpr const char* names[]{"loot/bag", "fixture/key-bronze", "fixture/key-silver", "fixture/endpoint",
                                   "fixture/threshold"};
-    for (unsigned i = 0; i < 7; ++i)
+    for (unsigned i = 0; i < icons_.size(); ++i)
         for (unsigned t = 0; t < assets.publication.textures.size(); ++t)
             if (assets.publication.textures[t].name == names[i])
                 icons_[i] = t;
@@ -271,13 +266,11 @@ bool VisibilityPipeline::update(const FrameInput& in) {
     return true;
 }
 void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
+    out.crestTexture = pack_.crest;
+    out.vineTexture = pack_.vine;
     const auto center = playerCenter(in.movement);
-    unsigned ordinary = 0, locked = 0;
-    if (in.geometry.fixtures()) {
-        ordinary = assets_.named("door");
-        locked = assets_.named("door-locked");
-    }
-    out.doorCount = doorBoxes(in.geometry, in.doors, out.doors, ordinary, locked, 0);
+    out.doorCount = doorBoxes(in.geometry, in.doors, out.doors, pack_.door, pack_.lockedDoor,
+                              pack_.materialCount ? pack_.materials[0] : 0, pack_.doorEdge);
     const auto append = [&](Billboard b) {
         if (out.count == billboardCapacity)
             throw std::runtime_error("World billboard capacity exceeded");
@@ -398,15 +391,14 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         out.picking.fixtureWorld(f->world());
         for (unsigned i = 0; i < f->definition().count; ++i) {
             const auto& entry = f->definition().entries[i];
-            if (entry.kind == FixtureKind::Door || entry.kind == FixtureKind::GuardianGate)
+            if (entry.kind == FixtureKind::Door || entry.kind == FixtureKind::GuardianGate ||
+                stairFixture(entry.kind))
                 continue;
             if (entry.kind == FixtureKind::Key && f->completed(i))
                 continue;
-            const unsigned icon = entry.kind == FixtureKind::Key          ? (entry.key == 2 ? 1 : 2)
-                                  : entry.kind == FixtureKind::Upstairs   ? 3
-                                  : entry.kind == FixtureKind::Downstairs ? 4
-                                  : entry.kind == FixtureKind::Endpoint   ? 5
-                                                                          : 6;
+            const unsigned icon = entry.kind == FixtureKind::Key        ? (entry.key == 2 ? 1 : 2)
+                                  : entry.kind == FixtureKind::Endpoint ? 3
+                                                                        : 4;
             if (icons_[icon] == UINT16_MAX)
                 throw std::invalid_argument("Missing prepared fixture marker");
             Vec feet{entry.cell.x + .5f, elevation(in.geometry.surface(entry.cell).floor),
@@ -443,11 +435,11 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
                                               scene_.vertices[scene_.indices[i + 2]]};
                 if (dot(v[0].normal, sub(out.camera.position, v[0].position)) <= 0)
                     continue;
-                triangle(out, v, PickingBuffer::empty);
+                triangle(out, v, range.id);
             }
         }
         for (const auto& decal : scene_.decals) {
-            const auto texture = assets_.named(decal.motif ? "decoration/vine" : "decoration/crest");
+            const auto texture = decal.motif ? pack_.vine : pack_.crest;
             const auto& p = decal.vertices;
             triangle(out, {p[0], p[1], p[2]}, PickingBuffer::empty, &assets_, texture, 16, true);
             triangle(out, {p[0], p[2], p[3]}, PickingBuffer::empty, &assets_, texture, 16, true);

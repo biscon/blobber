@@ -64,6 +64,11 @@ bool Map::canStep(Cell a, Cell b) const noexcept {
            surfacePassage(surface(a), surface(b));
 }
 void Map::validateWorld() {
+    if (world_.assetPack.empty() || world_.assetPack.size() > 32 ||
+        !std::all_of(world_.assetPack.begin(), world_.assetPack.end(), [](unsigned char c) {
+            return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+        }))
+        throw std::invalid_argument("Invalid world asset pack ID");
     const auto count = std::size_t(width_) * height_;
     if (world_.surfaces.empty())
         world_.surfaces.resize(count);

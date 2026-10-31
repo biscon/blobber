@@ -84,7 +84,10 @@ Json encodeObservation(const Observation& o) {
              {"name", fixtureName(f)},
              {"position", xy(f.cell)},
              {"key", f.key},
-             {"completed", o.diagnostic ? fixtures.completed(i) : fixtures.rememberedComplete(i)}});
+             {"completed", o.diagnostic ? fixtures.completed(i) : fixtures.rememberedComplete(i)},
+             {"open", o.diagnostic ? fixtures.open(i) : fixtures.rememberedOpen(i)},
+             {"unlocked",
+              f.kind == FixtureKind::Door && (!f.key || bool(g.party().questKeys() & (1u << f.key)))}});
     }
     if (fixtures.definition().discovery) {
         j["discovered"] = Json::array();

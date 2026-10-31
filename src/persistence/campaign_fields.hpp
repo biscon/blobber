@@ -80,6 +80,7 @@ template <class A> void visit(A& a, Decoration& v) {
     a("depth", v.depth);
 }
 template <class A> void visit(A& a, WorldDefinition& v) {
+    a("assetPack", v.assetPack);
     a("surfaces", v.surfaces);
     a("decorations", v.decorations);
 }
@@ -135,6 +136,8 @@ template <class A> void visit(A& a, ActorSnapshot& v) {
 }
 template <class A> void visit(A& a, FloorGeometry::Saved& v) {
     a("completed", v.completed);
+    a("open", v.open);
+    a("rememberedOpen", v.rememberedOpen);
     a("known", v.known);
     a("remembered", v.remembered);
     a("discovered", v.discovered);

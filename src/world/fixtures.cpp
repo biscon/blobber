@@ -49,6 +49,9 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
             (f.kind == FixtureKind::Key && !f.key) ||
             (f.kind != FixtureKind::Key && f.kind != FixtureKind::Door && f.key))
             throw std::invalid_argument("Invalid floor fixture");
+        if (stairFixture(f.kind) &&
+            (map.solid(stairLanding(f)) || map.surface(stairLanding(f)).floor != map.surface(f.cell).floor))
+            throw std::invalid_argument("Stairs require a level adjacent landing");
         if (f.kind == FixtureKind::Door || f.kind == FixtureKind::GuardianGate) {
             const auto a = f.cell + forward(f.facing), b = f.cell + forward(f.facing) * -1;
             if ((!map.solid(a) && map.surface(a).floor != map.surface(f.cell).floor) ||
@@ -94,7 +97,7 @@ bool GeometryView::solid(Cell c) const noexcept {
         return true;
     const int i = fixtures_ ? fixtures_->at(c) : -1;
     return i >= 0 &&
-           fixtureBlocks(fixtures_->definition().entries[unsigned(i)], fixtures_->completed(unsigned(i)));
+           fixtureBlocks(fixtures_->definition().entries[unsigned(i)], fixtures_->open(unsigned(i)));
 }
 bool GeometryView::npcAllowed(Cell c) const noexcept {
     if (solid(c))
@@ -114,6 +117,8 @@ bool FloorGeometry::complete(unsigned i) noexcept {
     if (i >= definition_.count || completed_[i] || revision_ == UINT64_MAX || geometryRevision_ == UINT64_MAX)
         return false;
     completed_[i] = true;
+    if (definition_.entries[i].kind == FixtureKind::Door)
+        open_[i] = true;
     ++revision_;
     if (definition_.entries[i].kind == FixtureKind::Door ||
         definition_.entries[i].kind == FixtureKind::GuardianGate)
@@ -138,9 +143,11 @@ void FloorGeometry::discover(Cell cell, Heading heading) noexcept {
             discovered_.set(n);
             const auto i = at(c);
             if (i >= 0) {
-                changed |= !known_[i] || remembered_[i] != completed_[i];
+                changed |=
+                    !known_[i] || remembered_[i] != completed_[i] || rememberedOpen_[i] != open(unsigned(i));
                 known_[i] = true;
                 remembered_[i] = completed_[i];
+                rememberedOpen_[i] = open(unsigned(i));
             }
         }
     if (changed && discoveryRevision_ != UINT64_MAX)

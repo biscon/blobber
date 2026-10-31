@@ -11,7 +11,7 @@ std::array<Vec, 8> corners(const DoorBox& b) noexcept {
     return p;
 }
 unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox, doorBoxCapacity>& out,
-                   unsigned ordinary, unsigned locked, unsigned frame) {
+                   unsigned ordinary, unsigned locked, unsigned frame, unsigned edge) {
     if (doors && doors->world != g.world())
         throw std::invalid_argument("Foreign door snapshot");
     const auto* fs = g.fixtures();
@@ -37,17 +37,22 @@ unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox
                             {0, h, 0},
                             {d * (-r.x * s + n.x * c), 0, d * (-r.y * s + n.y * c)},
                             id,
-                            std::uint16_t(texture)};
+                            std::uint16_t(texture),
+                            std::uint16_t(edge),
+                            id == PickingBuffer::empty};
         };
         add(0, 0, 0, .06f, height, .12f, 0, frame);
         add(.94f, 0, 0, .06f, height, .12f, 0, frame);
         add(.06f, height - .08f, 0, .88f, .08f, .12f, 0, frame);
-        const bool completed = fs->completed(i);
-        float t = completed ? (doors ? doors->progress(i) : 1.f) : 0.f;
+        const bool opened = fs->open(i);
+        const float progress = doors ? doors->progress(i) : 1.f;
+        float t = opened ? progress : 1.f - progress;
         t = t * t * (3 - 2 * t);
-        add(.06f, 0, .06f, .88f, height - .08f, .06f, t * pi * .5f,
+        const float angle = t * pi * .5f;
+        // Hinge through the leaf thickness, keeping the open slab clear of the adjoining wall.
+        add(.09f - .03f * std::cos(angle), 0, .06f - .03f * std::sin(angle), .88f, height - .08f, .06f, angle,
             f.key || f.kind == FixtureKind::GuardianGate ? locked : ordinary,
-            completed ? PickingBuffer::empty : std::uint16_t(PickingBuffer::fixtureBase + i));
+            std::uint16_t(PickingBuffer::fixtureBase + i));
     }
     return count;
 }

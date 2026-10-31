@@ -14,7 +14,10 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         std::memcpy(&bits, &f, sizeof(bits));
         add(bits);
     };
-    add(1);
+    add(2);
+    add(assetPack.size());
+    for (unsigned char c : assetPack)
+        add(c);
     add(surfaces.size());
     for (auto s : surfaces) {
         add(std::uint16_t(s.floor));

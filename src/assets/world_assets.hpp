@@ -5,12 +5,13 @@
 #include <vector>
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 256 * MiB, alphaBudget = 64 * MiB;
-constexpr unsigned version = 1, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned version = 2, appearanceRevision = 4, textureCapacity = 480;
 struct Texture {
     std::string name;
     unsigned width = 0, height = 0, levels = 0;
     bool clamp = false;
     std::uint64_t offset = 0, bytes = 0, alphaOffset = 0, alphaBytes = 0, checksum = 0, alphaChecksum = 0;
+    bool material = true;
 };
 struct Clip {
     NpcClipTiming timing{};
@@ -31,12 +32,21 @@ struct Appearance {
 struct Anchor {
     float x = .5f, y = 1;
 };
+struct Pack {
+    std::string id = "dungeon";
+    std::array<std::uint16_t, 32> materials{};
+    unsigned materialCount = 0;
+    std::uint16_t door = 0, lockedDoor = 0, doorEdge = 0, crest = 0, vine = 0, sky = 0;
+    float worldScale = 1;
+    std::array<float, 3> horizon{.60f, .67f, .72f};
+};
 struct Publication {
     std::filesystem::path payload;
     std::uint64_t fingerprint = 0, definitions = 0, textureBytes = 0, alphaBytes = 0;
     std::vector<Texture> textures;
     std::vector<Anchor> anchors;
     std::vector<Appearance> appearances;
+    std::vector<Pack> packs;
     std::vector<unsigned char> read(unsigned index, bool alpha = false) const;
 };
 // Immutable preparation owner; safe to share between live and windowless views.
@@ -51,6 +61,7 @@ class CpuAssets {
     std::vector<AlphaBounds> bounds;
     std::array<float, 32> edgeHalfWidths{};
     unsigned named(const char*) const;
+    Pack pack(const std::string&) const;
     std::size_t bytes() const noexcept;
 };
 std::size_t mipBytes(unsigned width, unsigned height);
@@ -65,8 +76,10 @@ class Writer {
     explicit Writer(const std::filesystem::path& directory);
     ~Writer();
     unsigned add(const std::string& name, unsigned width, unsigned height, bool sprite,
-                 const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {});
-    void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0);
+                 const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {},
+                 bool material = true);
+    void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0,
+                const std::vector<Pack>& packs = {});
 
   private:
     std::filesystem::path directory_, temporary_;

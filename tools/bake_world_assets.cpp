@@ -39,7 +39,7 @@ fs::path relative(const std::string& text) {
 }
 std::map<std::string, std::string> sourceFingerprints(const fs::path& source) {
     std::map<std::string, std::string> result;
-    for (const auto* folder : {"npcs", "textures", "fixtures", "effects"})
+    for (const auto* folder : {"npcs", "textures", "fixtures", "effects", "packs"})
         for (const auto& entry : fs::recursive_directory_iterator(source / folder))
             if (entry.is_regular_file() &&
                 (entry.path().extension() == ".png" || entry.path().extension() == ".json"))
@@ -57,10 +57,69 @@ int run(const fs::path& source, const fs::path& output) {
         auto rgba = pixels(path, w, h);
         return writer.add(name, w, h, sprite, rgba, cutoff, anchor);
     };
-    for (const auto* name : {"wall", "floor", "ceiling"})
-        add(name, source / "textures" / (std::string(name) + ".png"), false);
-    add("door", source / "textures/door.png", false);
-    add("door-locked", source / "textures/door-locked.png", false);
+    std::vector<world_assets::Pack> packs;
+    std::vector<fs::path> packDirectories;
+    for (const auto& entry : fs::directory_iterator(source / "packs"))
+        if (entry.is_directory())
+            packDirectories.push_back(entry.path());
+    std::sort(packDirectories.begin(), packDirectories.end());
+    for (const auto& directory : packDirectories) {
+        const auto manifest = read(directory / "pack.json");
+        world_assets::Pack pack;
+        pack.id = manifest.at("id");
+        pack.worldScale = manifest.value("worldScale", 1.f);
+        pack.horizon = manifest.at("horizon").get<std::array<float, 3>>();
+        const auto addPack = [&](const std::string& role, bool sprite, unsigned maximum, bool material) {
+            const auto path = source / relative(manifest.at(role).get<std::string>());
+            OwnedImage image(LoadImage(path.string().c_str()));
+            if (!image.value.data || image.value.width > 4096 || image.value.height > 4096)
+                throw std::runtime_error("Invalid pack artwork: " + path.string());
+            const float scale =
+                std::min(1.f, float(maximum) / std::max(image.value.width, image.value.height));
+            if (scale < 1)
+                ImageResize(&image.value, std::max(1, int(image.value.width * scale)),
+                            std::max(1, int(image.value.height * scale)));
+            ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+            const auto* first = static_cast<const unsigned char*>(image.value.data);
+            std::vector<unsigned char> rgba(first,
+                                            first + std::size_t(image.value.width) * image.value.height * 4);
+            if (!sprite)
+                for (std::size_t i = 3; i < rgba.size(); i += 4)
+                    rgba[i] = 255;
+            // Join generated panorama edges without changing the central cloud composition.
+            if (role == "sky") {
+                const auto width = unsigned(image.value.width), height = unsigned(image.value.height);
+                const auto band = std::min(32u, width / 4);
+                for (unsigned y = 0; y < height; ++y)
+                    for (unsigned c = 0; c < 3; ++c) {
+                        const float seam = (rgba[(std::size_t(y) * width) * 4 + c] +
+                                            rgba[(std::size_t(y) * width + width - 1) * 4 + c]) *
+                                           .5f;
+                        for (unsigned x = 0; x < band; ++x) {
+                            const float t = float(x) / band;
+                            for (auto column : {x, width - 1 - x}) {
+                                auto& value = rgba[(std::size_t(y) * width + column) * 4 + c];
+                                value = static_cast<unsigned char>(std::round(seam * (1 - t) + value * t));
+                            }
+                        }
+                    }
+            }
+            return std::uint16_t(writer.add("pack/" + pack.id + "/" + role, unsigned(image.value.width),
+                                            unsigned(image.value.height), sprite, rgba, sprite ? 16 : 0, {},
+                                            material));
+        };
+        for (const auto* role : {"wall", "floor", "ceiling", "stairWall", "stairFloor"})
+            pack.materials[pack.materialCount++] = addPack(role, false, 256, true);
+        pack.door = addPack("door", false, 512, false);
+        pack.lockedDoor = addPack("lockedDoor", false, 512, false);
+        pack.doorEdge = addPack("doorEdge", false, 256, false);
+        pack.crest = addPack("crest", true, 256, false);
+        pack.vine = addPack("vine", true, 384, false);
+        pack.sky = addPack("sky", false, 2048, false);
+        packs.push_back(std::move(pack));
+    }
+    if (packs.empty() || packs.size() > 8)
+        throw std::runtime_error("Expected one to eight world asset packs");
     for (const auto* name : {"grease", "web", "spiritual_weapon"})
         add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
             source / "effects" / (std::string(name) + ".png"), true);
@@ -109,29 +168,6 @@ int run(const fs::path& source, const fs::path& output) {
                 rgba[at + 3] = inside ? a : 0;
             }
         writer.add(std::string("effect/") + names[kind], 64, 64, true, rgba);
-    }
-    for (unsigned motif = 0; motif < 2; ++motif) {
-        std::vector<unsigned char> rgba(64 * 64 * 4);
-        for (unsigned y = 0; y < 64; ++y)
-            for (unsigned x = 0; x < 64; ++x) {
-                const float u = (x + .5f) / 64 - .5f, v = (y + .5f) / 64 - .5f;
-                const bool mark =
-                    motif ? (std::abs(u - .12f * std::sin(v * 14)) < .025f ||
-                             (std::abs(std::abs(u) - .12f) < .055f && std::abs(std::sin(v * 18)) > .7f))
-                          : ((std::abs(u) < .28f && std::abs(v) < .4f) &&
-                             (std::abs(v) < .31f || std::abs(u) < .18f));
-                auto* p = &rgba[(y * 64 + x) * 4];
-                p[0] = motif ? 70 : 147;
-                p[1] = motif ? 104 : 82;
-                p[2] = motif ? 57 : 43;
-                p[3] = mark ? 255 : 0;
-                if (!motif && mark && (std::abs(u) < .025f || std::abs(v) < .025f)) {
-                    p[0] = 209;
-                    p[1] = 178;
-                    p[2] = 104;
-                }
-            }
-        writer.add(motif ? "decoration/vine" : "decoration/crest", 64, 64, true, rgba);
     }
     const Map dummy({"###", "#.#", "###"});
     const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
@@ -199,11 +235,11 @@ int run(const fs::path& source, const fs::path& output) {
         appearances.push_back(std::move(a));
     }
     add("loot/bag", source / "ui/items/loot-bag.png", true);
-    for (const auto* name : {"key-bronze", "key-silver", "upstairs", "downstairs", "endpoint", "threshold"})
+    for (const auto* name : {"key-bronze", "key-silver", "endpoint", "threshold"})
         add(std::string("fixture/") + name, source / "fixtures" / (std::string(name) + ".png"), true);
     if (sourceFingerprints(source) != inputs)
         throw std::runtime_error("World source assets changed during preparation; rebuild");
-    writer.finish(appearances, parsed.definitionFingerprint);
+    writer.finish(appearances, parsed.definitionFingerprint, packs);
     {
         std::ofstream provenance(output / "sources.json");
         provenance << Json(inputs).dump(2) << '\n';

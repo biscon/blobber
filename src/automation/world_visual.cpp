@@ -5,7 +5,7 @@ namespace {
 class WorldVisual final : public Visibility {
   public:
     WorldVisual(WorldVisualContext& c, const Map& map, const GameSession& game)
-        : scene_(world_render::prepare(map)), pipeline_(scene_, c.assets),
+        : scene_(world_render::prepare(game.geometry())), pipeline_(scene_, c.assets),
           animator_(game.actors(), c.timings) {
         sample(map, game);
     }
