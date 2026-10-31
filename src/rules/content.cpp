@@ -184,6 +184,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
             throw std::runtime_error("attacks." + a.id + ".damage.type: invalid physical damage type");
     }
     for (const auto& m : monsters_) {
+        if (!validDamageProfile(m.damageProfile))
+            throw std::runtime_error("Invalid monster damage profile");
         if (m.lootCount > m.loot.size())
             throw std::runtime_error("Monster loot exceeds eight stacks");
         for (std::size_t j = 0; j < m.lootCount; ++j) {

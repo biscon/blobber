@@ -1,0 +1,271 @@
+[
+  {
+    "name": "attack-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. FRONT facing the viewer. Use reference only for identity, NOT its four-view layout. FOUR sequential front-facing shortsword ATTACK poses in reading order: top-left neutral ready, top-right pull anatomical right sword arm back and raise sword for clear windup, bottom-left thrust/slash sword toward the viewer at STRIKE, bottom-right retract and recover. Emphasize weapon coming toward camera rather than turning side-on. Left hand stays empty. Exactly FOUR full-body poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same camera, character scale (about 390px tall), body-center pivots and LOCAL ground baseline within each cell. Every pose including raised sword fully contained in its own cell. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/attack-front.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "death-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. BACK facing away; back of skull and harness visible. Use reference only for identity, NOT its four-view layout. FOUR sequential DEATH/COLLAPSE poses in reading order: top-left begins to buckle while almost standing; top-right knees buckle and torso sinks; bottom-left bones and armor fall apart onto the invisible floor; bottom-right final motionless low pile of the SAME bones, skull, armor, cloth and sword. Bones do not disappear between stages; no blood. This is death, NOT sleeping. CRITICAL: identical scale for skull/bones/weapon in all four cells; collapsing poses naturally become shorter, NEVER enlarge collapsed poses to fill a cell. Exactly FOUR complete poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same low frontal camera; uniform anatomical scale and LOCAL invisible ground baseline within each cell. Stage one is about 390px tall, final pile much lower. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/death-back.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "death-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. FRONT facing the viewer. Use reference only for identity, NOT its four-view layout. FOUR sequential DEATH/COLLAPSE poses in reading order: top-left begins to buckle while almost standing; top-right knees buckle and torso sinks; bottom-left bones and armor fall apart onto the invisible floor; bottom-right final motionless low pile of the SAME bones, skull, armor, cloth and sword. Bones do not disappear between stages; no blood. This is death, NOT sleeping. CRITICAL: identical scale for skull/bones/weapon in all four cells; collapsing poses naturally become shorter, NEVER enlarge collapsed poses to fill a cell. Exactly FOUR complete poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same low frontal camera; uniform anatomical scale and LOCAL invisible ground baseline within each cell. Stage one is about 390px tall, final pile much lower. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/death-front.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "death-left",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. FOUR sequential DEATH/COLLAPSE poses in reading order: top-left begins to buckle while almost standing; top-right knees buckle and torso sinks; bottom-left bones and armor fall apart onto the invisible floor; bottom-right final motionless low pile of the SAME bones, skull, armor, cloth and sword. Bones do not disappear between stages; no blood. This is death, NOT sleeping. CRITICAL: identical scale for skull/bones/weapon in all four cells; collapsing poses naturally become shorter, NEVER enlarge collapsed poses to fill a cell. Exactly FOUR complete poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same low frontal camera; uniform anatomical scale and LOCAL invisible ground baseline within each cell. Stage one is about 390px tall, final pile much lower. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/death-left.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "death-right",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. RIGHT PROFILE, nose and toes facing image RIGHT. Use reference only for identity, NOT its four-view layout. FOUR sequential DEATH/COLLAPSE poses in reading order: top-left begins to buckle while almost standing; top-right knees buckle and torso sinks; bottom-left bones and armor fall apart onto the invisible floor; bottom-right final motionless low pile of the SAME bones, skull, armor, cloth and sword. Bones do not disappear between stages; no blood. This is death, NOT sleeping. CRITICAL: identical scale for skull/bones/weapon in all four cells; collapsing poses naturally become shorter, NEVER enlarge collapsed poses to fill a cell. Exactly FOUR complete poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same low frontal camera; uniform anatomical scale and LOCAL invisible ground baseline within each cell. Stage one is about 390px tall, final pile much lower. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/death-right.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "hurt-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. BACK facing away; back of skull and harness visible. Use reference only for identity, NOT its four-view layout. TWO consecutive HURT reaction poses: left cell torso recoils and shoulders twist from a hit, right cell recovers toward neutral. Keep bones connected, sword held, feet close to their planted baseline, head intact. No blood, missing limbs or impact effect. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/hurt-back.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "hurt-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. FRONT facing the viewer. Use reference only for identity, NOT its four-view layout. TWO consecutive HURT reaction poses: left cell torso recoils and shoulders twist from a hit, right cell recovers toward neutral. Keep bones connected, sword held, feet close to their planted baseline, head intact. No blood, missing limbs or impact effect. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/hurt-front.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "hurt-left",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. TWO consecutive HURT reaction poses: left cell torso recoils and shoulders twist from a hit, right cell recovers toward neutral. Keep bones connected, sword held, feet close to their planted baseline, head intact. No blood, missing limbs or impact effect. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/hurt-left.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "hurt-right",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. RIGHT PROFILE, nose and toes facing image RIGHT. Use reference only for identity, NOT its four-view layout. TWO consecutive HURT reaction poses: left cell torso recoils and shoulders twist from a hit, right cell recovers toward neutral. Keep bones connected, sword held, feet close to their planted baseline, head intact. No blood, missing limbs or impact effect. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/hurt-right.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "idle-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. BACK facing away; back of skull and harness visible. Use reference only for identity, NOT its four-view layout. LEFT pose: relaxed neutral idle; RIGHT pose: subtle idle weight shift with feet planted. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall), ground baseline around y=930, centered body pivots. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/idle-back.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "idle-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production TWO-FRAME IDLE sprite sheet for the APPROVED skeleton in the supplied reference. Reference is identity/style only, not the layout to reproduce. Copy exact skull, yellowed bones, rusted shoulder/forearm/shin armor scraps, crossed leather harness, tattered brown waistcloth, exposed skeletal feet and worn right-hand shortsword. FRONT view toward camera, sword in anatomical RIGHT hand at viewer LEFT, left hand empty. Exactly TWO full-body poses side by side in TWO EQUAL cells on a 1536x1024 landscape transparent sheet. Neutral idle on left, tiny breathing/weight-shift idle variation on right with feet fixed. Both complete figures and swords fit comfortably in their own cells with at least 80px margin, same scale (about 800px from skull to ground), same baseline about y=930, aligned pelvis pivots. Consistent proportions, sword length and lighting. Same detailed shaded textured retro dungeon art as reference. Actual transparent alpha including rib gaps, no backdrop, ground, shadows, text, grid, glow or effects. Never mirror equipment or change character.",
+    "path": "sheets/idle-front.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "idle-left",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. LEFT pose: relaxed neutral idle; RIGHT pose: subtle idle weight shift with feet planted. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall), ground baseline around y=930, centered body pivots. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/idle-left.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "idle-right",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. RIGHT PROFILE, nose and toes facing image RIGHT. Use reference only for identity, NOT its four-view layout. LEFT pose: relaxed neutral idle; RIGHT pose: subtle idle weight shift with feet planted. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall), ground baseline around y=930, centered body pivots. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/idle-right.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "prone-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. BACK facing away; back of skull and harness visible. Use reference only for identity, NOT its four-view layout. Exactly ONE isolated complete skeleton lying motionless on its side on an invisible floor, bones INTACT and connected, arms relaxed, knees slightly bent, shortsword close beside its anatomical right hand. Head to image LEFT, legs to image RIGHT. View from the specified character direction in a low three-quarter overhead dungeon billboard view, NOT top-down. This is knocked-down/unconscious posture, NOT a death pile, no standing/kneeling. One wide landscape transparent image, whole horizontal body and sword visible with generous padding. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/prone-back.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "prone-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. FRONT facing the viewer. Use reference only for identity, NOT its four-view layout. Exactly ONE isolated complete skeleton lying motionless on its side on an invisible floor, bones INTACT and connected, arms relaxed, knees slightly bent, shortsword close beside its anatomical right hand. Head to image LEFT, legs to image RIGHT. View from the specified character direction in a low three-quarter overhead dungeon billboard view, NOT top-down. This is knocked-down/unconscious posture, NOT a death pile, no standing/kneeling. One wide landscape transparent image, whole horizontal body and sword visible with generous padding. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/prone-front.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "prone-left",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. Exactly ONE isolated complete skeleton lying motionless on its side on an invisible floor, bones INTACT and connected, arms relaxed, knees slightly bent, shortsword close beside its anatomical right hand. Head to image LEFT, legs to image RIGHT. View from the specified character direction in a low three-quarter overhead dungeon billboard view, NOT top-down. This is knocked-down/unconscious posture, NOT a death pile, no standing/kneeling. One wide landscape transparent image, whole horizontal body and sword visible with generous padding. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/prone-left.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "prone-right",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. RIGHT PROFILE, nose and toes facing image RIGHT. Use reference only for identity, NOT its four-view layout. Exactly ONE isolated complete skeleton lying motionless on its side on an invisible floor, bones INTACT and connected, arms relaxed, knees slightly bent, shortsword close beside its anatomical right hand. Head to image LEFT, legs to image RIGHT. View from the specified character direction in a low three-quarter overhead dungeon billboard view, NOT top-down. This is knocked-down/unconscious posture, NOT a death pile, no standing/kneeling. One wide landscape transparent image, whole horizontal body and sword visible with generous padding. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/prone-right.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. BACK facing away; back of skull and harness visible. Use reference only for identity, NOT its four-view layout. TWO successive WALK poses: left cell left leg forward/right leg back; right cell opposite stride. Sword held low and controlled in the anatomical right hand. Natural visible walking gait, pelvis stays aligned, not two identical idle poses. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and ground baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/walk-back.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. FRONT facing the viewer. Use reference only for identity, NOT its four-view layout. TWO successive WALK poses: left cell left leg forward/right leg back; right cell opposite stride. Sword held low and controlled in the anatomical right hand. Natural visible walking gait, pelvis stays aligned, not two identical idle poses. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and ground baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/walk-front.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-left",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. TWO successive WALK poses: left cell left leg forward/right leg back; right cell opposite stride. Sword held low and controlled in the anatomical right hand. Natural visible walking gait, pelvis stays aligned, not two identical idle poses. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and ground baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/walk-left.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-right",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. RIGHT PROFILE, nose and toes facing image RIGHT. Use reference only for identity, NOT its four-view layout. TWO successive WALK poses: left cell left leg forward/right leg back; right cell opposite stride. Sword held low and controlled in the anatomical right hand. Natural visible walking gait, pelvis stays aligned, not two identical idle poses. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and ground baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+    "path": "sheets/walk-right.png",
+    "references": [
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "death-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct weapon handedness in the first TWO back-facing collapse poses: sword in the hand on VIEWER RIGHT (the skeleton's anatomical RIGHT); VIEWER LEFT hand is empty. Keep all four stages in their exact cells and same scale, back-of-head/spine facing viewer. The later fallen sword should remain beside the right arm. Preserve all other artwork. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/death-back.png",
+    "references": [
+      "revisions/death-back-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "hurt-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct ONLY weapon handedness in BOTH back-facing hurt/recovery poses. Put the shortsword in the hand on VIEWER RIGHT (anatomical RIGHT in a back view); the hand on VIEWER LEFT is EMPTY. Preserve all recoil poses, scale, armor, back-of-head view and two-cell sheet layout. Do NOT mirror the image. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/hurt-back.png",
+    "references": [
+      "revisions/hurt-back-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "idle-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct ONLY the weapon handedness in BOTH back-facing poses. The shortsword must be held by the anatomical RIGHT hand, which is the hand on the VIEWER'S RIGHT side in this BACK view. The hand on the VIEWER'S LEFT is EMPTY. Keep body, back view, feet, light, exact scale, placement, two-cell layout and armor unchanged. Do NOT mirror the whole image. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/idle-back.png",
+    "references": [
+      "revisions/idle-back-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "prone-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Change this ONE prone skeleton to show its BACK toward the camera, while retaining the same connected lying-on-side pose, head at image LEFT, feet at image RIGHT, scale and armor. We must see the BACK OF SKULL, spine and rear armor/harness. NO eye sockets, nose, teeth, face or front belt buckle should be visible. Sword lies beside anatomical right hand on far side. Keep same art, transparent alpha, full body padding. This is a static knocked-down pose, not a shattered death pile. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/prone-back.png",
+    "references": [
+      "revisions/prone-back-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-back",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct the two-frame BACK walk: sword in the hand on VIEWER RIGHT in BOTH poses; VIEWER LEFT hand EMPTY. Show back of skull, spine, heel/back of feet, no face. LEFT CELL viewer-left leg forward away from camera, viewer-right leg trailing toward camera; RIGHT CELL opposite stride with viewer-right leg forward away and viewer-left leg trailing. Same armor, light, scale and two-cell layout. No mirroring of equipment between cells. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/walk-back.png",
+    "references": [
+      "revisions/walk-back-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-front",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Fix the two-frame WALK cycle. Keep LEFT CELL pose and all equipment. In RIGHT CELL change ONLY legs to the OPPOSITE stride: the leg on VIEWER RIGHT now steps forward toward camera and is the planted large foreground foot; the leg on VIEWER LEFT swings back behind. Left cell has viewer-left foot forward; right cell MUST have viewer-right foot forward. Do not mirror the torso, head, harness or shortsword: sword remains viewer LEFT (anatomical right) in BOTH cells. Preserve scale and transparent two-cell layout. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/walk-front.png",
+    "references": [
+      "revisions/walk-front-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-left",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Fix two consecutive walk poses of this skeleton facing image LEFT. Keep LEFT CELL pose. In RIGHT CELL use the OPPOSITE stride: near-camera leg reaches BACK toward image RIGHT and far leg reaches FORWARD toward image LEFT; do not keep the same foreground leg forward in both. Preserve skull, torso, armor, waistcloth, anatomical right-hand shortsword and exact scale/layout. Only walking legs/feet and minimal natural arm response change. Transparent background. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/walk-left.png",
+    "references": [
+      "revisions/walk-left-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  },
+  {
+    "name": "walk-right",
+    "tool": "built-in imagegen",
+    "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Fix two consecutive walk poses of this skeleton facing image RIGHT. Keep LEFT CELL pose. In RIGHT CELL use the OPPOSITE stride: near-camera leg reaches BACK toward image LEFT and far leg reaches FORWARD toward image RIGHT; do not keep the same foreground leg forward in both. Preserve skull, torso, armor, waistcloth, anatomical right-hand shortsword and exact scale/layout. Only walking legs/feet and minimal natural arm response change. Transparent background. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+    "path": "sheets/walk-right.png",
+    "references": [
+      "revisions/walk-right-v1.png",
+      "../reference/turnaround-v1.png"
+    ]
+  }
+]

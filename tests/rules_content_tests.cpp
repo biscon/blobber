@@ -96,7 +96,7 @@ void loading() {
         std::string field;
         switch (fault) {
         case 0:
-            bad["schema_version"] = 10;
+            bad["schema_version"] = 99;
             field = "schema_version";
             break;
         case 1:
@@ -240,6 +240,52 @@ void loading() {
     files.write(atLimit);
     check(loadRules(files.path).monsterCount() == 1, "Exact byte limit accepted");
 }
+void damageProfiles() {
+    Fixture files;
+    auto root = fixture();
+    root["schema_version"] = 10;
+    for (const char* key : {"races", "classes", "items", "spells", "creation"})
+        root[key] = Json::array();
+    root["preset_party"] = nullptr;
+    for (auto& m : root["monsters"]) {
+        m["traits"] = Json::array();
+        m["loot"] = Json::array();
+        m["metal_armor"] = false;
+        m["sleep_immune"] = true;
+        m["experience"] = 50;
+        m["humanoid"] = false;
+        m["damage_immunities"] = Json::array({"poison"});
+        m["damage_vulnerabilities"] = Json::array({"bludgeoning"});
+    }
+    const auto loaded = files.load(root);
+    const auto profile = loaded.monster({0})->damageProfile;
+    check(profile.immunities == damageBit(DamageType::Poison) &&
+              profile.vulnerabilities == damageBit(DamageType::Bludgeoning),
+          "Typed profiles load");
+    for (int fault = 0; fault < 5; ++fault) {
+        auto bad = root;
+        auto& m = bad["monsters"][0];
+        if (fault == 0)
+            m["damage_immunities"] = Json::array({"missing"});
+        if (fault == 1)
+            m["damage_immunities"] = Json::array({"poison", "poison"});
+        if (fault == 2)
+            m["damage_immunities"] = "poison";
+        if (fault == 3)
+            m.erase("damage_immunities");
+        if (fault == 4)
+            m["damage_vulnerabilities"] = Json::array({"poison"});
+        files.invalid(bad, fault == 4 ? "damage_vulnerabilities" : "damage_immunities");
+    }
+    auto legacy = root;
+    legacy["schema_version"] = 9;
+    for (auto& m : legacy["monsters"]) {
+        m.erase("damage_immunities");
+        m.erase("damage_vulnerabilities");
+    }
+    const auto normal = files.load(legacy).monster({0})->damageProfile;
+    check(!normal.immunities && !normal.vulnerabilities, "Legacy profile defaults to normal");
+}
 void capacities() {
     Fixture files;
     auto data = fixture();
@@ -337,6 +383,7 @@ int main(int argc, char** argv) {
         check(argc == 1, "Usage: blobber_rules_content_tests [--validate FILE]");
         loading();
         capacities();
+        damageProfiles();
         std::cout << "Rules content checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

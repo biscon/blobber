@@ -211,10 +211,9 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
                 validateNpcTimings(npcTimings(appearance));
                 for (std::size_t i = 0; i < npcAnimationCount; ++i) {
                     const auto& clip = appearance.animations[i];
-                    const float maxWidth =
-                        i == std::size_t(NpcAnimation::Death) || i == std::size_t(NpcAnimation::Prone) ? 1.f
-                        : i == std::size_t(NpcAnimation::RangedAttack)                                 ? .6f
-                                                                                                       : .5f;
+                    // Clip canvases include weapons/limbs/padding, not occupancy. The shared
+                    // world publication already supports canvases up to one cell wide.
+                    const float maxWidth = 1.f;
                     if (clip.width > maxWidth)
                         throw std::runtime_error("Invalid NPC clip canvas width");
                 }

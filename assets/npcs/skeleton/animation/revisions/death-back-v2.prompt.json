@@ -1,0 +1,10 @@
+{
+  "name": "death-back",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct weapon handedness in the first TWO back-facing collapse poses: sword in the hand on VIEWER RIGHT (the skeleton's anatomical RIGHT); VIEWER LEFT hand is empty. Keep all four stages in their exact cells and same scale, back-of-head/spine facing viewer. The later fallen sword should remain beside the right arm. Preserve all other artwork. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+  "path": "sheets/death-back.png",
+  "references": [
+    "revisions/death-back-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}

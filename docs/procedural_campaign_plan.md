@@ -7,9 +7,9 @@ PC07–PC09 plans remain unapproved; do not advance automatically.
 **Paused after P-B (2026-10-30), at the user's request.** The
 [renderer roadmap](renderer_plan.md) is now complete: R01–R06 and milestones
 R-A/R-B/R-C are Accepted and closed (2026-10-31), including production cutover and
-old-renderer retirement. The proposed [bestiary roadmap](bestiary_plan.md) comes
-next: implement and review the monsters in the arena, then separately plan their
-campaign integration. The pause remains in force and supersedes earlier
+old-renderer retirement. The accepted [bestiary roadmap](bestiary_plan.md) is active:
+B01 skeleton is Ready for review in the arena; later monsters and campaign
+integration remain separate work. The pause remains in force and supersedes earlier
 instructions to plan PC07; renderer/bestiary work does not authorize campaign
 resumption.
 
@@ -57,7 +57,7 @@ arena and test fixtures; it does not imply retaining the old game mode.
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
 | Next eligible slice | PC07 — Depth bands and finite recovery encounters; detailed planning only |
-| Next action | Campaign paused after P-B; review the proposed bestiary roadmap, implement/review monsters in the arena, then resume campaign integration planning only on the user's request |
+| Next action | Campaign paused after P-B; finish the accepted bestiary roadmap and arena reviews, then resume campaign integration planning only on the user's request |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
 | Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted; PC07–PC09 plans unapproved |
 

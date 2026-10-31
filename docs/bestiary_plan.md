@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
 Created: 2026-10-31. Last updated: 2026-10-31.
-Status: **Proposed roadmap for review. B01–B06 Planned; no implementation started.**
+Status: **Roadmap accepted (2026-10-31); B01 Ready for review; B02–B06 Planned.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -25,10 +25,10 @@ pacing or start PC07. Campaign integration gets its own plan after arena review.
 | Field | Current value |
 | --- | --- |
 | Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 closed |
-| Active slice | None; roadmap drafting complete |
-| Awaiting review | This roadmap and its proposed gameplay defaults |
-| Next eligible slice | B01 — Skeleton and typed damage; detailed planning only |
-| Next action | Review roadmap, then prepare B01's detailed implementation plan when requested |
+| Active slice | B01 — Skeleton and typed damage; Ready for review |
+| Awaiting review | B01 mechanics and complete production art; reference approved |
+| Next eligible slice | B02 — Bugbear, after B01 acceptance |
+| Next action | User arena review using the [B01 handoff](b01_verification.md); B02 waits for acceptance |
 | Campaign status | Paused; no generator/population or guardian changes |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
@@ -167,7 +167,7 @@ per-frame image generation/decoding is part of this work.
 
 | ID | Slice | Dependency | Status |
 | --- | --- | --- | --- |
-| B01 | Skeleton and typed damage | Roadmap direction reviewed | Planned |
+| B01 | [Skeleton and typed damage](b01_skeleton_design.md) | Roadmap accepted | Ready for review |
 | B02 | Bugbear | B01 accepted | Planned |
 | B03 | Giant rat and Pack Tactics | B02 accepted | Planned |
 | B04 | Zombie and Undead Fortitude | B03 accepted | Planned |
@@ -344,3 +344,12 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
 - **Planning delivery:** Repository/SRD review and documentation checks only. No
   gameplay implementation, image generation, builds, captures, balance runs or
   commits. Next work is roadmap review, then B01 detailed planning when requested.
+
+- **2026-10-31 B01 start:** User accepted the roadmap and approved the detailed B01 plan. Implementation is active; art reference review precedes full sheets.
+
+- **2026-10-31 B01 delivery:** Skeleton reference approved; complete 48-pose production
+  art, native portrait and typed damage delivered in the normal arena. Focused
+  Release CPU checks, hidden GPU integration and three strict production-asset
+  arena replays pass. [Handoff and evidence](b01_verification.md) retain exact
+  results and limitations. **Ready for review**, awaiting user acceptance;
+  B02 remains Planned and campaign work remains paused.

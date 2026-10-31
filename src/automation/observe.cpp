@@ -358,6 +358,11 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
         {"save_total", e.saveTotal},
         {"save_difficulty", e.saveDifficulty},
         {"darts", e.darts}};
+    if (e.event == CombatEvent::Attack) {
+        j["damage_type"] = rules::damageTypeName(e.damageType);
+        j["raw_damage"] = e.rawDamage;
+        j["damage_adjustment"] = rules::damageAdjustmentName(e.damageAdjustment);
+    }
     if (const auto* item = cat.item(e.item))
         j["item"] = item->id;
     if (e.event == CombatEvent::Effect)

@@ -1,0 +1,9 @@
+{
+  "name": "hurt-left",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. TWO consecutive HURT reaction poses: left cell torso recoils and shoulders twist from a hit, right cell recovers toward neutral. Keep bones connected, sword held, feet close to their planted baseline, head intact. No blood, missing limbs or impact effect. Exactly TWO complete full-body poses SIDE BY SIDE in two EQUAL cells, landscape 1536x1024 sheet. Identical figure scale (roughly 800px tall) and baseline around y=930. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+  "path": "sheets/hurt-left.png",
+  "references": [
+    "../reference/turnaround-v1.png"
+  ]
+}

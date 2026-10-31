@@ -1,0 +1,9 @@
+{
+  "name": "attack-front",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. FRONT facing the viewer. Use reference only for identity, NOT its four-view layout. FOUR sequential front-facing shortsword ATTACK poses in reading order: top-left neutral ready, top-right pull anatomical right sword arm back and raise sword for clear windup, bottom-left thrust/slash sword toward the viewer at STRIKE, bottom-right retract and recover. Emphasize weapon coming toward camera rather than turning side-on. Left hand stays empty. Exactly FOUR full-body poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same camera, character scale (about 390px tall), body-center pivots and LOCAL ground baseline within each cell. Every pose including raised sword fully contained in its own cell. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+  "path": "sheets/attack-front.png",
+  "references": [
+    "../reference/turnaround-v1.png"
+  ]
+}

@@ -7,6 +7,7 @@ CombatOutcome CombatController::spectralAttack(const PartyCommand& c, Player pos
     out.character = c.character;
     out.enemy = c.enemies[0];
     out.spell = rules::SpellKind::SpiritualWeapon;
+    out.damageType = rules::DamageType::Force;
     out.kind = rules::AttackKind::Melee;
     const auto* ch = party_.character(c.character);
     const auto roll = rng_.d20(effects_.attackMode(c.character, out.enemy, true, false, false)).value;
@@ -31,10 +32,14 @@ void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t
     const auto dc = party_.spellAccess(c.character, c.spell).difficulty;
     for (std::size_t i = 0; i < affected.recipientCount; ++i) {
         const auto t = affected.recipients[i];
-        const auto save = effects_.save(t, rules::Ability::Constitution, dc);
+        const bool immune =
+            t.npc && (actors_.catalog().monster(actors_.actor(t.enemy)->monster)->damageProfile.immunities &
+                      rules::damageBit(rules::DamageType::Thunder));
+        const auto save = immune ? rules::SaveResult{} : effects_.save(t, rules::Ability::Constitution, dc);
         CombatOutcome out;
         out.event = CombatEvent::SpellSave;
         out.spell = rules::SpellKind::Shatter;
+        out.damageType = rules::DamageType::Thunder;
         out.character = c.character;
         out.enemy = t.enemy;
         out.recipient = t.character;
@@ -44,7 +49,8 @@ void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t
         out.saveDifficulty = dc;
         out.hit = save.succeeded;
         out.occurredMs = now;
-        events.append(out);
+        if (!immune)
+            events.append(out);
         out.event = CombatEvent::Attack;
         out.hit = true;
         out.damage = save.succeeded ? damage / 2 : damage;

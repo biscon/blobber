@@ -60,9 +60,10 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
 namespace {
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
     {
-        const Color color = feedback.healing ? Color{35, 140, 95, 255}
-                            : feedback.hit   ? Color{190, 24, 18, 255}
-                                             : WHITE;
+        const Color color = feedback.immune    ? Color{100, 112, 126, 255}
+                            : feedback.healing ? Color{35, 140, 95, 255}
+                            : feedback.hit     ? Color{190, 24, 18, 255}
+                                               : WHITE;
         const Vector2 center{r.x + r.width * .5f, r.y + r.height * .5f};
         for (std::size_t i = 0; i < bloodSplat.size(); ++i) {
             const auto a = bloodSplat[i], b = bloodSplat[(i + 1) % bloodSplat.size()];
@@ -186,7 +187,10 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         for (std::size_t i = 0; i < combat.upcomingCount; ++i) {
             const auto& participant = combat.upcoming[i];
             const UiRect tile{r.x + 54 + int(i) * 30, r.y + 3, 26, 27};
-            unsigned portrait = 4;
+            unsigned portrait =
+                participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Skeleton
+                    ? UiArt::skeletonPortraitIcon
+                    : 4;
             if (participant.character)
                 for (const auto& card : h->cards)
                     if (card.id.index == participant.character->index)

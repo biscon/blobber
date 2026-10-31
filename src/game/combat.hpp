@@ -51,6 +51,9 @@ struct CombatOutcome {
     ActorId enemy{};
     bool enemyAttack = false, hit = false, critical = false, died = false;
     std::int64_t damage = 0;
+    std::int64_t rawDamage = 0;
+    rules::DamageType damageType = rules::DamageType::Bludgeoning;
+    rules::DamageAdjustment damageAdjustment = rules::DamageAdjustment::Normal;
     int roll = 0;
     CombatPhase phase = CombatPhase::Exploration;
     rules::AttackKind kind = rules::AttackKind::Melee;

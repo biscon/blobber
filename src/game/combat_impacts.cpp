@@ -271,7 +271,7 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             const auto* victim = actors_.actor(out.enemy);
             v.targetPosition = actorPosition(*victim, earliest);
             const auto& timing = presentation_[victim->npc.type.index];
-            if (out.hit)
+            if (out.hit && out.damage > 0)
                 setAttackHold(owner, earliest + (out.died ? timing.death : timing.hurt));
         }
         v.stage = AttackStage::Resolved;
@@ -315,6 +315,12 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         effects_.resolveMirror(out.mirror, false, when, events);
         out.damage = 0;
     } else if (out.hit) {
+        const auto profile = out.enemyAttack ? rules::DamageProfile{}
+                                             : actors_.catalog().monster(target->monster)->damageProfile;
+        const auto resolved = rules::resolveDamage(out.damage, out.damageType, profile);
+        out.rawDamage = resolved.raw;
+        out.damage = resolved.damage;
+        out.damageAdjustment = resolved.adjustment;
         if (out.enemyAttack) {
             out.died = party_.damage(out.recipient, out.damage, out.critical).died;
             if (party_.character(out.recipient)->life != rules::Life::Conscious)

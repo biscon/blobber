@@ -185,6 +185,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const bool ranged = c.action == PartyAction::Ranged;
         out.kind = ranged ? rules::AttackKind::Ranged : rules::AttackKind::Melee;
         const auto& w = *weapon(c.character, ranged);
+        out.damageType = w.damageType;
         const auto* a = actors_.actor(out.enemy);
         const bool advantage = ranged && realTime(state_.phase) && !ai_.aware(out.enemy) &&
                                !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
@@ -269,6 +270,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     }
     out.event = CombatEvent::Attack;
     out.kind = ranged ? rules::AttackKind::Ranged : rules::AttackKind::Melee;
+    out.damageType = attack->damageType;
     const auto& timing = presentation_[a->npc.type.index];
     out.impactMs = ranged ? timing.bowImpact : timing.impact;
     const auto roll =

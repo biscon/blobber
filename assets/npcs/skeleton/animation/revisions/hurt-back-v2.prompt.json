@@ -1,0 +1,10 @@
+{
+  "name": "hurt-back",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct ONLY weapon handedness in BOTH back-facing hurt/recovery poses. Put the shortsword in the hand on VIEWER RIGHT (anatomical RIGHT in a back view); the hand on VIEWER LEFT is EMPTY. Preserve all recoil poses, scale, armor, back-of-head view and two-cell sheet layout. Do NOT mirror the image. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+  "path": "sheets/hurt-back.png",
+  "references": [
+    "revisions/hurt-back-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}

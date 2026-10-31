@@ -118,6 +118,12 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         throw std::invalid_argument("HUD animation/world type counts differ");
     for (const auto& timing : timings)
         validateNpcTimings(timing);
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto& a = actors_.snapshot().actors[i];
+        state_.enemyPortraits[i] = actors_.catalog().monster(a.monster)->id == "skeleton"
+                                       ? EnemyPortrait::Skeleton
+                                       : EnemyPortrait::Goblin;
+    }
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
     refresh({}, false, false, true);
@@ -131,6 +137,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     const auto* recipient = party_.character(out.recipient);
     const char* name = actor ? actor->build.name.c_str() : "?";
     const char* target = recipient ? recipient->build.name.c_str() : "?";
+    char species[rules::Catalog::maxIdBytes + 1] = "Monster";
+    if (const auto* enemy = actors_.actor(out.enemy)) {
+        std::snprintf(species, sizeof(species), "%s", actors_.catalog().monster(enemy->monster)->id.c_str());
+        if (species[0] >= 'a' && species[0] <= 'z')
+            species[0] = char(species[0] - 'a' + 'A');
+    }
     switch (out.event) {
     case CombatEvent::Started:
         std::snprintf(line, sizeof(line), "Combat begins.");
@@ -159,20 +171,30 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                           out.died ? ", dead" : "");
             break;
         }
+        if (out.damageAdjustment == rules::DamageAdjustment::Immune) {
+            std::snprintf(line, sizeof(line), "%s #%u: immune to %s.", species, unsigned(out.enemy.slot) + 1,
+                          rules::damageTypeName(out.damageType));
+            break;
+        }
         if (out.enemyAttack) {
-            std::snprintf(line, sizeof(line), "Goblin #%u -> %s: %s (d20 %d), %lld damage%s.",
+            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s (d20 %d), %lld damage%s.", species,
                           unsigned(out.enemy.slot) + 1, target,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
                           out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "");
         } else
-            std::snprintf(line, sizeof(line), "%s -> goblin #%u: %s (d20 %d), %lld damage%s.", name,
+            std::snprintf(line, sizeof(line), "%s -> %s #%u: %s (d20 %d), %lld damage%s.", name, species,
                           unsigned(out.enemy.slot) + 1,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
                           out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "");
+        if (out.damageAdjustment == rules::DamageAdjustment::Vulnerable) {
+            appendLog(line);
+            std::snprintf(line, sizeof(line), "%s #%u: %s vulnerability doubles damage.", species,
+                          unsigned(out.enemy.slot) + 1, rules::damageTypeName(out.damageType));
+        }
         break;
     case CombatEvent::Defend:
         std::snprintf(line, sizeof(line), "%s defends until their next turn.", name);
@@ -300,6 +322,9 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     next.active = true;
     next.party = out.enemyAttack;
     next.hit = out.hit;
+    next.immune = out.damageAdjustment == rules::DamageAdjustment::Immune;
+    if (next.immune)
+        next.text = "IMMUNE";
     const auto* spell = rules::spellRules(out.spell);
     if (spell && !spell->attack && !out.hit)
         next.text = "SAVED";

@@ -1,5 +1,6 @@
 #pragma once
 #include "rules/character.hpp"
+#include "rules/damage.hpp"
 #include <limits>
 #include <optional>
 #include <string>
@@ -45,6 +46,7 @@ struct MonsterDefinition {
     bool metalArmor = false, sleepImmune = false;
     std::uint32_t experience = 0;
     bool humanoid = false;
+    DamageProfile damageProfile;
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
 struct CreationClass;

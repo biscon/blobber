@@ -362,3 +362,22 @@ with 14 HP instead of 7. Other stats, attacks, loot and 50 XP remain unchanged.
 This is an intentionally easy, uncalibrated project adaptation for progression
 verification. It is not a new SRD stat block, monster level system or final depth
 band. One ordinary archer escorts it; both designated deaths unlock the gate.
+
+## B01 — Skeleton and typed damage (2026-10-31)
+
+Source: official SRD 5.1 CC edition linked above, skeleton p. 346; damage
+vulnerability p. 97 and Sleep spell restrictions. B01 adopts the skeleton’s six
+abilities, AC 13, fixed HP 13, +4 shortsword (1d6+2 piercing), 50 XP, poison damage
+immunity and bludgeoning vulnerability. Its sleep immunity is represented by the
+existing spell-eligibility flag; it is not humanoid for Hold Person. Rusted metal
+armor scraps use the existing metal-armor rule for Shocking Grasp.
+
+The shipped skeleton is melee-only: shortbow, senses, languages and absent
+condition systems are omitted. One standard shortsword loot is a project choice;
+rust is visual and never degrades item stats. One subcell, paired protection,
+movement/action timing, source animation timing and mana remain project rules.
+Pure damage immunity skips its target save while retaining cast cost/shared cast
+roll; independent save consequences and hit riders retain current semantics.
+Vulnerability doubles final rolled damage after critical dice and save reduction.
+The masks implement immunity/vulnerability only; resistance and party racial
+mitigation remain outside this slice. No campaign recipe or guardian is assigned.

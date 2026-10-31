@@ -247,9 +247,13 @@ void CommandController::updateHover() noexcept {
                 put(3, "Inspect the preview, then Cast.");
             } else if (h.reason != CommandReason::Ready)
                 put(2, commandMessage(h.reason));
-            else if (m.single)
-                put(2, "Click to cast.");
-            else if (m.missiles) {
+            else if (m.single) {
+                const auto* spell = rules::spellRules(m.kind);
+                const auto profile = actors_.catalog().monster(a.monster)->damageProfile;
+                put(2, spell && (profile.immunities & rules::damageBit(spell->damage))
+                           ? "Immune to this damage. Click to cast."
+                           : "Click to cast.");
+            } else if (m.missiles) {
                 std::snprintf(h.lines[2].data(), h.lines[2].size(), "%u %s assigned", darts,
                               darts == 1 ? "dart" : "darts");
                 put(3, m.assigned == 3
@@ -271,10 +275,16 @@ void CommandController::updateHover() noexcept {
             const auto i = static_cast<unsigned>(slot);
             const auto& weapon = c->stats.weapons[i];
             const auto& dice = weapon.damage;
-            std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s: %lld-%lld damage", item->name.c_str(),
-                          static_cast<long long>(std::max<std::int64_t>(0, dice.count + dice.modifier)),
-                          static_cast<long long>(std::max<std::int64_t>(
-                              0, std::int64_t(dice.count) * dice.sides + dice.modifier)));
+            const auto profile = actors_.catalog().monster(a.monster)->damageProfile;
+            const auto low =
+                rules::resolveDamage(dice.count + std::int64_t(dice.modifier), weapon.damageType, profile);
+            const auto high = rules::resolveDamage(std::int64_t(dice.count) * dice.sides + dice.modifier,
+                                                   weapon.damageType, profile);
+            std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s: %lld-%lld damage%s", item->name.c_str(),
+                          static_cast<long long>(low.damage), static_cast<long long>(high.damage),
+                          low.adjustment == rules::DamageAdjustment::Vulnerable ? " (vulnerable)"
+                          : low.adjustment == rules::DamageAdjustment::Immune   ? " (immune)"
+                                                                                : "");
         }
         put(2, realTime(state_.combat.phase) ? "Cost: 6-second cooldown" : "Cost: 1 action");
         if (session_.combat().sneakPreview(command.character, *h.enemy, command.action == PartyAction::Ranged,

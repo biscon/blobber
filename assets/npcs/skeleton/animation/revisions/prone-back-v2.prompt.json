@@ -1,0 +1,10 @@
+{
+  "name": "prone-back",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Change this ONE prone skeleton to show its BACK toward the camera, while retaining the same connected lying-on-side pose, head at image LEFT, feet at image RIGHT, scale and armor. We must see the BACK OF SKULL, spine and rear armor/harness. NO eye sockets, nose, teeth, face or front belt buckle should be visible. Sword lies beside anatomical right hand on far side. Keep same art, transparent alpha, full body padding. This is a static knocked-down pose, not a shattered death pile. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+  "path": "sheets/prone-back.png",
+  "references": [
+    "revisions/prone-back-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}

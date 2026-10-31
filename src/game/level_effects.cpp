@@ -241,16 +241,24 @@ void EffectController::burnWeb(std::uint64_t now, CombatEvents& events) noexcept
             out.recipient = t.character;
             out.enemyAttack = !t.npc;
             out.hit = true;
-            out.damage = damage;
+            out.damageType = rules::DamageType::Fire;
+            const auto profile =
+                t.npc ? actors_.catalog().monster(actors_.actor(t.enemy)->monster)->damageProfile
+                      : rules::DamageProfile{};
+            const auto resolved = rules::resolveDamage(damage, out.damageType, profile);
+            out.rawDamage = resolved.raw;
+            out.damage = resolved.damage;
+            out.damageAdjustment = resolved.adjustment;
             out.occurredMs = now;
             if (t.npc)
-                out.died = actors_.damage(t.enemy, damage, now).died;
+                out.died = actors_.damage(t.enemy, out.damage, now).died;
             else
-                out.died = party_.damage(t.character, damage).died;
+                out.died = party_.damage(t.character, out.damage).died;
             events.append(out);
-            wake(t, now, events);
+            if (out.damage > 0)
+                wake(t, now, events);
             if (!t.npc)
-                damaged(t.character, damage, now, events);
+                damaged(t.character, out.damage, now, events);
         }
     }
     reconcileWeb(now, events);

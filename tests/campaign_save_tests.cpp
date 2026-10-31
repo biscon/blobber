@@ -54,8 +54,8 @@ void environmentRoundtrip() {
         },
         "Malformed surface retains prior session");
     bad = blobber::automation::Json::parse(text);
-    bad["simulation"] = 1;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Old simulation rejects explicitly");
+    bad["simulation"] = 3;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-B01 simulation rejects explicitly");
 }
 void roundtrip() {
     const auto c = catalog();

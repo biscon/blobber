@@ -471,3 +471,12 @@ and executable-sensitive; it is separate from the save schema. Save files and
 persistence trace payloads contain full diagnostic state and must not feed hidden
 knowledge to player-visible policies. Owned CLI/MCP and fresh-process contracts
 live in `campaign_save_cli_tests.py`; the optional SDK test is separate from CTest.
+
+### B01 typed damage observations
+
+Resolved `attack` events add `damage_type` (supported lowercase damage name),
+`raw_damage` (nonnegative rolled amount after any save reduction), and
+`damage_adjustment` (`normal`, `immune`, or `vulnerable`). Existing `damage` is the
+resolved amount before HP clamping. Acceptance/release events do not expose raw
+rolls. Protocol version remains 1; strict replay retains binary/content identities.
+Campaign simulation version is 4; save schema remains 3.

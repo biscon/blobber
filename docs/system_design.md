@@ -6,7 +6,7 @@ new renderer plan”. [Sole renderer cutover and retirement](renderer_cutover_de
 documents the delivered ownership, interfaces and deletion inventory;
 [verification](r06_verification.md) retains executed checks and limitations unchanged.
 [Historical design and acceptance records](system_history.md) preserve prior evidence
-without describing current defaults. Additional monsters require separate planning;
+without describing current defaults. Additional monster work follows its separately accepted bestiary roadmap;
 the campaign roadmap remains paused after P-B, with no automatic PC07 work.
 
 Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
@@ -15,11 +15,14 @@ Current follow-up: [loot, guardian doors and uninterrupted encounter flow](dunge
 records the implemented visual/interaction polish, unsaved-run terminal fix, and
 focused CPU/GPU verification.
 
-Proposed next work: [early bestiary roadmap](bestiary_plan.md) — six slices for
+Accepted work: [early bestiary roadmap](bestiary_plan.md) — six slices for
 skeleton, bugbear, standard giant rat, zombie, goblin shaman and arena polish.
 Each monster includes imagegen art in the goblins' style and their applicable
 animation set. Implement and review in the arena before campaign integration;
-all actors retain one-subcell footprints. B01–B06 are Planned, not implemented.
+all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) is
+**Ready for review**: immutable damage profiles, typed impact resolution and full
+skeleton art are implemented in the arena. [Verification](b01_verification.md)
+records checks, captures and review steps; B02–B06 remain Planned.
 The three-floor campaign is the opening low-level vertical slice of an eventual
 roughly 20+ floor game; it stays paused after P-B.
 
@@ -215,6 +218,27 @@ cache preparation, exceptional error reporting, captures, and driver/raylib
 internals are outside it. A targeted allocation guard is more useful here than
 a Vulkan-style benchmark or stress-testing framework.
 
+## Typed damage and bestiary content
+
+Rules catalog schema 10 adds immutable uint16 immunity/vulnerability masks to each
+monster; schemas 1–9 default to normal. Loading rejects unknown types, duplicates
+and overlap. A pure allocation-free resolver adjusts the final rolled total once
+at impact, after critical aggregation/save reduction. Outcome records carry raw
+and resolved damage, concrete type and adjustment. Weapons, spells, Spiritual
+Weapon, Shatter and burning Web share this rule; parties retain normal profiles.
+Zero damage causes no hurt, interruption, wake or concentration check. Pending
+rolls remain private until resolution. The [B01 design](b01_skeleton_design.md)
+documents save/RNG, hit-rider and persistence details.
+
+Skeleton is a melee-only, single-subcell arena entry with poison immunity and
+bludgeoning vulnerability. Prepared image masters, registration and mip/alpha
+publication follow the existing renderer pipeline. Body width stays <=.5 cells;
+all clip canvases may use the existing <=1-cell world publication bound without
+changing occupancy. A fixed HUD species discriminator selects its generated
+portrait in the existing UI atlas. Profiles and portraits add no frame allocations
+or resource owner. Current publication totals and next-species budget constraints
+are retained in the [handoff](b01_verification.md).
+
 ## Interfaces and preservation
 
 GameView/WorldRenderer stage the destination geometry, visibility, effects and first
@@ -223,7 +247,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 3/3 and generator/templates 4/4. Older saves reject
+Campaign schema/simulation are 3/4 and generator/templates 4/4. Older saves reject
 without being modified; no migration. World publication is format 2, appearance 4,
 visibility world-visibility-v5 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
@@ -251,7 +275,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 | Location | Responsibility and design |
 | --- | --- |
 | `src/world/`, `src/generation/` | Immutable quantized maps/surfaces, fixtures, bounded procedural generation; [environment](renderer_environment_design.md), [generation](procedural_generation_design.md) |
-| `src/game/`, `src/rules/` | Session, Party, actors, combat/effects, movement, navigation; [actors](actors_design.md), [combat](melee_combat_design.md), [effects](effects_design.md), [inventory](inventory_design.md); proposed [bestiary roadmap](bestiary_plan.md) |
+| `src/game/`, `src/rules/` | Session, Party, actors, combat/effects, movement, navigation; [actors](actors_design.md), [combat](melee_combat_design.md), [effects](effects_design.md), [inventory](inventory_design.md); accepted [bestiary roadmap](bestiary_plan.md) |
 | `src/render/world_*`, `src/assets/world_assets.*` | Geometry, camera, effects, depth/IDs and reusable publication; [world](renderer_world_design.md), [visibility](renderer_visibility_design.md), [integration](renderer_integration_design.md) |
 | `src/platform/`, `src/ui/` | GPU resources, sole renderer, view leases, input and native presentation; [native HUD](native_hud_design.md), [cutover](renderer_cutover_design.md) |
 | `src/app/` | Startup/menu/creator/arena/game orchestration and session transitions; [menu](menu_launch_design.md), [arena](arena_design.md) |
@@ -259,6 +283,6 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 | `src/automation/`, `tools/` | Typed sessions, strict replay, CLI/client/local MCP, owned captures and opt-in experiments; [protocol](headless_protocol.md), [MCP](mcp_design.md) |
 | `tests/` | Self-owned CPU/GPU regression fixtures and resource/allocation guards; no retired renderer harnesses |
 
-The procedural campaign roadmap remains paused after accepted P-B. The proposed
+The procedural campaign roadmap remains paused after accepted P-B. The accepted
 bestiary roadmap delivers arena-reviewed monsters first; campaign integration and
 PC07 require a later explicit return to campaign planning.

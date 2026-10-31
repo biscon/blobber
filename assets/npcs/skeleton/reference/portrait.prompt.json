@@ -1,0 +1,8 @@
+{
+  "tool": "built-in imagegen",
+  "prompt": "Use case: identity-preserve. Asset type: square native game UI enemy portrait. Create a tight HEAD AND SHOULDERS portrait of the EXACT approved skeleton dungeon guard in the input reference: same yellowed weathered skull, empty dark eye sockets, toothy jaw, rusted shoulder armor and crossed brown leather harness. Face directly toward camera, centered skull filling most of the square, entire skull and jaw visible with modest margin. Match the detailed shaded textured retro dungeon painting and muted materials of the reference. No sword, shield, hands, body, colored eye glow, text or frame. Actual transparent alpha background. This portrait will appear at 72 pixels square; emphasize readable skull silhouette and dark sockets.",
+  "path": "../../../ui/skeleton.png",
+  "references": [
+    "turnaround-v1.png"
+  ]
+}

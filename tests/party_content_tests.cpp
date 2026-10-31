@@ -535,7 +535,7 @@ void loading() {
             field = "hand conflict";
             break;
         case 44:
-            bad["schema_version"] = 10;
+            bad["schema_version"] = 99;
             field = "schema_version";
             break;
         }

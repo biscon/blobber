@@ -1,0 +1,9 @@
+{
+  "name": "idle-front",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: identity-preserve. Production TWO-FRAME IDLE sprite sheet for the APPROVED skeleton in the supplied reference. Reference is identity/style only, not the layout to reproduce. Copy exact skull, yellowed bones, rusted shoulder/forearm/shin armor scraps, crossed leather harness, tattered brown waistcloth, exposed skeletal feet and worn right-hand shortsword. FRONT view toward camera, sword in anatomical RIGHT hand at viewer LEFT, left hand empty. Exactly TWO full-body poses side by side in TWO EQUAL cells on a 1536x1024 landscape transparent sheet. Neutral idle on left, tiny breathing/weight-shift idle variation on right with feet fixed. Both complete figures and swords fit comfortably in their own cells with at least 80px margin, same scale (about 800px from skull to ground), same baseline about y=930, aligned pelvis pivots. Consistent proportions, sword length and lighting. Same detailed shaded textured retro dungeon art as reference. Actual transparent alpha including rib gaps, no backdrop, ground, shadows, text, grid, glow or effects. Never mirror equipment or change character.",
+  "path": "sheets/idle-front.png",
+  "references": [
+    "../reference/turnaround-v1.png"
+  ]
+}

@@ -552,6 +552,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 const auto* a = actors_.actor(id);
                 auto result = out;
                 result.event = CombatEvent::Attack;
+                result.damageType = r.damage;
                 result.enemy = id;
                 result.kind = (kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp)
                                   ? rules::AttackKind::Melee
@@ -587,6 +588,11 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                         if (sameActor(id, c.enemies[j]))
                             result.darts = c.darts[j];
                     result.damage = sharedDamage * result.darts;
+                } else if (kind != SpellKind::Thunderwave &&
+                           (actors_.catalog().monster(a->monster)->damageProfile.immunities &
+                            rules::damageBit(r.damage))) {
+                    // Damage-only immunity needs no target save. Keep the shared cast roll/cost.
+                    result.damage = sharedDamage;
                 } else {
                     const int dc =
                         8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier;

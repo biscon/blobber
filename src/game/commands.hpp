@@ -57,7 +57,7 @@ struct HudHover {
 };
 struct CombatFeedback {
     static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
-    bool active = false, party = false, hit = false, healing = false;
+    bool active = false, party = false, hit = false, healing = false, immune = false;
     rules::CharacterId character;
     ActorId enemy;
     const char* text = nullptr;
@@ -125,7 +125,9 @@ struct TravelHud {
     unsigned count = 0, cursor = 0, kits = 0;
     FixtureResult preview;
 };
+enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton };
 struct HudSnapshot {
+    std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
     std::array<HudCard, rules::partySize> cards{};
     PartyCommand selection;
     TargetSnapshot targets;

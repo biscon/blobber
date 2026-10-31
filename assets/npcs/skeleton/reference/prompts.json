@@ -1,0 +1,12 @@
+[
+  {
+    "tool": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Asset type: production four-view character reference for an existing first-person dungeon game. The two supplied images are STYLE REFERENCES ONLY: match their detailed shaded, textured retro dungeon sprite art, restrained earthy colors, dark crisp silhouette edges, meticulous painted materials and consistent soft frontal overhead lighting. Create ONE coherent human-sized undead SKELETON dungeon guard shown in FOUR separate full-body views arranged side by side: FRONT, BACK, LEFT profile facing image-left, RIGHT profile facing image-right. No text or labels. Yellowed weathered ivory bones; empty dark eye sockets without colored glow; spare rusted iron armor scraps with visible ribs; tattered muted brown waist cloth and worn leather belt; exposed skeletal feet and legs. A worn short straight shortsword held low in anatomical RIGHT hand in every view; anatomical left hand empty. No shield, bow, helmet, cape, gore, flesh or jewelry. Skeleton is taller and leaner than the goblins, with robust enough bone thickness and rib gaps to read at low game resolution. Keep skull, armor arrangement, cloth, sword and handedness exactly consistent in all four views. Relaxed readable idle pose. Same character and scale in all views, complete body and sword with generous margins, uniform ground baseline and no cropping. Make it feel authored by the same artist as both supplied goblins, not a photoreal skeleton, flat cartoon, vector illustration or 3D model render. Actual transparent alpha background, no backdrop, floor, cast shadow, glow, caption, border or grid. Output a wide landscape reference sheet.",
+    "path": "turnaround-v1.png",
+    "references": [
+      "../../goblin/animation/sheets/idle-front.png",
+      "../../goblin-archer/reference/turnaround-v2.png"
+    ],
+    "status": "Approved by user: yes concept art approved (2026-10-31)"
+  }
+]

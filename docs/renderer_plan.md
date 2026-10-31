@@ -23,8 +23,8 @@ for the explicit, bounded elevation extensions described below.
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
 | Active slice | None; renderer roadmap complete |
 | Awaiting review | None |
-| Next eligible slice | Proposed [bestiary B01](bestiary_plan.md), detailed planning after roadmap review; no automatic PC07 |
-| Next action | Renderer work closed; bestiary roadmap proposed for arena-first monster delivery and review |
+| Next eligible slice | [Bestiary B01](b01_verification.md) Ready for review; no automatic PC07 |
+| Next action | Renderer work closed; accepted bestiary roadmap active, B01 awaits arena review |
 | Blockers | None for closure; recorded verification limitations remain unchanged |
 | Campaign status | Paused after P-B; do not start PC07 |
 

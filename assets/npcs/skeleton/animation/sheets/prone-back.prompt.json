@@ -1,0 +1,9 @@
+{
+  "name": "prone-back",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. BACK facing away; back of skull and harness visible. Use reference only for identity, NOT its four-view layout. Exactly ONE isolated complete skeleton lying motionless on its side on an invisible floor, bones INTACT and connected, arms relaxed, knees slightly bent, shortsword close beside its anatomical right hand. Head to image LEFT, legs to image RIGHT. View from the specified character direction in a low three-quarter overhead dungeon billboard view, NOT top-down. This is knocked-down/unconscious posture, NOT a death pile, no standing/kneeling. One wide landscape transparent image, whole horizontal body and sword visible with generous padding. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+  "path": "sheets/prone-back.png",
+  "references": [
+    "../reference/turnaround-v1.png"
+  ]
+}

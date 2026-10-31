@@ -1,5 +1,5 @@
 {
-  "schema_version": 9,
+  "schema_version": 10,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -15,6 +15,17 @@
     {
       "id": "goblin.shortbow",
       "kind": "ranged",
+      "attack_bonus": 4,
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "modifier": 2,
+        "type": "piercing"
+      }
+    },
+    {
+      "id": "skeleton.shortsword",
+      "kind": "melee",
       "attack_bonus": 4,
       "damage": {
         "count": 1,
@@ -102,7 +113,9 @@
       "metal_armor": false,
       "sleep_immune": false,
       "experience": 50,
-      "humanoid": true
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": []
     },
     {
       "id": "goblin.archer",
@@ -190,7 +203,9 @@
       "metal_armor": false,
       "sleep_immune": false,
       "experience": 50,
-      "humanoid": true
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": []
     },
     {
       "id": "goblin.guardian.placeholder",
@@ -269,7 +284,47 @@
       "metal_armor": false,
       "sleep_immune": false,
       "experience": 50,
-      "humanoid": true
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": []
+    },
+    {
+      "id": "skeleton",
+      "abilities": {
+        "strength": 10,
+        "dexterity": 14,
+        "constitution": 15,
+        "intelligence": 6,
+        "wisdom": 8,
+        "charisma": 5
+      },
+      "armor_class": 13,
+      "hit_points": 13,
+      "attacks": [
+        "skeleton.shortsword"
+      ],
+      "traits": [],
+      "loot": [
+        {
+          "item": "shortsword",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        }
+      ],
+      "metal_armor": true,
+      "sleep_immune": true,
+      "experience": 50,
+      "humanoid": false,
+      "damage_immunities": [
+        "poison"
+      ],
+      "damage_vulnerabilities": [
+        "bludgeoning"
+      ]
     }
   ],
   "races": [

@@ -1,0 +1,9 @@
+{
+  "name": "death-left",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: identity-preserve. Production game sprite sheet of the APPROVED SKELETON reference. Copy exactly the same yellowed skull and bones, rusted shoulder/forearm/shin armor scraps, crossed brown leather harness, tattered brown waistcloth and worn shortsword. Sword stays in anatomical RIGHT hand, left hand empty. Exposed skeletal feet. Same shaded textured retro dungeon sprite style, muted colors and overhead light. LEFT PROFILE, nose and toes facing image LEFT. Use reference only for identity, NOT its four-view layout. FOUR sequential DEATH/COLLAPSE poses in reading order: top-left begins to buckle while almost standing; top-right knees buckle and torso sinks; bottom-left bones and armor fall apart onto the invisible floor; bottom-right final motionless low pile of the SAME bones, skull, armor, cloth and sword. Bones do not disappear between stages; no blood. This is death, NOT sleeping. CRITICAL: identical scale for skull/bones/weapon in all four cells; collapsing poses naturally become shorter, NEVER enlarge collapsed poses to fill a cell. Exactly FOUR complete poses in a clean 2 by 2 equal-cell grid on a 1536x1024 landscape sheet. Same low frontal camera; uniform anatomical scale and LOCAL invisible ground baseline within each cell. Stage one is about 390px tall, final pile much lower. Generous transparent margins and clear separation between cells, no cropping or contact between figures. Preserve weapon length, equipment handedness and anatomy across poses. Actual transparent alpha outside figures AND rib/limb holes. NO background, gradient, floor, cast shadows, scene, text, labels, borders, grid lines, glow or particle effects.",
+  "path": "sheets/death-left.png",
+  "references": [
+    "../reference/turnaround-v1.png"
+  ]
+}

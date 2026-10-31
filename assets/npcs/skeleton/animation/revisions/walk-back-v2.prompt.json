@@ -1,0 +1,10 @@
+{
+  "name": "walk-back",
+  "tool": "built-in imagegen",
+  "prompt": "Use case: precise-object-edit. First input is the exact sprite-sheet EDIT TARGET; second input is approved skeleton IDENTITY REFERENCE. Correct the two-frame BACK walk: sword in the hand on VIEWER RIGHT in BOTH poses; VIEWER LEFT hand EMPTY. Show back of skull, spine, heel/back of feet, no face. LEFT CELL viewer-left leg forward away from camera, viewer-right leg trailing toward camera; RIGHT CELL opposite stride with viewer-right leg forward away and viewer-left leg trailing. Same armor, light, scale and two-cell layout. No mirroring of equipment between cells. Preserve the detailed shaded textured retro style. Actual transparent alpha outside the artwork and through bone gaps. No backdrop, floor, cast shadow, text, glow, grid or borders.",
+  "path": "sheets/walk-back.png",
+  "references": [
+    "revisions/walk-back-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}
