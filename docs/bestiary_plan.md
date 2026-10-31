@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
 Created: 2026-10-31. Last updated: 2026-10-31.
-Status: **Roadmap accepted (2026-10-31); B01 Ready for review; B02–B06 Planned.**
+Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02–B06 Planned.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -24,11 +24,11 @@ pacing or start PC07. Campaign integration gets its own plan after arena review.
 
 | Field | Current value |
 | --- | --- |
-| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 closed |
-| Active slice | B01 — Skeleton and typed damage; Ready for review |
-| Awaiting review | B01 mechanics and complete production art; reference approved |
-| Next eligible slice | B02 — Bugbear, after B01 acceptance |
-| Next action | User arena review using the [B01 handoff](b01_verification.md); B02 waits for acceptance |
+| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01 closed |
+| Active slice | None; B01 — Skeleton and typed damage Accepted and closed |
+| Awaiting review | None; B01 accepted after arena review and presentation corrections |
+| Next eligible slice | B02 — Bugbear; detailed planning |
+| Next action | Plan B02 using the [accepted B01 handoff](b01_verification.md), starting with measured texture-budget headroom; review its detailed plan before implementation |
 | Campaign status | Paused; no generator/population or guardian changes |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
@@ -167,7 +167,7 @@ per-frame image generation/decoding is part of this work.
 
 | ID | Slice | Dependency | Status |
 | --- | --- | --- | --- |
-| B01 | [Skeleton and typed damage](b01_skeleton_design.md) | Roadmap accepted | Ready for review |
+| B01 | [Skeleton and typed damage](b01_skeleton_design.md) | Roadmap accepted | Accepted and closed (2026-10-31) |
 | B02 | Bugbear | B01 accepted | Planned |
 | B03 | Giant rat and Pack Tactics | B02 accepted | Planned |
 | B04 | Zombie and Undead Fortitude | B03 accepted | Planned |
@@ -353,3 +353,12 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
   arena replays pass. [Handoff and evidence](b01_verification.md) retain exact
   results and limitations. **Ready for review**, awaiting user acceptance;
   B02 remains Planned and campaign work remains paused.
+
+- **2026-10-31 B01 acceptance:** User: “cool slice accepted, record it in the plan
+  doc, so we can get started on the next mob”. **B01 Accepted and closed**, including
+  its full skeleton art/mechanics, 12.5% appearance reduction, right-aligned
+  initiative and head-centered health bars. Existing verification evidence and
+  limitations remain recorded in the [handoff](b01_verification.md). **B02 — Bugbear
+  is next eligible for detailed planning**, beginning with the approximately
+  4.8 MiB remaining mip budget. B02 implementation is not started; B03–B06 remain
+  Planned and campaign integration/PC07 stay paused.

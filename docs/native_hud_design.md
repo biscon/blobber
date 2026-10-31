@@ -48,3 +48,21 @@ Removing the 640×360 render target saves its 921,600-byte color attachment plus
 its depth storage. GPU driver allocations are outside engine allocation claims.
 GameSession retains ordinary sight/contact detection while flights are pending;
 approach-only death-save scheduling begins when the impact actually starts approach.
+
+## B01 review adjustment — 2026-10-31
+
+The initiative strip now anchors to the dungeon viewport’s right edge with a
+six-logical-unit inset (18 native pixels), retaining its existing top edge, bounded
+queue and portrait ordering. Its width follows the remaining queue, so the right
+edge remains fixed as turns advance. This clears the central monster/health-bar
+area. [B01 review evidence](b01_verification.md#user-review-adjustment--size-and-initiative-2026-10-31)
+records the smaller skeleton metadata and fresh GPU captures. No per-frame storage,
+input regions, render targets or resource ownership changed.
+
+The B01 health-bar centering correction uses `TargetAnchor::badgeX`, the existing
+projected body/ground axis, rather than the visible alpha-bound center (`x`), which
+includes outstretched weapons and partial occlusion. Keep the current visible-top
+height, viewport clamping and depth clipping. This shares the stable horizontal
+anchor already used by status indicators; no new per-frame data or rendering pass.
+Verify on a hidden production skeleton hover capture and the existing HUD and
+visibility checks.

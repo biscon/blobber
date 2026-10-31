@@ -8,8 +8,9 @@ PC07–PC09 plans remain unapproved; do not advance automatically.
 [renderer roadmap](renderer_plan.md) is now complete: R01–R06 and milestones
 R-A/R-B/R-C are Accepted and closed (2026-10-31), including production cutover and
 old-renderer retirement. The accepted [bestiary roadmap](bestiary_plan.md) is active:
-B01 skeleton is Ready for review in the arena; later monsters and campaign
-integration remain separate work. The pause remains in force and supersedes earlier
+B01 skeleton is Accepted and closed (2026-10-31) after arena review; B02 bugbear
+is next for detailed planning. Later monsters and campaign integration remain
+separate work. The pause remains in force and supersedes earlier
 instructions to plan PC07; renderer/bestiary work does not authorize campaign
 resumption.
 

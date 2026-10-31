@@ -16,8 +16,8 @@ rows/body pivots, and taller first rows in collapse sheets. Later collapsing
 frames are never resized to standing height. Canvases are 480 pixels high, with
 common widths within clips and fixed 464-pixel ground anchors. Full-resolution
 masters are preserved. This registration keeps the complete three-appearance
-publication inside its existing texture budget. The body is .45 cells wide and
-the canvas .85 cells high; clip artwork may extend beyond the body without
+publication inside its existing texture budget. After the B01 review adjustment, the body is .39375 cells wide and
+the canvas .74375 cells high (12.5% smaller in both dimensions); clip artwork may extend beyond the body without
 changing one-subcell occupancy.
 
 World baking extracts registered frames and prepares the current mip/alpha chain.

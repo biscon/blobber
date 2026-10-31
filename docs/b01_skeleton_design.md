@@ -1,6 +1,6 @@
 # B01 — Skeleton and typed damage
 
-Status: **Ready for review**, 2026-10-31. The user accepted the
+Status: **Accepted and closed**, 2026-10-31. The user accepted the
 bestiary roadmap and approved this detailed plan with “Implement the plan.”
 Campaign integration stays paused; B02 is unstarted.
 
@@ -18,10 +18,10 @@ for user approval before generating full animation sheets, as required by the
 accepted roadmap. Mechanics/owned fixture work may continue during reference review.
 Reference accepted on 2026-10-31: “yes concept art approved”.
 Full production art and normal arena availability are delivered. See
-[verification and review](b01_verification.md); user acceptance is pending.
+[verification and review](b01_verification.md); user acceptance is recorded there.
 
 Use the built-in imagegen skill, retain transparent masters, exact prompts and
-measured registration in assets/npcs/skeleton. Upright world height 0.85 cells;
+measured registration in assets/npcs/skeleton. Upright world height .74375 cells after the B01 review adjustment;
 widths follow canvas proportions and existing ground anchors. Match the goblins’
 shaded textured retro style and muted materials. Death collapses into bones;
 prone remains a fallen intact skeleton. Full applicable set: four-direction idle
@@ -99,7 +99,7 @@ Reference approved; 21 original sheets and eight corrective imagegen edits retai
 48 poses. Selected canvas height is 480 (rather than the goblins’ 536), with uniform
 per-sheet scales and shared widths within clips, to keep the combined publication
 within its existing 256 MiB mip budget. Source masters retain full resolution.
-Body width remains .45 cells. Clip canvases use the existing world format’s <=1-cell
+Body width is .39375 cells after the review adjustment. Clip canvases use the existing world format’s <=1-cell
 cap, including the idle/weapon padding of a taller skeleton; metadata now admits
 that same existing bound for every clip. This changes no actor occupancy or world
 format. Wide fallen canvases are capped at 560 pixels through uniform sheet scaling.
@@ -108,3 +108,23 @@ In-game capture found the existing initiative strip always used goblin art. B01
 adds a generated skeleton portrait to the same startup UI atlas and a fixed HUD
 portrait discriminator initialized from immutable monster identity. There is no
 per-frame allocation, new GPU texture slot or save field.
+
+## B01 review adjustment — 2026-10-31
+
+User review requested more headroom and a less imposing early skeleton. Right-align
+initiative at the viewport’s six-unit right inset, retaining its height, top edge,
+portrait order and bounded count. Uniformly multiply skeleton height, body width
+and every explicit clip width by .875. Height becomes .74375 cells, body width
+.39375; source sheets, 480-pixel canvases and normalized ground anchors remain
+unchanged. Prepared projection, shadows, health anchors and picking use the same
+appearance metadata. No runtime scaling layer, art regeneration or occupancy
+change. Verify with the existing HUD/metadata tests and fresh hidden normal-arena
+captures; do not rerun the full B01 suite for this visual adjustment.
+
+## Acceptance — 2026-10-31
+
+User accepted B01 after reviewing the skeleton and requesting the delivered size,
+initiative and health-bar corrections: “cool slice accepted, record it in the plan
+doc, so we can get started on the next mob”. B01 is closed. B02 bugbear is next for
+separate detailed planning; campaign work remains paused. See the
+[roadmap checkpoint](bestiary_plan.md#current-checkpoint).

@@ -20,9 +20,16 @@ skeleton, bugbear, standard giant rat, zombie, goblin shaman and arena polish.
 Each monster includes imagegen art in the goblins' style and their applicable
 animation set. Implement and review in the arena before campaign integration;
 all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) is
-**Ready for review**: immutable damage profiles, typed impact resolution and full
+**Accepted and closed** (2026-10-31): immutable damage profiles, typed impact resolution and full
 skeleton art are implemented in the arena. [Verification](b01_verification.md)
-records checks, captures and review steps; B02–B06 remain Planned.
+records checks, captures and acceptance; B02 bugbear is next for detailed planning,
+starting with the measured texture-budget constraint. B02–B06 remain Planned.
+B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
+right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
+retaining source art, pixel canvases and ground anchors. This is presentation
+metadata/layout only, using the existing prepared-image pipeline. Health bars use the
+projected body-axis anchor horizontally rather than the visible silhouette’s
+bounds, so weapons and asymmetric poses do not pull them away from the head.
 The three-floor campaign is the opening low-level vertical slice of an eventual
 roughly 20+ floor game; it stays paused after P-B.
 

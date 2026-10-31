@@ -1,6 +1,6 @@
 # B01 — Skeleton delivery and review
 
-2026-10-31. **Ready for review; user acceptance pending.**
+2026-10-31. **Accepted and closed (2026-10-31).**
 The roadmap and detailed implementation plan were approved. The user approved
 `turnaround-v1.png` with “yes concept art approved”. B02 is Planned. Campaign
 integration and PC07 remain paused.
@@ -52,8 +52,8 @@ movement and await human motion review.
 
 The prepared publication contains **175 textures, 263,362,808 mip bytes and
 46,895,760 alpha bytes**, within the unchanged 256 MiB / 64 MiB budgets. Canvases
-are 480 px tall; full-resolution source art is preserved. Body width stays .45
-cells; clip canvases may extend to the existing one-cell publication bound.
+are 480 px tall; full-resolution source art is preserved. Body width is .39375
+cells after the review adjustment; clip canvases may extend to the existing one-cell publication bound.
 No world format, occupancy or GPU registry capacity changed. Only about **4.8 MiB
 of mip budget remains**: B02 planning must address total publication size before
 adding more art. This is a measured content limit, not a reason to raise budgets
@@ -130,6 +130,57 @@ not an exhaustive near/far/diagonal/overlap or every-status capture matrix. No
 claim of balance or fun-factor acceptance is made. Debug, sanitizer, broader slow
 save/CLI tests and stress/benchmark runs were not run for this slice.
 
-After user acceptance, close B01 in the roadmap. B02 gets a separate detailed
+B01 acceptance is recorded below and in the roadmap. B02 gets a separate detailed
 bugbear plan, beginning with the measured texture-budget constraint. Campaign
 integration still waits for the roster’s arena review and a separate request.
+
+## User review adjustment — size and initiative (2026-10-31)
+
+User found the skeletons too large and the centered initiative strip obstructed
+health bars. Skeleton appearance height and every body/clip width now scale by
+.875: .74375-cell height and .39375-cell body width. Ground anchors, source images,
+registered pixel canvases and animation timing remain unchanged. The initiative
+strip retains its top edge and aligns to the viewport’s right edge with an
+18-native-pixel inset for every queue length.
+
+Rebuilt the Release game, headless runner and affected HUD/metadata checks; **2/2
+focused tests passed**. A fresh normal paired-skeleton arena run replayed strictly
+with `matched` using the new executable/content identities. Inspected the updated
+[contact view](screenshots/b01/scale-review/captures/operation-31.png),
+[hurt view](screenshots/b01/scale-review/captures/operation-35.png) and
+[corpse view](screenshots/b01/scale-review/captures/operation-41.png) through hidden
+application-owned GPU capture. The strip is right-aligned and upright skeletons
+have additional headroom with unchanged ground contact. Replay HUD captures omit
+mouse-hover health bars; interactive hover review remains with the user. No OS
+input or full regression/configuration matrix was used for this visual tweak.
+Prepared texture/alpha byte totals are unchanged. Original B01 captures retain the
+initial larger size and centered strip as historical evidence; the gallery links
+the latest capture separately. This adjustment was included in the subsequent B01 acceptance below.
+
+## User review adjustment — health-bar centering (2026-10-31)
+
+Health bars now use the existing projected body-axis `badgeX` for horizontal
+centering. The previous visible-silhouette center included the sword and shifted
+the skeleton bar 6 logical pixels (18 native pixels) left of its head. Vertical
+placement, viewport clamping and depth clipping are retained.
+
+Rebuilt Release game/headless and affected targets; **HUD and world_visibility
+passed (2/2, 0.07 seconds)**. An application-owned, hidden GPU review used the
+production arena map, roster, party, movement updates, picking and HUD hover API.
+No OS input was injected. Inspected the actual hover bar centered over the skull:
+[left skeleton](screenshots/b01/health-review/skeleton-0.png) and
+[right skeleton](screenshots/b01/health-review/skeleton-1.png). Body-axis centers
+were 208/292 logical pixels versus silhouette centers 202/286. No asset rebake,
+new storage or full test matrix was needed for this layout correction.
+
+## Acceptance and continuation — 2026-10-31
+
+User: “cool slice accepted, record it in the plan doc, so we can get started on the
+next mob”. **B01 Accepted and closed**, including the final size, initiative-strip
+and health-bar corrections. Executed checks, retained evidence and limitations
+above remain unchanged; acceptance adds no new test or balance claims.
+
+Next: B02 bugbear detailed planning against the current code and this handoff,
+especially the approximately 4.8 MiB remaining mip budget. B02 is Planned and
+unimplemented; its design needs review before implementation. Campaign integration
+and PC07 remain paused. The [roadmap](bestiary_plan.md) is the active checkpoint.

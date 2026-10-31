@@ -166,7 +166,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             h->hover.enemy->slot < picking->targets().anchors.size()) {
             const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
             if (anchor.valid) {
-                const UiRect r{viewX + std::clamp(anchor.x - 23, 0, viewWidth - 46),
+                const UiRect r{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),
                                viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6};
                 forEachDepthClip(*picking, h->hover.enemy->slot, r, [&](UiRect clip) {
                     BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
@@ -179,7 +179,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     }
     if (!h->suspended && combat.phase == CombatPhase::Turns && combat.upcomingCount) {
         const int width = 54 + int(combat.upcomingCount) * 30;
-        const UiRect r{viewX + (viewWidth - width) / 2, 24, width, 34};
+        const UiRect r{viewX + viewWidth - width - 6, 24, width, 34};
         p.overlayBox(r, edge);
         char line[32];
         std::snprintf(line, sizeof(line), "ROUND %llu", static_cast<unsigned long long>(combat.round));

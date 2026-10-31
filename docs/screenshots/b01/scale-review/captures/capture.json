@@ -1,0 +1,57 @@
+{
+  "assets": "cmake-build-release/assets",
+  "header": {
+    "binary": "7290385661519123282",
+    "content": {
+      "catalog": "1276332733553920479",
+      "npc_definitions": "7900486286285411045",
+      "world_appearance": 4,
+      "world_format": 2,
+      "world_publication": "13954067699238470398"
+    },
+    "door_scheduling": "shared-door-motion-300ms-v2",
+    "mode": "visual",
+    "protocol": 1,
+    "terrain_rules": "terrain-rules-v2",
+    "timing": "fixed-10ms-v1",
+    "visibility_backend": "world",
+    "visibility_version": "world-visibility-v5"
+  },
+  "images": [
+    {
+      "file": "operation-31.png",
+      "height": 1080,
+      "operation": 31,
+      "revision": "21",
+      "session": "1",
+      "ticks": 650,
+      "width": 1920
+    },
+    {
+      "file": "operation-35.png",
+      "height": 1080,
+      "operation": 35,
+      "revision": "24",
+      "session": "1",
+      "ticks": 680,
+      "width": 1920
+    },
+    {
+      "file": "operation-41.png",
+      "height": 1080,
+      "operation": 41,
+      "revision": "29",
+      "session": "1",
+      "ticks": 890,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "prepared/world/metadata.json": "9821451303771532762",
+    "prepared/world/textures.bin": "10132155330652798415"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "docs/screenshots/b01/scale-review/skeleton-pair-review.jsonl",
+  "trace_fingerprint": "592623845308250797"
+}
