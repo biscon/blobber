@@ -5,7 +5,7 @@ namespace blobber {
 struct NpcSheetOptions {
     ImageSampling sampling = ImageSampling::Nearest;
     double resolution = 1;
-    std::filesystem::path outputDirectory;   // Empty retains the legacy destination.
+    std::filesystem::path outputDirectory;   // Empty writes beside the source registration.
     std::size_t* loadingHighWater = nullptr; // Optional offline managed image/scratch diagnostic.
 };
 // Offline only: reads authored sheets and writes registered frames plus frames.json.

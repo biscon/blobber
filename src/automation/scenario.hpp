@@ -12,19 +12,13 @@ struct CampaignScenario {
     StartingParty party;
     std::uint32_t seed = 5;
 };
-struct RendererFixtureScenario {
-    StartingParty party;
-    std::uint32_t seed = 5;
-};
-using Scenario = std::variant<ArenaScenario, GeneratedScenario, CampaignScenario, RendererFixtureScenario>;
+using Scenario = std::variant<ArenaScenario, GeneratedScenario, CampaignScenario>;
 inline void replaceSeed(Scenario& s, std::uint32_t seed) {
     if (auto* a = std::get_if<ArenaScenario>(&s))
         a->seed = seed;
     else if (auto* g = std::get_if<GeneratedScenario>(&s))
         g->generation.seed = seed;
-    else if (auto* c = std::get_if<CampaignScenario>(&s))
-        c->seed = seed;
     else
-        std::get<RendererFixtureScenario>(s).seed = seed;
+        std::get<CampaignScenario>(s).seed = seed;
 }
 } // namespace blobber::automation

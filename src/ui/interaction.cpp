@@ -433,7 +433,7 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                         commands.selectCharacter(i);
                         commands.confirm();
                     }
-                } else if (state.production && realTime(state.combat.phase))
+                } else if (realTime(state.combat.phase))
                     commands.selectCharacter(i);
                 else
                     commands.inspect(i);

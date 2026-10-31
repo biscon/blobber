@@ -1,7 +1,7 @@
 # Low-resolution 3D renderer: design and delivery roadmap
 
 Created: 2026-10-30. Last updated: 2026-10-31.
-Status: **Roadmap accepted; R01–R05 and milestones R-A/R-B Accepted.**
+Status: **Complete — R01–R06 Accepted and closed; milestones R-A/R-B/R-C Accepted (2026-10-31).**
 
 The user agreed to replace the prepared perspective-image world renderer with a
 low-resolution GPU 3D world, retaining billboard monster/item artwork and discrete
@@ -19,13 +19,13 @@ for the explicit, bounded elevation extensions described below.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Campaign P-A/P-B and prior demo/automation slices; current renderer remains production |
+| Latest accepted foundation | R01–R06 and R-A/R-B/R-C Accepted and closed; campaign P-A/P-B accepted |
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
-| Active slice | None; R05 accepted and closed |
+| Active slice | None; renderer roadmap complete |
 | Awaiting review | None |
-| Next eligible slice | R06 — Production cutover and retirement; eligible for separate planning, not started |
-| Next action | Plan R06 when requested; review its detailed plan before implementation |
-| Blockers | None known; filtering, picking parity and performance require evidence from the slices |
+| Next eligible slice | Additional monsters, separately planned when requested; no automatic PC07 |
+| Next action | Renderer work closed; await a separate request to plan additional monsters |
+| Blockers | None for closure; recorded verification limitations remain unchanged |
 | Campaign status | Paused after P-B; do not start PC07 |
 
 Update this checkpoint, tracker, decision log and affected execution record together.
@@ -258,13 +258,13 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 | R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Accepted (2026-10-31) | R-B |
 | R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Accepted (2026-10-31) | R-B |
 | R05 | [Heights, outdoor hub and decoration](#r05-heights-outdoor-hub-and-decoration) | R04 accepted | Accepted (2026-10-31) | R-C |
-| R06 | [Production cutover and retirement](#r06-production-cutover-and-retirement) | R05 accepted | Planned | R-C |
+| R06 | [Production cutover and retirement](#r06-production-cutover-and-retirement) | R05 accepted | Accepted (2026-10-31) | R-C |
 
 | Milestone | User-visible outcome | Status |
 | --- | --- | --- |
 | R-A — Look established | Representative room and moving comparisons establish camera, filtering and art compatibility | Accepted (2026-10-31) |
 | R-B — Playable replacement | Current campaign/arena work through the GPU renderer, including combat, interactions, travel and automation | Accepted (2026-10-31) |
-| R-C — Renderer delivered | Outdoor hub, single-layer height variation and decoration work; production uses the replacement and obsolete renderer dependencies are retired | Planned |
+| R-C — Renderer delivered | Outdoor hub, single-layer height variation and decoration work; production uses the replacement and obsolete renderer dependencies are retired | Accepted (2026-10-31) |
 
 ### R01: Visual and motion proof
 
@@ -530,10 +530,22 @@ inventory and relevant verification results. User accepts the complete renderer
 milestone only after the old renderer and its exclusive assets/tests are gone.
 The next work is planning additional monsters, not automatically resuming PC07.
 
-**Execution record:** Not started; R05 acceptance satisfies its prerequisite.
-The user explicitly requires complete removal of the old renderer, its prepared
-image banks and renderer-specific tests as part of R06. This clarifies the slice's
-completion criteria; detailed R06 planning/implementation has not begun.
+**Execution record:** **Accepted and closed** (2026-10-31); milestone **R-C Accepted**. User approved
+[the detailed design](renderer_cutover_design.md) with “Implement the plan.” The
+world renderer is the sole graphical path and CPU world depth/IDs serve visual
+automation. Old renderer/banks/bakers/probe/tests and standalone demos, capture
+runners, authored-demo loading and public height showcase are deleted. Shared
+preparation, artwork, native UI, arena and regular automation remain.
+[Removal inventory](r06_removal_inventory.md), [verification](r06_verification.md)
+and [gallery/motion sample](screenshots/r06/index.html) record 124 deleted tracked
+files, clean graphics/headless builds, graphics 54/54 and headless 49/49 ordinary
+Release checks, final affected follow-ups, hidden GPU parity/lifecycle/failure/
+allocation checks, publication/retirement fixtures, real SDK stdio and a fresh
+1,070-operation expedition with strict replay images. Limits are explicit; no
+interactive or other-GPU coverage is inferred. The user explicitly accepted R06:
+“slice accepted, close up the new renderer plan”. R06 and milestone R-C are closed;
+all six renderer slices and all three milestones are accepted. Acceptance adds no
+new checks or coverage. No monsters/debug interface/PC07 work.
 
 ## Evidence and test policy
 
@@ -556,7 +568,10 @@ Each handoff records implementation/design paths, asset/schema/visibility versio
 executed commands, results, captures, hardware limitations, material risks and the
 exact next action. Do not carry forward historical passing counts as new evidence.
 
-## Risks and decisions still requiring slice evidence
+## Delivery risks and recorded mitigations
+
+Historical delivery risks below were addressed through the accepted slices.
+Recorded verification limitations remain; this table does not reopen completed work.
 
 | Risk | Mitigation / owner |
 | --- | --- |
@@ -574,6 +589,8 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-31 | R06 and R-C Accepted; renderer roadmap complete | Explicit user acceptance: “slice accepted, close up the new renderer plan”; all R01–R06 and R-A/R-B/R-C closed; verification and limitations unchanged; additional monsters require separate planning and PC07 stays paused |
+| 2026-10-31 | R06 implemented; Ready for review | Approved cutover completed: sole renderer, full legacy deletion, demos/showcase retired; focused + integration evidence and removal inventory retained; user acceptance pending |
 | 2026-10-31 | R06 requires complete old-renderer deletion within the slice | User explicitly requires no old renderer code, required prepared image banks or renderer-specific tests left after cutover; no deferred cleanup or fallback implementation |
 | 2026-10-31 | R05 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R06 eligible for separate planning, not started; R-C remains Planned |
 | 2026-10-31 | R05 implemented; Ready for review; resource-bounded focused verification policy adopted | Implementation approval followed by explicit instruction to limit processor use and stop repeated full-suite/benchmark work |
@@ -594,21 +611,20 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 ## Current next-agent handoff
 
-R01–R05 and milestones R-A/R-B are **Accepted**. R05 is **Accepted and closed**
-(2026-10-31), under its [approved design](renderer_environment_design.md). See
-[verification](r05_verification.md) and [gallery](screenshots/r05/index.html).
-The user explicitly accepted R05: “slice accepted, record it in the plan doc”.
-Evidence and limitations are unchanged; no additional checks or interactive coverage
-are inferred. R06 is next for separate planning only, when requested; it is not
-started. R-C remains Planned. Legacy stays default until R06.
-R06 must delete the old implementation, its exclusive prepared banks, tools, build
-dependencies and tests across gameplay and tooling. A default switch or disabled
-legacy path is insufficient; deletion cannot be deferred beyond R06.
+The renderer roadmap is **complete and closed** (2026-10-31): R01–R06 and milestones
+R-A/R-B/R-C are Accepted. The user explicitly accepted R06 and closed the roadmap:
+“slice accepted, close up the new renderer plan”. See the [accepted cutover design](renderer_cutover_design.md),
+[verification and limits](r06_verification.md), [completed removal inventory](r06_removal_inventory.md)
+and [gallery/motion sample](screenshots/r06/index.html).
 
-The user explicitly requires responsive resource use and smaller development
-verification. Read [AGENTS.md](../AGENTS.md) and the
-[verification workflow](verification_workflow.md): one intensive job, two build
-workers total, low priority and serial focused tests. Do not repeat full
-Debug/Release matrices, exhaustive legacy-bank tests or benchmarks automatically.
-Full coverage remains available through explicit slow integration tests.
-No desktop input automation, commits, new monsters, balancing or PC07 work.
+The sole renderer serves normal game, arena and automation; no legacy implementation,
+banks, fallback, probe or standalone demo remains. Acceptance changes no verification
+results and adds no unperformed checks or interactive/other-GPU coverage. Earlier
+slice execution records and decision-log entries preserve their delivery-time states;
+this checkpoint supersedes their next-action and pending-cutover notes.
+
+No renderer slice or milestone remains active or awaiting review. Next work is
+separate planning for additional monsters when requested. A future cheat/debug
+interface also needs separate planning; PC07 stays paused. Do not start either
+from this closure. Resource and desktop restrictions continue to apply. No new
+builds, tests, benchmarks, captures or commits were performed for acceptance recording.

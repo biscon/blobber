@@ -67,6 +67,24 @@ int main() {
         check(loadNpcDefinitions(dir.path / "level.json").definitionFingerprint ==
                   loaded.definitionFingerprint,
               "identical metadata retains fingerprint");
+        const Map map({"#####", "#...#", "#...#", "#...#", "#####"});
+        const auto placement = Json{{"type", "metadata-only"}, {"cell", {2, 2}},
+                                    {"subcell", {0, 0}}, {"facing", "south"}};
+        auto level = Json{{"definitions", {"npc.json"}}, {"instances", {placement}}};
+        const auto placed = [&](const Json& value) {
+            { std::ofstream out(dir.path / "level.json"); out << value; }
+            return loadNpcMetadata(dir.path / "level.json", map, {1, 1});
+        };
+        check(placed(level).world.occupied({2, 2}), "metadata placement retains occupancy without images");
+        for (unsigned fault = 0; fault < 5; ++fault) {
+            auto bad = level;
+            if (fault == 0) bad["instances"].push_back(placement);
+            if (fault == 1) bad["instances"][0]["type"] = "unknown";
+            if (fault == 2) bad["instances"][0]["cell"] = {0, 0};
+            if (fault == 3) bad["instances"][0]["subcell"] = {2, 0};
+            if (fault == 4) bad["instances"][0]["cell"] = {1, 1};
+            rejects([&] { placed(bad); }, "duplicate, unknown, wall, subcell and spawn placements reject");
+        }
         std::cout << "Graphics-independent metadata checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

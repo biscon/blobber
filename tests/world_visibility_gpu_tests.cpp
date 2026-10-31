@@ -2,9 +2,9 @@
 #include "platform/window.hpp"
 #include "platform/world_renderer.hpp"
 #include "rlgl.h"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
-#include "support/probe_allocations.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <iostream>
 using namespace blobber;

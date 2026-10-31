@@ -9,8 +9,7 @@ inline bool sameActor(ActorId a, ActorId b) noexcept {
 }
 enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Aid, Feature, Count };
 enum class CommandReason : std::uint8_t {
-    PreviewAccepted,
-    Ready,
+    Ready = 1, // Value zero is retired; preserve persisted command result values.
     Resolved,
     NoEncounter,
     NotYourTurn,

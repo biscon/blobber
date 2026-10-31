@@ -6,29 +6,26 @@
 #include <memory>
 
 namespace blobber {
-// One fixed allocation; never resized. Slot IDs are meaningful only with targets.world.
+// Fixed ID/depth allocations; never resized. Slot IDs are meaningful only with targets.world.
 class PickingBuffer {
   public:
     static constexpr std::uint16_t fixtureBase = NpcWorld::maxInstances + lootCapacity;
     static constexpr std::uint16_t empty = UINT16_MAX;
-    explicit PickingBuffer(bool fullDepth = false)
-        : pixels_(std::make_unique<std::uint16_t[]>(viewWidth * viewHeight)) {
-        if (fullDepth) {
-            pixelDepth_ = std::make_unique<float[]>(viewWidth * viewHeight);
-            opaqueDepth_ = std::make_unique<float[]>(viewWidth * viewHeight);
-        }
+    PickingBuffer()
+        : pixels_(std::make_unique<std::uint16_t[]>(viewWidth * viewHeight)),
+          pixelDepth_(std::make_unique<float[]>(viewWidth * viewHeight)),
+          opaqueDepth_(std::make_unique<float[]>(viewWidth * viewHeight)) {
         clear();
     }
     void clear() noexcept {
         std::fill_n(pixels_.get(), viewWidth * viewHeight, empty);
-        if (pixelDepth_) {
+        {
             std::fill_n(pixelDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
             std::fill_n(opaqueDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
         }
         targets_ = {};
         badgeAnchors_ = {};
         bodyDepth_.fill(std::numeric_limits<float>::infinity());
-        wallDepth_.fill(std::numeric_limits<float>::infinity());
         lootWorld_ = 0;
         fixtureWorld_ = 0;
         lootAnchors_ = {};
@@ -38,37 +35,28 @@ class PickingBuffer {
         badgeAnchors_[slot] = {x, top};
         bodyDepth_[slot] = depth;
     }
-    void wallDepths(const std::array<float, viewWidth>& depths) noexcept { wallDepth_ = depths; }
     bool badgeVisible(std::uint16_t owner, int x, int y) const noexcept {
         if (owner >= bodyDepth_.size() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight)
             return false;
         const auto depth = bodyDepth_[owner];
-        if (depth >= (opaqueDepth_ ? opaqueDepth_[y * viewWidth + x] : wallDepth_[x]))
+        if (depth >= opaqueDepth_[y * viewWidth + x])
             return false;
         const auto body = slot(x, y);
-        if (pixelDepth_)
-            return body == owner || pixelDepth_[y * viewWidth + x] > depth;
-        return body == owner || body >= bodyDepth_.size() || bodyDepth_[body] > depth;
+        return body == owner || pixelDepth_[y * viewWidth + x] > depth;
     }
-    bool fullDepth() const noexcept { return bool(pixelDepth_); }
     void copyRaster(const PickingBuffer& other) noexcept {
         std::copy_n(other.pixels_.get(), viewWidth * viewHeight, pixels_.get());
         std::copy_n(other.pixelDepth_.get(), viewWidth * viewHeight, pixelDepth_.get());
         std::copy_n(other.opaqueDepth_.get(), viewWidth * viewHeight, opaqueDepth_.get());
     }
-    float depth(std::size_t pixel) const noexcept {
-        return pixelDepth_ ? pixelDepth_[pixel] : std::numeric_limits<float>::infinity();
-    }
-    float opaqueDepth(std::size_t pixel) const noexcept {
-        return opaqueDepth_ ? opaqueDepth_[pixel] : std::numeric_limits<float>::infinity();
-    }
+    float depth(std::size_t pixel) const noexcept { return pixelDepth_[pixel]; }
+    float opaqueDepth(std::size_t pixel) const noexcept { return opaqueDepth_[pixel]; }
     void writeDepth(std::size_t pixel, std::uint16_t id, float depth, bool opaque = false) noexcept {
         pixels_[pixel] = id;
         pixelDepth_[pixel] = depth;
         if (opaque)
             opaqueDepth_[pixel] = depth;
     }
-    void write(std::size_t pixel, std::uint16_t slot) noexcept { pixels_[pixel] = slot; }
     std::uint16_t slot(int x, int y) const noexcept {
         return x >= 0 && x < viewWidth && y >= 0 && y < viewHeight ? pixels_[y * viewWidth + x] : empty;
     }
@@ -147,6 +135,5 @@ class PickingBuffer {
     std::array<std::uint64_t, lootCapacity> lootGenerations_{};
     std::array<Cell, NpcWorld::maxInstances> badgeAnchors_{};
     std::array<float, NpcWorld::maxInstances> bodyDepth_{};
-    std::array<float, viewWidth> wallDepth_{};
 };
 } // namespace blobber

@@ -330,9 +330,8 @@ class Jobs:
                        '--replay', str(root/'trace.jsonl')]
             backend = header['data'].get('visibility_backend')
             if backend is not None:
-                if backend not in ('legacy', 'world') or recorded_mode != 'visual':
+                if backend != 'world' or recorded_mode != 'visual':
                     raise AdapterError('replay_incompatible', 'Invalid recorded visibility backend')
-                command += ['--visibility', backend]
             if header['data'].get('campaign_persistence') == 1:
                 command += ['--campaign-save', str(root/'replay-memory-slot.json')]
             if operations is not None:

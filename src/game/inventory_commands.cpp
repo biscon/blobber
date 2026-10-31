@@ -37,14 +37,14 @@ void CommandController::refreshInventoryActions() noexcept {
     auto& i = state_.inventory;
     i.actions = {};
     const auto* stack = party_.inventory().stack(i.selected);
-    if (!i.open || !session_ || !stack)
+    if (!i.open || !stack)
         return;
     const auto& item = *party_.catalog().item(stack->item);
     const auto location = party_.inventory().locate(i.selected);
     if (location.character.index != i.character.index)
         return;
     auto preview = [&](InventoryRequest request) {
-        const auto access = session_->inventoryAccess(request);
+        const auto access = session_.inventoryAccess(request);
         return access == InventoryError::None ? party_.previewInventoryChange(request).error : access;
     };
     auto& equip = i.actions[static_cast<unsigned>(InventoryAction::Equip)];
@@ -80,7 +80,7 @@ void CommandController::refreshInventoryActions() noexcept {
         auto reason = CommandReason::MissingTarget;
         for (std::uint16_t n = 0; n < 4; ++n) {
             c.ally = rules::CharacterId{n};
-            reason = session_->combat().validate(c, session_->movement().player);
+            reason = session_.combat().validate(c, session_.movement().player);
             if (reason == CommandReason::Ready) {
                 use.enabled = true;
                 break;
@@ -93,7 +93,7 @@ void CommandController::refreshInventoryActions() noexcept {
     auto& drop = i.actions[static_cast<unsigned>(InventoryAction::Drop)];
     drop.visible = true;
     drop.label = stack->quantity > 1 ? "DROP STACK" : "DROP";
-    const auto dropResult = session_->dropItem(i.selected, i.revision, true);
+    const auto dropResult = session_.dropItem(i.selected, i.revision, true);
     drop.enabled = bool(dropResult);
     drop.reason = dropResult.reason;
 }
@@ -114,8 +114,7 @@ void CommandController::openInventory(std::optional<rules::CharacterId> characte
     i.open = true;
     i.page = page;
     i.character = party_.character(selected) ? selected : rules::CharacterId{0};
-    if (session_)
-        session_->clearPending();
+    session_.clearPending();
     refreshInventory();
 }
 void CommandController::inventoryPage(CharacterPage page) noexcept {
@@ -175,19 +174,18 @@ void CommandController::refreshInventory() noexcept {
         const auto* c = party_.character(i.character);
         i.weight = c->stats.carriedWeight;
         i.capacity = c->stats.carryingCapacity;
-        i.armorClass = session_ ? session_->effects().armorClass(i.character) : c->stats.armorClass;
-        i.management = session_ && session_->combat().safeRecovery(session_->movement().player)
-                           ? InventoryError::None
-                           : InventoryError::Unsafe;
+        i.armorClass = session_.effects().armorClass(i.character);
+        i.management = session_.combat().safeRecovery(session_.movement().player) ? InventoryError::None
+                                                                                  : InventoryError::Unsafe;
     }
     refreshInventoryActions();
     if (i.open && i.page == CharacterPage::Character)
         refreshCharacterSheet();
-    if (i.itemTargeting && session_) {
+    if (i.itemTargeting) {
         for (std::size_t n = 0; n < 4; ++n) {
             auto command = i.itemCommand;
             command.ally = state_.cards[n].id;
-            i.recipients[n] = session_->combat().validate(command, session_->movement().player);
+            i.recipients[n] = session_.combat().validate(command, session_.movement().player);
             state_.cards[n].castEligible = i.recipients[n] == CommandReason::Ready;
             state_.cards[n].castRecipient = state_.cards[n].castEligible && i.itemCommand.ally &&
                                             i.itemCommand.ally->index == state_.cards[n].id.index;
@@ -210,10 +208,8 @@ void CommandController::inventorySelect(std::uint16_t cell) noexcept {
     refreshInventoryActions();
 }
 void CommandController::inventoryExecute(const InventoryRequest& r) noexcept {
-    if (!session_)
-        return;
-    const auto result = session_->inventoryChange(r);
-    record(session_->events());
+    const auto result = session_.inventoryChange(r);
+    record(session_.events());
     state_.inventory.mode = InventoryMode::Browse;
     state_.inventory.source = {};
     state_.inventory.pointerDown = state_.inventory.dragging = false;
@@ -222,7 +218,7 @@ void CommandController::inventoryExecute(const InventoryRequest& r) noexcept {
 }
 void CommandController::inventoryDrop(ItemLocation dest, bool split) noexcept {
     auto& i = state_.inventory;
-    if (!session_ || i.page != CharacterPage::Inventory)
+    if (i.page != CharacterPage::Inventory)
         return;
     const auto h = i.source ? i.source : i.selected;
     const auto* s = party_.inventory().stack(h);
@@ -244,8 +240,8 @@ void CommandController::inventoryDrop(ItemLocation dest, bool split) noexcept {
             return;
         }
         r.quantity = 1;
-        if (session_->inventoryAccess(r) != InventoryError::None) {
-            inventoryFeedback(inventoryMessage(session_->inventoryAccess(r)));
+        if (session_.inventoryAccess(r) != InventoryError::None) {
+            inventoryFeedback(inventoryMessage(session_.inventoryAccess(r)));
             return;
         }
         const auto valid = party_.previewInventoryChange(r);
@@ -264,7 +260,7 @@ void CommandController::inventoryDrop(ItemLocation dest, bool split) noexcept {
 }
 void CommandController::inventoryAction(InventoryAction action) noexcept {
     auto& i = state_.inventory;
-    if (!i.open || !session_ || i.page != CharacterPage::Inventory)
+    if (!i.open || i.page != CharacterPage::Inventory)
         return;
     refreshInventoryActions();
     const auto index = static_cast<unsigned>(action);
@@ -278,8 +274,8 @@ void CommandController::inventoryAction(InventoryAction action) noexcept {
     const auto* item = party_.catalog().item(stack->item);
     i.source = i.selected;
     if (action == InventoryAction::Drop) {
-        const auto result = session_->dropItem(i.selected, i.revision);
-        record(session_->events());
+        const auto result = session_.dropItem(i.selected, i.revision);
+        record(session_.events());
         inventoryFeedback(result.reason);
         i.source = {};
         i.pointerDown = i.dragging = false;
@@ -291,7 +287,7 @@ void CommandController::inventoryAction(InventoryAction action) noexcept {
         inventoryDrop({i.character, equipDestination(party_.inventory(), i.selected, *item)});
     } else if (action == InventoryAction::Use) {
         auto c = inventoryUseCommand();
-        auto reason = session_->combat().validate(c, session_->movement().player);
+        auto reason = session_.combat().validate(c, session_.movement().player);
         if (reason != CommandReason::Ready && reason != CommandReason::FullHealth &&
             reason != CommandReason::FullMana && reason != CommandReason::DeadAlly) {
             inventoryFeedback(commandMessage(reason));
@@ -301,7 +297,7 @@ void CommandController::inventoryAction(InventoryAction action) noexcept {
             for (std::uint16_t n = 0; n < 4; ++n) {
                 auto candidate = c;
                 candidate.ally = rules::CharacterId{n};
-                if (session_->combat().validate(candidate, session_->movement().player) ==
+                if (session_.combat().validate(candidate, session_.movement().player) ==
                     CommandReason::Ready) {
                     c = candidate;
                     break;

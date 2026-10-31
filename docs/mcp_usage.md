@@ -17,12 +17,12 @@ floors. Diagnostic captures include a labelled full-map companion image; no hidd
 map is added to visual player observations. Existing experiment policies remain
 arena-only; connecting the adapter does not launch a prototype or seed sweep.
 
-R04 adds `session_start(mode="visual", visibility="world", ...)` for the shared
-windowless world visibility backend. The selection is retained across reset/load;
-use a new session to change it. Legacy remains the default. `replay_capture` forwards
-the recorded backend and graphics builds now support world images with an owned
-hidden context. Ordinary world observations require no window, source PNGs or legacy
-perspective banks. Doors use the same shared opening barrier as graphical gameplay.
+`session_start(mode="visual", ...)` uses the sole world CPU depth/ID pipeline.
+There is no visibility selector. Reset/load retain observation mode; replacement
+cannot change it. `replay_capture` uses the world renderer in its own hidden context.
+Ordinary visual observations need no display or source PNGs. Doors use the same
+opening barrier as graphical gameplay. Supported scenarios are arena,
+generated_floor and campaign; the height showcase endpoint is retired.
 
 ## Install and invoke
 
@@ -36,7 +36,7 @@ From the repository root:
 
 ```sh
 cmake --preset headless-release
-cmake --build --preset headless-release --target blobber_headless -j 6
+cmake --build --preset headless-release --target blobber_headless
 python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r tools/mcp-requirements.lock
 .venv/bin/python tools/blobber_mcp.py --help
@@ -94,16 +94,16 @@ binary **from recording onward**, with its prepared assets directory:
 
 ```sh
 cmake --preset release
-cmake --build --preset release --target blobber_headless -j 6
+cmake --build --preset release --target blobber_headless
 ```
 
 Use `cmake-build-release/blobber_headless` and `cmake-build-release/assets` in the
-configuration. Prepared scene/NPC/loot banks, fonts and UI assets must already be
+configuration. The world texture/alpha publication, fonts and native UI assets must already be
 available through the ordinary project asset build. The MCP server never bakes
 assets automatically. If needed, the normal graphics build prepares them:
 
 ```sh
-cmake --build --preset release -j 6
+cmake --build --preset release
 ```
 
 Explicitly forward display environment variables for application-owned hidden

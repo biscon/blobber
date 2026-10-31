@@ -1,4 +1,3 @@
-#include "assets/recovery_loader.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/party.hpp"
 #include "support/check.hpp"
@@ -257,33 +256,6 @@ void inventoryLoading() {
                  six["monsters"][0]["loot"][0], six["monsters"][0]["loot"][0],
                  six["monsters"][0]["loot"][0]});
         rejects([&] { files.load(bad); }, "Invalid reward profile rejected");
-    }
-    const Map recoveryMap({"#####", "#...#", "#...#", "#####"});
-    const auto recoveryFile = files.directory / "recovery.json";
-    const Json recovery = {
-        {"schema_version", 1},
-        {"sanctuaries", Json::array({Json::array({1, 1})})},
-        {"ground", Json::array({{{"cell", Json::array({2, 1})}, {"item", "test.kit"}, {"quantity", 1}}})}};
-    const auto loadLevel = [&](const Json& data) {
-        std::ofstream out(recoveryFile);
-        out << data;
-        out.close();
-        return loadRecoveryLevel(recoveryFile, recoveryMap, newCat);
-    };
-    check(loadLevel(recovery).groundCount == 1, "Authored ground and sanctuary metadata");
-    for (int fault = 0; fault < 5; ++fault) {
-        auto bad = recovery;
-        if (fault == 0)
-            bad["ground"][0]["quantity"] = 6;
-        if (fault == 1)
-            bad["ground"][0]["cell"] = Json::array({0, 0});
-        if (fault == 2)
-            bad["sanctuaries"].push_back(Json::array({1, 1}));
-        if (fault == 3)
-            bad["ground"][0]["item"] = "missing";
-        if (fault == 4)
-            bad["unexpected"] = true;
-        rejects([&] { loadLevel(bad); }, "Invalid recovery metadata rejected");
     }
     // Legacy version two keeps its strict fields and still gains bounded live stacks.
     auto legacy = fixture();

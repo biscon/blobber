@@ -167,15 +167,12 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             if (anchor.valid) {
                 const UiRect r{viewX + std::clamp(anchor.x - 23, 0, viewWidth - 46),
                                viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6};
-                if (picking->fullDepth())
-                    forEachDepthClip(*picking, h->hover.enemy->slot, r, [&](UiRect clip) {
-                        BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
-                                         clip.width * HudPainter::scale, clip.height * HudPainter::scale);
-                        p.health(r, h->hover.health);
-                        EndScissorMode();
-                    });
-                else
+                forEachDepthClip(*picking, h->hover.enemy->slot, r, [&](UiRect clip) {
+                    BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
+                                     clip.width * HudPainter::scale, clip.height * HudPainter::scale);
                     p.health(r, h->hover.health);
+                    EndScissorMode();
+                });
             }
         }
     }
@@ -302,9 +299,5 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.travel(*h);
     if (h->advancement.open)
         drawAdvancement(p, h->advancement);
-    if (h->demo) {
-        p.label("F2 NEXT", hudLayout::demoNext, gold, UiTextStyle::Small);
-        p.label("F3 RESET", hudLayout::demoReset, gold, UiTextStyle::Small);
-    }
 }
 } // namespace blobber

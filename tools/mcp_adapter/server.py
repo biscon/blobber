@@ -117,9 +117,9 @@ def create_server(runner, assets, output_root, capacity=8192*MIB):
     def session_start(scenario: dict | None = None, scenario_path: str | None = None,
                       mode: str = 'diagnostic', seed: int | None = None,
                       handle: str | None = None, session: str | None = None, revision: str | None = None,
-                      campaign_save_path: str | None = None, visibility: str | None = None) -> dict:
-        """Start a recorded arena, generated_floor, renderer_fixture (r05-heights-v1) or persistent campaign with doors, keys, discovery and checked stairs. Choose scenario object, scenario path OR campaign_save_path. Resume uses an isolated slot; replacement requires current tokens."""
-        return sessions.start(scenario, scenario_path, mode, seed, handle, session, revision, cancelled, campaign_save_path, visibility)
+                      campaign_save_path: str | None = None) -> dict:
+        """Start a recorded arena, generated_floor or persistent campaign with doors, keys, discovery and checked stairs. Choose scenario object, scenario path OR campaign_save_path. Resume uses an isolated slot; replacement requires current tokens."""
+        return sessions.start(scenario, scenario_path, mode, seed, handle, session, revision, cancelled, campaign_save_path)
 
     @tool(True)
     def session_list() -> dict:

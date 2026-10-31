@@ -4,30 +4,30 @@
 #include <cstdio>
 namespace blobber {
 void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
-    if (!session_ || state_.modal() || state_.suspended || state_.magic.casting() || state_.magic.armed ||
+    if (state_.modal() || state_.suspended || state_.magic.casting() || state_.magic.armed ||
         state_.inventory.itemTargeting)
         return;
-    auto request = session_->nearbyFixture();
+    auto request = session_.nearbyFixture();
     if (id)
-        request = {*id, session_->fixtures().revision()};
-    const auto* fixture = session_->fixtures().find(request.id);
-    const bool travel = session_->campaign() && fixture && CampaignRun::stairs(fixture->kind);
-    const auto result = session_->interact(request, travel);
+        request = {*id, session_.fixtures().revision()};
+    const auto* fixture = session_.fixtures().find(request.id);
+    const bool travel = session_.campaign() && fixture && CampaignRun::stairs(fixture->kind);
+    const auto result = session_.interact(request, travel);
     if (travel && result.accepted) {
-        if (session_->campaign()->activeLocation() == 0) {
+        if (session_.campaign()->activeLocation() == 0) {
             openTravel();
             return;
         }
-        state_.travelRequested = session_->campaign()->request(request);
+        state_.travelRequested = session_.campaign()->request(request);
     }
     state_.log.append(result.reason);
 }
 
 void CommandController::openLoot(LootId id) noexcept {
-    if (!session_ || state_.modal() || state_.suspended)
+    if (state_.modal() || state_.suspended)
         return;
-    const auto* item = session_->loot().find(id);
-    const auto access = session_->lootAccess(id);
+    const auto* item = session_.loot().find(id);
+    const auto access = session_.lootAccess(id);
     if (!item || !access) {
         state_.log.append(access.reason);
         return;
@@ -42,20 +42,20 @@ void CommandController::openLoot(LootId id) noexcept {
     state_.loot.open = true;
     state_.loot.cell = cell;
     state_.loot.world = id.world;
-    session_->clearPending();
+    session_.clearPending();
     refreshLoot();
     refreshRestAvailability();
 }
 void CommandController::refreshLoot() noexcept {
     auto& h = state_.loot;
-    if (!h.open || !session_)
+    if (!h.open)
         return;
     if (h.world != actors_.snapshot().world) {
         h.open = false;
         return;
     }
     h.count = 0;
-    const auto& stacks = session_->loot().snapshot().stacks;
+    const auto& stacks = session_.loot().snapshot().stacks;
     for (std::uint16_t i = 0; i < stacks.size(); ++i)
         if (stacks[i].active && stacks[i].cell == h.cell)
             h.ids[h.count++] = {h.world, i, stacks[i].generation};
@@ -64,7 +64,7 @@ void CommandController::refreshLoot() noexcept {
     for (unsigned i = 0; i < LootHud::visibleCount && h.page * LootHud::visibleCount + i < h.count; ++i) {
         auto& e = h.entries[i];
         e.id = h.ids[h.page * LootHud::visibleCount + i];
-        const auto* s = session_->loot().find(e.id);
+        const auto* s = session_.loot().find(e.id);
         e.definition = party_.catalog().item(s->item);
         e.quantity = s->quantity;
     }
@@ -80,8 +80,8 @@ void CommandController::refreshLoot() noexcept {
     h.canTakeAny = false;
     h.reason = h.count ? "Hover an item for details." : "This bag is empty.";
     if (h.count) {
-        const auto access = session_->lootAccess(h.ids[0]);
-        h.canTakeAny = bool(access) && session_->effects().canAct(h.recipient);
+        const auto access = session_.lootAccess(h.ids[0]);
+        h.canTakeAny = bool(access) && session_.effects().canAct(h.recipient);
         if (!access)
             h.reason = access.reason;
         else if (!h.canTakeAny)
@@ -89,7 +89,7 @@ void CommandController::refreshLoot() noexcept {
     }
     if (h.hovered >= 0 && unsigned(h.hovered) < h.entries.size() && h.entries[h.hovered].definition) {
         const auto preview =
-            session_->pickup({h.entries[h.hovered].id, h.recipient, party_.inventory().revision()}, true);
+            session_.pickup({h.entries[h.hovered].id, h.recipient, party_.inventory().revision()}, true);
         h.canTake = bool(preview);
         h.reason = preview ? "Click to take this stack." : preview.reason;
     }
@@ -118,11 +118,11 @@ void CommandController::lootRecipient(std::size_t formation) noexcept {
 }
 void CommandController::lootTake(unsigned index) noexcept {
     auto& h = state_.loot;
-    if (!h.open || !session_ || state_.suspended || index >= h.entries.size() || !h.entries[index].definition)
+    if (!h.open || state_.suspended || index >= h.entries.size() || !h.entries[index].definition)
         return;
     const auto e = h.entries[index];
-    const auto out = session_->pickup({e.id, state_.selection.character, party_.inventory().revision()});
-    record(session_->events());
+    const auto out = session_.pickup({e.id, state_.selection.character, party_.inventory().revision()});
+    record(session_.events());
     if (out)
         std::snprintf(h.feedback.data(), h.feedback.size(), "%s takes %u %s.", h.name, e.quantity,
                       e.definition->name.c_str());
@@ -133,7 +133,7 @@ void CommandController::lootTake(unsigned index) noexcept {
 }
 void CommandController::lootTakeAll() noexcept {
     auto& h = state_.loot;
-    if (!h.open || !session_ || state_.suspended)
+    if (!h.open || state_.suspended)
         return;
     refreshLoot();
     unsigned taken = 0, left = 0;
@@ -141,7 +141,7 @@ void CommandController::lootTakeAll() noexcept {
     // IDs and dialog cell remain stable while individual transactions commit.
     for (unsigned i = 0; i < h.count; ++i) {
         const auto out =
-            session_->pickup({h.ids[i], state_.selection.character, party_.inventory().revision()});
+            session_.pickup({h.ids[i], state_.selection.character, party_.inventory().revision()});
         if (out)
             ++taken;
         else {

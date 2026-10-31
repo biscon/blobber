@@ -25,16 +25,6 @@ class CombatLog {
     std::size_t next_ = 0, count_ = 0;
 };
 enum class DisplayStatus : std::uint8_t { Ready, Unconscious, Dead, Stable };
-struct DemoResources {
-    int hp = 0, mana = 0, maxMana = 0;
-    DisplayStatus status = DisplayStatus::Ready;
-};
-// Explicit diagnostic data, never an authoritative Party snapshot.
-struct HudDemo {
-    bool enabled = false;
-    int scenario = 0;
-    std::array<DemoResources, rules::partySize> resources{};
-};
 struct HudCard {
     rules::CharacterId id;
     const char *name = "", *className = "";
@@ -144,10 +134,8 @@ struct HudSnapshot {
     std::size_t targetPage = 0, logOffset = 0;
     CommandReason availability = CommandReason::MissingTarget;
     std::array<CommandReason, static_cast<std::size_t>(PartyAction::Count)> actionAvailability{};
-    bool suspended = false, demo = false, logExpanded = false;
-    int demoScenario = 0;
+    bool suspended = false, logExpanded = false;
     CombatLog log;
-    bool production = false;
     CombatSnapshot combat;
     std::array<rules::CharacterId, rules::partySize> allies{};
     std::size_t allyCount = 0;
@@ -182,11 +170,9 @@ inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, Par
                                                          PartyAction::Ranged, PartyAction::Spell,
                                                          PartyAction::Item, PartyAction::Aid}};
 
-// Owners outlive this controller. The session overload routes checked combat requests;
-// the const-owner overload is isolated preview-only presentation.
+// The authoritative session and its map/catalog outlive this controller.
 class CommandController {
   public:
-    CommandController(const Party& party, const ActorWorld& actors);
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     CommandController(GameSession&&) = delete;
     void openInventory(std::optional<rules::CharacterId> = {},
@@ -228,14 +214,9 @@ class CommandController {
     bool magicSingleTarget() const noexcept;
     void magicKeyboardTarget(int delta) noexcept;
     void magicGround(std::optional<Cell>, bool select = false) noexcept;
-    CommandController(Party&&, const ActorWorld&) = delete;
-    CommandController(const Party&&, const ActorWorld&) = delete;
-    CommandController(const Party&, ActorWorld&&) = delete;
-    CommandController(const Party&, const ActorWorld&&) = delete;
     CommandController(const CommandController&) = delete;
     CommandController& operator=(const CommandController&) = delete;
-    void refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
-                 const HudDemo* demo = nullptr) noexcept;
+    void refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused) noexcept;
     void selectCharacter(std::size_t formationIndex) noexcept;
     void selectAction(PartyAction action) noexcept;
     void cycleAction(int delta) noexcept;
@@ -341,11 +322,11 @@ class CommandController {
     bool objectiveReported_ = false, objectiveFailureReported_ = false;
     bool pointerKnown_ = false;
     float pointerX_ = 0, pointerY_ = 0;
-    GameSession* session_ = nullptr;
+    GameSession& session_;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;
-    CommandReason suspension_ = CommandReason::PreviewAccepted;
+    CommandReason suspension_ = CommandReason::Ready;
 };
 } // namespace blobber

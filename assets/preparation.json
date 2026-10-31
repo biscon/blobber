@@ -1,6 +1,0 @@
-{
-  "version": 1,
-  "npc_filter": "area",
-  "npc_resolution": 0.5,
-  "surface_filter": "nearest"
-}

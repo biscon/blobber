@@ -2,11 +2,11 @@
 #include "game/perception.hpp"
 #include "game/session.hpp"
 #include "render/world_effects.hpp"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
-#include "support/probe_allocations.hpp"
+#include "support/environment_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
-#include "world/environment_maps.hpp"
 #include <iostream>
 using namespace blobber;
 int main(int argc, char**) {
@@ -158,7 +158,7 @@ int main(int argc, char**) {
         world_render::doorBoxes(geometry.view(), nullptr, boxes, 0, 0, 0);
         check(std::abs(boxes[0].origin.y - .25f) < 1e-5f && std::abs(boxes[0].y.y - 1.75f) < 1e-5f,
               "Door pivot and frame fit raised aperture");
-        const auto env = rendererHeightMap();
+        const auto env = test::rendererHeightMap();
         check(!env.flat(), "Review fixture is genuinely elevated");
         watching = true;
         allocations = 0;

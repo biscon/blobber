@@ -1,0 +1,193 @@
+{
+  "assets": "/home/bison/Projects/blobber/cmake-build-release/assets",
+  "header": {
+    "binary": "10267860653587682180",
+    "campaign_persistence": 1,
+    "content": {
+      "catalog": "2951465791058573525",
+      "npc_definitions": "15378577391153559251",
+      "world_appearance": 4,
+      "world_format": 1,
+      "world_publication": "16365773382617078244"
+    },
+    "door_scheduling": "shared-opening-300ms-v1",
+    "mode": "visual",
+    "protocol": 1,
+    "terrain_rules": "terrain-rules-v1",
+    "timing": "fixed-10ms-v1",
+    "visibility_backend": "world",
+    "visibility_version": "world-visibility-v3"
+  },
+  "images": [
+    {
+      "file": "operation-1.png",
+      "height": 1080,
+      "operation": 1,
+      "revision": "1",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-3.png",
+      "height": 1080,
+      "operation": 3,
+      "revision": "2",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-3-diagnostic-map.png",
+      "height": 1080,
+      "operation": 3,
+      "revision": "2",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-3-discovered-map.png",
+      "height": 1080,
+      "operation": 3,
+      "revision": "2",
+      "session": "1",
+      "ticks": 0,
+      "width": 1920
+    },
+    {
+      "file": "operation-105.png",
+      "height": 1080,
+      "operation": 105,
+      "revision": "99",
+      "session": "1",
+      "ticks": 835,
+      "width": 1920
+    },
+    {
+      "file": "operation-105-diagnostic-map.png",
+      "height": 1080,
+      "operation": 105,
+      "revision": "99",
+      "session": "1",
+      "ticks": 835,
+      "width": 1920
+    },
+    {
+      "file": "operation-105-discovered-map.png",
+      "height": 1080,
+      "operation": 105,
+      "revision": "99",
+      "session": "1",
+      "ticks": 835,
+      "width": 1920
+    },
+    {
+      "file": "operation-1006.png",
+      "height": 1080,
+      "operation": 1006,
+      "revision": "311",
+      "session": "1",
+      "ticks": 5676,
+      "width": 1920
+    },
+    {
+      "file": "operation-1006-diagnostic-map.png",
+      "height": 1080,
+      "operation": 1006,
+      "revision": "311",
+      "session": "1",
+      "ticks": 5676,
+      "width": 1920
+    },
+    {
+      "file": "operation-1006-discovered-map.png",
+      "height": 1080,
+      "operation": 1006,
+      "revision": "311",
+      "session": "1",
+      "ticks": 5676,
+      "width": 1920
+    },
+    {
+      "file": "operation-1013.png",
+      "height": 1080,
+      "operation": 1013,
+      "revision": "316",
+      "session": "1",
+      "ticks": 5793,
+      "width": 1920
+    },
+    {
+      "file": "operation-1013-diagnostic-map.png",
+      "height": 1080,
+      "operation": 1013,
+      "revision": "316",
+      "session": "1",
+      "ticks": 5793,
+      "width": 1920
+    },
+    {
+      "file": "operation-1013-discovered-map.png",
+      "height": 1080,
+      "operation": 1013,
+      "revision": "316",
+      "session": "1",
+      "ticks": 5793,
+      "width": 1920
+    },
+    {
+      "file": "operation-1065.png",
+      "height": 1080,
+      "operation": 1065,
+      "revision": "366",
+      "session": "1",
+      "ticks": 6214,
+      "width": 1920
+    },
+    {
+      "file": "operation-1065-diagnostic-map.png",
+      "height": 1080,
+      "operation": 1065,
+      "revision": "366",
+      "session": "1",
+      "ticks": 6214,
+      "width": 1920
+    },
+    {
+      "file": "operation-1065-discovered-map.png",
+      "height": 1080,
+      "operation": 1065,
+      "revision": "366",
+      "session": "1",
+      "ticks": 6214,
+      "width": 1920
+    },
+    {
+      "file": "operation-1066.png",
+      "height": 1080,
+      "operation": 1066,
+      "revision": "367",
+      "session": "1",
+      "ticks": 6214,
+      "width": 1920
+    },
+    {
+      "file": "operation-1069.png",
+      "height": 1080,
+      "operation": 1069,
+      "revision": "1",
+      "session": "2",
+      "ticks": 0,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "prepared/world/metadata.json": "15339199694761983564",
+    "prepared/world/textures.bin": "16365773382617078244"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "/home/bison/Projects/blobber/scratch/r06/campaign-review/trace.jsonl",
+  "trace_fingerprint": "16876806686373110928"
+}

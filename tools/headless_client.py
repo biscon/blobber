@@ -36,10 +36,8 @@ class Client:
     STDERR_TAIL = 1024 * 1024
 
     def __init__(self, executable, assets, mode="diagnostic", record=None, on_event=None,
-                 *, timeout=10, startup_timeout=30, deadline=None, cancelled=None, campaign_save=None, visibility=None):
+                 *, timeout=10, startup_timeout=30, deadline=None, cancelled=None, campaign_save=None):
         command = [str(executable), "--assets", str(assets), "--mode", mode]
-        if visibility is not None:
-            command += ["--visibility", visibility]
         if campaign_save is not None:
             command += ["--campaign-save", str(campaign_save)]
         if record is not None:
@@ -237,7 +235,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runner", default="cmake-build-headless-debug/blobber_headless")
     parser.add_argument("--assets", default="assets")
-    parser.add_argument("--visibility", choices=("legacy", "world"))
     parser.add_argument("--mode", choices=("diagnostic", "visual"), default="diagnostic")
     parser.add_argument("--scenario", required=True, type=Path, help="Arena, generated_floor or campaign scenario JSON")
     parser.add_argument("--record", type=Path)
@@ -245,7 +242,7 @@ def main():
     args = parser.parse_args()
     def show(message):
         print(json.dumps(message), flush=True)
-    with Client(args.runner, args.assets, args.mode, args.record, show, visibility=args.visibility) as client:
+    with Client(args.runner, args.assets, args.mode, args.record, show) as client:
         response = client.request("start", scenario=json.loads(args.scenario.read_text()))
         show(response)
         if not response["ok"]:

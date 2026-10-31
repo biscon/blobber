@@ -4,21 +4,9 @@
 #include <optional>
 namespace blobber {
 struct Options {
-    bool environmentReview = false;
-    bool captureDoorsOnly = false, worldPreview = false, supersampling = true, worldRenderer = false;
-    std::filesystem::path worldBenchmark;
-    bool development = false, captureProgressionOnly = false;
+    bool development = false, supersampling = true, help = false;
     int width = 1920, height = 1080;
-    std::filesystem::path assets, captureDirectory, campaignSave;
-    bool captureArenaOnly = false, captureSaveOnly = false;
-    bool captureMenuOnly = false, captureCreatorOnly = false;
-    bool captureBuildsOnly = false;
-    bool recoveryDemo = false, captureRecoveryOnly = false;
-    bool inventoryDemo = false, captureInventoryOnly = false;
-    bool spellDemo = false, captureSpellsOnly = false;
-    bool captureProjectilesOnly = false, captureReactionsOnly = false, captureHudOnly = false, help = false,
-         uiDemo = false, combatDemo = false, aiDemo = false, captureAiOnly = false, hybridDemo = false,
-         captureHybridOnly = false, capturePreparationOnly = false, checkPreparedOnly = false;
+    std::filesystem::path assets, campaignSave;
     std::optional<std::uint32_t> seed;
 };
 Options parseOptions(int argc, char** argv);

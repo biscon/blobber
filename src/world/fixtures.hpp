@@ -74,13 +74,6 @@ class GeometryView {
     CellSurface surface(Cell c) const noexcept { return map_->surface(c); }
     bool reach(Cell a, Cell b) const noexcept { return surfacePassage(surface(a), surface(b)); }
     bool canStep(Cell a, Cell b) const noexcept { return map_->canStep(a, b) && !solid(a) && !solid(b); }
-    // Render-only borrow: retain closed legacy proxies until their opening settles.
-    GeometryView presentation(const DoorSnapshot& doors) const noexcept {
-        auto result = *this;
-        result.doors_ = &doors;
-        return result;
-    }
-    const DoorSnapshot* doors() const noexcept { return doors_; }
     bool npcAllowed(Cell) const noexcept;
     int width() const noexcept { return map_->width(); }
     int height() const noexcept { return map_->height(); }
@@ -94,7 +87,6 @@ class GeometryView {
     GeometryView(const Map& map, const FloorGeometry* fixtures) noexcept : map_(&map), fixtures_(fixtures) {}
     const Map* map_;
     const FloorGeometry* fixtures_ = nullptr;
-    const DoorSnapshot* doors_ = nullptr;
 };
 class GameSession;
 class FloorGeometry {

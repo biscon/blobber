@@ -14,7 +14,7 @@ async def main(runner, world_writer=None):
         root=Path(temporary);assets=root/'assets';assets.mkdir();scenario=setup(assets)
         if world_writer:
             subprocess.run([str(world_writer.resolve()), str(assets)], check=True)
-        backend = dict(mode='visual', visibility='world') if world_writer else {}
+        backend = dict(mode='visual') if world_writer else {}
         params=StdioServerParameters(command=sys.executable,args=[str(ROOT/'tools/blobber_mcp.py'),
             '--workspace',str(ROOT),'--runner',str(runner.resolve()),'--assets',str(assets),'--output-root',str(root/'output')])
         async with MCPClient(params,read_timeout_seconds=45) as client:

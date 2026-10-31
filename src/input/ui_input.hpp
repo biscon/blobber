@@ -19,8 +19,6 @@ enum class UiKey : std::size_t {
     Click,
     RightClick,
     Back,
-    DemoNext,
-    DemoReset,
     PreviousPage,
     NextPage,
     Inventory,

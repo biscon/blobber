@@ -1,11 +1,11 @@
 #include "assets/image.hpp"
 #include "platform/window.hpp"
 #include "platform/world_renderer.hpp"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
-#include "support/probe_allocations.hpp"
+#include "support/environment_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
-#include "world/environment_maps.hpp"
 #include <iostream>
 using namespace blobber;
 namespace {
@@ -45,12 +45,12 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 }
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
     try {
         test::VisibilityFixture fixture;
         auto assets = std::make_shared<const world_assets::CpuAssets>(fixture.publication());
         const auto catalog = creationCatalog(true);
-        const auto map = rendererHeightMap();
+        const auto map = test::rendererHeightMap();
         const auto hub = sanctuaryMap();
         const NpcWorld placements(map, {3, 5}, {"goblin"}, {{{0}, {3, 2}, {0, 0}, Heading::South}});
         ActorWorld actors(map, catalog, placements);
@@ -81,6 +81,14 @@ int main() {
                 for (unsigned h = 0; h < 4; ++h) {
                     movement.player.heading = Heading(h);
                     renderer.render(input());
+                    if (argc == 2 && quality && h < 2) {
+                        const std::filesystem::path output(argv[1]);
+                        std::filesystem::create_directories(output);
+                        OwnedImage capture(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+                        ImageFlipVertical(&capture.value);
+                        check(ExportImage(capture.value, (output / ("height-fixture-" + std::to_string(h) + ".png")).string().c_str()),
+                              "Export optional test-owned height review");
+                    }
                     differences += compare(resources, renderer, ids.get());
                 }
                 movement.player.heading = Heading::North;

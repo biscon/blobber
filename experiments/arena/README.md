@@ -23,7 +23,7 @@ From the repository root:
 
 ```sh
 cmake --preset headless-release
-cmake --build --preset headless-release --target blobber_headless -j 6
+cmake --build --preset headless-release --target blobber_headless
 python3 tools/arena_experiment.py validate experiments/arena/smoke.json
 python3 tools/arena_experiment.py run experiments/arena/smoke.json \
   --output /tmp/blobber-arena-review
@@ -57,7 +57,7 @@ python3 tools/arena_experiment.py run /path/to/visual-manifest.json \
   --assets cmake-build-release/assets --output /tmp/blobber-arena-visual
 ```
 
-Visual mode uses prepared CPU body picking and opens no window. Missing assets
+Visual mode uses the sole world CPU depth/ID pipeline and opens no window. Missing assets
 fail explicitly; there is no automatic diagnostic fallback. Diagnostic mode knows
 all enemy positions/HP and is not player-equivalent. Neither policy sees pending
 rolls or AI plans. Both use a zero-time preview legality oracle and know layout-v1's

@@ -1,5 +1,4 @@
 #include "automation/session.hpp"
-#include "world/environment_maps.hpp"
 #include <stdexcept>
 namespace blobber::automation {
 namespace {
@@ -23,21 +22,6 @@ Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definition
     if (const auto* campaign = std::get_if<CampaignScenario>(&scenario_)) {
         campaign_ = std::make_unique<CampaignRun>(catalog, startingParty(catalog, campaign->party),
                                                   definitions.types, definitions.timings, campaign->seed);
-    } else if (const auto* review = std::get_if<RendererFixtureScenario>(&scenario_)) {
-        arenaMap_.emplace(rendererHeightMap());
-        map_ = &*arenaMap_;
-        placements_.emplace(*map_, Cell{3, 5}, definitions.types,
-                            std::vector<NpcInstance>{{{0}, {3, 2}, {0, 0}, Heading::South}});
-        const auto fixtures = rendererHeightFixtures();
-        RecoveryLevel recovery;
-        recovery.groundCount = 1;
-        recovery.ground[0] = {{3, 3},
-                              catalog.item(catalog.findItem("dagger")) ? catalog.findItem("dagger")
-                                                                       : rules::ItemId{0},
-                              1};
-        game_ = std::make_unique<GameSession>(*map_, catalog, startingParty(catalog, review->party),
-                                              *placements_, review->seed, Player{{3, 5}, Heading::North},
-                                              false, definitions.timings, recovery, fixtures);
     } else {
         generated_ = prepare(scenario_, mode);
         if (!generated_)

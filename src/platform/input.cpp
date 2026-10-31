@@ -29,8 +29,6 @@ InputSample Input::poll(float seconds) {
     uiDown[static_cast<std::size_t>(UiKey::Cancel)] |= IsKeyDown(KEY_BACKSPACE);
     uiDown[static_cast<std::size_t>(UiKey::Click)] = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     uiDown[static_cast<std::size_t>(UiKey::RightClick)] = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
-    uiDown[static_cast<std::size_t>(UiKey::DemoNext)] = IsKeyDown(KEY_F2);
-    uiDown[static_cast<std::size_t>(UiKey::DemoReset)] = IsKeyDown(KEY_F3);
     uiDown[static_cast<std::size_t>(UiKey::Back)] = IsKeyDown(KEY_B);
     uiDown[static_cast<std::size_t>(UiKey::PreviousPage)] = IsKeyDown(KEY_PAGE_UP);
     uiDown[static_cast<std::size_t>(UiKey::NextPage)] = IsKeyDown(KEY_PAGE_DOWN);

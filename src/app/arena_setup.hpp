@@ -23,7 +23,6 @@ struct ArenaSetup {
 struct MenuView;
 struct Options;
 class Presenter;
-void captureArena(MenuView&, Presenter&, const Options&, ArenaScenarioStore&);
 void openArena(MenuView&, const Options&, ArenaScenarioStore&);
 // All disk operations and launch transitions live here, outside rendering/input frames.
 bool arenaAction(MenuView&, int action, const Options&, ArenaScenarioStore&, Presenter&);

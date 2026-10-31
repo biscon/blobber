@@ -16,10 +16,9 @@ void logToStderr(int, const char* text, va_list args) {
 }
 class Capture final : public ReplayObserver {
   public:
-    Capture(const SceneRenderer* r, WorldRenderer* w, const NpcDefinitions& d, Presenter& p,
-            const std::filesystem::path& o, const std::vector<std::size_t>& operations)
-        : renderer(r), world(w), definitions(d), presenter(p), output(o),
-          pending(operations.begin(), operations.end()) {}
+    Capture(WorldRenderer& w, const NpcDefinitions& d, Presenter& p, const std::filesystem::path& o,
+            const std::vector<std::size_t>& operations)
+        : world(w), definitions(d), presenter(p), output(o), pending(operations.begin(), operations.end()) {}
     void boundary(Session* session, std::size_t operation, const Json& state) override {
         if (!pending.count(operation))
             return;
@@ -28,7 +27,7 @@ class Capture final : public ReplayObserver {
         auto& game = session->replayGame();
         NpcAnimator animator(game.actors(), definitions.timings);
         animator.setTime(game.timeMs(), &game.effects());
-        GameView frames(renderer, world);
+        GameView frames(world);
         SpellArea area;
         area.ground = game.effects().ground();
         frames.update(game, animator.snapshot(), area);
@@ -64,12 +63,10 @@ class Capture final : public ReplayObserver {
             frames.present(presenter, game, session->map(), true, false, &hud.snapshot(), &diagnostic, false);
             save("-discovered-map");
         }
-        if (world)
-            world->clear();
+        world.clear();
         pending.erase(operation);
     }
-    const SceneRenderer* renderer;
-    WorldRenderer* world;
+    WorldRenderer& world;
     const NpcDefinitions& definitions;
     Presenter& presenter;
     std::filesystem::path output;
@@ -89,36 +86,28 @@ void captureReplay(Protocol& protocol, const std::filesystem::path& trace, const
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("capture_output_exists");
     SetTraceLogCallback(logToStderr);
-    std::unique_ptr<SceneRenderer> renderer;
     std::unique_ptr<Window> window;
     std::unique_ptr<GpuResources> resources;
     std::unique_ptr<Presenter> presenter;
     std::unique_ptr<WorldRenderer> world;
-    const bool worldBackend = header.value("visibility_backend", std::string{}) == "world";
     try {
-        if (!worldBackend)
-            renderer = loadVisualRenderer(assets, definitions);
+        auto publication = world_assets::load(assets / "prepared/world");
+        if (publication.definitions != definitions.definitionFingerprint)
+            throw std::runtime_error("World NPC definitions differ; rebuild world assets");
         window = std::make_unique<Window>(gameWidth, gameHeight, true);
         resources = std::make_unique<GpuResources>();
         presenter = std::make_unique<Presenter>(*resources, assets);
-        if (worldBackend)
-            world =
-                std::make_unique<WorldRenderer>(*resources, world_assets::load(assets / "prepared/world"));
+        world = std::make_unique<WorldRenderer>(*resources, std::move(publication));
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("graphics_unavailable: ") + e.what());
     }
-    Capture capture(renderer.get(), world.get(), definitions, *presenter, output, operations);
+    Capture capture(*world, definitions, *presenter, output, operations);
     replay(protocol, trace, header, &capture, files);
     if (!capture.pending.empty())
         throw std::runtime_error("capture_invalid_point: operation exceeds recording");
     Json prepared = Json::object();
-    if (worldBackend) {
-        for (const auto* path : {"prepared/world/metadata.json", "prepared/world/textures.bin"})
-            prepared[path] = fingerprintFile(assets / path);
-    } else
-        for (const auto* path : {"preparation.json", "prepared/metadata.json", "prepared/scene.bin",
-                                 "prepared/npcs.bin", "prepared/loot.bin"})
-            prepared[path] = fingerprintFile(assets / path);
+    for (const auto* path : {"prepared/world/metadata.json", "prepared/world/textures.bin"})
+        prepared[path] = fingerprintFile(assets / path);
     const Json metadata = {{"replay", "matched"},
                            {"trace", trace.string()},
                            {"trace_fingerprint", fingerprintFile(trace)},

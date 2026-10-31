@@ -4,13 +4,13 @@ Created: 2026-10-30. Last updated: 2026-10-31.
 Status: **Roadmap accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted (2026-10-30).**
 PC07–PC09 plans remain unapproved; do not advance automatically.
 
-**Paused after P-B (2026-10-30), at the user's request.** Work now turns to
-rendering and presentation, followed by additional monsters, before returning
-to the procedural campaign. The user has accepted the low-resolution 3D renderer
-direction with stacked cells deferred; its [six-slice roadmap](renderer_plan.md)
-is accepted; R01 is implemented and [Ready for review](r01_verification.md), with
-no production renderer cutover. This pause supersedes
-earlier next-action instructions to plan PC07.
+**Paused after P-B (2026-10-30), at the user's request.** The
+[renderer roadmap](renderer_plan.md) is now complete: R01–R06 and milestones
+R-A/R-B/R-C are Accepted and closed (2026-10-31), including production cutover and
+old-renderer retirement. Additional monsters come next, through separate planning
+when requested, before returning to the procedural campaign. The pause remains
+in force and supersedes earlier instructions to plan PC07; renderer acceptance
+does not authorize campaign resumption.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and

@@ -1,8 +1,7 @@
 #include "game/commands.hpp"
 #include "support/check.hpp"
-#include "support/npc_fixtures.hpp"
-#include "support/render_fixtures.hpp"
 #include "support/spell_fixtures.hpp"
+#include "support/world_visibility_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/spell_layout.hpp"
 #include <cstring>
@@ -129,10 +128,12 @@ void summaryAndPose() {
     EffectController effects(party, actors, rng);
     CombatEvents events;
     const auto id = actors.id(0);
-    auto appearance = testProneAppearance();
-    const std::vector<NpcTimings> timings{npcTimings(appearance)};
+    test::VisibilityFixture fixture;
+    const world_assets::CpuAssets assets(fixture.publication());
+    const auto& timings = fixture.timings;
     NpcAnimator animator(actors, timings);
-    const SceneRenderer renderer(testGreaseMaterials(), {appearance});
+    const auto scene = world_render::prepare(map);
+    world_render::VisibilityPipeline renderer(scene, assets);
     effects.condition(id, EffectKind::Sleep, {3}, 0, events);
     auto statuses = effects.statuses(id);
     check(statuses.count == 1 && statuses.entries[0].spell == rules::SpellKind::Sleep &&
@@ -148,17 +149,18 @@ void summaryAndPose() {
     const auto cell = actors.actor(id)->npc.cell;
     for (unsigned heading = 0; heading < 4; ++heading) {
         const Player player{cell + forward(Heading(heading)) * -2, Heading(heading)};
-        Frame frame;
-        PickingBuffer pick;
-        renderer.compose(map, player, frame, &actors, &animator.snapshot(), &pick);
+        MovementState movement;
+        movement.player = player;
+        renderer.update({map, movement, &actors, &animator.snapshot()});
+        const auto& pick = renderer.frame().picking;
         check(pick.targets().count == 1 && actors.occupied(cell),
               "All prone directions keep visible picking and occupancy");
-        const auto low = pick.targets().anchors[id.slot].badgeTop;
+        const auto low = pick.targets().anchors[id.slot].top;
         auto standing = animator.snapshot();
         standing.frames[0].clip = NpcAnimation::Idle;
-        renderer.compose(map, player, frame, &actors, &standing, &pick);
-        check(pick.targets().anchors[id.slot].badgeTop < low,
-              "Prone body silhouette is lower than standing body");
+        ++standing.revision;
+        renderer.update({map, movement, &actors, &standing});
+        check(renderer.frame().picking.targets().anchors[id.slot].top < low, "Prone body silhouette is lower than standing body");
     }
     effects.condition(id, EffectKind::Knockdown, {3}, 2000, events);
     effects.wake(id, 2000, events);

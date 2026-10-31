@@ -221,7 +221,7 @@ void CommandController::updateHover() noexcept {
         }
         const auto& a = *actors_.actor(*h.enemy);
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s%s #%u",
-                      session_ && session_->guardian(*h.enemy) ? "Guardian: " : "",
+                      session_.guardian(*h.enemy) ? "Guardian: " : "",
                       actors_.catalog().monster(a.monster)->id.c_str(), unsigned(h.enemy->slot) + 1);
         h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
@@ -277,19 +277,17 @@ void CommandController::updateHover() noexcept {
                               0, std::int64_t(dice.count) * dice.sides + dice.modifier)));
         }
         put(2, realTime(state_.combat.phase) ? "Cost: 6-second cooldown" : "Cost: 1 action");
-        if (session_ && session_->combat().sneakPreview(command.character, *h.enemy,
-                                                        command.action == PartyAction::Ranged,
-                                                        session_->movement().player))
+        if (session_.combat().sneakPreview(command.character, *h.enemy, command.action == PartyAction::Ranged,
+                                           session_.movement().player))
             put(2, "Sneak Attack: +1d6 on hit / one action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
-        if (session_)
-            for (unsigned e = unsigned(EffectKind::Sleep); e < unsigned(EffectKind::Count); ++e)
-                if (session_->effects().has(*h.enemy, EffectKind(e))) {
-                    put(2, effectName(EffectKind(e)));
-                    break;
-                }
+        for (unsigned e = unsigned(EffectKind::Sleep); e < unsigned(EffectKind::Count); ++e)
+            if (session_.effects().has(*h.enemy, EffectKind(e))) {
+                put(2, effectName(EffectKind(e)));
+                break;
+            }
     } else if (h.kind == HoverKind::Action && h.index >= 0 && h.index < 6) {
-        if (h.index == 4 && session_) {
+        if (h.index == 4) {
             h.reason = CommandReason::Ready;
             put(0, "Inventory [I / 5]");
             put(1, "Browse bags, equipment and potions.");
@@ -309,7 +307,7 @@ void CommandController::updateHover() noexcept {
         put(2, h.index == 3   ? "Browsing pauses; targeting resumes play."
                : h.index == 4 ? "Unavailable"
                               : "Cost: 1 action");
-        if (h.index == 3 && session_) {
+        if (h.index == 3) {
             put(0, state_.magic.spellcaster ? "Spells [4]" : "Class Features [4]");
             put(1, state_.magic.spellcaster ? "Browse spells and activated class features."
                                             : "Browse activated and automatic class features.");
@@ -320,7 +318,7 @@ void CommandController::updateHover() noexcept {
         if (h.index == 0 && party_.hasFeature(command.character, rules::ClassFeature::SneakAttack))
             put(1, "Rogue: melee can reach from the rear row.");
         if (h.reason != CommandReason::Ready && h.reason != CommandReason::MissingTarget &&
-            h.reason != CommandReason::InvalidAlly && h.reason != CommandReason::PreviewAccepted)
+            h.reason != CommandReason::InvalidAlly)
             put(3, commandMessage(h.reason));
         else if (action == PartyAction::Aid) {
             put(2, "Cost: 1 action / no healing");

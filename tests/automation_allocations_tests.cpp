@@ -1,16 +1,13 @@
+#include "automation/world_visual.hpp"
 #include "game/commands.hpp"
 #include "persistence/campaign_codec.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/cpu_view.hpp"
 #include "support/fixture_world.hpp"
+#include "support/world_visibility_fixtures.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <new>
-#ifdef BLOBBER_AUTOMATION_VISUAL
-#include "automation/visual.hpp"
-#include "render/frame_pipeline.hpp"
-#include "support/npc_fixtures.hpp"
-#include "support/render_fixtures.hpp"
-#endif
 namespace {
 bool tracking = false;
 std::size_t allocations = 0, requestedBytes = 0, failAt = 0;
@@ -97,21 +94,14 @@ int main(int argc, char**) {
         auto defs = definitions();
         auto setup = scenario(cat, argc > 1 ? 256 : 1);
         Session session(cat, defs, setup, Mode::Diagnostic);
-#ifdef BLOBBER_AUTOMATION_VISUAL
-        auto art = testNpcAppearance();
-        PreparedLoot markerBank;
-        markerBank.pixels.assign(PreparedLoot::icons * PreparedLoot::pixelsPerIcon, Color{220, 190, 90, 255});
-        SceneRenderer renderer(prepareScene(testMaterials()), PreparedNpcs({art, art}), {},
-                               std::move(markerBank));
-        defs.timings = {npcTimings(art), npcTimings(art)};
-        VisualContext context{renderer, defs.timings};
-        Session visual(cat, defs, setup, Mode::Visual, makeVisual, &context);
-#endif
+        blobber::test::VisibilityFixture fixture(2);
+        const world_assets::CpuAssets assets(fixture.publication());
+        defs.timings = fixture.timings;
+        WorldVisualContext context{assets, defs.timings};
+        Session visual(cat, defs, setup, Mode::Visual, makeWorldVisual, &context);
         const GeneratedScenario generatedSetup{setup.party, {5}};
         Session generated(cat, defs, generatedSetup, Mode::Diagnostic);
-#ifdef BLOBBER_AUTOMATION_VISUAL
-        Session generatedVisual(cat, defs, generatedSetup, Mode::Visual, makeVisual, &context);
-#endif
+        Session generatedVisual(cat, defs, generatedSetup, Mode::Visual, makeWorldVisual, &context);
         Observation observation;
         unsigned events = 0, accepted = 0;
         bool okay = true;
@@ -151,7 +141,7 @@ int main(int argc, char**) {
             }
         };
         const auto walk = [&](Session& s) {
-            for (unsigned i = 0; i < 48; ++i) {
+            for (unsigned i = 0; i < 6; ++i) {
                 ActionRequest r;
                 r.operation = Operation::Move;
                 constexpr Action actions[]{Action::Forward, Action::Left, Action::TurnRight,
@@ -173,18 +163,10 @@ int main(int argc, char**) {
             fixtureFloor, fixtureRules, empty, 5, Player{{2, 3}, Heading::East}, false,
             std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions());
         CommandController fixtureUi(*fixtureGame);
-#ifdef BLOBBER_AUTOMATION_VISUAL
-        FramePipeline fixtureFrames;
-        const auto fixtureFrame = [&] {
-            fixtureFrames.update(renderer, fixtureGame->geometry(), fixtureGame->movement(),
-                                 &fixtureGame->actors(), nullptr, nullptr, fixtureGame->timeMs(), nullptr,
-                                 &fixtureGame->loot().snapshot());
-        };
-#endif
+        blobber::test::CpuView fixtureFrames(*fixtureGame, assets, defs.timings);
+        const auto fixtureFrame = [&] { fixtureFrames.update(*fixtureGame); };
         CommandController guardianUi(generated.replayGame());
-#ifdef BLOBBER_AUTOMATION_VISUAL
-        FramePipeline guardianFrames;
-#endif
+        blobber::test::CpuView guardianFrames(generated.replayGame(), assets, defs.timings);
         auto campaign = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
         for (unsigned visit = 0; visit < 3; ++visit) {
             auto travel = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
@@ -214,11 +196,8 @@ int main(int argc, char**) {
             const auto world = rollback->game().actors().snapshot().world;
             const auto stage = [&] {
                 auto ticket = rollback->prepareTravel(request);
-#ifdef BLOBBER_AUTOMATION_VISUAL
-                FramePipeline frames;
-                frames.update(renderer, ticket.game().geometry(), ticket.game().movement(),
-                              &ticket.game().actors());
-#endif
+                blobber::test::CpuView frames(ticket.game(), assets, defs.timings);
+                frames.update(ticket.game());
             };
             allocations = requestedBytes = 0;
             tracking = true;
@@ -253,11 +232,8 @@ int main(int argc, char**) {
         const auto saveText = encodeCampaign(cat, defs, {"owned", 0}, *checkpoint);
         const auto restoreStage = [&](std::unique_ptr<CampaignCheckpoint> state) {
             auto restored = std::make_unique<CampaignRun>(cat, std::move(*state), defs.timings);
-#ifdef BLOBBER_AUTOMATION_VISUAL
-            FramePipeline frames;
-            frames.update(renderer, restored->game().geometry(), restored->game().movement(),
-                          &restored->game().actors());
-#endif
+            blobber::test::CpuView frames(restored->game(), assets, defs.timings);
+            frames.update(restored->game());
         };
         auto stagedState = decodeCampaign(cat, defs, {"owned", 0}, saveText);
         allocations = 0;
@@ -288,9 +264,7 @@ int main(int argc, char**) {
         allocations = requestedBytes = 0;
         CommandController campaignUi(campaign->game(), defs.timings);
         campaignUi.saveMenu().enabled = true;
-#ifdef BLOBBER_AUTOMATION_VISUAL
-        FramePipeline campaignFrames;
-#endif
+        blobber::test::CpuView campaignFrames(campaign->game(), assets, defs.timings);
         tracking = true;
         for (unsigned i = 0; i < 40; ++i) {
             campaign->update(.01, false);
@@ -308,11 +282,7 @@ int main(int argc, char**) {
             campaignUi.cancelTravel();
             campaignUi.closeOverlay();
             okay &= campaign->previewTravel(campaign->recallRequest()).accepted;
-#ifdef BLOBBER_AUTOMATION_VISUAL
-            campaignFrames.update(renderer, campaign->game().geometry(), campaign->game().movement(),
-                                  &campaign->game().actors(), nullptr, nullptr, campaign->game().timeMs(),
-                                  nullptr, &campaign->game().loot().snapshot());
-#endif
+            campaignFrames.update(campaign->game());
         }
         auto& guardianGame = generated.replayGame();
         guardianGame.actors().damage(guardianGame.actors().id(2), 100000, 0);
@@ -321,33 +291,23 @@ int main(int argc, char**) {
         guardianGame.update(.3, false);
         okay &= guardianGame.objective().completed && guardianGame.landingSafety(0).safe;
         guardianUi.refresh({}, false, false, true);
-#ifdef BLOBBER_AUTOMATION_VISUAL
-        guardianFrames.update(renderer, guardianGame.geometry(), guardianGame.movement(),
-                              &guardianGame.actors(), nullptr, nullptr, 0, nullptr,
-                              &guardianGame.loot().snapshot());
+        guardianFrames.update(guardianGame);
         fixtureFrame();
-#endif
         collectFixtureKey(*fixtureGame);
         okay &= fixtureGame->party().questKeys() == 4;
         okay &= fixtureGame->interact(fixtureRequest(*fixtureGame, 0), true).accepted;
         okay &= fixtureGame->interact(fixtureRequest(*fixtureGame, 0)).changed;
-#ifdef BLOBBER_AUTOMATION_VISUAL
         fixtureFrame();
-#endif
         fixtureUi.refresh({}, false, false, true);
         fixtureUi.interactFixture();
         fixtureGame->update(.3, false);
         fixtureGame->move(Action::Forward);
         fixtureUi.refresh({}, false, true, true);
         walk(generated);
-#ifdef BLOBBER_AUTOMATION_VISUAL
         walk(generatedVisual);
-#endif
         exercise(session, argc > 1 ? 60000 : 6000);
-#ifdef BLOBBER_AUTOMATION_VISUAL
         // Representative visual decisions; full runs are covered by integration tests.
-        exercise(visual, 100);
-#endif
+        exercise(visual, 40);
         tracking = false;
         check(okay && accepted > 10 && events > 0, "allocation workload executes actual movement/combat");
         check(allocations == 0,

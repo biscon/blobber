@@ -25,7 +25,7 @@ def main():
         for name in ['key-bronze','key-silver','upstairs','downstairs','endpoint','threshold']: png(source/'fixtures'/f'{name}.png')
         png(source/'ui/items/loot-bag.png'); png(source/'npcs/body.png')
         (source/'npcs/level.json').write_text(json.dumps({'definitions':['actor.json'],'instances':[]}))
-        (source/'npcs/actor.json').write_text(json.dumps({'id':'fixture','width':.45,'height':.65,'alpha_cutoff':15,'views':dict.fromkeys(['front','back','left','right'],'body.png')}))
+        (source/'npcs/actor.json').write_text(json.dumps({'id':'fixture','width':.45,'height':.65,'alpha_cutoff':15,'animations':{clip:{'durations_ms':[100], 'views':dict.fromkeys(['front','back','left','right'],['body.png'])} for clip in ('idle','prone')}}))
         project=root/'project'; project.mkdir()
         (project/'CMakeLists.txt').write_text(f'''cmake_minimum_required(VERSION 3.24)
 project(WorldAssetFixture NONE)
@@ -57,6 +57,10 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 (source/'fixtures/new-unused.png').unlink(); run(*command)
                 assert 'fixtures/new-unused.png' not in json.loads((output/'sources.json').read_text()), 'Removed source not detected'
                 prior=stamp(); (source/'npcs/body.png').touch(); run(*command); assert stamp()!=prior, 'Touched source not rebuilt'
+                definition=source/'npcs/actor.json'; valid=definition.read_bytes()
+                missing=json.loads(valid); missing['animations'].pop('prone')
+                definition.write_text(json.dumps(missing)); run(*command,okay=False)
+                definition.write_bytes(valid); run(*command)
                 good=(source/'textures/wall.png').read_bytes(); prior_payload=(output/'textures.bin').read_bytes()
                 (source/'textures/wall.png').write_bytes(b'broken'); run(*command,okay=False)
                 assert (output/'textures.bin').read_bytes()==prior_payload, 'Failed bake replaced prior payload'

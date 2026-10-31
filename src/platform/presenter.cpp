@@ -10,8 +10,6 @@ Presenter::Presenter(GpuResources& resources, const std::filesystem::path& asset
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);
-    OwnedImage image(GenImageColor(viewWidth, viewHeight, BLACK));
-    viewport_ = resources_.createTexture(image.value);
 }
 void Presenter::drawTarget(TargetHandle handle, Rectangle destination) const {
     const auto& value = resources_.target(handle);
@@ -23,13 +21,6 @@ void Presenter::drawGame(Rectangle destination) const {
     BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
     drawTarget(ui_, destination);
     EndBlendMode();
-}
-void Presenter::present(const Frame& frame, const MovementState& state, const Map& map, bool debug,
-                        bool changed, const HudSnapshot* hud, const PickingBuffer* picking,
-                        const generation::DiagnosticView* generation, bool reveal) {
-    if (changed)
-        UpdateTexture(resources_.texture(viewport_), frame.data());
-    compose(resources_.texture(viewport_), false, state, map, debug, hud, picking, generation, reveal);
 }
 void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
                              const Map& map, const HudSnapshot* hud, const PickingBuffer* picking, bool debug,

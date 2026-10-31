@@ -48,7 +48,7 @@ def provenance(runner, assets, config):
     npc = read_json(assets/"npcs/level.json")
     content += [assets/"npcs"/p for p in npc["definitions"]]
     if config["mode"] == "visual":
-        content += [assets/p for p in ("preparation.json", "prepared/metadata.json", "prepared/scene.bin", "prepared/npcs.bin", "prepared/loot.bin")]
+        content += [assets/p for p in ("prepared/world/metadata.json", "prepared/world/textures.bin")]
     files = {str(p.relative_to(assets)): file_digest(p) for p in content}
     root = Path(__file__).resolve().parents[2]
     def git(*args):

@@ -21,7 +21,7 @@ void layoutPreparation(FlowControls& w, const CampHud& h) noexcept {
 }
 void CommandController::openPreparation() noexcept {
     auto& h = state_.camp;
-    if (!session_ || !h.open || h.playing || h.request.kind != RestKind::Long)
+    if (!h.open || h.playing || h.request.kind != RestKind::Long)
         return;
     refreshCamp();
     if (!h.canPrepare)
@@ -91,7 +91,7 @@ void CommandController::routePreparation(const UiInput& input) noexcept {
         auto candidate = h.request;
         candidate.preparation = h.editingRequest;
         candidate.preparation.prepared = h.editing;
-        const auto p = session_->previewRest(candidate);
+        const auto p = session_.previewRest(candidate);
         // Unchanged preparation may be staged; Start Rest remains unavailable without a benefit.
         if (!p && p.error != RestError::NoBenefit) {
             std::snprintf(h.preparationMessage.data(), h.preparationMessage.size(), "%s",

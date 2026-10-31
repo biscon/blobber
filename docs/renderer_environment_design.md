@@ -4,7 +4,12 @@ Status: **Accepted and closed** (2026-10-31).
 User approved the reviewed plan with “Implement the plan.” R04/R-B are accepted.
 Parent: [renderer roadmap](renderer_plan.md). The user accepted R05 with
 “slice accepted, record it in the plan doc”. Verification results and limitations
-remain unchanged. R06 is eligible for separate planning, not started.
+remain unchanged. At the R05 delivery checkpoint, R06 was eligible for separate
+planning and had not started.
+
+Current closure: [R06 and the full renderer roadmap](renderer_plan.md) are Accepted
+and closed. Rollout/next-slice notes below record the R05 delivery checkpoint and
+are superseded by that closure; R05 evidence and limitations are unchanged.
 
 ## World ownership and rules
 

@@ -1,0 +1,139 @@
+{
+  "assets": "/home/bison/Projects/blobber/cmake-build-release/assets",
+  "header": {
+    "binary": "10267860653587682180",
+    "campaign_persistence": 1,
+    "content": {
+      "catalog": "2951465791058573525",
+      "npc_definitions": "15378577391153559251",
+      "world_appearance": 4,
+      "world_format": 1,
+      "world_publication": "16365773382617078244"
+    },
+    "door_scheduling": "shared-opening-300ms-v1",
+    "mode": "visual",
+    "protocol": 1,
+    "terrain_rules": "terrain-rules-v1",
+    "timing": "fixed-10ms-v1",
+    "visibility_backend": "world",
+    "visibility_version": "world-visibility-v3"
+  },
+  "images": [
+    {
+      "file": "operation-35.png",
+      "height": 1080,
+      "operation": 35,
+      "revision": "32",
+      "session": "1",
+      "ticks": 255,
+      "width": 1920
+    },
+    {
+      "file": "operation-35-diagnostic-map.png",
+      "height": 1080,
+      "operation": 35,
+      "revision": "32",
+      "session": "1",
+      "ticks": 255,
+      "width": 1920
+    },
+    {
+      "file": "operation-35-discovered-map.png",
+      "height": 1080,
+      "operation": 35,
+      "revision": "32",
+      "session": "1",
+      "ticks": 255,
+      "width": 1920
+    },
+    {
+      "file": "operation-36.png",
+      "height": 1080,
+      "operation": 36,
+      "revision": "33",
+      "session": "1",
+      "ticks": 255,
+      "width": 1920
+    },
+    {
+      "file": "operation-36-diagnostic-map.png",
+      "height": 1080,
+      "operation": 36,
+      "revision": "33",
+      "session": "1",
+      "ticks": 255,
+      "width": 1920
+    },
+    {
+      "file": "operation-36-discovered-map.png",
+      "height": 1080,
+      "operation": 36,
+      "revision": "33",
+      "session": "1",
+      "ticks": 255,
+      "width": 1920
+    },
+    {
+      "file": "operation-37.png",
+      "height": 1080,
+      "operation": 37,
+      "revision": "34",
+      "session": "1",
+      "ticks": 270,
+      "width": 1920
+    },
+    {
+      "file": "operation-37-diagnostic-map.png",
+      "height": 1080,
+      "operation": 37,
+      "revision": "34",
+      "session": "1",
+      "ticks": 270,
+      "width": 1920
+    },
+    {
+      "file": "operation-37-discovered-map.png",
+      "height": 1080,
+      "operation": 37,
+      "revision": "34",
+      "session": "1",
+      "ticks": 270,
+      "width": 1920
+    },
+    {
+      "file": "operation-38.png",
+      "height": 1080,
+      "operation": 38,
+      "revision": "35",
+      "session": "1",
+      "ticks": 285,
+      "width": 1920
+    },
+    {
+      "file": "operation-38-diagnostic-map.png",
+      "height": 1080,
+      "operation": 38,
+      "revision": "35",
+      "session": "1",
+      "ticks": 285,
+      "width": 1920
+    },
+    {
+      "file": "operation-38-discovered-map.png",
+      "height": 1080,
+      "operation": 38,
+      "revision": "35",
+      "session": "1",
+      "ticks": 285,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "prepared/world/metadata.json": "15339199694761983564",
+    "prepared/world/textures.bin": "16365773382617078244"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "/home/bison/Projects/blobber/scratch/r06/campaign-review/trace.jsonl",
+  "trace_fingerprint": "16876806686373110928"
+}

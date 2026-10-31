@@ -10,7 +10,7 @@ void CommandController::refreshMagic() noexcept {
     const auto caster =
         m.state == CastingState::Normal || m.open ? state_.selection.character : m.pending.character;
     const auto* c = party_.character(caster);
-    if (!session_ || !c) {
+    if (!c) {
         m = {};
         return;
     }
@@ -46,7 +46,7 @@ void CommandController::refreshMagic() noexcept {
         command.spell = spell;
         command.feature = feature;
         command.action = feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
-        const auto reason = session_->combat().validate(command, session_->movement().player);
+        const auto reason = session_.combat().validate(command, session_.movement().player);
         const int charges = feature == rules::Feature::SecondWind       ? int(c->secondWind)
                             : feature == rules::Feature::ActionSurge    ? int(c->actionSurge)
                             : feature == rules::Feature::PreserveLife   ? int(c->channelDivinity)
@@ -105,10 +105,10 @@ void CommandController::refreshMagic() noexcept {
                       : "Defend freely once per turn, before or after your normal action.",
                   0);
     }
-    if (session_->effects().has(caster, EffectKind::Restrained))
+    if (session_.effects().has(caster, EffectKind::Restrained))
         entry({}, rules::Feature::EscapeWeb, "Escape Web",
               "One action: Strength check against Web DC to end restraint.", 0);
-    if (session_->effects().spiritualWeapon(caster)) {
+    if (session_.effects().spiritualWeapon(caster)) {
         rules::SpellId id;
         for (std::uint16_t i = 0; i < party_.catalog().spellCount(); ++i)
             if (party_.catalog().spell({i})->kind == rules::SpellKind::SpiritualWeapon)
@@ -118,10 +118,10 @@ void CommandController::refreshMagic() noexcept {
               "destination. Click a floor cell or an enemy, then confirm.",
               0);
     }
-    if (session_->effects().spiritualWeapon(caster))
+    if (session_.effects().spiritualWeapon(caster))
         entry({}, rules::Feature::DismissSpiritualWeapon, "Dismiss Spiritual Weapon",
               "End this local summon before safe floor travel. No action, mana or cooldown cost.", 0);
-    if (session_->effects().concentration(caster).serial)
+    if (session_.effects().concentration(caster).serial)
         entry({}, rules::Feature::DismissConcentration, "End concentration",
               "End your concentration voluntarily. No action, mana or cooldown cost.", 0);
     const auto passive = [&](PassiveFeature id, const char* name, const char* description) {
@@ -194,7 +194,7 @@ void CommandController::refreshMagic() noexcept {
         auto aimed = m.pending;
         if (m.hoverCell)
             aimed.aimedCell = m.hoverCell;
-        m.footprint = session_->combat().area(aimed, session_->movement().player);
+        m.footprint = session_.combat().area(aimed, session_.movement().player);
         m.cells = m.footprint.eligible;
         m.affected = m.footprint.actors;
         m.affectedCount = m.footprint.count;
@@ -219,7 +219,7 @@ void CommandController::refreshMagic() noexcept {
             auto one = m.pending;
             one.targetCount = 1;
             one.allies[0] = party_.snapshot().formation[i];
-            m.allyReasons[i] = session_->combat().spellRecipient(one, session_->movement().player, 0);
+            m.allyReasons[i] = session_.combat().spellRecipient(one, session_.movement().player, 0);
             for (std::size_t j = 0; j < m.pending.targetCount; ++j)
                 m.selectedAllies[i] |= one.allies[0].index == m.pending.allies[j].index;
         }
@@ -249,7 +249,7 @@ void CommandController::magicFeedback(const char* text) noexcept {
     std::snprintf(state_.magic.feedback.data(), state_.magic.feedback.size(), "%s", text);
 }
 void CommandController::openSpellbook() noexcept {
-    if (!session_ || state_.suspended || state_.magic.state == CastingState::Resolving)
+    if (state_.suspended || state_.magic.state == CastingState::Resolving)
         return;
     closeOverlay();
     cancel();
@@ -395,7 +395,7 @@ bool CommandController::magicSingleTarget() const noexcept {
 }
 CommandReason CommandController::magicEligibility(ActorId id) const noexcept {
     const auto& m = state_.magic;
-    if (!session_ || !m.armed || !m.hostile || m.area)
+    if (!m.armed || !m.hostile || m.area)
         return CommandReason::InvalidTarget;
     if (!visible(id))
         return CommandReason::NotVisible;
@@ -404,7 +404,7 @@ CommandReason CommandController::magicEligibility(ActorId id) const noexcept {
     if (m.kind == rules::SpellKind::AcidSplash && c.targetCount && !sameActor(c.enemies[0], id))
         index = 1;
     c.enemies[index] = id;
-    return session_->combat().spellRecipient(c, session_->movement().player, index);
+    return session_.combat().spellRecipient(c, session_.movement().player, index);
 }
 void CommandController::removeMagicRecipient(std::size_t index) noexcept {
     auto& c = state_.magic.pending;
@@ -498,10 +498,10 @@ void CommandController::magicAlly(std::size_t formation) noexcept {
 }
 void CommandController::magicKeyboardTarget(int delta) noexcept {
     auto& m = state_.magic;
-    if (m.ground && session_) {
+    if (m.ground) {
         std::array<Cell, 169> cells{};
         std::size_t count = 0, index = 0;
-        const auto pose = session_->movement().player;
+        const auto pose = session_.movement().player;
         for (int y = -6; y <= 6; ++y)
             for (int x = -6; x <= 6; ++x) {
                 const auto cell = pose.cell + Cell{x, y};
@@ -533,9 +533,9 @@ void CommandController::magicKeyboardTarget(int delta) noexcept {
 }
 void CommandController::magicGround(std::optional<Cell> cell, bool select) noexcept {
     auto& m = state_.magic;
-    if (!session_ || !m.armed || !m.ground || state_.suspended)
+    if (!m.armed || !m.ground || state_.suspended)
         return;
-    if (cell && !spellCell(actors_.map(), session_->movement().player, *cell))
+    if (cell && !spellCell(actors_.map(), session_.movement().player, *cell))
         cell.reset();
     m.hoverCell = cell;
     if (select && cell) {
@@ -548,37 +548,35 @@ void CommandController::magicGround(std::optional<Cell> cell, bool select) noexc
 SpellArea CommandController::floorPreview() const noexcept {
     SpellArea result;
     const auto& m = state_.magic;
-    if (!session_)
-        return result;
-    if (m.armed && m.area && !state_.modal() && !session_->actionBusy()) {
+    if (m.armed && m.area && !state_.modal() && !session_.actionBusy()) {
         auto aimed = m.pending;
         if (m.hoverCell)
             aimed.aimedCell = m.hoverCell;
-        result = session_->combat().area(aimed, session_->movement().player);
+        result = session_.combat().area(aimed, session_.movement().player);
         result.kind = m.kind;
     }
-    result.ground = session_->effects().ground();
+    result.ground = session_.effects().ground();
     return result;
 }
 void CommandController::reconcileMagic() noexcept {
     auto& m = state_.magic;
-    if (!session_ || !m.casting())
+    if (!m.casting())
         return;
     if (m.state == CastingState::Resolving) {
-        if (!session_->combat().casterResolving(m.pending.character))
+        if (!session_.combat().casterResolving(m.pending.character))
             cancel();
         return;
     }
     if (m.pending.world != state_.combat.world || m.pending.turn != state_.combat.turn ||
         m.pending.character.index != state_.selection.character.index ||
-        !session_->effects().canAct(m.pending.character)) {
+        !session_.effects().canAct(m.pending.character)) {
         cancel();
         return;
     }
     if (state_.suspended)
         return;
     for (std::size_t i = 0; i < m.pending.targetCount;) {
-        const auto reason = session_->combat().spellRecipient(m.pending, session_->movement().player, i);
+        const auto reason = session_.combat().spellRecipient(m.pending, session_.movement().player, i);
         if (reason != CommandReason::Ready || (m.hostile && !visible(m.pending.enemies[i]))) {
             removeMagicRecipient(i);
             magicFeedback("Target no longer eligible; selection updated.");

@@ -2,7 +2,7 @@
 """Explicit single-expedition renderer review. Ordinary commands; no balance experiment or OS input.
 
 The route uses labelled diagnostic inspection; command admission still uses the
-selected visual backend. Images are captured separately by strict replay.
+world visual observation policy. Images are captured separately by strict replay.
 """
 import argparse
 from collections import deque
@@ -19,7 +19,7 @@ def run(args):
     selected = {}
     state = None
     with Client(args.runner, args.assets, 'visual', args.output/'trace.jsonl',
-                visibility=args.backend, campaign_save=args.output/'campaign.json') as client:
+                campaign_save=args.output/'campaign.json') as client:
         def request(op, **fields):
             nonlocal state
             reply = client.request(op, **fields)
@@ -125,11 +125,18 @@ def run(args):
                     act(dict(kind='move', direction='turn_right')); advance(17)
                 fixture = fixtures.get(cell)
                 if fixture and fixture['kind'] == 0 and not fixture['completed']:
+                    if 'door-closed' not in selected:
+                        mark('door-closed')
                     act(dict(kind='interact', fixture=fixture['fixture']))
+                    if 'door-begin' not in selected:
+                        mark('door-begin')
                     advance(15)
                     if 'door-opening' not in selected:
                         mark('door-opening')
-                    advance(15); fixture['completed'] = True
+                    advance(15)
+                    if 'door-open' not in selected:
+                        mark('door-open')
+                    fixture['completed'] = True
                 if not act(dict(kind='move', direction='forward'), required=False):
                     fight()
                     act(dict(kind='move', direction='forward'))
@@ -167,45 +174,9 @@ def run(args):
             raise RuntimeError('Review save was not durable')
         request('load', replace=True); mark('continue')
         request('close')
-    (args.output/'review.json').write_text(json.dumps(dict(selected=selected, backend=args.backend,
+    (args.output/'review.json').write_text(json.dumps(dict(selected=selected,
         note='One deterministic diagnostic-routed command trace; effects gallery is separate.'), indent=2)+'\n')
     print(json.dumps(selected))
-
-
-def compare(args):
-    """Replay identical requests through the other backend and compare simulation results."""
-    args.output.mkdir(parents=True, exist_ok=False)
-    source = [json.loads(line) for line in args.compare_trace.read_text().splitlines()]
-    requests = [r['data'] for r in source if r['type'] == 'request']
-    responses = [r['data'] for r in source if r['type'] == 'response']
-    states = [r['data'] for r in source if r['type'] == 'state']
-    differences = []
-    def gameplay(state):
-        if not state:
-            return None
-        result = {key: state.get(key) for key in ('position', 'heading', 'phase', 'round', 'gameplay_ms',
-                  'time_ms', 'party', 'objective', 'quest_keys', 'fixtures', 'ground', 'door_opening',
-                  'attacks', 'pending_count', 'ai_time', 'loot')}
-        result['enemies'] = [{k:v for k,v in enemy.items() if k != 'targetable'} for enemy in state.get('enemies', [])]
-        return result
-    with Client(args.runner, args.assets, 'visual', args.output/'trace.jsonl', visibility=args.backend,
-                campaign_save=args.output/'campaign.json') as client:
-        for number, (request, expected, state) in enumerate(zip(requests, responses, states), 1):
-            fields = {k:v for k,v in request.items() if k not in ('op','id','version','session','revision')}
-            actual = client.request(request['op'], **fields)
-            if actual['ok'] != expected['ok'] or (isinstance(expected.get('data'), dict) and
-                actual.get('data', {}).get('accepted') != expected['data'].get('accepted')):
-                differences.append(dict(operation=number, reason='admission'))
-            # Compare diagnostic observations from the trace only at existing inspect requests;
-            # comparing does not insert extra ticks or observation requests into the sequence.
-            if request['op'] == 'inspect' and gameplay(actual.get('data')) != gameplay(state):
-                differences.append(dict(operation=number, reason='gameplay state'))
-    report = dict(requests=len(requests), differences=differences, backend=args.backend,
-                  compared='Admission at every request; canonical gameplay at diagnostic inspections')
-    (args.output/'comparison.json').write_text(json.dumps(report, indent=2)+'\n')
-    print(json.dumps(report))
-    if differences:
-        raise RuntimeError('Renderer backend gameplay comparison differed')
 
 
 if __name__ == '__main__':
@@ -214,7 +185,5 @@ if __name__ == '__main__':
     parser.add_argument('--assets', type=Path, required=True)
     parser.add_argument('--scenario', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--compare-trace', type=Path)
-    parser.add_argument('--backend', choices=('legacy', 'world'), default='world')
     args = parser.parse_args()
-    compare(args) if args.compare_trace else run(args)
+    run(args)

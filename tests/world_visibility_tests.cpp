@@ -1,7 +1,7 @@
 #include "automation/world_visual.hpp"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
-#include "support/probe_allocations.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/status_occlusion.hpp"
 #include <iostream>
@@ -126,7 +126,7 @@ int main() {
         rejects([&] { world_render::VisibilityPipeline incomplete(scene, incompleteAssets); },
                 "Missing future loot/fixture sprites fail preparation before normal frames");
         // Status clipping compares the complete surface at each pixel and excludes its owner.
-        PickingBuffer depthPicking(true);
+        PickingBuffer depthPicking;
         depthPicking.badgeAnchor(0, 100, 100, 3.f);
         depthPicking.writeDepth(100 * viewWidth + 100, PickingBuffer::empty, 4.f, true);
         check(depthPicking.badgeVisible(0, 100, 100), "Farther wall leaves status icon visible");

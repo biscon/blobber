@@ -97,11 +97,11 @@ void CommandController::refreshCharacterSheet() noexcept {
         if (cls.progression == rules::ProgressionClass::Wizard)
             feature("Evocation / Sculpt", "Shatter protects companions, not caster.", "Automatic");
     }
-    if (session_) {
+    {
         for (unsigned n = 0; n < unsigned(EffectKind::Count); ++n)
-            if (session_->effects().has(i.character, static_cast<EffectKind>(n)))
+            if (session_.effects().has(i.character, static_cast<EffectKind>(n)))
                 append(out.effects, effectName(static_cast<EffectKind>(n)));
-        if (session_->effects().concentration(i.character).serial)
+        if (session_.effects().concentration(i.character).serial)
             append(out.effects, "Concentrating");
     }
     if (!out.effects[0])

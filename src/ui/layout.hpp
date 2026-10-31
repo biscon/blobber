@@ -73,12 +73,6 @@ constexpr UiRect menu{222, 65, 196, 230}, resume{242, 130, 156, 24}, rest{242, 1
 constexpr UiRect viewport{viewX, viewY, viewWidth, viewHeight};
 constexpr UiRect result{102, 118, 304, 91}, resultButton{174, 174, 160, 22};
 constexpr UiRect arenaRematch{116, 174, 134, 22}, arenaEdit{258, 174, 134, 22};
-constexpr UiRect demoNext{400, 2, 50, 13}, demoReset{453, 2, 56, 13};
-// Diagnostic compatibility: these legacy controls have no interactive surface.
-constexpr UiRect target(int) {
-    return {-100, -100, 0, 0};
-}
-constexpr UiRect previousPage{-100, -100, 0, 0}, nextPage{-100, -100, 0, 0}, confirm{-100, -100, 0, 0};
 constexpr UiRect feedback{10, 350, 284, 8};
 constexpr UiRect travelButton{578, 2, 16, 13};
 constexpr UiRect restButton{600, 2, 16, 13};

@@ -14,20 +14,6 @@ Scenario decodeScenario(const rules::Catalog& catalog, const Json& j) {
         arena.erase("kind");
         return decodeArena(catalog, arena.dump());
     }
-    if (j.at("kind") == "renderer_fixture") {
-        fields(j, {"kind", "schema_version", "fixture", "seed", "party"});
-        if (j.at("fixture") != "r05-heights-v1")
-            throw std::invalid_argument("Unknown renderer fixture");
-        auto g = j;
-        g.erase("fixture");
-        g["kind"] = "generated_floor";
-        g["generator_version"] = generation::generatorVersion;
-        g["template_version"] = generation::templateVersion;
-        g["depth"] = 1;
-        const auto d = decodeScenario(catalog, g);
-        const auto& s = std::get<GeneratedScenario>(d);
-        return RendererFixtureScenario{s.party, s.generation.seed};
-    }
     if (j.at("kind") == "campaign") {
         fields(j, {"kind", "schema_version", "generator_version", "template_version", "seed", "party"});
         auto floor = j;

@@ -427,7 +427,7 @@ promising a speed multiplier. No event skipping or new timing schedule. If seria
 performance is inadequate, bring a measured, small follow-up proposal for review;
 do not silently add a pool or weaken recording/observation guarantees.
 
-Visual mode validation is command-line CPU work with prepared banks and no window.
+Visual mode validation is command-line CPU work with prepared world alpha masks/depth/IDs and no window.
 If those assets are unavailable, report the check unexecuted. No desktop automation
 or new GPU/presentation verification is needed for this Python tooling scope.
 

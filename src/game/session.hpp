@@ -103,7 +103,6 @@ class GameSession {
     std::optional<Action> doorPending() const noexcept { return doorPending_; }
     bool opening() const noexcept { return doors_.active(); }
     bool actionBusy() const noexcept { return opening() || movement().transition.active(); }
-    GeometryView presentationGeometry() const noexcept { return map_.presentation(doors_); }
     void clearPending() noexcept {
         movement_.clearPending();
         doorPending_.reset();

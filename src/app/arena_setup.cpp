@@ -1,6 +1,6 @@
 #include "app/arena_setup.hpp"
 #include "app/menu.hpp"
-#include "assets/npc_loader.hpp"
+#include "assets/npc_metadata.hpp"
 #include "ui/menu_screen.hpp"
 #include <algorithm>
 #include <cctype>

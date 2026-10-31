@@ -9,7 +9,7 @@ Window::Window(int width, int height, bool hidden) {
     if (!IsWindowReady()) {
         // raylib returns before initializing rlgl on platform failure; its
         // CloseWindow path assumes initialized GL resources.
-        throw std::runtime_error("Cannot open window");
+        throw std::runtime_error("Graphics unavailable: cannot open an OpenGL window");
     }
     SetExitKey(KEY_NULL);
     SetWindowMinSize(320, 240);

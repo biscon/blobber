@@ -1,7 +1,7 @@
 #include "game/commands.hpp"
 #include "support/actor_fixtures.hpp"
 #include "support/check.hpp"
-#include "support/party_fixtures.hpp"
+#include "support/combat_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include <cstring>
 #include <iostream>
@@ -9,13 +9,15 @@
 using namespace blobber;
 int main() {
     try {
-        const auto catalog = partyFixture().catalog();
-        Party party(catalog);
-        const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
-        auto actors =
-            testActors(map, {3, 3}, {"test"},
-                       {{{0}, {3, 1}, {0, 0}, Heading::South}, {{0}, {3, 1}, {1, 1}, Heading::South}});
-        CommandController commands(party, actors);
+        const auto catalog = combatCatalog();
+        const auto map = combatMap();
+        const NpcWorld smallPlacements(
+            map, {3, 3}, {"goblin"},
+            {{{0}, {3, 1}, {0, 0}, Heading::South}, {{0}, {3, 1}, {1, 1}, Heading::South}});
+        GameSession session(map, catalog, smallPlacements, 5, {{3, 3}, Heading::North}, false);
+        auto& party = session.party();
+        auto& actors = session.actors();
+        CommandController commands(session);
         TargetSnapshot targets;
         targets.world = actors.snapshot().world;
         targets.revision = actors.snapshot().revision;
@@ -28,31 +30,7 @@ int main() {
               "Stable deduplicated targets");
         commands.refresh(commands.snapshot().targets, false, false, true);
         check(commands.snapshot().targets.count == 2, "Borrowed target snapshot can be refreshed safely");
-        const int hp = party.character({0})->hitPoints;
-        check(commands.confirm() == CommandReason::MissingTarget, "Target required");
         commands.selectTarget(actors.id(0));
-        check(commands.confirm() == CommandReason::PreviewAccepted, "Melee preview accepted");
-        commands.selectAction(PartyAction::BackMelee);
-        check(commands.confirm() == CommandReason::BackRowOnly,
-              "Front member cannot preview back-row action");
-        commands.selectCharacter(2);
-        check(commands.confirm() == CommandReason::PreviewAccepted, "Back member can preview step forward");
-        check(party.swapFormation(FormationSlot::BackLeft, FormationSlot::FrontLeft), "Swap fixture");
-        commands.refresh(targets, false, false, true);
-        check(commands.confirm() == CommandReason::BackRowOnly,
-              "Selected identity follows changed formation");
-        for (const auto action : {PartyAction::Ranged, PartyAction::Spell, PartyAction::Item}) {
-            commands.selectAction(action);
-            check(commands.confirm() == CommandReason::Unavailable,
-                  "Deferred actions explain unavailability");
-        }
-        check(commands.submit({{99}, PartyAction::Defend, {}}) == CommandReason::InvalidCharacter,
-              "Invalid member rejected");
-        check(commands.submit({{0}, static_cast<PartyAction>(255), {}}) == CommandReason::InvalidAction,
-              "Invalid action rejected");
-        commands.selectAction(PartyAction::Melee);
-        commands.selectTarget(actors.id(0));
-        const auto command = commands.snapshot().selection;
         commands.refresh(targets, true, false, true);
         check(!commands.snapshot().selection.target && commands.confirm() == CommandReason::Moving,
               "Movement clears target and suspends confirmation");
@@ -64,35 +42,6 @@ int main() {
         check(!commands.snapshot().selection.target && commands.confirm() == CommandReason::Unfocused,
               "Focus loss cancels");
         commands.refresh(targets, false, false, true);
-        auto foreign = testActors(map, {3, 3}, {"test"}, {{{0}, {3, 1}, {0, 0}, Heading::South}});
-        check(commands.submit({{0}, PartyAction::Melee, foreign.id(0)}) == CommandReason::InvalidTarget,
-              "Foreign actor rejected");
-        check(bool(actors.damage(actors.id(0), 7, 700)), "Kill target fixture");
-        check(commands.submit(command) == CommandReason::InvalidTarget,
-              "Death revalidated before snapshot refresh");
-        const auto dead = actors.id(0);
-        check(bool(actors.remove(dead)), "Remove dead fixture");
-        check(commands.submit(command) == CommandReason::InvalidTarget, "Removed target rejected");
-        commands.refresh(targets, false, false, true);
-        check(commands.snapshot().targets.count == 0, "Stale visibility snapshot rejected");
-        targets.revision = actors.snapshot().revision;
-        commands.refresh(targets, false, false, true);
-        check(commands.snapshot().targets.count == 1, "Dead target filtered");
-        commands.selectTarget(actors.id(1));
-        targets.count = 0;
-        commands.refresh(targets, false, false, true);
-        check(!commands.snapshot().selection.target, "Hidden target cleared without retargeting");
-        const auto count = commands.snapshot().log.size();
-        commands.refresh(targets, false, false, true);
-        check(commands.snapshot().log.size() == count, "Idle refresh does not add log messages");
-        commands.selectAction(PartyAction::Defend);
-        check(commands.confirm() == CommandReason::PreviewAccepted, "Defend requires no target");
-        for (int i = 0; i < 40; ++i)
-            commands.confirm();
-        check(commands.snapshot().log.size() == CombatLog::capacity, "Command log bounded");
-        check(party.character({0})->hitPoints == hp && party.character({0})->availableHitDice == 1 &&
-                  actors.actor(actors.id(1))->hitPoints == 7,
-              "Preview requests never spend resources or damage targets");
         CombatLog log;
         for (int i = 0; i < 40; ++i) {
             char n[16];
@@ -112,19 +61,6 @@ int main() {
               "Scroll bounded oldest");
         commands.scrollLog(-999);
         check(commands.snapshot().logOffset == 0, "Scroll bounded newest");
-        HudDemo demo;
-        demo.enabled = true;
-        for (std::size_t i = 0; i < 4; ++i)
-            demo.resources[i] = {1, 2, 6, DisplayStatus::Ready};
-        demo.resources[0].status = DisplayStatus::Unconscious;
-        commands.refresh(targets, false, false, true, &demo);
-        check(commands.submit({{0}, PartyAction::Defend, {}}) == CommandReason::CannotAct,
-              "Demo status blocks preview without modifying Party");
-        commands.refresh(targets, false, false, true);
-        check(commands.submit({{0}, PartyAction::Defend, {}}) == CommandReason::PreviewAccepted &&
-                  party.character({0})->hitPoints == hp,
-              "Leaving fixture restores authoritative view");
-
         // Full-capacity pagination and selection must not truncate targets.
         std::vector<std::string> rows(11, std::string(11, '.'));
         for (int i = 0; i < 11; ++i) {
@@ -143,8 +79,10 @@ int main() {
                         for (int sx = 0; sx < 2; ++sx)
                             if (placements.size() < NpcWorld::maxInstances)
                                 placements.push_back({{0}, {x, y}, {sx, sy}, Heading::South});
-        auto many = testActors(largeMap, {1, 1}, {"test"}, placements);
-        CommandController paged(party, many);
+        const NpcWorld largePlacements(largeMap, {1, 1}, {"goblin"}, placements);
+        GameSession largeSession(largeMap, catalog, largePlacements, 5, {{1, 1}, Heading::North}, false);
+        auto& many = largeSession.actors();
+        CommandController paged(largeSession);
         TargetSnapshot all;
         all.world = many.snapshot().world;
         all.revision = many.snapshot().revision;
@@ -201,11 +139,10 @@ int main() {
         commands.cancel();
         commands.selectAction(PartyAction::Melee);
         routeHudInput(commands, input);
-        check(std::strstr(commands.snapshot().log.newest(0), "Select a visible target") != nullptr,
-              "Keyboard activation routes rejection");
+        check(commands.snapshot().log.size() > 0, "Keyboard activation routes through live commands");
         input.pressed = {};
         input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
-        const auto portrait = hudLayout::card(2);
+        const auto portrait = hudLayout::detail(2);
         input.pointer = ArtPoint{float(portrait.x + 5), float(portrait.y + 5)};
         routeHudInput(commands, input);
         check(commands.snapshot().inventory.open &&

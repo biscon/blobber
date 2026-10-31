@@ -9,7 +9,7 @@ The [experiment tooling](../experiments/arena/README.md) and optional
 
 ```sh
 cmake --preset headless-debug
-cmake --build --preset headless-debug -j 6
+cmake --build --preset headless-debug
 ctest --preset headless-debug
 cmake-build-headless-debug/blobber_headless --assets assets --mode diagnostic
 ```
@@ -20,33 +20,26 @@ JSON at runtime. Image references in those definitions need not exist. C++17, CM
 Ninja and nlohmann/json are required; tests also use Python 3. System JSON is preferred
 with the existing pinned fallback. No new runtime package is required.
 
-`--mode visual` defaults to the legacy backend, available in the normal graphics build. Pass its prepared asset
-directory, e.g. `--assets cmake-build-debug/assets`. It loads scene/NPC/loot banks and
-uses the ordinary CPU renderer and body picking. It creates no window, context,
-fonts or presentation surface; DISPLAY is unnecessary. Missing/incompatible banks
-are errors. Diagnostic mode uses core validation without body-visibility filtering.
+`--mode visual` always uses the world CPU depth/ID pipeline in both graphics and
+graphics-disabled builds. Supply a prepared world publication through `--assets`
+(for example `cmake-build-release/assets`). No source images, display, window or
+context are needed. Missing/incompatible publications fail; diagnostic mode retains
+core validation without body-visibility filtering. Renderer and visibility selectors
+have been removed from CLI, Python client and MCP; visual mode alone selects the
+supported observation policy.
 
-R03 adds the explicit `--mode visual --visibility world` backend in **both** graphics
-and graphics-disabled builds. Point `--assets` at a prepared world publication
-(for example `cmake-build-release/assets`); no source images, legacy perspective
-banks, display, window or context are required. This uses the same CPU depth/ID
-pipeline as the development world preview. The default remains `legacy`, keeping
-default gameplay and visual automation aligned until the R06 cutover. `--visibility`
-is invalid in diagnostic mode. The Python client's constructor accepts the keyword
-`visibility="world"`; its CLI accepts the same selector. Local MCP session creation
-accepts `visibility="world"` with `mode="visual"`; its existing default remains
-legacy. Reset/load retain the selection; replacement cannot change it. Replay jobs
-forward the backend recorded in a trace.
-
-Capabilities include `visibility_backends` and `capture_visibility_backends`;
-`visual` means at least one visual backend was compiled. Capture availability is
-separate. World traces record `visibility_backend`, `visibility_version` equal to
-`world-visibility-v2`, publication fingerprint, format 1 and appearance revision 2.
-All new traces also record `door_scheduling="shared-opening-300ms-v1"`. Strict replay
-rejects changed identities before execution. Protocol and save schemas remain unchanged.
-Graphics builds support world replay images through their own hidden context;
-graphics-disabled builds advertise no capture backend and return `graphics_unavailable`.
+Capabilities advertise `visibility_backends:["world"]`; capture is separate and
+available only in graphics builds. World traces record backend `world`, visibility
+`world-visibility-v3`, publication fingerprint, format 1 and appearance revision 4,
+plus `door_scheduling="shared-opening-300ms-v1"` and `terrain_rules="terrain-rules-v1"`.
+Strict replay rejects incompatible identities, including legacy renderer recordings.
+Protocol remains v1 and campaign schema/simulation remain 2/2. Replay images own a
+hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
+
+The public height-showcase `renderer_fixture` scenario has been removed. Height/depth
+regressions use test-owned fixtures; supported scenarios are arena, generated_floor
+and campaign.
 
 R04 adds `door_opening` to observations and opening deadlines/pending movement to
 strict diagnostic state. Fixture completion remains permanent and immediate, with a
@@ -319,7 +312,7 @@ fight and fresh-process replay without relying on shipped game content.
 
 Trace records stream header, request, full events, response and normalized boundary
 state, then a completion footer. The header fingerprints the executable, catalog,
-NPC definitions and (visual mode) prepared banks/profile. Rebuilding the executable
+NPC definitions and (visual mode) world publication fingerprint/format. Rebuilding the executable
 or changing content can invalidate old traces, including changes irrelevant to a
 particular encounter. These are strict reproduction records, not save games or a
 cross-version format. Successful replay prints `{"replay":"matched"}` and exits 0;

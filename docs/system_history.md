@@ -1,0 +1,934 @@
+# Historical system design through R05
+
+Historical snapshot before R06. Renderer/demo interfaces and commands described
+here have been retired; [current system design](system_design.md) is authoritative.
+No passing counts here describe R06 verification.
+
+
+[Verification workflow and resource limits](verification_workflow.md) governs when
+to run checks. Use focused tests in one configuration during iteration; full matrices
+and benchmarks are not routine development steps. Build workers are capped at two,
+only one intensive job runs at a time, and slow legacy/persistence checks are opt-in.
+
+R05 **Accepted and closed** (2026-10-31):
+[single-layer heights, outdoor hub and decoration](renderer_environment_design.md).
+User approved the reviewed plan with “Implement the plan.” Shared quantized
+heights/traversal/sight, raised world presentation, outdoor hub/decor, checkpoint
+schema 2/2 and windowless fixture replay are implemented.
+[Verification](r05_verification.md) and [gallery](screenshots/r05/index.html) retain
+focused final checks and limits. Legacy remains default until R06; generated floors
+and the hub walkable layout remain flat. The user explicitly accepted R05:
+“slice accepted, record it in the plan doc”. Verification and limitations remain
+unchanged; no additional checks or interactive coverage are inferred. R06 is next
+for separate planning only, when requested; R-C remains Planned.
+This checkpoint supersedes historical R05-unstarted notes below.
+
+R06 completion contract clarified by the user: completely remove the old renderer,
+its exclusive prepared image banks, preparation/build dependencies and renderer-
+specific tests, including copies in probes/tools. The new renderer becomes the sole
+path; no dormant implementation or fallback remains. See the
+[R06 removal criteria](renderer_plan.md#r06-production-cutover-and-retirement).
+R06 remains unstarted; this is a planning constraint, not a completed cutover.
+
+R04 effect review correction **implemented**: lower Spiritual Weapon within flat
+floor/ceiling clearance, restore GPU spell colors/impact fade and visible impact
+depth, retain multi-dart/ray separation, and capture actual transient phases.
+See [review correction](renderer_integration_design.md#r04-effect-review-correction--2026-10-31-implemented).
+
+R04 **Accepted and closed; milestone R-B Accepted** (2026-10-31):
+[doors, effects and campaign integration](renderer_integration_design.md), approved
+by “Implement the plan.” Complete `--renderer world` campaign/arena, shared 300 ms
+opening barriers, procedural slabs/frames, depth-aware effects and GPU replay images
+are implemented. [Verification](r04_verification.md) and
+[gallery](screenshots/r04/index.html) record the initial graphics 65/65 and headless 46/46
+Debug/Release suites, final affected/protocol checks, CPU sanitizers, hidden GPU
+parity/lifecycle/failure/allocation guards, 1,070-request legacy gameplay comparison
+and 612 identical initial Debug/Release door/spell captures. The review correction
+adds focused CPU/GPU/sanitizer/asset checks and new transient-phase Release captures.
+Legacy stays default until R06.
+The user explicitly accepted the baseline: “I accept the slice, record it in the
+plan doc”. Richer spell graphics remain deferred. R05 is eligible for separate
+planning, not started; no new human/other-GPU coverage is inferred.
+
+R03 **Accepted and closed** (2026-10-31):
+[shared billboards and visibility](renderer_visibility_design.md), approved with
+“Implement the plan.” Current-art GPU bodies/shadows/items, continuous fitted
+transforms, CPU triangle/alpha depth/IDs, ground picking and native health/status
+clipping share one prepared snapshot. Windowless `--visibility world` is explicit
+and graphics-independent; normal gameplay/default visual mode stay legacy.
+[Verification/handoff](r03_verification.md) and [gallery](screenshots/r03/index.html):
+graphics Debug/Release 64/64 each, headless 45/45 each, affected final checks,
+sanitizers, hidden GPU parity/rollback, allocation/upload and capacity guards pass.
+403 Debug/Release captures match exactly. Per-view scratch is 4.60 MiB; the CPU
+visibility investigation target is met on the named reference machine. The user
+explicitly accepted R03: “slice accepted, record it in the plan doc”. Verification
+limits are unchanged; no additional human interactive or other-GPU coverage is inferred.
+R04 and milestone R-B are accepted under the approved integration design.
+
+R01 **Accepted and closed; milestone R-A Accepted** (2026-10-31):
+[visual and motion proof](renderer_probe_design.md), approved with “Implement the
+plan.” The isolated manual/hidden probe provides low-resolution GPU geometry,
+source-art billboards, three filtering profiles, legacy comparison and door/sky/
+decoration specimens. [Verification/handoff](r01_verification.md) and
+[review gallery](screenshots/r01/index.html): focused graphics 6/6 Debug/Release,
+headless 3/3 each, final CPU/GPU checks, CPU ASan/UBSan, zero tracked warmed C++
+allocations and fresh-process benchmark reports. User review (2026-10-31) selects
+supersampling (button 3) as default, retaining native filtered (button 2) as the
+Supersampling off option; the user reports both look good without flickering.
+The probe startup default now follows that preference. Detailed manual coverage
+and other GPU devices remain unverified; the user explicitly accepted R01 and R-A on 2026-10-31.
+Production gameplay, renderer, assets and saves remain unchanged.
+
+R02 **Accepted and closed** (2026-10-31):
+[production world rendering and assets](renderer_world_design.md). User approved
+the reviewed plan with “Implement the plan.” Bounded 8×8 chunk/material meshes,
+prepared mip/alpha textures, shared camera math, shader/mesh handles, staged GPU
+views and a development-only Presenter path are implemented. Supersampling defaults
+on; off is native filtered. [Verification/handoff](r02_verification.md) and
+[selected captures](screenshots/r02/README.md): graphics Debug/Release 62/62 each,
+headless 43/43 each, focused final checks, CPU sanitizers, hidden GPU lifecycle and
+rollback, zero tracked frame C++ allocations/uploads, near-capacity stress and
+incremental multi-config publication checks pass. 81 world captures repeat exactly.
+Normal gameplay retains its renderer. The user accepted R02 on 2026-10-31;
+R03 interaction is delivered for review under its separately approved design.
+Complete production integration remains R04.
+
+Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R03 is
+Accepted along with R04 and milestone R-B; R05 is Accepted and R06 remains Planned. Static mesh/assets, billboard interaction/windowless visibility,
+effects/doors/campaign integration, single-layer heights/outdoor hub/decoration and
+production cutover follow only through their own reviewed slices. Stacked cells are
+explicitly deferred. Existing implemented systems below remain authoritative until
+replaced; their prepared-image preservation notes describe the current production
+implementation, not a prohibition on the explicitly requested replacement.
+
+The [procedural campaign roadmap](procedural_campaign_plan.md) remains paused after
+accepted P-B (PC01–PC06 closed). Renderer/presentation work, then additional monsters,
+precede a return to campaign work. Do not advance PC07 automatically.
+
+Incremental asset build follow-up **implemented** (2026-10-30): narrowed the creator atlas dependency
+list to the 36 PNGs consumed by `creatorArtNames` (keep both lists in sync).
+Replaced the always-running raw asset directory copies with one source-dependent
+output command per file, preserving the current copied directories and per-config
+asset locations. File globs still detect added/removed raw inputs at configure
+time; ordinary no-change builds perform no copies. Full atlas packing and baking
+tool/library dependencies stay unchanged. Release configuration/build passes;
+timestamp probes confirm Travel copies just its PNG and Sacred Flame copies its
+PNG plus repacks only the creator atlas. Source timestamps were restored and the
+subsequent build does no work. Isolated generated fixtures pass single- and
+multi-config copying, no-op/changed/touched inputs, missing outputs, added files,
+paths with spaces and independent Debug/Release outputs. The explicit list was
+checked against all 36 consumed images. Logs: `/tmp/incremental-assets-fixtures.log`,
+`/tmp/incremental-assets-travel-probe.log`, `/tmp/incremental-assets-creator-probe.log`
+and `/tmp/incremental-assets-post-probes.log`. Gameplay code is unaffected.
+
+Travel HUD icon follow-up **implemented** (2026-10-30): replaced the text button with a generated,
+transparent brass compass matching the painted Camp icon. UiArt prepares it in
+the existing startup atlas (one additional 108-pixel region, no new GPU resource).
+The shared logical click rectangle moves beside Camp at the same 16×13 size;
+the existing T shortcut and travel validation remain authoritative. A bounded
+hover tooltip retains the Travel label and shortcut without frame allocations.
+Focused Release HUD/campaign/allocation checks and the hidden GPU check pass;
+application-owned captures were inspected at native and reduced resolution.
+See [captures, prompt and verification](screenshots/travel-icon/README.md). No OS input.
+
+PC06 **Accepted and closed** (2026-10-30):
+[campaign save and resume](procedural_campaign_save_design.md). User approved the
+reviewed plan with “Implement the plan.” One manual slot, safe Save/Save and Main
+Menu, staged Continue independent of starting builds, exact campaign snapshots,
+checked content/schema/clock ownership and terminal markers are implemented.
+Headless/client/local MCP and byte-safe strict replay share the same authority.
+[Verification and handoff](pc06_verification.md) and [gallery](screenshots/pc06/index.html):
+full headless Debug/Release 41/41 each; graphics 60/60 each; focused ASan/UBSan 3/3
+plus final 1/1, final protocol checks 3/3 in all four presets, zero tracked frame C++
+allocations and 55/60 owned restore/view allocation failure points pass. Fresh-process
+and cross-build saves, retained positive/negative strict replay, local SDK stdio,
+hidden GPU and all 19 repeat-identical captures pass; 14 PNGs are retained.
+PC06 presentation review correction: hide unavailable Continue, use compact shared
+confirmation geometry, and describe failed save writes in plain language; see the
+[design correction](procedural_campaign_save_design.md#pc06-presentation-review-correction-2026-10-30).
+Human interactive/native-close event and live Codex-host MCP remain unverified.
+User accepted the save/load slice on 2026-10-30; accepted PC04–PC06 complete
+milestone P-B. Review corrections are included; verification and limitations remain
+unchanged, with no additional interactive play-coverage details supplied. No balance
+experiments or PC07 work. PC07 is next for detailed planning only, in a fresh context
+when requested. This supersedes historical review-pending/next-planning notes below.
+
+PC05 **Accepted and closed** (2026-10-30):
+[paid recall and entry waypoints](procedural_campaign_recall_design.md).
+User approved the reviewed plan with “Implement the plan.” Confirmed one-kit
+recall and free unlocked-entry returns share the existing staged transaction;
+Party supply/derived stats commit atomically with travel. A dedicated paused Travel
+panel preserves Inventory T. First stairs arrivals alone unlock entries; ordinary
+stairs remain free at zero kits. Existing persistent floors, clocks/effects,
+prepared banks and single-Party ownership remain authoritative.
+[Verification/handoff](pc05_verification.md) and [gallery](screenshots/pc05/index.html):
+headless Debug/Release 39/39 each, graphics Debug/Release 58/58 each, focused
+ASan/UBSan 3/3 plus final campaign reruns, zero tracked frame C++ allocations,
+9/14 preparation failure points per travel kind, strict replay, CLI/client/local
+MCP, hidden GPU and 14 repeat-identical captures pass. Interactive human and live
+Codex-host MCP remain unverified. No balance experiments, saves or PC06 work.
+User accepted PC05 on 2026-10-30: “slice accepted, record it in the plan doc”.
+Verification results and limitations are unchanged; no additional interactive
+play-coverage details were supplied. PC04/P-A remain accepted; P-B remains Planned.
+PC06 is next eligible for its own reviewed detailed plan only, when requested.
+This record supersedes historical PC05 next-planning directions below.
+
+PC04 **Accepted and closed** (2026-10-30):
+[persistent descent and fixed hub](procedural_campaign_travel_design.md).
+One travelling Party, authored sanctuary hub and three persistent generated floors
+share checked staged stairs in graphical/headless play. Floor-local snapshots,
+portable effects/deadline rebasing, fresh runtime identities, campaign terminal
+results and strict inactive-state replay integrity preserve the accepted systems.
+Prepared banks remain shared; no recall, disk saves, content tuning or balance
+experiments. [Verification/handoff](pc04_verification.md) and
+[capture gallery](screenshots/pc04/index.html). User approval: “Implement the plan.”
+Final headless Debug/Release checks pass 39/39 each; graphics 58/58 each;
+ASan/UBSan 3/3, zero tracked steady-frame C++ allocations, 9/14 preparation
+allocation-failure points, strict replay and hidden GPU/captures pass. Twelve
+retained PNGs distinguish real travel from the victory presentation reconstruction.
+The user accepted PC04 on 2026-10-30: “slice accepted, record it in the plan doc”.
+PC03/P-A stay accepted; milestone P-B remains Planned. PC05 is next eligible for
+its own reviewed detailed plan only, in a fresh context when requested. Verification
+results and limitations are unchanged; no additional play-coverage details were supplied.
+The milestone records below describe acceptance-time states; this PC04 record
+supersedes their historical no-travel/next-planning notes.
+
+PC03 **Accepted and closed** (2026-10-30):
+[guardians and protected progression](procedural_guardians_design.md).
+User approved the detailed plan with “Implement the plan.” Easy placeholder
+encounters, designated guardian gate/reward, and safe stairs rooms; no balance
+experiments, travel or PC04 work. PC01/PC02 remain accepted.
+[Verification/handoff](pc03_verification.md) records headless Debug/Release 38/38,
+graphics Debug/Release 57/57, five focused sanitizer checks, zero tracked runtime
+allocations, strict guardian combat replay and hidden captures. Generator/templates
+are now 3/3; prepared format/renderer are 4/5. The user accepted PC03 after playing
+through the accessible floor, defeating the guardian and collecting the loot
+(2026-10-30). Milestone P-A is Accepted. PC04 is next for detailed planning only.
+
+PC02 **Accepted and closed** (2026-10-30):
+[doors, keys and discovered navigation](procedural_fixtures_design.md).
+User: “Implement the plan.” Shared effective geometry, checked permanent fixtures,
+facing-based discovery and isolated diagnostic reveal. [Verification/handoff](pc02_verification.md)
+records headless Debug/Release 37/37, graphics Debug/Release 56/56, focused sanitizer
+and allocation checks, strict replay and hidden captures. Generator/templates are
+2/2 and prepared format/renderer 4/4. The user accepted after testing the available
+gameplay and reporting it working (2026-10-30). Separate test floors and inert stairs
+are expected until PC04; basic door art is not considered final visual quality.
+PC03 is now Accepted and closed under its implemented design above.
+
+
+Roadmap **accepted by the user; PC04 campaign architecture implemented and accepted in PC04** (2026-10-30):
+[procedural campaign delivery plan](procedural_campaign_plan.md), based on the
+[MVP specification](procedural_campaign_mvp.md). The user closed the remaining
+[static-demo roadmap](dnd5e_demo_design.md#roadmap-closeout-2026-10-30): retire its
+polish/static integration slices and move save/resume after generation and travel.
+The campaign replaces the static-map New Game flow; preserving that old mode is
+not required. Remove obsolete mode-specific wiring/content as the replacement lands;
+retain shared systems, authored hub support and arena/investigation tooling.
+All prior accepted slices remain closed. Nine planned slices cover bounded
+room-graph/template generation, shared door geometry/discovery, designated guardian
+gates, one travelling Party with persistent floor snapshots, fixed hub, paid recall
+and entry waypoints, then campaign saves, depth content and expedition investigation.
+No respawns; finite optional encounters provide XP/resource fallback. Shops are a
+later milestone. The plan records ownership, clocks, transactional failures and
+validation. The user approved the [PC01 detailed design](procedural_generation_design.md) with
+“Implement the plan.” PC01 is **Accepted and closed** (2026-10-30); the user
+confirmed “slice accepted, record it in the doc”. PC02 is Accepted and closed above; PC03 and milestone P-A are Accepted; PC04–PC09 remain Planned. [PC01 verification/handoff](pc01_verification.md) records full
+headless Debug/Release 35/35, graphics Debug/Release 53/53, focused sanitizers,
+zero tracked frame allocations, hidden GPU/capture checks and thirteen retained PNGs.
+New Game now enters a populated seeded 36×36 floor through the existing party picker.
+Bounded graph/templates, tile validation, deterministic fallback/diagnostics and
+strict generated-floor replay are implemented. PC02 adds checked doors/keys and
+a discovered map, with a separate development diagnostic reveal. PC03 adds a designated
+guardian pair, once-only gate/rewards and protected stairs rooms. Stairs travel
+remains inert pending PC04. No balance experiments or broad seed sweep were run.
+PC03 is accepted; PC04 is eligible for detailed planning in a fresh context when
+requested, with plan review required before implementation. The user has tested the
+available PC02 gameplay and completed the accessible PC03 floor through guardian
+defeat and loot collection; live Codex-host MCP remains unverified.
+
+Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter](mcp_design.md).
+Optional official-SDK stdio tools reuse accepted sessions, experiments/reports and
+strict replay, with stale-safe handles, bounded jobs, cancellation and artifact access.
+An optional replay observer exports hidden application-owned current scene/HUD captures.
+[Installation/review guide](mcp_usage.md) and [verification/handoff](slice133_verification.md):
+19 fast adapter contracts, headless Debug/Release 6/6, graphics Debug/Release 7/7,
+focused sanitizer replay/capture checks, SDK lifecycle/cancellation integration,
+explicit opt-in smoke/rerun/replay, hidden GPU checks and seven retained captures.
+Live Codex-host interaction and interactive desktop review remain unverified.
+The user accepted 13.3 after reviewing the capture gallery. 13.1/13.2 remain closed;
+save/resume is unimplemented and now planned as campaign PC06, after generation/travel.
+
+Implemented, **accepted and closed** (2026-10-30): [slice 13.2 automated players and
+balance experiments](automated_players_design.md). A stdlib Python policy/experiment
+layer reuses accepted headless commands and strict replay, with bounded serial trials,
+explicit outcome/coverage/uncertainty reports, deterministic decision records and
+selected trace retention. The client adds I/O deadlines and cancellation. Three
+sensible party packages and three policies support separate opt-in playtesting;
+**even small balance matrices stay outside routine tests**. No gameplay or rendering
+rules changed. [Usage](../experiments/arena/README.md) and
+[verification/handoff](slice132_verification.md): 27 fast tooling contracts, focused
+Debug/Release 5/5, manual fixture integration, 18/216-trial comparisons, selected
+policy rerun/engine replay, CPU visual mode and measured Release workloads. The
+user accepted and closed the slice on 2026-10-30: “close up the slice”. It is general-purpose project tooling for agents to use wherever relevant.
+Verification results and coverage limits remain unchanged. MCP 13.3 is Accepted and closed above; save/resume has moved to the proposed campaign PC06 and remains unimplemented.
+
+Implemented, **accepted and closed** (2026-10-30): [slice 13.1 headless arena sessions](headless_design.md).
+A graphics-independent NPC metadata loader and bounded typed session host adapt the
+existing simulation to JSON-lines commands, fixed 10 ms stepping, player/diagnostic
+observations and strict replay. Optional prepared CPU picking shares visibility
+validation with the UI; graphics-disabled builds need no raylib or image assets.
+[Protocol/client guide](headless_protocol.md) and [verification/handoff](slice131_verification.md):
+full Debug/Release 48/48, graphics-disabled Debug/Release 30/30, focused sanitizers,
+zero tracked allocations, 256-actor capacity, shipped-content record/replay in both
+modes without a display, and hidden GPU lifecycle checks. The user accepted slice 13.1
+on 2026-10-30: “slice accepted, update the docs.” Verification limits remain unchanged.
+[13.2](automation_plan.md#slice-132-automated-players-and-balance-experiments) is now
+Accepted above; 13.3 is Accepted and closed above; demo slice 14 is superseded by campaign PC06.
+
+Implemented, **accepted and closed** (2026-10-30): [slice 13 progression](progression_design.md).
+Session-owned exactly-once XP feeds checked live-party advancement through levels
+2–3, shared new-choice/review screens, fixed subclass features and eight second-level
+spells. Bounded effects add Aid, Mirror reservations, spectral weapon positions and
+concentration-linked Web cells; optional activations preserve normal turn ownership.
+Schema 9 and prepared bundle/renderer revision 3 retain the accepted library, arena,
+1920×1080 and prepared-image contracts. [Verification and handoff](slice13_verification.md)
+records Debug/Release 41/41, focused sanitizer 8/8, zero tracked allocations,
+capacity/GPU checks and 69 initial captures. The user accepted slice 13 and milestone C
+on 2026-10-30. The automation interlude is now accepted; the remaining static-demo
+roadmap is closed and unimplemented save/resume moves to campaign PC06. The subsequent spell-picker review adds
+clear preparation-slot messaging, actionable-only advancement lists, blue card
+outlines, measured compact descriptions and shared scrollbars with aligned panels.
+These corrections and existing Action Surge activation were accepted with the slice.
+See the handoff for focused verification, refreshed captures and the accepted closeout.
+
+Implemented, **accepted and closed** (2026-10-29): [slice 12.5 arena](arena_design.md).
+Main-menu setup, independent party/scenario snapshots, bounded portable file storage,
+generated safe-spawn room and Rematch/Edit Setup reuse normal gameplay and prepared
+rendering. [Verification and handoff](slice125_verification.md): Debug/Release 38/38,
+focused ASan/UBSan 5/5, zero tracked frame allocations, capacity stress, hidden GPU
+checks and 54 captures. The user accepted slice 12.5 on 2026-10-29. Creature-size
+footprints remain deferred; the subsequent progression work is recorded above.
+
+Implemented, **accepted and closed** (2026-10-29): [slice 12.4 creator and reusable selection](character_creator_design.md).
+Fixed drafts and shared choice panels integrate creation, checked library saving
+and atomic Long Rest preparation. A bounded 16 MiB detail-art atlas reuses existing
+masters. [Verification and handoff](slice124_verification.md): Debug/Release 37/37,
+focused ASan/UBSan 4/4 with leak detection, zero tracked frame allocations, hidden
+GPU checks and 187 captures. The user accepted slice 12.4 on 2026-10-29 and retained
+the current 27-point buy, 8–15 base scores and fixed racial bonuses. Arena slice 12.5 was subsequently accepted; progression is recorded above.
+
+Implemented, **accepted and closed** (2026-10-29): [slice 12.3 menu and launch](menu_launch_design.md).
+Normal startup loads catalog/library/UI only. Bounded library browsing, read-only
+review, confirmed deletion and a four-character picker precede transactional dungeon
+preparation. Runs own independent starting builds; defeat replays those builds and
+seed. Confirmed Main Menu teardown returns to the menu. [Verification/handoff](slice123_verification.md)
+records Debug/Release 35/35, focused sanitizers, allocation/GPU checks and hidden
+captures. Review correction adds direct card-to-slot dragging, swaps, drop feedback and
+focused search carets; focused Debug/Release, sanitizer, allocation and hidden
+capture checks pass. The user accepted slice 12.3, including both review corrections, on 2026-10-29.
+Slice 12.4 is accepted and closed above.
+
+Implemented, **accepted and closed** (2026-10-29): [slice 12.2 character builds, library
+and portraits](character_builds_design.md). Fixed creation drafts/previews and curated
+gear reuse derivation; schema 8 authors explicit per-character class/domain/racial
+spell grants. A versioned 128-character starting-build library uses checked atomic
+POSIX transactions. Independent party/session construction adds three launch camp
+kits. Twenty stable portraits use offline padded QOI atlases (40 MiB), with no
+frame decode/resize. [Verification and handoff](slice122_verification.md): Debug and
+Release 34/34, focused sanitizers 5/5, allocation/GPU checks, 225 portrait/build
+captures and 482 spell captures. The user accepted slice 12.2 on 2026-10-29; 12.3 is accepted and closed above.
+
+Implemented, **accepted and closed** (2026-10-29): portrait follow-up to the
+[12.1 visual review](spell_visual_review_design.md#portrait-follow-up). Timed status
+and concentration tooltips show turns in combat and seconds/minutes in real time;
+a framed gold concentration emblem replaces the blue portrait block. Focused
+Debug/Release 5/5, allocation and GPU checks pass; 482 captures include the follow-up.
+The full-suite/sanitizer results below record the preceding visual correction baseline.
+
+Implemented, **accepted and closed** (2026-10-29): [slice 12.1 expanded spells](expanded_spells_design.md)
+and its [visual review corrections](spell_visual_review_design.md). Spell-level
+and Abilities tabs preserve selection per character/tab. Bounded status summaries
+supply portrait icons and duration tooltips; enemy badges reuse spell art. Prepared
+Grease floor banks and required four-direction static prone clips preserve offline
+image preparation and frame allocation guarantees. That checkpoint used bundle format 2; slice 13 advances it to format 3.
+The ten spell additions retain checked casts, bounded conditions/ground areas,
+temporary HP and turn-relative short effects. [Local SRD](references/README.md)
+is the source for future planning. [Verification and handoff](slice121_verification.md):
+Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations,
+capacity baking, hidden GPU checks and 470 captures pass. User acceptance on 2026-10-29 includes all visual and portrait
+follow-ups. Slice 12.2 is now accepted and closed, as recorded above.
+
+Design accepted (2026-10-28), **implemented across slices 12.1–12.4**:
+[main menu and character-creation flow](character_creation_flow_proposal.md), with
+[sixteen approved imagegen mockups](mockups/character-creator-v1/index.html).
+The [12.1–12.4 roadmap](dnd5e_demo_design.md#character-creation-interlude-accepted-flow-and-shared-contracts)
+adds expanded level-one spells; pure build rules, per-character spell grants,
+versioned starting-build storage and twenty portraits; menu/library/party launch;
+and the creator plus shared preparation/advancement presentation. The user approved
+expanded spell selection and Color Spray in place of illustrative Ray of Sickness.
+Library blueprints and live party state have independent ownership; menu/session
+lifecycle and bounded draft/UI storage preserve existing rendering/allocation
+contracts. Detailed subsystem designs are written in each later planning pass.
+The data foundation is implemented in 12.2; menu/library/party launch is implemented
+in accepted slice 12.3. The creator is implemented and accepted in slice 12.4.
+Slices 12.1 and 12.2 are accepted and closed.
+The creator and arena prerequisites are satisfied. Slice 13 is accepted and closed above. Earlier checkpoint history remains below.
+
+Implemented, **accepted and closed** (2026-10-27): slice 12 follow-up adds Inventory
+Drop into the current cell, automatic Take All closure, and a small generated Rest
+icon beside Settings while restoring full log widths. Session validates floor
+capacity before staged Party removal; 256 generation-checked reusable player-drop
+slots complement the unchanged 2,112 death/authored reservations. Equipment-derived
+stats/effects reconcile after a drop. Fixed storage, per-pixel picking identities
+and modal input rules remain intact. See [design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up)
+and [current verification](slice12_verification.md): Debug/Release 29/29, focused
+sanitizers 3/3, allocation/stress/hidden GPU checks and 108 hidden captures pass.
+The user accepted slice 12, including all review corrections, on 2026-10-27.
+This was the slice-12 checkpoint; the accepted 12.x interlude above now precedes slice 13.
+
+Implemented, **accepted and closed** (2026-10-27): slice 12
+[loot and recovery](loot_recovery_design.md), including the approved loot-bag review
+correction; [verification and handoff](slice12_verification.md). GameSession owns
+bounded corpse-independent loot and checked rest transactions; Party stages whole-
+stack acquisition and supply consumption. One prepared bag per nonempty cell opens
+a paused grid with contained/aligned details, shared Inventory slot painting, live
+portrait recipient selection, per-stack pickup and Take All. Leftovers retain the
+bag. One projection fixes approach scaling. The Rest icon in the top bar
+is dim/inert when neither rest has a legal benefit.
+Schema 6 adds authored drops, weighted currency and camp kits. Floor imagery is
+baked offline and shares depth-aware picking/transitions; normal frames allocate no
+engine-owned C++ storage. Camp commits recovery once and plays a cosmetic bonfire.
+Debug/Release 29/29, focused sanitizers, capacity stress, allocation guard, hidden
+GPU checks and 93 native/reduced/letterboxed captures passed at that checkpoint.
+The user accepted the completed slice and its follow-up corrections on 2026-10-27.
+Automated verification limits remain recorded in the handoff.
+
+Implemented, **accepted and closed**: approved [tabbed inventory and character sheet](character_sheet_design.md),
+replacing the portrait inspector while preserving the current inventory layout.
+The shared paused overlay uses fixed snapshots of live stats, equipment, resources,
+features and effects; XP remains read-only. Both entry routes and tab directions
+preserve character identity. [Verification and captures](character_sheet_verification.md)
+record focused Debug/Release, allocation and hidden GPU checks. The user accepted slice 11 and this extension on 2026-10-27.
+
+Implemented, **accepted and closed**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
+
+Implemented, **accepted and closed** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).
+Party owns bounded live stacks and separate gear, with atomic staged transactions,
+weight/stat/effect reconciliation and strict schema-5 content. Full-screen paused
+browsing supports drag, split, transfer and equipment controls. Potions and finite
+party arrows share authoritative combat costs. Native item art preserves prepared
+dungeon rendering. Debug/Release suites, focused sanitizers, allocation guards and
+hidden GPU/captures pass. The user accepted slice 11 on 2026-10-27. Slice 12's implemented result is tracked above.
+
+Implemented, **accepted and closed** (2026-10-27): [Class Features picker correction](spellcasting_ui_design.md#class-features-presentation).
+The shared picker distinguishes spells, activated features and read-only automatic
+features. Class casting capability controls headings/resource visibility and slot-4
+art; gameplay commands, costs and schemas remain unchanged. UI storage stays bounded,
+with native-resolution artwork and captured fighter/rogue verification. The full
+Debug suite passes (26/26), with focused follow-up tests and hidden GPU checks.
+
+Implemented post-acceptance [diagonal-contact animation fix](hybrid_encounter_design.md#diagonal-contact-animation-correction-2026-10-27):
+Combat already faces NPCs toward the party at initiative
+entry and attack acceptance. Sprite direction now uses that same cell-center geometry,
+including interpolated travel/strafe offsets, rather than the subcell placement and
+camera setback used to project the body. Bodies and projectile attachments share
+the direction query; projection, occupancy, clocks and prepared banks stay unchanged.
+This is constant work per NPC without new storage or allocations. All 26 Debug suites
+pass, including 48 approach/render combinations, side/back fallback, travel and
+allocation checks. Hidden GPU checks and shipped-art captures also pass. Slice 10's
+acceptance remains recorded below; this correction does not start slice 11.
+
+Implemented correction, accepted by the user on 2026-10-27: [native-resolution HUD and impact alerts](native_hud_design.md), with [verification](native_hud_verification.md).
+
+Implemented, **accepted and closed** (2026-10-27): slice 10
+[spells and class identity](spells_design.md), with [verification and handoff](slice10_verification.md).
+Fourteen curated spells use checked commands, fixed party payloads and the existing
+impact/effect clocks. Party owns mana/charges; Combat owns readiness and Sneak Attack;
+Effects owns concentration and Guiding deadlines. The paused spellbook resumes into
+live targeting, with multi-target/area confirmation and bounded cosmetic feedback.
+Schema 4 retains versions 1–3 compatibility. The user accepted slice 10, including
+all UI and impact-alert corrections. Slice 11 is tracked separately at the top of this overview. The approved [casting UI revision](spellcasting_ui_design.md)
+is implemented without changing spell mechanics: independent pending casts, compact picker,
+casting dock, direct recipient feedback and a shared authoritative area query. See
+[UI verification and captures](slice10_ui_verification.md). The completed review correction
+stabilizes badges with projection-based anchors and adjusts HUD spacing; see the
+[review polish design](spellcasting_ui_design.md#review-polish-badge-stability-and-spacing-2026-10-27).
+
+Implemented, **accepted and closed** (2026-10-27): slice 09
+[effects and concentration](effects_design.md), with
+[verification and handoff](slice09_verification.md). GameSession owns 64 fixed
+instances for Bless, Bane, Shield of Faith, Mage Armor and Hold Person. Effects
+share the hybrid gameplay clock, with real-time deadlines interleaved with attack
+impacts and full-round retries during turns. Concentration changes at damage impact;
+paralysis blocks actions/facing and paired protection while retaining occupancy.
+Read-only effective stats leave base builds unchanged. Slice 09 supplied consequences;
+player casting and mana arrive in slice 10 above. The user accepted slice 09 on 2026-10-27.
+
+Implemented, **accepted and closed** (2026-10-26): slice 8.1
+[offline image preparation and memory](image_preparation_design.md), with
+[verification and handoff](slice81_verification.md). NPC and dungeon surface banks
+are baked by an incremental build target and loaded without source image decoding
+or resizing at startup. Shared NPC profile C (alpha-aware area/half-size derivatives)
+applies to every current and future appearance. Walls/floors/ceilings retain point
+sampling. Masters remain intact. Compact NPC banks and separate 512 MiB resident /
+tracked-loading limits supersede the historical 160 MiB startup pixel cap below.
+
+Implemented, **accepted and closed** (2026-10-26): slice 8.2
+[distinct goblin archer artwork and loadouts](goblin_archer_design.md), with
+[verification and handoff](slice82_verification.md). Appearance `goblin.archer`
+provides 48 hooded bow/quiver poses across five four-direction clips and binds by
+name to the existing bow-only rules variant. The two hybrid-demo archers use it;
+regular `goblin` is melee-only. Both immutable prepared appearances share profile C,
+existing actor/animator interfaces and zero-allocation frame processing. Actual
+combined runtime banks occupy 181,300,462 bytes. Original melee artwork and historical
+bow masters remain intact. The user accepted the completed slice on 2026-10-26.
+
+Implemented, **accepted and closed** (2026-10-27): slice 8.3
+[projectiles and impact-time consequences](projectile_impact_design.md), with
+[verification and handoff](slice83_verification.md). Combat owns 260 pending
+attacks; validation, costs and rolls occur at acceptance, while HP/life/occupancy,
+reactions and result feedback change at impact. Timestamped batches drain existing
+deadlines before movement/AI and phase handoff. Separate bounded cosmetics render
+prepared arrows, a melee slash and impact glints. Hurt suspends unreleased NPC
+windups; released arrows survive shooter death. Current prepared resident accounting
+is 182,314,670 bytes. This supersedes the earlier immediate-damage and UI-delayed-
+feedback descriptions below. The user accepted 8.3, including the front-cell
+spacing correction. Slice 09 is now accepted and closed (see above).
+
+Implemented review correction (2026-10-27): the front-band edge fit previously compressed
+center-cell pairs, causing visible overlap. The corrected mapping preserves ordinary projection between
+the two center-slot pivots (lateral ±0.25 cells), tapering compression only outside
+that interval toward the existing diagonal edge limit. It retains the continuous depth/
+strafe blend and shared body/shadow/picking/projectile projection. Center pair
+separation in both rows/all headings, diagonal visibility, travel and allocations
+pass regression checks; hidden captures confirm the shipped-art result. See the
+[correction verification](slice83_verification.md#review-correction-center-cell-pair-spacing).
+
+Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
+
+Implemented and accepted (2026-10-26): [front-approach routing correction](hybrid_encounter_design.md#front-approach-routing-correction). Pursuit from ahead prefers the center and diagonal front cells, with bounded navigation fallback when that band is full or unreachable. Living melee targets beyond reach report out of range. Initiative strip unchanged.
+
+Implemented and accepted (2026-10-26): [single-weapon AI correction](hybrid_encounter_design.md#single-weapon-review-correction). Melee-only NPCs close and attack; ranged-only NPCs hold shooting positions and create distance at contact. Mixed-weapon behavior is preserved. Slice 8.2 replaces the two hybrid archers' historical placement MonsterId overrides with a distinct appearance bound by name; generic overrides remain supported.
+
+Implemented and accepted (2026-10-26): slice 08
+[hybrid encounters](hybrid_encounter_design.md). GameSession owns separate
+presentation and gameplay clocks; shared NPC AI/perception supports six-cell bows,
+local alerts, NPC surprise and boundary-enrolled reinforcements. Combat enters
+initiative directly, retains facing while the three-cell front group lives, and automatically
+turns to the next adjacent group without spending an action. Offscreen enemies
+cannot attack; fixed front-row protection replaces directional exposure. No
+maneuver/retreat command or party surprise penalty remains. Catalog schema 3 adds typed traits and
+a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
+fixed 1920×1080 presentation and 160 MiB pixel cap. See
+[verification and handoff](slice08_verification.md). Slice 09 is now accepted and closed;
+slice 08 and milestone B are closed. Graphical subslices 8.1–8.3 are also
+accepted and closed; see the slice 09 checkpoint above.
+
+Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
+600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)
+and attack-presentation holds. Slice 08 renames the shared controller to NpcAiController
+and supersedes the former frontal-only contact and frozen-roaming phase policy.
+[Slice 07 verification](slice07_verification.md) is its historical acceptance record.
+The earlier slice descriptions below record their accepted scope; hybrid encounter
+rules above supersede their stationary-combat restrictions.
+
+Implemented and accepted by the user (2026-10-26): slice 06 [goblin hurt/death reactions](goblin_reactions_design.md).
+Four-direction prepared clips provide 300 ms hurt and 1200 ms death/corpse playback,
+with a 100 ms white overlay. See [verification and review](slice06_verification.md).
+Simulation releases occupancy when lethal damage is committed, now at impact;
+art never resolves damage or death. The historical UI-only delay in the
+[impact timing design](goblin_reactions_design.md#attack-impact-feedback) is
+superseded by slice 8.3's authoritative timeline and direct impact feedback.
+Implemented review correction (2026-10-26): same-cell melee advancement may use
+either vacant front slot, preferring straight ahead. Turn eligibility is separate
+from current target exposure; see [melee design](melee_combat_design.md#front-slot-review-correction-2026-10-26).
+
+Implemented and accepted by the user (2026-10-25):
+[dungeon-first UI revision](dungeon_ui_design.md) for slice 05.
+Combat and presentation are accepted; slice 05 and milestone A are closed. See
+[UI verification and captures](dungeon_ui_verification.md).
+
+Implemented and accepted by the user (2026-10-25), slice 05:
+[first melee combat](melee_combat_design.md).
+An immovable gameplay session owns party health, actors, movement, seeded RNG and
+stationary frontal encounters. Initiative, row protection on both sides, melee,
+Defend, Aid, death saves, victory and defeat now execute authoritative commands.
+See [slice 05 verification and review](slice05_verification.md). Interactive desktop
+review remains unverified; do not automate the user's mouse, keyboard or desktop.
+
+Implemented and accepted by the user (2026-10-25): slice 04
+[party HUD and command design](party_hud_design.md). Four portraits, command
+previews, visible-body targeting and a bounded log read the existing party/actor
+state. Slice 05 adds combat execution; the isolated demo retains preview-only semantics with the revised UI.
+Explicit UI demo
+scenarios keep sample mana/status values separate from authoritative party state.
+See [slice 04 verification](slice04_verification.md). The typography correction uses
+size-specific font atlases and native 1920×1080 text over the enlarged art,
+with rounded text positions. The HUD design records the live-animation correction:
+interactive demo clocks advance; capture clocks remain explicit, and automatic
+idle phase offsets prevent default-placed actors from moving in lockstep. The UI
+demo prepares its own idle-only placement copy, shared by interactive and
+capture scenarios, so stationary actors do not inherit showcase walk/attack loops.
+The dock keeps four wrapped log lines readable; expanded history pauses play.
+Both use bounded word wrapping and scrolling that preserves the reading position
+when new messages arrive.
+
+Implemented and accepted by the user (2026-10-25):
+slice 03, [mutable monster world](actors_design.md).
+Runtime actors now supply live collision/rendering state, health and lifecycle.
+Prepared appearances and asset formats remain unchanged; scripted diagnostics
+exercise mutation and the 100 ms white damage/death flash; slice 06 adds reaction clips.
+
+Gameplay extension: [SRD 5.1 demo design and self-tracking roadmap](dnd5e_demo_design.md).
+It defines sixteen individually reviewed slices toward a four-character goblin
+combat demo. Slice 01's [rules foundation](rules_design.md) is implemented and
+accepted by the user (2026-10-25): explicitly seeded dice, pure attack/save/damage rules,
+and an immutable catalog loaded from bounded JSON before image preparation.
+The application owns the catalog; GameSession owns the live party and actors.
+Rules and health transitions are graphics-independent, JSON stays in a separate I/O library,
+and typed catalog indices are stable for one non-recycled catalog lifetime.
+The [source ledger](srd_content_ledger.md) records adopted SRD data and adaptations.
+The roadmap owns delivery
+status, user decisions, verification records, and handoff notes; this overview
+continues to describe implemented systems and must be updated as slices land.
+
+Implemented and accepted by the user (2026-10-25):
+[characters and preset party](characters_design.md) is slice 02. Independent race/class/item definitions and an editable preset feed
+pure stat derivation and a bounded four-character owner. It initializes HP, Hit
+Dice, XP, and relative formation before world/image preparation. The party exposes
+const state, checked health operations and formation swaps locked during combat.
+Inventory transactions and mana remain deferred. See [slice 02 verification](slice02_verification.md).
+
+NPC extension: [directional sprites and slow animation](npc_design.md) is implemented.
+It adds immutable level NPC placement data, JSON assets, and prepared alpha animation
+frames. Runtime actors initialize from those placements; a separate animation
+player selects idle, walk-in-place, or frontal attack frames and transient hit feedback.
+Stationary combat is integrated. Review corrections add paired-slot protection,
+same-cell enemy advancement, one-shot existing attack clips and bounded damage/MISS
+feedback; see the melee design. Slice 07 adds autonomous cross-cell movement; slice 06 supplies four-direction
+hurt/death clips.
+The [NPC design](npc_design.md#rendering) also covers prepared, floor-projected
+contact shadows, blended beneath bodies and clipped against wall depth.
+
+Status: implemented. The foundation refactor preserves the established renderer,
+projection, movement, and art. See [verification](verification.md) for executed
+checks and limits.
+
+## Boundaries and data flow
+
+- **World:** compact immutable row-major solid-cell storage and immutable NPC
+  loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
+  play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
+- **Session/combat:** an immovable owner borrows map/catalog and owns actors,
+  movement, AI, combat RNG and elapsed time. Standalone sessions own Party;
+  campaign sessions borrow the single Party owned by CampaignRun. Actors and encounter membership
+  are bounded at 256; initiative groups use catalog monster identities. Contact
+  clears queued movement; commands validate turn tokens, life, equipment, range,
+  formation and attacker availability before RNG. Acceptance returns synchronously;
+  a fixed pending record retains the saved result until strike/arrival. Each update
+  returns a borrowed timestamped batch (1,036 entries including effect notices),
+  draining effect deadlines and existing attacks before movement/AI and then taking
+  at most one new automatic step. Consume the batch before any subsequent session
+  simulation operation, not only the next update.
+  Acting turns, facing and results wait for pending impacts and presentation tails.
+  Focus/map/details/history/menu pauses freeze session deadlines and gameplay time.
+  Gameplay cooldowns retain the hybrid real-time/round-boundary policy.
+- **Effects:** session-owned 64-instance fixed storage, up to three typed recipients
+  per instance; world/serial IDs reject stale slot reuse. Party casters own at most
+  one concentration each. Checked apply/remove operations and save/lifecycle events
+  serve later spell commands; current review is headless. Full storage rejects
+  before costs/RNG/replacement. Expiry precedes repeat saves and equal-time impacts;
+  existing accepted attacks keep their saved rolls. Incapacitation masks suppress
+  NPC facing as well as pathfinding; living held actors retain occupancy.
+- **Party/rules:** immutable catalog values feed pure, allocation-free character
+  derivation. A four-character party owns starting builds/gear, derived caches,
+  resources, health/death-save state, and a formation permutation. Pure health
+  transitions feed checked mutations; health/build snapshots remain const. Typed character/item indices never
+  recycle; formation swaps preserve identities and resources. JSON/loading stays
+  outside game code. Schema 2 adds party content; strict schema 1 remains readable
+  as rules-only content, but startup requires a preset.
+- **Actors:** a fixed-capacity runtime owner initializes monster HP and transforms
+  from placements and the catalog. Checked movement, facing, attack cues, damage and removal
+  atomically update records, occupancy and revisions. Typed IDs include a unique
+  world identity; slots never recycle. Dead records remain readable, removed IDs
+  fail lookup, and only living actors block movement.
+- **AI/navigation:** fixed state for at most 256 actors; immutable placements supply
+  guard/patrol/wander settings. Separate seeded randomness preserves combat rolls.
+  One exploration tick per 100 ms uses a shared map-sized BFS workspace (six bytes
+  per cell), at most 4096 search/cleanup visits and eight completed requests.
+  Requests wait on budget exhaustion; checked ActorWorld steps revalidate occupancy.
+  AI time freezes outside exploration; visual walk cues use paused session time.
+- **Movement:** owns player pose, one pending command, transition state, and a
+  revision counter. Exposes a const state snapshot; consumers cannot mutate its
+  invariants. Key repetition is a separate graphics-independent input component.
+- **Assets and preparation:** the offline bake tool reads masters/materials and
+  produces versioned scene/NPC banks. Scene banks retain eight lateral phases and
+  sixteen floor/ceiling variants per phase. NPC banks use cropped contiguous
+  clip/direction/frame/depth and travel rasters with unchanged logical pivots,
+  plus independent shadows. Runtime reads bounded JSON metadata and validates a
+  publication manifest and both banks, streaming into their final owners. It
+  neither decodes NPC/material sources nor prepares rasters. Standalone preparation
+  remains available to generated-fixture tests. See the image preparation design
+  for format, invalidation, budget and appearance-integration contracts.
+- **CPU rendering:** immutable prepared data plus caller-owned fixed-size frames.
+  Scene composition and image transitions write into supplied buffers. A frame
+  pipeline owns source/destination/display buffers and only updates changed views.
+  Its independent 260-slot projectile owner copies visual snapshots; cosmetic
+  exhaustion replaces the oldest visual without affecting pending damage. Compile-
+  time arrow/slash/glint rasters total 1,012,160 bytes. Shared NPC projection and
+  optional directional attachments keep bodies and arrows aligned. Wall/body depth
+  clips effects, which never write picking IDs. Extra picking scratch is reused
+  for effects during transitions.
+- **Platform:** raylib window/input adaptation and GPU ownership. Typed texture
+  and render-target handles refer to fixed-capacity, generation-checked slots.
+  Borrowed raw raylib values stay inside short platform calls. RAII unloads GPU
+  resources before the window closes, including exception paths.
+- **Commands/UI:** a graphics-independent controller validates current body
+  visibility and routes production requests through GameSession; a separate const-owner
+  mode retains preview-only diagnostics. It separately owns targeting, read-only hover, inspection, exclusive overlays, bounded enemy/ally
+  targets, a 32×192-byte log, eight timed damage/MISS splashes and a fixed HUD snapshot. Confirmation must refer to
+  the turn/outcome already presented. Focus/edge handling, Aid selection and
+  aspect-fit hit testing are CPU-testable.
+- **Presentation:** Presenter uses the shared application registry for its viewport
+  texture and two native 1920×1080
+  targets: a point-filtered dungeon base and a transparent premultiplied UI layer
+  fitted with bilinear filtering. The 500×282 prepared dungeon remains unchanged.
+  Layout and input retain logical 640×360 coordinates; HudPainter converts geometry
+  to native pixels, and fonts draw at their native atlas sizes. Artwork, geometry
+  and text share one ordered UI pass; modal fills cover all underlying UI content.
+  Five startup-loaded RAII font atlases provide Plex Sans regular 21/24 px, bold
+  27 px, Inconsolata 24 px and DejaVu Serif Bold 27 px. Font ownership is separate
+  from the generic texture registry and ends before window shutdown.
+  A 2048×1024 startup atlas holds 28 original-art derivatives at native display
+  sizes, with padded edges and bilinear sampling. Portraits center-crop and icons
+  aspect-fit. No low-resolution UI image is enlarged threefold. Captures use one
+  temporary diagnostic target. See [native HUD design](native_hud_design.md).
+- **Application/tools:** option parsing, loading, scheduling, and lifecycle only.
+  Captures use a hidden GLFW window, application-owned targets and in-process UiInput scripts, with no OS input injection or foreign-window selection. They are an explicit diagnostic mode with startup-prepared cases; output paths, filesystem work and image export are not normal gameplay frame work.
+
+Dependencies flow from application/presentation toward platform, CPU rendering,
+movement, and world values. World/movement/input timing have no raylib dependency.
+There is no ECS, generic event bus, virtual renderer hierarchy, or service locator.
+
+## Ownership, storage, and limits
+
+Maps own contiguous cell bytes. CampaignRun retains four stable locations and the
+travelling Party; the application owns shared prepared rendering. One active
+session borrows its location/Party, with value snapshots for inactive locations.
+Travel stages replacement simulation/view owners at an explicit preparation
+boundary and commits before the next simulation tick. Only active/staged owners
+have navigation/frame scratch; there is no live streaming or inactive simulation.
+Standalone authored/arena sessions retain their existing map/catalog lifetime
+contract. See the PC04 design for snapshot validation and clock ownership.
+
+Prepared sprites refer to ranges in contiguous column and color arrays, replacing
+per-column pixel vectors. These are immutable offsets with cache-local lifetime,
+not recyclable object IDs. Preparation may grow containers; rendering cannot.
+The projection and eight phases bound the cache. Each phase permits at most 1024
+sprites, 512,000 columns, and 16 million colors; exceeding a limit fails loading.
+No eviction or hidden runtime growth occurs.
+
+Runtime actors retain up to 256 stable records and one byte of live occupancy
+per map cell. The immutable placement mask is loading data only. The map and
+catalog outlive the noncopyable/nonmovable actor owner. Runtime operations return
+fixed result values without allocation. Lethal impact unblocks immediately; animation
+plays a 1200 ms goblin death/corpse clip, overlaying white for its first 100 ms,
+then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash.
+
+Each 500×282 RGBA frame allocates once, is move-only, and cannot resize. The live
+pipeline owns three frames (about 1.61 MiB), reusing them across idle, movement,
+collision, NPC alpha composition, and transitions. Composition copies pixels but
+never allocates output storage. Input buffers at most one fresh movement command. UI confirmation is edge-triggered
+and never queued. UI formatting uses stack buffers. Each frame pipeline also owns
+two fixed 500×282 uint16 picking buffers (~551 KiB combined; one is transition effect scratch), written alongside prepared body
+pixels. Living target membership, visible-body centers and top edges are scanned after composition; transitions expose
+no picking. Transparent holes/walls/shadows do not select, and dead bodies occlude
+without becoming targets. Revisions invalidate picking with the image.
+
+Party stores four character identities/resources and owns one fixed 208-stack
+inventory: four 48-cell bags plus four equipment positions per character. Startup
+content retains up to 16 owned entries; live queries use inventory handles and
+52-position sparse loadouts, never startup indices. Item handles carry party
+inventory identity, pool index and generation. Moves preserve identity; complete
+merges/consumption invalidate it, and exhausted generations retire slots.
+Transactions stage fixed value storage and all four derived-stat records, committing
+only after capacity, training, hand compatibility and weight validation. Weight is
+integer hundredths of pounds with int64 totals. Catalog bounds remain 16 races,
+16 classes and 64 items; all preparation bounds reject explicitly.
+
+Party construction may copy strings; frame callers borrow const snapshots. The
+catalog outlives sessions/parties. Campaign travel retains actual Party/inventory
+identity and rebases portable deadlines without recreating starting builds. Arena
+restart reconstructs borrowers while reusing prepared assets. These preparation
+boundaries may allocate; ordinary engine-owned frames may not. Character IDs are
+party-local; startup owned-item indices are character-local; catalog IDs remain
+catalog-local. See [inventory design](inventory_design.md) for schema 5, live item
+commands, safety, UI storage and tests.
+
+R02 expands the application-owned GPU registry to 512 standalone textures, eight
+render targets, eight static meshes and eight shaders. Presenter borrows the registry;
+world scene/resource leases release resources at explicit preparation boundaries.
+The new path additionally enforces texture/mesh/scene byte budgets in the
+[R02 design](renderer_world_design.md). Normal gameplay defaults to CPU world images; `--renderer world` selects the complete
+R04 alternative without loading legacy world banks. R06 owns the default cutover.
+Handles include a typed slot index and generation. Invalid/stale lookup returns
+no resource; checked platform operations reject it. Exhaustion is an explicit
+startup error. Releasing a slot invalidates its generation; exhausted generation
+counters retire that slot rather than allowing old handles to become valid again.
+Registry identity prevents handles from accidentally crossing registries. Slots
+contain resource values, not owning raw pointers. No extra handles are introduced
+for ordinary grid coordinates or transient references.
+
+The allocation guarantee covers engine-owned CPU gameplay processing. The test
+intercepts ordinary and aligned C++ `new`/`new[]`; it does not intercept C
+`malloc` calls. Engine-owned frame code uses no C allocation APIs. Loading,
+cache preparation, exceptional error reporting, captures, and driver/raylib
+internals are outside it. A targeted allocation guard is more useful here than
+a Vulkan-style benchmark or stress-testing framework.
+
+## Interfaces and preservation
+
+The composition API writes to `Frame&`; callers must supply distinct buffers for
+image transitions. The frame pipeline consumes a read-only movement snapshot,
+tracks movement, actor-world identity/revision and NPC animation revisions, and publishes a const display frame plus a changed flag so idle
+frames do not trigger texture uploads. Prepared cache configuration and content
+remain immutable after construction. A pipeline belongs to one map, scene cache,
+actor world, animation player, and controller lifetime: construct a new pipeline when replacing those systems,
+because revisions are local to that controller. Moved-from frames may only be
+destroyed or assigned another frame before use.
+
+Keep controls, collision, queued-command behavior, the 0.4-tile viewpoint setback,
+strafe parallax, and existing image transition effects. Capture filenames remain
+stable for before/after comparisons.
+
+Implemented and accepted by the user (2026-10-26): narrower dungeon framing.
+horizontal FOV reduced from 90° to 84° and horizon raised from 36% to 34% of
+viewport height. `ViewProjection` remains the shared compile-time configuration
+for prepared walls/floors, NPCs, shadows and picking; no new API, runtime setting,
+storage ownership or frame-time work is introduced. The larger projected NPC
+images exceed the previous 128 MiB combined source/prepared pixel cap with shipped
+art; that revision raised the startup budget to 160 MiB. Slice 8.1 supersedes
+that historical budget with separate 512 MiB limits and offline source loading. Retain the 0.4-tile setback
+to expose current-cell floor for future dropped items. At 500×282 this leaves
+32 central floor rows (96 presentation pixels) facing an adjacent wall. Rebuild
+prepared images offline (the original startup path was superseded by slice 8.1). Validate all four adjacent-wall headings
+with generated materials, preserve side-opening/occlusion/strafe tests, run
+Debug/Release correctness and allocation suites, and compare deterministic hidden
+captures of walls, passages, rooms and goblins. Item interaction remains deferred.
+Both 19-suite builds, allocation checks and the hidden GPU lifecycle check pass;
+278 captures per projection completed. See the [framing verification and retained
+comparisons](verification.md#84-framing-experiment-2026-10-26).
+
+Prefer an installed compatible raylib 6.2 package, otherwise use the current
+hash-verified FetchContent fallback. nlohmann/json 3.12.0 likewise prefers the
+installed package with a hash-pinned download fallback; only asset I/O uses JSON.
+Debug/Release presets stay CLion-compatible.
+
+## Validation strategy
+
+- Independent core tests: movement, malformed/bounded maps, input repeat, focus
+  reset, state transitions, and aspect-fit behavior.
+- Renderer tests: generated CPU materials and a dedicated test-owned regression
+  map; preserve the independent geometric oracle, side-passage/floor framing,
+  strafe reversal, and transition endpoint checks.
+- Resource tests: typed handles, stale IDs, slot reuse, capacity, registry lifetime,
+  and CPU material loading failures using isolated test-owned files.
+- NPC tests: bounded JSON loading, generated sprites, 2x2 occupancy and collision,
+  four view sectors, scale/grounding, transparent overlap, viewport clipping,
+  and wall occlusion against independent ray/block intersections.
+- Party/rules tests: deterministic dice, strict versioned content, independent
+  race/class builds, armor/weapon/weight calculations, initialized resources,
+  formation identity, and rejected invalid input.
+- Actor tests: generated catalogs/maps, capacity and binding failures, stale/foreign
+  handles, transactional occupancy, queued movement, exactly-once death/removal,
+  stationary view refresh, hit-flash/reaction boundaries and all movement transitions.
+  Reaction tests cover interruptions, corpse holds, hidden expiry, wider-canvas scale,
+  reused-subslot ordering, pauses/Continue/restart, and budget exhaustion. Routine fixtures own their data;
+  shipped content and startup validation are checked separately.
+- Command/UI tests: preview validation without costs, live formation, foreign and
+  stale identities, 256-target paging, bounded logs, development-only statuses,
+  focus/held input, letterbox/pillarbox/high-DPI inverse mapping, alpha/depth-aware
+  picking, transition suspension, and stationary invalidation. Direct actions, non-mutating hover, portrait Aid/details,
+  exclusive modal input, keyboard feedback, initiative preview versus actual execution,
+  and wrapped-history read-position preservation have dedicated HUD tests.
+- Combat/health tests: pure health boundaries, death saves and stabilization;
+  initiative/group ordering, both row collapses in four directions, authoritative
+  requests, current visibility, Aid/Defend, pauses, queued contact, complete wins/losses,
+  restart identity and input on newly displayed turns/results. Fixtures own their data.
+- Effect tests: generated fixtures for the five supported consumers; atomic
+  replacement, stacking, invalid/stale references, full capacity, expiry/retry
+  boundaries, concentration at impact, natural death saves, paralysis and formation,
+  frozen flight outcomes, pause/round/victory transitions and deterministic traces.
+- Allocation regression: enable an allocation counter after preparation, exercise
+  first and subsequent moves, all transitions, blocked/queued input, and held/advancing NPC
+  frames, actor mutations/flash expiry/removal, rules/party queries and formation swaps, HUD refresh/commands/log rollover/input/picking, first combat entry and subsequent
+  turns/Aid/healing/outcomes, and require zero C++ allocations in the normal CPU frame path.
+- Desktop integration: check actual GPU handle creation/release and presentation,
+  produce the same deterministic captures, and compare them with the baseline.
+  Capture/export allocations are intentionally excluded from the frame guarantee.
+- Build and run CTest in Debug and Release. Record executed checks and limitations
+  in [verification notes](verification.md).
+
+Historical techniques and visual choices are documented in [research](research.md).
+
+## Source map and extension points
+
+| Location | Responsibility |
+| --- | --- |
+| `src/generation/` | Bounded deterministic floor templates/topology, tile validation, preparation diagnostics and JSON report adapter |
+| `src/world/` | Grid values, immutable map and NPC placements/occupancy |
+| `src/rules/` | Deterministic rules, character derivation, bounded creation drafts/previews, per-grant spell queries and immutable typed catalog |
+| `src/persistence/` | Versioned starting-build codec, checked UUID/revision library transactions; independent of future run saves |
+| `src/game/` | Campaign/active-session ownership, checked travel and floor snapshots, encounters, runtime actors/occupancy, movement, animation state, bounded party/health/formation |
+| `src/input/` | Platform-independent key repeat timing |
+| `src/assets/` | CPU image ownership, materials, NPC JSON/images, and separate rules JSON loading |
+| `src/render/` | Projection, prepared scene data, composition, transitions, frame reuse |
+| `src/core/` | Fixed-capacity typed resource slots |
+| `src/platform/` | Window lifetime, keyboard adapter, GPU registry and presentation |
+| `src/ui/` | Portrait/action HUD, shared layout/input routing, targeting and bounded-log presentation |
+| `src/app/` | Startup/options, frame scheduling, diagnostic capture cases |
+| `tools/` | Offline asset/portrait preparation and headless build/library diagnostic |
+| `tests/` | Core, renderer, resource, NPC, allocation, and explicit desktop checks |
+
+NPC appearance indices remain stable for a prepared level lifetime. Runtime actor
+slots never recycle; removal leaves a terminal record. Runtime spawning is deferred. Other future interactive objects should have their own
+owner and lifetime model before introducing handles for them. They should not be
+added to the GPU resource pool.
+Future overlays belong in the UI; new movement rules belong in the controller or
+world queries; material loading remains outside composition. Preparing a new
+level or material set is an explicit loading operation. These boundaries do not
+promise live streaming, asynchronous loading, or arbitrary wall heights.
+
+Implemented extension: [slow NPC sprite animation](npc_design.md#sprite-animation)
+adds bounded clip timing and prepared animation frames, preserving immutable
+placements and the current image-composition/presentation pipeline. The application
+owns a graphics-independent animation player with fixed-capacity snapshots. Source
+images are released after preparation; timing metadata survives independently.
+Authored visual loops remain isolated diagnostics; production gameplay
+uses idle placements plus timestamped walk, attack and damage cues while AI and
+combat independently resolve movement and turns. Controlled actor movement and
+health/lifecycle mutation are described in the actor design; prepared caches stay
+immutable and are reused at each runtime position.
+
+## Enemy status-icon occlusion follow-up (2026-10-30)
+
+Implemented correction to the accepted slice 13 presentation: enemy condition icons
+remain native-resolution UI art, but their visible pixels must respect their
+owner's projected depth. PickingBuffer retains the existing alpha-aware body IDs
+(including visible corpses), plus 256 projected actor depths and 500 wall-column
+depths (about 3 KiB per buffer). NPC composition publishes these alongside stable
+badge anchors, including travel offsets. A bounded 12×12 icon clipping helper
+compares each covered dungeon pixel against nearer bodies/walls, excluding the
+owner itself; transparent holes and farther bodies leave the icon visible.
+Equal-depth other bodies occlude consistently. Identical visibility rows merge
+into scissor rectangles, so a fully visible icon draws once. No per-frame heap
+storage, new GPU resources, image baking or changes to picking/target identities.
+Status rows retain their existing non-overlap placement; casting/target UI remains
+an overlay. Generated-fixture depth, silhouette, wall, corpse and reset cases,
+clipping coverage and allocation guards cover the CPU contract. Hidden
+application-owned captures exercise sleeping rear enemies behind standing front
+enemies. See the [follow-up verification](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30).
+The user accepted this follow-up on 2026-10-30; it is closed alongside slice 13
+and milestone C. The subsequent automation interlude above makes slice 13.1 next
+eligible for separate planning; slice 14 remains unstarted.

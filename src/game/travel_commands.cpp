@@ -2,15 +2,15 @@
 #include "game/commands.hpp"
 namespace blobber {
 void CommandController::openTravel() noexcept {
-    if (!session_ || !session_->campaign() || state_.suspended || state_.modal() || state_.magic.casting() ||
+    if (!session_.campaign() || state_.suspended || state_.modal() || state_.magic.casting() ||
         state_.magic.armed || state_.inventory.itemTargeting)
         return;
-    auto& run = *session_->campaign();
+    auto& run = *session_.campaign();
     if (run.status() != CampaignStatus::Active)
         return;
     const bool hub = run.activeLocation() == 0;
     if (hub) {
-        const auto check = run.previewTravel(run.request(session_->nearbyFixture()));
+        const auto check = run.previewTravel(run.request(session_.nearbyFixture()));
         if (!check) {
             state_.log.append(check.reason);
             return;
@@ -28,20 +28,20 @@ void CommandController::openTravel() noexcept {
             if (run.location(depth).visited || depth == 1)
                 h.rows[h.count++] = {depth, run.location(depth).visited
                                                 ? run.waypointRequest(depth)
-                                                : run.request(session_->nearbyFixture())};
+                                                : run.request(session_.nearbyFixture())};
     } else {
         h.count = 1;
         h.rows[0].request = run.recallRequest();
     }
-    session_->clearPending();
+    session_.clearPending();
     refreshTravel();
 }
 void CommandController::refreshTravel() noexcept {
     auto& h = state_.travel;
-    if (!session_ || !session_->campaign() || !h.open || h.cursor >= h.count)
+    if (!session_.campaign() || !h.open || h.cursor >= h.count)
         return;
     h.kits = party_.campSupplies().kits;
-    h.preview = session_->campaign()->previewTravel(h.rows[h.cursor].request);
+    h.preview = session_.campaign()->previewTravel(h.rows[h.cursor].request);
 }
 void CommandController::selectTravel(unsigned row) noexcept {
     if (!state_.travel.open || row >= state_.travel.count)

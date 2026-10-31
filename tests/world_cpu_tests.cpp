@@ -1,6 +1,6 @@
 #include "render/world_scene.hpp"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
-#include "support/probe_allocations.hpp"
 #include "support/world_fixtures.hpp"
 #include <cmath>
 #include <iostream>

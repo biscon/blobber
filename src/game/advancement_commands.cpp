@@ -59,10 +59,8 @@ void layoutAdvancement(FlowControls& w, const AdvancementHud& h) noexcept {
         layoutSelection(w, h.selection);
 }
 void CommandController::openAdvancement(rules::CharacterId id) noexcept {
-    if (!session_)
-        return;
-    const auto request = session_->advancementRequest(id);
-    const auto error = session_->advancementEligibility(request);
+    const auto request = session_.advancementRequest(id);
+    const auto error = session_.advancementEligibility(request);
     if (error != AdvancementError::None) {
         appendLog(advancementMessage(error));
         return;
@@ -81,7 +79,7 @@ void CommandController::openAdvancement(rules::CharacterId id) noexcept {
     h.oldHp = c.stats.maxHitPoints;
     h.oldMana = c.maxMana;
     h.sync();
-    h.preview = session_->previewAdvancement(h.request);
+    h.preview = session_.previewAdvancement(h.request);
 }
 void CommandController::restorationChoice() noexcept {
     auto& m = state_.magic;
@@ -92,7 +90,7 @@ void CommandController::restorationChoice() noexcept {
     }
 }
 void CommandController::endTurn() noexcept {
-    if (!session_ || !state_.combat.activeCharacter)
+    if (!state_.combat.activeCharacter)
         return;
     PartyCommand c;
     c.character = *state_.combat.activeCharacter;
@@ -103,12 +101,12 @@ void CommandController::endTurn() noexcept {
     submit(c);
 }
 void CommandController::developmentExperience() noexcept {
-    if (session_ && session_->grantNextLevelExperience())
+    if (session_.grantNextLevelExperience())
         appendLog("Development: XP granted to the next level threshold.");
 }
 void CommandController::routeAdvancement(const UiInput& input) noexcept {
     auto& h = state_.advancement;
-    if (!h.open || !session_)
+    if (!h.open)
         return;
     if (!input.focused) {
         h.searchEdit.focused = false;
@@ -125,7 +123,7 @@ void CommandController::routeAdvancement(const UiInput& input) noexcept {
         if (input.text.backspace)
             routed.pressed[std::size_t(UiKey::Cancel)] = false;
     }
-    h.preview = session_->previewAdvancement(h.request);
+    h.preview = session_.previewAdvancement(h.request);
     layoutAdvancement(h.controls, h);
     auto a = h.controls.input(routed);
     if (routed.has(UiKey::Cancel))
@@ -145,7 +143,7 @@ void CommandController::routeAdvancement(const UiInput& input) noexcept {
         h.open = false;
         return;
     case FlowAction::Done: {
-        const auto result = session_->advance(h.request);
+        const auto result = session_.advance(h.request);
         if (!result) {
             std::snprintf(h.message.data(), h.message.size(), "%s", advancementMessage(result.error));
             return;
@@ -198,6 +196,6 @@ void CommandController::routeAdvancement(const UiInput& input) noexcept {
         h.request.choices.prepared &= context.available;
     } else if (h.step == AdvancementStep::Prepared)
         h.request.choices.prepared = h.selection.selected;
-    h.preview = session_->previewAdvancement(h.request);
+    h.preview = session_.previewAdvancement(h.request);
 }
 } // namespace blobber

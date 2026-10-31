@@ -135,12 +135,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                color, style);
     };
     headerText("STONE & SHADOW", 12, gold, UiTextStyle::Display);
-    if (h && h->demo)
-        headerText("UI DEMO / SAMPLE", 175, blue, UiTextStyle::Small);
     char line[96];
     std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .", headingName(state.player.heading));
     headerText(line, 245, gold, UiTextStyle::Small);
-    if (!h || !h->demo) {
+    {
         const auto depth = h && h->floor ? h->floor->definition().depth : 1;
         headerText(h && h->campaign && depth == 0 ? "Sanctuary hub"
                    : h && h->arena                ? "Arena"
@@ -175,10 +173,9 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                             : h->camp.open ? "CAMP / PAUSED"
                                            : "EXPLORATION";
         for (const auto& c : h->cards)
-            if ((h->combat.activeCharacter && c.id.index == h->combat.activeCharacter->index) ||
-                (!h->production && c.id.index == h->selection.character.index))
+            if ((h->combat.activeCharacter && c.id.index == h->combat.activeCharacter->index))
                 actor = c.name;
-        if (h->production && h->combat.activeEnemy)
+        if (h->combat.activeEnemy)
             actor = "ENEMY TURN";
         if (h->combat.phase == CombatPhase::Facing && h->combat.facing) {
             constexpr const char* labels[]{"FACING NORTH", "FACING EAST", "FACING SOUTH", "FACING WEST"};
@@ -206,9 +203,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             const auto reason = h->actionAvailability[static_cast<std::size_t>(action)];
             const bool available =
                 (i >= 0 && i < 6) && !h->campaignTerminal && !h->suspended && !h->modal() &&
-                (i == 3 || (i == 4 && h->production) || reason == CommandReason::Ready ||
-                 reason == CommandReason::MissingTarget || reason == CommandReason::InvalidAlly ||
-                 reason == CommandReason::PreviewAccepted);
+                (i == 3 || i == 4 || reason == CommandReason::Ready ||
+                 reason == CommandReason::MissingTarget || reason == CommandReason::InvalidAlly);
             const bool selected = action == h->selection.action;
             p.box(r, selected ? bright : edge);
             const unsigned icon = i == 3 && !h->magic.spellcaster ? UiArt::classFeaturesIcon : 5 + i;
@@ -230,13 +226,12 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                 ? (h->campaign ? "This expedition has ended. Return to Main Menu."
                                : "Restart to begin a fresh session.")
             : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
-            : h->production && h->combat.awaitingAction ? "Click a reachable enemy to attack."
-            : h->production && h->combat.phase == CombatPhase::Turns
-                ? "Waiting for the active participant."
-                : "WASD move / Q E turn / M map / R camp";
+            : h->combat.awaitingAction                ? "Click a reachable enemy to attack."
+            : h->combat.phase == CombatPhase::Turns   ? "Waiting for the active participant."
+                                                      : "WASD move / Q E turn / M map / R camp";
         p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
-    if (h->production && (h->combat.knownDirections || h->combat.pendingCount)) {
+    if ((h->combat.knownDirections || h->combat.pendingCount)) {
         char threats[96];
         char dirs[5]{};
         int n = 0;

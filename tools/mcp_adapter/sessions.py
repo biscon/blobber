@@ -126,9 +126,7 @@ class Sessions:
                                trace=str(s.root/'trace.jsonl')) from exc
 
     def start(self, scenario=None, scenario_path=None, mode='diagnostic', seed=None,
-              handle=None, session=None, revision=None, check_cancel=None, campaign_save_path=None, visibility=None):
-        if visibility is not None and (mode != 'visual' or visibility not in ('legacy', 'world')):
-            raise AdapterError('invalid_input', 'Visibility requires visual mode and legacy or world')
+              handle=None, session=None, revision=None, check_cancel=None, campaign_save_path=None):
         if mode not in ('diagnostic', 'visual') or sum(x is not None for x in (scenario, scenario_path, campaign_save_path)) != 1:
             raise AdapterError('invalid_input', 'Choose diagnostic/visual and exactly one scenario, scenario_path or campaign_save_path')
         if scenario_path:
@@ -148,7 +146,7 @@ class Sessions:
             fields['seed'] = integer(seed, 0, 2**32-1, 'seed')
         if handle:
             with self.access(handle, dict(session=session, revision=revision), check_cancel) as s:
-                if mode != s.mode or (visibility is not None and visibility != s.visibility):
+                if mode != s.mode:
                     raise AdapterError('invalid_input', 'Replacement retains observation mode; use a new session to change it')
                 result = self._request(s, 'start', **fields)
                 return self._rotate(s, result)
@@ -159,7 +157,6 @@ class Sessions:
                 raise AdapterError('session_capacity', 'At most two live sessions')
             s = Live(self.storage.reserve('session', 290*MIB))
             s.mode = mode
-            s.visibility = visibility or ("legacy" if mode == "visual" else None)
             s.lock.acquire()
             self.live[s.handle] = s
         try:
@@ -167,9 +164,8 @@ class Sessions:
             slot = s.root/'campaign.json'
             if saved_bytes is not None:
                 slot.write_bytes(saved_bytes)
-            backend = {'visibility': visibility} if visibility is not None else {}
             s.client = self.factory(self.runner, self.assets, mode, s.root/'trace.jsonl', s.events.append,
-                                    timeout=10, startup_timeout=30, cancelled=s.cancelled, campaign_save=slot, **backend)
+                                    timeout=10, startup_timeout=30, cancelled=s.cancelled, campaign_save=slot)
             result = self._request(s, 'load' if saved_bytes is not None else 'start', **fields)
             if not result['response']['ok']:
                 self._dispose(s)

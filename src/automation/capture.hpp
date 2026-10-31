@@ -1,6 +1,6 @@
 #pragma once
+#include "assets/npc_metadata.hpp"
 #include "automation/trace.hpp"
-#include "automation/visual.hpp"
 #include <vector>
 namespace blobber::automation {
 // Verify first; caller supplies a fresh Protocol for the capture pass.

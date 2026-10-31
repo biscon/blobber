@@ -1,5 +1,4 @@
 #include "app/menu.hpp"
-#include "app/creator_captures.hpp"
 #include "app/menu_model.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
@@ -12,49 +11,17 @@
 #include <cstdio>
 #include <cstring>
 #include <random>
-#include <unistd.h>
 namespace blobber {
 int runMenus(const Options& options) {
     const auto catalog = loadRules(options.assets / "rules/catalog.json");
-    Window window(options.width, options.height, options.captureMenuOnly);
+    Window window(options.width, options.height);
     GpuResources resources;
     Presenter presenter(resources, options.assets);
     presenter.prepareMenu();
-    struct CaptureDirectory {
-        std::filesystem::path path;
-        ~CaptureDirectory() {
-            if (!path.empty()) {
-                std::error_code ignored;
-                std::filesystem::remove_all(path, ignored);
-            }
-        }
-    } captureDirectory;
-    std::filesystem::path libraryPath;
-    if (options.captureMenuOnly) {
-        char pattern[] = "/tmp/blobber-menu-XXXXXX";
-        const auto* dir = mkdtemp(pattern);
-        if (!dir)
-            throw std::runtime_error("Cannot create isolated capture library");
-        captureDirectory.path = dir;
-        libraryPath = captureDirectory.path / "characters.json";
-    }
-    LibraryIoHooks hooks;
-    if (options.captureCreatorOnly)
-        hooks.fail = creatorCaptureFailStage;
-    if (options.captureMenuOnly)
-        hooks.entropy = [](std::array<std::uint8_t, 16>& bytes) {
-            static unsigned id = 0;
-            bytes.fill(0);
-            ++id;
-            bytes[14] = std::uint8_t(id >> 8);
-            bytes[15] = std::uint8_t(id);
-            return true;
-        };
-    CharacterLibrary library(catalog, characterLibraryPath(libraryPath), hooks);
+    CharacterLibrary library(catalog, characterLibraryPath());
     MenuView v{catalog, library};
     const auto saveDefinitions = loadNpcDefinitions(options.assets / "npcs/level.json");
-    CampaignDisk saveDisk(options.captureMenuOnly ? captureDirectory.path / "campaign.json"
-                                                  : campaignSavePath(options.campaignSave));
+    CampaignDisk saveDisk(campaignSavePath(options.campaignSave));
     CampaignStore saves(
         catalog, saveDefinitions,
         {fingerprintFile(options.assets / "rules/catalog.json"), saveDefinitions.definitionFingerprint},
@@ -66,7 +33,7 @@ int runMenus(const Options& options) {
                       slot.active ? (slot.location + " | " + slot.partySummary).c_str() : slot.error.c_str());
     };
     refreshContinue();
-    ArenaScenarioStore scenarioStore(catalog, characterLibraryPath(libraryPath).parent_path() / "scenarios");
+    ArenaScenarioStore scenarioStore(catalog, characterLibraryPath().parent_path() / "scenarios");
     auto reload = [&] {
         const auto r = library.initialize();
         v.usable = bool(r);
@@ -74,106 +41,6 @@ int runMenus(const Options& options) {
         v.model.filter(library.snapshot());
     };
     reload();
-    if (options.captureSaveOnly) {
-        std::filesystem::create_directories(options.captureDirectory);
-        presenter.presentMenu(drawMenu, &v);
-        presenter.capture(options.captureDirectory / "save-main-empty.png");
-        auto captureOptions = options;
-        captureOptions.campaignSave = captureDirectory.path / "campaign.json";
-        v.model.defaults();
-        launchMenuParty(captureOptions, catalog, v.model.resolve(catalog, library.snapshot()), presenter,
-                        &saves);
-        refreshContinue();
-        presenter.presentMenu(drawMenu, &v);
-        presenter.capture(options.captureDirectory / "save-main-terminal.png");
-        const auto freshParty = v.model.resolve(catalog, library.snapshot());
-        CampaignRun fresh(catalog, freshParty, saveDefinitions.types, saveDefinitions.timings, 5);
-        if (!saves.save(fresh, saves.inspect().revision, true).durable)
-            throw std::runtime_error("Capture fresh campaign save failed");
-        refreshContinue();
-        presenter.presentMenu(drawMenu, &v);
-        presenter.capture(options.captureDirectory / "save-main-continue.png");
-        return 0;
-    }
-    if (options.captureArenaOnly) {
-        captureArena(v, presenter, options, scenarioStore);
-        return 0;
-    }
-    if (options.captureCreatorOnly) {
-        captureCreator(v, presenter, options);
-        return 0;
-    }
-    if (options.captureMenuOnly) {
-        std::filesystem::create_directories(options.captureDirectory);
-        auto capture = [&](const char* name) {
-            presenter.presentMenu(drawMenu, &v);
-            presenter.capture(options.captureDirectory / (std::string(name) + ".png"));
-            presenter.capture(options.captureDirectory / (std::string(name) + "-1280.png"), 1280, 720);
-            presenter.capture(options.captureDirectory / (std::string(name) + "-4x3.png"), 1024, 768);
-        };
-        capture("main");
-        v.model.screen = MenuScreen::Library;
-        capture("library");
-        v.model.confirmDelete(library.snapshot(), library.snapshot().records[0].id);
-        capture("delete");
-        v.model.deletion.reset();
-        v.model.selected = library.snapshot().records[0].id;
-        v.model.screen = MenuScreen::Detail;
-        capture("detail");
-        v.model.screen = MenuScreen::Picker;
-        capture("picker-empty");
-        UiInput dragPress;
-        dragPress.pointer = ArtPoint{45, 100};
-        dragPress.pointerHeld = true;
-        dragPress.pressed[std::size_t(UiKey::Click)] = true;
-        v.interaction.routeDrag(v.model, library.snapshot(), dragPress);
-        UiInput dragMove;
-        dragMove.pointer = ArtPoint{450, 120};
-        dragMove.pointerHeld = true;
-        v.interaction.routeDrag(v.model, library.snapshot(), dragMove);
-        capture("picker-drag");
-        UiInput dragDrop;
-        dragDrop.pointer = dragMove.pointer;
-        dragDrop.pointerReleased = true;
-        v.interaction.routeDrag(v.model, library.snapshot(), dragDrop);
-        capture("picker-dropped");
-        v.interaction.focusSearch(true);
-        std::snprintf(v.model.search.data(), 65, "Alden");
-        v.model.filter(library.snapshot());
-        capture("search-caret-on");
-        v.interaction.tick(.6f, true);
-        capture("search-caret-off");
-        v.interaction.focusSearch(false);
-        v.model.search = {};
-        v.model.filter(library.snapshot());
-        v.model.defaults();
-        capture("picker-ready");
-        for (int i = 0; i < 20; ++i) {
-            auto draft = library.snapshot().records[i % 4].draft;
-            std::snprintf(draft.name.data(), draft.name.size(), "Adventurer %02d", i);
-            library.create(draft, library.snapshot().revision);
-        }
-        v.model.screen = MenuScreen::Library;
-        v.model.filter(library.snapshot());
-        capture("library-many");
-        v.model.firstRow = 3;
-        capture("library-scrolled");
-        std::snprintf(v.model.search.data(), 65, "No matching record");
-        v.model.filter(library.snapshot());
-        capture("library-no-results");
-        v.model.search = {};
-        v.model.filter(library.snapshot());
-        v.model.activeSlot = 0;
-        v.model.assign({library.snapshot().records[4].id, -1});
-        v.model.selected = library.snapshot().records[3].id;
-        v.model.screen = MenuScreen::Detail;
-        capture("detail-wizard");
-        v.message("Launch failed: prepared dungeon assets unavailable. Retry after repair.");
-        v.model.screen = MenuScreen::Picker;
-        capture("launch-error");
-        launchMenuParty(options, catalog, v.model.resolve(catalog, library.snapshot()), presenter, &saves);
-        return 0;
-    }
     Input input;
     bool suppress = true;
     while (!WindowShouldClose()) {

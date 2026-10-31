@@ -16,7 +16,7 @@ def main(runner, writer):
     env.pop("DISPLAY", None)
     env.pop("WAYLAND_DISPLAY", None)
     caps = json.loads(subprocess.check_output([runner, "--capabilities"], env=env, text=True))
-    assert "world" in caps["visibility_backends"] and caps["visual"]
+    assert caps["visibility_backends"] == ["world"] and caps["visual"]
     with tempfile.TemporaryDirectory(prefix="blobber-world-cli-") as tmp:
         root = Path(tmp)
         scenario = fixture(root)
@@ -25,7 +25,7 @@ def main(runner, writer):
         # Client forwarding is exercised against the actual runner, not a command mock.
         old_display = {key: os.environ.pop(key, None) for key in ("DISPLAY", "WAYLAND_DISPLAY")}
         try:
-            with Client(runner, root, "visual", trace, visibility="world") as client:
+            with Client(runner, root, "visual", trace) as client:
                 start = client.request("start", scenario=scenario)
                 assert start["ok"], start
                 observed = client.request("observe")
@@ -45,7 +45,7 @@ def main(runner, writer):
         assert header["visibility_backend"] == "world"
         assert header["visibility_version"] == "world-visibility-v3"
         assert "world_publication" in header["content"]
-        command = [runner, "--assets", str(root), "--mode", "visual", "--visibility", "world"]
+        command = [runner, "--assets", str(root), "--mode", "visual"]
         result = subprocess.run(command + ["--replay", str(trace)], env=env, capture_output=True, text=True)
         assert result.returncode == 0, (result.stdout, result.stderr)
         assert json.loads(result.stdout)["replay"] == "matched"
@@ -61,16 +61,18 @@ def main(runner, writer):
             result = subprocess.run(command + ["--replay", str(trace), "--capture-dir", str(root / "captures"), "--capture-operation", "1"], env=env, capture_output=True, text=True)
             assert result.returncode and "graphics_unavailable" in result.stderr
             assert not (root / "captures").exists()
-        height_trace = root / "heights.jsonl"
-        height_scenario = dict(kind="renderer_fixture", schema_version=1, fixture="r05-heights-v1", seed=5, party=scenario["party"])
-        with Client(runner, root, "visual", height_trace, visibility="world") as client:
-            started = client.request("start", scenario=height_scenario)
-            assert started["ok"], started
-            assert client.request("observe")["ok"]
-            assert client.request("reset")["ok"]
+        with Client(runner, root, "visual") as client:
+            retired = client.request("start", scenario=dict(kind="renderer_fixture"))
+            assert not retired["ok"], retired
             assert client.request("close")["ok"]
-        replayed = subprocess.run(command + ["--replay", str(height_trace)], env=env, capture_output=True, text=True)
-        assert replayed.returncode == 0, replayed.stderr
+        legacy = json.loads(records[0])
+        legacy["data"]["visibility_backend"] = "legacy"
+        records[0] = json.dumps(legacy)
+        modified.write_text("\n".join(records) + "\n")
+        result = subprocess.run(command + ["--replay", str(modified)], env=env, capture_output=True, text=True)
+        assert result.returncode and "header" in result.stderr, result.stderr
+        result = subprocess.run([runner, "--visibility", "world"], env=env, capture_output=True, text=True)
+        assert result.returncode and "Unknown" in result.stderr, result.stderr
         # Publication errors cannot fall back to permissive diagnostic visibility.
         payload = root / "prepared/world/textures.bin"
         data = bytearray(payload.read_bytes())

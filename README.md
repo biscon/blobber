@@ -1,10 +1,8 @@
 # Stone & Shadow
 
-A C++17 / raylib 6.2 prototype of a 1990s grid-based dungeon crawler. Rendering,
-six-direction keyboard movement, wall/NPC collision, and a small exploration level
-with animated goblins, a four-character party HUD, and hybrid ranged approach / turn-based combat with spells, class abilities, inventory, and equipment.
-
-![The great hall](docs/screenshots/great-hall.png)
+A C++17 / raylib 6.2 grid-based dungeon crawler with a four-character party,
+discrete movement, procedural expeditions, an outdoor sanctuary hub, arena combat,
+spells, class abilities, inventory, travel, and campaign save/Continue.
 
 ## Build and run
 
@@ -49,46 +47,9 @@ working-directory setup is required: assets are copied beside the executable.
 
 Build presets use at most two workers; test presets run serially and skip labelled
 slow integration tests. Run affected test targets in one configuration during
-iteration. Full persistence and legacy image-bank tests remain explicitly available.
+iteration. Full persistence tests remain explicitly available. Retired image-bank tests are deleted.
 See [verification workflow and resource limits](docs/verification_workflow.md) for
 when to run each check; full Debug/Release matrices and benchmarks are not routine.
-
-## R05 height and outdoor review
-
-`./cmake-build-debug/blobber --development --renderer-fixture r05-heights-v1`
-opens the bounded height review (F1 heights, F2 outdoor hub; F5 native filtered,
-F6 supersampling). `--capture-environment DIR` exports hidden application-owned
-captures with scripted step/door phases and labelled diagnostic poses. No OS input
-is injected. Normal `--renderer world` campaigns use the outdoor sanctuary hub;
-its floor layout, camp and stairs are unchanged.
-
-Heights use quarter-cell steps and shared traversal, clearance and sight rules.
-Legacy remains the normal default until R06, and rejects non-flat maps. Campaign
-save schema/simulation 2/2 rejects earlier saves without modifying them. World
-visibility v3 and appearance 4 require rebuilt publications and fresh strict traces.
-See [R05 design](docs/renderer_environment_design.md) and
-[verification](docs/r05_verification.md).
-
-## Alternative world renderer (R04)
-
-Launch `./cmake-build-debug/blobber --renderer world` to use the GPU world in
-New Game, arena and Continue. Legacy remains the default until R06 and can be
-selected explicitly with `--renderer legacy`. Supersampling defaults on;
-`--renderer world --supersampling off` selects native filtered rendering.
-
-Doors open permanently with a shared 300 ms presentation barrier in both backends.
-New actions wait; accepted impacts/effects continue. One fresh graphical movement
-can queue. Pause freezes the opening and clears input; Tab settles it immediately.
-Save/travel require settled opening and input. Existing saves remain compatible.
-
-Hidden application-owned world captures are available with `--capture-doors DIR`,
-`--renderer world --capture-spells DIR`, `--renderer world --capture-projectiles DIR`,
-`--renderer world --capture-arena DIR`, `--renderer world --capture-menu DIR`, and
-`--renderer world --capture-campaign-save DIR`. Other historical focused capture
-recipes retain their legacy implementation and reject world selection explicitly.
-World visual replay captures use the recorded backend; normal world observations
-need no display or graphics context. See [R04 design](docs/renderer_integration_design.md)
-and [headless protocol](docs/headless_protocol.md).
 
 ## Controls
 
@@ -98,7 +59,9 @@ and [headless protocol](docs/headless_protocol.md).
 | A / D | Strafe left / right one tile |
 | Q / E | Turn left / right 90 degrees |
 | Tab | Toggle animated / instant steps |
-| M | Toggle the development map overlay |
+| M | Toggle the discovered map overlay |
+| T / compass | Open Travel for checked stairs, waypoint entry or recall |
+| F | Interact with a nearby door, key or stair |
 | R / pause-menu Rest | Open camp; Left/Right selects Short/Long Rest, Enter starts, Escape closes |
 | Floor item hover / click / wheel | Inspect / collect into selected character / page through a crowded cell |
 | Monster hover / click | Preview reach and damage / immediately attack a reachable enemy |
@@ -158,8 +121,7 @@ allows camp: a Short Rest takes one gameplay hour and spends the Hit Dice you ch
 takes eight hours, costs one party camp kit outside an authored sanctuary, and restores
 living members' HP, mana, class charges and half their maximum Hit Dice (rounded down,
 minimum one). Dead companions stay dead; dying companions must first be stabilized.
-Normal dungeon play has no sanctuary. Alden starts with one kit; two more are on the
-floor. Cancel before starting costs nothing; Escape after starting only skips the
+The campaign begins at a sanctuary hub; expedition floors require camp kits. Cancel before starting costs nothing; Escape after starting only skips the
 animation. Portrait selection is distinct from the active turn.
 
 Loot stays in each monster's death cell after the corpse disappears. Click its loot
@@ -175,258 +137,48 @@ The small campfire icon in the top bar, beside Settings, opens camp. It is dimme
 when no beneficial, legal rest is available. R and the pause-menu Rest entry also
 open camp, where unavailable choices explain their requirements.
 
-Recovery demo: `./cmake-build-debug/blobber --recovery-demo --seed 5` uses separated
-encounters, supplies and an explicitly free sanctuary at the starting cell. The normal
-dungeon has no such sanctuary. `--capture-recovery DIRECTORY` exports hidden scripted
-camp/loot captures; add `--size 1280 720` or `--size 1024 768` to check scaling.
-See [slice 12 verification](docs/slice12_verification.md) for the review recipe.
+## Rendering and assets
 
-Inventory demo: `./cmake-build-debug/blobber --inventory-demo --seed 5` opens
-Merrin's inventory. Each character has 48 bag cells plus separate body, main-hand,
-shield and ranged slots. Weight includes both bag and equipment; the limit is
-Strength × 15 lb. Arrows stack to 100, potions to 20, and other items stay separate.
-Equipment changes and transfers require stationary, safe exploration. Bag
-organization remains available during paused danger. Rejected operations preserve
-all items; unequipping needs a free cell, while a replacement returns old equipment
-to its source cell. Drag to another character's tab to transfer; Shift-drag opens
-the quantity dialog with one selected. Escape cancels the pending operation.
-The sidebar Drop button puts the selected item or entire stack in a loot bag at
-the party's current cell, joining any existing loot. Dropping requires safe, stationary
-exploration; equipped items update your stats when dropped. Split a stack first to
-drop only part of it.
+The GPU world renderer is the sole graphical path, with reusable prepared material
+and sprite textures, mip chains and alpha masks. The world renders at 500×282 inside
+fixed 1920×1080 presentation; UI art/text draw at native resolution. Supersampling
+is on by default; `--supersampling off` selects native filtered quality. No renderer
+selector or CPU color fallback remains. Desktop gameplay requires OpenGL 3.3.
 
-Drop onto the same item to merge stacks. The sidebar shows only actions relevant
-to the selected item; temporarily blocked actions are dimmed with a reason.
+Normal builds prepare `assets/prepared/world/{metadata.json,textures.bin,sources.json}`
+and native creator/portrait atlases beside the executable. Source artwork and NPC
+sheet extraction remain; scene/NPC/loot perspective banks and their bakers are gone.
+Incremental builds also remove obsolete banks from managed build asset outputs.
+Missing/corrupt world publication or incompatible NPC definitions fail clearly.
 
-The Character tab shares the character strip and shows live resources, effective
-AC, equipped weapon attacks/damage, ability scores and saves, proficiencies, class
-features and effects. Switching tabs preserves the viewed character and cancels
-unfinished inventory operations. Character inspection preserves a pending spell;
-entering Inventory cancels targeting. XP shows the stored value and progress toward
-level 2 (300 XP); XP awards and the future level-up flow are not implemented yet.
-See the [approved character sheet design](docs/character_sheet_design.md).
+Runtime options: `--assets DIRECTORY`, `--campaign-save FILE`, `--size WIDTH HEIGHT`,
+`--seed UINT32`, `--development`, `--supersampling on|off`, `--help`. The development
+flag retains existing in-game diagnostics; standalone demos, previews, public height
+showcase and dedicated screenshot commands have been retired. A future cheat/debug
+interface is separate work.
 
-Use a potion from its owner's inventory, then click a living ally or confirm with
-Enter. Healing restores 2d4+2 HP, including reviving a dying ally; mana restores two.
-Both use one action or the character's shared six-second cooldown. Full resources
-reject without consumption. Every accepted party bow attack spends an arrow,
-including misses and interrupted projectiles. Arrows and potions do not replenish
-between encounters; looting and rests remain deferred.
+NPC source definitions retain registered four-direction animation and attachment
+metadata. Living occupants block cells; hurt/death, prone posture, loot, doors and
+raised surfaces share world depth/IDs for interaction. See the [system design](docs/system_design.md)
+and [NPC metadata](docs/npc_design.md) for content authoring and ownership.
 
-`--capture-inventory DIRECTORY` exports hidden, scripted inventory captures.
-See [inventory design](docs/inventory_design.md) and the [accepted slice 11 handoff](docs/slice11_verification.md).
+## Automation and screenshots
 
-Slice 10 review: `./cmake-build-debug/blobber --spell-demo --seed 5` opens the
-Wizard's spellbook on the hybrid demo map. Browsing pauses; selecting an entry
-resumes play. Click a body/portrait for a single-target cast. Bless/Bane/Acid Splash
-let you toggle multiple targets. Magic Missile starts empty: each left-click adds
-one dart; right-click or Shift-click removes one. At the limit, remove a dart before
-reassigning it. Confirm multi-target and area spells with Cast/Enter.
-The casting dock replaces ordinary action buttons while the log stays visible.
-Selected portraits have teal frames/checkmarks; the caster retains a gold outer
-border. Recipient chips remove allies. Area spells preview the actual clear front
-cells and affected enemies. B returns to the picker; Escape cancels without spending.
-Invalid recipients are removed individually, preserving other selections.
-Fighter Second Wind and Wizard Arcane Recovery are in the same picker. A blue
-portrait marker indicates concentration; inspect details for effects and use
-End concentration in the picker to dismiss it freely. Rogue features are automatic.
+`blobber_headless --mode diagnostic|visual` drives the regular session engine through
+bounded JSON lines. Visual mode always uses CPU world depth/IDs and needs no display,
+raylib context or source PNGs, including graphics-disabled builds; provide the prepared
+world publication in its `--assets` directory. Diagnostic mode needs only rules/NPC
+JSON. The Python client, local MCP adapter and opt-in arena experiments share this path.
+See [protocol](docs/headless_protocol.md), [MCP usage](docs/mcp_usage.md) and
+[arena experiments](experiments/arena/README.md).
 
-`--capture-spells DIRECTORY` exports deterministic hidden-window spell/ability
-captures. `blobber_spells_tests --trace` provides a headless impact/resource trace.
-See [spell design](docs/spells_design.md) for the exact roster and adaptations, and
-[casting UI design](docs/spellcasting_ui_design.md) for interaction and rendering contracts.
+Replay image export remains available in graphics builds using `--replay FILE`,
+`--capture-dir NEW_DIRECTORY` and 1–8 `--capture-operation N` arguments. It creates
+its own hidden GPU context and exports the current scene/HUD without advancing time.
+It never captures other windows or injects OS input. Strict replay rejects old
+renderer recordings. Review evidence: [R06 verification](docs/r06_verification.md).
 
-For immediate review, run `./cmake-build-debug/blobber --combat-demo --seed 5`.
-This starts beside the existing goblins using the production combat path. `--seed`
-accepts an unsigned 32-bit integer; normal play reports its generated seed and
-restart reuses it. See [current UI review](docs/dungeon_ui_verification.md) and [combat limitations](docs/slice05_verification.md).
-
-Run `./cmake-build-debug/blobber --ui-demo` for eight deterministic development
-scenarios near the goblins. F2/NEXT advances; F3/RESET resets the current scenario.
-The banner identifies sample HP/mana/status values; they never change the real
-party. Scenarios cover previews, unavailable actions, missing/removed targets,
-low HP/unconscious/dead displays and log rollover. The regular `--capture` command
-also exports eight `ui-*` images. See [slice 04 review](docs/slice04_verification.md).
-
-The player starts at `(3, 21)`, facing north. The enclosed 25×25 test map contains
-two large chambers, pillars, loops, dead ends, and long corridors. Press M to
-inspect the layout. `assets/maze.txt` is plain ASCII: `#` is solid, `.` is floor.
-All floor tiles must be reachable from the spawn.
-
-## NPCs
-
-The test goblins stand at **(18,17)** in the southeast great hall, facing south.
-The player still starts at (3,21). Use M and the coordinate readout to navigate;
-stand at (18,18) facing north to start a frontal fight. Contact turns the goblins
-toward the party. Authored directional views remain in the capture diagnostics.
-Living occupants block player entry into the entire cell.
-
-![The goblin in the great hall](docs/screenshots/npc-front.png)
-
-Edit `assets/npcs/level.json` to list definition files and placements. Each
-placement has a string `type`, integer `cell: [x,y]`, `subcell: [x,y]` with each
-component 0 or 1, and `facing: "north"`, `"east"`, `"south"`, or `"west"`.
-The four subcells are world-aligned quarter/three-quarter positions; at most one
-NPC occupies each slot. All current runtime placements are hostile; friendly
-NPC behavior is not implemented.
-
-A definition such as `assets/npcs/goblin/goblin.json` contains `id`, `width`,
-`height` (full canvas dimensions in cell units), and four `views` named `front`,
-`back`, `left`, `right`. Left/right refer to the NPC's anatomical sides. Each view
-is a PNG path or `{ "image": "front.png", "anchor": [0.5, 1.0] }`; anchors are
-normalized foot positions, defaulting to bottom center. Paths are relative to
-the JSON that declares them. An optional `alpha_cutoff` (default 0) removes pixels
-at or below that alpha during preparation. Source PNGs remain unchanged.
-
-Rebuild to copy edited assets beside the executable. Custom `--assets` directories
-must include `npcs/level.json`; use `{ "definitions": [], "instances": [] }` for
-an empty level. Invalid placements, unknown types, malformed assets, and exceeded
-limits fail at startup with an error. See the [NPC design](docs/npc_design.md) for
-ownership, limits, and future extension points. Animated definitions use `animations`
-instead of `views`; each clip has `durations_ms` and directional frame arrays.
-Optional clip `width` overrides canvas width (death may be up to one cell wide).
-Hurt/death clips are triggered, never placement loops. Runtime actors have HP,
-live occupancy, checked movement/removal and damage/death reactions. Production actors idle while stationary combat resolves independently;
-authored walk/attack loops remain isolated showcases. Production enemy attacks play
-the existing attack clip once on hits and misses. Red damage splats and white MISS
-splats briefly mark the affected monster or party portrait. Autonomous cross-cell
-movement and runtime spawning remain deferred. Goblins flinch for 300 ms on damage;
-lethal damage immediately releases collision, plays a 600 ms collapse, holds a
-corpse for 600 ms, then hides. Both reactions retain the first 100 ms white flash.
-All four hurt/death directions are authored; existing attacks remain front-only.
-See [slice 06 review and captures](docs/slice06_verification.md).
-
-## Rendering
-
-This is a **2D image compositor**. At startup it prepares perspective wall sprites
-for fixed cardinal headings, covering twelve tiles of depth and eight lateral
-fractions of a tile. Each fraction has sixteen floor/ceiling backgrounds (four
-headings × four world X/Y parity combinations). It then selects and layers
-those sprites for the current view. Each prepared sprite stores cropped vertical
-pixel strips and their depth; a column coverage buffer resolves occlusion at
-corners and pillars. Equal-height walls make this coverage representation exact.
-NPCs use pre-scaled, shaded alpha images at the same subcell depths and strafe
-phases. They are blended far-to-near and clipped against wall column depths,
-including partial pillar occlusion. Soft semitransparent contact shadows are
-prepared as floor-projected blobs and blended beneath the bodies. The runtime
-scene compositor uses neither
-ray traversal nor a 3D camera/mesh.
-
-The prepared projection uses a 90° horizontal field of view and a viewpoint 0.4
-tiles behind the player's tile center, still inside that tile. This exposes side
-passages while standing beside them and keeps an adjacent wall far enough away
-to leave foreground floor visible. The horizon is 36% down the viewport, giving
-more space to the floor. This is an off-center projection, keeping vertical walls
-upright rather than pitching them. `ViewProjection` in `src/render/projection.hpp` holds
-these settings; wall sprites, floor/ceiling sampling, and movement effects share
-them. The player remains at the tile center for movement and collision.
-
-The textures are original imagegen artwork, normalized to 256×256 PNGs with
-nearest-neighbor sampling. Mirrored tile addressing joins texture edges.
-Side faces, ceilings, distance shading, and a twelve-tile fade give depth cues.
-Floor, ceiling, and wall texture parity is anchored to the map so materials remain
-attached to their surfaces throughout a side step and at its endpoint.
-
-Grid moves and headings remain discrete. Forward/back movement uses short
-image-space zoom/inset effects; Q/E turns use stretched strips. A/D strafes use
-the prepared fractional views at the same heading: nearby objects move farther
-than distant walls, the horizon stays fixed, and newly revealed surfaces are
-composed with proper occlusion. Left strafes reuse the same eight-step cache in
-reverse. The game still draws 2D images; no runtime 3D scene or raycaster is used.
-Tab switches transitions off.
-
-The dungeon retains its 500×282 prepared pixel view at logical `(4, 18)`, enlarged
-3× within the fixed **1920×1080 presentation**. The whole HUD—portraits, icons,
-borders, controls and text—renders directly at native resolution. Logical layout
-coordinates and hit testing still use the 640×360 grid. Final aspect fitting uses
-point sampling for the dungeon and bilinear sampling for the premultiplied UI,
-with centered black bars when needed.
-HUD fonts are DejaVu Serif Bold for headings/names, IBM Plex Sans for controls,
-and Inconsolata for the log, using native 21/24/27 px atlases.
-`assets/fonts` and `assets/ui` are copied beside the executable and required for custom assets.
-Twenty-eight images are prepared from their original sources into one 2048×1024
-atlas at startup, sized for native display rather than the old low-resolution HUD.
-Exact built-in imagegen prompts remain in `assets/ui/prompts.json` and
-`assets/ui/spells/prompts.json`; font licenses are alongside the bundled fonts.
-Window resizing never changes the logical resolution, perspective, or UI layout.
-At noninteger scales, pixel widths necessarily vary slightly to fill the fitted area.
-
-## Assets and screenshots
-
-Keep disposable generation experiments, unselected sheets, and intermediate
-files in `/tmp` outside the repository or in the ignored repository directories
-`tmp/`, `temp/`, `scratch/`, or `output/`. Asset-local directories named `tmp`,
-`temp`, or `scratch` are also ignored. Use `captures/` or `captures-*/` for
-disposable diagnostic captures.
-
-Selected source artwork, animation sheets, runtime textures/frames, manifests,
-prompts, and curated previews in `docs/screenshots/` are intentional versioned
-assets, even when generated by a tool. Do not put them in the scratch directories.
-
-The three original images are in `assets/originals/`; the runtime textures are in
-`assets/textures/`. Each exact generation prompt is saved as
-`assets/{wall,floor,ceiling}-prompt.txt`. All three were made using the built-in
-imagegen tool; no original game artwork is included. The four goblin views were
-also generated with the built-in imagegen tool. Selected PNGs are in
-`assets/npcs/goblin/` (`front.png`, `back-v2.png`, `left.png`, `right.png`), alongside
-the exact prompt history in `prompts.txt` and an unused first back-view variant.
-
-To repeat the deterministic normalization of the generated originals:
-
-```sh
-cmake --build --preset debug --target blobber_prepare_assets
-./cmake-build-debug/blobber_prepare_assets assets/originals assets/textures
-cmake --build --preset debug
-```
-
-The developer capture mode preserves existing dungeon, transition, NPC, actor and
-UI diagnostic filenames and adds combat and four-direction reaction cases for the shipped level.
-It also exports focused `hud-*` cases at native, 1280×720, and letterboxed
-1024×768 sizes, then exits. Capture mode uses a hidden window and exports its own
-render targets; it never captures another window or injects desktop input:
-
-```sh
-./cmake-build-debug/blobber --capture /tmp/blobber-captures
-# Focused UI captures only:
-./cmake-build-debug/blobber --capture-hud /tmp/blobber-ui
-# Focused hurt/death poses, transitions, corpse replacement and combat outcomes:
-./cmake-build-debug/blobber --capture-reactions /tmp/blobber-reactions
-```
-
-`--assets DIRECTORY` overrides the default executable-relative asset directory.
-Missing assets or malformed maps produce a clear error and a nonzero exit status.
-Representative verified screenshots are included in `docs/screenshots/`.
-
-## Code and checks
-
-The [system design](docs/system_design.md) describes module boundaries, ownership,
-capacities, and extension points. The project is organized into world, movement,
-input timing, assets, CPU rendering, UI, platform, and application modules.
-`main.cpp` only calls the application and reports errors.
-
-The CPU frame path reuses three fixed-size buffers. Prepared wall data uses
-contiguous column/pixel arrays, and unchanged views skip viewport uploads.
-GPU textures and render targets are owned by bounded registries with typed,
-generation-checked handles and RAII cleanup before the window closes.
-
-Seventeen routine CTest suites cover rules/health/party/actors/combat, commands and input, picking,
-core behavior, rendering against an independent geometric oracle, resource
-lifetime/loading failures, NPC loading/rendering/collision, and zero C++ allocations
-in engine-owned CPU frame processing. They own their fixtures and need no display.
-Loading, preparation, diagnostic exports, and raylib/driver internals are outside
-the allocation guarantee. No performance benchmark framework is required.
-
-The separate GPU lifecycle check needs a display and uses a hidden window:
-
-```sh
-cmake --build --preset debug --target blobber_gpu_smoke
-./cmake-build-debug/blobber_gpu_smoke
-```
-
-C++ formatting is defined by `.clang-format`. See [research notes](docs/research.md)
-for historical sources and [verification notes](docs/verification.md) for checks
-and remaining platform limitations.
-
-The prototype has no inventory/equipment UI, interactive doors, audio,
-save system, or procedural level generation. Walls have one uniform height;
-transparent walls and variable elevations would require a richer coverage model.
+Keep disposable captures/experiments in ignored `captures/`, `scratch/` or a suitably
+sized temporary directory. Selected source art, prompts, animation sheets and curated
+historical screenshots remain versioned. The source texture normalization and NPC
+sheet tools remain explicit authoring tools, independent of runtime rendering.

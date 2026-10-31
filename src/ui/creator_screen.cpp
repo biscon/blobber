@@ -204,7 +204,7 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
                   preview.stats.abilities[0], preview.stats.abilities[1], preview.stats.abilities[2],
                   preview.stats.abilities[3], preview.stats.abilities[4], preview.stats.abilities[5]);
     detail("Final abilities", line);
-    detail("Skills", "Not available in this demo");
+    detail("Skills", "Not available yet");
     if (d.defense)
         detail("Fighter", "Defense / Second Wind");
     if (d.lifeDomain)
@@ -363,7 +363,7 @@ void drawCreator(void* context, const UiFonts& fonts, const UiArt& art) {
         p.text("Skills", 174, 66, gold, UiTextStyle::Display);
         p.box({174, 99, 448, 201});
         p.centered("Skill selection is coming later", {180, 155, 436, 28}, gold, UiTextStyle::Control);
-        p.centered("Skills are not used in this demo. No selection required.", {180, 195, 436, 24});
+        p.centered("Skills are not available yet. No selection required.", {180, 195, 436, 24});
         break;
     case CreatorStep::Cantrips:
     case CreatorStep::Racial:

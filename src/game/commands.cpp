@@ -78,8 +78,6 @@ const char* commandMessage(CommandReason reason) noexcept {
         return "Close the overlay to act.";
     case CommandReason::FeatureRequired:
         return "Requires the Rogue back-row feature.";
-    case CommandReason::PreviewAccepted:
-        return "Preview only: no costs or combat.";
     case CommandReason::InvalidCharacter:
         return "Invalid character.";
     case CommandReason::InvalidAction:
@@ -113,19 +111,13 @@ void CombatLog::append(const char* message) noexcept {
 const char* CombatLog::newest(std::size_t offset) const noexcept {
     return offset < count_ ? entries_[(next_ + capacity - 1 - offset) % capacity].data() : "";
 }
-CommandController::CommandController(const Party& party, const ActorWorld& actors)
-    : party_(party), actors_(actors) {
-    state_.selection.character = party.snapshot().formation[0];
-    refresh({}, false, false, true);
-    appendLog("Choose a character, action and target. Mana is unavailable until the spell slice.");
-}
 CommandController::CommandController(GameSession& session, const std::vector<NpcTimings>& timings)
-    : CommandController(session.party(), session.actors()) {
+    : session_(session), party_(session.party()), actors_(session.actors()) {
+    state_.selection.character = party_.snapshot().formation[0];
     if (!timings.empty() && timings.size() != actors_.snapshot().typeCount)
         throw std::invalid_argument("HUD animation/world type counts differ");
     for (const auto& timing : timings)
         validateNpcTimings(timing);
-    session_ = &session;
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
     refresh({}, false, false, true);
@@ -298,13 +290,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                 ? "Arena cleared. Rematch restores the starting setup; Edit Setup changes the scenario."
                 : "Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
     if (out.phase == CombatPhase::Defeat)
-        appendLog(session_ && session_->campaign()
-                      ? "Defeat: this expedition has ended. Return to Main Menu."
-                      : "Defeat: nobody is conscious. Restart begins a fresh session.");
+        appendLog(session_.campaign() ? "Defeat: this expedition has ended. Return to Main Menu."
+                                      : "Defeat: nobody is conscious. Restart begins a fresh session.");
 }
 void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     const auto* actor = actors_.actor(out.enemy);
-    if (!session_ || (!out.enemyAttack && !actor) || (out.enemyAttack && !party_.character(out.recipient)))
+    if ((!out.enemyAttack && !actor) || (out.enemyAttack && !party_.character(out.recipient)))
         return;
     CombatFeedback next;
     next.active = true;
@@ -319,8 +310,8 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     next.enemy = out.enemy;
     next.damage = out.damage;
     next.startedMs = out.occurredMs;
-    if (session_->timeMs() < next.startedMs ||
-        session_->timeMs() - next.startedMs >= CombatFeedback::durationMs)
+    if (session_.timeMs() < next.startedMs ||
+        session_.timeMs() - next.startedMs >= CombatFeedback::durationMs)
         return;
     if (!next.party) {
         // This is the last presented target image, including for a newly dead actor.
@@ -354,7 +345,7 @@ void CommandController::refreshFeedback(bool clear) noexcept {
         hitUntil_ = {};
         return;
     }
-    const auto now = session_->timeMs();
+    const auto now = session_.timeMs();
     for (auto& entry : state_.feedback)
         if (entry.active && now - entry.startedMs >= CombatFeedback::durationMs)
             entry.active = false;
@@ -373,53 +364,52 @@ bool CommandController::visible(ActorId id) const noexcept {
             return true;
     return false;
 }
-void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
-                                const HudDemo* demo) noexcept {
-    moving |= session_ && session_->opening();
-    if (session_ && session_->objective().known) {
-        if (session_->objective().completed && !objectiveReported_) {
+void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen,
+                                bool focused) noexcept {
+    moving |= session_.opening();
+    if (session_.objective().known) {
+        if (session_.objective().completed && !objectiveReported_) {
             state_.log.append("Guardians defeated. Gate opened; supplies await beyond.");
             objectiveReported_ = true;
         }
-        if (session_->objective().capacityFailure && !objectiveFailureReported_) {
+        if (session_.objective().capacityFailure && !objectiveFailureReported_) {
             state_.log.append("Objective could not commit: floor revision capacity exhausted.");
             objectiveFailureReported_ = true;
         }
     }
-    if (state_.save.enabled && session_) {
-        state_.save.reason = session_->saveSafety();
+    if (state_.save.enabled) {
+        state_.save.reason = session_.saveSafety();
         state_.save.allowed = !state_.save.reason;
     }
-    state_.campaign = session_ && session_->campaign();
-    state_.campaignTerminal = state_.campaign && session_->campaign()->status() != CampaignStatus::Active;
-    state_.campaignVictory = state_.campaign && session_->campaign()->status() == CampaignStatus::Victory;
-    state_.locationName = state_.campaign ? session_->campaign()->name() : "";
+    state_.campaign = session_.campaign();
+    state_.campaignTerminal = state_.campaign && session_.campaign()->status() != CampaignStatus::Active;
+    state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
+    state_.locationName = state_.campaign ? session_.campaign()->name() : "";
     const bool sanctuary = state_.campaign && !state_.campaignTerminal &&
-                           session_->movement().player.cell == Cell{4, 4} &&
-                           session_->campaign()->activeLocation() == 0;
+                           session_.movement().player.cell == Cell{4, 4} &&
+                           session_.campaign()->activeLocation() == 0;
     const char* locationHint = sanctuary ? "Sanctuary hub (R: rest)" : state_.locationName;
     std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s", locationHint);
     if (state_.campaignTerminal)
         std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
                       "This expedition has ended. Return to Main Menu.");
-    state_.floor = session_ ? &session_->fixtures() : nullptr;
-    state_.questKeys = session_ ? session_->party().questKeys() : 0;
-    if (session_ && !state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
+    state_.floor = &session_.fixtures();
+    state_.questKeys = session_.party().questKeys();
+    if (!state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
         !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
-        const auto request = session_->nearbyFixture();
-        const auto* f = session_->fixtures().find(request.id);
+        const auto request = session_.nearbyFixture();
+        const auto* f = session_.fixtures().find(request.id);
         if (f &&
-            (!session_->fixtures().definition().discovery || session_->fixtures().known(request.id.slot))) {
-            const auto result = session_->interact(request, true);
+            (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
+            const auto result = session_.interact(request, true);
             std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s%sF / %s - %s",
                           locationHint, state_.campaign ? " | " : "", fixtureName(*f),
-                          state_.campaign && session_->campaign()->activeLocation() == 0 && result
+                          state_.campaign && session_.campaign()->activeLocation() == 0 && result
                               ? "Choose a floor entry."
                               : result.reason);
         }
     }
-    state_.production = session_ != nullptr;
-    state_.development = session_ && session_->development();
+    state_.development = session_.development();
     if (state_.camp.open)
         refreshCamp();
     if (state_.travel.open)
@@ -428,8 +418,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         state_.inventory.pointerDown = false;
         state_.inventory.dragging = false;
     }
-    if (session_) {
-        const auto& combat = session_->combat().snapshot();
+    {
+        const auto& combat = session_.combat().snapshot();
         refreshFeedback(false);
         if (combat.turn != state_.combat.turn || combat.phase != state_.combat.phase) {
             if (!realTime(combat.phase))
@@ -461,15 +451,15 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                                                state_.inventory.itemCommand.world != combat.world))
             state_.inventory.itemTargeting = false;
         state_.combat = combat;
-        session_->combat().previewTurns(state_.combat);
+        session_.combat().previewTurns(state_.combat);
         state_.selection.world = combat.world;
         state_.selection.turn = combat.turn;
     }
     suspension_ = !focused  ? CommandReason::Unfocused
                   : moving  ? CommandReason::Moving
                   : mapOpen ? CommandReason::MapOpen
-                            : CommandReason::PreviewAccepted;
-    state_.suspended = suspension_ != CommandReason::PreviewAccepted;
+                            : CommandReason::Ready;
+    state_.suspended = suspension_ != CommandReason::Ready;
     TargetSnapshot normalized;
     if (targets.count <= targets.ids.size() && targets.world == actors_.snapshot().world &&
         targets.revision == actors_.snapshot().revision) {
@@ -502,21 +492,17 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     }
     state_.protectedTargets.fill(false);
     state_.conditions.fill(0);
-    if (session_)
-        for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
-            for (unsigned k = 0; k < unsigned(EffectKind::Count); ++k)
-                if (session_->effects().has(actors_.id(i), EffectKind(k)))
-                    state_.conditions[i] |= 1u << k;
-    if (session_)
-        for (std::size_t i = 0; i < state_.targets.count; ++i) {
-            const auto* target = actors_.actor(state_.targets.ids[i]);
-            const auto pose = session_->movement().player;
-            state_.protectedTargets[i] = target && inFrontBand(pose.cell, pose.heading, target->npc.cell) &&
-                                         !session_->combat().exposed(state_.targets.ids[i]);
-        }
-    state_.demo = !session_ && demo && demo->enabled;
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
+        for (unsigned k = 0; k < unsigned(EffectKind::Count); ++k)
+            if (session_.effects().has(actors_.id(i), EffectKind(k)))
+                state_.conditions[i] |= 1u << k;
+    for (std::size_t i = 0; i < state_.targets.count; ++i) {
+        const auto* target = actors_.actor(state_.targets.ids[i]);
+        const auto pose = session_.movement().player;
+        state_.protectedTargets[i] = target && inFrontBand(pose.cell, pose.heading, target->npc.cell) &&
+                                     !session_.combat().exposed(state_.targets.ids[i]);
+    }
     state_.allyCount = 0;
-    state_.demoScenario = state_.demo ? demo->scenario : 0;
     for (std::size_t i = 0; i < rules::partySize; ++i) {
         const auto id = party_.snapshot().formation[i];
         const auto& member = *party_.character(id);
@@ -528,8 +514,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.abilities = member.stats.abilities;
         card.armorClass = member.stats.armorClass;
         card.level = member.build.level;
-        card.levelEligible = session_ && session_->advancementEligibility(session_->advancementRequest(id)) ==
-                                             AdvancementError::None;
+        card.levelEligible =
+            session_.advancementEligibility(session_.advancementRequest(id)) == AdvancementError::None;
         card.portrait =
             member.build.portrait.index < rules::portraitCount ? 64u + member.build.portrait.index : 255u;
         const std::array<EquipmentSlot, 4> equipped{EquipmentSlot::MainHand, EquipmentSlot::OffHand,
@@ -550,10 +536,10 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                                                             : DisplayStatus::Unconscious;
         card.successes = member.successes;
         card.failures = member.failures;
-        if (session_) {
-            card.armorClass = session_->effects().armorClass(id);
-            card.concentration = session_->effects().concentrationStatus(id);
-            card.effects = session_->effects().statuses(id);
+        {
+            card.armorClass = session_.effects().armorClass(id);
+            card.concentration = session_.effects().concentrationStatus(id);
+            card.effects = session_.effects().statuses(id);
             card.hasDeathSaves = member.life == rules::Life::Dying;
             card.active = realTime(state_.combat.phase)
                               ? state_.selection.character.index == id.index
@@ -563,27 +549,18 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             card.cooldownMs = state_.combat.cooldownMs[id.index];
             card.spent = state_.combat.spent[id.index] && !realTime(state_.combat.phase);
             card.defending = state_.combat.defending[id.index];
-            card.recentlyHit = session_->timeMs() < hitUntil_[id.index];
-            for (const auto& shot : session_->combat().attacks().attacks)
+            card.recentlyHit = session_.timeMs() < hitUntil_[id.index];
+            for (const auto& shot : session_.combat().attacks().attacks)
                 card.incomingShot |= shot.incoming && shot.ranged && shot.character.index == id.index &&
                                      shot.stage == AttackStage::Flight;
-            if ((member.life == rules::Life::Dying || session_->effects().has(id, EffectKind::Sleep)) &&
+            if ((member.life == rules::Life::Dying || session_.effects().has(id, EffectKind::Sleep)) &&
                 id.index != state_.selection.character.index)
                 state_.allies[state_.allyCount++] = id;
-        }
-        if (state_.demo) {
-            const auto& r = demo->resources[id.index];
-            card.hp = std::clamp(r.hp, 0, card.maxHp);
-            card.mana = std::max(0, r.mana);
-            card.maxMana = std::max(card.mana, r.maxMana);
-            card.hasMana = true;
-            card.status = r.status;
         }
     }
     if (state_.selection.target && (moving || !focused || !visible(*state_.selection.target))) {
         const auto* selected = actors_.actor(*state_.selection.target);
-        if (!session_ ||
-            (state_.combat.phase == CombatPhase::Turns && selected && selected->life == ActorLife::Alive))
+        if ((state_.combat.phase == CombatPhase::Turns && selected && selected->life == ActorLife::Alive))
             appendLog(commandMessage(moving     ? CommandReason::Moving
                                      : !focused ? CommandReason::Unfocused
                                                 : CommandReason::NotVisible));
@@ -625,7 +602,7 @@ void CommandController::updateAvailability() noexcept {
     }
 }
 void CommandController::selectCharacter(std::size_t index) noexcept {
-    if (session_ && state_.selection.action == PartyAction::Aid && index < rules::partySize) {
+    if (state_.selection.action == PartyAction::Aid && index < rules::partySize) {
         state_.selection.ally = party_.snapshot().formation[index];
         updateAvailability();
         return;
@@ -653,7 +630,7 @@ void CommandController::selectAction(PartyAction action) noexcept {
     updateAvailability();
 }
 void CommandController::cycleAction(int delta) noexcept {
-    const int count = session_ ? static_cast<int>(PartyAction::Count) : 6;
+    const int count = static_cast<int>(PartyAction::Count);
     selectAction(static_cast<PartyAction>(
         (static_cast<int>(state_.selection.action) + (delta < 0 ? count - 1 : 1)) % count));
 }
@@ -667,7 +644,7 @@ void CommandController::selectTarget(ActorId target) noexcept {
     updateAvailability();
 }
 void CommandController::cycleTarget(int delta) noexcept {
-    if (session_ && state_.selection.action == PartyAction::Aid) {
+    if (state_.selection.action == PartyAction::Aid) {
         if (!state_.allyCount)
             return;
         std::size_t next = delta < 0 ? state_.allyCount - 1 : 0;
@@ -725,50 +702,23 @@ void CommandController::movementStarted() noexcept {
 CommandReason CommandController::validate(const PartyCommand& command) const noexcept {
     if (state_.suspended)
         return suspension_;
-    if (session_) {
-        if (state_.modal())
-            return CommandReason::LogOpen;
-        const auto reason = session_->combat().validate(command, session_->movement().player);
-        if (reason != CommandReason::Ready)
-            return reason;
-        return targetVisibility(command, party_.catalog(), state_.targets, actors_.snapshot());
-    }
-    if (!party_.character(command.character))
-        return CommandReason::InvalidCharacter;
-    if (static_cast<unsigned>(command.action) >= static_cast<unsigned>(PartyAction::Count))
-        return CommandReason::InvalidAction;
-    bool back = false;
-    for (std::size_t i = 0; i < rules::partySize; ++i)
-        if (state_.cards[i].id.index == command.character.index) {
-            if (state_.cards[i].status != DisplayStatus::Ready)
-                return CommandReason::CannotAct;
-        }
-    for (std::size_t i = 2; i < rules::partySize; ++i)
-        if (party_.snapshot().formation[i].index == command.character.index)
-            back = true;
-    if (command.action >= PartyAction::Ranged)
-        return CommandReason::Unavailable;
-    if (command.action == PartyAction::BackMelee && !back)
-        return CommandReason::BackRowOnly;
-    if (command.action == PartyAction::Defend)
-        return CommandReason::PreviewAccepted;
-    if (!command.target)
-        return CommandReason::MissingTarget;
-    const auto* actor = actors_.actor(*command.target);
-    if (!actor || actor->life != ActorLife::Alive)
-        return CommandReason::InvalidTarget;
-    return visible(*command.target) ? CommandReason::PreviewAccepted : CommandReason::NotVisible;
+    if (state_.modal())
+        return CommandReason::LogOpen;
+    const auto reason = session_.combat().validate(command, session_.movement().player);
+    if (reason != CommandReason::Ready)
+        return reason;
+    return targetVisibility(command, party_.catalog(), state_.targets, actors_.snapshot());
 }
 CommandReason CommandController::submit(const PartyCommand& command) noexcept {
     const auto reason = validate(command);
-    if (session_ && reason == CommandReason::Ready) {
+    if (reason == CommandReason::Ready) {
         const auto submitted = command;
         const bool magic = submitted.action == PartyAction::Spell || submitted.action == PartyAction::Feature;
-        const auto out = session_->submit(command);
-        record(session_->events());
+        const auto out = session_.submit(command);
+        record(session_.events());
         if (out.reason == CommandReason::Resolved) {
             cancel();
-            if (magic && session_->combat().casterResolving(submitted.character)) {
+            if (magic && session_.combat().casterResolving(submitted.character)) {
                 state_.magic.pending = submitted;
                 state_.magic.pending.targetCount = 0;
                 setCastingState(CastingState::Resolving);

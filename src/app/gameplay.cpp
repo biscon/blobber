@@ -1,7 +1,5 @@
 #include "app/gameplay.hpp"
-#include "app/ai_demo.hpp"
 #include "app/campaign_saves.hpp"
-#include "app/hybrid_demo.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
 #include "platform/game_view.hpp"
@@ -22,15 +20,6 @@ NpcWorld gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn) 
         types.push_back(source.typeId({static_cast<std::uint16_t>(i)}));
     return NpcWorld(map, spawn, std::move(types), std::move(instances));
 }
-Player combatCamera(const Map& map, const NpcWorld& placements) {
-    for (const auto& actor : placements.instances())
-        for (const auto heading : {Heading::North, Heading::East, Heading::South, Heading::West}) {
-            const auto cell = actor.cell + forward(heading) * -1;
-            if (!map.solid(cell) && !placements.occupied(cell))
-                return {cell, heading};
-        }
-    throw std::runtime_error("Combat demo requires an accessible monster cell");
-}
 namespace {
 struct PlayView {
     std::unique_ptr<GameSession> ownedSession;
@@ -41,18 +30,18 @@ struct PlayView {
     const Map& map;
     std::optional<generation::DiagnosticView> diagnostics;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
-             const std::vector<NpcTimings>& timings, const SceneRenderer* r, std::uint32_t seed, Player spawn,
-             bool enableAi = false, const RecoveryLevel& recovery = {},
+             const std::vector<NpcTimings>& timings, WorldRenderer& world, std::uint32_t seed, Player spawn,
+             bool enableAi = true, const RecoveryLevel& recovery = {},
              const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {},
-             const FloorObjectiveDefinition& objective = {}, WorldRenderer* world = nullptr)
+             const FloorObjectiveDefinition& objective = {})
         : ownedSession(std::make_unique<GameSession>(m, catalog, starting ? *starting : *catalog.preset(),
                                                      placements, seed, spawn, enableAi, timings, recovery,
                                                      fixtures, objective)),
-          session(*ownedSession), animator(session.actors(), timings), frames(r, world),
+          session(*ownedSession), animator(session.actors(), timings), frames(world),
           commands(session, timings), map(m) {}
-    PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, const SceneRenderer* r,
-             const generation::GeneratedFloor* floor = nullptr, WorldRenderer* world = nullptr)
-        : session(game), animator(game.actors(), timings), frames(r, world), commands(game, timings), map(m) {
+    PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, WorldRenderer& world,
+             const generation::GeneratedFloor* floor = nullptr)
+        : session(game), animator(game.actors(), timings), frames(world), commands(game, timings), map(m) {
         if (floor)
             diagnostics = generation::diagnosticView(*floor);
     }
@@ -72,21 +61,12 @@ struct PlayView {
 };
 } // namespace
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
-                        const std::vector<NpcTimings>& timings, const SceneRenderer* renderer,
-                        Presenter& presenter, const Options& options, const RecoveryLevel& recovery,
-                        const rules::PresetParty* starting, const GameplayLaunch* launch,
-                        WorldRenderer* world) {
-    const Player spawn = launch               ? launch->spawn
-                         : options.combatDemo ? combatCamera(map, placements)
-                         : options.hybridDemo ? hybridDemoSpawn()
-                         : options.aiDemo     ? aiDemoSpawn()
-                                              : Player{};
+                        const std::vector<NpcTimings>& timings, Presenter& presenter, const Options& options,
+                        WorldRenderer& world, const RecoveryLevel& recovery,
+                        const rules::PresetParty* starting, const GameplayLaunch* launch) {
+    const Player spawn = launch ? launch->spawn : Player{};
     const auto idle = gameplayPlacements(map, placements, spawn.cell);
-    const std::uint32_t seed = launch         ? launch->seed
-                               : options.seed ? *options.seed
-                               : (options.combatDemo || options.aiDemo || options.hybridDemo)
-                                   ? 5u
-                                   : std::random_device{}();
+    const std::uint32_t seed = launch ? launch->seed : options.seed.value_or(std::random_device{}());
     std::cout << "Gameplay seed: " << seed << '\n';
     bool inputArmed = false;
     Input input; // Keep edge latches across restart, so held confirmation never replays.
@@ -94,13 +74,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     for (;;) {
         auto current =
             campaign
-                ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, renderer, nullptr,
-                                             world)
+                ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, world)
                 : std::make_unique<PlayView>(
-                      map, catalog, idle, timings, renderer, seed, spawn,
-                      launch ? launch->enableAi : !options.combatDemo, recovery, starting,
-                      launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
-                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{}, world);
+                      map, catalog, idle, timings, world, seed, spawn, launch ? launch->enableAi : true,
+                      recovery, starting, launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
+                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
         auto& initial = *current;
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
@@ -112,12 +90,6 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             initial.commands.arenaContext(false);
         initial.refresh();
         initial.frames.activate();
-        if (options.inventoryDemo)
-            initial.commands.openInventory(rules::CharacterId{2});
-        if (options.spellDemo) {
-            initial.commands.selectCharacter(3);
-            initial.commands.openSpellbook();
-        }
         for (;;) {
             auto& view = *current;
             if (WindowShouldClose() && (!campaign || saveFlow.closeRequested(*campaign, view.commands)))
@@ -227,11 +199,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 try {
                     auto ticket = campaign->prepareTravel(request);
                     auto replacement = std::make_unique<PlayView>(
-                        ticket.game(), campaign->location(ticket.destination()).map(), timings, renderer,
+                        ticket.game(), campaign->location(ticket.destination()).map(), timings, world,
                         campaign->location(ticket.destination()).generated
                             ? &*campaign->location(ticket.destination()).generated
-                            : nullptr,
-                        world);
+                            : nullptr);
                     // Compose destination before commit; refresh does not mutate Party.
                     replacement->refresh();
                     replacement->commands.enableMainMenu();
@@ -274,97 +245,5 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             break;
     }
     return PlayOutcome::Quit;
-}
-void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
-                   const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
-                   Presenter& presenter, const std::filesystem::path& directory) {
-    if (placements.instances().empty())
-        return;
-    const auto idle = gameplayPlacements(map, placements);
-    const auto spawn = combatCamera(map, idle);
-    auto capture = [&](PlayView& view, const char* name) {
-        view.refresh();
-        view.frames.present(presenter, view.session, map, false, true, &view.commands.snapshot());
-        presenter.capture(directory / (std::string(name) + ".png"));
-    };
-    {
-        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
-        view.commands.record(view.session.update(0, false));
-        capture(view, "combat-start");
-        for (int step = 0; step < 500 && view.session.combat().snapshot().phase != CombatPhase::Victory &&
-                           view.session.combat().snapshot().phase != CombatPhase::Defeat;
-             ++step) {
-            view.refresh();
-            const auto& combat = view.session.combat().snapshot();
-            if (combat.awaitingAction) {
-                view.commands.selectAction(PartyAction::Defend);
-                if (view.session.combat().exposed(*combat.activeCharacter)) {
-                    for (std::size_t i = 0; i < view.commands.snapshot().targets.count; ++i) {
-                        const auto id = view.commands.snapshot().targets.ids[i];
-                        if (view.session.combat().exposed(id) && view.session.combat().member(id)) {
-                            view.commands.selectAction(PartyAction::Melee);
-                            view.commands.selectTarget(id);
-                            break;
-                        }
-                    }
-                }
-                view.commands.confirm();
-            } else
-                view.commands.record(view.session.update(0.45, false));
-            if (step == 6)
-                capture(view, "combat-exchange");
-        }
-        if (view.session.combat().snapshot().phase != CombatPhase::Victory)
-            throw std::runtime_error("Deterministic combat capture did not reach victory");
-        capture(view, "combat-victory");
-        view.session.update(.6, false);
-        capture(view, "combat-victory-corpse");
-        view.session.combat().continueExploring();
-        view.session.update(.6, false);
-        capture(view, "combat-continue-corpses-expired");
-    }
-    {
-        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
-        view.commands.record(view.session.update(0, false));
-        for (std::uint16_t i = 0; i < rules::partySize; ++i)
-            view.session.party().damage({i}, view.session.party().character({i})->hitPoints);
-        view.commands.record(view.session.update(0.45, false));
-        capture(view, "combat-defeat");
-    }
-    {
-        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
-        view.session.party().damage({0}, view.session.party().character({0})->hitPoints);
-        view.session.party().deathSave({0}, 1);
-        view.session.party().damage({1}, view.session.party().character({1})->hitPoints);
-        view.session.party().stabilize({1});
-        view.commands.record(view.session.update(0, false));
-        capture(view, "combat-front-collapse");
-        view.session.party().heal({0}, 3);
-        view.commands.record(view.session.update(.45, false));
-        capture(view, "combat-healed-from-zero");
-        view.commands.toggleLog();
-        capture(view, "combat-log");
-    }
-    {
-        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
-        view.session.party().damage({0}, view.session.party().character({0})->hitPoints);
-        view.commands.record(view.session.update(0, false));
-        view.refresh();
-        view.commands.selectAction(PartyAction::Aid);
-        view.commands.selectAlly(0);
-        capture(view, "combat-aid");
-        if (view.commands.confirm() != CommandReason::Resolved)
-            throw std::runtime_error("Aid capture failed to resolve");
-        capture(view, "combat-aid-result");
-    }
-    {
-        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
-        view.commands.record(view.session.update(0, false));
-        view.refresh();
-        view.commands.selectAction(PartyAction::Defend);
-        if (view.commands.confirm() != CommandReason::Resolved)
-            throw std::runtime_error("Defend capture failed to resolve");
-        capture(view, "combat-defend");
-    }
 }
 } // namespace blobber

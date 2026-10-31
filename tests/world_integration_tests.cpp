@@ -1,9 +1,9 @@
-#include "app/starting_build_diagnostics.hpp"
 #include "render/world_effects.hpp"
+#include "support/allocations.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/fixture_world.hpp"
-#include "support/probe_allocations.hpp"
+#include "support/spell_parties.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <chrono>
 #include <iostream>
@@ -16,7 +16,7 @@ void barriers() {
     NpcWorld empty(map, {3, 3}, {"goblin"}, {});
     GameSession game(map, cat, empty, 5, {{3, 3}, Heading::East}, false, {}, {}, fixtureDefinitions(false));
     check(game.interact(fixtureRequest(game, 0)).changed && game.opening(), "opening starts shared barrier");
-    check(!game.geometry().solid({4, 3}) && game.presentationGeometry().solid({4, 3}),
+    check(!game.geometry().solid({4, 3}) && game.doors().active(),
           "logical completion precedes settled legacy presentation");
     check(game.saveSafety() && game.travelSafety(), "save/travel reject unsettled opening");
     const auto start = game.movement().player;
@@ -35,7 +35,7 @@ void barriers() {
     GameSession off(map, cat, empty, 5, {{3, 3}, Heading::East}, false, {}, {}, fixtureDefinitions(false));
     off.interact(fixtureRequest(off, 0));
     off.setAnimated(false);
-    check(!off.opening() && !off.presentationGeometry().solid({4, 3}), "animation off settles opening");
+    check(!off.opening() && !off.geometry().solid({4, 3}), "animation off settles opening");
     off.move(Action::Forward);
     check(off.movement().player.cell == Cell{4, 3},
           "settled opening permits immediate animation-off movement");
@@ -313,8 +313,8 @@ void captureBuilds() {
     const auto catalog = automation::test::catalog();
     for (unsigned i = 0; i < unsigned(rules::SpellKind::Count); ++i) {
         const auto kind = rules::SpellKind(i);
-        Party party(catalog, spellCaptureParty(catalog, kind));
-        prepareSpellCaptureParty(party, kind);
+        Party party(catalog, leveledSpellParty(catalog, kind));
+        prepareSpellParty(party, kind);
         const auto* rule = rules::spellRules(kind);
         const rules::CharacterId id{std::uint16_t(rule->casting == rules::Casting::Wisdom ? 1 : 3)};
         check(bool(party.spellAccess(id, catalog.findSpell(rule->id))),

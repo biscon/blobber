@@ -3,9 +3,13 @@
 Status: **Accepted and closed** (2026-10-31).
 The user approved the detailed plan with “Implement the plan.” R04/R-B stay accepted;
 the user accepted R05 with “slice accepted, record it in the plan doc”.
-Acceptance changes no verification results or coverage limitations. R06 remains
-Planned and requires its own reviewed plan.
+Acceptance changes no verification results or coverage limitations. At the R05
+delivery checkpoint, R06 remained Planned and required its own reviewed plan.
 [Design](renderer_environment_design.md) · [Gallery](screenshots/r05/index.html).
+
+Current closure: [R06 and the full renderer roadmap](renderer_plan.md) are Accepted
+and closed. Rollout/next-slice notes below record the R05 delivery checkpoint and
+are superseded by that closure; R05 evidence and limitations are unchanged.
 
 ## Delivered behavior
 

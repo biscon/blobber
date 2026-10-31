@@ -20,25 +20,17 @@ A graphics-independent NPC definition parser validates metadata once, retaining
 image references without decoding. Existing image loading/baking consumes these
 same records. Preserve ordering, timings and definition fingerprints. A graphics-
 disabled CMake configuration excludes raylib discovery/download and all image
-baking/copy targets while retaining CPU tests and the runner. Normal builds add
-an optional visual backend; the runner itself never creates a window.
+baking/copy targets while retaining CPU tests and the runner. Both builds include CPU world visual observations; normal graphics builds add
+only GPU replay capture. Observations do not create a window. Capture explicitly
+owns a hidden context and uses regular GameView/Presenter.
 
-Diagnostic mode uses authoritative core validation and full observations. The default
-legacy visual mode loads existing prepared banks, samples NpcAnimator and FramePipeline at
-observation/action boundaries, and shares UI target-visibility validation. No
-fallback on missing assets. The shared validator retains actor-world/revision checks and also covers explicit
-back-row melee and Spiritual Weapon follow-up targets. Player observations exclude hidden enemies, AI plans,
-private RNG and pre-impact rolls; enemy health is the displayed fraction. Full
-`inspect` is separately diagnostic and recorded as such. Visual targeting does
-not imply human reaction speed. Existing rendering and live frame scheduling stay
-unchanged.
-
-The R03 explicit world backend is described in the [billboard/visibility design](renderer_visibility_design.md).
-It uses immutable world publication masks and a CPU depth/ID pipeline without color
-frames, raylib or a context, and is compiled in graphics-disabled builds too.
-Backend selection is preparation-time and recorded in strict replay identity.
-Defaults stay legacy until broader R04 integration; neither backend weakens core
-command validation. World replay images explicitly remain unsupported in R03.
+Diagnostic mode uses authoritative core validation/full observations. Visual mode
+uses immutable world publication alpha masks, NpcAnimator and the CPU depth/ID
+pipeline at observation/action boundaries, sharing UI target-visibility validation.
+There is no selector or fallback. Hidden enemies/private RNG/pre-impact outcomes
+remain filtered; inspect is separately diagnostic. Strict replay retains world
+visibility/publication identities. The renderer_fixture public showcase is retired;
+CPU/GPU test-owned height fixtures retain its regression coverage.
 
 ## Interface and time
 
@@ -98,7 +90,7 @@ Reads/previews do not advance simulation; inspection use remains in provenance.
 - `automation/session.*`: typed fixed-shape actions/observations and arena ownership.
   The protocol enforces run/request budgets; trusted typed callers own their stepping
   budget. Borrowed catalog/definitions and visual context must outlive the session.
-- `automation/visual.*`: optional prepared CPU frame/picking adapter. It samples
+- `automation/world_visual.*`: graphics-independent world depth/ID adapter. It samples
   absolute simulation time and reuses cached targeting/loot membership when the frame
   has not changed. No extra window, image-export or presentation layer.
 - `automation/decode.*`, `observe.*`, `actions.*`, `protocol.*`: bounded input schema,

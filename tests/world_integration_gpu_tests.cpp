@@ -1,11 +1,14 @@
 #include "assets/image.hpp"
+#include "assets/rules_loader.hpp"
+#include "app/options.hpp"
+#include "ui/menu_screen.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
+#include "support/allocations.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/fixture_world.hpp"
-#include "support/probe_allocations.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <iostream>
 using namespace blobber;
@@ -46,7 +49,7 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 }
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
     try {
         test::VisibilityFixture fixture(2);
         auto assets = std::make_shared<const world_assets::CpuAssets>(fixture.publication());
@@ -211,7 +214,7 @@ int main() {
             }
             auto campaign = std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types,
                                                           fixture.timings, 5);
-            auto current = std::make_unique<GameView>(nullptr, &renderer);
+            auto current = std::make_unique<GameView>(renderer);
             NpcAnimator animator(campaign->game().actors(), fixture.timings);
             animator.setTime(0);
             SpellArea area;
@@ -220,7 +223,7 @@ int main() {
             const auto prior = renderer.image();
             const auto* pick = renderer.picking();
             auto ticket = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
-            auto replacement = std::make_unique<GameView>(nullptr, &renderer);
+            auto replacement = std::make_unique<GameView>(renderer);
             NpcAnimator destination(ticket.game().actors(), fixture.timings);
             destination.setTime(ticket.game().timeMs());
             resources.failAfter(0);
@@ -233,7 +236,7 @@ int main() {
             unsigned cpuFailures = 0;
             const auto retained = resources.counts();
             for (int point = 0; point < 32; ++point) {
-                auto probe = std::make_unique<GameView>(nullptr, &renderer);
+                auto probe = std::make_unique<GameView>(renderer);
                 allocationsUntilFailure = point;
                 try {
                     probe->update(ticket.game(), destination.snapshot(), area);
@@ -279,6 +282,33 @@ int main() {
         const auto counts = resources.counts();
         check(!counts.textures && !counts.targets && !counts.meshes && !counts.shaders,
               "Integrated GPU resources released");
+        // Optional review export uses production menu callbacks and real owned content.
+        // Normal correctness mode above remains independent of shipped assets.
+        if (argc == 3) {
+            const std::filesystem::path source(argv[1]), output(argv[2]);
+            std::filesystem::create_directories(output);
+            const auto rules = loadRules(source / "rules/catalog.json");
+            CharacterLibrary library(rules, fixture.location.directory / "characters.json");
+            check(bool(library.initialize()), "Review owns its isolated character library");
+            MenuView menu(rules, library);
+            menu.usable = true;
+            menu.model.filter(library.snapshot());
+            GpuResources native;
+            Presenter presenter(native, source);
+            presenter.prepareMenu();
+            presenter.presentMenu(drawMenu, &menu);
+            presenter.capture(output / "main-menu.png");
+            Options options;
+            options.assets = source;
+            options.seed = 5;
+            ArenaScenarioStore store(rules, fixture.location.directory / "scenarios");
+            openArena(menu, options, store);
+            presenter.presentMenu(drawMenu, &menu);
+            presenter.capture(output / "arena-setup.png");
+            menu.model.screen = MenuScreen::Library;
+            presenter.presentMenu(drawMenu, &menu);
+            presenter.capture(output / "character-library.png");
+        }
     } catch (const std::exception& e) {
         watching = false;
         std::cerr << e.what() << '\n';

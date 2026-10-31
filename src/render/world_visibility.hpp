@@ -36,7 +36,7 @@ struct WorldFrame {
     std::array<Cell, fixtureCapacity> proxies{};
     std::array<std::uint16_t, fixtureCapacity> proxyIds{};
     unsigned proxyCount = 0;
-    PickingBuffer picking{true};
+    PickingBuffer picking;
     std::array<LootId, lootCapacity> visibleLoot{};
     std::uint64_t revision = 0;
     bool moving = false;
@@ -63,7 +63,7 @@ class VisibilityPipeline {
     std::array<std::uint16_t, lootCapacity> lootOrder_{};
     std::array<unsigned, 7> icons_{};
     std::array<std::uint64_t, 10> stamp_{};
-    PickingBuffer opaqueCache_{true};
+    PickingBuffer opaqueCache_;
     unsigned current_ = 0;
     bool ready_ = false;
     void build(WorldFrame&, const FrameInput&);
