@@ -1,9 +1,11 @@
 #include "app/campaign_saves.hpp"
+#include "app/result_flow.hpp"
 #include "persistence/campaign_store.hpp"
 #include "persistence/character_library.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/save_layout.hpp"
+#include <fstream>
 #include <iostream>
 using namespace blobber;
 using namespace blobber::automation::test;
@@ -423,6 +425,60 @@ void applicationFlow() {
     check(nextUi.saveMenu().intent == SaveIntent::None, "blur suppresses save intent");
 }
 
+void unsavedTerminal() {
+    const auto c = catalog();
+    const auto d = definitions();
+    Directory directory;
+    const auto path = directory.path / "campaign.json";
+    CampaignDisk disk(path);
+    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignRun unsaved(c, *c.preset(), d.types, d.timings, 7);
+    for (unsigned i = 0; i < 4; ++i)
+        unsaved.party().damage({std::uint16_t(i)}, 100000);
+    const auto missing = store.terminal(unsaved);
+    check(missing.durable && !missing.published && !std::filesystem::exists(path),
+          "unsaved ending needs no marker when no slot exists");
+    CampaignRun previous(c, *c.preset(), d.types, d.timings, 5);
+    auto state = previous.checkpoint();
+    auto old = blobber::automation::Json::parse(encodeCampaign(c, d, {"fixture", 0}, *state));
+    // Exactly the pre-refresh versions: identity is readable but restore is forbidden.
+    old["schema"] = 1;
+    old["simulation"] = 1;
+    old["generator"] = 3;
+    old["templates"] = 3;
+    const auto original = old.dump();
+    {
+        std::ofstream output(path);
+        output << original;
+    }
+    check(!store.inspect().active, "previous-version slot is incompatible");
+    CommandController commands(unsaved.game(), d.timings);
+    commands.saveMenu().enabled = true;
+    CampaignSaveFlow flow(&store);
+    check(!flow.poll(unsaved, commands) && !commands.saveMenu().terminalWarning &&
+              !commands.snapshot().menuOpen,
+          "unsaved expedition ending over incompatible slot does not show write failure");
+    std::ifstream input(path);
+    const std::string retained((std::istreambuf_iterator<char>(input)), {});
+    check(retained == original && !store.inspect().active,
+          "incompatible previous save remains byte-identical and unavailable");
+    // Identity parsing has the same hostile-input limits as normal restoration.
+    auto duplicate = original;
+    duplicate.insert(1, "\"schema\":1,");
+    rejects([&] { savedCampaignRunId(duplicate); }, "ambiguous slot association rejects duplicate keys");
+    old["campaign"]["runId"] = "invalid";
+    rejects([&] { savedCampaignRunId(old.dump()); }, "invalid slot association rejects");
+    // A matching association still closes the slot even if content admission changed.
+    old["campaign"]["runId"] = unsaved.runId();
+    {
+        std::ofstream output(path);
+        output << old.dump();
+    }
+    const auto matching = store.terminal(unsaved);
+    check(matching.durable && matching.published && store.inspect().terminal,
+          "matching old slot is closed using identity without restoring its simulation");
+}
+
 void libraryIndependence() {
     const auto c = catalog();
     const auto d = definitions();
@@ -494,7 +550,11 @@ void postCombatSave() {
         g.update(.1, false);
     }
     check(g.combat().snapshot().phase == CombatPhase::Victory, "owned encounter reaches victory");
-    check(g.combat().continueExploring(), "acknowledge ordinary encounter victory");
+    const auto hp = g.party().character({0})->hitPoints;
+    check(continueLocalVictory(g, false) && realTime(g.combat().snapshot().phase),
+          "application returns to exploration without acknowledging ordinary victory");
+    check(g.party().character({0})->hitPoints == hp && !continueLocalVictory(g, false),
+          "automatic continuation is once-only and does not heal");
     g.update(2, false);
     check(!run.saveSafety(), "settled exploration after combat can save");
     const auto xp = run.party().character({0})->experience;
@@ -649,6 +709,7 @@ int main(int argc, char** argv) {
         malformed();
         saveUi();
         applicationFlow();
+        unsavedTerminal();
         navigationContinuation();
         libraryIndependence();
         postCombatSave();

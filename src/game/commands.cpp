@@ -285,10 +285,9 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     if (line[0])
         appendLog(line);
     if (out.phase == CombatPhase::Victory)
-        appendLog(
-            state_.arena && arenaCleared(actors_.snapshot())
-                ? "Arena cleared. Rematch restores the starting setup; Edit Setup changes the scenario."
-                : "Victory. Surviving downed allies are stable; HP is not restored. Continue to explore.");
+        appendLog(state_.arena && arenaCleared(actors_.snapshot())
+                      ? "Arena cleared. Rematch restores the starting setup; Edit Setup changes the scenario."
+                      : "Victory. Surviving downed allies are stable; HP is not restored.");
     if (out.phase == CombatPhase::Defeat)
         appendLog(session_.campaign() ? "Defeat: this expedition has ended. Return to Main Menu."
                                       : "Defeat: nobody is conscious. Restart begins a fresh session.");
@@ -402,11 +401,14 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         if (f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s%sF / %s - %s",
-                          locationHint, state_.campaign ? " | " : "", fixtureName(*f),
-                          state_.campaign && session_.campaign()->activeLocation() == 0 && result
-                              ? "Choose a floor entry."
-                              : result.reason);
+            std::snprintf(
+                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s%sF / %s - %s", locationHint,
+                state_.campaign ? " | " : "", fixtureName(*f),
+                state_.campaign && session_.campaign()->activeLocation() == 0 && result
+                    ? (session_.campaign()->location(2).visited || session_.campaign()->location(3).visited
+                           ? "Choose a floor entry."
+                           : "Enter dungeon floor 1.")
+                    : result.reason);
         }
     }
     state_.development = session_.development();

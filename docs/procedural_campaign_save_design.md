@@ -154,3 +154,15 @@ one shared state-dependent layout. The error title is “COULDN'T WRITE SAVE” 
 limited to real I/O failure after a run ends (the gallery injects that failure).
 Persistence behavior is unchanged. Check keyboard/click parity, allocations and
 hidden native/reduced captures; no balance experiments or OS input automation.
+
+
+## Unsaved-run terminal association fix (2026-10-31)
+
+Ending an unsaved expedition while a pre-refresh incompatible slot existed could
+raise the terminal write-failure dialog: terminal handling restored the slot before
+checking its run ID. `savedCampaignRunId` now uses the same bounded, depth-limited,
+duplicate-key-checked parser to extract association independently of schema/content
+admission. Unrelated old saves remain byte-identical with no warning; matching slots
+receive the durable terminal marker. Genuine read/write failures retain denial and
+retry. There is no migration. Owned regressions and verification are recorded in
+[dungeon flow polish](dungeon_flow_polish.md).

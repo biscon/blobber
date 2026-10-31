@@ -350,6 +350,14 @@ void envelope(const Json& j, const CampaignContent& content) {
         invalid("Incompatible campaign schema, simulation or content");
 }
 } // namespace
+std::string savedCampaignRunId(const std::string& text) {
+    const auto j = parse(text);
+    const auto& campaign = j.at("campaign");
+    const auto id = campaign.at("runId").get<std::string>();
+    if (id.size() != 32 || id.find_first_not_of("0123456789abcdef") != std::string::npos)
+        invalid("Invalid saved campaign run identity");
+    return id;
+}
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
     Json j = {{"schema", 3},

@@ -16,8 +16,8 @@ class GameView {
     }
     bool update(const GameSession& game, const NpcAnimationSnapshot& animation, const SpellArea& area) {
         const world_render::FrameInput input{
-            game.geometry(), game.movement(),          &game.actors(), &animation,   &game.loot().snapshot(),
-            &game.doors(),   &game.combat().attacks(), &area,          game.timeMs()};
+            game.geometry(), game.movement(),          &game.actors(), &animation,    &game.loot().snapshot(),
+            &game.doors(),   &game.combat().attacks(), &area,          game.timeMs(), game.guardianDoor()};
         const auto previous = image_.revision;
         if (!ready_) {
             world_.stage(input);

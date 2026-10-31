@@ -147,6 +147,26 @@ void stairsAndFrames() {
             for (unsigned i = 0; i < 3; ++i)
                 check(boxes[i].worldMapped, "All frame strips use world UV mapping");
             check(!boxes[3].worldMapped, "Leaf uses fitted art independently of frame density");
+            world_render::doorBoxes(door.view(), nullptr, boxes, 0, 0, 0, 0, 7, 0);
+            for (unsigned i = 0; i < 3; ++i)
+                check(boxes[i].emblemTexture == UINT16_MAX, "Frames never receive guardian emblems");
+            check(boxes[3].emblemTexture == 7, "Objective approach leaf receives reusable emblem");
+            for (bool back : {false, true}) {
+                const auto quad = world_render::doorEmblemQuad(boxes[3], back);
+                for (const auto& p : quad) {
+                    const auto& b = boxes[3];
+                    const float plane = ((p.x - b.origin.x) * b.z.x + (p.z - b.origin.z) * b.z.z) /
+                                        (b.z.x * b.z.x + b.z.z * b.z.z);
+                    check(std::abs(plane - (back ? 1.02f : -.02f)) < .0001f,
+                          "Emblem sits just outside the correct door face in every heading");
+                    check(p.y > boxes[3].origin.y && p.y < boxes[3].origin.y + boxes[3].y.y,
+                          "Emblem remains within the leaf height");
+                }
+            }
+            definitions.entries[0].kind = FixtureKind::GuardianGate;
+            FloorGeometry gate(map, definitions);
+            world_render::doorBoxes(gate.view(), nullptr, boxes, 0, 0, 0, 0, 7);
+            check(boxes[3].emblemTexture == 7, "Guardian gate also receives the same sigil");
         }
 }
 void packs() {
@@ -158,12 +178,14 @@ void packs() {
         pack.materials[pack.materialCount++] = std::uint16_t(writer.add(name, 4, 4, false, pixels));
     pack.door = pack.lockedDoor = pack.doorEdge =
         std::uint16_t(writer.add("door", 4, 4, false, pixels, 0, {}, false));
-    pack.crest = pack.vine = std::uint16_t(writer.add("decal", 4, 4, true, pixels));
+    pack.guardianEmblem = pack.crest = pack.vine = std::uint16_t(writer.add("decal", 4, 4, true, pixels));
     pack.sky = std::uint16_t(writer.add("sky", 4, 4, false, pixels, 0, {}, false));
     writer.finish({}, 0, {pack});
     world_assets::CpuAssets assets(world_assets::load(fixture.directory));
     check(assets.pack("dungeon").materialCount == 3 && !assets.publication.textures[pack.sky].material,
           "Sky and door images remain outside the terrain palette");
+    check(assets.pack("dungeon").guardianEmblem == pack.guardianEmblem,
+          "Optional guardian art binding survives publication");
     rejects([&] { assets.pack("missing"); }, "Missing map pack rejects explicitly");
     auto world = Map({"###", "#.#", "###"}).definition();
     const auto previous = world.fingerprint();
@@ -177,6 +199,7 @@ void packs() {
         std::ifstream input(metadata);
         input >> corrupt;
     }
+    const auto original = corrupt;
     corrupt["packs"][0]["worldScale"] = 2;
     {
         std::ofstream output(metadata);
@@ -184,12 +207,56 @@ void packs() {
     }
     check(world_assets::load(fixture.directory).fingerprint != assets.publication.fingerprint,
           "Pack bindings and sampling participate in publication identity even with identical pixels");
+    corrupt["packs"][0]["guardianEmblem"] = pack.door;
+    {
+        std::ofstream output(metadata);
+        output << corrupt.dump();
+    }
+    rejects([&] { world_assets::load(fixture.directory); }, "Opaque guardian emblem binding rejects");
+    corrupt = original;
     corrupt["packs"][0]["materials"][1] = pack.sky;
     {
         std::ofstream output(metadata);
         output << corrupt;
     }
     rejects([&] { world_assets::load(fixture.directory); }, "Non-terrain pack palette entry rejects");
+}
+void lootBags() {
+    test::VisibilityFixture fixture;
+    world_assets::CpuAssets assets(fixture.publication());
+    const auto map = test::worldRoom(9, 9);
+    auto scene = world_render::prepare(map);
+    world_render::VisibilityPipeline visibility(scene, assets);
+    MovementState movement;
+    movement.player = {{4, 5}, Heading::North};
+    LootSnapshot loot;
+    loot.world = 99;
+    loot.stacks[0] = {{4, 5}, {0}, 1, true, 7};
+    loot.stacks[1] = {{4, 5}, {0}, 2, true, 8};
+    world_render::FrameInput input{map, movement, nullptr, nullptr, &loot};
+    for (int cellY : {5, 4, 2}) {
+        loot.stacks[0].cell.y = loot.stacks[1].cell.y = cellY;
+        ++loot.revision;
+        visibility.update(input);
+        const auto& frame = visibility.frame();
+        check(frame.count == 1, "Several loot stacks in a cell share one bag and shadow");
+        const auto& bag = frame.billboards[0];
+        const float projected = bag.width * world_render::focal() / bag.depth;
+        const float oldProjected = std::clamp(world_render::focal() * .25f / bag.depth, 4.f, 64.f);
+        check(std::abs(projected - oldProjected * (2.f / 3.f)) < .001f && bag.height == bag.width,
+              "Near-clamped and distant bags retain two-thirds of previous size");
+        check(bag.shadowRadius > 0 && bag.shadowRadius < bag.width * .5f,
+              "Small bag has a proportional soft floor shadow");
+        check(visibility.lootVisible({99, 0, 7}), "Reduced bag stays pickable");
+    }
+    watching = true;
+    allocations = 0;
+    for (unsigned i = 0; i < 4; ++i) {
+        ++loot.revision;
+        visibility.update(input);
+    }
+    watching = false;
+    check(!allocations, "Bag/shadow updates do not allocate frame storage");
 }
 void loading() {
     TravelFade fade;
@@ -270,6 +337,7 @@ int main() {
         doors();
         stairsAndFrames();
         packs();
+        lootBags();
         loading();
         std::cout << "Dungeon refresh CPU contracts passed\n";
     } catch (const std::exception& e) {

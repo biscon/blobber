@@ -43,7 +43,7 @@ def main(runner, writer):
                     os.environ[key] = value
         header = json.loads(trace.read_text().splitlines()[0])["data"]
         assert header["visibility_backend"] == "world"
-        assert header["visibility_version"] == "world-visibility-v4"
+        assert header["visibility_version"] == "world-visibility-v5"
         assert "world_publication" in header["content"]
         command = [runner, "--assets", str(root), "--mode", "visual"]
         result = subprocess.run(command + ["--replay", str(trace)], env=env, capture_output=True, text=True)

@@ -75,6 +75,9 @@ class GameSession {
     GameSession(const GameSession&) = delete;
     GameSession& operator=(const GameSession&) = delete;
     const FloorObjectiveSnapshot& objective() const noexcept { return objective_; }
+    unsigned guardianDoor() const noexcept {
+        return objective_.count ? objectiveDefinition_.approachDoor : UINT16_MAX;
+    }
     bool guardian(ActorId id) const noexcept;
     LandingSafety landingSafety(unsigned index) const noexcept;
     GeometryView geometry() const noexcept { return map_; }

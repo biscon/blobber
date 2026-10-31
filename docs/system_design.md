@@ -11,6 +11,10 @@ the campaign roadmap remains paused after P-B, with no automatic PC07 work.
 
 Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
+Current follow-up: [loot, guardian doors and uninterrupted encounter flow](dungeon_flow_polish.md)
+records the implemented visual/interaction polish, unsaved-run terminal fix, and
+focused CPU/GPU verification.
+
 ## Boundaries and data flow
 
 - **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID
@@ -62,7 +66,7 @@ Current revision: [dungeon art, stairwells, reusable doors and responsive loadin
 - **Assets and preparation:** the offline world baker extracts registered source
   frames, prepares reusable material/sprite mip chains and CPU alpha masks, and
   publishes bounded versioned world metadata/textures, including up to eight pack
-  manifests with local material palettes, door/edge/decal/sky bindings and world UV scale.
+  manifests with local material palettes, door/edge/decal/sky bindings, an optional reusable guardian-door emblem, and world UV scale.
   Texture purpose is independent of sprite alpha/sampling; panoramas do not occupy
   terrain palette slots. Publication identity hashes canonical metadata including the
   checked payload checksum, so binding-only edits invalidate replay too. Runtime validates publication
@@ -74,7 +78,9 @@ Current revision: [dungeon art, stairwells, reusable doors and responsive loadin
   lined shafts, exterior shells and dark terminations; their full bounds and fixture
   IDs use the same triangles on CPU/GPU. Stair cells block movement; F uses the
   designated adjacent landing. Frames use wall-density world UVs, leaves fitted
-  rectangular artwork and separate edge sampling. Picking has full per-pixel depth/IDs, with
+  rectangular artwork and separate edge sampling. Guardian approach/gate leaves carry
+  a transparent sigil on both faces through their current hinge transform. Loot uses
+  smaller billboards and proportional floor shadows; shadows do not affect picking. Picking has full per-pixel depth/IDs, with
   transparent holes, corpse occlusion and native status/health clipping. World
   effects never write picking IDs. A changed view invalidates rendering; idle views
   reuse their target without frame uploads. See the accepted R02–R05 designs.
@@ -113,7 +119,10 @@ Current revision: [dungeon art, stairwells, reusable doors and responsive loadin
   soft checkpoint budget. Individual driver/decoder operations remain indivisible.
   Stairs/recall/waypoints fade the entire presentation out over 250ms, publish black,
   prepare and commit, then fade in over 250ms. Failure returns to the source view;
-  simulation clocks freeze, costs commit once and held input must release.
+  simulation clocks freeze, costs commit once and held input must release. A sole
+  hub destination emits travel directly; multiple entries and paid recall retain
+  their selectors. Ordinary local victories resume exploration automatically after
+  recording settled combat events; terminal campaign/arena controls remain.
 
 Dependencies flow from application/presentation toward platform, CPU rendering,
 movement, and world values. World/movement/input timing have no raylib dependency.
@@ -205,7 +214,7 @@ uses prepared fixed storage; export and diagnostic readbacks are explicit bounda
 
 Campaign schema/simulation are 3/3 and generator/templates 4/4. Older saves reject
 without being modified; no migration. World publication is format 2, appearance 4,
-visibility world-visibility-v4 and terrain-rules-v2. Door scheduling identity is
+visibility world-visibility-v5 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

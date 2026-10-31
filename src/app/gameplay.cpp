@@ -1,6 +1,7 @@
 #include "app/gameplay.hpp"
 #include "app/campaign_saves.hpp"
 #include "app/loading.hpp"
+#include "app/result_flow.hpp"
 #include "app/travel_fade.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
@@ -133,6 +134,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             const auto presentedCombat = view.commands.snapshot().combat;
             const auto previous = view.session.movement().player;
             view.commands.record(campaign ? campaign->update(dt, paused) : view.session.update(dt, paused));
+            if (!paused && continueLocalVictory(view.session, launch && launch->arena))
+                view.commands.cancel();
             if (!paused) {
                 if (sample.toggleAnimation)
                     view.session.setAnimated(!view.session.movement().animated);

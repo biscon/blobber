@@ -45,6 +45,9 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
         require(i < textures.size() && !textures[i].clamp && !textures[i].material);
     for (auto i : {p.crest, p.vine})
         require(i < textures.size() && textures[i].clamp && !textures[i].material);
+    if (p.guardianEmblem != UINT16_MAX)
+        require(p.guardianEmblem < textures.size() && textures[p.guardianEmblem].clamp &&
+                !textures[p.guardianEmblem].material);
     for (float c : p.horizon)
         require(std::isfinite(c) && c >= 0 && c <= 1);
 }
@@ -205,7 +208,7 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
     for (const auto& a : appearances)
         actors.push_back(appearanceJson(a));
     Json packJson = Json::array();
-    for (const auto& p : packs)
+    for (const auto& p : packs) {
         packJson.push_back({{"id", p.id},
                             {"materials", std::vector<std::uint16_t>(p.materials.begin(),
                                                                      p.materials.begin() + p.materialCount)},
@@ -217,6 +220,9 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"sky", p.sky},
                             {"worldScale", p.worldScale},
                             {"horizon", p.horizon}});
+        if (p.guardianEmblem != UINT16_MAX)
+            packJson.back()["guardianEmblem"] = p.guardianEmblem;
+    }
     const Json manifest{{"format", version},          {"appearance_revision", appearanceRevision},
                         {"definitions", definitions}, {"bytes", offset_},
                         {"checksum", hash_},          {"textures", textures},
@@ -331,6 +337,8 @@ Publication load(const std::filesystem::path& directory) {
             pack.crest = ref("crest", true);
             pack.vine = ref("vine", true);
             pack.sky = ref("sky", false);
+            if (v.contains("guardianEmblem"))
+                pack.guardianEmblem = ref("guardianEmblem", true);
             pack.worldScale = v.at("worldScale").get<float>();
             require(std::isfinite(pack.worldScale) && pack.worldScale > 0 && pack.worldScale <= 16);
             require(v.at("horizon").size() == 3);

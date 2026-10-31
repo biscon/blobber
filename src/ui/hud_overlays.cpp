@@ -210,7 +210,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     for (const auto& feedback : h->feedback)
         if (const auto rect = feedbackRect(feedback, h->cards))
             splash(p, feedback, *rect);
-    if (h->campaignTerminal || combat.phase == CombatPhase::Victory || combat.phase == CombatPhase::Defeat) {
+    if (h->campaignTerminal || (h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory) ||
+        combat.phase == CombatPhase::Defeat) {
         p.overlayBox(hudLayout::result);
         const auto r = hudLayout::result;
         const bool arenaVictory = h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory;

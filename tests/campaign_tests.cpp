@@ -1,3 +1,4 @@
+#include "app/result_flow.hpp"
 #include "game/campaign.hpp"
 #include "game/commands.hpp"
 #include "support/automation_fixtures.hpp"
@@ -180,6 +181,7 @@ void campaign() {
     check(final.actors().snapshot().actors[0].life == ActorLife::Alive &&
               run.status() == CampaignStatus::Victory,
           "final designated guardian completion wins without an unrelated clear");
+    check(!continueLocalVictory(final, false), "Campaign completion retains terminal navigation");
     check(!run.previewTravel(run.request(stair(run.game(), FixtureKind::Upstairs))).accepted,
           "terminal travel rejects");
     std::cout << "snapshot_bytes=" << run.snapshotBytes() << '\n';
@@ -798,15 +800,13 @@ void travelUi() {
     auto both = open;
     both.pressed[std::size_t(UiKey::Confirm)] = true;
     routeHudInput(hub, both);
-    check(hub.snapshot().travel.open && hub.snapshot().travel.count == 1 &&
-              hub.snapshot().travel.rows[0].request.kind == TravelKind::Stairs &&
-              !hub.snapshot().travelRequested,
-          "opening fresh selector cannot confirm");
-    routeHudInput(hub, cancel);
+    check(!hub.snapshot().travel.open && hub.snapshot().travelRequested &&
+              hub.snapshot().travelRequested->kind == TravelKind::Stairs,
+          "one fresh hub destination immediately emits checked stairs intent");
+    hub.cancelTravel();
     hub.interactFixture();
-    check(hub.snapshot().travel.open && !hub.snapshot().travelRequested, "hub F opens selector");
-    routeHudInput(hub, confirm);
-    check(bool(hub.snapshot().travelRequested), "selector explicit confirmation emits typed intent");
+    check(!hub.snapshot().modal() && hub.snapshot().travelRequested,
+          "hub F enters the single destination without a selector");
     auto enter = run.prepareTravel(*hub.snapshot().travelRequested);
     check(run.commitTravel(enter), "confirmed first entry commits");
     CommandController ui(run.game());
@@ -850,9 +850,10 @@ void travelUi() {
     CommandController returned(run.game());
     returned.refresh({}, false, false, true);
     returned.interactFixture();
-    check(returned.snapshot().travel.open && returned.snapshot().travel.count == 1 &&
-              returned.snapshot().travel.rows[0].request.kind == TravelKind::Waypoint,
-          "hub selector offers unlocked entry only");
+    check(!returned.snapshot().travel.open && returned.snapshot().travelRequested &&
+              returned.snapshot().travelRequested->kind == TravelKind::Waypoint &&
+              returned.snapshot().travelRequested->depth == 1,
+          "sole unlocked hub entry immediately emits waypoint intent");
     UiInputEdges edges;
     std::array<bool, uiKeyCount> down{};
     down[std::size_t(UiKey::Travel)] = true;

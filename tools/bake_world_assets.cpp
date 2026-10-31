@@ -116,6 +116,8 @@ int run(const fs::path& source, const fs::path& output) {
         pack.crest = addPack("crest", true, 256, false);
         pack.vine = addPack("vine", true, 384, false);
         pack.sky = addPack("sky", false, 2048, false);
+        if (manifest.contains("guardianEmblem"))
+            pack.guardianEmblem = addPack("guardianEmblem", true, 256, false);
         packs.push_back(std::move(pack));
     }
     if (packs.empty() || packs.size() > 8)

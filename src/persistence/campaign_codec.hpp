@@ -7,6 +7,8 @@ struct CampaignContent {
     std::string catalog;
     std::uint64_t npcs = 0;
 };
+// Read association without requiring current save/content versions. Never restores state.
+std::string savedCampaignRunId(const std::string&);
 std::string encodeCampaign(const rules::Catalog&, const NpcDefinitions&, const CampaignContent&,
                            CampaignCheckpoint&);
 std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog&, const NpcDefinitions&,

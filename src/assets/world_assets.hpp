@@ -37,6 +37,7 @@ struct Pack {
     std::array<std::uint16_t, 32> materials{};
     unsigned materialCount = 0;
     std::uint16_t door = 0, lockedDoor = 0, doorEdge = 0, crest = 0, vine = 0, sky = 0;
+    std::uint16_t guardianEmblem = UINT16_MAX; // Optional transparent art, reusable across packs.
     float worldScale = 1;
     std::array<float, 3> horizon{.60f, .67f, .72f};
 };

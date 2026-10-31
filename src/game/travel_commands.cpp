@@ -35,6 +35,8 @@ void CommandController::openTravel() noexcept {
     }
     session_.clearPending();
     refreshTravel();
+    if (hub && h.count == 1 && h.preview)
+        confirmTravel();
 }
 void CommandController::refreshTravel() noexcept {
     auto& h = state_.travel;

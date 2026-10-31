@@ -76,8 +76,9 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 (source/'textures/wall.png').write_bytes(good); run(*command)
                 manifest=json.loads((output/'metadata.json').read_text())
                 assert len(manifest['appearances'])==1 and len(manifest['textures'])==27 and len(manifest['packs'])==1 and manifest['format']==2 and manifest['appearance_revision']==4
-                prior=stamp(); manifest_path=pack/'pack.json'; data=json.loads(manifest_path.read_text()); data['worldScale']=1.25; manifest_path.write_text(json.dumps(data)); run(*command)
+                prior=stamp(); manifest_path=pack/'pack.json'; data=json.loads(manifest_path.read_text()); data['worldScale']=1.25; data['guardianEmblem']='fixtures/key-bronze.png'; manifest_path.write_text(json.dumps(data)); run(*command)
                 assert stamp()!=prior, 'Changed pack manifest did not rebuild publication'
+                updated=json.loads((output/'metadata.json').read_text()); assert len(updated['textures'])==28 and 'guardianEmblem' in updated['packs'][0], 'Optional guardian art was not baked'
                 print(generator,config,'clean/no-op/change/touch/missing/add/remove/failure: pass')
     print('World build fixtures passed')
 if __name__=='__main__': main()

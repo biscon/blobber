@@ -279,8 +279,9 @@ CampaignWrite CampaignStore::terminal(const CampaignRun& run) {
         std::string id;
         if (terminalRecord(current.data, id))
             return {false, true, campaignRevision(current.data), {}};
-        auto s = decodeCampaign(catalog_, definitions_, content_, current.data);
-        if (s->runId != run.runId())
+        // Association must not depend on whether an older save is still restorable.
+        // An unsaved expedition has no authority to replace another run's slot.
+        if (savedCampaignRunId(current.data) != run.runId())
             return {false, true, campaignRevision(current.data), {}};
         deniedRun_ = run.runId();
         const auto text = Json{{"terminal_schema", 2},

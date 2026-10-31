@@ -228,7 +228,7 @@ bool VisibilityPipeline::update(const FrameInput& in) {
     if (fixtures && fixtures->definition().count > fixtureCapacity)
         throw std::invalid_argument("Too many world fixtures");
     const auto c = camera(in.movement, in.geometry);
-    const std::array<std::uint64_t, 10> stamp{in.geometry.world(),
+    const std::array<std::uint64_t, 11> stamp{in.geometry.world(),
                                               in.geometry.revision(),
                                               fixtures ? fixtures->revision() : 0,
                                               actors ? actors->world : 0,
@@ -237,7 +237,8 @@ bool VisibilityPipeline::update(const FrameInput& in) {
                                               in.loot ? in.loot->world : 0,
                                               in.loot ? in.loot->revision : 0,
                                               in.doors ? in.doors->revision : 0,
-                                              in.doors && in.doors->active() ? in.doors->now : 0};
+                                              in.doors && in.doors->active() ? in.doors->now : 0,
+                                              in.guardianDoor};
     if (ready_ && stamp == stamp_ && sameCamera(c, frame().camera) &&
         frame().moving == (in.movement.transition.active() || (in.doors && in.doors->active())))
         return false;
@@ -270,7 +271,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
     out.vineTexture = pack_.vine;
     const auto center = playerCenter(in.movement);
     out.doorCount = doorBoxes(in.geometry, in.doors, out.doors, pack_.door, pack_.lockedDoor,
-                              pack_.materialCount ? pack_.materials[0] : 0, pack_.doorEdge);
+                              pack_.materialCount ? pack_.materials[0] : 0, pack_.doorEdge,
+                              pack_.guardianEmblem, in.guardianDoor);
     const auto append = [&](Billboard b) {
         if (out.count == billboardCapacity)
             throw std::runtime_error("World billboard capacity exceeded");
@@ -375,11 +377,11 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                 feet.x += out.camera.right.x * (fitted - lateral);
                 feet.z += out.camera.right.z * (fitted - lateral);
             }
-            const float size = std::clamp(focal() * .25f / depth, 4.f, 64.f) * depth / focal();
+            const float size = (2.f / 3.f) * std::clamp(focal() * .25f / depth, 4.f, 64.f) * depth / focal();
             const auto p = project(out.camera, feet);
             // Retain the current-cell bag's four-pixel margin above the viewport foot.
             feet.y += std::max(0.f, p.y - (viewHeight - 4)) * depth / focal();
-            append({feet, size, size, .5f, 1, depth, 0, std::uint16_t(icons_[0]),
+            append({feet, size, size, .5f, 1, depth, size * .42f, std::uint16_t(icons_[0]),
                     std::uint16_t(NpcWorld::maxInstances + i)});
             out.picking.lootGeneration(std::uint16_t(i), stack.generation);
             const auto anchor = project(out.camera, feet);

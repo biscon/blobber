@@ -3,12 +3,13 @@
 #include "assets/image.hpp"
 #include "game/campaign.hpp"
 #include "platform/game_view.hpp"
+#include "rlgl.h"
 #include "support/check.hpp"
 #include "world/environment_maps.hpp"
 #include <iostream>
 namespace blobber::test {
 inline void dungeonArtReview(const std::filesystem::path& source, const std::filesystem::path& output,
-                             const rules::Catalog& rules) {
+                             const rules::Catalog& rules, bool flowPolish = false) {
     PreparationWorker worker;
     GpuResources resources;
     LoadingScreen loading(&worker);
@@ -19,6 +20,9 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
                            prepareCpu([&] { return world_assets::load(source / "prepared/world"); }));
     std::cout << "Production loading presentations=" << loading.presentations()
               << " longest gap ms=" << loading.longestGapSeconds() * 1000 << "\n";
+    GpuLease<TargetHandle> ids;
+    if (flowPolish)
+        ids = {resources, resources.createTarget(viewWidth, viewHeight)};
     auto capture = [&](GameSession& game, const Map& map, const char* name, float fade = 0) {
         NpcAnimator animation(game.actors(), definitions.timings);
         animation.setTime(game.timeMs());
@@ -31,6 +35,24 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
         presenter.fade(fade);
         view.present(presenter, game, map, false, true, &commands.snapshot());
         presenter.capture(output / (std::string(name) + ".png"));
+        if (flowPolish) {
+            renderer.diagnosticIds(ids.get());
+            OwnedImage image(LoadImageFromTexture(resources.target(ids.get()).texture));
+            ImageFlipVertical(&image.value);
+            ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+            const auto* pixels = static_cast<const unsigned char*>(image.value.data);
+            const auto& picking = renderer.visibility()->frame().picking;
+            unsigned mismatches = 0;
+            for (int y = 0; y < viewHeight; ++y)
+                for (int x = 0; x < viewWidth; ++x) {
+                    const auto p = (y * viewWidth + x) * 4;
+                    mismatches += std::uint16_t(pixels[p] + 256 * pixels[p + 1]) != picking.slot(x, y);
+                }
+            check(!mismatches, "Production guardian and loot CPU/GPU picking agrees exactly");
+            using Error = unsigned (*)();
+            check(reinterpret_cast<Error>(rlGetProcAddress("glGetError"))() == 0,
+                  "Guardian emblem and loot shadow draw without GL errors");
+        }
         if (std::string(name).find("stairs-") == 0) {
             OwnedImage image(LoadImageFromTexture(resources.target(renderer.image().target).texture));
             ImageFlipVertical(&image.value);
@@ -40,6 +62,40 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
     };
     const Map corridor(
         {"#########", "#...#...#", "#...#...#", "#.......#", "#...#...#", "#...#...#", "#########"});
+    if (flowPolish) {
+        FloorFixtures doors;
+        doors.count = 2;
+        doors.entries[0] = {{4, 3}, Heading::East, FixtureKind::Door};
+        doors.entries[1] = {{6, 3}, Heading::East, FixtureKind::GuardianGate};
+        FloorObjectiveDefinition objective;
+        objective.count = 1;
+        objective.members[0] = 0;
+        objective.approachDoor = 0;
+        objective.gate = 1;
+        NpcWorld guards(corridor, {3, 3}, definitions.types, {{{0}, {7, 1}, {0, 0}, Heading::South}});
+        GameSession guardian(corridor, rules, guards, 5, {{3, 3}, Heading::East}, false, definitions.timings,
+                             {}, doors, objective);
+        capture(guardian, corridor, "guardian-entrance");
+        guardian.restorePose({{5, 3}, Heading::West}, true);
+        capture(guardian, corridor, "guardian-entrance-back");
+        check(guardian.interact({guardian.fixtures().id(0), guardian.fixtures().revision()}).changed,
+              "Review opens guardian approach door");
+        guardian.update(.15, false);
+        capture(guardian, corridor, "guardian-entrance-opening");
+        guardian.update(.15, false);
+        capture(guardian, corridor, "guardian-entrance-open");
+        const Map room({"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#",
+                        "#.......#", "#.......#", "#########"});
+        NpcWorld none(room, {4, 5}, definitions.types, {});
+        RecoveryLevel loot;
+        loot.groundCount = 1;
+        loot.ground[0] = {{4, 4}, rules.findItem("healing_potion"), 1};
+        GameSession bags(room, rules, none, 5, {{4, 5}, Heading::North}, false, definitions.timings, loot);
+        capture(bags, room, "loot-bag-shadow");
+        CampaignRun campaign(rules, *rules.preset(), definitions.types, definitions.timings, 5);
+        capture(campaign.game(), campaign.map(), "single-destination-hub");
+        return;
+    }
     NpcWorld empty(corridor, {5, 3}, definitions.types, {});
     FloorFixtures door;
     door.count = 1;

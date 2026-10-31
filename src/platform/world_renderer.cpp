@@ -494,7 +494,29 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
             }
         }
     if (!ids) {
+        // Guardian art rides on both leaf faces. The opaque leaf owns all depth/IDs.
         rlDisableDepthMask();
+        for (unsigned i = 0; i < frame.doorCount; ++i) {
+            const auto& door = frame.doors[i];
+            if (door.emblemTexture == UINT16_MAX)
+                continue;
+            rlEnableTexture(resources_.texture(textures_[door.emblemTexture].get()).id);
+            for (bool back : {false, true}) {
+                const auto q = world_render::doorEmblemQuad(door, back);
+                auto m = MatrixIdentity();
+                m.m0 = q[1].x - q[0].x;
+                m.m1 = q[1].y - q[0].y;
+                m.m2 = q[1].z - q[0].z;
+                m.m4 = q[3].x - q[0].x;
+                m.m5 = q[3].y - q[0].y;
+                m.m6 = q[3].z - q[0].z;
+                m.m12 = (q[0].x + q[1].x) * .5f;
+                m.m13 = (q[0].y + q[1].y) * .5f;
+                m.m14 = (q[0].z + q[1].z) * .5f;
+                draw(m, 1, 16, false, door.id);
+                draw(m, 2, 16, false, door.id);
+            }
+        }
         for (unsigned i = 0; i < frame.count; ++i) {
             const auto& b = frame.billboards[i];
             if (!b.shadowRadius)

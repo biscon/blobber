@@ -311,7 +311,12 @@ int main(int argc, char** argv) {
               "Integrated GPU resources released");
         // Optional review export uses production menu callbacks and real owned content.
         // Normal correctness mode above remains independent of shipped assets.
-        if (argc == 3) {
+        if (argc == 4 && std::string(argv[3]) == "--flow-polish") {
+            const std::filesystem::path source(argv[1]), output(argv[2]);
+            std::filesystem::create_directories(output);
+            const auto rules = loadRules(source / "rules/catalog.json");
+            test::dungeonArtReview(source, output, rules, true);
+        } else if (argc == 3) {
             const std::filesystem::path source(argv[1]), output(argv[2]);
             std::filesystem::create_directories(output);
             const auto rules = loadRules(source / "rules/catalog.json");

@@ -10,8 +10,22 @@ std::array<Vec, 8> corners(const DoorBox& b) noexcept {
                 b.origin.z + (i & 1 ? b.x.z : 0) + (i & 2 ? b.y.z : 0) + (i & 4 ? b.z.z : 0)};
     return p;
 }
+std::array<Vec, 4> doorEmblemQuad(const DoorBox& b, bool back) noexcept {
+    std::array<Vec, 4> result{};
+    for (unsigned i = 0; i < result.size(); ++i) {
+        float x = (i == 1 || i == 2) ? .725f : .275f;
+        if (back)
+            x = 1.f - x;
+        const float y = i >= 2 ? .82f : .37f, z = back ? 1.02f : -.02f;
+        result[i] = {b.origin.x + b.x.x * x + b.y.x * y + b.z.x * z,
+                     b.origin.y + b.x.y * x + b.y.y * y + b.z.y * z,
+                     b.origin.z + b.x.z * x + b.y.z * y + b.z.z * z};
+    }
+    return result;
+}
 unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox, doorBoxCapacity>& out,
-                   unsigned ordinary, unsigned locked, unsigned frame, unsigned edge) {
+                   unsigned ordinary, unsigned locked, unsigned frame, unsigned edge, unsigned guardianEmblem,
+                   unsigned guardianDoor) {
     if (doors && doors->world != g.world())
         throw std::invalid_argument("Foreign door snapshot");
     const auto* fs = g.fixtures();
@@ -53,6 +67,8 @@ unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox
         add(.09f - .03f * std::cos(angle), 0, .06f - .03f * std::sin(angle), .88f, height - .08f, .06f, angle,
             f.key || f.kind == FixtureKind::GuardianGate ? locked : ordinary,
             std::uint16_t(PickingBuffer::fixtureBase + i));
+        if (f.kind == FixtureKind::GuardianGate || i == guardianDoor)
+            out[count - 1].emblemTexture = std::uint16_t(guardianEmblem);
     }
     return count;
 }

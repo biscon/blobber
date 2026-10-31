@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v4";
+constexpr const char* visibilityVersion = "world-visibility-v5";
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;
@@ -19,6 +19,7 @@ struct FrameInput {
     const AttackVisualSnapshot* attacks = nullptr;
     const SpellArea* area = nullptr;
     std::uint64_t now = 0;
+    unsigned guardianDoor = UINT16_MAX;
 };
 struct Billboard {
     Vec feet;
@@ -64,7 +65,7 @@ class VisibilityPipeline {
     std::array<WorldFrame, 2> frames_;
     std::array<std::uint16_t, lootCapacity> lootOrder_{};
     std::array<unsigned, 5> icons_{};
-    std::array<std::uint64_t, 10> stamp_{};
+    std::array<std::uint64_t, 11> stamp_{};
     PickingBuffer opaqueCache_;
     unsigned current_ = 0;
     bool ready_ = false;
