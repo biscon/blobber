@@ -70,7 +70,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "spells/hold_person",
                                   "items/quarterstaff",
                                   "travel",
-                                  "skeleton"};
+                                  "skeleton",
+                                  "bugbear"};
     const auto prepared = directory.parent_path() / "prepared";
     auto loadPreparedAtlas = [&](const char* name, int height) {
         preparationPoint("Loading interface atlases");
@@ -212,7 +213,9 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index == skeletonPortraitIcon)
+    if (index == bugbearPortraitIcon)
+        index = 60;
+    else if (index == skeletonPortraitIcon)
         index = 59;
     else if (index >= 49 && index <= travelIcon)
         index -= 3;

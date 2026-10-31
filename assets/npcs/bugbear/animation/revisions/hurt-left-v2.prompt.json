@@ -1,0 +1,9 @@
+{
+  "name": "hurt-left",
+  "tool": "built-in imagegen",
+  "prompt": "EDIT the first supplied production sheet; second image is the approved character identity reference. Preserve the two different hurt/recovery poses, same equipment, facing and anatomy. Reduce each full figure to fit centrally inside its OWN half of the sheet, with at least 80 transparent pixels on BOTH left/right edges of each cell and 60 transparent pixels above/below. Especially separate all weapon spikes, shields and boots from neighboring cell. No figure or alpha pixels may touch the center vertical boundary. Preserve the detailed shaded textured muted retro dungeon painting and the same bugbear fur, hide armor, face, boots, round wood shield, rigid iron-spiked morningstar. No mirrored handedness, chain, extra limbs, text, floor, background, glow, grid lines or cast shadow. True transparent alpha outside figures.",
+  "references": [
+    "revisions/hurt-left-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}

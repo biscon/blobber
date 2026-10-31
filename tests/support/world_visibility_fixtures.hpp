@@ -5,7 +5,7 @@ namespace blobber::test {
 struct VisibilityFixture {
     WorldFixture location;
     std::vector<NpcTimings> timings;
-    VisibilityFixture(unsigned types = 1) {
+    VisibilityFixture(unsigned types = 1, unsigned padding = 0, bool crop = false) {
         world_assets::Writer writer(location.directory);
         std::vector<unsigned char> pixels(8 * 12 * 4, 255);
         for (unsigned i = 0; i < 8 * 12; ++i) {
@@ -43,9 +43,14 @@ struct VisibilityFixture {
                             }
                         const auto name = a.id + "/" + std::to_string(clip) + "/" + std::to_string(side) +
                                           "/" + std::to_string(frame);
-                        c.textures[side][frame] =
-                            std::uint16_t(writer.add(name, 8, 12, true, rgba, 0,
-                                                     {clip == 3 && side == 1 && frame == 1 ? .25f : .5f, 1}));
+                        const unsigned width = 8 + 2 * padding, height = 12 + 2 * padding;
+                        std::vector<unsigned char> padded(std::size_t(width) * height * 4);
+                        for (unsigned y = 0; y < 12; ++y)
+                            std::copy_n(rgba.begin() + y * 8 * 4, 8 * 4,
+                                        padded.begin() + ((y + padding) * width + padding) * 4);
+                        c.textures[side][frame] = std::uint16_t(
+                            writer.add(name, width, height, true, padded, 0,
+                                       {clip == 3 && side == 1 && frame == 1 ? .25f : .5f, 1}, true, crop));
                     }
             }
             a.attachments.release[0] = {.2f, .35f};

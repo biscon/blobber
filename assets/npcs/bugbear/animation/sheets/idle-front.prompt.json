@@ -1,0 +1,8 @@
+{
+  "name": "idle-front",
+  "tool": "built-in imagegen",
+  "prompt": "Production animation sprite sheet of the APPROVED BUGBEAR in the supplied reference. Copy this exact shaggy brown-furred muscular goblinoid, broad face/tusks/ears, worn hide armor and straps, boots, rigid iron-spiked morningstar in ANATOMICAL RIGHT hand and wood round shield in ANATOMICAL LEFT hand. Match detailed shaded textured retro dungeon art, muted earth colors, crisp edges and neutral illumination. Reference is for IDENTITY only, do NOT reproduce its four-direction layout. FRONT view facing the camera; right-hand morningstar appears on image LEFT and left-hand shield on image RIGHT. Exactly TWO full-body standing IDLE poses in a single row, left then right: neutral heavy resting stance, then subtle breathing with small chest/shoulder motion. Both feet stay planted, same body scale and ground. Do not duplicate the same frame exactly. For two-frame sheets use a 1536x1024 landscape canvas, TWO equal 768-wide cells; upright bugbear about 800px tall with generous margins. For four-frame sheets use 1536x1536 square, FOUR equal cells, upright about 580px tall. Prone single-pose sheets use a wide landscape canvas with large transparent margins. Identical scale and LOCAL invisible ground baseline within cells, every head/foot/shield/weapon/spike fully inside own cell with transparent gaps. Maintain right/left equipment anatomy in every pose; no mirroring or extra limbs. Actual transparent alpha background and gaps between limbs, NO background, floor, cast shadow, glow, text, labels, borders, grid lines or scene.",
+  "references": [
+    "../../reference/turnaround-v1.png"
+  ]
+}

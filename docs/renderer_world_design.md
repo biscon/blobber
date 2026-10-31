@@ -80,6 +80,13 @@ no-op/incremental and multi-config behavior. Source images are offline-only owne
 Current registrations reference 100 frames, calculated 149.34 MiB full RGBA mip data;
 this is not a measured GPU-residency figure.
 
+## Current B02 amendment
+
+B02 raises shared mip payload to 512 MiB and tracked world GPU ceiling to 608 MiB;
+CPU remains 352 MiB and alpha remains 64 MiB. Full-resolution NPC crop rectangles
+are publication format 3. The original R02 figures below record its historical
+contract; [B02](b02_bugbear_design.md) documents the current storage and geometry.
+
 ## Ownership, budgets and failure
 
 Shared assets/shaders outlive active/staged views. Each scene owns CPU geometry, mesh

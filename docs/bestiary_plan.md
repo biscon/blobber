@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
 Created: 2026-10-31. Last updated: 2026-10-31.
-Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02–B06 Planned.**
+Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03–B06 Planned.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -24,11 +24,11 @@ pacing or start PC07. Campaign integration gets its own plan after arena review.
 
 | Field | Current value |
 | --- | --- |
-| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01 closed |
-| Active slice | None; B01 — Skeleton and typed damage Accepted and closed |
-| Awaiting review | None; B01 accepted after arena review and presentation corrections |
-| Next eligible slice | B02 — Bugbear; detailed planning |
-| Next action | Plan B02 using the [accepted B01 handoff](b01_verification.md), starting with measured texture-budget headroom; review its detailed plan before implementation |
+| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B02 closed |
+| Active slice | None; B02 — Bugbear Accepted and closed |
+| Awaiting review | None; B02 completed-slice acceptance recorded |
+| Next eligible slice | B03 — Giant rat and Pack Tactics; detailed planning |
+| Next action | Plan B03 using the [accepted B02 handoff](b02_verification.md); review its detailed plan before implementation |
 | Campaign status | Paused; no generator/population or guardian changes |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
@@ -100,7 +100,9 @@ damage/incapacitation/removal cleanup while retaining party-only restrictions fo
 unrelated spells. Keep NPC resource/action state in bounded session-owned storage.
 
 Retain the current 32 monster definitions, 32 appearances, 256 actors, 64 active
-effect instances and prepared-world byte budgets. Derive event/timeline bounds
+effect instances and the current prepared-world byte budgets. B02 explicitly
+raises mip/GPU ceilings to 512/608 MiB and adds full-resolution NPC cropping;
+alpha/CPU and count limits remain fixed. Derive event/timeline bounds
 when adding NPC casts; reject capacity exhaustion before costs/RNG, never drop
 consequences. Preparation can allocate; engine-owned gameplay frames cannot.
 Pack checks scan bounded actors only when an attack is accepted, not per pixel or
@@ -168,7 +170,7 @@ per-frame image generation/decoding is part of this work.
 | ID | Slice | Dependency | Status |
 | --- | --- | --- | --- |
 | B01 | [Skeleton and typed damage](b01_skeleton_design.md) | Roadmap accepted | Accepted and closed (2026-10-31) |
-| B02 | Bugbear | B01 accepted | Planned |
+| B02 | [Bugbear and sprite memory preparation](b02_bugbear_design.md) | B01 accepted | Accepted and closed (2026-10-31) |
 | B03 | Giant rat and Pack Tactics | B02 accepted | Planned |
 | B04 | Zombie and Undead Fortitude | B03 accepted | Planned |
 | B05 | Goblin shaman and enemy spellcasting | B04 accepted | Planned |
@@ -362,3 +364,22 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
   is next eligible for detailed planning**, beginning with the approximately
   4.8 MiB remaining mip budget. B02 implementation is not started; B03–B06 remain
   Planned and campaign integration/PC07 stay paused.
+
+- **2026-10-31 B02 approval and delivery:** User approved the detailed plan with
+  “Implement the plan” and accepted the turnaround with “reference accepted,
+  looks great”. Full bugbear mechanics, 48-pose art, initiative portrait and normal
+  arena binding are delivered. User explicitly authorized a 512 MiB texture
+  budget while preserving prepared detail; NPC crop offsets/shared CPU/GPU
+  geometry reduce the four-appearance publication to 173.65 MiB mip textures /
+  30.22 MiB alpha. No atlas or streaming system was added. Focused Release CPU,
+  publication/build, hidden GPU and six strict production replay checks pass.
+  [Verification/gallery](b02_verification.md) records evidence and limitations.
+  **B02 Ready for review**, awaiting completed-slice user acceptance. B03 remains
+  Planned; campaign integration and PC07 stay paused.
+
+- **2026-10-31 B02 acceptance:** User: “slice accepted, record it in the plan doc”.
+  **B02 Accepted and closed**, including bugbear mechanics, full 48-pose art,
+  initiative portrait, arena integration, transparent-margin cropping and revised
+  texture/GPU budgets. Existing [verification evidence and limitations](b02_verification.md)
+  remain recorded. **B03 — Giant rat and Pack Tactics** is next for detailed
+  planning; implementation is unstarted. Campaign integration and PC07 stay paused.

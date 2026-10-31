@@ -329,12 +329,18 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                         selection.flash};
             b.release = a.attachments.release[side];
             b.torso = a.attachments.torso[side];
+            const auto& stored = assets_.publication.textures[texture];
+            b.crop = {float(stored.canvas.x) / stored.canvas.width,
+                      float(stored.canvas.y) / stored.canvas.height,
+                      float(stored.canvas.x + stored.width) / stored.canvas.width,
+                      float(stored.canvas.y + stored.height) / stored.canvas.height};
             append(b);
             auto canonical = a.clips[0].textures[0][0];
             float top = 0;
             if (clip == unsigned(NpcAnimation::Prone) && a.clips[clip].textures[side][0] != UINT16_MAX) {
                 canonical = a.clips[clip].textures[side][0];
-                top = float(assets_.bounds[canonical].top) / assets_.publication.textures[canonical].height;
+                const auto& stored = assets_.publication.textures[canonical];
+                top = float(stored.canvas.y + assets_.bounds[canonical].top) / stored.canvas.height;
             }
             const auto badge = project(
                 out.camera,
@@ -501,8 +507,8 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
     return {};
 }
 std::array<Vec, 4> corners(const Camera& c, const Billboard& b) noexcept {
-    const float left = -b.anchorX * b.width, right = (1 - b.anchorX) * b.width,
-                bottom = (b.anchorY - 1) * b.height, top = b.anchorY * b.height;
+    const float left = (b.crop.left - b.anchorX) * b.width, right = (b.crop.right - b.anchorX) * b.width,
+                bottom = (b.anchorY - b.crop.bottom) * b.height, top = (b.anchorY - b.crop.top) * b.height;
     return {{{b.feet.x + c.right.x * left, b.feet.y + bottom, b.feet.z + c.right.z * left},
              {b.feet.x + c.right.x * right, b.feet.y + bottom, b.feet.z + c.right.z * right},
              {b.feet.x + c.right.x * right, b.feet.y + top, b.feet.z + c.right.z * right},

@@ -184,8 +184,8 @@ int main() {
             resources.failAfter(-1);
             check(renderer.image().revision == revision && renderer.picking() == picking,
                   "Failed stage retains image and picking atomically");
-            check(renderer.cpuBytes() < 352u * world_assets::MiB &&
-                      renderer.gpuBytes() < 352u * world_assets::MiB,
+            check(renderer.cpuBytes() < world_assets::worldCpuBudget &&
+                      renderer.gpuBytes() < world_assets::worldGpuBudget,
                   "Active/staged subsystem budgets");
             unsigned cpuFailures = 0;
             const auto retained = resources.counts();
@@ -217,6 +217,40 @@ int main() {
         check(resources.counts().textures == 0 && resources.counts().meshes == 0 &&
                   resources.counts().shaders == 0 && resources.counts().targets == 0,
               "All world billboard resources release before context");
+        {
+            test::VisibilityFixture cropped(1, 6, true);
+            WorldRenderer renderer(resources, cropped.publication());
+            movement = {};
+            movement.player = {{4, 6}, Heading::North};
+            animation.frames = {};
+            animation.actorRevision = actors.snapshot().revision;
+            world_render::FrameInput input{map, movement, &actors, &animation};
+            renderer.stage(input);
+            renderer.commit();
+            GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
+            for (unsigned clip = 0; clip < npcAnimationCount; ++clip)
+                for (bool quality : {false, true}) {
+                    animation.frames[0].clip = NpcAnimation(clip);
+                    ++animation.revision;
+                    renderer.supersampling(quality);
+                    renderer.render(input);
+                    differences += compare(resources, renderer, ids.get());
+                }
+            const auto transfers = resources.transfers();
+            watching = true;
+            allocations = 0;
+            for (unsigned i = 0; i < 4; ++i) {
+                animation.frames[0].clip = NpcAnimation::Idle;
+                animation.frames[0].active = std::uint8_t(i % 2);
+                ++animation.revision;
+                renderer.render(input);
+            }
+            watching = false;
+            check(allocations == 0 && resources.transfers().uploads == transfers.uploads,
+                  "Cropped animation frames allocate no engine C++ storage or texture uploads");
+        }
+        check(resources.counts().textures == 0 && resources.counts().targets == 0,
+              "Cropped textures release with their original world owner");
         std::cout << "World billboard GPU parity/lifecycle passed; boundary pixel differences=" << differences
                   << '\n';
     } catch (const std::exception& e) {

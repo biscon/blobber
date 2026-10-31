@@ -24,13 +24,14 @@ Bow and corpse canvases are wider, with proportional world widths; every canvas
 uses the same 512/536 vertical anchor. Collapsing poses are not individually
 normalized to standing height. The extractor rejects visible footprint clipping.
 
-Runtime derivatives are generated in the build tree using the shared area/half-size
-profile. They are not hand-edited or required in this source directory:
+Runtime derivatives are generated in the build tree using the current nearest/full-prepared-resolution
+profile, followed by offline transparent-margin cropping (B02). Original authored
+registration scales still apply; cropping does not resample visible texels. They are not hand-edited or required in this source directory:
 
 ```sh
 cmake --build --preset release
 cmake-build-release/blobber_prepare_npc_animation assets/npcs/goblin-archer/animation/sheets.json \
-  --filter area --resolution 0.5 --output /tmp/blobber-archer-derivatives
+  --filter nearest --resolution 1 --output scratch/blobber-archer-derivatives
 ```
 
 See [design](../../../docs/goblin_archer_design.md) and

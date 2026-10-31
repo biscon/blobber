@@ -381,3 +381,19 @@ roll; independent save consequences and hit riders retain current semantics.
 Vulnerability doubles final rolled damage after critical dice and save reduction.
 The masks implement immunity/vulnerability only; resistance and party racial
 mitigation remain outside this slice. No campaign recipe or guardian is assigned.
+
+## B02 — Bugbear (2026-10-31)
+
+Source: official SRD 5.1 CC edition, printed p. 266. Adopt abilities
+15/14/13/8/11/9, AC 16 (hide and shield), fixed HP 27, CR 1 context / 200 XP,
+morningstar +4 for 2d8+2 piercing. The two dice already include Brute; ordinary
+criticals use four dice and one modifier through the shared damage path. Humanoid,
+sleep-susceptible and nonmetal armor; normal damage profiles.
+
+Project adaptations: melee-only; omit javelin and Surprise Attack, skills, senses,
+languages and tabletop movement speed. Existing grid approach, ordinary reach,
+front protection and uniform legal target selection apply. No Nimble Escape,
+larger footprint or hidden level-one protection. Loot is one existing shield;
+recoverable hide/morningstar equipment is omitted. Arena-first delivery does not
+assign a campaign guardian, population recipe or difficulty label. All artwork is
+new imagegen production art with retained provenance, not copied SRD illustrations.

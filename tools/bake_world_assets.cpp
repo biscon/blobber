@@ -48,14 +48,14 @@ std::map<std::string, std::string> sourceFingerprints(const fs::path& source) {
     result.emplace("ui/items/loot-bag.png", fingerprintFile(source / "ui/items/loot-bag.png"));
     return result;
 }
-int run(const fs::path& source, const fs::path& output) {
+int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     const auto inputs = sourceFingerprints(source);
     world_assets::Writer writer(output);
     auto add = [&](const std::string& name, const fs::path& path, bool sprite, unsigned cutoff = 0,
-                   world_assets::Anchor anchor = {}) {
+                   world_assets::Anchor anchor = {}, bool crop = false) {
         unsigned w = 0, h = 0;
         auto rgba = pixels(path, w, h);
-        return writer.add(name, w, h, sprite, rgba, cutoff, anchor);
+        return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop);
     };
     std::vector<world_assets::Pack> packs;
     std::vector<fs::path> packDirectories;
@@ -227,7 +227,7 @@ int run(const fs::path& source, const fs::path& output) {
                     unsigned id;
                     if (it == images.end()) {
                         id = add(name, sheets ? generated / rel : ref.path, true, def.alphaCutoff,
-                                 {ref.anchorX, ref.anchorY});
+                                 {ref.anchorX, ref.anchorY}, cropNpcs);
                         images.emplace(name, id);
                     } else
                         id = it->second;
@@ -257,10 +257,10 @@ int run(const fs::path& source, const fs::path& output) {
 } // namespace
 int main(int argc, char** argv) {
     try {
-        if (argc != 3)
-            throw std::runtime_error("Usage: blobber_bake_world SOURCE OUTPUT");
+        if (argc != 3 && !(argc == 4 && std::string(argv[3]) == "--uncropped-npcs"))
+            throw std::runtime_error("Usage: blobber_bake_world SOURCE OUTPUT [--uncropped-npcs]");
         SetTraceLogLevel(LOG_WARNING);
-        return run(fs::absolute(argv[1]), fs::absolute(argv[2]));
+        return run(fs::absolute(argv[1]), fs::absolute(argv[2]), argc == 3);
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         return 1;

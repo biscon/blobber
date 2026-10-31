@@ -120,9 +120,10 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         validateNpcTimings(timing);
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        state_.enemyPortraits[i] = actors_.catalog().monster(a.monster)->id == "skeleton"
-                                       ? EnemyPortrait::Skeleton
-                                       : EnemyPortrait::Goblin;
+        const auto& species = actors_.catalog().monster(a.monster)->id;
+        state_.enemyPortraits[i] = species == "skeleton"  ? EnemyPortrait::Skeleton
+                                   : species == "bugbear" ? EnemyPortrait::Bugbear
+                                                          : EnemyPortrait::Goblin;
     }
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");

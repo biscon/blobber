@@ -1,0 +1,11 @@
+{
+  "status": "Accepted 2026-10-31",
+  "tool": "built-in imagegen",
+  "output": "turnaround-v1.png",
+  "prompt": "Create a transparent-background four-direction character turnaround for a NEW BUGBEAR dungeon monster. The supplied images are STYLE REFERENCES: first existing melee goblin idle sheet; second existing goblin archer turnaround. Match their detailed shaded textured retro dungeon game sprite painting, muted earth colors, crisp material and edge detail, consistent neutral lighting, NOT smooth cartoon, NOT low-detail pixel art. New anatomy: tall bulky muscular shaggy brown-furred goblinoid, broad shoulders, heavy long arms, thick legs, pointed ears, bestial broad nose and small tusks, intimidating but grounded. Worn brown hide armor and leather straps, exposed fur. One short rigid-shaft iron-spiked morningstar held in ANATOMICAL RIGHT hand; battered round wood shield with iron boss on ANATOMICAL LEFT forearm. No flail chain, bow, javelin, helmet or text. Four complete orthographic full-body poses left-to-right FRONT, LEFT PROFILE (face pointing left), BACK, RIGHT PROFILE (face pointing right). Same character, outfit, weapon, shield, proportions, lighting and apparent size in all views. Anatomical handedness remains correct in back/profile; never mirror equipment. All poses stand on same ground baseline, generous transparent gaps and margins around heads, feet, ears, weapon and shield. Each pose has own complete visible equipment without clipping or overlap into neighbor. This is a turnaround concept to approve before animation; standing relaxed heavy stance, no action and no ground/shadow/backdrop. Wide landscape composition.",
+  "references": [
+    "assets/npcs/goblin/animation/sheets/idle-front.png",
+    "assets/npcs/goblin-archer/reference/turnaround-v2.png"
+  ],
+  "acceptance": "reference accepted, looks great"
+}

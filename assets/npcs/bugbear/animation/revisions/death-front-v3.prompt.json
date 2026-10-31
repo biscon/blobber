@@ -1,0 +1,7 @@
+{
+  "tool": "built-in imagegen",
+  "prompt": "Create a NEW square 2048x2048 transparent animation sheet with FOUR SMALL bugbear figures in a 2x2 grid. Use supplied turnaround for exact character/style identity ONLY. This sheet must have HUGE EMPTY SPACE: figures occupy less than half of each cell's width. Center figures at horizontal 25% and 75%, with at least 15% of sheet width as completely empty vertical gap between columns. Keep every morningstar spike, shield and corpse far from all grid boundaries. SAME bugbear anatomy/equipment, detailed shaded textured muted retro dungeon art, anatomical right rigid morningstar and left round wood shield. FRONT VIEW. Four successive death poses: 1 nearly standing beginning to buckle; 2 knees down; 3 falling sideways onto ground; 4 fully motionless low corpse. Same anatomical scale in all four, corpse naturally much shorter and wider, never enlarge it. Entire body and equipment intact in all cells. Local ground baseline at bottom of each row. No text, lines, background, shadows or scenery. Do not fill the canvas with figures: substantial blank space is ESSENTIAL. FOUR small separated figures, NOT large close-ups.",
+  "references": [
+    "../reference/turnaround-v1.png"
+  ]
+}

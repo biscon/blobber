@@ -1,0 +1,912 @@
+[
+  {
+    "name": "attack-front",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        34,
+        74,
+        565,
+        639
+      ],
+      [
+        14,
+        11,
+        546,
+        649
+      ],
+      [
+        107,
+        42,
+        580,
+        578
+      ],
+      [
+        16,
+        29,
+        550,
+        569
+      ]
+    ],
+    "registration": {
+      "name": "attack-front",
+      "columns": 2,
+      "rows": 2,
+      "scale": 0.778761062,
+      "pivot_x": [
+        350,
+        340,
+        350,
+        345
+      ],
+      "ground_y": [
+        639,
+        649,
+        578,
+        569
+      ],
+      "canvas_width": 544,
+      "canvas_height": 536,
+      "anchor_x": 272.0,
+      "anchor_y": 512,
+      "split_x": 627,
+      "split_y": 649
+    }
+  },
+  {
+    "name": "death-back",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        45,
+        49,
+        618,
+        660
+      ],
+      [
+        2,
+        222,
+        607,
+        668
+      ],
+      [
+        27,
+        150,
+        631,
+        536
+      ],
+      [
+        1,
+        249,
+        613,
+        518
+      ]
+    ],
+    "registration": {
+      "name": "death-back",
+      "columns": 2,
+      "rows": 2,
+      "scale": 0.720130933,
+      "pivot_x": [
+        331.5,
+        304.5,
+        329.0,
+        307.0
+      ],
+      "ground_y": [
+        660,
+        668,
+        536,
+        518
+      ],
+      "canvas_width": 560,
+      "canvas_height": 536,
+      "anchor_x": 280.0,
+      "anchor_y": 512,
+      "split_x": 631,
+      "split_y": 668
+    }
+  },
+  {
+    "name": "death-front",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        115,
+        172,
+        482,
+        607
+      ],
+      [
+        97,
+        265,
+        494,
+        605
+      ],
+      [
+        53,
+        313,
+        610,
+        520
+      ],
+      [
+        30,
+        381,
+        584,
+        528
+      ]
+    ],
+    "registration": {
+      "name": "death-front",
+      "columns": 2,
+      "rows": 2,
+      "scale": 0.947935368,
+      "pivot_x": [
+        298.5,
+        295.5,
+        331.5,
+        307.0
+      ],
+      "ground_y": [
+        607,
+        605,
+        520,
+        528
+      ],
+      "canvas_width": 560,
+      "canvas_height": 536,
+      "anchor_x": 280.0,
+      "anchor_y": 512,
+      "split_x": 627,
+      "split_y": 627
+    }
+  },
+  {
+    "name": "death-left",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        145,
+        194,
+        474,
+        664
+      ],
+      [
+        143,
+        295,
+        503,
+        660
+      ],
+      [
+        53,
+        242,
+        587,
+        462
+      ],
+      [
+        21,
+        323,
+        569,
+        471
+      ]
+    ],
+    "registration": {
+      "name": "death-left",
+      "columns": 2,
+      "rows": 2,
+      "scale": 0.936170213,
+      "pivot_x": [
+        309.5,
+        323.0,
+        320.0,
+        295.0
+      ],
+      "ground_y": [
+        664,
+        660,
+        462,
+        471
+      ],
+      "canvas_width": 560,
+      "canvas_height": 536,
+      "anchor_x": 280.0,
+      "anchor_y": 512,
+      "split_x": 627,
+      "split_y": 664
+    }
+  },
+  {
+    "name": "death-right",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        16,
+        62,
+        603,
+        703
+      ],
+      [
+        31,
+        180,
+        600,
+        704
+      ],
+      [
+        37,
+        179,
+        621,
+        482
+      ],
+      [
+        21,
+        239,
+        611,
+        494
+      ]
+    ],
+    "registration": {
+      "name": "death-right",
+      "columns": 2,
+      "rows": 2,
+      "scale": 0.686427457,
+      "pivot_x": [
+        309.5,
+        315.5,
+        329.0,
+        316.0
+      ],
+      "ground_y": [
+        703,
+        704,
+        482,
+        494
+      ],
+      "canvas_width": 560,
+      "canvas_height": 536,
+      "anchor_x": 280.0,
+      "anchor_y": 512,
+      "split_x": 627,
+      "split_y": 704
+    }
+  },
+  {
+    "name": "hurt-back",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        33,
+        128,
+        797,
+        918
+      ],
+      [
+        2,
+        121,
+        725,
+        928
+      ]
+    ],
+    "registration": {
+      "name": "hurt-back",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.506329114,
+      "pivot_x": [
+        395,
+        405
+      ],
+      "ground_y": [
+        918,
+        928
+      ],
+      "canvas_width": 464,
+      "canvas_height": 536,
+      "anchor_x": 232.0,
+      "anchor_y": 512,
+      "split_x": 797
+    }
+  },
+  {
+    "name": "hurt-front",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        26,
+        95,
+        767,
+        955
+      ],
+      [
+        15,
+        96,
+        727,
+        954
+      ]
+    ],
+    "registration": {
+      "name": "hurt-front",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.465116279,
+      "pivot_x": [
+        400,
+        400
+      ],
+      "ground_y": [
+        955,
+        954
+      ],
+      "canvas_width": 464,
+      "canvas_height": 536,
+      "anchor_x": 232.0,
+      "anchor_y": 512,
+      "split_x": 768
+    }
+  },
+  {
+    "name": "hurt-left",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        20,
+        152,
+        770,
+        940
+      ],
+      [
+        19,
+        145,
+        737,
+        935
+      ]
+    ],
+    "registration": {
+      "name": "hurt-left",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.507614213,
+      "pivot_x": [
+        440,
+        440
+      ],
+      "ground_y": [
+        940,
+        935
+      ],
+      "canvas_width": 464,
+      "canvas_height": 536,
+      "anchor_x": 232.0,
+      "anchor_y": 512,
+      "split_x": 770
+    }
+  },
+  {
+    "name": "hurt-right",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        72,
+        129,
+        842,
+        938
+      ],
+      [
+        16,
+        138,
+        674,
+        932
+      ]
+    ],
+    "registration": {
+      "name": "hurt-right",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.494437577,
+      "pivot_x": [
+        440,
+        350
+      ],
+      "ground_y": [
+        938,
+        932
+      ],
+      "canvas_width": 464,
+      "canvas_height": 536,
+      "anchor_x": 232.0,
+      "anchor_y": 512,
+      "split_x": 842
+    }
+  },
+  {
+    "name": "idle-back",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        45,
+        45,
+        791,
+        971
+      ],
+      [
+        2,
+        51,
+        730,
+        974
+      ]
+    ],
+    "registration": {
+      "name": "idle-back",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.475161987,
+      "pivot_x": [
+        395,
+        392
+      ],
+      "ground_y": [
+        971,
+        974
+      ],
+      "canvas_width": 416,
+      "canvas_height": 536,
+      "anchor_x": 208.0,
+      "anchor_y": 512,
+      "split_x": 791
+    }
+  },
+  {
+    "name": "idle-front",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        20,
+        22,
+        745,
+        965
+      ],
+      [
+        1,
+        23,
+        741,
+        967
+      ]
+    ],
+    "registration": {
+      "name": "idle-front",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.46659597,
+      "pivot_x": [
+        385,
+        400
+      ],
+      "ground_y": [
+        965,
+        967
+      ],
+      "canvas_width": 416,
+      "canvas_height": 536,
+      "anchor_x": 208.0,
+      "anchor_y": 512,
+      "split_x": 768
+    }
+  },
+  {
+    "name": "idle-left",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        31,
+        35,
+        748,
+        987
+      ],
+      [
+        16,
+        35,
+        749,
+        987
+      ]
+    ],
+    "registration": {
+      "name": "idle-left",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.462184874,
+      "pivot_x": [
+        430,
+        430
+      ],
+      "ground_y": [
+        987,
+        987
+      ],
+      "canvas_width": 416,
+      "canvas_height": 536,
+      "anchor_x": 208.0,
+      "anchor_y": 512,
+      "split_x": 768
+    }
+  },
+  {
+    "name": "idle-right",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        48,
+        36,
+        732,
+        991
+      ],
+      [
+        48,
+        36,
+        733,
+        991
+      ]
+    ],
+    "registration": {
+      "name": "idle-right",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.460732984,
+      "pivot_x": [
+        425,
+        420
+      ],
+      "ground_y": [
+        991,
+        991
+      ],
+      "canvas_width": 416,
+      "canvas_height": 536,
+      "anchor_x": 208.0,
+      "anchor_y": 512,
+      "split_x": 768
+    }
+  },
+  {
+    "name": "prone-back",
+    "source_size": [
+      1933,
+      814
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        9,
+        146,
+        1914,
+        727
+      ]
+    ],
+    "registration": {
+      "name": "prone-back",
+      "columns": 1,
+      "rows": 1,
+      "scale": 0.25,
+      "pivot_x": [
+        961.5
+      ],
+      "ground_y": [
+        727
+      ],
+      "canvas_width": 512,
+      "canvas_height": 536,
+      "anchor_x": 256.0,
+      "anchor_y": 512
+    }
+  },
+  {
+    "name": "prone-front",
+    "source_size": [
+      1774,
+      887
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        41,
+        207,
+        1746,
+        791
+      ]
+    ],
+    "registration": {
+      "name": "prone-front",
+      "columns": 1,
+      "rows": 1,
+      "scale": 0.25,
+      "pivot_x": [
+        893.5
+      ],
+      "ground_y": [
+        791
+      ],
+      "canvas_width": 512,
+      "canvas_height": 536,
+      "anchor_x": 256.0,
+      "anchor_y": 512
+    }
+  },
+  {
+    "name": "prone-left",
+    "source_size": [
+      1774,
+      887
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        24,
+        237,
+        1746,
+        722
+      ]
+    ],
+    "registration": {
+      "name": "prone-left",
+      "columns": 1,
+      "rows": 1,
+      "scale": 0.25,
+      "pivot_x": [
+        885.0
+      ],
+      "ground_y": [
+        722
+      ],
+      "canvas_width": 512,
+      "canvas_height": 536,
+      "anchor_x": 256.0,
+      "anchor_y": 512
+    }
+  },
+  {
+    "name": "prone-right",
+    "source_size": [
+      1997,
+      788
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        34,
+        220,
+        1980,
+        769
+      ]
+    ],
+    "registration": {
+      "name": "prone-right",
+      "columns": 1,
+      "rows": 1,
+      "scale": 0.25,
+      "pivot_x": [
+        1007.0
+      ],
+      "ground_y": [
+        769
+      ],
+      "canvas_width": 512,
+      "canvas_height": 536,
+      "anchor_x": 256.0,
+      "anchor_y": 512
+    }
+  },
+  {
+    "name": "walk-back",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        32,
+        72,
+        788,
+        945
+      ],
+      [
+        44,
+        72,
+        748,
+        958
+      ]
+    ],
+    "registration": {
+      "name": "walk-back",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.504009164,
+      "pivot_x": [
+        395,
+        415
+      ],
+      "ground_y": [
+        945,
+        958
+      ],
+      "canvas_width": 448,
+      "canvas_height": 536,
+      "anchor_x": 224.0,
+      "anchor_y": 512,
+      "split_x": 788
+    }
+  },
+  {
+    "name": "walk-front",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        16,
+        43,
+        751,
+        981
+      ],
+      [
+        17,
+        42,
+        739,
+        962
+      ]
+    ],
+    "registration": {
+      "name": "walk-front",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.469083156,
+      "pivot_x": [
+        390,
+        395
+      ],
+      "ground_y": [
+        981,
+        962
+      ],
+      "canvas_width": 448,
+      "canvas_height": 536,
+      "anchor_x": 224.0,
+      "anchor_y": 512,
+      "split_x": 768
+    }
+  },
+  {
+    "name": "walk-left",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        19,
+        73,
+        766,
+        963
+      ],
+      [
+        48,
+        75,
+        764,
+        955
+      ]
+    ],
+    "registration": {
+      "name": "walk-left",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.494382022,
+      "pivot_x": [
+        440,
+        445
+      ],
+      "ground_y": [
+        963,
+        955
+      ],
+      "canvas_width": 448,
+      "canvas_height": 536,
+      "anchor_x": 224.0,
+      "anchor_y": 512,
+      "split_x": 768
+    }
+  },
+  {
+    "name": "walk-right",
+    "source_size": [
+      1536,
+      1024
+    ],
+    "alpha_cutoff": 15,
+    "source_bounds": [
+      [
+        40,
+        60,
+        802,
+        971
+      ],
+      [
+        50,
+        60,
+        701,
+        961
+      ]
+    ],
+    "registration": {
+      "name": "walk-right",
+      "columns": 2,
+      "rows": 1,
+      "scale": 0.48298573,
+      "pivot_x": [
+        430,
+        428
+      ],
+      "ground_y": [
+        971,
+        961
+      ],
+      "canvas_width": 448,
+      "canvas_height": 536,
+      "anchor_x": 224.0,
+      "anchor_y": 512,
+      "split_x": 802
+    }
+  }
+]

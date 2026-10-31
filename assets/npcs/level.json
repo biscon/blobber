@@ -2,7 +2,8 @@
   "definitions": [
     "goblin/goblin.json",
     "goblin-archer/goblin-archer.json",
-    "skeleton/skeleton.json"
+    "skeleton/skeleton.json",
+    "bugbear/bugbear.json"
   ],
   "instances": [
     {

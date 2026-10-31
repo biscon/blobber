@@ -33,6 +33,17 @@
         "modifier": 2,
         "type": "piercing"
       }
+    },
+    {
+      "id": "bugbear.morningstar",
+      "kind": "melee",
+      "attack_bonus": 4,
+      "damage": {
+        "count": 2,
+        "sides": 8,
+        "modifier": 2,
+        "type": "piercing"
+      }
     }
   ],
   "monsters": [
@@ -325,6 +336,40 @@
       "damage_vulnerabilities": [
         "bludgeoning"
       ]
+    },
+    {
+      "id": "bugbear",
+      "abilities": {
+        "strength": 15,
+        "dexterity": 14,
+        "constitution": 13,
+        "intelligence": 8,
+        "wisdom": 11,
+        "charisma": 9
+      },
+      "armor_class": 16,
+      "hit_points": 27,
+      "attacks": [
+        "bugbear.morningstar"
+      ],
+      "traits": [],
+      "loot": [
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        }
+      ],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 200,
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": []
     }
   ],
   "races": [

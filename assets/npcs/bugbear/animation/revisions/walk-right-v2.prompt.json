@@ -1,0 +1,9 @@
+{
+  "name": "walk-right",
+  "tool": "built-in imagegen",
+  "prompt": "EDIT the first supplied production sheet; second image is the approved character identity reference. Keep frame one. Completely redraw the legs in FRAME TWO to the OPPOSITE step, not the same silhouette: NEAR leg bent at knee, foot lifted beneath hip in a clear passing pose, FAR leg straight supporting body. Frame one retains a long open stride. Keep upper-body identity, correct equipment hands and right direction. BOTH poses must visibly differ in leg angle and boot position. Reduce BOTH full figures to occupy only the central 70% of their cells, with a clear completely transparent gap at the sheet center. Preserve the detailed shaded textured muted retro dungeon painting and the same bugbear fur, hide armor, face, boots, round wood shield, rigid iron-spiked morningstar. No mirrored handedness, chain, extra limbs, text, floor, background, glow, grid lines or cast shadow. True transparent alpha outside figures.",
+  "references": [
+    "revisions/walk-right-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}

@@ -22,8 +22,9 @@ animation set. Implement and review in the arena before campaign integration;
 all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) is
 **Accepted and closed** (2026-10-31): immutable damage profiles, typed impact resolution and full
 skeleton art are implemented in the arena. [Verification](b01_verification.md)
-records checks, captures and acceptance; B02 bugbear is next for detailed planning,
-starting with the measured texture-budget constraint. B02–B06 remain Planned.
+records checks, captures and acceptance. B02 bugbear and full-resolution sprite
+cropping are **Accepted and closed** (2026-10-31); [B02 verification](b02_verification.md) records
+art, memory totals, CPU/GPU checks and arena captures. B03–B06 remain Planned.
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
 right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
@@ -175,9 +176,9 @@ then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash
 
 WorldRenderer retains immutable shared textures/alpha data and at most active and
 staged views. Each view owns bounded static scene geometry, visibility scratch,
-effects and GPU mesh/target leases. World asset budgets are 256 MiB mip textures
+effects and GPU mesh/target leases. World asset budgets are 512 MiB mip textures
 and 64 MiB alpha masks; scene limits are 64 MiB CPU/40 MiB GPU, view scratch 8 MiB,
-and the aggregate world subsystem budget 352 MiB. Preparation rejects capacity or
+and tracked world ceilings are 352 MiB CPU / 608 MiB GPU. Preparation rejects capacity or
 allocation failures without replacing the playable view. These are preparation
 boundaries, not frame-time growth policies.
 
@@ -227,6 +228,14 @@ a Vulkan-style benchmark or stress-testing framework.
 
 ## Typed damage and bestiary content
 
+B02 implementation follows the approved [bugbear and sprite memory design](b02_bugbear_design.md).
+It implements full-resolution NPC crop rectangles and 512/608 MiB world
+texture/GPU ceilings while preserving CPU/alpha and count limits. Bugbear uses
+ordinary melee and one-subcell occupancy; Brute is included in immutable damage
+dice. Crop rectangles reduce stored texels without changing logical anchors,
+attachments, shadows or picking placement. See the design for verification and
+user review status.
+
 Rules catalog schema 10 adds immutable uint16 immunity/vulnerability masks to each
 monster; schemas 1–9 default to normal. Loading rejects unknown types, duplicates
 and overlap. A pure allocation-free resolver adjusts the final rolled total once
@@ -243,8 +252,8 @@ publication follow the existing renderer pipeline. Body width stays <=.5 cells;
 all clip canvases may use the existing <=1-cell world publication bound without
 changing occupancy. A fixed HUD species discriminator selects its generated
 portrait in the existing UI atlas. Profiles and portraits add no frame allocations
-or resource owner. Current publication totals and next-species budget constraints
-are retained in the [handoff](b01_verification.md).
+or resource owner. Historical B01 totals remain in its [handoff](b01_verification.md);
+current cropped publication totals are in [B02 verification](b02_verification.md).
 
 ## Interfaces and preservation
 
@@ -255,8 +264,8 @@ Presenter accepts only world target/revision publications. Engine-owned frame wo
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
 Campaign schema/simulation are 3/4 and generator/templates 4/4. Older saves reject
-without being modified; no migration. World publication is format 2, appearance 4,
-visibility world-visibility-v5 and terrain-rules-v2. Door scheduling identity is
+without being modified; no migration. World publication is format 3, appearance 4,
+visibility world-visibility-v6 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

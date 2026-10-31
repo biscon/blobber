@@ -30,7 +30,7 @@ supported observation policy.
 
 Capabilities advertise `visibility_backends:["world"]`; capture is separate and
 available only in graphics builds. World traces record backend `world`, visibility
-`world-visibility-v5`, publication fingerprint, format 2 and appearance revision 4,
+`world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
 Protocol remains v1 and campaign schema/simulation are 3/3 (older saves reject unchanged). Replay images own a

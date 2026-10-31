@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v5";
+constexpr const char* visibilityVersion = "world-visibility-v6";
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;
@@ -27,6 +27,10 @@ struct Billboard {
     std::uint16_t texture = UINT16_MAX, id = PickingBuffer::empty;
     bool alive = false, flash = false;
     NpcAttachment release{}, torso{};
+    // Drawable crop in logical canvas space; attachments/shadows keep that space.
+    struct Region {
+        float left = 0, top = 0, right = 1, bottom = 1;
+    } crop{};
 };
 struct WorldFrame {
     Camera camera{};

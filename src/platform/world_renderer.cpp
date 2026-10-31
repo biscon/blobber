@@ -172,7 +172,7 @@ void WorldRenderer::stage(GeometryView geometry, const MovementState& state, wor
                    std::chrono::duration<double, std::milli>(uploaded - built).count(),
                    std::chrono::duration<double, std::milli>(drawn - uploaded).count()};
     staged_ = std::move(candidate);
-    if (cpuBytes() > 352u * world_assets::MiB || gpuBytes() > 352u * world_assets::MiB) {
+    if (cpuBytes() > world_assets::worldCpuBudget || gpuBytes() > world_assets::worldGpuBudget) {
         staged_.reset();
         throw std::runtime_error("World active/staged budget exceeded");
     }
@@ -218,7 +218,7 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
                staged_->effects ? &staged_->effects->frame() : nullptr);
         resources_.finishPreparation();
         staged_->publishedPicking = staged_->visibility->picking();
-        if (cpuBytes() > 352u * world_assets::MiB || gpuBytes() > 352u * world_assets::MiB)
+        if (cpuBytes() > world_assets::worldCpuBudget || gpuBytes() > world_assets::worldGpuBudget)
             throw std::runtime_error("World active/staged budget exceeded");
     } catch (...) {
         staged_.reset();
@@ -542,11 +542,18 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
             foot.y + (1 - b.anchorY) * b.height * scale < 0)
             continue;
         rlEnableTexture(resources_.texture(textures_[b.texture].get()).id);
-        const float lateral = (.5f - b.anchorX) * b.width;
-        const auto model = MatrixMultiply(
-            MatrixMultiply(MatrixScale(b.width, b.height, 1), MatrixRotateY(-frame.camera.yaw)),
-            MatrixTranslate(b.feet.x + frame.camera.right.x * lateral, b.feet.y + (b.anchorY - 1) * b.height,
-                            b.feet.z + frame.camera.right.z * lateral));
+        // CPU picking and GPU drawing share the registered crop geometry.
+        const auto q = world_render::corners(frame.camera, b);
+        auto model = MatrixIdentity();
+        model.m0 = q[1].x - q[0].x;
+        model.m1 = q[1].y - q[0].y;
+        model.m2 = q[1].z - q[0].z;
+        model.m4 = q[3].x - q[0].x;
+        model.m5 = q[3].y - q[0].y;
+        model.m6 = q[3].z - q[0].z;
+        model.m12 = (q[0].x + q[1].x) * .5f;
+        model.m13 = (q[0].y + q[1].y) * .5f;
+        model.m14 = (q[0].z + q[1].z) * .5f;
         rlEnableDepthMask();
         draw(model, ids ? 4 : 1, b.id < NpcWorld::maxInstances ? 1 : 16, b.flash, b.id);
         if (!ids) {

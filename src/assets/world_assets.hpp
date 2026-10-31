@@ -4,14 +4,21 @@
 #include <string>
 #include <vector>
 namespace blobber::world_assets {
-constexpr std::size_t MiB = 1024 * 1024, textureBudget = 256 * MiB, alphaBudget = 64 * MiB;
-constexpr unsigned version = 2, appearanceRevision = 4, textureCapacity = 480;
+constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
+constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
+constexpr unsigned version = 3, appearanceRevision = 4, textureCapacity = 480;
+// Stored texels occupy [x,x+width) in the original registered canvas. Anchors
+// and attachments always refer to that canvas, including after offline cropping.
+struct SpriteCanvas {
+    unsigned width = 0, height = 0, x = 0, y = 0;
+};
 struct Texture {
     std::string name;
     unsigned width = 0, height = 0, levels = 0;
     bool clamp = false;
     std::uint64_t offset = 0, bytes = 0, alphaOffset = 0, alphaBytes = 0, checksum = 0, alphaChecksum = 0;
     bool material = true;
+    SpriteCanvas canvas{};
 };
 struct Clip {
     NpcClipTiming timing{};
@@ -78,7 +85,7 @@ class Writer {
     ~Writer();
     unsigned add(const std::string& name, unsigned width, unsigned height, bool sprite,
                  const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {},
-                 bool material = true);
+                 bool material = true, bool crop = false);
     void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0,
                 const std::vector<Pack>& packs = {});
 

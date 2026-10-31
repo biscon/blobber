@@ -1,0 +1,9 @@
+{
+  "name": "walk-back",
+  "tool": "built-in imagegen",
+  "prompt": "EDIT the first supplied production sheet; second image is the approved character identity reference. Keep frame one. Completely redraw the legs in FRAME TWO to the OPPOSITE step, not the same silhouette: left/anatomical boot (image LEFT) drawn back with its sole visible and higher, right boot (image RIGHT) planted lower; opposite of frame one. Keep upper-body identity, correct equipment hands and back direction. BOTH poses must visibly differ in leg angle and boot position. Reduce BOTH full figures to occupy only the central 70% of their cells, with a clear completely transparent gap at the sheet center. Preserve the detailed shaded textured muted retro dungeon painting and the same bugbear fur, hide armor, face, boots, round wood shield, rigid iron-spiked morningstar. No mirrored handedness, chain, extra limbs, text, floor, background, glow, grid lines or cast shadow. True transparent alpha outside figures.",
+  "references": [
+    "revisions/walk-back-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}

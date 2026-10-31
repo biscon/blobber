@@ -37,7 +37,8 @@ int main() {
         pose.player.heading = Heading::East;
         renderer.stage(map, pose);
         const auto cpu = renderer.cpuBytes(), gpu = renderer.gpuBytes();
-        check(cpu < 352u * 1024 * 1024 && gpu < 352u * 1024 * 1024, "Two large scenes fit tracked budgets");
+        check(cpu < world_assets::worldCpuBudget && gpu < world_assets::worldGpuBudget,
+              "Two large scenes fit tracked budgets");
         const auto initialDraws = renderer.stats.draws;
         renderer.commit();
         renderer.render(pose);

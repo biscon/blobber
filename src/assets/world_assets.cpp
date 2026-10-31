@@ -31,6 +31,14 @@ void boundedAdd(std::uint64_t& n, std::uint64_t add, std::uint64_t limit) {
 void validAnchor(Anchor a) {
     require(std::isfinite(a.x) && std::isfinite(a.y) && a.x >= 0 && a.x <= 1 && a.y > 0 && a.y <= 1);
 }
+void validCanvas(const Texture& t) {
+    dimensions(t.width, t.height);
+    dimensions(t.canvas.width, t.canvas.height);
+    require(t.width <= t.canvas.width && t.height <= t.canvas.height &&
+            t.canvas.x <= t.canvas.width - t.width && t.canvas.y <= t.canvas.height - t.height);
+    require(t.clamp ||
+            (t.canvas.x == 0 && t.canvas.y == 0 && t.canvas.width == t.width && t.canvas.height == t.height));
+}
 void validPack(const Pack& p, const std::vector<Texture>& textures) {
     require(!p.id.empty() && p.id.size() <= 32 && p.materialCount >= 3 && p.materialCount <= 32 &&
             std::all_of(p.id.begin(), p.id.end(),
@@ -153,7 +161,8 @@ void Writer::bytes(const std::vector<unsigned char>& b) {
     offset_ += b.size();
 }
 unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprite,
-                     const std::vector<unsigned char>& rgba, unsigned cutoff, Anchor anchor, bool material) {
+                     const std::vector<unsigned char>& rgba, unsigned cutoff, Anchor anchor, bool material,
+                     bool crop) {
     require(publication_.textures.size() < textureCapacity && !name.empty() && name.size() <= 256);
     for (const auto& t : publication_.textures)
         require(t.name != name);
@@ -162,13 +171,41 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
     for (const auto& t : publication_.textures)
         t.clamp ? ++sprites : materials += unsigned(t.material);
     require(sprite ? sprites < 448 : (!material || materials < 256));
+    dimensions(w, h);
+    require(rgba.size() == std::size_t(w) * h * 4 && cutoff < 255 && (!crop || sprite));
+    SpriteCanvas canvas{w, h, 0, 0};
+    std::vector<unsigned char> cropped;
+    if (crop) {
+        unsigned left = w, top = h, right = 0, bottom = 0;
+        for (unsigned y = 0; y < h; ++y)
+            for (unsigned x = 0; x < w; ++x)
+                if (rgba[(std::size_t(y) * w + x) * 4 + 3] > cutoff) {
+                    left = std::min(left, x);
+                    top = std::min(top, y);
+                    right = std::max(right, x + 1);
+                    bottom = std::max(bottom, y + 1);
+                }
+        require(left < right && top < bottom);
+        canvas.x = left > 2 ? left - 2 : 0;
+        canvas.y = top > 2 ? top - 2 : 0;
+        right = std::min(w, right + 2);
+        bottom = std::min(h, bottom + 2);
+        w = right - canvas.x;
+        h = bottom - canvas.y;
+        cropped.resize(std::size_t(w) * h * 4);
+        for (unsigned y = 0; y < h; ++y) {
+            const auto start = rgba.begin() + (std::size_t(y + canvas.y) * canvas.width + canvas.x) * 4;
+            std::copy_n(start, std::size_t(w) * 4, cropped.begin() + std::size_t(y) * w * 4);
+        }
+    }
     std::vector<unsigned char> alpha;
-    auto pixels = preparePixels(rgba, w, h, cutoff, sprite, alpha);
+    auto pixels = preparePixels(crop ? cropped : rgba, w, h, cutoff, sprite, alpha);
     boundedAdd(publication_.textureBytes, pixels.size(), textureBudget);
     boundedAdd(publication_.alphaBytes, alpha.size(), alphaBudget);
     Texture t{name,        w, h, mipLevels(w, h), sprite, offset_, pixels.size(), offset_ + pixels.size(),
               alpha.size()};
     t.material = material && !sprite;
+    t.canvas = canvas;
     t.checksum = fingerprintBasis;
     t.alphaChecksum = fingerprintBasis;
     fingerprintBytes(t.checksum, pixels.data(), pixels.size());
@@ -194,6 +231,7 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
         textures.push_back({{"name", t.name},
                             {"width", t.width},
                             {"height", t.height},
+                            {"canvas", {t.canvas.width, t.canvas.height, t.canvas.x, t.canvas.y}},
                             {"levels", t.levels},
                             {"clamp", t.clamp},
                             {"material", t.material},
@@ -290,6 +328,11 @@ Publication load(const std::filesystem::path& directory) {
                       integer(v.at("checksum")),
                       integer(v.at("alpha_checksum"))};
             require(!t.name.empty() && t.name.size() <= 256 && names.insert(t.name).second);
+            const auto& canvas = v.at("canvas");
+            require(canvas.is_array() && canvas.size() == 4);
+            t.canvas = {unsigned(integer(canvas[0], 4096)), unsigned(integer(canvas[1], 4096)),
+                        unsigned(integer(canvas[2], 4096)), unsigned(integer(canvas[3], 4096))};
+            validCanvas(t);
             require(t.levels == mipLevels(t.width, t.height) && t.bytes == mipBytes(t.width, t.height) &&
                     t.offset == offset);
             boundedAdd(offset, t.bytes, length);
@@ -445,6 +488,7 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
     }
     std::uint64_t totalAlpha = 0;
     for (const auto& t : publication.textures) {
+        validCanvas(t);
         require(t.width && t.height && t.width <= 4096 && t.height <= 4096 &&
                 t.alphaBytes == (t.clamp ? std::uint64_t(t.width) * t.height : 0));
         boundedAdd(totalAlpha, t.alphaBytes, alphaBudget);

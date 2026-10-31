@@ -1,0 +1,9 @@
+{
+  "tool": "built-in imagegen",
+  "output": "assets/ui/bugbear.png",
+  "prompt": "Create a square native initiative portrait for this exact bugbear reference character, consistent detailed shaded textured retro dungeon game artwork. Tight head-and-shoulders crop centered on broad brown-furred goblinoid face, shaggy hair, large pointed ears, amber eyes, broad bestial nose, small tusks, worn hide shoulder straps. Match reference identity and muted materials; neutral lighting, crisp small-scale readable face, subtle dark warm dungeon background. No weapon, shield, text, border or extra characters. This is an initiative UI icon, not a full-body pose. Keep ears within image.",
+  "references": [
+    "assets/npcs/bugbear/reference/turnaround-v1.png"
+  ],
+  "status": "Reference accepted 2026-10-31"
+}

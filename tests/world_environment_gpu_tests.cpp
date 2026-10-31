@@ -84,10 +84,14 @@ int main(int argc, char** argv) {
                     if (argc == 2 && quality && h < 2) {
                         const std::filesystem::path output(argv[1]);
                         std::filesystem::create_directories(output);
-                        OwnedImage capture(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+                        OwnedImage capture(
+                            LoadImageFromTexture(resources.target(renderer.image().target).texture));
                         ImageFlipVertical(&capture.value);
-                        check(ExportImage(capture.value, (output / ("height-fixture-" + std::to_string(h) + ".png")).string().c_str()),
-                              "Export optional test-owned height review");
+                        check(
+                            ExportImage(
+                                capture.value,
+                                (output / ("height-fixture-" + std::to_string(h) + ".png")).string().c_str()),
+                            "Export optional test-owned height review");
                     }
                     differences += compare(resources, renderer, ids.get());
                 }
@@ -122,8 +126,8 @@ int main(int argc, char** argv) {
             renderer.stage(world_render::FrameInput{hub, outdoor});
             renderer.commit();
             renderer.render(world_render::FrameInput{hub, outdoor});
-            check(renderer.cpuBytes() < 352u * world_assets::MiB &&
-                      renderer.gpuBytes() < 352u * world_assets::MiB,
+            check(renderer.cpuBytes() < world_assets::worldCpuBudget &&
+                      renderer.gpuBytes() < world_assets::worldGpuBudget,
                   "Extended scene budgets retained");
             std::cout << "Height CPU/GPU edge differences: " << differences
                       << "; allocations: " << allocations << '\n';

@@ -1,0 +1,9 @@
+{
+  "name": "prone-back",
+  "tool": "built-in imagegen",
+  "prompt": "EDIT the first supplied production sheet; second image is the approved character identity reference. Change this single prone pose to a TRUE BACK VIEW of the same unconscious bugbear: see back of shaggy head, back armor and crossed straps, backs of shoulders and boots. Face points AWAY, no visible eyes, nose, tusks or front chest. The body lies low horizontally at rest, not kneeling. Keep anatomical right-hand morningstar, anatomical left shield, all limbs/equipment intact, no extra limbs. Actual transparency, no background. Generous transparent margin around all sides. Preserve the detailed shaded textured muted retro dungeon painting and the same bugbear fur, hide armor, face, boots, round wood shield, rigid iron-spiked morningstar. No mirrored handedness, chain, extra limbs, text, floor, background, glow, grid lines or cast shadow. True transparent alpha outside figures.",
+  "references": [
+    "revisions/prone-back-v1.png",
+    "../reference/turnaround-v1.png"
+  ]
+}
