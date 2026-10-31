@@ -23,24 +23,29 @@ unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox
         if (f.kind != FixtureKind::Door && f.kind != FixtureKind::GuardianGate)
             continue;
         const auto r = right(f.facing), n = forward(f.facing);
-        const Vec origin{f.cell.x + .5f - r.x * .5f - n.x * .5f, 0, f.cell.y + .5f - r.y * .5f - n.y * .5f};
+        const auto surface = g.surface(f.cell);
+        const float floor = elevation(surface.floor),
+                    height = (surface.ceiling == noCeiling ? g.base().upper() : elevation(surface.ceiling)) -
+                             floor;
+        const Vec origin{f.cell.x + .5f - r.x * .5f - n.x * .5f, floor,
+                         f.cell.y + .5f - r.y * .5f - n.y * .5f};
         auto add = [&](float x, float y, float z, float w, float h, float d, float angle, unsigned texture,
                        std::uint16_t id = PickingBuffer::empty) {
             const float c = std::cos(angle), s = std::sin(angle);
-            out[count++] = {{origin.x + r.x * x + n.x * z, y, origin.z + r.y * x + n.y * z},
+            out[count++] = {{origin.x + r.x * x + n.x * z, floor + y, origin.z + r.y * x + n.y * z},
                             {w * (r.x * c + n.x * s), 0, w * (r.y * c + n.y * s)},
                             {0, h, 0},
                             {d * (-r.x * s + n.x * c), 0, d * (-r.y * s + n.y * c)},
                             id,
                             std::uint16_t(texture)};
         };
-        add(0, 0, 0, .06f, 1, .12f, 0, frame);
-        add(.94f, 0, 0, .06f, 1, .12f, 0, frame);
-        add(.06f, .92f, 0, .88f, .08f, .12f, 0, frame);
+        add(0, 0, 0, .06f, height, .12f, 0, frame);
+        add(.94f, 0, 0, .06f, height, .12f, 0, frame);
+        add(.06f, height - .08f, 0, .88f, .08f, .12f, 0, frame);
         const bool completed = fs->completed(i);
         float t = completed ? (doors ? doors->progress(i) : 1.f) : 0.f;
         t = t * t * (3 - 2 * t);
-        add(.06f, 0, .06f, .88f, .92f, .06f, t * pi * .5f,
+        add(.06f, 0, .06f, .88f, height - .08f, .06f, t * pi * .5f,
             f.key || f.kind == FixtureKind::GuardianGate ? locked : ordinary,
             completed ? PickingBuffer::empty : std::uint16_t(PickingBuffer::fixtureBase + i));
     }

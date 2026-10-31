@@ -63,6 +63,8 @@ struct VisibilityFixture {
         for (const auto* n :
              {"arrow", "tip", "feathers", "slash", "glint", "grease", "web", "weapon", "preview", "white"})
             writer.add(std::string("effect/") + n, 8, 12, true, pixels);
+        writer.add("decoration/crest", 8, 12, true, pixels);
+        writer.add("decoration/vine", 8, 12, true, pixels);
         writer.finish(actors);
     }
     world_assets::Publication publication() const { return world_assets::load(location.directory); }

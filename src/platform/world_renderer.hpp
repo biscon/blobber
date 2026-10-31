@@ -84,11 +84,12 @@ class WorldRenderer {
     std::vector<GpuLease<TextureHandle>> textures_;
     std::array<TextureHandle, 32> materials_{};
     unsigned materialCount_ = 0;
-    GpuLease<ShaderHandle> world_, resolve_, billboard_;
+    GpuLease<ShaderHandle> world_, resolve_, billboard_, sky_;
     GpuLease<MeshHandle> quad_, proxy_;
     std::array<int, 7> billboardLocations_{};
     void prepareBillboards();
-    void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool);
+    void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool,
+                        const world_render::Scene*);
     void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground);
     int model_ = -1, idMode_ = -1, idColor_ = -1;
     GpuLease<TargetHandle> high_;

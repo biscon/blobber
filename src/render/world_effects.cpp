@@ -6,10 +6,11 @@ namespace {
 float depth(const Camera& c, Vec p) {
     return (p.x - c.position.x) * c.forward.x + (p.z - c.position.z) * c.forward.z;
 }
-Vec partyAnchor(const AttackVisual& shot, Player player) {
+Vec partyAnchor(const AttackVisual& shot, Player player, GeometryView geometry) {
     const auto f = forward(player.heading), r = right(player.heading);
     const float lane = (shot.formationSlot % 2 ? 1.f : -1.f) * .15f;
-    return {player.cell.x + .5f + f.x * .1f + r.x * lane, shot.formationSlot < 2 ? .2f : .17f,
+    return {player.cell.x + .5f + f.x * .1f + r.x * lane,
+            elevation(geometry.surface(player.cell).floor) + (shot.formationSlot < 2 ? .2f : .17f),
             player.cell.y + .5f + f.y * .1f + r.y * lane};
 }
 std::array<float, 4> spellTint(rules::SpellKind kind, float alpha) {
@@ -66,6 +67,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         frame_.packets[frame_.count++] = p;
     };
     auto ground = [&](Cell cell, unsigned texture, std::array<float, 4> tint, float height) {
+        height += elevation(in.geometry.surface(cell).floor);
         const float x = float(cell.x), z = float(cell.y);
         add({{{{x, height, z + 1}, {x + 1, height, z + 1}, {x + 1, height, z}, {x, height, z}}},
              tint,
@@ -106,7 +108,9 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     };
     for (const auto& weapon : area.ground.weapons)
         if (weapon.active)
-            billboard({weapon.cell.x + .5f, .5f, weapon.cell.y + .5f}, .65f, .65f, 7);
+            billboard({weapon.cell.x + .5f, elevation(in.geometry.surface(weapon.cell).floor) + .5f,
+                       weapon.cell.y + .5f},
+                      .65f, .65f, 7);
     std::array<const Billboard*, NpcWorld::maxInstances> bodies{};
     for (unsigned i = 0; i < world.count; ++i) {
         const auto& b = world.billboards[i];
@@ -118,15 +122,18 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             in.actors && shot.enemy.world == in.actors->snapshot().world && shot.enemy.slot < bodies.size()
                 ? bodies[shot.enemy.slot]
                 : nullptr;
-        Vec enemy{shot.targetPosition.x, .5f, shot.targetPosition.y};
+        Vec enemy{shot.targetPosition.x, elevation(in.geometry.surface(shot.npcOrigin.cell).floor) + .5f,
+                  shot.targetPosition.y};
         if (shot.incoming)
-            enemy = {shot.sourcePosition.x, .5f, shot.sourcePosition.y};
+            enemy = {shot.sourcePosition.x, elevation(in.geometry.surface(shot.npcOrigin.cell).floor) + .5f,
+                     shot.sourcePosition.y};
         if (body) {
             const auto a = attachment(world.camera, *body, shot.incoming ? body->release : body->torso);
             if (a.valid)
                 enemy = a.position;
         }
-        const Vec party = partyAnchor(shot, shot.incoming ? in.movement.player : shot.partyOrigin);
+        const Vec party =
+            partyAnchor(shot, shot.incoming ? in.movement.player : shot.partyOrigin, in.geometry);
         const Vec from = shot.incoming ? enemy : party, to = shot.incoming ? party : enemy;
         const bool ending = in.now >= shot.impactMs;
         if (ending && (!shot.hit || shot.targetGone))

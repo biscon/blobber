@@ -45,6 +45,30 @@ CMake preset, wait for configuration, select the **blobber** executable, and Run
 CLion's ordinary CMake profiles also work. No machine-specific `.idea` files or
 working-directory setup is required: assets are copied beside the executable.
 
+## Development checks
+
+Build presets use at most two workers; test presets run serially and skip labelled
+slow integration tests. Run affected test targets in one configuration during
+iteration. Full persistence and legacy image-bank tests remain explicitly available.
+See [verification workflow and resource limits](docs/verification_workflow.md) for
+when to run each check; full Debug/Release matrices and benchmarks are not routine.
+
+## R05 height and outdoor review
+
+`./cmake-build-debug/blobber --development --renderer-fixture r05-heights-v1`
+opens the bounded height review (F1 heights, F2 outdoor hub; F5 native filtered,
+F6 supersampling). `--capture-environment DIR` exports hidden application-owned
+captures with scripted step/door phases and labelled diagnostic poses. No OS input
+is injected. Normal `--renderer world` campaigns use the outdoor sanctuary hub;
+its floor layout, camp and stairs are unchanged.
+
+Heights use quarter-cell steps and shared traversal, clearance and sight rules.
+Legacy remains the normal default until R06, and rejects non-flat maps. Campaign
+save schema/simulation 2/2 rejects earlier saves without modifying them. World
+visibility v3 and appearance 4 require rebuilt publications and fresh strict traces.
+See [R05 design](docs/renderer_environment_design.md) and
+[verification](docs/r05_verification.md).
+
 ## Alternative world renderer (R04)
 
 Launch `./cmake-build-debug/blobber --renderer world` to use the GPU world in

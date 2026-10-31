@@ -133,6 +133,7 @@ int main(int argc, char** argv) {
         const Json header = {{"protocol", 1},
                              {"timing", "fixed-10ms-v1"},
                              {"door_scheduling", "shared-opening-300ms-v1"},
+                             {"terrain_rules", "terrain-rules-v1"},
                              {"mode", mode == Mode::Visual ? "visual" : "diagnostic"},
                              {"binary", fingerprintFile(ec ? std::filesystem::path(argv[0]) : executable)},
                              {"content", content}};

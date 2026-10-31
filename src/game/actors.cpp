@@ -20,6 +20,15 @@ std::uint8_t bit(Cell subcell) noexcept {
     return static_cast<std::uint8_t>(1u << (subcell.y * 2 + subcell.x));
 }
 } // namespace
+float actorElevation(const ActorState& a, GeometryView g, std::uint64_t time) noexcept {
+    const float to = elevation(g.surface(a.npc.cell).floor);
+    if (!a.hasTravel)
+        return to;
+    if (a.life == ActorLife::Dead)
+        time = std::min(time, a.damageTimeMs);
+    const float t = time < a.walkTimeMs ? 0.f : std::min(1.f, float(time - a.walkTimeMs) / a.walkDurationMs);
+    return a.walkFromElevation + (to - a.walkFromElevation) * t;
+}
 bool actorWalking(const ActorState& a, std::uint64_t timeMs) noexcept {
     return a.hasTravel && a.life == ActorLife::Alive &&
            (timeMs < a.walkTimeMs || timeMs - a.walkTimeMs < a.walkDurationMs);
@@ -89,10 +98,12 @@ ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell
         return {ActorError::InvalidTime};
     const bool crossCell = !(a->npc.cell == cell);
     const auto from = actorPosition(*a, timeMs);
+    const auto fromHeight = actorElevation(*a, map_, timeMs);
     const auto result = move(id, cell, subcell, partyCell);
     if (result.changed && crossCell) {
         state_.actors[id.slot].hasTravel = true;
         state_.actors[id.slot].walkFrom = from;
+        state_.actors[id.slot].walkFromElevation = fromHeight;
         state_.actors[id.slot].hasWalk = true;
         state_.actors[id.slot].walkTimeMs = timeMs;
         state_.actors[id.slot].walkDurationMs = durationMs;
@@ -111,7 +122,8 @@ ActorResult ActorWorld::move(ActorId id, Cell cell, Cell subcell, Cell partyCell
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
-    if (!map_.npcAllowed(cell) || subcell.x < 0 || subcell.x > 1 || subcell.y < 0 || subcell.y > 1)
+    if ((!(cell == old->npc.cell) && !map_.canStep(old->npc.cell, cell)) || !map_.npcAllowed(cell) ||
+        subcell.x < 0 || subcell.x > 1 || subcell.y < 0 || subcell.y > 1)
         return {ActorError::InvalidDestination};
     if (std::abs(cell.x - old->npc.cell.x) + std::abs(cell.y - old->npc.cell.y) > 1)
         return {ActorError::InvalidDestination};

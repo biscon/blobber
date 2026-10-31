@@ -62,7 +62,7 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 assert (output/'textures.bin').read_bytes()==prior_payload, 'Failed bake replaced prior payload'
                 (source/'textures/wall.png').write_bytes(good); run(*command)
                 manifest=json.loads((output/'metadata.json').read_text())
-                assert len(manifest['appearances'])==1 and len(manifest['textures'])==23 and manifest['appearance_revision']==3
+                assert len(manifest['appearances'])==1 and len(manifest['textures'])==25 and manifest['appearance_revision']==4
                 print(generator,config,'clean/no-op/change/touch/missing/add/remove/failure: pass')
     print('World build fixtures passed')
 if __name__=='__main__': main()

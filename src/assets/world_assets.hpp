@@ -5,7 +5,7 @@
 #include <vector>
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 256 * MiB, alphaBudget = 64 * MiB;
-constexpr unsigned version = 1, appearanceRevision = 3, textureCapacity = 480;
+constexpr unsigned version = 1, appearanceRevision = 4, textureCapacity = 480;
 struct Texture {
     std::string name;
     unsigned width = 0, height = 0, levels = 0;

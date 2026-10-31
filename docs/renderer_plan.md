@@ -1,7 +1,7 @@
 # Low-resolution 3D renderer: design and delivery roadmap
 
 Created: 2026-10-30. Last updated: 2026-10-31.
-Status: **Roadmap accepted; R01–R04 and milestones R-A/R-B Accepted.**
+Status: **Roadmap accepted; R01–R05 and milestones R-A/R-B Accepted.**
 
 The user agreed to replace the prepared perspective-image world renderer with a
 low-resolution GPU 3D world, retaining billboard monster/item artwork and discrete
@@ -21,10 +21,10 @@ for the explicit, bounded elevation extensions described below.
 | --- | --- |
 | Latest accepted foundation | Campaign P-A/P-B and prior demo/automation slices; current renderer remains production |
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
-| Active slice | None; R04 accepted and closed |
+| Active slice | None; R05 accepted and closed |
 | Awaiting review | None |
-| Next eligible slice | R05 — Heights, outdoor hub and decoration; eligible for separate planning, not started |
-| Next action | Plan R05 when requested; obtain its detailed-plan review before implementation |
+| Next eligible slice | R06 — Production cutover and retirement; eligible for separate planning, not started |
+| Next action | Plan R06 when requested; review its detailed plan before implementation |
 | Blockers | None known; filtering, picking parity and performance require evidence from the slices |
 | Campaign status | Paused after P-B; do not start PC07 |
 
@@ -257,7 +257,7 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 | R02 | [Production world rendering and assets](#r02-production-world-rendering-and-assets) | R01 accepted | Accepted (2026-10-31) | R-B |
 | R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Accepted (2026-10-31) | R-B |
 | R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Accepted (2026-10-31) | R-B |
-| R05 | [Heights, outdoor hub and decoration](#r05-heights-outdoor-hub-and-decoration) | R04 accepted | Planned | R-C |
+| R05 | [Heights, outdoor hub and decoration](#r05-heights-outdoor-hub-and-decoration) | R04 accepted | Accepted (2026-10-31) | R-C |
 | R06 | [Production cutover and retirement](#r06-production-cutover-and-retirement) | R05 accepted | Planned | R-C |
 
 | Milestone | User-visible outcome | Status |
@@ -448,43 +448,92 @@ without state loss. Re-run affected headless observations, replay and allocation
 sky, inspect wall art/props and climb a legal step. Show a rejected high ledge and
 a height-sensitive occlusion case. Travel away and reload to show identical state.
 
-**Execution record:** Not started; R04 acceptance satisfies its prerequisite. Its detailed design
-must settle height quantization, traversal/LOS semantics and save compatibility
-before implementation; split the slice if those cannot stay bounded.
+**Execution record:** **Accepted and closed** (2026-10-31). User approved
+the detailed plan with “Implement the plan.” [Design](renderer_environment_design.md),
+[verification](r05_verification.md) and [gallery](screenshots/r05/index.html) record
+shared height rules, world presentation, outdoor hub, decorations, checkpoint
+schema 2/2 and fixture replay. Final focused CPU/save/replay 3/3 (0.65s), hidden
+GPU parity/lifecycle/allocation and optimized NPC animation checks pass. Historical
+full-run evidence and the storage/restart interruption are distinguished explicitly.
+The user's resource/testing correction supersedes repeated full-matrix and benchmark
+recipes: see [verification workflow](verification_workflow.md). Legacy stays default.
+The user explicitly accepted R05: “slice accepted, record it in the plan doc”.
+Verification results and limitations remain unchanged; acceptance adds no unperformed
+checks or interactive coverage. R06 is eligible for separate planning, not started;
+R-C remains Planned until R06 is accepted.
 
 ### R06: Production cutover and retirement
 
-**Deliver:** Make the new renderer the normal path; retire obsolete CPU color
-composition, image transitions, perspective sprite/scene banks and exclusive build
-dependencies/options after verifying their consumers have migrated. Retain shared
-art preparation, CPU visibility, meaningful regression fixtures, reference evidence
-and current automation. Update build/runtime documentation and system design to
-describe the implemented architecture, not two permanent interchangeable renderers.
+**Deliver:** Switch completely to the new renderer and **delete the old renderer**.
+Changing the default or leaving an unused compatibility implementation does not
+complete this slice. No old-renderer code, required image banks or renderer-specific
+tests may remain when R06 is delivered.
+
+The detailed plan must inventory consumers and carry their migration and removal
+through the same slice:
+
+- Delete old CPU world color composition, prepared-image scene/sprite rendering,
+  frame/image transitions, perspective caches and their exclusive interfaces,
+  loaders and resource owners. Remove old-renderer implementations embedded in
+  probes, diagnostic tools and test helpers too; do not keep a reference or fallback
+  copy of executable renderer code.
+- Delete the perspective scene/NPC/loot image banks and other old-renderer-only
+  prepared assets, metadata and manifests. Remove their exclusive baking/packing
+  tools, preparation code, CMake targets, dependencies, copy/install/package rules
+  and runtime loading paths. Remove stale obsolete banks from project-managed
+  build/package asset outputs as part of the cutover, not only from clean builds.
+- Delete old-renderer-specific tests, fixtures, golden outputs, benchmark/comparison
+  tools and test helpers. Do not merely disable or relabel them. Port useful shared
+  gameplay, picking, allocation and lifecycle regressions to the new renderer before
+  removing their old harnesses; no obsolete renderer is retained to support a test.
+- Remove old-renderer selection, compatibility and fallback paths from gameplay,
+  launch options, captures, probes, CLI/client/local MCP and windowless automation.
+  Migrate supported flows to the new renderer and CPU visibility path; retire
+  diagnostics whose only purpose was testing or comparing the removed renderer.
+
+Retain source artwork, native UI assets, shared preparation and CPU geometry/
+visibility code only where the new renderer or another current subsystem consumes
+them. New-renderer material/sprite textures and alpha masks remain valid prepared
+assets. Historical design notes and screenshot evidence may remain as clearly
+historical documentation; they must not retain renderer code or runnable dependencies.
+Update build/runtime documentation and system design to describe the sole renderer.
 
 **Boundary:** No late appearance redesign or new rendering features. Necessary
-fixes remain in scope; adding feature work requires an explicit follow-up slice.
+migration/parity fixes remain in scope. Old-renderer deletion is a completion
+requirement of R06, not cleanup deferred to a later slice.
 
-**Acceptance / validation:** Clean graphics and graphics-disabled builds, relevant
-Debug/Release correctness suites, focused sanitizers, CPU allocation guards, strict
-replay, save/Continue, campaign travel, arena/menu/UI and GPU resource lifecycle.
-Test startup/shutdown/restart and failure cleanup; missing GPU support is a clear
-error for graphics, not a silent legacy fallback. Verify routine windowless visual
-observations still work and image capture explicitly owns its hidden context.
+**Acceptance / validation:** Audit the final source/build/test/package references
+against the removal inventory. The obsolete implementation, banks, exclusive tools
+and tests must be absent, with no disabled targets, compatibility branches or hidden
+consumers keeping them alive. Fresh builds must neither generate nor package the
+old banks, and incremental managed asset outputs must no longer contain them.
 
-Run separate representative and stress performance checks: startup/bake time,
-CPU/GPU resident and peak staged memory, draw calls/uploads, stationary work,
-moving/turning/combat p50/p95/p99 frame times and visibility cost. Record hardware,
-build, resolution, warmup and workload; compare to R01 baseline and budgets agreed
-in R02. A 60 Hz presentation target implies a 16.67 ms total frame budget on the
-named reference machine, not a claim about every device. Do not report CPU timings
-as GPU timings or gate routine correctness on noisy benchmark thresholds.
+Check graphics and graphics-disabled builds and affected new-renderer correctness,
+CPU allocation, replay, save/Continue, campaign travel, arena/menu/UI and GPU lifecycle
+behavior. Startup, shutdown, restart and failure cleanup use the sole renderer;
+missing GPU support produces a clear graphical-launch error. Windowless visual
+observations continue through CPU depth/IDs; image capture explicitly owns its
+hidden GPU context. None of these paths requires an old image bank or renderer test.
 
-**Review recipe:** A retained end-to-end gallery and motion sequence spanning
-indoor/outdoor scenes, doors, heights, creatures, effects and UI, plus the performance
-comparison and known limitations. User accepts the complete renderer milestone.
+Follow the [verification workflow](verification_workflow.md) and AGENTS resource
+limits: focused tests in one configuration during iteration, one intensive job at
+a time, at most two build workers and serial tests. Select broader integration
+checks once for the cutover; do not automatically repeat full Debug/Release matrices.
+Use a short representative performance check only to answer a concrete remaining
+question about the sole renderer, recording workload/hardware and distinguishing
+CPU from GPU measurements. Stress tests and repeated timing/capture matrices are
+not mandatory checklist work. Reuse valid prior evidence and report limitations.
+
+**Review recipe:** A concise retained gallery/motion sample spanning indoor/outdoor
+scenes, doors, heights, creatures, effects and UI, plus the completed removal
+inventory and relevant verification results. User accepts the complete renderer
+milestone only after the old renderer and its exclusive assets/tests are gone.
 The next work is planning additional monsters, not automatically resuming PC07.
 
-**Execution record:** Not started; depends on R05 acceptance.
+**Execution record:** Not started; R05 acceptance satisfies its prerequisite.
+The user explicitly requires complete removal of the old renderer, its prepared
+image banks and renderer-specific tests as part of R06. This clarifies the slice's
+completion criteria; detailed R06 planning/implementation has not begun.
 
 ## Evidence and test policy
 
@@ -525,6 +574,10 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-31 | R06 requires complete old-renderer deletion within the slice | User explicitly requires no old renderer code, required prepared image banks or renderer-specific tests left after cutover; no deferred cleanup or fallback implementation |
+| 2026-10-31 | R05 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R06 eligible for separate planning, not started; R-C remains Planned |
+| 2026-10-31 | R05 implemented; Ready for review; resource-bounded focused verification policy adopted | Implementation approval followed by explicit instruction to limit processor use and stop repeated full-suite/benchmark work |
+| 2026-10-31 | R05 detailed plan approved; implementation in progress | User: “Implement the plan.” Flat hub floors, explicit save incompatibility, quarter-cell steps and sight/reach |
 | 2026-10-31 | R04 and R-B Accepted and closed | Explicit user acceptance: “I accept the slice, record it in the plan doc”; baseline spell corrections included, richer effects deferred; R05 eligible for separate planning, not started |
 | 2026-10-31 | R04 implemented; Ready for review | User approved the reviewed plan; complete alternative gameplay/tooling and evidence delivered; legacy default retained, acceptance pending |
 | 2026-10-31 | R03 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R04 eligible for separate planning, not started; R-B remains Planned |
@@ -541,24 +594,21 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 ## Current next-agent handoff
 
-R01/R-A and R02 are Accepted. R02's [design](renderer_world_design.md),
-[verification](r02_verification.md) and [selected evidence](screenshots/r02/README.md)
-record the delivered slice. User acceptance closes R02 on 2026-10-31 and supersedes
-the pending-review status in its implementation handoff documents.
-R03 is **Accepted and closed** (2026-10-31) under its
-[approved design](renderer_visibility_design.md). The user explicitly accepted it:
-“slice accepted, record it in the plan doc”. [Verification/handoff](r03_verification.md)
-and [gallery](screenshots/r03/index.html) retain the implementation, evidence and
-limitations unchanged; no additional interactive-review coverage is inferred.
-R04 is **Accepted and closed** (2026-10-31); milestone **R-B Accepted** under its
-[approved integration design](renderer_integration_design.md). The user explicitly
-accepted the delivered baseline: “I accept the slice, record it in the plan doc”.
-[Verification](r04_verification.md) and [gallery](screenshots/r04/index.html) retain
-actual evidence and limitations, including the baseline spell corrections. Richer
-spell graphics remain deferred. Acceptance adds no unperformed verification claims.
-R05 is eligible for separate planning, remains unstarted and requires its own
-reviewed plan. Do not add monsters or resume PC07.
-This checkpoint supersedes earlier R04-unstarted and pending-review records,
-including the status recorded in its implementation handoff documents.
-Keep legacy gameplay working and the supersampling/native-filtered quality policy.
-No commits or desktop input automation.
+R01–R05 and milestones R-A/R-B are **Accepted**. R05 is **Accepted and closed**
+(2026-10-31), under its [approved design](renderer_environment_design.md). See
+[verification](r05_verification.md) and [gallery](screenshots/r05/index.html).
+The user explicitly accepted R05: “slice accepted, record it in the plan doc”.
+Evidence and limitations are unchanged; no additional checks or interactive coverage
+are inferred. R06 is next for separate planning only, when requested; it is not
+started. R-C remains Planned. Legacy stays default until R06.
+R06 must delete the old implementation, its exclusive prepared banks, tools, build
+dependencies and tests across gameplay and tooling. A default switch or disabled
+legacy path is insufficient; deletion cannot be deferred beyond R06.
+
+The user explicitly requires responsive resource use and smaller development
+verification. Read [AGENTS.md](../AGENTS.md) and the
+[verification workflow](verification_workflow.md): one intensive job, two build
+workers total, low priority and serial focused tests. Do not repeat full
+Debug/Release matrices, exhaustive legacy-bank tests or benchmarks automatically.
+Full coverage remains available through explicit slow integration tests.
+No desktop input automation, commits, new monsters, balancing or PC07 work.

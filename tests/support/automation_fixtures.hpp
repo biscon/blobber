@@ -11,8 +11,8 @@ namespace blobber::automation::test {
 struct Directory {
     std::filesystem::path path;
     Directory() {
-        char pattern[] = "/tmp/blobber-automation-XXXXXX";
-        auto* p = mkdtemp(pattern);
+        auto pattern = (std::filesystem::temp_directory_path() / "blobber-automation-XXXXXX").string();
+        auto* p = mkdtemp(pattern.data());
         if (!p)
             throw std::runtime_error("mkdtemp");
         path = p;

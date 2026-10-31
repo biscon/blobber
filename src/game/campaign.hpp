@@ -23,6 +23,8 @@ struct CampaignLocationState {
     generation::FloorLayout layout;
     generation::GenerationDiagnostics diagnostics;
     std::uint64_t fingerprint = 0;
+    WorldDefinition world;
+    std::uint64_t worldFingerprint = 0;
     std::vector<std::string> rows, types;
     std::vector<NpcInstance> placements;
     RecoveryLevel recovery;

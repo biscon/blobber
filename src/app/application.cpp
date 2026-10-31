@@ -5,6 +5,7 @@
 #include "app/build_captures.hpp"
 #include "app/captures.hpp"
 #include "app/door_captures.hpp"
+#include "app/environment_review.hpp"
 #include "app/gameplay.hpp"
 #include "app/hud_captures.hpp"
 #include "app/hybrid_demo.hpp"
@@ -50,7 +51,8 @@ int runDiagnostics(int argc, char** argv) {
                      "--spell-demo] [--seed UINT32] [--development] "
                      "[--check-prepared] [--campaign-save FILE] [--renderer legacy|world] [--capture-doors "
                      "DIRECTORY] [--development --world-preview] [--capture-world DIR | --benchmark-world "
-                     "DIR] [--supersampling on|off]\n";
+                     "DIR] [--supersampling on|off] [--development --renderer-fixture r05-heights-v1] "
+                     "[--capture-environment DIR]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
@@ -242,6 +244,8 @@ int runDiagnostics(int argc, char** argv) {
 namespace blobber {
 int run(int argc, char** argv) {
     const auto o = parseOptions(argc, argv);
+    if (o.environmentReview && !o.help)
+        return runEnvironmentReview(o);
     if (o.worldPreview && !o.help)
         return runWorldPreview(o);
     if (o.captureMenuOnly)

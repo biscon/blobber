@@ -45,19 +45,23 @@
   "buildPresets": [
     {
       "name": "debug",
-      "configurePreset": "debug"
+      "configurePreset": "debug",
+      "jobs": 2
     },
     {
       "name": "release",
-      "configurePreset": "release"
+      "configurePreset": "release",
+      "jobs": 2
     },
     {
       "name": "headless-debug",
-      "configurePreset": "headless-debug"
+      "configurePreset": "headless-debug",
+      "jobs": 2
     },
     {
       "name": "headless-release",
-      "configurePreset": "headless-release"
+      "configurePreset": "headless-release",
+      "jobs": 2
     }
   ],
   "testPresets": [
@@ -66,6 +70,14 @@
       "configurePreset": "debug",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 1
+      },
+      "filter": {
+        "exclude": {
+          "label": "slow|stress|benchmark"
+        }
       }
     },
     {
@@ -73,6 +85,14 @@
       "configurePreset": "release",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 1
+      },
+      "filter": {
+        "exclude": {
+          "label": "slow|stress|benchmark"
+        }
       }
     },
     {
@@ -80,6 +100,14 @@
       "configurePreset": "headless-debug",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 1
+      },
+      "filter": {
+        "exclude": {
+          "label": "slow|stress|benchmark"
+        }
       }
     },
     {
@@ -87,6 +115,14 @@
       "configurePreset": "headless-release",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 1
+      },
+      "filter": {
+        "exclude": {
+          "label": "slow|stress|benchmark"
+        }
       }
     }
   ]

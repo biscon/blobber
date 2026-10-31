@@ -49,6 +49,15 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
             (f.kind == FixtureKind::Key && !f.key) ||
             (f.kind != FixtureKind::Key && f.kind != FixtureKind::Door && f.key))
             throw std::invalid_argument("Invalid floor fixture");
+        if (f.kind == FixtureKind::Door || f.kind == FixtureKind::GuardianGate) {
+            const auto a = f.cell + forward(f.facing), b = f.cell + forward(f.facing) * -1;
+            if ((!map.solid(a) && map.surface(a).floor != map.surface(f.cell).floor) ||
+                (!map.solid(b) && map.surface(b).floor != map.surface(f.cell).floor))
+                throw std::invalid_argument("Door requires a level threshold");
+        }
+        for (const auto& d : map.definition().decorations)
+            if (!d.cutout() && d.cell == f.cell)
+                throw std::invalid_argument("Prop overlaps fixture");
         auto& cell = index_[std::size_t(f.cell.y * map.width() + f.cell.x)];
         if (cell != UINT8_MAX)
             throw std::invalid_argument("Overlapping floor fixtures");
@@ -62,6 +71,9 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
     }
     for (unsigned i = 0; i < defs.landingCount; ++i) {
         const auto c = defs.landings[i];
+        for (const auto& d : map.definition().decorations)
+            if (!d.cutout() && d.cell == c)
+                throw std::invalid_argument("Prop overlaps landing");
         if (map.solid(c) || !defs.npcExcluded[std::size_t(c.y * map.width() + c.x)])
             throw std::invalid_argument("Invalid protected landing");
     }

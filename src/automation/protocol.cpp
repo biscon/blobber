@@ -16,6 +16,8 @@ void Protocol::checkIdentity(const Json& r) const {
 Json Protocol::observation(bool diagnostic) {
     session_->observe(observation_, diagnostic);
     auto j = encodeObservation(observation_);
+    if (observation_.diagnostic)
+        j["world_definition"] = std::to_string(session_->map().definition().fingerprint());
     j["session"] = std::to_string(epoch_);
     j["revision"] = std::to_string(revision_);
     j["mode"] = mode_ == Mode::Visual ? "visual" : "diagnostic";
@@ -56,6 +58,7 @@ Json Protocol::observation(bool diagnostic) {
                                {"fingerprint", location.generated
                                                    ? std::to_string(location.generated->fingerprint)
                                                    : "hub-v1"}};
+                record["world_definition"] = std::to_string(location.map().definition().fingerprint());
                 if (i == campaign->activeLocation()) {
                     session_->game().exportFloor(*state);
                     record["state_digest"] = std::to_string(state->digest());

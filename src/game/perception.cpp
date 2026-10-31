@@ -3,7 +3,45 @@
 #include <cstdlib>
 namespace blobber {
 static bool sight(GeometryView map, Cell from, Cell target, bool blockingEndpoint) noexcept {
-    return gridSight([&](Cell c) { return map.solid(c); }, from, target, blockingEndpoint);
+    if (map.solid(from) || (!blockingEndpoint && map.solid(target)))
+        return false;
+    const int dx = target.x - from.x, dz = target.y - from.y, nx = std::abs(dx), nz = std::abs(dz);
+    const int sx = dx > 0 ? 1 : -1, sz = dz > 0 ? 1 : -1;
+    const std::int64_t h0 = map.surface(from).floor + 2, dh = map.surface(target).floor + 2 - h0;
+    auto clear = [&](Cell c, std::int64_t n, std::int64_t d) {
+        if (blockingEndpoint && c == target && map.solid(c))
+            return true;
+        if (map.solid(c))
+            return false;
+        const auto s = map.surface(c);
+        const auto h = h0 * d + dh * n;
+        return h > std::int64_t(s.floor) * d && (s.ceiling == noCeiling || h < std::int64_t(s.ceiling) * d);
+    };
+    Cell c = from;
+    int ix = 0, iz = 0;
+    std::int64_t en = 0, ed = 1;
+    while (true) {
+        const std::int64_t xn = 2 * ix + 1, xd = 2 * nx, zn = 2 * iz + 1, zd = 2 * nz;
+        const bool useX = ix < nx && (iz == nz || xn * zd <= zn * xd);
+        const bool useZ = iz < nz && (ix == nx || zn * xd <= xn * zd);
+        const std::int64_t ex = useX ? xn : useZ ? zn : 1, den = useX ? xd : useZ ? zd : 1;
+        if (!clear(c, en, ed) || !clear(c, ex, den))
+            return false;
+        if (c == target)
+            return true;
+        if (useX && useZ && (!clear(c + Cell{sx, 0}, ex, den) || !clear(c + Cell{0, sz}, ex, den)))
+            return false;
+        if (useX) {
+            c.x += sx;
+            ++ix;
+        }
+        if (useZ) {
+            c.y += sz;
+            ++iz;
+        }
+        en = ex;
+        ed = den;
+    }
 }
 
 bool lineOfSight(GeometryView map, Cell from, Cell target) noexcept {
@@ -32,7 +70,7 @@ bool npcSees(GeometryView map, Cell from, Heading facing, Cell target) noexcept 
 }
 bool combatAdjacent(GeometryView map, Cell from, Cell target) noexcept {
     const int dx = std::abs(target.x - from.x), dy = std::abs(target.y - from.y);
-    return std::max(dx, dy) == 1 && lineOfSight(map, from, target);
+    return std::max(dx, dy) == 1 && map.reach(from, target) && lineOfSight(map, from, target);
 }
 bool inFrontBand(Cell from, Heading heading, Cell target) noexcept {
     if (static_cast<unsigned>(heading) >= 4)
@@ -43,7 +81,7 @@ bool inFrontBand(Cell from, Heading heading, Cell target) noexcept {
     return ahead == 1 && std::abs(side) <= 1;
 }
 bool inMeleeFront(GeometryView map, Cell from, Heading heading, Cell target) noexcept {
-    return inFrontBand(from, heading, target) && lineOfSight(map, from, target);
+    return inFrontBand(from, heading, target) && map.reach(from, target) && lineOfSight(map, from, target);
 }
 bool inPartyView(GeometryView map, Cell from, Heading facing, Cell target) noexcept {
     if (static_cast<unsigned>(facing) >= 4 || !inBowRange(from, target))

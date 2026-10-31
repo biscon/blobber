@@ -78,6 +78,7 @@ struct Canonical {
         add(v.walkDurationMs);
         add(v.hasTravel);
         add(v.walkFrom);
+        add(v.walkFromElevation);
     }
     void add(const ActorSnapshot& v) {
         add(v.actors);

@@ -1,3 +1,6 @@
+template <class A> void visit(A&, CellSurface&);
+template <class A> void visit(A&, Decoration&);
+template <class A> void visit(A&, WorldDefinition&);
 template <class A> void visit(A& a, NpcAiConfig& v) {
     a("routine", v.routine);
     a("waypoints", v.waypoints);
@@ -57,6 +60,29 @@ template <class A> void visit(A&, CampaignCheckpoint&);
 template <class A> void visit(A&, EffectId&);
 template <class A> void visit(A&, AreaId&);
 template <class A> void visit(A&, rules::CharacterId&);
+template <class A> void visit(A& a, CellSurface& v) {
+    a("floor", v.floor);
+    a("ceiling", v.ceiling);
+    a("wallMaterial", v.wallMaterial);
+    a("floorMaterial", v.floorMaterial);
+    a("ceilingMaterial", v.ceilingMaterial);
+    a("environment", v.environment);
+}
+template <class A> void visit(A& a, Decoration& v) {
+    a("cell", v.cell);
+    a("face", v.face);
+    a("kind", v.kind);
+    a("material", v.material);
+    a("offset", v.offset);
+    a("elevation", v.elevation);
+    a("width", v.width);
+    a("height", v.height);
+    a("depth", v.depth);
+}
+template <class A> void visit(A& a, WorldDefinition& v) {
+    a("surfaces", v.surfaces);
+    a("decorations", v.decorations);
+}
 template <class A> void visit(A& a, Cell& v) {
     a("x", v.x);
     a("y", v.y);
@@ -99,6 +125,7 @@ template <class A> void visit(A& a, ActorState& v) {
     a("walkDurationMs", v.walkDurationMs);
     a("hasTravel", v.hasTravel);
     a("walkFrom", v.walkFrom);
+    a("walkFromElevation", v.walkFromElevation);
 }
 template <class A> void visit(A& a, ActorSnapshot& v) {
     a("actors", v.actors);
@@ -489,6 +516,8 @@ template <class A> void visit(A& a, CampaignLocationState& v) {
     a("layout", v.layout);
     a("diagnostics", v.diagnostics);
     a("fingerprint", v.fingerprint);
+    a("world", v.world);
+    a("worldFingerprint", v.worldFingerprint);
     a("rows", v.rows);
     a("types", v.types);
     a("placements", v.placements);

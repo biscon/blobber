@@ -24,6 +24,21 @@ Camera camera(const MovementState& s) noexcept {
             r,
             yaw};
 }
+Camera camera(const MovementState& s, GeometryView g) noexcept {
+    auto c = camera(s);
+    const auto& t = s.transition;
+    const auto a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
+    const float p = t.active() ? t.progress() : 1, e = p * p * (3 - 2 * p);
+    c.position.y += elevation(g.surface(a.cell).floor) * (1 - e) + elevation(g.surface(b.cell).floor) * e;
+    return c;
+}
+float daylight(const MovementState& s, GeometryView g) noexcept {
+    const auto& t = s.transition;
+    const float p = t.active() ? t.progress() : 1, e = p * p * (3 - 2 * p);
+    const auto a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
+    return float(g.surface(a.cell).environment == Environment::Daylight) * (1 - e) +
+           float(g.surface(b.cell).environment == Environment::Daylight) * e;
+}
 ScreenPoint project(const Camera& c, Vec p) noexcept {
     const float dx = p.x - c.position.x, dz = p.z - c.position.z;
     const float d = dx * c.forward.x + dz * c.forward.z;
@@ -36,7 +51,8 @@ bool sameCamera(const Camera& a, const Camera& b) noexcept {
 }
 std::size_t Scene::bytes() const noexcept {
     return sizeof(*this) + vertices.capacity() * sizeof(Vertex) + indices.capacity() * 4 +
-           ranges.capacity() * sizeof(Range) + chunks.capacity() * sizeof(Chunk);
+           ranges.capacity() * sizeof(Range) + chunks.capacity() * sizeof(Chunk) +
+           decals.capacity() * sizeof(Decal);
 }
 std::size_t Scene::meshBytes() const noexcept {
     return vertices.size() * sizeof(Vertex) + indices.size() * 4;
@@ -60,25 +76,73 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
         for (int x = cx; x < std::min(cx + 8, m.width()); ++x) {
             if (m.solid({x, z}))
                 continue;
-            const auto s = overrides.empty() ? defaults : overrides[std::size_t(z) * m.width() + x];
-            const float a = float(x), b = float(z);
-            add({Vec{a, 0, b}, Vec{a, 0, b + 1}, Vec{a + 1, 0, b + 1}, Vec{a + 1, 0, b}}, {0, 1, 0}, s.floor,
-                false);
-            add({Vec{a, 1, b}, Vec{a + 1, 1, b}, Vec{a + 1, 1, b + 1}, Vec{a, 1, b + 1}}, {0, -1, 0},
-                s.ceiling, false);
-            if (m.solid({x, z - 1}))
-                add({Vec{a, 0, b}, Vec{a + 1, 0, b}, Vec{a + 1, 1, b}, Vec{a, 1, b}}, {0, 0, 1}, s.wall,
-                    true);
-            if (m.solid({x, z + 1}))
-                add({Vec{a + 1, 0, b + 1}, Vec{a, 0, b + 1}, Vec{a, 1, b + 1}, Vec{a + 1, 1, b + 1}},
-                    {0, 0, -1}, s.wall, true);
-            if (m.solid({x - 1, z}))
-                add({Vec{a, 0, b + 1}, Vec{a, 0, b}, Vec{a, 1, b}, Vec{a, 1, b + 1}}, {1, 0, 0}, s.wall,
-                    true);
-            if (m.solid({x + 1, z}))
-                add({Vec{a + 1, 0, b}, Vec{a + 1, 0, b + 1}, Vec{a + 1, 1, b + 1}, Vec{a + 1, 1, b}},
-                    {-1, 0, 0}, s.wall, true);
+            const auto h = m.surface({x, z});
+            auto s = overrides.empty() ? Surfaces{h.wallMaterial, h.floorMaterial, h.ceilingMaterial}
+                                       : overrides[std::size_t(z) * m.width() + x];
+            if (overrides.empty() && (defaults.wall != 0 || defaults.floor != 1 || defaults.ceiling != 2))
+                s = defaults;
+            const float a = float(x), b = float(z), lo = elevation(h.floor),
+                        hi = h.ceiling == noCeiling ? m.base().upper() : elevation(h.ceiling);
+            add({Vec{a, lo, b}, Vec{a, lo, b + 1}, Vec{a + 1, lo, b + 1}, Vec{a + 1, lo, b}}, {0, 1, 0},
+                s.floor, false);
+            if (h.ceiling != noCeiling)
+                add({Vec{a, hi, b}, Vec{a + 1, hi, b}, Vec{a + 1, hi, b + 1}, Vec{a, hi, b + 1}}, {0, -1, 0},
+                    s.ceiling, false);
+            for (unsigned d = 0; d < 4; ++d) {
+                const auto f = forward(Heading(d)), r = right(Heading(d));
+                const Cell next = Cell{x, z} + f;
+                const auto n = m.surface(next);
+                auto wall = [&](float low, float high) {
+                    if (high <= low)
+                        return;
+                    const float px = a + .5f + f.x * .5f, pz = b + .5f + f.y * .5f;
+                    add({Vec{px - r.x * .5f, low, pz - r.y * .5f}, Vec{px + r.x * .5f, low, pz + r.y * .5f},
+                         Vec{px + r.x * .5f, high, pz + r.y * .5f},
+                         Vec{px - r.x * .5f, high, pz - r.y * .5f}},
+                        {float(-f.x), 0, float(-f.y)}, s.wall, true);
+                };
+                if (m.solid(next))
+                    wall(lo, hi);
+                else {
+                    wall(lo, std::min(hi, elevation(n.floor)));
+                    if (n.ceiling != noCeiling)
+                        wall(std::max(lo, elevation(n.ceiling)), hi);
+                }
+            }
         }
+    for (const auto& d : m.base().definition().decorations) {
+        if (d.cutout() || d.cell.x < cx || d.cell.x >= cx + 8 || d.cell.y < cz || d.cell.y >= cz + 8)
+            continue;
+        const auto f = forward(d.face), r = right(d.face);
+        const float px = d.cell.x + .5f + f.x * (.5f - d.depth * .5f) + r.x * (d.offset - .5f),
+                    pz = d.cell.y + .5f + f.y * (.5f - d.depth * .5f) + r.y * (d.offset - .5f),
+                    base = elevation(m.surface(d.cell).floor);
+        const unsigned sides = d.kind == DecorationKind::Urn ? 8 : 4;
+        std::array<Vec, 8> bottom{}, top{};
+        for (unsigned k = 0; k < sides; ++k) {
+            float u, v;
+            if (sides == 4) {
+                u = (k == 0 || k == 3) ? -.5f : .5f;
+                v = k < 2 ? -.5f : .5f;
+            } else {
+                const float angle = 2 * pi * k / sides;
+                u = .5f * std::cos(angle);
+                v = .5f * std::sin(angle);
+            }
+            bottom[k] = {px + r.x * u * d.width + f.x * v * d.depth, base,
+                         pz + r.y * u * d.width + f.y * v * d.depth};
+            top[k] = bottom[k];
+            top[k].y += d.height;
+        }
+        const Vec center{px, base + d.height, pz};
+        for (unsigned k = 0; k < sides; ++k) {
+            const unsigned n = (k + 1) % sides;
+            const float dx = bottom[n].x - bottom[k].x, dz = bottom[n].z - bottom[k].z,
+                        len = std::sqrt(dx * dx + dz * dz);
+            add({bottom[k], bottom[n], top[n], top[k]}, {-dz / len, 0, dx / len}, d.material, true);
+            add({center, top[k], top[n], center}, {0, 1, 0}, d.material, false);
+        }
+    }
 }
 } // namespace
 Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& overrides, Limits limits) {
@@ -91,38 +155,76 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     limits.ranges = std::min(limits.ranges, std::size_t(65536));
     limits.cpuBytes = std::min(limits.cpuBytes, std::size_t(64u * 1024 * 1024));
     Scene s;
+    s.map = &m.base();
+    for (auto h : m.base().definition().surfaces)
+        s.outdoor |= h.ceiling == noCeiling;
+    for (const auto& d : m.base().definition().decorations)
+        if (d.cutout()) {
+            const auto f = forward(d.face), r = right(d.face);
+            const float x = d.cell.x + .5f + f.x * .499f + r.x * (d.offset - .5f),
+                        z = d.cell.y + .5f + f.y * .499f + r.y * (d.offset - .5f),
+                        y = elevation(m.surface(d.cell).floor) + d.elevation;
+            const float w = d.width * .5f, h = d.height * .5f;
+            const Vec normal{float(-f.x), 0, float(-f.y)};
+            s.decals.push_back({{{{{x - r.x * w, y - h, z - r.y * w}, normal, 0, 1},
+                                  {{x + r.x * w, y - h, z + r.y * w}, normal, 1, 1},
+                                  {{x + r.x * w, y + h, z + r.y * w}, normal, 1, 0},
+                                  {{x - r.x * w, y + h, z - r.y * w}, normal, 0, 0}}},
+                                unsigned(d.kind)});
+        }
     s.width = m.width();
     s.height = m.height();
     s.columns = (m.width() + 7) / 8;
     s.rows = (m.height() + 7) / 8;
-    std::size_t quads = 0, ranges = 0;
+    std::size_t quads = 0, ranges = 0, maxLocal = 0;
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
             std::array<bool, 32> used{};
+            std::size_t localCount = 0;
             faces(m, x, z, defaults, overrides, [&](const Face& f) {
                 ++quads;
+                ++localCount;
                 used[f.material] = true;
             });
+            maxLocal = std::max(maxLocal, localCount);
             ranges += std::count(used.begin(), used.end(), true);
             if (quads > limits.quads || ranges > limits.ranges)
                 throw std::runtime_error("World geometry capacity exceeded");
         }
-    const std::size_t required =
-        sizeof(s) + quads * 152 + ranges * sizeof(Range) + std::size_t(s.columns) * s.rows * sizeof(Chunk);
+    const std::size_t required = sizeof(s) + s.decals.capacity() * sizeof(Decal) + quads * 152 +
+                                 ranges * sizeof(Range) + std::size_t(s.columns) * s.rows * sizeof(Chunk);
     if (required > limits.cpuBytes)
         throw std::runtime_error("World CPU scene budget exceeded");
     s.vertices.reserve(quads * 4);
     s.indices.reserve(quads * 6);
     s.ranges.reserve(ranges);
     s.chunks.resize(std::size_t(s.columns) * s.rows);
+    std::vector<Face> local(maxLocal);
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
-            std::array<Face, 384> local{};
             unsigned count = 0;
             faces(m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; });
             std::sort(local.begin(), local.begin() + count,
                       [](const Face& a, const Face& b) { return a.material < b.material; });
             auto& chunk = s.chunks[(z / 8) * s.columns + x / 8];
+            chunk.low = m.base().upper();
+            chunk.high = m.base().lower();
+            for (unsigned i = 0; i < count; ++i)
+                for (const auto& v : local[i].v) {
+                    chunk.low = std::min(chunk.low, v.position.y);
+                    chunk.high = std::max(chunk.high, v.position.y);
+                }
+            for (const auto& d : s.decals)
+                for (const auto& v : d.vertices)
+                    if (v.position.x >= x && v.position.x <= x + 8 && v.position.z >= z &&
+                        v.position.z <= z + 8) {
+                        chunk.low = std::min(chunk.low, v.position.y);
+                        chunk.high = std::max(chunk.high, v.position.y);
+                    }
+            if (chunk.low > chunk.high) {
+                chunk.low = m.base().lower();
+                chunk.high = m.base().upper();
+            }
             chunk.first = std::uint32_t(s.ranges.size());
             for (unsigned i = 0; i < count; ++i) {
                 if (!i || local[i].material != local[i - 1].material) {
@@ -142,11 +244,11 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     s.identity = next.fetch_add(1);
     return s;
 }
-bool visible(const Camera& c, int x, int z, int width, int height) noexcept {
+bool visible(const Camera& c, int x, int z, int width, int height, float low, float high) noexcept {
     std::array<bool, 6> inside{};
     for (int dx : {0, width})
         for (int dz : {0, height})
-            for (int y : {0, 1}) {
+            for (float y : {low, high}) {
                 const float rx = x + dx - c.position.x, rz = z + dz - c.position.z;
                 const float depth = rx * c.forward.x + rz * c.forward.z,
                             side = rx * c.right.x + rz * c.right.z;
@@ -172,7 +274,8 @@ void cull(const Scene& s, const Camera& c, DrawList& out) noexcept {
     for (int z = top; z <= bottom; ++z)
         for (int x = left; x <= right; ++x) {
             ++out.tested;
-            if (visible(c, x * 8, z * 8, std::min(8, s.width - x * 8), std::min(8, s.height - z * 8)))
+            if (visible(c, x * 8, z * 8, std::min(8, s.width - x * 8), std::min(8, s.height - z * 8),
+                        s.chunks[z * s.columns + x].low, s.chunks[z * s.columns + x].high))
                 chunks[n++] = z * s.columns + x;
         }
     for (unsigned mat = 0; mat < 32; ++mat)

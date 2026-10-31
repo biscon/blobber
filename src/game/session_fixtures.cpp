@@ -39,7 +39,8 @@ FixtureRequest GameSession::nearbyFixture() const noexcept {
     auto i = floor_.at(pose.cell + forward(pose.heading));
     if (i < 0)
         i = here;
-    if (i >= 0 && !fixtureReachable(floor_.definition().entries[i], pose.cell, pose.heading))
+    if (i >= 0 && (!fixtureReachable(floor_.definition().entries[i], pose.cell, pose.heading) ||
+                   !map_.reach(pose.cell, floor_.definition().entries[i].cell)))
         i = -1;
     if (i >= 0 && floor_.definition().entries[i].kind == FixtureKind::Key && floor_.completed(i))
         i = -1;
@@ -62,7 +63,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
     if (actionBusy())
         return {false, false, opening() ? "Wait until the door opens." : "Wait until movement finishes."};
     const auto pose = movement().player;
-    if (!fixtureReachable(*f, pose.cell, pose.heading))
+    if (!fixtureReachable(*f, pose.cell, pose.heading) || !map_.reach(pose.cell, f->cell))
         return {false, false, "Move closer and face the fixture."};
     if (!combat_.settledRecovery(pose, timeMs_) || effects_.area(pose.cell))
         return {false, false, "Fixtures require settled safe exploration."};

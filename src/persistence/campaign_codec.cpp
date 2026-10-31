@@ -24,7 +24,11 @@ template <class T> struct Pointer<std::unique_ptr<T>> : std::true_type {};
 template <class T> struct Bits : std::false_type {};
 template <std::size_t N> struct Bits<std::bitset<N>> : std::true_type {};
 template <class T> constexpr unsigned enumMaximum() {
-    if constexpr (std::is_same_v<T, Heading>)
+    if constexpr (std::is_same_v<T, Environment>)
+        return 1;
+    else if constexpr (std::is_same_v<T, DecorationKind>)
+        return 3;
+    else if constexpr (std::is_same_v<T, Heading>)
         return 3;
     else if constexpr (std::is_same_v<T, NpcAnimation>)
         return npcAnimationCount - 1;
@@ -339,7 +343,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 1 || j.at("simulation") != 1 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 2 || j.at("simulation") != 2 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -348,8 +352,8 @@ void envelope(const Json& j, const CampaignContent& content) {
 } // namespace
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 1},
-              {"simulation", 1},
+    Json j = {{"schema", 2},
+              {"simulation", 2},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

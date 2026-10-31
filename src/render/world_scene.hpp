@@ -21,6 +21,8 @@ struct ScreenPoint {
 };
 float focal() noexcept;
 Camera camera(const MovementState&) noexcept;
+Camera camera(const MovementState&, GeometryView) noexcept;
+float daylight(const MovementState&, GeometryView) noexcept;
 ScreenPoint project(const Camera&, Vec) noexcept;
 bool sameCamera(const Camera&, const Camera&) noexcept;
 struct Vertex {
@@ -37,11 +39,19 @@ struct Range {
 };
 struct Chunk {
     std::uint32_t first = 0, count = 0;
+    float low = 0, high = 1;
 };
 struct Limits {
     std::size_t quads = 262144, ranges = 65536, cpuBytes = 64u * 1024 * 1024;
 };
+struct Decal {
+    std::array<Vertex, 4> vertices;
+    unsigned motif = 0;
+};
 struct Scene {
+    const Map* map = nullptr;
+    bool outdoor = false;
+    std::vector<Decal> decals;
     std::uint64_t identity = 0;
     int width = 0, height = 0, columns = 0, rows = 0;
     std::vector<Vertex> vertices;
@@ -53,7 +63,7 @@ struct Scene {
 };
 // Optional overrides are row-major, one per cell. No simulation/schema mutation.
 Scene prepare(GeometryView, Surfaces = {}, const std::vector<Surfaces>& overrides = {}, Limits = {});
-bool visible(const Camera&, int x, int z, int width, int height) noexcept;
+bool visible(const Camera&, int x, int z, int width, int height, float low = 0, float high = 1) noexcept;
 struct DrawList {
     std::array<std::uint32_t, 49 * materialCapacity> ranges{};
     unsigned count = 0, tested = 0;

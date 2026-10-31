@@ -71,6 +71,9 @@ class GeometryView {
     GeometryView(Map&&) = delete;
     GeometryView(const Map&&) = delete;
     bool solid(Cell) const noexcept;
+    CellSurface surface(Cell c) const noexcept { return map_->surface(c); }
+    bool reach(Cell a, Cell b) const noexcept { return surfacePassage(surface(a), surface(b)); }
+    bool canStep(Cell a, Cell b) const noexcept { return map_->canStep(a, b) && !solid(a) && !solid(b); }
     // Render-only borrow: retain closed legacy proxies until their opening settles.
     GeometryView presentation(const DoorSnapshot& doors) const noexcept {
         auto result = *this;

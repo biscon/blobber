@@ -22,6 +22,8 @@ class GameView {
             world_->clear();
     }
     bool update(const GameSession& game, const NpcAnimationSnapshot& animation, const SpellArea& area) {
+        if (legacy_ && !game.geometry().base().flat())
+            throw std::invalid_argument("Height maps require --renderer world");
         if (legacy_)
             return legacy_->update(*renderer_, game.presentationGeometry(), game.movement(), &game.actors(),
                                    &animation, &game.combat().attacks(), game.timeMs(), &area,

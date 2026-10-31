@@ -110,6 +110,29 @@ int run(const fs::path& source, const fs::path& output) {
             }
         writer.add(std::string("effect/") + names[kind], 64, 64, true, rgba);
     }
+    for (unsigned motif = 0; motif < 2; ++motif) {
+        std::vector<unsigned char> rgba(64 * 64 * 4);
+        for (unsigned y = 0; y < 64; ++y)
+            for (unsigned x = 0; x < 64; ++x) {
+                const float u = (x + .5f) / 64 - .5f, v = (y + .5f) / 64 - .5f;
+                const bool mark =
+                    motif ? (std::abs(u - .12f * std::sin(v * 14)) < .025f ||
+                             (std::abs(std::abs(u) - .12f) < .055f && std::abs(std::sin(v * 18)) > .7f))
+                          : ((std::abs(u) < .28f && std::abs(v) < .4f) &&
+                             (std::abs(v) < .31f || std::abs(u) < .18f));
+                auto* p = &rgba[(y * 64 + x) * 4];
+                p[0] = motif ? 70 : 147;
+                p[1] = motif ? 104 : 82;
+                p[2] = motif ? 57 : 43;
+                p[3] = mark ? 255 : 0;
+                if (!motif && mark && (std::abs(u) < .025f || std::abs(v) < .025f)) {
+                    p[0] = 209;
+                    p[1] = 178;
+                    p[2] = 104;
+                }
+            }
+        writer.add(motif ? "decoration/vine" : "decoration/crest", 64, 64, true, rgba);
+    }
     const Map dummy({"###", "#.#", "###"});
     const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
     const auto level = read(source / "npcs/level.json");

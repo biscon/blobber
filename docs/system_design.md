@@ -1,5 +1,30 @@
 # System design
 
+[Verification workflow and resource limits](verification_workflow.md) governs when
+to run checks. Use focused tests in one configuration during iteration; full matrices
+and benchmarks are not routine development steps. Build workers are capped at two,
+only one intensive job runs at a time, and slow legacy/persistence checks are opt-in.
+
+R05 **Accepted and closed** (2026-10-31):
+[single-layer heights, outdoor hub and decoration](renderer_environment_design.md).
+User approved the reviewed plan with “Implement the plan.” Shared quantized
+heights/traversal/sight, raised world presentation, outdoor hub/decor, checkpoint
+schema 2/2 and windowless fixture replay are implemented.
+[Verification](r05_verification.md) and [gallery](screenshots/r05/index.html) retain
+focused final checks and limits. Legacy remains default until R06; generated floors
+and the hub walkable layout remain flat. The user explicitly accepted R05:
+“slice accepted, record it in the plan doc”. Verification and limitations remain
+unchanged; no additional checks or interactive coverage are inferred. R06 is next
+for separate planning only, when requested; R-C remains Planned.
+This checkpoint supersedes historical R05-unstarted notes below.
+
+R06 completion contract clarified by the user: completely remove the old renderer,
+its exclusive prepared image banks, preparation/build dependencies and renderer-
+specific tests, including copies in probes/tools. The new renderer becomes the sole
+path; no dormant implementation or fallback remains. See the
+[R06 removal criteria](renderer_plan.md#r06-production-cutover-and-retirement).
+R06 remains unstarted; this is a planning constraint, not a completed cutover.
+
 R04 effect review correction **implemented**: lower Spiritual Weapon within flat
 floor/ceiling clearance, restore GPU spell colors/impact fade and visible impact
 depth, retain multi-dart/ray separation, and capture actual transient phases.
@@ -64,7 +89,7 @@ R03 interaction is delivered for review under its separately approved design.
 Complete production integration remains R04.
 
 Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R03 is
-Accepted along with R04 and milestone R-B; R05–R06 remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
+Accepted along with R04 and milestone R-B; R05 is Accepted and R06 remains Planned. Static mesh/assets, billboard interaction/windowless visibility,
 effects/doors/campaign integration, single-layer heights/outdoor hub/decoration and
 production cutover follow only through their own reviewed slices. Stacked cells are
 explicitly deferred. Existing implemented systems below remain authoritative until

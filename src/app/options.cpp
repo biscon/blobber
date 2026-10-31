@@ -20,7 +20,14 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
-        else if (arg == "--campaign-save" && i + 1 < argc)
+        else if (arg == "--renderer-fixture" && i + 1 < argc) {
+            if (std::string(argv[++i]) != "r05-heights-v1")
+                throw std::invalid_argument("Unknown renderer fixture");
+            result.environmentReview = result.worldRenderer = true;
+        } else if (arg == "--capture-environment" && i + 1 < argc) {
+            result.environmentReview = result.worldRenderer = result.development = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--campaign-save" && i + 1 < argc)
             result.campaignSave = std::filesystem::absolute(argv[++i]);
         else if (arg == "--renderer" && i + 1 < argc) {
             const std::string value = argv[++i];
@@ -166,6 +173,10 @@ Options parseOptions(int argc, char** argv) {
         (result.captureRecoveryOnly &&
          (result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo || result.inventoryDemo)))
         throw std::runtime_error("Use --capture-recovery alone for recovery captures");
+    if (result.environmentReview &&
+        (!result.development || result.worldPreview || result.captureMenuOnly || result.captureDoorsOnly ||
+         result.uiDemo || result.combatDemo || result.aiDemo || result.hybridDemo))
+        throw std::invalid_argument("Renderer fixture requires --development and independent diagnostics");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
     if (result.captureDoorsOnly && !result.worldRenderer)

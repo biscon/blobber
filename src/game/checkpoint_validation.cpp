@@ -63,7 +63,8 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
     for (std::size_t i = 0; i < s.actors.count; ++i) {
         const auto& a = s.actors.actors[i];
         const auto& ai = s.ai.state.actors[i];
-        if (!std::isfinite(a.walkFrom.x) || !std::isfinite(a.walkFrom.y) || a.walkFrom.x < 0 ||
+        if (!std::isfinite(a.walkFromElevation) || a.walkFromElevation < -8 || a.walkFromElevation > 8 ||
+            !std::isfinite(a.walkFrom.x) || !std::isfinite(a.walkFrom.y) || a.walkFrom.x < 0 ||
             a.walkFrom.y < 0 || a.walkFrom.x >= map_.width() || a.walkFrom.y >= map_.height() ||
             !cell(ai.lastSeen) || (a.life == ActorLife::Dead && (!a.hasDeath || a.hitPoints)) ||
             (a.hasDeath && a.life == ActorLife::Alive) ||

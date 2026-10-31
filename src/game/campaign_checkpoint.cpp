@@ -4,6 +4,58 @@
 #include <random>
 #include <stdexcept>
 namespace blobber {
+namespace {
+// Preparation-only progression validation. Heights may remove edges but may not
+// make a key depend on its own lock or place a guardian behind its gate.
+void validateSurfaceProgression(const CampaignLocation& location) {
+    const auto& map = location.map();
+    const auto& defs = location.fixtures;
+    std::vector<unsigned char> seen(std::size_t(map.width()) * map.height());
+    std::vector<Cell> queue;
+    queue.reserve(seen.size());
+    unsigned keys = 0;
+    auto index = [&](Cell c) { return std::size_t(c.y) * map.width() + c.x; };
+    for (unsigned pass = 0; pass <= fixtureCapacity; ++pass) {
+        std::fill(seen.begin(), seen.end(), 0);
+        queue.clear();
+        queue.push_back(location.entry.cell);
+        seen[index(location.entry.cell)] = 1;
+        for (std::size_t head = 0; head < queue.size(); ++head)
+            for (unsigned h = 0; h < 4; ++h) {
+                const auto from = queue[head], to = from + forward(Heading(h));
+                if (!map.canStep(from, to) || seen[index(to)])
+                    continue;
+                bool blocked = false;
+                for (unsigned i = 0; i < defs.count; ++i) {
+                    const auto& f = defs.entries[i];
+                    if (!(f.cell == to))
+                        continue;
+                    blocked |= f.kind == FixtureKind::GuardianGate ||
+                               (f.kind == FixtureKind::Door && f.key && !(keys & (1u << f.key)));
+                }
+                if (!blocked) {
+                    seen[index(to)] = 1;
+                    queue.push_back(to);
+                }
+            }
+        const unsigned old = keys;
+        for (unsigned i = 0; i < defs.count; ++i)
+            if (defs.entries[i].kind == FixtureKind::Key && seen[index(defs.entries[i].cell)])
+                keys |= 1u << defs.entries[i].key;
+        if (keys == old)
+            break;
+    }
+    for (unsigned i = 0; i < defs.count; ++i)
+        if (defs.entries[i].kind == FixtureKind::Key && !(keys & (1u << defs.entries[i].key)))
+            throw std::invalid_argument("Saved heights break key progression");
+    if (location.generated)
+        for (unsigned i = 0; i < location.generated->layout.populationCount; ++i) {
+            const auto& p = location.generated->layout.population[i];
+            if (p.guardian && !seen[index(p.cell)])
+                throw std::invalid_argument("Saved heights hide guardians behind their gate");
+        }
+}
+} // namespace
 std::string campaignRunId() {
     std::random_device entropy;
     char id[33];
@@ -20,6 +72,8 @@ void GameSession::restorePose(Player pose, bool animated) {
     if (unsigned(pose.heading) > 3 || map_.solid(pose.cell) || actors_.occupied(pose.cell))
         throw std::invalid_argument("Invalid saved player pose");
     movement_.state_.player = pose;
+    movement_.state_.transition = {};
+    movement_.state_.blocked = false;
     movement_.state_.animated = animated;
     movement_.clearPending();
     effects_.partyCell(pose.cell);
@@ -40,6 +94,8 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     for (unsigned i = 0; i < 4; ++i) {
         const auto& from = locations_[i];
         auto& to = out->locations[i];
+        to.world = from.map().definition();
+        to.worldFingerprint = to.world.fingerprint();
         to.generated = bool(from.generated);
         to.visited = from.visited;
         if (from.generated) {
@@ -87,7 +143,11 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             from.types.empty() || from.types.size() != timings.size() ||
             (i && from.visited && !s.locations[i - 1].visited) || (i && bool(from.state) != from.visited))
             throw std::invalid_argument("Invalid campaign location definition");
-        Map map(from.rows);
+        if (from.world.surfaces.empty() || from.world.fingerprint() != from.worldFingerprint)
+            throw std::invalid_argument("Saved world definition fingerprint differs");
+        Map map(from.rows, std::move(from.world));
+        if (!map.connected(from.entry.cell))
+            throw std::invalid_argument("Saved surfaces disconnect the floor");
         if (map.width() * map.height() > int(generation::maxCells))
             throw std::invalid_argument("Campaign map capacity exceeded");
         if (i) {
@@ -138,6 +198,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
         to.placements.emplace(to.map(), to.entry.cell, from.types, from.placements);
         to.saved = std::move(from.state);
         auto checked = prepare(i, to.entry, true);
+        validateSurfaceProgression(to);
         if (i != location_ && to.saved) {
             for (unsigned c = 0; c < 4; ++c)
                 for (const auto& condition : to.saved->effects.conditions[c])

@@ -84,6 +84,7 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
         const auto time = actor.life == ActorLife::Dead && !dying ? actor.damageTimeMs : elapsedMs;
         NpcFrameSelection next{0, 0, visible, flash};
         const auto position = actorPosition(actor, elapsedMs);
+        next.elevation = actorElevation(actor, world_.map(), elapsedMs);
         next.offsetX = position.x - (npc.cell.x + .25f + npc.subcell.x * .5f);
         next.offsetY = position.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
         next.clip = npc.animation;
@@ -137,7 +138,7 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||
                    old.flash != next.flash || old.clip != next.clip || old.offsetX != next.offsetX ||
-                   old.offsetY != next.offsetY;
+                   old.offsetY != next.offsetY || old.elevation != next.elevation;
         old = next;
     }
     snapshot_.actorRevision = world_.snapshot().revision;

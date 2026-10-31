@@ -54,7 +54,7 @@ add_library(blobber_rules src/rules/progression.cpp src/rules/spell_selection.cp
 target_include_directories(blobber_rules PUBLIC src)
 add_library(blobber_rules_io src/persistence/campaign_store.cpp src/persistence/campaign_codec.cpp src/persistence/arena_store.cpp src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp src/assets/recovery_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
-add_library(blobber_core src/render/attack_visuals.cpp src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/fixtures.cpp src/generation/templates.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
+add_library(blobber_core src/world/surfaces.cpp src/world/environment_maps.cpp src/render/attack_visuals.cpp src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/fixtures.cpp src/generation/templates.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules)
 # Level recovery loading validates world cells and exposes core recovery data.
@@ -86,7 +86,7 @@ if(BLOBBER_BUILD_GRAPHICS)
         src/platform/gpu_resources.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
         src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_render blobber_world_cpu)
-    add_executable(blobber src/app/door_captures.cpp src/app/world_interaction_preview.cpp src/app/world_preview.cpp src/app/save_captures.cpp src/app/campaign_saves.cpp src/app/guardian_captures.cpp src/app/progression_captures.cpp src/app/arena_model.cpp src/app/arena_captures.cpp src/app/arena_setup.cpp src/ui/arena_screen.cpp src/app/creator_captures.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp src/app/menu.cpp src/app/menu_model.cpp src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
+    add_executable(blobber src/app/environment_review.cpp src/app/door_captures.cpp src/app/world_interaction_preview.cpp src/app/world_preview.cpp src/app/save_captures.cpp src/app/campaign_saves.cpp src/app/guardian_captures.cpp src/app/progression_captures.cpp src/app/arena_model.cpp src/app/arena_captures.cpp src/app/arena_setup.cpp src/ui/arena_screen.cpp src/app/creator_captures.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp src/app/menu.cpp src/app/menu_model.cpp src/app/starting_build_diagnostics.cpp src/app/build_captures.cpp src/app/recovery_demo.cpp src/main.cpp src/app/application.cpp src/app/options.cpp src/app/captures.cpp src/app/actor_captures.cpp src/app/archer_captures.cpp src/app/spell_captures.cpp src/app/spell_review_captures.cpp src/app/projectile_captures.cpp src/app/ui_demo.cpp src/app/gameplay.cpp src/app/hud_captures.cpp src/app/inventory_captures.cpp src/app/ai_demo.cpp src/app/hybrid_demo.cpp)
     target_link_libraries(blobber PRIVATE blobber_platform blobber_assets_io blobber_rules_io nlohmann_json::nlohmann_json)
     add_executable(blobber_prepare_assets EXCLUDE_FROM_ALL tools/prepare_assets.cpp)
     target_link_libraries(blobber_prepare_assets PRIVATE raylib)
@@ -436,6 +436,8 @@ if(BUILD_TESTING)
     target_link_libraries(blobber_campaign_save_tests PRIVATE blobber_automation_io)
     blobber_warnings(blobber_campaign_save_tests)
     add_test(NAME campaign_save COMMAND blobber_campaign_save_tests)
+    set_tests_properties(campaign_save PROPERTIES LABELS "slow;integration" RUN_SERIAL TRUE)
+    add_test(NAME campaign_save_smoke COMMAND blobber_campaign_save_tests --smoke)
 endif()
 if(BUILD_TESTING AND Python3_Interpreter_FOUND)
     add_test(NAME campaign_save_cli COMMAND ${Python3_EXECUTABLE}
@@ -550,4 +552,27 @@ if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
     target_link_libraries(blobber_world_integration_gpu_tests PRIVATE blobber_platform blobber_automation_io)
     target_include_directories(blobber_world_integration_gpu_tests PRIVATE tests)
     blobber_warnings(blobber_world_integration_gpu_tests)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(blobber_world_environment_tests tests/world_environment_tests.cpp)
+    target_link_libraries(blobber_world_environment_tests PRIVATE blobber_world_cpu)
+    target_include_directories(blobber_world_environment_tests PRIVATE tests)
+    blobber_warnings(blobber_world_environment_tests)
+    add_test(NAME world_environment COMMAND blobber_world_environment_tests)
+endif()
+
+if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
+    add_executable(blobber_world_environment_gpu_tests EXCLUDE_FROM_ALL tests/world_environment_gpu_tests.cpp)
+    target_link_libraries(blobber_world_environment_gpu_tests PRIVATE blobber_platform)
+    target_include_directories(blobber_world_environment_gpu_tests PRIVATE tests)
+    blobber_warnings(blobber_world_environment_gpu_tests)
+endif()
+
+# These legacy image-bank fixtures deliberately exercise complete prepared banks.
+# Keep coverage available explicitly, without baking hundreds of MiB per ordinary edit.
+if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
+    set_tests_properties(frame_allocations render actor_render loot_render npc_animation
+        npc_reactions npc portraits image_preparation prepared_assets
+        PROPERTIES LABELS "slow;legacy-render" RUN_SERIAL TRUE)
 endif()

@@ -43,7 +43,7 @@ def main(runner, writer):
                     os.environ[key] = value
         header = json.loads(trace.read_text().splitlines()[0])["data"]
         assert header["visibility_backend"] == "world"
-        assert header["visibility_version"] == "world-visibility-v2"
+        assert header["visibility_version"] == "world-visibility-v3"
         assert "world_publication" in header["content"]
         command = [runner, "--assets", str(root), "--mode", "visual", "--visibility", "world"]
         result = subprocess.run(command + ["--replay", str(trace)], env=env, capture_output=True, text=True)
@@ -61,6 +61,16 @@ def main(runner, writer):
             result = subprocess.run(command + ["--replay", str(trace), "--capture-dir", str(root / "captures"), "--capture-operation", "1"], env=env, capture_output=True, text=True)
             assert result.returncode and "graphics_unavailable" in result.stderr
             assert not (root / "captures").exists()
+        height_trace = root / "heights.jsonl"
+        height_scenario = dict(kind="renderer_fixture", schema_version=1, fixture="r05-heights-v1", seed=5, party=scenario["party"])
+        with Client(runner, root, "visual", height_trace, visibility="world") as client:
+            started = client.request("start", scenario=height_scenario)
+            assert started["ok"], started
+            assert client.request("observe")["ok"]
+            assert client.request("reset")["ok"]
+            assert client.request("close")["ok"]
+        replayed = subprocess.run(command + ["--replay", str(height_trace)], env=env, capture_output=True, text=True)
+        assert replayed.returncode == 0, replayed.stderr
         # Publication errors cannot fall back to permissive diagnostic visibility.
         payload = root / "prepared/world/textures.bin"
         data = bytearray(payload.read_bytes())

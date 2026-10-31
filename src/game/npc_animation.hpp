@@ -18,7 +18,7 @@ struct NpcFrameSelection {
     std::uint8_t active = 0, idle = 0;
     bool visible = true, flash = false;
     NpcAnimation clip = NpcAnimation::Idle;
-    float offsetX = 0, offsetY = 0;
+    float offsetX = 0, offsetY = 0, elevation = 0;
 };
 struct NpcAnimationSnapshot {
     std::array<NpcFrameSelection, NpcWorld::maxInstances> frames{};

@@ -18,27 +18,34 @@ out vec2 uv;out vec3 normal;out float depth;
 void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4 p=matModel*vec4(vertexPosition,1);depth=-(matView*p).z;gl_Position=mvp*p;})";
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;out vec4 finalColor;
-uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;
+uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;
 void main(){if(idPass!=0){finalColor=idColor;return;}vec4 c=texture(texture0,uv);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
-float light=face/(1.0+0.115*depth+0.015*depth*depth);float fog=clamp((depth-9.4)/3.5,0.0,1.0);
-finalColor=vec4(c.rgb*light*(1.0-fog)+vec3(15,18,20)/255.0*fog,1);})";
+float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
+finalColor=vec4(c.rgb*light*(1.0-fog)+mix(vec3(15,18,20),vec3(153,181,193),daylight)/255.0*fog,1);})";
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;out vec4 finalColor;
-uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
+uniform float daylight;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 void main(){
-float fog=clamp((depth-9.4)/3.5,0.0,1.0);
+float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
-if(kind==5){vec4 c=texture(texture0,uv)*idColor;float light=1.0/(1.0+0.115*depth+0.015*depth*depth);
-finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+vec3(15,18,20)/255.0*fog*c.a,c.a);return;}
+if(kind==5){vec4 c=texture(texture0,uv)*idColor;float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20),vec3(153,181,193),daylight)/255.0*fog*c.a,c.a);return;}
 ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(uv*vec2(size))),ivec2(0),size-1);
 float base=texelFetch(texture0,p,0).a;bool covered=base*255.0+0.01>=float(threshold);
 vec4 c=texture(texture0,uv);
 if(kind==2){if(covered||c.a<=0.001)discard;}else{if(!covered)discard;}
 if(kind==4){finalColor=idColor;return;}
-float light=1.0/(1.0+0.115*depth+0.015*depth*depth);
-finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+vec3(15,18,20)/255.0*fog*c.a,c.a);
+float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20),vec3(153,181,193),daylight)/255.0*fog*c.a,c.a);
 })";
+constexpr const char* skyFragment = R"(#version 330
+out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;
+void main(){vec2 p=gl_FragCoord.xy/viewport;float f=250.0/tan(radians(42.0));
+vec3 ray=normalize(forward+right*((p.x-0.5)*500.0/f)+vec3(0,(p.y-0.66)*282.0/f,0));
+float up=clamp(ray.y*2.0,0.0,1.0);vec3 c=mix(vec3(153,181,193),vec3(78,116,145),up)/255.0;
+float cloud=smoothstep(0.35,0.75,sin(ray.x*7.0+ray.z*3.0)*sin(ray.z*9.0-ray.x*2.0))*smoothstep(0.03,0.2,ray.y);
+finalColor=vec4(mix(c,vec3(0.73,0.77,0.79),cloud*0.22),1);})";
 constexpr const char* resolveFragment = R"(#version 330
 in vec2 fragTexCoord;out vec4 finalColor;uniform sampler2D texture0;
 void main(){ivec2 p=clamp(ivec2(fragTexCoord*vec2(500,282)),ivec2(0),ivec2(499,281))*2;
@@ -110,6 +117,7 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
         }
     }
     world_ = {r, r.createShader(vertex, fragment)};
+    sky_ = {r, r.createShader(nullptr, skyFragment)};
     resolve_ = {r, r.createShader(nullptr, resolveFragment)};
     const auto shader = r.shader(world_.get());
     mvp_ = GetShaderLocation(shader, "mvp");
@@ -146,6 +154,10 @@ void WorldRenderer::stage(GeometryView geometry, const MovementState& state, wor
                    std::chrono::duration<double, std::milli>(uploaded - built).count(),
                    std::chrono::duration<double, std::milli>(drawn - uploaded).count()};
     staged_ = std::move(candidate);
+    if (cpuBytes() > 352u * world_assets::MiB || gpuBytes() > 352u * world_assets::MiB) {
+        staged_.reset();
+        throw std::runtime_error("World active/staged budget exceeded");
+    }
 }
 void WorldRenderer::prepareBillboards() {
     if (billboard_)
@@ -253,7 +265,7 @@ WorldImage WorldRenderer::render(const MovementState& state) {
 }
 WorldImage WorldRenderer::render(View& v, const MovementState& state, const world_render::WorldFrame* frame,
                                  TargetHandle ids, const world_render::EffectFrame* effects) {
-    const auto camera = world_render::camera(state);
+    const auto camera = v.cpu.map ? world_render::camera(state, *v.cpu.map) : world_render::camera(state);
     stats = {};
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
@@ -269,6 +281,22 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     (void)resources_.mesh(v.mesh.get());
     BeginTextureMode(target);
     ClearBackground(ids ? Color{255, 255, 0, 255} : Color{15, 18, 20, 255});
+    const float ambient = v.cpu.map ? world_render::daylight(state, *v.cpu.map) : 0;
+    if (v.cpu.outdoor && !ids) {
+        const auto sky = resources_.shader(sky_.get());
+        const float viewport[]{float(target.texture.width), float(target.texture.height)};
+        SetShaderValue(sky, GetShaderLocation(sky, "viewport"), viewport, SHADER_UNIFORM_VEC2);
+        SetShaderValue(sky, GetShaderLocation(sky, "forward"), &camera.forward, SHADER_UNIFORM_VEC3);
+        SetShaderValue(sky, GetShaderLocation(sky, "right"), &camera.right, SHADER_UNIFORM_VEC3);
+        BeginShaderMode(sky);
+        DrawRectangle(0, 0, target.texture.width, target.texture.height, WHITE);
+        EndShaderMode();
+    }
+    SetShaderValue(shader, GetShaderLocation(shader, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
+    if (billboard_) {
+        const auto b = resources_.shader(billboard_.get());
+        SetShaderValue(b, GetShaderLocation(b, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
+    }
     Camera3D rc{
         {camera.position.x, camera.position.y, camera.position.z},
         {camera.position.x + camera.forward.x, camera.position.y, camera.position.z + camera.forward.z},
@@ -333,7 +361,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         const auto a = MatrixToFloatV(vp), b = MatrixToFloatV(view);
         if (effects && !ids)
             drawEffects(*effects, a.v, b.v, true);
-        drawBillboards(*frame, a.v, b.v, bool(ids));
+        drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu);
         if (effects && !ids)
             drawEffects(*effects, a.v, b.v, false);
     }
@@ -370,7 +398,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     return {v.output.get(), v.revision};
 }
 void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const float* vp, const float* view,
-                                   bool ids) {
+                                   bool ids, const world_render::Scene* scene) {
     Matrix projection{}, cameraView{};
     // raymath's field declaration order differs from its column-major float representation.
     auto matrix = [](const float* v) {
@@ -399,16 +427,44 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
         resources_.draw(quad_.get(), 0, 6);
         ++stats.draws;
     };
+    if (scene)
+        for (const auto& d : scene->decals) {
+            const auto texture = assets_->named(d.motif ? "decoration/vine" : "decoration/crest");
+            rlEnableTexture(resources_.texture(textures_[texture].get()).id);
+            const auto& a = d.vertices[0].position;
+            const auto& b = d.vertices[1].position;
+            const auto& c = d.vertices[3].position;
+            auto m = MatrixIdentity();
+            m.m0 = b.x - a.x;
+            m.m1 = b.y - a.y;
+            m.m2 = b.z - a.z;
+            m.m4 = c.x - a.x;
+            m.m5 = c.y - a.y;
+            m.m6 = c.z - a.z;
+            m.m12 = (a.x + b.x) * .5f;
+            m.m13 = (a.y + b.y) * .5f;
+            m.m14 = (a.z + b.z) * .5f;
+            rlEnableDepthMask();
+            draw(m, ids ? 4 : 1, 16, false, PickingBuffer::empty);
+            if (!ids) {
+                rlDisableDepthMask();
+                draw(m, 2, 16, false, PickingBuffer::empty);
+            }
+        }
     if (!ids) {
         rlDisableDepthMask();
         for (unsigned i = 0; i < frame.count; ++i) {
             const auto& b = frame.billboards[i];
             if (!b.shadowRadius)
                 continue;
+            float floor = b.feet.y;
+            const Cell under{int(std::floor(b.feet.x)), int(std::floor(b.feet.z))};
+            if (scene && scene->map && !scene->map->solid(under))
+                floor = elevation(scene->map->surface(under).floor);
             const auto model =
                 MatrixMultiply(MatrixMultiply(MatrixScale(2 * b.shadowRadius, 2 * b.shadowRadius, 1),
                                               MatrixRotateX(world_render::pi / 2)),
-                               MatrixTranslate(b.feet.x, .001f, b.feet.z - b.shadowRadius));
+                               MatrixTranslate(b.feet.x, floor + .001f, b.feet.z - b.shadowRadius));
             draw(model, 3, 1, false, 0);
         }
     }
@@ -484,6 +540,10 @@ void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const fl
 }
 std::size_t WorldRenderer::cpuBytes() const noexcept {
     std::size_t n = sizeof(*this) + assets_->bytes() + textures_.capacity() * sizeof(GpuLease<TextureHandle>);
+    if (active_ && active_->cpu.map)
+        n += active_->cpu.map->definition().bytes();
+    if (staged_ && staged_->cpu.map && (!active_ || staged_->cpu.map != active_->cpu.map))
+        n += staged_->cpu.map->definition().bytes();
     for (const auto* v : {active_.get(), staged_.get()})
         if (v) {
             n += sizeof(View) + v->cpu.bytes();

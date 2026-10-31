@@ -18,6 +18,43 @@ template <class F> void rejects(F f, const char* message) {
     }
     check(rejected, message);
 }
+void environmentRoundtrip() {
+    const auto c = catalog();
+    const auto d = definitions();
+    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    auto state = run.checkpoint();
+    auto& world = state->locations[0].world;
+    world.surfaces[2 * 9 + 3].floor = 1;
+    world.surfaces[2 * 9 + 3].ceiling = noCeiling;
+    state->locations[0].worldFingerprint = world.fingerprint();
+    const auto fingerprint = world.fingerprint();
+    const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
+    auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
+    CampaignRun loaded(c, std::move(*decoded), d.timings);
+    check(loaded.map().definition().fingerprint() == fingerprint,
+          "Nonflat world and decorations survive Continue");
+    auto travel = loaded.prepareTravel(loaded.request(loaded.game().nearbyFixture()));
+    check(loaded.commitTravel(travel), "Travel from height-bearing hub");
+    check(loaded.location(0).map().definition().fingerprint() == fingerprint,
+          "Inactive location retains environment");
+    auto away = loaded.checkpoint();
+    const auto text2 = encodeCampaign(c, d, {"fixture", 0}, *away);
+    auto back = decodeCampaign(c, d, {"fixture", 0}, text2);
+    CampaignRun resumed(c, std::move(*back), d.timings);
+    check(resumed.location(0).map().definition().fingerprint() == fingerprint,
+          "Inactive environment survives disk roundtrip");
+    auto bad = blobber::automation::Json::parse(text);
+    bad["campaign"]["locations"][0]["world"]["surfaces"][20]["floor"] = 99;
+    rejects(
+        [&] {
+            auto v = decodeCampaign(c, d, {"fixture", 0}, bad.dump());
+            CampaignRun invalid(c, std::move(*v), d.timings);
+        },
+        "Malformed surface retains prior session");
+    bad = blobber::automation::Json::parse(text);
+    bad["simulation"] = 1;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Old simulation rejects explicitly");
+}
 void roundtrip() {
     const auto c = catalog();
     const auto d = definitions();
@@ -261,7 +298,7 @@ void malformed() {
             },
             "malformed state rejected transactionally");
     };
-    bad([](auto& j) { j["schema"] = 2; });
+    bad([](auto& j) { j["schema"] = 1; });
     bad([](auto& j) { j["campaign"]["gameplayMs"] = "18446744073709551615"; });
     bad([](auto& j) { j["catalog"] = "other"; });
     bad([](auto& j) {
@@ -589,8 +626,18 @@ void navigationContinuation() {
 }
 
 } // namespace
-int main() {
+int main(int argc, char** argv) {
     try {
+        if (argc == 2 && std::string(argv[1]) == "--smoke") {
+            environmentRoundtrip();
+            roundtrip();
+            saveUi();
+            std::cout << "campaign save smoke tests passed\n";
+            return 0;
+        }
+        if (argc != 1)
+            throw std::invalid_argument("Expected no arguments or --smoke");
+        environmentRoundtrip();
         roundtrip();
         std::cerr << "progression/floors\n";
         progressionAndFloors();

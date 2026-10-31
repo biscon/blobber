@@ -55,6 +55,8 @@ class Visual final : public Visibility {
 };
 } // namespace
 std::unique_ptr<Visibility> makeVisual(void* context, const Map&, const GameSession& g) {
+    if (!g.geometry().base().flat())
+        throw std::invalid_argument("Height maps require --visibility world");
     return std::make_unique<Visual>(*static_cast<VisualContext*>(context), g);
 }
 } // namespace blobber::automation

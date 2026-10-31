@@ -63,7 +63,7 @@ bool terminalRecord(const std::string& text, std::string& id) {
     if (duplicate)
         return false;
     if (!j.is_object() || j.size() != 3 || !j.contains("terminal_schema") ||
-        !j["terminal_schema"].is_number_integer() || j["terminal_schema"] != 1 || !j.contains("run_id") ||
+        !j["terminal_schema"].is_number_integer() || j["terminal_schema"] != 2 || !j.contains("run_id") ||
         !j["run_id"].is_string() || !j.contains("status") ||
         (j["status"] != "victory" && j["status"] != "defeat"))
         return false;
@@ -283,7 +283,7 @@ CampaignWrite CampaignStore::terminal(const CampaignRun& run) {
         if (s->runId != run.runId())
             return {false, true, campaignRevision(current.data), {}};
         deniedRun_ = run.runId();
-        const auto text = Json{{"terminal_schema", 1},
+        const auto text = Json{{"terminal_schema", 2},
                                {"run_id", run.runId()},
                                {"status", run.status() == CampaignStatus::Victory ? "victory" : "defeat"}}
                               .dump() +

@@ -26,7 +26,7 @@ bool tryAction(GeometryView map, Player& player, Action action, const ActorWorld
     default:
         return false;
     }
-    if (map.solid(player.cell + delta) || (npcs && npcs->occupied(player.cell + delta)))
+    if (!map.canStep(player.cell, player.cell + delta) || (npcs && npcs->occupied(player.cell + delta)))
         return false;
     player.cell = player.cell + delta;
     return true;

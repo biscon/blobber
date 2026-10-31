@@ -4,6 +4,7 @@
 #include <optional>
 namespace blobber {
 struct Options {
+    bool environmentReview = false;
     bool captureDoorsOnly = false, worldPreview = false, supersampling = true, worldRenderer = false;
     std::filesystem::path worldBenchmark;
     bool development = false, captureProgressionOnly = false;

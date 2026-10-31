@@ -28,6 +28,34 @@ the task explicitly changes them.
 - Prefer straightforward, maintainable code and existing facilities when they meet the performance requirements. Avoid cleverness and custom infrastructure without a demonstrated need.
 - Validate changes with focused checks appropriate to the affected behaviour. For rendering changes, inspect deterministic captures and check the raylib/OpenGL integration when a desktop is available. Document material limitations and keep design notes current.
 
+## Resource use and verification cost
+
+- Keep the user's desktop responsive. Never saturate the processor, exhaust memory
+  or fill temporary storage with builds, tests, captures or benchmarks.
+- Run only one resource-intensive job at a time. This limit applies across build
+  configurations, test processes, sanitizers, asset preparation and background jobs.
+  Default to at most two build workers total and one test process; reduce further
+  when necessary. Never use unbounded `-j` or derive worker counts from all CPUs.
+- Run lengthy commands at low CPU and I/O priority (`nice -n 15` and, on Linux,
+  `ionice -c 3`). Keep internal library thread counts bounded too. Check available
+  memory and scratch space before costly work; put large scratch output on a disk
+  with space instead of filling `/tmp` or the workspace. Do not remove unrelated files.
+- Use focused tests during development. Choose tests from the changed behavior
+  and its callers, and state that selection; a passing count is not a reason to
+  run another configuration. Do not rerun the full Debug/Release,
+  graphics/headless, sanitizer and GPU matrix after minor edits. Run broader checks
+  once at a meaningful integration checkpoint, only for affected configurations;
+  rerun passing checks only when subsequent changes or failures justify it.
+- Benchmarks and capacity stress are opt-in investigations, not routine correctness
+  checks. State the concrete performance question and bounded workload first. Do
+  not run them merely because a historical slice or checklist ran them. Prefer a
+  short representative check, and stop once it answers the question.
+- Treat a slow routine test as a problem to investigate. Reduce repeated fixture
+  generation, oversized data and redundant work while preserving the failure or
+  invariant being tested. Keep intentional expensive tests explicitly labelled
+  and outside the ordinary development loop. Report skipped or interrupted work
+  honestly; do not rerun expensive work just to reproduce a passing count.
+
 ## Testing
 
 - Aim for thorough, meaningful coverage of our behaviour and invariants: normal use, boundary cases, failure paths, resource lifetimes, and interactions between our systems. Add regression tests for bugs where they provide lasting value.

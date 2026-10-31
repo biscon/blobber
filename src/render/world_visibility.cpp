@@ -39,7 +39,8 @@ bool inclusive(float ax, float ay, float bx, float by) {
     return by < ay || (by == ay && bx > ax);
 }
 void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint16_t id,
-              const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1) {
+              const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
+              bool cutoutOpaque = false) {
     std::array<ClipVertex, 16> a{}, b{};
     unsigned count = 3;
     for (unsigned i = 0; i < 3; ++i) {
@@ -122,7 +123,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                         continue;
                 } else if (z >= out.picking.depth(pixel))
                     continue;
-                out.picking.writeDepth(pixel, id, z, !assets);
+                out.picking.writeDepth(pixel, id, z, !assets || cutoutOpaque);
             }
         }
     }
@@ -175,6 +176,14 @@ float fit(float lateral, float depth, float halfWidth) {
 } // namespace
 VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::CpuAssets& assets)
     : scene_(scene), assets_(assets) {
+    unsigned materials = 0;
+    for (const auto& texture : assets.publication.textures)
+        materials += !texture.clamp;
+    for (const auto& range : scene.ranges)
+        if (range.material >= materials)
+            throw std::invalid_argument("Scene references an unavailable world material");
+    for (const auto& decal : scene.decals)
+        (void)assets.named(decal.motif ? "decoration/vine" : "decoration/crest");
     icons_.fill(UINT16_MAX);
     constexpr const char* names[]{"loot/bag",         "fixture/key-bronze", "fixture/key-silver",
                                   "fixture/upstairs", "fixture/downstairs", "fixture/endpoint",
@@ -196,7 +205,7 @@ bool VisibilityPipeline::lootVisible(LootId id) const noexcept {
     return ready_ && !frame().moving && id.slot < lootCapacity && frame().visibleLoot[id.slot] == id;
 }
 bool VisibilityPipeline::update(const FrameInput& in) {
-    if (map_ && map_ != &in.geometry.base())
+    if ((scene_.map && scene_.map != &in.geometry.base()) || (map_ && map_ != &in.geometry.base()))
         throw std::invalid_argument("World visibility belongs to another map; prepare a new view");
     if (in.geometry.width() != scene_.width || in.geometry.height() != scene_.height)
         throw std::invalid_argument("World visibility geometry dimensions differ");
@@ -212,7 +221,9 @@ bool VisibilityPipeline::update(const FrameInput& in) {
         throw std::invalid_argument("World animation belongs to another actor snapshot");
     if (anim)
         for (unsigned i = 0; i < anim->count; ++i)
-            if (!std::isfinite(anim->frames[i].offsetX) || !std::isfinite(anim->frames[i].offsetY) ||
+            if (!std::isfinite(anim->frames[i].elevation) || anim->frames[i].elevation < -8 ||
+                anim->frames[i].elevation > 8 || !std::isfinite(anim->frames[i].offsetX) ||
+                !std::isfinite(anim->frames[i].offsetY) ||
                 std::abs(anim->frames[i].offsetX) > Map::maxDimension ||
                 std::abs(anim->frames[i].offsetY) > Map::maxDimension)
                 throw std::invalid_argument("Invalid world animation travel offset");
@@ -221,7 +232,7 @@ bool VisibilityPipeline::update(const FrameInput& in) {
     const auto* fixtures = in.geometry.fixtures();
     if (fixtures && fixtures->definition().count > fixtureCapacity)
         throw std::invalid_argument("Too many world fixtures");
-    const auto c = camera(in.movement);
+    const auto c = camera(in.movement, in.geometry);
     const std::array<std::uint64_t, 10> stamp{in.geometry.world(),
                                               in.geometry.revision(),
                                               fixtures ? fixtures->revision() : 0,
@@ -283,7 +294,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             if (npc.type.index >= assets_.publication.appearances.size())
                 throw std::invalid_argument("Invalid world appearance index");
             const auto& a = assets_.publication.appearances[npc.type.index];
-            const Vec foot{npc.cell.x + .25f + npc.subcell.x * .5f + selection.offsetX, 0,
+            const Vec foot{npc.cell.x + .25f + npc.subcell.x * .5f + selection.offsetX,
+                           in.animation ? selection.elevation : actorElevation(actor, in.geometry, in.now),
                            npc.cell.y + .25f + npc.subcell.y * .5f + selection.offsetY};
             const float travelX = foot.x - (npc.cell.x + .25f + npc.subcell.x * .5f),
                         travelZ = foot.z - (npc.cell.y + .25f + npc.subcell.y * .5f);
@@ -330,7 +342,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                 top = float(assets_.bounds[canonical].top) / assets_.publication.textures[canonical].height;
             }
             const auto badge = project(
-                out.camera, {feet.x, a.height * (assets_.publication.anchors[canonical].y - top), feet.z});
+                out.camera,
+                {feet.x, feet.y + a.height * (assets_.publication.anchors[canonical].y - top), feet.z});
             out.picking.badgeAnchor(std::uint16_t(i), int(std::round(badge.x)), int(std::round(badge.y)),
                                     depth);
         }
@@ -349,7 +362,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const auto& stack = in.loot->stacks[i];
             if (j && stack.cell == in.loot->stacks[lootOrder_[j - 1]].cell)
                 continue;
-            Vec feet{stack.cell.x + .5f, 0, stack.cell.y + .5f};
+            Vec feet{stack.cell.x + .5f, elevation(in.geometry.surface(stack.cell).floor),
+                     stack.cell.y + .5f};
             float depth = dot(sub(feet, out.camera.position), out.camera.forward);
             if (depth < nearPlane || depth > farPlane)
                 continue;
@@ -395,7 +409,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                                                                           : 6;
             if (icons_[icon] == UINT16_MAX)
                 throw std::invalid_argument("Missing prepared fixture marker");
-            Vec feet{entry.cell.x + .5f, 0, entry.cell.y + .5f};
+            Vec feet{entry.cell.x + .5f, elevation(in.geometry.surface(entry.cell).floor),
+                     entry.cell.y + .5f};
             const float depth = dot(sub(feet, out.camera.position), out.camera.forward);
             if (depth < nearPlane || depth > farPlane)
                 continue;
@@ -431,6 +446,12 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
                 triangle(out, v, PickingBuffer::empty);
             }
         }
+        for (const auto& decal : scene_.decals) {
+            const auto texture = assets_.named(decal.motif ? "decoration/vine" : "decoration/crest");
+            const auto& p = decal.vertices;
+            triangle(out, {p[0], p[1], p[2]}, PickingBuffer::empty, &assets_, texture, 16, true);
+            triangle(out, {p[0], p[2], p[3]}, PickingBuffer::empty, &assets_, texture, 16, true);
+        }
         constexpr unsigned faces[6][4]{{0, 1, 3, 2}, {4, 6, 7, 5}, {0, 2, 6, 4},
                                        {1, 5, 7, 3}, {2, 3, 7, 6}, {0, 4, 5, 1}};
         for (unsigned i = 0; i < out.doorCount; ++i) {
@@ -447,19 +468,43 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
     }
 }
 std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, int y) const noexcept {
-    if ((in.doors && in.doors->active()) || in.movement.transition.active() || x < 0 || x >= viewWidth ||
-        y < 0 || y >= viewHeight || y + .5f <= viewHeight * .34f)
+    if (!ready_ || map_ != &in.geometry.base() || (in.doors && in.doors->active()) ||
+        in.movement.transition.active() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight)
         return {};
-    const auto c = camera(in.movement);
-    const float depth = focal() * c.position.y / (y + .5f - viewHeight * .34f);
-    const float lateral = (x + .5f - viewWidth * .5f) * depth / focal();
-    if (depth < nearPlane || depth > farPlane)
+    if (in.geometry.world() != stamp_[0] || in.geometry.revision() != stamp_[1] ||
+        (in.doors ? in.doors->revision : 0) != stamp_[8])
         return {};
-    const Cell cell{int(std::floor(c.position.x + c.forward.x * depth + c.right.x * lateral)),
-                    int(std::floor(c.position.z + c.forward.z * depth + c.right.z * lateral))};
-    if (ready_ && depth > frame().picking.opaqueDepth(std::size_t(y) * viewWidth + x) + epsilon)
+    const auto c = camera(in.movement, in.geometry);
+    if (!sameCamera(c, frame().camera))
         return {};
-    return spellCell(in.geometry, in.movement.player, cell) ? std::optional<Cell>{cell} : std::nullopt;
+    const float lateral = (x + .5f - viewWidth * .5f) / focal(), vy = (viewHeight * .34f - y - .5f) / focal();
+    if (vy >= 0)
+        return {};
+    const float vx = c.forward.x + c.right.x * lateral, vz = c.forward.z + c.right.z * lateral;
+    float start = nearPlane;
+    for (unsigned visit = 0; visit < 64 && start < farPlane; ++visit) {
+        const float probe = start + 1e-5f;
+        const Cell cell{int(std::floor(c.position.x + vx * probe)),
+                        int(std::floor(c.position.z + vz * probe))};
+        float end = farPlane;
+        if (std::abs(vx) > 1e-8f)
+            end = std::min(end, ((vx > 0 ? cell.x + 1 : cell.x) - c.position.x) / vx);
+        if (std::abs(vz) > 1e-8f)
+            end = std::min(end, ((vz > 0 ? cell.y + 1 : cell.y) - c.position.z) / vz);
+        if (in.geometry.base().solid(cell))
+            return {};
+        const float d = (elevation(in.geometry.surface(cell).floor) - c.position.y) / vy;
+        if (d >= start - epsilon && d <= end + epsilon && d >= nearPlane && d <= farPlane) {
+            if (d > frame().picking.opaqueDepth(std::size_t(y) * viewWidth + x) + epsilon)
+                return {};
+            return spellCell(in.geometry, in.movement.player, cell) ? std::optional<Cell>{cell}
+                                                                    : std::nullopt;
+        }
+        if (end <= start)
+            return {};
+        start = end;
+    }
+    return {};
 }
 std::array<Vec, 4> corners(const Camera& c, const Billboard& b) noexcept {
     const float left = -b.anchorX * b.width, right = (1 - b.anchorX) * b.width,

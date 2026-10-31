@@ -148,7 +148,8 @@ void Navigation::update(Cell party) noexcept {
         }
         for (const int d : directions) {
             const auto next = c + forward(static_cast<Heading>(d));
-            if (!map_.npcAllowed(next) || next == party || actors_.occupiedSlots(next) == 15)
+            if (!map_.canStep(c, next) || !map_.npcAllowed(next) || next == party ||
+                actors_.occupiedSlots(next) == 15)
                 continue;
             const auto nextIndex = index(next);
             if (seen_[nextIndex])

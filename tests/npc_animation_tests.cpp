@@ -1,8 +1,8 @@
 #include "render/frame_pipeline.hpp"
 #include "render/transitions.hpp"
 #include "support/actor_fixtures.hpp"
-#include "support/combat_fixtures.hpp"
 #include "support/check.hpp"
+#include "support/combat_fixtures.hpp"
 #include "support/hybrid_fixtures.hpp"
 #include "support/npc_fixtures.hpp"
 #include "support/render_fixtures.hpp"
@@ -302,12 +302,17 @@ void staggeredIdle() {
     check(!animator.snapshot().frames[1].visible && !animator.snapshot().frames[1].flash,
           "Idle phase does not shift the 100 ms death flash lifetime");
 }
+// These cases use identical immutable art; bake its large perspective bank once.
+const SceneRenderer& animatedRenderer() {
+    static const SceneRenderer renderer(testMaterials(), {testAnimatedNpcAppearance()});
+    return renderer;
+}
 void triggeredAttacks() {
     const auto appearance = testAnimatedNpcAppearance();
     auto actors = world(NpcAnimation::Idle);
     const auto idleActors = world(NpcAnimation::Idle);
     NpcAnimator animator(actors, {npcTimings(appearance)}), idle(idleActors, {npcTimings(appearance)});
-    const SceneRenderer renderer(testMaterials(), {appearance});
+    const auto& renderer = animatedRenderer();
     Frame attackFrame, idleFrame;
     const auto id = actors.id(0);
     const auto hp = actors.actor(id)->hitPoints;
@@ -361,7 +366,7 @@ void sideContactAttacks() {
     const auto catalog = hybridCatalog(false);
     const auto appearance = testAnimatedNpcAppearance();
     const auto timings = npcTimings(appearance);
-    const SceneRenderer renderer(testMaterials(), {appearance});
+    const auto& renderer = animatedRenderer();
     Frame attack, idle;
     for (int heading = 0; heading < 4; ++heading) {
         const Player contact{{6, 6}, static_cast<Heading>(heading)};
@@ -369,7 +374,9 @@ void sideContactAttacks() {
         const Player start{contact.cell + f * -1, contact.heading};
         for (int side : {-1, 0, 1}) {
             for (int slot = 0; slot < 4; ++slot) {
-                NpcInstance npc{{0}, contact.cell + f + r * side, {slot % 2, slot / 2},
+                NpcInstance npc{{0},
+                                contact.cell + f + r * side,
+                                {slot % 2, slot / 2},
                                 static_cast<Heading>((heading + 1) % 4)};
                 npc.monster = catalog.findMonster("swordsman");
                 NpcWorld placements(room, start.cell, {"goblin"}, {npc});
@@ -413,7 +420,7 @@ void rendering() {
     const auto npcs = world(NpcAnimation::Attack);
     const auto idleWorld = world(NpcAnimation::Idle);
     NpcAnimator animator(npcs, {npcTimings(appearance)}), idle(idleWorld, {npcTimings(appearance)});
-    const SceneRenderer renderer(testMaterials(), {appearance});
+    const auto& renderer = animatedRenderer();
     Frame a, b, source, destination;
     const std::array<Player, 4> cameras{{{{3, 5}, Heading::North},
                                          {{3, 1}, Heading::South},

@@ -1,4 +1,5 @@
 #include "game/campaign.hpp"
+#include "world/environment_maps.hpp"
 #include <algorithm>
 #include <stdexcept>
 namespace blobber {
@@ -30,9 +31,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
                          std::uint32_t seed)
     : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
     auto& hub = locations_[0];
-    hub.authored.emplace(std::vector<std::string>{"#########", "#.......#", "#.......#", "#.......#",
-                                                  "#.......#", "#.......#", "#.......#", "#.......#",
-                                                  "#########"});
+    hub.authored.emplace(sanctuaryMap());
     hub.entry = {{4, 4}, Heading::East};
     hub.exit = hub.entry;
     hub.fixtures.count = 1;
@@ -148,7 +147,8 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
     if (!f || !stairs(f->kind) || r.fixture.revision != g.fixtures().revision() ||
         (g.fixtures().definition().discovery && !g.fixtures().known(r.fixture.id.slot)))
         return {false, false, "Stale or unknown stairs."};
-    if (!fixtureReachable(*f, g.movement().player.cell, g.movement().player.heading))
+    if (!fixtureReachable(*f, g.movement().player.cell, g.movement().player.heading) ||
+        !g.geometry().reach(g.movement().player.cell, f->cell))
         return {false, false, "Move closer and face the stairs."};
     if (const auto* reason = g.travelSafety())
         return {false, false, reason};
