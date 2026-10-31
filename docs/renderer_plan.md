@@ -1,7 +1,7 @@
 # Low-resolution 3D renderer: design and delivery roadmap
 
 Created: 2026-10-30. Last updated: 2026-10-31.
-Status: **Roadmap accepted; R01/R-A and R02 Accepted.**
+Status: **Roadmap accepted; R01/R-A and R02–R03 Accepted.**
 
 The user agreed to replace the prepared perspective-image world renderer with a
 low-resolution GPU 3D world, retaining billboard monster/item artwork and discrete
@@ -21,10 +21,10 @@ for the explicit, bounded elevation extensions described below.
 | --- | --- |
 | Latest accepted foundation | Campaign P-A/P-B and prior demo/automation slices; current renderer remains production |
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
-| Active slice | None; R02 — Production world rendering and assets accepted and closed |
+| Active slice | None; R03 — Billboards, picking and visual automation accepted and closed |
 | Awaiting review | None |
-| Next eligible slice | R03 — Billboards, picking and visual automation; eligible for planning |
-| Next action | Await instruction to plan R03; do not automatically implement it |
+| Next eligible slice | R04 — Doors, effects and campaign integration; eligible for planning |
+| Next action | Await instruction to plan R04; do not automatically implement it |
 | Blockers | None known; filtering, picking parity and performance require evidence from the slices |
 | Campaign status | Paused after P-B; do not start PC07 |
 
@@ -255,7 +255,7 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 | --- | --- | --- | --- | --- |
 | R01 | [Visual and motion proof](#r01-visual-and-motion-proof) | Accepted direction | Accepted (2026-10-31) | R-A |
 | R02 | [Production world rendering and assets](#r02-production-world-rendering-and-assets) | R01 accepted | Accepted (2026-10-31) | R-B |
-| R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Planned | R-B |
+| R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Accepted (2026-10-31) | R-B |
 | R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Planned | R-B |
 | R05 | [Heights, outdoor hub and decoration](#r05-heights-outdoor-hub-and-decoration) | R04 accepted | Planned | R-C |
 | R06 | [Production cutover and retirement](#r06-production-cutover-and-retirement) | R05 accepted | Planned | R-C |
@@ -365,7 +365,16 @@ Run strict replay/protocol checks affected by visibility; record version changes
 inspect corpse occlusion, pick up/drop an item and replay the same action sequence
 through windowless visual mode. Show correctly clipped health/status indicators.
 
-**Execution record:** Not started; depends on R02 acceptance.
+**Execution record:** **Accepted and closed** (2026-10-31). User approved implementation with
+“Implement the plan.” [Design](renderer_visibility_design.md),
+[verification/handoff](r03_verification.md) and [review gallery](screenshots/r03/index.html)
+record shared CPU/GPU billboards, full-pixel visibility, HUD clipping, explicit
+windowless backend and replay identities. Graphics 64/64 and headless 45/45 in
+Debug/Release, final affected checks/sanitizers/hidden GPU lifecycle and parity,
+zero tracked frame C++ allocations/uploads, 2,656-candidate stress and 403 identical
+Debug/Release captures pass. Legacy defaults remain; full integration stays R04.
+The user explicitly accepted R03: “slice accepted, record it in the plan doc”.
+R04 is eligible for separate planning, not started; milestone R-B remains Planned.
 
 ### R04: Doors, effects and campaign integration
 
@@ -502,6 +511,9 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-31 | R03 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R04 eligible for separate planning, not started; R-B remains Planned |
+| 2026-10-31 | R03 implemented; Ready for review | Shared billboards/CPU visibility and explicit windowless backend; evidence retained; normal defaults unchanged and acceptance pending |
+| 2026-10-31 | R03 detailed plan approved; implementation in progress | Explicit world visibility selector preserves legacy defaults; shared CPU/GPU transforms and mask-based visibility, no R04 work |
 | 2026-10-31 | R02 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R03 eligible for planning, not started; R-B remains Planned |
 | 2026-10-31 | R02 implemented and Ready for review | Approved design implemented; verification, production-asset captures and measurements retained; no gameplay cutover |
 | 2026-10-31 | R01 and R-A Accepted; R02 detailed plan approved for implementation | Explicit user acceptance followed by “Implement the plan”; [design](renderer_world_design.md) |
@@ -517,8 +529,12 @@ R01/R-A and R02 are Accepted. R02's [design](renderer_world_design.md),
 [verification](r02_verification.md) and [selected evidence](screenshots/r02/README.md)
 record the delivered slice. User acceptance closes R02 on 2026-10-31 and supersedes
 the pending-review status in its implementation handoff documents.
-R03 is the next eligible slice for planning; it has not started. Await instruction
-to plan it, then obtain detailed-plan approval before implementation. R-B remains
-Planned until its remaining slices are accepted. Do not add monsters or resume PC07.
+R03 is **Accepted and closed** (2026-10-31) under its
+[approved design](renderer_visibility_design.md). The user explicitly accepted it:
+“slice accepted, record it in the plan doc”. [Verification/handoff](r03_verification.md)
+and [gallery](screenshots/r03/index.html) retain the implementation, evidence and
+limitations unchanged; no additional interactive-review coverage is inferred.
+R04 is next eligible for separate planning when requested; it has not started.
+R-B remains Planned until its remaining slices are accepted. Do not add monsters or resume PC07.
 Keep legacy gameplay working and the supersampling/native-filtered quality policy.
 No commits or desktop input automation.

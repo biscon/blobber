@@ -1,5 +1,20 @@
 # System design
 
+R03 **Accepted and closed** (2026-10-31):
+[shared billboards and visibility](renderer_visibility_design.md), approved with
+“Implement the plan.” Current-art GPU bodies/shadows/items, continuous fitted
+transforms, CPU triangle/alpha depth/IDs, ground picking and native health/status
+clipping share one prepared snapshot. Windowless `--visibility world` is explicit
+and graphics-independent; normal gameplay/default visual mode stay legacy.
+[Verification/handoff](r03_verification.md) and [gallery](screenshots/r03/index.html):
+graphics Debug/Release 64/64 each, headless 45/45 each, affected final checks,
+sanitizers, hidden GPU parity/rollback, allocation/upload and capacity guards pass.
+403 Debug/Release captures match exactly. Per-view scratch is 4.60 MiB; the CPU
+visibility investigation target is met on the named reference machine. The user
+explicitly accepted R03: “slice accepted, record it in the plan doc”. Verification
+limits are unchanged; no additional human interactive or other-GPU coverage is inferred.
+R04 full effects/doors/campaign integration remains unstarted.
+
 R01 **Accepted and closed; milestone R-A Accepted** (2026-10-31):
 [visual and motion proof](renderer_probe_design.md), approved with “Implement the
 plan.” The isolated manual/hidden probe provides low-resolution GPU geometry,
@@ -14,7 +29,7 @@ The probe startup default now follows that preference. Detailed manual coverage
 and other GPU devices remain unverified; the user explicitly accepted R01 and R-A on 2026-10-31.
 Production gameplay, renderer, assets and saves remain unchanged.
 
-R02 **implemented; Ready for review** (2026-10-31):
+R02 **Accepted and closed** (2026-10-31):
 [production world rendering and assets](renderer_world_design.md). User approved
 the reviewed plan with “Implement the plan.” Bounded 8×8 chunk/material meshes,
 prepared mip/alpha textures, shared camera math, shader/mesh handles, staged GPU
@@ -24,11 +39,12 @@ on; off is native filtered. [Verification/handoff](r02_verification.md) and
 headless 43/43 each, focused final checks, CPU sanitizers, hidden GPU lifecycle and
 rollback, zero tracked frame C++ allocations/uploads, near-capacity stress and
 incremental multi-config publication checks pass. 81 world captures repeat exactly.
-Normal gameplay retains its renderer; R03 interaction and R04 complete integration
-remain deferred. R02 acceptance is pending; do not advance automatically.
+Normal gameplay retains its renderer. The user accepted R02 on 2026-10-31;
+R03 interaction is delivered for review under its separately approved design.
+Complete production integration remains R04.
 
-Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R03–R06
-remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
+Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R03 is
+Accepted; R04–R06 remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
 effects/doors/campaign integration, single-layer heights/outdoor hub/decoration and
 production cutover follow only through their own reviewed slices. Stacked cells are
 explicitly deferred. Existing implemented systems below remain authoritative until

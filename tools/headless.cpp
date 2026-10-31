@@ -2,6 +2,8 @@
 #include "assets/rules_loader.hpp"
 #include "automation/protocol.hpp"
 #include "automation/trace.hpp"
+#include "automation/world_visual.hpp"
+#include "render/world_visibility.hpp"
 #ifdef BLOBBER_HEADLESS_VISUAL
 #include "automation/capture.hpp"
 #include "automation/visual.hpp"
@@ -15,6 +17,8 @@ int main(int argc, char** argv) {
         std::filesystem::path assets = "assets", record, playback, capture, campaignSave;
         std::vector<std::size_t> operations;
         Mode mode = Mode::Diagnostic;
+        std::string visibility = "legacy";
+        bool visibilitySpecified = false;
         for (int i = 1; i < argc; ++i) {
             const std::string option = argv[i];
             if (option == "--capabilities") {
@@ -24,7 +28,9 @@ int main(int argc, char** argv) {
                 constexpr bool graphics = false;
 #endif
                 std::cout << Json{{"protocol", 1},
-                                  {"visual", graphics},
+                                  {"visual", true},
+                                  {"visibility_backends", graphics ? Json{"legacy", "world"} : Json{"world"}},
+                                  {"capture_visibility_backends", graphics ? Json{"legacy"} : Json::array()},
                                   {"capture", graphics},
                                   {"graphics_runtime", "unchecked"}}
                                  .dump()
@@ -32,7 +38,8 @@ int main(int argc, char** argv) {
                 return 0;
             }
             if (option == "--help") {
-                std::cout << "blobber_headless --assets DIR --mode diagnostic|visual [--record FILE | "
+                std::cout << "blobber_headless --assets DIR --mode diagnostic|visual [--visibility "
+                             "legacy|world] [--record FILE | "
                              "--replay FILE [--capture-dir NEW_DIR --capture-operation N (repeat up to 8)]]\n"
                              "[--campaign-save FILE] enables explicit isolated save/load; replay uses "
                              "recorded I/O.\n"
@@ -47,7 +54,10 @@ int main(int argc, char** argv) {
                 assets = value;
             else if (option == "--campaign-save")
                 campaignSave = std::filesystem::absolute(value);
-            else if (option == "--record")
+            else if (option == "--visibility" && (value == "legacy" || value == "world")) {
+                visibility = value;
+                visibilitySpecified = true;
+            } else if (option == "--record")
                 record = value;
             else if (option == "--replay")
                 playback = value;
@@ -65,6 +75,11 @@ int main(int argc, char** argv) {
             else
                 throw std::runtime_error("Unknown option or mode: " + option);
         }
+        if (visibilitySpecified && mode != Mode::Visual)
+            throw std::runtime_error("Visibility selection requires visual mode");
+        if (visibility == "world" && !capture.empty())
+            throw std::runtime_error("capture_unsupported: world visibility replay images require R04; use "
+                                     "world-preview captures");
         if (!record.empty() && !playback.empty())
             throw std::runtime_error("Recording and replay are exclusive");
         if ((!capture.empty() || !operations.empty()) &&
@@ -80,10 +95,25 @@ int main(int argc, char** argv) {
         void* context = nullptr;
         Json content = {{"catalog", fingerprintFile(assets / "rules/catalog.json")},
                         {"npc_definitions", std::to_string(definitions.definitionFingerprint)}};
+        std::unique_ptr<world_assets::CpuAssets> worldAssets;
+        std::unique_ptr<WorldVisualContext> worldVisual;
+        if (mode == Mode::Visual && visibility == "world") {
+            worldAssets =
+                std::make_unique<world_assets::CpuAssets>(world_assets::load(assets / "prepared/world"));
+            if (worldAssets->publication.definitions != definitions.definitionFingerprint)
+                throw std::runtime_error("World NPC definitions differ; rebuild world assets");
+            worldVisual =
+                std::make_unique<WorldVisualContext>(WorldVisualContext{*worldAssets, definitions.timings});
+            context = worldVisual.get();
+            factory = makeWorldVisual;
+            content["world_publication"] = std::to_string(worldAssets->publication.fingerprint);
+            content["world_format"] = world_assets::version;
+            content["world_appearance"] = 1;
+        }
 #ifdef BLOBBER_HEADLESS_VISUAL
         std::unique_ptr<SceneRenderer> renderer;
         std::unique_ptr<VisualContext> visual;
-        if (mode == Mode::Visual) {
+        if (mode == Mode::Visual && visibility == "legacy") {
             try {
                 renderer = loadVisualRenderer(assets, definitions);
             } catch (const std::exception& e) {
@@ -97,7 +127,7 @@ int main(int argc, char** argv) {
                 content[path] = fingerprintFile(assets / path);
         }
 #else
-        if (mode == Mode::Visual)
+        if (mode == Mode::Visual && visibility == "legacy")
             throw std::runtime_error("graphics_unavailable: configure BLOBBER_BUILD_GRAPHICS=ON");
 #endif
         std::error_code ec;
@@ -108,6 +138,11 @@ int main(int argc, char** argv) {
                              {"binary", fingerprintFile(ec ? std::filesystem::path(argv[0]) : executable)},
                              {"content", content}};
         Json runtimeHeader = header;
+        if (mode == Mode::Visual) {
+            runtimeHeader["visibility_backend"] = visibility;
+            runtimeHeader["visibility_version"] =
+                visibility == "world" ? world_render::visibilityVersion : "legacy-visibility-v1";
+        }
         if (!campaignSave.empty())
             runtimeHeader["campaign_persistence"] = 1;
         CampaignDisk campaignDisk(campaignSave);

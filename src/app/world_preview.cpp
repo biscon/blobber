@@ -1,4 +1,5 @@
 #include "app/world_preview.hpp"
+#include "app/world_interaction_preview.hpp"
 #include "assets/image.hpp"
 #include "generation/floor.hpp"
 #include "platform/presenter.hpp"
@@ -76,6 +77,8 @@ std::string driver() {
 } // namespace
 int runWorldPreview(const Options& o) {
     const bool diagnostic = !o.captureDirectory.empty() || !o.worldBenchmark.empty();
+    if (!diagnostic)
+        return runWorldInteractionPreview(o);
     const auto output = o.worldBenchmark.empty() ? o.captureDirectory : o.worldBenchmark;
     if (diagnostic) {
         if (std::filesystem::exists(output) && !std::filesystem::is_empty(output))
@@ -98,7 +101,6 @@ int runWorldPreview(const Options& o) {
     WorldRenderer renderer(resources, std::move(publication));
     renderer.supersampling(o.supersampling);
     const auto uploadMs = ms(upload);
-    unsigned selected = 0;
     Controller controller(starts[0]);
     const auto prep = Clock::now();
     renderer.stage(geometries[0], controller.state());
@@ -164,6 +166,7 @@ int runWorldPreview(const Options& o) {
                          {"mesh_texture_uploads", resources.transfers().uploads - beforeTransfers.uploads},
                          {"uploaded_bytes", resources.transfers().bytes - beforeTransfers.bytes}});
                 }
+        benchmarkWorldInteractions(o, resources, renderer, output);
     } else {
         Presenter presenter(resources, o.assets);
         if (!o.captureDirectory.empty()) {
@@ -206,53 +209,7 @@ int runWorldPreview(const Options& o) {
                 throw std::runtime_error("Staging changed active image");
             logicalCapture(resources, after, output / "retained-after-failure.png");
             report["failed_stage_retained_active"] = true;
-        } else {
-            SetWindowTitle(
-                "R02 world preview | W/S A/D Q/E | 2 native, 3 supersampled | Tab scene | Esc exit");
-            std::cout << "R02 development preview: movement and quality only; gameplay remains on the "
-                         "existing renderer.\n";
-            const auto title = [&] {
-                SetWindowTitle(renderer.supersampling()
-                                   ? "R02 world preview | Supersampling ON | 2 off, 3 on | W/S A/D Q/E | Tab "
-                                     "scene | Esc exit"
-                                   : "R02 world preview | Supersampling OFF (native filtered) | 2 off, 3 on "
-                                     "| W/S A/D Q/E | Tab scene | Esc exit");
-            };
-            title();
-            while (!WindowShouldClose() && !IsKeyPressed(KEY_ESCAPE)) {
-                if (IsKeyPressed(KEY_TWO)) {
-                    renderer.supersampling(false);
-                    title();
-                }
-                if (IsKeyPressed(KEY_THREE)) {
-                    renderer.supersampling(true);
-                    title();
-                }
-                if (IsKeyPressed(KEY_TAB)) {
-                    const auto next = 1 - selected;
-                    Controller replacement(starts[next]);
-                    try {
-                        renderer.stage(geometries[next], replacement.state());
-                        renderer.commit();
-                        selected = next;
-                        controller = std::move(replacement);
-                    } catch (const std::exception& e) {
-                        std::cerr << e.what() << '\n';
-                    }
-                }
-                if (IsWindowFocused()) {
-                    const std::array<int, 6> keys{KEY_W, KEY_S, KEY_A, KEY_D, KEY_Q, KEY_E};
-                    const std::array<Action, 6> actions{Action::Forward, Action::Back,     Action::Left,
-                                                        Action::Right,   Action::TurnLeft, Action::TurnRight};
-                    for (unsigned i = 0; i < 6; ++i)
-                        if (IsKeyPressed(keys[i]))
-                            controller.submit(geometries[selected], actions[i], true);
-                    controller.update(geometries[selected], std::min(GetFrameTime(), .1f));
-                }
-                const auto image = renderer.render(controller.state());
-                presenter.presentWorld(image.target, image.revision, controller.state(),
-                                       geometries[selected].base());
-            }
+            captureWorldInteractions(o, resources, renderer, presenter, output);
         }
     }
 #if defined(__unix__)

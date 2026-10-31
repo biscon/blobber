@@ -20,11 +20,31 @@ JSON at runtime. Image references in those definitions need not exist. C++17, CM
 Ninja and nlohmann/json are required; tests also use Python 3. System JSON is preferred
 with the existing pinned fallback. No new runtime package is required.
 
-`--mode visual` is available in the normal graphics build. Pass its prepared asset
+`--mode visual` defaults to the legacy backend, available in the normal graphics build. Pass its prepared asset
 directory, e.g. `--assets cmake-build-debug/assets`. It loads scene/NPC/loot banks and
 uses the ordinary CPU renderer and body picking. It creates no window, context,
 fonts or presentation surface; DISPLAY is unnecessary. Missing/incompatible banks
 are errors. Diagnostic mode uses core validation without body-visibility filtering.
+
+R03 adds the explicit `--mode visual --visibility world` backend in **both** graphics
+and graphics-disabled builds. Point `--assets` at a prepared world publication
+(for example `cmake-build-release/assets`); no source images, legacy perspective
+banks, display, window or context are required. This uses the same CPU depth/ID
+pipeline as the development world preview. The default remains `legacy`, keeping
+normal gameplay and default visual automation aligned until R04. `--visibility`
+is invalid in diagnostic mode. The Python client's constructor accepts the keyword
+`visibility="world"`; its CLI accepts the same selector. Local MCP session creation
+keeps its existing default; replay jobs forward the backend recorded in a trace.
+
+Capabilities include `visibility_backends` and `capture_visibility_backends`;
+`visual` means at least one visual backend was compiled. Capture availability is
+separate. World traces record `visibility_backend`, `visibility_version` equal to
+`world-visibility-v1`, publication fingerprint, format 1 and appearance revision 1.
+Strict replay rejects changed visibility identity before execution. Protocol and
+save schemas remain unchanged. World-backend replay image capture returns
+`capture_unsupported` before creating a window or output directory; full effects,
+doors and replay-image integration remain R04. R03 images use the hidden
+`blobber --development --capture-world NEW_DIR` development capture path.
 
 ## Transport and identities
 

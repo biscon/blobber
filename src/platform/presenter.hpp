@@ -13,7 +13,7 @@ class Presenter {
   public:
     Presenter(GpuResources& resources, const std::filesystem::path& assets);
     void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
-                      const HudSnapshot* hud = nullptr);
+                      const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr);
     void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed,
                  const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
                  const generation::DiagnosticView* generation = nullptr, bool reveal = false);

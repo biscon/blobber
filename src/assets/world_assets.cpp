@@ -338,3 +338,90 @@ std::vector<unsigned char> Publication::read(unsigned index, bool alpha) const {
     return data;
 }
 } // namespace blobber::world_assets
+
+namespace blobber::world_assets {
+CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
+    require(publication.textures.size() <= textureCapacity && publication.appearances.size() <= 32 &&
+            publication.anchors.size() == publication.textures.size() &&
+            publication.alphaBytes <= alphaBudget && publication.textureBytes <= textureBudget);
+    std::uint64_t totalAlpha = 0;
+    for (const auto& t : publication.textures) {
+        require(t.width && t.height && t.width <= 4096 && t.height <= 4096 &&
+                t.alphaBytes == (t.clamp ? std::uint64_t(t.width) * t.height : 0));
+        boundedAdd(totalAlpha, t.alphaBytes, alphaBudget);
+    }
+    require(totalAlpha == publication.alphaBytes);
+    for (const auto& anchor : publication.anchors)
+        validAnchor(anchor);
+    for (const auto& appearance : publication.appearances) {
+        require(std::isfinite(appearance.width) && std::isfinite(appearance.height) && appearance.width > 0 &&
+                appearance.width <= .5f && appearance.height > 0 && appearance.height <= 1);
+        NpcTimings timings{};
+        for (unsigned c = 0; c < npcAnimationCount; ++c) {
+            const auto& clip = appearance.clips[c];
+            timings[c] = clip.timing;
+            require(std::isfinite(clip.width) && clip.width >= 0 && clip.width <= 1);
+            for (const auto& side : clip.textures)
+                for (unsigned f = 0; f < side.size(); ++f)
+                    require(side[f] == UINT16_MAX ||
+                            (f < clip.timing.count && side[f] < publication.textures.size() &&
+                             publication.textures[side[f]].clamp));
+        }
+        validateNpcTimings(timings);
+        for (unsigned c = 0; c < npcAnimationCount; ++c)
+            for (unsigned side = 0; side < 4; ++side)
+                if (c != unsigned(NpcAnimation::Attack) || side == 0)
+                    for (unsigned f = 0; f < timings[c].count; ++f)
+                        require(appearance.clips[c].textures[side][f] != UINT16_MAX);
+    }
+    masks.reserve(publication.textures.size());
+    bounds.reserve(publication.textures.size());
+    for (unsigned i = 0; i < publication.textures.size(); ++i) {
+        const auto& t = publication.textures[i];
+        masks.push_back(publication.read(i, true));
+        AlphaBounds b{t.width, t.height, 0, 0};
+        if (t.clamp)
+            for (unsigned y = 0; y < t.height; ++y)
+                for (unsigned x = 0; x < t.width; ++x)
+                    if (masks.back()[std::size_t(y) * t.width + x]) {
+                        b.left = std::min(b.left, x);
+                        b.top = std::min(b.top, y);
+                        b.right = std::max(b.right, x + 1);
+                        b.bottom = std::max(b.bottom, y + 1);
+                    }
+        bounds.push_back(b);
+    }
+    for (unsigned i = 0; i < publication.appearances.size(); ++i) {
+        const auto& a = publication.appearances[i];
+        for (const auto& c : a.clips)
+            for (const auto& side : c.textures)
+                for (auto t : side)
+                    if (t != UINT16_MAX) {
+                        const auto anchor = publication.anchors[t];
+                        edgeHalfWidths[i] = std::max(edgeHalfWidths[i], (c.width ? c.width : a.width) *
+                                                                            std::max(anchor.x, 1 - anchor.x));
+                    }
+    }
+    if (bytes() > 68 * MiB)
+        throw std::runtime_error("World shared CPU storage budget exceeded");
+}
+unsigned CpuAssets::named(const char* name) const {
+    for (unsigned i = 0; i < publication.textures.size(); ++i)
+        if (publication.textures[i].name == name)
+            return i;
+    throw std::invalid_argument(std::string("Missing world sprite: ") + name);
+}
+std::size_t CpuAssets::bytes() const noexcept {
+    std::size_t n =
+        sizeof(*this) + masks.capacity() * sizeof(masks[0]) + bounds.capacity() * sizeof(AlphaBounds) +
+        publication.textures.capacity() * sizeof(Texture) + publication.anchors.capacity() * sizeof(Anchor) +
+        publication.appearances.capacity() * sizeof(Appearance);
+    for (const auto& m : masks)
+        n += m.capacity();
+    for (const auto& t : publication.textures)
+        n += t.name.capacity();
+    for (const auto& a : publication.appearances)
+        n += a.id.capacity();
+    return n;
+}
+} // namespace blobber::world_assets

@@ -11,9 +11,20 @@ class PickingBuffer {
   public:
     static constexpr std::uint16_t fixtureBase = NpcWorld::maxInstances + lootCapacity;
     static constexpr std::uint16_t empty = UINT16_MAX;
-    PickingBuffer() : pixels_(std::make_unique<std::uint16_t[]>(viewWidth * viewHeight)) { clear(); }
+    explicit PickingBuffer(bool fullDepth = false)
+        : pixels_(std::make_unique<std::uint16_t[]>(viewWidth * viewHeight)) {
+        if (fullDepth) {
+            pixelDepth_ = std::make_unique<float[]>(viewWidth * viewHeight);
+            opaqueDepth_ = std::make_unique<float[]>(viewWidth * viewHeight);
+        }
+        clear();
+    }
     void clear() noexcept {
         std::fill_n(pixels_.get(), viewWidth * viewHeight, empty);
+        if (pixelDepth_) {
+            std::fill_n(pixelDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
+            std::fill_n(opaqueDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
+        }
         targets_ = {};
         badgeAnchors_ = {};
         bodyDepth_.fill(std::numeric_limits<float>::infinity());
@@ -32,10 +43,30 @@ class PickingBuffer {
         if (owner >= bodyDepth_.size() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight)
             return false;
         const auto depth = bodyDepth_[owner];
-        if (depth >= wallDepth_[x])
+        if (depth >= (opaqueDepth_ ? opaqueDepth_[y * viewWidth + x] : wallDepth_[x]))
             return false;
         const auto body = slot(x, y);
+        if (pixelDepth_)
+            return body == owner || pixelDepth_[y * viewWidth + x] > depth;
         return body == owner || body >= bodyDepth_.size() || bodyDepth_[body] > depth;
+    }
+    bool fullDepth() const noexcept { return bool(pixelDepth_); }
+    void copyRaster(const PickingBuffer& other) noexcept {
+        std::copy_n(other.pixels_.get(), viewWidth * viewHeight, pixels_.get());
+        std::copy_n(other.pixelDepth_.get(), viewWidth * viewHeight, pixelDepth_.get());
+        std::copy_n(other.opaqueDepth_.get(), viewWidth * viewHeight, opaqueDepth_.get());
+    }
+    float depth(std::size_t pixel) const noexcept {
+        return pixelDepth_ ? pixelDepth_[pixel] : std::numeric_limits<float>::infinity();
+    }
+    float opaqueDepth(std::size_t pixel) const noexcept {
+        return opaqueDepth_ ? opaqueDepth_[pixel] : std::numeric_limits<float>::infinity();
+    }
+    void writeDepth(std::size_t pixel, std::uint16_t id, float depth, bool opaque = false) noexcept {
+        pixels_[pixel] = id;
+        pixelDepth_[pixel] = depth;
+        if (opaque)
+            opaqueDepth_[pixel] = depth;
     }
     void write(std::size_t pixel, std::uint16_t slot) noexcept { pixels_[pixel] = slot; }
     std::uint16_t slot(int x, int y) const noexcept {
@@ -109,6 +140,7 @@ class PickingBuffer {
 
   private:
     std::unique_ptr<std::uint16_t[]> pixels_;
+    std::unique_ptr<float[]> pixelDepth_, opaqueDepth_;
     TargetSnapshot targets_;
     std::uint64_t lootWorld_ = 0, fixtureWorld_ = 0;
     std::array<Cell, lootCapacity> lootAnchors_{};

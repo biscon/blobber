@@ -1,0 +1,446 @@
+{
+  "active_staged_cpu_bytes": 41079089,
+  "active_staged_gpu_estimated_bytes": 174954772,
+  "cpu_bytes": 36220273,
+  "gpu_estimated_bytes": 173796372,
+  "samples": 600,
+  "supersampling": true,
+  "trials": [
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "elapsed": {
+        "p50_ms": 9e-05,
+        "p95_ms": 0.0001,
+        "p99_ms": 0.000101
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 2e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "synchronized": false,
+      "trial": 0,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 3e-05,
+        "p95_ms": 3.1e-05,
+        "p99_ms": 4e-05
+      },
+      "workload": "cached_idle"
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "elapsed": {
+        "p50_ms": 9e-05,
+        "p95_ms": 0.0001,
+        "p99_ms": 0.000101
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 2e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "synchronized": false,
+      "trial": 1,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 3e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "workload": "cached_idle"
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "elapsed": {
+        "p50_ms": 9e-05,
+        "p95_ms": 9.1e-05,
+        "p99_ms": 0.0001
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 2e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "synchronized": false,
+      "trial": 2,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 3e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "workload": "cached_idle"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 15000,
+      "elapsed": {
+        "p50_ms": 0.298006,
+        "p95_ms": 0.32667,
+        "p99_ms": 0.509281
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.022752,
+        "p95_ms": 0.030397,
+        "p99_ms": 0.04322
+      },
+      "synchronized": false,
+      "trial": 0,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.27314,
+        "p95_ms": 0.295713,
+        "p99_ms": 0.470609
+      },
+      "workload": "animation"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 15000,
+      "elapsed": {
+        "p50_ms": 0.297776,
+        "p95_ms": 0.309097,
+        "p99_ms": 0.335126
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.022763,
+        "p95_ms": 0.030537,
+        "p99_ms": 0.044483
+      },
+      "synchronized": false,
+      "trial": 1,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.27285,
+        "p95_ms": 0.281676,
+        "p99_ms": 0.290773
+      },
+      "workload": "animation"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 15000,
+      "elapsed": {
+        "p50_ms": 0.297666,
+        "p95_ms": 0.31057,
+        "p99_ms": 0.341608
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.022752,
+        "p95_ms": 0.030587,
+        "p99_ms": 0.044202
+      },
+      "synchronized": false,
+      "trial": 2,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.272819,
+        "p95_ms": 0.284942,
+        "p99_ms": 0.301272
+      },
+      "workload": "animation"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 14076,
+      "elapsed": {
+        "p50_ms": 0.901233,
+        "p95_ms": 1.038158,
+        "p99_ms": 1.122095
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.023484,
+        "p95_ms": 0.031368,
+        "p99_ms": 0.042279
+      },
+      "synchronized": false,
+      "trial": 0,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.876987,
+        "p95_ms": 1.010738,
+        "p99_ms": 1.099082
+      },
+      "workload": "motion"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 14076,
+      "elapsed": {
+        "p50_ms": 0.901594,
+        "p95_ms": 1.045633,
+        "p99_ms": 1.122065
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.023484,
+        "p95_ms": 0.03249,
+        "p99_ms": 0.044073
+      },
+      "synchronized": false,
+      "trial": 1,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.877248,
+        "p95_ms": 1.021979,
+        "p99_ms": 1.099212
+      },
+      "workload": "motion"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 14076,
+      "elapsed": {
+        "p50_ms": 0.898038,
+        "p95_ms": 1.045883,
+        "p99_ms": 1.120152
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.023403,
+        "p95_ms": 0.03237,
+        "p99_ms": 0.042169
+      },
+      "synchronized": false,
+      "trial": 2,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.873211,
+        "p95_ms": 1.023181,
+        "p99_ms": 1.093252
+      },
+      "workload": "motion"
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "elapsed": {
+        "p50_ms": 0.00012,
+        "p95_ms": 0.000121,
+        "p99_ms": 0.00013
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 2e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "synchronized": true,
+      "trial": 0,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 3e-05,
+        "p95_ms": 4e-05,
+        "p99_ms": 4e-05
+      },
+      "workload": "cached_idle"
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "elapsed": {
+        "p50_ms": 0.00012,
+        "p95_ms": 0.000121,
+        "p99_ms": 0.000131
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 2e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "synchronized": true,
+      "trial": 1,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 3e-05,
+        "p95_ms": 4e-05,
+        "p99_ms": 4e-05
+      },
+      "workload": "cached_idle"
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "elapsed": {
+        "p50_ms": 0.00012,
+        "p95_ms": 0.000121,
+        "p99_ms": 0.00013
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 2e-05,
+        "p95_ms": 3e-05,
+        "p99_ms": 3.1e-05
+      },
+      "synchronized": true,
+      "trial": 2,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 3e-05,
+        "p95_ms": 4e-05,
+        "p99_ms": 4e-05
+      },
+      "workload": "cached_idle"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 15000,
+      "elapsed": {
+        "p50_ms": 0.347449,
+        "p95_ms": 0.361475,
+        "p99_ms": 0.442226
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.022782,
+        "p95_ms": 0.025678,
+        "p99_ms": 0.033122
+      },
+      "synchronized": true,
+      "trial": 0,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.272439,
+        "p95_ms": 0.280944,
+        "p99_ms": 0.291935
+      },
+      "workload": "animation"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 15000,
+      "elapsed": {
+        "p50_ms": 0.347709,
+        "p95_ms": 0.36965,
+        "p99_ms": 0.548445
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.022833,
+        "p95_ms": 0.025357,
+        "p99_ms": 0.034985
+      },
+      "synchronized": true,
+      "trial": 1,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.272399,
+        "p95_ms": 0.283349,
+        "p99_ms": 0.28892
+      },
+      "workload": "animation"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 15000,
+      "elapsed": {
+        "p50_ms": 0.347849,
+        "p95_ms": 0.381433,
+        "p99_ms": 0.502258
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.022853,
+        "p95_ms": 0.02682,
+        "p99_ms": 0.033031
+      },
+      "synchronized": true,
+      "trial": 2,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.272489,
+        "p95_ms": 0.281425,
+        "p99_ms": 0.288018
+      },
+      "workload": "animation"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 14076,
+      "elapsed": {
+        "p50_ms": 0.987745,
+        "p95_ms": 1.208006,
+        "p99_ms": 1.440541
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.023504,
+        "p95_ms": 0.028493,
+        "p99_ms": 0.04302
+      },
+      "synchronized": true,
+      "trial": 0,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.871427,
+        "p95_ms": 1.018021,
+        "p99_ms": 1.093963
+      },
+      "workload": "motion"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 14076,
+      "elapsed": {
+        "p50_ms": 1.094665,
+        "p95_ms": 1.361753,
+        "p99_ms": 1.785956
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.023484,
+        "p95_ms": 0.029535,
+        "p99_ms": 0.041979
+      },
+      "synchronized": true,
+      "trial": 1,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.869745,
+        "p95_ms": 1.012972,
+        "p99_ms": 1.087732
+      },
+      "workload": "motion"
+    },
+    {
+      "cache_hits": 0,
+      "draws": 14076,
+      "elapsed": {
+        "p50_ms": 1.122005,
+        "p95_ms": 1.609566,
+        "p99_ms": 2.244602
+      },
+      "mesh_texture_uploads": 0,
+      "submission": {
+        "p50_ms": 0.023484,
+        "p95_ms": 0.029535,
+        "p99_ms": 0.042149
+      },
+      "synchronized": true,
+      "trial": 2,
+      "uploaded_bytes": 0,
+      "visibility": {
+        "p50_ms": 0.869484,
+        "p95_ms": 1.012581,
+        "p99_ms": 1.083673
+      },
+      "workload": "motion"
+    }
+  ],
+  "visibility": "world-visibility-v1",
+  "visibility_scratch_bytes": 4827808,
+  "warmup": 120,
+  "workload": "R03 isolated 11x11 room, five current-art actors"
+}

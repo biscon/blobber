@@ -13,16 +13,30 @@ namespace blobber {
 namespace {
 constexpr const char* vertex = R"(#version 330
 in vec3 vertexPosition;in vec2 vertexTexCoord;in vec3 vertexNormal;
-uniform mat4 mvp;uniform mat4 matView;
+uniform mat4 mvp;uniform mat4 matView;uniform mat4 matModel;
 out vec2 uv;out vec3 normal;out float depth;
-void main(){uv=vertexTexCoord;normal=vertexNormal;depth=-(matView*vec4(vertexPosition,1)).z;gl_Position=mvp*vec4(vertexPosition,1);})";
+void main(){uv=vertexTexCoord;normal=mat3(matModel)*vertexNormal;vec4 p=matModel*vec4(vertexPosition,1);depth=-(matView*p).z;gl_Position=mvp*p;})";
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;out vec4 finalColor;
-uniform sampler2D texture0;uniform vec3 forward;
-void main(){vec4 c=texture(texture0,uv);
+uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;
+void main(){if(idPass!=0){finalColor=idColor;return;}vec4 c=texture(texture0,uv);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
 float light=face/(1.0+0.115*depth+0.015*depth*depth);float fog=clamp((depth-9.4)/3.5,0.0,1.0);
 finalColor=vec4(c.rgb*light*(1.0-fog)+vec3(15,18,20)/255.0*fog,1);})";
+constexpr const char* billboardFragment = R"(#version 330
+in vec2 uv;in float depth;out vec4 finalColor;
+uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
+void main(){
+float fog=clamp((depth-9.4)/3.5,0.0,1.0);
+if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
+ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(uv*vec2(size))),ivec2(0),size-1);
+float base=texelFetch(texture0,p,0).a;bool covered=base*255.0+0.01>=float(threshold);
+vec4 c=texture(texture0,uv);
+if(kind==2){if(covered||c.a<=0.001)discard;}else{if(!covered)discard;}
+if(kind==4){finalColor=idColor;return;}
+float light=1.0/(1.0+0.115*depth+0.015*depth*depth);
+finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+vec3(15,18,20)/255.0*fog*c.a,c.a);
+})";
 constexpr const char* resolveFragment = R"(#version 330
 in vec2 fragTexCoord;out vec4 finalColor;uniform sampler2D texture0;
 void main(){ivec2 p=clamp(ivec2(fragTexCoord*vec2(500,282)),ivec2(0),ivec2(499,281))*2;
@@ -51,7 +65,10 @@ int anisotropy() {
 }
 } // namespace
 WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publication)
-    : resources_(r), publication_(std::move(publication)) {
+    : WorldRenderer(r, std::make_shared<const world_assets::CpuAssets>(std::move(publication))) {}
+WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets::CpuAssets> assets)
+    : resources_(r), assets_(std::move(assets)),
+      publication_(assets_ ? assets_->publication : throw std::invalid_argument("Missing world CPU assets")) {
     if (publication_.textures.size() > world_assets::textureCapacity ||
         publication_.textureBytes > world_assets::textureBudget ||
         publication_.alphaBytes > world_assets::alphaBudget)
@@ -72,7 +89,6 @@ WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publicat
         throw std::invalid_argument("World publication byte totals differ");
     anisotropy_ = blobber::anisotropy();
     textures_.reserve(publication_.textures.size());
-    alpha_.reserve(publication_.textures.size());
     for (unsigned i = 0; i < publication_.textures.size(); ++i) {
         const auto& t = publication_.textures[i];
         auto pixels = publication_.read(i);
@@ -90,7 +106,6 @@ WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publicat
                 throw std::runtime_error("World material capacity exceeded");
             materials_[materialCount_++] = textures_.back().get();
         }
-        alpha_.push_back(publication_.read(i, true));
     }
     world_ = {r, r.createShader(vertex, fragment)};
     resolve_ = {r, r.createShader(nullptr, resolveFragment)};
@@ -98,10 +113,13 @@ WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publicat
     mvp_ = GetShaderLocation(shader, "mvp");
     view_ = GetShaderLocation(shader, "matView");
     forward_ = GetShaderLocation(shader, "forward");
+    model_ = GetShaderLocation(shader, "matModel");
+    idMode_ = GetShaderLocation(shader, "idPass");
+    idColor_ = GetShaderLocation(shader, "idColor");
     if (mvp_ < 0 || view_ < 0 || forward_ < 0)
         throw std::runtime_error("World shader interface unavailable");
     high_ = {r, r.createTarget(1000, 564)};
-    if (cpuBytes() > 68u * world_assets::MiB)
+    if (assets_->bytes() > 68u * world_assets::MiB)
         throw std::runtime_error("World shared CPU storage budget exceeded");
 }
 void WorldRenderer::stage(GeometryView geometry, const MovementState& state, world_render::Surfaces surfaces,
@@ -127,6 +145,72 @@ void WorldRenderer::stage(GeometryView geometry, const MovementState& state, wor
                    std::chrono::duration<double, std::milli>(drawn - uploaded).count()};
     staged_ = std::move(candidate);
 }
+void WorldRenderer::prepareBillboards() {
+    if (billboard_)
+        return;
+    GpuLease<ShaderHandle> shader(resources_, resources_.createShader(vertex, billboardFragment));
+    GpuLease<MeshHandle> quad(resources_, resources_.createMesh(world_render::billboardMesh()));
+    GpuLease<MeshHandle> proxy(resources_, resources_.createMesh(world_render::proxyMesh()));
+    constexpr const char* names[]{"mvp", "matView", "matModel", "kind", "threshold", "flash", "idColor"};
+    std::array<int, 7> locations{};
+    for (unsigned i = 0; i < locations.size(); ++i) {
+        locations[i] = GetShaderLocation(resources_.shader(shader.get()), names[i]);
+        if (locations[i] < 0)
+            throw std::runtime_error("Billboard shader interface unavailable");
+    }
+    billboardLocations_ = locations;
+    billboard_ = std::move(shader);
+    quad_ = std::move(quad);
+    proxy_ = std::move(proxy);
+}
+void WorldRenderer::stage(const world_render::FrameInput& in) {
+    if (staged_)
+        throw std::runtime_error("A world scene is already staged; commit or cancel it first");
+    const bool hadBillboards = bool(billboard_);
+    try {
+        prepareBillboards();
+        stage(GeometryView(in.geometry.base()), in.movement);
+        staged_->visibility = std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
+        staged_->visibility->update(in);
+        render(*staged_, in.movement, &staged_->visibility->frame());
+        resources_.finishPreparation();
+        staged_->publishedPicking = staged_->visibility->picking();
+        if (cpuBytes() > 352u * world_assets::MiB || gpuBytes() > 352u * world_assets::MiB)
+            throw std::runtime_error("World active/staged budget exceeded");
+    } catch (...) {
+        staged_.reset();
+        if (!hadBillboards) {
+            proxy_.reset();
+            quad_.reset();
+            billboard_.reset();
+        }
+        throw;
+    }
+}
+WorldImage WorldRenderer::render(const world_render::FrameInput& in) {
+    if (!active_ || !active_->visibility)
+        throw std::logic_error("No active interactive world scene");
+    using Clock = std::chrono::steady_clock;
+    const auto start = measure_ ? Clock::now() : Clock::time_point{};
+    active_->visibility->update(in);
+    const auto prepared = measure_ ? Clock::now() : Clock::time_point{};
+    const auto result = render(*active_, in.movement, &active_->visibility->frame());
+    if (measure_) {
+        stats.visibilityMs = std::chrono::duration<double, std::milli>(prepared - start).count();
+        stats.submissionMs = std::chrono::duration<double, std::milli>(Clock::now() - prepared).count();
+    }
+    active_->publishedPicking = active_->visibility->picking();
+    return result;
+}
+void WorldRenderer::diagnosticIds(TargetHandle destination) {
+    if (!active_ || !active_->visibility)
+        throw std::logic_error("No world visibility snapshot for diagnostic IDs");
+    const auto& t = resources_.target(destination);
+    if (t.texture.width != viewWidth || t.texture.height != viewHeight ||
+        t.id == resources_.target(active_->output.get()).id || t.id == resources_.target(high_.get()).id)
+        throw std::invalid_argument("Diagnostic IDs require a separate logical target");
+    render(*active_, active_->movement, &active_->visibility->frame(), destination);
+}
 bool WorldRenderer::commit() noexcept {
     if (!staged_)
         return false;
@@ -140,23 +224,27 @@ WorldImage WorldRenderer::image() const noexcept {
 WorldImage WorldRenderer::render(const MovementState& state) {
     if (!active_)
         throw std::logic_error("No active world scene");
+    if (active_->visibility)
+        throw std::logic_error("Interactive world rendering requires matching frame input");
     return render(*active_, state);
 }
-WorldImage WorldRenderer::render(View& v, const MovementState& state) {
+WorldImage WorldRenderer::render(View& v, const MovementState& state, const world_render::WorldFrame* frame,
+                                 TargetHandle ids) {
     const auto camera = world_render::camera(state);
     stats = {};
-    if (v.ready && v.quality == supersampling_ && world_render::sameCamera(camera, v.last)) {
+    if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
+        v.quality == supersampling_ && world_render::sameCamera(camera, v.last)) {
         stats.cached = true;
         return {v.output.get(), v.revision};
     }
     world_render::cull(v.cpu, camera, draws_);
     stats.chunks = draws_.tested;
-    const auto& target = resources_.target(supersampling_ ? high_.get() : v.output.get());
+    const auto& target = resources_.target(ids ? ids : supersampling_ ? high_.get() : v.output.get());
     const auto shader = resources_.shader(world_.get());
     // All checked resource lookups happen before entering a render pass.
     (void)resources_.mesh(v.mesh.get());
     BeginTextureMode(target);
-    ClearBackground({15, 18, 20, 255});
+    ClearBackground(ids ? Color{255, 255, 0, 255} : Color{15, 18, 20, 255});
     Camera3D rc{
         {camera.position.x, camera.position.y, camera.position.z},
         {camera.position.x + camera.forward.x, camera.position.y, camera.position.z + camera.forward.z},
@@ -175,6 +263,12 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state) {
     rlSetUniformMatrix(view_, rlGetMatrixModelview());
     rlSetUniformMatrix(mvp_, MatrixMultiply(rlGetMatrixModelview(), projection));
     rlSetUniform(forward_, &camera.forward, SHADER_UNIFORM_VEC3, 1);
+    const auto identity = MatrixIdentity();
+    rlSetUniformMatrix(model_, identity);
+    const int idPass = ids ? 1 : 0;
+    const float emptyColor[]{1, 1, 0, 1};
+    rlSetUniform(idMode_, &idPass, SHADER_UNIFORM_INT, 1);
+    rlSetUniform(idColor_, emptyColor, SHADER_UNIFORM_VEC4, 1);
     rlActiveTextureSlot(0);
     rlEnableDepthTest();
     rlEnableDepthMask();
@@ -185,6 +279,25 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state) {
         resources_.draw(v.mesh.get(), range.first, range.count);
         ++stats.draws;
     }
+    if (frame) {
+        for (unsigned i = 0; i < frame->proxyCount; ++i) {
+            const auto cell = frame->proxies[i];
+            const auto model = MatrixTranslate(float(cell.x), 0, float(cell.y));
+            rlSetUniformMatrix(model_, model);
+            const auto id = frame->proxyIds[i];
+            const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
+            rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
+            rlEnableTexture(resources_.texture(materials_[0]).id);
+            // Proxy winding is intentionally double-sided for the current-cell boundary.
+            rlDisableBackfaceCulling();
+            resources_.draw(proxy_.get(), 0, 36);
+            ++stats.draws;
+        }
+        const auto vp = MatrixMultiply(rlGetMatrixModelview(), projection);
+        const auto view = rlGetMatrixModelview();
+        const auto a = MatrixToFloatV(vp), b = MatrixToFloatV(view);
+        drawBillboards(*frame, a.v, b.v, bool(ids));
+    }
     rlDisableTexture();
     rlDisableShader();
     rlDisableVertexArray();
@@ -192,7 +305,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state) {
     rlDisableVertexBufferElement();
     EndMode3D();
     EndTextureMode();
-    if (supersampling_) {
+    if (!ids && supersampling_) {
         BeginTextureMode(resources_.target(v.output.get()));
         ClearBackground(BLANK);
         BeginShaderMode(resources_.shader(resolve_.get()));
@@ -206,32 +319,97 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state) {
     rlDisableDepthTest();
     rlEnableBackfaceCulling();
     rlSetBlendMode(BLEND_ALPHA);
+    if (ids)
+        return {ids, frame ? frame->revision : 1};
+    v.contentRevision = frame ? frame->revision : 0;
+    v.movement = state;
     v.last = camera;
     v.quality = supersampling_;
     v.ready = true;
     v.revision = ++revision_;
     return {v.output.get(), v.revision};
 }
+void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const float* vp, const float* view,
+                                   bool ids) {
+    Matrix projection{}, cameraView{};
+    // raymath's field declaration order differs from its column-major float representation.
+    auto matrix = [](const float* v) {
+        return Matrix{v[0], v[4], v[8],  v[12], v[1], v[5], v[9],  v[13],
+                      v[2], v[6], v[10], v[14], v[3], v[7], v[11], v[15]};
+    };
+    projection = matrix(vp);
+    cameraView = matrix(view);
+    const auto shader = resources_.shader(billboard_.get());
+    rlSetBlendMode(ids ? BLEND_ALPHA : BLEND_ALPHA_PREMULTIPLY);
+    rlEnableShader(shader.id);
+    rlSetUniformMatrix(billboardLocations_[0], projection);
+    rlSetUniformMatrix(billboardLocations_[1], cameraView);
+    const int modelLoc = billboardLocations_[2], kindLoc = billboardLocations_[3],
+              thresholdLoc = billboardLocations_[4], flashLoc = billboardLocations_[5],
+              colorLoc = billboardLocations_[6];
+    rlDisableBackfaceCulling();
+    auto draw = [&](const Matrix& model, int kind, int threshold, bool flash, std::uint16_t id) {
+        const int f = flash ? 1 : 0;
+        const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
+        rlSetUniformMatrix(modelLoc, model);
+        rlSetUniform(kindLoc, &kind, SHADER_UNIFORM_INT, 1);
+        rlSetUniform(thresholdLoc, &threshold, SHADER_UNIFORM_INT, 1);
+        rlSetUniform(flashLoc, &f, SHADER_UNIFORM_INT, 1);
+        rlSetUniform(colorLoc, color, SHADER_UNIFORM_VEC4, 1);
+        resources_.draw(quad_.get(), 0, 6);
+        ++stats.draws;
+    };
+    if (!ids) {
+        rlDisableDepthMask();
+        for (unsigned i = 0; i < frame.count; ++i) {
+            const auto& b = frame.billboards[i];
+            if (!b.shadowRadius)
+                continue;
+            const auto model =
+                MatrixMultiply(MatrixMultiply(MatrixScale(2 * b.shadowRadius, 2 * b.shadowRadius, 1),
+                                              MatrixRotateX(world_render::pi / 2)),
+                               MatrixTranslate(b.feet.x, .001f, b.feet.z - b.shadowRadius));
+            draw(model, 3, 1, false, 0);
+        }
+    }
+    for (unsigned i = 0; i < frame.count; ++i) {
+        const auto& b = frame.billboards[i];
+        const auto foot = world_render::project(frame.camera, b.feet);
+        const float scale = world_render::focal() / b.depth;
+        if (foot.x + (1 - b.anchorX) * b.width * scale < 0 ||
+            foot.x - b.anchorX * b.width * scale > viewWidth ||
+            foot.y - b.anchorY * b.height * scale > viewHeight ||
+            foot.y + (1 - b.anchorY) * b.height * scale < 0)
+            continue;
+        rlEnableTexture(resources_.texture(textures_[b.texture].get()).id);
+        const float lateral = (.5f - b.anchorX) * b.width;
+        const auto model = MatrixMultiply(
+            MatrixMultiply(MatrixScale(b.width, b.height, 1), MatrixRotateY(-frame.camera.yaw)),
+            MatrixTranslate(b.feet.x + frame.camera.right.x * lateral, b.feet.y + (b.anchorY - 1) * b.height,
+                            b.feet.z + frame.camera.right.z * lateral));
+        rlEnableDepthMask();
+        draw(model, ids ? 4 : 1, b.id < NpcWorld::maxInstances ? 1 : 16, b.flash, b.id);
+        if (!ids) {
+            rlDisableDepthMask();
+            draw(model, 2, b.id < NpcWorld::maxInstances ? 1 : 16, b.flash, b.id);
+        }
+    }
+    rlEnableDepthMask();
+    rlSetBlendMode(BLEND_ALPHA);
+}
 std::size_t WorldRenderer::cpuBytes() const noexcept {
-    std::size_t n = sizeof(*this) + textures_.capacity() * sizeof(GpuLease<TextureHandle>) +
-                    alpha_.capacity() * sizeof(std::vector<unsigned char>);
-    for (const auto& a : alpha_)
-        n += a.capacity();
-    n += publication_.textures.capacity() * sizeof(world_assets::Texture) +
-         publication_.anchors.capacity() * sizeof(world_assets::Anchor) +
-         publication_.appearances.capacity() * sizeof(world_assets::Appearance);
-    for (const auto& t : publication_.textures)
-        n += t.name.capacity();
-    for (const auto& a : publication_.appearances)
-        n += a.id.capacity();
-    if (active_)
-        n += sizeof(View) + active_->cpu.bytes();
-    if (staged_)
-        n += sizeof(View) + staged_->cpu.bytes();
+    std::size_t n = sizeof(*this) + assets_->bytes() + textures_.capacity() * sizeof(GpuLease<TextureHandle>);
+    for (const auto* v : {active_.get(), staged_.get()})
+        if (v) {
+            n += sizeof(View) + v->cpu.bytes();
+            if (v->visibility)
+                n += v->visibility->bytes();
+        }
     return n;
 }
 std::size_t WorldRenderer::gpuBytes() const noexcept {
-    std::size_t n = publication_.textureBytes + 1000u * 564 * 8;
+    std::size_t n =
+        publication_.textureBytes + 1000u * 564 * 8 + (quad_ ? 4u * 32 + 6u * 4 + 24u * 32 + 36u * 4 : 0);
     if (active_)
         n += active_->cpu.meshBytes() + 500u * 282 * 8;
     if (staged_)

@@ -39,6 +39,20 @@ struct Publication {
     std::vector<Appearance> appearances;
     std::vector<unsigned char> read(unsigned index, bool alpha = false) const;
 };
+// Immutable preparation owner; safe to share between live and windowless views.
+struct AlphaBounds {
+    unsigned left = 0, top = 0, right = 0, bottom = 0;
+};
+class CpuAssets {
+  public:
+    explicit CpuAssets(Publication);
+    const Publication publication;
+    std::vector<std::vector<unsigned char>> masks;
+    std::vector<AlphaBounds> bounds;
+    std::array<float, 32> edgeHalfWidths{};
+    unsigned named(const char*) const;
+    std::size_t bytes() const noexcept;
+};
 std::size_t mipBytes(unsigned width, unsigned height);
 unsigned mipLevels(unsigned width, unsigned height);
 Publication load(const std::filesystem::path& directory);

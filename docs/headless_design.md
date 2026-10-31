@@ -23,8 +23,8 @@ disabled CMake configuration excludes raylib discovery/download and all image
 baking/copy targets while retaining CPU tests and the runner. Normal builds add
 an optional visual backend; the runner itself never creates a window.
 
-Diagnostic mode uses authoritative core validation and full observations. Visual
-mode loads existing prepared banks, samples NpcAnimator and FramePipeline at
+Diagnostic mode uses authoritative core validation and full observations. The default
+legacy visual mode loads existing prepared banks, samples NpcAnimator and FramePipeline at
 observation/action boundaries, and shares UI target-visibility validation. No
 fallback on missing assets. The shared validator retains actor-world/revision checks and also covers explicit
 back-row melee and Spiritual Weapon follow-up targets. Player observations exclude hidden enemies, AI plans,
@@ -32,6 +32,13 @@ private RNG and pre-impact rolls; enemy health is the displayed fraction. Full
 `inspect` is separately diagnostic and recorded as such. Visual targeting does
 not imply human reaction speed. Existing rendering and live frame scheduling stay
 unchanged.
+
+The R03 explicit world backend is described in the [billboard/visibility design](renderer_visibility_design.md).
+It uses immutable world publication masks and a CPU depth/ID pipeline without color
+frames, raylib or a context, and is compiled in graphics-disabled builds too.
+Backend selection is preparation-time and recorded in strict replay identity.
+Defaults stay legacy until broader R04 integration; neither backend weakens core
+command validation. World replay images explicitly remain unsupported in R03.
 
 ## Interface and time
 
