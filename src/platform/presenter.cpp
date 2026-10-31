@@ -4,8 +4,8 @@
 #include "ui/hud.hpp"
 #include <stdexcept>
 namespace blobber {
-Presenter::Presenter(const std::filesystem::path& assets)
-    : assetsMenuPath_(assets / "ui/menu-background.png"), fonts_(assets / "fonts"),
+Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets)
+    : resources_(resources), assetsMenuPath_(assets / "ui/menu-background.png"), fonts_(assets / "fonts"),
       uiArt_(resources_, assets / "ui") {
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
@@ -27,13 +27,25 @@ void Presenter::drawGame(Rectangle destination) const {
 void Presenter::present(const Frame& frame, const MovementState& state, const Map& map, bool debug,
                         bool changed, const HudSnapshot* hud, const PickingBuffer* picking,
                         const generation::DiagnosticView* generation, bool reveal) {
-    SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_POINT);
     if (changed)
         UpdateTexture(resources_.texture(viewport_), frame.data());
+    compose(resources_.texture(viewport_), false, state, map, debug, hud, picking, generation, reveal);
+}
+void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
+                             const Map& map, const HudSnapshot* hud) {
+    const auto& target = resources_.target(logical);
+    if (!revision || target.texture.width != viewWidth || target.texture.height != viewHeight)
+        throw std::invalid_argument("Invalid world image publication");
+    compose(target.texture, true, state, map, false, hud, nullptr, nullptr, false);
+}
+void Presenter::compose(const Texture2D& texture, bool flipped, const MovementState& state, const Map& map,
+                        bool debug, const HudSnapshot* hud, const PickingBuffer* picking,
+                        const generation::DiagnosticView* generation, bool reveal) {
+    SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_POINT);
     BeginTextureMode(resources_.target(game_));
     ClearBackground({12, 18, 18, 255});
     constexpr float scale = float(gameWidth) / artWidth;
-    DrawTexturePro(resources_.texture(viewport_), {0, 0, float(viewWidth), float(viewHeight)},
+    DrawTexturePro(texture, {0, 0, float(viewWidth), float(viewHeight) * (flipped ? -1 : 1)},
                    {viewX * scale, viewY * scale, viewWidth * scale, viewHeight * scale}, {0, 0}, 0, WHITE);
     EndTextureMode();
     BeginTextureMode(resources_.target(ui_));

@@ -7,6 +7,7 @@
 namespace blobber {
 Options parseOptions(int argc, char** argv) {
     Options result;
+    bool qualitySpecified = false;
     result.assets = std::filesystem::path(GetApplicationDirectory()) / "assets";
     auto dimension = [](const char* text) {
         std::size_t consumed = 0;
@@ -21,7 +22,21 @@ Options parseOptions(int argc, char** argv) {
             result.assets = argv[++i];
         else if (arg == "--campaign-save" && i + 1 < argc)
             result.campaignSave = std::filesystem::absolute(argv[++i]);
-        else if (arg == "--development")
+        else if (arg == "--world-preview")
+            result.worldPreview = true;
+        else if (arg == "--capture-world" && i + 1 < argc) {
+            result.worldPreview = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--benchmark-world" && i + 1 < argc) {
+            result.worldPreview = true;
+            result.worldBenchmark = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--supersampling" && i + 1 < argc) {
+            const std::string value = argv[++i];
+            if (value != "on" && value != "off")
+                throw std::invalid_argument("Supersampling expects on or off");
+            result.supersampling = value == "on";
+            qualitySpecified = true;
+        } else if (arg == "--development")
             result.development = true;
         else if (arg == "--capture-campaign-save" && i + 1 < argc) {
             result.captureSaveOnly = result.captureMenuOnly = true;
@@ -144,6 +159,19 @@ Options parseOptions(int argc, char** argv) {
         throw std::runtime_error("Use --capture-recovery alone for recovery captures");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
+    if (qualitySpecified && !result.worldPreview)
+        throw std::invalid_argument(
+            "Supersampling selection currently requires the development world preview");
+    if (result.worldPreview &&
+        (!result.development || result.captureMenuOnly || result.uiDemo || result.combatDemo ||
+         result.aiDemo || result.hybridDemo || result.inventoryDemo || result.recoveryDemo ||
+         result.spellDemo || result.checkPreparedOnly || result.captureHudOnly ||
+         result.captureReactionsOnly || result.captureProjectilesOnly || result.capturePreparationOnly ||
+         result.captureBuildsOnly || result.captureProgressionOnly || result.captureSpellsOnly ||
+         result.captureInventoryOnly || result.captureRecoveryOnly ||
+         (!result.worldBenchmark.empty() && !result.captureDirectory.empty())))
+        throw std::invalid_argument(
+            "World preview requires --development and cannot combine with other diagnostics");
     return result;
 }
 } // namespace blobber

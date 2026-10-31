@@ -1,0 +1,171 @@
+{
+  "active_staged_cpu_bytes": 31599433,
+  "active_staged_gpu_estimated_bytes": 175130636,
+  "asset_read_ms": 334.327716,
+  "build": "Release",
+  "cpu_bytes": 31479413,
+  "driver": "NVIDIA Corporation | NVIDIA GeForce RTX 3060/PCIe/SSE2 | 3.3.0 NVIDIA 615.78.08",
+  "gpu_estimated_bytes": 173883772,
+  "peak_rss_kib": 153400,
+  "preparation_upload_bytes": 168362636,
+  "resolution": [
+    500,
+    282
+  ],
+  "samples": 600,
+  "scene_phases_ms": {
+    "first_draw": 1.584159,
+    "mesh": 0.073607,
+    "upload": 0.287607
+  },
+  "scene_prepare_upload_first_draw_ms": 1.945733,
+  "shared_upload_ms": 435.229689,
+  "supersampling": false,
+  "trials": [
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "mesh_texture_uploads": 0,
+      "moving": false,
+      "p50_ms": 3e-05,
+      "p95_ms": 4e-05,
+      "p99_ms": 4.1e-05,
+      "synchronized": false,
+      "trial": 0,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "mesh_texture_uploads": 0,
+      "moving": false,
+      "p50_ms": 3e-05,
+      "p95_ms": 4e-05,
+      "p99_ms": 4.1e-05,
+      "synchronized": false,
+      "trial": 1,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "mesh_texture_uploads": 0,
+      "moving": false,
+      "p50_ms": 3e-05,
+      "p95_ms": 4e-05,
+      "p99_ms": 4.1e-05,
+      "synchronized": false,
+      "trial": 2,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 0,
+      "draws": 5508,
+      "mesh_texture_uploads": 0,
+      "moving": true,
+      "p50_ms": 0.007704,
+      "p95_ms": 0.016131,
+      "p99_ms": 0.025898,
+      "synchronized": false,
+      "trial": 0,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 0,
+      "draws": 5508,
+      "mesh_texture_uploads": 0,
+      "moving": true,
+      "p50_ms": 0.007685,
+      "p95_ms": 0.015399,
+      "p99_ms": 0.02115,
+      "synchronized": false,
+      "trial": 1,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 0,
+      "draws": 5508,
+      "mesh_texture_uploads": 0,
+      "moving": true,
+      "p50_ms": 0.007433,
+      "p95_ms": 0.015949,
+      "p99_ms": 0.027541,
+      "synchronized": false,
+      "trial": 2,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "mesh_texture_uploads": 0,
+      "moving": false,
+      "p50_ms": 6e-05,
+      "p95_ms": 7e-05,
+      "p99_ms": 7.1e-05,
+      "synchronized": true,
+      "trial": 0,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "mesh_texture_uploads": 0,
+      "moving": false,
+      "p50_ms": 6e-05,
+      "p95_ms": 7.1e-05,
+      "p99_ms": 7.1e-05,
+      "synchronized": true,
+      "trial": 1,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 600,
+      "draws": 0,
+      "mesh_texture_uploads": 0,
+      "moving": false,
+      "p50_ms": 6e-05,
+      "p95_ms": 7e-05,
+      "p99_ms": 7.1e-05,
+      "synchronized": true,
+      "trial": 2,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 0,
+      "draws": 5508,
+      "mesh_texture_uploads": 0,
+      "moving": true,
+      "p50_ms": 0.025417,
+      "p95_ms": 0.029896,
+      "p99_ms": 0.17644,
+      "synchronized": true,
+      "trial": 0,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 0,
+      "draws": 5508,
+      "mesh_texture_uploads": 0,
+      "moving": true,
+      "p50_ms": 0.025147,
+      "p95_ms": 0.029726,
+      "p99_ms": 0.033793,
+      "synchronized": true,
+      "trial": 1,
+      "uploaded_bytes": 0
+    },
+    {
+      "cache_hits": 0,
+      "draws": 5508,
+      "mesh_texture_uploads": 0,
+      "moving": true,
+      "p50_ms": 0.025258,
+      "p95_ms": 0.031659,
+      "p99_ms": 0.464107,
+      "synchronized": true,
+      "trial": 2,
+      "uploaded_bytes": 0
+    }
+  ],
+  "warmup": 120
+}

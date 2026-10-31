@@ -1,6 +1,6 @@
 # System design
 
-R01 **implemented; Ready for review** (2026-10-31):
+R01 **Accepted and closed; milestone R-A Accepted** (2026-10-31):
 [visual and motion proof](renderer_probe_design.md), approved with “Implement the
 plan.” The isolated manual/hidden probe provides low-resolution GPU geometry,
 source-art billboards, three filtering profiles, legacy comparison and door/sky/
@@ -11,10 +11,23 @@ allocations and fresh-process benchmark reports. User review (2026-10-31) select
 supersampling (button 3) as default, retaining native filtered (button 2) as the
 Supersampling off option; the user reports both look good without flickering.
 The probe startup default now follows that preference. Detailed manual coverage
-and other GPU devices remain unverified; formal R01 acceptance is pending.
+and other GPU devices remain unverified; the user explicitly accepted R01 and R-A on 2026-10-31.
 Production gameplay, renderer, assets and saves remain unchanged.
 
-Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R02–R06
+R02 **implemented; Ready for review** (2026-10-31):
+[production world rendering and assets](renderer_world_design.md). User approved
+the reviewed plan with “Implement the plan.” Bounded 8×8 chunk/material meshes,
+prepared mip/alpha textures, shared camera math, shader/mesh handles, staged GPU
+views and a development-only Presenter path are implemented. Supersampling defaults
+on; off is native filtered. [Verification/handoff](r02_verification.md) and
+[selected captures](screenshots/r02/README.md): graphics Debug/Release 62/62 each,
+headless 43/43 each, focused final checks, CPU sanitizers, hidden GPU lifecycle and
+rollback, zero tracked frame C++ allocations/uploads, near-capacity stress and
+incremental multi-config publication checks pass. 81 world captures repeat exactly.
+Normal gameplay retains its renderer; R03 interaction and R04 complete integration
+remain deferred. R02 acceptance is pending; do not advance automatically.
+
+Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R03–R06
 remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
 effects/doors/campaign integration, single-layer heights/outdoor hub/decoration and
 production cutover follow only through their own reviewed slices. Stacked cells are
@@ -611,7 +624,8 @@ checks and limits.
   targets, a 32×192-byte log, eight timed damage/MISS splashes and a fixed HUD snapshot. Confirmation must refer to
   the turn/outcome already presented. Focus/edge handling, Aid selection and
   aspect-fit hit testing are CPU-testable.
-- **Presentation:** Presenter owns the viewport texture and two native 1920×1080
+- **Presentation:** Presenter uses the shared application registry for its viewport
+  texture and two native 1920×1080
   targets: a point-filtered dungeon base and a transparent premultiplied UI layer
   fitted with bilinear filtering. The 500×282 prepared dungeon remains unchanged.
   Layout and input retain logical 640×360 coordinates; HudPainter converts geometry
@@ -686,7 +700,11 @@ party-local; startup owned-item indices are character-local; catalog IDs remain
 catalog-local. See [inventory design](inventory_design.md) for schema 5, live item
 commands, safety, UI storage and tests.
 
-The GPU registry holds up to eight standalone textures and four render targets.
+R02 expands the application-owned GPU registry to 512 standalone textures, eight
+render targets, eight static meshes and eight shaders. Presenter borrows the registry;
+world scene/resource leases release resources at explicit preparation boundaries.
+The new path additionally enforces texture/mesh/scene byte budgets in the
+[R02 design](renderer_world_design.md). Normal gameplay still uses CPU world images.
 Handles include a typed slot index and generation. Invalid/stale lookup returns
 no resource; checked platform operations reject it. Exhaustion is an explicit
 startup error. Releasing a slot invalidates its generation; exhausted generation

@@ -11,7 +11,9 @@
 namespace blobber {
 class Presenter {
   public:
-    explicit Presenter(const std::filesystem::path& assets);
+    Presenter(GpuResources& resources, const std::filesystem::path& assets);
+    void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
+                      const HudSnapshot* hud = nullptr);
     void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed,
                  const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
                  const generation::DiagnosticView* generation = nullptr, bool reveal = false);
@@ -23,7 +25,9 @@ class Presenter {
   private:
     void drawTarget(TargetHandle handle, Rectangle destination) const;
     void drawGame(Rectangle destination) const;
-    GpuResources resources_;
+    void compose(const Texture2D&, bool flipped, const MovementState&, const Map&, bool debug,
+                 const HudSnapshot*, const PickingBuffer*, const generation::DiagnosticView*, bool reveal);
+    GpuResources& resources_;
     TargetHandle game_, ui_;
     TextureHandle viewport_, menuBackground_;
     std::filesystem::path assetsMenuPath_;

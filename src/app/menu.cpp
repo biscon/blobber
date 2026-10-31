@@ -17,7 +17,8 @@ namespace blobber {
 int runMenus(const Options& options) {
     const auto catalog = loadRules(options.assets / "rules/catalog.json");
     Window window(options.width, options.height, options.captureMenuOnly);
-    Presenter presenter(options.assets);
+    GpuResources resources;
+    Presenter presenter(resources, options.assets);
     presenter.prepareMenu();
     struct CaptureDirectory {
         std::filesystem::path path;

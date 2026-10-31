@@ -4,6 +4,8 @@
 #include <optional>
 namespace blobber {
 struct Options {
+    bool worldPreview = false, supersampling = true;
+    std::filesystem::path worldBenchmark;
     bool development = false, captureProgressionOnly = false;
     int width = 1920, height = 1080;
     std::filesystem::path assets, captureDirectory, campaignSave;

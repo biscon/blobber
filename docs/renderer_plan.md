@@ -1,7 +1,7 @@
 # Low-resolution 3D renderer: design and delivery roadmap
 
 Created: 2026-10-30. Last updated: 2026-10-31.
-Status: **Roadmap accepted; R01 implemented and Ready for review. No renderer slice accepted yet.**
+Status: **Roadmap accepted; R01/R-A and R02 Accepted.**
 
 The user agreed to replace the prepared perspective-image world renderer with a
 low-resolution GPU 3D world, retaining billboard monster/item artwork and discrete
@@ -21,10 +21,10 @@ for the explicit, bounded elevation extensions described below.
 | --- | --- |
 | Latest accepted foundation | Campaign P-A/P-B and prior demo/automation slices; current renderer remains production |
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
-| Active slice | R01 — Visual and motion proof; Ready for review |
-| Awaiting review | R01 slice acceptance; user reviewed the demo and selected supersampling, retaining native filtered as an option |
-| Next eligible slice | R02 detailed planning only, after user acceptance of R01 |
-| Next action | User review of R01; do not self-accept or advance |
+| Active slice | None; R02 — Production world rendering and assets accepted and closed |
+| Awaiting review | None |
+| Next eligible slice | R03 — Billboards, picking and visual automation; eligible for planning |
+| Next action | Await instruction to plan R03; do not automatically implement it |
 | Blockers | None known; filtering, picking parity and performance require evidence from the slices |
 | Campaign status | Paused after P-B; do not start PC07 |
 
@@ -111,9 +111,10 @@ results. Removing it without replacing this contract would break automation or
 change which commands the player can issue.
 
 `Presenter` currently uploads a CPU world image and composes separate native game
-and UI targets. Its resource registry has eight texture and four target slots;
-that budget must be deliberately revised for the new assets/targets, not bypassed
-with unowned raw handles. Campaign travel stages a replacement view alongside
+and UI targets. R02 now adds a typed GPU-world entry and a shared
+registry with 512 texture/eight target/eight mesh/eight shader slots, with separate
+world byte budgets. Normal gameplay still uses the CPU entry; raw GPU ownership is
+not exposed to gameplay. Campaign travel stages a replacement view alongside
 simulation state before committing. Preserve that transaction and failure behavior.
 
 Useful source entry points:
@@ -252,8 +253,8 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 
 | ID | Slice | Dependency | Status | Milestone |
 | --- | --- | --- | --- | --- |
-| R01 | [Visual and motion proof](#r01-visual-and-motion-proof) | Accepted direction | Ready for review (2026-10-31) | R-A |
-| R02 | [Production world rendering and assets](#r02-production-world-rendering-and-assets) | R01 accepted | Planned | R-B |
+| R01 | [Visual and motion proof](#r01-visual-and-motion-proof) | Accepted direction | Accepted (2026-10-31) | R-A |
+| R02 | [Production world rendering and assets](#r02-production-world-rendering-and-assets) | R01 accepted | Accepted (2026-10-31) | R-B |
 | R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Planned | R-B |
 | R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Planned | R-B |
 | R05 | [Heights, outdoor hub and decoration](#r05-heights-outdoor-hub-and-decoration) | R04 accepted | Planned | R-C |
@@ -261,7 +262,7 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 
 | Milestone | User-visible outcome | Status |
 | --- | --- | --- |
-| R-A — Look established | Representative room and moving comparisons establish camera, filtering and art compatibility | Ready for review; R01 acceptance pending |
+| R-A — Look established | Representative room and moving comparisons establish camera, filtering and art compatibility | Accepted (2026-10-31) |
 | R-B — Playable replacement | Current campaign/arena work through the GPU renderer, including combat, interactions, travel and automation | Planned |
 | R-C — Renderer delivered | Outdoor hub, single-layer height variation and decoration work; production uses the replacement and obsolete renderer dependencies are retired | Planned |
 
@@ -290,7 +291,7 @@ moving and stationary work separately; no unmeasured efficiency claim.
 candidate, with a short recommendation. User accepts the look and selected default
 before the production architecture is expanded around it.
 
-**Execution record:** Implemented; **Ready for review**, 2026-10-31. User approved the
+**Execution record:** **Accepted**, 2026-10-31; milestone R-A Accepted. User approved the
 [R01 detailed design](renderer_probe_design.md) with “Implement the plan.” Standalone
 manual/hidden probe, three sampling profiles, unchanged legacy comparison, source-art
 billboard, slab door/sky/decoration specimens and deterministic motion gallery are
@@ -301,7 +302,7 @@ benchmarks. [Review gallery](screenshots/r01/index.html). Detailed manual covera
 and other GPUs remain unverified. No production renderer replacement or later-slice
 work. The user prefers supersampling and requests retaining native filtered as an off
 option; this supersedes the provisional native-filtered recommendation. The user
-reports both modes look good without flickering. Formal slice acceptance is pending.
+reports both modes look good without flickering. The user explicitly accepted R01 and R-A on 2026-10-31.
 
 ### R02: Production world rendering and assets
 
@@ -329,7 +330,15 @@ GPU integration checks must include state restoration before the native UI pass.
 against R01, demonstrate no corner popping, and show a failed preparation leaving
 the prior scene usable. Report draw calls/upload volume and frame timings.
 
-**Execution record:** Not started; depends on R01 acceptance.
+**Execution record:** **Accepted and closed** (2026-10-31).
+[Approved design](renderer_world_design.md), implemented after “Implement the plan.”
+[Verification/handoff](r02_verification.md) and [selected evidence](screenshots/r02/README.md)
+record graphics 62/62 and headless 43/43 in Debug/Release, final focused checks,
+sanitizers, hidden GPU rollback/lifecycle and allocation/upload guards, capacity
+stress, incremental multi-config fixtures and 81 repeat-identical captures. Normal
+legacy gameplay remains default. R03/R04 work is not implemented. The user explicitly
+accepted R02: “slice accepted, record it in the plan doc”. R03 is eligible for
+planning but has not started; milestone R-B remains Planned.
 
 ### R03: Billboards, picking and visual automation
 
@@ -493,6 +502,9 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-31 | R02 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R03 eligible for planning, not started; R-B remains Planned |
+| 2026-10-31 | R02 implemented and Ready for review | Approved design implemented; verification, production-asset captures and measurements retained; no gameplay cutover |
+| 2026-10-31 | R01 and R-A Accepted; R02 detailed plan approved for implementation | Explicit user acceptance followed by “Implement the plan”; [design](renderer_world_design.md) |
 | 2026-10-31 | Supersampling default; retain native filtered as the user-facing off option. Raw nearest remains diagnostic. | User prefers button 3 for distant detail and reports buttons 2 and 3 look good without flickering; requests keeping both. This is quality-policy feedback, not recorded whole-slice acceptance. |
 | 2026-10-31 | R01 implemented and Ready for review; retain native filtered as provisional default pending appearance acceptance | Approved detailed plan: “Implement the plan.” Verification and review gallery recorded; no production cutover or R02 work |
 | 2026-10-30 | Campaign paused after accepted P-B; rendering/presentation, then more monsters, precede campaign resumption | Explicit user direction |
@@ -501,15 +513,12 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 ## Current next-agent handoff
 
-R01 is implemented and **Ready for review**, not Accepted. Read its
-[design](renderer_probe_design.md), [verification/handoff](r01_verification.md) and
-[review gallery](screenshots/r01/index.html). The user approved implementation with
-“Implement the plan.” The roadmap is accepted; R02–R06 remain Planned.
-
-Next action: user acceptance of R01. Appearance feedback selects supersampling
-by default with native filtered retained as the off option; the user reports both
-look good without flickering.
-Correct review issues within R01. Only after explicit acceptance should a fresh
-context plan **R02 — Production world rendering and assets**, for review before
-implementation. Do not self-accept, start R02, add monsters, resume PC07 or run
-balance experiments. Production rendering and accepted P-B gameplay remain unchanged.
+R01/R-A and R02 are Accepted. R02's [design](renderer_world_design.md),
+[verification](r02_verification.md) and [selected evidence](screenshots/r02/README.md)
+record the delivered slice. User acceptance closes R02 on 2026-10-31 and supersedes
+the pending-review status in its implementation handoff documents.
+R03 is the next eligible slice for planning; it has not started. Await instruction
+to plan it, then obtain detailed-plan approval before implementation. R-B remains
+Planned until its remaining slices are accepted. Do not add monsters or resume PC07.
+Keep legacy gameplay working and the supersampling/native-filtered quality policy.
+No commits or desktop input automation.

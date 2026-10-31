@@ -22,6 +22,17 @@ int main() {
             rejected = true;
         }
         check(rejected, "unknown options still reject");
+        char preview[] = "--world-preview", quality[] = "--supersampling", off[] = "off", bad[] = "nearest";
+        char* defaults[]{program, development, preview};
+        check(parseOptions(3, defaults).supersampling, "World preview defaults to supersampling");
+        char* lower[]{program, development, preview, quality, off};
+        check(!parseOptions(5, lower).supersampling, "Off selects the native quality enum");
+        char* forbidden[]{program, preview};
+        rejects([&] { parseOptions(2, forbidden); }, "Incomplete world path requires development mode");
+        char* raw[]{program, development, preview, quality, bad};
+        rejects([&] { parseOptions(5, raw); }, "Raw nearest is not a production quality option");
+        char* unused[]{program, quality, off};
+        rejects([&] { parseOptions(3, unused); }, "Quality is not silently ignored by normal launches");
         std::cout << "Command-line option checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

@@ -1,4 +1,5 @@
 #include "app/application.hpp"
+#include "app/world_preview.hpp"
 #include "app/actor_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/archer_captures.hpp"
@@ -46,7 +47,7 @@ int runDiagnostics(int argc, char** argv) {
                      "[--ui-demo | "
                      "--recovery-demo | --inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | "
                      "--spell-demo] [--seed UINT32] [--development] "
-                     "[--check-prepared] [--campaign-save FILE]\n";
+                     "[--check-prepared] [--campaign-save FILE] [--development --world-preview] [--capture-world DIR | --benchmark-world DIR] [--supersampling on|off]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
@@ -102,7 +103,8 @@ int runDiagnostics(int argc, char** argv) {
         return 0;
     // Declaration order guarantees all GPU resources die before the window/context.
     const Window window(options.width, options.height, !options.captureDirectory.empty());
-    Presenter presenter(options.assets);
+    GpuResources resources;
+    Presenter presenter(resources, options.assets);
     if (!options.captureDirectory.empty()) {
         NpcAnimator animator(npcs, timings);
         FramePipeline frames;
@@ -212,6 +214,7 @@ int runDiagnostics(int argc, char** argv) {
 namespace blobber {
 int run(int argc, char** argv) {
     const auto o = parseOptions(argc, argv);
+    if (o.worldPreview && !o.help) return runWorldPreview(o);
     if (o.captureMenuOnly)
         return runMenus(o);
     if (o.help || o.checkPreparedOnly || !o.captureDirectory.empty() || o.uiDemo || o.combatDemo ||

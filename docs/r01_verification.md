@@ -1,6 +1,6 @@
 # R01 verification and review handoff
 
-Status: **Implemented; Ready for review** (2026-10-31). Not yet user-accepted.
+Status: **Accepted and closed; milestone R-A Accepted** (2026-10-31). User explicitly accepted R01 and R-A.
 Approved with “Implement the plan.” [Design](renderer_probe_design.md) ·
 [Roadmap](renderer_plan.md) · [Retained motion gallery](screenshots/r01/index.html).
 
@@ -176,7 +176,14 @@ locks, gameplay timing or interactions; manual movement can cross it. R04 owns t
 integration. R01 does not implement close-range lateral actor fitting, body picking,
 full animations, environmental schemas or staged campaign GPU travel.
 
-Quality preference recorded; R01 remains Ready for review. User acceptance closes R01/R-A; then **R02 detailed planning
-only** becomes eligible. Do not self-accept, start R02 implementation, add monsters,
-resume PC07 or launch balance experiments. Preserve this gallery and accepted
-production gameplay while carrying forward the approved visual choices.
+R01 and milestone R-A are Accepted (2026-10-31). R02's
+[design](renderer_world_design.md) has subsequently been implemented and is Ready
+for review; see its [handoff](r02_verification.md). R01's gallery and measurements
+remain unchanged. No new manual-coverage or other-device claims accompany acceptance.
+
+## Acceptance (2026-10-31)
+
+The user explicitly accepted R01 and milestone R-A. This supersedes acceptance-
+pending handoff text above without changing evidence or coverage limitations.
+R02 planning is complete and its [design](renderer_world_design.md) is approved
+for implementation. Supersampling remains default; off means native filtered.

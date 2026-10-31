@@ -3,33 +3,6 @@
 #include <cmath>
 #include <stdexcept>
 namespace blobber::probe {
-float focal() noexcept {
-    return width * .5f / std::tan(84 * pi / 360);
-}
-Camera camera(const MovementState& s) noexcept {
-    const auto& t = s.transition;
-    const Player a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
-    const float p = t.active() ? t.progress() : 1, e = p * p * (3 - 2 * p);
-    float ya = float(a.heading) * pi / 2, yb = float(b.heading) * pi / 2;
-    float delta = yb - ya;
-    if (delta > pi)
-        delta -= 2 * pi;
-    if (delta < -pi)
-        delta += 2 * pi;
-    const float yaw = ya + delta * e;
-    const Vec f{std::sin(yaw), 0, -std::cos(yaw)}, r{std::cos(yaw), 0, std::sin(yaw)};
-    return {{a.cell.x + .5f + (b.cell.x - a.cell.x) * e - .4f * f.x, .5f,
-             a.cell.y + .5f + (b.cell.y - a.cell.y) * e - .4f * f.z},
-            f,
-            r,
-            yaw};
-}
-ScreenPoint project(const Camera& c, Vec p) noexcept {
-    const float dx = p.x - c.position.x, dz = p.z - c.position.z;
-    const float d = dx * c.forward.x + dz * c.forward.z;
-    return {width * .5f + focal() * (dx * c.right.x + dz * c.right.z) / d,
-            height * .34f - focal() * (p.y - c.position.y) / d, d};
-}
 Vec billboardCenter(const Camera& c, Vec feet, float w, float h, float anchorX, float anchorY) noexcept {
     return {feet.x + c.right.x * (.5f - anchorX) * w, feet.y + (anchorY - .5f) * h,
             feet.z + c.right.z * (.5f - anchorX) * w};

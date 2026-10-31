@@ -92,11 +92,13 @@ void captureReplay(Protocol& protocol, const std::filesystem::path& trace, const
     SetTraceLogCallback(logToStderr);
     std::unique_ptr<SceneRenderer> renderer;
     std::unique_ptr<Window> window;
+    std::unique_ptr<GpuResources> resources;
     std::unique_ptr<Presenter> presenter;
     try {
         renderer = loadVisualRenderer(assets, definitions);
         window = std::make_unique<Window>(gameWidth, gameHeight, true);
-        presenter = std::make_unique<Presenter>(assets);
+        resources = std::make_unique<GpuResources>();
+        presenter = std::make_unique<Presenter>(*resources, assets);
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("graphics_unavailable: ") + e.what());
     }

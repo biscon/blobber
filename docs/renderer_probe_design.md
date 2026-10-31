@@ -1,7 +1,7 @@
 # R01: Visual and motion proof
 
-Status: **Implemented; Ready for review** (2026-10-31).
-[Verification and handoff](r01_verification.md); user acceptance pending.
+Status: **Accepted and closed; milestone R-A Accepted** (2026-10-31).
+[Verification and handoff](r01_verification.md); user acceptance recorded on 2026-10-31.
 User approved the detailed conversational plan with “Implement the plan.”
 Parent: [renderer roadmap](renderer_plan.md). No production cutover in this slice.
 
@@ -122,4 +122,11 @@ default, native filtered when off. The probe now starts in button-3 mode; existi
 1/2/3 keys and explicit `--profile` overrides remain. Production quality settings
 belong to R02, without changing the logical image/picking coordinate system.
 This supersedes the earlier native-filtered recommendation, not the test results.
-R01 remains Ready for review pending explicit whole-slice acceptance.
+The user subsequently accepted R01 and milestone R-A on 2026-10-31.
+
+## Acceptance (2026-10-31)
+
+The user explicitly accepted R01 and milestone R-A. This supersedes acceptance-
+pending handoff text above without changing evidence or coverage limitations.
+R02 planning is complete and its [design](renderer_world_design.md) is approved
+for implementation. Supersampling remains default; off means native filtered.

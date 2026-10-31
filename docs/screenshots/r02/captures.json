@@ -1,0 +1,58 @@
+{
+  "0-native-88.png": {
+    "size": [
+      500,
+      282
+    ],
+    "rgba_sha256": "7dc3b10ae704614d1986a6ff969b516d169c9885fe6b8c7a83e7576bd6088c12"
+  },
+  "0-ss-0-hud.png": {
+    "size": [
+      1920,
+      1080
+    ],
+    "rgba_sha256": "98a8cc8e6bde46593b9e77f8dd2b1cf29d112b013e11947238967fc67ebce9cf"
+  },
+  "0-ss-88.png": {
+    "size": [
+      500,
+      282
+    ],
+    "rgba_sha256": "6a76e179200c94cf5a0bf9a75a7a19f4de71661509c0c9b3298c6e33f5ad3174"
+  },
+  "1-native-40.png": {
+    "size": [
+      500,
+      282
+    ],
+    "rgba_sha256": "182e919d1d3095f2f7fd595773c3be75d8535149720a90aab67732b80f79897d"
+  },
+  "1-ss-40-hud.png": {
+    "size": [
+      1920,
+      1080
+    ],
+    "rgba_sha256": "0984936ffdc3f6634e8fe307b1ed13f71aca43fb7c9f8f4737d049f8daf6c635"
+  },
+  "1-ss-40.png": {
+    "size": [
+      500,
+      282
+    ],
+    "rgba_sha256": "c188dfa833d7d0987fcd29c86722e28649158e625a9198caf9e905322908a34d"
+  },
+  "legacy-campaign-floor1.png": {
+    "size": [
+      1920,
+      1080
+    ],
+    "rgba_sha256": "6237cd0f9ca1e8ac0b41e36a3600549d0a34bd8669fdb2e16af04227bac6e6c1"
+  },
+  "retained-after-failure.png": {
+    "size": [
+      500,
+      282
+    ],
+    "rgba_sha256": "7bb34fd5ae69f05995444c3cce6884fe239b110a07f57b9cbdd83baedab04308"
+  }
+}

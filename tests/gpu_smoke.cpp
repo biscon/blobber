@@ -198,10 +198,10 @@ int main() {
         check(resources.destroy(target), "Target released");
         resources.createTarget(32, 32);
         rejects([&] { resources.target(target); }, "Stale GPU target rejected after reuse");
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 7; ++i)
             resources.createTarget(32, 32);
         rejects([&] { resources.createTarget(32, 32); }, "Target capacity fails before allocation");
-        for (int i = 0; i < 7; ++i)
+        for (int i = 0; i < 511; ++i)
             resources.createTexture(image.value);
         rejects([&] { resources.createTexture(image.value); }, "Texture capacity fails before allocation");
         BeginDrawing();
