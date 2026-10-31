@@ -8,6 +8,17 @@ are Accepted and closed;
 PC07–PC09 remain unimplemented.**
 The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
 
+### Opening-slice clarification (2026-10-31)
+
+The user intends a final dungeon of roughly 20+ floors. The three floors here
+are the polished opening vertical slice for judging fun, covering early character
+levels within current 1–3 support; they are not the whole game's progression arc.
+Whether this opening route ends nearer level two or three remains a pacing decision.
+The proposed [bestiary roadmap](bestiary_plan.md) first delivers monsters and their
+review in the arena. Campaign population/integration follows a separate plan;
+the campaign remains paused after P-B. This clarification adds no floors or levels
+to the currently implemented campaign.
+
 ### Scope clarification and amendments (2026-10-30)
 
 The user clarifies that an authored town with shops and a bottom-floor boss is the

@@ -7,10 +7,11 @@ PC07–PC09 plans remain unapproved; do not advance automatically.
 **Paused after P-B (2026-10-30), at the user's request.** The
 [renderer roadmap](renderer_plan.md) is now complete: R01–R06 and milestones
 R-A/R-B/R-C are Accepted and closed (2026-10-31), including production cutover and
-old-renderer retirement. Additional monsters come next, through separate planning
-when requested, before returning to the procedural campaign. The pause remains
-in force and supersedes earlier instructions to plan PC07; renderer acceptance
-does not authorize campaign resumption.
+old-renderer retirement. The proposed [bestiary roadmap](bestiary_plan.md) comes
+next: implement and review the monsters in the arena, then separately plan their
+campaign integration. The pause remains in force and supersedes earlier
+instructions to plan PC07; renderer/bestiary work does not authorize campaign
+resumption.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -22,6 +23,9 @@ unless an explicit change below is approved.
 Long-term direction: a procedural first-person crawler beneath an authored town,
 with shops and periodic returns, culminating in a bottom-floor boss. The MVP is
 one small fixed hub, three persistent generated floors and a final guardian.
+User clarification (2026-10-31): these are the polished opening vertical slice of
+an eventual roughly 20+ floor game, covering early character levels within the
+current 1–3 support; ending near level two or three needs later pacing review.
 Shops and a wider economy are deliberately later work, as clarified by the user.
 The demo's accepted slices stay closed. Its save/resume requirement moves here,
 after playable generation and persistent travel; its polish and static-level
@@ -53,7 +57,7 @@ arena and test fixtures; it does not imply retaining the old game mode.
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
 | Next eligible slice | PC07 — Depth bands and finite recovery encounters; detailed planning only |
-| Next action | Campaign paused after P-B: review the implemented R01 renderer probe, then additional monsters after rendering; resume PC07 planning only when the user returns to the campaign |
+| Next action | Campaign paused after P-B; review the proposed bestiary roadmap, implement/review monsters in the arena, then resume campaign integration planning only on the user's request |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
 | Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted; PC07–PC09 plans unapproved |
 

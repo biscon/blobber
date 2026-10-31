@@ -15,6 +15,14 @@ Current follow-up: [loot, guardian doors and uninterrupted encounter flow](dunge
 records the implemented visual/interaction polish, unsaved-run terminal fix, and
 focused CPU/GPU verification.
 
+Proposed next work: [early bestiary roadmap](bestiary_plan.md) — six slices for
+skeleton, bugbear, standard giant rat, zombie, goblin shaman and arena polish.
+Each monster includes imagegen art in the goblins' style and their applicable
+animation set. Implement and review in the arena before campaign integration;
+all actors retain one-subcell footprints. B01–B06 are Planned, not implemented.
+The three-floor campaign is the opening low-level vertical slice of an eventual
+roughly 20+ floor game; it stays paused after P-B.
+
 ## Boundaries and data flow
 
 - **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID
@@ -243,7 +251,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 | Location | Responsibility and design |
 | --- | --- |
 | `src/world/`, `src/generation/` | Immutable quantized maps/surfaces, fixtures, bounded procedural generation; [environment](renderer_environment_design.md), [generation](procedural_generation_design.md) |
-| `src/game/`, `src/rules/` | Session, Party, actors, combat/effects, movement, navigation; [actors](actors_design.md), [combat](melee_combat_design.md), [effects](effects_design.md), [inventory](inventory_design.md) |
+| `src/game/`, `src/rules/` | Session, Party, actors, combat/effects, movement, navigation; [actors](actors_design.md), [combat](melee_combat_design.md), [effects](effects_design.md), [inventory](inventory_design.md); proposed [bestiary roadmap](bestiary_plan.md) |
 | `src/render/world_*`, `src/assets/world_assets.*` | Geometry, camera, effects, depth/IDs and reusable publication; [world](renderer_world_design.md), [visibility](renderer_visibility_design.md), [integration](renderer_integration_design.md) |
 | `src/platform/`, `src/ui/` | GPU resources, sole renderer, view leases, input and native presentation; [native HUD](native_hud_design.md), [cutover](renderer_cutover_design.md) |
 | `src/app/` | Startup/menu/creator/arena/game orchestration and session transitions; [menu](menu_launch_design.md), [arena](arena_design.md) |
@@ -251,5 +259,6 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 | `src/automation/`, `tools/` | Typed sessions, strict replay, CLI/client/local MCP, owned captures and opt-in experiments; [protocol](headless_protocol.md), [MCP](mcp_design.md) |
 | `tests/` | Self-owned CPU/GPU regression fixtures and resource/allocation guards; no retired renderer harnesses |
 
-The procedural campaign roadmap remains paused after accepted P-B. Additional
-monsters/debug tools need separate planning; PC07 does not resume automatically.
+The procedural campaign roadmap remains paused after accepted P-B. The proposed
+bestiary roadmap delivers arena-reviewed monsters first; campaign integration and
+PC07 require a later explicit return to campaign planning.
