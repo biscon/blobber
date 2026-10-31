@@ -242,18 +242,21 @@ void EffectController::burnWeb(std::uint64_t now, CombatEvents& events) noexcept
             out.enemyAttack = !t.npc;
             out.hit = true;
             out.damageType = rules::DamageType::Fire;
-            const auto profile =
-                t.npc ? actors_.catalog().monster(actors_.actor(t.enemy)->monster)->damageProfile
-                      : rules::DamageProfile{};
-            const auto resolved = rules::resolveDamage(damage, out.damageType, profile);
-            out.rawDamage = resolved.raw;
-            out.damage = resolved.damage;
-            out.damageAdjustment = resolved.adjustment;
             out.occurredMs = now;
-            if (t.npc)
-                out.died = actors_.damage(t.enemy, out.damage, now).died;
-            else
+            if (t.npc) {
+                const auto result = damageNpc(actors_, *this, t.enemy, damage, out.damageType, false, now);
+                out.rawDamage = result.resolved.raw;
+                out.damage = result.resolved.damage;
+                out.damageAdjustment = result.resolved.adjustment;
+                out.fortitude = result.fortitude;
+                out.died = result.actor.died;
+            } else {
+                const auto resolved = rules::resolveDamage(damage, out.damageType);
+                out.rawDamage = resolved.raw;
+                out.damage = resolved.damage;
+                out.damageAdjustment = resolved.adjustment;
                 out.died = party_.damage(t.character, out.damage).died;
+            }
             events.append(out);
             if (out.damage > 0)
                 wake(t, now, events);

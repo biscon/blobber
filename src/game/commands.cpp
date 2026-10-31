@@ -124,6 +124,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         state_.enemyPortraits[i] = species == "skeleton"    ? EnemyPortrait::Skeleton
                                    : species == "bugbear"   ? EnemyPortrait::Bugbear
                                    : species == "giant.rat" ? EnemyPortrait::GiantRat
+                                   : species == "zombie"    ? EnemyPortrait::Zombie
                                                             : EnemyPortrait::Goblin;
     }
     state_.log = {};
@@ -200,6 +201,20 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             appendLog(line);
             std::snprintf(line, sizeof(line), "%s #%u: %s vulnerability doubles damage.", species,
                           unsigned(out.enemy.slot) + 1, rules::damageTypeName(out.damageType));
+        }
+        if (out.fortitude.status != FortitudeStatus::None) {
+            appendLog(line);
+            const auto& f = out.fortitude;
+            if (f.status == FortitudeStatus::Saved || f.status == FortitudeStatus::Failed)
+                std::snprintf(line, sizeof(line), "%s #%u: Undead Fortitude %s (Con %lld vs DC %lld)%s.",
+                              species, unsigned(out.enemy.slot) + 1,
+                              f.status == FortitudeStatus::Saved ? "succeeds" : "fails",
+                              static_cast<long long>(f.total), static_cast<long long>(f.difficulty),
+                              f.status == FortitudeStatus::Saved ? ": remains at 1 HP" : ": dead");
+            else
+                std::snprintf(line, sizeof(line), "%s #%u: %s bypasses Undead Fortitude.", species,
+                              unsigned(out.enemy.slot) + 1,
+                              f.status == FortitudeStatus::RadiantBypass ? "radiant damage" : "critical hit");
         }
         break;
     case CombatEvent::Defend:
@@ -336,6 +351,8 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
         next.text = "SAVED";
     if (out.mirror.effect.serial)
         next.text = out.hit ? "IMAGE LOST" : "IMAGE MISSED";
+    if (out.fortitude.status == FortitudeStatus::Saved)
+        next.text = "1 HP";
     next.character = out.recipient;
     next.enemy = out.enemy;
     next.damage = out.damage;

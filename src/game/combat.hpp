@@ -1,5 +1,6 @@
 #pragma once
 #include "game/attack_timeline.hpp"
+#include "game/damage_resolution.hpp"
 #include "game/effects.hpp"
 #include "game/npc_ai.hpp"
 #include "game/npc_animation.hpp"
@@ -54,6 +55,7 @@ struct CombatOutcome {
     std::int64_t rawDamage = 0;
     rules::DamageType damageType = rules::DamageType::Bludgeoning;
     rules::DamageAdjustment damageAdjustment = rules::DamageAdjustment::Normal;
+    FortitudeResult fortitude; // Resolved impact only; never an accepted/saved roll.
     int roll = 0;
     // Accepted NPC weapon-roll context, published only with the resolved attack.
     bool packTactics = false;

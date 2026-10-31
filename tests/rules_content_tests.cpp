@@ -306,6 +306,24 @@ void packTraits() {
     check(hasTrait(loaded.monster({0})->traits, Trait::PackTactics) &&
               hasTrait(loaded.monster({0})->traits, Trait::NimbleEscape),
           "Schema 11 composes both typed monster traits");
+    auto modern = root;
+    modern["schema_version"] = 12;
+    modern["monsters"][0]["traits"] = {"undead_fortitude", "pack_tactics", "nimble_escape"};
+    const auto zombie = files.load(modern);
+    check(hasTrait(zombie.monster({0})->traits, Trait::UndeadFortitude) &&
+              hasTrait(zombie.monster({0})->traits, Trait::PackTactics) &&
+              hasTrait(zombie.monster({0})->traits, Trait::NimbleEscape),
+          "Schema 12 composes all three immutable traits");
+    for (const auto& traits :
+         {Json::array({"undead_fortitude", "undead_fortitude"}), Json::array({"unknown"}),
+          Json::array({"undead_fortitude", "pack_tactics", "nimble_escape", "unknown"})}) {
+        auto bad = modern;
+        bad["monsters"][0]["traits"] = traits;
+        files.invalid(bad, "traits");
+    }
+    modern["schema_version"] = 11;
+    modern["monsters"][0]["traits"] = {"undead_fortitude"};
+    files.invalid(modern, "traits");
     for (const auto& traits :
          {Json::array({"pack_tactics", "pack_tactics"}), Json::array({"nimble_escape", "nimble_escape"}),
           Json::array({"unknown"}), Json::array({"pack_tactics", "nimble_escape", "pack_tactics"})}) {
@@ -320,7 +338,7 @@ void packTraits() {
     check(files.load(root).monster({0})->traits == static_cast<Traits>(Trait::NimbleEscape),
           "Schema 10 retains its original trait vocabulary");
     auto monster = *loaded.monster({0});
-    monster.traits = 4;
+    monster.traits = 8;
     bool rejected = false;
     try {
         Catalog invalid({*loaded.attack({0}), *loaded.attack({1})}, {monster});

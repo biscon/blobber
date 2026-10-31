@@ -416,3 +416,26 @@ One subcell, formation protection, six-second economy and quick four-frame bite
 (300/150/150/300 ms, impact 450 ms) are project mechanics. Arena first; no campaign
 population/guardian assignment or claim of calibrated difficulty. Production art
 uses the approved vicious rat reference and built-in imagegen, not SRD artwork.
+
+## B04 — Zombie and Undead Fortitude (2026-11-01; Accepted and closed)
+
+Source: official SRD 5.1 CC edition linked above, printed pp. 356–357. Adopt
+abilities 13/6/16/3/6/5, AC 8, fixed HP 22, CR 1/4 context / 50 XP,
+slam +3 for 1d6+1 bludgeoning (critical 2d6+1), poison damage immunity and
+Undead Fortitude. The existing sleep-immunity flag and nonhumanoid spell targeting
+represent applicable undead restrictions. No radiant or bludgeoning vulnerability.
+
+Fortitude uses the existing effect-modified Constitution save (+3 before effects)
+at lethal impact against DC 5 + full post-mitigation damage, including overkill.
+Radiant or critical damage bypasses; success commits one HP before any death
+marker, occupancy release, animation or reward. It is unlimited while alive;
+there is no resurrection or trait charge. Keep existing aggregated Magic Missile
+and separate Scorching Ray impacts, with deterministic impact-time save RNG.
+
+Project adaptations: one subcell, ordinary discrete movement/approach, formation
+protection and six-second action economy. No loot, currency or potions. Unarmored,
+nonmetal decayed villager; omit Wisdom save proficiency (NPC saves remain ability-
+based), tabletop speed/senses/languages and unsupported poisoned conditions.
+Full production art follows the user-accepted turnaround v1 and built-in imagegen,
+not SRD artwork. Arena-first delivery assigns no population or guardian recipe;
+campaign integration/PC07 remain paused. The completed slice is accepted.

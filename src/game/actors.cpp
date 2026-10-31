@@ -196,7 +196,8 @@ ActorResult ActorWorld::cancelAttack(ActorId id) noexcept {
     ++state_.revision;
     return {ActorError::None, true};
 }
-ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept {
+ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t timeMs,
+                               LethalDisposition disposition) noexcept {
     const auto* old = actor(id);
     if (!old)
         return {ActorError::InvalidHandle};
@@ -209,7 +210,8 @@ ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t ti
     if (old->hasDamage && timeMs < old->damageTimeMs)
         return {ActorError::InvalidTime};
     auto& a = state_.actors[id.slot];
-    const auto applied = static_cast<std::int32_t>(std::min<std::int64_t>(amount, a.hitPoints));
+    const auto floor = disposition == LethalDisposition::RetainOneHp ? 1 : 0;
+    const auto applied = static_cast<std::int32_t>(std::min<std::int64_t>(amount, a.hitPoints - floor));
     a.hitPoints -= applied;
     a.hasDamage = true;
     a.damageTimeMs = timeMs;

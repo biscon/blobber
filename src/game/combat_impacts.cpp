@@ -323,18 +323,22 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         effects_.resolveMirror(out.mirror, false, when, events);
         out.damage = 0;
     } else if (out.hit) {
-        const auto profile = out.enemyAttack ? rules::DamageProfile{}
-                                             : actors_.catalog().monster(target->monster)->damageProfile;
-        const auto resolved = rules::resolveDamage(out.damage, out.damageType, profile);
-        out.rawDamage = resolved.raw;
-        out.damage = resolved.damage;
-        out.damageAdjustment = resolved.adjustment;
         if (out.enemyAttack) {
+            const auto resolved = rules::resolveDamage(out.damage, out.damageType);
+            out.rawDamage = resolved.raw;
+            out.damage = resolved.damage;
+            out.damageAdjustment = resolved.adjustment;
             out.died = party_.damage(out.recipient, out.damage, out.critical).died;
             if (party_.character(out.recipient)->life != rules::Life::Conscious)
                 state_.defending[out.recipient.index] = false;
         } else {
-            out.died = actors_.damage(out.enemy, out.damage, when).died;
+            const auto result =
+                damageNpc(actors_, effects_, out.enemy, out.damage, out.damageType, out.critical, when);
+            out.rawDamage = result.resolved.raw;
+            out.damage = result.resolved.damage;
+            out.damageAdjustment = result.resolved.adjustment;
+            out.fortitude = result.fortitude;
+            out.died = result.actor.died;
             if (out.damage > 0)
                 interruptWindup(out.enemy, when);
         }

@@ -1,0 +1,67 @@
+{
+  "assets": "/home/bison/Projects/blobber/cmake-build-release/assets",
+  "header": {
+    "binary": "9197643726081627222",
+    "campaign_persistence": 1,
+    "content": {
+      "catalog": "18133623398271122840",
+      "npc_definitions": "10185415011994363592",
+      "world_appearance": 4,
+      "world_format": 3,
+      "world_publication": "1780262384493097845"
+    },
+    "door_scheduling": "shared-door-motion-300ms-v2",
+    "mode": "visual",
+    "protocol": 1,
+    "terrain_rules": "terrain-rules-v2",
+    "timing": "fixed-10ms-v1",
+    "visibility_backend": "world",
+    "visibility_version": "world-visibility-v6"
+  },
+  "images": [
+    {
+      "file": "operation-479.png",
+      "height": 1080,
+      "operation": 479,
+      "revision": "56",
+      "session": "1",
+      "ticks": 450,
+      "width": 1920
+    },
+    {
+      "file": "operation-640.png",
+      "height": 1080,
+      "operation": 640,
+      "revision": "213",
+      "session": "1",
+      "ticks": 1980,
+      "width": 1920
+    },
+    {
+      "file": "operation-654.png",
+      "height": 1080,
+      "operation": 654,
+      "revision": "226",
+      "session": "1",
+      "ticks": 2100,
+      "width": 1920
+    },
+    {
+      "file": "operation-731.png",
+      "height": 1080,
+      "operation": 731,
+      "revision": "1",
+      "session": "2",
+      "ticks": 0,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "prepared/world/metadata.json": "10238372357796034245",
+    "prepared/world/textures.bin": "7349207644656000504"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "docs/screenshots/b04/zombie-goblin-review.jsonl",
+  "trace_fingerprint": "8340909577987677455"
+}

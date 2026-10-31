@@ -1,0 +1,9 @@
+{
+  "name": "hurt-front",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production sprite animation sheet of the EXACT accepted zombie decayed human villager shown in the reference, which is an IDENTITY/STYLE reference only, NOT layout to copy. Same gaunt adult human, cloudy dead white eyes, sparse messy dark hair, gray-green decayed skin, ragged dirty beige sleeveless linen tunic, dull brown belt and torn brown trousers and worn brown shoes; unarmed empty five-fingered human hands. Detailed shaded textured retro dungeon illustration, crisp edges and muted materials, same lighting/proportions/clothing tears and anatomy. Human ears, no weapons/armor, never cute. Genuine TRANSPARENT alpha background and alpha holes, no background, floor, painted shadow, glow, grid, labels or text. Generous transparent outer margins and between poses; no silhouette may touch its neighbor or sheet edge. Same anatomical scale in all frames. FRONT view facing directly toward viewer, both eyes/front chest laces visible. Exactly TWO COMPLETE full-body HURT reaction poses left then right in TWO EQUAL cells on horizontal landscape 1536x1024 sheet. Frame 1 sudden recoil from a blow: torso twists and arches back slightly, head jerks to one side, empty arms thrown loosely apart, knees buckle but BOTH SHOES STAY on ground. Frame 2 recovering toward slack hunched standing, arms settling, head less tilted; distinctly different pose. SAME body anatomy and shoes baseline; not dead, not falling flat, no blood spray or white flash painted into sprite. Generous transparent head/hand/shoe margins, full figure roughly 760px tall.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/assets/npcs/zombie/reference/turnaround-v1.png"
+  ],
+  "transparent_background": true
+}

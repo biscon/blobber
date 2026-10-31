@@ -54,7 +54,7 @@ void environmentRoundtrip() {
         },
         "Malformed surface retains prior session");
     bad = blobber::automation::Json::parse(text);
-    bad["simulation"] = 4;
+    bad["simulation"] = 5;
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
     {
@@ -62,12 +62,12 @@ void environmentRoundtrip() {
         file << bad.dump();
     }
     CampaignStore store(c, d, {"fixture", 0}, disk);
-    check(!store.inspect().active, "Pre-B03 simulation is incompatible");
+    check(!store.inspect().active, "Pre-B04 simulation is incompatible");
     std::ifstream unchanged(directory.path / "campaign.json");
     const std::string original((std::istreambuf_iterator<char>(unchanged)), {});
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
-            "Previous simulation 4 rejects explicitly");
+            "Previous simulation 5 rejects explicitly");
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");

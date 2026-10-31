@@ -194,6 +194,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                     ? UiArt::bugbearPortraitIcon
                 : participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::GiantRat
                     ? UiArt::giantRatPortraitIcon
+                : participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Zombie
+                    ? UiArt::zombiePortraitIcon
                     : 4;
             if (participant.character)
                 for (const auto& card : h->cards)

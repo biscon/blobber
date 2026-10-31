@@ -1,0 +1,9 @@
+{
+  "name": "idle-front",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production sprite animation sheet of the EXACT accepted zombie decayed human villager shown in the reference, which is an IDENTITY/STYLE reference only, NOT layout to copy. Same gaunt adult human, cloudy dead white eyes, sparse messy dark hair, gray-green decayed skin, ragged dirty beige sleeveless linen tunic, dull brown belt and torn brown trousers and worn brown shoes; unarmed empty five-fingered human hands. Detailed shaded textured retro dungeon illustration, crisp edges and muted materials, same lighting/proportions/clothing tears and anatomy. Human ears, no weapons/armor, never cute. Genuine TRANSPARENT alpha background and alpha holes, no background, floor, painted shadow, glow, grid, labels or text. Generous transparent outer margins and between poses; no silhouette may touch its neighbor or sheet edge. Same anatomical scale in all frames. FRONT view facing directly toward viewer, both eyes visible. Exactly TWO COMPLETE full-body idle poses arranged LEFT then RIGHT in two equal cells on one horizontal LANDSCAPE sheet, preferably 1536x1024. Frame 1: slack stooped standing posture, arms hanging slightly forward, feet planted. Frame 2: subtle shoulder/rib-cage breathing sway and slight head shift, same planted shoe positions, clearly a separate pose. No walking, attacking or falling. Each complete standing human fits within its equal half-cell with about 100 px clear margin above head and below feet, same invisible ground row. Full hands and shoes visible, head to soles around 760 px, no cropped anatomy.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/assets/npcs/zombie/reference/turnaround-v1.png"
+  ],
+  "transparent_background": true
+}

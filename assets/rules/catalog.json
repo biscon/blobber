@@ -1,5 +1,5 @@
 {
-  "schema_version": 11,
+  "schema_version": 12,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -54,6 +54,17 @@
         "sides": 4,
         "modifier": 2,
         "type": "piercing"
+      }
+    },
+    {
+      "id": "zombie.slam",
+      "kind": "melee",
+      "attack_bonus": 3,
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "modifier": 1,
+        "type": "bludgeoning"
       }
     }
   ],
@@ -406,6 +417,34 @@
       "experience": 25,
       "humanoid": false,
       "damage_immunities": [],
+      "damage_vulnerabilities": []
+    },
+    {
+      "id": "zombie",
+      "abilities": {
+        "strength": 13,
+        "dexterity": 6,
+        "constitution": 16,
+        "intelligence": 3,
+        "wisdom": 6,
+        "charisma": 5
+      },
+      "armor_class": 8,
+      "hit_points": 22,
+      "attacks": [
+        "zombie.slam"
+      ],
+      "traits": [
+        "undead_fortitude"
+      ],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": true,
+      "experience": 50,
+      "humanoid": false,
+      "damage_immunities": [
+        "poison"
+      ],
       "damage_vulnerabilities": []
     }
   ],

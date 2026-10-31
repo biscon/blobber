@@ -22,7 +22,7 @@ struct AttackDefinition {
     Dice damage;
     DamageType damageType = DamageType::Bludgeoning;
 };
-enum class Trait : std::uint8_t { NimbleEscape = 1, PackTactics = 2 };
+enum class Trait : std::uint8_t { NimbleEscape = 1, PackTactics = 2, UndeadFortitude = 4 };
 using Traits = std::uint8_t;
 inline bool hasTrait(Traits traits, Trait trait) noexcept {
     return (traits & static_cast<Traits>(trait)) != 0;

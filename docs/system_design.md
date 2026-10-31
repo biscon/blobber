@@ -24,7 +24,12 @@ all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) i
 skeleton art are implemented in the arena. [Verification](b01_verification.md)
 records checks, captures and acceptance. B02 bugbear and full-resolution sprite
 cropping are **Accepted and closed** (2026-10-31); [B02 verification](b02_verification.md) records
-art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack Tactics](b03_giant_rat_design.md) is **Accepted and closed** (2026-10-31); B04 is next for separate detailed planning and B04–B06 remain Planned.
+art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack Tactics](b03_giant_rat_design.md) is **Accepted and closed** (2026-10-31).
+[B04 zombie and atomic Undead Fortitude](b04_zombie_design.md) is **Accepted and closed**
+(2026-11-01): mechanics, full art, native portrait and normal arena integration are
+delivered. Reference v1 and the completed slice are accepted.
+[B04 verification/gallery](b04_verification.md) records the checks and limitations.
+B05 is next for separate detailed planning; B05–B06 remain Planned.
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
 right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
@@ -47,7 +52,7 @@ roughly 20+ floor game; it stays paused after P-B.
   clears queued movement; commands validate turn tokens, life, equipment, range,
   formation and attacker availability before RNG. Acceptance returns synchronously;
   a fixed pending record retains the saved result until strike/arrival. Each update
-  returns a borrowed timestamped batch (1,036 entries including effect notices),
+  returns a borrowed timestamped batch (8,192 entries plus one automatic step),
   draining effect deadlines and existing attacks before movement/AI and then taking
   at most one new automatic step. Consume the batch before any subsequent session
   simulation operation, not only the next update.
@@ -228,6 +233,18 @@ a Vulkan-style benchmark or stress-testing framework.
 
 ## Typed damage and bestiary content
 
+B04 implements the approved [zombie design](b04_zombie_design.md). Catalog schema 12
+adds Undead Fortitude to the typed byte trait mask. One allocation-free NPC damage
+helper serves combat impacts and burning Web, applying mitigation and an effect-
+modified lethal Constitution save before the ActorWorld HP/death commit. Success
+retains one HP, identity and occupancy with ordinary hurt, never a death marker or
+premature reward. Radiant/critical bypass; full adjusted damage sets the 64-bit DC.
+Existing impact order, accepted rolls and spell-hit granularity remain. Resolved
+event metadata, bounded log/one-HP feedback, production 48-pose art and native
+portrait use existing owners. Six-appearance publication is 260.95 MiB mip /
+46.60 MiB alpha within unchanged limits; [verification](b04_verification.md) records
+focused CPU/GPU/replay evidence, limitations and completed-slice user acceptance.
+
 B03 mechanics follow the approved [giant rat design](b03_giant_rat_design.md).
 Schema 11 extends the typed trait mask with Pack Tactics. At accepted NPC weapon
 attacks combat scans at most 256 world-checked actors for another conscious ally
@@ -274,7 +291,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 3/5 and generator/templates 4/4. Older saves reject
+Campaign schema/simulation are 3/6 and generator/templates 4/4. Older saves reject
 without being modified; no migration. World publication is format 3, appearance 4,
 visibility world-visibility-v6 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

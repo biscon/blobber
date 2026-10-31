@@ -1,0 +1,5026 @@
+{
+  "operations": {
+    "start": 1,
+    "approach": 89,
+    "first-hurt": 116,
+    "contact": 274,
+    "first-enemy-impact": 307,
+    "first-death": 346,
+    "final": 358,
+    "rematch": 359
+  },
+  "events": [
+    {
+      "character": 3,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "cast",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "approach",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": "fire_bolt",
+      "target_gone": false,
+      "time_ms": "1700"
+    },
+    {
+      "character": 2,
+      "critical": false,
+      "damage": 8,
+      "damage_adjustment": "normal",
+      "damage_type": "piercing",
+      "darts": 0,
+      "died": false,
+      "enemy": 0,
+      "enemy_attack": false,
+      "event": "attack",
+      "feature": "Ability",
+      "hit": true,
+      "phase": "approach",
+      "raw_damage": 8,
+      "recipient": 65535,
+      "roll": 4,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "1996"
+    },
+    {
+      "character": 3,
+      "critical": false,
+      "damage": 0,
+      "damage_adjustment": "normal",
+      "damage_type": "fire",
+      "darts": 0,
+      "died": false,
+      "enemy": 0,
+      "enemy_attack": false,
+      "event": "attack",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "approach",
+      "raw_damage": 0,
+      "recipient": 65535,
+      "roll": 2,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": "fire_bolt",
+      "target_gone": false,
+      "time_ms": "2096"
+    },
+    {
+      "character": 65535,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "started",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "turns",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "0"
+    },
+    {
+      "character": 3,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "spent",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "turns",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "0"
+    },
+    {
+      "character": 1,
+      "critical": false,
+      "damage": 3,
+      "damage_adjustment": "normal",
+      "damage_type": "bludgeoning",
+      "darts": 0,
+      "died": false,
+      "enemy": 0,
+      "enemy_attack": false,
+      "event": "attack",
+      "feature": "Ability",
+      "hit": true,
+      "phase": "turns",
+      "raw_damage": 3,
+      "recipient": 65535,
+      "roll": 13,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "5200"
+    },
+    {
+      "attack_roll_mode": "normal",
+      "character": 65535,
+      "critical": false,
+      "damage": 0,
+      "damage_adjustment": "normal",
+      "damage_type": "bludgeoning",
+      "darts": 0,
+      "died": false,
+      "enemy": 0,
+      "enemy_attack": true,
+      "event": "attack",
+      "feature": "Ability",
+      "hit": false,
+      "pack_tactics": false,
+      "phase": "turns",
+      "raw_damage": 0,
+      "recipient": 0,
+      "roll": 10,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "7600"
+    },
+    {
+      "character": 0,
+      "critical": false,
+      "damage": 8,
+      "damage_adjustment": "normal",
+      "damage_type": "slashing",
+      "darts": 0,
+      "died": false,
+      "enemy": 0,
+      "enemy_attack": false,
+      "event": "attack",
+      "feature": "Ability",
+      "hit": true,
+      "phase": "turns",
+      "raw_damage": 8,
+      "recipient": 65535,
+      "roll": 14,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "8800"
+    },
+    {
+      "character": 2,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "spent",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "round_end",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "0"
+    },
+    {
+      "character": 65535,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "round",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "turns",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "0"
+    },
+    {
+      "character": 3,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "cast",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "turns",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": "fire_bolt",
+      "target_gone": false,
+      "time_ms": "10700"
+    },
+    {
+      "character": 3,
+      "critical": false,
+      "damage": 3,
+      "damage_adjustment": "normal",
+      "damage_type": "fire",
+      "darts": 0,
+      "died": true,
+      "enemy": 0,
+      "enemy_attack": false,
+      "event": "attack",
+      "feature": "Ability",
+      "hit": true,
+      "phase": "turns",
+      "raw_damage": 3,
+      "recipient": 65535,
+      "roll": 18,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": "fire_bolt",
+      "target_gone": false,
+      "time_ms": "10880",
+      "undead_fortitude": {
+        "difficulty": 8,
+        "outcome": "failed",
+        "roll": 4,
+        "total": 7
+      }
+    },
+    {
+      "character": 65535,
+      "critical": false,
+      "damage": 0,
+      "darts": 0,
+      "died": false,
+      "enemy": null,
+      "enemy_attack": false,
+      "event": "finished",
+      "feature": "Ability",
+      "hit": false,
+      "phase": "victory",
+      "recipient": 65535,
+      "roll": 0,
+      "save_difficulty": 0,
+      "save_total": 0,
+      "spell": null,
+      "target_gone": false,
+      "time_ms": "0"
+    }
+  ],
+  "checkpoints": {
+    "start": {
+      "active_character": null,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": true,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [
+        {
+          "actor": 0,
+          "guardian": false,
+          "heading": 2,
+          "health_fraction": 1.0,
+          "position": [
+            10,
+            7
+          ],
+          "statuses": [],
+          "subcell": [
+            0,
+            0
+          ],
+          "targetable": true,
+          "type": "zombie"
+        }
+      ],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "0",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 0,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1600,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 20
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        }
+      ],
+      "phase": "exploration",
+      "position": [
+        10,
+        21
+      ],
+      "quest_keys": 0,
+      "resolving_action": false,
+      "revision": "1",
+      "round": "0",
+      "session": "1",
+      "targets": [
+        0
+      ],
+      "terminal": false,
+      "ticks": 0,
+      "time_ms": "0"
+    },
+    "approach": {
+      "active_character": null,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": true,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [
+        {
+          "actor": 0,
+          "guardian": false,
+          "heading": 2,
+          "health_fraction": 1.0,
+          "position": [
+            10,
+            8
+          ],
+          "statuses": [],
+          "subcell": [
+            0,
+            0
+          ],
+          "targetable": true,
+          "type": "zombie"
+        }
+      ],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "1600",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 24,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1600,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 20
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        }
+      ],
+      "phase": "approach",
+      "position": [
+        10,
+        13
+      ],
+      "quest_keys": 0,
+      "resolving_action": false,
+      "revision": "25",
+      "round": "0",
+      "session": "1",
+      "targets": [
+        0
+      ],
+      "terminal": false,
+      "ticks": 160,
+      "time_ms": "1600"
+    },
+    "first-hurt": {
+      "active_character": null,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": true,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [
+        {
+          "actor": 0,
+          "guardian": false,
+          "heading": 2,
+          "health_fraction": 0.6363636363636364,
+          "position": [
+            10,
+            8
+          ],
+          "statuses": [],
+          "subcell": [
+            0,
+            0
+          ],
+          "targetable": true,
+          "type": "zombie"
+        }
+      ],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "2000",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 30,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1595,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "5600",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 19
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "5700",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        }
+      ],
+      "phase": "approach",
+      "position": [
+        10,
+        13
+      ],
+      "quest_keys": 0,
+      "resolving_action": false,
+      "revision": "31",
+      "round": "0",
+      "session": "1",
+      "targets": [
+        0
+      ],
+      "terminal": false,
+      "ticks": 200,
+      "time_ms": "2000"
+    },
+    "contact": {
+      "active_character": 3,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": false,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [
+        {
+          "actor": 0,
+          "guardian": false,
+          "heading": 2,
+          "health_fraction": 0.6363636363636364,
+          "position": [
+            10,
+            12
+          ],
+          "statuses": [],
+          "subcell": [
+            0,
+            0
+          ],
+          "targetable": true,
+          "type": "zombie"
+        }
+      ],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "3900",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 55,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1595,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "3700",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 19
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "3800",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        }
+      ],
+      "phase": "turns",
+      "position": [
+        10,
+        13
+      ],
+      "quest_keys": 0,
+      "resolving_action": false,
+      "revision": "56",
+      "round": "1",
+      "session": "1",
+      "targets": [
+        0
+      ],
+      "terminal": false,
+      "ticks": 450,
+      "time_ms": "4500"
+    },
+    "first-enemy-impact": {
+      "active_character": null,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": false,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [
+        {
+          "actor": 0,
+          "guardian": false,
+          "heading": 2,
+          "health_fraction": 0.5,
+          "position": [
+            10,
+            12
+          ],
+          "statuses": [],
+          "subcell": [
+            0,
+            1
+          ],
+          "targetable": true,
+          "type": "zombie"
+        }
+      ],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "3900",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 87,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "6000",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1595,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "3700",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 19
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "3800",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        }
+      ],
+      "phase": "turns",
+      "position": [
+        10,
+        13
+      ],
+      "quest_keys": 0,
+      "resolving_action": true,
+      "revision": "88",
+      "round": "1",
+      "session": "1",
+      "targets": [
+        0
+      ],
+      "terminal": false,
+      "ticks": 760,
+      "time_ms": "7600"
+    },
+    "first-death": {
+      "active_character": 3,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": false,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "9900",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 122,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1595,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 19
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "6000",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        }
+      ],
+      "phase": "turns",
+      "position": [
+        10,
+        13
+      ],
+      "quest_keys": 0,
+      "resolving_action": true,
+      "revision": "123",
+      "round": "2",
+      "session": "1",
+      "targets": [],
+      "terminal": false,
+      "ticks": 1090,
+      "time_ms": "10900"
+    },
+    "final": {
+      "active_character": null,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": true,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "9900",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 134,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1595,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 19
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "6000",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": true,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 12
+        }
+      ],
+      "phase": "victory",
+      "position": [
+        10,
+        13
+      ],
+      "quest_keys": 0,
+      "resolving_action": false,
+      "revision": "135",
+      "round": "2",
+      "session": "1",
+      "targets": [],
+      "terminal": true,
+      "ticks": 1208,
+      "time_ms": "12080"
+    },
+    "rematch": {
+      "active_character": null,
+      "awaiting_action": false,
+      "can_end_turn": false,
+      "decision": true,
+      "diagnostic": false,
+      "diagnostic_inspection_used": false,
+      "door_opening": false,
+      "enemies": [
+        {
+          "actor": 0,
+          "guardian": false,
+          "heading": 2,
+          "health_fraction": 1.0,
+          "position": [
+            10,
+            7
+          ],
+          "statuses": [],
+          "subcell": [
+            0,
+            0
+          ],
+          "targetable": true,
+          "type": "zombie"
+        }
+      ],
+      "fixtures": [],
+      "formation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "gameplay_ms": "0",
+      "ground": [],
+      "heading": 0,
+      "loot": [],
+      "mode": "visual",
+      "moving": false,
+      "mutations": 0,
+      "party": [
+        {
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 19,
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 8900,
+          "carrying_capacity": 24000,
+          "channel_divinity": false,
+          "character": 0,
+          "class": "fighter",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "alden",
+          "initiative": 2,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 3
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 20
+              },
+              "item": "camp_kit",
+              "quantity": 3
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 1
+              },
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 0
+              },
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 2
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 12,
+          "max_mana": 0,
+          "name": "Alden",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "human",
+          "racial": [],
+          "saves": [
+            5,
+            2,
+            4,
+            -1,
+            1,
+            0
+          ],
+          "second_wind": true,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 16,
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "carried_weight": 5800,
+          "carrying_capacity": 19500,
+          "channel_divinity": false,
+          "character": 1,
+          "class": "cleric",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "hit_dice": 1,
+          "hp": 12,
+          "id": "brunna",
+          "initiative": 0,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 7
+              },
+              "item": "holy_symbol",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 8
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 9
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 5
+              },
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 4
+              },
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "handle": {
+                "generation": "1",
+                "slot": 6
+              },
+              "item": "shield",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 12,
+          "max_mana": 4,
+          "name": "Brunna",
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "proficiency": 2,
+          "race": "hill_dwarf",
+          "racial": [],
+          "saves": [
+            1,
+            0,
+            3,
+            -1,
+            5,
+            3
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "action_surge": false,
+          "arcane_recovery": false,
+          "armor_class": 14,
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "carried_weight": 1600,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 2,
+          "class": "rogue",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 10,
+          "id": "merrin",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 13
+              },
+              "item": "arrow",
+              "quantity": 20
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 14
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 48,
+              "handle": {
+                "generation": "1",
+                "slot": 11
+              },
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 10
+              },
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "handle": {
+                "generation": "1",
+                "slot": 12
+              },
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ],
+          "learned": [],
+          "level": 1,
+          "life": 0,
+          "mana": 0,
+          "max_hp": 10,
+          "max_mana": 0,
+          "name": "Merrin",
+          "prepared": [],
+          "proficiency": 2,
+          "race": "lightfoot_halfling",
+          "racial": [],
+          "saves": [
+            -1,
+            5,
+            2,
+            3,
+            1,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        },
+        {
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "action_surge": false,
+          "arcane_recovery": true,
+          "armor_class": 13,
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "carried_weight": 700,
+          "carrying_capacity": 12000,
+          "channel_divinity": false,
+          "character": 3,
+          "class": "wizard",
+          "concentration": [],
+          "cooldown_ms": "0",
+          "death_failures": 0,
+          "death_successes": 0,
+          "defending": false,
+          "domain": [],
+          "hit_dice": 1,
+          "hp": 7,
+          "id": "lethiel",
+          "initiative": 3,
+          "inventory": [
+            {
+              "cell": 0,
+              "handle": {
+                "generation": "1",
+                "slot": 16
+              },
+              "item": "spellbook",
+              "quantity": 1
+            },
+            {
+              "cell": 1,
+              "handle": {
+                "generation": "1",
+                "slot": 17
+              },
+              "item": "arcane_focus",
+              "quantity": 1
+            },
+            {
+              "cell": 2,
+              "handle": {
+                "generation": "1",
+                "slot": 18
+              },
+              "item": "healing_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 3,
+              "handle": {
+                "generation": "1",
+                "slot": 19
+              },
+              "item": "mana_potion",
+              "quantity": 2
+            },
+            {
+              "cell": 49,
+              "handle": {
+                "generation": "1",
+                "slot": 15
+              },
+              "item": "dagger",
+              "quantity": 1
+            }
+          ],
+          "learned": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave",
+            "sleep",
+            "grease"
+          ],
+          "level": 1,
+          "life": 0,
+          "mana": 4,
+          "max_hp": 7,
+          "max_mana": 4,
+          "name": "Lethiel",
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "proficiency": 2,
+          "race": "high_elf",
+          "racial": [
+            "shocking_grasp"
+          ],
+          "saves": [
+            -1,
+            3,
+            1,
+            5,
+            3,
+            0
+          ],
+          "second_wind": false,
+          "spent": false,
+          "statuses": [],
+          "temporary_hp": 0,
+          "xp": 0
+        }
+      ],
+      "phase": "exploration",
+      "position": [
+        10,
+        21
+      ],
+      "quest_keys": 0,
+      "resolving_action": false,
+      "revision": "1",
+      "round": "0",
+      "session": "2",
+      "targets": [
+        0
+      ],
+      "terminal": false,
+      "ticks": 0,
+      "time_ms": "0"
+    }
+  },
+  "final": {
+    "active_character": null,
+    "awaiting_action": false,
+    "can_end_turn": false,
+    "decision": true,
+    "diagnostic": false,
+    "diagnostic_inspection_used": false,
+    "door_opening": false,
+    "enemies": [],
+    "fixtures": [],
+    "formation": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "gameplay_ms": "9900",
+    "ground": [],
+    "heading": 0,
+    "loot": [],
+    "mode": "visual",
+    "moving": false,
+    "mutations": 134,
+    "party": [
+      {
+        "abilities": [
+          16,
+          14,
+          15,
+          9,
+          13,
+          11
+        ],
+        "action_surge": false,
+        "arcane_recovery": false,
+        "armor_class": 19,
+        "base_abilities": [
+          15,
+          13,
+          14,
+          8,
+          12,
+          10
+        ],
+        "cantrips": [],
+        "carried_weight": 8900,
+        "carrying_capacity": 24000,
+        "channel_divinity": false,
+        "character": 0,
+        "class": "fighter",
+        "concentration": [],
+        "cooldown_ms": "0",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [],
+        "hit_dice": 1,
+        "hp": 12,
+        "id": "alden",
+        "initiative": 2,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 3
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 20
+            },
+            "item": "camp_kit",
+            "quantity": 3
+          },
+          {
+            "cell": 48,
+            "handle": {
+              "generation": "1",
+              "slot": 1
+            },
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 0
+            },
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "handle": {
+              "generation": "1",
+              "slot": 2
+            },
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "learned": [],
+        "level": 1,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 12,
+        "max_mana": 0,
+        "name": "Alden",
+        "prepared": [],
+        "proficiency": 2,
+        "race": "human",
+        "racial": [],
+        "saves": [
+          5,
+          2,
+          4,
+          -1,
+          1,
+          0
+        ],
+        "second_wind": true,
+        "spent": false,
+        "statuses": [],
+        "temporary_hp": 0,
+        "xp": 12
+      },
+      {
+        "abilities": [
+          13,
+          10,
+          16,
+          8,
+          16,
+          12
+        ],
+        "action_surge": false,
+        "arcane_recovery": false,
+        "armor_class": 16,
+        "base_abilities": [
+          13,
+          10,
+          14,
+          8,
+          15,
+          12
+        ],
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "carried_weight": 5800,
+        "carrying_capacity": 19500,
+        "channel_divinity": false,
+        "character": 1,
+        "class": "cleric",
+        "concentration": [],
+        "cooldown_ms": "0",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "hit_dice": 1,
+        "hp": 12,
+        "id": "brunna",
+        "initiative": 0,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 7
+            },
+            "item": "holy_symbol",
+            "quantity": 1
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 8
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 2,
+            "handle": {
+              "generation": "1",
+              "slot": 9
+            },
+            "item": "mana_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 48,
+            "handle": {
+              "generation": "1",
+              "slot": 5
+            },
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 4
+            },
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "handle": {
+              "generation": "1",
+              "slot": 6
+            },
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "learned": [],
+        "level": 1,
+        "life": 0,
+        "mana": 4,
+        "max_hp": 12,
+        "max_mana": 4,
+        "name": "Brunna",
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "proficiency": 2,
+        "race": "hill_dwarf",
+        "racial": [],
+        "saves": [
+          1,
+          0,
+          3,
+          -1,
+          5,
+          3
+        ],
+        "second_wind": false,
+        "spent": false,
+        "statuses": [],
+        "temporary_hp": 0,
+        "xp": 12
+      },
+      {
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "action_surge": false,
+        "arcane_recovery": false,
+        "armor_class": 14,
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "carried_weight": 1595,
+        "carrying_capacity": 12000,
+        "channel_divinity": false,
+        "character": 2,
+        "class": "rogue",
+        "concentration": [],
+        "cooldown_ms": "0",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [],
+        "hit_dice": 1,
+        "hp": 10,
+        "id": "merrin",
+        "initiative": 3,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 13
+            },
+            "item": "arrow",
+            "quantity": 19
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 14
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 48,
+            "handle": {
+              "generation": "1",
+              "slot": 11
+            },
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 10
+            },
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "handle": {
+              "generation": "1",
+              "slot": 12
+            },
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ],
+        "learned": [],
+        "level": 1,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 10,
+        "max_mana": 0,
+        "name": "Merrin",
+        "prepared": [],
+        "proficiency": 2,
+        "race": "lightfoot_halfling",
+        "racial": [],
+        "saves": [
+          -1,
+          5,
+          2,
+          3,
+          1,
+          0
+        ],
+        "second_wind": false,
+        "spent": false,
+        "statuses": [],
+        "temporary_hp": 0,
+        "xp": 12
+      },
+      {
+        "abilities": [
+          8,
+          16,
+          13,
+          16,
+          12,
+          10
+        ],
+        "action_surge": false,
+        "arcane_recovery": true,
+        "armor_class": 13,
+        "base_abilities": [
+          8,
+          14,
+          13,
+          15,
+          12,
+          10
+        ],
+        "cantrips": [
+          "fire_bolt",
+          "acid_splash",
+          "ray_of_frost"
+        ],
+        "carried_weight": 700,
+        "carrying_capacity": 12000,
+        "channel_divinity": false,
+        "character": 3,
+        "class": "wizard",
+        "concentration": [],
+        "cooldown_ms": "6000",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [],
+        "hit_dice": 1,
+        "hp": 7,
+        "id": "lethiel",
+        "initiative": 3,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 16
+            },
+            "item": "spellbook",
+            "quantity": 1
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 17
+            },
+            "item": "arcane_focus",
+            "quantity": 1
+          },
+          {
+            "cell": 2,
+            "handle": {
+              "generation": "1",
+              "slot": 18
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 3,
+            "handle": {
+              "generation": "1",
+              "slot": 19
+            },
+            "item": "mana_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 15
+            },
+            "item": "dagger",
+            "quantity": 1
+          }
+        ],
+        "learned": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave",
+          "sleep",
+          "grease"
+        ],
+        "level": 1,
+        "life": 0,
+        "mana": 4,
+        "max_hp": 7,
+        "max_mana": 4,
+        "name": "Lethiel",
+        "prepared": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave"
+        ],
+        "proficiency": 2,
+        "race": "high_elf",
+        "racial": [
+          "shocking_grasp"
+        ],
+        "saves": [
+          -1,
+          3,
+          1,
+          5,
+          3,
+          0
+        ],
+        "second_wind": false,
+        "spent": true,
+        "statuses": [],
+        "temporary_hp": 0,
+        "xp": 12
+      }
+    ],
+    "phase": "victory",
+    "position": [
+      10,
+      13
+    ],
+    "quest_keys": 0,
+    "resolving_action": false,
+    "revision": "135",
+    "round": "2",
+    "session": "1",
+    "targets": [],
+    "terminal": true,
+    "ticks": 1208,
+    "time_ms": "12080"
+  },
+  "notes": [
+    "Ordinary level-one party, seed 8, visual-mode legal commands.",
+    "Ordinary weapon attacks and wizard Fire Bolt; no hidden resource grants.",
+    "Bounded behavior review, not a balance experiment."
+  ]
+}

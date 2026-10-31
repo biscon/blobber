@@ -491,3 +491,17 @@ party events retain their prior shape. Acceptance, release and cancellation neve
 publish this saved roll context; non-diagnostic acceptance/release stay hidden.
 Campaign schema/simulation are now 3/5. Older simulation/content rejects without
 migration or rewriting the rejected file. Arena format remains 1.
+
+## B04 Undead Fortitude event metadata
+
+Protocol remains v1. A resolved NPC `attack` event that reaches a lethal Fortitude
+decision additionally exposes `undead_fortitude`. Its `outcome` is `saved`,
+`failed`, `radiant_bypass` or `critical_bypass`; radiant takes explanatory precedence
+when both bypasses apply. Attempted saves also include `roll`, `total` and
+`difficulty` (a 64-bit integer). Bypasses have no invented save. Unaffected and
+acceptance/release/cancellation events omit the field, including diagnostics.
+Fortitude uses full post-mitigation `damage`, not HP removed; successful survival
+retains one HP and `died=false`. Multi-hit/source granularity remains unchanged.
+Campaign schema/simulation are now 3/6; old simulation/content rejects without
+migration or rewriting files. Arena format and strict replay identity checks stay
+unchanged.

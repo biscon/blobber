@@ -1,0 +1,9 @@
+{
+  "name": "prone-left",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production sprite animation sheet of the EXACT accepted zombie decayed human villager shown in the reference, which is an IDENTITY/STYLE reference only, NOT layout to copy. Same gaunt adult human, cloudy dead white eyes, sparse messy dark hair, gray-green decayed skin, ragged dirty beige sleeveless linen tunic, dull brown belt and torn brown trousers and worn brown shoes; unarmed empty five-fingered human hands. Detailed shaded textured retro dungeon illustration, crisp edges and muted materials, same lighting/proportions/clothing tears and anatomy. Human ears, no weapons/armor, never cute. Genuine TRANSPARENT alpha background and alpha holes, no background, floor, painted shadow, glow, grid, labels or text. Generous transparent outer margins and between poses; no silhouette may touch its neighbor or sheet edge. Same anatomical scale in all frames. Exactly ONE COMPLETE full-body PRONE pose, STRICT LEFT-facing side view. Knocked-down zombie lies flat on his side on ground with HEAD at screen-LEFT, feet at screen-RIGHT, face/chest visible toward camera; empty hands limp near head and body, both legs extended, not standing or kneeling. Entire body roughly900px long and only230px high within horizontal landscape1536x1024 sheet, centered with generous transparent margins on EVERY side. SAME anatomical adult proportions and clothing as reference, don't enlarge head or shrink limbs. No pool, floor, shadow, effects or dismemberment. Very low sprawled silhouette, unclipped full head/fingers/shoes.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/assets/npcs/zombie/reference/turnaround-v1.png"
+  ],
+  "transparent_background": true
+}

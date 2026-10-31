@@ -1,0 +1,9 @@
+{
+  "name": "walk-left",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production sprite animation sheet of the EXACT accepted zombie decayed human villager shown in the reference, which is an IDENTITY/STYLE reference only, NOT layout to copy. Same gaunt adult human, cloudy dead white eyes, sparse messy dark hair, gray-green decayed skin, ragged dirty beige sleeveless linen tunic, dull brown belt and torn brown trousers and worn brown shoes; unarmed empty five-fingered human hands. Detailed shaded textured retro dungeon illustration, crisp edges and muted materials, same lighting/proportions/clothing tears and anatomy. Human ears, no weapons/armor, never cute. Genuine TRANSPARENT alpha background and alpha holes, no background, floor, painted shadow, glow, grid, labels or text. Generous transparent outer margins and between poses; no silhouette may touch its neighbor or sheet edge. Same anatomical scale in all frames. STRICT LEFT PROFILE faces and walks toward screen-LEFT, nose/chest/hands/shoe toes point LEFT, one eye visible. Exactly TWO COMPLETE full-body WALK poses left then right in TWO equal cells on horizontal1536x1024. Frame1 WIDE OPEN STRIDE, one shoe at farLEFT and other at farRIGHT, slack arms loosely spread. Frame2 NARROW PASSING POSE, BOTH SHOES CLOSE TOGETHER DIRECTLY UNDER HIPS, near knee bent and heel raised, arms hang closer to body. Frame2 must have feet-together stance VERY DIFFERENT from frame1 wide stride; do not repeat open leg pose. Same head/torso scale and local ground baseline, figures about760px high. Whole fingers/shoes with generous clear transparent margins.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/assets/npcs/zombie/reference/turnaround-v1.png"
+  ],
+  "transparent_background": true
+}

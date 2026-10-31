@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Asset type: native initiative portrait for a retro dungeon game. Create one square head-and-shoulders portrait of the EXACT accepted zombie decayed human villager in the supplied reference. Same gaunt haggard human face, cloudy dead white eyes, sparse messy dark brown hair, small round human ears, gray-green pallid decayed skin with restrained dried wounds, slack partly open jaw with crooked yellow teeth, ragged dirty beige linen tunic shoulders. Detailed shaded textured retro dungeon illustration with crisp facial features, worn materials and muted earthy colors, consistent top-left lighting. Sinister exhausted stubborn corpse, never cute/comical. Large readable face centered, near frontal slight three-quarter turn, entire top of head with generous margin, shoulders fill lower corners. Dark muted warm charcoal-brown plain painted background, subtle vignette, NO text/border/icon/symbol/weapon. Match identity and palette exactly. Readable at a small 24px initiative tile.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/assets/npcs/zombie/reference/turnaround-v1.png"
+  ],
+  "transparent_background": false
+}

@@ -368,6 +368,16 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
         j["damage_type"] = rules::damageTypeName(e.damageType);
         j["raw_damage"] = e.rawDamage;
         j["damage_adjustment"] = rules::damageAdjustmentName(e.damageAdjustment);
+        if (e.fortitude.status != FortitudeStatus::None) {
+            const auto& f = e.fortitude;
+            j["undead_fortitude"] = {{"outcome", fortitudeStatusName(f.status)}};
+            if (f.status == FortitudeStatus::Saved || f.status == FortitudeStatus::Failed) {
+                auto& save = j["undead_fortitude"];
+                save["roll"] = f.roll;
+                save["total"] = f.total;
+                save["difficulty"] = f.difficulty;
+            }
+        }
     }
     if (const auto* item = cat.item(e.item))
         j["item"] = item->id;

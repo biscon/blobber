@@ -1,0 +1,9 @@
+{
+  "name": "walk-front",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production sprite animation sheet of the EXACT accepted zombie decayed human villager shown in the reference, which is an IDENTITY/STYLE reference only, NOT layout to copy. Same gaunt adult human, cloudy dead white eyes, sparse messy dark hair, gray-green decayed skin, ragged dirty beige sleeveless linen tunic, dull brown belt and torn brown trousers and worn brown shoes; unarmed empty five-fingered human hands. Detailed shaded textured retro dungeon illustration, crisp edges and muted materials, same lighting/proportions/clothing tears and anatomy. Human ears, no weapons/armor, never cute. Genuine TRANSPARENT alpha background and alpha holes, no background, floor, painted shadow, glow, grid, labels or text. Generous transparent outer margins and between poses; no silhouette may touch its neighbor or sheet edge. Same anatomical scale in all frames. FRONT view facing directly toward viewer, BOTH eyes and front chest laces visible. Exactly TWO COMPLETE full-body WALK cycle poses arranged left then right in TWO EQUAL cells on a horizontal landscape 1536x1024 sheet. Frame 1: shambling STEP with anatomical LEFT leg forward toward viewer, right leg trailing, shoulders sagging and arms swinging gently out of phase. Frame 2: opposite step RIGHT leg forward, left leg trailing. Obvious alternating leg/arm positions, not two idle poses. Keep human hunched head and torso height/size consistent, ground soles on same invisible baseline. Each figure around 760px high with clear transparent margins, complete shoes and fingers.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/assets/npcs/zombie/reference/turnaround-v1.png"
+  ],
+  "transparent_background": true
+}

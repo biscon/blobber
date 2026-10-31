@@ -39,6 +39,33 @@ void packEvents() {
     check(!encodeEvent(event, cat, false).contains("pack_tactics"), "NPC spell event has no weapon metadata");
 }
 
+void fortitudeEvents() {
+    const auto cat = catalog();
+    CombatOutcome event;
+    event.event = CombatEvent::Attack;
+    event.fortitude = {FortitudeStatus::Saved, 13, 16, 9};
+    const auto encoded = encodeEvent(event, cat, false);
+    check(encoded.at("undead_fortitude") ==
+              Json{{"outcome", "saved"}, {"roll", 13}, {"total", 16}, {"difficulty", 9}},
+          "Resolved impact exposes Fortitude save independently of attack/spell save rolls");
+    event.fortitude.status = FortitudeStatus::Failed;
+    event.fortitude.difficulty = INT64_MAX;
+    check(encodeEvent(event, cat, true).at("undead_fortitude").at("difficulty") == INT64_MAX,
+          "Fortitude DC retains 64-bit precision");
+    event.fortitude = {FortitudeStatus::RadiantBypass};
+    check(encodeEvent(event, cat, false).at("undead_fortitude") == Json{{"outcome", "radiant_bypass"}},
+          "Bypass reports its reason without an invented save");
+    for (const auto type : {CombatEvent::AttackStarted, CombatEvent::ProjectileReleased,
+                            CombatEvent::AttackCanceled, CombatEvent::SpellSave}) {
+        event.event = type;
+        check(!encodeEvent(event, cat, true).contains("undead_fortitude"),
+              "Unresolved events never reveal Fortitude context");
+    }
+    event.event = CombatEvent::Attack;
+    event.fortitude = {};
+    check(!encodeEvent(event, cat, false).contains("undead_fortitude"),
+          "Unaffected event wire shape remains unchanged");
+}
 void boundaries() {
     const auto cat = catalog();
     const auto defs = definitions();
@@ -473,6 +500,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         packEvents();
+        fortitudeEvents();
         boundaries();
         tickBudget();
         management();

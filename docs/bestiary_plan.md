@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
-Created: 2026-10-31. Last updated: 2026-10-31.
-Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03 Accepted and closed (2026-10-31); B04–B06 Planned.**
+Created: 2026-10-31. Last updated: 2026-11-01.
+Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03 Accepted and closed (2026-10-31); B04 Accepted and closed (2026-11-01); B05–B06 Planned.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -24,11 +24,11 @@ pacing or start PC07. Campaign integration gets its own plan after arena review.
 
 | Field | Current value |
 | --- | --- |
-| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B03 closed |
-| Active slice | None; B03 — Giant rat and Pack Tactics Accepted and closed |
-| Awaiting review | None; B03 completed-slice acceptance recorded |
-| Next eligible slice | B04 — Zombie and Undead Fortitude; detailed planning |
-| Next action | Plan B04 using the [accepted B03 handoff](b03_verification.md); review its detailed plan before implementation |
+| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B04 closed |
+| Active slice | None; B04 — Zombie and Undead Fortitude Accepted and closed |
+| Awaiting review | None; B04 completed-slice acceptance recorded |
+| Next eligible slice | B05 — Goblin shaman and enemy spellcasting; detailed planning |
+| Next action | Plan B05 using the [accepted B04 handoff](b04_verification.md); review its detailed plan before implementation |
 | Campaign status | Paused; no generator/population or guardian changes |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
@@ -172,7 +172,7 @@ per-frame image generation/decoding is part of this work.
 | B01 | [Skeleton and typed damage](b01_skeleton_design.md) | Roadmap accepted | Accepted and closed (2026-10-31) |
 | B02 | [Bugbear and sprite memory preparation](b02_bugbear_design.md) | B01 accepted | Accepted and closed (2026-10-31) |
 | B03 | [Giant rat and Pack Tactics](b03_giant_rat_design.md) | B02 accepted | Accepted and closed (2026-10-31) |
-| B04 | Zombie and Undead Fortitude | B03 accepted | Planned |
+| B04 | [Zombie and Undead Fortitude](b04_zombie_design.md) | B03 accepted | Accepted and closed (2026-11-01) |
 | B05 | Goblin shaman and enemy spellcasting | B04 accepted | Planned |
 | B06 | Arena preparation and roster polish | B05 accepted | Planned |
 
@@ -227,6 +227,9 @@ notice and select among feet, shadows and corpses without artificially enlarging
 visually readable and has no lingering ailment/recovery requirement.
 
 ### B04 — Zombie and Undead Fortitude
+
+**Accepted and closed (2026-11-01).** [Design](b04_zombie_design.md) ·
+[verification/gallery](b04_verification.md). Reference v1 and completed slice accepted.
 
 Deliver the zombie and its full applicable art set, reusing B01's damage profile
 for poison immunity and the existing undead spell restrictions. Undead Fortitude
@@ -403,3 +406,31 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
   automation/save identities. Existing [verification evidence and limitations](b03_verification.md)
   remain recorded. **B04 — Zombie and Undead Fortitude** is next for separate
   detailed planning; implementation is unstarted. Campaign integration/PC07 stay paused.
+
+- **2026-10-31 B04 approval:** User approved the detailed plan with “Implement the plan.”
+  Decayed villager direction selected; [B04 design](b04_zombie_design.md) records
+  atomic Fortitude, complete art, arena and compatibility work. Implementation is
+  active; reference acceptance and completed-slice acceptance remain pending.
+  Campaign integration and PC07 stay paused.
+
+- **2026-10-31 B04 reference acceptance:** User: “reference accepted”.
+  Turnaround v1 is accepted; full production animation is authorized. Completed
+  B04 acceptance remains pending; campaign/PC07 stay paused.
+
+- **2026-11-01 B04 delivery:** Zombie, atomic Undead Fortitude, full 48-pose
+  production art, native portrait and normal arena integration are delivered.
+  Schema 12 / campaign simulation 6 retain explicit incompatible-save rejection.
+  Six-appearance publication is 260.95 MiB mip / 46.60 MiB alpha within unchanged
+  budgets. Seventeen focused CPU checks, hidden GPU integration and four strict
+  production arena traces/captures pass; later hurt/corpse captures also match.
+  [Verification/gallery](b04_verification.md) records exact checks and limitations.
+  **B04 Ready for review**; reference v1 accepted, completed-slice acceptance pending.
+  B05–B06 remain Planned; campaign integration/PC07 stay paused.
+
+- **2026-11-01 B04 acceptance:** User: “slice accepted, record it in the plan doc”.
+  **B04 Accepted and closed**, including zombie mechanics, atomic Undead Fortitude,
+  full 48-pose production art, native portrait, normal arena integration and
+  affected automation/save identities. Existing [verification evidence and
+  limitations](b04_verification.md) remain recorded. **B05 — Goblin shaman and
+  enemy spellcasting** is next for separate detailed planning; implementation is
+  unstarted. B06 remains Planned; campaign integration and PC07 stay paused.

@@ -59,6 +59,7 @@ struct ActorResult {
     std::int32_t damage = 0;
     explicit operator bool() const noexcept { return error == ActorError::None; }
 };
+enum class LethalDisposition : std::uint8_t { AllowDeath, RetainOneHp };
 // Placement-only slots never recycle. Map/catalog must outlive this immovable owner.
 class ActorWorld {
   public:
@@ -81,7 +82,8 @@ class ActorWorld {
     ActorResult attack(ActorId id, std::uint64_t timeMs, bool ranged = false) noexcept;
     ActorResult suspendAttack(ActorId, std::uint64_t when, std::uint64_t duration) noexcept;
     ActorResult cancelAttack(ActorId) noexcept;
-    ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs) noexcept;
+    ActorResult damage(ActorId id, std::int64_t amount, std::uint64_t timeMs,
+                       LethalDisposition = LethalDisposition::AllowDeath) noexcept;
     ActorResult remove(ActorId id) noexcept;
     GeometryView map() const noexcept { return map_; }
     const rules::Catalog& catalog() const noexcept { return catalog_; }
