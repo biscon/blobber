@@ -9,8 +9,9 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
             ++mutation_;
     if (!preview)
         events_.clear();
-    if (movement().transition.active())
-        return {InventoryError::Moving, "Wait until movement finishes."};
+    if (actionBusy())
+        return {InventoryError::Moving,
+                opening() ? "Wait until the door opens." : "Wait until movement finishes."};
     if (!combat_.safeRecovery(movement().player))
         return {InventoryError::Unsafe, "Dropping requires safe exploration."};
     const auto* stack = party_.inventory().stack(handle);
@@ -42,8 +43,9 @@ PickupResult GameSession::lootAccess(LootId id) const noexcept {
     const auto* s = loot_.find(id);
     if (!s || loot_.snapshot().revision == UINT64_MAX)
         return {InventoryError::Stale, "That loot bag is no longer available."};
-    if (movement().transition.active())
-        return {InventoryError::Moving, "Wait until movement finishes."};
+    if (actionBusy())
+        return {InventoryError::Moving,
+                opening() ? "Wait until the door opens." : "Wait until movement finishes."};
     if (!combat_.safeRecovery(movement().player))
         return {InventoryError::Unsafe, "Loot requires safe exploration."};
     if (!(s->cell == movement().player.cell) &&
@@ -93,7 +95,7 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
         leader |= effects_.canAct(rules::CharacterId{i});
     if (r.world != actors_.snapshot().world || r.token != restToken_)
         p.error = RestError::Stale;
-    else if (movement().transition.active())
+    else if (actionBusy())
         p.error = RestError::Moving;
     else if (effects_.area(movement().player.cell) || !combat_.settledRecovery(movement().player, timeMs_))
         p.error = RestError::Unsafe;

@@ -2,6 +2,7 @@
 #include "assets/image.hpp"
 #include "assets/npc_sheet.hpp"
 #include "assets/world_assets.hpp"
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -38,7 +39,7 @@ fs::path relative(const std::string& text) {
 }
 std::map<std::string, std::string> sourceFingerprints(const fs::path& source) {
     std::map<std::string, std::string> result;
-    for (const auto* folder : {"npcs", "textures", "fixtures"})
+    for (const auto* folder : {"npcs", "textures", "fixtures", "effects"})
         for (const auto& entry : fs::recursive_directory_iterator(source / folder))
             if (entry.is_regular_file() &&
                 (entry.path().extension() == ".png" || entry.path().extension() == ".json"))
@@ -58,6 +59,57 @@ int run(const fs::path& source, const fs::path& output) {
     };
     for (const auto* name : {"wall", "floor", "ceiling"})
         add(name, source / "textures" / (std::string(name) + ".png"), false);
+    add("door", source / "textures/door.png", false);
+    add("door-locked", source / "textures/door-locked.png", false);
+    for (const auto* name : {"grease", "web", "spiritual_weapon"})
+        add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
+            source / "effects" / (std::string(name) + ".png"), true);
+    // Code-authored source artwork; reusable base images replace perspective rasters.
+    for (unsigned kind = 0; kind < 7; ++kind) {
+        constexpr const char* names[]{"arrow", "tip", "feathers", "slash", "glint", "preview", "white"};
+        std::vector<unsigned char> rgba(64 * 64 * 4);
+        for (unsigned y = 0; y < 64; ++y)
+            for (unsigned x = 0; x < 64; ++x) {
+                const float u = (x + .5f) / 64 - .5f, v = (y + .5f) / 64 - .5f;
+                bool inside = false;
+                unsigned char r = 242, g = 231, b = 194, a = 255;
+                if (kind == 0) {
+                    inside = (std::abs(v) < .035f && u > -.4f && u < .32f) ||
+                             (u > .22f && u < .48f && std::abs(v) < (.48f - u) * .5f) ||
+                             (u < -.22f && u > -.46f && std::abs(v) < (.47f + u) * .55f + .03f);
+                    r = 205;
+                    g = 196;
+                    b = 163;
+                }
+                if (kind == 1)
+                    inside = u * u + v * v < .02f || (std::abs(u) < .035f && std::abs(v) < .2f);
+                if (kind == 2)
+                    inside = (std::abs(v) < .045f && std::abs(u) < .25f) ||
+                             (std::abs(u) < .045f && std::abs(v) < .25f);
+                if (kind == 3) {
+                    inside = u > -.46f && u < .46f && std::abs(v - .12f * u * u) < .035f;
+                    a = 230;
+                }
+                if (kind == 4) {
+                    inside = (std::abs(v) < .035f && std::abs(u) < .42f) ||
+                             (std::abs(u) < .035f && std::abs(v) < .42f) || u * u + v * v < .012f;
+                    r = 255;
+                    g = b = 255;
+                    a = 240;
+                }
+                if (kind >= 5) {
+                    inside = true;
+                    r = g = b = 255;
+                    a = kind == 6 ? 255 : ((x < 2 || y < 2 || x >= 62 || y >= 62) ? 155 : 38);
+                }
+                const auto at = (y * 64 + x) * 4;
+                rgba[at] = r;
+                rgba[at + 1] = g;
+                rgba[at + 2] = b;
+                rgba[at + 3] = inside ? a : 0;
+            }
+        writer.add(std::string("effect/") + names[kind], 64, 64, true, rgba);
+    }
     const Map dummy({"###", "#.#", "###"});
     const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
     const auto level = read(source / "npcs/level.json");

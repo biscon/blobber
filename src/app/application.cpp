@@ -1,10 +1,10 @@
 #include "app/application.hpp"
-#include "app/world_preview.hpp"
 #include "app/actor_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/archer_captures.hpp"
 #include "app/build_captures.hpp"
 #include "app/captures.hpp"
+#include "app/door_captures.hpp"
 #include "app/gameplay.hpp"
 #include "app/hud_captures.hpp"
 #include "app/hybrid_demo.hpp"
@@ -16,6 +16,7 @@
 #include "app/recovery_demo.hpp"
 #include "app/spell_captures.hpp"
 #include "app/ui_demo.hpp"
+#include "app/world_preview.hpp"
 #include "assets/npc_loader.hpp"
 #include "assets/preparation_profile.hpp"
 #include "assets/prepared_assets.hpp"
@@ -47,7 +48,9 @@ int runDiagnostics(int argc, char** argv) {
                      "[--ui-demo | "
                      "--recovery-demo | --inventory-demo | --combat-demo | --ai-demo | --hybrid-demo | "
                      "--spell-demo] [--seed UINT32] [--development] "
-                     "[--check-prepared] [--campaign-save FILE] [--development --world-preview] [--capture-world DIR | --benchmark-world DIR] [--supersampling on|off]\n";
+                     "[--check-prepared] [--campaign-save FILE] [--renderer legacy|world] [--capture-doors "
+                     "DIRECTORY] [--development --world-preview] [--capture-world DIR | --benchmark-world "
+                     "DIR] [--supersampling on|off]\n";
         return 0;
     }
     // Declaration order keeps immutable definitions alive for the starting party.
@@ -75,6 +78,31 @@ int runDiagnostics(int argc, char** argv) {
                                      : loadRecoveryLevel(options.assets / "rules/recovery.json", map, rules));
     ActorWorld npcs(map, rules, loadedNpcs.world);
     const auto& timings = loadedNpcs.timings;
+    if (options.worldRenderer) {
+        if (!options.captureDirectory.empty() && !options.captureSpellsOnly &&
+            !options.captureProjectilesOnly && !options.captureDoorsOnly)
+            throw std::runtime_error("Use --capture-doors, --capture-spells, --capture-projectiles, "
+                                     "menu/campaign captures or replay capture with the world renderer");
+        const Window window(options.width, options.height, !options.captureDirectory.empty());
+        GpuResources resources;
+        Presenter presenter(resources, options.assets);
+        WorldRenderer world(resources, world_assets::load(options.assets / "prepared/world"));
+        world.supersampling(options.supersampling);
+        if (!options.captureDirectory.empty()) {
+            std::filesystem::create_directories(options.captureDirectory);
+            if (options.captureDoorsOnly)
+                captureDoors(rules, loadedNpcs.world, timings, world, presenter, options.captureDirectory);
+            else if (options.captureSpellsOnly)
+                captureSpells(rules, loadedNpcs.world, timings, nullptr, presenter, options.captureDirectory,
+                              &world);
+            else
+                captureProjectiles(rules, loadedNpcs.world, timings, nullptr, presenter,
+                                   options.captureDirectory, &world);
+        } else
+            runGameplay(map, rules, loadedNpcs.world, timings, nullptr, presenter, options, recovery, nullptr,
+                        nullptr, &world);
+        return 0;
+    }
     const auto profile = loadPreparationProfile(options.assets / "preparation.json");
     validatePreparedPublication(options.assets / "prepared", profile, loadedNpcs.definitionFingerprint);
     auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
@@ -206,7 +234,7 @@ int runDiagnostics(int argc, char** argv) {
         runUiDemo(map, party, rules, loadedNpcs.world, timings, renderer, presenter);
         return 0;
     }
-    runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options, recovery);
+    runGameplay(map, rules, loadedNpcs.world, timings, &renderer, presenter, options, recovery);
     return 0;
 }
 } // namespace blobber
@@ -214,7 +242,8 @@ int runDiagnostics(int argc, char** argv) {
 namespace blobber {
 int run(int argc, char** argv) {
     const auto o = parseOptions(argc, argv);
-    if (o.worldPreview && !o.help) return runWorldPreview(o);
+    if (o.worldPreview && !o.help)
+        return runWorldPreview(o);
     if (o.captureMenuOnly)
         return runMenus(o);
     if (o.help || o.checkPreparedOnly || !o.captureDirectory.empty() || o.uiDemo || o.combatDemo ||

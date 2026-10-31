@@ -23,6 +23,8 @@ std::unique_ptr<Visibility> visibility(void*, const Map&, const GameSession&) {
     return std::make_unique<EmptyVisibility>();
 }
 void move(Client& c, const char* action) {
+    if (c.protocol.session()->game().opening())
+        c.advance(30, false);
     check(c.act({{"kind", "move"}, {"direction", action}}).at("data").at("accepted"),
           "Fixture walking uses legal movement");
     check(c.advance(17, false).at("ok"), "Fixture movement settles");
@@ -131,6 +133,7 @@ void run(const char* exe, const char* retain = nullptr) {
         face(c, door.facing);
         check(c.act({{"kind", "interact"}, {"fixture", 0}}).at("data").at("accepted"),
               "Transport opens matching door");
+        check(!c.protocol.session()->decision(), "Opening barrier is not an actionable automation decision");
         move(c, "forward");
         check(c.protocol.session()->game().movement().player.cell == door.cell,
               "Transport walks into opened cell");

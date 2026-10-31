@@ -216,25 +216,34 @@ bool VisibilityPipeline::update(const FrameInput& in) {
                 std::abs(anim->frames[i].offsetX) > Map::maxDimension ||
                 std::abs(anim->frames[i].offsetY) > Map::maxDimension)
                 throw std::invalid_argument("Invalid world animation travel offset");
+    if (in.doors && in.doors->world != in.geometry.world())
+        throw std::invalid_argument("Foreign door snapshot");
     const auto* fixtures = in.geometry.fixtures();
     if (fixtures && fixtures->definition().count > fixtureCapacity)
         throw std::invalid_argument("Too many world fixtures");
     const auto c = camera(in.movement);
-    const std::array<std::uint64_t, 8> stamp{
-        in.geometry.world(),          in.geometry.revision(),         fixtures ? fixtures->revision() : 0,
-        actors ? actors->world : 0,   actors ? actors->revision : 0,  anim ? anim->revision : 0,
-        in.loot ? in.loot->world : 0, in.loot ? in.loot->revision : 0};
+    const std::array<std::uint64_t, 10> stamp{in.geometry.world(),
+                                              in.geometry.revision(),
+                                              fixtures ? fixtures->revision() : 0,
+                                              actors ? actors->world : 0,
+                                              actors ? actors->revision : 0,
+                                              anim ? anim->revision : 0,
+                                              in.loot ? in.loot->world : 0,
+                                              in.loot ? in.loot->revision : 0,
+                                              in.doors ? in.doors->revision : 0,
+                                              in.doors && in.doors->active() ? in.doors->now : 0};
     if (ready_ && stamp == stamp_ && sameCamera(c, frame().camera) &&
-        frame().moving == in.movement.transition.active())
+        frame().moving == (in.movement.transition.active() || (in.doors && in.doors->active())))
         return false;
     auto& out = frames_[1 - current_];
     out.picking.clear();
     out.visibleLoot = {};
     out.count = out.proxyCount = 0;
     out.camera = c;
-    out.moving = in.movement.transition.active();
+    out.moving = in.movement.transition.active() || (in.doors && in.doors->active());
     const bool opaqueChanged = !ready_ || !sameCamera(c, frame().camera) || stamp[0] != stamp_[0] ||
-                               stamp[1] != stamp_[1] || stamp[2] != stamp_[2];
+                               stamp[1] != stamp_[1] || stamp[2] != stamp_[2] || stamp[8] != stamp_[8] ||
+                               stamp[9] != stamp_[9];
     build(out, in);
     raster(out, opaqueChanged);
     out.picking.finish(in.actors);
@@ -252,6 +261,12 @@ bool VisibilityPipeline::update(const FrameInput& in) {
 }
 void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
     const auto center = playerCenter(in.movement);
+    unsigned ordinary = 0, locked = 0;
+    if (in.geometry.fixtures()) {
+        ordinary = assets_.named("door");
+        locked = assets_.named("door-locked");
+    }
+    out.doorCount = doorBoxes(in.geometry, in.doors, out.doors, ordinary, locked, 0);
     const auto append = [&](Billboard b) {
         if (out.count == billboardCapacity)
             throw std::runtime_error("World billboard capacity exceeded");
@@ -369,11 +384,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         out.picking.fixtureWorld(f->world());
         for (unsigned i = 0; i < f->definition().count; ++i) {
             const auto& entry = f->definition().entries[i];
-            if (fixtureBlocks(entry, f->completed(i))) {
-                out.proxies[out.proxyCount] = entry.cell;
-                out.proxyIds[out.proxyCount++] = std::uint16_t(PickingBuffer::fixtureBase + i);
+            if (entry.kind == FixtureKind::Door || entry.kind == FixtureKind::GuardianGate)
                 continue;
-            }
             if (entry.kind == FixtureKind::Key && f->completed(i))
                 continue;
             const unsigned icon = entry.kind == FixtureKind::Key          ? (entry.key == 2 ? 1 : 2)
@@ -419,11 +431,13 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
                 triangle(out, v, PickingBuffer::empty);
             }
         }
-        for (unsigned i = 0; i < out.proxyCount; ++i)
-            cube(out.proxies[i], [&](const auto& p, Vec n) {
-                if (dot(n, sub(out.camera.position, p[0])) > 0)
-                    quad(out, p, out.proxyIds[i]);
-            });
+        constexpr unsigned faces[6][4]{{0, 1, 3, 2}, {4, 6, 7, 5}, {0, 2, 6, 4},
+                                       {1, 5, 7, 3}, {2, 3, 7, 6}, {0, 4, 5, 1}};
+        for (unsigned i = 0; i < out.doorCount; ++i) {
+            const auto p = corners(out.doors[i]);
+            for (const auto& f : faces)
+                quad(out, {p[f[0]], p[f[1]], p[f[2]], p[f[3]]}, out.doors[i].id);
+        }
         opaqueCache_.copyRaster(out.picking);
     } else
         out.picking.copyRaster(opaqueCache_);
@@ -433,8 +447,8 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
     }
 }
 std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, int y) const noexcept {
-    if (in.movement.transition.active() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight ||
-        y + .5f <= viewHeight * .34f)
+    if ((in.doors && in.doors->active()) || in.movement.transition.active() || x < 0 || x >= viewWidth ||
+        y < 0 || y >= viewHeight || y + .5f <= viewHeight * .34f)
         return {};
     const auto c = camera(in.movement);
     const float depth = focal() * c.position.y / (y + .5f - viewHeight * .34f);
@@ -443,6 +457,8 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
         return {};
     const Cell cell{int(std::floor(c.position.x + c.forward.x * depth + c.right.x * lateral)),
                     int(std::floor(c.position.z + c.forward.z * depth + c.right.z * lateral))};
+    if (ready_ && depth > frame().picking.opaqueDepth(std::size_t(y) * viewWidth + x) + epsilon)
+        return {};
     return spellCell(in.geometry, in.movement.player, cell) ? std::optional<Cell>{cell} : std::nullopt;
 }
 std::array<Vec, 4> corners(const Camera& c, const Billboard& b) noexcept {

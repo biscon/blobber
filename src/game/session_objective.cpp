@@ -59,7 +59,7 @@ void GameSession::reconcileObjective() noexcept {
         objective_.capacityFailure = true;
         return;
     }
-    if (!floor_.complete(objectiveDefinition_.gate)) {
+    if (!completeFixture(objectiveDefinition_.gate)) {
         objective_.capacityFailure = true;
         return;
     }
@@ -76,7 +76,7 @@ LandingSafety GameSession::landingSafety(unsigned index) const noexcept {
     if (index >= defs.landingCount)
         return {};
     const auto c = defs.landings[index];
-    if (movement().transition.active())
+    if (actionBusy())
         return {false, "Wait until movement finishes."};
     if (map_.solid(c) || actors_.occupied(c))
         return {false, "Landing is occupied."};

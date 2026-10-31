@@ -45,6 +45,27 @@ CMake preset, wait for configuration, select the **blobber** executable, and Run
 CLion's ordinary CMake profiles also work. No machine-specific `.idea` files or
 working-directory setup is required: assets are copied beside the executable.
 
+## Alternative world renderer (R04)
+
+Launch `./cmake-build-debug/blobber --renderer world` to use the GPU world in
+New Game, arena and Continue. Legacy remains the default until R06 and can be
+selected explicitly with `--renderer legacy`. Supersampling defaults on;
+`--renderer world --supersampling off` selects native filtered rendering.
+
+Doors open permanently with a shared 300 ms presentation barrier in both backends.
+New actions wait; accepted impacts/effects continue. One fresh graphical movement
+can queue. Pause freezes the opening and clears input; Tab settles it immediately.
+Save/travel require settled opening and input. Existing saves remain compatible.
+
+Hidden application-owned world captures are available with `--capture-doors DIR`,
+`--renderer world --capture-spells DIR`, `--renderer world --capture-projectiles DIR`,
+`--renderer world --capture-arena DIR`, `--renderer world --capture-menu DIR`, and
+`--renderer world --capture-campaign-save DIR`. Other historical focused capture
+recipes retain their legacy implementation and reject world selection explicitly.
+World visual replay captures use the recorded backend; normal world observations
+need no display or graphics context. See [R04 design](docs/renderer_integration_design.md)
+and [headless protocol](docs/headless_protocol.md).
+
 ## Controls
 
 | Key | Action |

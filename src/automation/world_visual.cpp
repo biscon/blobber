@@ -12,7 +12,7 @@ class WorldVisual final : public Visibility {
     const TargetSnapshot& sample(const Map&, const GameSession& game) override {
         animator_.setTime(game.timeMs(), &game.effects());
         pipeline_.update({game.geometry(), game.movement(), &game.actors(), &animator_.snapshot(),
-                          &game.loot().snapshot()});
+                          &game.loot().snapshot(), &game.doors()});
         const auto* picking = pipeline_.picking();
         return picking ? picking->targets() : empty_;
     }

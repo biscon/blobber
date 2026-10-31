@@ -1,0 +1,24 @@
+{
+  "appearance_revision": 3,
+  "release_capture_pngs": 586,
+  "selected": [
+    "spell-spiritual_weapon-650.png",
+    "spell-scorching_ray-flight.png",
+    "spell-scorching_ray-impact-tail.png",
+    "spell-burning_hands-sparse-cast.png",
+    "spell-burning_hands-sparse-60.png",
+    "spell-burning_hands-sparse-120.png"
+  ],
+  "scorching_ray_ms": {
+    "flight": 117,
+    "impact": 234,
+    "half_tail": 294,
+    "expired": 354
+  },
+  "burning_hands_ms": {
+    "cast": 0,
+    "half_tail": 60,
+    "expired": 120
+  },
+  "debug_release_capture_parity_rerun": false
+}

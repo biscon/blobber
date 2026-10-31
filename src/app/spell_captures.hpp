@@ -6,3 +6,9 @@ void captureSpellReview(const rules::Catalog&, const NpcWorld&, const std::vecto
 void captureSpells(const rules::Catalog&, const NpcWorld&, const std::vector<NpcTimings>&,
                    const SceneRenderer&, Presenter&, const std::filesystem::path&);
 } // namespace blobber
+
+namespace blobber {
+class WorldRenderer;
+void captureSpells(const rules::Catalog&, const NpcWorld&, const std::vector<NpcTimings>&,
+                   const SceneRenderer*, Presenter&, const std::filesystem::path&, WorldRenderer*);
+} // namespace blobber

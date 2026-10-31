@@ -1,0 +1,4 @@
+Integrated preparation allocation failures=16 of 32 positions
+Fixture active CPU bytes=4987377 GPU estimate=5724224
+Fixture active+staged CPU bytes=10033029 GPU estimate=6972304
+R04 hidden door/effect GPU, allocation, parity and travel rollback passed; edge differences=0

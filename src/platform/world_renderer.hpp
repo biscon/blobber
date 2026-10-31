@@ -1,6 +1,7 @@
 #pragma once
 #include "assets/world_assets.hpp"
 #include "platform/gpu_resources.hpp"
+#include "render/world_effects.hpp"
 #include "render/world_visibility.hpp"
 #include <memory>
 namespace blobber {
@@ -31,9 +32,16 @@ class WorldRenderer {
     void cancel() noexcept { staged_.reset(); }
     WorldImage render(const MovementState&);
     WorldImage render(const world_render::FrameInput&);
+    WorldImage renderStaged(const world_render::FrameInput&);
     const PickingBuffer* picking() const noexcept { return active_ ? active_->publishedPicking : nullptr; }
     const world_render::VisibilityPipeline* visibility() const noexcept {
         return active_ ? active_->visibility.get() : nullptr;
+    }
+    const PickingBuffer* stagedPicking() const noexcept {
+        return staged_ ? staged_->publishedPicking : nullptr;
+    }
+    const world_render::VisibilityPipeline* stagedVisibility() const noexcept {
+        return staged_ ? staged_->visibility.get() : nullptr;
     }
     const world_assets::CpuAssets& assets() const noexcept { return *assets_; }
     // Diagnostic only; caller owns a 500x282 target, no gameplay readback.
@@ -59,6 +67,8 @@ class WorldRenderer {
     struct View {
         world_render::Scene cpu;
         std::unique_ptr<world_render::VisibilityPipeline> visibility;
+        std::unique_ptr<world_render::EffectsPipeline> effects;
+        std::uint64_t effectRevision = 0;
         const PickingBuffer* publishedPicking = nullptr;
         std::uint64_t contentRevision = 0;
         MovementState movement{};
@@ -79,6 +89,7 @@ class WorldRenderer {
     std::array<int, 7> billboardLocations_{};
     void prepareBillboards();
     void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool);
+    void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground);
     int model_ = -1, idMode_ = -1, idColor_ = -1;
     GpuLease<TargetHandle> high_;
     std::unique_ptr<View> active_, staged_;
@@ -86,7 +97,8 @@ class WorldRenderer {
     int mvp_ = -1, view_ = -1, forward_ = -1, anisotropy_ = 1;
     bool supersampling_ = true, measure_ = false;
     std::uint64_t revision_ = 0;
+    WorldImage renderInput(View&, const world_render::FrameInput&);
     WorldImage render(View&, const MovementState&, const world_render::WorldFrame* = nullptr,
-                      TargetHandle ids = {});
+                      TargetHandle ids = {}, const world_render::EffectFrame* effects = nullptr);
 };
 } // namespace blobber

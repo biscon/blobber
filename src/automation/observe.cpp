@@ -43,6 +43,7 @@ Json encodeObservation(const Observation& o) {
     const auto& movement = g.movement();
     Json j = {{"diagnostic", o.diagnostic},
               {"time_ms", u(g.timeMs())},
+              {"door_opening", g.opening()},
               {"gameplay_ms", u(combat.gameplayMs)},
               {"phase", phaseName(combat.phase)},
               {"round", u(combat.round)},
@@ -239,6 +240,10 @@ Json encodeObservation(const Observation& o) {
         j["progression_revision"] = u(g.party().progressionRevision());
         j["actor_revision"] = u(actors.revision);
         j["loot_revision"] = u(loot.revision);
+        j["door_pending"] = g.doorPending() ? Json(unsigned(*g.doorPending())) : Json(nullptr);
+        j["door_until"] = Json::array();
+        for (auto until : g.doors().until)
+            j["door_until"].push_back(u(until));
         j["ai_time"] = u(g.ai().timeMs);
         j["known_directions"] = combat.knownDirections;
         j["facing"] = combat.facing ? Json(unsigned(*combat.facing)) : Json(nullptr);

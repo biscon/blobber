@@ -95,7 +95,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::NotVisible:
         return "Target is no longer visible.";
     case CommandReason::Moving:
-        return "Wait for movement to finish.";
+        return "Wait for the current transition to finish.";
     case CommandReason::MapOpen:
         return "Close the map to target or confirm.";
     case CommandReason::Unfocused:
@@ -375,6 +375,7 @@ bool CommandController::visible(ActorId id) const noexcept {
 }
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen, bool focused,
                                 const HudDemo* demo) noexcept {
+    moving |= session_ && session_->opening();
     if (session_ && session_->objective().known) {
         if (session_->objective().completed && !objectiveReported_) {
             state_.log.append("Guardians defeated. Gate opened; supplies await beyond.");

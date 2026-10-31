@@ -1,6 +1,20 @@
 #include "game/campaign.hpp"
 #include "game/session.hpp"
 namespace blobber {
+bool GameSession::completeFixture(unsigned slot) noexcept {
+    if (!floor_.complete(slot))
+        return false;
+    const auto kind = floor_.definition().entries[slot].kind;
+    if (kind == FixtureKind::Door || kind == FixtureKind::GuardianGate) {
+        doors_.now = timeMs_;
+        clearPending();
+        if (movement().animated && timeMs_ <= UINT64_MAX - DoorSnapshot::durationMs) {
+            doors_.until[slot] = timeMs_ + DoorSnapshot::durationMs;
+            ++doors_.revision;
+        }
+    }
+    return true;
+}
 void GameSession::discover() noexcept {
     const auto pose = movement().player;
     if (movement().transition.active() ||
@@ -45,8 +59,8 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         return {};
     if (r.revision != floor_.revision())
         return {false, false, "Stale fixture request."};
-    if (movement().transition.active())
-        return {false, false, "Wait until movement finishes."};
+    if (actionBusy())
+        return {false, false, opening() ? "Wait until the door opens." : "Wait until movement finishes."};
     const auto pose = movement().player;
     if (!fixtureReachable(*f, pose.cell, pose.heading))
         return {false, false, "Move closer and face the fixture."};
@@ -76,7 +90,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         return {false, false, "Fixture revision exhausted."};
     if (!preview) {
         events_.clear();
-        if (!floor_.complete(r.id.slot))
+        if (!completeFixture(r.id.slot))
             return {false, false, "Fixture unavailable."};
         if (f->kind == FixtureKind::Key)
             party_.questKeys_ |= std::uint8_t(1u << f->key);

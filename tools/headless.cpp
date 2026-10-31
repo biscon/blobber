@@ -30,7 +30,8 @@ int main(int argc, char** argv) {
                 std::cout << Json{{"protocol", 1},
                                   {"visual", true},
                                   {"visibility_backends", graphics ? Json{"legacy", "world"} : Json{"world"}},
-                                  {"capture_visibility_backends", graphics ? Json{"legacy"} : Json::array()},
+                                  {"capture_visibility_backends",
+                                   graphics ? Json{"legacy", "world"} : Json::array()},
                                   {"capture", graphics},
                                   {"graphics_runtime", "unchecked"}}
                                  .dump()
@@ -77,9 +78,6 @@ int main(int argc, char** argv) {
         }
         if (visibilitySpecified && mode != Mode::Visual)
             throw std::runtime_error("Visibility selection requires visual mode");
-        if (visibility == "world" && !capture.empty())
-            throw std::runtime_error("capture_unsupported: world visibility replay images require R04; use "
-                                     "world-preview captures");
         if (!record.empty() && !playback.empty())
             throw std::runtime_error("Recording and replay are exclusive");
         if ((!capture.empty() || !operations.empty()) &&
@@ -108,7 +106,7 @@ int main(int argc, char** argv) {
             factory = makeWorldVisual;
             content["world_publication"] = std::to_string(worldAssets->publication.fingerprint);
             content["world_format"] = world_assets::version;
-            content["world_appearance"] = 1;
+            content["world_appearance"] = world_assets::appearanceRevision;
         }
 #ifdef BLOBBER_HEADLESS_VISUAL
         std::unique_ptr<SceneRenderer> renderer;
@@ -134,6 +132,7 @@ int main(int argc, char** argv) {
         const auto executable = std::filesystem::read_symlink("/proc/self/exe", ec);
         const Json header = {{"protocol", 1},
                              {"timing", "fixed-10ms-v1"},
+                             {"door_scheduling", "shared-opening-300ms-v1"},
                              {"mode", mode == Mode::Visual ? "visual" : "diagnostic"},
                              {"binary", fingerprintFile(ec ? std::filesystem::path(argv[0]) : executable)},
                              {"content", content}};

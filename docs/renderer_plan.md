@@ -1,7 +1,7 @@
 # Low-resolution 3D renderer: design and delivery roadmap
 
 Created: 2026-10-30. Last updated: 2026-10-31.
-Status: **Roadmap accepted; R01/R-A and R02–R03 Accepted.**
+Status: **Roadmap accepted; R01–R04 and milestones R-A/R-B Accepted.**
 
 The user agreed to replace the prepared perspective-image world renderer with a
 low-resolution GPU 3D world, retaining billboard monster/item artwork and discrete
@@ -21,10 +21,10 @@ for the explicit, bounded elevation extensions described below.
 | --- | --- |
 | Latest accepted foundation | Campaign P-A/P-B and prior demo/automation slices; current renderer remains production |
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
-| Active slice | None; R03 — Billboards, picking and visual automation accepted and closed |
+| Active slice | None; R04 accepted and closed |
 | Awaiting review | None |
-| Next eligible slice | R04 — Doors, effects and campaign integration; eligible for planning |
-| Next action | Await instruction to plan R04; do not automatically implement it |
+| Next eligible slice | R05 — Heights, outdoor hub and decoration; eligible for separate planning, not started |
+| Next action | Plan R05 when requested; obtain its detailed-plan review before implementation |
 | Blockers | None known; filtering, picking parity and performance require evidence from the slices |
 | Campaign status | Paused after P-B; do not start PC07 |
 
@@ -256,14 +256,14 @@ largest uncertainty and may warrant a reviewed split if their prototypes expose 
 | R01 | [Visual and motion proof](#r01-visual-and-motion-proof) | Accepted direction | Accepted (2026-10-31) | R-A |
 | R02 | [Production world rendering and assets](#r02-production-world-rendering-and-assets) | R01 accepted | Accepted (2026-10-31) | R-B |
 | R03 | [Billboards, picking and visual automation](#r03-billboards-picking-and-visual-automation) | R02 accepted | Accepted (2026-10-31) | R-B |
-| R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Planned | R-B |
+| R04 | [Doors, effects and campaign integration](#r04-doors-effects-and-campaign-integration) | R03 accepted | Accepted (2026-10-31) | R-B |
 | R05 | [Heights, outdoor hub and decoration](#r05-heights-outdoor-hub-and-decoration) | R04 accepted | Planned | R-C |
 | R06 | [Production cutover and retirement](#r06-production-cutover-and-retirement) | R05 accepted | Planned | R-C |
 
 | Milestone | User-visible outcome | Status |
 | --- | --- | --- |
 | R-A — Look established | Representative room and moving comparisons establish camera, filtering and art compatibility | Accepted (2026-10-31) |
-| R-B — Playable replacement | Current campaign/arena work through the GPU renderer, including combat, interactions, travel and automation | Planned |
+| R-B — Playable replacement | Current campaign/arena work through the GPU renderer, including combat, interactions, travel and automation | Accepted (2026-10-31) |
 | R-C — Renderer delivered | Outdoor hub, single-layer height variation and decoration work; production uses the replacement and obsolete renderer dependencies are retired | Planned |
 
 ### R01: Visual and motion proof
@@ -405,7 +405,21 @@ with melee/ranged/ground/spectral effects, collect loot, descend, recall, save a
 Continue. Compare meaningful gameplay results and visual timing with the baseline.
 This milestone establishes playable parity, not campaign balance.
 
-**Execution record:** Not started; depends on R03 acceptance.
+**Execution record:** **Accepted and closed** (2026-10-31); milestone **R-B Accepted**.
+User approved the reviewed plan with “Implement the plan.” [Design](renderer_integration_design.md),
+[verification/handoff](r04_verification.md) and [gallery](screenshots/r04/index.html).
+Shared door scheduling/geometry, complete current effects, explicit world gameplay,
+staged campaign/save/Continue and CLI/client/local MCP/replay captures are delivered.
+Fresh graphics 65/65 and headless 46/46 Debug/Release suites, final affected/protocol
+checks, sanitizers, hidden GPU parity/lifecycle/failure/allocation guards and asset
+fixtures pass. The same 1,070 expedition requests match legacy admission and inspected
+gameplay; 612 initial Debug/Release door/spell images match exactly. The baseline
+spell review corrections restore weapon clearance, spell tint/fade and impact
+visibility, with focused CPU/GPU/allocation/sanitizer checks and correctly timed
+captures. Verification records actual reruns and limits. The user explicitly accepted
+the delivered baseline: “I accept the slice, record it in the plan doc”. Richer spell
+graphics remain deferred to later passes. Legacy stays default until R06. R05 is
+eligible for separate planning, not started; no new monsters, balancing or PC07 work.
 
 ### R05: Heights, outdoor hub and decoration
 
@@ -434,7 +448,7 @@ without state loss. Re-run affected headless observations, replay and allocation
 sky, inspect wall art/props and climb a legal step. Show a rejected high ledge and
 a height-sensitive occlusion case. Travel away and reload to show identical state.
 
-**Execution record:** Not started; depends on R04 acceptance. Its detailed design
+**Execution record:** Not started; R04 acceptance satisfies its prerequisite. Its detailed design
 must settle height quantization, traversal/LOS semantics and save compatibility
 before implementation; split the slice if those cannot stay bounded.
 
@@ -511,6 +525,8 @@ exact next action. Do not carry forward historical passing counts as new evidenc
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-10-31 | R04 and R-B Accepted and closed | Explicit user acceptance: “I accept the slice, record it in the plan doc”; baseline spell corrections included, richer effects deferred; R05 eligible for separate planning, not started |
+| 2026-10-31 | R04 implemented; Ready for review | User approved the reviewed plan; complete alternative gameplay/tooling and evidence delivered; legacy default retained, acceptance pending |
 | 2026-10-31 | R03 Accepted and closed | Explicit user acceptance: “slice accepted, record it in the plan doc”; R04 eligible for separate planning, not started; R-B remains Planned |
 | 2026-10-31 | R03 implemented; Ready for review | Shared billboards/CPU visibility and explicit windowless backend; evidence retained; normal defaults unchanged and acceptance pending |
 | 2026-10-31 | R03 detailed plan approved; implementation in progress | Explicit world visibility selector preserves legacy defaults; shared CPU/GPU transforms and mask-based visibility, no R04 work |
@@ -534,7 +550,15 @@ R03 is **Accepted and closed** (2026-10-31) under its
 “slice accepted, record it in the plan doc”. [Verification/handoff](r03_verification.md)
 and [gallery](screenshots/r03/index.html) retain the implementation, evidence and
 limitations unchanged; no additional interactive-review coverage is inferred.
-R04 is next eligible for separate planning when requested; it has not started.
-R-B remains Planned until its remaining slices are accepted. Do not add monsters or resume PC07.
+R04 is **Accepted and closed** (2026-10-31); milestone **R-B Accepted** under its
+[approved integration design](renderer_integration_design.md). The user explicitly
+accepted the delivered baseline: “I accept the slice, record it in the plan doc”.
+[Verification](r04_verification.md) and [gallery](screenshots/r04/index.html) retain
+actual evidence and limitations, including the baseline spell corrections. Richer
+spell graphics remain deferred. Acceptance adds no unperformed verification claims.
+R05 is eligible for separate planning, remains unstarted and requires its own
+reviewed plan. Do not add monsters or resume PC07.
+This checkpoint supersedes earlier R04-unstarted and pending-review records,
+including the status recorded in its implementation handoff documents.
 Keep legacy gameplay working and the supersampling/native-filtered quality policy.
 No commits or desktop input automation.

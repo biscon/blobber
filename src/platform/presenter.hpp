@@ -12,8 +12,11 @@ namespace blobber {
 class Presenter {
   public:
     Presenter(GpuResources& resources, const std::filesystem::path& assets);
+    GpuResources& resources() noexcept { return resources_; }
     void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
-                      const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr);
+                      const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
+                      bool debug = false, const generation::DiagnosticView* diagnostic = nullptr,
+                      bool reveal = false);
     void present(const Frame& frame, const MovementState& state, const Map& map, bool debug, bool changed,
                  const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
                  const generation::DiagnosticView* generation = nullptr, bool reveal = false);

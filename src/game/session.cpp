@@ -38,6 +38,7 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
       combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(true) {
     if (map_.solid(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
+    doors_.world = floor_.world();
     prepareObjective();
     ai_.bindEffects(&effects_);
     movement_.bindEffects(&effects_);
@@ -45,9 +46,11 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
     combat_.enableRoaming(enableAi_);
 }
 void GameSession::detectContact() noexcept {
+    if (opening())
+        return;
     combat_.observe(movement_.state().player);
     if (combat_.contact(movement_.state().player))
-        movement_.clearPending();
+        clearPending();
 }
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     if (campaign_ && campaign_->status() != CampaignStatus::Active) {
@@ -60,17 +63,20 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     loot_.reconcile(actors_);
     reconcileRewards();
     if (paused) {
-        movement_.clearPending();
+        clearPending();
         return events_;
     }
     if (!std::isfinite(seconds) || seconds < 0)
         seconds = 0;
     // Bound pathological caller deltas; no accumulated automatic-action catch-up.
     seconds = std::min(seconds, 60.0);
+    const auto openingDeadline = doors_.deadline();
+    const auto previousTime = timeMs_;
     remainderMs_ += seconds * 1000;
     const auto elapsed = static_cast<std::uint64_t>(remainderMs_);
     timeMs_ += elapsed;
     remainderMs_ -= static_cast<double>(elapsed);
+    doors_.now = timeMs_;
     combat_.resolveImpacts(movement_.state().player, timeMs_, events_, elapsed);
     // Final objective completion closes command admission immediately. Drain already
     // accepted consequences/presentation, without starting another movement, AI or turn.
@@ -81,16 +87,31 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
         discover();
         return events_;
     }
+    if (opening()) {
+        loot_.reconcile(actors_);
+        events_.step.phase = combat_.snapshot().phase;
+        return events_;
+    }
+    const auto blockedMs =
+        openingDeadline > previousTime ? std::min(elapsed, openingDeadline - previousTime) : 0;
+    const auto freeMs = elapsed - blockedMs;
+    const float movementSeconds = blockedMs ? float(freeMs) / 1000.f : float(seconds);
     if (!effects_.mobileParty())
-        movement_.clearPending();
+        clearPending();
     detectContact();
     const auto oldCell = movement_.state().player.cell;
+    if (doorPending_) {
+        const auto pending = *doorPending_;
+        doorPending_.reset();
+        if (realTime(combat_.snapshot().phase) && effects_.mobileParty())
+            movement_.submit(map_, pending, true, &actors_);
+    }
     // A queued step may immediately start another transition at this boundary.
     // Remember the settled endpoint before Controller consumes that queued step.
     const auto& transition = movement().transition;
-    if (transition.active() && transition.elapsed + static_cast<float>(seconds) >= transition.durationSeconds)
+    if (transition.active() && transition.elapsed + movementSeconds >= transition.durationSeconds)
         floor_.discover(movement().player.cell, movement().player.heading);
-    movement_.update(map_, static_cast<float>(seconds), &actors_);
+    movement_.update(map_, movementSeconds, &actors_);
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))
         for (std::uint16_t i = 0; i < rules::partySize; ++i)
@@ -100,7 +121,7 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     if (enableAi_ && realTime(combat_.snapshot().phase)) {
         const auto locks = combat_.movementLocks(timeMs_);
         const auto incapacitated = effects_.incapacitatedActors();
-        ai_.update(elapsed, timeMs_, movement_.state().player, &locks, &incapacitated);
+        ai_.update(freeMs, timeMs_, movement_.state().player, &locks, &incapacitated);
         detectContact();
     }
     events_.step =
@@ -115,6 +136,14 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
 void GameSession::move(Action action, bool fresh) noexcept {
     if (!runActive())
         return;
+    if (opening()) {
+        if (mutation_ != UINT64_MAX)
+            ++mutation_;
+        events_.clear();
+        if (fresh)
+            doorPending_ = action;
+        return;
+    }
     if (mutation_ != UINT64_MAX)
         ++mutation_;
     events_.clear();
@@ -133,7 +162,7 @@ void GameSession::move(Action action, bool fresh) noexcept {
 InventoryError GameSession::inventoryAccess(const InventoryRequest& request) const noexcept {
     if (!runActive())
         return InventoryError::Unavailable;
-    if (movement_.state().transition.active())
+    if (actionBusy())
         return InventoryError::Moving;
     const auto source = party_.inventory().locate(request.source);
     if (source.cell >= 52)
@@ -170,7 +199,7 @@ CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
         ++mutation_;
     events_.clear();
     combat_.reconcileEffects(timeMs_, events_);
-    if (movement_.state().transition.active()) {
+    if (actionBusy()) {
         CombatOutcome result;
         result.reason = CommandReason::Moving;
         return result;
@@ -216,7 +245,7 @@ EffectResult GameSession::endConcentration(std::uint64_t world, rules::Character
 }
 void GameSession::driveFacing() noexcept {
     const auto& combat = combat_.snapshot();
-    if (combat.phase != CombatPhase::Facing || !combat.facing || movement_.state().transition.active())
+    if (combat.phase != CombatPhase::Facing || !combat.facing || actionBusy())
         return;
     const auto heading = movement_.state().player.heading;
     if (heading == *combat.facing)

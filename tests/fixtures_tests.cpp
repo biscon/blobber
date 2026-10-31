@@ -192,7 +192,7 @@ void incrementalAndThreats() {
     check(live->ai().actors[0].awareness == Awareness::Routine,
           "Actual AI cannot perceive through closed door");
     check(live->interact(fixtureRequest(*live, 0)).changed, "Quiet approach permits opening");
-    live->update(.1, false);
+    live->update(.4, false);
     check(live->ai().actors[0].awareness != Awareness::Routine && !live->interact(fixtureRequest(*live, 0)),
           "Opening exposes actual perception; active approach blocks further interaction");
 }

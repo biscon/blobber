@@ -1,0 +1,4 @@
+Effect-only maximum (313 packets), trial 0: p50_ms=0.023965 p95_ms=0.024716 p99_ms=0.028173 allocations=0
+Effect-only maximum (313 packets), trial 1: p50_ms=0.023965 p95_ms=0.024265 p99_ms=0.02721 allocations=0
+Effect-only maximum (313 packets), trial 2: p50_ms=0.023974 p95_ms=0.024306 p99_ms=0.02701 allocations=0
+R04 barriers, shared geometry and effect invariants passed

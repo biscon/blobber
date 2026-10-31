@@ -33,6 +33,12 @@ int main() {
         rejects([&] { parseOptions(5, raw); }, "Raw nearest is not a production quality option");
         char* unused[]{program, quality, off};
         rejects([&] { parseOptions(3, unused); }, "Quality is not silently ignored by normal launches");
+        char renderer[] = "--renderer", world[] = "world", legacy[] = "legacy";
+        char* full[]{program, renderer, world, quality, off};
+        check(parseOptions(5, full).worldRenderer && !parseOptions(5, full).supersampling,
+              "Complete alternative world gameplay is explicitly selectable");
+        char* old[]{program, renderer, legacy};
+        check(!parseOptions(3, old).worldRenderer, "Legacy remains available");
         std::cout << "Command-line option checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

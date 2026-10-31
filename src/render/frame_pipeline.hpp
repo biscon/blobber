@@ -10,7 +10,9 @@ class FramePipeline {
                 const AttackVisualSnapshot* attacks = nullptr, std::uint64_t now = 0,
                 const SpellArea* area = nullptr, const LootSnapshot* loot = nullptr);
     const Frame& frame() const noexcept { return current_; }
-    const PickingBuffer* picking() const noexcept { return ready_ && !wasAnimating_ ? &picking_ : nullptr; }
+    const PickingBuffer* picking() const noexcept {
+        return ready_ && !wasAnimating_ && !opening_ ? &picking_ : nullptr;
+    }
 
   private:
     Frame source_, destination_, current_;
@@ -20,6 +22,7 @@ class FramePipeline {
     std::uint64_t geometryWorld_ = 0, geometryRevision_ = 0, fixtureRevision_ = 0;
     SpellArea area_{};
     std::uint64_t lootWorld_ = 0, lootRevision_ = 0;
+    bool opening_ = false;
     bool hadAnimation_ = false;
     bool ready_ = false, wasAnimating_ = false;
 };

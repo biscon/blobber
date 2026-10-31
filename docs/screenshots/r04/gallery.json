@@ -1,0 +1,110 @@
+[
+  {
+    "file": "door-0-closed.png",
+    "label": "Closed procedural slab"
+  },
+  {
+    "file": "door-0-opening-150.png",
+    "label": "Opening midpoint: interaction barrier active"
+  },
+  {
+    "file": "door-0-settled.png",
+    "label": "Settled leaf after queued movement"
+  },
+  {
+    "file": "door-native-midpoint.png",
+    "label": "Native filtered quality: same opening pose"
+  },
+  {
+    "file": "spell-grease-650.png",
+    "label": "Grease — diagnostic legal spell build"
+  },
+  {
+    "file": "spell-web-650.png",
+    "label": "Web — diagnostic legal spell build"
+  },
+  {
+    "file": "spell-spiritual_weapon-650.png",
+    "label": "Spiritual Weapon — centered between floor and ceiling"
+  },
+  {
+    "file": "spell-scorching_ray-flight.png",
+    "label": "Scorching Ray — flight, 117 ms after cast"
+  },
+  {
+    "file": "spell-scorching_ray-impact-tail.png",
+    "label": "Scorching Ray — half-faded impact, 294 ms after cast"
+  },
+  {
+    "file": "spell-burning_hands-sparse-cast.png",
+    "label": "Burning Hands — immediate impact flash; no flame cone"
+  },
+  {
+    "file": "spell-burning_hands-sparse-60.png",
+    "label": "Burning Hands — half-faded pulse, 60 ms after cast"
+  },
+  {
+    "file": "spell-burning_hands-sparse-120.png",
+    "label": "Burning Hands — pulse expired at 120 ms; body hit flash continues"
+  },
+  {
+    "file": "spell-mirror_image-650.png",
+    "label": "Mirror Image — diagnostic legal spell build"
+  },
+  {
+    "file": "outgoing-1-seed5-flight.png",
+    "label": "Outgoing ranged attack: flight"
+  },
+  {
+    "file": "outgoing-1-seed5-impact.png",
+    "label": "Outgoing ranged attack: impact"
+  },
+  {
+    "file": "operation-1.png",
+    "label": "Campaign hub"
+  },
+  {
+    "file": "operation-37.png",
+    "label": "Actual campaign door opening"
+  },
+  {
+    "file": "operation-105.png",
+    "label": "Campaign combat"
+  },
+  {
+    "file": "operation-1006.png",
+    "label": "Guardians defeated"
+  },
+  {
+    "file": "operation-1013.png",
+    "label": "Loot collected"
+  },
+  {
+    "file": "operation-1065.png",
+    "label": "Descent to floor two"
+  },
+  {
+    "file": "operation-1066.png",
+    "label": "Paid recall"
+  },
+  {
+    "file": "operation-1069.png",
+    "label": "Continue restored the saved run"
+  },
+  {
+    "file": "save-overwrite-dialog.png",
+    "label": "Save overwrite confirmation"
+  },
+  {
+    "file": "save-error-rename.png",
+    "label": "Save write failure: session and prior slot retained"
+  },
+  {
+    "file": "arena-rematch.png",
+    "label": "Arena rematch"
+  },
+  {
+    "file": "arena-victory.png",
+    "label": "Arena victory"
+  }
+]

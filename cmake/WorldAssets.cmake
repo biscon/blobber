@@ -1,7 +1,7 @@
 function(blobber_world_publication target baker source output)
     file(GLOB_RECURSE world_inputs CONFIGURE_DEPENDS
         "${source}/npcs/*.json" "${source}/npcs/*.png"
-        "${source}/textures/*.png" "${source}/fixtures/*.png")
+        "${source}/effects/*.png" "${source}/textures/*.png" "${source}/fixtures/*.png")
     # A changed inventory also rebuilds when a dependency was removed.
     set(inventory "${CMAKE_CURRENT_BINARY_DIR}/${target}-inputs.txt")
     file(GENERATE OUTPUT "${inventory}" CONTENT "${world_inputs}\n")

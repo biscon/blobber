@@ -1,11 +1,17 @@
 #include "app/projectile_captures.hpp"
 #include "app/ai_demo.hpp"
+#include "platform/game_view.hpp"
 #include <fstream>
 #include <stdexcept>
 namespace blobber {
 void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
                         const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
                         Presenter& presenter, const std::filesystem::path& directory) {
+    captureProjectiles(catalog, source, timings, &renderer, presenter, directory, nullptr);
+}
+void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
+                        const std::vector<NpcTimings>& timings, const SceneRenderer* renderer,
+                        Presenter& presenter, const std::filesystem::path& directory, WorldRenderer* world) {
     const auto map = aiDemoMap();
     const Player spawn{{8, 11}, Heading::North};
     std::vector<std::string> names;
@@ -36,12 +42,14 @@ void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
                 if (!incoming && scenario == 5)
                     s.actors().damage(s.actors().id(0), s.actors().snapshot().actors[0].hitPoints - 1, 0);
                 NpcAnimator animator(s.actors(), timings);
-                FramePipeline frames;
+                GameView frames(renderer, world);
                 CommandController ui(s, timings);
                 auto refresh = [&] {
                     animator.setTime(s.timeMs(), &s.effects());
-                    frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
-                                  &s.combat().attacks(), s.timeMs());
+                    SpellArea area;
+                    area.ground = s.effects().ground();
+                    frames.update(s, animator.snapshot(), area);
+                    frames.activate();
                     ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
                                s.movement().transition.active(), false, true);
                 };
@@ -86,8 +94,7 @@ void captureProjectiles(const rules::Catalog& catalog, const NpcWorld& source,
                                          std::to_string(scenario) + "-seed" + std::to_string(seed);
                 auto save = [&](const char* phase) {
                     refresh();
-                    presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(),
-                                      frames.picking());
+                    frames.present(presenter, s, map, false, true, &ui.snapshot());
                     presenter.capture(directory / (name + "-" + phase + ".png"));
                     presenter.capture(directory / (name + "-" + phase + "-720.png"), 1280, 720);
                     const auto& v = s.combat().attacks().attacks[index];

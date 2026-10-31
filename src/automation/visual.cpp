@@ -26,9 +26,9 @@ class Visual final : public Visibility {
         animator_.setTime(g.timeMs(), &g.effects());
         SpellArea area;
         area.ground = g.effects().ground();
-        const bool changed =
-            frames_.update(context_.renderer, g.geometry(), g.movement(), &g.actors(), &animator_.snapshot(),
-                           &g.combat().attacks(), g.timeMs(), &area, &g.loot().snapshot());
+        const bool changed = frames_.update(context_.renderer, g.presentationGeometry(), g.movement(),
+                                            &g.actors(), &animator_.snapshot(), &g.combat().attacks(),
+                                            g.timeMs(), &area, &g.loot().snapshot());
         if (!changed)
             return targets_;
         loot_ = {};

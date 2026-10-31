@@ -1,7 +1,7 @@
 #include "app/save_captures.hpp"
 #include "assets/fingerprint.hpp"
 #include "game/commands.hpp"
-#include "render/frame_pipeline.hpp"
+#include "platform/game_view.hpp"
 #include <stdexcept>
 namespace blobber {
 namespace {
@@ -10,7 +10,8 @@ bool failRename(CampaignIoStage stage) {
 }
 } // namespace
 void captureCampaignSave(CampaignRun& original, CampaignStore& saves, const std::vector<NpcTimings>& timings,
-                         const SceneRenderer& renderer, Presenter& presenter, const Options& options) {
+                         const SceneRenderer* renderer, Presenter& presenter, const Options& options,
+                         WorldRenderer* world) {
     const auto capture = [&](CampaignRun& run, const char* name, bool menu = false, const char* message = "",
                              bool overwrite = false, bool warning = false) {
         auto& game = run.game();
@@ -19,9 +20,10 @@ void captureCampaignSave(CampaignRun& original, CampaignStore& saves, const std:
         CommandController commands(game, timings);
         commands.enableMainMenu();
         commands.saveMenu().enabled = true;
-        FramePipeline frames;
-        frames.update(renderer, game.geometry(), game.movement(), &game.actors(), &animator.snapshot(),
-                      &game.combat().attacks(), game.timeMs(), nullptr, &game.loot().snapshot());
+        GameView frames(renderer, world);
+        SpellArea area;
+        area.ground = game.effects().ground();
+        frames.update(game, animator.snapshot(), area);
         commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false,
                          true);
         if (menu)
@@ -31,10 +33,11 @@ void captureCampaignSave(CampaignRun& original, CampaignStore& saves, const std:
         if (overwrite)
             hud.confirmation = SaveConfirmation::Overwrite;
         hud.terminalWarning = warning;
-        presenter.present(frames.frame(), game.movement(), run.map(), false, true, &commands.snapshot(),
-                          frames.picking());
+        frames.present(presenter, game, run.map(), false, true, &commands.snapshot());
         presenter.capture(options.captureDirectory / (std::string(name) + ".png"));
         presenter.capture(options.captureDirectory / (std::string(name) + "-1280.png"), 1280, 720);
+        if (world)
+            world->clear();
     };
     capture(original, "save-paused-hub", true);
     auto slot = saves.inspect();

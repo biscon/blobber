@@ -16,6 +16,7 @@ from mcp_adapter.investigation import replay_inspect
 
 class FakeClient:
     def __init__(self, executable, assets, mode, record, on_event, **kwargs):
+        self.visibility = kwargs.get('visibility')
         self.identity = None
         self.closed = self.failed = False
         self.disposed = False
@@ -63,6 +64,14 @@ class Fixture(unittest.TestCase):
             operation()
         self.assertEqual(cm.exception.code, code)
         return cm.exception
+
+    def test_world_visibility_is_retained_and_replacement_cannot_change_it(self):
+        r = self.sessions.start(scenario={}, mode='visual', visibility='world')
+        self.assertEqual(self.sessions.live[r['handle']].client.visibility, 'world')
+        self.error('invalid_input', lambda: self.sessions.start(scenario={}, mode='visual', visibility='legacy', **self.tokens(r)))
+        changed = self.sessions.request(op='reset', **self.tokens(r))
+        self.assertEqual(self.sessions.live[changed['handle']].client.visibility, 'world')
+        self.error('invalid_input', lambda: self.sessions.start(scenario={}, mode='diagnostic', visibility='world'))
 
     def test_stale_revision_not_forwarded(self):
         r = self.start()

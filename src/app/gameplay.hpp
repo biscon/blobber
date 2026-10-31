@@ -4,6 +4,7 @@
 #include "platform/presenter.hpp"
 #include "render/frame_pipeline.hpp"
 namespace blobber {
+class WorldRenderer;
 class CampaignRun;
 class CampaignStore;
 NpcWorld gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn = Player{}.cell);
@@ -20,9 +21,10 @@ struct GameplayLaunch {
     CampaignStore* saves = nullptr;
 };
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
-                        const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
+                        const std::vector<NpcTimings>& timings, const SceneRenderer* renderer,
                         Presenter& presenter, const Options& options, const RecoveryLevel& recovery = {},
-                        const rules::PresetParty* starting = nullptr, const GameplayLaunch* launch = nullptr);
+                        const rules::PresetParty* starting = nullptr, const GameplayLaunch* launch = nullptr,
+                        WorldRenderer* world = nullptr);
 void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                    const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
                    Presenter& presenter, const std::filesystem::path& directory);

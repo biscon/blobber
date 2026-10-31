@@ -1,18 +1,24 @@
 #pragma once
 #include "assets/world_assets.hpp"
+#include "game/combat.hpp"
 #include "render/picking.hpp"
+#include "render/world_doors.hpp"
 #include "render/world_scene.hpp"
 
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v1";
+constexpr const char* visibilityVersion = "world-visibility-v2";
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;
     const ActorWorld* actors = nullptr;
     const NpcAnimationSnapshot* animation = nullptr;
     const LootSnapshot* loot = nullptr;
+    const DoorSnapshot* doors = nullptr;
+    const AttackVisualSnapshot* attacks = nullptr;
+    const SpellArea* area = nullptr;
+    std::uint64_t now = 0;
 };
 struct Billboard {
     Vec feet;
@@ -25,6 +31,8 @@ struct WorldFrame {
     Camera camera{};
     std::array<Billboard, billboardCapacity> billboards{};
     unsigned count = 0;
+    std::array<DoorBox, doorBoxCapacity> doors{};
+    unsigned doorCount = 0;
     std::array<Cell, fixtureCapacity> proxies{};
     std::array<std::uint16_t, fixtureCapacity> proxyIds{};
     unsigned proxyCount = 0;
@@ -54,7 +62,7 @@ class VisibilityPipeline {
     std::array<WorldFrame, 2> frames_;
     std::array<std::uint16_t, lootCapacity> lootOrder_{};
     std::array<unsigned, 7> icons_{};
-    std::array<std::uint64_t, 8> stamp_{};
+    std::array<std::uint64_t, 10> stamp_{};
     PickingBuffer opaqueCache_{true};
     unsigned current_ = 0;
     bool ready_ = false;

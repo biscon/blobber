@@ -7,6 +7,7 @@ bool FramePipeline::update(const SceneRenderer& renderer, GeometryView map, cons
                            const ActorWorld* npcs, const NpcAnimationSnapshot* animation,
                            const AttackVisualSnapshot* attacks, std::uint64_t now, const SpellArea* area,
                            const LootSnapshot* loot) {
+    opening_ = map.doors() && map.doors()->active();
     if (attacks && (!npcs || attacks->world != npcs->snapshot().world))
         throw std::invalid_argument("Attack snapshot belongs to another actor world");
     const bool effectsChanged = projectiles_.update(attacks, now);
@@ -19,7 +20,7 @@ bool FramePipeline::update(const SceneRenderer& renderer, GeometryView map, cons
     const auto animationRevision = animation ? animation->revision : 0;
     const auto actorRevision = npcs ? npcs->snapshot().revision : 0;
     const auto actorWorld = npcs ? npcs->snapshot().world : 0;
-    SpellArea preview = area && !state.transition.active() ? *area : SpellArea{};
+    SpellArea preview = area && !state.transition.active() && !opening_ ? *area : SpellArea{};
     if (area)
         preview.ground = area->ground;
     const bool previewChanged = preview.cells != area_.cells || preview.eligible != area_.eligible ||

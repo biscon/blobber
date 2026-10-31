@@ -22,7 +22,15 @@ Options parseOptions(int argc, char** argv) {
             result.assets = argv[++i];
         else if (arg == "--campaign-save" && i + 1 < argc)
             result.campaignSave = std::filesystem::absolute(argv[++i]);
-        else if (arg == "--world-preview")
+        else if (arg == "--renderer" && i + 1 < argc) {
+            const std::string value = argv[++i];
+            if (value != "world" && value != "legacy")
+                throw std::invalid_argument("Renderer expects legacy or world");
+            result.worldRenderer = value == "world";
+        } else if (arg == "--capture-doors" && i + 1 < argc) {
+            result.captureDoorsOnly = result.worldRenderer = true;
+            result.captureDirectory = std::filesystem::absolute(argv[++i]);
+        } else if (arg == "--world-preview")
             result.worldPreview = true;
         else if (arg == "--capture-world" && i + 1 < argc) {
             result.worldPreview = true;
@@ -123,18 +131,19 @@ Options parseOptions(int argc, char** argv) {
          result.captureProgressionOnly || result.captureSpellsOnly || result.captureInventoryOnly ||
          result.captureRecoveryOnly || result.captureProjectilesOnly || result.captureReactionsOnly ||
          result.captureHudOnly || result.captureAiOnly || result.captureHybridOnly ||
-         result.capturePreparationOnly))
+         result.capturePreparationOnly || result.captureDoorsOnly))
         throw std::runtime_error("Menu capture must run independently");
     if (int(result.uiDemo) + int(result.combatDemo) + int(result.aiDemo) + int(result.hybridDemo) +
                 int(result.inventoryDemo) + int(result.recoveryDemo) >
             1 ||
         (result.captureAiOnly && (result.uiDemo || result.combatDemo)))
         throw std::runtime_error("Choose only one of --ui-demo, --combat-demo or --ai-demo");
-    if (int(result.captureAiOnly) + int(result.captureHudOnly) + int(result.captureReactionsOnly) +
-            int(result.captureHybridOnly) + int(result.capturePreparationOnly) +
-            int(result.captureProjectilesOnly) + int(result.captureSpellsOnly) +
-            int(result.captureInventoryOnly) + int(result.captureRecoveryOnly) +
-            int(result.captureBuildsOnly) + int(result.captureProgressionOnly) >
+    if (int(result.captureDoorsOnly) + int(result.captureAiOnly) + int(result.captureHudOnly) +
+            int(result.captureReactionsOnly) + int(result.captureHybridOnly) +
+            int(result.capturePreparationOnly) + int(result.captureProjectilesOnly) +
+            int(result.captureSpellsOnly) + int(result.captureInventoryOnly) +
+            int(result.captureRecoveryOnly) + int(result.captureBuildsOnly) +
+            int(result.captureProgressionOnly) >
         1)
         throw std::runtime_error("Choose only one focused capture mode");
     if (result.aiDemo && !result.captureDirectory.empty() && !result.captureAiOnly)
@@ -159,9 +168,11 @@ Options parseOptions(int argc, char** argv) {
         throw std::runtime_error("Use --capture-recovery alone for recovery captures");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
-    if (qualitySpecified && !result.worldPreview)
+    if (result.captureDoorsOnly && !result.worldRenderer)
+        throw std::runtime_error("Door captures require the world renderer");
+    if (qualitySpecified && !result.worldPreview && !result.worldRenderer)
         throw std::invalid_argument(
-            "Supersampling selection currently requires the development world preview");
+            "Supersampling selection requires the world renderer or development world preview");
     if (result.worldPreview &&
         (!result.development || result.captureMenuOnly || result.uiDemo || result.combatDemo ||
          result.aiDemo || result.hybridDemo || result.inventoryDemo || result.recoveryDemo ||

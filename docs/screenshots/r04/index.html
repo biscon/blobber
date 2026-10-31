@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>R04 renderer review</title>
+<style>body{background:#101818;color:#e4dcc6;font:16px system-ui;max-width:1500px;margin:32px auto;padding:0 16px}a{color:#dfb65c}section{display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:16px}figure{margin:0}img,video{width:100%;height:auto}figcaption{padding:8px 0 20px}p{max-width:1050px;line-height:1.5}</style>
+<h1>R04 · Doors, effects and campaign integration</h1>
+<p>Implemented; ready for user review. Legacy remains the default until R06. Every image is an application-owned hidden capture. Click an image for its original 1920×1080 PNG.</p>
+<p>The expedition uses ordinary commands with labelled diagnostic route inspection: open doors, fight guardians, collect loot, descend, recall, save and Continue. Its 1,070 requests were also executed through legacy rendering with no admission or inspected gameplay differences. Spell specimens use independently prepared legal builds, including Party advancement for level-two spells; they are separate from the expedition.</p>
+<p><a href="../../r04_verification.md">Verification and limitations</a> · <a href="campaign-review.json">Capture boundaries</a> · <a href="comparison.json">Backend comparison</a> · <a href="campaign-review.jsonl.gz">Strict trace (gzip)</a></p>
+<h2>Door motion</h2><p>Compressed motion preview at half native dimensions; linked PNGs retain the exact pixels. The door opens in 300 ms and the queued step then takes the normal 160 ms.</p>
+<video controls loop preload="metadata" src="door-motion.webm"></video>
+<h2>Baseline spell corrections</h2><p>The reviewed hammer and spell images below were regenerated with appearance revision 3. Spiritual Weapon clears floor and ceiling. Scorching Ray impacts at 234 ms and expires at 354 ms in this specimen; the former 650 ms image was aftermath. Burning Hands retains its existing immediate 120 ms fiery impact pulses, alongside the separate white body hit flash. There is no flame-cone effect. These are baseline corrections; further spell art remains deferred.</p>
+<p>Real-time previews preserve captured phase timestamps with a short hold before casting and after expiry. They use representative sampled frames, not continuous frame recordings. <a href="effect-review-times.tsv">Exact session timestamps</a>.</p>
+<video controls loop preload="metadata" src="scorching-ray-motion.webm"></video>
+<video controls loop preload="metadata" src="burning-hands-motion.webm"></video>
+<h2>Selected captures</h2><section><figure><a href="door-0-closed.png"><img loading="lazy" src="door-0-closed.png" alt="Closed procedural slab"></a><figcaption>Closed procedural slab</figcaption></figure>
+<figure><a href="door-0-opening-150.png"><img loading="lazy" src="door-0-opening-150.png" alt="Opening midpoint: interaction barrier active"></a><figcaption>Opening midpoint: interaction barrier active</figcaption></figure>
+<figure><a href="door-0-settled.png"><img loading="lazy" src="door-0-settled.png" alt="Settled leaf after queued movement"></a><figcaption>Settled leaf after queued movement</figcaption></figure>
+<figure><a href="door-native-midpoint.png"><img loading="lazy" src="door-native-midpoint.png" alt="Native filtered quality: same opening pose"></a><figcaption>Native filtered quality: same opening pose</figcaption></figure>
+<figure><a href="spell-grease-650.png"><img loading="lazy" src="spell-grease-650.png" alt="Grease — diagnostic legal spell build"></a><figcaption>Grease — diagnostic legal spell build</figcaption></figure>
+<figure><a href="spell-web-650.png"><img loading="lazy" src="spell-web-650.png" alt="Web — diagnostic legal spell build"></a><figcaption>Web — diagnostic legal spell build</figcaption></figure>
+<figure><a href="spell-spiritual_weapon-650.png"><img loading="lazy" src="spell-spiritual_weapon-650.png" alt="Spiritual Weapon — centered between floor and ceiling"></a><figcaption>Spiritual Weapon — centered between floor and ceiling</figcaption></figure>
+<figure><a href="spell-scorching_ray-flight.png"><img loading="lazy" src="spell-scorching_ray-flight.png" alt="Scorching Ray — flight, 117 ms after cast"></a><figcaption>Scorching Ray — flight, 117 ms after cast</figcaption></figure>
+<figure><a href="spell-scorching_ray-impact-tail.png"><img loading="lazy" src="spell-scorching_ray-impact-tail.png" alt="Scorching Ray — half-faded impact, 294 ms after cast"></a><figcaption>Scorching Ray — half-faded impact, 294 ms after cast</figcaption></figure>
+<figure><a href="spell-burning_hands-sparse-cast.png"><img loading="lazy" src="spell-burning_hands-sparse-cast.png" alt="Burning Hands — immediate impact flash; no flame cone"></a><figcaption>Burning Hands — immediate impact flash; no flame cone</figcaption></figure>
+<figure><a href="spell-burning_hands-sparse-60.png"><img loading="lazy" src="spell-burning_hands-sparse-60.png" alt="Burning Hands — half-faded pulse, 60 ms after cast"></a><figcaption>Burning Hands — half-faded pulse, 60 ms after cast</figcaption></figure>
+<figure><a href="spell-burning_hands-sparse-120.png"><img loading="lazy" src="spell-burning_hands-sparse-120.png" alt="Burning Hands — pulse expired at 120 ms; body hit flash continues"></a><figcaption>Burning Hands — pulse expired at 120 ms; body hit flash continues</figcaption></figure>
+<figure><a href="spell-mirror_image-650.png"><img loading="lazy" src="spell-mirror_image-650.png" alt="Mirror Image — diagnostic legal spell build"></a><figcaption>Mirror Image — diagnostic legal spell build</figcaption></figure>
+<figure><a href="outgoing-1-seed5-flight.png"><img loading="lazy" src="outgoing-1-seed5-flight.png" alt="Outgoing ranged attack: flight"></a><figcaption>Outgoing ranged attack: flight</figcaption></figure>
+<figure><a href="outgoing-1-seed5-impact.png"><img loading="lazy" src="outgoing-1-seed5-impact.png" alt="Outgoing ranged attack: impact"></a><figcaption>Outgoing ranged attack: impact</figcaption></figure>
+<figure><a href="operation-1.png"><img loading="lazy" src="operation-1.png" alt="Campaign hub"></a><figcaption>Campaign hub</figcaption></figure>
+<figure><a href="operation-37.png"><img loading="lazy" src="operation-37.png" alt="Actual campaign door opening"></a><figcaption>Actual campaign door opening</figcaption></figure>
+<figure><a href="operation-105.png"><img loading="lazy" src="operation-105.png" alt="Campaign combat"></a><figcaption>Campaign combat</figcaption></figure>
+<figure><a href="operation-1006.png"><img loading="lazy" src="operation-1006.png" alt="Guardians defeated"></a><figcaption>Guardians defeated</figcaption></figure>
+<figure><a href="operation-1013.png"><img loading="lazy" src="operation-1013.png" alt="Loot collected"></a><figcaption>Loot collected</figcaption></figure>
+<figure><a href="operation-1065.png"><img loading="lazy" src="operation-1065.png" alt="Descent to floor two"></a><figcaption>Descent to floor two</figcaption></figure>
+<figure><a href="operation-1066.png"><img loading="lazy" src="operation-1066.png" alt="Paid recall"></a><figcaption>Paid recall</figcaption></figure>
+<figure><a href="operation-1069.png"><img loading="lazy" src="operation-1069.png" alt="Continue restored the saved run"></a><figcaption>Continue restored the saved run</figcaption></figure>
+<figure><a href="save-overwrite-dialog.png"><img loading="lazy" src="save-overwrite-dialog.png" alt="Save overwrite confirmation"></a><figcaption>Save overwrite confirmation</figcaption></figure>
+<figure><a href="save-error-rename.png"><img loading="lazy" src="save-error-rename.png" alt="Save write failure: session and prior slot retained"></a><figcaption>Save write failure: session and prior slot retained</figcaption></figure>
+<figure><a href="arena-rematch.png"><img loading="lazy" src="arena-rematch.png" alt="Arena rematch"></a><figcaption>Arena rematch</figcaption></figure>
+<figure><a href="arena-victory.png"><img loading="lazy" src="arena-victory.png" alt="Arena victory"></a><figcaption>Arena victory</figcaption></figure>
+</section>

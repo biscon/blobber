@@ -102,6 +102,7 @@ void objective() {
           "full player-drop pool cannot exhaust reserved guardian rewards");
     const LootId reward{drops.actors().snapshot().world,
                         std::uint16_t(NpcWorld::maxInstances * lootPerActor + p.recovery.groundCount), 1};
+    drops.update(.3, false);
     const auto beforePickup = drops.loot().snapshot().revision;
     const PickupRequest pickup{reward, {0}, drops.party().inventory().revision()};
     check(bool(drops.pickup(pickup, true)) && drops.loot().snapshot().revision == beforePickup,

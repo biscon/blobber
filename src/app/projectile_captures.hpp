@@ -4,3 +4,9 @@ namespace blobber {
 void captureProjectiles(const rules::Catalog&, const NpcWorld&, const std::vector<NpcTimings>&,
                         const SceneRenderer&, Presenter&, const std::filesystem::path&);
 }
+
+namespace blobber {
+class WorldRenderer;
+void captureProjectiles(const rules::Catalog&, const NpcWorld&, const std::vector<NpcTimings>&,
+                        const SceneRenderer*, Presenter&, const std::filesystem::path&, WorldRenderer*);
+} // namespace blobber

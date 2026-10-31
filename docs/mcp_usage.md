@@ -17,6 +17,13 @@ floors. Diagnostic captures include a labelled full-map companion image; no hidd
 map is added to visual player observations. Existing experiment policies remain
 arena-only; connecting the adapter does not launch a prototype or seed sweep.
 
+R04 adds `session_start(mode="visual", visibility="world", ...)` for the shared
+windowless world visibility backend. The selection is retained across reset/load;
+use a new session to change it. Legacy remains the default. `replay_capture` forwards
+the recorded backend and graphics builds now support world images with an owned
+hidden context. Ordinary world observations require no window, source PNGs or legacy
+perspective banks. Doors use the same shared opening barrier as graphical gameplay.
+
 ## Install and invoke
 
 Linux/POSIX is the supported process environment for this slice, matching the

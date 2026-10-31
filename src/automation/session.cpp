@@ -74,7 +74,7 @@ void Session::observe(Observation& out, bool diagnostic) {
     else {
         out.targets.world = game().actors().snapshot().world;
         out.targets.revision = game().actors().snapshot().revision;
-        if (!game().movement().transition.active())
+        if (!game().actionBusy())
             for (std::size_t i = 0; i < game().actors().snapshot().count; ++i)
                 if (game().actors().snapshot().actors[i].life == ActorLife::Alive)
                     out.targets.ids[out.targets.count++] = game().actors().id(i);
@@ -100,8 +100,8 @@ bool Session::terminal() const noexcept {
             arenaCleared(game().actors().snapshot()));
 }
 bool Session::decision() const noexcept {
-    return result() || game().combat().snapshot().awaitingAction ||
-           (realTime(game().combat().snapshot().phase) && !game().movement().transition.active());
+    return result() || (!game().opening() && game().combat().snapshot().awaitingAction) ||
+           (realTime(game().combat().snapshot().phase) && !game().actionBusy());
 }
 const CombatEvents& Session::tick() noexcept {
     ++ticks_;
@@ -114,8 +114,8 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
     const auto okay = [](bool b, const char* reason) -> ActionResult { return {b, b ? "Ready" : reason}; };
     switch (r.operation) {
     case Operation::Combat: {
-        if (game().movement().transition.active())
-            return {false, "Moving"};
+        if (game().actionBusy())
+            return {false, game().opening() ? "Wait until the door opens." : "Moving"};
         if (mode_ == Mode::Visual) {
             observe(scratch_);
             const auto visible = targetVisibility(r.combat, game().party().catalog(), scratch_.targets,
@@ -132,8 +132,8 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
         return {reason == CommandReason::Resolved, commandMessage(reason)};
     }
     case Operation::Move: {
-        if (game().movement().transition.active())
-            return {false, "Moving"};
+        if (game().actionBusy())
+            return {false, game().opening() ? "Wait until the door opens." : "Moving"};
         if (!realTime(game().combat().snapshot().phase) || !game().effects().mobileParty())
             return {false, "Cannot move in this phase or condition"};
         auto player = game().movement().player;

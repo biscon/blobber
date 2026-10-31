@@ -1,0 +1,15 @@
+{
+  "selected": {
+    "hub": 1,
+    "floor1": 3,
+    "door-opening": 37,
+    "combat-start": 105,
+    "combat-victory": 1006,
+    "loot": 1013,
+    "floor2": 1065,
+    "recall": 1066,
+    "continue": 1069
+  },
+  "backend": "world",
+  "note": "One deterministic diagnostic-routed command trace; effects gallery is separate."
+}

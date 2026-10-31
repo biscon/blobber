@@ -58,6 +58,11 @@ struct VisibilityFixture {
         for (const auto* n : {"loot/bag", "fixture/key-bronze", "fixture/key-silver", "fixture/upstairs",
                               "fixture/downstairs", "fixture/endpoint", "fixture/threshold"})
             writer.add(n, 8, 12, true, pixels);
+        for (const auto* n : {"door", "door-locked"})
+            writer.add(n, 8, 12, false, pixels);
+        for (const auto* n :
+             {"arrow", "tip", "feathers", "slash", "glint", "grease", "web", "weapon", "preview", "white"})
+            writer.add(std::string("effect/") + n, 8, 12, true, pixels);
         writer.finish(actors);
     }
     world_assets::Publication publication() const { return world_assets::load(location.directory); }

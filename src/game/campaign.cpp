@@ -90,7 +90,8 @@ CampaignStatus CampaignRun::status() const noexcept {
         conscious |= member.life == rules::Life::Conscious;
     if (!conscious || game().combat().snapshot().phase == CombatPhase::Defeat)
         return CampaignStatus::Defeat;
-    if (location_ == 3 && game().objective().completed && game().combat().settledActions(game().timeMs()))
+    if (location_ == 3 && game().objective().completed && !game().opening() &&
+        game().combat().settledActions(game().timeMs()))
         return CampaignStatus::Victory;
     return CampaignStatus::Active;
 }

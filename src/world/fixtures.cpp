@@ -81,6 +81,8 @@ bool GeometryView::solid(Cell c) const noexcept {
     if (map_->solid(c))
         return true;
     const int i = fixtures_ ? fixtures_->at(c) : -1;
+    if (i >= 0 && doors_ && doors_->world == world() && doors_->active(unsigned(i)))
+        return true;
     return i >= 0 &&
            fixtureBlocks(fixtures_->definition().entries[unsigned(i)], fixtures_->completed(unsigned(i)));
 }
@@ -96,7 +98,8 @@ std::uint64_t GeometryView::world() const noexcept {
     return fixtures_ ? fixtures_->world() : 0;
 }
 std::uint64_t GeometryView::revision() const noexcept {
-    return fixtures_ ? fixtures_->geometryRevision() : 0;
+    return (fixtures_ ? fixtures_->geometryRevision() : 0) +
+           (doors_ ? doors_->revision * 2 + unsigned(doors_->active()) : 0);
 }
 bool FloorGeometry::complete(unsigned i) noexcept {
     if (i >= definition_.count || completed_[i] || revision_ == UINT64_MAX || geometryRevision_ == UINT64_MAX)

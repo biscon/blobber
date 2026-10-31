@@ -23,7 +23,7 @@ AdvancementError GameSession::advancementEligibility(const AdvancementRequest& r
         return AdvancementError::Unavailable;
     if (r.world != actors_.snapshot().world)
         return AdvancementError::Stale;
-    if (movement().transition.active())
+    if (actionBusy())
         return AdvancementError::Moving;
     if (effects_.area(movement().player.cell) || !combat_.settledRecovery(movement().player, timeMs_))
         return AdvancementError::Unsafe;
@@ -57,8 +57,7 @@ bool GameSession::grantNextLevelExperience() noexcept {
         return false;
     if (mutation_ != UINT64_MAX)
         ++mutation_;
-    if (!development_ || !combat_.settledRecovery(movement().player, timeMs_) ||
-        movement().transition.active())
+    if (!development_ || !combat_.settledRecovery(movement().player, timeMs_) || actionBusy())
         return false;
     return party_.grantNextLevelExperience();
 }

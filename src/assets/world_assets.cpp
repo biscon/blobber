@@ -177,8 +177,9 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
     }
     for (const auto& a : appearances)
         actors.push_back(appearanceJson(a));
-    const Json manifest{{"format", version},    {"appearance_revision", 1}, {"definitions", definitions},
-                        {"bytes", offset_},     {"checksum", hash_},        {"textures", textures},
+    const Json manifest{{"format", version},          {"appearance_revision", appearanceRevision},
+                        {"definitions", definitions}, {"bytes", offset_},
+                        {"checksum", hash_},          {"textures", textures},
                         {"appearances", actors}};
     const auto text = manifest.dump(2);
     require(text.size() <= 256 * 1024);
@@ -210,7 +211,8 @@ Publication load(const std::filesystem::path& directory) {
                 require(keys.at(depth - 1).insert(value.get<std::string>()).second);
             return true;
         });
-        require(integer(j.at("format")) == version && integer(j.at("appearance_revision")) == 1);
+        require(integer(j.at("format")) == version &&
+                integer(j.at("appearance_revision")) == appearanceRevision);
         Publication p;
         p.payload = directory / "textures.bin";
         p.fingerprint = integer(j.at("checksum"));

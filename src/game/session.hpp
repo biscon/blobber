@@ -99,9 +99,21 @@ class GameSession {
     const NpcAiSnapshot& ai() const noexcept { return ai_.snapshot(); }
     const CombatEvents& update(double seconds, bool paused) noexcept;
     void move(Action action, bool fresh = true) noexcept;
-    void clearPending() noexcept { movement_.clearPending(); }
+    const DoorSnapshot& doors() const noexcept { return doors_; }
+    std::optional<Action> doorPending() const noexcept { return doorPending_; }
+    bool opening() const noexcept { return doors_.active(); }
+    bool actionBusy() const noexcept { return opening() || movement().transition.active(); }
+    GeometryView presentationGeometry() const noexcept { return map_.presentation(doors_); }
+    void clearPending() noexcept {
+        movement_.clearPending();
+        doorPending_.reset();
+    }
     void setAnimated(bool enabled) noexcept {
         movement_.setAnimated(enabled);
+        if (!enabled) {
+            doors_.until.fill(0);
+            ++doors_.revision;
+        }
         discover();
     }
     InventoryError inventoryAccess(const InventoryRequest&) const noexcept;
@@ -130,6 +142,9 @@ class GameSession {
     CampaignRun* campaign_ = nullptr;
     std::uint64_t mutation_ = 0;
     FloorGeometry floor_;
+    DoorSnapshot doors_;
+    std::optional<Action> doorPending_;
+    bool completeFixture(unsigned) noexcept;
     FloorObjectiveDefinition objectiveDefinition_;
     FloorObjectiveSnapshot objective_;
     void prepareObjective();

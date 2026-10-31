@@ -31,20 +31,30 @@ and graphics-disabled builds. Point `--assets` at a prepared world publication
 (for example `cmake-build-release/assets`); no source images, legacy perspective
 banks, display, window or context are required. This uses the same CPU depth/ID
 pipeline as the development world preview. The default remains `legacy`, keeping
-normal gameplay and default visual automation aligned until R04. `--visibility`
+default gameplay and visual automation aligned until the R06 cutover. `--visibility`
 is invalid in diagnostic mode. The Python client's constructor accepts the keyword
 `visibility="world"`; its CLI accepts the same selector. Local MCP session creation
-keeps its existing default; replay jobs forward the backend recorded in a trace.
+accepts `visibility="world"` with `mode="visual"`; its existing default remains
+legacy. Reset/load retain the selection; replacement cannot change it. Replay jobs
+forward the backend recorded in a trace.
 
 Capabilities include `visibility_backends` and `capture_visibility_backends`;
 `visual` means at least one visual backend was compiled. Capture availability is
 separate. World traces record `visibility_backend`, `visibility_version` equal to
-`world-visibility-v1`, publication fingerprint, format 1 and appearance revision 1.
-Strict replay rejects changed visibility identity before execution. Protocol and
-save schemas remain unchanged. World-backend replay image capture returns
-`capture_unsupported` before creating a window or output directory; full effects,
-doors and replay-image integration remain R04. R03 images use the hidden
-`blobber --development --capture-world NEW_DIR` development capture path.
+`world-visibility-v2`, publication fingerprint, format 1 and appearance revision 2.
+All new traces also record `door_scheduling="shared-opening-300ms-v1"`. Strict replay
+rejects changed identities before execution. Protocol and save schemas remain unchanged.
+Graphics builds support world replay images through their own hidden context;
+graphics-disabled builds advertise no capture backend and return `graphics_unavailable`.
+Captures render requested operation boundaries without advancing session time.
+
+R04 adds `door_opening` to observations and opening deadlines/pending movement to
+strict diagnostic state. Fixture completion remains permanent and immediate, with a
+300 ms shared barrier before new movement, attacks and AI actions. Accepted impacts
+and effect deadlines continue; pause freezes the opening. Animation-off settles it.
+Movement actions during opening reject without queuing in headless mode. Preview,
+action eligibility, save and travel use the same barrier. Completed doors restore
+settled; no transient opening state enters the save format.
 
 ## Transport and identities
 

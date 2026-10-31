@@ -11,6 +11,7 @@
 #include "generation/diagnostic_view.hpp"
 #include "generation/population.hpp"
 #include "persistence/campaign_store.hpp"
+#include "platform/game_view.hpp"
 #include "platform/presenter.hpp"
 #include "render/frame_pipeline.hpp"
 #include "render/preparation_limits.hpp"
@@ -29,7 +30,6 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                       : options.seed            ? *options.seed
                       : options.captureMenuOnly ? 5u
                                                 : std::random_device{}();
-    const auto loadStart = std::chrono::steady_clock::now();
     auto definitions = loadNpcDefinitions(options.assets / "npcs/level.json");
     std::unique_ptr<CampaignRun> campaign = std::move(restored);
     std::optional<Map> arenaFloor;
@@ -49,50 +49,51 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         campaign ? campaign->location(campaign->activeLocation()).recovery : RecoveryLevel{};
 
     const auto& timings = loadedNpcs.timings;
-    const auto profile = loadPreparationProfile(options.assets / "preparation.json");
-    validatePreparedPublication(options.assets / "prepared", profile, loadedNpcs.definitionFingerprint);
-    auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
-    const auto sceneBytes = sceneStorageBytes(scene);
-    auto loot = loadPreparedLoot(options.assets / "prepared/loot.bin");
-    const auto lootBytes = loot.storageBytes();
-    requirePreparationBytes(sceneBytes, projectilePreparedBytes() + lootBytes,
-                            PreparationLimits{}.residentBytes);
-    const auto remaining =
-        PreparationLimits{}.residentBytes - sceneBytes - projectilePreparedBytes() - lootBytes;
-    auto preparedNpcs = loadPreparedNpcs(options.assets / "prepared/npcs.bin", timings,
-                                         loadedNpcs.definitionFingerprint, profile, {remaining, remaining});
-    const auto npcBytes = preparedNpcs.storageBytes();
-
-    const SceneRenderer renderer(std::move(scene), std::move(preparedNpcs), loadedNpcs.attachments,
-                                 std::move(loot));
-    std::cout << "Prepared assets loaded: scene=" << sceneBytes << " npc=" << npcBytes
-              << " projectiles=" << projectilePreparedBytes() << " loot=" << lootBytes
-              << " resident=" << sceneBytes + npcBytes + projectilePreparedBytes() + lootBytes
-              << " limit=" << PreparationLimits{}.residentBytes << " load_ms="
-              << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
-                                                                       loadStart)
-                     .count()
-              << '\n';
+    std::unique_ptr<SceneRenderer> renderer;
+    std::unique_ptr<WorldRenderer> world;
+    if (options.worldRenderer) {
+        auto publication = world_assets::load(options.assets / "prepared/world");
+        if (publication.definitions != loadedNpcs.definitionFingerprint)
+            throw std::runtime_error("World NPC definitions differ; rebuild world assets");
+        world = std::make_unique<WorldRenderer>(presenter.resources(), std::move(publication));
+        world->supersampling(options.supersampling);
+    } else {
+        const auto profile = loadPreparationProfile(options.assets / "preparation.json");
+        validatePreparedPublication(options.assets / "prepared", profile, loadedNpcs.definitionFingerprint);
+        auto scene = loadPreparedScene(options.assets / "prepared/scene.bin", profile);
+        auto loot = loadPreparedLoot(options.assets / "prepared/loot.bin");
+        const auto used = sceneStorageBytes(scene) + loot.storageBytes() + projectilePreparedBytes();
+        requirePreparationBytes(0, used, PreparationLimits{}.residentBytes);
+        auto npcs = loadPreparedNpcs(
+            options.assets / "prepared/npcs.bin", timings, loadedNpcs.definitionFingerprint, profile,
+            {PreparationLimits{}.residentBytes - used, PreparationLimits{}.residentBytes - used});
+        renderer = std::make_unique<SceneRenderer>(std::move(scene), std::move(npcs), loadedNpcs.attachments,
+                                                   std::move(loot));
+    }
     if (options.captureSaveOnly && campaign && saves) {
-        captureCampaignSave(*campaign, *saves, timings, renderer, presenter, options);
+        captureCampaignSave(*campaign, *saves, timings, renderer.get(), presenter, options, world.get());
         return true;
     }
     if (options.captureArenaOnly && arena) {
         auto capture = [&](const char* name, GameSession& session, CommandController& commands) {
             NpcAnimator animator(session.actors(), timings);
             animator.setTime(session.timeMs(), &session.effects());
-            FramePipeline frames;
-            frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
-                          &animator.snapshot(), &session.combat().attacks(), session.timeMs());
+            GameView frames(renderer.get(), world.get());
+            SpellArea area;
+            area.ground = session.effects().ground();
+            frames.update(session, animator.snapshot(), area);
             commands.arenaContext(arenaCleared(session.actors().snapshot()));
             commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false,
                              true);
-            presenter.present(frames.frame(), session.movement(), map, false, true, &commands.snapshot(),
-                              frames.picking());
+            frames.present(presenter, session, map, false, true, &commands.snapshot());
             const auto file = options.captureDirectory / (std::string(name) + ".png");
             presenter.capture(file);
             presenter.capture(options.captureDirectory / (std::string(name) + "-1280.png"), 1280, 720);
+            if (world)
+                world->clear();
             presenter.capture(options.captureDirectory / (std::string(name) + "-4x3.png"), 1024, 768);
+            if (world)
+                world->clear();
         };
         for (unsigned repeat = 0; repeat < 2; ++repeat) {
             GameSession session(map, rules, *starting, loadedNpcs.world, arena->seed, arenaSpawn(), true,
@@ -154,10 +155,10 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
             animator.setTime(session.timeMs(), &session.effects());
             CommandController commands(session, timings);
             commands.enableMainMenu();
-            FramePipeline frames;
-            frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
-                          &animator.snapshot(), &session.combat().attacks(), session.timeMs(), nullptr,
-                          &session.loot().snapshot());
+            GameView frames(renderer.get(), world.get());
+            SpellArea area;
+            area.ground = session.effects().ground();
+            frames.update(session, animator.snapshot(), area);
             commands.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false,
                              true);
             if (camp) {
@@ -177,10 +178,11 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                 std::snprintf(hud.fixturePrompt.data(), hud.fixturePrompt.size(), "%s",
                               "This expedition has ended. Return to Main Menu.");
             }
-            presenter.present(frames.frame(), session.movement(), campaign->map(), false, true, &hud,
-                              frames.picking());
+            frames.present(presenter, session, campaign->map(), false, true, &hud);
             presenter.capture(options.captureDirectory / (std::string(name) + ".png"));
             presenter.capture(options.captureDirectory / (std::string(name) + "-1280.png"), 1280, 720);
+            if (world)
+                world->clear();
         };
         capture("launch");
         capture("travel-fresh-selector", false, false, true);
@@ -220,8 +222,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     }
     const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena),    true, nullptr,
                                 nullptr, nullptr,     campaign.get(), saves};
-    return runGameplay(map, rules, loadedNpcs.world, timings, renderer, presenter, options, recovery,
-                       starting, &launch) != PlayOutcome::Quit;
+    return runGameplay(map, rules, loadedNpcs.world, timings, renderer.get(), presenter, options, recovery,
+                       starting, &launch, world.get()) != PlayOutcome::Quit;
 }
 bool launchMenuParty(const Options& o, const rules::Catalog& c, const rules::PresetParty& p,
                      Presenter& presenter, CampaignStore* saves) {

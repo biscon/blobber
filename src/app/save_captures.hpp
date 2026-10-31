@@ -4,6 +4,7 @@
 #include "platform/presenter.hpp"
 #include "render/scene_renderer.hpp"
 namespace blobber {
-void captureCampaignSave(CampaignRun&, CampaignStore&, const std::vector<NpcTimings>&, const SceneRenderer&,
-                         Presenter&, const Options&);
-}
+class WorldRenderer;
+void captureCampaignSave(CampaignRun&, CampaignStore&, const std::vector<NpcTimings>&, const SceneRenderer*,
+                         Presenter&, const Options&, WorldRenderer* = nullptr);
+} // namespace blobber

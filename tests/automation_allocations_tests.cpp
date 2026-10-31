@@ -318,6 +318,7 @@ int main(int argc, char**) {
         guardianGame.actors().damage(guardianGame.actors().id(2), 100000, 0);
         guardianGame.actors().damage(guardianGame.actors().id(3), 100000, 0);
         guardianGame.update(0, false);
+        guardianGame.update(.3, false);
         okay &= guardianGame.objective().completed && guardianGame.landingSafety(0).safe;
         guardianUi.refresh({}, false, false, true);
 #ifdef BLOBBER_AUTOMATION_VISUAL
@@ -335,6 +336,7 @@ int main(int argc, char**) {
 #endif
         fixtureUi.refresh({}, false, false, true);
         fixtureUi.interactFixture();
+        fixtureGame->update(.3, false);
         fixtureGame->move(Action::Forward);
         fixtureUi.refresh({}, false, true, true);
         walk(generated);

@@ -1,5 +1,25 @@
 # System design
 
+R04 effect review correction **implemented**: lower Spiritual Weapon within flat
+floor/ceiling clearance, restore GPU spell colors/impact fade and visible impact
+depth, retain multi-dart/ray separation, and capture actual transient phases.
+See [review correction](renderer_integration_design.md#r04-effect-review-correction--2026-10-31-implemented).
+
+R04 **Accepted and closed; milestone R-B Accepted** (2026-10-31):
+[doors, effects and campaign integration](renderer_integration_design.md), approved
+by “Implement the plan.” Complete `--renderer world` campaign/arena, shared 300 ms
+opening barriers, procedural slabs/frames, depth-aware effects and GPU replay images
+are implemented. [Verification](r04_verification.md) and
+[gallery](screenshots/r04/index.html) record the initial graphics 65/65 and headless 46/46
+Debug/Release suites, final affected/protocol checks, CPU sanitizers, hidden GPU
+parity/lifecycle/failure/allocation guards, 1,070-request legacy gameplay comparison
+and 612 identical initial Debug/Release door/spell captures. The review correction
+adds focused CPU/GPU/sanitizer/asset checks and new transient-phase Release captures.
+Legacy stays default until R06.
+The user explicitly accepted the baseline: “I accept the slice, record it in the
+plan doc”. Richer spell graphics remain deferred. R05 is eligible for separate
+planning, not started; no new human/other-GPU coverage is inferred.
+
 R03 **Accepted and closed** (2026-10-31):
 [shared billboards and visibility](renderer_visibility_design.md), approved with
 “Implement the plan.” Current-art GPU bodies/shadows/items, continuous fitted
@@ -13,7 +33,7 @@ sanitizers, hidden GPU parity/rollback, allocation/upload and capacity guards pa
 visibility investigation target is met on the named reference machine. The user
 explicitly accepted R03: “slice accepted, record it in the plan doc”. Verification
 limits are unchanged; no additional human interactive or other-GPU coverage is inferred.
-R04 full effects/doors/campaign integration remains unstarted.
+R04 and milestone R-B are accepted under the approved integration design.
 
 R01 **Accepted and closed; milestone R-A Accepted** (2026-10-31):
 [visual and motion proof](renderer_probe_design.md), approved with “Implement the
@@ -44,7 +64,7 @@ R03 interaction is delivered for review under its separately approved design.
 Complete production integration remains R04.
 
 Renderer roadmap **accepted**: [six-slice delivery plan](renderer_plan.md). R03 is
-Accepted; R04–R06 remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
+Accepted along with R04 and milestone R-B; R05–R06 remain Planned. Static mesh/assets, billboard interaction/windowless visibility,
 effects/doors/campaign integration, single-layer heights/outdoor hub/decoration and
 production cutover follow only through their own reviewed slices. Stacked cells are
 explicitly deferred. Existing implemented systems below remain authoritative until
@@ -720,7 +740,8 @@ R02 expands the application-owned GPU registry to 512 standalone textures, eight
 render targets, eight static meshes and eight shaders. Presenter borrows the registry;
 world scene/resource leases release resources at explicit preparation boundaries.
 The new path additionally enforces texture/mesh/scene byte budgets in the
-[R02 design](renderer_world_design.md). Normal gameplay still uses CPU world images.
+[R02 design](renderer_world_design.md). Normal gameplay defaults to CPU world images; `--renderer world` selects the complete
+R04 alternative without loading legacy world banks. R06 owns the default cutover.
 Handles include a typed slot index and generation. Invalid/stale lookup returns
 no resource; checked platform operations reject it. Exhaustion is an explicit
 startup error. Releasing a slot invalidates its generation; exhausted generation

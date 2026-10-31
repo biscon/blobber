@@ -4,6 +4,7 @@
 #include "app/hybrid_demo.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
+#include "platform/game_view.hpp"
 #include "platform/input.hpp"
 #include "ui/interaction.hpp"
 #include <algorithm>
@@ -35,51 +36,46 @@ struct PlayView {
     std::unique_ptr<GameSession> ownedSession;
     GameSession& session;
     NpcAnimator animator;
-    FramePipeline frames;
+    GameView frames;
     CommandController commands;
     const Map& map;
-    const SceneRenderer& renderer;
     std::optional<generation::DiagnosticView> diagnostics;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
-             const std::vector<NpcTimings>& timings, const SceneRenderer& r, std::uint32_t seed, Player spawn,
+             const std::vector<NpcTimings>& timings, const SceneRenderer* r, std::uint32_t seed, Player spawn,
              bool enableAi = false, const RecoveryLevel& recovery = {},
              const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {},
-             const FloorObjectiveDefinition& objective = {})
+             const FloorObjectiveDefinition& objective = {}, WorldRenderer* world = nullptr)
         : ownedSession(std::make_unique<GameSession>(m, catalog, starting ? *starting : *catalog.preset(),
                                                      placements, seed, spawn, enableAi, timings, recovery,
                                                      fixtures, objective)),
-          session(*ownedSession), animator(session.actors(), timings), commands(session, timings), map(m),
-          renderer(r) {}
-    PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, const SceneRenderer& r,
-             const generation::GeneratedFloor* floor = nullptr)
-        : session(game), animator(game.actors(), timings), commands(game, timings), map(m), renderer(r) {
+          session(*ownedSession), animator(session.actors(), timings), frames(r, world),
+          commands(session, timings), map(m) {}
+    PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, const SceneRenderer* r,
+             const generation::GeneratedFloor* floor = nullptr, WorldRenderer* world = nullptr)
+        : session(game), animator(game.actors(), timings), frames(r, world), commands(game, timings), map(m) {
         if (floor)
             diagnostics = generation::diagnosticView(*floor);
     }
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs(), &session.effects());
         const auto area = debug ? SpellArea{} : commands.floorPreview();
-        const bool changed = frames.update(
-            renderer, session.geometry(), session.movement(), &session.actors(), &animator.snapshot(),
-            &session.combat().attacks(), session.timeMs(), &area, &session.loot().snapshot());
+        const bool changed = frames.update(session, animator.snapshot(), area);
         const auto* picking = frames.picking();
-        commands.refresh(picking ? picking->targets() : TargetSnapshot{},
-                         session.movement().transition.active(), debug, focused);
+        commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
+                         focused);
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
-            return frames.update(renderer, session.geometry(), session.movement(), &session.actors(),
-                                 &animator.snapshot(), &session.combat().attacks(), session.timeMs(),
-                                 &currentArea, &session.loot().snapshot()) ||
-                   changed;
+            return frames.update(session, animator.snapshot(), currentArea) || changed;
         return changed;
     }
 };
 } // namespace
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
-                        const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
+                        const std::vector<NpcTimings>& timings, const SceneRenderer* renderer,
                         Presenter& presenter, const Options& options, const RecoveryLevel& recovery,
-                        const rules::PresetParty* starting, const GameplayLaunch* launch) {
+                        const rules::PresetParty* starting, const GameplayLaunch* launch,
+                        WorldRenderer* world) {
     const Player spawn = launch               ? launch->spawn
                          : options.combatDemo ? combatCamera(map, placements)
                          : options.hybridDemo ? hybridDemoSpawn()
@@ -97,12 +93,14 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
     auto* campaign = launch ? launch->campaign : nullptr;
     for (;;) {
         auto current =
-            campaign ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, renderer)
-                     : std::make_unique<PlayView>(
-                           map, catalog, idle, timings, renderer, seed, spawn,
-                           launch ? launch->enableAi : !options.combatDemo, recovery, starting,
-                           launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
-                           launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
+            campaign
+                ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, renderer, nullptr,
+                                             world)
+                : std::make_unique<PlayView>(
+                      map, catalog, idle, timings, renderer, seed, spawn,
+                      launch ? launch->enableAi : !options.combatDemo, recovery, starting,
+                      launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
+                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{}, world);
         auto& initial = *current;
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
@@ -113,6 +111,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         if (launch && launch->arena)
             initial.commands.arenaContext(false);
         initial.refresh();
+        initial.frames.activate();
         if (options.inventoryDemo)
             initial.commands.openInventory(rules::CharacterId{2});
         if (options.spellDemo) {
@@ -210,10 +209,9 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                                        int(sample.ui.pointer->y) - viewY)
                                    : std::nullopt;
                 const auto groundHit =
-                    sample.ui.pointer && !view.session.movement().transition.active()
-                        ? SceneRenderer::groundCell(view.session.geometry(), view.session.movement().player,
-                                                    int(sample.ui.pointer->x) - viewX,
-                                                    int(sample.ui.pointer->y) - viewY)
+                    sample.ui.pointer
+                        ? view.frames.groundCell(view.session, int(sample.ui.pointer->x) - viewX,
+                                                 int(sample.ui.pointer->y) - viewY)
                         : std::nullopt;
                 routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
                               picking && sample.ui.pointer
@@ -232,12 +230,14 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         ticket.game(), campaign->location(ticket.destination()).map(), timings, renderer,
                         campaign->location(ticket.destination()).generated
                             ? &*campaign->location(ticket.destination()).generated
-                            : nullptr);
+                            : nullptr,
+                        world);
                     // Compose destination before commit; refresh does not mutate Party.
                     replacement->refresh();
                     replacement->commands.enableMainMenu();
                     replacement->commands.saveMenu().enabled = launch && launch->saves;
                     if (campaign->commitTravel(ticket)) {
+                        replacement->frames.activate();
                         replacement->commands.travelMessage(
                             request.kind == TravelKind::Recall
                                 ? "Recalled to the sanctuary hub. One camp kit consumed. Rest separately."
@@ -262,12 +262,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (view.commands.snapshot().quitRequested)
                 return PlayOutcome::Quit;
             changed |= view.refresh(debug, sample.ui.focused);
-            presenter.present(view.frames.frame(), view.session.movement(), view.map, debug, changed || first,
-                              &view.commands.snapshot(), view.frames.picking(),
-                              view.diagnostics ? &*view.diagnostics
-                              : launch         ? launch->diagnostics
-                                               : nullptr,
-                              reveal);
+            view.frames.present(presenter, view.session, view.map, debug, changed || first,
+                                &view.commands.snapshot(),
+                                view.diagnostics ? &*view.diagnostics
+                                : launch         ? launch->diagnostics
+                                                 : nullptr,
+                                reveal);
             first = false;
         }
         if (!restart)
@@ -284,12 +284,11 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
     const auto spawn = combatCamera(map, idle);
     auto capture = [&](PlayView& view, const char* name) {
         view.refresh();
-        presenter.present(view.frames.frame(), view.session.movement(), map, false, true,
-                          &view.commands.snapshot(), view.frames.picking());
+        view.frames.present(presenter, view.session, map, false, true, &view.commands.snapshot());
         presenter.capture(directory / (std::string(name) + ".png"));
     };
     {
-        PlayView view(map, catalog, idle, timings, renderer, 5, spawn);
+        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
         view.commands.record(view.session.update(0, false));
         capture(view, "combat-start");
         for (int step = 0; step < 500 && view.session.combat().snapshot().phase != CombatPhase::Victory &&
@@ -325,7 +324,7 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
         capture(view, "combat-continue-corpses-expired");
     }
     {
-        PlayView view(map, catalog, idle, timings, renderer, 5, spawn);
+        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
         view.commands.record(view.session.update(0, false));
         for (std::uint16_t i = 0; i < rules::partySize; ++i)
             view.session.party().damage({i}, view.session.party().character({i})->hitPoints);
@@ -333,7 +332,7 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
         capture(view, "combat-defeat");
     }
     {
-        PlayView view(map, catalog, idle, timings, renderer, 5, spawn);
+        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
         view.session.party().damage({0}, view.session.party().character({0})->hitPoints);
         view.session.party().deathSave({0}, 1);
         view.session.party().damage({1}, view.session.party().character({1})->hitPoints);
@@ -347,7 +346,7 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
         capture(view, "combat-log");
     }
     {
-        PlayView view(map, catalog, idle, timings, renderer, 5, spawn);
+        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
         view.session.party().damage({0}, view.session.party().character({0})->hitPoints);
         view.commands.record(view.session.update(0, false));
         view.refresh();
@@ -359,7 +358,7 @@ void captureCombat(const Map& map, const rules::Catalog& catalog, const NpcWorld
         capture(view, "combat-aid-result");
     }
     {
-        PlayView view(map, catalog, idle, timings, renderer, 5, spawn);
+        PlayView view(map, catalog, idle, timings, &renderer, 5, spawn);
         view.commands.record(view.session.update(0, false));
         view.refresh();
         view.commands.selectAction(PartyAction::Defend);

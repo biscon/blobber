@@ -20,7 +20,8 @@ def main():
     args=parser.parse_args(); baker=args.baker.resolve(); rule=args.rule.resolve()
     with tempfile.TemporaryDirectory(prefix='blobber world build ') as temp:
         root=pathlib.Path(temp); source=root/'source assets'; source.mkdir()
-        for name in ['wall','floor','ceiling']: png(source/'textures'/f'{name}.png')
+        for name in ['wall','floor','ceiling','door','door-locked']: png(source/'textures'/f'{name}.png')
+        for name in ['grease','web','spiritual_weapon']: png(source/'effects'/f'{name}.png')
         for name in ['key-bronze','key-silver','upstairs','downstairs','endpoint','threshold']: png(source/'fixtures'/f'{name}.png')
         png(source/'ui/items/loot-bag.png'); png(source/'npcs/body.png')
         (source/'npcs/level.json').write_text(json.dumps({'definitions':['actor.json'],'instances':[]}))
@@ -35,6 +36,7 @@ if(CMAKE_CONFIGURATION_TYPES)
 endif()
 blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}" "${{destination}}")
 ''')
+        effect_revision=40
         for generator in ['Ninja','Ninja Multi-Config']:
             build=root/generator; run('cmake','-S',str(project),'-B',str(build),'-G',generator)
             configs=['Debug','Release'] if 'Multi' in generator else ['Debug']
@@ -47,6 +49,8 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 first=stamp(); run(*command); assert stamp()==first, 'No-op build rewrites assets'
                 old=(output/'textures.bin').read_bytes(); png(source/'textures/wall.png',(old[0]+17)%200+20)
                 run(*command); assert (output/'textures.bin').read_bytes()!=old, 'Changed source did not rebuild payload'
+                old=(output/'textures.bin').read_bytes(); effect_revision+=1; png(source/'effects/web.png',effect_revision)
+                run(*command); assert (output/'textures.bin').read_bytes()!=old, 'Changed effect source did not rebuild payload'
                 (output/'textures.bin').unlink(); run(*command); assert (output/'textures.bin').exists()
                 png(source/'fixtures/new-unused.png'); run(*command)
                 assert 'fixtures/new-unused.png' in json.loads((output/'sources.json').read_text()), 'Added source not detected'
@@ -58,7 +62,7 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 assert (output/'textures.bin').read_bytes()==prior_payload, 'Failed bake replaced prior payload'
                 (source/'textures/wall.png').write_bytes(good); run(*command)
                 manifest=json.loads((output/'metadata.json').read_text())
-                assert len(manifest['appearances'])==1 and len(manifest['textures'])==11
+                assert len(manifest['appearances'])==1 and len(manifest['textures'])==23 and manifest['appearance_revision']==3
                 print(generator,config,'clean/no-op/change/touch/missing/add/remove/failure: pass')
     print('World build fixtures passed')
 if __name__=='__main__': main()

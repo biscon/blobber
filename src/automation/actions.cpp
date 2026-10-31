@@ -35,8 +35,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
         "escape_web",   "end_turn",      "dismiss_spiritual_weapon"};
     const char* names[]{"melee", "back_melee", "defend", "ranged", "spell", "item", "aid", "feature"};
     const auto eligibility = [&](const PartyCommand& c) {
-        auto reason = g.movement().transition.active() ? CommandReason::Moving
-                                                       : g.combat().validate(c, g.movement().player);
+        auto reason = g.actionBusy() ? CommandReason::Moving : g.combat().validate(c, g.movement().player);
         if (reason == CommandReason::Ready && !o.diagnostic)
             reason = targetVisibility(c, cat, o.targets, g.actors().snapshot());
         return Json{{"ready", reason == CommandReason::Ready}, {"reason", commandMessage(reason)}};

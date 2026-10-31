@@ -1,6 +1,7 @@
 #include "app/spell_captures.hpp"
 #include "app/ai_demo.hpp"
 #include "app/starting_build_diagnostics.hpp"
+#include "platform/game_view.hpp"
 #include "ui/interaction.hpp"
 #include <fstream>
 #include <stdexcept>
@@ -27,6 +28,11 @@ void focusSpellEntry(CommandController& ui, std::size_t index) {
 void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                    const std::vector<NpcTimings>& timings, const SceneRenderer& renderer,
                    Presenter& presenter, const std::filesystem::path& directory) {
+    captureSpells(catalog, source, timings, &renderer, presenter, directory, nullptr);
+}
+void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
+                   const std::vector<NpcTimings>& timings, const SceneRenderer* renderer,
+                   Presenter& presenter, const std::filesystem::path& directory, WorldRenderer* world) {
     const auto map = aiDemoMap();
     const Player spawn{{8, 11}, Heading::North};
     std::vector<std::string> names;
@@ -66,28 +72,28 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
                                      Heading::North});
         NpcWorld placements(map, spawn.cell, names, instances);
         GameSession s(map, catalog, spellCaptureParty(catalog, kind), placements, 5, spawn, false, timings);
+        prepareSpellCaptureParty(s.party(), kind);
         if (kind == rules::SpellKind::ShockingGrasp) {
             s.party().lockFormation(false);
             s.party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
             s.party().lockFormation(true);
         }
         NpcAnimator animator(s.actors(), timings);
-        FramePipeline frames;
+        GameView frames(renderer, world);
         CommandController ui(s, timings);
         const unsigned caster = rule.casting == rules::Casting::Wisdom ? 1 : 3;
         bool focused = true;
         auto refresh = [&](std::uint64_t animationOffset = 0) {
             animator.setTime(s.timeMs() + animationOffset, &s.effects());
             const auto area = ui.floorPreview();
-            frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
-                          &s.combat().attacks(), s.timeMs(), &area);
+            frames.update(s, animator.snapshot(), area);
+            frames.activate();
             ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{},
                        s.movement().transition.active(), false, focused);
         };
         auto capture = [&](const std::string& suffix, std::uint64_t animationOffset = 0) {
             refresh(animationOffset);
-            presenter.present(frames.frame(), s.movement(), map, false, true, &ui.snapshot(),
-                              frames.picking());
+            frames.present(presenter, s, map, false, true, &ui.snapshot());
             const auto name = std::string("spell-") + rule.id + (sparse ? "-sparse-" : "-") + suffix;
             presenter.capture(directory / (name + ".png"));
             if (suffix == "book" || suffix == "target" || suffix == "partial" || suffix == "unfocused" ||
@@ -118,6 +124,17 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         }
         if (kind == rules::SpellKind::CureWounds || kind == rules::SpellKind::SpareTheDying)
             s.party().damage({0}, s.party().character({0})->hitPoints);
+        if (kind == rules::SpellKind::LesserRestoration) {
+            EffectRequest hold;
+            hold.world = s.actors().snapshot().world;
+            hold.caster = {3};
+            hold.kind = EffectKind::HoldPerson;
+            hold.targets[0] = rules::CharacterId{0};
+            hold.count = 1;
+            hold.difficulty = 100;
+            if (!s.applyEffect(hold))
+                throw std::runtime_error("Restoration capture needs a paralyzed recipient");
+        }
         refresh();
         for (unsigned slot = 0; slot < rules::partySize; ++slot)
             if (s.party().snapshot().formation[slot].index == caster)
@@ -160,6 +177,8 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             } else {
                 const unsigned ally = kind == rules::SpellKind::MageArmor ? 3 : 0;
                 ui.magicAlly(ally);
+                if (kind == rules::SpellKind::LesserRestoration)
+                    ui.restorationChoice();
                 if (kind == rules::SpellKind::Bless) {
                     ui.magicAlly(1);
                     ui.magicAlly(2);
@@ -200,9 +219,35 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             ui.closeOverlay();
         }
         const auto start = s.timeMs();
-        for (unsigned delta : {100u, 199u, 200u, 341u, 342u, 400u, 650u, 1400u}) {
+        // Export actual transient phases, rather than presenting only the aftermath.
+        std::vector<unsigned> times{100, 199, 200, 341, 342, 400, 650, 1400};
+        std::uint64_t flight = 0, impact = 0;
+        const auto& visual = s.combat().attacks().attacks[NpcWorld::maxInstances + caster];
+        if (kind == rules::SpellKind::ScorchingRay) {
+            flight = visual.releaseMs + (visual.impactMs - visual.releaseMs) / 2;
+            impact = visual.impactMs;
+            for (auto time : {flight, impact, impact + 60, impact + 120})
+                if (time > start)
+                    times.push_back(unsigned(time - start));
+        }
+        if (kind == rules::SpellKind::BurningHands)
+            for (unsigned time : {30u, 60u, 90u, 119u, 120u})
+                times.push_back(time);
+        std::sort(times.begin(), times.end());
+        times.erase(std::unique(times.begin(), times.end()), times.end());
+        for (unsigned delta : times) {
             ui.record(s.update(double(start + delta - s.timeMs()) / 1000, false));
             capture(std::to_string(delta));
+            if (kind == rules::SpellKind::ScorchingRay) {
+                if (s.timeMs() == flight)
+                    capture("flight");
+                if (s.timeMs() == impact)
+                    capture("impact");
+                if (s.timeMs() == impact + 60)
+                    capture("impact-tail");
+                if (s.timeMs() == impact + 120)
+                    capture("effect-expired");
+            }
         }
         if (kind == rules::SpellKind::MagicMissile) {
             ui.record(s.update(6, false));
@@ -225,12 +270,14 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
         GameSession s(map, catalog, places, 5, spawn, false, timings);
         s.party().spendMana({3}, 3);
         NpcAnimator animator(s.actors(), timings);
-        FramePipeline frames;
+        GameView frames(renderer, world);
         CommandController ui(s, timings);
         const auto refresh = [&] {
             animator.setTime(s.timeMs(), &s.effects());
-            frames.update(renderer, map, s.movement(), &s.actors(), &animator.snapshot(),
-                          &s.combat().attacks(), s.timeMs());
+            SpellArea area;
+            area.ground = s.effects().ground();
+            frames.update(s, animator.snapshot(), area);
+            frames.activate();
             ui.refresh(frames.picking() ? frames.picking()->targets() : TargetSnapshot{}, false, false, true);
         };
         const auto capture = [&](const char* suffix, bool empty = false) {
@@ -238,7 +285,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             auto hud = ui.snapshot();
             if (empty) // Presentation-only diagnostic of a class without any features.
                 hud.magic.count = hud.magic.cursor = hud.magic.offset = 0;
-            presenter.present(frames.frame(), s.movement(), map, false, true, &hud, frames.picking());
+            frames.present(presenter, s, map, false, true, &hud);
             const auto name =
                 "feature-" + std::to_string(member) + (combat ? "-combat-" : "-explore-") + suffix;
             presenter.capture(directory / (name + ".png"));
@@ -320,6 +367,7 @@ void captureSpells(const rules::Catalog& catalog, const NpcWorld& source,
             capture("used");
         }
     }
-    captureSpellReview(catalog, source, timings, renderer, presenter, directory);
+    if (renderer)
+        captureSpellReview(catalog, source, timings, *renderer, presenter, directory);
 }
 } // namespace blobber

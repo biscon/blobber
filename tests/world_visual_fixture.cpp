@@ -30,6 +30,11 @@ int main(int argc, char** argv) {
         for (const auto* name : {"loot/bag", "fixture/key-bronze", "fixture/key-silver", "fixture/upstairs",
                                  "fixture/downstairs", "fixture/endpoint", "fixture/threshold"})
             writer.add(name, 8, 12, true, pixels);
+        for (const auto* name : {"door", "door-locked"})
+            writer.add(name, 8, 8, false, std::vector<unsigned char>(8 * 8 * 4, 255));
+        for (const auto* name :
+             {"arrow", "tip", "feathers", "slash", "glint", "grease", "web", "weapon", "preview", "white"})
+            writer.add(std::string("effect/") + name, 8, 8, true, std::vector<unsigned char>(8 * 8 * 4, 255));
         writer.finish(appearances, defs.definitionFingerprint);
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

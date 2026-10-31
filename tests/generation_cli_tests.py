@@ -53,6 +53,8 @@ def open_door(request, state):
     assert request('preview', action=action)['data']['accepted']
     opened = request('act', action=action)['data']
     assert opened['accepted'] and next(f for f in opened['observation']['fixtures'] if f['fixture'] == door['id'])['completed']
+    assert not request('act', action=action)['data']['accepted']
+    state = request('advance', ticks=30, until_decision=False)['data']['observation']
     assert request('act', action=action)['data']['accepted']
     move('forward')
     assert state['position'] == door['position']

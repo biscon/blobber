@@ -43,7 +43,7 @@ def main(runner, writer):
                     os.environ[key] = value
         header = json.loads(trace.read_text().splitlines()[0])["data"]
         assert header["visibility_backend"] == "world"
-        assert header["visibility_version"] == "world-visibility-v1"
+        assert header["visibility_version"] == "world-visibility-v2"
         assert "world_publication" in header["content"]
         command = [runner, "--assets", str(root), "--mode", "visual", "--visibility", "world"]
         result = subprocess.run(command + ["--replay", str(trace)], env=env, capture_output=True, text=True)
@@ -57,9 +57,10 @@ def main(runner, writer):
         modified.write_text("\n".join(records) + "\n")
         result = subprocess.run(command + ["--replay", str(modified)], env=env, capture_output=True, text=True)
         assert result.returncode and "header" in result.stderr, result.stderr
-        result = subprocess.run(command + ["--replay", str(trace), "--capture-dir", str(root / "captures"), "--capture-operation", "1"], env=env, capture_output=True, text=True)
-        assert result.returncode and "capture_unsupported" in result.stderr
-        assert not (root / "captures").exists()
+        if not caps["capture"]:
+            result = subprocess.run(command + ["--replay", str(trace), "--capture-dir", str(root / "captures"), "--capture-operation", "1"], env=env, capture_output=True, text=True)
+            assert result.returncode and "graphics_unavailable" in result.stderr
+            assert not (root / "captures").exists()
         # Publication errors cannot fall back to permissive diagnostic visibility.
         payload = root / "prepared/world/textures.bin"
         data = bytearray(payload.read_bytes())

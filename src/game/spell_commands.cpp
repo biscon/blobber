@@ -550,7 +550,7 @@ SpellArea CommandController::floorPreview() const noexcept {
     const auto& m = state_.magic;
     if (!session_)
         return result;
-    if (m.armed && m.area && !state_.modal() && !session_->movement().transition.active()) {
+    if (m.armed && m.area && !state_.modal() && !session_->actionBusy()) {
         auto aimed = m.pending;
         if (m.hoverCell)
             aimed.aimedCell = m.hoverCell;

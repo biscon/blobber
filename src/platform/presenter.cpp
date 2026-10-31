@@ -32,11 +32,12 @@ void Presenter::present(const Frame& frame, const MovementState& state, const Ma
     compose(resources_.texture(viewport_), false, state, map, debug, hud, picking, generation, reveal);
 }
 void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
-                             const Map& map, const HudSnapshot* hud, const PickingBuffer* picking) {
+                             const Map& map, const HudSnapshot* hud, const PickingBuffer* picking, bool debug,
+                             const generation::DiagnosticView* diagnostic, bool reveal) {
     const auto& target = resources_.target(logical);
     if (!revision || target.texture.width != viewWidth || target.texture.height != viewHeight)
         throw std::invalid_argument("Invalid world image publication");
-    compose(target.texture, true, state, map, false, hud, picking, nullptr, false);
+    compose(target.texture, true, state, map, debug, hud, picking, diagnostic, reveal);
 }
 void Presenter::compose(const Texture2D& texture, bool flipped, const MovementState& state, const Map& map,
                         bool debug, const HudSnapshot* hud, const PickingBuffer* picking,

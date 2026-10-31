@@ -45,6 +45,24 @@ inline bool fixtureBlocks(const FixtureDefinition& f, bool completed) noexcept {
     return (f.kind == FixtureKind::Door || f.kind == FixtureKind::GuardianGate) && !completed;
 }
 const char* fixtureName(const FixtureDefinition&) noexcept;
+// Transient session-owned presentation, never persisted as world geometry.
+struct DoorSnapshot {
+    static constexpr std::uint64_t durationMs = 300;
+    std::uint64_t world = 0, revision = 0, now = 0;
+    std::array<std::uint64_t, fixtureCapacity> until{};
+    bool active(unsigned i) const noexcept { return i < until.size() && until[i] > now; }
+    std::uint64_t deadline() const noexcept {
+        std::uint64_t result = now;
+        for (auto value : until)
+            if (value > result)
+                result = value;
+        return result;
+    }
+    bool active() const noexcept { return deadline() > now; }
+    float progress(unsigned i) const noexcept {
+        return active(i) ? 1.f - float(until[i] - now) / float(durationMs) : 1.f;
+    }
+};
 class FloorGeometry;
 // Cheap read-only borrow. Map-only views support authored/arena/test maps without fixtures.
 class GeometryView {
@@ -53,6 +71,13 @@ class GeometryView {
     GeometryView(Map&&) = delete;
     GeometryView(const Map&&) = delete;
     bool solid(Cell) const noexcept;
+    // Render-only borrow: retain closed legacy proxies until their opening settles.
+    GeometryView presentation(const DoorSnapshot& doors) const noexcept {
+        auto result = *this;
+        result.doors_ = &doors;
+        return result;
+    }
+    const DoorSnapshot* doors() const noexcept { return doors_; }
     bool npcAllowed(Cell) const noexcept;
     int width() const noexcept { return map_->width(); }
     int height() const noexcept { return map_->height(); }
@@ -66,6 +91,7 @@ class GeometryView {
     GeometryView(const Map& map, const FloorGeometry* fixtures) noexcept : map_(&map), fixtures_(fixtures) {}
     const Map* map_;
     const FloorGeometry* fixtures_ = nullptr;
+    const DoorSnapshot* doors_ = nullptr;
 };
 class GameSession;
 class FloorGeometry {
@@ -87,9 +113,11 @@ class FloorGeometry {
     std::uint64_t revision() const noexcept { return revision_; }
     std::uint64_t geometryRevision() const noexcept { return geometryRevision_; }
     bool discovered(Cell) const noexcept;
-    bool known(unsigned slot) const noexcept { return slot < definition_.count && known_[slot]; }
+    bool known(unsigned slot) const noexcept {
+        return slot < definition_.count && (!definition_.discovery || known_[slot]);
+    }
     bool rememberedComplete(unsigned slot) const noexcept {
-        return slot < definition_.count && remembered_[slot];
+        return slot < definition_.count && (definition_.discovery ? remembered_[slot] : completed_[slot]);
     }
     std::uint64_t discoveryRevision() const noexcept { return discoveryRevision_; }
     std::size_t storageBytes() const noexcept { return sizeof(*this) + index_.capacity(); }

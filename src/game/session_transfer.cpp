@@ -12,8 +12,8 @@ const char* GameSession::saveSafety() const noexcept {
         return "Save clock capacity exhausted.";
     if (mutation_ == UINT64_MAX)
         return "Session revision exhausted.";
-    if (movement_.pending_ || movement().transition.active())
-        return "Wait until movement finishes.";
+    if (movement_.pending_ || doorPending_ || actionBusy())
+        return opening() ? "Wait until the door opens." : "Wait until movement finishes.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
         return "Saving requires settled safe exploration.";
     return nullptr;
@@ -21,8 +21,8 @@ const char* GameSession::saveSafety() const noexcept {
 const char* GameSession::travelSafety() const noexcept {
     if (mutation_ == UINT64_MAX)
         return "Session revision exhausted.";
-    if (movement_.pending_ || movement().transition.active())
-        return "Wait until movement finishes.";
+    if (movement_.pending_ || doorPending_ || actionBusy())
+        return opening() ? "Wait until the door opens." : "Wait until movement finishes.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
         return "Travel requires settled safe exploration.";
     bool able = false;
@@ -275,6 +275,10 @@ void GameSession::importFloor(const FloorState& s) {
     creditedDeaths_ = s.creditedDeaths;
     rewardRevision_ = s.rewardRevision;
     timeMs_ = s.timeMs;
+    doors_.now = timeMs_;
+    doors_.until.fill(0);
+    doorPending_.reset();
+    ++doors_.revision;
     restToken_ = s.restToken;
     remainderMs_ = s.remainderMs;
     rng_ = s.rng;
