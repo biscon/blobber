@@ -94,6 +94,9 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
         capture(bags, room, "loot-bag-shadow");
         CampaignRun campaign(rules, *rules.preset(), definitions.types, definitions.timings, 5);
         capture(campaign.game(), campaign.map(), "single-destination-hub");
+        auto ticket = campaign.prepareTravel(campaign.request(campaign.game().nearbyFixture()));
+        check(campaign.commitTravel(ticket), "Review enters dungeon for idle HUD");
+        capture(campaign.game(), campaign.map(), "idle-dungeon");
         return;
     }
     NpcWorld empty(corridor, {5, 3}, definitions.types, {});

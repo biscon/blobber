@@ -95,6 +95,16 @@ void campaign() {
               std::string_view(hubUi.snapshot().fixturePrompt.data()).find("R: rest") !=
                   std::string_view::npos,
           "hub exposes sanctuary recovery alongside stair interaction");
+    run.game().setAnimated(false);
+    run.game().move(Action::TurnLeft);
+    run.game().move(Action::Forward);
+    hubUi.refresh({}, false, false, true);
+    check(!hubUi.snapshot().fixturePrompt[0], "Idle campaign has no permanent location strip");
+    run.game().move(Action::Back);
+    run.game().move(Action::TurnRight);
+    hubUi.refresh({}, false, false, true);
+    check(std::string_view(hubUi.snapshot().fixturePrompt.data()).find("F /") != std::string_view::npos,
+          "Contextual stair prompt returns after leaving idle exploration");
     auto* party = &run.party();
     const auto inventory = party->inventory().identity();
     const auto initialHp = party->character({0})->hitPoints;

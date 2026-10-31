@@ -91,7 +91,10 @@ focused CPU/GPU verification.
 - **Commands/UI:** a graphics-independent controller validates current body
   visibility and routes production requests through GameSession; it separately owns targeting, read-only hover, inspection, exclusive overlays, bounded enemy/ally
   targets, a 32×192-byte log, eight timed damage/MISS splashes and a fixed HUD snapshot. Confirmation must refer to
-  the turn/outcome already presented. Focus/edge handling, Aid selection and
+  the turn/outcome already presented. The bottom viewport strip appears only for
+  contextual interaction/rest prompts or terminal guidance; floor/depth information
+  belongs in the top bar. Idle exploration has no bottom location label or fill.
+  Focus/edge handling, Aid selection and
   aspect-fit hit testing are CPU-testable.
 - **Presentation:** Presenter uses the shared application registry for its viewport
   two native 1920×1080

@@ -89,3 +89,13 @@ Review captures:
 - [Fully open](screenshots/flow-polish/guardian-entrance-open.png)
 - [Smaller loot bag and shadow](screenshots/flow-polish/loot-bag-shadow.png)
 - [Single-destination hub prompt](screenshots/flow-polish/single-destination-hub.png)
+
+
+## Contextual viewport strip (2026-10-31)
+
+Removed the persistent location label and its dark viewport fill. The top bar
+retains depth information. The bottom strip is empty in idle exploration, appearing
+for nearby fixture interactions, sanctuary rest, or terminal guidance. Release
+build and the campaign test passed, including idle-to-stair prompt transitions.
+The hidden GPU integration passed with zero ID differences; the updated
+[idle dungeon capture](screenshots/flow-polish/idle-dungeon.png) was inspected.

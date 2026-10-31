@@ -387,8 +387,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     const bool sanctuary = state_.campaign && !state_.campaignTerminal &&
                            session_.movement().player.cell == Cell{4, 4} &&
                            session_.campaign()->activeLocation() == 0;
-    const char* locationHint = sanctuary ? "Sanctuary hub (R: rest)" : state_.locationName;
-    std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s", locationHint);
+    state_.fixturePrompt[0] = 0;
     if (state_.campaignTerminal)
         std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
                       "This expedition has ended. Return to Main Menu.");
@@ -396,14 +395,16 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.questKeys = session_.party().questKeys();
     if (!state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
         !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
+        if (sanctuary)
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "R: rest");
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
         if (f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
             std::snprintf(
-                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s%sF / %s - %s", locationHint,
-                state_.campaign ? " | " : "", fixtureName(*f),
+                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%sF / %s - %s",
+                sanctuary ? "R: rest | " : "", fixtureName(*f),
                 state_.campaign && session_.campaign()->activeLocation() == 0 && result
                     ? (session_.campaign()->location(2).visited || session_.campaign()->location(3).visited
                            ? "Choose a floor entry."
