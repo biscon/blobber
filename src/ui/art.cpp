@@ -71,7 +71,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "items/quarterstaff",
                                   "travel",
                                   "skeleton",
-                                  "bugbear"};
+                                  "bugbear",
+                                  "giant-rat"};
     const auto prepared = directory.parent_path() / "prepared";
     auto loadPreparedAtlas = [&](const char* name, int height) {
         preparationPoint("Loading interface atlases");
@@ -213,7 +214,9 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index == bugbearPortraitIcon)
+    if (index == giantRatPortraitIcon)
+        index = 61;
+    else if (index == bugbearPortraitIcon)
         index = 60;
     else if (index == skeletonPortraitIcon)
         index = 59;
@@ -231,7 +234,7 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         return;
     }
     auto source = regions_[index];
-    if (index < 5 || index == 59) {
+    if (index < 5 || index == 59 || index == 60 || index == 61) {
         // Portraits cover their card without stretching faces.
         const float ratio = destination.width / destination.height;
         if (source.width / source.height > ratio) {

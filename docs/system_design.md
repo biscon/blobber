@@ -24,7 +24,7 @@ all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) i
 skeleton art are implemented in the arena. [Verification](b01_verification.md)
 records checks, captures and acceptance. B02 bugbear and full-resolution sprite
 cropping are **Accepted and closed** (2026-10-31); [B02 verification](b02_verification.md) records
-art, memory totals, CPU/GPU checks and arena captures. B03–B06 remain Planned.
+art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack Tactics](b03_giant_rat_design.md) is **Accepted and closed** (2026-10-31); B04 is next for separate detailed planning and B04–B06 remain Planned.
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
 right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
@@ -228,6 +228,17 @@ a Vulkan-style benchmark or stress-testing framework.
 
 ## Typed damage and bestiary content
 
+B03 mechanics follow the approved [giant rat design](b03_giant_rat_design.md).
+Schema 11 extends the typed trait mask with Pack Tactics. At accepted NPC weapon
+attacks combat scans at most 256 world-checked actors for another conscious ally
+in legal melee contact with the shared party cell. Prone/immobile is not inherently
+incapacitated. Existing advantage cancellation and saved delayed rolls remain
+unchanged. Resolved attacks carry compact pack/mode context for bounded HUD logs
+and additive automation fields; no frame allocation, support cache or capacity
+increase. Rat production art (48 poses), native portrait and arena integration are delivered,
+with accepted reference v3. [Verification](b03_verification.md) records CPU/GPU
+checks, publication totals, strict arena captures, limitations and completed-slice acceptance.
+
 B02 implementation follows the approved [bugbear and sprite memory design](b02_bugbear_design.md).
 It implements full-resolution NPC crop rectangles and 512/608 MiB world
 texture/GPU ceilings while preserving CPU/alpha and count limits. Bugbear uses
@@ -263,7 +274,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 3/4 and generator/templates 4/4. Older saves reject
+Campaign schema/simulation are 3/5 and generator/templates 4/4. Older saves reject
 without being modified; no migration. World publication is format 3, appearance 4,
 visibility world-visibility-v6 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

@@ -1,0 +1,66 @@
+{
+  "assets": "cmake-build-release/assets",
+  "header": {
+    "binary": "2688456039042359810",
+    "content": {
+      "catalog": "9799617168696246631",
+      "npc_definitions": "6728759001580982112",
+      "world_appearance": 4,
+      "world_format": 3,
+      "world_publication": "13544536356951850618"
+    },
+    "door_scheduling": "shared-door-motion-300ms-v2",
+    "mode": "visual",
+    "protocol": 1,
+    "terrain_rules": "terrain-rules-v2",
+    "timing": "fixed-10ms-v1",
+    "visibility_backend": "world",
+    "visibility_version": "world-visibility-v6"
+  },
+  "images": [
+    {
+      "file": "operation-187.png",
+      "height": 1080,
+      "operation": 187,
+      "revision": "175",
+      "session": "1",
+      "ticks": 1930,
+      "width": 1920
+    },
+    {
+      "file": "operation-201.png",
+      "height": 1080,
+      "operation": 201,
+      "revision": "189",
+      "session": "1",
+      "ticks": 2050,
+      "width": 1920
+    },
+    {
+      "file": "operation-273.png",
+      "height": 1080,
+      "operation": 273,
+      "revision": "253",
+      "session": "1",
+      "ticks": 2650,
+      "width": 1920
+    },
+    {
+      "file": "operation-274.png",
+      "height": 1080,
+      "operation": 274,
+      "revision": "1",
+      "session": "2",
+      "ticks": 0,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "prepared/world/metadata.json": "381160349232471100",
+    "prepared/world/textures.bin": "15421141231442400669"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "docs/screenshots/b03/rat-thinning-review.jsonl",
+  "trace_fingerprint": "6972908090643651145"
+}

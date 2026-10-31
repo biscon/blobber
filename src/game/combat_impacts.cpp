@@ -89,6 +89,8 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     out.impactMs = windup;
     out.hit = out.critical = out.died = false;
     out.damage = out.roll = 0;
+    out.packTactics = false;
+    out.attackRollMode = rules::RollMode::Normal;
     return out;
 }
 void CombatController::interruptWindup(ActorId id, std::uint64_t when) noexcept {
@@ -124,6 +126,8 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
     out.targetGone = targetGone;
     out.hit = out.critical = out.died = false;
     out.damage = out.roll = 0;
+    out.packTactics = false;
+    out.attackRollMode = rules::RollMode::Normal;
     out.phase = state_.phase;
     events.append(out);
     v.stage = AttackStage::Canceled;
@@ -182,6 +186,8 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             out.occurredMs = v.releaseMs;
             out.hit = out.critical = false;
             out.damage = out.roll = 0;
+            out.packTactics = false;
+            out.attackRollMode = rules::RollMode::Normal;
             events.append(out);
             p.releaseNotice = false;
         }
@@ -247,6 +253,8 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
                 out.occurredMs = earliest;
                 out.hit = out.critical = out.died = false;
                 out.damage = out.roll = 0;
+                out.packTactics = false;
+                out.attackRollMode = rules::RollMode::Normal;
                 out.phase = state_.phase;
                 events.append(out);
                 ++visuals_.revision;

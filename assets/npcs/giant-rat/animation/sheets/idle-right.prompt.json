@@ -1,0 +1,8 @@
+{
+  "name": "idle-right",
+  "tool": "built-in image_gen",
+  "prompt": "Production animation sheet of the exact USER-APPROVED mean vicious giant rat in the supplied reference, which is an IDENTITY/STYLE reference only, NOT a layout to copy. Lean wiry quadruped, narrow angular muzzle, small narrowed predatory dark eyes, small rounded ragged ears, sharp natural rat incisors, coarse bristling brown-gray fur, muted pink-brown paws/ears and long bare segmented tail. Four paws only. Detailed shaded textured hand-painted retro dungeon game art; muted earthy palette, crisp edges, warm neutral light. Keep rat mean and nasty, never cute, fluffy, plump or baby-faced. RIGHT PROFILE facing image RIGHT, nose pointing RIGHT and rump on LEFT. Full long rat tail curves on ground behind rump, never in front of nose. Exactly TWO COMPLETE full-body IDLE poses arranged LEFT then RIGHT in TWO EQUAL cells on one horizontal landscape sheet. Frame 1: tense low resting crouch ready to bite. Frame 2: subtle breathing shift in shoulders/rib cage and whiskers, SAME planted paw positions, same anatomy/size, clearly a separate pose. No lunge or walking. Each long low rat fits its own equal half-cell with very generous transparent margins, especially the nose whiskers and ENTIRE long tail. Invisible ground baseline identical in both local cells. About 560px long including tail and 250px high within each 768-wide cell of a requested 1536x1024 landscape sheet. Genuine transparent alpha background including gaps between paws/tail; no backdrop, floor, cast shadow, glow, text, frame labels, dividing lines or grid. Do not crop any fur/ear/whisker/paw/tail or let neighboring figures touch.",
+  "references": [
+    "../../reference/turnaround-v3.png"
+  ]
+}

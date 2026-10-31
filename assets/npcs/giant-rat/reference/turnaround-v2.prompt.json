@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "request": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "/home/bison/Projects/blobber/assets/npcs/giant-rat/reference/turnaround-v1.png"
+    ],
+    "prompt": "Edit this exact four-view rat reference sheet. Preserve the rat identity, realistic quadrupedal anatomy, all four view directions, detailed textured shaded muted brown-gray fur style, lighting, pink-brown paws/ears/tail and genuine transparent background. Correct only layout: make ALL FOUR rats uniformly smaller inside the canvas so there is a generous fully transparent OUTER MARGIN of at least 100 pixels on both left and right and at least 60 pixels of transparent space between every complete silhouette. Every whisker on the rightmost right-facing rat must end well INSIDE the canvas, with at least 100 pixels blank transparent space to its right. Whiskers on the leftmost rat also need full margin. Keep all tails complete, separated from all neighboring figures, with no contact/overlap. Keep standing feet on one common baseline. Four complete separate consistent views left to right: front, left profile, back, right profile. No text, shadow, floor or background. This is a production reference sheet; absolutely no silhouette may touch the canvas edge."
+  },
+  "output": "turnaround-v2.png",
+  "status": "Superseded by user direction: less cute, more vicious."
+}

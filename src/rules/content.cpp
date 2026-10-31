@@ -196,7 +196,7 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                 (e.sides && !validDice({e.quantity, e.sides, 0})) || maximum > stackLimit(*d))
                 throw std::runtime_error("Invalid monster loot entry");
         }
-        if (m.traits & ~static_cast<Traits>(Trait::NimbleEscape))
+        if (m.traits & ~(static_cast<Traits>(Trait::NimbleEscape) | static_cast<Traits>(Trait::PackTactics)))
             throw std::runtime_error("Unsupported monster trait");
         for (const int score : m.abilities)
             if (!abilityModifier(score))

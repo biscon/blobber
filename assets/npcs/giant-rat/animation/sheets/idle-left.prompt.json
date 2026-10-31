@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Edit this exact two-frame left-facing rat sheet. Preserve BOTH rats, their exact identity, poses, style, fur detail, paws, full tails and framing. REMOVE THE BROWN BACKGROUND GLOW / HAZE COMPLETELY. Every pixel outside the rat fur/whiskers/limbs/tails must be fully transparent alpha 0, including between the paws and tail loops. Rat pixels should be opaque with clean antialiased edges. No shadow or colored backdrop, no vignette. Do not add or change anatomy. Two intact left-facing rat idle sprites on genuine transparent background. Complete silhouette in each own cell with generous clear transparent gutters/margins, no touching/cropping of tail/whiskers/paws, same local ground baseline. GENUINE TRANSPARENT ALPHA BACKGROUND, NO floor, cast shadow, brown glow, haze, gradient, text, labels, borders or grid.",
+  "references": [
+    "animation/sheets/idle-left.png"
+  ],
+  "correction": "Remove background haze"
+}

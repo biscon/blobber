@@ -8,6 +8,37 @@ using namespace blobber;
 using namespace blobber::automation;
 using namespace blobber::automation::test;
 namespace {
+void packEvents() {
+    const auto cat = catalog();
+    CombatOutcome event;
+    event.event = CombatEvent::Attack;
+    event.enemyAttack = true;
+    event.packTactics = true;
+    event.attackRollMode = rules::RollMode::Advantage;
+    const auto encoded = encodeEvent(event, cat, false);
+    check(encoded.at("pack_tactics") == true && encoded.at("attack_roll_mode") == "advantage",
+          "Resolved NPC weapon event exposes accepted Pack Tactics context");
+    event.attackRollMode = rules::RollMode::Normal;
+    check(encodeEvent(event, cat, true).at("attack_roll_mode") == "normal",
+          "Diagnostic event reports cancellation as a normal roll");
+    event.attackRollMode = rules::RollMode::Disadvantage;
+    event.packTactics = false;
+    check(encodeEvent(event, cat, false).at("attack_roll_mode") == "disadvantage",
+          "Ordinary NPC weapon disadvantage is explicit");
+    event.event = CombatEvent::AttackStarted;
+    check(encodeEvent(event, cat, false).is_null() && !encodeEvent(event, cat, true).contains("pack_tactics"),
+          "Acceptance does not publish hidden pack result");
+    event.event = CombatEvent::AttackCanceled;
+    check(!encodeEvent(event, cat, false).contains("attack_roll_mode"),
+          "Canceled attacks do not publish roll context");
+    event.event = CombatEvent::Attack;
+    event.enemyAttack = false;
+    check(!encodeEvent(event, cat, false).contains("pack_tactics"), "Party event wire shape stays unchanged");
+    event.enemyAttack = true;
+    event.spell = rules::SpellKind::FireBolt;
+    check(!encodeEvent(event, cat, false).contains("pack_tactics"), "NPC spell event has no weapon metadata");
+}
+
 void boundaries() {
     const auto cat = catalog();
     const auto defs = definitions();
@@ -441,6 +472,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        packEvents();
         boundaries();
         tickBudget();
         management();

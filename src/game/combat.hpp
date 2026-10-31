@@ -55,6 +55,9 @@ struct CombatOutcome {
     rules::DamageType damageType = rules::DamageType::Bludgeoning;
     rules::DamageAdjustment damageAdjustment = rules::DamageAdjustment::Normal;
     int roll = 0;
+    // Accepted NPC weapon-roll context, published only with the resolved attack.
+    bool packTactics = false;
+    rules::RollMode attackRollMode = rules::RollMode::Normal;
     CombatPhase phase = CombatPhase::Exploration;
     rules::AttackKind kind = rules::AttackKind::Melee;
     std::uint32_t impactMs = 0; // Strike/release offset in acceptance events.
@@ -259,6 +262,7 @@ class CombatController {
     bool episode_ = false, enableRoaming_ = true, resumeAwaiting_ = false;
     CombatPhase resumePhase_ = CombatPhase::Contact;
     bool partyExposed(rules::CharacterId) const noexcept;
+    bool packSupported(ActorId, Cell partyCell) const noexcept;
     bool frontal(ActorId) const noexcept;
     bool settleFront(std::uint64_t now) noexcept;
     bool presentationBusy(std::uint64_t now) const noexcept;

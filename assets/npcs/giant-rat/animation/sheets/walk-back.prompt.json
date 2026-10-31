@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Production animation sheet of the exact USER-APPROVED mean vicious giant rat in the supplied reference, which is an IDENTITY/STYLE reference only, NOT a layout to copy. Lean wiry quadruped, narrow angular muzzle, small narrowed predatory dark eyes, small rounded ragged ears, sharp natural rat incisors, coarse bristling brown-gray fur, muted pink-brown paws/ears and long bare segmented tail. Four paws only. Detailed shaded textured hand-painted retro dungeon game art; muted earthy palette, crisp edges, warm neutral light. Keep rat mean and nasty, never cute, fluffy, plump or baby-faced. STRICT STRAIGHT REAR VIEW, matching supplied corrected BACK sprite: camera directly behind centered tail root/rump, head points AWAY toward TOP of image, two symmetrical rear haunches/paws either side of tail. NO visible eyes, nose, mouth or teeth, NO LEFT/RIGHT PROFILE and no side turn. Tail emerges at central bottom rump and curves down on floor. TWO frames in one horizontal row, WALKING AWAY: frame 1 left rear paw lifted forward and right rear paw pushing back; frame 2 reverse rear paws, hips shift oppositely. Clear distinct alternating gait, low body, same scale and ground. Both remain facing directly away. Complete silhouette in each own cell with generous clear transparent gutters/margins, no touching/cropping of tail/whiskers/paws, same local ground baseline. GENUINE TRANSPARENT ALPHA BACKGROUND, NO floor, cast shadow, brown glow, haze, gradient, text, labels, borders or grid.",
+  "references": [
+    "animation/sheets/idle-back.png"
+  ],
+  "correction": "Correct facing, preserve identity"
+}

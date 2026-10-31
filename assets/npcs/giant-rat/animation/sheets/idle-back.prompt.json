@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Create a TWO-FRAME animation sheet showing ONLY THE REAR / RUMP VIEW of the exact brown-gray vicious rat in the reference. Use ONLY the THIRD rat from the reference for orientation: rear view directly BEHIND THE TAIL looking at the rump. Both rats face straight AWAY INTO THE DISTANCE, nose points toward TOP OF IMAGE, tail grows from CENTER of rump closest to viewer and curves down along floor. Symmetrical left and right hind haunches and rear paws visible on both sides of centered tail root; shoulders/head are behind the rump, small backs of ears may peek above. NO EYES, NO NOSE, NO MOUTH, NO TEETH visible. Never side profile or 3/4 side; absolutely NO rat facing left or right. Body axis is vertical image direction, from rump at BOTTOM toward hidden head at TOP. Rat on all four paws in low tense IDLE crouch, frame 1 rest and frame 2 slight breathing/haunch shift. Two COMPLETE separate rear-view rats in one row, equal size, feet on same local baseline. Long bare segmented pink-brown tail fully inside each half-cell with 12% transparent margins; separate figures. Keep detailed crisp painted fur, lean bristled brown-gray body and natural anatomy exactly like approved reference. Genuine transparent alpha, no shadow, floor, colored glow, backdrop, text or grid. This must be a usable BACK-facing game sprite, NOT a side-facing rat with its eye merely hidden.",
+  "references": [
+    "../../reference/turnaround-v3.png"
+  ],
+  "correction": "Explicit rear orientation; original wrongly faced left."
+}

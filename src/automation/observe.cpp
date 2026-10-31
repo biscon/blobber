@@ -359,6 +359,12 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
         {"save_difficulty", e.saveDifficulty},
         {"darts", e.darts}};
     if (e.event == CombatEvent::Attack) {
+        if (e.enemyAttack && e.spell == rules::SpellKind::Count) {
+            j["pack_tactics"] = e.packTactics;
+            j["attack_roll_mode"] = e.attackRollMode == rules::RollMode::Advantage      ? "advantage"
+                                    : e.attackRollMode == rules::RollMode::Disadvantage ? "disadvantage"
+                                                                                        : "normal";
+        }
         j["damage_type"] = rules::damageTypeName(e.damageType);
         j["raw_damage"] = e.rawDamage;
         j["damage_adjustment"] = rules::damageAdjustmentName(e.damageAdjustment);

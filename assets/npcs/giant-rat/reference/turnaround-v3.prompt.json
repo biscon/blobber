@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "request": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "/home/bison/Projects/blobber/assets/npcs/giant-rat/reference/turnaround-v2.png",
+      "/home/bison/Projects/blobber/assets/npcs/goblin-archer/reference/turnaround-v2.png"
+    ],
+    "prompt": "Revise Image 1's giant rat turnaround to address user feedback: it looks too cute and not vicious enough. Image 2 is the game's painted detail/shading style reference only. Create the same four separate rat directions left to right FRONT, LEFT PROFILE, BACK, RIGHT PROFILE on a genuinely transparent wide canvas with at least 100 pixels outer margin and clear transparent gutters. Change the CHARACTER DESIGN substantially toward a dangerous, vicious dungeon rat: leaner wiry muscular body, longer angular narrow snout, much smaller deeply set narrowed dark predatory eyes under tense brow ridges (no large shiny friendly eyes), smaller ragged rounded ears, taut muzzle, slightly open snarling mouth exposing long sharp natural RAT INCISORS, coarse dirty brown-gray fur bristling in a jagged ridge over hunched shoulders, tense low stalking crouch with spread clawed paws. Show aggression through animal anatomy and alert tense stance, not cartoon eyebrows. More feral alley rat than round fluffy pet. No smiling, no round soft baby face, no cute cuddly plump cheeks. Natural rat quadruped anatomy, not a wolf, not a saber-tooth, not a monster with extra teeth or limbs; four paws only, long bare segmented rat tail, muted pink-brown ears/paws/tail. No blood, gore, disease, magic, costume or weapons. Preserve detailed shaded textured hand-painted retro dungeon style with crisp edges matching the goblin reference. All four views must show the SAME lean dangerous rat with identical anatomy/coat and consistent ground baseline. Low idle crouch poised to bite, not an action lunge. Keep every whisker/tail/paw inside canvas, no figure overlaps, no shadows, floor, labels or watermark."
+  },
+  "output": "turnaround-v3.png",
+  "status": "User approved 2026-10-31: approved, thats a mean and nasty rat :)"
+}

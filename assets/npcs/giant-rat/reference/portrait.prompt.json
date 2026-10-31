@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Square native initiative portrait of the exact USER APPROVED vicious giant rat in reference: centered close head-and-shoulders crop, lean angular rat muzzle, small narrowed predatory dark eyes, bristling coarse brown-gray fur, ragged rounded pink-brown ears, bared sharp natural rat incisors. Mean nasty feral expression, never cute, no glowing eyes. Detailed textured shaded hand-painted retro dungeon artwork matching this reference. Tight readable face for a tiny 72px initiative icon, retain ears and whiskers inside square. Subtle dark warm dungeon background, no text, border, weapons, blood, disease or other figures.",
+  "references": [
+    "reference/turnaround-v3.png"
+  ],
+  "output": "assets/ui/giant-rat.png"
+}

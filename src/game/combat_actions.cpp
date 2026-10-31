@@ -226,6 +226,19 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     out.phase = state_.phase;
     return out;
 }
+bool CombatController::packSupported(ActorId id, Cell partyCell) const noexcept {
+    const auto* attacker = actors_.actor(id);
+    if (!attacker || attacker->life != ActorLife::Alive ||
+        !rules::hasTrait(actors_.catalog().monster(attacker->monster)->traits, rules::Trait::PackTactics))
+        return false;
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto ally = actors_.id(i);
+        if (i != id.slot && effects_.conscious(ally) &&
+            combatAdjacent(map_, actors_.actor(ally)->npc.cell, partyCell))
+            return true;
+    }
+    return false;
+}
 CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64_t now,
                                             bool opening) noexcept {
     CombatOutcome out;
@@ -273,12 +286,11 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.damageType = attack->damageType;
     const auto& timing = presentation_[a->npc.type.index];
     out.impactMs = ranged ? timing.bowImpact : timing.impact;
-    const auto roll =
-        rng_.d20(effects_.attackMode(id, out.recipient, combatAdjacent(map_, a->npc.cell, origin_.cell),
-                                     opening,
-                                     state_.defending[out.recipient.index] ||
-                                         (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell))))
-            .value;
+    out.packTactics = packSupported(id, origin_.cell);
+    out.attackRollMode = effects_.attackMode(
+        id, out.recipient, combatAdjacent(map_, a->npc.cell, origin_.cell), opening || out.packTactics,
+        state_.defending[out.recipient.index] || (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell)));
+    const auto roll = rng_.d20(out.attackRollMode).value;
     out.roll = roll.selected;
     const int attackBonus = attack->bonus + effects_.rollModifier(id);
     out.mirror = effects_.mirror(id, out.recipient, roll.selected, attackBonus);

@@ -480,3 +480,14 @@ Resolved `attack` events add `damage_type` (supported lowercase damage name),
 resolved amount before HP clamping. Acceptance/release events do not expose raw
 rolls. Protocol version remains 1; strict replay retains binary/content identities.
 Campaign simulation version is 4; save schema remains 3.
+
+
+## B03 Pack Tactics event metadata
+
+Protocol remains v1. Resolved NPC weapon `attack` events additionally expose
+`pack_tactics` (boolean, eligible at acceptance) and `attack_roll_mode`
+(`normal`, `advantage`, `disadvantage`, after ordinary cancellation). Spell and
+party events retain their prior shape. Acceptance, release and cancellation never
+publish this saved roll context; non-diagnostic acceptance/release stay hidden.
+Campaign schema/simulation are now 3/5. Older simulation/content rejects without
+migration or rewriting the rejected file. Arena format remains 1.

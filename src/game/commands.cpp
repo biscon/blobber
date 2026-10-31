@@ -121,9 +121,10 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
         const auto& species = actors_.catalog().monster(a.monster)->id;
-        state_.enemyPortraits[i] = species == "skeleton"  ? EnemyPortrait::Skeleton
-                                   : species == "bugbear" ? EnemyPortrait::Bugbear
-                                                          : EnemyPortrait::Goblin;
+        state_.enemyPortraits[i] = species == "skeleton"    ? EnemyPortrait::Skeleton
+                                   : species == "bugbear"   ? EnemyPortrait::Bugbear
+                                   : species == "giant.rat" ? EnemyPortrait::GiantRat
+                                                            : EnemyPortrait::Goblin;
     }
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
@@ -144,6 +145,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         if (species[0] >= 'a' && species[0] <= 'z')
             species[0] = char(species[0] - 'a' + 'A');
     }
+    const char* pack = !out.enemyAttack || !out.packTactics ? ""
+                       : out.attackRollMode == rules::RollMode::Advantage
+                           ? " Pack Tactics: advantage."
+                           : " Pack Tactics: canceled by disadvantage.";
     switch (out.event) {
     case CombatEvent::Started:
         std::snprintf(line, sizeof(line), "Combat begins.");
@@ -162,8 +167,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         }
         recordFeedback(out);
         if (out.mirror.effect.serial) {
-            std::snprintf(line, sizeof(line), "%s: attack redirected; duplicate %s.", target,
-                          out.hit ? "destroyed" : "missed");
+            std::snprintf(line, sizeof(line), "%s: attack redirected; duplicate %s.%s", target,
+                          out.hit ? "destroyed" : "missed", pack);
             break;
         }
         if (out.enemyAttack && out.spell != rules::SpellKind::Count) {
@@ -178,12 +183,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             break;
         }
         if (out.enemyAttack) {
-            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s (d20 %d), %lld damage%s.", species,
+            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s (d20 %d), %lld damage%s.%s", species,
                           unsigned(out.enemy.slot) + 1, target,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
-                          out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "");
+                          out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "", pack);
         } else
             std::snprintf(line, sizeof(line), "%s -> %s #%u: %s (d20 %d), %lld damage%s.", name, species,
                           unsigned(out.enemy.slot) + 1,

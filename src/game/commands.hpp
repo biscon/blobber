@@ -125,7 +125,7 @@ struct TravelHud {
     unsigned count = 0, cursor = 0, kits = 0;
     FixtureResult preview;
 };
-enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton, Bugbear };
+enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton, Bugbear, GiantRat };
 struct HudSnapshot {
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
     std::array<HudCard, rules::partySize> cards{};

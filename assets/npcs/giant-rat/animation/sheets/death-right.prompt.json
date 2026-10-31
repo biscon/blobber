@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Correct the LAYOUT of this exact four-pose rat death animation sheet. Keep the identical rat design, RIGHT-facing orientation and four chronological collapse poses. Important defect: tails and whiskers cross the vertical cell boundary. REDRAW ALL FOUR complete rats at ONLY 65% of their current size within their original equal quadrant. Keep FOUR equal quadrants in a 2x2 grid on a SQUARE canvas. Within each quadrant the COMPLETE rat including ALL tail and ALL whiskers may occupy at most 65% of cell width, leaving a huge empty transparent margin on BOTH sides. Keep each grounded pose on the same local baseline at 80% of quadrant height. The upper left rat's tail must end well before the canvas center line, and the upper right rat's nose must start well after that center line. Same for lower row: leave an uninterrupted completely TRANSPARENT VERTICAL COLUMN at canvas center at least 100 pixels wide, and a completely transparent HORIZONTAL ROW at canvas middle. Figures cannot touch any grid divider or neighboring figure. No grid lines are drawn. Four states: buckle, fall, flattened side-lying corpse, final low dead corpse, with later frames lower than standing at SAME scale. Preserve painterly fur/detail, opacity and full anatomy; GENUINE TRANSPARENT background alpha0 outside rats, NO floor, glow, shadow, haze, text or backdrop. Do NOT enlarge rats to fill the canvas.",
+  "references": [
+    "animation/revisions/death-right-v1.png"
+  ],
+  "correction": "Uninterrupted transparent gutters; source silhouettes crossed the half-cell split."
+}

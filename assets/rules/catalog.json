@@ -1,5 +1,5 @@
 {
-  "schema_version": 10,
+  "schema_version": 11,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -41,6 +41,17 @@
       "damage": {
         "count": 2,
         "sides": 8,
+        "modifier": 2,
+        "type": "piercing"
+      }
+    },
+    {
+      "id": "giant.rat.bite",
+      "kind": "melee",
+      "attack_bonus": 4,
+      "damage": {
+        "count": 1,
+        "sides": 4,
         "modifier": 2,
         "type": "piercing"
       }
@@ -368,6 +379,32 @@
       "sleep_immune": false,
       "experience": 200,
       "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": []
+    },
+    {
+      "id": "giant.rat",
+      "abilities": {
+        "strength": 7,
+        "dexterity": 15,
+        "constitution": 11,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 12,
+      "hit_points": 7,
+      "attacks": [
+        "giant.rat.bite"
+      ],
+      "traits": [
+        "pack_tactics"
+      ],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 25,
+      "humanoid": false,
       "damage_immunities": [],
       "damage_vulnerabilities": []
     }

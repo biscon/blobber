@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "request": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "/home/bison/Projects/blobber/assets/npcs/goblin/animation/frames/idle-front-0.png",
+      "/home/bison/Projects/blobber/assets/npcs/goblin-archer/reference/turnaround-v2.png"
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: production game character four-direction reference turnaround. Create ONE standard giant rat character shown in four complete separate views arranged left to right: FRONT facing viewer, LEFT PROFILE facing left, BACK facing away, RIGHT PROFILE facing right. Input Image 1 and Image 2 are STYLE references only for matching this dungeon game's detailed hand-painted shaded textured retro fantasy art, muted material palette, crisp fine edge detail and warm subdued lighting. Do not depict goblins. Subject: natural believable giant rat on all four paws, brown-gray coarse fur with slightly lighter underside, rounded pink-brown ears, dark alert eyes, visible small incisors, whiskers, pinkish paws and a long bare segmented pink-brown rat tail. Low stocky quadruped silhouette, small compared to a goblin, no clothing, weapons, armor, magic, blood, disease or props. Keep anatomy, coat and proportions identical across views, four paws only. The rat stays low to the ground; never humanoid, never standing on hind legs. Each view fully visible with ample transparent gutter between figures and outer margins; especially keep every long tail, whisker, ear and paw unclipped and separate from neighboring rats. Natural relaxed standing idle pose. Level orthographic creature-sheet camera, consistent apparent body size and ground baseline. Render fur strands and tactile form like the reference artwork, detailed painterly volume, no pixelated squares, no cartoon outline, no photoreal photograph. Genuine transparent background with no floor, cast shadow, backdrop, text, labels or watermark. Wide horizontal four-view sheet. The purpose is user reference approval before individual animation sheet production."
+  },
+  "output": "turnaround-v1.png",
+  "status": "Superseded: right-profile whiskers touch the right image edge."
+}

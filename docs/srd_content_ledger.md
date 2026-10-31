@@ -397,3 +397,22 @@ larger footprint or hidden level-one protection. Loot is one existing shield;
 recoverable hide/morningstar equipment is omitted. Arena-first delivery does not
 assign a campaign guardian, population recipe or difficulty label. All artwork is
 new imagegen production art with retained provenance, not copied SRD illustrations.
+
+
+## B03 — Standard giant rat (2026-10-31; Accepted and closed)
+
+Source: cached official SRD 5.1 CC edition, printed p. 378. Adopt abilities
+7/15/11/2/10/4, AC 12, fixed HP 7, CR 1/8 context / 25 XP, bite +4 for
+1d4+2 piercing (critical 2d4+2), Pack Tactics. Small beast, nonhumanoid,
+sleep-susceptible, unarmored, normal damage profile. No poison or disease variant.
+
+Project adaptations: no loot/currency/potions; omit Keen Smell, tabletop senses
+and movement speed. Pack support means another conscious hostile NPC in legal
+melee contact with the shared party cell, including same-cell/protected/different-
+species supporters. Sleep/Hold Person remove support; prone/blind/slow/restrained
+alone do not. Existing conservative reach/LOS and advantage cancellation apply.
+Support is evaluated at acceptance; accepted rolls survive supporter removal.
+One subcell, formation protection, six-second economy and quick four-frame bite
+(300/150/150/300 ms, impact 450 ms) are project mechanics. Arena first; no campaign
+population/guardian assignment or claim of calibrated difficulty. Production art
+uses the approved vicious rat reference and built-in imagegen, not SRD artwork.

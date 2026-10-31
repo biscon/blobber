@@ -286,6 +286,50 @@ void damageProfiles() {
     const auto normal = files.load(legacy).monster({0})->damageProfile;
     check(!normal.immunities && !normal.vulnerabilities, "Legacy profile defaults to normal");
 }
+void packTraits() {
+    Fixture files;
+    auto root = fixture();
+    root["schema_version"] = 11;
+    for (const char* key : {"races", "classes", "items", "spells", "creation"})
+        root[key] = Json::array();
+    root["preset_party"] = nullptr;
+    auto& m = root["monsters"][0];
+    m["traits"] = {"pack_tactics", "nimble_escape"};
+    m["loot"] = Json::array();
+    m["metal_armor"] = false;
+    m["sleep_immune"] = false;
+    m["experience"] = 25;
+    m["humanoid"] = false;
+    m["damage_immunities"] = Json::array();
+    m["damage_vulnerabilities"] = Json::array();
+    const auto loaded = files.load(root);
+    check(hasTrait(loaded.monster({0})->traits, Trait::PackTactics) &&
+              hasTrait(loaded.monster({0})->traits, Trait::NimbleEscape),
+          "Schema 11 composes both typed monster traits");
+    for (const auto& traits :
+         {Json::array({"pack_tactics", "pack_tactics"}), Json::array({"nimble_escape", "nimble_escape"}),
+          Json::array({"unknown"}), Json::array({"pack_tactics", "nimble_escape", "pack_tactics"})}) {
+        auto bad = root;
+        bad["monsters"][0]["traits"] = traits;
+        files.invalid(bad, "traits");
+    }
+    m["traits"] = {"pack_tactics"};
+    root["schema_version"] = 10;
+    files.invalid(root, "traits");
+    m["traits"] = {"nimble_escape"};
+    check(files.load(root).monster({0})->traits == static_cast<Traits>(Trait::NimbleEscape),
+          "Schema 10 retains its original trait vocabulary");
+    auto monster = *loaded.monster({0});
+    monster.traits = 4;
+    bool rejected = false;
+    try {
+        Catalog invalid({*loaded.attack({0}), *loaded.attack({1})}, {monster});
+    } catch (const std::exception&) {
+        rejected = true;
+    }
+    check(rejected, "Programmatic catalog rejects unknown trait bits");
+}
+
 void capacities() {
     Fixture files;
     auto data = fixture();
@@ -384,6 +428,7 @@ int main(int argc, char** argv) {
         loading();
         capacities();
         damageProfiles();
+        packTraits();
         std::cout << "Rules content checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

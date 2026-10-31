@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
 Created: 2026-10-31. Last updated: 2026-10-31.
-Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03–B06 Planned.**
+Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03 Accepted and closed (2026-10-31); B04–B06 Planned.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -24,11 +24,11 @@ pacing or start PC07. Campaign integration gets its own plan after arena review.
 
 | Field | Current value |
 | --- | --- |
-| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B02 closed |
-| Active slice | None; B02 — Bugbear Accepted and closed |
-| Awaiting review | None; B02 completed-slice acceptance recorded |
-| Next eligible slice | B03 — Giant rat and Pack Tactics; detailed planning |
-| Next action | Plan B03 using the [accepted B02 handoff](b02_verification.md); review its detailed plan before implementation |
+| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B03 closed |
+| Active slice | None; B03 — Giant rat and Pack Tactics Accepted and closed |
+| Awaiting review | None; B03 completed-slice acceptance recorded |
+| Next eligible slice | B04 — Zombie and Undead Fortitude; detailed planning |
+| Next action | Plan B04 using the [accepted B03 handoff](b03_verification.md); review its detailed plan before implementation |
 | Campaign status | Paused; no generator/population or guardian changes |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
@@ -171,7 +171,7 @@ per-frame image generation/decoding is part of this work.
 | --- | --- | --- | --- |
 | B01 | [Skeleton and typed damage](b01_skeleton_design.md) | Roadmap accepted | Accepted and closed (2026-10-31) |
 | B02 | [Bugbear and sprite memory preparation](b02_bugbear_design.md) | B01 accepted | Accepted and closed (2026-10-31) |
-| B03 | Giant rat and Pack Tactics | B02 accepted | Planned |
+| B03 | [Giant rat and Pack Tactics](b03_giant_rat_design.md) | B02 accepted | Accepted and closed (2026-10-31) |
 | B04 | Zombie and Undead Fortitude | B03 accepted | Planned |
 | B05 | Goblin shaman and enemy spellcasting | B04 accepted | Planned |
 | B06 | Arena preparation and roster polish | B05 accepted | Planned |
@@ -383,3 +383,23 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
   texture/GPU budgets. Existing [verification evidence and limitations](b02_verification.md)
   remain recorded. **B03 — Giant rat and Pack Tactics** is next for detailed
   planning; implementation is unstarted. Campaign integration and PC07 stay paused.
+
+- **2026-10-31 B03 approval:** User approved the detailed plan with “Implement the plan.” Quick bite uses 300/150/150/300 ms, impact 450 ms. B03 implementation is active under its [design](b03_giant_rat_design.md); art reference and completed-slice acceptance remain pending. Campaign/PC07 stay paused.
+
+- **2026-10-31 B03 reference acceptance:** User requested a less cute, more vicious rat and approved turnaround-v3 with “approved, thats a mean and nasty rat :)”. Full production animation is now authorized; completed-slice acceptance remains pending.
+
+- **2026-10-31 B03 delivery:** Standard giant rat, bounded acceptance-time Pack
+  Tactics, quick bite, full 48-pose production art, native portrait and normal arena
+  integration are delivered. Schema 11 / campaign simulation 5 preserve explicit
+  incompatible-save rejection. Publication is 232.81 MiB mip / 41.32 MiB alpha,
+  within unchanged budgets. Focused CPU, hidden GPU integration and five strict
+  production arena replays/captures pass. [Handoff/gallery](b03_verification.md)
+  records exact checks and limitations. **B03 Ready for review**; reference v3 is
+  accepted, completed-slice acceptance pending. B04/campaign/PC07 remain unstarted.
+
+- **2026-10-31 B03 acceptance:** User: “slice accepted, record it in the plan doc”.
+  **B03 Accepted and closed**, including standard giant rat mechanics, Pack Tactics,
+  quick bite, full 48-pose art, native portrait, arena integration and affected
+  automation/save identities. Existing [verification evidence and limitations](b03_verification.md)
+  remain recorded. **B04 — Zombie and Undead Fortitude** is next for separate
+  detailed planning; implementation is unstarted. Campaign integration/PC07 stay paused.

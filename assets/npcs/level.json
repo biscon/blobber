@@ -3,7 +3,8 @@
     "goblin/goblin.json",
     "goblin-archer/goblin-archer.json",
     "skeleton/skeleton.json",
-    "bugbear/bugbear.json"
+    "bugbear/bugbear.json",
+    "giant-rat/giant-rat.json"
   ],
   "instances": [
     {
