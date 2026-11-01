@@ -1,7 +1,9 @@
 # PC07.2 — Population, route evidence and handoff
 
-2026-11-01. **Ready for review.** User approval: “Implement the plan”,
-including the eight-case bounded diagnostic study. Acceptance remains pending.
+2026-11-01. **Accepted and closed**, including subsequent review corrections. User:
+“slice accepted, record it in the plan doc”. Implementation approval: “Implement the
+plan”, including the eight-case bounded diagnostic study. The original delivery
+evidence below remains historical; see the [current acceptance handoff](procedural_campaign_plan.md#pc072-accepted-closeout-and-next-agent-handoff-2026-11-01-current).
 [Design](pc072_population_design.md) records the approved behavior and budgets.
 PC07.1 and the earlier campaign, renderer and bestiary slices remain closed.
 
@@ -152,7 +154,7 @@ Manual review can use `cmake-build-release/blobber --seed 8 --campaign-save
 output/pc072/manual-review.json` with a new party, without touching the normal save
 slot. The normal creation/library flow remains the source of manual party builds.
 Human interactive play/fun and live Codex-host MCP remain unverified. No commit,
-reset, stash or installed configuration change was made. Stop at Ready for review.
+reset, stash or installed configuration change was made. The implementation originally stopped at Ready for review; user acceptance is recorded above.
 
 Final artifact checks passed: `git diff --check`, Python byte-compilation, 171
 relative Markdown file links and 29 JSON files at the validation checkpoint, eight

@@ -9,7 +9,8 @@ documents the delivered ownership, interfaces and deletion inventory;
 without describing current defaults. The bestiary expansion is closed with B01–B05
 accepted; useful B06 scope transfers to campaign PC07. Campaign planning resumes
 after P-B. [PC07.1 preparation and calibration](pc071_arena_calibration_design.md)
-is Accepted and closed (2026-11-01); PC07.2 [population and route checks](pc072_population_design.md) is **Ready for review** under the user-approved plan.
+is Accepted and closed (2026-11-01); PC07.2 [population and route checks](pc072_population_design.md) is **Accepted and closed** (2026-11-01), including review corrections. Parent PC07
+is closed; PC08 is next for detailed planning only and P-C remains incomplete.
 
 Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
@@ -54,18 +55,18 @@ shared XP. The bounded 36-trial study completed: all victories, three downings, 
 deaths. [Costs and recommendations](pc071_calibration/README.md) and
 [verification](pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
 
-PC07.2 [variety and controls](pc072_variety_controls.md) are **Ready for review**
+PC07.2 [variety and controls](pc072_variety_controls.md) are **Accepted and closed** (2026-11-01)
 under the approved review plan: generated room graphs, one starting kit,
 key-use logs, release-activated buttons and automatic rogue action completion.
 
-PC07.2 [review corrections](pc072_review_corrections.md) are **Ready for review**
+PC07.2 [review corrections](pc072_review_corrections.md) are **Accepted and closed** (2026-11-01)
 under the user-approved plan: sector locks, reduced guaranteed potions, automatic
 End Turn Cunning Defend (superseded by automatic action completion above), responsive
 saving feedback and alpha-aware presentation.
 The original route study remains historical evidence for the previous budgets.
 
 PC07.2 [population and generated-route checks](pc072_population_design.md) are
-**Ready for review** (2026-11-01). Fixed five-recipe depth bands retain bounded
+**Accepted and closed** (2026-11-01). Fixed five-recipe depth bands retain bounded
 encounter/member records, an intended key/guardian route and finite caches.
 Closed populated-room doors use existing shared geometry/AI. One population
 resolver supplies launch and checked save definitions; diagnostic generation
@@ -76,7 +77,7 @@ The original generator-5 [eight persistent routes](pc072_routes/README.md) all w
 zero permanent deaths/recorded merges, level two before the final guardian and
 three field rests each. Both selected replays matched with hidden captures.
 [Verification and limitations](pc072_verification.md) retain frequent downings,
-costly reserve detours, diagnostic policy limits and pending human acceptance.
+costly reserve detours, diagnostic policy limits and historical balance limitations.
 
 Pause diagnostics follow-up (2026-11-01): Presenter owns a default-off F1 toggle
 for raylib's live FPS counter, drawn over the final window composite in gameplay,
@@ -421,5 +422,6 @@ The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
 [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 PC07.1 preparation and calibration are Accepted and closed;
 [verification/handoff](pc071_verification.md) records the bounded study and limits.
-PC07.2 population and route checks are Ready for review;
-parent PC07 and P-C remain incomplete.
+PC07.2 population, route checks and review corrections are Accepted and closed
+(2026-11-01), completing parent PC07. PC08 is next for separate detailed planning;
+P-C remains incomplete. See the [current handoff](procedural_campaign_plan.md#pc072-accepted-closeout-and-next-agent-handoff-2026-11-01-current).

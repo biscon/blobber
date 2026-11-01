@@ -1,6 +1,8 @@
 # PC07.2 — Population and generated-route checks
 
-Status: **Ready for review, including approved corrections**, 2026-11-01.
+Status: **Accepted and closed, including review corrections**, 2026-11-01.
+User: “slice accepted, record it in the plan doc”. The roadmap current handoff
+records acceptance; verification and historical balance limitations stay unchanged.
 The later [variety and controls correction](pc072_variety_controls.md) supersedes
 starting kit count, normal topology, rogue completion and version identities.
 The [review correction design](pc072_review_corrections.md) supersedes the original

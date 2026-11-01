@@ -1,7 +1,8 @@
 # PC07.2 — campaign variety and responsive controls
 
-Status: **Ready for review**, 2026-11-01. User approved this plan with “Implement
-the plan.” This is review work; PC07/P-C are not accepted and PC08 is not started.
+Status: **Accepted and closed** as part of PC07.2, 2026-11-01. User: “slice accepted,
+record it in the plan doc”. Implementation was approved with “Implement the plan”.
+Parent PC07 is closed; P-C remains incomplete and PC08 is not started.
 
 ## Campaign and action ownership
 
@@ -153,6 +154,6 @@ logs are under `output/pc072-variety/`. `git diff --check` passes.
 Human interaction/feel is left for user review. No OS input/focus automation,
 new expedition runs, balance experiment, broad configuration matrix or benchmark
 ran. The original eight-route results describe generator 5, three starting kits and
-older potion budgets; they do not validate current balance. This work does not
-accept PC07.2, PC07 or P-C and does not authorize PC08. Fresh campaigns are required;
+older potion budgets; they do not validate current balance. The implementation checks did not themselves constitute acceptance. The user later
+accepted PC07.2 and parent PC07; P-C remains incomplete and PC08 is not authorized. Fresh campaigns are required;
 incompatible saves reject without migration or modification.

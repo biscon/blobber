@@ -1,6 +1,7 @@
 # Character compatibility and inventory tab follow-up
 
-Implemented for review, 2026-11-01, at the user's request after an incompatible
+Accepted with PC07.2, 2026-11-01: “slice accepted, record it in the plan doc”.
+Implemented at the user's request after an incompatible
 starting-gear record disabled the Character Creator.
 
 CharacterLibrary now loads each compatible record independently. Incompatible

@@ -3,15 +3,14 @@
 Date: 2026-10-30.
 
 Status: **MVP specification and amendments incorporated in the roadmap accepted
-on 2026-10-30; delivery is tracked separately. PC01–PC06 and milestones P-A/P-B
+on 2026-10-30; delivery is tracked separately. PC01–PC07 and milestones P-A/P-B
 are Accepted and closed;
 PC07.1 arena preparation/calibration is Accepted and closed (2026-11-01); PC07.2 campaign population
-is implemented and Ready for review; PC08–PC09 remain unimplemented.**
+and its review corrections are Accepted and closed (2026-11-01); PC08–PC09 remain unimplemented and P-C incomplete.**
 The approved [PC07.2 review corrections](pc072_review_corrections.md) are implemented
-and Ready for review: retain room/encounter/XP structure, use key-controlled guardian
+and accepted: retain encounter/XP budgets, use key-controlled guardian
 sectors, reduce guaranteed potions, streamline rogue End Turn and improve saving/rendering.
-The later [variety and controls correction](pc072_variety_controls.md) is also Ready
-for review: one starting camp kit total, sampled dungeon graphs, automatic rogue
+The later [variety and controls correction](pc072_variety_controls.md) is also accepted: one starting camp kit total, sampled dungeon graphs, automatic rogue
 completion, named-key logs and release-activated buttons with pressed feedback.
 Earlier route results remain historical evidence for the previous supplies and graphs.
 The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
@@ -33,7 +32,7 @@ The user selected level 2 before the final guardian for this opening. PC07 is sp
 [PC07.1 preparation/calibration](pc071_verification.md) measures candidate encounters
 first and is now accepted; PC07.2 chooses population and checks generated routes
 after its own detailed plan review.
-PC07.2 is now implemented and Ready for review: the intended direct route supplies
+PC07.2 is now Accepted and closed: the intended direct route supplies
 1,200 monster XP before the final guardian, with bypassable ordinary fights and
 finite optional reserves. Eight approved diagnostic routes won with 32 observed
 downings and no permanent deaths; this is limited route evidence, not campaign

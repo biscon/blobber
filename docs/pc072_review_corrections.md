@@ -1,7 +1,8 @@
 # PC07.2 review corrections
 
-Status: **Ready for review**. User approved the review plan on 2026-11-01.
-This remains PC07.2 review work, not acceptance or PC08. Keep existing rooms,
+Status: **Accepted and closed** as part of PC07.2 (2026-11-01). User: “slice accepted,
+record it in the plan doc”. The review plan was approved earlier the same day.
+This does not authorize PC08. Keep existing rooms,
 encounters, placements and XP; quiet rooms remain for now.
 
 The later [variety and controls correction](pc072_variety_controls.md) supersedes
