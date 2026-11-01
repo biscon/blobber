@@ -1,0 +1,6878 @@
+{
+  "id": "balanced-5-direct",
+  "status": "victory",
+  "reason": "campaign_victory",
+  "seconds": 16.67099715099903,
+  "trace_complete": true,
+  "trace_bytes": 141749322,
+  "checkpoints": [
+    {
+      "depth": 1,
+      "pre_recovery": [
+        {
+          "character": 0,
+          "name": "Alden",
+          "class": "fighter",
+          "race": "human",
+          "level": 1,
+          "hp": 5,
+          "max_hp": 12,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": true,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 19,
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "healing_potion": 4,
+            "camp_kit": 3,
+            "mana_potion": 4,
+            "arrow": 20,
+            "chain_mail": 1,
+            "longsword": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 1,
+          "name": "Brunna",
+          "class": "cleric",
+          "race": "hill_dwarf",
+          "level": 1,
+          "hp": 9,
+          "max_hp": 12,
+          "mana": 2,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "racial": [],
+          "items": {
+            "holy_symbol": 1,
+            "healing_potion": 2,
+            "mana_potion": 1,
+            "scale_mail": 1,
+            "mace": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 2,
+          "name": "Merrin",
+          "class": "rogue",
+          "race": "lightfoot_halfling",
+          "level": 1,
+          "hp": 10,
+          "max_hp": 10,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 14,
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "arrow": 18,
+            "healing_potion": 2,
+            "leather": 1,
+            "shortsword": 1,
+            "shortbow": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 3,
+          "name": "Lethiel",
+          "class": "wizard",
+          "race": "high_elf",
+          "level": 1,
+          "hp": 7,
+          "max_hp": 7,
+          "mana": 2,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "domain": [],
+          "racial": [
+            "shocking_grasp"
+          ],
+          "items": {
+            "spellbook": 1,
+            "arcane_focus": 1,
+            "healing_potion": 2,
+            "mana_potion": 1,
+            "dagger": 1
+          },
+          "equipment": [
+            {
+              "cell": 49,
+              "item": "dagger",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "resources": [
+        {
+          "character": 0,
+          "name": "Alden",
+          "class": "fighter",
+          "race": "human",
+          "level": 1,
+          "hp": 12,
+          "max_hp": 12,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": true,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 19,
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "healing_potion": 4,
+            "camp_kit": 2,
+            "mana_potion": 4,
+            "arrow": 20,
+            "chain_mail": 1,
+            "longsword": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 1,
+          "name": "Brunna",
+          "class": "cleric",
+          "race": "hill_dwarf",
+          "level": 1,
+          "hp": 12,
+          "max_hp": 12,
+          "mana": 4,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "racial": [],
+          "items": {
+            "holy_symbol": 1,
+            "healing_potion": 2,
+            "mana_potion": 1,
+            "scale_mail": 1,
+            "mace": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 2,
+          "name": "Merrin",
+          "class": "rogue",
+          "race": "lightfoot_halfling",
+          "level": 1,
+          "hp": 10,
+          "max_hp": 10,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 14,
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "arrow": 18,
+            "healing_potion": 2,
+            "leather": 1,
+            "shortsword": 1,
+            "shortbow": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 3,
+          "name": "Lethiel",
+          "class": "wizard",
+          "race": "high_elf",
+          "level": 1,
+          "hp": 7,
+          "max_hp": 7,
+          "mana": 4,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": true,
+          "concentration": [],
+          "armor_class": 13,
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "domain": [],
+          "racial": [
+            "shocking_grasp"
+          ],
+          "items": {
+            "spellbook": 1,
+            "arcane_focus": 1,
+            "healing_potion": 2,
+            "mana_potion": 1,
+            "dagger": 1
+          },
+          "equipment": [
+            {
+              "cell": 49,
+              "item": "dagger",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "xp": [
+        [
+          50,
+          0
+        ],
+        [
+          50,
+          0
+        ],
+        [
+          50,
+          0
+        ],
+        [
+          50,
+          0
+        ]
+      ],
+      "campaign_ms": "28860650",
+      "operation": 751,
+      "consumed": {
+        "arrow": 2,
+        "mana_potion": 2,
+        "camp_kit": 1
+      },
+      "collected": {
+        "healing_potion": 2,
+        "mana_potion": 4,
+        "arrow": 20
+      }
+    },
+    {
+      "depth": 2,
+      "pre_recovery": [
+        {
+          "character": 0,
+          "name": "Alden",
+          "class": "fighter",
+          "race": "human",
+          "level": 1,
+          "hp": 11,
+          "max_hp": 12,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": true,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 19,
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "healing_potion": 6,
+            "camp_kit": 3,
+            "mana_potion": 4,
+            "arrow": 50,
+            "chain_mail": 1,
+            "longsword": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 1,
+          "name": "Brunna",
+          "class": "cleric",
+          "race": "hill_dwarf",
+          "level": 1,
+          "hp": 5,
+          "max_hp": 12,
+          "mana": 0,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "racial": [],
+          "items": {
+            "holy_symbol": 1,
+            "healing_potion": 2,
+            "scale_mail": 1,
+            "mace": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 2,
+          "name": "Merrin",
+          "class": "rogue",
+          "race": "lightfoot_halfling",
+          "level": 1,
+          "hp": 7,
+          "max_hp": 10,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 14,
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "arrow": 12,
+            "healing_potion": 2,
+            "leather": 1,
+            "shortsword": 1,
+            "shortbow": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 3,
+          "name": "Lethiel",
+          "class": "wizard",
+          "race": "high_elf",
+          "level": 1,
+          "hp": 2,
+          "max_hp": 7,
+          "mana": 0,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "domain": [],
+          "racial": [
+            "shocking_grasp"
+          ],
+          "items": {
+            "spellbook": 1,
+            "arcane_focus": 1,
+            "healing_potion": 2,
+            "dagger": 1
+          },
+          "equipment": [
+            {
+              "cell": 49,
+              "item": "dagger",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "resources": [
+        {
+          "character": 0,
+          "name": "Alden",
+          "class": "fighter",
+          "race": "human",
+          "level": 1,
+          "hp": 12,
+          "max_hp": 12,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": true,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 19,
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "healing_potion": 6,
+            "camp_kit": 2,
+            "mana_potion": 4,
+            "arrow": 50,
+            "chain_mail": 1,
+            "longsword": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 1,
+          "name": "Brunna",
+          "class": "cleric",
+          "race": "hill_dwarf",
+          "level": 1,
+          "hp": 12,
+          "max_hp": 12,
+          "mana": 4,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "racial": [],
+          "items": {
+            "holy_symbol": 1,
+            "healing_potion": 2,
+            "scale_mail": 1,
+            "mace": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 2,
+          "name": "Merrin",
+          "class": "rogue",
+          "race": "lightfoot_halfling",
+          "level": 1,
+          "hp": 10,
+          "max_hp": 10,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 14,
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "arrow": 12,
+            "healing_potion": 2,
+            "leather": 1,
+            "shortsword": 1,
+            "shortbow": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 3,
+          "name": "Lethiel",
+          "class": "wizard",
+          "race": "high_elf",
+          "level": 1,
+          "hp": 7,
+          "max_hp": 7,
+          "mana": 4,
+          "max_mana": 4,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 1,
+          "second_wind": false,
+          "arcane_recovery": true,
+          "concentration": [],
+          "armor_class": 13,
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "domain": [],
+          "racial": [
+            "shocking_grasp"
+          ],
+          "items": {
+            "spellbook": 1,
+            "arcane_focus": 1,
+            "healing_potion": 2,
+            "dagger": 1
+          },
+          "equipment": [
+            {
+              "cell": 49,
+              "item": "dagger",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "xp": [
+        [
+          175,
+          0
+        ],
+        [
+          175,
+          0
+        ],
+        [
+          175,
+          0
+        ],
+        [
+          175,
+          0
+        ]
+      ],
+      "campaign_ms": "57762890",
+      "operation": 2040,
+      "consumed": {
+        "arrow": 8,
+        "mana_potion": 8,
+        "camp_kit": 2,
+        "healing_potion": 1
+      },
+      "collected": {
+        "healing_potion": 5,
+        "mana_potion": 8,
+        "arrow": 50,
+        "camp_kit": 1
+      }
+    },
+    {
+      "depth": 3,
+      "pre_recovery": [
+        {
+          "character": 0,
+          "name": "Alden",
+          "class": "fighter",
+          "race": "human",
+          "level": 2,
+          "hp": 20,
+          "max_hp": 20,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": true,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 19,
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "healing_potion": 8,
+            "camp_kit": 3,
+            "mana_potion": 4,
+            "arrow": 70,
+            "chain_mail": 1,
+            "longsword": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 1,
+          "name": "Brunna",
+          "class": "cleric",
+          "race": "hill_dwarf",
+          "level": 2,
+          "hp": 14,
+          "max_hp": 21,
+          "mana": 2,
+          "max_mana": 6,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "racial": [],
+          "items": {
+            "holy_symbol": 1,
+            "healing_potion": 2,
+            "scale_mail": 1,
+            "mace": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 2,
+          "name": "Merrin",
+          "class": "rogue",
+          "race": "lightfoot_halfling",
+          "level": 2,
+          "hp": 16,
+          "max_hp": 17,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 14,
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "arrow": 8,
+            "healing_potion": 2,
+            "leather": 1,
+            "shortsword": 1,
+            "shortbow": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 3,
+          "name": "Lethiel",
+          "class": "wizard",
+          "race": "high_elf",
+          "level": 2,
+          "hp": 12,
+          "max_hp": 12,
+          "mana": 2,
+          "max_mana": 6,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "domain": [],
+          "racial": [
+            "shocking_grasp"
+          ],
+          "items": {
+            "spellbook": 1,
+            "arcane_focus": 1,
+            "healing_potion": 2,
+            "dagger": 1
+          },
+          "equipment": [
+            {
+              "cell": 49,
+              "item": "dagger",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "resources": [
+        {
+          "character": 0,
+          "name": "Alden",
+          "class": "fighter",
+          "race": "human",
+          "level": 2,
+          "hp": 20,
+          "max_hp": 20,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": true,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 19,
+          "abilities": [
+            16,
+            14,
+            15,
+            9,
+            13,
+            11
+          ],
+          "base_abilities": [
+            15,
+            13,
+            14,
+            8,
+            12,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "healing_potion": 8,
+            "camp_kit": 2,
+            "mana_potion": 4,
+            "arrow": 70,
+            "chain_mail": 1,
+            "longsword": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "chain_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "longsword",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 1,
+          "name": "Brunna",
+          "class": "cleric",
+          "race": "hill_dwarf",
+          "level": 2,
+          "hp": 21,
+          "max_hp": 21,
+          "mana": 6,
+          "max_mana": 6,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 16,
+          "abilities": [
+            13,
+            10,
+            16,
+            8,
+            16,
+            12
+          ],
+          "base_abilities": [
+            13,
+            10,
+            14,
+            8,
+            15,
+            12
+          ],
+          "cantrips": [
+            "sacred_flame",
+            "spare_the_dying",
+            "guidance"
+          ],
+          "prepared": [
+            "bane",
+            "shield_of_faith",
+            "guiding_bolt",
+            "inflict_wounds"
+          ],
+          "domain": [
+            "bless",
+            "cure_wounds"
+          ],
+          "racial": [],
+          "items": {
+            "holy_symbol": 1,
+            "healing_potion": 2,
+            "scale_mail": 1,
+            "mace": 1,
+            "shield": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "scale_mail",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "mace",
+              "quantity": 1
+            },
+            {
+              "cell": 50,
+              "item": "shield",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 2,
+          "name": "Merrin",
+          "class": "rogue",
+          "race": "lightfoot_halfling",
+          "level": 2,
+          "hp": 17,
+          "max_hp": 17,
+          "mana": 0,
+          "max_mana": 0,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": false,
+          "arcane_recovery": false,
+          "concentration": [],
+          "armor_class": 14,
+          "abilities": [
+            8,
+            17,
+            14,
+            12,
+            13,
+            11
+          ],
+          "base_abilities": [
+            8,
+            15,
+            14,
+            12,
+            13,
+            10
+          ],
+          "cantrips": [],
+          "prepared": [],
+          "domain": [],
+          "racial": [],
+          "items": {
+            "arrow": 8,
+            "healing_potion": 2,
+            "leather": 1,
+            "shortsword": 1,
+            "shortbow": 1
+          },
+          "equipment": [
+            {
+              "cell": 48,
+              "item": "leather",
+              "quantity": 1
+            },
+            {
+              "cell": 49,
+              "item": "shortsword",
+              "quantity": 1
+            },
+            {
+              "cell": 51,
+              "item": "shortbow",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "character": 3,
+          "name": "Lethiel",
+          "class": "wizard",
+          "race": "high_elf",
+          "level": 2,
+          "hp": 12,
+          "max_hp": 12,
+          "mana": 6,
+          "max_mana": 6,
+          "life": 0,
+          "temporary_hp": 0,
+          "death_successes": 0,
+          "death_failures": 0,
+          "hit_dice": 2,
+          "second_wind": false,
+          "arcane_recovery": true,
+          "concentration": [],
+          "armor_class": 13,
+          "abilities": [
+            8,
+            16,
+            13,
+            16,
+            12,
+            10
+          ],
+          "base_abilities": [
+            8,
+            14,
+            13,
+            15,
+            12,
+            10
+          ],
+          "cantrips": [
+            "fire_bolt",
+            "acid_splash",
+            "ray_of_frost"
+          ],
+          "prepared": [
+            "mage_armor",
+            "magic_missile",
+            "burning_hands",
+            "thunderwave"
+          ],
+          "domain": [],
+          "racial": [
+            "shocking_grasp"
+          ],
+          "items": {
+            "spellbook": 1,
+            "arcane_focus": 1,
+            "healing_potion": 2,
+            "dagger": 1
+          },
+          "equipment": [
+            {
+              "cell": 49,
+              "item": "dagger",
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "xp": [
+        [
+          300,
+          0
+        ],
+        [
+          300,
+          0
+        ],
+        [
+          300,
+          0
+        ],
+        [
+          300,
+          0
+        ]
+      ],
+      "campaign_ms": "86665530",
+      "operation": 3431,
+      "consumed": {
+        "arrow": 12,
+        "mana_potion": 12,
+        "camp_kit": 3,
+        "healing_potion": 2
+      },
+      "collected": {
+        "healing_potion": 8,
+        "mana_potion": 12,
+        "arrow": 70,
+        "camp_kit": 2
+      }
+    }
+  ],
+  "metrics": {
+    "initial": [
+      {
+        "character": 0,
+        "name": "Alden",
+        "class": "fighter",
+        "race": "human",
+        "level": 1,
+        "hp": 12,
+        "max_hp": 12,
+        "mana": 0,
+        "max_mana": 0,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 1,
+        "second_wind": true,
+        "arcane_recovery": false,
+        "concentration": [],
+        "armor_class": 19,
+        "abilities": [
+          16,
+          14,
+          15,
+          9,
+          13,
+          11
+        ],
+        "base_abilities": [
+          15,
+          13,
+          14,
+          8,
+          12,
+          10
+        ],
+        "cantrips": [],
+        "prepared": [],
+        "domain": [],
+        "racial": [],
+        "items": {
+          "healing_potion": 2,
+          "camp_kit": 3,
+          "chain_mail": 1,
+          "longsword": 1,
+          "shield": 1
+        },
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "character": 1,
+        "name": "Brunna",
+        "class": "cleric",
+        "race": "hill_dwarf",
+        "level": 1,
+        "hp": 12,
+        "max_hp": 12,
+        "mana": 4,
+        "max_mana": 4,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 1,
+        "second_wind": false,
+        "arcane_recovery": false,
+        "concentration": [],
+        "armor_class": 16,
+        "abilities": [
+          13,
+          10,
+          16,
+          8,
+          16,
+          12
+        ],
+        "base_abilities": [
+          13,
+          10,
+          14,
+          8,
+          15,
+          12
+        ],
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "racial": [],
+        "items": {
+          "holy_symbol": 1,
+          "healing_potion": 2,
+          "mana_potion": 2,
+          "scale_mail": 1,
+          "mace": 1,
+          "shield": 1
+        },
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "character": 2,
+        "name": "Merrin",
+        "class": "rogue",
+        "race": "lightfoot_halfling",
+        "level": 1,
+        "hp": 10,
+        "max_hp": 10,
+        "mana": 0,
+        "max_mana": 0,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 1,
+        "second_wind": false,
+        "arcane_recovery": false,
+        "concentration": [],
+        "armor_class": 14,
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "prepared": [],
+        "domain": [],
+        "racial": [],
+        "items": {
+          "arrow": 20,
+          "healing_potion": 2,
+          "leather": 1,
+          "shortsword": 1,
+          "shortbow": 1
+        },
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "character": 3,
+        "name": "Lethiel",
+        "class": "wizard",
+        "race": "high_elf",
+        "level": 1,
+        "hp": 7,
+        "max_hp": 7,
+        "mana": 4,
+        "max_mana": 4,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 1,
+        "second_wind": false,
+        "arcane_recovery": true,
+        "concentration": [],
+        "armor_class": 13,
+        "abilities": [
+          8,
+          16,
+          13,
+          16,
+          12,
+          10
+        ],
+        "base_abilities": [
+          8,
+          14,
+          13,
+          15,
+          12,
+          10
+        ],
+        "cantrips": [
+          "fire_bolt",
+          "acid_splash",
+          "ray_of_frost"
+        ],
+        "prepared": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave"
+        ],
+        "domain": [],
+        "racial": [
+          "shocking_grasp"
+        ],
+        "items": {
+          "spellbook": 1,
+          "arcane_focus": 1,
+          "healing_potion": 2,
+          "mana_potion": 2,
+          "dagger": 1
+        },
+        "equipment": [
+          {
+            "cell": 49,
+            "item": "dagger",
+            "quantity": 1
+          }
+        ]
+      }
+    ],
+    "final": [
+      {
+        "character": 0,
+        "name": "Alden",
+        "class": "fighter",
+        "race": "human",
+        "level": 2,
+        "hp": 20,
+        "max_hp": 20,
+        "mana": 0,
+        "max_mana": 0,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 2,
+        "second_wind": true,
+        "arcane_recovery": false,
+        "concentration": [],
+        "armor_class": 19,
+        "abilities": [
+          16,
+          14,
+          15,
+          9,
+          13,
+          11
+        ],
+        "base_abilities": [
+          15,
+          13,
+          14,
+          8,
+          12,
+          10
+        ],
+        "cantrips": [],
+        "prepared": [],
+        "domain": [],
+        "racial": [],
+        "items": {
+          "healing_potion": 8,
+          "camp_kit": 2,
+          "mana_potion": 4,
+          "arrow": 70,
+          "chain_mail": 1,
+          "longsword": 1,
+          "shield": 1
+        },
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "character": 1,
+        "name": "Brunna",
+        "class": "cleric",
+        "race": "hill_dwarf",
+        "level": 2,
+        "hp": 15,
+        "max_hp": 21,
+        "mana": 0,
+        "max_mana": 6,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 2,
+        "second_wind": false,
+        "arcane_recovery": false,
+        "concentration": [],
+        "armor_class": 16,
+        "abilities": [
+          13,
+          10,
+          16,
+          8,
+          16,
+          12
+        ],
+        "base_abilities": [
+          13,
+          10,
+          14,
+          8,
+          15,
+          12
+        ],
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "racial": [],
+        "items": {
+          "holy_symbol": 1,
+          "healing_potion": 2,
+          "scale_mail": 1,
+          "mace": 1,
+          "shield": 1
+        },
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "character": 2,
+        "name": "Merrin",
+        "class": "rogue",
+        "race": "lightfoot_halfling",
+        "level": 2,
+        "hp": 17,
+        "max_hp": 17,
+        "mana": 0,
+        "max_mana": 0,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 2,
+        "second_wind": false,
+        "arcane_recovery": false,
+        "concentration": [],
+        "armor_class": 14,
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "prepared": [],
+        "domain": [],
+        "racial": [],
+        "items": {
+          "arrow": 7,
+          "healing_potion": 2,
+          "leather": 1,
+          "shortsword": 1,
+          "shortbow": 1
+        },
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ]
+      },
+      {
+        "character": 3,
+        "name": "Lethiel",
+        "class": "wizard",
+        "race": "high_elf",
+        "level": 2,
+        "hp": 12,
+        "max_hp": 12,
+        "mana": 0,
+        "max_mana": 6,
+        "life": 0,
+        "temporary_hp": 0,
+        "death_successes": 0,
+        "death_failures": 0,
+        "hit_dice": 2,
+        "second_wind": false,
+        "arcane_recovery": true,
+        "concentration": [],
+        "armor_class": 16,
+        "abilities": [
+          8,
+          16,
+          13,
+          16,
+          12,
+          10
+        ],
+        "base_abilities": [
+          8,
+          14,
+          13,
+          15,
+          12,
+          10
+        ],
+        "cantrips": [
+          "fire_bolt",
+          "acid_splash",
+          "ray_of_frost"
+        ],
+        "prepared": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave"
+        ],
+        "domain": [],
+        "racial": [
+          "shocking_grasp"
+        ],
+        "items": {
+          "spellbook": 1,
+          "arcane_focus": 1,
+          "healing_potion": 2,
+          "dagger": 1
+        },
+        "equipment": [
+          {
+            "cell": 49,
+            "item": "dagger",
+            "quantity": 1
+          }
+        ]
+      }
+    ],
+    "events": {
+      "campaign_transition": 3,
+      "entry_unlocked": 3,
+      "cast": 61,
+      "effect": 68,
+      "recovery": 16,
+      "attack_started": 84,
+      "projectile_released": 44,
+      "attack": 98,
+      "started": 13,
+      "spent": 52,
+      "round": 14,
+      "finished": 9,
+      "attack_canceled": 2,
+      "move": 3,
+      "guiding_mark": 4,
+      "spell_save": 14,
+      "healing": 2,
+      "defend": 3,
+      "campaign_result": 1
+    },
+    "action_counts": {
+      "interact": 21,
+      "guidance": 3,
+      "mage_armor": 4,
+      "arcane_recovery": 3,
+      "move": 284,
+      "guiding_bolt": 12,
+      "ranged": 13,
+      "magic_missile": 10,
+      "melee": 25,
+      "continue": 9,
+      "item": 14,
+      "pickup": 14,
+      "rest": 3,
+      "bane": 4,
+      "acid_splash": 2,
+      "fire_bolt": 4,
+      "sacred_flame": 4,
+      "advancement": 4,
+      "cunning_action": 3,
+      "action_surge": 1,
+      "burning_hands": 1
+    },
+    "policy_reasons": {},
+    "mana_spent": [
+      0,
+      32,
+      0,
+      30
+    ],
+    "mana_recovered": [
+      0,
+      28,
+      0,
+      26
+    ],
+    "hp_lost_observed": [
+      8,
+      23,
+      20,
+      5
+    ],
+    "hp_gained_observed": [
+      16,
+      26,
+      27,
+      10
+    ],
+    "downings_observed_lower_bound": [
+      0,
+      0,
+      2,
+      0
+    ],
+    "consumed_items": {
+      "arrow": 13,
+      "mana_potion": 12,
+      "camp_kit": 3,
+      "healing_potion": 2
+    },
+    "incoming_damage_resolved": [
+      8,
+      23,
+      26,
+      5
+    ],
+    "largest_incoming_hit": [
+      7,
+      7,
+      10,
+      5
+    ],
+    "max_incoming_6s": [
+      7,
+      7,
+      10,
+      5
+    ],
+    "max_incoming_round": [
+      7,
+      7,
+      0,
+      0
+    ],
+    "burst_metrics_complete": true,
+    "healing_resolved": [
+      0,
+      0,
+      16,
+      0
+    ],
+    "approach_ms_observed": 24990,
+    "first_contact_ms": 0,
+    "permanent_deaths_by_character": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rounds_completed": 14,
+    "encounters": 13,
+    "permanent_deaths": 0,
+    "unconscious_survivors": 0
+  },
+  "coverage": {
+    "1,1,1,1": {
+      "abilities": [
+        {
+          "character": 0,
+          "ability": "second_wind",
+          "coverage": "implemented"
+        },
+        {
+          "character": 0,
+          "ability": "arcane_recovery",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 0,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 0,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "sacred_flame",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "spare_the_dying",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "bless",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "bane",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "shield_of_faith",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "cure_wounds",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "guiding_bolt",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "inflict_wounds",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "guidance",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "second_wind",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "arcane_recovery",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 1,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "second_wind",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "arcane_recovery",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 2,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 2,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "fire_bolt",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "acid_splash",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "mage_armor",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "magic_missile",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "burning_hands",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "thunderwave",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "ray_of_frost",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "shocking_grasp",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "second_wind",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "arcane_recovery",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 3,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        }
+      ],
+      "unsupported": [],
+      "disabled": [
+        "rest",
+        "loot",
+        "inventory_management",
+        "preparation_changes",
+        "advancement"
+      ],
+      "policy_version": 2,
+      "limitations": [
+        "new preparation slots intentionally empty",
+        "level-2 features used in contact turns",
+        "no automated level-3 tactics"
+      ]
+    },
+    "2,2,2,2": {
+      "abilities": [
+        {
+          "character": 0,
+          "ability": "second_wind",
+          "coverage": "implemented"
+        },
+        {
+          "character": 0,
+          "ability": "arcane_recovery",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 0,
+          "ability": "action_surge",
+          "coverage": "implemented_in_contact_turns"
+        },
+        {
+          "character": 0,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 0,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 0,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "sacred_flame",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "spare_the_dying",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "bless",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "bane",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "shield_of_faith",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "cure_wounds",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "guiding_bolt",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "inflict_wounds",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "guidance",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "second_wind",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "arcane_recovery",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 1,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "preserve_life",
+          "coverage": "implemented_in_contact_turns"
+        },
+        {
+          "character": 1,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 1,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 1,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "second_wind",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "arcane_recovery",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 2,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "cunning_action",
+          "coverage": "implemented_in_contact_turns"
+        },
+        {
+          "character": 2,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 2,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 2,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "fire_bolt",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "acid_splash",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "mage_armor",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "magic_missile",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "burning_hands",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "thunderwave",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "ray_of_frost",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "shocking_grasp",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "second_wind",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "arcane_recovery",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "dismiss_concentration",
+          "coverage": "implemented_when_concentrating"
+        },
+        {
+          "character": 3,
+          "ability": "action_surge",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "preserve_life",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "cunning_action",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "escape_web",
+          "coverage": "unavailable_at_level_or_class"
+        },
+        {
+          "character": 3,
+          "ability": "end_turn",
+          "coverage": "implemented"
+        },
+        {
+          "character": 3,
+          "ability": "dismiss_spiritual_weapon",
+          "coverage": "unavailable_at_level_or_class"
+        }
+      ],
+      "unsupported": [],
+      "disabled": [
+        "rest",
+        "loot",
+        "inventory_management",
+        "preparation_changes",
+        "advancement"
+      ],
+      "policy_version": 2,
+      "limitations": [
+        "new preparation slots intentionally empty",
+        "level-2 features used in contact turns",
+        "no automated level-3 tactics"
+      ]
+    }
+  },
+  "rests": 3,
+  "steps": 205,
+  "retraced_steps": 0,
+  "merges": [],
+  "final": {
+    "active_character": null,
+    "active_enemy": null,
+    "actor_revision": "45",
+    "ai_time": "74580",
+    "attacks": [
+      {
+        "character": 3,
+        "darts": 0,
+        "end": "88850",
+        "enemy": 8,
+        "hit": true,
+        "impact": "88730",
+        "incoming": false,
+        "ranged": false,
+        "release": "88730",
+        "serial": "88731",
+        "spell": 12,
+        "stage": 3,
+        "start": "88730",
+        "target_gone": false
+      },
+      {
+        "character": 3,
+        "darts": 0,
+        "end": "88850",
+        "enemy": 9,
+        "hit": true,
+        "impact": "88730",
+        "incoming": false,
+        "ranged": false,
+        "release": "88730",
+        "serial": "88731",
+        "spell": 12,
+        "stage": 3,
+        "start": "88730",
+        "target_gone": false
+      },
+      {
+        "character": 1,
+        "darts": 0,
+        "end": "72450",
+        "enemy": 10,
+        "hit": true,
+        "impact": "72330",
+        "incoming": false,
+        "ranged": false,
+        "release": "72330",
+        "serial": "72331",
+        "spell": 3,
+        "stage": 3,
+        "start": "72330",
+        "target_gone": false
+      }
+    ],
+    "awaiting_action": false,
+    "campaign": {
+      "gameplay_ms": "86680940",
+      "location": 3,
+      "location_name": "Dungeon floor 3",
+      "locations": [
+        {
+          "fingerprint": "hub-v1",
+          "location": 0,
+          "state_digest": "1744982726464880115",
+          "visited": true,
+          "world_definition": "12424454151760147752"
+        },
+        {
+          "fingerprint": "4231259551877321407",
+          "location": 1,
+          "state_digest": "6991238269738168389",
+          "visited": true,
+          "world_definition": "4512051372683231963"
+        },
+        {
+          "fingerprint": "10536113083195915626",
+          "location": 2,
+          "state_digest": "17668468109915874860",
+          "visited": true,
+          "world_definition": "4512051372683231963"
+        },
+        {
+          "fingerprint": "1343960859790078932",
+          "location": 3,
+          "state_digest": "11698122599031116019",
+          "visited": true,
+          "world_definition": "4512051372683231963"
+        }
+      ],
+      "revision": "4",
+      "save": {
+        "configured": false,
+        "eligible": false,
+        "reason": "Campaign has ended.",
+        "warning": ""
+      },
+      "status": "victory",
+      "travel": {
+        "recall": {
+          "cost": 1,
+          "kits": 2,
+          "ready": false,
+          "reason": "Campaign has ended."
+        },
+        "waypoints": [
+          {
+            "cost": 0,
+            "depth": 1,
+            "ready": false,
+            "reason": "Campaign has ended."
+          },
+          {
+            "cost": 0,
+            "depth": 2,
+            "ready": false,
+            "reason": "Campaign has ended."
+          },
+          {
+            "cost": 0,
+            "depth": 3,
+            "ready": false,
+            "reason": "Campaign has ended."
+          }
+        ]
+      },
+      "visited_entries": [
+        1,
+        2,
+        3
+      ]
+    },
+    "can_end_turn": false,
+    "decision": true,
+    "diagnostic": true,
+    "diagnostic_inspection_used": false,
+    "discovered": [
+      [
+        6,
+        1,
+        1
+      ],
+      [
+        29,
+        1,
+        1
+      ],
+      [
+        30,
+        1,
+        1
+      ],
+      [
+        31,
+        1,
+        1
+      ],
+      [
+        6,
+        2,
+        0
+      ],
+      [
+        13,
+        2,
+        0
+      ],
+      [
+        14,
+        2,
+        0
+      ],
+      [
+        15,
+        2,
+        0
+      ],
+      [
+        16,
+        2,
+        1
+      ],
+      [
+        22,
+        2,
+        0
+      ],
+      [
+        23,
+        2,
+        0
+      ],
+      [
+        24,
+        2,
+        0
+      ],
+      [
+        25,
+        2,
+        1
+      ],
+      [
+        29,
+        2,
+        0
+      ],
+      [
+        30,
+        2,
+        0
+      ],
+      [
+        31,
+        2,
+        0
+      ],
+      [
+        32,
+        2,
+        0
+      ],
+      [
+        33,
+        2,
+        0
+      ],
+      [
+        34,
+        2,
+        1
+      ],
+      [
+        2,
+        3,
+        1
+      ],
+      [
+        3,
+        3,
+        1
+      ],
+      [
+        4,
+        3,
+        1
+      ],
+      [
+        6,
+        3,
+        0
+      ],
+      [
+        7,
+        3,
+        1
+      ],
+      [
+        12,
+        3,
+        0
+      ],
+      [
+        13,
+        3,
+        0
+      ],
+      [
+        14,
+        3,
+        0
+      ],
+      [
+        15,
+        3,
+        0
+      ],
+      [
+        16,
+        3,
+        1
+      ],
+      [
+        21,
+        3,
+        0
+      ],
+      [
+        22,
+        3,
+        0
+      ],
+      [
+        23,
+        3,
+        0
+      ],
+      [
+        24,
+        3,
+        0
+      ],
+      [
+        25,
+        3,
+        1
+      ],
+      [
+        29,
+        3,
+        0
+      ],
+      [
+        30,
+        3,
+        0
+      ],
+      [
+        31,
+        3,
+        0
+      ],
+      [
+        32,
+        3,
+        0
+      ],
+      [
+        34,
+        3,
+        1
+      ],
+      [
+        3,
+        4,
+        0
+      ],
+      [
+        4,
+        4,
+        0
+      ],
+      [
+        5,
+        4,
+        1
+      ],
+      [
+        6,
+        4,
+        0
+      ],
+      [
+        7,
+        4,
+        0
+      ],
+      [
+        8,
+        4,
+        0
+      ],
+      [
+        9,
+        4,
+        0
+      ],
+      [
+        10,
+        4,
+        0
+      ],
+      [
+        11,
+        4,
+        0
+      ],
+      [
+        12,
+        4,
+        0
+      ],
+      [
+        13,
+        4,
+        0
+      ],
+      [
+        14,
+        4,
+        0
+      ],
+      [
+        15,
+        4,
+        0
+      ],
+      [
+        16,
+        4,
+        0
+      ],
+      [
+        17,
+        4,
+        0
+      ],
+      [
+        18,
+        4,
+        0
+      ],
+      [
+        19,
+        4,
+        0
+      ],
+      [
+        20,
+        4,
+        0
+      ],
+      [
+        21,
+        4,
+        0
+      ],
+      [
+        22,
+        4,
+        0
+      ],
+      [
+        23,
+        4,
+        0
+      ],
+      [
+        24,
+        4,
+        0
+      ],
+      [
+        25,
+        4,
+        0
+      ],
+      [
+        26,
+        4,
+        0
+      ],
+      [
+        27,
+        4,
+        0
+      ],
+      [
+        28,
+        4,
+        0
+      ],
+      [
+        29,
+        4,
+        0
+      ],
+      [
+        30,
+        4,
+        0
+      ],
+      [
+        31,
+        4,
+        1
+      ],
+      [
+        33,
+        4,
+        0
+      ],
+      [
+        34,
+        4,
+        1
+      ],
+      [
+        2,
+        5,
+        0
+      ],
+      [
+        3,
+        5,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        5,
+        5,
+        1
+      ],
+      [
+        6,
+        5,
+        0
+      ],
+      [
+        7,
+        5,
+        1
+      ],
+      [
+        12,
+        5,
+        0
+      ],
+      [
+        13,
+        5,
+        0
+      ],
+      [
+        14,
+        5,
+        0
+      ],
+      [
+        15,
+        5,
+        0
+      ],
+      [
+        16,
+        5,
+        1
+      ],
+      [
+        21,
+        5,
+        0
+      ],
+      [
+        22,
+        5,
+        0
+      ],
+      [
+        23,
+        5,
+        0
+      ],
+      [
+        24,
+        5,
+        0
+      ],
+      [
+        25,
+        5,
+        1
+      ],
+      [
+        28,
+        5,
+        1
+      ],
+      [
+        29,
+        5,
+        0
+      ],
+      [
+        30,
+        5,
+        0
+      ],
+      [
+        31,
+        5,
+        0
+      ],
+      [
+        32,
+        5,
+        0
+      ],
+      [
+        33,
+        5,
+        0
+      ],
+      [
+        34,
+        5,
+        1
+      ],
+      [
+        1,
+        6,
+        1
+      ],
+      [
+        2,
+        6,
+        0
+      ],
+      [
+        3,
+        6,
+        0
+      ],
+      [
+        4,
+        6,
+        0
+      ],
+      [
+        5,
+        6,
+        0
+      ],
+      [
+        6,
+        6,
+        0
+      ],
+      [
+        7,
+        6,
+        1
+      ],
+      [
+        13,
+        6,
+        0
+      ],
+      [
+        14,
+        6,
+        0
+      ],
+      [
+        15,
+        6,
+        0
+      ],
+      [
+        16,
+        6,
+        1
+      ],
+      [
+        22,
+        6,
+        0
+      ],
+      [
+        23,
+        6,
+        0
+      ],
+      [
+        24,
+        6,
+        0
+      ],
+      [
+        25,
+        6,
+        1
+      ],
+      [
+        28,
+        6,
+        1
+      ],
+      [
+        29,
+        6,
+        0
+      ],
+      [
+        30,
+        6,
+        0
+      ],
+      [
+        31,
+        6,
+        0
+      ],
+      [
+        32,
+        6,
+        0
+      ],
+      [
+        33,
+        6,
+        0
+      ],
+      [
+        34,
+        6,
+        1
+      ],
+      [
+        3,
+        7,
+        1
+      ],
+      [
+        4,
+        7,
+        1
+      ],
+      [
+        5,
+        7,
+        1
+      ],
+      [
+        6,
+        7,
+        1
+      ],
+      [
+        14,
+        7,
+        1
+      ],
+      [
+        29,
+        7,
+        1
+      ],
+      [
+        30,
+        7,
+        1
+      ],
+      [
+        31,
+        7,
+        0
+      ],
+      [
+        32,
+        7,
+        1
+      ],
+      [
+        31,
+        8,
+        0
+      ],
+      [
+        31,
+        9,
+        0
+      ],
+      [
+        31,
+        10,
+        0
+      ],
+      [
+        31,
+        11,
+        0
+      ],
+      [
+        30,
+        12,
+        0
+      ],
+      [
+        31,
+        12,
+        0
+      ],
+      [
+        32,
+        12,
+        0
+      ],
+      [
+        29,
+        13,
+        0
+      ],
+      [
+        30,
+        13,
+        0
+      ],
+      [
+        31,
+        13,
+        0
+      ],
+      [
+        32,
+        13,
+        0
+      ],
+      [
+        33,
+        13,
+        0
+      ],
+      [
+        29,
+        14,
+        0
+      ],
+      [
+        30,
+        14,
+        0
+      ],
+      [
+        31,
+        14,
+        0
+      ],
+      [
+        32,
+        14,
+        0
+      ],
+      [
+        33,
+        14,
+        0
+      ],
+      [
+        29,
+        15,
+        0
+      ],
+      [
+        30,
+        15,
+        0
+      ],
+      [
+        31,
+        15,
+        0
+      ],
+      [
+        32,
+        15,
+        0
+      ],
+      [
+        33,
+        15,
+        0
+      ],
+      [
+        29,
+        16,
+        1
+      ],
+      [
+        30,
+        16,
+        1
+      ],
+      [
+        31,
+        16,
+        0
+      ],
+      [
+        32,
+        16,
+        1
+      ],
+      [
+        33,
+        16,
+        1
+      ],
+      [
+        31,
+        17,
+        0
+      ],
+      [
+        31,
+        18,
+        0
+      ],
+      [
+        22,
+        19,
+        1
+      ],
+      [
+        23,
+        19,
+        1
+      ],
+      [
+        24,
+        19,
+        1
+      ],
+      [
+        31,
+        19,
+        0
+      ],
+      [
+        19,
+        20,
+        1
+      ],
+      [
+        20,
+        20,
+        0
+      ],
+      [
+        21,
+        20,
+        0
+      ],
+      [
+        22,
+        20,
+        0
+      ],
+      [
+        23,
+        20,
+        0
+      ],
+      [
+        24,
+        20,
+        0
+      ],
+      [
+        28,
+        20,
+        1
+      ],
+      [
+        31,
+        20,
+        0
+      ],
+      [
+        19,
+        21,
+        1
+      ],
+      [
+        21,
+        21,
+        0
+      ],
+      [
+        22,
+        21,
+        0
+      ],
+      [
+        23,
+        21,
+        0
+      ],
+      [
+        24,
+        21,
+        0
+      ],
+      [
+        25,
+        21,
+        1
+      ],
+      [
+        28,
+        21,
+        1
+      ],
+      [
+        29,
+        21,
+        0
+      ],
+      [
+        30,
+        21,
+        0
+      ],
+      [
+        31,
+        21,
+        0
+      ],
+      [
+        32,
+        21,
+        0
+      ],
+      [
+        18,
+        22,
+        0
+      ],
+      [
+        19,
+        22,
+        0
+      ],
+      [
+        20,
+        22,
+        0
+      ],
+      [
+        22,
+        22,
+        1
+      ],
+      [
+        23,
+        22,
+        0
+      ],
+      [
+        24,
+        22,
+        0
+      ],
+      [
+        25,
+        22,
+        0
+      ],
+      [
+        26,
+        22,
+        0
+      ],
+      [
+        27,
+        22,
+        0
+      ],
+      [
+        28,
+        22,
+        0
+      ],
+      [
+        29,
+        22,
+        0
+      ],
+      [
+        30,
+        22,
+        0
+      ],
+      [
+        31,
+        22,
+        0
+      ],
+      [
+        32,
+        22,
+        0
+      ],
+      [
+        33,
+        22,
+        0
+      ],
+      [
+        19,
+        23,
+        1
+      ],
+      [
+        20,
+        23,
+        0
+      ],
+      [
+        21,
+        23,
+        0
+      ],
+      [
+        22,
+        23,
+        0
+      ],
+      [
+        23,
+        23,
+        0
+      ],
+      [
+        24,
+        23,
+        0
+      ],
+      [
+        25,
+        23,
+        1
+      ],
+      [
+        28,
+        23,
+        1
+      ],
+      [
+        29,
+        23,
+        0
+      ],
+      [
+        30,
+        23,
+        0
+      ],
+      [
+        31,
+        23,
+        0
+      ],
+      [
+        32,
+        23,
+        0
+      ],
+      [
+        33,
+        23,
+        0
+      ],
+      [
+        19,
+        24,
+        1
+      ],
+      [
+        20,
+        24,
+        0
+      ],
+      [
+        21,
+        24,
+        0
+      ],
+      [
+        22,
+        24,
+        0
+      ],
+      [
+        23,
+        24,
+        0
+      ],
+      [
+        24,
+        24,
+        0
+      ],
+      [
+        25,
+        24,
+        1
+      ],
+      [
+        28,
+        24,
+        1
+      ],
+      [
+        29,
+        24,
+        0
+      ],
+      [
+        30,
+        24,
+        0
+      ],
+      [
+        31,
+        24,
+        0
+      ],
+      [
+        32,
+        24,
+        0
+      ],
+      [
+        33,
+        24,
+        0
+      ],
+      [
+        21,
+        25,
+        1
+      ],
+      [
+        22,
+        25,
+        0
+      ],
+      [
+        23,
+        25,
+        1
+      ],
+      [
+        24,
+        25,
+        1
+      ],
+      [
+        29,
+        25,
+        1
+      ],
+      [
+        30,
+        25,
+        1
+      ],
+      [
+        31,
+        25,
+        1
+      ],
+      [
+        32,
+        25,
+        1
+      ],
+      [
+        33,
+        25,
+        1
+      ],
+      [
+        22,
+        26,
+        0
+      ],
+      [
+        22,
+        27,
+        0
+      ],
+      [
+        22,
+        28,
+        0
+      ],
+      [
+        22,
+        29,
+        0
+      ],
+      [
+        22,
+        30,
+        0
+      ],
+      [
+        21,
+        31,
+        0
+      ],
+      [
+        22,
+        31,
+        0
+      ],
+      [
+        23,
+        31,
+        0
+      ],
+      [
+        21,
+        32,
+        0
+      ],
+      [
+        22,
+        32,
+        0
+      ],
+      [
+        23,
+        32,
+        0
+      ],
+      [
+        22,
+        33,
+        0
+      ]
+    ],
+    "discovery_revision": "58",
+    "door_opening": false,
+    "door_pending": null,
+    "door_until": [
+      "72080",
+      "0",
+      "0",
+      "0",
+      "10300",
+      "100200",
+      "0",
+      "52480",
+      "64280",
+      "0",
+      "25650",
+      "48430",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "effects": [
+      {
+        "caster": 3,
+        "caster_source": {
+          "character": 3,
+          "kind": "party"
+        },
+        "cell": [
+          0,
+          0
+        ],
+        "difficulty": 13,
+        "duplicates": 0,
+        "expires": "57662850",
+        "kind": 3,
+        "ready": "0",
+        "reserved": 0,
+        "retry": "28868850",
+        "serial": "3",
+        "targets": [
+          {
+            "id": 3,
+            "npc": false
+          }
+        ]
+      }
+    ],
+    "enemies": [
+      {
+        "actor": 0,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 1,
+        "damage_time": "10750",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 3,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          7,
+          4
+        ],
+        "last_seen_ms": "10440",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 7,
+        "move_due_ms": "10700",
+        "position": [
+          12,
+          4
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          1
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "goblin",
+        "walk_duration": "600",
+        "walk_from": [
+          13.25,
+          4.75
+        ],
+        "walk_time": "10400",
+        "waypoint": 0
+      },
+      {
+        "actor": 1,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 1,
+        "damage_time": "11392",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 3,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          7,
+          4
+        ],
+        "last_seen_ms": "11090",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 7,
+        "move_due_ms": "11300",
+        "position": [
+          11,
+          4
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "goblin",
+        "walk_duration": "600",
+        "walk_from": [
+          12.25,
+          4.25
+        ],
+        "walk_time": "11000",
+        "waypoint": 0
+      },
+      {
+        "actor": 2,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 1,
+        "damage_time": "26100",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 3,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          16,
+          4
+        ],
+        "last_seen_ms": "25490",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 13,
+        "move_due_ms": "25700",
+        "position": [
+          21,
+          4
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          1
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "skeleton",
+        "walk_duration": "600",
+        "walk_from": [
+          22.25,
+          4.75
+        ],
+        "walk_time": "25700",
+        "waypoint": 0
+      },
+      {
+        "actor": 3,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "36980",
+        "awareness": 1,
+        "damage_time": "38930",
+        "guardian": false,
+        "has_attack": true,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 3,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          18,
+          4
+        ],
+        "last_seen_ms": "32300",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 22,
+        "move_due_ms": "26900",
+        "position": [
+          19,
+          4
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "zombie",
+        "walk_duration": "600",
+        "walk_from": [
+          20.25,
+          4.25
+        ],
+        "walk_time": "26900",
+        "waypoint": 0
+      },
+      {
+        "actor": 4,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 1,
+        "damage_time": "53126",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 0,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          31,
+          7
+        ],
+        "last_seen_ms": "44690",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 7,
+        "move_due_ms": "44700",
+        "position": [
+          31,
+          12
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "goblin",
+        "walk_duration": "600",
+        "walk_from": [
+          31.25,
+          13.25
+        ],
+        "walk_time": "52530",
+        "waypoint": 0
+      },
+      {
+        "actor": 5,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 1,
+        "damage_time": "54530",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 0,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          31,
+          9
+        ],
+        "last_seen_ms": "45300",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 7,
+        "move_due_ms": "45900",
+        "position": [
+          31,
+          10
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          1,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "goblin",
+        "walk_duration": "600",
+        "walk_from": [
+          31.75,
+          11.25
+        ],
+        "walk_time": "53730",
+        "waypoint": 0
+      },
+      {
+        "actor": 6,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 0,
+        "damage_time": "0",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": false,
+        "has_death": false,
+        "has_travel": false,
+        "has_walk": false,
+        "heading": 1,
+        "health_fraction": 1.0,
+        "hp": 13,
+        "last_seen": [
+          0,
+          0
+        ],
+        "last_seen_ms": "0",
+        "life": 0,
+        "mana": 0,
+        "max_hp": 13,
+        "move_due_ms": "1200",
+        "position": [
+          4,
+          22
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          1,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": true,
+        "type": "skeleton",
+        "walk_duration": "600",
+        "walk_from": [
+          0.0,
+          0.0
+        ],
+        "walk_time": "0",
+        "waypoint": 0
+      },
+      {
+        "actor": 7,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "0",
+        "awareness": 0,
+        "damage_time": "0",
+        "guardian": false,
+        "has_attack": false,
+        "has_damage": false,
+        "has_death": false,
+        "has_travel": false,
+        "has_walk": false,
+        "heading": 1,
+        "health_fraction": 1.0,
+        "hp": 22,
+        "last_seen": [
+          0,
+          0
+        ],
+        "last_seen_ms": "0",
+        "life": 0,
+        "mana": 0,
+        "max_hp": 22,
+        "move_due_ms": "1200",
+        "position": [
+          4,
+          22
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          1,
+          1
+        ],
+        "target_cursor": 0,
+        "targetable": true,
+        "type": "zombie",
+        "walk_duration": "600",
+        "walk_from": [
+          0.0,
+          0.0
+        ],
+        "walk_time": "0",
+        "waypoint": 0
+      },
+      {
+        "actor": 8,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "90380",
+        "awareness": 1,
+        "damage_time": "98410",
+        "guardian": true,
+        "has_attack": true,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 0,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          22,
+          27
+        ],
+        "last_seen_ms": "74300",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 27,
+        "move_due_ms": "62900",
+        "position": [
+          22,
+          28
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "bugbear",
+        "walk_duration": "600",
+        "walk_from": [
+          22.25,
+          29.25
+        ],
+        "walk_time": "73330",
+        "waypoint": 0
+      },
+      {
+        "actor": 9,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "79630",
+        "awareness": 1,
+        "damage_time": "88730",
+        "guardian": true,
+        "has_attack": true,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 0,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          22,
+          27
+        ],
+        "last_seen_ms": "68300",
+        "life": 1,
+        "mana": 0,
+        "max_hp": 7,
+        "move_due_ms": "62900",
+        "position": [
+          22,
+          28
+        ],
+        "ranged_attack": false,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          1,
+          0
+        ],
+        "target_cursor": 0,
+        "targetable": false,
+        "type": "goblin",
+        "walk_duration": "600",
+        "walk_from": [
+          22.75,
+          29.25
+        ],
+        "walk_time": "73330",
+        "waypoint": 0
+      },
+      {
+        "actor": 10,
+        "attack_pause_from": "0",
+        "attack_pause_until": "0",
+        "attack_paused": "0",
+        "attack_time": "99620",
+        "awareness": 1,
+        "damage_time": "99898",
+        "guardian": true,
+        "has_attack": false,
+        "has_damage": true,
+        "has_death": true,
+        "has_travel": true,
+        "has_walk": true,
+        "heading": 0,
+        "health_fraction": 0.0,
+        "hp": 0,
+        "last_seen": [
+          22,
+          27
+        ],
+        "last_seen_ms": "74580",
+        "life": 1,
+        "mana": 4,
+        "max_hp": 9,
+        "move_due_ms": "61700",
+        "position": [
+          22,
+          30
+        ],
+        "ranged_attack": true,
+        "resumable": false,
+        "search_start": "0",
+        "search_turns": 0,
+        "statuses": [],
+        "subcell": [
+          0,
+          1
+        ],
+        "target_cursor": 2,
+        "targetable": false,
+        "type": "goblin_shaman",
+        "walk_duration": "600",
+        "walk_from": [
+          22.25,
+          31.75
+        ],
+        "walk_time": "72130",
+        "waypoint": 0
+      }
+    ],
+    "facing": null,
+    "fixture_knowledge": [
+      [
+        true,
+        true
+      ],
+      [
+        true,
+        true
+      ],
+      [
+        true,
+        false
+      ],
+      [
+        false,
+        false
+      ],
+      [
+        true,
+        true
+      ],
+      [
+        false,
+        false
+      ],
+      [
+        false,
+        false
+      ],
+      [
+        true,
+        true
+      ],
+      [
+        true,
+        true
+      ],
+      [
+        false,
+        false
+      ],
+      [
+        true,
+        true
+      ],
+      [
+        true,
+        true
+      ],
+      [
+        false,
+        false
+      ]
+    ],
+    "fixture_revision": "8",
+    "fixtures": [
+      {
+        "completed": true,
+        "fixture": 0,
+        "key": 3,
+        "kind": 0,
+        "name": "Silver seal door",
+        "open": true,
+        "position": [
+          22,
+          26
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": true,
+        "fixture": 1,
+        "key": 3,
+        "kind": 1,
+        "name": "Silver seal key",
+        "open": false,
+        "position": [
+          30,
+          4
+        ],
+        "unlocked": false
+      },
+      {
+        "completed": false,
+        "fixture": 2,
+        "key": 0,
+        "kind": 2,
+        "name": "Stairs up",
+        "open": false,
+        "position": [
+          2,
+          5
+        ],
+        "unlocked": false
+      },
+      {
+        "completed": false,
+        "fixture": 3,
+        "key": 0,
+        "kind": 4,
+        "name": "Floor objective",
+        "open": false,
+        "position": [
+          32,
+          30
+        ],
+        "unlocked": false
+      },
+      {
+        "completed": true,
+        "fixture": 4,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": true,
+        "position": [
+          8,
+          4
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": true,
+        "fixture": 5,
+        "key": 0,
+        "kind": 5,
+        "name": "Guardian gate",
+        "open": true,
+        "position": [
+          25,
+          31
+        ],
+        "unlocked": false
+      },
+      {
+        "completed": false,
+        "fixture": 6,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": false,
+        "position": [
+          28,
+          31
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": true,
+        "fixture": 7,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": true,
+        "position": [
+          31,
+          8
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": true,
+        "fixture": 8,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": true,
+        "position": [
+          31,
+          17
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": false,
+        "fixture": 9,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": false,
+        "position": [
+          13,
+          9
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": true,
+        "fixture": 10,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": true,
+        "position": [
+          17,
+          4
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": true,
+        "fixture": 11,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": true,
+        "position": [
+          26,
+          4
+        ],
+        "unlocked": true
+      },
+      {
+        "completed": false,
+        "fixture": 12,
+        "key": 0,
+        "kind": 0,
+        "name": "Dungeon door",
+        "open": false,
+        "position": [
+          9,
+          22
+        ],
+        "unlocked": true
+      }
+    ],
+    "formation": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "gameplay_ms": "28877710",
+    "generation": {
+      "attempts": 1,
+      "connections": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          4,
+          11
+        ]
+      ],
+      "depth": 3,
+      "encounters": [
+        {
+          "count": 2,
+          "first": 0,
+          "id": 0,
+          "recipe": "goblin_pair",
+          "role": "direct",
+          "room": 6
+        },
+        {
+          "count": 2,
+          "first": 2,
+          "id": 1,
+          "recipe": "undead_pair",
+          "role": "direct",
+          "room": 7
+        },
+        {
+          "count": 2,
+          "first": 4,
+          "id": 2,
+          "recipe": "goblin_pair",
+          "role": "direct",
+          "room": 1
+        },
+        {
+          "count": 2,
+          "first": 6,
+          "id": 3,
+          "recipe": "undead_pair",
+          "role": "optional",
+          "room": 11
+        },
+        {
+          "count": 3,
+          "first": 8,
+          "id": 4,
+          "recipe": "bugbear_support",
+          "role": "guardian",
+          "room": 9
+        }
+      ],
+      "failure": {
+        "code": "none",
+        "connection": -1,
+        "room": -1
+      },
+      "fallback": false,
+      "fallback_id": 0,
+      "family": 1,
+      "fingerprint": "1343960859790078932",
+      "fixtures": [
+        {
+          "heading": 2,
+          "id": 0,
+          "key": 3,
+          "kind": 0,
+          "name": "Silver seal door",
+          "position": [
+            22,
+            26
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 1,
+          "key": 3,
+          "kind": 1,
+          "name": "Silver seal key",
+          "position": [
+            30,
+            4
+          ]
+        },
+        {
+          "heading": 3,
+          "id": 2,
+          "key": 0,
+          "kind": 2,
+          "name": "Stairs up",
+          "position": [
+            2,
+            5
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 3,
+          "key": 0,
+          "kind": 4,
+          "name": "Floor objective",
+          "position": [
+            32,
+            30
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 4,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            8,
+            4
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 5,
+          "key": 0,
+          "kind": 5,
+          "name": "Guardian gate",
+          "position": [
+            25,
+            31
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 6,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            28,
+            31
+          ]
+        },
+        {
+          "heading": 2,
+          "id": 7,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            31,
+            8
+          ]
+        },
+        {
+          "heading": 2,
+          "id": 8,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            31,
+            17
+          ]
+        },
+        {
+          "heading": 0,
+          "id": 9,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            13,
+            9
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 10,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            17,
+            4
+          ]
+        },
+        {
+          "heading": 1,
+          "id": 11,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            26,
+            4
+          ]
+        },
+        {
+          "heading": 3,
+          "id": 12,
+          "key": 0,
+          "kind": 0,
+          "name": "Dungeon door",
+          "position": [
+            9,
+            22
+          ]
+        }
+      ],
+      "generator_version": 5,
+      "height": 36,
+      "landings": [
+        [
+          3,
+          5
+        ],
+        [
+          32,
+          30
+        ]
+      ],
+      "loop_connection": 0,
+      "map": "####################################\n####################################\n######.####.....####.....####.....##\n######.####.....####.....####.....##\n##...#.......+........+.......+#..##\n##.E.#.####.....####.....####.....##\n##.....####.....####.....####.....##\n#############.#################.####\n#############.#################.####\n#############.#################.####\n#############.#################.####\n###########...###############.....##\n###########...###############.....##\n###########..+..#############..+..##\n###########.....#############.....##\n###########.....#############.....##\n#############.#################.####\n#############.#################.####\n#############.#################.####\n#############.#################.####\n##.....####.....####.....####.....##\n##.....####.....####.....####.....##\n##..B........+........#........+..##\n##.....####.....####..+..####.....##\n##.....####.....####.....####.....##\n######################.#############\n######################.#############\n######################.#############\n######################.#############\n####################.....####.....##\n####################.....####.#.O.##\n####################..A.......#...##\n####################.....####.######\n####################.....####.######\n####################################\n####################################\n",
+      "npc_excluded": [
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          29,
+          29
+        ],
+        [
+          30,
+          29
+        ],
+        [
+          31,
+          29
+        ],
+        [
+          32,
+          29
+        ],
+        [
+          33,
+          29
+        ],
+        [
+          29,
+          30
+        ],
+        [
+          31,
+          30
+        ],
+        [
+          32,
+          30
+        ],
+        [
+          33,
+          30
+        ],
+        [
+          29,
+          31
+        ],
+        [
+          31,
+          31
+        ],
+        [
+          32,
+          31
+        ],
+        [
+          33,
+          31
+        ],
+        [
+          29,
+          32
+        ],
+        [
+          29,
+          33
+        ]
+      ],
+      "objective": {
+        "approach": [
+          22,
+          29
+        ],
+        "approach_door": 0,
+        "gate": 5,
+        "reward": [
+          27,
+          31
+        ]
+      },
+      "population": [
+        {
+          "guardian": false,
+          "heading": 3,
+          "id": 0,
+          "position": [
+            13,
+            4
+          ],
+          "recipe": 0,
+          "species": "goblin",
+          "subcell": [
+            0,
+            1
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 3,
+          "id": 1,
+          "position": [
+            13,
+            4
+          ],
+          "recipe": 0,
+          "species": "goblin",
+          "subcell": [
+            0,
+            0
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 3,
+          "id": 2,
+          "position": [
+            22,
+            4
+          ],
+          "recipe": 2,
+          "species": "skeleton",
+          "subcell": [
+            0,
+            1
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 3,
+          "id": 3,
+          "position": [
+            22,
+            4
+          ],
+          "recipe": 3,
+          "species": "zombie",
+          "subcell": [
+            0,
+            0
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 0,
+          "id": 4,
+          "position": [
+            31,
+            13
+          ],
+          "recipe": 0,
+          "species": "goblin",
+          "subcell": [
+            0,
+            0
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 0,
+          "id": 5,
+          "position": [
+            31,
+            13
+          ],
+          "recipe": 0,
+          "species": "goblin",
+          "subcell": [
+            1,
+            0
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 1,
+          "id": 6,
+          "position": [
+            4,
+            22
+          ],
+          "recipe": 2,
+          "species": "skeleton",
+          "subcell": [
+            1,
+            0
+          ]
+        },
+        {
+          "guardian": false,
+          "heading": 1,
+          "id": 7,
+          "position": [
+            4,
+            22
+          ],
+          "recipe": 3,
+          "species": "zombie",
+          "subcell": [
+            1,
+            1
+          ]
+        },
+        {
+          "guardian": true,
+          "heading": 0,
+          "id": 8,
+          "position": [
+            22,
+            31
+          ],
+          "recipe": 6,
+          "species": "bugbear",
+          "subcell": [
+            0,
+            0
+          ]
+        },
+        {
+          "guardian": true,
+          "heading": 0,
+          "id": 9,
+          "position": [
+            22,
+            31
+          ],
+          "recipe": 0,
+          "species": "goblin",
+          "subcell": [
+            1,
+            0
+          ]
+        },
+        {
+          "guardian": true,
+          "heading": 0,
+          "id": 10,
+          "position": [
+            22,
+            31
+          ],
+          "recipe": 5,
+          "species": "goblin_shaman",
+          "subcell": [
+            0,
+            1
+          ]
+        }
+      ],
+      "rejections": [],
+      "rooms": [
+        {
+          "anchor": [
+            30,
+            4
+          ],
+          "facing": 1,
+          "id": 0,
+          "ports": 12,
+          "role": "junction",
+          "rotation": 0,
+          "site": [
+            3,
+            0
+          ],
+          "template": 1
+        },
+        {
+          "anchor": [
+            31,
+            13
+          ],
+          "facing": 1,
+          "id": 1,
+          "ports": 5,
+          "role": "junction",
+          "rotation": 1,
+          "site": [
+            3,
+            1
+          ],
+          "template": 0
+        },
+        {
+          "anchor": [
+            31,
+            22
+          ],
+          "facing": 1,
+          "id": 2,
+          "ports": 9,
+          "role": "junction",
+          "rotation": 3,
+          "site": [
+            3,
+            2
+          ],
+          "template": 0
+        },
+        {
+          "anchor": [
+            22,
+            23
+          ],
+          "facing": 1,
+          "id": 3,
+          "ports": 14,
+          "role": "junction",
+          "rotation": 3,
+          "site": [
+            2,
+            2
+          ],
+          "template": 1
+        },
+        {
+          "anchor": [
+            13,
+            22
+          ],
+          "facing": 1,
+          "id": 4,
+          "ports": 11,
+          "role": "junction",
+          "rotation": 2,
+          "site": [
+            1,
+            2
+          ],
+          "template": 0
+        },
+        {
+          "anchor": [
+            13,
+            13
+          ],
+          "facing": 1,
+          "id": 5,
+          "ports": 5,
+          "role": "junction",
+          "rotation": 0,
+          "site": [
+            1,
+            1
+          ],
+          "template": 2
+        },
+        {
+          "anchor": [
+            13,
+            4
+          ],
+          "facing": 1,
+          "id": 6,
+          "ports": 14,
+          "role": "junction",
+          "rotation": 3,
+          "site": [
+            1,
+            0
+          ],
+          "template": 0
+        },
+        {
+          "anchor": [
+            22,
+            4
+          ],
+          "facing": 1,
+          "id": 7,
+          "ports": 10,
+          "role": "junction",
+          "rotation": 2,
+          "site": [
+            2,
+            0
+          ],
+          "template": 0
+        },
+        {
+          "anchor": [
+            3,
+            5
+          ],
+          "facing": 1,
+          "id": 8,
+          "ports": 2,
+          "role": "entrance",
+          "rotation": 3,
+          "site": [
+            0,
+            0
+          ],
+          "template": 4
+        },
+        {
+          "anchor": [
+            22,
+            31
+          ],
+          "facing": 1,
+          "id": 9,
+          "ports": 3,
+          "role": "approach",
+          "rotation": 3,
+          "site": [
+            2,
+            3
+          ],
+          "template": 0
+        },
+        {
+          "anchor": [
+            32,
+            30
+          ],
+          "facing": 1,
+          "id": 10,
+          "ports": 8,
+          "role": "objective",
+          "rotation": 1,
+          "site": [
+            3,
+            3
+          ],
+          "template": 4
+        },
+        {
+          "anchor": [
+            4,
+            22
+          ],
+          "facing": 1,
+          "id": 11,
+          "ports": 2,
+          "role": "optional",
+          "rotation": 3,
+          "site": [
+            0,
+            2
+          ],
+          "template": 0
+        }
+      ],
+      "rotation": 1,
+      "route": [
+        8,
+        6,
+        7,
+        0,
+        1,
+        2,
+        3,
+        9
+      ],
+      "runtime_seed": 353874030,
+      "seed": 5,
+      "spawn": {
+        "heading": 1,
+        "x": 3,
+        "y": 5
+      },
+      "supplies": {
+        "direct": [
+          22,
+          25
+        ],
+        "optional": [
+          4,
+          22
+        ]
+      },
+      "template_version": 5,
+      "width": 36
+    },
+    "geometry_revision": "7",
+    "ground": [],
+    "heading": 2,
+    "inventory_revision": "48",
+    "known_directions": 4,
+    "loot": [
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 0
+        },
+        "item": "scimitar",
+        "position": [
+          12,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 1
+        },
+        "item": "leather",
+        "position": [
+          12,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 2
+        },
+        "item": "shield",
+        "position": [
+          12,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 3
+        },
+        "item": "gold",
+        "position": [
+          12,
+          4
+        ],
+        "quantity": 5
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 8
+        },
+        "item": "scimitar",
+        "position": [
+          11,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 9
+        },
+        "item": "leather",
+        "position": [
+          11,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 10
+        },
+        "item": "shield",
+        "position": [
+          11,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 11
+        },
+        "item": "gold",
+        "position": [
+          11,
+          4
+        ],
+        "quantity": 3
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 13
+        },
+        "item": "mana_potion",
+        "position": [
+          11,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 16
+        },
+        "item": "shortsword",
+        "position": [
+          21,
+          4
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 32
+        },
+        "item": "scimitar",
+        "position": [
+          31,
+          12
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 33
+        },
+        "item": "leather",
+        "position": [
+          31,
+          12
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 34
+        },
+        "item": "shield",
+        "position": [
+          31,
+          12
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 35
+        },
+        "item": "gold",
+        "position": [
+          31,
+          12
+        ],
+        "quantity": 2
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 36
+        },
+        "item": "healing_potion",
+        "position": [
+          31,
+          12
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 40
+        },
+        "item": "scimitar",
+        "position": [
+          31,
+          10
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 41
+        },
+        "item": "leather",
+        "position": [
+          31,
+          10
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 42
+        },
+        "item": "shield",
+        "position": [
+          31,
+          10
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 43
+        },
+        "item": "gold",
+        "position": [
+          31,
+          10
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 64
+        },
+        "item": "shield",
+        "position": [
+          22,
+          28
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 72
+        },
+        "item": "scimitar",
+        "position": [
+          22,
+          28
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 73
+        },
+        "item": "leather",
+        "position": [
+          22,
+          28
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 74
+        },
+        "item": "shield",
+        "position": [
+          22,
+          28
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 75
+        },
+        "item": "gold",
+        "position": [
+          22,
+          28
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 2051
+        },
+        "item": "healing_potion",
+        "position": [
+          4,
+          22
+        ],
+        "quantity": 1
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 2052
+        },
+        "item": "mana_potion",
+        "position": [
+          4,
+          22
+        ],
+        "quantity": 2
+      },
+      {
+        "handle": {
+          "generation": "1",
+          "slot": 2053
+        },
+        "item": "arrow",
+        "position": [
+          4,
+          22
+        ],
+        "quantity": 10
+      }
+    ],
+    "loot_revision": "14",
+    "mode": "diagnostic",
+    "moving": false,
+    "mutations": 1474,
+    "objective": {
+      "capacity_failure": false,
+      "completed": true,
+      "known": true,
+      "members": [
+        8,
+        9,
+        10
+      ],
+      "revision": "2",
+      "reward_issued": true
+    },
+    "party": [
+      {
+        "abilities": [
+          16,
+          14,
+          15,
+          9,
+          13,
+          11
+        ],
+        "action_surge": false,
+        "aid_bonus": 0,
+        "arcane_recovery": false,
+        "armor_class": 19,
+        "base_abilities": [
+          15,
+          13,
+          14,
+          8,
+          12,
+          10
+        ],
+        "cantrips": [],
+        "carried_weight": 8950,
+        "carrying_capacity": 24000,
+        "channel_divinity": false,
+        "character": 0,
+        "class": "fighter",
+        "concentration": [],
+        "cooldown_ms": "4390",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [],
+        "hit_dice": 2,
+        "hp": 20,
+        "id": "alden",
+        "initiative": 2,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 3
+            },
+            "item": "healing_potion",
+            "quantity": 8
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 20
+            },
+            "item": "camp_kit",
+            "quantity": 2
+          },
+          {
+            "cell": 2,
+            "handle": {
+              "generation": "3",
+              "slot": 9
+            },
+            "item": "mana_potion",
+            "quantity": 4
+          },
+          {
+            "cell": 3,
+            "handle": {
+              "generation": "1",
+              "slot": 22
+            },
+            "item": "arrow",
+            "quantity": 70
+          },
+          {
+            "cell": 48,
+            "handle": {
+              "generation": "1",
+              "slot": 1
+            },
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 0
+            },
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "handle": {
+              "generation": "1",
+              "slot": 2
+            },
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "learned": [],
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 20,
+        "max_mana": 0,
+        "name": "Alden",
+        "prepared": [],
+        "proficiency": 2,
+        "race": "human",
+        "racial": [],
+        "saves": [
+          5,
+          2,
+          4,
+          -1,
+          1,
+          0
+        ],
+        "second_wind": true,
+        "spent": true,
+        "statuses": [],
+        "temporary_hp": 0,
+        "temporary_until_ms": "0",
+        "xp": 375,
+        "xp_fraction": 0
+      },
+      {
+        "abilities": [
+          13,
+          10,
+          16,
+          8,
+          16,
+          12
+        ],
+        "action_surge": false,
+        "aid_bonus": 0,
+        "arcane_recovery": false,
+        "armor_class": 16,
+        "base_abilities": [
+          13,
+          10,
+          14,
+          8,
+          15,
+          12
+        ],
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "carried_weight": 5700,
+        "carrying_capacity": 19500,
+        "channel_divinity": true,
+        "character": 1,
+        "class": "cleric",
+        "concentration": [],
+        "cooldown_ms": "4390",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "hit_dice": 2,
+        "hp": 15,
+        "id": "brunna",
+        "initiative": 0,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 7
+            },
+            "item": "holy_symbol",
+            "quantity": 1
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 8
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 48,
+            "handle": {
+              "generation": "1",
+              "slot": 5
+            },
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 4
+            },
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "handle": {
+              "generation": "1",
+              "slot": 6
+            },
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "learned": [],
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 21,
+        "max_mana": 6,
+        "name": "Brunna",
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "proficiency": 2,
+        "race": "hill_dwarf",
+        "racial": [],
+        "saves": [
+          1,
+          0,
+          3,
+          -1,
+          5,
+          3
+        ],
+        "second_wind": false,
+        "spent": true,
+        "statuses": [],
+        "temporary_hp": 0,
+        "temporary_until_ms": "0",
+        "xp": 375,
+        "xp_fraction": 0
+      },
+      {
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "action_surge": false,
+        "aid_bonus": 0,
+        "arcane_recovery": false,
+        "armor_class": 14,
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "carried_weight": 1535,
+        "carrying_capacity": 12000,
+        "channel_divinity": false,
+        "character": 2,
+        "class": "rogue",
+        "concentration": [],
+        "cooldown_ms": "4390",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": true,
+        "domain": [],
+        "hit_dice": 2,
+        "hp": 17,
+        "id": "merrin",
+        "initiative": 3,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 13
+            },
+            "item": "arrow",
+            "quantity": 7
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 14
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 48,
+            "handle": {
+              "generation": "1",
+              "slot": 11
+            },
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 10
+            },
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "handle": {
+              "generation": "1",
+              "slot": 12
+            },
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ],
+        "learned": [],
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 17,
+        "max_mana": 0,
+        "name": "Merrin",
+        "prepared": [],
+        "proficiency": 2,
+        "race": "lightfoot_halfling",
+        "racial": [],
+        "saves": [
+          -1,
+          5,
+          2,
+          3,
+          1,
+          0
+        ],
+        "second_wind": false,
+        "spent": true,
+        "statuses": [],
+        "temporary_hp": 0,
+        "temporary_until_ms": "0",
+        "xp": 375,
+        "xp_fraction": 0
+      },
+      {
+        "abilities": [
+          8,
+          16,
+          13,
+          16,
+          12,
+          10
+        ],
+        "action_surge": false,
+        "aid_bonus": 0,
+        "arcane_recovery": true,
+        "armor_class": 16,
+        "base_abilities": [
+          8,
+          14,
+          13,
+          15,
+          12,
+          10
+        ],
+        "cantrips": [
+          "fire_bolt",
+          "acid_splash",
+          "ray_of_frost"
+        ],
+        "carried_weight": 600,
+        "carrying_capacity": 12000,
+        "channel_divinity": false,
+        "character": 3,
+        "class": "wizard",
+        "concentration": [],
+        "cooldown_ms": "4640",
+        "death_failures": 0,
+        "death_successes": 0,
+        "defending": false,
+        "domain": [],
+        "hit_dice": 2,
+        "hp": 12,
+        "id": "lethiel",
+        "initiative": 3,
+        "inventory": [
+          {
+            "cell": 0,
+            "handle": {
+              "generation": "1",
+              "slot": 16
+            },
+            "item": "spellbook",
+            "quantity": 1
+          },
+          {
+            "cell": 1,
+            "handle": {
+              "generation": "1",
+              "slot": 17
+            },
+            "item": "arcane_focus",
+            "quantity": 1
+          },
+          {
+            "cell": 2,
+            "handle": {
+              "generation": "1",
+              "slot": 18
+            },
+            "item": "healing_potion",
+            "quantity": 2
+          },
+          {
+            "cell": 49,
+            "handle": {
+              "generation": "1",
+              "slot": 15
+            },
+            "item": "dagger",
+            "quantity": 1
+          }
+        ],
+        "learned": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave",
+          "sleep",
+          "false_life",
+          "grease",
+          "color_spray"
+        ],
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 12,
+        "max_mana": 6,
+        "name": "Lethiel",
+        "prepared": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave"
+        ],
+        "proficiency": 2,
+        "race": "high_elf",
+        "racial": [
+          "shocking_grasp"
+        ],
+        "saves": [
+          -1,
+          3,
+          1,
+          5,
+          3,
+          0
+        ],
+        "second_wind": false,
+        "spent": true,
+        "statuses": [
+          {
+            "clock": 0,
+            "effect": 3,
+            "harmful": false,
+            "name": "Mage Armor",
+            "remaining_ms": "28785140",
+            "stacks": 0
+          }
+        ],
+        "temporary_hp": 0,
+        "temporary_until_ms": "0",
+        "xp": 375,
+        "xp_fraction": 0
+      }
+    ],
+    "pending_count": 0,
+    "phase": "approach",
+    "position": [
+      22,
+      27
+    ],
+    "preparation_revision": "4",
+    "progression_revision": "4",
+    "quest_keys": 12,
+    "resolving_action": false,
+    "rest_token": "6",
+    "revision": "1475",
+    "round": "3",
+    "scenario_kind": "campaign",
+    "session": "1",
+    "targets": [
+      6,
+      7
+    ],
+    "terminal": true,
+    "ticks": 33569,
+    "time_ms": "101220",
+    "transition": {
+      "action": 0,
+      "duration": 0.1599999964237213,
+      "elapsed": 0.1599999964237213,
+      "from": [
+        22,
+        26
+      ],
+      "from_heading": 2,
+      "revision": "84"
+    },
+    "turn": "66",
+    "world_definition": "4512051372683231963"
+  }
+}

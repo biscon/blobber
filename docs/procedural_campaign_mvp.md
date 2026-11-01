@@ -6,7 +6,7 @@ Status: **MVP specification and amendments incorporated in the roadmap accepted
 on 2026-10-30; delivery is tracked separately. PC01–PC06 and milestones P-A/P-B
 are Accepted and closed;
 PC07.1 arena preparation/calibration is Accepted and closed (2026-11-01); PC07.2 campaign population
-and PC08–PC09 remain unimplemented.**
+is implemented and Ready for review; PC08–PC09 remain unimplemented.**
 The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
 
 ### Opening-slice clarification (2026-10-31)
@@ -26,7 +26,12 @@ The user selected level 2 before the final guardian for this opening. PC07 is sp
 [PC07.1 preparation/calibration](pc071_verification.md) measures candidate encounters
 first and is now accepted; PC07.2 chooses population and checks generated routes
 after its own detailed plan review.
-The bounded 36-trial study completed; no campaign population is implied. This
+PC07.2 is now implemented and Ready for review: the intended direct route supplies
+1,200 monster XP before the final guardian, with bypassable ordinary fights and
+finite optional reserves. Eight approved diagnostic routes won with 32 observed
+downings and no permanent deaths; this is limited route evidence, not campaign
+balance acceptance. See [verification](pc072_verification.md).
+The bounded 36-trial arena study remains historical calibration evidence. This
 supersedes the earlier campaign pause and unresolved level-two/three target above.
 
 ### Scope clarification and amendments (2026-10-30)
@@ -380,13 +385,12 @@ See [automated-player design](automated_players_design.md),
 | Change comparisons | Reuse declared seed sets and party/policy inputs to compare generator or content revisions; report distributions and uncertainty, not just an overall win rate |
 
 These are intended uses, not claims that campaign automation already exists.
-Current starts use level-one arena scenarios and fixed arena geometry. Current
-policies know that open arena and do not navigate unknown dungeon walls. The
-fixed-loadout experiment profile does not automate looting, resting, equipment
-changes or advancement, although the protocol already exposes those gameplay
-operations. Policy coverage also excludes some spells and higher-level decisions.
-Doors, keys, campaign launch/travel and campaign observations will require
-appropriate support alongside the new gameplay. Completing an arena roster must
+PC07.1 now supports prepared level 1–3 arena scenarios and focused aggressive-v2
+level 1–2 tactics. Arena policies still assume their known open geometry.
+PC07.2 adds diagnostic scripted generated routes with checked looting, recovery,
+advancement and travel; this is not general player exploration. The fixed-loadout
+arena profile still excludes inventory/recovery/advancement decisions, and broader
+spell/build/exploration coverage remains PC08 work. Completing an arena roster must
 not be mistaken for completing a campaign floor or winning a run.
 
 The later plan should identify the smallest extensions needed to exercise this

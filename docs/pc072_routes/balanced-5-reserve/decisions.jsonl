@@ -1,0 +1,640 @@
+{"tick": 25, "location": 0, "phase": "exploration", "action": {"kind": "interact", "fixture": 0}, "operation": 4}
+{"tick": 50, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guidance", "allies": [0]}, "operation": 8}
+{"tick": 75, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "mage_armor", "allies": [3]}, "operation": 12}
+{"tick": 675, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "feature", "feature": "arcane_recovery"}, "operation": 62}
+{"tick": 1275, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 113}
+{"tick": 1300, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 118}
+{"tick": 1325, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 122}
+{"tick": 1350, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 127}
+{"tick": 1375, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 131}
+{"tick": 1400, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 135}
+{"tick": 1425, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 139}
+{"tick": 1450, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 144}
+{"tick": 1475, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 149}
+{"tick": 1500, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 153}
+{"tick": 1525, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 157}
+{"tick": 1550, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 161}
+{"tick": 1575, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 166}
+{"tick": 1600, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 171}
+{"tick": 1625, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 175}
+{"tick": 1650, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 3}, "operation": 198}
+{"tick": 1680, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [0]}, "operation": 202}
+{"tick": 1705, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 0}, "operation": 206}
+{"tick": 1730, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [0], "darts": [3]}, "operation": 210}
+{"tick": 1755, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 214}
+{"tick": 1805, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 222}
+{"event": "combat_started", "location": 1, "expected": [0, 1]}
+{"tick": 2265, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 1}, "operation": 226}
+{"tick": 2626, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 1}, "operation": 230}
+{"tick": 2766, "location": 1, "phase": "victory", "action": {"kind": "continue"}, "operation": 233}
+{"tick": 2816, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 239}
+{"tick": 2841, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 244}
+{"tick": 2866, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 249}
+{"tick": 2891, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 254}
+{"tick": 3366, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 294}
+{"tick": 3391, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 298}
+{"tick": 3416, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 303}
+{"tick": 3441, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 308}
+{"tick": 3466, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 331}
+{"tick": 3491, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 7}, "operation": 354}
+{"tick": 3521, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [2]}, "operation": 358}
+{"tick": 3546, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "item", "item": {"generation": "1", "slot": 19}, "ally": 1}, "operation": 362}
+{"tick": 3571, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 3}, "operation": 366}
+{"tick": 3621, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 373}
+{"event": "combat_started", "location": 1, "expected": [2, 3]}
+{"tick": 4036, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 3}, "operation": 379}
+{"tick": 4442, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [3], "darts": [3]}, "operation": 383}
+{"tick": 4580, "location": 1, "phase": "victory", "action": {"kind": "continue"}, "operation": 386}
+{"tick": 5205, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 438}
+{"tick": 5230, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 443}
+{"tick": 5255, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 448}
+{"tick": 5280, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 453}
+{"tick": 5305, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 487}
+{"tick": 5330, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 492}
+{"tick": 5355, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 497}
+{"tick": 5380, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 502}
+{"tick": 5405, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 6}, "operation": 507}
+{"tick": 5435, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 511}
+{"tick": 5460, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 516}
+{"tick": 5485, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 521}
+{"tick": 5510, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 526}
+{"tick": 5535, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 530}
+{"tick": 5560, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 534}
+{"tick": 5585, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 538}
+{"tick": 5610, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 543}
+{"tick": 5635, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 547}
+{"tick": 5660, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 552}
+{"tick": 5685, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 586}
+{"tick": 5710, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 590}
+{"tick": 5735, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 594}
+{"tick": 5760, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 598}
+{"tick": 5785, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 603}
+{"tick": 5810, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 608}
+{"tick": 5835, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 613}
+{"tick": 5860, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 618}
+{"tick": 5885, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 623}
+{"tick": 5910, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 628}
+{"tick": 5935, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 633}
+{"tick": 5960, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 668}
+{"tick": 5985, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 672}
+{"tick": 6010, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 676}
+{"tick": 6035, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 681}
+{"tick": 6060, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 686}
+{"tick": 6085, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 691}
+{"tick": 6110, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 696}
+{"tick": 6135, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 701}
+{"tick": 6160, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 706}
+{"tick": 6185, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 711}
+{"tick": 6210, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 716}
+{"tick": 6235, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 720}
+{"tick": 6260, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 725}
+{"tick": 6285, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 729}
+{"tick": 6310, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 733}
+{"tick": 6335, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 737}
+{"tick": 6360, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 742}
+{"tick": 6385, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 747}
+{"tick": 6410, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 752}
+{"tick": 6435, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 756}
+{"tick": 6460, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 760}
+{"tick": 6485, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 764}
+{"tick": 6510, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "item", "item": {"generation": "1", "slot": 9}, "ally": 3}, "operation": 769}
+{"tick": 6535, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 791}
+{"tick": 6560, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 795}
+{"tick": 7110, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 9}, "operation": 824}
+{"tick": 7140, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "bane", "enemies": [4, 5, 6]}, "operation": 828}
+{"tick": 7165, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "item", "item": {"generation": "1", "slot": 19}, "ally": 1}, "operation": 832}
+{"tick": 7190, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 4}, "operation": 836}
+{"tick": 7215, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 840}
+{"tick": 7265, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 848}
+{"event": "combat_started", "location": 1, "expected": [4, 5, 6]}
+{"tick": 7390, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 5}, "operation": 852}
+{"tick": 8025, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "cure_wounds", "allies": [1]}, "operation": 856}
+{"tick": 8125, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 5}, "operation": 860}
+{"tick": 8265, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 6}, "operation": 864}
+{"tick": 8575, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [6], "darts": [3]}, "operation": 868}
+{"tick": 8713, "location": 1, "phase": "victory", "action": {"kind": "continue"}, "operation": 871}
+{"tick": 9338, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 923}
+{"tick": 9363, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 928}
+{"tick": 9388, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 933}
+{"tick": 9413, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2051}, "character": 0}, "operation": 950}
+{"tick": 9438, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2052}, "character": 0}, "operation": 965}
+{"tick": 9463, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2053}, "character": 0}, "operation": 980}
+{"tick": 9488, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1000}
+{"tick": 9513, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1004}
+{"tick": 9538, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1008}
+{"tick": 9563, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1013}
+{"tick": 9588, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1018}
+{"tick": 9613, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1023}
+{"tick": 9638, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1028}
+{"tick": 9663, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1033}
+{"tick": 9688, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1038}
+{"tick": 9713, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1042}
+{"tick": 9738, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1046}
+{"tick": 9763, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1050}
+{"tick": 9788, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1055}
+{"tick": 9813, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1059}
+{"tick": 9838, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1064}
+{"tick": 9863, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1069}
+{"tick": 9888, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1074}
+{"tick": 9913, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1079}
+{"tick": 9938, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1083}
+{"tick": 9963, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1088}
+{"tick": 9988, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1092}
+{"tick": 10013, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1096}
+{"tick": 10038, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1100}
+{"tick": 10063, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1105}
+{"tick": 10088, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1110}
+{"tick": 10113, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1115}
+{"tick": 10138, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1120}
+{"tick": 10163, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1125}
+{"tick": 10188, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1130}
+{"tick": 10213, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1135}
+{"tick": 10238, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1139}
+{"tick": 10263, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1144}
+{"tick": 10288, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1149}
+{"tick": 10313, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 19}, "ally": 1}, "operation": 1154}
+{"tick": 10338, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "item", "item": {"generation": "1", "slot": 9}, "ally": 3}, "operation": 1158}
+{"tick": 10938, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2048}, "character": 0}, "operation": 1192}
+{"tick": 10963, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2049}, "character": 0}, "operation": 1195}
+{"tick": 10988, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2050}, "character": 0}, "operation": 1198}
+{"tick": 11013, "location": 1, "phase": "exploration", "action": {"kind": "rest", "type": "long"}, "operation": 1206}
+{"tick": 11038, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 0}, "operation": 1213}
+{"tick": 11068, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "mage_armor", "allies": [3]}, "operation": 1217}
+{"tick": 11093, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "bane", "enemies": [7, 8, 10]}, "operation": 1221}
+{"tick": 11118, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 7}, "operation": 1225}
+{"tick": 11143, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1230}
+{"tick": 11168, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1235}
+{"event": "combat_started", "location": 1, "expected": [7, 8, 9, 10]}
+{"tick": 11473, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 7}, "operation": 1241}
+{"tick": 12359, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 7}, "operation": 1245}
+{"tick": 12499, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [8], "darts": [3]}, "operation": 1249}
+{"tick": 12637, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 19}, "ally": 3}, "operation": 1253}
+{"tick": 12662, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [10]}, "operation": 1257}
+{"tick": 12712, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1264}
+{"tick": 12737, "location": 1, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1269}
+{"event": "combat_started", "location": 1, "expected": [7, 8, 9, 10]}
+{"tick": 13298, "location": 1, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 10}, "operation": 1273}
+{"tick": 13438, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 19}, "ally": 1}, "operation": 1277}
+{"tick": 13463, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [9]}, "operation": 1281}
+{"tick": 13488, "location": 1, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [9], "darts": [3]}, "operation": 1285}
+{"tick": 13632, "location": 1, "phase": "victory", "action": {"kind": "continue"}, "operation": 1297}
+{"tick": 14082, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guidance", "allies": [0]}, "operation": 1335}
+{"tick": 14107, "location": 1, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "feature", "feature": "arcane_recovery"}, "operation": 1339}
+{"tick": 14707, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1389}
+{"tick": 14732, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1393}
+{"tick": 14757, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1398}
+{"tick": 14782, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1403}
+{"tick": 14807, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1407}
+{"tick": 14832, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1411}
+{"tick": 14857, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1415}
+{"tick": 14882, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1420}
+{"tick": 14907, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1425}
+{"tick": 14932, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1429}
+{"tick": 14957, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1434}
+{"tick": 14982, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1439}
+{"tick": 15007, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2054}, "character": 0}, "operation": 1452}
+{"tick": 15032, "location": 1, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2055}, "character": 0}, "operation": 1463}
+{"tick": 15057, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 5}, "operation": 1479}
+{"tick": 15087, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1483}
+{"tick": 15112, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1488}
+{"tick": 15137, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1493}
+{"tick": 15162, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1497}
+{"tick": 15187, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1501}
+{"tick": 15212, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1505}
+{"tick": 15237, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1510}
+{"tick": 15262, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1515}
+{"tick": 15287, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1519}
+{"tick": 15312, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1524}
+{"tick": 15337, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1529}
+{"tick": 15362, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1534}
+{"tick": 15387, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1538}
+{"tick": 15412, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1543}
+{"tick": 15437, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1547}
+{"tick": 15462, "location": 1, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1551}
+{"tick": 15487, "location": 1, "phase": "exploration", "action": {"kind": "interact", "fixture": 2}, "operation": 1555}
+{"tick": 15512, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1560}
+{"tick": 15537, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1565}
+{"tick": 15562, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1569}
+{"tick": 15587, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1574}
+{"tick": 15612, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1578}
+{"tick": 15637, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1582}
+{"tick": 15662, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1586}
+{"tick": 15687, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1591}
+{"tick": 15712, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1596}
+{"tick": 15737, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1600}
+{"tick": 15762, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1604}
+{"tick": 15787, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1608}
+{"tick": 15812, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1613}
+{"tick": 15837, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 1618}
+{"tick": 15862, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1622}
+{"tick": 15887, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 19}, "ally": 1}, "operation": 1627}
+{"tick": 16487, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 4}, "operation": 1655}
+{"tick": 16517, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [0]}, "operation": 1659}
+{"tick": 16542, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 19}, "ally": 1}, "operation": 1663}
+{"tick": 16567, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 0}, "operation": 1667}
+{"tick": 16592, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [0], "darts": [3]}, "operation": 1671}
+{"tick": 16617, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1675}
+{"tick": 16667, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1683}
+{"event": "combat_started", "location": 2, "expected": [0, 1]}
+{"tick": 17212, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "item", "item": {"generation": "1", "slot": 14}, "ally": 1}, "operation": 1687}
+{"tick": 17312, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "fire_bolt", "enemies": [1]}, "operation": 1691}
+{"tick": 17430, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 19}, "ally": 3}, "operation": 1695}
+{"tick": 17770, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "cure_wounds", "allies": [1]}, "operation": 1699}
+{"tick": 17915, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 1}, "operation": 1703}
+{"tick": 18035, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [1], "darts": [3]}, "operation": 1707}
+{"tick": 18173, "location": 2, "phase": "victory", "action": {"kind": "continue"}, "operation": 1710}
+{"tick": 18798, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1762}
+{"tick": 18823, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1767}
+{"tick": 18848, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1772}
+{"tick": 18873, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1777}
+{"tick": 18898, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1812}
+{"tick": 18923, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1817}
+{"tick": 18948, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1822}
+{"tick": 18973, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 8}, "operation": 1851}
+{"tick": 19003, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [2]}, "operation": 1855}
+{"tick": 19028, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 2}, "operation": 1859}
+{"tick": 19053, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "acid_splash", "enemies": [2, 3]}, "operation": 1863}
+{"tick": 19078, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1867}
+{"tick": 19103, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1872}
+{"tick": 19128, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1877}
+{"event": "combat_started", "location": 2, "expected": [2, 3, 4, 5]}
+{"tick": 19734, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 2}, "operation": 1881}
+{"tick": 20099, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 3}, "operation": 1885}
+{"tick": 20459, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 3}, "operation": 1889}
+{"tick": 20599, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [4]}, "operation": 1893}
+{"tick": 20624, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "acid_splash", "enemies": [4, 5]}, "operation": 1897}
+{"tick": 20674, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1904}
+{"tick": 20699, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 1909}
+{"event": "combat_started", "location": 2, "expected": [2, 3, 4, 5]}
+{"tick": 21134, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 4}, "operation": 1913}
+{"tick": 21274, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 5}, "operation": 1917}
+{"tick": 21599, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "fire_bolt", "enemies": [5]}, "operation": 1921}
+{"tick": 21717, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [5]}, "operation": 1925}
+{"tick": 21837, "location": 2, "phase": "victory", "action": {"kind": "continue"}, "operation": 1928}
+{"tick": 22462, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 1980}
+{"tick": 22487, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 35}, "character": 0}, "operation": 1989}
+{"tick": 22512, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2025}
+{"tick": 22537, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2030}
+{"tick": 22562, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2035}
+{"tick": 22587, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 9}, "operation": 2040}
+{"tick": 22617, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2044}
+{"tick": 22642, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2049}
+{"tick": 22667, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2054}
+{"tick": 22692, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2059}
+{"tick": 22717, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2064}
+{"tick": 22742, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2069}
+{"tick": 22767, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 1}, "operation": 2074}
+{"tick": 22792, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2110}
+{"tick": 22817, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2114}
+{"tick": 22842, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2119}
+{"tick": 22867, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2124}
+{"tick": 22892, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2129}
+{"tick": 22917, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2134}
+{"tick": 22942, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2139}
+{"tick": 22967, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2144}
+{"tick": 22992, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2149}
+{"tick": 23017, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2154}
+{"tick": 23042, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2192}
+{"tick": 23067, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2197}
+{"tick": 23092, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2202}
+{"tick": 23117, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2207}
+{"tick": 23142, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2212}
+{"tick": 23167, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2217}
+{"tick": 23192, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2222}
+{"tick": 23217, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2227}
+{"tick": 23242, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2232}
+{"tick": 23267, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2236}
+{"tick": 23292, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2241}
+{"tick": 23317, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2245}
+{"tick": 23342, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2249}
+{"tick": 23367, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2253}
+{"tick": 23392, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2291}
+{"tick": 23417, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2295}
+{"tick": 23442, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2300}
+{"tick": 23467, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2305}
+{"tick": 23492, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2310}
+{"tick": 23517, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2315}
+{"tick": 23542, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2320}
+{"tick": 23567, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2325}
+{"tick": 23592, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2330}
+{"tick": 23617, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2369}
+{"tick": 23642, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2374}
+{"tick": 23667, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2379}
+{"tick": 23692, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2384}
+{"tick": 23717, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2389}
+{"tick": 23742, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2394}
+{"tick": 23767, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2399}
+{"tick": 23792, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2404}
+{"tick": 23817, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2409}
+{"tick": 23842, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2414}
+{"tick": 23867, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2419}
+{"tick": 23892, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2424}
+{"tick": 23917, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 10}, "operation": 2441}
+{"tick": 23947, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [6]}, "operation": 2445}
+{"tick": 23972, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 6}, "operation": 2449}
+{"tick": 23997, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "acid_splash", "enemies": [6, 7]}, "operation": 2453}
+{"tick": 24022, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2457}
+{"tick": 24047, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2462}
+{"tick": 24072, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2467}
+{"event": "combat_started", "location": 2, "expected": [6, 7]}
+{"tick": 24727, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 6}, "operation": 2471}
+{"tick": 24892, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 6}, "operation": 2475}
+{"tick": 25032, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "fire_bolt", "enemies": [7]}, "operation": 2479}
+{"tick": 25390, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [7]}, "operation": 2483}
+{"tick": 25490, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 7}, "operation": 2487}
+{"tick": 25655, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 7}, "operation": 2491}
+{"tick": 25795, "location": 2, "phase": "victory", "action": {"kind": "continue"}, "operation": 2494}
+{"tick": 25845, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2500}
+{"tick": 25870, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2505}
+{"tick": 25895, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2510}
+{"tick": 26395, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2051}, "character": 0}, "operation": 2544}
+{"tick": 26420, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2052}, "character": 0}, "operation": 2571}
+{"tick": 26445, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2053}, "character": 0}, "operation": 2598}
+{"tick": 26470, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2630}
+{"tick": 26495, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2634}
+{"tick": 26520, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2638}
+{"tick": 26545, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2643}
+{"tick": 26570, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2648}
+{"tick": 26595, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2653}
+{"tick": 26620, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2658}
+{"tick": 26645, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2663}
+{"tick": 26670, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2668}
+{"tick": 26695, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2673}
+{"tick": 26720, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2678}
+{"tick": 26745, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2683}
+{"tick": 26770, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2688}
+{"tick": 26795, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2693}
+{"tick": 26820, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2698}
+{"tick": 26845, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2703}
+{"tick": 26870, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2708}
+{"tick": 26895, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2713}
+{"tick": 26920, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2718}
+{"tick": 26945, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2723}
+{"tick": 26970, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 2728}
+{"tick": 26995, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2732}
+{"tick": 27020, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2737}
+{"tick": 27045, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 2742}
+{"tick": 27070, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 9}, "ally": 1}, "operation": 2747}
+{"tick": 27670, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2048}, "character": 0}, "operation": 2802}
+{"tick": 27695, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2049}, "character": 0}, "operation": 2817}
+{"tick": 27720, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2050}, "character": 0}, "operation": 2832}
+{"tick": 27745, "location": 2, "phase": "exploration", "action": {"kind": "rest", "type": "long"}, "operation": 2852}
+{"tick": 27770, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 0}, "operation": 2859}
+{"tick": 27800, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "mage_armor", "allies": [3]}, "operation": 2863}
+{"tick": 27825, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "bane", "enemies": [8, 9, 11]}, "operation": 2867}
+{"tick": 27850, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 8}, "operation": 2871}
+{"tick": 27875, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2876}
+{"tick": 27900, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2881}
+{"event": "combat_started", "location": 2, "expected": [8, 9, 10, 11]}
+{"tick": 28070, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 8}, "operation": 2887}
+{"tick": 28895, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 8}, "operation": 2891}
+{"tick": 29015, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 8}, "operation": 2895}
+{"tick": 29600, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "item", "item": {"generation": "1", "slot": 18}, "ally": 0}, "operation": 2899}
+{"tick": 29700, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [9]}, "operation": 2903}
+{"tick": 30103, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 9}, "operation": 2907}
+{"tick": 30223, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 9}, "ally": 1}, "operation": 2911}
+{"tick": 30768, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "item", "item": {"generation": "1", "slot": 18}, "ally": 1}, "operation": 2915}
+{"tick": 30868, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "bane", "enemies": [9, 11, 10]}, "operation": 2919}
+{"tick": 31253, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "item", "item": {"generation": "1", "slot": 14}, "ally": 0}, "operation": 2923}
+{"tick": 31353, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 9}, "ally": 1}, "operation": 2927}
+{"tick": 31898, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [9], "darts": [3]}, "operation": 2931}
+{"tick": 32016, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [9]}, "operation": 2935}
+{"tick": 32179, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2942}
+{"tick": 32204, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2947}
+{"event": "combat_started", "location": 2, "expected": [8, 9, 10, 11]}
+{"tick": 32535, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 11}, "operation": 2951}
+{"tick": 32675, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 9}, "ally": 1}, "operation": 2955}
+{"tick": 32700, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [10]}, "operation": 2960}
+{"tick": 32725, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "fire_bolt", "enemies": [10]}, "operation": 2965}
+{"tick": 32775, "location": 2, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 2972}
+{"event": "combat_started", "location": 2, "expected": [8, 9, 10, 11]}
+{"tick": 33130, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 10}, "operation": 2976}
+{"tick": 33250, "location": 2, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 9}, "ally": 1}, "operation": 2980}
+{"tick": 33455, "location": 2, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [10]}, "operation": 2985}
+{"tick": 33599, "location": 2, "phase": "victory", "action": {"kind": "continue"}, "operation": 2997}
+{"tick": 33624, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "feature", "feature": "arcane_recovery"}, "operation": 3001}
+{"tick": 34074, "location": 2, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guidance", "allies": [0]}, "operation": 3039}
+{"tick": 34674, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3089}
+{"tick": 34699, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3093}
+{"tick": 34724, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3097}
+{"tick": 34749, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3101}
+{"tick": 34774, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3106}
+{"tick": 34799, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3111}
+{"tick": 34824, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3115}
+{"tick": 34849, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3120}
+{"tick": 34874, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3124}
+{"tick": 34899, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3128}
+{"tick": 34924, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3132}
+{"tick": 34949, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3137}
+{"tick": 34974, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3142}
+{"tick": 34999, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2054}, "character": 0}, "operation": 3167}
+{"tick": 35024, "location": 2, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2055}, "character": 0}, "operation": 3190}
+{"tick": 35049, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 6}, "operation": 3218}
+{"tick": 35079, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3222}
+{"tick": 35104, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3227}
+{"tick": 35129, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3232}
+{"tick": 35154, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3236}
+{"tick": 35179, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3240}
+{"tick": 35204, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3244}
+{"tick": 35229, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3249}
+{"tick": 35254, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3254}
+{"tick": 35279, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3258}
+{"tick": 35304, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3263}
+{"tick": 35329, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3268}
+{"tick": 35354, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3273}
+{"tick": 35379, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3277}
+{"tick": 35404, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3282}
+{"tick": 35429, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3286}
+{"tick": 35454, "location": 2, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3290}
+{"tick": 35479, "location": 2, "phase": "exploration", "action": {"kind": "interact", "fixture": 3}, "operation": 3294}
+{"tick": 35504, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3299}
+{"tick": 35529, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3304}
+{"tick": 35554, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3308}
+{"tick": 35579, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3313}
+{"tick": 35604, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3317}
+{"tick": 35629, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3321}
+{"tick": 35654, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3325}
+{"tick": 35679, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3330}
+{"tick": 35704, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3335}
+{"tick": 35729, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3339}
+{"tick": 35754, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3343}
+{"tick": 35779, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3347}
+{"tick": 35804, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3352}
+{"tick": 35829, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3357}
+{"tick": 35854, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3361}
+{"tick": 35879, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "2", "slot": 9}, "ally": 1}, "operation": 3366}
+{"tick": 36479, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 4}, "operation": 3394}
+{"tick": 36509, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [0]}, "operation": 3398}
+{"tick": 36534, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 0}, "operation": 3402}
+{"tick": 36559, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [1], "darts": [3]}, "operation": 3406}
+{"tick": 36719, "location": 3, "phase": "victory", "action": {"kind": "continue"}, "operation": 3421}
+{"tick": 37169, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3459}
+{"tick": 37194, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3464}
+{"tick": 37219, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3469}
+{"tick": 37244, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3474}
+{"tick": 37269, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3479}
+{"tick": 37294, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3484}
+{"tick": 37319, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3523}
+{"tick": 37344, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3528}
+{"tick": 37369, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3533}
+{"tick": 37394, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 10}, "operation": 3550}
+{"tick": 37424, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [2]}, "operation": 3554}
+{"tick": 37449, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 2}, "operation": 3558}
+{"tick": 37474, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "acid_splash", "enemies": [2, 3]}, "operation": 3562}
+{"tick": 37524, "location": 3, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 3569}
+{"tick": 37549, "location": 3, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 3574}
+{"event": "combat_started", "location": 3, "expected": [2, 3]}
+{"tick": 37609, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 3}, "operation": 3578}
+{"tick": 38149, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 3}, "operation": 3582}
+{"tick": 38509, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "aid", "ally": 1}, "operation": 3586}
+{"tick": 38509, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "melee", "target": 3}, "operation": 3589}
+{"tick": 38674, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "1", "slot": 3}, "ally": 1}, "operation": 3593}
+{"tick": 39014, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "fire_bolt", "enemies": [3]}, "operation": 3597}
+{"tick": 39132, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [3]}, "operation": 3601}
+{"tick": 39252, "location": 3, "phase": "victory", "action": {"kind": "continue"}, "operation": 3604}
+{"tick": 39877, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3656}
+{"tick": 39902, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3661}
+{"tick": 39927, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3666}
+{"tick": 39952, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3671}
+{"tick": 39977, "location": 3, "phase": "exploration", "action": {"kind": "advancement", "character": 0, "prepared": [], "learned": []}, "operation": 3704}
+{"tick": 40002, "location": 3, "phase": "exploration", "action": {"kind": "advancement", "character": 1, "prepared": [], "learned": []}, "operation": 3707}
+{"tick": 40027, "location": 3, "phase": "exploration", "action": {"kind": "advancement", "character": 2, "prepared": [], "learned": []}, "operation": 3710}
+{"tick": 40052, "location": 3, "phase": "exploration", "action": {"kind": "advancement", "character": 3, "prepared": [], "learned": ["false_life", "color_spray"]}, "operation": 3713}
+{"tick": 40077, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3717}
+{"tick": 40102, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3722}
+{"tick": 40127, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3727}
+{"tick": 40152, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 11}, "operation": 3732}
+{"tick": 40182, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3736}
+{"tick": 40207, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3741}
+{"tick": 40232, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3746}
+{"tick": 40257, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3751}
+{"tick": 40282, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3756}
+{"tick": 40307, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 1}, "operation": 3761}
+{"tick": 40332, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3794}
+{"tick": 40357, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3798}
+{"tick": 40382, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3803}
+{"tick": 40407, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3807}
+{"tick": 40432, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3811}
+{"tick": 40457, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3815}
+{"tick": 40482, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 3820}
+{"tick": 40507, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3824}
+{"tick": 40532, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3829}
+{"tick": 40557, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 7}, "operation": 3852}
+{"tick": 40587, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [4]}, "operation": 3856}
+{"tick": 40612, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 4}, "operation": 3860}
+{"tick": 40637, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "magic_missile", "enemies": [5], "darts": [3]}, "operation": 3864}
+{"tick": 40797, "location": 3, "phase": "victory", "action": {"kind": "continue"}, "operation": 3879}
+{"tick": 41247, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3917}
+{"tick": 41272, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3922}
+{"tick": 41297, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3927}
+{"tick": 41322, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3932}
+{"tick": 41347, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3937}
+{"tick": 41372, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3942}
+{"tick": 41397, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3980}
+{"tick": 41422, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3985}
+{"tick": 41447, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3990}
+{"tick": 41472, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 8}, "operation": 3995}
+{"tick": 41502, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 3999}
+{"tick": 41527, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4004}
+{"tick": 41552, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4009}
+{"tick": 41577, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4014}
+{"tick": 41602, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4019}
+{"tick": 41627, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4024}
+{"tick": 41652, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4062}
+{"tick": 41677, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4066}
+{"tick": 41702, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4071}
+{"tick": 41727, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4076}
+{"tick": 41752, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4081}
+{"tick": 41777, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4086}
+{"tick": 41802, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4091}
+{"tick": 41827, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4096}
+{"tick": 41852, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4101}
+{"tick": 41877, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4105}
+{"tick": 41902, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4109}
+{"tick": 41927, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4113}
+{"tick": 41952, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4118}
+{"tick": 41977, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4122}
+{"tick": 42002, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4127}
+{"tick": 42027, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4166}
+{"tick": 42052, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4171}
+{"tick": 42077, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4175}
+{"tick": 42102, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4180}
+{"tick": 42127, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4184}
+{"tick": 42152, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4188}
+{"tick": 42177, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4192}
+{"tick": 42202, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4197}
+{"tick": 42227, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4202}
+{"tick": 42252, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4207}
+{"tick": 42277, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4212}
+{"tick": 42302, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4217}
+{"tick": 42327, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4222}
+{"tick": 42352, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4227}
+{"tick": 42377, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4232}
+{"tick": 42402, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4237}
+{"tick": 42427, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4242}
+{"tick": 42452, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 12}, "operation": 4259}
+{"tick": 42482, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "sacred_flame", "enemies": [6]}, "operation": 4263}
+{"tick": 42507, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 6}, "operation": 4267}
+{"tick": 42532, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "acid_splash", "enemies": [6, 7]}, "operation": 4271}
+{"tick": 42582, "location": 3, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 4278}
+{"tick": 42607, "location": 3, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 4283}
+{"event": "combat_started", "location": 3, "expected": [6, 7]}
+{"tick": 42672, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "feature", "feature": "cunning_action"}, "operation": 4287}
+{"tick": 42772, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 7}, "operation": 4291}
+{"tick": 42892, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "feature", "feature": "action_surge"}, "operation": 4295}
+{"tick": 42992, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 7}, "operation": 4299}
+{"tick": 43132, "location": 3, "phase": "victory", "action": {"kind": "continue"}, "operation": 4302}
+{"tick": 43682, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4348}
+{"tick": 43707, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4353}
+{"tick": 43732, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4358}
+{"tick": 43757, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4363}
+{"tick": 43782, "location": 3, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2051}, "character": 0}, "operation": 4388}
+{"tick": 43807, "location": 3, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2052}, "character": 0}, "operation": 4411}
+{"tick": 43832, "location": 3, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2053}, "character": 0}, "operation": 4434}
+{"tick": 43857, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4458}
+{"tick": 43882, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4462}
+{"tick": 43907, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4466}
+{"tick": 43932, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4471}
+{"tick": 43957, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4476}
+{"tick": 43982, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4481}
+{"tick": 44007, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4486}
+{"tick": 44032, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4491}
+{"tick": 44057, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4496}
+{"tick": 44082, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4501}
+{"tick": 44107, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4506}
+{"tick": 44132, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4511}
+{"tick": 44157, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4516}
+{"tick": 44182, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4521}
+{"tick": 44207, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4526}
+{"tick": 44232, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4531}
+{"tick": 44257, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4536}
+{"tick": 44282, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4541}
+{"tick": 44307, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4546}
+{"tick": 44332, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4551}
+{"tick": 44357, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4555}
+{"tick": 44382, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4560}
+{"tick": 44407, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4564}
+{"tick": 44432, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4568}
+{"tick": 44457, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4572}
+{"tick": 44482, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "turn_right"}, "operation": 4577}
+{"tick": 44507, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4581}
+{"tick": 44532, "location": 3, "phase": "exploration", "action": {"kind": "move", "direction": "forward"}, "operation": 4586}
+{"tick": 44557, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 0, "action": "item", "item": {"generation": "3", "slot": 9}, "ally": 1}, "operation": 4591}
+{"tick": 45157, "location": 3, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2048}, "character": 0}, "operation": 4634}
+{"tick": 45182, "location": 3, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2049}, "character": 0}, "operation": 4645}
+{"tick": 45207, "location": 3, "phase": "exploration", "action": {"kind": "pickup", "loot": {"generation": "1", "slot": 2050}, "character": 0}, "operation": 4656}
+{"tick": 45232, "location": 3, "phase": "exploration", "action": {"kind": "rest", "type": "long"}, "operation": 4668}
+{"tick": 45257, "location": 3, "phase": "exploration", "action": {"kind": "interact", "fixture": 0}, "operation": 4671}
+{"tick": 45287, "location": 3, "phase": "exploration", "action": {"kind": "combat", "character": 3, "action": "spell", "spell": "mage_armor", "allies": [3]}, "operation": 4675}
+{"tick": 45312, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "bane", "enemies": [8, 9, 10]}, "operation": 4679}
+{"tick": 45337, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 8}, "operation": 4683}
+{"tick": 45362, "location": 3, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 4688}
+{"tick": 45387, "location": 3, "phase": "approach", "action": {"kind": "move", "direction": "forward"}, "operation": 4693}
+{"event": "combat_started", "location": 3, "expected": [8, 9, 10]}
+{"tick": 45512, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 8}, "operation": 4699}
+{"tick": 45632, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "feature", "feature": "action_surge"}, "operation": 4703}
+{"tick": 45732, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 8}, "operation": 4707}
+{"tick": 45962, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 2, "action": "feature", "feature": "cunning_action"}, "operation": 4711}
+{"tick": 46392, "location": 3, "phase": "turns", "action": {"kind": "combat", "character": 0, "action": "melee", "target": 9}, "operation": 4715}
+{"tick": 46532, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 1, "action": "spell", "spell": "guiding_bolt", "enemies": [10]}, "operation": 4719}
+{"tick": 46557, "location": 3, "phase": "approach", "action": {"kind": "combat", "character": 2, "action": "ranged", "target": 10}, "operation": 4723}

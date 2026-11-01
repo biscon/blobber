@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 4/7 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 5/8 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -125,8 +125,8 @@ same starting-draft codec as arena `party`):
 {
   "kind": "generated_floor",
   "schema_version": 1,
-  "generator_version": 3,
-  "template_version": 3,
+  "generator_version": 5,
+  "template_version": 5,
   "seed": 5,
   "depth": 1,
   "party": ["replace with four existing starting-draft objects"]
@@ -359,8 +359,8 @@ no focus, desktop or OS input automation is used. See [MCP usage](mcp_usage.md).
 
 ## PC04 persistent campaign scenarios
 
-`kind: "campaign"` uses scenario schema 1, `generator_version: 3`,
-`template_version: 3`, a uint32 `seed` and the existing four-entry `party` array.
+`kind: "campaign"` uses scenario schema 1, `generator_version: 5`,
+`template_version: 5`, a uint32 `seed` and the existing four-entry `party` array.
 There is no `depth` input: launch starts in the fixed sanctuary hub and eagerly
 prepares all three depths. Arena and single generated-floor diagnostic scenarios
 remain supported. Normal graphical New Game uses this same campaign owner.
@@ -528,3 +528,15 @@ casting command or privileged mutation verb is added. Arena scenarios stay schem
 1/layout 1. Strict replay checks current binary/content/publication identities.
 Campaign schema/simulation 4/7 store tagged sources and local NPC resources; old
 saves reject unchanged, and local sources/resources do not travel with the party.
+
+### PC07.2 population and diagnostic route metadata
+
+Current campaign schema/simulation are **5/8**, generator/templates **5/5**; older
+incompatible saves reject unchanged. Protocol v1 and arena schema 2 remain.
+Diagnostic active campaigns expose `generation` with the same full floor report as
+generated-floor scenarios: ordered room `route`, bounded `encounters` with recipe,
+role, room and member range, population species and direct/optional supply positions.
+Player observations do not receive this hidden metadata or new objective knowledge.
+Normal pickup, advancement, rest, interaction and travel commands remain authoritative.
+The explicitly invoked PC07.2 route tool is diagnostic; it does not implement the
+PC08 player exploration agent or claim human exploration timing.

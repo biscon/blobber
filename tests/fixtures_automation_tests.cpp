@@ -48,17 +48,11 @@ void walk(Client& c, Cell target) {
         auto here = queue[head++];
         for (unsigned d = 0; d < 4; ++d) {
             auto next = here + forward(Heading(d));
-            bool dangerous = false;
-            for (const auto& actor : g.actors().snapshot().actors)
-                if (actor.life == ActorLife::Alive && actor.maxHitPoints) {
-                    dangerous |= combatAdjacent(map, actor.npc.cell, next) ||
-                                 npcSees(map, actor.npc.cell, actor.npc.facing, next);
-                }
             const auto fi = g.fixtures().at(next);
             const bool door = fi >= 0 && g.fixtures().definition().entries[fi].kind == FixtureKind::Door &&
                               (!g.fixtures().definition().entries[fi].key ||
                                (g.party().questKeys() & (1u << g.fixtures().definition().entries[fi].key)));
-            if ((map.solid(next) && !door) || dangerous || previous[index(next)] >= 0)
+            if ((map.solid(next) && !door) || previous[index(next)] >= 0)
                 continue;
             previous[index(next)] = index(here);
             queue[tail++] = next;
@@ -78,6 +72,11 @@ void walk(Client& c, Cell target) {
                 face(c, Heading(d));
                 break;
             }
+        if (!realTime(g.combat().snapshot().phase)) {
+            fight(c, true, 2000, true);
+            if (g.combat().snapshot().phase == CombatPhase::Victory)
+                c.act({{"kind", "continue"}});
+        }
         const auto fi = g.fixtures().at(*i);
         if (fi >= 0 && g.fixtures().definition().entries[fi].kind == FixtureKind::Door &&
             !g.fixtures().completed(unsigned(fi)))
@@ -97,9 +96,10 @@ void run(const char* exe, const char* retain = nullptr) {
           "Player start excludes hidden geometry and fixture totals");
     check(!first.contains("objective"), "Unseen objective does not leak membership or progress");
     auto inspect = player.request("inspect").at("data");
-    check(inspect.at("objective").at("members").size() == 2,
+    check(inspect.at("objective").at("members").size() == 4,
           "Diagnostics expose exact designated membership");
-    check(inspect.at("fixtures").size() == 7, "Explicit diagnostics contain full fixtures");
+    check(inspect.at("fixtures").size() == player.protocol.session()->game().fixtures().definition().count,
+          "Explicit diagnostics contain full fixtures");
     auto after = player.request("observe").at("data");
     check(!after.contains("objective"), "Inspection cannot teach objective state");
     check(first.at("discovered") == after.at("discovered") && first.at("fixtures") == after.at("fixtures"),

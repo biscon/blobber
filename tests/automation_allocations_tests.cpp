@@ -98,7 +98,7 @@ int main(int argc, char**) {
         auto preparedSetup = setup;
         arenaLevel(cat, preparedSetup, 2);
         Session prepared(cat, defs, preparedSetup, Mode::Diagnostic);
-        blobber::test::VisibilityFixture fixture(2);
+        blobber::test::VisibilityFixture fixture(unsigned(defs.types.size()));
         const world_assets::CpuAssets assets(fixture.publication());
         defs.timings = fixture.timings;
         WorldVisualContext context{assets, defs.timings};
@@ -288,8 +288,8 @@ int main(int argc, char**) {
             campaignFrames.update(campaign->game());
         }
         auto& guardianGame = generated.replayGame();
-        guardianGame.actors().damage(guardianGame.actors().id(2), 100000, 0);
-        guardianGame.actors().damage(guardianGame.actors().id(3), 100000, 0);
+        for (unsigned i = 0; i < guardianGame.objective().count; ++i)
+            guardianGame.actors().damage(guardianGame.objective().members[i], 100000, 0);
         guardianGame.update(0, false);
         guardianGame.update(.3, false);
         okay &= guardianGame.objective().completed && guardianGame.landingSafety(0).safe;

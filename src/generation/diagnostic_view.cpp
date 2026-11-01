@@ -21,7 +21,7 @@ DiagnosticView diagnosticView(const GeneratedFloor& f) noexcept {
     line(5, "Rejections %u / last: %s", errors,
          errors ? errorName(f.diagnostics.rejected[errors - 1].code) : "none");
     line(6, "K key / U up / D down / O objective / + door / G gate");
-    line(7, "Defeat guardians to open their gate. Stairs travel unavailable.");
+    line(7, "Defeat guardians to open their gate. Use stairs from their landing.");
     line(8, "Full map is diagnostic, not discovered knowledge.");
     return v;
 }

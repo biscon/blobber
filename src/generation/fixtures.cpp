@@ -113,45 +113,14 @@ void placeFixtures(FloorLayout& f) noexcept {
             }
     }
 }
-void placePopulation(FloorLayout& f, GenerationRequest request, unsigned attempt, bool fallback) noexcept {
-    unsigned approach = 0, optional = maxRooms, ordinary = maxRooms;
-    const auto start =
-        fallback ? 0u : unsigned(seedFor(request, Domain::Encounter, 0, attempt) % f.roomCount);
-    for (unsigned n = 0; n < f.roomCount; ++n) {
-        const auto i = (start + n) % f.roomCount;
-        const auto& r = f.rooms[i];
-        if (r.role == Role::Approach)
-            approach = i;
-        if (r.role == Role::Optional && optional == maxRooms)
-            optional = i;
-        bool key = false;
-        for (unsigned j = 0; j < f.fixtures.count; ++j)
-            key |= f.fixtures.entries[j].kind == FixtureKind::Key && f.fixtures.entries[j].cell == r.anchor;
-        if (r.role == Role::Junction && !key && ordinary == maxRooms)
-            ordinary = i;
-    }
-    const auto add = [&](Cell c, Cell sub, Heading h, ActorRecipe recipe, bool guardian) {
-        const auto i = f.populationCount++;
-        f.population[i] = {c, sub, h, recipe, std::uint8_t(i), guardian};
-    };
-    if (ordinary < maxRooms)
-        add(f.rooms[ordinary].anchor, {0, 0}, f.rooms[ordinary].facing, ActorRecipe::Goblin, false);
-    if (optional < maxRooms) {
-        add(f.rooms[optional].anchor, {0, 0}, f.rooms[optional].facing, ActorRecipe::Goblin, false);
-        f.optionalSupply = f.rooms[optional].anchor;
-    }
-    const auto facing = Heading((unsigned(f.fixtures.entries[f.approachDoor].facing) + 2) % 4);
-    add(f.rooms[approach].anchor, {0, 0}, facing, ActorRecipe::Guardian, true);
-    add(f.rooms[approach].anchor, {1, 1}, facing, ActorRecipe::Archer, true);
-}
 Failure validateFixtures(const FloorLayout& f) noexcept {
     if (f.width < 3 || f.height < 3 || f.width > 40 || f.height > 40 || f.roomCount > maxRooms ||
         f.connectionCount > maxConnections || !floorCell(f, f.spawn.cell))
         return {Error::Capacity};
     const auto& defs = f.fixtures;
     if (f.depth < 1 || f.depth > 3 || defs.depth != f.depth || !defs.discovery ||
-        defs.count != (f.depth == 1 ? 6u : 7u) || defs.landingCount != 2 || f.approachDoor >= defs.count ||
-        f.guardianGate >= defs.count)
+        defs.count < (f.depth == 1 ? 6u : 7u) || defs.count > fixtureCapacity || defs.landingCount != 2 ||
+        f.approachDoor >= defs.count || f.guardianGate >= defs.count)
         return {Error::Fixture};
     int key = -1, up = -1, goal = -1;
     unsigned doors = 0, gates = 0;
@@ -187,7 +156,7 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
             goal = int(i);
         }
     }
-    if (doors != 3 || gates != 1 || up < 0 || goal < 0 || (key >= 0) != (f.depth > 1) ||
+    if (doors < 3 || gates != 1 || up < 0 || goal < 0 || (key >= 0) != (f.depth > 1) ||
         defs.entries[f.approachDoor].kind != FixtureKind::Door ||
         defs.entries[f.guardianGate].kind != FixtureKind::GuardianGate ||
         !(stairLanding(defs.entries[up]) == f.spawn.cell) ||
@@ -226,7 +195,7 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
     if (!approachPort || !gatePort || !goalAnchor)
         return {Error::Fixture};
     if (!floorCell(f, f.guardianApproach) || !floorCell(f, f.guardianReward) ||
-        !floorCell(f, f.optionalSupply))
+        !floorCell(f, f.optionalSupply) || !floorCell(f, f.supply))
         return {Error::Population};
     // Four monotone progression states. Ordinary doors can be opened from a faced
     // adjacent cell without costs; locked doors require key, gate requires deaths.
@@ -285,14 +254,16 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
         if ((r.role == Role::Optional || r.role == Role::Junction) && !seen[index(r.anchor)])
             return {Error::Progression};
     }
-    if (f.populationCount != 4)
+    if (const auto failure = validatePopulation(f))
+        return failure;
+    if (!f.populationCount || f.populationCount > f.population.size())
         return {Error::Population};
     unsigned guardians = 0, optionalActors = 0, ordinaryActors = 0;
     for (unsigned i = 0; i < f.populationCount; ++i) {
         const auto& p = f.population[i];
         if (p.id != i || !floorCell(f, p.cell) || defs.npcExcluded[index(p.cell)] || unsigned(p.facing) > 3 ||
             p.subcell.x < 0 || p.subcell.x > 1 || p.subcell.y < 0 || p.subcell.y > 1 ||
-            unsigned(p.recipe) > 2)
+            unsigned(p.recipe) > unsigned(ActorRecipe::Bugbear))
             return {Error::Population};
         for (unsigned j = 0; j < i; ++j)
             if (p.cell == f.population[j].cell && p.subcell == f.population[j].subcell)
@@ -322,7 +293,8 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
                 return {Error::Population};
         }
     }
-    if (guardians != 2 || optionalActors != 1 || ordinaryActors != 1)
+    if (guardians != (f.depth == 3 ? 3u : 4u) || optionalActors != (f.depth == 1 ? 3u : 2u) ||
+        ordinaryActors != (f.depth == 1 ? 4u : 6u))
         return {Error::Population};
     // Allocation-free supercover on final base tiles: every door is treated open.
     const auto sight = [&](Cell from, Cell to) {

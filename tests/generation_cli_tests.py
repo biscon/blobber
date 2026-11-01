@@ -90,23 +90,23 @@ def main(generator, runner):
         catalog_path = root / 'rules/catalog.json'
         cat = json.loads(catalog_path.read_text())
         enemy = cat['monsters'][0]
-        for name in ('goblin', 'goblin.archer', 'goblin.guardian.placeholder'):
+        for name in ('goblin', 'goblin.archer', 'skeleton', 'zombie', 'giant.rat', 'goblin_shaman', 'bugbear'):
             cat['monsters'].append(dict(enemy, id=name))
-        for name in ('healing_potion', 'mana_potion'):
-            cat['items'].append(dict(cat['items'][1], id=name))
+        for name in ('healing_potion', 'mana_potion', 'arrow'):
+            cat['items'].append(dict(cat['items'][1], id=name, **(dict(kind='ammunition',stack_limit=100,ammunition='arrow') if name=='arrow' else {})))
         catalog_path.write_text(json.dumps(cat))
         npc = json.loads((root / 'npcs/enemy.json').read_text())
-        for name in ('goblin', 'goblin.archer'):
+        for name in ('goblin', 'goblin.archer', 'skeleton', 'zombie', 'giant.rat', 'goblin_shaman', 'bugbear'):
             (root / f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name)))
-        (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', 'goblin.json', 'goblin.archer.json'], instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=4,
-                     template_version=4, seed=5, depth=1, party=arena['party'])
+        (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')]], instances=[])))
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=5,
+                     template_version=5, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
             start = client.request('start', scenario=setup)
             assert start['ok'] and start['data']['generation']['fingerprint'] == a['fingerprint']
             initial = start['data']
-            assert initial['objective']['members'] == [2, 3] and not initial['objective']['completed']
+            assert initial['objective']['members'] == [7, 8, 9, 10] and not initial['objective']['completed']
             assert client.request('act', action=dict(kind='move', direction='forward'))['data']['accepted']
             assert client.request('advance', ticks=100, until_decision=True)['ok']
             state = client.request('observe')['data']

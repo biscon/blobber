@@ -1,0 +1,31 @@
+{
+  "balanced-8-reserve": {
+    "operations": [
+      464,
+      1341,
+      3387,
+      3844,
+      5227
+    ],
+    "observed_incoming_by_floor": {
+      "1": 58,
+      "2": 43,
+      "3": 29
+    }
+  },
+  "no_wizard-8-direct": {
+    "operations": [
+      766,
+      1382,
+      1940,
+      2457,
+      3145,
+      3231
+    ],
+    "observed_incoming_by_floor": {
+      "1": 15,
+      "2": 62,
+      "3": 28
+    }
+  }
+}

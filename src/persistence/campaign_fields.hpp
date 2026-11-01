@@ -448,6 +448,13 @@ template <class A> void visit(A& a, generation::PopulationPlacement& v) {
     a("id", v.id);
     a("guardian", v.guardian);
 }
+template <class A> void visit(A& a, generation::Encounter& v) {
+    a("recipe", v.recipe);
+    a("role", v.role);
+    a("room", v.room);
+    a("first", v.first);
+    a("count", v.count);
+}
 template <class A> void visit(A& a, generation::FloorLayout& v) {
     a("width", v.width);
     a("height", v.height);
@@ -464,6 +471,11 @@ template <class A> void visit(A& a, generation::FloorLayout& v) {
     a("fixtures", v.fixtures);
     a("population", v.population);
     a("populationCount", v.populationCount);
+    a("encounters", v.encounters);
+    a("encounterCount", v.encounterCount);
+    a("route", v.route);
+    a("routeCount", v.routeCount);
+    a("supply", v.supply);
     a("optionalSupply", v.optionalSupply);
     a("guardianReward", v.guardianReward);
     a("guardianApproach", v.guardianApproach);

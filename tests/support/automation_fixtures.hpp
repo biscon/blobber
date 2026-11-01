@@ -23,7 +23,7 @@ struct Directory {
     }
 };
 inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 5, bool rangedArcher = false,
-                              bool npcCasting = false) {
+                              bool npcCasting = false, bool normalXp = false) {
     const auto base = creationCatalog(true);
     std::vector<rules::RaceDefinition> races;
     std::vector<rules::ClassDefinition> classes;
@@ -40,6 +40,7 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
         items.push_back(*base.item({i}));
     for (std::uint16_t i = 0; i < base.spellCount(); ++i)
         spells.push_back(*base.spell({i}));
+    items[9].id = "arrow";
     auto monster = *base.monster({0});
     monster.hitPoints = deadly ? 10000 : hp;
     monster.spellcasting = npcCasting ? rules::EnemyCasting::AcolyteSupport : rules::EnemyCasting::None;
@@ -60,19 +61,37 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
     bow.kind = rules::AttackKind::Ranged;
     if (rangedArcher)
         archer.attacks[0] = {1};
-    return {{attack, bow}, {monster, archer, guardian}, races, classes, items, *base.preset(), spells,
-            creation};
+    auto skeleton = monster, zombie = monster, rat = monster, shaman = monster, bugbear = monster;
+    skeleton.id = "skeleton";
+    zombie.id = "zombie";
+    rat.id = "giant.rat";
+    shaman.id = "goblin_shaman";
+    bugbear.id = "bugbear";
+    if (normalXp) {
+        constexpr const char* classIds[]{"fighter", "cleric", "rogue", "wizard"};
+        for (unsigned i = 0; i < classes.size(); ++i)
+            classes[i].id = classIds[i];
+        monster.experience = archer.experience = skeleton.experience = zombie.experience = shaman.experience =
+            50;
+        rat.experience = 25;
+        bugbear.experience = 200;
+    }
+    return {{attack, bow}, {monster, archer, guardian, skeleton, zombie, rat, shaman, bugbear},
+            races,         classes,
+            items,         *base.preset(),
+            spells,        creation};
 }
 inline NpcDefinitions definitions() {
     NpcDefinitions d;
-    d.types = {"goblin", "goblin.archer"};
-    d.timings.resize(2);
-    d.attachments.resize(2);
+    d.types = {"goblin", "goblin.archer", "skeleton", "zombie", "giant.rat", "goblin_shaman", "bugbear"};
+    d.timings.resize(d.types.size());
+    d.attachments.resize(d.types.size());
     d.timings[0][0] = {{{100, 0, 0, 0}}, 1};
     for (auto clip :
          {NpcAnimation::Attack, NpcAnimation::Hurt, NpcAnimation::Death, NpcAnimation::RangedAttack})
         d.timings[0][std::size_t(clip)] = {{{50, 50, 0, 0}}, 2};
-    d.timings[1] = d.timings[0];
+    for (unsigned i = 1; i < d.timings.size(); ++i)
+        d.timings[i] = d.timings[0];
     return d;
 }
 inline ArenaScenario scenario(const rules::Catalog& c, unsigned count = 1) {
@@ -84,8 +103,12 @@ inline ArenaScenario scenario(const rules::Catalog& c, unsigned count = 1) {
 }
 inline Json generatedScenario(const rules::Catalog& c, unsigned seed = 5) {
     const auto arena = Json::parse(encodeArena(c, scenario(c)));
-    return {{"kind", "generated_floor"}, {"schema_version", 1}, {"generator_version", 4},
-            {"template_version", 4},     {"seed", seed},        {"depth", 1},
+    return {{"kind", "generated_floor"},
+            {"schema_version", 1},
+            {"generator_version", generation::generatorVersion},
+            {"template_version", generation::templateVersion},
+            {"seed", seed},
+            {"depth", 1},
             {"party", arena.at("party")}};
 }
 struct Sink : Output {

@@ -331,6 +331,10 @@ void malformed() {
     bad([](auto& j) { j["campaign"]["locations"][0]["state"]["rng"] = "1"; });
     bad([](auto& j) { j["campaign"]["navigation"]["tail"] = "1601"; });
     bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["population"][0]["recipe"] = 255; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["encounters"][0]["count"] = 31; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["routeCount"] = 33; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["recovery"]["ground"][0]["quantity"] = 19; });
+    bad([](auto& j) { j["simulation"] = 7; });
     bad([](auto& j) { j["campaign"]["locations"][1]["fixtures"]["npcExcluded"] = std::string(1600, '0'); });
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, std::string(campaignMaxBytes + 1, 'x')); },
             "oversized input rejected");
@@ -587,7 +591,8 @@ void groundAndInactive() {
     auto& effects = const_cast<EffectController&>(game.effects());
     CombatEvents events;
     const auto grease = game.actors().snapshot().actors[0].npc.cell;
-    const auto web = game.actors().snapshot().actors[1].npc.cell;
+    const auto web = game.actors().actor(game.objective().members[0])->npc.cell;
+    check(!(web == grease), "owned ground-effect fixtures use distinct cells");
     check(bool(effects.createArea(grease, {0}, 10, 0, events).serial), "owned Grease area created");
     check(effects.createWeb(&web, 1, {2}, 1000, 0, events), "owned Web area/restraint created");
     effects.condition(game.actors().id(0), EffectKind::Sleep, {0}, 0, events);

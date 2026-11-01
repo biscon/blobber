@@ -432,7 +432,9 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     moving |= session_.opening();
     if (session_.objective().known) {
         if (session_.objective().completed && !objectiveReported_) {
-            state_.log.append("Guardians defeated. Gate opened; supplies await beyond.");
+            state_.log.append(session_.fixtures().definition().depth == 3
+                                  ? "Final guardians defeated."
+                                  : "Guardians defeated. Gate opened; supplies await beyond.");
             objectiveReported_ = true;
         }
         if (session_.objective().capacityFailure && !objectiveFailureReported_) {

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "balanced-5-direct",
+    "trace": "balanced-5-direct/trace.jsonl.gz",
+    "uncompressed_sha256": "0658b52deb374924a92af27abec1aa4257de71f914bf2763a5343853560bc4ba",
+    "uncompressed_bytes": 141749322,
+    "compressed_bytes": 15399632,
+    "replay": "not_replayed"
+  },
+  {
+    "id": "balanced-5-reserve",
+    "trace": "balanced-5-reserve/trace.jsonl.gz",
+    "uncompressed_sha256": "78e210f9a66c1d01f6ce6c5212989bbf0000475f3822ce2497561da3dd095140",
+    "uncompressed_bytes": 193896318,
+    "compressed_bytes": 21367543,
+    "replay": "not_replayed"
+  },
+  {
+    "id": "balanced-8-direct",
+    "trace": "balanced-8-direct/trace.jsonl.gz",
+    "uncompressed_sha256": "505175283e784bec7bf081688c394079d521656e2246c39f75102edcd2d91817",
+    "uncompressed_bytes": 145203571,
+    "compressed_bytes": 15828118,
+    "replay": "not_replayed"
+  },
+  {
+    "id": "balanced-8-reserve",
+    "trace": "balanced-8-reserve/trace.jsonl.gz",
+    "uncompressed_sha256": "4f69ff33019a0c539673c4c54b6f8de9e94aab78456c38e956ffb3d091c94320",
+    "uncompressed_bytes": 217704350,
+    "compressed_bytes": 23899468,
+    "replay": "matched"
+  },
+  {
+    "id": "no_wizard-5-direct",
+    "trace": "no_wizard-5-direct/trace.jsonl.gz",
+    "uncompressed_sha256": "1eeba3ba595b5678f42a43d56631152ba35483f804b09c06fea85cd1d4030746",
+    "uncompressed_bytes": 122902954,
+    "compressed_bytes": 12829298,
+    "replay": "not_replayed"
+  },
+  {
+    "id": "no_wizard-5-reserve",
+    "trace": "no_wizard-5-reserve/trace.jsonl.gz",
+    "uncompressed_sha256": "0011cab1c65481757de858a0b532697a0cec8c43de9be722226e28b4f936e331",
+    "uncompressed_bytes": 175398278,
+    "compressed_bytes": 18557790,
+    "replay": "not_replayed"
+  },
+  {
+    "id": "no_wizard-8-direct",
+    "trace": "no_wizard-8-direct/trace.jsonl.gz",
+    "uncompressed_sha256": "e1c53a7c8131da035f9d1c12fa16d38121c30df90783baf654216c784c3050d0",
+    "uncompressed_bytes": 128367193,
+    "compressed_bytes": 13567099,
+    "replay": "matched"
+  },
+  {
+    "id": "no_wizard-8-reserve",
+    "trace": "no_wizard-8-reserve/trace.jsonl.gz",
+    "uncompressed_sha256": "97a376711de992fa39d33a5819e9a0782d1cece8c486a941cb883f7057f7be07",
+    "uncompressed_bytes": 197257582,
+    "compressed_bytes": 21053735,
+    "replay": "not_replayed"
+  }
+]

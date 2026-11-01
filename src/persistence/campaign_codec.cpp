@@ -49,7 +49,11 @@ template <class T> constexpr unsigned enumMaximum() {
     else if constexpr (std::is_same_v<T, generation::Role>)
         return unsigned(generation::Role::Optional);
     else if constexpr (std::is_same_v<T, generation::ActorRecipe>)
-        return unsigned(generation::ActorRecipe::Guardian);
+        return unsigned(generation::ActorRecipe::Bugbear);
+    else if constexpr (std::is_same_v<T, generation::EncounterRecipe>)
+        return unsigned(generation::EncounterRecipe::BugbearSupport);
+    else if constexpr (std::is_same_v<T, generation::EncounterRole>)
+        return unsigned(generation::EncounterRole::Guardian);
     else if constexpr (std::is_same_v<T, generation::Error>)
         return unsigned(generation::Error::ForcedFallback);
     else {
@@ -343,7 +347,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 4 || j.at("simulation") != 7 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 5 || j.at("simulation") != 8 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -360,8 +364,8 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 4},
-              {"simulation", 7},
+    Json j = {{"schema", 5},
+              {"simulation", 8},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},
@@ -391,33 +395,19 @@ std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog& catalog
                 l.placements.size() != l.layout.populationCount ||
                 l.diagnostics.attempts > generation::maxAttempts)
                 invalid("Inconsistent campaign generation provenance/population");
-            FloorObjectiveDefinition expected;
-            expected.approachDoor = l.layout.approachDoor;
-            expected.gate = l.layout.guardianGate;
-            expected.lootSeed = std::uint32_t(generation::seedFor(l.generation, generation::Domain::Reward));
-            constexpr const char* names[]{"goblin", "goblin.archer", "goblin.guardian.placeholder"};
-            for (unsigned i = 0; i < l.layout.populationCount; ++i) {
-                const auto& p = l.layout.population[i];
-                const auto& npc = l.placements[i];
-                const auto monster = catalog.findMonster(names[unsigned(p.recipe)]);
-                if (!npc.monster || npc.monster->index != monster.index || !(npc.cell == p.cell) ||
-                    !(npc.subcell == p.subcell) || npc.facing != p.facing ||
-                    npc.animation != NpcAnimation::Idle || npc.phaseMs ||
-                    npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount ||
-                    definitions.types[npc.type.index] != monsterAppearance(names[unsigned(p.recipe)]))
+            const auto definition =
+                generation::resolvePopulation(l.layout, l.generation, catalog, definitions.types);
+            auto expected = definition.objective;
+            auto recovery = definition.recovery;
+            for (unsigned i = 0; i < definition.count; ++i) {
+                Json want, got;
+                Archive verify{want, catalog, definitions, false}, actual{got, catalog, definitions, false};
+                auto npc = definition.actors[i];
+                verify.transfer(want, npc);
+                actual.transfer(got, l.placements[i]);
+                if (want != got)
                     invalid("Saved initial population differs from its definition");
-                if (p.guardian)
-                    expected.members[expected.count++] = std::uint16_t(i);
             }
-            RecoveryLevel recovery;
-            recovery.ground[recovery.groundCount++] = {l.layout.optionalSupply,
-                                                       catalog.findItem("healing_potion"), 1};
-            recovery.ground[recovery.groundCount++] = {l.layout.optionalSupply,
-                                                       catalog.findItem("mana_potion"), 1};
-            expected.rewards[expected.rewardCount++] = {l.layout.guardianReward,
-                                                        catalog.findItem("healing_potion"), 1};
-            expected.rewards[expected.rewardCount++] = {l.layout.guardianReward, catalog.findItem("camp_kit"),
-                                                        1};
             Json want, got;
             Archive verify{want, catalog, definitions, false}, actual{got, catalog, definitions, false};
             verify.transfer(want, expected);

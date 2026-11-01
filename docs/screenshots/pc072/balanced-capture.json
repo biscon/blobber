@@ -1,0 +1,160 @@
+{
+  "assets": "cmake-build-release/assets",
+  "header": {
+    "binary": "15356109025350882900",
+    "content": {
+      "catalog": "17483537775723663902",
+      "npc_definitions": "16095196451204280053"
+    },
+    "door_scheduling": "shared-door-motion-300ms-v2",
+    "mode": "diagnostic",
+    "protocol": 1,
+    "terrain_rules": "terrain-rules-v2",
+    "timing": "fixed-10ms-v1"
+  },
+  "images": [
+    {
+      "file": "operation-464.png",
+      "height": 1080,
+      "operation": 464,
+      "revision": "204",
+      "session": "1",
+      "ticks": 6112,
+      "width": 1920
+    },
+    {
+      "file": "operation-464-diagnostic-map.png",
+      "height": 1080,
+      "operation": 464,
+      "revision": "204",
+      "session": "1",
+      "ticks": 6112,
+      "width": 1920
+    },
+    {
+      "file": "operation-464-discovered-map.png",
+      "height": 1080,
+      "operation": 464,
+      "revision": "204",
+      "session": "1",
+      "ticks": 6112,
+      "width": 1920
+    },
+    {
+      "file": "operation-1341.png",
+      "height": 1080,
+      "operation": 1341,
+      "revision": "549",
+      "session": "1",
+      "ticks": 12400,
+      "width": 1920
+    },
+    {
+      "file": "operation-1341-diagnostic-map.png",
+      "height": 1080,
+      "operation": 1341,
+      "revision": "549",
+      "session": "1",
+      "ticks": 12400,
+      "width": 1920
+    },
+    {
+      "file": "operation-1341-discovered-map.png",
+      "height": 1080,
+      "operation": 1341,
+      "revision": "549",
+      "session": "1",
+      "ticks": 12400,
+      "width": 1920
+    },
+    {
+      "file": "operation-3387.png",
+      "height": 1080,
+      "operation": 3387,
+      "revision": "1453",
+      "session": "1",
+      "ticks": 30451,
+      "width": 1920
+    },
+    {
+      "file": "operation-3387-diagnostic-map.png",
+      "height": 1080,
+      "operation": 3387,
+      "revision": "1453",
+      "session": "1",
+      "ticks": 30451,
+      "width": 1920
+    },
+    {
+      "file": "operation-3387-discovered-map.png",
+      "height": 1080,
+      "operation": 3387,
+      "revision": "1453",
+      "session": "1",
+      "ticks": 30451,
+      "width": 1920
+    },
+    {
+      "file": "operation-3844.png",
+      "height": 1080,
+      "operation": 3844,
+      "revision": "1681",
+      "session": "1",
+      "ticks": 35756,
+      "width": 1920
+    },
+    {
+      "file": "operation-3844-diagnostic-map.png",
+      "height": 1080,
+      "operation": 3844,
+      "revision": "1681",
+      "session": "1",
+      "ticks": 35756,
+      "width": 1920
+    },
+    {
+      "file": "operation-3844-discovered-map.png",
+      "height": 1080,
+      "operation": 3844,
+      "revision": "1681",
+      "session": "1",
+      "ticks": 35756,
+      "width": 1920
+    },
+    {
+      "file": "operation-5227.png",
+      "height": 1080,
+      "operation": 5227,
+      "revision": "2305",
+      "session": "1",
+      "ticks": 46600,
+      "width": 1920
+    },
+    {
+      "file": "operation-5227-diagnostic-map.png",
+      "height": 1080,
+      "operation": 5227,
+      "revision": "2305",
+      "session": "1",
+      "ticks": 46600,
+      "width": 1920
+    },
+    {
+      "file": "operation-5227-discovered-map.png",
+      "height": 1080,
+      "operation": 5227,
+      "revision": "2305",
+      "session": "1",
+      "ticks": 46600,
+      "width": 1920
+    }
+  ],
+  "prepared": {
+    "prepared/world/metadata.json": "3690621994282735798",
+    "prepared/world/textures.bin": "6233218355960917337"
+  },
+  "presentation": "Current scene and HUD; no historical UI interactions",
+  "replay": "matched",
+  "trace": "output/pc072/study/balanced-8-reserve/trace.jsonl",
+  "trace_fingerprint": "7118110741517602810"
+}

@@ -63,11 +63,28 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
         const auto& p = l.population[i];
         j["population"].push_back({{"id", p.id},
                                    {"recipe", unsigned(p.recipe)},
+                                   {"species", speciesName(p.recipe)},
                                    {"guardian", p.guardian},
                                    {"position", {p.cell.x, p.cell.y}},
                                    {"subcell", {p.subcell.x, p.subcell.y}},
                                    {"heading", unsigned(p.facing)}});
     }
+    j["encounters"] = nlohmann::json::array();
+    for (unsigned i = 0; i < l.encounterCount; ++i) {
+        const auto& e = l.encounters[i];
+        constexpr const char* roles[]{"direct", "optional", "guardian"};
+        j["encounters"].push_back({{"id", i},
+                                   {"recipe", encounterRecipe(e.recipe).name},
+                                   {"role", roles[unsigned(e.role)]},
+                                   {"room", e.room},
+                                   {"first", e.first},
+                                   {"count", e.count}});
+    }
+    j["route"] = nlohmann::json::array();
+    for (unsigned i = 0; i < l.routeCount; ++i)
+        j["route"].push_back(l.route[i]);
+    j["supplies"] = {{"direct", {l.supply.x, l.supply.y}},
+                     {"optional", {l.optionalSupply.x, l.optionalSupply.y}}};
     j["landings"] = nlohmann::json::array();
     j["npc_excluded"] = nlohmann::json::array();
     for (unsigned i = 0; i < l.fixtures.landingCount; ++i)

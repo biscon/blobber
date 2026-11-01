@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 4, templateVersion = 4;
+constexpr unsigned generatorVersion = 5, templateVersion = 5;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 constexpr int floorDimension = 36;
 constexpr std::size_t fixtureScratchBytes = maxCells * 4 * (sizeof(std::uint8_t) + sizeof(std::uint16_t));
@@ -31,7 +31,21 @@ struct Room {
 struct Connection {
     std::uint8_t a = 0, b = 0;
 };
-enum class ActorRecipe : std::uint8_t { Goblin, Archer, Guardian };
+enum class ActorRecipe : std::uint8_t { Goblin, Archer, Skeleton, Zombie, Rat, Shaman, Bugbear };
+enum class EncounterRecipe : std::uint8_t { GoblinPair, RatPack, UndeadPair, GoblinSupport, BugbearSupport };
+enum class EncounterRole : std::uint8_t { Direct, Optional, Guardian };
+struct Encounter {
+    EncounterRecipe recipe = EncounterRecipe::GoblinPair;
+    EncounterRole role = EncounterRole::Direct;
+    std::uint8_t room = 0, first = 0, count = 0;
+};
+struct Recipe {
+    const char* name;
+    std::array<ActorRecipe, 4> members;
+    unsigned count;
+};
+const Recipe& encounterRecipe(EncounterRecipe) noexcept;
+const char* speciesName(ActorRecipe) noexcept;
 struct PopulationPlacement {
     Cell cell{}, subcell{};
     Heading facing = Heading::North;
@@ -51,7 +65,11 @@ struct FloorLayout {
     FloorFixtures fixtures;
     std::array<PopulationPlacement, 32> population{};
     unsigned populationCount = 0;
-    Cell optionalSupply{}, guardianReward{}, guardianApproach{};
+    std::array<Encounter, 5> encounters{};
+    unsigned encounterCount = 0;
+    std::array<std::uint8_t, maxRooms * 2> route{};
+    unsigned routeCount = 0;
+    Cell optionalSupply{}, guardianReward{}, guardianApproach{}, supply{};
     std::uint8_t approachDoor = 0, guardianGate = 0;
 };
 enum class Error : std::uint8_t {
@@ -105,6 +123,7 @@ Failure validate(const FloorLayout&) noexcept;
 Failure validateFixtures(const FloorLayout&) noexcept;
 void placeFixtures(FloorLayout&) noexcept;
 void placePopulation(FloorLayout&, GenerationRequest, unsigned attempt, bool fallback) noexcept;
+Failure validatePopulation(const FloorLayout&) noexcept;
 Failure validateTemplates(const TemplateCatalog&) noexcept;
 std::uint64_t seedFor(GenerationRequest, Domain, unsigned stableId = 0, unsigned attempt = 0) noexcept;
 std::uint64_t fingerprint(const FloorLayout&) noexcept;

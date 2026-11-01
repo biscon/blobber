@@ -1,0 +1,775 @@
+{
+  "attempts": 1,
+  "connections": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      5,
+      6
+    ],
+    [
+      6,
+      7
+    ],
+    [
+      7,
+      0
+    ],
+    [
+      6,
+      8
+    ],
+    [
+      3,
+      9
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      4,
+      11
+    ]
+  ],
+  "depth": 2,
+  "encounters": [
+    {
+      "count": 2,
+      "first": 0,
+      "id": 0,
+      "recipe": "undead_pair",
+      "role": "direct",
+      "room": 6
+    },
+    {
+      "count": 4,
+      "first": 2,
+      "id": 1,
+      "recipe": "goblin_support",
+      "role": "direct",
+      "room": 7
+    },
+    {
+      "count": 2,
+      "first": 6,
+      "id": 2,
+      "recipe": "goblin_pair",
+      "role": "optional",
+      "room": 11
+    },
+    {
+      "count": 4,
+      "first": 8,
+      "id": 3,
+      "recipe": "goblin_support",
+      "role": "guardian",
+      "room": 9
+    }
+  ],
+  "failure": {
+    "code": "none",
+    "connection": -1,
+    "room": -1
+  },
+  "fallback": false,
+  "fallback_id": 0,
+  "family": 1,
+  "fingerprint": "10536113083195915626",
+  "fixtures": [
+    {
+      "heading": 2,
+      "id": 0,
+      "key": 2,
+      "kind": 0,
+      "name": "Bronze seal door",
+      "position": [
+        22,
+        26
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 1,
+      "key": 2,
+      "kind": 1,
+      "name": "Bronze seal key",
+      "position": [
+        31,
+        4
+      ]
+    },
+    {
+      "heading": 3,
+      "id": 2,
+      "key": 0,
+      "kind": 2,
+      "name": "Stairs up",
+      "position": [
+        2,
+        5
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 3,
+      "key": 0,
+      "kind": 3,
+      "name": "Stairs down",
+      "position": [
+        33,
+        30
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 4,
+      "key": 0,
+      "kind": 0,
+      "name": "Dungeon door",
+      "position": [
+        8,
+        4
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 5,
+      "key": 0,
+      "kind": 5,
+      "name": "Guardian gate",
+      "position": [
+        25,
+        31
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 6,
+      "key": 0,
+      "kind": 0,
+      "name": "Dungeon door",
+      "position": [
+        28,
+        31
+      ]
+    },
+    {
+      "heading": 0,
+      "id": 7,
+      "key": 0,
+      "kind": 0,
+      "name": "Dungeon door",
+      "position": [
+        13,
+        9
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 8,
+      "key": 0,
+      "kind": 0,
+      "name": "Dungeon door",
+      "position": [
+        17,
+        4
+      ]
+    },
+    {
+      "heading": 1,
+      "id": 9,
+      "key": 0,
+      "kind": 0,
+      "name": "Dungeon door",
+      "position": [
+        26,
+        4
+      ]
+    },
+    {
+      "heading": 3,
+      "id": 10,
+      "key": 0,
+      "kind": 0,
+      "name": "Dungeon door",
+      "position": [
+        9,
+        22
+      ]
+    }
+  ],
+  "generator_version": 5,
+  "height": 36,
+  "landings": [
+    [
+      3,
+      5
+    ],
+    [
+      32,
+      30
+    ]
+  ],
+  "loop_connection": 0,
+  "map": "####################################\n####################################\n######.####.....######...####.....##\n######.####.....######...####.....##\n##...#.......+........+........+..##\n##.E.#.####.....####.....######...##\n##.....####.....####.....######...##\n#############.#################.####\n#############.#################.####\n#############.#################.####\n#############.#################.####\n###########.....##############...###\n###########.....#############.....##\n###########..+..#############..+..##\n###########.....#############.....##\n###########.....#############....###\n#############.#################.####\n#############.#################.####\n#############.#################.####\n#############.#################.####\n##.....######...####.....####.....##\n##.....######...####.....####.....##\n##..B........+........+.......+#..##\n##.....####.....####.....####.....##\n##.....####.....####.....####.....##\n######################.#############\n######################.#############\n######################.#############\n######################.#############\n####################.....####.....##\n####################.....####.#.O.##\n####################..A.......#...##\n####################.....####.######\n####################.....####.######\n####################################\n####################################\n",
+  "npc_excluded": [
+    [
+      6,
+      2
+    ],
+    [
+      6,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      4
+    ],
+    [
+      6,
+      4
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      3,
+      5
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      6,
+      5
+    ],
+    [
+      2,
+      6
+    ],
+    [
+      3,
+      6
+    ],
+    [
+      4,
+      6
+    ],
+    [
+      5,
+      6
+    ],
+    [
+      6,
+      6
+    ],
+    [
+      29,
+      29
+    ],
+    [
+      30,
+      29
+    ],
+    [
+      31,
+      29
+    ],
+    [
+      32,
+      29
+    ],
+    [
+      33,
+      29
+    ],
+    [
+      29,
+      30
+    ],
+    [
+      31,
+      30
+    ],
+    [
+      32,
+      30
+    ],
+    [
+      33,
+      30
+    ],
+    [
+      29,
+      31
+    ],
+    [
+      31,
+      31
+    ],
+    [
+      32,
+      31
+    ],
+    [
+      33,
+      31
+    ],
+    [
+      29,
+      32
+    ],
+    [
+      29,
+      33
+    ]
+  ],
+  "objective": {
+    "approach": [
+      22,
+      29
+    ],
+    "approach_door": 0,
+    "gate": 5,
+    "reward": [
+      27,
+      31
+    ]
+  },
+  "population": [
+    {
+      "guardian": false,
+      "heading": 3,
+      "id": 0,
+      "position": [
+        13,
+        4
+      ],
+      "recipe": 2,
+      "species": "skeleton",
+      "subcell": [
+        0,
+        1
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 3,
+      "id": 1,
+      "position": [
+        13,
+        4
+      ],
+      "recipe": 3,
+      "species": "zombie",
+      "subcell": [
+        0,
+        0
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 3,
+      "id": 2,
+      "position": [
+        22,
+        4
+      ],
+      "recipe": 0,
+      "species": "goblin",
+      "subcell": [
+        0,
+        1
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 3,
+      "id": 3,
+      "position": [
+        22,
+        4
+      ],
+      "recipe": 0,
+      "species": "goblin",
+      "subcell": [
+        0,
+        0
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 3,
+      "id": 4,
+      "position": [
+        22,
+        4
+      ],
+      "recipe": 1,
+      "species": "goblin.archer",
+      "subcell": [
+        1,
+        1
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 3,
+      "id": 5,
+      "position": [
+        22,
+        4
+      ],
+      "recipe": 5,
+      "species": "goblin_shaman",
+      "subcell": [
+        1,
+        0
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 1,
+      "id": 6,
+      "position": [
+        4,
+        22
+      ],
+      "recipe": 0,
+      "species": "goblin",
+      "subcell": [
+        1,
+        0
+      ]
+    },
+    {
+      "guardian": false,
+      "heading": 1,
+      "id": 7,
+      "position": [
+        4,
+        22
+      ],
+      "recipe": 0,
+      "species": "goblin",
+      "subcell": [
+        1,
+        1
+      ]
+    },
+    {
+      "guardian": true,
+      "heading": 0,
+      "id": 8,
+      "position": [
+        22,
+        31
+      ],
+      "recipe": 0,
+      "species": "goblin",
+      "subcell": [
+        0,
+        0
+      ]
+    },
+    {
+      "guardian": true,
+      "heading": 0,
+      "id": 9,
+      "position": [
+        22,
+        31
+      ],
+      "recipe": 0,
+      "species": "goblin",
+      "subcell": [
+        1,
+        0
+      ]
+    },
+    {
+      "guardian": true,
+      "heading": 0,
+      "id": 10,
+      "position": [
+        22,
+        31
+      ],
+      "recipe": 1,
+      "species": "goblin.archer",
+      "subcell": [
+        0,
+        1
+      ]
+    },
+    {
+      "guardian": true,
+      "heading": 0,
+      "id": 11,
+      "position": [
+        22,
+        31
+      ],
+      "recipe": 5,
+      "species": "goblin_shaman",
+      "subcell": [
+        1,
+        1
+      ]
+    }
+  ],
+  "rejections": [],
+  "rooms": [
+    {
+      "anchor": [
+        31,
+        4
+      ],
+      "facing": 1,
+      "id": 0,
+      "ports": 12,
+      "role": "junction",
+      "rotation": 2,
+      "site": [
+        3,
+        0
+      ],
+      "template": 2
+    },
+    {
+      "anchor": [
+        31,
+        13
+      ],
+      "facing": 1,
+      "id": 1,
+      "ports": 5,
+      "role": "junction",
+      "rotation": 1,
+      "site": [
+        3,
+        1
+      ],
+      "template": 3
+    },
+    {
+      "anchor": [
+        30,
+        22
+      ],
+      "facing": 1,
+      "id": 2,
+      "ports": 9,
+      "role": "junction",
+      "rotation": 0,
+      "site": [
+        3,
+        2
+      ],
+      "template": 1
+    },
+    {
+      "anchor": [
+        22,
+        22
+      ],
+      "facing": 1,
+      "id": 3,
+      "ports": 14,
+      "role": "junction",
+      "rotation": 1,
+      "site": [
+        2,
+        2
+      ],
+      "template": 0
+    },
+    {
+      "anchor": [
+        13,
+        22
+      ],
+      "facing": 1,
+      "id": 4,
+      "ports": 11,
+      "role": "junction",
+      "rotation": 3,
+      "site": [
+        1,
+        2
+      ],
+      "template": 2
+    },
+    {
+      "anchor": [
+        13,
+        13
+      ],
+      "facing": 1,
+      "id": 5,
+      "ports": 5,
+      "role": "junction",
+      "rotation": 0,
+      "site": [
+        1,
+        1
+      ],
+      "template": 0
+    },
+    {
+      "anchor": [
+        13,
+        4
+      ],
+      "facing": 1,
+      "id": 6,
+      "ports": 14,
+      "role": "junction",
+      "rotation": 0,
+      "site": [
+        1,
+        0
+      ],
+      "template": 0
+    },
+    {
+      "anchor": [
+        22,
+        4
+      ],
+      "facing": 1,
+      "id": 7,
+      "ports": 10,
+      "role": "junction",
+      "rotation": 3,
+      "site": [
+        2,
+        0
+      ],
+      "template": 2
+    },
+    {
+      "anchor": [
+        3,
+        5
+      ],
+      "facing": 1,
+      "id": 8,
+      "ports": 2,
+      "role": "entrance",
+      "rotation": 3,
+      "site": [
+        0,
+        0
+      ],
+      "template": 4
+    },
+    {
+      "anchor": [
+        22,
+        31
+      ],
+      "facing": 1,
+      "id": 9,
+      "ports": 3,
+      "role": "approach",
+      "rotation": 1,
+      "site": [
+        2,
+        3
+      ],
+      "template": 0
+    },
+    {
+      "anchor": [
+        32,
+        30
+      ],
+      "facing": 1,
+      "id": 10,
+      "ports": 8,
+      "role": "objective",
+      "rotation": 1,
+      "site": [
+        3,
+        3
+      ],
+      "template": 4
+    },
+    {
+      "anchor": [
+        4,
+        22
+      ],
+      "facing": 1,
+      "id": 11,
+      "ports": 2,
+      "role": "optional",
+      "rotation": 3,
+      "site": [
+        0,
+        2
+      ],
+      "template": 0
+    }
+  ],
+  "rotation": 1,
+  "route": [
+    8,
+    6,
+    7,
+    0,
+    1,
+    2,
+    3,
+    9
+  ],
+  "runtime_seed": 737294877,
+  "seed": 5,
+  "spawn": {
+    "heading": 1,
+    "x": 3,
+    "y": 5
+  },
+  "supplies": {
+    "direct": [
+      22,
+      25
+    ],
+    "optional": [
+      4,
+      22
+    ]
+  },
+  "template_version": 5,
+  "width": 36
+}

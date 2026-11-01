@@ -9,7 +9,7 @@ documents the delivered ownership, interfaces and deletion inventory;
 without describing current defaults. The bestiary expansion is closed with B01–B05
 accepted; useful B06 scope transfers to campaign PC07. Campaign planning resumes
 after P-B. [PC07.1 preparation and calibration](pc071_arena_calibration_design.md)
-is Accepted and closed (2026-11-01); PC07.2 population remains unplanned.
+is Accepted and closed (2026-11-01); PC07.2 [population and route checks](pc072_population_design.md) is **Ready for review** under the user-approved plan.
 
 Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
@@ -53,6 +53,20 @@ selection in PC07.2. The target is level 2 before the final guardian under norma
 shared XP. The bounded 36-trial study completed: all victories, three downings, zero permanent
 deaths. [Costs and recommendations](pc071_calibration/README.md) and
 [verification](pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
+
+PC07.2 [population and generated-route checks](pc072_population_design.md) are
+**Ready for review** (2026-11-01). Fixed five-recipe depth bands retain bounded
+encounter/member records, an intended key/guardian route and finite caches.
+Closed populated-room doors use existing shared geometry/AI. One population
+resolver supplies launch and checked save definitions; diagnostic generation
+reports include route/recipe metadata while player reports retain identity only.
+Direct-route XP totals 1,200 before the final guardian; ordinary fights remain
+bypassable. Existing Party, reward, travel and allocation ownership are unchanged.
+[Eight persistent routes](pc072_routes/README.md) all won: 32 observed downings,
+zero permanent deaths/recorded merges, level two before the final guardian and
+three field rests each. Both selected replays matched with hidden captures.
+[Verification and limitations](pc072_verification.md) retain frequent downings,
+costly reserve detours, diagnostic policy limits and pending human acceptance.
 
 ## Boundaries and data flow
 
@@ -256,7 +270,8 @@ and Sacred Flame; ranged-capable admission and AI holds preserve support positio
 Effect requests/instances/events carry tagged party or world-checked actor sources.
 NPC Bless reservations share the 64 slots; damage and burning Web notify source
 concentration exactly once. NPC sources/resources remain floor-owned across travel,
-canonical restore and disk persistence (schema/simulation 4/7). Additive protocol
+canonical restore and disk persistence (introduced in schema/simulation 4/7;
+current identities are 5/8). Additive protocol
 source tags, hover/log feedback, full production art and portrait reuse existing
 owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
 all budgets/count capacities remain fixed. [Verification](b05_verification.md)
@@ -320,7 +335,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 4/7 and generator/templates 4/4. Older saves reject
+Campaign schema/simulation are 5/8 and generator/templates 5/5. Older saves reject
 without being modified; no migration. World publication is format 3, appearance 4,
 visibility world-visibility-v6 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
@@ -360,5 +375,5 @@ The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
 [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 PC07.1 preparation and calibration are Accepted and closed;
 [verification/handoff](pc071_verification.md) records the bounded study and limits.
-PC07.2 population is next eligible for a reviewed detailed plan when requested;
+PC07.2 population and route checks are Ready for review;
 parent PC07 and P-C remain incomplete.

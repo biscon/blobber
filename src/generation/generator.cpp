@@ -178,7 +178,19 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
         number(unsigned(p.subcell.y));
         number(unsigned(p.facing));
     }
-    for (auto c : {f.optionalSupply, f.guardianReward, f.guardianApproach}) {
+    number(f.encounterCount);
+    for (unsigned i = 0; i < f.encounterCount; ++i) {
+        const auto& e = f.encounters[i];
+        number(unsigned(e.recipe));
+        number(unsigned(e.role));
+        number(e.room);
+        number(e.first);
+        number(e.count);
+    }
+    number(f.routeCount);
+    for (unsigned i = 0; i < f.routeCount; ++i)
+        number(f.route[i]);
+    for (auto c : {f.optionalSupply, f.guardianReward, f.guardianApproach, f.supply}) {
         number(unsigned(c.x));
         number(unsigned(c.y));
     }

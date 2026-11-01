@@ -22,7 +22,7 @@ void objective() {
     const auto p = preparePopulation(f, cat, defs.types);
     GameSession g(f.map, cat, p.placements, f.runtimeSeed, f.layout.spawn, true, defs.timings, p.recovery,
                   f.layout.fixtures, p.objective);
-    check(g.objective().count == 2 && !g.objective().completed && active(g) == 2,
+    check(g.objective().count == 4 && !g.objective().completed && active(g) == 6,
           "only optional supplies start active");
     check(g.landingSafety(0).safe && g.landingSafety(1).safe && !g.landingSafety(2).safe,
           "both initially protected landings are safe");
@@ -36,7 +36,10 @@ void objective() {
             check(bool(g.party().inventory().stack(g.party().inventory().at({{c}, b}))),
                   "owned bags filled before guardian rewards");
     }
-    const auto first = g.actors().id(2), second = g.actors().id(3);
+    const auto first = g.objective().members[0], second = g.objective().members[1];
+    for (unsigned n = 2; n < g.objective().count; ++n)
+        g.actors().damage(g.objective().members[n], 1000, 0);
+    g.update(0, false);
     check(g.guardian(first) && !g.guardian(g.actors().id(0)) && !g.guardian({first.slot, first.world + 1}),
           "designation rejects foreign actors");
     g.actors().damage(g.actors().id(0), 1000, 0);
@@ -62,8 +65,9 @@ void objective() {
           "reconciliation cannot duplicate loot or XP");
     GameSession removed(f.map, cat, p.placements, 5, f.layout.spawn, false, {}, p.recovery, f.layout.fixtures,
                         p.objective);
-    removed.actors().remove(removed.actors().id(2));
-    removed.actors().damage(removed.actors().id(3), 1000, 0);
+    removed.actors().remove(removed.objective().members[0]);
+    for (unsigned n = 1; n < removed.objective().count; ++n)
+        removed.actors().damage(removed.objective().members[n], 1000, 0);
     removed.update(0, false);
     check(!removed.objective().completed && removed.geometry().solid(gate),
           "removing a live guardian never counts as death");
@@ -71,11 +75,11 @@ void objective() {
                           f.layout.fixtures, p.objective);
     auto& exhaustedLoot = const_cast<LootSnapshot&>(exhausted.loot().snapshot());
     exhaustedLoot.revision = UINT64_MAX;
-    exhausted.actors().damage(exhausted.actors().id(2), 1000, 0);
-    exhausted.actors().damage(exhausted.actors().id(3), 1000, 0);
+    for (unsigned n = 0; n < exhausted.objective().count; ++n)
+        exhausted.actors().damage(exhausted.objective().members[n], 1000, 0);
     exhausted.update(0, false);
     check(exhausted.objective().capacityFailure && !exhausted.objective().completed &&
-              exhausted.geometry().solid(gate) && active(exhausted) == 2 &&
+              exhausted.geometry().solid(gate) && active(exhausted) == 6 &&
               exhaustedLoot.revision == UINT64_MAX,
           "revision exhaustion cannot partially publish gate or reward or wrap loot");
     GameSession drops(f.map, cat, p.placements, 5, {f.layout.guardianReward, Heading::North}, false, {},
@@ -95,10 +99,10 @@ void objective() {
         check(bool(drops.dropItem(handle, drops.party().inventory().revision())),
               "fill player-drop pool through checked transactions");
     }
-    drops.actors().damage(drops.actors().id(2), 1000, 0);
-    drops.actors().damage(drops.actors().id(3), 1000, 0);
+    for (unsigned n = 0; n < drops.objective().count; ++n)
+        drops.actors().damage(drops.objective().members[n], 1000, 0);
     drops.update(0, false);
-    check(drops.objective().completed && active(drops) == lootDropCapacity + 6,
+    check(drops.objective().completed && active(drops) == lootDropCapacity + 12,
           "full player-drop pool cannot exhaust reserved guardian rewards");
     const LootId reward{drops.actors().snapshot().world,
                         std::uint16_t(NpcWorld::maxInstances * lootPerActor + p.recovery.groundCount), 1};

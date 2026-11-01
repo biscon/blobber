@@ -307,7 +307,7 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
             p.text("Silver seal key", 270, 190, text);
         else
             p.text("None collected", 270, 190, muted);
-        p.text("Stairs and objectives: travel not yet available.", 270, 218, muted, UiTextStyle::Small);
+        p.text("Use stairs from the adjacent landing.", 270, 218, muted, UiTextStyle::Small);
     }
     if (hud && hud->development) {
         p.box(hudLayout::diagnosticMap);

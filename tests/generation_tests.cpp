@@ -47,6 +47,7 @@ FloorLayout rotated(const FloorLayout& source, unsigned turn) {
     f.guardianReward = rotate(f.guardianReward, f.width, turn);
     f.optionalSupply = rotate(f.optionalSupply, f.width, turn);
     f.guardianApproach = rotate(f.guardianApproach, f.width, turn);
+    f.supply = rotate(f.supply, f.width, turn);
     f.spawn.cell = rotate(f.spawn.cell, f.width, turn);
     f.spawn.heading = Heading((unsigned(f.spawn.heading) + turn) % 4);
     return f;

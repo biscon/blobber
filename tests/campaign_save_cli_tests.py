@@ -17,16 +17,16 @@ def setup(root):
     path=root/'rules/catalog.json'
     cat=json.loads(path.read_text())
     enemy=cat['monsters'][0]
-    for name in ('goblin','goblin.archer','goblin.guardian.placeholder'):
+    for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear'):
         cat['monsters'].append(dict(enemy,id=name))
-    for name in ('healing_potion','mana_potion'):
-        cat['items'].append(dict(cat['items'][1],id=name))
+    for name in ('healing_potion','mana_potion','arrow'):
+        cat['items'].append(dict(cat['items'][1],id=name,**(dict(kind='ammunition',stack_limit=100,ammunition='arrow') if name=='arrow' else {})))
     path.write_text(json.dumps(cat))
     npc=json.loads((root/'npcs/enemy.json').read_text())
-    for name in ('goblin','goblin.archer'):
+    for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear'):
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc,id=name)))
-    (root/'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json','goblin.json','goblin.archer.json'],instances=[])))
-    return dict(kind='campaign',schema_version=1,generator_version=4,template_version=4,seed=5,party=arena['party'])
+    (root/'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json',*[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')]],instances=[])))
+    return dict(kind='campaign',schema_version=1,generator_version=5,template_version=5,seed=5,party=arena['party'])
 
 
 def main(runner):
