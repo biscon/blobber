@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
 Created: 2026-10-31. Last updated: 2026-11-01.
-Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03 Accepted and closed (2026-10-31); B04 Accepted and closed (2026-11-01); B05 Accepted and closed (2026-11-01); B06 Planned.**
+Status: **Closed for this expansion (2026-11-01). B01–B05 Accepted and closed; B06 Superseded without implementation by campaign PC07 planning.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -16,20 +16,23 @@ serves the opening character levels, within the currently supported **levels 1�
 whether the eventual three-floor route ends around level two or three remains a
 campaign pacing decision. Floor number does not imply character level or CR.
 
-The [campaign roadmap](procedural_campaign_plan.md) stays paused after accepted
-P-B. This plan does not populate generated floors, assign guardians, change XP
-pacing or start PC07. Campaign integration gets its own plan after arena review.
+The five monster slices are accepted. The user chose to close this roadmap and
+transfer B06's useful preparation/calibration scope to
+[campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
+Population, guardians, XP and recovery pacing now belong to that campaign plan.
+PC07 is next for detailed planning; no campaign implementation or balance
+experiment has started as part of this closeout.
 
 ## Current checkpoint
 
 | Field | Current value |
 | --- | --- |
 | Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B05 closed |
-| Active slice | None; B05 accepted and closed |
+| Active slice | None; this expansion is closed with B01–B05 accepted |
 | Awaiting review | None; B05 reference v1 and completed slice accepted |
-| Next eligible slice | B06 — Arena preparation and roster polish; separate detailed planning, implementation unstarted |
-| Next action | Prepare B06's detailed plan for review when requested |
-| Campaign status | Paused; no generator/population or guardian changes |
+| Next eligible slice | Campaign PC07; B06 superseded without implementation |
+| Next action | Plan PC07's population, progression and targeted calibration under the campaign roadmap |
+| Campaign status | Planning resumes after accepted P-B; implementation and experiments unstarted |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
 Update checkpoint, tracker and affected execution record together. Roadmap
@@ -52,9 +55,9 @@ Only the user accepts a delivered slice.
    identify the next planning step without automatically implementing it.
 
 Use the existing statuses: Planned, In progress — planning/implementation, Ready
-for review, Accepted, Blocked, Superseded/Retired. Six slices are sufficient now;
-do not subdivide each animation, subsystem or test into a delivery slice. Propose
-a suffixed split only if implementation evidence makes a slice impractical.
+for review, Accepted, Blocked, Superseded/Retired. B01–B05 are delivered and
+accepted; B06 is superseded by campaign planning. Retain the historical slice IDs
+and evidence rather than treating transferred work as implemented.
 
 ## Roster and experience
 
@@ -112,9 +115,10 @@ per frame. Do not increase budgets or capacities speculatively for 20+ floors.
 
 Each monster becomes selectable in normal Arena Setup when its appearance and
 rules are available. Reuse existing scenario IDs, quantities, seed, rematch and
-editing. Until B06's level preparation is delivered, manual review uses level-one
-arena parties; focused level-two/three checks may construct parties through the
-existing advancement API. Do not describe those checks as a delivered arena UI.
+editing. Manual review currently uses level-one arena parties; focused level-two/
+three checks may construct parties through the existing advancement API. The
+proposed reusable level preparation now belongs to PC07. Do not describe those
+checks as a delivered arena UI.
 
 Shared combat changes must preserve current campaign save/travel behavior. If
 saved structures or simulation meaning change, update validation/version identity
@@ -174,7 +178,7 @@ per-frame image generation/decoding is part of this work.
 | B03 | [Giant rat and Pack Tactics](b03_giant_rat_design.md) | B02 accepted | Accepted and closed (2026-10-31) |
 | B04 | [Zombie and Undead Fortitude](b04_zombie_design.md) | B03 accepted | Accepted and closed (2026-11-01) |
 | B05 | [Goblin shaman and enemy spellcasting](b05_goblin_shaman_design.md) | B04 accepted | Accepted and closed (2026-11-01) |
-| B06 | Arena preparation and roster polish | B05 accepted | Planned |
+| B06 | Arena preparation and roster polish | B05 accepted | Superseded (2026-11-01); useful scope transferred to PC07, unimplemented |
 
 ### B01 — Skeleton and typed damage
 
@@ -280,6 +284,16 @@ capacity rejection, resources, pause, interruption and persistence checks pass.
 
 ### B06 — Arena preparation and roster polish
 
+**Superseded without implementation (2026-11-01).** The user chose to close the
+bestiary expansion after accepted B01–B05. Reproducible level preparation and
+targeted encounter measurements now belong to
+[PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters),
+where they serve population, XP and recovery decisions. General arena/roster
+polish is deferred unless campaign review exposes a concrete need. B06 is not an
+acceptance prerequisite for campaign work, and no B06 results are claimed.
+
+The original proposal below is retained as history, not an active delivery gate.
+
 Add bounded arena preparation for party levels 1–3 using existing advancement
 rules and actual spell choices. Preserve level-one character-library snapshots.
 Store the arena target level and required advancement choices as scenario-owned
@@ -334,12 +348,15 @@ protection, targeting, rendering anchors and persistence. Image width is not a
 collision footprint. All selected creatures fit the existing one-subcell model;
 no placeholder footprint subsystem is required now.
 
-After B06 acceptance and a user request to return to campaign work, inspect PC07
-and plan species/recipe selection, depth bands, guardian compositions, rewards,
-required-path XP and recovery pacing using the reviewed arena behavior. Rat/undead/
-goblin families can suggest room identities later, but this roadmap assigns none
-to generated floors. Long-term 20+ floor count, higher-level progression, later
-monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
+The user has directed the return to campaign planning. PC07 owns species/recipe
+selection, depth bands, guardian compositions, rewards, required-path XP and
+recovery pacing, plus the useful preparation/calibration scope transferred from
+B06. Start with campaign targets, measure candidate encounters, then check
+accumulated difficulty on generated routes. Existing arena evidence establishes
+monster behavior, not dungeon balance. A reviewed detailed PC07 plan and explicit
+bounded experiment opt-in still precede implementation and balance runs.
+Long-term 20+ floor count, higher-level progression, later monster tiers,
+poison/cleansing, corrosion and the mouther remain separate work.
 
 ## Decision and execution record
 
@@ -461,3 +478,12 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
   remain recorded. **B06 — Arena preparation and roster polish** is next for
   separate detailed planning; implementation is unstarted. Campaign integration
   and PC07 stay paused.
+
+- **2026-11-01 roadmap closeout and campaign handoff:** User proposed closing the
+  bestiary plan and moving B06 into the procedural campaign plan. This expansion
+  is **closed with B01–B05 Accepted and closed**. **B06 is Superseded without
+  implementation**; its reproducible level preparation and useful encounter
+  measurements transfer to PC07 to inform population, XP and recovery pacing.
+  General arena polish is deferred. Campaign planning resumes with PC07; its
+  detailed implementation plan remains unapproved. No new gameplay results,
+  balance experiments or campaign implementation are claimed by this closeout.

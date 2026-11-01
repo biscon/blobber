@@ -1,18 +1,18 @@
 # Procedural campaign MVP: design and delivery roadmap
 
-Created: 2026-10-30. Last updated: 2026-10-31.
+Created: 2026-10-30. Last updated: 2026-11-01.
 Status: **Roadmap accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted (2026-10-30).**
 PC07–PC09 plans remain unapproved; do not advance automatically.
 
-**Paused after P-B (2026-10-30), at the user's request.** The
+**Campaign planning resumed (2026-11-01), at the user's direction.** The
 [renderer roadmap](renderer_plan.md) is now complete: R01–R06 and milestones
 R-A/R-B/R-C are Accepted and closed (2026-10-31), including production cutover and
-old-renderer retirement. The accepted [bestiary roadmap](bestiary_plan.md) is active:
-B01 skeleton is Accepted and closed (2026-10-31) after arena review; B02 bugbear
-is next for detailed planning. Later monsters and campaign integration remain
-separate work. The pause remains in force and supersedes earlier
-instructions to plan PC07; renderer/bestiary work does not authorize campaign
-resumption.
+old-renderer retirement. The [bestiary expansion](bestiary_plan.md) is closed with
+B01–B05 Accepted and closed. B06 was superseded without implementation; its useful
+level preparation and encounter calibration move into PC07 to inform dungeon
+population, progression and recovery. This direction supersedes the pause after
+P-B for planning. PC07's detailed implementation plan remains unapproved, and no
+balance experiment is started or authorized merely by this roadmap update.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -53,14 +53,14 @@ arena and test fixtures; it does not imply retaining the old game mode.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06 and milestones P-A/P-B accepted (2026-10-30) |
+| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06 and P-A/P-B accepted; renderer R01–R06 and bestiary B01–B05 accepted |
 | Active slice | None; PC06 Accepted and closed |
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
 | Next eligible slice | PC07 — Depth bands and finite recovery encounters; detailed planning only |
-| Next action | Campaign paused after P-B; finish the accepted bestiary roadmap and arena reviews, then resume campaign integration planning only on the user's request |
+| Next action | Prepare PC07's detailed population/XP/recovery plan, including targeted calibration transferred from B06; review before implementation |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted; PC07–PC09 plans unapproved |
+| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 and P-A/P-B closed; PC07 absorbs useful B06 scope; PC07–PC09 detailed plans unapproved |
 
 Update this checkpoint, tracker and affected execution record together. Roadmap
 acceptance is not slice implementation or evidence of delivered gameplay acceptance.
@@ -351,7 +351,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Accepted (2026-10-30) | P-B |
 | PC05 | [Paid recall and entry waypoints](#pc05-paid-recall-and-entry-waypoints) | PC04 | Accepted (2026-10-30) | P-B |
 | PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Accepted (2026-10-30) | P-B |
-| PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters) | PC06 | Planned | P-C |
+| PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters), including targeted calibration | PC06; bestiary B01–B05 accepted | Planned | P-C |
 | PC08 | [Campaign agents and expedition reports](#pc08-campaign-agents-and-expedition-reports) | PC07 | Planned | P-C |
 | PC09 | [Integrated expedition and MVP acceptance](#pc09-integrated-expedition-and-mvp-acceptance) | PC08 | Planned | P-C |
 
@@ -605,6 +605,11 @@ experiments, broad sweep, expedition experiment, commits or later-slice work.
 
 ### PC07: Depth bands and finite recovery encounters
 
+**Scope transfer (2026-11-01):** Bestiary B06 is superseded without implementation.
+Its useful level preparation and encounter measurements belong here, driven by
+campaign population decisions. General arena polish is not a prerequisite. This
+is the revised roadmap scope; a detailed implementation plan is still required.
+
 **Deliver:** Three curated depth bands, 3–5 ordinary groups (including optional groups) plus a guardian as an
 initial target, meaningful quiet/key/supply rooms and 1–2 optional reward branches.
 Use existing supported monsters or explicitly labelled adaptations with prepared
@@ -612,9 +617,53 @@ art. Give the final guardian clear presentation; a unique species/boss framework
 is not required. Allocate enough approachable optional XP/rewards to offer a
 fallback when a party reaches the guardian underpowered.
 
+Plan and deliver the following in order within PC07:
+
+1. **Population and progression targets.** Draft candidate compositions, ordinary/
+   optional/guardian roles, required/optional XP and supplies for each depth. Infer
+   expected party levels from attainable XP, not floor number. Use the seven
+   accepted appearances/species; document any adaptation explicitly.
+2. **Reproducible preparation and targeted calibration.** Reuse existing advancement
+   rules to prepare level 1–3 parties with actual spell choices, ordinary starting
+   equipment and full ordinary resources for isolated encounters. Preserve
+   level-one library snapshots; scenario-owned target levels/choices and immutable
+   launch data must reproduce through load, automation and rematch. Version the
+   scenario format with explicit defaults for supported old level-one scenarios;
+   reject invalid choices without replacing the active setup. Expose these cases
+   for ordinary manual arena review. Extend the existing bounded serial experiment
+   runner/reports only where needed, with declared tactical capability coverage.
+3. **Generated-route validation and tuning.** Populate generated floors using the
+   candidate recipes, then compare selected direct routes and optional detours.
+   Carry actual HP, mana, supplies, XP and advancement between encounters; recover
+   only through ordinary legal gameplay. Check approach geometry, ranged/support
+   positions, alerts/encounter merges, guardian entry resources and recovery costs.
+   Use short checked scripts/manual review here; general autonomous exploration
+   and expedition agents remain PC08 work.
+
+The concrete handoff is a **candidate population table**: stable recipe/composition,
+intended party level, ordinary/optional/guardian role, XP, supplies, placement
+requirements, observed resource costs, risks and unresolved evidence. Retain per-
+character damage/downings/deaths and damage bursts, mana/healing/consumable use,
+combat rounds and simulation duration separately. Include party builds/advancement,
+tactical policy, seeds and relevant code/content versions with reproduction traces.
+Label sampled lower bounds and unsupported tactics; distinguish stalls/timeouts/
+policy failures from party defeats. Fresh-party arena wins alone do not establish
+that a sequence of fights is affordable.
+
+For the detailed experiment proposal, start with six candidate recipes at their
+intended levels × two declared party compositions (mixed and less magical support)
+× three fixed seeds: **36 serial trials** using one supported documented policy.
+This is a proposed bounded diagnostic sample, not an approved run or a reliable
+win-rate estimate. Inspect failures/outliers before expanding. Specify runtime,
+output and stopping limits and obtain explicit experiment opt-in before execution;
+select a few generated-route comparisons for the subsequent floor check. Do not
+multiply every recipe across every level/build/policy or run an unattended sweep.
+
 **Boundary:** No respawns, dynamic party scaling, automatic level-per-floor,
 mandatory full clear or universal party victory promise. No hidden food/repair tax
-or shop economy. Target 10–15 minutes per floor is a hypothesis, not a test assertion.
+or shop economy. No general party/equipment/formation editor, new experiment service
+or autonomous tuning optimizer. Target 10–15 minutes per floor is a hypothesis,
+not a test assertion; combat simulation duration does not measure human exploration.
 
 **Acceptance / validation:** Record mandatory/optional XP by depth and attainable
 level thresholds; show where extra encounters can help and where level 3 caps it.
@@ -625,12 +674,16 @@ fixtures. With explicit opt-in, use existing arena calibration plus scripted rea
 floor approaches to inspect damage spikes, consumables and required-route viability.
 Do not pass this slice based solely on CR sums or arena win rate.
 
-**Review recipe:** Present the recipe/XP/supply table and sample generated floors.
+**Review recipe:** Present the population/calibration/XP/supply table and sample generated floors.
 Show a direct route and a struggling-party optional detour, including fewer-magic
 compositions. Retain representative failures. If playtesting was not authorized,
 report it as pending evidence rather than inventing balance confidence.
 
-**Execution record:** Not started; PC06 is accepted. Campaign paused after P-B on 2026-10-30 for rendering/presentation and then additional monsters. PC07 remains next eligible when the user resumes campaign work.
+**Execution record:** Detailed planning/implementation and experiments not started.
+PC06/P-B and bestiary B01–B05 are accepted. On 2026-11-01 the user directed closing
+the bestiary roadmap and transferring useful B06 scope here. Campaign planning
+resumes with this revised scope; implementation and experiment approvals remain
+separate. No B06 calibration data or campaign balance result is claimed.
 
 ### PC08: Campaign agents and expedition reports
 
@@ -638,8 +691,9 @@ report it as pending evidence rather than inventing balance confidence.
 information, legal fixture/travel decisions and declared tactical/resource/advancement
 coverage. Reuse existing client, serial jobs, reports, replay/captures and MCP job
 lifecycle. Extend scenario/provenance schemas for campaign seeds and depth recipes.
-Add resources at each guardian, optional XP taken/remaining, hub/recall/rest counts,
-retracing time, encounter merges and generation retry/fallback diagnostics to reports.
+Extend PC07's encounter calibration metrics with resources at each guardian,
+optional XP taken/remaining, hub/recall/rest counts, retracing time, encounter merges
+and generation retry/fallback diagnostics.
 
 **Boundary:** No duplicated game rules, omniscient player agent, autonomous tuning
 optimizer, new test service or exhaustive spell/build coverage promise. Diagnostic
@@ -723,6 +777,7 @@ boundaries should accommodate them without building their systems now.
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-11-01 | Close the bestiary expansion with B01–B05 accepted; supersede unimplemented B06 and transfer useful preparation/calibration to PC07. Resume campaign planning; detailed implementation and experiment approvals remain separate. | User proposes closing the bestiary plan and working B06 into the procedural campaign plan, as discussed. |
 | 2026-10-30 | Renderer direction accepted, stacked cells deferred; separate six-slice renderer roadmap proposed. Campaign pause remains in force. | User agreed to the renderer proposal and requested a slice plan like this roadmap. No automatic implementation or PC07 work authorized. |
 | 2026-10-30 | Pause campaign work after accepted P-B; prioritize rendering/presentation, then additional monsters before resuming. | User explicitly requests the pause and discussion of a low-resolution 3D renderer. Renderer implementation is not yet approved. |
 | 2026-10-30 | PC06 Accepted and closed; milestone P-B complete through accepted PC04–PC06. PC07 next for detailed planning only. | User: “I accept the save and love slice, record it in the plan doc”. Review corrections included; verification and limitations unchanged. No new play-coverage details or balance authorization. |
@@ -937,7 +992,7 @@ See the [review correction verification](pc06_verification.md#pc06-presentation-
 Acceptance remains pending.
 
 
-### PC06 accepted closeout and next-agent handoff (2026-10-30, current)
+### PC06 accepted closeout and next-agent handoff (2026-10-30, historical)
 
 PC06 — Campaign save and resume — is **Accepted and closed**. The user accepted
 the save/load slice on 2026-10-30: “I accept the save and love slice, record it in the
@@ -961,3 +1016,26 @@ This closeout changes documentation only. Existing verification and limitations
 remain unchanged; no additional interactive play-coverage details were supplied.
 All working-tree changes were preserved. No builds, gameplay tests, captures,
 balance experiments, commits, resets or stashes were performed during this closeout.
+
+### Bestiary closeout and campaign planning handoff (2026-11-01, current)
+
+The user chose to close the bestiary plan and incorporate B06's useful scope into
+this roadmap. B01–B05 and renderer R01–R06 remain **Accepted and closed**. B06 is
+**Superseded without implementation**, not accepted as delivered. Its reusable
+level preparation and targeted measurements now serve PC07 population, XP and
+recovery decisions; broad arena polish is deferred.
+
+This handoff supersedes the earlier pause/next-agent instructions: campaign
+**planning resumes**, with PC07 next for a detailed plan. Read AGENTS.md, the system
+overview, MVP specification, revised PC07 scope and PC06/B05 verification; inspect
+the current generator, population, advancement and experiment code before designing
+the change. The current population is still the small goblin/archer/placeholder-
+guardian setup, and normal arena scenarios remain level-one only. The scope
+transfer itself implements neither new population nor level preparation.
+
+PC07 should first propose progression/population targets, then the minimum reusable
+preparation/calibration support, then generated-route checks with persistent
+resources. Keep general autonomous navigation/reporting extensions in PC08.
+PC07–PC09 and P-C remain Planned; detailed implementation plans require review and
+balance experiments require explicit bounded opt-in. No builds, playthroughs or
+experiments were run for this documentation-only handoff.

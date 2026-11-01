@@ -1,8 +1,9 @@
 # B05 — Goblin shaman delivery and review
 
-2026-11-01. **Ready for review.** The user approved implementation with
+2026-11-01. **Accepted and closed.** The user approved implementation with
 “Implement the plan” and accepted turnaround v1 with “reference approved”.
-Completed-slice acceptance remains pending.
+The user accepted the completed slice with “slice accepted, record it in the plan
+doc”. Existing checks and limitations remain unchanged by acceptance.
 
 [Review gallery](screenshots/b05/index.html) · [design](b05_goblin_shaman_design.md) ·
 [exact artwork prompts/provenance](../assets/npcs/goblin-shaman/README.md).
@@ -13,7 +14,7 @@ Normal Arena Setup exposes `goblin_shaman`: Small one-subcell humanoid, abilitie
 10/10/10/10/14/11, AC 10, fixed HP 9, DC 12, 50 XP, +2 staff/club for 1d4
 bludgeoning (critical 2d4). No loot, metal armor, damage modifiers, sleep immunity,
 Nimble Escape, healing or Sanctuary casting. The source ledger records the Acolyte
-baseline and adaptations. Campaign population/guardians, PC07 and B06 are unchanged.
+baseline and adaptations. B05 did not change campaign population/guardians.
 
 Each shaman starts with six mana. Bless costs two, Sacred Flame is free, and
 encounter transitions do not refill resources. Bless requires another conscious,
@@ -159,5 +160,6 @@ feel and fun remain user review items. Campaign balance is not established, and 
 arena level-preparation UI or campaign population integration is claimed.
 
 Review ordinary Arena Setup by searching for shaman, then try the retained recipes
-and concentrate ranged pressure on the caster. B05 is **Ready for review**;
-completed-slice acceptance is pending. B06 and campaign/PC07 remain unstarted.
+and concentrate ranged pressure on the caster. B05 is **Accepted and closed**.
+The bestiary roadmap is closed; B06 is superseded without implementation and its
+useful calibration scope transfers to PC07 planning. No campaign balance is claimed.

@@ -1,9 +1,10 @@
 # B05 — Goblin shaman and enemy spellcasting
 
-2026-11-01. **Ready for review.** The user approved the detailed
-plan with “Implement the plan.” Reference v1 accepted with “reference approved”; completed-slice acceptance
-remains pending. Campaign population, guardians, PC07 and B06 remain
-unstarted.
+2026-11-01. **Accepted and closed.** The user approved the detailed plan with
+“Implement the plan.” Reference v1 was accepted with “reference approved”; the
+completed slice was accepted with “slice accepted, record it in the plan doc”.
+The bestiary roadmap is now closed; B06's useful scope transfers to campaign PC07
+planning. Campaign population/guardian implementation remains unstarted.
 
 ## Content and responsibility
 
@@ -147,4 +148,5 @@ event allowance is 6,728 <8,192; source cleanup stays in the existing lifecycle 
 
 Reference v1 is accepted. [Verification/gallery](b05_verification.md) records exact
 checks, strict production arena recipes/captures, byte totals and limitations.
-Completed-slice acceptance remains pending; B06 and campaign/PC07 stay unstarted.
+The completed slice is accepted. B06 is superseded without implementation; campaign
+PC07 is next for detailed planning under the revised roadmap.

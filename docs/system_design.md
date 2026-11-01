@@ -6,8 +6,9 @@ new renderer plan”. [Sole renderer cutover and retirement](renderer_cutover_de
 documents the delivered ownership, interfaces and deletion inventory;
 [verification](r06_verification.md) retains executed checks and limitations unchanged.
 [Historical design and acceptance records](system_history.md) preserve prior evidence
-without describing current defaults. Additional monster work follows its separately accepted bestiary roadmap;
-the campaign roadmap remains paused after P-B, with no automatic PC07 work.
+without describing current defaults. The bestiary expansion is closed with B01–B05
+accepted; useful B06 scope transfers to campaign PC07. Campaign planning resumes
+after P-B; detailed implementation plans and balance experiments remain unapproved.
 
 Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
@@ -15,8 +16,8 @@ Current follow-up: [loot, guardian doors and uninterrupted encounter flow](dunge
 records the implemented visual/interaction polish, unsaved-run terminal fix, and
 focused CPU/GPU verification.
 
-Accepted work: [early bestiary roadmap](bestiary_plan.md) — six slices for
-skeleton, bugbear, standard giant rat, zombie, goblin shaman and arena polish.
+Accepted work: [early bestiary roadmap](bestiary_plan.md) — closed after five
+accepted monster slices: skeleton, bugbear, standard giant rat, zombie and goblin shaman.
 Each monster includes imagegen art in the goblins' style and their applicable
 animation set. Implement and review in the arena before campaign integration;
 all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) is
@@ -30,11 +31,12 @@ art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack T
 delivered. Reference v1 and the completed slice are accepted.
 [B04 verification/gallery](b04_verification.md) records the checks and limitations.
 [B05 goblin shaman and enemy spellcasting](b05_goblin_shaman_design.md) is
-**Ready for review** under the user-approved detailed plan. Tagged NPC Bless
+**Accepted and closed** (2026-11-01). Tagged NPC Bless
 sources, fixed NPC resources, casting timelines, full 56-pose art and portrait are
-implemented. Reference v1 is accepted; completed-slice acceptance is pending.
+implemented. Reference v1 and the completed slice are accepted.
 [B05 verification/gallery](b05_verification.md) records checks and limitations.
-B06 remains Planned.
+B06 is superseded without implementation; reusable level preparation and targeted
+calibration now belong to [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
 right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
@@ -42,7 +44,15 @@ metadata/layout only, using the existing prepared-image pipeline. Health bars us
 projected body-axis anchor horizontally rather than the visible silhouette’s
 bounds, so weapons and asymmetric poses do not pull them away from the head.
 The three-floor campaign is the opening low-level vertical slice of an eventual
-roughly 20+ floor game; it stays paused after P-B.
+roughly 20+ floor game; planning resumes after accepted P-B.
+
+Proposed PC07 scope starts with population/XP/recovery targets, reuses existing
+advancement and scenario/experiment owners for reproducible level 1–3 encounter
+calibration, and checks accumulated costs on selected generated routes. The output
+is a candidate population table with resource costs, XP, placement requirements,
+risks and reproduction evidence. General expedition agents remain PC08. This is
+roadmap direction only: existing population and level-one arena behavior remain
+implemented; PC07 still needs a reviewed detailed design before implementation.
 
 ## Boundaries and data flow
 
@@ -250,7 +260,7 @@ canonical restore and disk persistence (schema/simulation 4/7). Additive protoco
 source tags, hover/log feedback, full production art and portrait reuse existing
 owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
 all budgets/count capacities remain fixed. [Verification](b05_verification.md)
-records evidence, limitations and pending completed-slice user review.
+records evidence, limitations and completed-slice user acceptance.
 
 B04 implements the approved [zombie design](b04_zombie_design.md). Catalog schema 12
 adds Undead Fortitude to the typed byte trait mask. One allocation-free NPC damage
@@ -346,6 +356,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 | `src/automation/`, `tools/` | Typed sessions, strict replay, CLI/client/local MCP, owned captures and opt-in experiments; [protocol](headless_protocol.md), [MCP](mcp_design.md) |
 | `tests/` | Self-owned CPU/GPU regression fixtures and resource/allocation guards; no retired renderer harnesses |
 
-The procedural campaign roadmap remains paused after accepted P-B. The accepted
-bestiary roadmap delivers arena-reviewed monsters first; campaign integration and
-PC07 require a later explicit return to campaign planning.
+The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
+[campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
+Campaign planning resumes after accepted P-B; PC07 is next for a reviewed detailed
+plan. Implementation and balance experiments have not started.
