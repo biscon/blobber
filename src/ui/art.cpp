@@ -73,7 +73,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "skeleton",
                                   "bugbear",
                                   "giant-rat",
-                                  "zombie"};
+                                  "zombie",
+                                  "goblin-shaman"};
     const auto prepared = directory.parent_path() / "prepared";
     auto loadPreparedAtlas = [&](const char* name, int height) {
         preparationPoint("Loading interface atlases");
@@ -215,7 +216,9 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index == zombiePortraitIcon)
+    if (index == shamanPortraitIcon)
+        index = 63;
+    else if (index == zombiePortraitIcon)
         index = 62;
     else if (index == giantRatPortraitIcon)
         index = 61;

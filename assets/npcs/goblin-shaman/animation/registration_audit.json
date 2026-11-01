@@ -1,0 +1,1279 @@
+{
+  "attack-front": {
+    "size": [
+      1254,
+      1254
+    ],
+    "frames": [
+      {
+        "bounds": [
+          45,
+          10,
+          582,
+          618
+        ],
+        "skin_bounds": [
+          163,
+          22,
+          578,
+          598
+        ],
+        "median_x": 372.0,
+        "ground": 618
+      },
+      {
+        "bounds": [
+          93,
+          136,
+          487,
+          628
+        ],
+        "skin_bounds": [
+          109,
+          141,
+          467,
+          610
+        ],
+        "median_x": 279.0,
+        "ground": 628
+      },
+      {
+        "bounds": [
+          30,
+          92,
+          594,
+          573
+        ],
+        "skin_bounds": [
+          99,
+          92,
+          577,
+          544
+        ],
+        "median_x": 373.0,
+        "ground": 573
+      },
+      {
+        "bounds": [
+          98,
+          7,
+          515,
+          583
+        ],
+        "skin_bounds": [
+          99,
+          79,
+          498,
+          555
+        ],
+        "median_x": 314.0,
+        "ground": 583
+      }
+    ],
+    "scale": 1.0570824524312896,
+    "pivots": [
+      372.0,
+      279.0,
+      373.0,
+      314.0
+    ],
+    "measured_body_top": 145,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "cast-back": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          266,
+          24,
+          744,
+          738
+        ],
+        "skin_bounds": [
+          269,
+          38,
+          738,
+          679
+        ],
+        "median_x": 507.0,
+        "ground": 738
+      },
+      {
+        "bounds": [
+          239,
+          24,
+          835,
+          739
+        ],
+        "skin_bounds": [
+          243,
+          57,
+          831,
+          679
+        ],
+        "median_x": 598.0,
+        "ground": 739
+      }
+    ],
+    "scale": 0.7142857142857143,
+    "pivots": [
+      507.0,
+      598.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "cast-front": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          289,
+          11,
+          827,
+          747
+        ],
+        "skin_bounds": [
+          297,
+          31,
+          785,
+          709
+        ],
+        "median_x": 560.0,
+        "ground": 747
+      },
+      {
+        "bounds": [
+          205,
+          11,
+          797,
+          752
+        ],
+        "skin_bounds": [
+          212,
+          29,
+          777,
+          715
+        ],
+        "median_x": 469.0,
+        "ground": 752
+      }
+    ],
+    "scale": 0.6983240223463687,
+    "pivots": [
+      560.0,
+      469.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "cast-left": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          379,
+          13,
+          760,
+          740
+        ],
+        "skin_bounds": [
+          385,
+          27,
+          733,
+          720
+        ],
+        "median_x": 577.0,
+        "ground": 740
+      },
+      {
+        "bounds": [
+          231,
+          14,
+          711,
+          741
+        ],
+        "skin_bounds": [
+          286,
+          27,
+          670,
+          644
+        ],
+        "median_x": 549.0,
+        "ground": 741
+      }
+    ],
+    "scale": 0.7012622720897616,
+    "pivots": [
+      577.0,
+      549.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "cast-right": {
+    "size": [
+      1774,
+      887
+    ],
+    "frames": [
+      {
+        "bounds": [
+          244,
+          8,
+          673,
+          862
+        ],
+        "skin_bounds": [
+          244,
+          28,
+          667,
+          822
+        ],
+        "median_x": 493.0,
+        "ground": 862
+      },
+      {
+        "bounds": [
+          230,
+          9,
+          834,
+          862
+        ],
+        "skin_bounds": [
+          230,
+          91,
+          799,
+          823
+        ],
+        "median_x": 393.0,
+        "ground": 862
+      }
+    ],
+    "scale": 0.6561679790026247,
+    "pivots": [
+      493.0,
+      393.0
+    ],
+    "measured_body_top": 100,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "death-back": {
+    "size": [
+      1254,
+      1254
+    ],
+    "frames": [
+      {
+        "bounds": [
+          28,
+          27,
+          502,
+          634
+        ],
+        "skin_bounds": [
+          38,
+          40,
+          473,
+          510
+        ],
+        "median_x": 320.5,
+        "ground": 634
+      },
+      {
+        "bounds": [
+          29,
+          83,
+          578,
+          645
+        ],
+        "skin_bounds": [
+          91,
+          201,
+          562,
+          614
+        ],
+        "median_x": 329.0,
+        "ground": 645
+      },
+      {
+        "bounds": [
+          26,
+          53,
+          650,
+          492
+        ],
+        "skin_bounds": [
+          29,
+          81,
+          561,
+          448
+        ],
+        "median_x": 364.0,
+        "ground": 492
+      },
+      {
+        "bounds": [
+          5,
+          100,
+          589,
+          489
+        ],
+        "skin_bounds": [
+          5,
+          126,
+          497,
+          380
+        ],
+        "median_x": 322.0,
+        "ground": 489
+      }
+    ],
+    "scale": 0.8417508417508418,
+    "pivots": [
+      320.5,
+      329.0,
+      295.0,
+      251.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "death-front": {
+    "size": [
+      1254,
+      1254
+    ],
+    "frames": [
+      {
+        "bounds": [
+          68,
+          27,
+          570,
+          643
+        ],
+        "skin_bounds": [
+          75,
+          41,
+          551,
+          576
+        ],
+        "median_x": 327.0,
+        "ground": 643
+      },
+      {
+        "bounds": [
+          73,
+          100,
+          582,
+          644
+        ],
+        "skin_bounds": [
+          83,
+          114,
+          510,
+          611
+        ],
+        "median_x": 338.0,
+        "ground": 644
+      },
+      {
+        "bounds": [
+          57,
+          91,
+          604,
+          442
+        ],
+        "skin_bounds": [
+          85,
+          116,
+          579,
+          373
+        ],
+        "median_x": 367.0,
+        "ground": 442
+      },
+      {
+        "bounds": [
+          12,
+          177,
+          623,
+          458
+        ],
+        "skin_bounds": [
+          84,
+          219,
+          542,
+          408
+        ],
+        "median_x": 264.0,
+        "ground": 458
+      }
+    ],
+    "scale": 0.8305647840531561,
+    "pivots": [
+      327.0,
+      338.0,
+      332.0,
+      313.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "death-left": {
+    "size": [
+      1254,
+      1254
+    ],
+    "frames": [
+      {
+        "bounds": [
+          163,
+          43,
+          573,
+          683
+        ],
+        "skin_bounds": [
+          169,
+          120,
+          554,
+          649
+        ],
+        "median_x": 362.0,
+        "ground": 683
+      },
+      {
+        "bounds": [
+          110,
+          128,
+          600,
+          667
+        ],
+        "skin_bounds": [
+          115,
+          141,
+          530,
+          614
+        ],
+        "median_x": 321.0,
+        "ground": 667
+      },
+      {
+        "bounds": [
+          51,
+          74,
+          595,
+          413
+        ],
+        "skin_bounds": [
+          51,
+          141,
+          518,
+          397
+        ],
+        "median_x": 240.0,
+        "ground": 413
+      },
+      {
+        "bounds": [
+          23,
+          212,
+          606,
+          428
+        ],
+        "skin_bounds": [
+          72,
+          244,
+          528,
+          423
+        ],
+        "median_x": 231.5,
+        "ground": 428
+      }
+    ],
+    "scale": 0.8880994671403197,
+    "pivots": [
+      362.0,
+      321.0,
+      284.5,
+      300.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "death-right": {
+    "size": [
+      1254,
+      1254
+    ],
+    "frames": [
+      {
+        "bounds": [
+          64,
+          11,
+          573,
+          657
+        ],
+        "skin_bounds": [
+          92,
+          24,
+          565,
+          567
+        ],
+        "median_x": 372.0,
+        "ground": 657
+      },
+      {
+        "bounds": [
+          134,
+          87,
+          515,
+          656
+        ],
+        "skin_bounds": [
+          189,
+          192,
+          481,
+          608
+        ],
+        "median_x": 332.0,
+        "ground": 656
+      },
+      {
+        "bounds": [
+          17,
+          116,
+          608,
+          414
+        ],
+        "skin_bounds": [
+          89,
+          118,
+          567,
+          397
+        ],
+        "median_x": 427.0,
+        "ground": 414
+      },
+      {
+        "bounds": [
+          21,
+          186,
+          617,
+          405
+        ],
+        "skin_bounds": [
+          80,
+          203,
+          557,
+          395
+        ],
+        "median_x": 436.0,
+        "ground": 405
+      }
+    ],
+    "scale": 0.9578544061302682,
+    "pivots": [
+      372.0,
+      332.0,
+      328.0,
+      318.5
+    ],
+    "measured_body_top": 135,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "hurt-back": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          304,
+          38,
+          831,
+          738
+        ],
+        "skin_bounds": [
+          304,
+          91,
+          824,
+          604
+        ],
+        "median_x": 583.0,
+        "ground": 738
+      },
+      {
+        "bounds": [
+          202,
+          36,
+          788,
+          738
+        ],
+        "skin_bounds": [
+          204,
+          64,
+          779,
+          602
+        ],
+        "median_x": 544.0,
+        "ground": 738
+      }
+    ],
+    "scale": 0.7727975270479135,
+    "pivots": [
+      583.0,
+      544.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "hurt-front": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          323,
+          16,
+          822,
+          725
+        ],
+        "skin_bounds": [
+          328,
+          34,
+          811,
+          708
+        ],
+        "median_x": 557.0,
+        "ground": 725
+      },
+      {
+        "bounds": [
+          224,
+          26,
+          723,
+          729
+        ],
+        "skin_bounds": [
+          230,
+          43,
+          680,
+          712
+        ],
+        "median_x": 503.0,
+        "ground": 729
+      }
+    ],
+    "scale": 0.723589001447178,
+    "pivots": [
+      557.0,
+      503.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "hurt-left": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          297,
+          15,
+          818,
+          744
+        ],
+        "skin_bounds": [
+          303,
+          26,
+          807,
+          633
+        ],
+        "median_x": 567.0,
+        "ground": 744
+      },
+      {
+        "bounds": [
+          222,
+          23,
+          800,
+          742
+        ],
+        "skin_bounds": [
+          229,
+          38,
+          741,
+          663
+        ],
+        "median_x": 459.0,
+        "ground": 742
+      }
+    ],
+    "scale": 0.6963788300835655,
+    "pivots": [
+      567.0,
+      459.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "hurt-right": {
+    "size": [
+      1774,
+      887
+    ],
+    "frames": [
+      {
+        "bounds": [
+          122,
+          16,
+          861,
+          865
+        ],
+        "skin_bounds": [
+          132,
+          85,
+          774,
+          770
+        ],
+        "median_x": 449.0,
+        "ground": 865
+      },
+      {
+        "bounds": [
+          129,
+          19,
+          641,
+          866
+        ],
+        "skin_bounds": [
+          161,
+          182,
+          591,
+          760
+        ],
+        "median_x": 284.0,
+        "ground": 866
+      }
+    ],
+    "scale": 0.6578947368421053,
+    "pivots": [
+      449.0,
+      284.0
+    ],
+    "measured_body_top": 105,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "idle-back": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          293,
+          25,
+          739,
+          738
+        ],
+        "skin_bounds": [
+          298,
+          38,
+          732,
+          623
+        ],
+        "median_x": 505.0,
+        "ground": 738
+      },
+      {
+        "bounds": [
+          289,
+          26,
+          741,
+          738
+        ],
+        "skin_bounds": [
+          322,
+          40,
+          737,
+          730
+        ],
+        "median_x": 509.0,
+        "ground": 738
+      }
+    ],
+    "scale": 0.7142857142857143,
+    "pivots": [
+      505.0,
+      509.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "idle-front": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          358,
+          16,
+          793,
+          738
+        ],
+        "skin_bounds": [
+          360,
+          35,
+          784,
+          730
+        ],
+        "median_x": 602.0,
+        "ground": 738
+      },
+      {
+        "bounds": [
+          225,
+          18,
+          651,
+          738
+        ],
+        "skin_bounds": [
+          231,
+          36,
+          642,
+          715
+        ],
+        "median_x": 455.0,
+        "ground": 738
+      }
+    ],
+    "scale": 0.7112375533428165,
+    "pivots": [
+      602.0,
+      455.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "idle-left": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          392,
+          16,
+          782,
+          743
+        ],
+        "skin_bounds": [
+          397,
+          49,
+          754,
+          723
+        ],
+        "median_x": 567.0,
+        "ground": 743
+      },
+      {
+        "bounds": [
+          253,
+          16,
+          658,
+          743
+        ],
+        "skin_bounds": [
+          258,
+          46,
+          624,
+          648
+        ],
+        "median_x": 433.0,
+        "ground": 743
+      }
+    ],
+    "scale": 0.7204610951008645,
+    "pivots": [
+      567.0,
+      433.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "idle-right": {
+    "size": [
+      1774,
+      887
+    ],
+    "frames": [
+      {
+        "bounds": [
+          300,
+          12,
+          684,
+          861
+        ],
+        "skin_bounds": [
+          308,
+          30,
+          671,
+          810
+        ],
+        "median_x": 544.0,
+        "ground": 861
+      },
+      {
+        "bounds": [
+          213,
+          13,
+          597,
+          861
+        ],
+        "skin_bounds": [
+          213,
+          65,
+          576,
+          755
+        ],
+        "median_x": 454.0,
+        "ground": 861
+      }
+    ],
+    "scale": 0.6353240152477764,
+    "pivots": [
+      544.0,
+      454.0
+    ],
+    "measured_body_top": 74,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "prone-back": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          47,
+          35,
+          2006,
+          740
+        ],
+        "skin_bounds": [
+          297,
+          49,
+          1855,
+          664
+        ],
+        "median_x": 652.0,
+        "ground": 740
+      }
+    ],
+    "scale": 0.29256875365710944,
+    "pivots": [
+      1076.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "prone-front": {
+    "size": [
+      1774,
+      887
+    ],
+    "frames": [
+      {
+        "bounds": [
+          66,
+          72,
+          1708,
+          856
+        ],
+        "skin_bounds": [
+          116,
+          92,
+          1672,
+          826
+        ],
+        "median_x": 698.0,
+        "ground": 856
+      }
+    ],
+    "scale": 0.314070351758794,
+    "pivots": [
+      894.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "prone-left": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          48,
+          119,
+          1996,
+          678
+        ],
+        "skin_bounds": [
+          86,
+          128,
+          1870,
+          634
+        ],
+        "median_x": 672.0,
+        "ground": 678
+      }
+    ],
+    "scale": 0.2617801047120419,
+    "pivots": [
+      978.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "prone-right": {
+    "size": [
+      1774,
+      887
+    ],
+    "frames": [
+      {
+        "bounds": [
+          79,
+          303,
+          1703,
+          768
+        ],
+        "skin_bounds": [
+          114,
+          326,
+          1699,
+          748
+        ],
+        "median_x": 1147.0,
+        "ground": 768
+      }
+    ],
+    "scale": 0.30864197530864196,
+    "pivots": [
+      906.5
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "walk-back": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          394,
+          32,
+          842,
+          742
+        ],
+        "skin_bounds": [
+          404,
+          59,
+          836,
+          695
+        ],
+        "median_x": 603.0,
+        "ground": 742
+      },
+      {
+        "bounds": [
+          192,
+          23,
+          634,
+          742
+        ],
+        "skin_bounds": [
+          195,
+          55,
+          629,
+          741
+        ],
+        "median_x": 392.0,
+        "ground": 742
+      }
+    ],
+    "scale": 0.7320644216691069,
+    "pivots": [
+      603.0,
+      392.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "walk-front": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          443,
+          15,
+          884,
+          749
+        ],
+        "skin_bounds": [
+          451,
+          58,
+          863,
+          707
+        ],
+        "median_x": 679.0,
+        "ground": 749
+      },
+      {
+        "bounds": [
+          143,
+          15,
+          585,
+          749
+        ],
+        "skin_bounds": [
+          146,
+          35,
+          556,
+          745
+        ],
+        "median_x": 376.0,
+        "ground": 749
+      }
+    ],
+    "scale": 0.723589001447178,
+    "pivots": [
+      679.0,
+      376.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "walk-left": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          299,
+          15,
+          831,
+          740
+        ],
+        "skin_bounds": [
+          328,
+          57,
+          791,
+          647
+        ],
+        "median_x": 526.0,
+        "ground": 740
+      },
+      {
+        "bounds": [
+          237,
+          16,
+          792,
+          738
+        ],
+        "skin_bounds": [
+          268,
+          37,
+          754,
+          735
+        ],
+        "median_x": 455.0,
+        "ground": 738
+      }
+    ],
+    "scale": 0.7320644216691069,
+    "pivots": [
+      526.0,
+      455.0
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  },
+  "walk-right": {
+    "size": [
+      2043,
+      770
+    ],
+    "frames": [
+      {
+        "bounds": [
+          172,
+          29,
+          792,
+          733
+        ],
+        "skin_bounds": [
+          209,
+          49,
+          694,
+          672
+        ],
+        "median_x": 515.5,
+        "ground": 733
+      },
+      {
+        "bounds": [
+          203,
+          19,
+          812,
+          734
+        ],
+        "skin_bounds": [
+          247,
+          80,
+          753,
+          734
+        ],
+        "median_x": 551.5,
+        "ground": 734
+      }
+    ],
+    "scale": 0.7309941520467836,
+    "pivots": [
+      515.5,
+      551.5
+    ],
+    "measured_body_top": null,
+    "note": "One scale per sheet; measured crown rows override staff-highlight candidates."
+  }
+}

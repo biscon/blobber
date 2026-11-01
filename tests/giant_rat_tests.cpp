@@ -216,7 +216,7 @@ void conditions() {
     Fixture held(map, c, {supporter({3, 2}, {0, 0}, 1)});
     EffectRequest hold;
     hold.world = held.actors.snapshot().world;
-    hold.caster = {0};
+    hold.caster = rules::CharacterId{0};
     hold.kind = EffectKind::HoldPerson;
     hold.targets[0] = held.actors.id(1);
     hold.count = 1;

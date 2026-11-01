@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../revisions/cast-left-v1.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Correct ONLY the second/right figure of this two-pose LEFT PROFILE shaman casting sheet. The second figure currently has THREE ARMS: remove the extra bent arm and extra clenched hand protruding behind the back at the far RIGHT edge. Keep exactly TWO arms: anatomical LEFT arm extending toward screen LEFT with open palm to cast; anatomical RIGHT arm holding the upright staff. Fill removed extra arm with transparency and restore the robe/back silhouette. First figure unchanged. Keep faces/robe/charms/staff/handedness/scale/baseline, two horizontal poses, transparent background, no added effects/text/grid. No third arm/hand behind the second figure's back."
+}

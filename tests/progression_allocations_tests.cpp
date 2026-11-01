@@ -129,7 +129,7 @@ int main() {
             if (kind == SpellKind::LesserRestoration) {
                 EffectRequest r;
                 r.world = s.actors().snapshot().world;
-                r.caster = {3};
+                r.caster = rules::CharacterId{3};
                 r.kind = EffectKind::HoldPerson;
                 r.targets[0] = CharacterId{0};
                 r.count = 1;
@@ -161,7 +161,7 @@ int main() {
             events.clear();
             EffectRequest r;
             r.world = actors.snapshot().world;
-            r.caster = {3};
+            r.caster = rules::CharacterId{3};
             r.kind = EffectKind::MirrorImage;
             r.targets[0] = CharacterId{3};
             r.count = 1;

@@ -12,7 +12,7 @@ EffectRequest request(std::uint64_t world, EffectKind kind, unsigned caster,
     EffectRequest r;
     r.world = world;
     r.kind = kind;
-    r.caster = {static_cast<std::uint16_t>(caster)};
+    r.caster = rules::CharacterId{static_cast<std::uint16_t>(caster)};
     r.difficulty = dc;
     for (const auto t : targets)
         r.targets[r.count++] = t;
@@ -195,11 +195,11 @@ void savesAndConcentration() {
           "Bless modifies ordinary save after d20");
     const auto bless = effects.concentration({0});
     events.clear();
-    effects.damaged({0}, 0, 100, events);
+    effects.damaged(rules::CharacterId{0}, 0, 100, events);
     check(events.count == 0 && effects.find(bless), "Zero damage consumes no concentration roll");
     roll = oracle.d20().value;
     const auto concentrationBonus = oracle.roll({1, 4, 0}).value.total;
-    effects.damaged({0}, 23, 200, events);
+    effects.damaged(rules::CharacterId{0}, 23, 200, events);
     check(notices(events, EffectNotice::ConcentrationSave) == 1, "Positive damage checks concentration once");
     check(events.values[0].effect.roll == roll.selected && events.values[0].effect.difficulty == 11 &&
               events.values[0].effect.total ==
@@ -576,7 +576,7 @@ void trace() {
                 std::cout << "session_ms=" << e.occurredMs << " gameplay_ms=" << e.effect.gameplayMs << ' '
                           << kinds[static_cast<unsigned>(e.effect.kind)] << " #" << e.effect.id.serial << ' '
                           << names[static_cast<unsigned>(e.effect.notice)]
-                          << " caster=" << e.effect.caster.index << " d20=" << e.effect.roll
+                          << " caster=" << e.effect.caster.character.index << " d20=" << e.effect.roll
                           << " total=" << e.effect.total << " dc=" << e.effect.difficulty
                           << " success=" << e.effect.succeeded
                           << " reason=" << reasons[static_cast<unsigned>(e.effect.reason)] << '\n';

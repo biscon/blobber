@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-back.png"
+  ],
+  "prompt": "Use case: precise-object-edit. The attached two REAR idle poses establish this goblin shaman's exact identity and BACK orientation. Create FOUR sequential REAR DEATH/COLLAPSE animation frames on a square TWO BY TWO sheet: upper-left stagger hit, upper-right knees buckle, lower-left collapses toward ground, lower-right fully limp prone corpse with back of head and back of plum-brown robe toward camera. Preserve REAR identity throughout: NO face, eyes, nose, chest or necklace front visible; body starts facing away and falls forward/sideways away. Exactly two arms/legs, RIGHT hand starts on same staff at screen RIGHT, staff falls naturally beside body. Same olive anatomy/robe/belt/bone charms/leather boots/staff. SAME body/head/limb dimensions in every frame; do not shrink or enlarge the fallen body. Four equal panels with generous transparent row/column gutters and outer margins, all limbs/ears/staff/boots fully inside their panel. Genuine RGBA transparent background, no floor/shadow/blood/effects/text/grid/borders."
+}

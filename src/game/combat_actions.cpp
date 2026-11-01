@@ -331,6 +331,11 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
         out.event = CombatEvent::Spent;
         return out;
     }
+    if (enemyCaster(id)) {
+        out = enemySpell(id, now);
+        if (out.event != CombatEvent::None || out.reason != CommandReason::Resolved)
+            return out;
+    }
     const bool adjacent = combatAdjacent(map_, a->npc.cell, origin_.cell);
     const bool wounded =
         rules::hasTrait(actors_.catalog().monster(a->monster)->traits, rules::Trait::NimbleEscape) &&

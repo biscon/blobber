@@ -157,7 +157,7 @@ void sessionIntegration() {
     check(bool(s.inventoryChange(r)), "Safe session unequip");
     EffectRequest e;
     e.world = s.actors().snapshot().world;
-    e.caster = {3};
+    e.caster = rules::CharacterId{3};
     e.kind = EffectKind::MageArmor;
     e.targets[0] = rules::CharacterId{1};
     e.count = 1;
@@ -453,7 +453,7 @@ void characterSheet() {
           "Training combines race and class");
     EffectRequest effect;
     effect.world = s.actors().snapshot().world;
-    effect.caster = {3};
+    effect.caster = rules::CharacterId{3};
     effect.kind = EffectKind::MageArmor;
     effect.targets[0] = rules::CharacterId{3};
     effect.count = 1;

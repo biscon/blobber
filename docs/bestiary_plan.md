@@ -1,7 +1,7 @@
 # Early bestiary: design and delivery roadmap
 
 Created: 2026-10-31. Last updated: 2026-11-01.
-Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03 Accepted and closed (2026-10-31); B04 Accepted and closed (2026-11-01); B05–B06 Planned.**
+Status: **Roadmap accepted (2026-10-31); B01 Accepted and closed (2026-10-31); B02 Accepted and closed (2026-10-31); B03 Accepted and closed (2026-10-31); B04 Accepted and closed (2026-11-01); B05 Accepted and closed (2026-11-01); B06 Planned.**
 
 The user requested a modest slice plan for new monsters, implemented and reviewed
 in the arena **before campaign integration**. The roster is skeleton, bugbear,
@@ -24,11 +24,11 @@ pacing or start PC07. Campaign integration gets its own plan after arena review.
 
 | Field | Current value |
 | --- | --- |
-| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B04 closed |
-| Active slice | None; B04 — Zombie and Undead Fortitude Accepted and closed |
-| Awaiting review | None; B04 completed-slice acceptance recorded |
-| Next eligible slice | B05 — Goblin shaman and enemy spellcasting; detailed planning |
-| Next action | Plan B05 using the [accepted B04 handoff](b04_verification.md); review its detailed plan before implementation |
+| Accepted foundation | Existing goblins, arena, character progression through level 3; renderer R01–R06 and bestiary B01–B05 closed |
+| Active slice | None; B05 accepted and closed |
+| Awaiting review | None; B05 reference v1 and completed slice accepted |
+| Next eligible slice | B06 — Arena preparation and roster polish; separate detailed planning, implementation unstarted |
+| Next action | Prepare B06's detailed plan for review when requested |
 | Campaign status | Paused; no generator/population or guardian changes |
 | Deferred size work | Two-/four-subcell actors; all new monsters use one subcell |
 
@@ -173,7 +173,7 @@ per-frame image generation/decoding is part of this work.
 | B02 | [Bugbear and sprite memory preparation](b02_bugbear_design.md) | B01 accepted | Accepted and closed (2026-10-31) |
 | B03 | [Giant rat and Pack Tactics](b03_giant_rat_design.md) | B02 accepted | Accepted and closed (2026-10-31) |
 | B04 | [Zombie and Undead Fortitude](b04_zombie_design.md) | B03 accepted | Accepted and closed (2026-11-01) |
-| B05 | Goblin shaman and enemy spellcasting | B04 accepted | Planned |
+| B05 | [Goblin shaman and enemy spellcasting](b05_goblin_shaman_design.md) | B04 accepted | Accepted and closed (2026-11-01) |
 | B06 | Arena preparation and roster polish | B05 accepted | Planned |
 
 ### B01 — Skeleton and typed damage
@@ -248,9 +248,13 @@ and no incorrect death/reward or save/restore transitions.
 
 ### B05 — Goblin shaman and enemy spellcasting
 
+**Accepted and closed (2026-11-01).** [Design](b05_goblin_shaman_design.md) ·
+[verification/gallery](b05_verification.md). Reference v1 and the completed slice
+accepted by the user; verification evidence and limitations remain recorded.
+
 Deliver a visibly distinct goblin caster, full art set and readable casting action.
 Use the Acolyte as a baseline with **Bless, Sacred Flame and a weak melee fallback**.
-Proposed resource default: six NPC mana, two per Bless, free cantrip; no combat
+Delivered resource default: six NPC mana, two per Bless, free cantrip; no combat
 regeneration or silent refill at an encounter boundary. This is a project adaptation.
 
 Use a small deterministic policy: cast Bless when useful on up to three eligible
@@ -434,3 +438,26 @@ monster tiers, poison/cleansing, corrosion and the mouther remain separate work.
   limitations](b04_verification.md) remain recorded. **B05 — Goblin shaman and
   enemy spellcasting** is next for separate detailed planning; implementation is
   unstarted. B06 remains Planned; campaign integration and PC07 stay paused.
+
+- **2026-11-01 B05 approval:** User approved the detailed plan with “Implement the plan.” Ally-first Bless, rotating conscious party targets and tribal staff caster art selected. Implementation active under the [design](b05_goblin_shaman_design.md); reference and completed-slice acceptance pending. Campaign/PC07 and B06 remain unstarted.
+
+- **2026-11-01 B05 reference acceptance:** User: “reference approved”. Turnaround v1 accepted; full production animation is authorized. Completed-slice acceptance remains pending.
+
+- **2026-11-01 B05 delivery:** Goblin shaman, tagged NPC Bless/concentration, six-mana
+  resources, rotating Sacred Flame targets, support positioning, full 56-pose art,
+  native portrait and normal arena binding delivered. Schema 13 /campaign 4/7
+  retain explicit incompatible-save rejection. Publication is 314.56 MiB mip /
+  56.67 MiB alpha within unchanged limits. Focused CPU/allocation/persistence,
+  hidden GPU and four strict arena traces/captures pass;
+  [verification/gallery](b05_verification.md) records exact checks and limitations.
+  **B05 Ready for review**; completed-slice acceptance pending. B06 and campaign/PC07
+  remain unstarted.
+
+- **2026-11-01 B05 acceptance:** User: “slice accepted, record it in the plan doc”.
+  **B05 Accepted and closed**, including goblin shaman mechanics, tagged NPC
+  Bless/concentration, mana persistence, casting timelines, full 56-pose production
+  art, native portrait, normal arena integration and affected automation/save
+  identities. Existing [verification evidence and limitations](b05_verification.md)
+  remain recorded. **B06 — Arena preparation and roster polish** is next for
+  separate detailed planning; implementation is unstarted. Campaign integration
+  and PC07 stay paused.

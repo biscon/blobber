@@ -59,7 +59,7 @@ void tabsAndHover() {
     const auto apply = [&](EffectKind kind, unsigned caster) {
         EffectRequest r;
         r.world = s.actors().snapshot().world;
-        r.caster = {std::uint16_t(caster)};
+        r.caster = rules::CharacterId{std::uint16_t(caster)};
         r.kind = kind;
         r.targets[0] = rules::CharacterId{3};
         r.count = 1;
@@ -160,7 +160,8 @@ void summaryAndPose() {
         standing.frames[0].clip = NpcAnimation::Idle;
         ++standing.revision;
         renderer.update({map, movement, &actors, &standing});
-        check(renderer.frame().picking.targets().anchors[id.slot].top < low, "Prone body silhouette is lower than standing body");
+        check(renderer.frame().picking.targets().anchors[id.slot].top < low,
+              "Prone body silhouette is lower than standing body");
     }
     effects.condition(id, EffectKind::Knockdown, {3}, 2000, events);
     effects.wake(id, 2000, events);
@@ -186,7 +187,7 @@ void summaryAndPose() {
     EffectRequest armor;
     armor.world = actors.snapshot().world;
     armor.kind = EffectKind::MageArmor;
-    armor.caster = {3};
+    armor.caster = rules::CharacterId{3};
     armor.targets[0] = rules::CharacterId{3};
     armor.count = 1;
     check(bool(effects.apply(armor, 0, events)), "First armor instance");
@@ -211,7 +212,7 @@ void durationModes() {
     EffectRequest request;
     request.world = actors.snapshot().world;
     request.kind = EffectKind::Bless;
-    request.caster = {1};
+    request.caster = rules::CharacterId{1};
     request.targets[0] = rules::CharacterId{3};
     request.count = 1;
     check(bool(effects.apply(request, 0, events)), "Timed buff fixture");
@@ -221,12 +222,12 @@ void durationModes() {
         check(!std::strcmp(text, expected), "Duration uses active mode and rounds up partial units");
     };
     label(effects.statuses(rules::CharacterId{3}).entries[0], "1m 00s remaining");
-    label(*effects.concentrationStatus({1}), "1m 00s remaining");
+    label(*effects.concentrationStatus(rules::CharacterId{1}), "1m 00s remaining");
     effects.advance(1, 1, true, events);
     effects.condition(rules::CharacterId{2}, EffectKind::Knockdown, {3}, 1, events);
     effects.clockMode(true);
     label(effects.statuses(rules::CharacterId{3}).entries[0], "10 turns remaining");
-    label(*effects.concentrationStatus({1}), "10 turns remaining");
+    label(*effects.concentrationStatus(rules::CharacterId{1}), "10 turns remaining");
     effects.condition(actors.id(0), EffectKind::Sleep, {3}, 1, events);
     label(effects.statuses(actors.id(0)).entries[0], "10 turns remaining");
     effects.guide(actors.id(0), 1, events);
@@ -242,15 +243,15 @@ void durationModes() {
     label(effects.statuses(rules::CharacterId{3}).entries[0], "1 turn remaining");
     effects.clockMode(false);
     label(effects.statuses(rules::CharacterId{3}).entries[0], "6s remaining");
-    label(*effects.concentrationStatus({1}), "6s remaining");
+    label(*effects.concentrationStatus(rules::CharacterId{1}), "6s remaining");
     request.kind = EffectKind::ShieldOfFaith;
     check(bool(effects.apply(request, 54001, events)), "Concentration replacement");
-    check(effects.concentrationStatus({1})->effect == EffectKind::ShieldOfFaith,
+    check(effects.concentrationStatus(rules::CharacterId{1})->effect == EffectKind::ShieldOfFaith,
           "Concentration summary follows the maintained spell, not the old recipient buff");
     effects.clockMode(true);
-    label(*effects.concentrationStatus({1}), "100 turns remaining");
+    label(*effects.concentrationStatus(rules::CharacterId{1}), "100 turns remaining");
     effects.remove(effects.concentration({1}), 54001, events);
-    check(!effects.concentrationStatus({1}), "Removed concentration has no summary");
+    check(!effects.concentrationStatus(rules::CharacterId{1}), "Removed concentration has no summary");
 }
 void badgeLayout() {
     HudSnapshot hud;

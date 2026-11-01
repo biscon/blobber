@@ -1,0 +1,22 @@
+{
+  "operations": {
+    "start": 1,
+    "far-approach": 25,
+    "first-enemy-cast": 44,
+    "bless-windup": 44,
+    "bless-release": 50,
+    "first-hurt": 65,
+    "concentration-save": 65,
+    "first-death": 116,
+    "final": 157,
+    "rematch": 158,
+    "first-turns": 40,
+    "concentration-broken": 101
+  },
+  "captured": [
+    50,
+    65,
+    101,
+    116
+  ]
+}

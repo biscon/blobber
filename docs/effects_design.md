@@ -5,6 +5,12 @@ implementation with “okay implement the plan” and accepted it with “I acce
 slice, mark it as such in the plan doc”. Slice 10 is next eligible for planning
 and remains unstarted.
 
+Current extension: B05 implements tagged party/NPC effect sources and NPC-owned
+Bless/concentration, plus concrete pending-Bless reservations in the same 64 slots.
+Unrelated effects/conditions/ground spells remain party-cast only. The historical
+Slice 09 scope below records its original delivery; see the current
+[B05 design](b05_goblin_shaman_design.md) for ownership, damage and persistence.
+
 ## Scope and rules
 
 Implement the effect consequences of Bless, Bane, Shield of Faith, Mage Armor,

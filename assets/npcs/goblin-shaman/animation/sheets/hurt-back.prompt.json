@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-back.png"
+  ],
+  "prompt": "Use case: precise-object-edit. The attached sheet has TWO idle poses of the approved goblin shaman. Preserve their EXACT identity, equipment, scale and orientation: BACK directly away, back of head and robe only, NO face/eyes/chest. Change both into distinct full-body HURT/RECOIL animation frames. FIRST: flinches sideways from a hit, shoulders jerk, empty LEFT hand reflexively lifts, knees bent. SECOND: deeper recoil then beginning recovery, visibly different torso/head lean and empty left arm. RIGHT hand keeps same staff, never swaps hands; exactly two arms, no added weapon or blood/glow. Both full bodies stay same anatomical size and common foot baseline; staff and boots/ears/hands uncut. Wide horizontal sheet two equal panels with wide transparent center gutter and generous outer margins. Genuine RGBA transparent background, no floor/shadow/effects/text/grid/borders."
+}

@@ -57,9 +57,21 @@ struct EffectTarget {
     EffectTarget(ActorId id) : npc(true), enemy(id) {}
 };
 bool operator==(EffectTarget a, EffectTarget b) noexcept;
+// A caster identity, independent of the immutable monster catalog identity.
+struct EffectSource {
+    bool npc = false;
+    rules::CharacterId character{};
+    ActorId enemy{};
+    EffectSource() = default;
+    EffectSource(rules::CharacterId id) : character(id) {}
+    EffectSource(ActorId id) : npc(true), enemy(id) {}
+    operator EffectTarget() const noexcept { return npc ? EffectTarget(enemy) : EffectTarget(character); }
+};
+bool operator==(EffectSource, EffectSource) noexcept;
+
 struct EffectRequest {
     std::uint64_t world = 0;
-    rules::CharacterId caster{};
+    EffectSource caster{};
     EffectKind kind = EffectKind::Bless;
     std::array<EffectTarget, 3> targets{};
     std::size_t count = 0;
@@ -108,7 +120,7 @@ struct EffectEvent {
     EffectEnd reason = EffectEnd::None;
     EffectId id{};
     EffectKind kind = EffectKind::Bless;
-    rules::CharacterId caster{};
+    EffectSource caster{};
     EffectTarget target{};
     std::uint64_t gameplayMs = 0;
     int roll = 0;
@@ -118,12 +130,12 @@ struct EffectEvent {
 struct EffectInstance {
     EffectId id{};
     EffectKind kind = EffectKind::Bless;
-    rules::CharacterId caster{};
+    EffectSource caster{};
     std::array<EffectTarget, 3> targets{};
     std::size_t count = 0;
     int difficulty = 10;
     std::uint64_t expiresMs = 0, retryMs = 0;
-    bool active = false;
+    bool active = false, pendingBless = false;
     std::uint8_t duplicates = 0, reserved = 0;
     Cell cell{};
     std::uint64_t readyMs = 0;
@@ -178,19 +190,23 @@ class EffectController {
     EffectController& operator=(const EffectController&) = delete;
     const std::array<EffectInstance, capacity>& snapshot() const noexcept { return instances_; }
     const EffectInstance* find(EffectId) const noexcept;
-    EffectId concentration(rules::CharacterId) const noexcept;
+    EffectId concentration(rules::CharacterId id) const noexcept { return concentrationSource(id); }
+    EffectId concentrationSource(EffectSource) const noexcept;
     EffectError validate(const EffectRequest&) const noexcept;
     bool guiding(ActorId) const noexcept;
     void guide(ActorId, std::uint64_t now, CombatEvents&) noexcept;
     void consumeGuiding(ActorId, std::uint64_t now, CombatEvents&) noexcept;
     EffectResult apply(const EffectRequest&, std::uint64_t sessionMs, CombatEvents&) noexcept;
+    EffectResult reserveBless(const EffectRequest&) noexcept;
+    bool releaseBless(EffectId, std::uint64_t sessionMs, CombatEvents&) noexcept;
+    void cancelBless(EffectId) noexcept;
     EffectResult remove(EffectId, std::uint64_t sessionMs, CombatEvents&) noexcept;
     void reconcile(std::uint64_t sessionMs, CombatEvents&) noexcept;
     void advance(std::uint64_t gameplayMs, std::uint64_t sessionMs, bool realTime, CombatEvents&) noexcept;
-    void damaged(rules::CharacterId, std::int64_t damage, std::uint64_t sessionMs, CombatEvents&) noexcept;
+    void damaged(EffectTarget, std::int64_t damage, std::uint64_t sessionMs, CombatEvents&) noexcept;
     bool has(EffectTarget, EffectKind) const noexcept;
     StatusSummary statuses(EffectTarget) const noexcept;
-    std::optional<StatusEntry> concentrationStatus(rules::CharacterId) const noexcept;
+    std::optional<StatusEntry> concentrationStatus(EffectSource) const noexcept;
     bool canAct(EffectTarget) const noexcept;
     bool mobileParty() const noexcept;
     bool conscious(EffectTarget) const noexcept;

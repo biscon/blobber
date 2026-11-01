@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../../reference/turnaround-v1.png"
+  ],
+  "prompt": "Use case: stylized-concept. Production game sprite animation sheet. Use the attached APPROVED goblin shaman turnaround as strict identity/equipment/style reference: same olive goblin face/ears, ragged plum-brown short-sleeve robe, tooth/bone necklace and belt charms, brown leather bracers/boots, gnarled staff with little bone charms in anatomical RIGHT hand, LEFT hand empty. Preserve identity, anatomical handedness, muted materials and detailed crisp shaded textured retro dungeon style. No bow/dagger/shield or extra equipment. BACK directly away, only rear head/robe visible. TWO full-body spellcast frames horizontally: FIRST empty LEFT hand at screen LEFT gathers close by shoulder with elbow bent; SECOND LEFT arm extends forward away from camera and outward to screen LEFT with spread open hand. RIGHT hand at screen RIGHT holds staff throughout. Strong readable gather/release motion, no rendered magic. Same anatomical scale and foot baseline. Wide horizontal canvas, ample empty transparent center gutter and outer margins. All staff/ears/boots/hands visible. RGBA transparent background, no ground/shadow/effects/text/labels/grid/border."
+}

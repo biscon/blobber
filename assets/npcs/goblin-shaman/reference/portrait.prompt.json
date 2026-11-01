@@ -1,0 +1,9 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": false,
+  "references": [
+    "turnaround-v1.png"
+  ],
+  "output": "../../../ui/goblin-shaman.png",
+  "prompt": "Use case: stylized-concept. Native initiative portrait for a retro dungeon game. Create ONE SQUARE head-and-shoulders portrait of the EXACT approved goblin shaman in attached turnaround. Same malicious angular olive-green face, huge pointed ears, wrinkled bald crown with sparse coarse short hair, dark plum-brown ragged robe shoulders and small tooth/bone necklace. Detailed crisp shaded textured retro dungeon illustration, muted earthy material colors, consistent soft top-left lighting, sinister intelligent caster, no smooth 3D/cartoon simplification. Face centered, near frontal slight three-quarter pose, generous top/ear margins so full head/ears fit, shoulders fill lower corners. Plain dark warm charcoal-brown painted background and subtle vignette. No staff/weapon, skull headdress, hood, magic effects, symbols, text, border or watermark. Readable facial expression at 24px initiative size."
+}

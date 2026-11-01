@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-back.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Turn the attached TWO REAR IDLE goblin shaman poses into TWO REAR spellcasting poses. Keep both bodies facing DIRECTLY AWAY exactly like attachment: only back of head, backs of large ears, back of robe, no face/eyes/nose/chest/necklace visible. NEVER rotate torso or head toward viewer. FIRST pose: empty anatomical LEFT hand at screen LEFT raised near left shoulder to gather spell. SECOND pose: empty LEFT arm at screen LEFT extended away from viewer and slightly outward, spread open hand seen from behind. RIGHT hand on screen RIGHT holds the SAME staff throughout, never swap hands. Preserve detailed style, olive anatomy, plum-brown robe/belt/charms/boots, body size and common baseline. Exactly two complete figures horizontal, generous transparent central gutter and outer margins, full staff/boots/ears/hands. Transparent RGBA background, no ground/shadow/magic/text/grid/border."
+}

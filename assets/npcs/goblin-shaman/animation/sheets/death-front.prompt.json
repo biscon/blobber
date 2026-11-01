@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../../reference/turnaround-v1.png"
+  ],
+  "prompt": "Use case: stylized-concept. Production game sprite animation sheet. Use the attached APPROVED goblin shaman turnaround as strict identity/equipment/style reference: same olive goblin face/ears, ragged plum-brown short-sleeve robe, tooth/bone necklace and belt charms, brown leather bracers/boots, gnarled staff with little bone charms in anatomical RIGHT hand, LEFT hand empty. Preserve identity, anatomical handedness, muted materials and detailed crisp shaded textured retro dungeon style. No bow/dagger/shield or extra equipment. Exactly FOUR sequential full-body DEATH/COLLAPSE frames on a square TWO BY TWO sheet, order upper-left first struck stagger, upper-right knees buckle/lower body, lower-left falls onto side/back close to ground, lower-right fully collapsed limp corpse stretched across ground. FRONT-facing creature at start; falls mostly sideways so facial identity remains visible. Keep SAME anatomical body/head/limb size in ALL four frames; NEVER enlarge lying body to fill panel or shrink it to fit. Right-hand staff falls naturally beside corpse and stays full own height, no floating upright staff in last pose. Eyes close and mouth slack at final corpse. Exactly two arms/legs, preserve robe/charms/boots. Large equal panels with ample transparent margins and wide empty central row/column gutters. Entire falling body, ears, boots, staff visible in each panel. Genuine RGBA transparent background, no floor/shadow/blood/glow/effects/text/grid/border."
+}

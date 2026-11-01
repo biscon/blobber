@@ -60,6 +60,14 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
             (p.enemy && !actor(*p.enemy)))
             reject("combat state");
     }
+    for (std::size_t i = 0; i < NpcWorld::maxInstances; ++i) {
+        const bool caster =
+            i < s.actors.count && actors_.catalog().monster(s.actors.actors[i].monster)->spellcasting ==
+                                      rules::EnemyCasting::AcolyteSupport;
+        if (s.combat.enemyTarget[i] >= rules::partySize || s.combat.enemyMana[i] > (caster ? 6 : 0) ||
+            (!caster && s.combat.enemyTarget[i]))
+            reject("NPC casting resources");
+    }
     for (std::size_t i = 0; i < s.actors.count; ++i) {
         const auto& a = s.actors.actors[i];
         const auto& ai = s.ai.state.actors[i];
@@ -96,16 +104,24 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
     }
     if (s.objective.count && s.fixtures.completed[objectiveDefinition_.gate] != s.objective.completed)
         reject("fixture/objective ledger");
-    std::array<bool, 4> concentrating{};
+    std::array<bool, rules::partySize + NpcWorld::maxInstances> concentrating{};
     for (unsigned i = 0; i < s.effects.instances.size(); ++i) {
         const auto& e = s.effects.instances[i];
+        if (e.pendingBless)
+            reject("pending Bless in settled snapshot");
         if (!e.active)
             continue;
         if (e.expiresMs > maxCheckpointClock || e.retryMs > maxCheckpointClock ||
             e.readyMs > maxCheckpointClock)
             reject("effect clock capacity");
-        if (e.count == 0 || e.count > 3 || !party_.character(e.caster) || e.difficulty < 1 ||
-            e.difficulty > 1000 || e.duplicates > 7 || e.reserved)
+        if (e.count == 0 || e.count > 3 ||
+            (e.caster.npc ? !actor(e.caster.enemy) || e.kind != EffectKind::Bless ||
+                                s.actors.actors[e.caster.enemy.slot].life != ActorLife::Alive ||
+                                actors_.catalog()
+                                        .monster(s.actors.actors[e.caster.enemy.slot].monster)
+                                        ->spellcasting != rules::EnemyCasting::AcolyteSupport
+                          : !party_.character(e.caster.character)) ||
+            e.difficulty < 1 || e.difficulty > 1000 || e.duplicates > 7 || e.reserved)
             reject("effect state");
         for (unsigned j = 0; j < i; ++j)
             if (s.effects.instances[j].active && s.effects.instances[j].id.serial == e.id.serial)
@@ -115,13 +131,15 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
                                    e.kind == EffectKind::Guidance || e.kind == EffectKind::Resistance ||
                                    e.kind == EffectKind::Web;
         if (concentration) {
-            if (concentrating[e.caster.index])
+            const auto sourceIndex =
+                e.caster.npc ? rules::partySize + e.caster.enemy.slot : e.caster.character.index;
+            if (concentrating[sourceIndex])
                 reject("effect state");
-            concentrating[e.caster.index] = true;
+            concentrating[sourceIndex] = true;
         }
         for (unsigned j = 0; j < e.count; ++j) {
             const auto& t = e.targets[j];
-            if (t.npc ? !actor(t.enemy) : !party_.character(t.character))
+            if ((e.caster.npc && !t.npc) || (t.npc ? !actor(t.enemy) : !party_.character(t.character)))
                 reject("effect state");
             for (unsigned k = 0; k < j; ++k)
                 if (t == e.targets[k])
@@ -159,7 +177,7 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         if (s.effects.ground.weapons[i].active) {
             bool found = false;
             for (const auto& e : s.effects.instances)
-                found |= e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.index == i &&
+                found |= e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.character.index == i &&
                          e.cell == s.effects.ground.weapons[i].cell;
             if (!found)
                 reject("ground effects");

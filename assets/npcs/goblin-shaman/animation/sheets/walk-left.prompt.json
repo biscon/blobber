@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../revisions/walk-left-v2.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Edit ONLY the SECOND (right) walking goblin in this sheet. Keep first goblin unchanged. Reverse the second goblin's LEG STRIDE so the NEAR LEFT leg moves BACKWARD toward SCREEN RIGHT with its boot behind the hip, while the FAR RIGHT leg steps FORWARD toward SCREEN LEFT. Currently both figures repeat the same forward near boot; second must have the opposite leading leg. Keep nose facing LEFT, same anatomical RIGHT-hand staff, empty LEFT hand, robe/charms/face/ears/boots/body size, two equal horizontal frames, common local ground baseline. Genuine transparency, no new shadows/effects/text/grid."
+}

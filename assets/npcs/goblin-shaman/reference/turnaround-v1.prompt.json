@@ -1,0 +1,9 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../../goblin/front.png",
+    "../../goblin-archer/reference/turnaround-v2.png"
+  ],
+  "prompt": "Use case: stylized-concept. Asset: production dungeon goblin SHAMAN four-direction design reference turnaround, not an animation sheet. Reference image 1 is the shipped melee goblin, reference image 2 the shipped goblin archer: match their detailed shaded, crisp textured retro dungeon illustration, olive green skin, large pointed ears, short lean goblin proportions, muted worn leather and world scale. Create a visibly distinct tribal staff caster, same species: malicious angular face, bald wrinkled head with sparse coarse hair, ragged muted dark plum-brown knee-length robe with short sleeves, worn leather belt/bracers/boots, small bone and tooth charms around neck/belt. No hood or large headdress; ears and face stay clear. Hold a plain gnarled wooden STAFF in anatomical RIGHT hand, roughly own body height, with three small bone charms tied below its crooked tip; anatomical LEFT hand empty, ready to cast. No dagger, bow, quiver, shield, skull headpiece, large skull, bright glow or effects. Identical equipment/anatomy/robe and consistent anatomical right-hand staff across views, never mirror handedness. EXACTLY FOUR separate full-body standing orthographic views left to right: FRONT toward viewer, strict LEFT profile nose toward image left, REAR facing away, strict RIGHT profile nose toward image right. Same character, same scale, common foot baseline, generous clear space between figures, full staff/ears/boots within image and transparent margins. Relaxed neutral standing pose. Genuine RGBA transparent background, no floor, no cast shadows, no colored backdrop, no labels/text/grid/borders/watermark. Wide horizontal canvas. This is a concrete reference for user approval before producing full game animation sheets."
+}

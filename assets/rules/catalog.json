@@ -1,5 +1,5 @@
 {
-  "schema_version": 12,
+  "schema_version": 13,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -64,6 +64,17 @@
         "count": 1,
         "sides": 6,
         "modifier": 1,
+        "type": "bludgeoning"
+      }
+    },
+    {
+      "id": "goblin_shaman.staff",
+      "kind": "melee",
+      "attack_bonus": 2,
+      "damage": {
+        "count": 1,
+        "sides": 4,
+        "modifier": 0,
         "type": "bludgeoning"
       }
     }
@@ -148,7 +159,8 @@
       "experience": 50,
       "humanoid": true,
       "damage_immunities": [],
-      "damage_vulnerabilities": []
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
     },
     {
       "id": "goblin.archer",
@@ -238,7 +250,8 @@
       "experience": 50,
       "humanoid": true,
       "damage_immunities": [],
-      "damage_vulnerabilities": []
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
     },
     {
       "id": "goblin.guardian.placeholder",
@@ -319,7 +332,8 @@
       "experience": 50,
       "humanoid": true,
       "damage_immunities": [],
-      "damage_vulnerabilities": []
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
     },
     {
       "id": "skeleton",
@@ -357,7 +371,8 @@
       ],
       "damage_vulnerabilities": [
         "bludgeoning"
-      ]
+      ],
+      "spellcasting": "none"
     },
     {
       "id": "bugbear",
@@ -391,7 +406,8 @@
       "experience": 200,
       "humanoid": true,
       "damage_immunities": [],
-      "damage_vulnerabilities": []
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
     },
     {
       "id": "giant.rat",
@@ -417,7 +433,8 @@
       "experience": 25,
       "humanoid": false,
       "damage_immunities": [],
-      "damage_vulnerabilities": []
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
     },
     {
       "id": "zombie",
@@ -445,7 +462,33 @@
       "damage_immunities": [
         "poison"
       ],
-      "damage_vulnerabilities": []
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
+    },
+    {
+      "id": "goblin_shaman",
+      "abilities": {
+        "strength": 10,
+        "dexterity": 10,
+        "constitution": 10,
+        "intelligence": 10,
+        "wisdom": 14,
+        "charisma": 11
+      },
+      "armor_class": 10,
+      "hit_points": 9,
+      "attacks": [
+        "goblin_shaman.staff"
+      ],
+      "traits": [],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "acolyte_support"
     }
   ],
   "races": [

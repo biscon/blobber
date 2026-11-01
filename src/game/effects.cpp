@@ -22,6 +22,9 @@ bool targetLess(EffectTarget a, EffectTarget b) {
     return a.npc ? a.enemy.slot < b.enemy.slot : a.character.index < b.character.index;
 }
 } // namespace
+bool operator==(EffectSource a, EffectSource b) noexcept {
+    return static_cast<EffectTarget>(a) == static_cast<EffectTarget>(b);
+}
 bool operator==(EffectTarget a, EffectTarget b) noexcept {
     return a.npc == b.npc && (a.npc ? a.enemy.slot == b.enemy.slot && a.enemy.world == b.enemy.world
                                     : a.character.index == b.character.index);
@@ -36,9 +39,9 @@ const EffectInstance* EffectController::find(EffectId id) const noexcept {
             return &e;
     return nullptr;
 }
-EffectId EffectController::concentration(rules::CharacterId caster) const noexcept {
+EffectId EffectController::concentrationSource(EffectSource caster) const noexcept {
     for (const auto& e : instances_)
-        if (e.active && concentrates(e.kind) && e.caster.index == caster.index)
+        if (e.active && concentrates(e.kind) && e.caster == caster)
             return e.id;
     return {};
 }
@@ -146,7 +149,7 @@ void EffectController::end(EffectInstance& e, EffectEnd why, std::uint64_t now,
     emit(e, EffectNotice::Ended, why, {}, {}, 0, now, events);
     e.active = false;
     if (e.kind == EffectKind::SpiritualWeapon) {
-        ground_.weapons[e.caster.index].active = false;
+        ground_.weapons[e.caster.character.index].active = false;
         ++ground_.revision;
     }
     if (e.kind == EffectKind::Aid)
@@ -173,10 +176,18 @@ EffectResult EffectController::remove(EffectId id, std::uint64_t now, CombatEven
 EffectError EffectController::validate(const EffectRequest& request) const noexcept {
     if (request.world != actors_.snapshot().world)
         return EffectError::InvalidWorld;
-    if (!canAct(request.caster))
+    if ((request.caster.npc ? request.caster.character.index != UINT16_MAX
+                            : request.caster.enemy.slot != UINT16_MAX || request.caster.enemy.world != 0) ||
+        !canAct(request.caster) ||
+        (request.caster.npc &&
+         (!actors_.actor(request.caster.enemy) ||
+          actors_.catalog().monster(actors_.actor(request.caster.enemy)->monster)->spellcasting !=
+              rules::EnemyCasting::AcolyteSupport)))
         return EffectError::InvalidCaster;
     if (request.kind >= EffectKind::Count || request.kind == EffectKind::Restrained ||
         (request.kind >= EffectKind::Sleep && request.kind <= EffectKind::Knockdown))
+        return EffectError::InvalidKind;
+    if (request.caster.npc && request.kind != EffectKind::Bless)
         return EffectError::InvalidKind;
     if (request.difficulty < 1 || request.difficulty > 1000)
         return EffectError::InvalidDifficulty;
@@ -188,20 +199,22 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
         return EffectError::InvalidTargets;
     for (std::size_t i = 0; i < request.count; ++i) {
         const auto target = request.targets[i];
-        if (!living(target) || (request.kind == EffectKind::Aid && target.npc) ||
+        if (!living(target) || (request.caster.npc && !target.npc) ||
+            (request.kind == EffectKind::Aid && target.npc) ||
             ((request.kind == EffectKind::MirrorImage || request.kind == EffectKind::SpiritualWeapon ||
               request.kind == EffectKind::Web) &&
-             !(target == EffectTarget(request.caster))) ||
+             !(target == static_cast<EffectTarget>(request.caster))) ||
             (request.kind == EffectKind::MageArmor && (target.npc || !unarmored(target.character))))
             return EffectError::InvalidTargets;
         for (std::size_t j = 0; j < i; ++j)
             if (request.targets[j] == target)
                 return EffectError::InvalidTargets;
     }
-    const auto old = concentrates(request.kind) ? concentration(request.caster) : EffectId{};
+    const auto old = concentrates(request.kind) ? concentrationSource(request.caster) : EffectId{};
     std::size_t slot = capacity;
     for (std::size_t i = 0; i < capacity; ++i)
-        if (!instances_[i].active || (old.serial && instances_[i].id.serial == old.serial)) {
+        if ((!instances_[i].active && !instances_[i].pendingBless) ||
+            (old.serial && instances_[i].id.serial == old.serial)) {
             slot = i;
             break;
         }
@@ -216,9 +229,10 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     const auto error = validate(request);
     if (error != EffectError::None)
         return {error};
-    const auto old = concentrates(request.kind) ? concentration(request.caster) : EffectId{};
+    const auto old = concentrates(request.kind) ? concentrationSource(request.caster) : EffectId{};
     std::size_t slot = 0;
-    while (instances_[slot].active && (!old.serial || instances_[slot].id.serial != old.serial))
+    while ((instances_[slot].active || instances_[slot].pendingBless) &&
+           (!old.serial || instances_[slot].id.serial != old.serial))
         ++slot;
     if (old.serial)
         for (auto& e : instances_)
@@ -367,14 +381,14 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
     }
     gameplayMs_ = goal;
 }
-void EffectController::damaged(rules::CharacterId id, std::int64_t damage, std::uint64_t now,
+void EffectController::damaged(EffectTarget id, std::int64_t damage, std::uint64_t now,
                                CombatEvents& events) noexcept {
     if (damage > 0)
         wake(id, now, events);
     reconcile(now, events);
     if (damage <= 0)
         return;
-    const auto held = concentration(id);
+    const auto held = concentrationSource(id.npc ? EffectSource(id.enemy) : EffectSource(id.character));
     for (auto& e : instances_)
         if (e.active && held.serial && e.id.serial == held.serial) {
             const auto dc = std::max(std::int64_t{10}, damage / 2);

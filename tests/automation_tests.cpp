@@ -8,6 +8,33 @@ using namespace blobber;
 using namespace blobber::automation;
 using namespace blobber::automation::test;
 namespace {
+void casterSourceEvents() {
+    const auto cat = catalog();
+    CombatOutcome e;
+    e.event = CombatEvent::Effect;
+    e.effect.kind = EffectKind::Bless;
+    e.effect.caster = ActorId{2, 42};
+    e.effect.target = ActorId{1, 42};
+    const auto npc = encodeEvent(e, cat, false);
+    check(npc.at("effect").at("caster").is_null() &&
+              npc.at("effect").at("caster_source") == Json{{"kind", "npc"}, {"actor", 2}} &&
+              npc.at("effect").at("target") == 1,
+          "NPC effect source is tagged and never masquerades as a party caster");
+    e.effect.caster = rules::CharacterId{2};
+    const auto party = encodeEvent(e, cat, false);
+    check(party.at("effect").at("caster") == 2 &&
+              party.at("effect").at("caster_source") == Json{{"kind", "party"}, {"character", 2}},
+          "Party events retain numeric caster and additive tagged source");
+    e.event = CombatEvent::Cast;
+    e.enemyAttack = true;
+    e.enemy = {2, 42};
+    e.spell = rules::SpellKind::SacredFlame;
+    const auto cast = encodeEvent(e, cat, false);
+    check(cast.at("caster_source") == Json{{"kind", "npc"}, {"actor", 2}} && cast.at("roll") == 0 &&
+              cast.at("save_total") == 0 && cast.at("damage") == 0,
+          "Normal enemy cast event identifies actor without invented party identity or rolls");
+}
+
 void packEvents() {
     const auto cat = catalog();
     CombatOutcome event;
@@ -499,6 +526,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        casterSourceEvents();
         packEvents();
         fortitudeEvents();
         boundaries();

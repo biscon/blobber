@@ -5,7 +5,8 @@
     "skeleton/skeleton.json",
     "bugbear/bugbear.json",
     "giant-rat/giant-rat.json",
-    "zombie/zombie.json"
+    "zombie/zombie.json",
+    "goblin-shaman/goblin-shaman.json"
   ],
   "instances": [
     {

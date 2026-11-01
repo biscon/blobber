@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-left.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Starting from the attached TWO left-facing IDLE shaman figures, keep faces/bodies/legs/outfits/staff/handedness exactly the same. Modify ONLY the empty LEFT arm on the NEAR side of each figure for casting: first figure bends this arm so empty hand gathers near chest; second figure straightens this one arm forward toward SCREEN LEFT, open spread palm. Keep the anatomical RIGHT hand holding staff in the same place. Each figure has exactly TWO arms/two hands: the staff arm plus the empty casting arm. NO arm stump, elbow or hand behind either figure's back or near right hip. Both nose directions still LEFT, stable body size/baseline. Exactly two complete horizontal figures with ample transparent center gutter and outer margins, full staff/boots/ears/hands. RGBA transparent background, no ground/shadows/magic/effects/text/grid/border."
+}

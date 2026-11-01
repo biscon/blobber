@@ -54,7 +54,7 @@ void environmentRoundtrip() {
         },
         "Malformed surface retains prior session");
     bad = blobber::automation::Json::parse(text);
-    bad["simulation"] = 5;
+    bad["simulation"] = 6;
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
     {
@@ -62,12 +62,12 @@ void environmentRoundtrip() {
         file << bad.dump();
     }
     CampaignStore store(c, d, {"fixture", 0}, disk);
-    check(!store.inspect().active, "Pre-B04 simulation is incompatible");
+    check(!store.inspect().active, "Pre-B05 simulation is incompatible");
     std::ifstream unchanged(directory.path / "campaign.json");
     const std::string original((std::istreambuf_iterator<char>(unchanged)), {});
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
-            "Previous simulation 5 rejects explicitly");
+            "Previous simulation 6 rejects explicitly");
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");
@@ -202,7 +202,7 @@ void effects() {
         EffectRequest e;
         e.world = run.game().actors().snapshot().world;
         e.kind = kind;
-        e.caster = {0};
+        e.caster = rules::CharacterId{0};
         e.count = 1;
         e.difficulty = 1000;
         const rules::CharacterId target{
@@ -239,7 +239,7 @@ void effects() {
     EffectRequest e;
     e.world = local.game().actors().snapshot().world;
     e.kind = EffectKind::Bane;
-    e.caster = {0};
+    e.caster = rules::CharacterId{0};
     e.count = 2;
     e.difficulty = 1000;
     e.targets[0] = rules::CharacterId{1};
@@ -614,6 +614,47 @@ void groundAndInactive() {
     run = copy(c, d, *run);
 }
 
+void npcSourceTravel() {
+    const auto c = catalog(false, 50, 7, false, true);
+    const auto d = definitions();
+    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    travel(*run, FixtureKind::Downstairs);
+    const auto caster = run->game().actors().id(0);
+    EffectRequest request;
+    request.world = caster.world;
+    request.caster = caster;
+    request.targets[0] = caster;
+    request.count = 1;
+    check(bool(run->game().applyEffect(request)), "Owned campaign fixture applies NPC Bless");
+    auto floor = std::make_unique<FloorState>();
+    run->game().exportFloor(*floor);
+    floor->combat.enemyMana[0] = 2;
+    floor->combat.enemyTarget[0] = 3;
+    run->game().importFloor(*floor);
+    run = copy(c, d, *run);
+    const auto rebound = run->game().actors().id(0);
+    check(run->game().effects().concentrationSource(rebound).serial &&
+              !run->game().effects().concentrationSource(caster).serial &&
+              run->game().combat().enemyMana(rebound) == 2 && run->game().combat().enemyTarget(rebound) == 3,
+          "Disk roundtrip rebinds NPC caster and retains spent mana/target cursor");
+    travel(*run, FixtureKind::Upstairs);
+    for (const auto& e : run->game().effects().snapshot())
+        check(!e.active || !e.caster.npc, "NPC effects never follow party to hub");
+    RestRequest rest;
+    rest.kind = RestKind::Long;
+    rest.world = run->game().actors().snapshot().world;
+    rest.token = run->game().restToken();
+    run->party().damage({0}, 1);
+    check(bool(run->game().rest(rest)), "Party can rest with local NPC concentration on inactive floor");
+    run = copy(c, d, *run);
+    travel(*run, FixtureKind::Downstairs);
+    const auto returned = run->game().actors().id(0);
+    check(run->game().effects().has(returned, EffectKind::Bless) &&
+              run->game().combat().enemyMana(returned) == 2 &&
+              run->game().combat().enemyTarget(returned) == 3,
+          "NPC buff clock/resources stay frozen on their location through hub rest and save");
+}
+
 class TestVisibility final : public blobber::automation::Visibility {
     TargetSnapshot targets_;
 
@@ -729,6 +770,7 @@ int main(int argc, char** argv) {
         libraryIndependence();
         postCombatSave();
         groundAndInactive();
+        npcSourceTravel();
         protocolLoadRollback();
         std::cout << "campaign save tests passed\n";
         return 0;

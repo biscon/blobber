@@ -127,7 +127,7 @@ void campaign() {
     EffectRequest buff;
     buff.world = run.game().actors().snapshot().world;
     buff.kind = EffectKind::Aid;
-    buff.caster = {0};
+    buff.caster = rules::CharacterId{0};
     buff.targets[0] = rules::CharacterId{0};
     buff.count = 1;
     check(bool(run.game().applyEffect(buff)), "party buff fixture applies");
@@ -218,7 +218,7 @@ void transferFailuresAndEffects() {
     const auto oldWorld = g.actors().snapshot().world;
     EffectRequest effect;
     effect.world = oldWorld;
-    effect.caster = {0};
+    effect.caster = rules::CharacterId{0};
     effect.count = 1;
     effect.kind = EffectKind::Bless;
     effect.targets[0] = rules::CharacterId{0};
@@ -423,7 +423,7 @@ void allPortableEffects() {
         EffectRequest e;
         e.kind = kind;
         e.world = run.game().actors().snapshot().world;
-        e.caster = {0};
+        e.caster = rules::CharacterId{0};
         e.count = 1;
         e.difficulty = 1000;
         const rules::CharacterId target{
@@ -469,7 +469,7 @@ void allPortableEffects() {
     check(run.commitTravel(initial), "capacity fixture enters floor");
     EffectRequest e;
     e.world = run.game().actors().snapshot().world;
-    e.caster = {0};
+    e.caster = rules::CharacterId{0};
     e.count = 2;
     e.kind = EffectKind::Bless;
     e.targets[0] = rules::CharacterId{1};
@@ -650,7 +650,7 @@ void recallAndWaypoints() {
     EffectRequest e;
     e.world = g.actors().snapshot().world;
     e.kind = EffectKind::SpiritualWeapon;
-    e.caster = {0};
+    e.caster = rules::CharacterId{0};
     e.targets[0] = rules::CharacterId{0};
     e.count = 1;
     const auto weapon = g.applyEffect(e);
@@ -748,7 +748,7 @@ void recallSafetyAndRollback() {
     EffectRequest local;
     local.world = game.actors().snapshot().world;
     local.kind = EffectKind::Bane;
-    local.caster = {0};
+    local.caster = rules::CharacterId{0};
     local.count = 2;
     local.difficulty = 1000;
     local.targets[0] = rules::CharacterId{0};
@@ -787,7 +787,7 @@ void recallSafetyAndRollback() {
     area.cell = run.location(0).entry.cell;
     area.id.serial = hub.effects.nextArea++;
     area.untilMs = 60000;
-    area.caster = {0};
+    area.caster = rules::CharacterId{0};
     fail();
     area.active = false;
     auto ticket = run.prepareTravel(run.recallRequest());

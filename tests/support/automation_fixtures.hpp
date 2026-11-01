@@ -22,8 +22,8 @@ struct Directory {
         std::filesystem::remove_all(path, error);
     }
 };
-inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 5,
-                              bool rangedArcher = false) {
+inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 5, bool rangedArcher = false,
+                              bool npcCasting = false) {
     const auto base = creationCatalog(true);
     std::vector<rules::RaceDefinition> races;
     std::vector<rules::ClassDefinition> classes;
@@ -42,6 +42,7 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
         spells.push_back(*base.spell({i}));
     auto monster = *base.monster({0});
     monster.hitPoints = deadly ? 10000 : hp;
+    monster.spellcasting = npcCasting ? rules::EnemyCasting::AcolyteSupport : rules::EnemyCasting::None;
     monster.armorClass = 10;
     monster.experience = xp;
     monster.loot[0] = {{13}, 1, 0, 1, 100};

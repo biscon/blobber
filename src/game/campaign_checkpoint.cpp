@@ -210,7 +210,8 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             for (const auto& e : to.saved->effects.instances) {
                 if (!e.active)
                     continue;
-                bool local = e.kind == EffectKind::Web || e.kind == EffectKind::SpiritualWeapon;
+                bool local =
+                    e.caster.npc || e.kind == EffectKind::Web || e.kind == EffectKind::SpiritualWeapon;
                 for (unsigned t = 0; t < e.count; ++t)
                     local |= e.targets[t].npc;
                 if (!local)

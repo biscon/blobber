@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "../../reference/turnaround-v1.png"
+  ],
+  "prompt": "Use case: stylized-concept. Production game sprite animation sheet. Use the attached APPROVED goblin shaman turnaround as strict identity/equipment/style reference: same olive goblin face/ears, ragged plum-brown short-sleeve robe, tooth/bone necklace and belt charms, brown leather bracers/boots, gnarled staff with little bone charms in anatomical RIGHT hand, LEFT hand empty. Preserve identity, anatomical handedness, muted materials and detailed crisp shaded textured retro dungeon style. No bow/dagger/shield or extra equipment. Exactly FOUR full-body MELEE STAFF STRIKE frames on a square TWO BY TWO sheet, order upper-left windup, upper-right strike, lower-left follow-through, lower-right recovery. FRONT facing viewer throughout. One weak club-like staff swing with anatomical RIGHT arm; LEFT hand empty, stays near torso for balance. Windup raises staff diagonally beside/right shoulder, strike swings down toward viewer, follow-through low forward staff, recovery returns upright. Same staff, robe and body dimensions throughout, exactly two arms/two hands. Keep motion clearly different from empty-hand casting. Each pose fully inside its equal panel; generous transparent central row/column gutters and outer margins, all staff/ears/boots/hands uncut. Genuine RGBA transparent background, no floor/shadow/effects/motion blur/text/grid/border."
+}

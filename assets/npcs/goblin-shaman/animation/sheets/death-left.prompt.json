@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-left.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Attached LEFT PROFILE idle sheet is the identity/orientation reference. Make FOUR full-body LEFT PROFILE death-collapse frames on a square TWO BY TWO sheet in reading order. Upper-left struck staggering with head tilted back; upper-right knees buckle, head/torso still facing screen LEFT; lower-left falling onto side, feet toward screen RIGHT, head toward screen LEFT; lower-right fully limp side-lying corpse stretched horizontally with head screen LEFT, boots screen RIGHT, eyes closed and arms limp. Keep same goblin shaman body/head/limb dimensions across frames, no enlarging corpse to fill panel. Same olive skin, pointed ears, plum-brown ragged robe/bone charms/belt/leather boots. Right hand initially holds gnarled staff; staff falls alongside body, full staff visible in final frame. Exactly two arms/two legs. Entire body, ears, boots, staff visible inside each equal panel. Wide transparent central gutters and outer margins. RGBA transparent background, no ground/shadow/blood/effects/text/grid/border."
+}

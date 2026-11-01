@@ -31,7 +31,7 @@ void spells() {
         if (kind == SpellKind::LesserRestoration) {
             EffectRequest hold;
             hold.world = s.actors().snapshot().world;
-            hold.caster = {3};
+            hold.caster = rules::CharacterId{3};
             hold.kind = EffectKind::HoldPerson;
             hold.targets[0] = CharacterId{0};
             hold.count = 1;
@@ -99,7 +99,7 @@ void aidAndMirror() {
     CombatEvents events;
     EffectRequest r;
     r.world = s.actors().snapshot().world;
-    r.caster = {1};
+    r.caster = rules::CharacterId{1};
     r.kind = EffectKind::Aid;
     r.count = 1;
     r.targets[0] = CharacterId{0};
@@ -134,7 +134,7 @@ void effects() {
     CombatEvents events;
     EffectRequest r;
     r.world = s.actors().snapshot().world;
-    r.caster = {3};
+    r.caster = rules::CharacterId{3};
     r.kind = EffectKind::MirrorImage;
     r.count = 1;
     r.targets[0] = CharacterId{3};
@@ -315,7 +315,7 @@ void capacityStress() {
     for (unsigned i = 0; i < EffectController::capacity; ++i) {
         EffectRequest r;
         r.world = actors.snapshot().world;
-        r.caster = {3};
+        r.caster = rules::CharacterId{3};
         r.kind = EffectKind::MageArmor;
         r.count = 1;
         r.targets[0] = CharacterId{3};

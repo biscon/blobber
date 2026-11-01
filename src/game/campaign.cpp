@@ -19,7 +19,7 @@ std::uint64_t rebase(std::uint64_t deadline, std::uint64_t from, std::uint64_t t
     return to + remaining;
 }
 bool portable(const EffectInstance& e) noexcept {
-    if (e.kind == EffectKind::Web || e.kind == EffectKind::SpiritualWeapon)
+    if (e.caster.npc || e.kind == EffectKind::Web || e.kind == EffectKind::SpiritualWeapon)
         return false;
     for (std::size_t i = 0; i < e.count; ++i)
         if (e.targets[i].npc)

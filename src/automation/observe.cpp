@@ -1,6 +1,14 @@
 #include "automation/codec.hpp"
 namespace blobber::automation {
 namespace {
+Json casterSource(EffectSource source) {
+    return source.npc ? Json{{"kind", "npc"}, {"actor", source.enemy.slot}}
+                      : Json{{"kind", "party"}, {"character", source.character.index}};
+}
+Json legacyCaster(EffectSource source) {
+    return source.npc ? Json(nullptr) : Json(source.character.index);
+}
+
 std::string u(std::uint64_t v) {
     return std::to_string(v);
 }
@@ -149,7 +157,7 @@ Json encodeObservation(const Observation& o) {
                   {"domain", spellList(cat, p.build.spells.domain)},
                   {"racial", spellList(cat, p.build.spells.racial)},
                   {"inventory", Json::array()}};
-        if (auto concentration = g.effects().concentrationStatus({i})) {
+        if (auto concentration = g.effects().concentrationStatus(rules::CharacterId{i})) {
             StatusSummary s;
             s.entries[s.count++] = *concentration;
             c["concentration"] = status(s);
@@ -187,7 +195,11 @@ Json encodeObservation(const Observation& o) {
                   {"statuses", status(g.effects().statuses(g.actors().id(i)))},
                   {"targetable", o.visible[i]},
                   {"guardian", g.guardian(g.actors().id(i))}};
+        if (auto concentration = g.effects().concentrationStatus(g.actors().id(i)))
+            e["concentration"] = status(StatusSummary{{*concentration}, 1});
         if (o.diagnostic) {
+            e["mana"] = g.combat().enemyMana(g.actors().id(i));
+            e["target_cursor"] = g.combat().enemyTarget(g.actors().id(i));
             const auto& ai = g.ai().actors[i];
             e.update({{"hp", a.hitPoints},
                       {"max_hp", a.maxHitPoints},
@@ -266,7 +278,8 @@ Json encodeObservation(const Observation& o) {
                          {"id", e.targets[i].npc ? e.targets[i].enemy.slot : e.targets[i].character.index}});
                 j["effects"].push_back({{"serial", u(e.id.serial)},
                                         {"kind", unsigned(e.kind)},
-                                        {"caster", e.caster.index},
+                                        {"caster", legacyCaster(e.caster)},
+                                        {"caster_source", casterSource(e.caster)},
                                         {"targets", targets},
                                         {"difficulty", e.difficulty},
                                         {"expires", u(e.expiresMs)},
@@ -358,6 +371,10 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
         {"save_total", e.saveTotal},
         {"save_difficulty", e.saveDifficulty},
         {"darts", e.darts}};
+    if (e.spell != rules::SpellKind::Count && e.enemyAttack && e.enemy.world)
+        j["caster_source"] = casterSource(e.enemy);
+    else if (e.spell != rules::SpellKind::Count && e.character.index < rules::partySize)
+        j["caster_source"] = casterSource(e.character);
     if (e.event == CombatEvent::Attack) {
         if (e.enemyAttack && e.spell == rules::SpellKind::Count) {
             j["pack_tactics"] = e.packTactics;
@@ -386,7 +403,8 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
             {"notice", unsigned(e.effect.notice)},
             {"kind", effectName(e.effect.kind)},
             {"reason", unsigned(e.effect.reason)},
-            {"caster", e.effect.caster.index},
+            {"caster", legacyCaster(e.effect.caster)},
+            {"caster_source", casterSource(e.effect.caster)},
             {"npc", e.effect.target.npc},
             {"target", e.effect.target.npc ? e.effect.target.enemy.slot : e.effect.target.character.index},
             {"roll", e.effect.roll},

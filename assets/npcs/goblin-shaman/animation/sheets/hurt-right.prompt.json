@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-right.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Use the attached TWO idle goblin shaman poses as strict identity and orientation reference: STRICT RIGHT PROFILE, nose/toes point screen RIGHT. Produce TWO full-body HURT/RECOIL animation poses horizontally. FIRST recoils backward away from a hit, shoulders/head tilt back, empty LEFT arm reflexively lifts; SECOND bends forward recovering, different torso/head/empty hand motion. Exactly TWO arms: RIGHT hand keeps staff, LEFT hand empty. No third hand/arm. Preserve olive face/ears, plum-brown robe/bone charms/leather boots, same body dimensions/scale and local foot baseline. Complete staff tip, boots, ears, hands visible within generous transparent margins and wide central gutter. RGBA transparent background, no floor/shadow/blood/glow/effects/text/grid/border."
+}

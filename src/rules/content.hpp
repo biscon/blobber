@@ -33,6 +33,7 @@ struct LootEntry {
     std::uint16_t quantity = 1, sides = 0; // sides=0: fixed quantity; otherwise quantity d sides.
     std::uint8_t first = 1, last = 100;
 };
+enum class EnemyCasting : std::uint8_t { None, AcolyteSupport };
 struct MonsterDefinition {
     std::string id;
     Abilities abilities{};
@@ -47,6 +48,7 @@ struct MonsterDefinition {
     std::uint32_t experience = 0;
     bool humanoid = false;
     DamageProfile damageProfile;
+    EnemyCasting spellcasting = EnemyCasting::None;
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
 struct CreationClass;

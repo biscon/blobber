@@ -34,7 +34,7 @@ const char* GameSession::travelSafety() const noexcept {
     if (!able)
         return "An able conscious companion is required.";
     for (const auto& e : effects_.instances_) {
-        if (!e.active)
+        if (!e.active || e.caster.npc)
             continue;
         if (e.kind == EffectKind::SpiritualWeapon)
             return "Dismiss Spiritual Weapon before travel.";
@@ -95,6 +95,8 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
     s.combat.enemyBusy = combat_.enemyBusy_;
     s.combat.nextAttack = combat_.nextAttack_;
     s.combat.autoCursor = combat_.autoCursor_;
+    s.combat.enemyMana = combat_.enemyMana_;
+    s.combat.enemyTarget = combat_.enemyTarget_;
     s.objective = objective_;
     s.creditedDeaths = creditedDeaths_;
     s.rewardRevision = rewardRevision_;
@@ -109,6 +111,8 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
         id.world = 0;
     for (auto& e : s.effects.instances) {
         e.id.world = 0;
+        if (e.caster.npc)
+            e.caster.enemy.world = 0;
         for (auto& t : e.targets)
             t.enemy.world = 0;
     }
@@ -127,6 +131,29 @@ void GameSession::importFloor(const FloorState& s) {
         s.objective.count != objective_.count || !s.effects.nextSerial || !s.effects.nextArea ||
         s.remainderMs < 0 || s.remainderMs >= 1 || !std::isfinite(s.remainderMs))
         reject();
+    for (std::size_t i = 0; i < NpcWorld::maxInstances; ++i) {
+        const bool caster =
+            i < s.actors.count && actors_.catalog().monster(actors_.state_.actors[i].monster)->spellcasting ==
+                                      rules::EnemyCasting::AcolyteSupport;
+        if (s.combat.enemyMana[i] > (caster ? 6 : 0) || s.combat.enemyTarget[i] >= rules::partySize ||
+            (!caster && s.combat.enemyTarget[i]))
+            reject();
+    }
+    for (const auto& e : s.effects.instances) {
+        if (e.pendingBless)
+            reject();
+        if (!e.active || !e.caster.npc)
+            continue;
+        const auto slot = e.caster.enemy.slot;
+        if (slot >= s.actors.count || e.kind != EffectKind::Bless || e.caster.enemy.world ||
+            e.caster.character.index != UINT16_MAX || s.actors.actors[slot].life != ActorLife::Alive ||
+            actors_.catalog().monster(actors_.state_.actors[slot].monster)->spellcasting !=
+                rules::EnemyCasting::AcolyteSupport)
+            reject();
+        for (std::size_t i = 0; i < e.count && i < e.targets.size(); ++i)
+            if (!e.targets[i].npc)
+                reject();
+    }
     const auto validCell = [&](Cell c) {
         return c.x >= 0 && c.y >= 0 && c.x < map_.width() && c.y < map_.height();
     };
@@ -188,11 +215,15 @@ void GameSession::importFloor(const FloorState& s) {
             reject();
     }
     for (const auto& e : s.effects.instances) {
+        if (e.pendingBless)
+            reject();
         if (!e.active)
             continue;
         if (unsigned(e.kind) >= unsigned(EffectKind::Count) || !e.id.serial ||
             e.id.serial >= s.effects.nextSerial || e.count == 0 || e.count > e.targets.size() ||
-            !party_.character(e.caster) || e.reserved || e.kind == EffectKind::Restrained ||
+            (e.caster.npc ? e.caster.enemy.slot >= s.actors.count || e.kind != EffectKind::Bless
+                          : !party_.character(e.caster.character)) ||
+            e.pendingBless || e.reserved || e.kind == EffectKind::Restrained ||
             (e.kind >= EffectKind::Sleep && e.kind <= EffectKind::Knockdown))
             reject();
         for (std::size_t i = 0; i < e.count; ++i)
@@ -279,6 +310,8 @@ void GameSession::importFloor(const FloorState& s) {
     combat_.enemyBusy_ = s.combat.enemyBusy;
     combat_.nextAttack_ = s.combat.nextAttack;
     combat_.autoCursor_ = s.combat.autoCursor;
+    combat_.enemyMana_ = s.combat.enemyMana;
+    combat_.enemyTarget_ = s.combat.enemyTarget;
     objective_ = s.objective;
     creditedDeaths_ = s.creditedDeaths;
     rewardRevision_ = s.rewardRevision;
@@ -299,6 +332,8 @@ void GameSession::importFloor(const FloorState& s) {
         id.world = world;
     for (auto& e : effects_.instances_) {
         e.id.world = world;
+        if (e.caster.npc)
+            e.caster.enemy.world = world;
         for (auto& t : e.targets)
             t.enemy.world = world;
     }

@@ -144,10 +144,15 @@ struct Canonical {
         add(v.character.index);
         add(v.enemy);
     }
+    void add(const EffectSource& v) {
+        add(v.npc);
+        add(v.character.index);
+        add(v.enemy);
+    }
     void add(const EffectInstance& v) {
         add(v.id);
         add(v.kind);
-        add(v.caster.index);
+        add(v.caster);
         add(v.targets);
         add(v.count);
         add(v.difficulty);
@@ -156,6 +161,7 @@ struct Canonical {
         add(v.active);
         add(v.duplicates);
         add(v.reserved);
+        add(v.pendingBless);
         add(v.cell);
         add(v.readyMs);
     }
@@ -249,6 +255,8 @@ struct Canonical {
         add(v.enemyBusy);
         add(v.nextAttack);
         add(v.autoCursor);
+        add(v.enemyMana);
+        add(v.enemyTarget);
     }
     void add(const FloorObjectiveSnapshot& v) {
         add(v.members);

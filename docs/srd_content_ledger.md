@@ -439,3 +439,17 @@ based), tabletop speed/senses/languages and unsupported poisoned conditions.
 Full production art follows the user-accepted turnaround v1 and built-in imagegen,
 not SRD artwork. Arena-first delivery assigns no population or guardian recipe;
 campaign integration/PC07 remain paused. The completed slice is accepted.
+
+## B05 — Goblin shaman (in progress, 2026-11-01)
+
+SRD 5.1 CC Acolyte (printed p.395): abilities 10/10/10/10/14/11, AC10,
+fixed HP9, Wisdom spell DC12, club +2 /1d4 bludgeoning and 50XP adopted.
+Small goblin appearance/one subcell and a staff used as the weak club are project
+adaptations. No Nimble Escape, healing, Sanctuary, Light or Thaumaturgy; skills,
+languages/senses and tabletop movement speed are not imported. No loot/currency.
+Bless: up to three NPC allies, 1d4 attacks/saves, one-minute concentration.
+Sacred Flame: one conscious party target, Dexterity save negates 1d8 radiant.
+Use existing six-cell range/LOS, six-second action economy, six NPC mana and
+two mana/Bless; no regeneration/refill except fresh arena rematch. Deterministic
+ally-first support and rotating party targets are adaptations. See
+[b05 design](b05_goblin_shaman_design.md) for ownership/persistence/art contracts.

@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-back.png"
+  ],
+  "prompt": "Use case: stylized-concept. Attached idle goblin shaman establishes exact identity/equipment. Create ONE static full-body PRONE/incapacitated sprite: BACK-oriented goblin lying fully limp FACE DOWN, only BACK of head and back of robe visible, no eyes/nose/chest. Head toward screen LEFT, boots toward screen RIGHT. Both arms relaxed on ground, staff resting flat alongside right arm. Same olive goblin anatomy, pointed ears, plum-brown ragged robe, bone/tooth charms, brown leather belt/bracers/boots and gnarled wooden staff. Exactly two arms/two legs, natural collapsed weight. Same detailed shaded crisp retro dungeon style, muted material colors. Full body and entire staff/ears/boots/hands visible, ample transparent margins on a wide canvas. SINGLE figure only, no standing pose or extra panels. RGBA transparent background, no floor/shadow/blood/glow/effects/text/grid/border."
+}

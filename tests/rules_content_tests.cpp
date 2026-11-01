@@ -321,6 +321,19 @@ void packTraits() {
         bad["monsters"][0]["traits"] = traits;
         files.invalid(bad, "traits");
     }
+    auto casting = modern;
+    casting["schema_version"] = 13;
+    casting["monsters"][0]["spellcasting"] = "acolyte_support";
+    check(files.load(casting).monster({0})->spellcasting == EnemyCasting::AcolyteSupport,
+          "Schema 13 loads concrete enemy spell profile");
+    casting["monsters"][0]["spellcasting"] = "none";
+    check(files.load(casting).monster({0})->spellcasting == EnemyCasting::None,
+          "Noncasters retain explicit none profile");
+    casting["monsters"][0]["spellcasting"] = "wizard";
+    files.invalid(casting, "spellcasting");
+    casting["monsters"][0].erase("spellcasting");
+    files.invalid(casting, "spellcasting");
+    check(zombie.monster({0})->spellcasting == EnemyCasting::None, "Earlier schemas default to noncaster");
     modern["schema_version"] = 11;
     modern["monsters"][0]["traits"] = {"undead_fortitude"};
     files.invalid(modern, "traits");

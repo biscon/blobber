@@ -45,6 +45,11 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     auto& p = pending_[slot];
     auto& v = visuals_.attacks[slot];
     p = {};
+    if (out.enemyAttack && out.spell == rules::SpellKind::Bless)
+        p.action = PendingAttack::Action::Bless;
+    else if (out.enemyAttack && out.spell == rules::SpellKind::SacredFlame)
+        p.action = PendingAttack::Action::SacredFlame;
+    const bool npcCast = p.action != PendingAttack::Action::Weapon;
     v = {};
     const auto* a = actors_.actor(out.enemy);
     assert(a);
@@ -68,8 +73,10 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     const auto& timing = presentation_[a->npc.type.index];
     const auto windup = out.enemyAttack ? out.impactMs : (v.ranged ? 0u : 200u);
     v.releaseMs = now + windup;
-    v.impactMs = v.releaseMs + (v.ranged ? arrowFlightMs(pose.cell, a->npc.cell) : 0);
-    p.clipEndMs = now + (out.enemyAttack ? (v.ranged ? timing.bow : timing.attack) : windup);
+    v.impactMs = v.releaseMs + (v.ranged && !npcCast ? arrowFlightMs(pose.cell, a->npc.cell) : 0);
+    p.clipEndMs = now + (npcCast           ? (timing.bow ? timing.bow : 1000)
+                         : out.enemyAttack ? (v.ranged ? timing.bow : timing.attack)
+                                           : windup);
     p.turn = state_.phase == CombatPhase::Turns;
     if (v.ranged && !windup) {
         v.stage = AttackStage::Flight;
@@ -89,6 +96,8 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     out.impactMs = windup;
     out.hit = out.critical = out.died = false;
     out.damage = out.roll = 0;
+    out.saveTotal = out.saveDifficulty = 0;
+    out.saveSucceeded = false;
     out.packTactics = false;
     out.attackRollMode = rules::RollMode::Normal;
     return out;
@@ -120,12 +129,15 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
                                     bool targetGone) noexcept {
     auto& v = visuals_.attacks[slot];
     auto out = pending_[slot].result;
+    effects_.cancelBless(pending_[slot].blessing);
     effects_.resolveMirror(out.mirror, true, when, events);
     out.event = CombatEvent::AttackCanceled;
     out.occurredMs = when;
     out.targetGone = targetGone;
     out.hit = out.critical = out.died = false;
     out.damage = out.roll = 0;
+    out.saveTotal = out.saveDifficulty = 0;
+    out.saveSucceeded = false;
     out.packTactics = false;
     out.attackRollMode = rules::RollMode::Normal;
     out.phase = state_.phase;
@@ -186,6 +198,8 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             out.occurredMs = v.releaseMs;
             out.hit = out.critical = false;
             out.damage = out.roll = 0;
+            out.saveTotal = out.saveDifficulty = 0;
+            out.saveSucceeded = false;
             out.packTactics = false;
             out.attackRollMode = rules::RollMode::Normal;
             events.append(out);
@@ -196,8 +210,11 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         const auto* a = actors_.actor(v.enemy);
         const auto* c = party_.character(v.character);
         const bool sourceAlive = v.incoming ? effects_.canAct(v.enemy) : effects_.canAct(v.character);
-        const bool targetAlive =
-            v.incoming ? c && c->life != rules::Life::Dead : a && a->life == ActorLife::Alive;
+        const bool targetAlive = p.action == PendingAttack::Action::Bless ||
+                                 (v.incoming ? c && (p.action == PendingAttack::Action::SacredFlame
+                                                         ? c->life == rules::Life::Conscious
+                                                         : c->life != rules::Life::Dead)
+                                             : a && a->life == ActorLife::Alive);
         if (!sourceAlive || !targetAlive)
             cancelAttack(i, cursor, events, !targetAlive);
     }
@@ -231,15 +248,18 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         auto& p = pending_[owner];
         const auto* a = actors_.actor(v.enemy);
         const auto* character = party_.character(v.character);
-        const bool targetAlive =
-            v.incoming ? character && character->life != rules::Life::Dead : a && a->life == ActorLife::Alive;
+        const bool targetAlive = p.action == PendingAttack::Action::Bless ||
+                                 (v.incoming ? character && (p.action == PendingAttack::Action::SacredFlame
+                                                                 ? character->life == rules::Life::Conscious
+                                                                 : character->life != rules::Life::Dead)
+                                             : a && a->life == ActorLife::Alive);
         if (v.stage == AttackStage::Windup) {
             const bool sourceAlive = v.incoming ? effects_.canAct(v.enemy) : effects_.canAct(v.character);
             if (!sourceAlive || !targetAlive) {
                 cancelAttack(next, earliest, events, !targetAlive);
                 continue;
             }
-            if (v.ranged) {
+            if (v.ranged && p.action == PendingAttack::Action::Weapon) {
                 v.partyOrigin = pose;
                 if (v.incoming) {
                     v.npcOrigin = a->npc;
@@ -253,6 +273,8 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
                 out.occurredMs = earliest;
                 out.hit = out.critical = out.died = false;
                 out.damage = out.roll = 0;
+                out.saveTotal = out.saveDifficulty = 0;
+                out.saveSucceeded = false;
                 out.packTactics = false;
                 out.attackRollMode = rules::RollMode::Normal;
                 out.phase = state_.phase;
@@ -274,7 +296,21 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
         if (!v.incoming && targetAlive)
             alert(out.enemy, pose);
         out.phase = state_.phase;
-        applyDamage(out, earliest, events);
+        if (p.action == PendingAttack::Action::Bless) {
+            if (!effects_.releaseBless(p.blessing, earliest, events)) {
+                cancelAttack(next, earliest, events, false);
+                continue;
+            }
+        } else {
+            if (p.action == PendingAttack::Action::SacredFlame && !out.targetGone) {
+                auto save = out;
+                save.event = CombatEvent::SpellSave;
+                save.hit = out.saveSucceeded;
+                save.damage = 0;
+                events.append(save);
+            }
+            applyDamage(out, earliest, events);
+        }
         if (!v.incoming && !out.targetGone) {
             const auto* victim = actors_.actor(out.enemy);
             v.targetPosition = actorPosition(*victim, earliest);
@@ -297,7 +333,11 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             const bool sourceAlive =
                 other.incoming ? effects_.canAct(other.enemy) : effects_.canAct(other.character);
             const bool liveTarget =
-                other.incoming ? ch && ch->life != rules::Life::Dead : npc && npc->life == ActorLife::Alive;
+                pending_[i].action == PendingAttack::Action::Bless ||
+                (other.incoming ? ch && (pending_[i].action == PendingAttack::Action::SacredFlame
+                                             ? ch->life == rules::Life::Conscious
+                                             : ch->life != rules::Life::Dead)
+                                : npc && npc->life == ActorLife::Alive);
             if (!sourceAlive || !liveTarget)
                 cancelAttack(i, earliest, events, !liveTarget);
         }
@@ -353,6 +393,8 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         effects_.wake(out.enemyAttack ? EffectTarget(out.recipient) : EffectTarget(out.enemy), when, events);
     if (out.hit && out.enemyAttack)
         effects_.damaged(out.recipient, out.damage, when, events);
+    else if (out.hit && !out.targetGone)
+        effects_.damaged(out.enemy, out.damage, when, events);
     else
         effects_.reconcile(when, events);
     if (out.hit && !out.targetGone && !out.died && out.spell == rules::SpellKind::GuidingBolt)

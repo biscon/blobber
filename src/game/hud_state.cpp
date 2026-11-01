@@ -291,6 +291,9 @@ void CommandController::updateHover() noexcept {
                                            session_.movement().player))
             put(2, "Sneak Attack: +1d6 on hit / one action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
+        if (auto concentration = session_.effects().concentrationStatus(*h.enemy)) {
+            std::snprintf(h.lines[4].data(), h.lines[4].size(), "Concentrating: %s", concentration->name);
+        }
         for (unsigned e = unsigned(EffectKind::Sleep); e < unsigned(EffectKind::Count); ++e)
             if (session_.effects().has(*h.enemy, EffectKind(e))) {
                 put(2, effectName(EffectKind(e)));

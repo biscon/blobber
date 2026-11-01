@@ -121,11 +121,12 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
         const auto& species = actors_.catalog().monster(a.monster)->id;
-        state_.enemyPortraits[i] = species == "skeleton"    ? EnemyPortrait::Skeleton
-                                   : species == "bugbear"   ? EnemyPortrait::Bugbear
-                                   : species == "giant.rat" ? EnemyPortrait::GiantRat
-                                   : species == "zombie"    ? EnemyPortrait::Zombie
-                                                            : EnemyPortrait::Goblin;
+        state_.enemyPortraits[i] = species == "skeleton"        ? EnemyPortrait::Skeleton
+                                   : species == "bugbear"       ? EnemyPortrait::Bugbear
+                                   : species == "giant.rat"     ? EnemyPortrait::GiantRat
+                                   : species == "zombie"        ? EnemyPortrait::Zombie
+                                   : species == "goblin_shaman" ? EnemyPortrait::Shaman
+                                                                : EnemyPortrait::Goblin;
     }
     state_.log = {};
     appendLog("Click an enemy to attack. Shield guards; Aid stabilizes.");
@@ -173,9 +174,9 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             break;
         }
         if (out.enemyAttack && out.spell != rules::SpellKind::Count) {
-            std::snprintf(line, sizeof(line), "%s -> %s: %s, %lld damage%s.", name, target,
-                          rules::spellRules(out.spell)->name, static_cast<long long>(out.damage),
-                          out.died ? ", dead" : "");
+            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s, %lld damage%s.", species,
+                          unsigned(out.enemy.slot) + 1, target, rules::spellRules(out.spell)->name,
+                          static_cast<long long>(out.damage), out.died ? ", dead" : "");
             break;
         }
         if (out.damageAdjustment == rules::DamageAdjustment::Immune) {
@@ -252,6 +253,11 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         std::snprintf(line, sizeof(line), "Contact broken. Ranged approach resumes.");
         break;
     case CombatEvent::Cast: {
+        if (out.enemyAttack) {
+            std::snprintf(line, sizeof(line), "%s #%u begins %s.", species, unsigned(out.enemy.slot) + 1,
+                          rules::spellRules(out.spell)->name);
+            break;
+        }
         const auto* spell = rules::spellRules(out.spell);
         std::snprintf(line, sizeof(line), "%s: %s.", name,
                       spell ? spell->name : rules::featureName(out.feature));
@@ -302,15 +308,25 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Effect: {
         const auto& e = out.effect;
         const char* effect = effectName(e.kind);
+        char caster[48];
+        if (e.caster.npc)
+            std::snprintf(caster, sizeof(caster), "Enemy #%u ", unsigned(e.caster.enemy.slot) + 1);
+        else
+            caster[0] = '\0';
         if (e.notice == EffectNotice::InitialSave || e.notice == EffectNotice::RepeatSave ||
             e.notice == EffectNotice::ConcentrationSave)
-            std::snprintf(line, sizeof(line), "%s%s: save %lld vs %lld - %s.", effect,
+            std::snprintf(line, sizeof(line), "%s%s%s: save %lld vs %lld - %s.", caster, effect,
                           e.notice == EffectNotice::ConcentrationSave ? " concentration" : "",
                           static_cast<long long>(e.total), static_cast<long long>(e.difficulty),
                           e.succeeded ? "saved" : "failed");
         else
-            std::snprintf(line, sizeof(line), "%s: %s.", effect,
+            std::snprintf(line, sizeof(line), "%s%s: %s.", caster, effect,
                           e.notice == EffectNotice::Applied ? "applied" : "ended / recipient removed");
+        if (e.notice == EffectNotice::Applied && e.target.npc && e.caster.npc) {
+            appendLog(line);
+            std::snprintf(line, sizeof(line), "Enemy #%u receives %s from #%u.",
+                          unsigned(e.target.enemy.slot) + 1, effect, unsigned(e.caster.enemy.slot) + 1);
+        }
         if (e.notice == EffectNotice::Applied && !e.target.npc) {
             CombatFeedback f;
             f.active = f.party = f.hit = true;

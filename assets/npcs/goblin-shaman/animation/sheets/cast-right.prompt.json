@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-right.png"
+  ],
+  "prompt": "Use case: stylized-concept. Production game sprite animation sheet. Use the attached APPROVED goblin shaman turnaround as strict identity/equipment/style reference: same olive goblin face/ears, ragged plum-brown short-sleeve robe, tooth/bone necklace and belt charms, brown leather bracers/boots, gnarled staff with little bone charms in anatomical RIGHT hand, LEFT hand empty. Preserve identity, anatomical handedness, muted materials and detailed crisp shaded textured retro dungeon style. No bow/dagger/shield or extra equipment. Use the attached RIGHT PROFILE idle pose orientation exactly, nose points screen RIGHT in both frames. Create TWO full-body spellcasting frames horizontally. FIRST: empty LEFT hand on far side raised and curled near chest, RIGHT hand near camera holds upright staff. SECOND: empty LEFT arm extends toward screen RIGHT with spread open fingers and palm, RIGHT hand continues to hold staff. Exactly TWO arms and TWO hands in each pose. Staff never switches hand, no third hand behind back. Mouth opens incantation. Same body size and foot baseline, generous transparent center gutter and outer margins. Full hands/staff/ears/boots visible. RGBA transparent background, no ground/shadows/effects/text/grid/border."
+}

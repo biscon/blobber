@@ -28,6 +28,7 @@ CombatController::CombatController(GeometryView map, Party& party, ActorWorld& a
     visuals_.world = state_.world;
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto& m = *actors.catalog().monster(actors.snapshot().actors[i].monster);
+        enemyMana_[i] = m.spellcasting == rules::EnemyCasting::AcolyteSupport ? 6 : 0;
         for (std::size_t j = 0; j < m.attackCount; ++j) {
             auto& slot = actors.catalog().attack(m.attacks[j])->kind == rules::AttackKind::Melee ? melee_[i]
                                                                                                  : ranged_[i];
@@ -213,7 +214,8 @@ std::array<bool, NpcWorld::maxInstances> CombatController::movementLocks(std::ui
             a.hitPoints * 2 <= a.maxHitPoints && ai_.aware(actors_.id(i)) &&
             actors_.catalog().attack(melee_[i]) && actors_.catalog().attack(ranged_[i]);
         result[i] = !effects_.canAct(actors_.id(i)) || now < enemyBusy_[i] ||
-                    (!realTime(state_.phase) && members_[i]) || wounded;
+                    (!realTime(state_.phase) && members_[i]) || wounded ||
+                    (ai_.aware(actors_.id(i)) && enemySpellGeometry(actors_.id(i)));
     }
     return result;
 }
@@ -330,7 +332,7 @@ void CombatController::selectTurn() noexcept {
                 const auto id = state_.enemies[enemyCursor_];
                 const auto* a = actors_.actor(id);
                 if (frontal(id) && a->monster.index == groups_[e.index].index &&
-                    (actors_.catalog().attack(ranged_[id.slot]) ||
+                    (enemyCaster(id) || actors_.catalog().attack(ranged_[id.slot]) ||
                      !combatAdjacent(map_, a->npc.cell, origin_.cell) ||
                      meleeSlot(id, actors_.occupiedSlots(a->npc.cell)))) {
                     state_.activeEnemy = id;
@@ -462,7 +464,7 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
                 if (!frontal(id) || a->monster.index != groups_[e.index].index)
                     continue;
                 const auto slot = meleeSlot(id, occupied[i]);
-                if (!slot && !actors_.catalog().attack(ranged_[id.slot]) &&
+                if (!slot && !enemyCaster(id) && !actors_.catalog().attack(ranged_[id.slot]) &&
                     combatAdjacent(map_, a->npc.cell, origin_.cell))
                     continue;
                 dst.upcoming[dst.upcomingCount++] = {{}, id, false};

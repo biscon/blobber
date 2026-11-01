@@ -29,7 +29,12 @@ art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack T
 (2026-11-01): mechanics, full art, native portrait and normal arena integration are
 delivered. Reference v1 and the completed slice are accepted.
 [B04 verification/gallery](b04_verification.md) records the checks and limitations.
-B05 is next for separate detailed planning; B05–B06 remain Planned.
+[B05 goblin shaman and enemy spellcasting](b05_goblin_shaman_design.md) is
+**Ready for review** under the user-approved detailed plan. Tagged NPC Bless
+sources, fixed NPC resources, casting timelines, full 56-pose art and portrait are
+implemented. Reference v1 is accepted; completed-slice acceptance is pending.
+[B05 verification/gallery](b05_verification.md) records checks and limitations.
+B06 remains Planned.
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
 right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
@@ -60,9 +65,10 @@ roughly 20+ floor game; it stays paused after P-B.
   Focus/map/details/history/menu pauses freeze session deadlines and gameplay time.
   Gameplay cooldowns retain the hybrid real-time/round-boundary policy.
 - **Effects:** session-owned 64-instance fixed storage, up to three typed recipients
-  per instance; world/serial IDs reject stale slot reuse. Party casters own at most
-  one concentration each. Checked apply/remove operations and save/lifecycle events
-  serve later spell commands; current review is headless. Full storage rejects
+  per instance; world/serial IDs reject stale slot reuse. Tagged party/NPC sources own at most
+  one concentration each; NPC sources currently support Bless only. Pending Bless
+  reserves an existing effect slot before costs/RNG and commits at clip release. Checked apply/remove operations and save/lifecycle events
+  serve checked spell commands and resolved NPC cast timelines. Full storage rejects
   before costs/RNG/replacement. Expiry precedes repeat saves and equal-time impacts;
   existing accepted attacks keep their saved rolls. Incapacitation masks suppress
   NPC facing as well as pathfinding; living held actors retain occupancy.
@@ -233,6 +239,19 @@ a Vulkan-style benchmark or stress-testing framework.
 
 ## Typed damage and bestiary content
 
+B05 implements the approved [goblin shaman design](b05_goblin_shaman_design.md).
+Catalog schema 13 adds a concrete Acolyte support profile. Combat owns fixed
+per-actor mana/target cursors and reuses existing pending-action slots for Bless
+and Sacred Flame; ranged-capable admission and AI holds preserve support positions.
+Effect requests/instances/events carry tagged party or world-checked actor sources.
+NPC Bless reservations share the 64 slots; damage and burning Web notify source
+concentration exactly once. NPC sources/resources remain floor-owned across travel,
+canonical restore and disk persistence (schema/simulation 4/7). Additive protocol
+source tags, hover/log feedback, full production art and portrait reuse existing
+owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
+all budgets/count capacities remain fixed. [Verification](b05_verification.md)
+records evidence, limitations and pending completed-slice user review.
+
 B04 implements the approved [zombie design](b04_zombie_design.md). Catalog schema 12
 adds Undead Fortitude to the typed byte trait mask. One allocation-free NPC damage
 helper serves combat impacts and burning Web, applying mitigation and an effect-
@@ -291,7 +310,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 3/6 and generator/templates 4/4. Older saves reject
+Campaign schema/simulation are 4/7 and generator/templates 4/4. Older saves reject
 without being modified; no migration. World publication is format 3, appearance 4,
 visibility world-visibility-v6 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

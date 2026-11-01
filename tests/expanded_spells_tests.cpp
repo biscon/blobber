@@ -24,7 +24,7 @@ struct EffectsFixture {
         EffectRequest r;
         r.world = actors.snapshot().world;
         r.kind = kind;
-        r.caster = {std::uint16_t(caster)};
+        r.caster = rules::CharacterId{std::uint16_t(caster)};
         r.targets[0] = target;
         r.count = 1;
         r.difficulty = dc;
@@ -168,7 +168,7 @@ void sanctuaryRetargetAndWake() {
     for (std::uint16_t i = 0; i < 4; ++i) {
         EffectRequest r;
         r.world = s.actors().snapshot().world;
-        r.caster = {1};
+        r.caster = rules::CharacterId{1};
         r.kind = EffectKind::Sanctuary;
         r.count = 1;
         r.targets[0] = rules::CharacterId{i};
@@ -200,7 +200,7 @@ void sanctuaryRetargetAndWake() {
     f.apply(EffectKind::Bless, 3, rules::CharacterId{0});
     f.party.grantTemporary({3}, 2000, 60000);
     f.party.damage({3}, 1000);
-    f.effects.damaged({3}, 1000, 0, f.events);
+    f.effects.damaged(rules::CharacterId{3}, 1000, 0, f.events);
     check(f.party.character({3})->hitPoints == hp && !f.effects.concentration({3}).serial,
           "Concentration uses damage before temporary absorption");
 }

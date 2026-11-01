@@ -81,7 +81,7 @@ void sanctuaryAndEffects() {
     CombatEvents events;
     EffectRequest e;
     e.world = s.actors().snapshot().world;
-    e.caster = {3};
+    e.caster = rules::CharacterId{3};
     e.kind = EffectKind::MageArmor;
     e.targets[0] = rules::CharacterId{3};
     e.count = 1;

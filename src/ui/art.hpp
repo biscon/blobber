@@ -16,7 +16,8 @@ class UiArt {
     static constexpr unsigned holdPersonIcon = 59, quarterstaffIcon = 60, travelIcon = 61,
                               skeletonPortraitIcon = 62, bugbearPortraitIcon = 63,
                               giantRatPortraitIcon = 64 + rules::portraitCount,
-                              zombiePortraitIcon = giantRatPortraitIcon + 1;
+                              zombiePortraitIcon = giantRatPortraitIcon + 1,
+                              shamanPortraitIcon = zombiePortraitIcon + 1;
     static unsigned itemIcon(const rules::ItemDefinition&) noexcept;
     UiArt(GpuResources& resources, const std::filesystem::path& directory);
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
@@ -27,6 +28,6 @@ class UiArt {
   private:
     GpuResources& resources_;
     TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_;
-    std::array<Rectangle, 63> regions_{};
+    std::array<Rectangle, 64> regions_{};
 };
 } // namespace blobber

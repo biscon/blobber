@@ -78,10 +78,10 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                     const auto* a = actors_.actor(id);
                     if (!a || !effects_.canAct(id) || !ai_.aware(id) || actorWalking(*a, now) ||
                         now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs ||
-                        !actors_.catalog().attack(ranged_[i]) || !inBowRange(a->npc.cell, pose.cell) ||
-                        !frontal(id))
+                        (!enemyCaster(id) && !actors_.catalog().attack(ranged_[i])) ||
+                        !inBowRange(a->npc.cell, pose.cell) || !frontal(id))
                         continue;
-                    out = enemyAttack(id, true, now, !known_[i]);
+                    out = enemyCaster(id) ? enemySpell(id, now) : enemyAttack(id, true, now, !known_[i]);
                     autoCursor_ = (i + 1) % count;
                     break;
                 }
@@ -128,7 +128,8 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                 }
                 const bool stood = !(members_[i] && frontal(id)) && effects_.stand(id, now, events);
                 frozen[i] = stood || !effects_.canAct(id) || (members_[i] && frontal(id)) ||
-                            now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs;
+                            now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs ||
+                            (ai_.aware(actors_.id(i)) && enemySpellGeometry(actors_.id(i)));
             }
             if (enableRoaming_) {
                 const auto incapacitated = effects_.incapacitatedActors();

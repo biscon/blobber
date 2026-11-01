@@ -352,7 +352,7 @@ void invalidAndPool() {
     GameSession full(map, catalog, places, 19, spellSpawn, false);
     EffectRequest request;
     request.world = full.actors().snapshot().world;
-    request.caster = {3};
+    request.caster = rules::CharacterId{3};
     request.kind = EffectKind::MageArmor;
     request.targets[0] = rules::CharacterId{3};
     request.count = 1;
@@ -546,7 +546,7 @@ void classFeaturesUi() {
     mixed.party().damage({1}, 2);
     EffectRequest blessing;
     blessing.world = mixed.actors().snapshot().world;
-    blessing.caster = {1};
+    blessing.caster = rules::CharacterId{1};
     blessing.kind = EffectKind::Bless;
     blessing.targets[0] = rules::CharacterId{0};
     blessing.count = 1;

@@ -134,7 +134,8 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
         const Vec party =
             partyAnchor(shot, shot.incoming ? in.movement.player : shot.partyOrigin, in.geometry);
-        const Vec from = shot.incoming ? enemy : party, to = shot.incoming ? party : enemy;
+        const bool npcBless = shot.incoming && shot.spell == rules::SpellKind::Bless;
+        const Vec from = shot.incoming ? enemy : party, to = npcBless ? enemy : shot.incoming ? party : enemy;
         const bool ending = in.now >= shot.impactMs;
         if (ending && (!shot.hit || shot.targetGone))
             continue;

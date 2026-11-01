@@ -113,8 +113,8 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
     }
     return result;
 }
-std::optional<StatusEntry> EffectController::concentrationStatus(rules::CharacterId caster) const noexcept {
-    const auto* effect = find(concentration(caster));
+std::optional<StatusEntry> EffectController::concentrationStatus(EffectSource caster) const noexcept {
+    const auto* effect = find(concentrationSource(caster));
     if (!effect)
         return std::nullopt;
     return StatusEntry{effect->kind,

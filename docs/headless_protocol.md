@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 3/3 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 4/7 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -505,3 +505,21 @@ retains one HP and `died=false`. Multi-hit/source granularity remains unchanged.
 Campaign schema/simulation are now 3/6; old simulation/content rejects without
 migration or rewriting files. Arena format and strict replay identity checks stay
 unchanged.
+
+## B05 — NPC spell sources
+
+Protocol remains v1. Spell events identify the caster with additive `caster_source`:
+`{"kind":"npc","actor":0}` or `{"kind":"party","character":1}`. Effect lifecycle
+records carry the same tag inside `effect`. Existing effect `caster` stays numeric
+for party sources and is null for NPC sources. Actor indices belong to the current
+session, never the monster catalog. Acceptance/cancellation carries no saved rolls,
+save totals or damage; Sacred Flame publishes its target save at resolution.
+
+Visible NPC observations can include a `concentration` status array. Diagnostics
+add `mana` and `target_cursor`; noncasters retain zero resources. The cursor rotates
+through formation slots and never ranks characters by HP. NPC Bless, concentration
+saves/cleanup and casts use ordinary events and existing checked simulation; no NPC
+casting command or privileged mutation verb is added. Arena scenarios stay schema
+1/layout 1. Strict replay checks current binary/content/publication identities.
+Campaign schema/simulation 4/7 store tagged sources and local NPC resources; old
+saves reject unchanged, and local sources/resources do not travel with the party.

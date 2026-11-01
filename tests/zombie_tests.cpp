@@ -214,7 +214,7 @@ void saveModifiers() {
     CombatEvents events;
     EffectRequest bane;
     bane.world = f.actors.snapshot().world;
-    bane.caster = {3};
+    bane.caster = rules::CharacterId{3};
     bane.kind = EffectKind::Bane;
     bane.targets[0] = f.actors.id(0);
     bane.count = 1;

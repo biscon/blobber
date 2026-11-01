@@ -61,7 +61,7 @@ void EffectController::resolveMirror(MirrorReservation r, bool canceled, std::ui
 }
 const EffectInstance* EffectController::spiritualWeapon(rules::CharacterId id) const noexcept {
     for (const auto& e : instances_)
-        if (e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.index == id.index)
+        if (e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.character.index == id.index)
             return &e;
     return nullptr;
 }
@@ -88,7 +88,7 @@ bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial) 
     if ((!initial && !weaponCanMove(id, to)) || actors_.map().solid(to))
         return false;
     for (auto& e : instances_)
-        if (e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.index == id.index) {
+        if (e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.character.index == id.index) {
             e.cell = to;
             e.readyMs = gameplayMs_ + 6000;
             ground_.weapons[id.index] = {to, true};
@@ -260,8 +260,7 @@ void EffectController::burnWeb(std::uint64_t now, CombatEvents& events) noexcept
             events.append(out);
             if (out.damage > 0)
                 wake(t, now, events);
-            if (!t.npc)
-                damaged(t.character, out.damage, now, events);
+            damaged(t, out.damage, now, events);
         }
     }
     reconcileWeb(now, events);

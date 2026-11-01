@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "references": [
+    "idle-right.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Attached RIGHT PROFILE idle sheet establishes the exact goblin shaman identity and equipment. Make FOUR full-body RIGHT PROFILE death-collapse frames on a square TWO BY TWO sheet in reading order. Upper-left struck staggering with head tilted back; upper-right knees buckle, head/torso still facing screen RIGHT; lower-left falling onto side, feet toward screen LEFT and head toward screen RIGHT; lower-right fully limp side-lying corpse stretched horizontally, head screen RIGHT and boots screen LEFT, eyes closed and arms limp. Same goblin body/head/limb dimensions in every frame, no enlarging corpse or shrinking body. Same olive skin, pointed ears, plum-brown ragged robe/bone charms/belt/leather boots. RIGHT hand initially holds gnarled staff; it falls alongside the body, full staff in final pose. Exactly two arms/two legs. All ears/boots/hands/staff within each equal panel, ample empty transparent row/column gutters and outer margins. RGBA transparent background, no floor/shadow/blood/effects/text/grid/borders."
+}

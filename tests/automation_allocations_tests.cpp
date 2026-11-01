@@ -1,7 +1,7 @@
 #include "automation/world_visual.hpp"
 #include "game/commands.hpp"
 #include "persistence/campaign_codec.hpp"
-#include "support/automation_fixtures.hpp"
+#include "support/campaign_fixtures.hpp"
 #include "support/cpu_view.hpp"
 #include "support/fixture_world.hpp"
 #include "support/world_visibility_fixtures.hpp"
@@ -169,18 +169,15 @@ int main(int argc, char**) {
         blobber::test::CpuView guardianFrames(generated.replayGame(), assets, defs.timings);
         auto campaign = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
         for (unsigned visit = 0; visit < 3; ++visit) {
-            auto travel = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));
-            check(campaign->commitTravel(travel), "allocation fixture prepares repeated travel");
+            campaign_test::travel(*campaign, visit % 2 ? FixtureKind::Upstairs : FixtureKind::Downstairs);
         }
         // Inject each preparation allocation failure in turn, before touching the live owner.
         for (const auto kind : {TravelKind::Stairs, TravelKind::Recall, TravelKind::Waypoint}) {
             auto rollback = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
             if (kind != TravelKind::Stairs) {
-                auto enter = rollback->prepareTravel(rollback->request(rollback->game().nearbyFixture()));
-                check(rollback->commitTravel(enter), "fault fixture enters floor");
+                campaign_test::travel(*rollback, FixtureKind::Downstairs);
                 if (kind == TravelKind::Waypoint) {
-                    auto back = rollback->prepareTravel(rollback->request(rollback->game().nearbyFixture()));
-                    check(rollback->commitTravel(back), "fault fixture unlocks entry and returns");
+                    campaign_test::travel(*rollback, FixtureKind::Upstairs);
                 }
             }
             const auto location = rollback->activeLocation();

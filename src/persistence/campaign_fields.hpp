@@ -192,6 +192,11 @@ template <class A> void visit(A& a, EffectTarget& v) {
     a("character", v.character);
     a("enemy", v.enemy);
 }
+template <class A> void visit(A& a, EffectSource& v) {
+    a("npc", v.npc);
+    a("character", v.character);
+    a("enemy", v.enemy);
+}
 template <class A> void visit(A& a, EffectInstance& v) {
     a("id", v.id);
     a("kind", v.kind);
@@ -204,6 +209,7 @@ template <class A> void visit(A& a, EffectInstance& v) {
     a("active", v.active);
     a("duplicates", v.duplicates);
     a("reserved", v.reserved);
+    a("pendingBless", v.pendingBless);
     a("cell", v.cell);
     a("readyMs", v.readyMs);
 }
@@ -297,6 +303,8 @@ template <class A> void visit(A& a, CombatController::Saved& v) {
     a("enemyBusy", v.enemyBusy);
     a("nextAttack", v.nextAttack);
     a("autoCursor", v.autoCursor);
+    a("enemyMana", v.enemyMana);
+    a("enemyTarget", v.enemyTarget);
 }
 template <class A> void visit(A& a, FloorObjectiveSnapshot& v) {
     a("members", v.members);

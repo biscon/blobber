@@ -71,6 +71,7 @@ struct CombatOutcome {
     rules::Feature feature = rules::Feature::None;
     rules::ItemId item{};
     int saveTotal = 0, saveDifficulty = 0;
+    bool saveSucceeded = false;
     std::uint8_t darts = 0;
     MirrorReservation mirror;
 };
@@ -95,10 +96,18 @@ struct CombatEvents {
     const CombatOutcome* begin() const noexcept { return values.data(); }
     const CombatOutcome* end() const noexcept { return values.data() + count; }
 };
-// Original weapon burst, extra spell recipients, effects/cleanup, Guiding expiry,
-// and one synchronous area/phase operation. Revisit if adding NPC spellcasters.
+// Existing timeline/area allowance stays conservative. NPC Sacred Flame adds one
+// saved-target notice per owner. Extra NPC concentration checks can arise once
+// per retained impact (including party extra rays), one 40-recipient area, and
+// one burning-Web pass (each of 260 creatures occupies one cell). Failure ends
+// fit the 64*4 lifecycle cleanup allowance; at most 64*3 Bless applications plus
+// cleanup also fit eventAllowance=512. Reservations emit no lifecycle notices.
+constexpr std::size_t npcCastEventAllowance = NpcWorld::maxInstances;
+constexpr std::size_t npcConcentrationEventAllowance =
+    attackCapacity + rules::partySize * 2 + 40 + NpcWorld::maxInstances + rules::partySize;
 static_assert(attackCapacity * 2 + rules::partySize * 2 + EffectController::eventAllowance +
-                  NpcWorld::maxInstances + 4096 + 512 <
+                  NpcWorld::maxInstances + 4096 + 512 + npcCastEventAllowance +
+                  npcConcentrationEventAllowance <
               CombatEvents::capacity);
 struct CombatParticipant {
     std::optional<rules::CharacterId> character;
@@ -189,6 +198,7 @@ class CombatController {
         std::array<std::uint64_t, NpcWorld::maxInstances> knownUntil{}, enemyReady{}, enemyBusy{};
         std::uint64_t nextAttack = 1;
         std::size_t autoCursor = 0;
+        std::array<std::uint8_t, NpcWorld::maxInstances> enemyMana{}, enemyTarget{};
     };
 
   private:
@@ -213,6 +223,8 @@ class CombatController {
         CombatOutcome result;
         std::uint64_t clipEndMs = 0, hurtUntilMs = 0;
         bool turn = false, releaseNotice = false;
+        enum class Action : std::uint8_t { Weapon, Bless, SacredFlame } action = Action::Weapon;
+        EffectId blessing{};
     };
     std::array<PendingAttack, attackCapacity> pending_{};
     struct SpellPayload {
@@ -283,12 +295,18 @@ class CombatController {
     const rules::WeaponPreview* weapon(rules::CharacterId, bool ranged = false) const noexcept;
     CombatOutcome enemyAttack(ActorId, bool ranged, std::uint64_t now, bool opening = false) noexcept;
     CombatOutcome enemyTurn(ActorId, std::uint64_t now) noexcept;
+    bool enemyCaster(ActorId) const noexcept;
+    bool enemySpellGeometry(ActorId) const noexcept;
+    CombatOutcome enemySpell(ActorId, std::uint64_t now) noexcept;
+    std::array<std::uint8_t, NpcWorld::maxInstances> enemyMana_{}, enemyTarget_{};
     CombatEvents* currentEvents_ = nullptr;
     std::uint64_t noticeTime_ = 0;
     std::array<std::uint64_t, 4> processedCasterRound_{};
     CombatOutcome deathSave(rules::CharacterId, std::uint64_t now) noexcept;
 
   public:
+    unsigned enemyMana(ActorId id) const noexcept { return actors_.actor(id) ? enemyMana_[id.slot] : 0; }
+    unsigned enemyTarget(ActorId id) const noexcept { return actors_.actor(id) ? enemyTarget_[id.slot] : 0; }
     void enableRoaming(bool enabled) noexcept { enableRoaming_ = enabled; }
 };
 } // namespace blobber
