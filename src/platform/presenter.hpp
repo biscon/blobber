@@ -28,11 +28,13 @@ class Presenter {
     void capture(const std::filesystem::path& path, int width = gameWidth, int height = gameHeight) const;
 
   private:
+    void finishFrame();
     void drawTarget(TargetHandle handle, Rectangle destination) const;
     void drawGame(Rectangle destination) const;
     void compose(const Texture2D&, bool flipped, const MovementState&, const Map&, bool debug,
                  const HudSnapshot*, const PickingBuffer*, const generation::DiagnosticView*, bool reveal);
     PreparationWorker* worker_ = nullptr;
+    bool showFps_ = false;
     float fade_ = 0;
     std::array<char, 96> loadingLabel_{};
     GpuResources& resources_;

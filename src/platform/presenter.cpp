@@ -14,6 +14,16 @@ Presenter::Presenter(GpuResources& resources, const std::filesystem::path& asset
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);
 }
+void Presenter::finishFrame() {
+    if (IsWindowFocused() && IsKeyPressed(KEY_F1))
+        showFps_ = !showFps_;
+    if (showFps_) {
+        // Window-space diagnostics stay above pause/loading overlays and outside cached images.
+        DrawRectangle(8, 8, 112, 28, {0, 0, 0, 220});
+        DrawFPS(12, 12);
+    }
+    EndDrawing();
+}
 void Presenter::drawTarget(TargetHandle handle, Rectangle destination) const {
     const auto& value = resources_.target(handle);
     DrawTexturePro(value.texture, {0, 0, float(value.texture.width), -float(value.texture.height)},
@@ -47,7 +57,7 @@ void Presenter::presentCached(float fade, const char* status) {
         drawGame({fit.x * float(GetScreenWidth()) / rw, fit.y * float(GetScreenHeight()) / rh,
                   fit.width * float(GetScreenWidth()) / rw, fit.height * float(GetScreenHeight()) / rh});
     }
-    EndDrawing();
+    finishFrame();
 }
 void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
                              const Map& map, const HudSnapshot* hud, const PickingBuffer* picking, bool debug,
@@ -89,7 +99,7 @@ void Presenter::compose(const Texture2D& texture, bool flipped, const MovementSt
         const float sx = float(GetScreenWidth()) / rw, sy = float(GetScreenHeight()) / rh;
         drawGame({fit.x * sx, fit.y * sy, fit.width * sx, fit.height * sy});
     }
-    EndDrawing();
+    finishFrame();
 }
 void Presenter::prepareMenu() {
     if (!menuBackground_) {
@@ -122,7 +132,7 @@ void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), v
         drawGame({fit.x * GetScreenWidth() / rw, fit.y * GetScreenHeight() / rh,
                   fit.width * GetScreenWidth() / rw, fit.height * GetScreenHeight() / rh});
     }
-    EndDrawing();
+    finishFrame();
 }
 void Presenter::capture(const std::filesystem::path& path, int width, int height) const {
     if (width <= 0 || height <= 0)

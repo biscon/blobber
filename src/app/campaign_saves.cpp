@@ -21,9 +21,6 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
     const auto message = [&](const char* text) {
         std::snprintf(h.message.data(), h.message.size(), "%s", text);
     };
-    if (commands.snapshot().menuOpen && !menuWasOpen_ && !h.terminalWarning)
-        slot_ = store_->inspect();
-    menuWasOpen_ = commands.snapshot().menuOpen;
     const auto intent = h.intent;
     h.intent = SaveIntent::None;
     if ((run.status() != CampaignStatus::Active && !terminalAttempted_) ||
@@ -44,6 +41,10 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
     }
     if (intent != SaveIntent::Save && intent != SaveIntent::SaveMenu)
         return false;
+    // Inspecting restores/validates the entire saved run. Never do it on pause entry
+    // or idle menu frames. A confirmed overwrite must keep its previously reviewed revision.
+    if (!h.replace)
+        slot_ = store_->inspect();
     h.leaveAfter = intent == SaveIntent::SaveMenu;
     if (slot_.exists && (!slot_.active || slot_.runId != run.runId()) && !h.replace) {
         h.confirmation = SaveConfirmation::Overwrite;

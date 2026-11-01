@@ -11,6 +11,6 @@ class CampaignSaveFlow {
   private:
     CampaignStore* store_;
     CampaignSlot slot_;
-    bool menuWasOpen_ = false, terminalAttempted_ = false;
+    bool terminalAttempted_ = false;
 };
 } // namespace blobber

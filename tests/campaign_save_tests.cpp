@@ -384,6 +384,75 @@ void saveUi() {
           "terminal warning requires acknowledgement");
 }
 
+// Owned disk with observable I/O counts: pause frames must never read/restore a slot.
+class CountedCampaignDisk final : public CampaignFiles {
+  public:
+    explicit CountedCampaignDisk(const std::filesystem::path& path) : disk_(path) {}
+    CampaignIoReply exchange(const CampaignIoRequest& request) override {
+        reads += request.operation == "read";
+        writes += request.operation == "replace";
+        return disk_.exchange(request);
+    }
+    unsigned reads = 0, writes = 0;
+
+  private:
+    CampaignDisk disk_;
+};
+void pausePolling() {
+    const auto c = catalog();
+    const auto d = definitions();
+    Directory directory;
+    CountedCampaignDisk disk(directory.path / "campaign.json");
+    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    const auto initial = store.save(run, "missing");
+    check(initial.durable, "pause fixture owns an existing valid campaign save");
+    CommandController commands(run.game(), d.timings);
+    commands.saveMenu().enabled = true;
+    commands.refresh({}, false, false, true);
+    CampaignSaveFlow flow(&store);
+    const auto reads = disk.reads, writes = disk.writes;
+    const auto clock = run.gameplayMs();
+    for (unsigned visit = 0; visit < 2; ++visit) {
+        commands.toggleMenu();
+        for (unsigned frame = 0; frame < 60; ++frame) {
+            run.update(1.0 / 60, true);
+            commands.refresh({}, false, false, true);
+            check(!flow.poll(run, commands), "idle pause never leaves gameplay");
+        }
+        commands.closeOverlay();
+        flow.poll(run, commands);
+    }
+    check(disk.reads == reads && disk.writes == writes && run.gameplayMs() == clock,
+          "opening/reopening and 120 paused frames perform no slot I/O or clock advancement");
+    commands.toggleMenu();
+    commands.saveMenu().intent = SaveIntent::Save;
+    check(!flow.poll(run, commands) && disk.reads > reads && disk.writes == writes + 1 &&
+              std::string_view(commands.saveMenu().message.data()) == "Campaign saved.",
+          "explicit Save still inspects and publishes the current run");
+    CampaignRun other(c, *c.preset(), d.types, d.timings, 7);
+    CommandController otherUi(other.game(), d.timings);
+    otherUi.saveMenu().enabled = true;
+    otherUi.refresh({}, false, false, true);
+    otherUi.toggleMenu();
+    CampaignSaveFlow overwrite(&store);
+    overwrite.poll(other, otherUi);
+    otherUi.saveMenu().intent = SaveIntent::Save;
+    overwrite.poll(other, otherUi);
+    check(otherUi.saveMenu().confirmation == SaveConfirmation::Overwrite,
+          "different saved run still requires explicit overwrite review");
+    const auto reviewed = store.inspect();
+    run.party().damage({0}, 1);
+    check(store.save(run, reviewed.revision).durable, "owned concurrent writer changes reviewed slot");
+    const auto concurrentWrites = disk.writes;
+    otherUi.saveMenu().replace = true;
+    otherUi.saveMenu().intent = SaveIntent::Save;
+    check(!overwrite.poll(other, otherUi) && disk.writes == concurrentWrites &&
+              std::string_view(otherUi.saveMenu().message.data()).find("changed") != std::string_view::npos,
+          "confirmed overwrite retains its reviewed revision and rejects concurrent changes");
+    check(store.inspect().runId == run.runId(), "failed stale overwrite preserves the valid saved owner");
+}
+
 void applicationFlow() {
     const auto c = catalog();
     const auto d = definitions();
@@ -753,6 +822,8 @@ int main(int argc, char** argv) {
             environmentRoundtrip();
             roundtrip();
             saveUi();
+            applicationFlow();
+            pausePolling();
             std::cout << "campaign save smoke tests passed\n";
             return 0;
         }
@@ -770,6 +841,7 @@ int main(int argc, char** argv) {
         malformed();
         saveUi();
         applicationFlow();
+        pausePolling();
         unsavedTerminal();
         navigationContinuation();
         libraryIndependence();

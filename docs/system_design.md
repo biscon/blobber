@@ -68,6 +68,20 @@ three field rests each. Both selected replays matched with hidden captures.
 [Verification and limitations](pc072_verification.md) retain frequent downings,
 costly reserve detours, diagnostic policy limits and pending human acceptance.
 
+Pause diagnostics follow-up (2026-11-01): Presenter owns a default-off F1 toggle
+for raylib's live FPS counter, drawn over the final window composite in gameplay,
+menus and cached/loading frames. It does not invalidate world images or enter saved
+state/captures. Active-run pause opening and idle pause frames perform no campaign file I/O:
+CampaignSaveFlow inspects the slot only on an explicit Save/Save and Main Menu
+intent, retaining that revision across overwrite confirmation. Actual save/load
+validation remains unchanged. The existing save design applies; focused owned
+file-count regression checks cover idle pause frames and stale overwrite rejection.
+Release application and the user's active Debug application both built with one
+low-priority worker. `ctest --preset release -R '^campaign_save_smoke$'` passed
+1/1 in 0.93 s, including 120 paused frames with zero reads/writes and concurrent
+overwrite rejection. No GPU workload or desktop input automation ran while the
+user was playing; interactive FPS/latency confirmation remains user review.
+
 ## Boundaries and data flow
 
 - **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID
