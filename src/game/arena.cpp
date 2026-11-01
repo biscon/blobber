@@ -55,7 +55,9 @@ const char* arenaError(const rules::Catalog& c, const ArenaScenario& s) noexcept
     if (!rules::validDisplayText(s.name.data(), 64))
         return "Enter a scenario name.";
     for (unsigned i = 0; i < 4; ++i) {
-        if (!s.party[i].id[0] || !rules::previewBuild(c, s.party[i].draft))
+        if (!s.party[i].id[0] ||
+            std::find(s.party[i].id.begin(), s.party[i].id.end(), '\0') == s.party[i].id.end() ||
+            !rules::previewBuild(c, s.party[i].draft))
             return "Choose four valid level-one characters.";
         for (unsigned j = 0; j < i; ++j)
             if (!std::strcmp(s.party[i].id.data(), s.party[j].id.data()))
@@ -70,12 +72,51 @@ const char* arenaError(const rules::Catalog& c, const ArenaScenario& s) noexcept
             if (s.roster[i].monster.index == s.roster[j].monster.index)
                 return "Duplicate monster roster entry.";
     }
-    return nullptr;
+    return arenaPreparationError(c, s.party, s.preparation);
 }
 rules::PresetParty arenaParty(const rules::Catalog& c, const ArenaScenario& s) {
     if (const auto* error = arenaError(c, s))
         throw std::runtime_error(error);
     return startingParty(c, s.party);
+}
+const char* arenaPreparationError(const rules::Catalog& c, const StartingParty& starting,
+                                  const ArenaPreparation& p) noexcept {
+    if (p.targetLevel < 1 || p.targetLevel > 3)
+        return "Arena level must be between 1 and 3.";
+    for (unsigned i = 0; i < 4; ++i) {
+        const auto preview = rules::previewBuild(c, starting[i].draft);
+        if (!preview)
+            return "Choose four valid level-one characters.";
+        auto identity = rules::draftIdentity(starting[i].draft);
+        auto spells = starting[i].draft.spells;
+        for (unsigned step = 0; step < 2; ++step) {
+            const auto choices = p.advancements[step][i];
+            if (step + 1 >= p.targetLevel) {
+                if (choices.learned || choices.prepared)
+                    return "Unexpected arena advancement choices above the target level.";
+                continue;
+            }
+            const auto next = rules::previewAdvancement(c, identity, spells, preview.loadout, choices);
+            if (!next.valid)
+                return "Complete each arena character's advancement spell choices.";
+            ++identity.level;
+            spells = next.spells;
+        }
+    }
+    return nullptr;
+}
+std::unique_ptr<Party> prepareArenaParty(const rules::Catalog& c, const ArenaScenario& s) {
+    auto party = std::make_unique<Party>(c, arenaParty(c, s));
+    for (unsigned step = 0; step + 1 < s.preparation.targetLevel; ++step) {
+        party->grantNextLevelExperience();
+        for (std::uint16_t i = 0; i < 4; ++i) {
+            auto request = party->advancementRequest({i});
+            request.choices = s.preparation.advancements[step][i];
+            if (!party->advance(request))
+                throw std::invalid_argument("Arena party advancement failed.");
+        }
+    }
+    return party;
 }
 Map arenaMap() {
     std::vector<std::string> rows(25, std::string(21, '.'));

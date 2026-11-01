@@ -1,6 +1,7 @@
 #include "automation/world_visual.hpp"
 #include "game/commands.hpp"
 #include "persistence/campaign_codec.hpp"
+#include "support/arena_preparation_fixtures.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/cpu_view.hpp"
 #include "support/fixture_world.hpp"
@@ -94,6 +95,9 @@ int main(int argc, char**) {
         auto defs = definitions();
         auto setup = scenario(cat, argc > 1 ? 256 : 1);
         Session session(cat, defs, setup, Mode::Diagnostic);
+        auto preparedSetup = setup;
+        arenaLevel(cat, preparedSetup, 2);
+        Session prepared(cat, defs, preparedSetup, Mode::Diagnostic);
         blobber::test::VisibilityFixture fixture(2);
         const world_assets::CpuAssets assets(fixture.publication());
         defs.timings = fixture.timings;
@@ -263,6 +267,8 @@ int main(int argc, char**) {
         campaignUi.saveMenu().enabled = true;
         blobber::test::CpuView campaignFrames(campaign->game(), assets, defs.timings);
         tracking = true;
+        okay &= arenaPreparationError(cat, preparedSetup.party, preparedSetup.preparation) == nullptr;
+        exercise(prepared, 200);
         for (unsigned i = 0; i < 40; ++i) {
             campaign->update(.01, false);
             campaignUi.refresh({}, false, false, true);

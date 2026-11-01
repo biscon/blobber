@@ -5,6 +5,7 @@
 namespace blobber {
 class WorldRenderer;
 class CampaignRun;
+struct ArenaScenario;
 class CampaignStore;
 NpcWorld gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn = Player{}.cell);
 enum class PlayOutcome { MainMenu, ArenaSetup, Quit };
@@ -17,6 +18,7 @@ struct GameplayLaunch {
     const FloorObjectiveDefinition* objective = nullptr;
     CampaignRun* campaign = nullptr;
     CampaignStore* saves = nullptr;
+    const ArenaScenario* arenaScenario = nullptr;
 };
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                         const std::vector<NpcTimings>& timings, Presenter& presenter, const Options& options,

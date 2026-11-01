@@ -546,10 +546,10 @@ void drawPreparation(const HudPainter& p, const CampHud& h) {
     }
     p.clipped(h.preparationMessage.data(), 174, 350, 448, red, UiTextStyle::Small);
 }
-void drawAdvancement(const HudPainter& p, const AdvancementHud& h) {
+void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
     if (!h.catalog)
         return;
-    frame(p, "LEVEL UP");
+    frame(p, arena ? "ARENA PREPARATION" : "LEVEL UP");
     sidebar(p, *h.catalog, h.identity, h.portrait);
     constexpr const char* titles[]{"1 Overview", "2 Class features", "3 Spells", "4 Review"};
     const unsigned step = h.step == AdvancementStep::Review ? 3
@@ -659,7 +659,8 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h) {
                    : a == FlowAction::Next
                        ? (h.step == AdvancementStep::Prepared && !h.selection.selected ? "Leave slot empty"
                                                                                        : "Next")
-                       : "Confirm level up");
+                   : arena ? "Keep choices"
+                           : "Confirm level up");
     }
     p.clipped(h.message.data(), 174, 350, 448, red, UiTextStyle::Small);
 }

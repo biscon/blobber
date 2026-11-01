@@ -53,6 +53,36 @@ def config():
 
 
 class PolicyContracts(unittest.TestCase):
+    def test_v2_contact_features_and_coverage(self):
+        o=observation(); o["party"][0].update(level=2,spent=True,action_surge=True)
+        d=descriptors()
+        p=Policy(dict(kind="aggressive",version=2,parameters=dict(heal_fraction=.25,reserve_mana=0)))
+        self.assertEqual(next(p.candidates(o,d)).action.get("feature"),"action_surge")
+        self.assertFalse(any(c.action.get("feature")=="action_surge" for c in policy("aggressive").candidates(o,d)))
+        d["combat"][0]["features"][3]["eligibility"]["ready"]=True
+        self.assertEqual(coverage(o,d,"aggressive",2)["unsupported"],[])
+        self.assertIn("character 0: level 2",coverage(o,d,"aggressive",1)["unsupported"])
+        o["active_character"]=1; o["party"][1].update(level=2,channel_divinity=True)
+        o["party"][2].update(hp=0,life=1)
+        self.assertEqual(next(p.candidates(o,d)).action.get("feature"),"preserve_life")
+        o["party"][2].update(hp=10,life=0,level=2,spent=True)
+        o["party"][1]["channel_divinity"]=False
+        o.update(active_character=2,can_end_turn=True,enemies=[])
+        choices=list(p.candidates(o,descriptors()))
+        self.assertEqual(choices[-2].action.get("feature"),"cunning_action")
+        self.assertEqual(choices[-1].action.get("feature"),"end_turn")
+
+    def test_preparation_schema_structure(self):
+        c=config(); s=c["parties"][0]["scenario"]
+        s["schema_version"]=2
+        s["preparation"]=dict(target_level=2,advancements=[[dict(learned=[],prepared=[]) for _ in range(4)]])
+        self.assertEqual(resolve(c,".",embedded=True)["parties"][0]["scenario"]["preparation"]["target_level"],2)
+        for bad in (dict(target_level=4,advancements=[]),dict(target_level=2,advancements=[])):
+            s["preparation"]=bad
+            with self.assertRaises(ValueError): resolve(c,".",embedded=True)
+        del s["preparation"]
+        with self.assertRaises(ValueError): resolve(c,".",embedded=True)
+
     def test_heal_unconscious_before_attack(self):
         o=observation(); o["active_character"]=1; o["party"][2].update(hp=0,life=1)
         choices=list(policy().candidates(o,descriptors([("cure_wounds",2,False),("spare_the_dying",0,False)])))
@@ -184,6 +214,27 @@ class DataContracts(unittest.TestCase):
         self.assertEqual(watch.check(o,2,1,True),"repeated_decisions_without_progress")
         o["party"][0]["hp"]-=1
         self.assertIsNone(watch.check(o,2,1,True))
+
+    def test_damage_windows_rounds_healing_and_capacity(self):
+        m=Metrics(); o=observation(); m.observe(o)
+        def hit(t,damage,recipient=0):
+            return dict(event="attack",time_ms=str(t),phase="turns",enemy_attack=True,hit=True,recipient=recipient,damage=damage)
+        m.event(dict(events=[dict(event="started",time_ms="0"),hit(0,4),hit(5999,6),
+                             dict(event="round"),hit(6000,3),hit(6001,2,1),
+                             dict(event="healing",recipient=1,damage=5)]))
+        result=m.result()
+        self.assertEqual(result["incoming_damage_resolved"],[13,2,0,0])
+        self.assertEqual(result["largest_incoming_hit"],[6,2,0,0])
+        self.assertEqual(result["max_incoming_6s"],[10,2,0,0])
+        self.assertEqual(result["max_incoming_round"],[10,2,0,0])
+        self.assertEqual(result["healing_resolved"],[0,5,0,0])
+        m.event(dict(events=[hit(6002,1)]*4097))
+        self.assertFalse(m.result()["burst_metrics_complete"])
+        self.assertLessEqual(len(m.windows[0]),4096)
+        # Attack acceptance/cancellation never count as resolved damage.
+        before=m.result()["incoming_damage_resolved"].copy()
+        m.event(dict(events=[dict(event="attack_started",damage=99),dict(event="attack_canceled",damage=99),dict(hit(6003,99),target_gone=True)]))
+        self.assertEqual(m.result()["incoming_damage_resolved"],before)
 
     def test_resource_gross_spending_and_recovery(self):
         o=observation(); metrics=Metrics(); metrics.observe(o)

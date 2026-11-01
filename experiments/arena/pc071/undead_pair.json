@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "parties": [
+    {
+      "id": "balanced",
+      "scenario": "parties/balanced_l1.json"
+    },
+    {
+      "id": "no_wizard",
+      "scenario": "parties/no_wizard_l1.json"
+    }
+  ],
+  "rosters": [
+    {
+      "id": "undead_pair",
+      "monsters": [
+        {
+          "monster": "skeleton",
+          "quantity": 1
+        },
+        {
+          "monster": "zombie",
+          "quantity": 1
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "aggressive_v2",
+      "kind": "aggressive",
+      "version": 2
+    }
+  ],
+  "seeds": [
+    5,
+    8,
+    12
+  ],
+  "mode": "diagnostic",
+  "reaction_ticks": 25,
+  "limits": {
+    "trial_seconds": 60,
+    "batch_seconds": 450,
+    "output_bytes": 536870912
+  },
+  "retention": "selected",
+  "comparisons": [
+    [
+      "balanced",
+      "no_wizard"
+    ]
+  ]
+}

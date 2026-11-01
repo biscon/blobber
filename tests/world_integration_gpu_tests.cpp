@@ -5,6 +5,7 @@
 #include "platform/window.hpp"
 #include "rlgl.h"
 #include "support/allocations.hpp"
+#include "support/arena_preparation_review.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/dungeon_art_review.hpp"
@@ -58,6 +59,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--arena-preparation") {
+            test::arenaPreparationReview(argv[1], argv[2]);
+            return 0;
+        }
         test::VisibilityFixture fixture(2);
         auto assets = std::make_shared<const world_assets::CpuAssets>(fixture.publication());
         const auto catalog = automation::test::catalog(false, 50, 7);

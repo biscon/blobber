@@ -10,6 +10,6 @@ struct CreatorView {
 void drawCreator(void*, const UiFonts&, const UiArt&);
 unsigned drawBuildReview(const HudPainter&, const rules::Catalog&, const rules::CharacterDraft&,
                          unsigned offset);
-void drawAdvancement(const HudPainter&, const AdvancementHud&);
+void drawAdvancement(const HudPainter&, const AdvancementHud&, bool arena = false);
 void drawPreparation(const HudPainter&, const CampHud&);
 } // namespace blobber

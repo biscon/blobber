@@ -21,7 +21,8 @@ GameSession::GameSession(const Map& map, std::unique_ptr<Party> party, const Npc
                          std::uint32_t seed, Player spawn, bool enableAi,
                          const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,
                          const FloorFixtures& fixtures, const FloorObjectiveDefinition& objective)
-    : GameSession(map, *party, placements, seed, spawn, timings, recovery, fixtures, objective) {
+    : GameSession(map, party ? *party : throw std::invalid_argument("Missing owned party"), placements, seed,
+                  spawn, timings, recovery, fixtures, objective) {
     ownedParty_ = std::move(party);
     enableAi_ = enableAi;
     combat_.enableRoaming(enableAi_);

@@ -33,9 +33,10 @@ Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definition
                                  : arenaPlacements(*map_, catalog, std::get<ArenaScenario>(scenario_),
                                                    definitions.types);
         game_ = std::make_unique<GameSession>(
-            *map_, catalog,
-            generated_ ? startingParty(catalog, std::get<GeneratedScenario>(scenario_).party)
-                       : arenaParty(catalog, std::get<ArenaScenario>(scenario_)),
+            *map_,
+            generated_ ? std::make_unique<Party>(
+                             catalog, startingParty(catalog, std::get<GeneratedScenario>(scenario_).party))
+                       : prepareArenaParty(catalog, std::get<ArenaScenario>(scenario_)),
             *placements_, generated_ ? generated_->runtimeSeed : std::get<ArenaScenario>(scenario_).seed,
             generated_ ? generated_->layout.spawn : arenaSpawn(), true, definitions.timings,
             population_ ? population_->recovery : RecoveryLevel{},

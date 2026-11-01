@@ -27,6 +27,62 @@ void field(MenuView& v, const HudPainter& p, UiRect rect, const std::array<char,
 void drawArena(MenuView& v, const HudPainter& p, const UiArt& art) {
     auto& a = v.arena;
     char text[192];
+    auto& flow = a.preparation;
+    if (flow.active) {
+        flow.layout();
+        if (flow.step == ArenaPreparationStep::Choices) {
+            drawAdvancement(p, flow.advancement, true);
+            return;
+        }
+        p.text("ARENA PREPARATION", 20, 20, hudInk::gold, UiTextStyle::Control);
+        if (flow.step == ArenaPreparationStep::Level) {
+            p.text("Choose the party's target level", 160, 110, hudInk::gold, UiTextStyle::Heading);
+            p.text("Starting characters and equipment stay independent of your library.", 100, 220,
+                   hudInk::muted);
+        } else {
+            std::snprintf(text, sizeof(text), "Ready to prepare level %u",
+                          flow.candidate.preparation.targetLevel);
+            p.text(text, 30, 65, hudInk::gold, UiTextStyle::Display);
+            for (unsigned i = 0; i < 4; ++i) {
+                const auto& draft = flow.candidate.party[i].draft;
+                auto identity = rules::draftIdentity(draft);
+                auto spells = draft.spells;
+                const auto build = rules::previewBuild(v.catalog, draft);
+                auto stats = build.stats;
+                for (unsigned step = 0; step + 1 < flow.candidate.preparation.targetLevel; ++step) {
+                    const auto next =
+                        rules::previewAdvancement(v.catalog, identity, spells, build.loadout,
+                                                  flow.candidate.preparation.advancements[step][i]);
+                    stats = next.stats;
+                    spells = next.spells;
+                    ++identity.level;
+                }
+                const auto* cls = v.catalog.characterClass(draft.characterClass);
+                std::snprintf(text, sizeof(text), "%s / %s: HP %d, mana %d, %u prepared + %u domain",
+                              draft.name.data(), cls->name.c_str(), stats.maxHitPoints,
+                              rules::maximumMana(cls->casting, identity.level),
+                              rules::spellCount(spells.prepared), rules::spellCount(spells.domain));
+                p.clipped(text, 30, 112 + int(i) * 31, 580, hudInk::text);
+            }
+            p.text("Full ordinary resources; starting equipment and supplies granted once.", 30, 265,
+                   hudInk::muted);
+        }
+        for (unsigned i = 0; i < flow.controls.count; ++i) {
+            const auto& control = flow.controls.entries[i];
+            const char* label = control.action == FlowAction::Cancel ? "Cancel"
+                                : control.action == FlowAction::Back ? "Change level"
+                                : control.action == FlowAction::Done ? "Use preparation"
+                                                                     : nullptr;
+            if (!label) {
+                std::snprintf(text, sizeof(text), "Level %d", control.value);
+                label = text;
+            }
+            p.box(control.rect, flow.controls.focus == i ? hudInk::teal : hudInk::edge);
+            p.centered(label, control.rect, hudInk::text, UiTextStyle::Heading);
+        }
+        return;
+    }
+
     if (v.model.screen == MenuScreen::Scenarios) {
         p.text("LOAD ARENA SCENARIO", 20, 18, hudInk::gold, UiTextStyle::Control);
         p.text("Share JSON files by copying them into this folder, then Refresh:", 20, 46, hudInk::muted);
@@ -60,18 +116,20 @@ void drawArena(MenuView& v, const HudPainter& p, const UiArt& art) {
     p.text("ARENA", 20, 17, hudInk::gold, UiTextStyle::Control);
     p.text("SCENARIO NAME", 20, 43, hudInk::muted, UiTextStyle::Small);
     field(v, p, {20, 56, 200, 24}, a.scenario.name, a.nameEdit, 4011);
-    p.text("PARTY / LEVEL 1", 20, 91, hudInk::gold, UiTextStyle::Heading);
+    std::snprintf(text, sizeof(text), "PARTY / LEVEL %u", a.scenario.preparation.targetLevel);
+    p.text(text, 20, 91, hudInk::gold, UiTextStyle::Heading);
     for (int i = 0; i < 4; ++i) {
         const auto& d = a.scenario.party[i].draft;
-        const int x = 20 + (i % 2) * 103, y = 112 + (i / 2) * 70;
-        p.box({x, y, 97, 65}, hudInk::edge);
-        art.draw(64 + d.portrait.index, {x + 3, y + 3, 34, 42});
+        const int x = 20 + (i % 2) * 103, y = 112 + (i / 2) * 60;
+        p.box({x, y, 97, 55}, hudInk::edge);
+        art.draw(64 + d.portrait.index, {x + 3, y + 3, 30, 35});
         p.text(i < 2 ? "Front" : "Rear", x + 42, y + 7, hudInk::muted, UiTextStyle::Small);
         p.clipped(v.catalog.characterClass(d.characterClass)->name.c_str(), x + 41, y + 24, 52, hudInk::gold,
                   UiTextStyle::Small);
-        p.clipped(d.name.data(), x + 4, y + 49, 89, hudInk::text, UiTextStyle::Small);
+        p.clipped(d.name.data(), x + 4, y + 42, 89, hudInk::text, UiTextStyle::Small);
     }
     v.button(p, {20, 255, 200, 23}, "Choose party / formation", 4001);
+    v.button(p, {20, 231, 200, 20}, "Prepare level / spells", 4016);
     p.text("SEED", 20, 285, hudInk::muted, UiTextStyle::Small);
     field(v, p, {55, 282, 115, 23}, a.seedText, a.seedEdit, 4012);
     v.button(p, {175, 282, 45, 23}, "New", 4006);

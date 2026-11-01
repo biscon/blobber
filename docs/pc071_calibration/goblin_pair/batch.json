@@ -1,0 +1,8 @@
+{
+  "status": "complete",
+  "reason": "all_planned_trials_recorded",
+  "started": 6,
+  "planned": 6,
+  "wall_seconds": 0.9395365489981486,
+  "unstarted": 0
+}

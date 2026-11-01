@@ -1,9 +1,11 @@
 #pragma once
+#include "app/arena_preparation.hpp"
 #include "input/text_edit.hpp"
 #include "persistence/arena_store.hpp"
 namespace blobber {
 struct ArenaSetup {
     ArenaScenario scenario;
+    ArenaPreparationFlow preparation;
     ScenarioListing listing;
     ScenarioEntry currentFile;
     std::array<bool, rules::Catalog::maxMonsters> available{};
@@ -14,6 +16,7 @@ struct ArenaSetup {
     TextEdit nameEdit, searchEdit, seedEdit;
     bool initialized = false;
     int pendingLoad = -1;
+    bool replaceParty(const StartingParty&) noexcept;
     void filter(const rules::Catalog&) noexcept;
     void syncSeed() noexcept;
     bool readSeed() noexcept;

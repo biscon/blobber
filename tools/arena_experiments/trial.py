@@ -1,5 +1,5 @@
 """One bounded trial: checked commands, fixed-step scheduling and streaming artifacts."""
-from collections import Counter
+from collections import Counter, deque
 import hashlib
 import json
 from pathlib import Path
@@ -93,15 +93,56 @@ class Metrics:
         self.previous = None
         self.initial = None
         self.rounds = self.encounters = 0
+        self.incoming = [0]*4; self.largest_hit = [0]*4; self.healing = [0]*4
+        self.burst_6s = [0]*4; self.burst_round = [0]*4
+        self.round_damage = [0]*4; self.window_damage = [0]*4
+        self.windows = [deque() for _ in range(4)]
+        self.burst_complete = True
+        self.first_contact_ms = None
+        self.approach_ms = 0
+        self.previous_phase = None; self.previous_time = None
 
     def event(self, chunk):
         for e in chunk["events"]:
             self.events[e["event"]] += 1
-            if e["event"] == "round": self.rounds += 1
-            if e["event"] == "started": self.encounters += 1
+            if e["event"] == "round":
+                self.rounds += 1
+                self.round_damage = [0]*4
+            if e["event"] == "started":
+                self.encounters += 1
+                self.round_damage = [0]*4
+                if self.first_contact_ms is None:
+                    self.first_contact_ms = int(e["time_ms"])
+            if e["event"] == "healing":
+                # Second Wind has no separate recipient in the existing event.
+                i = e["character"] if e.get("feature") == "Second Wind" else e.get("recipient")
+                if isinstance(i, int) and 0 <= i < 4:
+                    self.healing[i] += max(0, e.get("damage", 0))
+            if e["event"] != "attack" or not e.get("enemy_attack") or not e.get("hit") or e.get("target_gone"):
+                continue
+            i, damage, now = e.get("recipient"), max(0, e.get("damage", 0)), int(e["time_ms"])
+            if not isinstance(i, int) or not 0 <= i < 4:
+                raise ProtocolError("Incoming damage has invalid party recipient")
+            self.incoming[i] += damage
+            self.largest_hit[i] = max(self.largest_hit[i], damage)
+            window = self.windows[i]
+            while window and window[0][0] <= now-6000:
+                self.window_damage[i] -= window.popleft()[1]
+            if len(window) >= 4096:
+                self.burst_complete = False
+            else:
+                window.append((now, damage)); self.window_damage[i] += damage
+            self.burst_6s[i] = max(self.burst_6s[i], self.window_damage[i])
+            if e.get("phase") in ("contact", "turns", "facing", "round_end"):
+                self.round_damage[i] += damage
+                self.burst_round[i] = max(self.burst_round[i], self.round_damage[i])
 
     def observe(self, o):
         now = resources(o)
+        elapsed = int(o["time_ms"])
+        if self.previous_time is not None and self.previous_phase == "approach":
+            self.approach_ms += max(0, elapsed-self.previous_time)
+        self.previous_time, self.previous_phase = elapsed, o["phase"]
         if self.initial is None: self.initial = now
         if self.previous is not None:
             for i, (old, new) in enumerate(zip(self.previous, now)):
@@ -120,6 +161,11 @@ class Metrics:
                     mana_spent=self.mana_spent, mana_recovered=self.mana_recovered,
                     hp_lost_observed=self.hp_lost, hp_gained_observed=self.hp_gained,
                     downings_observed_lower_bound=self.downings, consumed_items=dict(self.consumed),
+                    incoming_damage_resolved=self.incoming, largest_incoming_hit=self.largest_hit,
+                    max_incoming_6s=self.burst_6s, max_incoming_round=self.burst_round,
+                    burst_metrics_complete=self.burst_complete, healing_resolved=self.healing,
+                    approach_ms_observed=self.approach_ms, first_contact_ms=self.first_contact_ms,
+                    permanent_deaths_by_character=[int(p["life"] == DEAD) for p in self.previous] if self.previous else None,
                     rounds_completed=self.rounds, encounters=self.encounters,
                     permanent_deaths=sum(p["life"] == DEAD for p in self.previous) if self.previous else None,
                     unconscious_survivors=sum(p["life"] in (DYING, STABLE) for p in self.previous) if self.previous else None)
@@ -236,7 +282,7 @@ def run_trial(spec, runner, assets, output, *, batch_deadline=None, cancelled=No
                         deadline=deadline, cancelled=cancelled)
         call("start", scenario=spec["scenario"])
         descriptors = call("actions")
-        row["coverage"] = coverage(state, descriptors, spec["policy"]["kind"])
+        row["coverage"] = coverage(state, descriptors, spec["policy"]["kind"], spec["policy"]["version"])
         timings["startup_seconds"] = time.monotonic()-started
         loop_started = time.monotonic()
         if row["coverage"]["unsupported"]:

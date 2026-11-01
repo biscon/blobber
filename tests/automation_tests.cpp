@@ -1,5 +1,6 @@
 #include "automation/trace.hpp"
 #include "game/commands.hpp"
+#include "support/arena_preparation_fixtures.hpp"
 #include "support/automation_fixtures.hpp"
 #include <iostream>
 #include <sstream>
@@ -8,6 +9,29 @@ using namespace blobber;
 using namespace blobber::automation;
 using namespace blobber::automation::test;
 namespace {
+void preparedArena() {
+    const auto c = catalog();
+    const auto d = definitions();
+    auto s = scenario(c);
+    arenaLevel(c, s, 3);
+    const auto input = Json::parse(encodeArena(c, s));
+    Client client(c, d);
+    auto started = client.request("start", {{"scenario", input}});
+    check(started.at("ok"), "prepared scenario starts through protocol");
+    for (const auto& member : started.at("data").at("party"))
+        check(member.at("level") == 3 && member.at("hp") == member.at("max_hp") &&
+                  member.at("mana") == member.at("max_mana"),
+              "headless uses prepared full resources");
+    const auto previous = client.protocol.state();
+    auto invalid = input;
+    invalid["preparation"]["advancements"][0][3]["learned"] = Json::array();
+    check(!client.request("start", {{"scenario", invalid}}).at("ok"),
+          "invalid preparation rejects replacement");
+    check(client.protocol.state() == previous, "failed preparation preserves active session");
+    const auto reset = client.request("reset");
+    check(reset.at("ok"), "prepared arena reset");
+    check(reset.at("data").at("party") == previous.at("party"), "reset reproduces prepared party exactly");
+}
 void casterSourceEvents() {
     const auto cat = catalog();
     CombatOutcome e;
@@ -526,6 +550,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        preparedArena();
         casterSourceEvents();
         packEvents();
         fortitudeEvents();

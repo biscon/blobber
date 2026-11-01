@@ -8,7 +8,8 @@ documents the delivered ownership, interfaces and deletion inventory;
 [Historical design and acceptance records](system_history.md) preserve prior evidence
 without describing current defaults. The bestiary expansion is closed with B01–B05
 accepted; useful B06 scope transfers to campaign PC07. Campaign planning resumes
-after P-B; detailed implementation plans and balance experiments remain unapproved.
+after P-B. [PC07.1 preparation and calibration](pc071_arena_calibration_design.md)
+is Accepted and closed (2026-11-01); PC07.2 population remains unplanned.
 
 Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
@@ -46,13 +47,12 @@ bounds, so weapons and asymmetric poses do not pull them away from the head.
 The three-floor campaign is the opening low-level vertical slice of an eventual
 roughly 20+ floor game; planning resumes after accepted P-B.
 
-Proposed PC07 scope starts with population/XP/recovery targets, reuses existing
-advancement and scenario/experiment owners for reproducible level 1–3 encounter
-calibration, and checks accumulated costs on selected generated routes. The output
-is a candidate population table with resource costs, XP, placement requirements,
-risks and reproduction evidence. General expedition agents remain PC08. This is
-roadmap direction only: existing population and level-one arena behavior remain
-implemented; PC07 still needs a reviewed detailed design before implementation.
+Current campaign work: [PC07.1 arena preparation and calibration](pc071_arena_calibration_design.md)
+implements the accepted first half of PC07. Its measurements precede population
+selection in PC07.2. The target is level 2 before the final guardian under normal
+shared XP. The bounded 36-trial study completed: all victories, three downings, zero permanent
+deaths. [Costs and recommendations](pc071_calibration/README.md) and
+[verification](pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
 
 ## Boundaries and data flow
 
@@ -358,5 +358,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 
 The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
 [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
-Campaign planning resumes after accepted P-B; PC07 is next for a reviewed detailed
-plan. Implementation and balance experiments have not started.
+PC07.1 preparation and calibration are Accepted and closed;
+[verification/handoff](pc071_verification.md) records the bounded study and limits.
+PC07.2 population is next eligible for a reviewed detailed plan when requested;
+parent PC07 and P-C remain incomplete.

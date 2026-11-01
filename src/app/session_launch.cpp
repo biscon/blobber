@@ -56,8 +56,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         throw std::runtime_error("World NPC definitions differ; rebuild world assets");
     WorldRenderer world(presenter.resources(), std::move(publication));
     world.supersampling(options.supersampling);
-    const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena),    true, nullptr,
-                                nullptr, nullptr,     campaign.get(), saves};
+    const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena),    true,  nullptr,
+                                nullptr, nullptr,     campaign.get(), saves, arena};
     if (loading->closing())
         return false;
     loading.reset();

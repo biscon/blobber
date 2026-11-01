@@ -1,0 +1,56 @@
+[
+  {
+    "recipe": "goblin_pair",
+    "trial": "c23b45835bc24bb28d1de210",
+    "party": "no_wizard",
+    "seed": 12,
+    "trace": "output/pc071/goblin_pair/traces/c23b45835bc24bb28d1de210.jsonl",
+    "returncode": 0,
+    "result": "{\"replay\":\"matched\"}\n"
+  },
+  {
+    "recipe": "rat_pack",
+    "trial": "85864fd2a88bbadfbb0b1032",
+    "party": "no_wizard",
+    "seed": 12,
+    "trace": "output/pc071/rat_pack/traces/85864fd2a88bbadfbb0b1032.jsonl",
+    "returncode": 0,
+    "result": "{\"replay\":\"matched\"}\n"
+  },
+  {
+    "recipe": "undead_pair",
+    "trial": "6320e5f08b8410e1760ba369",
+    "party": "balanced",
+    "seed": 12,
+    "trace": "output/pc071/undead_pair/traces/6320e5f08b8410e1760ba369.jsonl",
+    "returncode": 0,
+    "result": "{\"replay\":\"matched\"}\n"
+  },
+  {
+    "recipe": "bugbear_solo",
+    "trial": "6fb8ece0bf702a8132e709c0",
+    "party": "no_wizard",
+    "seed": 12,
+    "trace": "output/pc071/bugbear_solo/traces/6fb8ece0bf702a8132e709c0.jsonl",
+    "returncode": 0,
+    "result": "{\"replay\":\"matched\"}\n"
+  },
+  {
+    "recipe": "goblin_support",
+    "trial": "9fc0ed650e1ebcf3772cca32",
+    "party": "no_wizard",
+    "seed": 8,
+    "trace": "output/pc071/goblin_support/traces/9fc0ed650e1ebcf3772cca32.jsonl",
+    "returncode": 0,
+    "result": "{\"replay\":\"matched\"}\n"
+  },
+  {
+    "recipe": "bugbear_support",
+    "trial": "1eeec615daa92bb68aa4ceb2",
+    "party": "balanced",
+    "seed": 8,
+    "trace": "output/pc071/bugbear_support/traces/1eeec615daa92bb68aa4ceb2.jsonl",
+    "returncode": 0,
+    "result": "{\"replay\":\"matched\"}\n"
+  }
+]

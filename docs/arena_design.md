@@ -92,3 +92,11 @@ returns a typed PlayOutcome and reconstructs from the original launch data for r
 No additional GPU textures or changes to preparation budgets are needed.
 
 See [verification, limitations and review recipe](slice125_verification.md).
+
+## PC07.1 preparation extension (2026-11-01)
+
+[PC07.1](pc071_arena_calibration_design.md) adds schema-2 level 1–3 preparation
+without changing layout 1 or level-one library blueprints. One preparation factory
+serves manual launch, automation and rematch. The setup wizard stages incremental
+spell choices and commits only on final review. Schema 1 has explicit level-one
+defaults. Historical level-one-only statements above describe original delivery.

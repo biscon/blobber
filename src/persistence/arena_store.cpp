@@ -13,6 +13,24 @@
 namespace blobber {
 namespace {
 using namespace rules_json;
+Json spellNames(const rules::Catalog& c, std::uint32_t mask) {
+    Json out = Json::array();
+    for (std::uint16_t i = 0; i < c.spellCount(); ++i)
+        if (mask & rules::spellBit({i}))
+            out.push_back(c.spell({i})->id);
+    return out;
+}
+std::uint32_t spellMask(const rules::Catalog& c, const Json& j) {
+    array(j, "advancement spells", 32);
+    std::uint32_t mask = 0;
+    for (const auto& name : j) {
+        const auto bit = rules::spellBit(c.findSpell(identifier(name, "spell")));
+        if (!bit || (mask & bit))
+            fail("advancement", "unknown or duplicate spell");
+        mask |= bit;
+    }
+    return mask;
+}
 struct Fd {
     int fd;
     ~Fd() {
@@ -65,10 +83,24 @@ std::string encodeArena(const rules::Catalog& c, const ArenaScenario& s) {
     for (std::size_t i = 0; i < s.count; ++i)
         roster.push_back(
             {{"monster", c.monster(s.roster[i].monster)->id}, {"quantity", s.roster[i].quantity}});
-    auto text = Json{{"schema_version", 1}, {"layout_version", 1}, {"name", s.name.data()},
-                     {"seed", s.seed},      {"party", party},      {"monsters", roster}}
-                    .dump(2) +
-                "\n";
+    Json advancements = Json::array();
+    for (unsigned step = 0; step + 1 < s.preparation.targetLevel; ++step) {
+        Json members = Json::array();
+        for (const auto choices : s.preparation.advancements[step])
+            members.push_back(
+                {{"learned", spellNames(c, choices.learned)}, {"prepared", spellNames(c, choices.prepared)}});
+        advancements.push_back(std::move(members));
+    }
+    auto text =
+        Json{{"schema_version", 2},
+             {"layout_version", 1},
+             {"name", s.name.data()},
+             {"seed", s.seed},
+             {"party", party},
+             {"monsters", roster},
+             {"preparation", {{"target_level", s.preparation.targetLevel}, {"advancements", advancements}}}}
+            .dump(2) +
+        "\n";
     if (text.size() > arenaMaxBytes)
         throw std::runtime_error("Scenario exceeds 1 MiB.");
     return text;
@@ -87,9 +119,13 @@ ArenaScenario decodeArena(const rules::Catalog& c, const std::string& text) {
             fail("json", "duplicate key");
         return true;
     });
-    fields(root, "scenario", {"schema_version", "layout_version", "name", "seed", "party", "monsters"});
-    if (integer(root.at("schema_version"), "version") != 1 ||
-        integer(root.at("layout_version"), "layout") != 1)
+    const auto version = integer(root.at("schema_version"), "version");
+    if (version == 1)
+        fields(root, "scenario", {"schema_version", "layout_version", "name", "seed", "party", "monsters"});
+    else
+        fields(root, "scenario",
+               {"schema_version", "layout_version", "name", "seed", "party", "monsters", "preparation"});
+    if ((version != 1 && version != 2) || integer(root.at("layout_version"), "layout") != 1)
         fail("version", "unsupported scenario version");
     ArenaScenario s;
     const auto name = string(root.at("name"), "name");
@@ -109,6 +145,29 @@ ArenaScenario decodeArena(const rules::Catalog& c, const std::string& text) {
         s.party[i].draft = decodeStartingDraft(c, j);
         const auto id = j.at("id").get<std::string>();
         std::copy(id.begin(), id.end(), s.party[i].id.begin());
+    }
+    if (version == 2) {
+        const auto& prep = root.at("preparation");
+        fields(prep, "preparation", {"target_level", "advancements"});
+        const auto level = integer(prep.at("target_level"), "target_level");
+        if (level < 1 || level > 3)
+            fail("target_level", "expected 1..3");
+        s.preparation.targetLevel = unsigned(level);
+        const auto& steps = prep.at("advancements");
+        array(steps, "advancements", 2);
+        if (steps.size() != unsigned(level - 1))
+            fail("advancements", "expected one transition per level");
+        for (unsigned step = 0; step < steps.size(); ++step) {
+            array(steps[step], "advancement members", 4);
+            if (steps[step].size() != 4)
+                fail("advancements", "expected four character choices");
+            for (unsigned i = 0; i < 4; ++i) {
+                const auto& choice = steps[step][i];
+                fields(choice, "advancement", {"learned", "prepared"});
+                s.preparation.advancements[step][i] = {spellMask(c, choice.at("learned")),
+                                                       spellMask(c, choice.at("prepared"))};
+            }
+        }
     }
     array(root.at("monsters"), "monsters", NpcWorld::maxTypes);
     for (const auto& j : root.at("monsters")) {

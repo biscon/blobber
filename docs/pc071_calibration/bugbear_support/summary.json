@@ -1,0 +1,1630 @@
+{
+  "version": 1,
+  "planned": 6,
+  "started": 6,
+  "unstarted": 0,
+  "counts": {
+    "victory": 6,
+    "combat_loss": 0,
+    "stall": 0,
+    "timeout": 0,
+    "unsupported_decision": 0,
+    "policy_failure": 0,
+    "runner_failure": 0,
+    "cancelled": 0
+  },
+  "artifact_failures": 0,
+  "trial_wall_seconds": 1.1729613870047615,
+  "simulation_seconds": 249.61,
+  "simulated_seconds_per_wall_second": 212.80325402475228,
+  "completed_trials_per_minute": 306.91547393498183,
+  "groups": [
+    {
+      "party": "balanced",
+      "roster": "bugbear_support",
+      "policy": "aggressive_v2",
+      "mode": "diagnostic",
+      "reaction_ticks": 25,
+      "started": 3,
+      "counts": {
+        "victory": 3,
+        "combat_loss": 0,
+        "stall": 0,
+        "timeout": 0,
+        "unsupported_decision": 0,
+        "policy_failure": 0,
+        "runner_failure": 0,
+        "cancelled": 0
+      },
+      "valid_completions": 3,
+      "wins": 3,
+      "losses": 0,
+      "artifact_failures": 0,
+      "consumption": {
+        "arcane_focus": 0,
+        "arrow": 3,
+        "camp_kit": 0,
+        "chain_mail": 0,
+        "dagger": 0,
+        "healing_potion": 1,
+        "holy_symbol": 0,
+        "leather": 0,
+        "longsword": 0,
+        "mace": 0,
+        "mana_potion": 1,
+        "scale_mail": 0,
+        "shield": 0,
+        "shortbow": 0,
+        "shortsword": 0,
+        "spellbook": 0
+      },
+      "actions": {
+        "action_surge": 3,
+        "arcane_recovery": 3,
+        "cunning_action": 7,
+        "guidance": 3,
+        "guiding_bolt": 5,
+        "mage_armor": 3,
+        "magic_missile": 5,
+        "melee": 12,
+        "move": 39,
+        "ranged": 3,
+        "bane": 1,
+        "burning_hands": 2,
+        "item": 2
+      },
+      "coverage": {
+        "abilities": [
+          {
+            "ability": "second_wind",
+            "character": 0,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 0,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 0,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 0,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "sacred_flame",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "spare_the_dying",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "bless",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "bane",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "shield_of_faith",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "cure_wounds",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "guiding_bolt",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "inflict_wounds",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "guidance",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "second_wind",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 1,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 1,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "second_wind",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 2,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 2,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 2,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "fire_bolt",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "acid_splash",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "mage_armor",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "magic_missile",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "burning_hands",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "thunderwave",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "ray_of_frost",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "shocking_grasp",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "second_wind",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 3,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          }
+        ],
+        "disabled": [
+          "rest",
+          "loot",
+          "inventory_management",
+          "preparation_changes",
+          "advancement"
+        ],
+        "limitations": [
+          "new preparation slots intentionally empty",
+          "level-2 features used in contact turns",
+          "no automated level-3 tactics"
+        ],
+        "policy_version": 2,
+        "unsupported": []
+      },
+      "wall_seconds": 0.6397862120065838,
+      "burst_incomplete": 0,
+      "planned": 3,
+      "unstarted": 0,
+      "completion_rate": 1.0,
+      "wins_per_started": 1.0,
+      "victory_rate": 1.0,
+      "victory_wilson_95": [
+        0.4385029682449546,
+        1
+      ],
+      "sample_scope": "valid victories and combat losses; unfinished trials excluded",
+      "simulation_seconds": {
+        "n": 3,
+        "minimum": 29.49,
+        "median": 36.24,
+        "maximum": 52.04
+      },
+      "permanent_deaths": {
+        "n": 3,
+        "minimum": 0,
+        "median": 0,
+        "maximum": 0
+      },
+      "remaining_mana": {
+        "n": 3,
+        "minimum": 2,
+        "median": 4,
+        "maximum": 6
+      },
+      "remaining_hp": {
+        "n": 3,
+        "minimum": 56,
+        "median": 65,
+        "maximum": 70
+      },
+      "mana_spent": {
+        "n": 3,
+        "minimum": 8,
+        "median": 10,
+        "maximum": 14
+      },
+      "per_character_damage": [
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 3
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 3
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 3
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 3
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          }
+        },
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 5,
+            "maximum": 22
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 5,
+            "maximum": 14
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 5,
+            "maximum": 14
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 5,
+            "maximum": 14
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 10
+          }
+        },
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          }
+        },
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          }
+        }
+      ],
+      "approach_seconds_observed": {
+        "n": 3,
+        "minimum": 1.44,
+        "median": 1.69,
+        "maximum": 2.8
+      },
+      "rounds_completed": {
+        "n": 3,
+        "minimum": 1,
+        "median": 1,
+        "maximum": 3
+      }
+    },
+    {
+      "party": "no_wizard",
+      "roster": "bugbear_support",
+      "policy": "aggressive_v2",
+      "mode": "diagnostic",
+      "reaction_ticks": 25,
+      "started": 3,
+      "counts": {
+        "victory": 3,
+        "combat_loss": 0,
+        "stall": 0,
+        "timeout": 0,
+        "unsupported_decision": 0,
+        "policy_failure": 0,
+        "runner_failure": 0,
+        "cancelled": 0
+      },
+      "valid_completions": 3,
+      "wins": 3,
+      "losses": 0,
+      "artifact_failures": 0,
+      "consumption": {
+        "arrow": 7,
+        "camp_kit": 0,
+        "chain_mail": 0,
+        "healing_potion": 3,
+        "holy_symbol": 0,
+        "leather": 0,
+        "longsword": 0,
+        "mace": 0,
+        "mana_potion": 1,
+        "scale_mail": 0,
+        "shield": 0,
+        "shortbow": 0,
+        "shortsword": 0
+      },
+      "actions": {
+        "action_surge": 3,
+        "cunning_action": 18,
+        "guidance": 3,
+        "guiding_bolt": 6,
+        "melee": 22,
+        "move": 42,
+        "ranged": 7,
+        "item": 4,
+        "preserve_life": 1,
+        "bane": 1
+      },
+      "coverage": {
+        "abilities": [
+          {
+            "ability": "second_wind",
+            "character": 0,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 0,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 0,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 0,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 0,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "sacred_flame",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "spare_the_dying",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "bless",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "bane",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "shield_of_faith",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "cure_wounds",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "guiding_bolt",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "inflict_wounds",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "guidance",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "second_wind",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 1,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 1,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 1,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 1,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "second_wind",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 2,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 2,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 2,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 2,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "second_wind",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "arcane_recovery",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "dismiss_concentration",
+            "character": 3,
+            "coverage": "implemented_when_concentrating"
+          },
+          {
+            "ability": "action_surge",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "preserve_life",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "cunning_action",
+            "character": 3,
+            "coverage": "implemented_in_contact_turns"
+          },
+          {
+            "ability": "spiritual_weapon",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "escape_web",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          },
+          {
+            "ability": "end_turn",
+            "character": 3,
+            "coverage": "implemented"
+          },
+          {
+            "ability": "dismiss_spiritual_weapon",
+            "character": 3,
+            "coverage": "unavailable_at_level_or_class"
+          }
+        ],
+        "disabled": [
+          "rest",
+          "loot",
+          "inventory_management",
+          "preparation_changes",
+          "advancement"
+        ],
+        "limitations": [
+          "new preparation slots intentionally empty",
+          "level-2 features used in contact turns",
+          "no automated level-3 tactics"
+        ],
+        "policy_version": 2,
+        "unsupported": []
+      },
+      "wall_seconds": 0.5331751749981777,
+      "burst_incomplete": 0,
+      "planned": 3,
+      "unstarted": 0,
+      "completion_rate": 1.0,
+      "wins_per_started": 1.0,
+      "victory_rate": 1.0,
+      "victory_wilson_95": [
+        0.4385029682449546,
+        1
+      ],
+      "sample_scope": "valid victories and combat losses; unfinished trials excluded",
+      "simulation_seconds": {
+        "n": 3,
+        "minimum": 22.26,
+        "median": 43.24,
+        "maximum": 66.34
+      },
+      "permanent_deaths": {
+        "n": 3,
+        "minimum": 0,
+        "median": 0,
+        "maximum": 0
+      },
+      "remaining_mana": {
+        "n": 3,
+        "minimum": 0,
+        "median": 2,
+        "maximum": 4
+      },
+      "remaining_hp": {
+        "n": 3,
+        "minimum": 61,
+        "median": 64,
+        "maximum": 75
+      },
+      "mana_spent": {
+        "n": 3,
+        "minimum": 2,
+        "median": 4,
+        "maximum": 8
+      },
+      "per_character_damage": [
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 5
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 5
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 5
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 5
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          }
+        },
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 23,
+            "maximum": 24
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 11,
+            "maximum": 15
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 11,
+            "maximum": 15
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 11,
+            "maximum": 15
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 10,
+            "maximum": 15
+          }
+        },
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          }
+        },
+        {
+          "incoming": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "hit": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "six_seconds": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "round": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          },
+          "healing": {
+            "n": 3,
+            "minimum": 0,
+            "median": 0,
+            "maximum": 0
+          }
+        }
+      ],
+      "approach_seconds_observed": {
+        "n": 3,
+        "minimum": 2.49,
+        "median": 3.75,
+        "maximum": 3.83
+      },
+      "rounds_completed": {
+        "n": 3,
+        "minimum": 1,
+        "median": 2,
+        "maximum": 4
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baseline": "balanced",
+      "alternative": "no_wizard",
+      "roster": "bugbear_support",
+      "policy": "aggressive_v2",
+      "paired": 3,
+      "missing_pairs": 0,
+      "victory_difference": 0.0,
+      "bootstrap_95": null,
+      "uncertainty": "insufficient_pairs_minimum_20"
+    }
+  ],
+  "parties": {
+    "balanced": [
+      {
+        "abilities": [
+          16,
+          14,
+          15,
+          9,
+          13,
+          11
+        ],
+        "arcane_recovery": false,
+        "armor_class": 19,
+        "base_abilities": [
+          15,
+          13,
+          14,
+          8,
+          12,
+          10
+        ],
+        "cantrips": [],
+        "character": 0,
+        "class": "fighter",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 20,
+        "items": {
+          "camp_kit": 3,
+          "chain_mail": 1,
+          "healing_potion": 2,
+          "longsword": 1,
+          "shield": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 20,
+        "max_mana": 0,
+        "name": "Alden",
+        "prepared": [],
+        "race": "human",
+        "racial": [],
+        "second_wind": true,
+        "temporary_hp": 0
+      },
+      {
+        "abilities": [
+          13,
+          10,
+          16,
+          8,
+          16,
+          12
+        ],
+        "arcane_recovery": false,
+        "armor_class": 16,
+        "base_abilities": [
+          13,
+          10,
+          14,
+          8,
+          15,
+          12
+        ],
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "character": 1,
+        "class": "cleric",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 21,
+        "items": {
+          "healing_potion": 2,
+          "holy_symbol": 1,
+          "mace": 1,
+          "mana_potion": 2,
+          "scale_mail": 1,
+          "shield": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 6,
+        "max_hp": 21,
+        "max_mana": 6,
+        "name": "Brunna",
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "race": "hill_dwarf",
+        "racial": [],
+        "second_wind": false,
+        "temporary_hp": 0
+      },
+      {
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "arcane_recovery": false,
+        "armor_class": 14,
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "character": 2,
+        "class": "rogue",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 17,
+        "items": {
+          "arrow": 20,
+          "healing_potion": 2,
+          "leather": 1,
+          "shortbow": 1,
+          "shortsword": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 17,
+        "max_mana": 0,
+        "name": "Merrin",
+        "prepared": [],
+        "race": "lightfoot_halfling",
+        "racial": [],
+        "second_wind": false,
+        "temporary_hp": 0
+      },
+      {
+        "abilities": [
+          8,
+          16,
+          13,
+          16,
+          12,
+          10
+        ],
+        "arcane_recovery": true,
+        "armor_class": 13,
+        "base_abilities": [
+          8,
+          14,
+          13,
+          15,
+          12,
+          10
+        ],
+        "cantrips": [
+          "fire_bolt",
+          "acid_splash",
+          "ray_of_frost"
+        ],
+        "character": 3,
+        "class": "wizard",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [],
+        "equipment": [
+          {
+            "cell": 49,
+            "item": "dagger",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 12,
+        "items": {
+          "arcane_focus": 1,
+          "dagger": 1,
+          "healing_potion": 2,
+          "mana_potion": 2,
+          "spellbook": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 6,
+        "max_hp": 12,
+        "max_mana": 6,
+        "name": "Lethiel",
+        "prepared": [
+          "mage_armor",
+          "magic_missile",
+          "burning_hands",
+          "thunderwave"
+        ],
+        "race": "high_elf",
+        "racial": [
+          "shocking_grasp"
+        ],
+        "second_wind": false,
+        "temporary_hp": 0
+      }
+    ],
+    "no_wizard": [
+      {
+        "abilities": [
+          16,
+          14,
+          15,
+          9,
+          13,
+          11
+        ],
+        "arcane_recovery": false,
+        "armor_class": 19,
+        "base_abilities": [
+          15,
+          13,
+          14,
+          8,
+          12,
+          10
+        ],
+        "cantrips": [],
+        "character": 0,
+        "class": "fighter",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "chain_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "longsword",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 20,
+        "items": {
+          "camp_kit": 3,
+          "chain_mail": 1,
+          "healing_potion": 2,
+          "longsword": 1,
+          "shield": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 20,
+        "max_mana": 0,
+        "name": "Alden",
+        "prepared": [],
+        "race": "human",
+        "racial": [],
+        "second_wind": true,
+        "temporary_hp": 0
+      },
+      {
+        "abilities": [
+          13,
+          10,
+          16,
+          8,
+          16,
+          12
+        ],
+        "arcane_recovery": false,
+        "armor_class": 16,
+        "base_abilities": [
+          13,
+          10,
+          14,
+          8,
+          15,
+          12
+        ],
+        "cantrips": [
+          "sacred_flame",
+          "spare_the_dying",
+          "guidance"
+        ],
+        "character": 1,
+        "class": "cleric",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [
+          "bless",
+          "cure_wounds"
+        ],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "scale_mail",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "mace",
+            "quantity": 1
+          },
+          {
+            "cell": 50,
+            "item": "shield",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 21,
+        "items": {
+          "healing_potion": 2,
+          "holy_symbol": 1,
+          "mace": 1,
+          "mana_potion": 2,
+          "scale_mail": 1,
+          "shield": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 6,
+        "max_hp": 21,
+        "max_mana": 6,
+        "name": "Brunna",
+        "prepared": [
+          "bane",
+          "shield_of_faith",
+          "guiding_bolt",
+          "inflict_wounds"
+        ],
+        "race": "hill_dwarf",
+        "racial": [],
+        "second_wind": false,
+        "temporary_hp": 0
+      },
+      {
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "arcane_recovery": false,
+        "armor_class": 14,
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "character": 2,
+        "class": "rogue",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 17,
+        "items": {
+          "arrow": 20,
+          "healing_potion": 2,
+          "leather": 1,
+          "shortbow": 1,
+          "shortsword": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 17,
+        "max_mana": 0,
+        "name": "Merrin",
+        "prepared": [],
+        "race": "lightfoot_halfling",
+        "racial": [],
+        "second_wind": false,
+        "temporary_hp": 0
+      },
+      {
+        "abilities": [
+          8,
+          17,
+          14,
+          12,
+          13,
+          11
+        ],
+        "arcane_recovery": false,
+        "armor_class": 14,
+        "base_abilities": [
+          8,
+          15,
+          14,
+          12,
+          13,
+          10
+        ],
+        "cantrips": [],
+        "character": 3,
+        "class": "rogue",
+        "concentration": [],
+        "death_failures": 0,
+        "death_successes": 0,
+        "domain": [],
+        "equipment": [
+          {
+            "cell": 48,
+            "item": "leather",
+            "quantity": 1
+          },
+          {
+            "cell": 49,
+            "item": "shortsword",
+            "quantity": 1
+          },
+          {
+            "cell": 51,
+            "item": "shortbow",
+            "quantity": 1
+          }
+        ],
+        "hit_dice": 2,
+        "hp": 17,
+        "items": {
+          "arrow": 20,
+          "healing_potion": 2,
+          "leather": 1,
+          "shortbow": 1,
+          "shortsword": 1
+        },
+        "level": 2,
+        "life": 0,
+        "mana": 0,
+        "max_hp": 17,
+        "max_mana": 0,
+        "name": "Pip",
+        "prepared": [],
+        "race": "lightfoot_halfling",
+        "racial": [],
+        "second_wind": false,
+        "temporary_hp": 0
+      }
+    ]
+  },
+  "recorded_trials": 6,
+  "unrecorded_started_trials": 0,
+  "batch": {
+    "status": "complete",
+    "reason": "all_planned_trials_recorded",
+    "started": 6,
+    "planned": 6,
+    "wall_seconds": 1.343382422994182,
+    "unstarted": 0
+  },
+  "report_seconds": 0.0017298800012213178
+}

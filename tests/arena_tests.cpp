@@ -3,6 +3,8 @@
 #include "game/commands.hpp"
 #include "game/perception.hpp"
 #include "game/session.hpp"
+#include "support/allocations.hpp"
+#include "support/arena_preparation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "ui/interaction.hpp"
@@ -188,7 +190,7 @@ void persistence(const rules::Catalog& c) {
     auto j = nlohmann::json::parse(encoded);
     for (const char* field : {"schema_version", "layout_version"}) {
         auto bad = j;
-        bad[field] = 2;
+        bad[field] = 99;
         rejects([&] { decodeArena(c, bad.dump()); }, "unknown version");
     }
     for (const auto value : {-1ll, 4294967296ll}) {
@@ -223,6 +225,126 @@ void persistence(const rules::Catalog& c) {
         std::ofstream(store.directory() / ("fixture-" + std::to_string(i) + ".json")) << encoded;
     check(store.list().count == 128, "bounded listing full");
     rejects([&] { store.save(s); }, "full listing cannot create more");
+}
+void preparation() {
+    const auto c = creationCatalog(true);
+    auto s = defaultArena(c);
+    s.adjust({0}, 1);
+    const auto original = encodeArena(c, s);
+    auto v1 = nlohmann::json::parse(original);
+    v1["schema_version"] = 1;
+    v1.erase("preparation");
+    check(decodeArena(c, v1.dump()).preparation.targetLevel == 1, "schema 1 defaults to level one");
+    const auto fresh = prepareArenaParty(c, s);
+    for (unsigned level : {2u, 3u}) {
+        arenaLevel(c, s, level);
+        check(!arenaError(c, s), "valid incremental arena preparation");
+        const auto text = encodeArena(c, s);
+        const auto decoded = decodeArena(c, text);
+        check(encodeArena(c, decoded) == text, "prepared scenario roundtrips spell IDs");
+        auto party = prepareArenaParty(c, decoded);
+        check(party->campSupplies().kits == 3, "higher-level party grants kits once");
+        for (std::uint16_t i = 0; i < 4; ++i) {
+            const auto& member = *party->character({i});
+            check(member.build.level == int(level) && member.hitPoints == member.stats.maxHitPoints &&
+                      member.mana == member.maxMana && member.availableHitDice == int(level),
+                  "prepared party has full ordinary resources");
+            check(member.experience == rules::nextLevelExperience(int(level) - 1),
+                  "arena grants exact target XP");
+            for (std::uint16_t slot = 0; slot < 52; ++slot) {
+                const auto* a = fresh->inventory().stack(fresh->inventory().at({{i}, slot}));
+                const auto* b = party->inventory().stack(party->inventory().at({{i}, slot}));
+                check(bool(a) == bool(b) &&
+                          (!a || (a->item.index == b->item.index && a->quantity == b->quantity)),
+                      "advancement preserves exact starting equipment and consumables");
+            }
+        }
+        check(party->character({0})->actionSurge && party->character({1})->channelDivinity,
+              "earned class charges start ready");
+        party->damage({0}, 3);
+        party->spendMana({3}, 2);
+        auto rematch = prepareArenaParty(c, s);
+        check(rematch->character({0})->hitPoints == rematch->character({0})->stats.maxHitPoints &&
+                  rematch->character({3})->mana == rematch->character({3})->maxMana,
+              "rematch reconstructs immutable preparation");
+    }
+    auto bad = nlohmann::json::parse(encodeArena(c, s));
+    for (const auto level : {0, 4}) {
+        auto j = bad;
+        j["preparation"]["target_level"] = level;
+        rejects([&] { decodeArena(c, j.dump()); }, "invalid target rejected");
+    }
+    auto j = bad;
+    j["preparation"]["advancements"][0][3]["learned"] = {"missing"};
+    rejects([&] { decodeArena(c, j.dump()); }, "unknown advancement spell");
+    j = bad;
+    j["preparation"]["advancements"][0][0]["learned"] = {"bless"};
+    rejects([&] { decodeArena(c, j.dump()); }, "wrong-class choices rejected");
+    j = bad;
+    j["preparation"]["advancements"].erase(0);
+    rejects([&] { decodeArena(c, j.dump()); }, "missing transition rejected");
+    j = bad;
+    j["preparation"]["advancements"][0][3]["learned"] = {"sleep", "sleep"};
+    rejects([&] { decodeArena(c, j.dump()); }, "duplicate spell rejected");
+    j = bad;
+    j.erase("preparation");
+    rejects([&] { decodeArena(c, j.dump()); }, "schema 2 requires preparation");
+    ArenaSetup setup;
+    setup.scenario = s;
+    check(!setup.replaceParty(s.party) && setup.scenario.preparation.targetLevel == 3,
+          "unchanged party preserves preparation");
+    auto reordered = s.party;
+    std::swap(reordered[0], reordered[1]);
+    check(setup.replaceParty(reordered) && setup.scenario.preparation.targetLevel == 1,
+          "formation changes reset preparation");
+    auto baseline = decodeArena(c, original);
+    ArenaPreparationFlow flow;
+    flow.begin(baseline);
+    flow.selectLevel(c, 3);
+    flow.advancement.searchEdit.focus(true, flow.advancement.selection.search);
+    UiInput backspace;
+    backspace.pressed[std::size_t(UiKey::Cancel)] = true;
+    TextInput erase;
+    erase.backspace = true;
+    flow.route(c, backspace, erase, .01f);
+    check(flow.active, "editing search with backspace does not cancel preparation");
+    flow.advancement.searchEdit.focused = false;
+    UiInput cancel;
+    cancel.pressed[std::size_t(UiKey::Cancel)] = true;
+    flow.route(c, cancel, {}, .01f);
+    check(!flow.active && !flow.commit(c, baseline) && encodeArena(c, baseline) == original,
+          "cancel preserves setup");
+    allocations = 0;
+    watching = true;
+    flow.begin(baseline);
+    flow.selectLevel(c, 3);
+    for (unsigned iteration = 0; flow.step != ArenaPreparationStep::Review && iteration < 100; ++iteration) {
+        flow.layout();
+        auto& h = flow.advancement;
+        const auto action = h.step == AdvancementStep::Learned && !h.selection.valid() ? FlowAction::Recommend
+                            : h.step == AdvancementStep::Review                        ? FlowAction::Done
+                                                                                       : FlowAction::Next;
+        bool routed = false;
+        for (unsigned i = 0; i < h.controls.count; ++i) {
+            const auto control = h.controls.entries[i];
+            if (control.action != action || !control.enabled)
+                continue;
+            UiInput input;
+            input.pressed[std::size_t(UiKey::Click)] = true;
+            input.pointer = ArtPoint{float(control.rect.x + 2), float(control.rect.y + 2)};
+            flow.route(c, input, {}, .01f);
+            routed = true;
+            break;
+        }
+        check(routed, "shared controls provide next preparation action");
+    }
+    check(flow.step == ArenaPreparationStep::Review && flow.commit(c, baseline),
+          "shared wizard commits reviewed level 3");
+    watching = false;
+    check(allocations == 0, "arena preparation selection and commit allocate no C++ frame storage");
+    check(baseline.preparation.targetLevel == 3 && !arenaError(c, baseline),
+          "wizard stores valid incremental choices");
+    check(encodeArena(c, decodeArena(c, original)) == original, "starting snapshots remain unchanged");
 }
 void picker(const rules::Catalog& c) {
     auto s = defaultArena(c);
@@ -272,8 +394,10 @@ int main(int argc, char**) {
         lifecycle(c);
         persistence(c);
         picker(c);
+        preparation();
         std::cout << "Arena tests passed\n";
     } catch (const std::exception& e) {
+        watching = false;
         std::cerr << e.what() << '\n';
         return 1;
     }

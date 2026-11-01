@@ -2,7 +2,8 @@
 
 Created: 2026-10-30. Last updated: 2026-11-01.
 Status: **Roadmap accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted (2026-10-30).**
-PC07–PC09 plans remain unapproved; do not advance automatically.
+PC07.1 is **Accepted and closed** (2026-11-01); PC07.2–PC09 plans remain unapproved.
+Do not advance automatically.
 
 **Campaign planning resumed (2026-11-01), at the user's direction.** The
 [renderer roadmap](renderer_plan.md) is now complete: R01–R06 and milestones
@@ -11,8 +12,9 @@ old-renderer retirement. The [bestiary expansion](bestiary_plan.md) is closed wi
 B01–B05 Accepted and closed. B06 was superseded without implementation; its useful
 level preparation and encounter calibration move into PC07 to inform dungeon
 population, progression and recovery. This direction supersedes the pause after
-P-B for planning. PC07's detailed implementation plan remains unapproved, and no
-balance experiment is started or authorized merely by this roadmap update.
+P-B for planning. The user subsequently approved PC07.1 implementation and its
+bounded calibration study, and accepted the completed slice on 2026-11-01.
+[Delivery and evidence](pc071_verification.md) retain their recorded limitations. Population integration remains PC07.2, unstarted.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -53,14 +55,14 @@ arena and test fixtures; it does not imply retaining the old game mode.
 
 | Field | Current value |
 | --- | --- |
-| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06 and P-A/P-B accepted; renderer R01–R06 and bestiary B01–B05 accepted |
-| Active slice | None; PC06 Accepted and closed |
+| Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06, PC07.1 and P-A/P-B accepted; renderer R01–R06 and bestiary B01–B05 accepted |
+| Active slice | None; PC07.1 Accepted and closed |
 | Awaiting user review | None |
 | Blockers | None; later slices require their own plans and approvals |
-| Next eligible slice | PC07 — Depth bands and finite recovery encounters; detailed planning only |
-| Next action | Prepare PC07's detailed population/XP/recovery plan, including targeted calibration transferred from B06; review before implementation |
+| Next eligible slice | PC07.2 — Population and generated-route checks; detailed planning only |
+| Next action | When requested, plan PC07.2 from the accepted calibration evidence; review before implementation |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
-| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 and P-A/P-B closed; PC07 absorbs useful B06 scope; PC07–PC09 detailed plans unapproved |
+| Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 and P-A/P-B closed; PC07 absorbs useful B06 scope; PC07.1 Accepted and closed; PC07.2–PC09 plans unapproved |
 
 Update this checkpoint, tracker and affected execution record together. Roadmap
 acceptance is not slice implementation or evidence of delivered gameplay acceptance.
@@ -191,7 +193,7 @@ Inspected on 2026-10-30; these findings are constraints, not a future API promis
 | [Map](../src/world/map.hpp) | Immutable row-major solid cells, no fixtures; many systems call `solid`. Door semantics must agree across every consumer. |
 | [GameSession](../src/game/session.hpp) / [construction](../src/game/session.cpp) | Noncopyable owner combines Party, actors, loot, movement, AI, RNG, effects and combat while borrowing map/catalog. Constructing another session from a preset resets live party state. |
 | [Navigation](../src/game/navigation.hpp) / [perception](../src/game/perception.cpp) | Incremental bounded BFS and sight/melee queries read the map. Pending searches need invalidation when geometry changes; room labels do not stop alerts. |
-| [Frame pipeline](../src/render/frame_pipeline.cpp) / [renderer](../src/render/scene_renderer.hpp) | Prepared scene data is reusable across maps; cached frames/picking lack a door revision. A floor change needs fresh borrowers and frame state, not a copy of each prepared asset bank. |
+| Historical `frame_pipeline.cpp` / `scene_renderer.hpp` (retired by R06) | Prepared scene data is reusable across maps; cached frames/picking lack a door revision. A floor change needs fresh borrowers and frame state, not a copy of each prepared asset bank. |
 | [Gameplay view](../src/app/gameplay.cpp) | Bundles session, animator, frames and command controller; restart reconstructs them. Floor switching must deliberately rebuild these borrowers. Keep orchestration out of subsystem implementation. |
 | [Recovery](../src/game/session_recovery.cpp) / [XP](../src/game/session_progression.cpp) / [loot](../src/game/loot.hpp) | Rest advances gameplay effects without NPC walking; XP and loot use once-only death bookkeeping. Preserve those ledgers, not just alive/dead flags. |
 | [Effects](../src/game/effects.hpp) | World-scoped actor/effect/area IDs, party casters and local deadlines cross ownership boundaries. Raw snapshots/runtime IDs are not portable saves. |
@@ -351,7 +353,9 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | PC04 | [Persistent descent and fixed hub](#pc04-persistent-descent-and-fixed-hub) | PC03 | Accepted (2026-10-30) | P-B |
 | PC05 | [Paid recall and entry waypoints](#pc05-paid-recall-and-entry-waypoints) | PC04 | Accepted (2026-10-30) | P-B |
 | PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Accepted (2026-10-30) | P-B |
-| PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters), including targeted calibration | PC06; bestiary B01–B05 accepted | Planned | P-C |
+| PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters), including targeted calibration | PC06; bestiary B01–B05 accepted | In progress — PC07.1 Accepted; PC07.2 Planned | P-C |
+| PC07.1 | [Arena preparation and calibration](pc071_arena_calibration_design.md) | PC06 and B01–B05 accepted | Accepted (2026-11-01) | P-C |
+| PC07.2 | Population selection and generated-route checks | PC07.1 acceptance | Planned | P-C |
 | PC08 | [Campaign agents and expedition reports](#pc08-campaign-agents-and-expedition-reports) | PC07 | Planned | P-C |
 | PC09 | [Integrated expedition and MVP acceptance](#pc09-integrated-expedition-and-mvp-acceptance) | PC08 | Planned | P-C |
 
@@ -605,6 +609,13 @@ experiments, broad sweep, expedition experiment, commits or later-slice work.
 
 ### PC07: Depth bands and finite recovery encounters
 
+**Approved split (2026-11-01):** PC07.1 measures candidate encounters before
+PC07.2 selects population. The user approved the [PC07.1 design](pc071_arena_calibration_design.md)
+with “Implement the plan”, including at most 36 bounded serial trials. Target level
+2 before the final guardian; normal shared XP; focused level 1–2 tactics.
+PC07.1 is **Accepted and closed** (2026-11-01); see [verification and evidence](pc071_verification.md).
+PC07.2 is next eligible for its own reviewed detailed plan. Existing campaign population remains unchanged.
+
 **Scope transfer (2026-11-01):** Bestiary B06 is superseded without implementation.
 Its useful level preparation and encounter measurements belong here, driven by
 campaign population decisions. General arena polish is not a prerequisite. This
@@ -679,11 +690,16 @@ Show a direct route and a struggling-party optional detour, including fewer-magi
 compositions. Retain representative failures. If playtesting was not authorized,
 report it as pending evidence rather than inventing balance confidence.
 
-**Execution record:** Detailed planning/implementation and experiments not started.
-PC06/P-B and bestiary B01–B05 are accepted. On 2026-11-01 the user directed closing
-the bestiary roadmap and transferring useful B06 scope here. Campaign planning
-resumes with this revised scope; implementation and experiment approvals remain
-separate. No B06 calibration data or campaign balance result is claimed.
+**Execution record (2026-11-01):** PC07.1 is **Accepted and closed**. Implementation
+was approved with “Implement the plan”; the user accepted the completed slice with
+“slice accepted, record it in the plan doc”. Schema-2 level 1–3 arena preparation, shared launch/rematch,
+focused policy v2 and per-character burst/cost reporting are delivered. All 36
+bounded trials completed as victories, with three downings and zero permanent
+deaths; six retained traces strictly match. [Measured costs/recommendations](pc071_calibration/README.md),
+[verification/handoff](pc071_verification.md) and [captures](screenshots/pc071/index.html)
+record checks and limitations, unchanged by acceptance. Campaign population/route
+checks remain PC07.2; no campaign balance is claimed. Parent PC07 and P-C remain
+incomplete.
 
 ### PC08: Campaign agents and expedition reports
 
@@ -777,6 +793,7 @@ boundaries should accommodate them without building their systems now.
 
 | Date | Decision | Basis |
 | --- | --- | --- |
+| 2026-11-01 | PC07.1 Accepted and closed; PC07.2 next for detailed planning only. Parent PC07/P-C remain incomplete. | User: “slice accepted, record it in the plan doc”. Existing calibration evidence and limitations unchanged; no additional interactive coverage or experiments implied. |
 | 2026-11-01 | Close the bestiary expansion with B01–B05 accepted; supersede unimplemented B06 and transfer useful preparation/calibration to PC07. Resume campaign planning; detailed implementation and experiment approvals remain separate. | User proposes closing the bestiary plan and working B06 into the procedural campaign plan, as discussed. |
 | 2026-10-30 | Renderer direction accepted, stacked cells deferred; separate six-slice renderer roadmap proposed. Campaign pause remains in force. | User agreed to the renderer proposal and requested a slice plan like this roadmap. No automatic implementation or PC07 work authorized. |
 | 2026-10-30 | Pause campaign work after accepted P-B; prioritize rendering/presentation, then additional monsters before resuming. | User explicitly requests the pause and discussion of a low-resolution 3D renderer. Renderer implementation is not yet approved. |
@@ -1017,7 +1034,7 @@ remain unchanged; no additional interactive play-coverage details were supplied.
 All working-tree changes were preserved. No builds, gameplay tests, captures,
 balance experiments, commits, resets or stashes were performed during this closeout.
 
-### Bestiary closeout and campaign planning handoff (2026-11-01, current)
+### Bestiary closeout and campaign planning handoff (2026-11-01, historical)
 
 The user chose to close the bestiary plan and incorporate B06's useful scope into
 this roadmap. B01–B05 and renderer R01–R06 remain **Accepted and closed**. B06 is
@@ -1039,3 +1056,28 @@ resources. Keep general autonomous navigation/reporting extensions in PC08.
 PC07–PC09 and P-C remain Planned; detailed implementation plans require review and
 balance experiments require explicit bounded opt-in. No builds, playthroughs or
 experiments were run for this documentation-only handoff.
+
+### PC07.1 accepted closeout and next-agent handoff (2026-11-01, current)
+
+PC07.1 — Arena preparation and encounter calibration — is **Accepted and closed**.
+The user explicitly accepted: “slice accepted, record it in the plan doc”. Earlier
+implementation approval was “Implement the plan”, including the bounded study.
+Read the [implemented design](pc071_arena_calibration_design.md),
+[verification](pc071_verification.md), [measured table](pc071_calibration/README.md)
+and [gallery](screenshots/pc071/index.html). Existing results and limitations are
+unchanged: 36 victories, three observed downings, zero permanent deaths and six
+strictly matched retained replays. Acceptance supplies no additional interactive
+play-coverage details and does not establish campaign balance.
+
+PC07.2 — Population and generated-route checks — is next eligible for detailed
+planning in a fresh context when requested. Read AGENTS.md, system design, the MVP
+specification, this checkpoint and the PC07.1 handoff, then inspect relevant code.
+Plan from the measured costs, real-route accumulated resources, approach/merge
+safety, optional recovery and normal XP budgets. Level 2 before the final guardian
+is the selected opening target. Obtain review before implementation. PC07.2 and
+PC08/PC09 remain Planned; parent PC07 and milestone P-C are incomplete. No automatic
+planning, experiments or population implementation is authorized by this closeout.
+
+This acceptance update is documentation-only. All working-tree changes were
+preserved. No builds, gameplay tests, captures, experiments, commits, resets or
+stashes were performed; verification evidence and limitations remain unchanged.

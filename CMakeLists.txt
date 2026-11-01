@@ -89,7 +89,7 @@ if(BLOBBER_BUILD_GRAPHICS)
         src/platform/gpu_resources.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
         src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu raylib)
-    add_library(blobber_application src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_setup.cpp
+    add_library(blobber_application src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
         src/ui/arena_screen.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp
         src/app/menu.cpp src/app/menu_model.cpp src/app/application.cpp src/app/options.cpp src/app/gameplay.cpp)
     add_executable(blobber src/main.cpp)
@@ -269,7 +269,7 @@ if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
 endif()
 
 if(BUILD_TESTING)
-    add_executable(blobber_arena_tests tests/arena_tests.cpp src/app/menu_model.cpp src/app/arena_model.cpp)
+    add_executable(blobber_arena_tests tests/arena_tests.cpp src/app/menu_model.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp)
     target_link_libraries(blobber_arena_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
     blobber_warnings(blobber_arena_tests)
     add_test(NAME arena COMMAND blobber_arena_tests)

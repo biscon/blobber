@@ -73,6 +73,8 @@ bool arenaAction(MenuView& v, int action, const Options& o, ArenaScenarioStore& 
             a.seedEdit.focus(true, a.seedText);
         else if (action == 4013)
             a.searchEdit.focus(true, a.search);
+        else if (action == 4016)
+            a.preparation.begin(a.scenario);
         else if (action == 4014 && a.firstFile)
             --a.firstFile;
         else if (action == 4015 && a.firstFile + 7 < a.listing.count)

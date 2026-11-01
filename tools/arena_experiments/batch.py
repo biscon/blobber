@@ -36,7 +36,7 @@ def preflight(config, runner, assets, *, deadline=None, cancelled=None):
                 described = client.request("actions")
                 if not described["ok"]: raise RuntimeError("Action discovery failed during preflight")
                 for policy in config["policies"]:
-                    covered = coverage(state, described["data"], policy["kind"])
+                    covered = coverage(state, described["data"], policy["kind"], policy["version"])
                     checks.append(dict(party=p["id"], roster=r["id"], policy=policy["id"],
                                        ok=not covered["unsupported"], coverage=covered))
     return dict(ok=all(c["ok"] for c in checks), checks=checks)
@@ -135,7 +135,7 @@ def run_batch(config, runner, assets, output, *, cancelled=None, progress=print)
                     atomic_json(root/"batch.json", batch)
                     progress(f"{batch['started']}/{batch['planned']} {spec['party']} / {spec['roster']} / {spec['policy']['id']} seed={spec['seed']}: {row['status']} ({row['ticks']} ticks)")
                     if row["status"] == "policy_failure": failure_count += 1
-                    if row["status"] in ("cancelled", "runner_failure") or row["artifact_errors"] or failure_count >= config["limits"]["failures"]:
+                    if row["status"] in ("cancelled", "runner_failure", "unsupported_decision", "timeout") or row["artifact_errors"] or failure_count >= config["limits"]["failures"]:
                         batch.update(status="cancelled" if row["status"] == "cancelled" else "incomplete", reason=row["reason"] if not row["artifact_errors"] else "; ".join(row["artifact_errors"]))
                         break
                 else:

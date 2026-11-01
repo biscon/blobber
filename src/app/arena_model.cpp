@@ -5,6 +5,26 @@
 #include <cstdio>
 #include <cstring>
 namespace blobber {
+bool ArenaSetup::replaceParty(const StartingParty& selected) noexcept {
+    bool changed = false;
+    for (unsigned i = 0; i < 4; ++i) {
+        const auto& a = scenario.party[i];
+        const auto& b = selected[i];
+        const auto& x = a.draft;
+        const auto& y = b.draft;
+        changed |= a.id != b.id || x.name != y.name || x.race.index != y.race.index ||
+                   x.characterClass.index != y.characterClass.index || x.portrait.index != y.portrait.index ||
+                   x.abilities != y.abilities || x.defense != y.defense || x.lifeDomain != y.lifeDomain ||
+                   x.gear != y.gear || x.spells.cantrips != y.spells.cantrips ||
+                   x.spells.learned != y.spells.learned || x.spells.prepared != y.spells.prepared ||
+                   x.spells.domain != y.spells.domain || x.spells.racial != y.spells.racial;
+    }
+    if (changed) {
+        scenario.party = selected;
+        scenario.preparation = {};
+    }
+    return changed;
+}
 void ArenaSetup::filter(const rules::Catalog& c) noexcept {
     visibleCount = 0;
     for (std::uint16_t i = 0; i < c.monsterCount(); ++i) {

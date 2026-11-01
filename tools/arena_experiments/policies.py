@@ -1,4 +1,4 @@
-"""Small deterministic level-one policies. Candidates are preferences, never rules authority."""
+"""Small deterministic arena policies. Candidates are preferences, never rules authority."""
 from collections import deque
 from dataclasses import dataclass
 
@@ -25,10 +25,10 @@ def statuses(member):
     return {s["name"] for s in member.get("statuses", [])}
 
 
-def coverage(observation, descriptors, kind):
+def coverage(observation, descriptors, kind, version=1):
     entries, unsupported = [], []
     for p, d in zip(observation["party"], descriptors["combat"]):
-        if p["level"] != 1:
+        if p["level"] not in ((1, 2) if kind == "aggressive" and version == 2 else (1,)):
             unsupported.append(f"character {p['character']}: level {p['level']}")
         for s in d["spells"]:
             state = "implemented" if s["id"] in SUPPORTED_SPELLS else "unsupported"
@@ -46,11 +46,19 @@ def coverage(observation, descriptors, kind):
             elif name == "dismiss_concentration": state = "implemented_when_concentrating"
             elif name == "second_wind" and p["class"] == "fighter": state = "implemented"
             elif name == "arcane_recovery" and p["class"] == "wizard": state = "implemented"
+            elif kind == "aggressive" and version == 2 and p["level"] >= 2 and (
+                    (name == "action_surge" and p["class"] == "fighter") or
+                    (name == "preserve_life" and p["class"] == "cleric") or
+                    (name == "cunning_action" and p["class"] == "rogue")):
+                state = "implemented_in_contact_turns"
             elif f["eligibility"]["ready"]:
                 state = "unsupported"
                 unsupported.append(name)
             entries.append(dict(character=p["character"], ability=name, coverage=state))
-    return dict(abilities=entries, unsupported=sorted(set(unsupported)), disabled=DISABLED)
+    return dict(abilities=entries, unsupported=sorted(set(unsupported)), disabled=DISABLED,
+                policy_version=version,
+                limitations=(["new preparation slots intentionally empty", "level-2 features used in contact turns",
+                              "no automated level-3 tactics"] if version == 2 else []))
 
 
 def policy_view(observation):
@@ -64,6 +72,9 @@ def policy_view(observation):
     result["party"] = [{k: p[k] for k in party_keys} for p in observation["party"]]
     enemy_keys = ["actor", "type", "position", "subcell", "health_fraction", "statuses", "targetable"]
     if observation["mode"] == "diagnostic": enemy_keys += ["hp", "max_hp"]
+    for p, source in zip(result["party"], observation["party"]):
+        p["action_surge"] = source.get("action_surge", False)
+        p["channel_divinity"] = source.get("channel_divinity", False)
     result["enemies"] = [{k: e[k] for k in enemy_keys} for e in observation["enemies"]
                          if e["health_fraction"] > 0]
     return result
@@ -72,6 +83,7 @@ def policy_view(observation):
 class Policy:
     def __init__(self, config):
         self.kind = config["kind"]
+        self.version = config.get("version", 1)
         self.params = config["parameters"]
         self.focus = None
         self.opened = set()
@@ -112,6 +124,10 @@ class Policy:
                          (p["life"] in (DYING, STABLE) or p["hp"] <= p["max_hp"]*threshold)),
                         key=lambda p: (p["life"] == CONSCIOUS, -p["death_failures"],
                                        p["hp"]/p["max_hp"], o["formation"].index(p["character"])))
+        if self.version == 2 and not real_time and allies:
+            for p in actors:
+                if p.get("channel_divinity"):
+                    yield Candidate(combat(p["character"], "feature", feature="preserve_life"), "heal_preserve_life")
         # Rescue first across the whole party, not per-actor attacks before another actor's heal.
         for ally in allies:
             for p in actors:
@@ -179,6 +195,10 @@ class Policy:
                 for item in p["inventory"]:
                     if item["item"] == "mana_potion" and item["cell"] < 48:
                         yield Candidate(combat(p["character"], "item", item=item["handle"], ally=i), "recover_potion")
+        if self.version == 2 and not real_time and visible:
+            for p in actors:
+                if p.get("action_surge") and p["spent"]:
+                    yield Candidate(combat(p["character"], "feature", feature="action_surge"), "extra_attack_surge")
         for p in actors:
             i = p["character"]
             known = spells[i]
@@ -222,6 +242,8 @@ class Policy:
             # A normal action blocked by targets may defensively wait; optional allowances end explicitly.
             if not o["can_end_turn"]:
                 yield Candidate(combat(i, "defend"), "defend_no_attack")
+            if self.version == 2 and party[i]["class"] == "rogue" and party[i]["level"] >= 2:
+                yield Candidate(combat(i, "feature", feature="cunning_action"), "free_defend")
             yield Candidate(combat(i, "feature", feature="end_turn"), "end_turn")
 
     @staticmethod

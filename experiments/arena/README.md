@@ -156,3 +156,44 @@ or frame-rate speedup claim follows. No worker pool or desktop automation is inv
 The optional [local MCP adapter](../../docs/mcp_usage.md) exposes these same explicit
 commands as bounded jobs with status/cancellation/results and replay investigation.
 Connecting an agent never runs a matrix automatically.
+
+## PC07.1 targeted calibration
+
+The explicitly approved study lives in `pc071/`: six separate manifests, each
+with one candidate roster, balanced/no_wizard parties, aggressive policy v2 and
+seeds 5/8/12 (six trials per recipe, 36 maximum). The five first recipes use
+level one; bugbear_support uses level two. Arena schema 2 retains level-one
+blueprints plus explicit advancement choices. Newly earned preparation slots are
+intentionally empty; the wizard learns False Life/Color Spray without preparing
+them. Manual complete scenarios are in `pc071/scenarios/`; load copies through
+ordinary Arena Setup without modifying the original files or character library.
+
+Aggressive v2 preserves v1 offensive/rescue behavior and uses Action Surge after
+a spent normal action with visible enemies, Preserve Life for rescue healing and
+Cunning Action before End Turn, in contact turns. Existing v1 policies retain
+their level-one coverage. Level-three arena preparation is supported for manual
+review; automated level-three tactics are not supplied by this study.
+
+For each recipe, run (with its own new output path):
+
+```sh
+nice -n 15 ionice -c 3 python3 tools/arena_experiment.py run experiments/arena/pc071/goblin_pair.json \
+  --runner cmake-build-release/blobber_headless --assets cmake-build-release/assets \
+  --output output/pc071/goblin_pair
+```
+
+Inspect each batch before starting the next. Limits are 60 seconds per trial,
+450 seconds / 512 MiB per recipe; at most 45 minutes / 3 GiB across six recipes.
+Use one runner, check disk/memory, keep builds and other intensive jobs stopped.
+Unsupported decisions, timeouts, runner/artifact failures and cancellation stop
+a batch with partial evidence. No automatic expansion, rerun or tuning.
+
+Per-character resolved incoming damage, largest hit, six-second/round burst and
+healing are in the reports, separately from sampled HP/downing lower bounds.
+Damage includes temporary-HP absorption and overkill and is not net HP loss. The
+six-second window is `(t-6000ms,t]`; at most 4,096 incoming records per member are
+retained and overflow marks the metric incomplete. Rounds reset at combat start
+and round events. Approach duration is sampled at response boundaries. Diagnostic
+information, resource choices and strict identity/reproduction limitations remain
+explicit. These isolated costs inform PC07.2; they do not establish expedition
+affordability or prescribe floor population.

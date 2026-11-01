@@ -112,7 +112,9 @@ def aggregate(source, config):
                                started=0, counts=Counter(), valid_completions=0, wins=0, losses=0,
                                artifact_failures=0, durations=[], casualty_samples=[], mana_samples=[],
                                hp_samples=[], mana_spent_samples=[], consumption=Counter(), actions=Counter(),
-                               coverage=row.get("coverage"), wall_seconds=0.)
+                               coverage=row.get("coverage"), wall_seconds=0.,
+                               damage_samples=[dict(incoming=[], hit=[], six_seconds=[], round=[], healing=[]) for _ in range(4)],
+                               approach_samples=[], round_samples=[], burst_incomplete=0)
         g = groups[key]
         g["started"] += 1; g["counts"][row["status"]] += 1
         g["artifact_failures"] += bool(row["artifact_errors"])
@@ -128,6 +130,16 @@ def aggregate(source, config):
             g["mana_samples"].append(sum(p["mana"] for p in row["metrics"]["final"]))
             g["hp_samples"].append(sum(p["hp"] for p in row["metrics"]["final"]))
             g["mana_spent_samples"].append(sum(row["metrics"]["mana_spent"]))
+            m = row["metrics"]
+            g["burst_incomplete"] += not m.get("burst_metrics_complete", True)
+            for i in range(4):
+                for source_name, target in (("incoming_damage_resolved", "incoming"), ("largest_incoming_hit", "hit"),
+                                           ("max_incoming_6s", "six_seconds"), ("max_incoming_round", "round"),
+                                           ("healing_resolved", "healing")):
+                    if source_name in m and (target != "six_seconds" or m.get("burst_metrics_complete", False)):
+                        g["damage_samples"][i][target].append(m[source_name][i])
+            if "approach_ms_observed" in m: g["approach_samples"].append(m["approach_ms_observed"]/1000)
+            g["round_samples"].append(m["rounds_completed"])
             g["consumption"].update(row["metrics"]["consumed_items"])
             pair_key = (row["party"], row["roster"], row["policy"], row["seed"])
             if pair_key in paired: raise ValueError("Duplicate paired seed")
@@ -142,6 +154,9 @@ def aggregate(source, config):
                                     ("mana_samples", "remaining_mana"), ("hp_samples", "remaining_hp"),
                                     ("mana_spent_samples", "mana_spent")):
             g[target] = descriptive(g.pop(source_name))
+        g["per_character_damage"] = [{k: descriptive(v) for k, v in member.items()} for member in g.pop("damage_samples")]
+        g["approach_seconds_observed"] = descriptive(g.pop("approach_samples"))
+        g["rounds_completed"] = descriptive(g.pop("round_samples"))
         g["counts"] = {s: g["counts"][s] for s in STATUSES}
         g["consumption"] = dict(g["consumption"]); g["actions"] = dict(g["actions"])
     comparisons = []
@@ -179,7 +194,7 @@ def render(summary, config, batch):
     lines = ["# Arena playtesting report", "", f"Batch status: **{batch['status']}** ({batch.get('reason', '')}).",
              f"Planned {summary['planned']}; started {summary['started']}; unstarted {summary['unstarted']}.", "",
              "This is an exploratory policy comparison, not a target that every party should win.",
-             "Level one; fixed starter gear/preparation; no rest, loot or advancement during trials.",
+             "Scenario-declared levels and spell choices; fixed starter gear; no rest, loot or advancement during trials.",
              f"Information: **{config['mode']}**. Real-time party action interval: {config['reaction_ticks']*10} ms; initiative decisions have no added delay.",
              "Diagnostic mode knows all enemy positions/HP. Visual mode uses prepared body picking. Preview is a zero-time legality oracle.",
              "Seeds are shared across configurations; different actions need not consume the same rolls.", "",
@@ -204,7 +219,16 @@ def render(summary, config, batch):
         lines.append(f"- **{name}**, front-to-back: "+", ".join(p["race"]+" "+p["class"] for p in party)+".")
         for p in party:
             spells = sorted(set(p["cantrips"]+p["prepared"]+p["domain"]+p["racial"]))
-            lines.append(f"  - Slot {p['character']}: abilities {p['abilities']}, HP {p['max_hp']}, AC {p['armor_class']}, mana {p['max_mana']}; items {canonical(p['items'])}; spells {', '.join(spells) or 'none'}.")
+            lines.append(f"  - Slot {p['character']} level {p['level']}: abilities {p['abilities']}, HP {p['max_hp']}, AC {p['armor_class']}, mana {p['max_mana']}; items {canonical(p['items'])}; spells {', '.join(spells) or 'none'}.")
+    lines += ["", "Resolved damage and healing (not net HP loss; damage may include temporary HP/overkill):", "",
+              "| Party | Roster | Member | Incoming | Largest hit | Max / 6 s | Max / round | Healing |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for g in summary["groups"]:
+        for i, m in enumerate(g.get("per_character_damage", [])):
+            values = lambda key: (f"{m[key]['minimum']}/{m[key]['median']}/{m[key]['maximum']}" if m[key] else "N/A")
+            lines.append(f"| {g['party']} | {g['roster']} | {i} | {values('incoming')} | {values('hit')} | {values('six_seconds')} | {values('round')} | {values('healing')} |")
+    lines += ["", "Damage cells are min/median/max across valid completions. Six-second windows are (t−6000ms,t]; contact round bursts reset on started/round events. Overflow is flagged in each trial.",
+              "Approach phase duration is sampled at response boundaries; first-contact event time and total simulation duration are retained separately. HP/downing transitions remain observed lower bounds."]
     lines += ["", "Coverage is recorded per trial/group. Focus deliberately preserves offensive mana; other policies use only their documented supported subset.",
               "Unsupported active abilities stop a trial. A bot failure or stall is never counted as a combat loss.",
               "Full coverage, resource distributions, action counts and paired sample sizes are in summary.json.", "",

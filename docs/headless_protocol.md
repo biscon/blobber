@@ -87,7 +87,12 @@ the runner is protocol JSON. Do not mix console text into stdin.
 | `close` | none | `{closed:true}`, finish recording and exit |
 
 Untagged scenario documents use the existing [arena format](arena_design.md). Four distinct,
-valid level-one builds and 1–256 monsters are required. Formation is their initial
+valid level-one blueprints and 1–256 monsters are required. Arena schema 2 adds
+required `preparation: {target_level, advancements}`: target levels 1–3 and one
+array of four `{learned, prepared}` spell-ID lists per level transition. Schema 1
+defaults to level one without choices. A shared preparation factory applies normal
+advancement before launch; reset reproduces that immutable preparation. Invalid
+choices reject before replacing the current session. Formation is their initial
 order. There are no teleport, damage, XP-grant, arbitrary-state or custom-map verbs.
 Changes to party composition go in a new scenario. Earned advancement uses normal
 safe-exploration checks. Full arena victory/defeat is terminal until reset; a local

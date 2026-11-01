@@ -69,6 +69,7 @@ int runMenus(const Options& options) try {
         auto& m = v.model;
         v.interaction.tick(GetFrameTime(), sample.ui.focused);
         if (!sample.ui.focused) {
+            v.arena.preparation.route(catalog, sample.ui, {}, 0);
             v.arena.blur();
             v.creation.model.nameEdit.tick(0, false);
             v.creation.model.searchEdit.tick(0, false);
@@ -94,6 +95,19 @@ int runMenus(const Options& options) try {
                     v.message(result ? "Character saved." : result.message.data());
                     suppress = true;
                 }
+            }
+            continue;
+        }
+        if (v.arena.preparation.active) {
+            auto& flow = v.arena.preparation;
+            flow.route(catalog, sample.ui, pollTextInput(), GetFrameTime());
+            if (flow.commitRequested) {
+                if (!flow.commit(catalog, v.arena.scenario))
+                    v.message("Arena preparation is incomplete.");
+            }
+            if (!flow.active) {
+                suppress = true;
+                v.focus = 0;
             }
             continue;
         }
@@ -302,8 +316,9 @@ int runMenus(const Options& options) try {
                 }
                 auto starting = m.resolve(catalog, library.snapshot());
                 if (m.arenaPicker) {
+                    StartingParty selected;
                     for (unsigned i = 0; i < 4; ++i) {
-                        auto& member = v.arena.scenario.party[i];
+                        auto& member = selected[i];
                         rules::draftFromBuild(catalog, starting.characters[i], member.draft);
                         std::snprintf(member.id.data(), member.id.size(), "%s",
                                       starting.characters[i].id.c_str());
@@ -311,7 +326,8 @@ int runMenus(const Options& options) try {
                     m.arenaPicker = false;
                     m.choices = v.dungeonChoices;
                     m.screen = MenuScreen::Arena;
-                    v.message("");
+                    const bool changed = v.arena.replaceParty(selected);
+                    v.message(changed ? "Party selected. Arena preparation reset to level 1." : "");
                     v.focus = 0;
                     suppress = true;
                     continue;

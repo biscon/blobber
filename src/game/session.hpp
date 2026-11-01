@@ -26,6 +26,10 @@ struct FloorState {
 };
 class GameSession {
   public:
+    // Preparation-only ownership transfer; map/catalog outlive the session.
+    GameSession(const Map&, std::unique_ptr<Party>, const NpcWorld&, std::uint32_t, Player, bool,
+                const std::vector<NpcTimings>&, const RecoveryLevel&, const FloorFixtures&,
+                const FloorObjectiveDefinition&);
     // Staged borrowed-party construction does not observe/reconcile/mutate Party.
     GameSession(const Map&, Party&, const NpcWorld&, std::uint32_t seed, Player,
                 const std::vector<NpcTimings>&, const RecoveryLevel&, const FloorFixtures&,
@@ -137,9 +141,6 @@ class GameSession {
     bool grantNextLevelExperience() noexcept;
 
   private:
-    GameSession(const Map&, std::unique_ptr<Party>, const NpcWorld&, std::uint32_t, Player, bool,
-                const std::vector<NpcTimings>&, const RecoveryLevel&, const FloorFixtures&,
-                const FloorObjectiveDefinition&);
     friend class CampaignRun;
     CampaignRun* campaign_ = nullptr;
     std::uint64_t mutation_ = 0;

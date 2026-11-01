@@ -5,7 +5,8 @@ Date: 2026-10-30.
 Status: **MVP specification and amendments incorporated in the roadmap accepted
 on 2026-10-30; delivery is tracked separately. PC01–PC06 and milestones P-A/P-B
 are Accepted and closed;
-PC07–PC09 remain unimplemented.**
+PC07.1 arena preparation/calibration is Accepted and closed (2026-11-01); PC07.2 campaign population
+and PC08–PC09 remain unimplemented.**
 The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
 
 ### Opening-slice clarification (2026-10-31)
@@ -18,6 +19,15 @@ The proposed [bestiary roadmap](bestiary_plan.md) first delivers monsters and th
 review in the arena. Campaign population/integration follows a separate plan;
 the campaign remains paused after P-B. This clarification adds no floors or levels
 to the currently implemented campaign.
+
+### Calibration and pacing decision (2026-11-01)
+
+The user selected level 2 before the final guardian for this opening. PC07 is split:
+[PC07.1 preparation/calibration](pc071_verification.md) measures candidate encounters
+first and is now accepted; PC07.2 chooses population and checks generated routes
+after its own detailed plan review.
+The bounded 36-trial study completed; no campaign population is implied. This
+supersedes the earlier campaign pause and unresolved level-two/three target above.
 
 ### Scope clarification and amendments (2026-10-30)
 

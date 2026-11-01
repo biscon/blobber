@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "runner": "/home/bison/Projects/blobber/output/pc071/bin/blobber_headless",
+  "assets": "/home/bison/Projects/blobber/cmake-build-release/assets",
+  "binary_sha256": "fb25692e7d89b5f9847a911892ecda32283a2fb629afe6070e746c1a78437ec3",
+  "content_sha256": {
+    "rules/catalog.json": "f3c673ca37ef82124ffeb08659d1c2d972682d9e0defdd5e4fab4eca9688dd53",
+    "npcs/level.json": "b4c4678d57eafe12379f13c2be6bf6c65a4dc88369039b4c7c1bf07458d3d6e2",
+    "npcs/goblin/goblin.json": "e9652870f31d10817daf44598dda6c8d080e261953779b0b4d2172b8b15b2644",
+    "npcs/goblin-archer/goblin-archer.json": "78da0a97bb0065a3766c58166d7874343ceea010550b634a7c286efbe31de60a",
+    "npcs/skeleton/skeleton.json": "2abb385371c44bb80ee3967acab7d5076ba1b1432134bee43deb53f8fe7c22c4",
+    "npcs/bugbear/bugbear.json": "718e32759b9c95c6d31335e7570f763d4ad6cd5e6edf691c5399388be0692c30",
+    "npcs/giant-rat/giant-rat.json": "2d1f29429aff1c6363250346e6b4542f79c051e0dbc3665c74ab18703f7cd4f6",
+    "npcs/zombie/zombie.json": "9ac5fa9b67b4f794c4d5d9ac56caff70086094b910c2139f43b6bdaec60062fb",
+    "npcs/goblin-shaman/goblin-shaman.json": "112f0a8cef6801ceb0d083eb7999255b41848666cdac0cab969bc4ead13aeceb"
+  },
+  "code": {
+    "arena_experiment.py": "4873928cfaa769bb726159b9c42ca234272ab4605a492c13e2e8f88fc3b970e3",
+    "headless_client.py": "df734abd8ecc1fcb7798fb46130fdb917c7b4f88ca4b269c228c838abda9ac7e",
+    "arena_experiments/__init__.py": "382092aa4eb9abb00935a9306bbfef7539ded3a05df5c3da87f42732bcba7d6f",
+    "arena_experiments/batch.py": "750da40c34ef5521c8b4ff8135a4ef0f5e6eb69d46e81d5c7ee0cf28a42713b9",
+    "arena_experiments/config.py": "1f25c568dfd3658d22c7e4207bd3b37f53b4ca36da90938b0280b0b171477c78",
+    "arena_experiments/policies.py": "e9e08f7df610d2d1535cb36c1a9a727057964293e4b0867761eed2faa8185606",
+    "arena_experiments/report.py": "9dad77d684a1ff74e8d3b355386f8fc32f7be3520fb150087ba235bd86b55c1a",
+    "arena_experiments/trial.py": "aaee3b4fa6ed0e8bac2d1f50eeef1bddf01beff1133a9ea16f2bd9153cbc56e4"
+  },
+  "source_revision": "61b2c548502cafb8c41067c736fad16e16558885",
+  "working_tree": "M CMakeLists.txt\n M docs/arena_design.md\n M docs/headless_protocol.md\n M docs/procedural_campaign_plan.md\n M docs/system_design.md\n M experiments/arena/README.md\n M src/app/arena_model.cpp\n M src/app/arena_setup.cpp\n M src/app/arena_setup.hpp\n M src/app/gameplay.cpp\n M src/app/gameplay.hpp\n M src/app/menu.cpp\n M src/app/session_launch.cpp\n M src/automation/session.cpp\n M src/game/arena.cpp\n M src/game/arena.hpp\n M src/game/session.cpp\n M src/game/session.hpp\n M src/persistence/arena_store.cpp\n M src/ui/arena_screen.cpp\n M src/ui/creator_screen.cpp\n M src/ui/creator_screen.hpp\n M tests/arena_experiment_tests.py\n M tests/arena_tests.cpp\n M tests/automation_allocations_tests.cpp\n M tests/automation_tests.cpp\n M tests/world_integration_gpu_tests.cpp\n M tools/arena_experiments/batch.py\n M tools/arena_experiments/config.py\n M tools/arena_experiments/policies.py\n M tools/arena_experiments/report.py\n M tools/arena_experiments/trial.py\n?? docs/pc071_arena_calibration_design.md\n?? experiments/arena/pc071/\n?? src/app/arena_preparation.cpp\n?? src/app/arena_preparation.hpp\n?? tests/support/arena_preparation_fixtures.hpp\n?? tests/support/arena_preparation_review.hpp",
+  "python": "3.14.8 (main, Oct  2 2026, 10:23:31) [GCC 16.2.1 20260810]",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "processor": "",
+  "protocol": 1,
+  "timing": "fixed-10ms-v1",
+  "manifest_hash": "a00afa03e5d22c26df43b91450f3037a0c1d72f69e1c134c81146b731a30bc9a"
+}

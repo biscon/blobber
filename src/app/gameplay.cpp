@@ -36,10 +36,12 @@ struct PlayView {
              const std::vector<NpcTimings>& timings, WorldRenderer& world, std::uint32_t seed, Player spawn,
              bool enableAi = true, const RecoveryLevel& recovery = {},
              const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {},
-             const FloorObjectiveDefinition& objective = {})
-        : ownedSession(std::make_unique<GameSession>(m, catalog, starting ? *starting : *catalog.preset(),
-                                                     placements, seed, spawn, enableAi, timings, recovery,
-                                                     fixtures, objective)),
+             const FloorObjectiveDefinition& objective = {}, const ArenaScenario* arena = nullptr)
+        : ownedSession(std::make_unique<GameSession>(
+              m,
+              arena ? prepareArenaParty(catalog, *arena)
+                    : std::make_unique<Party>(catalog, starting ? *starting : *catalog.preset()),
+              placements, seed, spawn, enableAi, timings, recovery, fixtures, objective)),
           session(*ownedSession), animator(session.actors(), timings), frames(world),
           commands(session, timings), map(m) {}
     PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, WorldRenderer& world,
@@ -82,7 +84,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 : std::make_unique<PlayView>(
                       map, catalog, idle, timings, world, seed, spawn, launch ? launch->enableAi : true,
                       recovery, starting, launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
-                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{});
+                      launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
+                      launch ? launch->arenaScenario : nullptr);
         auto& initial = *current;
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
