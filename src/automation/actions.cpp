@@ -20,7 +20,8 @@ Json describeActions(const GameSession& g, const Observation& o) {
     const auto& cat = g.party().catalog();
     Json result = {
         {"combat", Json::array()},
-        {"management", {"inventory", "drop", "pickup", "rest", "advancement", "continue", "interact"}},
+        {"management",
+         {"inventory", "drop", "pickup", "open_container", "rest", "advancement", "continue", "interact"}},
         {"movement", {"forward", "back", "left", "right", "turn_left", "turn_right"}},
         {"note",
          "Descriptors are not complete combinations. Preview a fully specified action before submission."}};

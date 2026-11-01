@@ -9,6 +9,7 @@ struct LootEntryHud {
 struct LootHud {
     static constexpr unsigned visibleCount = 10;
     bool open = false;
+    std::uint8_t container = noContainer;
     Cell cell{};
     std::uint64_t world = 0;
     std::array<LootId, lootCapacity> ids{};

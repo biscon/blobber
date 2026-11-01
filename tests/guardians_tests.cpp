@@ -107,6 +107,11 @@ void objective() {
     const LootId reward{drops.actors().snapshot().world,
                         std::uint16_t(NpcWorld::maxInstances * lootPerActor + p.recovery.groundCount), 1};
     drops.update(.3, false);
+    const auto& chest = f.layout.caches[2];
+    drops.restorePose({chest.cell + forward(chest.facing) * -1, chest.facing}, false);
+    check(!drops.loot().snapshot().containers[2].sealed, "Guardian completion unlocks its chest");
+    check(bool(drops.openContainer({drops.loot().snapshot().world, 2})),
+          "Guardian chest opens through checked command");
     const auto beforePickup = drops.loot().snapshot().revision;
     const PickupRequest pickup{reward, {0}, drops.party().inventory().revision()};
     check(bool(drops.pickup(pickup, true)) && drops.loot().snapshot().revision == beforePickup,

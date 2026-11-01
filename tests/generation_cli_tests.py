@@ -103,8 +103,8 @@ def main(generator, runner):
         for name in ('goblin', 'goblin.archer', 'skeleton', 'zombie', 'giant.rat', 'goblin_shaman', 'bugbear'):
             (root / f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name)))
         (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')]], instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=8,
-                     template_version=6, seed=5, depth=1, party=arena['party'])
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=9,
+                     template_version=7, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
             start = client.request('start', scenario=setup)

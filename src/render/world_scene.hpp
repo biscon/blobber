@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/world_assets.hpp"
 #include "game/movement.hpp"
 #include "render/layout.hpp"
 #include <array>
@@ -38,10 +39,13 @@ struct Range {
     std::uint32_t first = 0, count = 0;
     std::uint8_t material = 0;
     std::uint16_t id = UINT16_MAX;
+    bool painted = false;
+    std::uint8_t variant = noContainer;
 };
 struct Chunk {
     std::uint32_t first = 0, count = 0;
     float low = 0, high = 1;
+    int left = 0, top = 0, width = 8, depth = 8;
 };
 struct Limits {
     std::size_t quads = 262144, ranges = 65536, cpuBytes = 64u * 1024 * 1024;
@@ -49,6 +53,7 @@ struct Limits {
 struct Decal {
     std::array<Vertex, 4> vertices;
     unsigned motif = 0;
+    std::uint16_t texture = UINT16_MAX;
 };
 struct Scene {
     const Map* map = nullptr;
@@ -64,10 +69,12 @@ struct Scene {
     std::size_t meshBytes() const noexcept;
 };
 // Optional overrides are row-major, one per cell. No simulation/schema mutation.
-Scene prepare(GeometryView, Surfaces = {}, const std::vector<Surfaces>& overrides = {}, Limits = {});
+Scene prepare(GeometryView, Surfaces = {}, const std::vector<Surfaces>& overrides = {}, Limits = {},
+              const world_assets::CpuAssets* assets = nullptr);
 bool visible(const Camera&, int x, int z, int width, int height, float low = 0, float high = 1) noexcept;
 struct DrawList {
-    std::array<std::uint32_t, 49 * materialCapacity + fixtureCapacity * 3> ranges{};
+    std::array<std::uint32_t, 49 * materialCapacity + fixtureCapacity * 3 + 128 + containerCapacity * 2>
+        ranges{};
     unsigned count = 0, tested = 0;
 };
 void cull(const Scene&, const Camera&, DrawList&) noexcept;

@@ -2,13 +2,14 @@
 #include "core/preparation.hpp"
 #include "render/picking.hpp"
 #include "render/world_stairs.hpp"
+#include "world/view.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <stdexcept>
 namespace blobber::world_render {
 float focal() noexcept {
-    return viewWidth * .5f / std::tan(84 * pi / 360);
+    return viewWidth * .5f / partyViewHalfTangent;
 }
 Camera camera(const MovementState& s) noexcept {
     const auto& t = s.transition;
@@ -21,8 +22,8 @@ Camera camera(const MovementState& s) noexcept {
         delta += 2 * pi;
     yaw += delta * e;
     const Vec f{std::sin(yaw), 0, -std::cos(yaw)}, r{std::cos(yaw), 0, std::sin(yaw)};
-    return {{a.cell.x + .5f + (b.cell.x - a.cell.x) * e - .4f * f.x, .5f,
-             a.cell.y + .5f + (b.cell.y - a.cell.y) * e - .4f * f.z},
+    return {{a.cell.x + .5f + (b.cell.x - a.cell.x) * e - partyCameraSetback * f.x, .5f,
+             a.cell.y + .5f + (b.cell.y - a.cell.y) * e - partyCameraSetback * f.z},
             f,
             r,
             yaw};
@@ -65,10 +66,12 @@ struct Face {
     std::array<Vertex, 4> v;
     std::uint8_t material;
     std::uint16_t id = UINT16_MAX;
+    bool painted = false;
+    std::uint8_t variant = noContainer;
 };
 template <class F>
-void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides,
-           F emit) {
+void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides, F emit,
+           const world_assets::CpuAssets* assets, const world_assets::Pack& pack) {
     auto add = [&](std::array<Vec, 4> p, Vec n, unsigned material, bool wall) {
         Face q{};
         q.material = std::uint8_t(material);
@@ -126,10 +129,86 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 }
             }
         }
+    auto block = [&](float x, float z, float base, float width, float depth, float height, Cell r, Cell f,
+                     unsigned material) {
+        std::array<Vec, 4> bottom{}, top{};
+        for (unsigned k = 0; k < 4; ++k) {
+            const float u = (k == 0 || k == 3) ? -.5f : .5f, v = k < 2 ? -.5f : .5f;
+            bottom[k] = {x + r.x * u * width + f.x * v * depth, base, z + r.y * u * width + f.y * v * depth};
+            top[k] = bottom[k];
+            top[k].y += height;
+        }
+        for (unsigned k = 0; k < 4; ++k) {
+            const unsigned n = (k + 1) % 4;
+            const float dx = bottom[n].x - bottom[k].x, dz = bottom[n].z - bottom[k].z,
+                        len = std::sqrt(dx * dx + dz * dz);
+            add({bottom[k], bottom[n], top[n], top[k]}, {-dz / len, 0, dx / len}, material, true);
+        }
+        add({top[0], top[1], top[2], top[3]}, {0, 1, 0}, material, false);
+    };
     for (const auto& d : m.base().definition().decorations) {
+        const bool local = d.cell.x >= cx && d.cell.x < cx + 8 && d.cell.y >= cz && d.cell.y < cz + 8;
+        if (local && d.kind == DecorationKind::DoorSurround) {
+            const auto f = forward(d.face), r = right(d.face);
+            const float x = d.cell.x + .5f, z = d.cell.y + .5f, base = elevation(m.surface(d.cell).floor);
+            for (int side : {-1, 1})
+                block(x + r.x * .475f * side, z + r.y * .475f * side, base, .05f, .08f, .96f, r, f,
+                      d.material);
+            block(x, z, base + .96f, 1.f, .08f, .04f, r, f, d.material);
+            continue;
+        }
+        if (local && (d.kind == DecorationKind::BonesA || d.kind == DecorationKind::BonesB)) {
+            // Small chips lift the floor art's silhouette without camera-facing cards.
+            const float x = d.cell.x + .5f, z = d.cell.y + .5f,
+                        base = elevation(m.surface(d.cell).floor) + .006f;
+            block(x - .11f, z + .07f, base, .19f, .035f, .022f, {1, 0}, {0, -1}, d.material);
+            block(x + .12f, z - .10f, base, .04f, .16f, .018f, {1, 0}, {0, -1}, d.material);
+        }
         if (d.cutout() || d.cell.x < cx || d.cell.x >= cx + 8 || d.cell.y < cz || d.cell.y >= cz + 8)
             continue;
         const auto f = forward(d.face), r = right(d.face);
+        if (d.model()) {
+            if (!assets)
+                throw std::runtime_error("Props require prepared mesh assets");
+            const unsigned first = d.kind == DecorationKind::Chest  ? 0
+                                   : d.kind == DecorationKind::Cage ? 2
+                                                                    : 3;
+            const unsigned last = d.kind == DecorationKind::Chest ? 2 : first + 1;
+            const float cx = d.cell.x + .5f + f.x * (d.kind == DecorationKind::Rack ? .5f : 0.f);
+            const float cz = d.cell.y + .5f + f.y * (d.kind == DecorationKind::Rack ? .5f : 0.f);
+            for (unsigned model = first; model < last; ++model) {
+                if (pack.models[model] >= assets->publication.meshes.size())
+                    throw std::runtime_error("Missing prop mesh binding");
+                const auto& mesh = assets->publication.meshes[pack.models[model]];
+                const float scale = d.kind == DecorationKind::Chest ? .5f : 1.f;
+                unsigned material = 0;
+                while (material < pack.materialCount && pack.materials[material] != mesh.texture)
+                    ++material;
+                if (material == pack.materialCount)
+                    throw std::runtime_error("Missing prop atlas binding");
+                for (unsigned n = 0; n < mesh.vertices.size(); n += 3) {
+                    Face q{};
+                    q.material = std::uint8_t(material);
+                    q.painted = true;
+                    if (d.kind == DecorationKind::Chest) {
+                        q.id = std::uint16_t(PickingBuffer::containerBase + d.container);
+                        q.variant = std::uint8_t(model);
+                    }
+                    for (unsigned k = 0; k < 3; ++k) {
+                        const auto& a = mesh.vertices[n + k];
+                        q.v[k] = {{cx + scale * (r.x * a[0] - f.x * a[2]),
+                                   elevation(m.surface(d.cell).floor) + scale * a[1],
+                                   cz + scale * (r.y * a[0] - f.y * a[2])},
+                                  {r.x * a[3] - f.x * a[5], a[4], r.y * a[3] - f.y * a[5]},
+                                  a[6],
+                                  a[7]};
+                    }
+                    q.v[3] = q.v[2];
+                    emit(q);
+                }
+            }
+            continue;
+        }
         const float px = d.cell.x + .5f + f.x * (.5f - d.depth * .5f) + r.x * (d.offset - .5f),
                     pz = d.cell.y + .5f + f.y * (.5f - d.depth * .5f) + r.y * (d.offset - .5f),
                     base = elevation(m.surface(d.cell).floor);
@@ -161,7 +240,8 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
     }
 }
 } // namespace
-Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& overrides, Limits limits) {
+Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& overrides, Limits limits,
+              const world_assets::CpuAssets* assets) {
     if (!overrides.empty() && overrides.size() != std::size_t(m.width()) * m.height())
         throw std::invalid_argument("World material grid dimensions differ");
     auto valid = [](Surfaces s) {
@@ -173,6 +253,7 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     limits.ranges = std::min(limits.ranges, std::size_t(65536));
     limits.cpuBytes = std::min(limits.cpuBytes, std::size_t(64u * 1024 * 1024));
     Scene s;
+    const auto pack = assets ? assets->pack(m.base().definition().assetPack) : world_assets::Pack{};
     s.map = &m.base();
     for (auto h : m.base().definition().surfaces)
         s.outdoor |= h.ceiling == noCeiling;
@@ -184,11 +265,47 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
                         y = elevation(m.surface(d.cell).floor) + d.elevation;
             const float w = d.width * .5f, h = d.height * .5f;
             const Vec normal{float(-f.x), 0, float(-f.y)};
+            const auto before = s.decals.size();
             s.decals.push_back({{{{{x - r.x * w, y - h, z - r.y * w}, normal, 0, 1},
                                   {{x + r.x * w, y - h, z + r.y * w}, normal, 1, 1},
                                   {{x + r.x * w, y + h, z + r.y * w}, normal, 1, 0},
                                   {{x - r.x * w, y + h, z - r.y * w}, normal, 0, 0}}},
                                 unsigned(d.kind)});
+            auto& decal = s.decals[before];
+            if (unsigned(d.kind) >= unsigned(DecorationKind::DampA)) {
+                if (!assets || pack.decorations[unsigned(d.kind)] == UINT16_MAX)
+                    throw std::runtime_error("Missing decoration artwork");
+                decal.texture = pack.decorations[unsigned(d.kind)];
+            }
+            if (d.kind == DecorationKind::DampA || d.kind == DecorationKind::DampB) {
+                const auto& texture = assets->publication.textures[decal.texture];
+                const auto& bounds = assets->bounds[decal.texture];
+                // Anchor visible ink, not the transparent canvas, at floor level.
+                const float bottom = y + h - d.height * float(bounds.bottom) / texture.height;
+                const float shift = elevation(m.surface(d.cell).floor) - bottom;
+                for (auto& v : decal.vertices)
+                    v.position.y += shift;
+            }
+            if (d.floorCutout()) {
+                const float yy = elevation(m.surface(d.cell).floor) + d.elevation;
+                const float xx = d.cell.x + .5f, zz = d.cell.y + .5f;
+                decal.vertices = {{{{xx - w, yy, zz + h}, {0, 1, 0}, 0, 1},
+                                   {{xx + w, yy, zz + h}, {0, 1, 0}, 1, 1},
+                                   {{xx + w, yy, zz - h}, {0, 1, 0}, 1, 0},
+                                   {{xx - w, yy, zz - h}, {0, 1, 0}, 0, 0}}};
+            } else if (d.web()) {
+                // From a point on the backing wall to a point on its adjoining wall.
+                const auto side = right(d.face);
+                const float centerX = d.cell.x + .5f, centerZ = d.cell.y + .5f;
+                const float ax = centerX + f.x * .498f - side.x * .20f,
+                            az = centerZ + f.y * .498f - side.y * .20f;
+                const float bx = centerX + side.x * .498f - f.x * .20f,
+                            bz = centerZ + side.y * .498f - f.y * .20f;
+                for (unsigned k = 0; k < 4; ++k) {
+                    decal.vertices[k].position.x = (k == 0 || k == 3) ? ax : bx;
+                    decal.vertices[k].position.z = (k == 0 || k == 3) ? az : bz;
+                }
+            }
         }
     s.width = m.width();
     s.height = m.height();
@@ -198,14 +315,19 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
             preparationPoint("Preparing dungeon");
-            std::array<bool, 32 * (fixtureCapacity + 1)> used{};
+            std::array<bool, 32 * (fixtureCapacity + containerCapacity + 1) * 4> used{};
             std::size_t localCount = 0;
-            faces(m, x, z, defaults, overrides, [&](const Face& f) {
-                ++quads;
-                ++localCount;
-                used[f.material +
-                     32 * (f.id == UINT16_MAX ? 0u : unsigned(f.id - PickingBuffer::fixtureBase) + 1)] = true;
-            });
+            faces(
+                m, x, z, defaults, overrides,
+                [&](const Face& f) {
+                    ++quads;
+                    ++localCount;
+                    used[f.material +
+                         32 * ((f.id == UINT16_MAX ? 0u : unsigned(f.id - PickingBuffer::fixtureBase) + 1) *
+                                   4 +
+                               unsigned(f.painted) * 2 + (f.variant == 1 ? 1 : 0))] = true;
+                },
+                assets, pack);
             maxLocal = std::max(maxLocal, localCount);
             ranges += std::count(used.begin(), used.end(), true);
             if (quads > limits.quads || ranges > limits.ranges)
@@ -225,18 +347,30 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
         for (int x = 0; x < m.width(); x += 8) {
             preparationPoint("Preparing dungeon");
             unsigned count = 0;
-            faces(m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; });
+            faces(m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; }, assets, pack);
             std::sort(local.begin(), local.begin() + count, [](const Face& a, const Face& b) {
-                return a.material != b.material ? a.material < b.material : a.id < b.id;
+                return a.material != b.material ? a.material < b.material
+                       : a.id != b.id           ? a.id < b.id
+                       : a.painted != b.painted ? a.painted < b.painted
+                                                : a.variant < b.variant;
             });
             auto& chunk = s.chunks[(z / 8) * s.columns + x / 8];
             chunk.low = m.base().upper();
             chunk.high = m.base().lower();
+            int left = x, top = z, right = std::min(x + 8, m.width()), bottom = std::min(z + 8, m.height());
             for (unsigned i = 0; i < count; ++i)
                 for (const auto& v : local[i].v) {
                     chunk.low = std::min(chunk.low, v.position.y);
                     chunk.high = std::max(chunk.high, v.position.y);
+                    left = std::min(left, int(std::floor(v.position.x)));
+                    right = std::max(right, int(std::ceil(v.position.x)));
+                    top = std::min(top, int(std::floor(v.position.z)));
+                    bottom = std::max(bottom, int(std::ceil(v.position.z)));
                 }
+            chunk.left = left;
+            chunk.top = top;
+            chunk.width = right - left;
+            chunk.depth = bottom - top;
             for (const auto& d : s.decals)
                 for (const auto& v : d.vertices)
                     if (v.position.x >= x && v.position.x <= x + 8 && v.position.z >= z &&
@@ -250,8 +384,11 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
             }
             chunk.first = std::uint32_t(s.ranges.size());
             for (unsigned i = 0; i < count; ++i) {
-                if (!i || (local[i].material != local[i - 1].material || local[i].id != local[i - 1].id)) {
-                    s.ranges.push_back({std::uint32_t(s.indices.size()), 0, local[i].material, local[i].id});
+                if (!i ||
+                    (local[i].material != local[i - 1].material || local[i].id != local[i - 1].id ||
+                     local[i].painted != local[i - 1].painted || local[i].variant != local[i - 1].variant)) {
+                    s.ranges.push_back({std::uint32_t(s.indices.size()), 0, local[i].material, local[i].id,
+                                        local[i].painted, local[i].variant});
                     ++chunk.count;
                 }
                 const auto first = std::uint32_t(s.vertices.size());
@@ -297,8 +434,8 @@ void cull(const Scene& s, const Camera& c, DrawList& out) noexcept {
     for (int z = top; z <= bottom; ++z)
         for (int x = left; x <= right; ++x) {
             ++out.tested;
-            if (visible(c, x * 8, z * 8, std::min(8, s.width - x * 8), std::min(8, s.height - z * 8),
-                        s.chunks[z * s.columns + x].low, s.chunks[z * s.columns + x].high))
+            const auto& chunk = s.chunks[z * s.columns + x];
+            if (visible(c, chunk.left, chunk.top, chunk.width, chunk.depth, chunk.low, chunk.high))
                 chunks[n++] = z * s.columns + x;
         }
     for (unsigned mat = 0; mat < 32; ++mat)

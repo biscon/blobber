@@ -5,7 +5,7 @@ void HudPainter::loot(const HudSnapshot& h) const {
     using namespace hudInk;
     const auto& l = h.loot;
     overlayBox(lootLayout::panel);
-    text("LOOT BAG", 60, 56, gold, UiTextStyle::Display);
+    text(l.container == noContainer ? "LOOT BAG" : "TREASURE CHEST", 60, 56, gold, UiTextStyle::Display);
     text("PAUSED", 240, 59, muted, UiTextStyle::Small);
     box(lootLayout::close);
     centered("X", lootLayout::close, gold);
@@ -65,7 +65,10 @@ void HudPainter::loot(const HudSnapshot& h) const {
     centered(">", lootLayout::next, l.page + 1 < pages ? gold : muted);
     std::snprintf(buffer, sizeof(buffer), "%u stacks / Page %u of %u / Wheel", l.count, l.page + 1, pages);
     centered(buffer, {88, 234, 194, 15}, muted, UiTextStyle::Small);
-    const char* feedback = l.feedback[0] ? l.feedback.data() : "Click to take. Leftovers stay in the bag.";
+    const char* feedback = l.feedback[0]
+                               ? l.feedback.data()
+                               : (l.container == noContainer ? "Click to take. Leftovers stay in the bag."
+                                                             : "Click to take. Leftovers stay in the chest.");
     // Two measured lines keep partial-collection reasons readable beside the buttons.
     char firstLine[192]{};
     std::snprintf(firstLine, sizeof(firstLine), "%s", feedback);

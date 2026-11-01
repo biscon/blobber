@@ -82,7 +82,9 @@ int main(int argc, char** argv) {
                 result ? result.floor->map.definition().bytes() - sizeof(blobber::WorldDefinition) : 0;
             j["generation_metadata_bytes"] = metadataBytes;
             j["world_definition_dynamic_bytes"] = worldBytes;
-            j["retained_bytes"] = metadataBytes + worldBytes;
+            j["movement_occupancy_bytes"] =
+                result ? result.floor->map.width() * result.floor->map.height() : 0;
+            j["retained_bytes"] = metadataBytes + worldBytes + j["movement_occupancy_bytes"].get<unsigned>();
             j["scratch_bytes"] = scratchBytes();
             if (json || count > 1 || !result)
                 std::cout << j.dump() << '\n';

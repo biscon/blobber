@@ -1,5 +1,16 @@
 # System design
 
+Current work: [Underkeep dressing](underkeep_dressing_design.md) records the approved
+biome art, procedural relief, furniture occupancy and persistent treasure-chest
+delivery. Implementation and verification are recorded there; user visual acceptance is pending.
+
+Underkeep review correction (implemented and verified, 2026-11-01):
+[scale, floor-anchored moss and offscreen contact](underkeep_review_corrections.md)
+records half-size chest instances, narrower/lower door leaves with filled stone
+frames, and a shared horizontal camera contract for subcell-aware combat facing.
+Current Underkeep saves remain compatible. Fifteen affected CPU suites and hidden
+production-art captures pass; interactive acceptance remains user review.
+
 Renderer roadmap **Accepted and closed** (2026-10-31): R01–R06 and milestones
 R-A/R-B/R-C are complete. The user accepted R06 with “slice accepted, close up the
 new renderer plan”. [Sole renderer cutover and retirement](renderer_cutover_design.md)
@@ -115,13 +126,14 @@ feedback pass skips these rectangles, avoiding the inset button border and text
 dimming on tabs. Capture/release/cancel semantics and storage remain unchanged;
 verify through hidden application-owned captures, without OS input automation.
 
-Implemented follow-up: [variable stone layouts](procedural_layout_design.md) replaces the lattice with explicit chamber membership, boundary sockets and passage paths. The preparation-only stone generator selects compact wings or chamber networks through biome/floor specifications, using variable rooms, bounded routing, checked loops and two frozen fallbacks. Fixtures, encounters and persistence consume actual geometry. Campaign population/resources and presentation remain unchanged. Generator/catalog 8/6 and campaign schema/simulation 6/10 reject older campaigns without rewriting them. [Review maps and captures](screenshots/variable-layouts/README.md) accompany 12 passing integration checks and hidden production GPU verification; user review is pending.
+Implemented follow-up: [variable stone layouts](procedural_layout_design.md) replaces the lattice with explicit chamber membership, boundary sockets and passage paths. The preparation-only stone generator selects compact wings or chamber networks through biome/floor specifications, using variable rooms, bounded routing, checked loops and two frozen fallbacks. Fixtures, encounters and persistence consume actual geometry. Campaign population/resources and presentation remain unchanged. That geometry delivery used generator/catalog 8/6 and campaign schema/simulation 6/10; Underkeep now extends it at 9/7 and 7/11 while preserving its terrain/population streams. [Review maps and captures](screenshots/variable-layouts/README.md) accompany 12 passing integration checks and hidden production GPU verification; user review is pending.
 
 ## Boundaries and data flow
 
 - **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID
   (default `dungeon`); compact row-major solid-cell storage and immutable NPC
-  loading/placement data; grid directions and coordinates are value types. Loading and connectivity validation happen before
+  loading/placement data; grid directions and coordinates are value types. Furniture
+  movement occupancy is cached separately from terrain/sight solidity. Loading and connectivity validation happen before
   play. A map is limited to 1024×1024 cells and rejects malformed input explicitly.
 - **Session/combat:** an immovable owner borrows map/catalog and owns actors,
   movement, AI, combat RNG and elapsed time. Standalone sessions own Party;
@@ -169,7 +181,8 @@ Implemented follow-up: [variable stone layouts](procedural_layout_design.md) rep
 - **Assets and preparation:** the offline world baker extracts registered source
   frames, prepares reusable material/sprite mip chains and CPU alpha masks, and
   publishes bounded versioned world metadata/textures, including up to eight pack
-  manifests with local material palettes, door/edge/decal/sky bindings, an optional reusable guardian-door emblem, and world UV scale.
+  manifests with local material palettes, door/edge/decal/sky bindings, bounded
+  prepared prop meshes, an optional reusable guardian-door emblem, and world UV scale.
   Texture purpose is independent of sprite alpha/sampling; panoramas do not occupy
   terrain palette slots. Publication identity hashes canonical metadata including the
   checked payload checksum, so binding-only edits invalidate replay too. Runtime validates publication
@@ -183,7 +196,10 @@ Implemented follow-up: [variable stone layouts](procedural_layout_design.md) rep
   designated adjacent landing. Frames use wall-density world UVs, leaves fitted
   rectangular artwork and separate edge sampling. Guardian approach/gate leaves carry
   a transparent sigil on both faces through their current hinge transform. Loot uses
-  smaller billboards and proportional floor shadows; shadows do not affect picking. Picking has full per-pixel depth/IDs, with
+  smaller billboards and proportional floor shadows; shadows do not affect picking.
+  Generated caches use persistent painted chest meshes, with prepared closed/open
+  variants and checked container identities; creature/party drops remain bags.
+  Picking has full per-pixel depth/IDs, with
   transparent holes, corpse occlusion and native status/health clipping. World
   effects never write picking IDs. A changed view invalidates rendering; idle views
   reuse their target without frame uploads. See the accepted R02–R05 designs.

@@ -5,7 +5,7 @@ namespace {
 class WorldVisual final : public Visibility {
   public:
     WorldVisual(WorldVisualContext& c, const Map& map, const GameSession& game)
-        : scene_(world_render::prepare(game.geometry())), pipeline_(scene_, c.assets),
+        : scene_(world_render::prepare(game.geometry(), {}, {}, {}, &c.assets)), pipeline_(scene_, c.assets),
           animator_(game.actors(), c.timings) {
         sample(map, game);
     }
@@ -17,6 +17,7 @@ class WorldVisual final : public Visibility {
         const auto* picking = pipeline_.picking();
         return picking ? picking->targets() : empty_;
     }
+    bool containerVisible(ContainerId id) const noexcept override { return pipeline_.containerVisible(id); }
     bool lootVisible(LootId id) const noexcept override { return pipeline_.lootVisible(id); }
 
   private:

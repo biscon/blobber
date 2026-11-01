@@ -1,13 +1,74 @@
 #include "automation/world_visual.hpp"
+#include "game/perception.hpp"
 #include "support/actor_fixtures.hpp"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
+#include "support/combat_fixtures.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/hybrid_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/status_occlusion.hpp"
 #include <iostream>
 using namespace blobber;
 namespace {
+void diagonalCombatTarget() {
+    test::VisibilityFixture fixture;
+    world_assets::CpuAssets assets(fixture.publication());
+    const auto catalog = hybridCatalog(false);
+    const auto map = hybridRoom();
+    const auto scene = world_render::prepare(map);
+    world_render::VisibilityPipeline pipeline(scene, assets);
+    for (unsigned h = 0; h < 4; ++h)
+        for (int side : {-1, 1}) {
+            const Player pose{{6, 6}, Heading(h)};
+            const auto front = pose.cell + forward(pose.heading),
+                       diagonal = front + right(pose.heading) * side;
+            Cell offscreen{};
+            bool found = false;
+            for (int sub = 0; sub < 4 && !found; ++sub) {
+                offscreen = {sub % 2, sub / 2};
+                found = !inPartyViewport(pose.cell, pose.heading, diagonal, offscreen);
+            }
+            check(found, "Each orientation includes an offscreen diagonal subslot");
+            NpcWorld places(
+                map, pose.cell, {"goblin"},
+                {{{0}, front, {0, 0}, Heading::South}, {{0}, diagonal, offscreen, Heading::South}});
+            GameSession game(map, catalog, places, 5, pose, false);
+            for (unsigned i = 0; i < 100 && !(game.combat().snapshot().awaitingAction &&
+                                              game.combat().snapshot().activeCharacter->index == 0);
+                 ++i) {
+                if (game.combat().snapshot().awaitingAction)
+                    game.submit(turnCommand(game));
+                else
+                    game.update(.5, false);
+            }
+            check(game.combat().snapshot().awaitingAction &&
+                      game.combat().snapshot().activeCharacter->index == 0,
+                  "Visibility fixture reaches fighter decision");
+            // Prepare storage before watching the changed camera and actor set.
+            pipeline.update({game.geometry(), game.movement(), &game.actors()});
+            game.actors().damage(game.actors().id(0), 1000, game.timeMs());
+            watching = true;
+            allocations = 0;
+            game.update(0, false);
+            for (unsigned i = 0; i < 6 && game.combat().snapshot().phase == CombatPhase::Facing; ++i) {
+                game.update(.16, false);
+                pipeline.update({game.geometry(), game.movement(), &game.actors()});
+            }
+            pipeline.update({game.geometry(), game.movement(), &game.actors()});
+            watching = false;
+            check(allocations == 0, "Automatic diagonal facing and rendered views allocate no C++ storage");
+            const auto targets = pipeline.frame().picking.targets();
+            check(targets.count == 1 && sameActor(targets.ids[0], game.actors().id(1)),
+                  "Surviving goblin body is a rendered/pickable target after handoff");
+            CommandController commands(game);
+            commands.refresh(targets, false, false, true);
+            auto command = turnCommand(game, PartyAction::Melee);
+            command.target = targets.ids[0];
+            check(commands.validate(command) == CommandReason::Ready,
+                  "Live command gate accepts the newly visible surviving goblin");
+        }
+}
 void alphaAnchorsAndWalls() {
     test::VisibilityFixture fixture(1, 2, true);
     auto publication = fixture.publication();
@@ -64,6 +125,7 @@ void alphaAnchorsAndWalls() {
 } // namespace
 int main() {
     try {
+        diagonalCombatTarget();
         alphaAnchorsAndWalls();
         test::VisibilityFixture fixture;
         world_assets::CpuAssets assets(fixture.publication());

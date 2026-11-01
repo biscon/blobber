@@ -50,9 +50,10 @@ bool CombatController::adjacent(Cell party) const noexcept {
     return false;
 }
 bool CombatController::occupiedFront(Player pose) const noexcept {
-    for (int side = -1; side <= 1; ++side) {
-        const auto cell = pose.cell + forward(pose.heading) + right(pose.heading) * side;
-        if (actors_.occupied(cell) && inMeleeFront(map_, pose.cell, pose.heading, cell))
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto& a = actors_.snapshot().actors[i];
+        if (a.life == ActorLife::Alive && inMeleeFront(map_, pose.cell, pose.heading, a.npc.cell) &&
+            inPartyViewport(pose.cell, pose.heading, a.npc.cell, a.npc.subcell))
             return true;
     }
     return false;
@@ -82,7 +83,8 @@ bool CombatController::exposed(rules::CharacterId id) const noexcept {
 }
 bool CombatController::frontal(ActorId id) const noexcept {
     const auto* a = actors_.actor(id);
-    return a && a->life == ActorLife::Alive && inPartyView(map_, origin_.cell, origin_.heading, a->npc.cell);
+    return a && a->life == ActorLife::Alive &&
+           inPartyView(map_, origin_.cell, origin_.heading, a->npc.cell, a->npc.subcell);
 }
 bool CombatController::presentationBusy(std::uint64_t now) const noexcept {
     if (pendingImpacts() || now < partyBusy_)
@@ -155,7 +157,8 @@ std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupie
     }
     auto slot = paired;
     for (int i = 0; i < 2; ++i) {
-        if (!(occupied & (1u << (slot.x + 2 * slot.y))))
+        if (!(occupied & (1u << (slot.x + 2 * slot.y))) &&
+            inPartyViewport(origin_.cell, origin_.heading, a->npc.cell, slot))
             return slot;
         if (approach == Heading::North || approach == Heading::South)
             slot.x = 1 - slot.x;
@@ -192,7 +195,7 @@ void CombatController::observe(Player pose) noexcept {
         const auto& a = actors_.snapshot().actors[i];
         if (a.life != ActorLife::Alive)
             continue;
-        const bool sees = inPartyView(map_, pose.cell, pose.heading, a.npc.cell);
+        const bool sees = inPartyView(map_, pose.cell, pose.heading, a.npc.cell, a.npc.subcell);
         if (sees) {
             known_[i] = true;
             knownUntil_[i] = state_.gameplayMs + combatRoundMs;

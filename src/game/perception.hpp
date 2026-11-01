@@ -39,6 +39,10 @@ bool combatAdjacent(GeometryView, Cell, Cell) noexcept;
 bool inFrontBand(Cell, Heading, Cell) noexcept;
 bool inMeleeFront(GeometryView, Cell, Heading, Cell) noexcept;
 bool inPartyView(GeometryView, Cell, Heading, Cell) noexcept;
+// Settled NPC body axis, including its 2x2 subcell position. Cell-based sight
+// remains the authority for range/occlusion; this adds horizontal screen bounds.
+bool inPartyViewport(Cell from, Heading, Cell target, Cell subcell) noexcept;
+bool inPartyView(GeometryView, Cell, Heading, Cell target, Cell subcell) noexcept;
 bool npcSees(GeometryView, Cell, Heading, Cell) noexcept;
 Heading headingToward(Cell, Cell) noexcept;
 int cellDistance(Cell, Cell) noexcept;

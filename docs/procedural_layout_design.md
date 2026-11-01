@@ -3,10 +3,14 @@
 Status: **Implemented and verified; awaiting user review**, 2026-11-01.
 Implementation approval: “Implement the plan.”
 
+Current follow-up: [Underkeep dressing](underkeep_dressing_design.md) implements
+biome details and containers at generator/catalog 9/7, preserving this delivery's
+8/6 terrain/population random streams. The geometry evidence below remains valid.
+
 This follow-up replaces generator 7's spatial lattice. Historical PC01–PC07
 acceptances remain historical. Campaign length, recipes, resources, movement and
-prepared-image presentation are unchanged. Decorations (decals, billboards and
-models) belong to a later biome pass.
+prepared-image presentation were unchanged by this geometry delivery. Decorations
+were deferred here and are now implemented by the linked Underkeep biome pass.
 
 ## Responsibilities and interfaces
 

@@ -376,8 +376,11 @@ void threeCellFront() {
                         enemyMelee = true;
                     }
                 }
-                check(s.movement().player.heading == p.heading,
-                      "Diagonal front occupants keep the current facing");
+                if (s.combat().snapshot().awaitingAction) {
+                    const auto& body = s.actors().actor(s.actors().id(0))->npc;
+                    check(inPartyViewport(p.cell, s.movement().player.heading, body.cell, body.subcell),
+                          "Diagonal decisions face the body, including outer subslots");
+                }
             }
             check(playerMelee && enemyMelee, "Both sides use diagonal melee");
 
@@ -429,6 +432,89 @@ void threeCellFront() {
     }
     check(moved && !combatAdjacent(map, p.cell, escape.actors().actor(escape.actors().id(0))->npc.cell),
           "Healthy diagonal archer escapes beyond the entire close-contact zone");
+}
+void offscreenDiagonalHandoff() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false);
+    unsigned offscreenCases = 0;
+    for (unsigned h = 0; h < 4; ++h)
+        for (int side : {-1, 1})
+            for (unsigned sub = 0; sub < 4; ++sub)
+                for (bool animated : {false, true}) {
+                    const Player p{{6, 6}, Heading(h)};
+                    const auto front = p.cell + forward(p.heading);
+                    NpcWorld places(map, p.cell, {"goblin"},
+                                    {npc(front, headingToward(front, p.cell), {0, 0}),
+                                     npc(front, headingToward(front, p.cell), {1, 0})});
+                    GameSession game(map, catalog, places, 5, p, false);
+                    game.setAnimated(animated);
+                    for (unsigned i = 0; i < 100 && !(game.combat().snapshot().awaitingAction &&
+                                                      game.combat().snapshot().activeCharacter->index == 0);
+                         ++i)
+                        tick(game);
+                    check(game.combat().snapshot().awaitingAction &&
+                              game.combat().snapshot().activeCharacter->index == 0,
+                          "Diagonal handoff fixture reaches fighter decision");
+                    const auto target = game.actors().id(1);
+                    const Cell diagonal = front + right(p.heading) * side, slot{int(sub % 2), int(sub / 2)};
+                    check(bool(game.actors().move(target, diagonal, slot, p.cell)),
+                          "Goblin relocates into front diagonal subslot");
+                    const bool visible = inPartyViewport(p.cell, p.heading, diagonal, slot);
+                    offscreenCases += !visible;
+                    if (!visible) {
+                        const auto round = game.combat().snapshot().round;
+                        for (unsigned i = 0; i < 100 && game.combat().snapshot().round == round; ++i) {
+                            if (game.combat().snapshot().awaitingAction)
+                                game.submit(turnCommand(game));
+                            else
+                                for (const auto& out : game.update(.5, false))
+                                    check(out.event != CombatEvent::AttackStarted || out.enemy.slot != 1,
+                                          "Offscreen diagonal enemy cannot attack behind the facing lock");
+                            check(game.movement().player.heading == p.heading,
+                                  "Visible central group keeps the camera steady");
+                        }
+                        check(game.combat().snapshot().round == round + 1,
+                              "Offscreen attack regression completes a bounded full round");
+                        for (unsigned i = 0;
+                             i < 100 && !(game.combat().snapshot().awaitingAction &&
+                                          game.combat().snapshot().activeCharacter->index == 0);
+                             ++i)
+                            tick(game);
+                    }
+                    const auto before = game.combat().snapshot();
+                    check(before.awaitingAction && before.activeCharacter->index == 0,
+                          "Preserve fighter's actionable turn at the handoff");
+                    const auto old = turnCommand(game, PartyAction::Melee);
+                    game.actors().damage(game.actors().id(0), 1000, game.timeMs());
+                    game.update(0, false);
+                    if (!visible) {
+                        check(game.combat().snapshot().phase == CombatPhase::Facing,
+                              "Offscreen diagonal cannot keep the cleared front camera locked");
+                        for (unsigned i = 0; i < 6 && game.combat().snapshot().phase == CombatPhase::Facing;
+                             ++i)
+                            game.update(.16, false);
+                        check(game.submit(old).reason == CommandReason::StaleTurn,
+                              "Automatic handoff invalidates old view commands");
+                    }
+                    const auto& after = game.combat().snapshot();
+                    check(after.phase == CombatPhase::Turns && after.awaitingAction &&
+                              after.activeCharacter &&
+                              after.activeCharacter->index == before.activeCharacter->index &&
+                              after.round == before.round && after.gameplayMs == before.gameplayMs &&
+                              inPartyViewport(p.cell, game.movement().player.heading, diagonal, slot),
+                          "Handoff faces the surviving body and preserves current action/round");
+                    auto command = turnCommand(game, PartyAction::Melee);
+                    command.target = target;
+                    check(game.submit(command).event == CombatEvent::AttackStarted,
+                          "Remaining diagonal goblin is immediately attackable after facing");
+                    game.update(3, false);
+                    game.actors().damage(target, 1000, game.timeMs());
+                    for (unsigned i = 0; i < 8 && game.combat().snapshot().phase != CombatPhase::Victory; ++i)
+                        game.update(.5, false);
+                    check(game.combat().snapshot().phase == CombatPhase::Victory,
+                          "Diagonal handoff encounter can finish normally");
+                }
+    check(offscreenCases >= 8, "Regression covers actual offscreen subslots in all orientations");
 }
 void frontApproachInCombat() {
     const auto map = hybridRoom();
@@ -733,6 +819,7 @@ int main() {
         reinforcementAndSaves();
         capacityAndBlockedEscape();
         threeCellFront();
+        offscreenDiagonalHandoff();
         frontApproachInCombat();
         singleWeaponPolicies();
         rangedPursuit();

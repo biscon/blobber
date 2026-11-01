@@ -482,6 +482,11 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                            ? "Choose a floor entry."
                            : "Enter dungeon floor 1.")
                     : result.reason);
+        } else if (const auto chest = session_.nearbyContainer()) {
+            const auto access = session_.containerAccess(chest);
+            const auto* container = session_.loot().findContainer(chest);
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / Treasure chest - %s",
+                          access ? (container->opened ? "Inspect contents." : "Open chest.") : access.reason);
         }
     }
     state_.development = session_.development();

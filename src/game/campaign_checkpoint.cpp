@@ -70,7 +70,7 @@ void CampaignRun::preparePersistenceIdentity(std::string id) {
     runId_ = std::move(id);
 }
 void GameSession::restorePose(Player pose, bool animated) {
-    if (unsigned(pose.heading) > 3 || map_.solid(pose.cell) || actors_.occupied(pose.cell))
+    if (unsigned(pose.heading) > 3 || map_.movementBlocked(pose.cell) || actors_.occupied(pose.cell))
         throw std::invalid_argument("Invalid saved player pose");
     movement_.state_.player = pose;
     movement_.state_.transition = {};
@@ -159,6 +159,9 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
                     throw std::invalid_argument("Invalid saved tile value");
             if (from.seed != std::uint32_t(generation::seedFor(from.generation, generation::Domain::Runtime)))
                 throw std::invalid_argument("Saved runtime seed differs from provenance");
+            if (from.layout.dressingFingerprint != map.definition().fingerprint() ||
+                from.layout.cacheCount != (i == 3 ? 2u : 3u) || map.definition().assetPack != "underkeep")
+                throw std::invalid_argument("Saved Underkeep dressing differs");
             if (from.generation.depth != i || from.generation.generator != generation::generatorVersion ||
                 from.generation.templates != generation::templateVersion || from.layout.depth != i ||
                 from.layout.width != map.width() || from.layout.height != map.height() ||

@@ -28,8 +28,14 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
     if (!detail)
         return j;
     j["runtime_seed"] = f.runtimeSeed;
+    j["dressing"] = nlohmann::json::array();
+    for (const auto& d : f.map.definition().decorations)
+        j["dressing"].push_back({{"kind", decorationName(d.kind)},
+                                 {"cell", {d.cell.x, d.cell.y}},
+                                 {"facing", unsigned(d.face)},
+                                 {"blocking", d.blocks()}});
     const auto& l = f.layout;
-    j["biome"] = "stone";
+    j["biome"] = "underkeep";
     j["algorithm"] = "stone_rooms";
     j["profile"] = profileName(l.profile);
     j["family"] = l.family;
@@ -100,6 +106,12 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
     j["route"] = nlohmann::json::array();
     for (unsigned i = 0; i < l.routeCount; ++i)
         j["route"].push_back(l.route[i]);
+    j["containers"] = nlohmann::json::array();
+    for (unsigned i = 0; i < l.cacheCount; ++i)
+        j["containers"].push_back({{"slot", i},
+                                   {"cell", {l.caches[i].cell.x, l.caches[i].cell.y}},
+                                   {"facing", unsigned(l.caches[i].facing)},
+                                   {"sealed", i == 2}});
     j["supplies"] = {{"direct", {l.supply.x, l.supply.y}},
                      {"optional", {l.optionalSupply.x, l.optionalSupply.y}}};
     j["landings"] = nlohmann::json::array();

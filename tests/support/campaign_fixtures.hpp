@@ -10,8 +10,12 @@ inline FixtureRequest stair(const GameSession& g, FixtureKind kind) {
     throw std::runtime_error("Missing fixture");
 }
 inline void face(GameSession& g, Heading h) {
-    while (g.movement().player.heading != h)
+    for (unsigned tries = 0; tries < 4 && g.movement().player.heading != h; ++tries)
         g.move(Action::TurnRight);
+    if (g.movement().player.heading != h)
+        throw std::runtime_error("Fixture turn blocked at " + std::to_string(g.movement().player.cell.x) +
+                                 "," + std::to_string(g.movement().player.cell.y) +
+                                 " phase=" + std::to_string(unsigned(g.combat().snapshot().phase)));
 }
 inline void walk(GameSession& g, Cell to) {
     g.setAnimated(false);
@@ -29,7 +33,7 @@ inline void walk(GameSession& g, Cell to) {
         q.pop();
         for (unsigned d = 0; d < 4; ++d) {
             const auto next = c + forward(Heading(d));
-            if (map.solid(next) || parent[index(next)] >= 0)
+            if (!map.canStep(c, next) || parent[index(next)] >= 0)
                 continue;
             const auto f = g.fixtures().at(next);
             if (f >= 0 && stairFixture(g.fixtures().definition().entries[unsigned(f)].kind))

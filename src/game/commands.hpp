@@ -253,6 +253,7 @@ class CommandController {
     void refreshCamp() noexcept;
     void floorHover(std::optional<LootId>) noexcept;
     void collectLoot(LootId) noexcept;
+    void openContainer(ContainerId) noexcept;
     void openLoot(LootId) noexcept;
     void refreshLoot() noexcept;
     void interactFixture(std::optional<FixtureId> = {}) noexcept;

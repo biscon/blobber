@@ -10,6 +10,7 @@ namespace blobber {
 class PickingBuffer {
   public:
     static constexpr std::uint16_t fixtureBase = NpcWorld::maxInstances + lootCapacity;
+    static constexpr std::uint16_t containerBase = fixtureBase + fixtureCapacity;
     static constexpr std::uint16_t empty = UINT16_MAX;
     PickingBuffer()
         : pixels_(std::make_unique<std::uint16_t[]>(viewWidth * viewHeight)),
@@ -94,6 +95,12 @@ class PickingBuffer {
                                        badgeAnchors_[i].x,
                                        badgeAnchors_[i].y};
             }
+    }
+    std::optional<ContainerId> pickContainer(int x, int y) const noexcept {
+        const auto s = slot(x, y);
+        if (lootWorld_ && s >= containerBase && s < containerBase + containerCapacity)
+            return ContainerId{lootWorld_, std::uint8_t(s - containerBase)};
+        return {};
     }
     std::optional<ActorId> pick(int x, int y) const noexcept {
         const auto s = slot(x, y);

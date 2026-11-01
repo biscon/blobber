@@ -555,3 +555,19 @@ profile under the existing diagnostic-only admission. No new gameplay commands.
 `tools/layout_gallery.py GENERATOR NEW_OUTPUT_DIRECTORY` exports the fixed twelve
 floor review sample, both fallbacks and metric summaries. It requires Pillow and
 does not run combat, a broad sweep or a performance benchmark.
+
+## Underkeep containers (current follow-up)
+
+Generator/catalog 9/7, campaign schema/simulation 7/11 and visibility
+`world-visibility-v9` supersede the earlier examples' identities. Visibility v9
+includes the Underkeep scale/moss/door and subcell-facing review fixes; save and
+generator versions remain unchanged. The new checked
+action is `{"kind":"open_container","container":0}` inside the ordinary
+act/preview envelope. Slots are world-scoped and bounded to eight per floor.
+Opening requires settled safe exploration and a reachable front-facing chest;
+it does not collect items. Use existing pickup actions after opening. Visible
+observations include `containers` (slot, position, opened, sealed); loot entries
+include a nullable `container` owner. Unopened contents remain hidden in visual
+mode. Diagnostic generation reports include dressing placements and occupied
+footprints. State digests/checkpoints retain opened/remaining content state.
+See [Underkeep dressing](underkeep_dressing_design.md) for ownership and compatibility.

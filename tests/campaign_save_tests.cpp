@@ -172,6 +172,35 @@ std::unique_ptr<CampaignRun> copy(const rules::Catalog& c, const NpcDefinitions&
     check(encodeCampaign(c, d, {"fixture", 0}, *after) == text, "exact logical campaign round trip");
     return result;
 }
+void chestRoundtrip() {
+    const auto c = catalog(false, 50, 7);
+    const auto d = definitions();
+    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    travel(*run, FixtureKind::Downstairs);
+    auto& game = run->game();
+    const auto& layout = run->location(1).generated->layout;
+    const auto chest = layout.caches[0];
+    kill(game); // Persistence fixture: no live encounters on the return route.
+    game.update(2, false);
+    game.restorePose({chest.cell + forward(chest.facing) * -1, chest.facing}, false);
+    check(bool(game.openContainer({game.loot().snapshot().world, 0})),
+          "Opened supply chest in owned campaign fixture");
+    const auto slot = std::uint16_t(NpcWorld::maxInstances * lootPerActor);
+    check(bool(game.pickup(
+              {{game.loot().snapshot().world, slot, 1}, {0}, game.party().inventory().revision()})),
+          "Partially loot campaign chest");
+    auto loaded = copy(c, d, *run);
+    check(loaded->game().loot().snapshot().containers[0].opened &&
+              !loaded->game().loot().snapshot().stacks[slot].active &&
+              loaded->game().loot().snapshot().stacks[slot + 1].active,
+          "Continue retains open state and exact remaining contents");
+    travel(*loaded, FixtureKind::Upstairs);
+    auto inactive = copy(c, d, *loaded);
+    travel(*inactive, FixtureKind::Downstairs);
+    check(inactive->game().loot().snapshot().containers[0].opened &&
+              !inactive->game().loot().snapshot().stacks[slot].active,
+          "Inactive floor chest survives save and revisit without reroll");
+}
 void progressionAndFloors() {
     const auto c = catalog(false, 50, 7);
     const auto d = definitions();
@@ -344,7 +373,7 @@ void malformed() {
             "malformed state rejected transactionally");
     };
     bad([](auto& j) { j["schema"] = 1; });
-    bad([](auto& j) { j["schema"] = 5; });
+    bad([](auto& j) { j["schema"] = 6; });
     bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["membership"][0] = 0; });
     bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["paths"][0] = 0; });
     bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["pathCount"] = 1601; });
@@ -881,6 +910,8 @@ int main(int argc, char** argv) {
         roundtrip();
         std::cerr << "progression/floors\n";
         progressionAndFloors();
+        std::cerr << "chest containers\n";
+        chestRoundtrip();
         std::cerr << "effects\n";
         effects();
         std::cerr << "I/O failures\n";

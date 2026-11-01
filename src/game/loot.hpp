@@ -13,16 +13,29 @@ struct LootId {
 inline bool operator==(LootId a, LootId b) noexcept {
     return a.world == b.world && a.slot == b.slot && a.generation == b.generation;
 }
+struct ContainerId {
+    std::uint64_t world = 0;
+    std::uint8_t slot = noContainer;
+    explicit operator bool() const noexcept { return world && slot < containerCapacity; }
+};
+struct LootContainer {
+    Cell cell{};
+    Heading facing = Heading::North;
+    bool opened = false, sealed = false;
+};
 struct FloorLoot {
     Cell cell{};
     rules::ItemId item{};
     std::uint16_t quantity = 0;
     bool active = false;
     std::uint64_t generation = 1;
+    std::uint8_t container = noContainer;
 };
 struct LootSnapshot {
     std::array<FloorLoot, lootCapacity> stacks{};
     std::uint64_t world = 0, revision = 1;
+    std::array<LootContainer, containerCapacity> containers{};
+    unsigned containerCount = 0;
 };
 struct PickupRequest {
     LootId loot;
@@ -40,6 +53,10 @@ class LootWorld {
     LootWorld(const ActorWorld&, const RecoveryLevel&, std::uint32_t seed);
     const LootSnapshot& snapshot() const noexcept { return state_; }
     const FloorLoot* find(LootId) const noexcept;
+    const LootContainer* findContainer(ContainerId id) const noexcept {
+        return id.world == state_.world && id.slot < state_.containerCount ? &state_.containers[id.slot]
+                                                                           : nullptr;
+    }
     void reconcile(const ActorWorld&) noexcept;
     bool collect(LootId) noexcept;
 

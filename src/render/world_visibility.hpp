@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v7";
+constexpr const char* visibilityVersion = "world-visibility-v9";
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;
@@ -34,6 +34,7 @@ struct Billboard {
 };
 struct WorldFrame {
     Camera camera{};
+    std::array<bool, containerCapacity> containerOpened{};
     std::array<Billboard, billboardCapacity> billboards{};
     unsigned count = 0;
     std::array<DoorBox, doorBoxCapacity> doors{};
@@ -44,6 +45,7 @@ struct WorldFrame {
     unsigned proxyCount = 0;
     PickingBuffer picking;
     std::array<LootId, lootCapacity> visibleLoot{};
+    std::array<ContainerId, containerCapacity> visibleContainers{};
     std::uint64_t revision = 0;
     bool moving = false;
 };
@@ -58,6 +60,10 @@ class VisibilityPipeline {
         return ready_ && !frame().moving ? &frame().picking : nullptr;
     }
     bool lootVisible(LootId id) const noexcept;
+    bool containerVisible(ContainerId id) const noexcept {
+        return ready_ && id.slot < containerCapacity &&
+               frame().visibleContainers[id.slot].world == id.world && bool(id);
+    }
     std::optional<Cell> groundCell(const FrameInput&, int x, int y) const noexcept;
     std::size_t bytes() const noexcept;
 

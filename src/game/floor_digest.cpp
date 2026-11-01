@@ -97,7 +97,14 @@ struct Canonical {
         add(v.geometryRevision);
         add(v.discoveryRevision);
     }
+    void add(const LootContainer& v) {
+        add(v.cell);
+        add(unsigned(v.facing));
+        add(v.opened);
+        add(v.sealed);
+    }
     void add(const FloorLoot& v) {
+        add(v.container);
         add(v.cell);
         add(v.item.index);
         add(v.quantity);
@@ -105,6 +112,8 @@ struct Canonical {
         add(v.generation);
     }
     void add(const LootSnapshot& v) {
+        add(v.containers);
+        add(v.containerCount);
         add(v.stacks);
         add(v.revision);
     }

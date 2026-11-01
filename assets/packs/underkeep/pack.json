@@ -1,0 +1,40 @@
+{
+  "id": "underkeep",
+  "worldScale": 1.0,
+  "horizon": [
+    0.6,
+    0.65,
+    0.71
+  ],
+  "wall": "textures/wall.png",
+  "floor": "textures/floor.png",
+  "ceiling": "textures/ceiling.png",
+  "stairWall": "textures/wall.png",
+  "stairFloor": "textures/floor.png",
+  "door": "packs/dungeon/source/door.png",
+  "lockedDoor": "packs/dungeon/source/door-locked.png",
+  "doorEdge": "packs/dungeon/source/door.png",
+  "crest": "packs/dungeon/source/crest.png",
+  "vine": "packs/dungeon/source/vine.png",
+  "sky": "packs/dungeon/source/sky.png",
+  "guardianEmblem": "packs/dungeon/source/guardian-emblem.png",
+  "decorations": {
+    "damp-a": "packs/underkeep/source/damp-a.png",
+    "damp-b": "packs/underkeep/source/damp-b.png",
+    "cracks": "packs/underkeep/source/cracks.png",
+    "soot": "packs/underkeep/source/soot.png",
+    "blood": "packs/underkeep/source/blood.png",
+    "banner-a": "packs/underkeep/source/banner-a.png",
+    "banner-b": "packs/underkeep/source/banner-b.png",
+    "web-a": "packs/underkeep/source/web-a.png",
+    "web-b": "packs/underkeep/source/web-b.png",
+    "bones-a": "packs/underkeep/source/bones-a.png",
+    "bones-b": "packs/underkeep/source/bones-b.png"
+  },
+  "models": [
+    "packs/underkeep/models/chest-closed.mesh.json",
+    "packs/underkeep/models/chest-open.mesh.json",
+    "packs/underkeep/models/cage.mesh.json",
+    "packs/underkeep/models/rack.mesh.json"
+  ]
+}

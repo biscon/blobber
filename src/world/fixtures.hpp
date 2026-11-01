@@ -80,8 +80,12 @@ class GeometryView {
     GeometryView(Map&&) = delete;
     GeometryView(const Map&&) = delete;
     bool solid(Cell) const noexcept;
+    bool movementBlocked(Cell c) const noexcept { return solid(c) || base().movementBlocked(c); }
     CellSurface surface(Cell c) const noexcept { return map_->surface(c); }
-    bool reach(Cell a, Cell b) const noexcept { return surfacePassage(surface(a), surface(b)); }
+    bool reach(Cell a, Cell b) const noexcept {
+        return !base().movementBlocked(a) && !base().movementBlocked(b) &&
+               surfacePassage(surface(a), surface(b));
+    }
     bool canStep(Cell a, Cell b) const noexcept { return map_->canStep(a, b) && !solid(a) && !solid(b); }
     bool npcAllowed(Cell) const noexcept;
     int width() const noexcept { return map_->width(); }

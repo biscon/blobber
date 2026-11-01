@@ -5,8 +5,9 @@ implementation with “Implement the plan” and accepted with “slice accepted
 it in the doc”. PC02 is next eligible for separate planning; later implementation
 is not authorized.
 
-Current generation is generator/catalog **8/6**, implemented by the separately
-approved [variable stone layout follow-up](procedural_layout_design.md). It replaces
+Current generation is generator/catalog **9/7**, with [Underkeep dressing](underkeep_dressing_design.md)
+extending the separately approved [variable stone layouts](procedural_layout_design.md).
+The preserved 8/6 geometry replaces
 the lattice, including the generator-7 [PC07.2 variety amendment](pc072_variety_controls.md),
 with explicit region/socket/path geometry. The original PC01 design and acceptance
 evidence below remain historical; campaign ownership follows the system overview.

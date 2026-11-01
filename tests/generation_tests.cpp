@@ -61,6 +61,10 @@ FloorLayout rotated(const FloorLayout& source, unsigned turn) {
     }
     for (auto* c : {&f.guardianReward, &f.guardianApproach, &f.optionalSupply, &f.supply, &f.spawn.cell})
         *c = rotate(*c, f.width, turn);
+    for (unsigned i = 0; i < f.cacheCount; ++i) {
+        f.caches[i].cell = rotate(f.caches[i].cell, f.width, turn);
+        f.caches[i].facing = heading(f.caches[i].facing);
+    }
     f.spawn.heading = heading(f.spawn.heading);
     return f;
 }
@@ -119,13 +123,13 @@ void deterministicAndVariety() {
     }
     check(profiles.size() == 2, "both spatial profiles are exercised");
     std::set<std::uint64_t> streams;
-    for (unsigned domain = 1; domain <= 5; ++domain)
+    for (unsigned domain = 1; domain <= 6; ++domain)
         for (unsigned depth = 1; depth <= 3; ++depth)
             streams.insert(seedFor({5, depth}, Domain(domain)));
-    check(streams.size() == 15 && seedFor({5}, Domain::Interior, 1) != seedFor({5}, Domain::Interior, 2),
+    check(streams.size() == 18 && seedFor({5}, Domain::Interior, 1) != seedFor({5}, Domain::Interior, 2),
           "domains/depths/regions isolate random streams");
     check(!floorSpec(0) && !floorSpec(4) && floorSpec(2)->keyedSector && floorSpec(3)->finalFloor &&
-              std::string(stoneBiome().assetPack) == "dungeon",
+              std::string(underkeepBiome().assetPack) == "underkeep",
           "floor/biome specification preserves campaign bands");
 }
 void pacing() {

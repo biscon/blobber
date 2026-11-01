@@ -1,0 +1,48 @@
+{
+  "seed": 0,
+  "generator": 9,
+  "catalog": 7,
+  "schema": 7,
+  "simulation": 11,
+  "visibility": "world-visibility-v8",
+  "samples": [
+    {
+      "depth": 1,
+      "profile": "chamber_network",
+      "fingerprint": "15711381999283466297",
+      "report": "seed-0-depth-1.json"
+    },
+    {
+      "depth": 3,
+      "profile": "compact_wings",
+      "fingerprint": "13984553738469637557",
+      "report": "seed-0-depth-3.json"
+    }
+  ],
+  "captures": [
+    "chamber_network-depth-1-banner-b.png",
+    "chamber_network-depth-1-bones-a.png",
+    "chamber_network-depth-1-cage.png",
+    "chamber_network-depth-1-chest-closed.png",
+    "chamber_network-depth-1-chest-empty.png",
+    "chamber_network-depth-1-chest-open.png",
+    "chamber_network-depth-1-damp-a.png",
+    "chamber_network-depth-1-hall.png",
+    "chamber_network-depth-1-mid-turn.png",
+    "chamber_network-depth-1-web-a.png",
+    "compact_wings-depth-3-bones-a.png",
+    "compact_wings-depth-3-chest-closed.png",
+    "compact_wings-depth-3-chest-empty.png",
+    "compact_wings-depth-3-chest-open.png",
+    "compact_wings-depth-3-damp-a.png",
+    "compact_wings-depth-3-hall.png",
+    "compact_wings-depth-3-mid-turn.png",
+    "compact_wings-depth-3-rack.png",
+    "compact_wings-depth-3-web-a.png"
+  ],
+  "world_metadata_sha256": "94282aa8b1aa482ae014c111705f20e06f09d5a527ecb73773b308e9d715e504",
+  "world_payload_checksum": "5708349575143789067",
+  "publication_format": 4,
+  "appearance_revision": 4,
+  "gpu": "NVIDIA RTX 3060 / OpenGL 3.3"
+}

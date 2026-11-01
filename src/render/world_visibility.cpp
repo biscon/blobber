@@ -281,20 +281,33 @@ bool VisibilityPipeline::update(const FrameInput& in) {
     auto& out = frames_[1 - current_];
     out.picking.clear();
     out.visibleLoot = {};
+    out.visibleContainers = {};
     out.count = out.proxyCount = 0;
     out.camera = c;
     out.moving = in.movement.transition.active() || (in.doors && in.doors->active());
     const bool opaqueChanged = !ready_ || !sameCamera(c, frame().camera) || stamp[0] != stamp_[0] ||
                                stamp[1] != stamp_[1] || stamp[2] != stamp_[2] || stamp[8] != stamp_[8] ||
-                               stamp[9] != stamp_[9];
+                               stamp[9] != stamp_[9] || stamp[7] != stamp_[7];
     build(out, in);
     raster(out, opaqueChanged);
     out.picking.finish(in.actors);
-    if (in.loot)
-        for (int y = 0; y < viewHeight; ++y)
-            for (int x = 0; x < viewWidth; ++x)
+    if (in.loot) {
+        for (int y = 0; y < viewHeight; ++y) {
+            for (int x = 0; x < viewWidth; ++x) {
                 if (auto id = out.picking.pickLoot(x, y))
                     out.visibleLoot[id->slot] = *id;
+                else if (auto chest = out.picking.pickContainer(x, y))
+                    out.visibleContainers[chest->slot] = *chest;
+            }
+        }
+    }
+    if (in.loot)
+        for (unsigned i = 0; i < lootCapacity; ++i) {
+            const auto& stack = in.loot->stacks[i];
+            if (stack.active && stack.container != noContainer && out.visibleContainers[stack.container] &&
+                out.containerOpened[stack.container])
+                out.visibleLoot[i] = {in.loot->world, std::uint16_t(i), stack.generation};
+        }
     out.revision = frame().revision + 1;
     map_ = &in.geometry.base();
     current_ = 1 - current_;
@@ -303,6 +316,10 @@ bool VisibilityPipeline::update(const FrameInput& in) {
     return true;
 }
 void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
+    out.containerOpened = {};
+    if (in.loot)
+        for (unsigned i = 0; i < in.loot->containerCount; ++i)
+            out.containerOpened[i] = in.loot->containers[i].opened;
     out.crestTexture = pack_.crest;
     out.vineTexture = pack_.vine;
     const auto center = playerCenter(in.movement);
@@ -396,7 +413,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         out.picking.lootWorld(in.loot->world);
         unsigned count = 0;
         for (unsigned i = 0; i < lootCapacity; ++i)
-            if (in.loot->stacks[i].active)
+            if (in.loot->stacks[i].active && in.loot->stacks[i].container == noContainer)
                 lootOrder_[count++] = std::uint16_t(i);
         std::sort(lootOrder_.begin(), lootOrder_.begin() + count, [&](auto a, auto b) {
             const auto x = in.loot->stacks[a].cell, y = in.loot->stacks[b].cell;
@@ -481,6 +498,9 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
         cull(scene_, out.camera, draws);
         for (unsigned r = 0; r < draws.count; ++r) {
             const auto& range = scene_.ranges[draws.ranges[r]];
+            if (range.variant != noContainer &&
+                out.containerOpened[range.id - PickingBuffer::containerBase] != bool(range.variant))
+                continue;
             for (unsigned i = range.first; i < range.first + range.count; i += 3) {
                 const std::array<Vertex, 3> v{scene_.vertices[scene_.indices[i]],
                                               scene_.vertices[scene_.indices[i + 1]],
@@ -491,7 +511,9 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
             }
         }
         for (const auto& decal : scene_.decals) {
-            const auto texture = decal.motif ? pack_.vine : pack_.crest;
+            const auto texture = decal.texture != UINT16_MAX ? decal.texture
+                                 : decal.motif               ? pack_.vine
+                                                             : pack_.crest;
             const auto& p = decal.vertices;
             triangle(out, {p[0], p[1], p[2]}, PickingBuffer::empty, &assets_, texture, 16, true);
             triangle(out, {p[0], p[2], p[3]}, PickingBuffer::empty, &assets_, texture, 16, true);

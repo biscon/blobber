@@ -233,11 +233,20 @@ Json encodeObservation(const Observation& o) {
     for (std::size_t i = 0; i < lootCapacity; ++i)
         if (loot.stacks[i].active && o.lootVisible[i]) {
             const auto& s = loot.stacks[i];
-            Json e = {{"handle", {{"slot", i}, {"generation", u(s.generation)}}}, {"position", xy(s.cell)}};
+            Json e = {{"handle", {{"slot", i}, {"generation", u(s.generation)}}},
+                      {"position", xy(s.cell)},
+                      {"container", s.container == noContainer ? Json(nullptr) : Json(s.container)}};
             // Contents are accessible only when the ordinary loot interaction can open the bag.
             if (o.diagnostic || g.lootAccess({loot.world, std::uint16_t(i), s.generation}))
                 e.update({{"item", cat.item(s.item)->id}, {"quantity", s.quantity}});
             j["loot"].push_back(std::move(e));
+        }
+    j["containers"] = Json::array();
+    for (unsigned i = 0; i < loot.containerCount; ++i)
+        if (o.containerVisible[i]) {
+            const auto& c = loot.containers[i];
+            j["containers"].push_back(
+                {{"slot", i}, {"position", xy(c.cell)}, {"opened", c.opened}, {"sealed", c.sealed}});
         }
     // Current ground spells are all party-created: their placement and duration are known.
     j["ground"] = Json::array();

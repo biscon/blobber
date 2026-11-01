@@ -124,6 +124,7 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
         r.area.world = 0;
 }
 void GameSession::importFloor(const FloorState& s) {
+    validateContainers(s);
     const auto reject = [] { throw std::invalid_argument("Invalid floor snapshot"); };
     if (s.actors.count != actors_.state_.count || s.actors.typeCount != actors_.state_.typeCount ||
         s.ai.state.count != s.actors.count || s.combat.state.phase != CombatPhase::Exploration ||
@@ -174,7 +175,7 @@ void GameSession::importFloor(const FloorState& s) {
             (a.life == ActorLife::Alive && (!a.hitPoints || a.hasDeath)))
             reject();
         if (a.life == ActorLife::Alive) {
-            if (map_.base().solid(a.npc.cell) ||
+            if (map_.base().movementBlocked(a.npc.cell) ||
                 floor_.definition_.npcExcluded[std::size_t(a.npc.cell.y * map_.width() + a.npc.cell.x)])
                 reject();
             for (unsigned f = 0; f < floor_.definition_.count; ++f)

@@ -15,14 +15,56 @@ struct CellSurface {
     Environment environment = Environment::Dungeon;
 };
 static_assert(sizeof(CellSurface) == 8);
-enum class DecorationKind : std::uint8_t { Crest, Vine, Bench, Urn };
+constexpr unsigned containerCapacity = 8;
+constexpr std::uint8_t noContainer = 255;
+enum class DecorationKind : std::uint8_t {
+    Crest,
+    Vine,
+    Bench,
+    Urn,
+    DampA,
+    DampB,
+    Cracks,
+    Soot,
+    Blood,
+    BannerA,
+    BannerB,
+    WebA,
+    WebB,
+    BonesA,
+    BonesB,
+    Pilaster,
+    WallBase,
+    DoorSurround,
+    Cage,
+    Rack,
+    Chest
+};
+constexpr unsigned decorationKinds = unsigned(DecorationKind::Chest) + 1;
+const char* decorationName(DecorationKind) noexcept;
 struct Decoration {
     Cell cell;
     Heading face = Heading::North; // Direction from the cell toward its supporting wall.
     DecorationKind kind = DecorationKind::Crest;
     std::uint8_t material = 0;
     float offset = .5f, elevation = .55f, width = .45f, height = .45f, depth = .2f;
-    bool cutout() const noexcept { return kind == DecorationKind::Crest || kind == DecorationKind::Vine; }
+    std::uint8_t container = noContainer;
+    bool sealed = false;
+    bool cutout() const noexcept {
+        return kind == DecorationKind::Crest || kind == DecorationKind::Vine ||
+               (kind >= DecorationKind::DampA && kind <= DecorationKind::BonesB);
+    }
+    bool blocks() const noexcept {
+        return kind == DecorationKind::Cage || kind == DecorationKind::Rack || kind == DecorationKind::Chest;
+    }
+    unsigned footprintCount() const noexcept { return kind == DecorationKind::Rack ? 2 : blocks() ? 1 : 0; }
+    Cell footprint(unsigned i) const noexcept { return cell + forward(face) * int(i); }
+    bool model() const noexcept { return kind >= DecorationKind::Cage; }
+    bool floorCutout() const noexcept {
+        return kind == DecorationKind::BonesA || kind == DecorationKind::BonesB ||
+               kind == DecorationKind::Blood;
+    }
+    bool web() const noexcept { return kind == DecorationKind::WebA || kind == DecorationKind::WebB; }
 };
 struct WorldDefinition {
     std::string assetPack = "dungeon";

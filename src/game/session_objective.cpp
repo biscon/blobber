@@ -36,7 +36,7 @@ void GameSession::prepareObjective() {
             (defs.landingCount && defs.npcExcluded[std::size_t(r.cell.y * map_.width() + r.cell.x)]))
             throw std::invalid_argument("Invalid guardian reward");
         loot_.state_.stacks[NpcWorld::maxInstances * lootPerActor + recovery_.groundCount + i] = {
-            r.cell, r.item, r.quantity, false};
+            r.cell, r.item, r.quantity, false, 1, r.container};
     }
 }
 bool GameSession::guardian(ActorId id) const noexcept {
@@ -65,6 +65,8 @@ void GameSession::reconcileObjective() noexcept {
     }
     for (unsigned i = 0; i < objectiveDefinition_.rewardCount; ++i)
         loot_.state_.stacks[NpcWorld::maxInstances * lootPerActor + recovery_.groundCount + i].active = true;
+    for (unsigned i = 0; i < loot_.state_.containerCount; ++i)
+        loot_.state_.containers[i].sealed = false;
     ++loot_.state_.revision;
     objective_.completed = true;
     objective_.rewardIssued = true;

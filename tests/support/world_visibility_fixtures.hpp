@@ -1,5 +1,6 @@
 #pragma once
 #include "render/world_visibility.hpp"
+#include "support/underkeep_assets.hpp"
 #include "support/world_fixtures.hpp"
 namespace blobber::test {
 struct VisibilityFixture {
@@ -65,14 +66,14 @@ struct VisibilityFixture {
         for (const auto* n : {"loot/bag", "fixture/key-bronze", "fixture/key-silver", "fixture/upstairs",
                               "fixture/downstairs", "fixture/endpoint", "fixture/threshold"})
             writer.add(n, 8, 12, true, pixels);
-        for (const auto* n : {"door", "door-locked"})
-            writer.add(n, 8, 12, false, pixels);
+        const auto door = writer.add("door", 8, 12, false, pixels, 0, {}, false);
+        const auto locked = writer.add("door-locked", 8, 12, false, pixels, 0, {}, false);
         for (const auto* n :
              {"arrow", "tip", "feathers", "slash", "glint", "grease", "web", "weapon", "preview", "white"})
             writer.add(std::string("effect/") + n, 8, 12, true, pixels);
-        writer.add("decoration/crest", 8, 12, true, pixels);
-        writer.add("decoration/vine", 8, 12, true, pixels);
-        writer.finish(actors);
+        const auto crest = writer.add("decoration/crest", 8, 12, true, pixels);
+        const auto vine = writer.add("decoration/vine", 8, 12, true, pixels);
+        finishWithUnderkeep(writer, actors, 0, door, locked, crest, vine);
     }
     world_assets::Publication publication() const { return world_assets::load(location.directory); }
 };

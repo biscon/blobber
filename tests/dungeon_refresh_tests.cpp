@@ -43,7 +43,7 @@ void doors() {
     game->update(.15, false);
     world_render::doorBoxes(game->geometry(), &game->doors(), boxes, 0, 0, 0);
     const auto middle = boxes[3].x;
-    check(std::abs(begin.x) > .8f && std::abs(middle.x) > .4f && std::abs(middle.z) > .4f,
+    check(std::abs(begin.x) > .55f && std::abs(middle.x) > .39f && std::abs(middle.z) > .39f,
           "Closing animates from open through a halfway angle");
     check(!game->interact(request()), "Motion barrier rejects repeated interaction");
     game->update(.15, false);
@@ -147,6 +147,14 @@ void stairsAndFrames() {
             for (unsigned i = 0; i < 3; ++i)
                 check(boxes[i].worldMapped, "All frame strips use world UV mapping");
             check(!boxes[3].worldMapped, "Leaf uses fitted art independently of frame density");
+            const auto length = [](world_render::Vec v) { return std::hypot(v.x, v.z); };
+            const float jamb = length(boxes[0].x), leaf = length(boxes[3].x);
+            check(std::abs(leaf - .88f * .65f) < 1e-5f && std::abs(boxes[3].y.y - .92f * .875f) < 1e-5f,
+                  "Door leaf has reviewed width/height in every heading");
+            check(std::abs(2 * jamb + leaf - 1.f) < 1e-5f &&
+                      std::abs(boxes[2].origin.y - boxes[3].origin.y - boxes[3].y.y) < 1e-5f &&
+                      std::abs(boxes[2].origin.y + boxes[2].y.y - boxes[0].origin.y - boxes[0].y.y) < 1e-5f,
+                  "Stone frame fills both sides and the entire space above the smaller leaf");
             world_render::doorBoxes(door.view(), nullptr, boxes, 0, 0, 0, 0, 7, 0);
             for (unsigned i = 0; i < 3; ++i)
                 check(boxes[i].emblemTexture == UINT16_MAX, "Frames never receive guardian emblems");

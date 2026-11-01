@@ -40,6 +40,18 @@ PopulationDefinition resolvePopulation(const FloorLayout& layout, GenerationRequ
     if (!floorSpec(layout.depth)->finalFloor) {
         objective.rewards[objective.rewardCount++] = {layout.guardianReward, item("camp_kit"), 1};
     }
+    if (layout.cacheCount) {
+        for (unsigned i = 0; i < recovery.groundCount; ++i) {
+            auto& p = recovery.ground[i];
+            const unsigned owner = p.cell == layout.optionalSupply ? 1 : 0;
+            p.cell = layout.caches[owner].cell;
+            p.container = std::uint8_t(owner);
+        }
+        for (unsigned i = 0; i < objective.rewardCount; ++i) {
+            objective.rewards[i].cell = layout.caches[2].cell;
+            objective.rewards[i].container = 2;
+        }
+    }
     return out;
 }
 PreparedPopulation preparePopulation(const GeneratedFloor& f, const rules::Catalog& catalog,

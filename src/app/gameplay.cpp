@@ -204,11 +204,14 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         ? view.frames.groundCell(view.session, int(sample.ui.pointer->x) - viewX,
                                                  int(sample.ui.pointer->y) - viewY)
                         : std::nullopt;
-                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
-                              picking && sample.ui.pointer
-                                  ? picking->pickFixture(int(sample.ui.pointer->x) - viewX,
-                                                         int(sample.ui.pointer->y) - viewY)
-                                  : std::nullopt);
+                routeHudInput(
+                    view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
+                    picking && sample.ui.pointer ? picking->pickFixture(int(sample.ui.pointer->x) - viewX,
+                                                                        int(sample.ui.pointer->y) - viewY)
+                                                 : std::nullopt,
+                    picking && sample.ui.pointer ? picking->pickContainer(int(sample.ui.pointer->x) - viewX,
+                                                                          int(sample.ui.pointer->y) - viewY)
+                                                 : std::nullopt);
             }
             if (campaign) {
                 std::optional<SavingScreen> saving;

@@ -1,12 +1,13 @@
 #pragma once
 #include "assets/npc_metadata.hpp"
+#include "world/surfaces.hpp"
 #include <fstream>
 #include <string>
 #include <vector>
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
 constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
-constexpr unsigned version = 3, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned version = 4, appearanceRevision = 4, textureCapacity = 480;
 // Stored texels occupy [x,x+width) in the original registered canvas. Anchors
 // and attachments always refer to that canvas, including after offline cropping.
 struct SpriteCanvas {
@@ -39,12 +40,24 @@ struct Appearance {
 struct Anchor {
     float x = .5f, y = 1;
 };
+// Narrow prepared triangle list, not a general GLTF runtime. Coordinates/UVs are authored.
+struct PropMesh {
+    std::string name;
+    std::uint16_t texture = 0;
+    std::vector<std::array<float, 8>> vertices;
+};
 struct Pack {
     std::string id = "dungeon";
     std::array<std::uint16_t, 32> materials{};
     unsigned materialCount = 0;
     std::uint16_t door = 0, lockedDoor = 0, doorEdge = 0, crest = 0, vine = 0, sky = 0;
     std::uint16_t guardianEmblem = UINT16_MAX; // Optional transparent art, reusable across packs.
+    std::array<std::uint16_t, decorationKinds> decorations = [] {
+        std::array<std::uint16_t, decorationKinds> a{};
+        a.fill(UINT16_MAX);
+        return a;
+    }();
+    std::array<std::uint16_t, 4> models{UINT16_MAX, UINT16_MAX, UINT16_MAX, UINT16_MAX};
     float worldScale = 1;
     std::array<float, 3> horizon{.60f, .67f, .72f};
 };
@@ -55,6 +68,7 @@ struct Publication {
     std::vector<Anchor> anchors;
     std::vector<Appearance> appearances;
     std::vector<Pack> packs;
+    std::vector<PropMesh> meshes;
     std::vector<unsigned char> read(unsigned index, bool alpha = false) const;
 };
 // Immutable preparation owner; safe to share between live and windowless views.
@@ -87,7 +101,7 @@ class Writer {
                  const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {},
                  bool material = true, bool crop = false);
     void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0,
-                const std::vector<Pack>& packs = {});
+                const std::vector<Pack>& packs = {}, const std::vector<PropMesh>& meshes = {});
 
   private:
     std::filesystem::path directory_, temporary_;

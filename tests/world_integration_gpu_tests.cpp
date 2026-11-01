@@ -12,6 +12,7 @@
 #include "support/fixture_world.hpp"
 #include "support/layout_review.hpp"
 #include "support/pc072_review.hpp"
+#include "support/underkeep_review.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/menu_screen.hpp"
 #include <iostream>
@@ -61,6 +62,14 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--underkeep-review") {
+            test::underkeepReview(argv[1], argv[2]);
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--underkeep-corrections-review") {
+            test::underkeepReview(argv[1], argv[2], true);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--layout-review") {
             test::layoutReview(argv[1], argv[2]);
             return 0;

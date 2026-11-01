@@ -95,11 +95,18 @@ Failure validateStone(const FloorLayout& f) noexcept {
 }
 Failure validate(const FloorLayout& f) noexcept {
     if (f.width < 3 || f.height < 3 || f.width > 40 || f.height > 40 || f.roomCount > maxRooms ||
-        f.connectionCount > maxConnections || f.pathCount > maxCells)
+        f.connectionCount > maxConnections || f.pathCount > maxCells || f.cacheCount > 3)
         return {Error::Capacity};
     if (!f.roomCount || !f.connectionCount || f.loopConnection >= f.connectionCount ||
-        f.biome != BiomeId::Stone || f.algorithm != AlgorithmId::StoneRooms)
+        f.biome != BiomeId::Underkeep || f.algorithm != AlgorithmId::StoneRooms)
         return {Error::Bounds};
+    for (unsigned i = 0; i < f.cacheCount; ++i) {
+        if (!floorCell(f, f.caches[i].cell) || unsigned(f.caches[i].facing) > 3)
+            return {Error::Fixture};
+        for (unsigned j = 0; j < i; ++j)
+            if (f.caches[i].cell == f.caches[j].cell)
+                return {Error::Fixture};
+    }
     Scratch s;
     s.owner.fill(noRegion);
     std::array<unsigned, maxRooms> degree{};

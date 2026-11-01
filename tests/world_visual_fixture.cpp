@@ -1,5 +1,6 @@
 #include "assets/npc_metadata.hpp"
 #include "assets/world_assets.hpp"
+#include "support/underkeep_assets.hpp"
 #include <iostream>
 int main(int argc, char** argv) {
     try {
@@ -30,14 +31,17 @@ int main(int argc, char** argv) {
         for (const auto* name : {"loot/bag", "fixture/key-bronze", "fixture/key-silver", "fixture/upstairs",
                                  "fixture/downstairs", "fixture/endpoint", "fixture/threshold"})
             writer.add(name, 8, 12, true, pixels);
-        for (const auto* name : {"door", "door-locked"})
-            writer.add(name, 8, 8, false, std::vector<unsigned char>(8 * 8 * 4, 255));
+        const auto door =
+            writer.add("door", 8, 8, false, std::vector<unsigned char>(8 * 8 * 4, 255), 0, {}, false);
+        const auto locked =
+            writer.add("door-locked", 8, 8, false, std::vector<unsigned char>(8 * 8 * 4, 255), 0, {}, false);
         for (const auto* name :
              {"arrow", "tip", "feathers", "slash", "glint", "grease", "web", "weapon", "preview", "white"})
             writer.add(std::string("effect/") + name, 8, 8, true, std::vector<unsigned char>(8 * 8 * 4, 255));
-        writer.add("decoration/crest", 8, 12, true, pixels);
-        writer.add("decoration/vine", 8, 12, true, pixels);
-        writer.finish(appearances, defs.definitionFingerprint);
+        const auto crest = writer.add("decoration/crest", 8, 12, true, pixels);
+        const auto vine = writer.add("decoration/vine", 8, 12, true, pixels);
+        blobber::test::finishWithUnderkeep(writer, appearances, defs.definitionFingerprint, door, locked,
+                                           crest, vine);
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         return 1;

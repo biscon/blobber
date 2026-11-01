@@ -55,17 +55,18 @@ unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox
                             std::uint16_t(edge),
                             id == PickingBuffer::empty};
         };
-        add(0, 0, 0, .06f, height, .12f, 0, frame);
-        add(.94f, 0, 0, .06f, height, .12f, 0, frame);
-        add(.06f, height - .08f, 0, .88f, .08f, .12f, 0, frame);
+        const float width = .88f * .65f, leafHeight = (height - .08f) * .875f, jamb = (1.f - width) * .5f;
+        add(0, 0, 0, jamb, height, .12f, 0, frame);
+        add(1.f - jamb, 0, 0, jamb, height, .12f, 0, frame);
+        add(jamb, leafHeight, 0, width, height - leafHeight, .12f, 0, frame);
         const bool opened = fs->open(i);
         const float progress = doors ? doors->progress(i) : 1.f;
         float t = opened ? progress : 1.f - progress;
         t = t * t * (3 - 2 * t);
         const float angle = t * pi * .5f;
         // Hinge through the leaf thickness, keeping the open slab clear of the adjoining wall.
-        add(.09f - .03f * std::cos(angle), 0, .06f - .03f * std::sin(angle), .88f, height - .08f, .06f, angle,
-            f.key || f.kind == FixtureKind::GuardianGate ? locked : ordinary,
+        add(jamb + .03f - .03f * std::cos(angle), 0, .06f - .03f * std::sin(angle), width, leafHeight, .06f,
+            angle, f.key || f.kind == FixtureKind::GuardianGate ? locked : ordinary,
             std::uint16_t(PickingBuffer::fixtureBase + i));
         if (f.kind == FixtureKind::GuardianGate || i == guardianDoor)
             out[count - 1].emblemTexture = std::uint16_t(guardianEmblem);

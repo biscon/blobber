@@ -37,7 +37,7 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
       loot_(actors_, recovery, objective.count ? objective.lootSeed : seed), movement_(spawn), rng_(seed),
       ai_(map_, actors_, seed), effects_(party_, actors_, rng_),
       combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(true) {
-    if (map_.solid(spawn.cell) || actors_.occupied(spawn.cell))
+    if (map_.movementBlocked(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     doors_.world = floor_.world();
     prepareObjective();

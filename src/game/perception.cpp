@@ -1,4 +1,5 @@
 #include "game/perception.hpp"
+#include "world/view.hpp"
 #include <algorithm>
 #include <cstdlib>
 namespace blobber {
@@ -96,6 +97,20 @@ Heading headingToward(Cell from, Cell to) noexcept {
     const int dx = to.x - from.x, dy = to.y - from.y;
     return std::abs(dx) > std::abs(dy) ? (dx > 0 ? Heading::East : Heading::West)
                                        : (dy > 0 ? Heading::South : Heading::North);
+}
+bool inPartyViewport(Cell from, Heading heading, Cell target, Cell subcell) noexcept {
+    if (unsigned(heading) >= 4 || unsigned(subcell.x) >= 2 || unsigned(subcell.y) >= 2)
+        return false;
+    const auto f = forward(heading), r = right(heading);
+    const float dx = target.x - from.x + .5f * subcell.x - .25f,
+                dz = target.y - from.y + .5f * subcell.y - .25f;
+    const float ahead = dx * f.x + dz * f.y + partyCameraSetback, lateral = dx * r.x + dz * r.y;
+    // Leave a small world-space margin so a sliver at the edge cannot hold the
+    // locked camera. This is a body-axis test, not a sprite/alpha readback.
+    return ahead > 0 && std::abs(lateral) < ahead * partyViewHalfTangent - .05f;
+}
+bool inPartyView(GeometryView map, Cell from, Heading heading, Cell target, Cell subcell) noexcept {
+    return inPartyView(map, from, heading, target) && inPartyViewport(from, heading, target, subcell);
 }
 int cellDistance(Cell a, Cell b) noexcept {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y);

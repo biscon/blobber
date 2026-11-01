@@ -26,6 +26,7 @@ if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
 if(uvMode<2) mapped*=worldScale;
 vec4 c=texture(texture0,mapped);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
+if(uvMode==4) face=1.0;
 float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
 finalColor=vec4((c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
@@ -155,7 +156,7 @@ void WorldRenderer::stage(GeometryView geometry, const MovementState& state, wor
     }
     candidate->cpu = prepareCpu([&] {
         preparationPoint("Preparing dungeon");
-        return world_render::prepare(geometry, surfaces, overrides, limits);
+        return world_render::prepare(geometry, surfaces, overrides, limits, assets_.get());
     });
     for (const auto& range : candidate->cpu.ranges)
         if (range.material >= candidate->pack.materialCount)
@@ -358,6 +359,12 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     rlEnableBackfaceCulling();
     for (unsigned i = 0; i < draws_.count; ++i) {
         const auto& range = v.cpu.ranges[draws_.ranges[i]];
+        if (range.variant != noContainer &&
+            (frame ? frame->containerOpened[range.id - PickingBuffer::containerBase] : false) !=
+                bool(range.variant))
+            continue;
+        const int rangeUv = range.painted ? 4 : 0;
+        rlSetUniform(uvMode_, &rangeUv, SHADER_UNIFORM_INT, 1);
         const float color[]{float(range.id & 255) / 255, float(range.id >> 8) / 255, 0, 1};
         rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
         rlEnableTexture(resources_.texture(v.materials[range.material]).id);
@@ -471,7 +478,9 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
     };
     if (scene)
         for (const auto& d : scene->decals) {
-            const auto texture = d.motif ? frame.vineTexture : frame.crestTexture;
+            const auto texture = d.texture != UINT16_MAX ? d.texture
+                                 : d.motif               ? frame.vineTexture
+                                                         : frame.crestTexture;
             rlEnableTexture(resources_.texture(textures_[texture].get()).id);
             const auto& a = d.vertices[0].position;
             const auto& b = d.vertices[1].position;
@@ -612,9 +621,9 @@ void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const fl
 std::size_t WorldRenderer::cpuBytes() const noexcept {
     std::size_t n = sizeof(*this) + assets_->bytes() + textures_.capacity() * sizeof(GpuLease<TextureHandle>);
     if (active_ && active_->cpu.map)
-        n += active_->cpu.map->definition().bytes();
+        n += active_->cpu.map->storageBytes();
     if (staged_ && staged_->cpu.map && (!active_ || staged_->cpu.map != active_->cpu.map))
-        n += staged_->cpu.map->definition().bytes();
+        n += staged_->cpu.map->storageBytes();
     for (const auto* v : {active_.get(), staged_.get()})
         if (v) {
             n += sizeof(View) + v->cpu.bytes();

@@ -128,6 +128,9 @@ class GameSession {
     const LootWorld& loot() const noexcept { return loot_; }
     PickupResult dropItem(ItemHandle, std::uint64_t inventoryRevision, bool preview = false) noexcept;
     PickupResult lootAccess(LootId) const noexcept;
+    PickupResult containerAccess(ContainerId) const noexcept;
+    PickupResult openContainer(ContainerId) noexcept;
+    ContainerId nearbyContainer() const noexcept;
     PickupResult pickup(const PickupRequest&, bool preview = false) noexcept;
     RestPreview previewRest(const RestRequest&) const noexcept;
     RestResult rest(const RestRequest&) noexcept;
@@ -141,6 +144,7 @@ class GameSession {
     bool grantNextLevelExperience() noexcept;
 
   private:
+    void validateContainers(const FloorState&) const;
     friend class CampaignRun;
     CampaignRun* campaign_ = nullptr;
     std::uint64_t mutation_ = 0;

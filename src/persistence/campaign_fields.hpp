@@ -69,6 +69,8 @@ template <class A> void visit(A& a, CellSurface& v) {
     a("environment", v.environment);
 }
 template <class A> void visit(A& a, Decoration& v) {
+    a("container", v.container);
+    a("sealed", v.sealed);
     a("cell", v.cell);
     a("face", v.face);
     a("kind", v.kind);
@@ -145,7 +147,14 @@ template <class A> void visit(A& a, FloorGeometry::Saved& v) {
     a("geometryRevision", v.geometryRevision);
     a("discoveryRevision", v.discoveryRevision);
 }
+template <class A> void visit(A& a, LootContainer& v) {
+    a("cell", v.cell);
+    a("facing", v.facing);
+    a("opened", v.opened);
+    a("sealed", v.sealed);
+}
 template <class A> void visit(A& a, FloorLoot& v) {
+    a("container", v.container);
     a("cell", v.cell);
     a("item", v.item);
     a("quantity", v.quantity);
@@ -153,6 +162,8 @@ template <class A> void visit(A& a, FloorLoot& v) {
     a("generation", v.generation);
 }
 template <class A> void visit(A& a, LootSnapshot& v) {
+    a("containers", v.containers);
+    a("containerCount", v.containerCount);
     a("stacks", v.stacks);
     a("revision", v.revision);
 }
@@ -386,6 +397,7 @@ template <class A> void visit(A& a, Party::Saved& v) {
     a("progressionRevision", v.progressionRevision);
 }
 template <class A> void visit(A& a, GroundPlacement& v) {
+    a("container", v.container);
     a("cell", v.cell);
     a("item", v.item);
     a("quantity", v.quantity);
@@ -462,7 +474,14 @@ template <class A> void visit(A& a, generation::Encounter& v) {
     a("first", v.first);
     a("count", v.count);
 }
+template <class A> void visit(A& a, generation::CacheSite& v) {
+    a("cell", v.cell);
+    a("facing", v.facing);
+}
 template <class A> void visit(A& a, generation::FloorLayout& v) {
+    a("caches", v.caches);
+    a("cacheCount", v.cacheCount);
+    a("dressingFingerprint", v.dressingFingerprint);
     a("width", v.width);
     a("height", v.height);
     a("floor", v.floor);

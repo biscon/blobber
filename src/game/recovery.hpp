@@ -1,6 +1,7 @@
 #pragma once
 #include "game/inventory.hpp"
 #include "world/grid.hpp"
+#include "world/surfaces.hpp"
 namespace blobber {
 enum class RestKind : std::uint8_t { Short, Long };
 enum class RestError : std::uint8_t {
@@ -53,6 +54,7 @@ struct GroundPlacement {
     Cell cell;
     rules::ItemId item;
     std::uint16_t quantity = 1;
+    std::uint8_t container = noContainer;
 };
 struct RecoveryLevel {
     std::array<Cell, 16> sanctuaries{};

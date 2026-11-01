@@ -3,6 +3,34 @@
 #include <cmath>
 #include <stdexcept>
 namespace blobber {
+void GameSession::validateContainers(const FloorState& s) const {
+    const auto reject = [](const char* part) { throw std::invalid_argument(part); };
+    if (s.loot.state.containerCount != loot_.state_.containerCount)
+        reject("container count");
+    for (unsigned i = 0; i < containerCapacity; ++i) {
+        const auto& saved = s.loot.state.containers[i];
+        const auto& original = loot_.state_.containers[i];
+        if (!(saved.cell == original.cell) || saved.facing != original.facing ||
+            (i >= s.loot.state.containerCount && (saved.opened || saved.sealed)) ||
+            (i < s.loot.state.containerCount && ((saved.opened && saved.sealed))))
+            reject("container state");
+    }
+    for (const auto& d : map_.base().definition().decorations)
+        if (d.kind == DecorationKind::Chest) {
+            const auto& c = s.loot.state.containers[d.container];
+            if (!(c.cell == d.cell) || c.facing != d.face ||
+                c.sealed != (d.sealed && !s.objective.completed) || (c.sealed && c.opened))
+                reject("Invalid container definition/state");
+        }
+    for (unsigned i = 0; i < lootCapacity; ++i) {
+        const auto& stack = s.loot.state.stacks[i];
+        if (stack.container != loot_.state_.stacks[i].container ||
+            (stack.container != noContainer &&
+             (stack.container >= s.loot.state.containerCount ||
+              !(stack.cell == s.loot.state.containers[stack.container].cell))))
+            reject("Invalid container loot owner");
+    }
+}
 void GameSession::validateCheckpoint(const FloorState& s) const {
     const auto reject = [](const char* part) {
         throw std::invalid_argument(std::string("Invalid saved floor ") + part);
@@ -182,10 +210,21 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
             if (!found)
                 reject("ground effects");
         }
+    validateContainers(s);
     for (std::size_t i = 0; i < lootCapacity; ++i) {
         const auto& stack = s.loot.state.stacks[i];
+        const auto& initial = loot_.state_.stacks[i];
+        if (stack.container != initial.container ||
+            (stack.container != noContainer &&
+             (stack.container >= s.loot.state.containerCount ||
+              !(stack.cell == s.loot.state.containers[stack.container].cell))))
+            reject("container loot ownership");
         if (stack.active && (!cell(stack.cell) || map_.base().solid(stack.cell)))
             reject("loot ledger");
+        if (initial.container != noContainer && !s.loot.state.containers[initial.container].opened &&
+            (stack.quantity != initial.quantity || stack.item.index != initial.item.index ||
+             stack.active != (initial.active || s.objective.rewardIssued)))
+            reject("unopened container contents");
         if (i < lootReservedCapacity && stack.quantity) {
             const auto& original = loot_.state_.stacks[i];
             if (stack.item.index != original.item.index || stack.quantity != original.quantity ||

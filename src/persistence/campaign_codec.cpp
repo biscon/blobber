@@ -27,7 +27,7 @@ template <class T> constexpr unsigned enumMaximum() {
     if constexpr (std::is_same_v<T, Environment>)
         return 1;
     else if constexpr (std::is_same_v<T, DecorationKind>)
-        return 3;
+        return decorationKinds - 1;
     else if constexpr (std::is_same_v<T, Heading>)
         return 3;
     else if constexpr (std::is_same_v<T, NpcAnimation>)
@@ -351,7 +351,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 6 || j.at("simulation") != 10 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 7 || j.at("simulation") != 11 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -368,8 +368,8 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 6},
-              {"simulation", 10},
+    Json j = {{"schema", 7},
+              {"simulation", 11},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

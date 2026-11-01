@@ -11,6 +11,13 @@ void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
     if (id)
         request = {*id, session_.fixtures().revision()};
     const auto* fixture = session_.fixtures().find(request.id);
+    if (!id && !fixture) {
+        const auto chest = session_.nearbyContainer();
+        if (chest) {
+            openContainer(chest);
+            return;
+        }
+    }
     const bool travel = session_.campaign() && fixture && CampaignRun::stairs(fixture->kind);
     const auto result = session_.interact(request, travel);
     if (travel && result.accepted) {
@@ -23,6 +30,29 @@ void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
     state_.log.append(result.reason);
 }
 
+void CommandController::openContainer(ContainerId id) noexcept {
+    if (state_.modal() || state_.suspended)
+        return;
+    const auto result = session_.openContainer(id);
+    if (!result) {
+        state_.log.append(result.reason);
+        return;
+    }
+    const auto* c = session_.loot().findContainer(id);
+    closeOverlay();
+    cancel();
+    state_.inventory.itemTargeting = false;
+    state_.hover = {};
+    state_.lootHover[0] = 0;
+    state_.loot = {};
+    state_.loot.open = true;
+    state_.loot.container = id.slot;
+    state_.loot.cell = c->cell;
+    state_.loot.world = id.world;
+    session_.clearPending();
+    refreshLoot();
+    refreshRestAvailability();
+}
 void CommandController::openLoot(LootId id) noexcept {
     if (state_.modal() || state_.suspended)
         return;
@@ -33,6 +63,7 @@ void CommandController::openLoot(LootId id) noexcept {
         return;
     }
     const auto cell = item->cell;
+    const auto container = item->container;
     closeOverlay();
     cancel();
     state_.inventory.itemTargeting = false;
@@ -41,6 +72,7 @@ void CommandController::openLoot(LootId id) noexcept {
     state_.loot = {};
     state_.loot.open = true;
     state_.loot.cell = cell;
+    state_.loot.container = container;
     state_.loot.world = id.world;
     session_.clearPending();
     refreshLoot();
@@ -57,7 +89,7 @@ void CommandController::refreshLoot() noexcept {
     h.count = 0;
     const auto& stacks = session_.loot().snapshot().stacks;
     for (std::uint16_t i = 0; i < stacks.size(); ++i)
-        if (stacks[i].active && stacks[i].cell == h.cell)
+        if (stacks[i].active && stacks[i].cell == h.cell && stacks[i].container == h.container)
             h.ids[h.count++] = {h.world, i, stacks[i].generation};
     h.page = std::min(h.page, h.count ? (h.count - 1) / LootHud::visibleCount : 0);
     h.entries = {};
@@ -78,7 +110,8 @@ void CommandController::refreshLoot() noexcept {
             h.portrait = card.portrait;
     h.canTake = false;
     h.canTakeAny = false;
-    h.reason = h.count ? "Hover an item for details." : "This bag is empty.";
+    h.reason = h.count ? "Hover an item for details."
+                       : (h.container == noContainer ? "This bag is empty." : "This chest is empty.");
     if (h.count) {
         const auto access = session_.lootAccess(h.ids[0]);
         h.canTakeAny = bool(access) && session_.effects().canAct(h.recipient);

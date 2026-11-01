@@ -547,7 +547,7 @@ bool build(FloorLayout& f, GenerationRequest request, unsigned attempt) noexcept
 }
 } // namespace
 bool buildStoneLayout(FloorLayout& f, GenerationRequest request, unsigned attempt, bool fallback) noexcept {
-    const auto& profiles = stoneBiome().profiles;
+    const auto& profiles = underkeepBiome().profiles;
     f.profile = profiles[unsigned(seedFor(request, Domain::Topology, 77)) % profiles.size()];
     f.family = fallback ? 1u : 0u;
     if (fallback)

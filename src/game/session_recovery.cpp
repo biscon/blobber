@@ -37,12 +37,68 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
     }
     return {InventoryError::None, "Dropped in a loot bag at your feet."};
 }
+ContainerId GameSession::nearbyContainer() const noexcept {
+    const auto cell = movement().player.cell + forward(movement().player.heading);
+    const auto& s = loot_.snapshot();
+    for (unsigned i = 0; i < s.containerCount; ++i)
+        if (s.containers[i].cell == cell)
+            return {s.world, std::uint8_t(i)};
+    return {};
+}
+PickupResult GameSession::containerAccess(ContainerId id) const noexcept {
+    if (!runActive())
+        return {InventoryError::Unavailable, "Campaign has ended."};
+    const auto* c = loot_.findContainer(id);
+    if (!c || loot_.snapshot().revision == UINT64_MAX)
+        return {InventoryError::Stale, "That chest is unavailable."};
+    if (actionBusy())
+        return {InventoryError::Moving, "Wait until actions finish."};
+    if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
+        return {InventoryError::Unsafe, "Chests require settled safe exploration."};
+    bool able = false;
+    for (std::uint16_t i = 0; i < 4; ++i)
+        able |= effects_.canAct(rules::CharacterId{i});
+    if (!able)
+        return {InventoryError::Unavailable, "An able companion is required."};
+    if (c->sealed)
+        return {InventoryError::Unavailable, "The guardians' seal holds this chest shut."};
+    const auto from = movement().player.cell;
+    if (!inFrontBand(from, movement().player.heading, c->cell) ||
+        !surfacePassage(map_.surface(from), map_.surface(c->cell)) || !lineOfSight(map_, from, c->cell))
+        return {InventoryError::Unavailable, "Move closer and face the chest."};
+    // A diagonal interaction must not reach through occupied or closed corners.
+    if (from.x != c->cell.x && from.y != c->cell.y &&
+        (map_.movementBlocked({from.x, c->cell.y}) || map_.movementBlocked({c->cell.x, from.y})))
+        return {InventoryError::Unavailable, "The chest is obstructed."};
+    return {};
+}
+PickupResult GameSession::openContainer(ContainerId id) noexcept {
+    const auto access = containerAccess(id);
+    if (!access)
+        return access;
+    auto& c = loot_.state_.containers[id.slot];
+    if (!c.opened) {
+        c.opened = true;
+        ++loot_.state_.revision;
+        if (mutation_ != UINT64_MAX)
+            ++mutation_;
+    }
+    return {InventoryError::None, "Chest opened."};
+}
 PickupResult GameSession::lootAccess(LootId id) const noexcept {
     if (!runActive())
         return {InventoryError::Unavailable, "Campaign has ended."};
     const auto* s = loot_.find(id);
     if (!s || loot_.snapshot().revision == UINT64_MAX)
         return {InventoryError::Stale, "That loot bag is no longer available."};
+    if (s->container != noContainer) {
+        const auto access = containerAccess({id.world, s->container});
+        if (!access)
+            return access;
+        if (!loot_.state_.containers[s->container].opened)
+            return {InventoryError::Unavailable, "Open the chest first."};
+        return {};
+    }
     if (actionBusy())
         return {InventoryError::Moving,
                 opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};

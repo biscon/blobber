@@ -169,6 +169,13 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
         r.inventory.revision = g.party().inventory().revision();
         return r;
     }
+    if (op == "open_container") {
+        fields(j, {"kind", "container"});
+        r.operation = Operation::OpenContainer;
+        r.container = {g.loot().snapshot().world,
+                       std::uint8_t(bounded(j.at("container"), containerCapacity - 1))};
+        return r;
+    }
     if (op == "pickup") {
         fields(j, {"kind", "loot", "character"});
         r.operation = Operation::Pickup;

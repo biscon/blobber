@@ -15,6 +15,7 @@ class Visibility {
     virtual ~Visibility() = default;
     virtual const TargetSnapshot& sample(const Map&, const GameSession&) = 0;
     virtual bool lootVisible(LootId) const noexcept = 0;
+    virtual bool containerVisible(ContainerId) const noexcept { return false; }
 };
 using VisibilityFactory = std::unique_ptr<Visibility> (*)(void*, const Map&, const GameSession&);
 struct Observation {
@@ -23,10 +24,23 @@ struct Observation {
     TargetSnapshot targets;
     std::array<bool, NpcWorld::maxInstances> visible{};
     std::array<bool, lootCapacity> lootVisible{};
+    std::array<bool, containerCapacity> containerVisible{};
     bool diagnostic = false;
 };
 // A fixed-shape request uses the same typed commands as the live game. Parsing/JSON is external.
-enum class Operation { Combat, Move, Inventory, Drop, Pickup, Rest, Advancement, Continue, Interact, Travel };
+enum class Operation {
+    Combat,
+    Move,
+    Inventory,
+    Drop,
+    Pickup,
+    OpenContainer,
+    Rest,
+    Advancement,
+    Continue,
+    Interact,
+    Travel
+};
 struct ActionRequest {
     Operation operation = Operation::Combat;
     PartyCommand combat;
@@ -34,6 +48,7 @@ struct ActionRequest {
     InventoryRequest inventory;
     ItemHandle item;
     PickupRequest pickup;
+    ContainerId container;
     RestRequest rest;
     AdvancementRequest advancement;
     FixtureRequest fixture;

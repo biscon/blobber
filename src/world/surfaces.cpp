@@ -1,6 +1,13 @@
 #include "world/surfaces.hpp"
 #include <cstring>
 namespace blobber {
+const char* decorationName(DecorationKind k) noexcept {
+    constexpr const char* names[]{"crest",  "vine",    "bench",   "urn",      "damp-a",    "damp-b",
+                                  "cracks", "soot",    "blood",   "banner-a", "banner-b",  "web-a",
+                                  "web-b",  "bones-a", "bones-b", "pilaster", "wall-base", "door-surround",
+                                  "cage",   "rack",    "chest"};
+    return unsigned(k) < decorationKinds ? names[unsigned(k)] : "invalid";
+}
 std::uint64_t WorldDefinition::fingerprint() const noexcept {
     std::uint64_t h = 14695981039346656037ull;
     auto add = [&](std::uint64_t v) {
@@ -34,6 +41,8 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         add(unsigned(d.face));
         add(unsigned(d.kind));
         add(d.material);
+        add(d.container);
+        add(d.sealed);
         real(d.offset);
         real(d.elevation);
         real(d.width);

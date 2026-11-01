@@ -60,6 +60,50 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
         require(std::isfinite(c) && c >= 0 && c <= 1);
 }
 
+void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>& textures,
+                 const std::vector<Pack>& packs) {
+    require(meshes.size() <= 16);
+    std::set<std::string> names;
+    for (const auto& m : meshes) {
+        require(!m.name.empty() && m.name.size() <= 64 && names.insert(m.name).second &&
+                m.texture < textures.size() && textures[m.texture].material);
+        require(!m.vertices.empty() && m.vertices.size() <= 6000 && m.vertices.size() % 3 == 0);
+        for (const auto& v : m.vertices) {
+            for (float n : v)
+                require(std::isfinite(n));
+            require(std::abs(v[0]) <= 1 && v[1] >= -.001f && v[1] <= 1 && std::abs(v[2]) <= 1 && v[6] >= 0 &&
+                    v[6] <= 1 && v[7] >= 0 && v[7] <= 1);
+            const float n = v[3] * v[3] + v[4] * v[4] + v[5] * v[5];
+            require(n > .99f && n < 1.01f);
+        }
+        for (unsigned i = 0; i < m.vertices.size(); i += 3) {
+            const auto& a = m.vertices[i];
+            const auto& b = m.vertices[i + 1];
+            const auto& c = m.vertices[i + 2];
+            const float x = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]);
+            const float y = (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]);
+            const float z = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+            require(x * a[3] + y * a[4] + z * a[5] > 1e-8f);
+        }
+    }
+    for (const auto& p : packs) {
+        for (auto id : p.decorations)
+            if (id != UINT16_MAX)
+                require(id < textures.size() && textures[id].clamp && !textures[id].material);
+        for (unsigned slot = 0; slot < p.models.size(); ++slot) {
+            const auto id = p.models[slot];
+            if (id != UINT16_MAX) {
+                require(id < meshes.size());
+                bool bound = false;
+                for (unsigned i = 0; i < p.materialCount; ++i)
+                    bound |= p.materials[i] == meshes[id].texture;
+                require(bound);
+                for (const auto& v : meshes[id].vertices)
+                    require(std::abs(v[0]) <= .5f && std::abs(v[2]) <= (slot == 3 ? 1.f : .5f));
+            }
+        }
+    }
+}
 Json appearanceJson(const Appearance& a) {
     Json clips = Json::array();
     for (const auto& c : a.clips)
@@ -217,7 +261,8 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
     return unsigned(publication_.textures.size() - 1);
 }
 void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t definitions,
-                    const std::vector<Pack>& packs) {
+                    const std::vector<Pack>& packs, const std::vector<PropMesh>& meshes) {
+    validMeshes(meshes, publication_.textures, packs);
     require(appearances.size() <= 32 && packs.size() <= 8);
     std::set<std::string> ids;
     for (const auto& p : packs) {
@@ -258,15 +303,20 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"sky", p.sky},
                             {"worldScale", p.worldScale},
                             {"horizon", p.horizon}});
+        packJson.back()["decorations"] = p.decorations;
+        packJson.back()["models"] = p.models;
         if (p.guardianEmblem != UINT16_MAX)
             packJson.back()["guardianEmblem"] = p.guardianEmblem;
     }
-    const Json manifest{{"format", version},          {"appearance_revision", appearanceRevision},
-                        {"definitions", definitions}, {"bytes", offset_},
-                        {"checksum", hash_},          {"textures", textures},
-                        {"appearances", actors},      {"packs", packJson}};
+    Json meshJson = Json::array();
+    for (const auto& m : meshes)
+        meshJson.push_back({{"name", m.name}, {"texture", m.texture}, {"vertices", m.vertices}});
+    const Json manifest{
+        {"meshes", meshJson},         {"format", version},     {"appearance_revision", appearanceRevision},
+        {"definitions", definitions}, {"bytes", offset_},      {"checksum", hash_},
+        {"textures", textures},       {"appearances", actors}, {"packs", packJson}};
     const auto text = manifest.dump(2);
-    require(text.size() <= 256 * 1024);
+    require(text.size() <= 2 * 1024 * 1024);
     out_.close();
     require(bool(out_));
     // Invalidate publication before replacing payload; interrupted/mixed output rejects.
@@ -284,7 +334,7 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
 }
 Publication load(const std::filesystem::path& directory) {
     try {
-        require(std::filesystem::file_size(directory / "metadata.json") <= 256 * 1024);
+        require(std::filesystem::file_size(directory / "metadata.json") <= 2 * 1024 * 1024);
         std::ifstream in(directory / "metadata.json");
         std::array<std::set<std::string>, 33> keys;
         auto j = Json::parse(in, [&](int depth, Json::parse_event_t event, Json& value) {
@@ -382,6 +432,11 @@ Publication load(const std::filesystem::path& directory) {
             pack.sky = ref("sky", false);
             if (v.contains("guardianEmblem"))
                 pack.guardianEmblem = ref("guardianEmblem", true);
+            require(v.at("decorations").size() == decorationKinds && v.at("models").size() == 4);
+            for (unsigned i = 0; i < decorationKinds; ++i)
+                pack.decorations[i] = std::uint16_t(integer(v.at("decorations")[i], UINT16_MAX));
+            for (unsigned i = 0; i < 4; ++i)
+                pack.models[i] = std::uint16_t(integer(v.at("models")[i], UINT16_MAX));
             pack.worldScale = v.at("worldScale").get<float>();
             require(std::isfinite(pack.worldScale) && pack.worldScale > 0 && pack.worldScale <= 16);
             require(v.at("horizon").size() == 3);
@@ -392,6 +447,19 @@ Publication load(const std::filesystem::path& directory) {
             validPack(pack, p.textures);
             p.packs.push_back(std::move(pack));
         }
+        require(j.at("meshes").is_array() && j.at("meshes").size() <= 16);
+        for (const auto& v : j.at("meshes")) {
+            require(v.at("vertices").is_array() && v.at("vertices").size() <= 6000);
+            PropMesh m;
+            m.name = v.at("name").get<std::string>();
+            m.texture = std::uint16_t(integer(v.at("texture"), textureCapacity - 1));
+            for (const auto& a : v.at("vertices")) {
+                require(a.size() == 8);
+                m.vertices.push_back(a.get<std::array<float, 8>>());
+            }
+            p.meshes.push_back(std::move(m));
+        }
+        validMeshes(p.meshes, p.textures, p.packs);
         const auto& actors = j.at("appearances");
         require(actors.is_array() && actors.size() <= 32);
         names.clear();
@@ -481,6 +549,7 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
             publication.anchors.size() == publication.textures.size() &&
             publication.alphaBytes <= alphaBudget && publication.textureBytes <= textureBudget);
     require(publication.packs.size() <= 8);
+    validMeshes(publication.meshes, publication.textures, publication.packs);
     std::set<std::string> ids;
     for (const auto& p : publication.packs) {
         validPack(p, publication.textures);
@@ -583,7 +652,10 @@ Pack CpuAssets::pack(const std::string& id) const {
     return p;
 }
 std::size_t CpuAssets::bytes() const noexcept {
-    std::size_t n = sizeof(*this) + publication.packs.capacity() * sizeof(Pack) +
+    std::size_t meshBytes = publication.meshes.capacity() * sizeof(PropMesh);
+    for (const auto& m : publication.meshes)
+        meshBytes += m.name.capacity() + m.vertices.capacity() * sizeof(std::array<float, 8>);
+    std::size_t n = sizeof(*this) + meshBytes + publication.packs.capacity() * sizeof(Pack) +
                     masks.capacity() * sizeof(masks[0]) + bounds.capacity() * sizeof(AlphaBounds) +
                     publication.textures.capacity() * sizeof(Texture) +
                     publication.anchors.capacity() * sizeof(Anchor) +

@@ -16,6 +16,16 @@ void run(const char* executable) {
     check(first.at("generation").contains("map") && !first.at("terminal") &&
               c.protocol.session()->game().actors().snapshot().count == 11,
           "populated generated floor stays nonterminal");
+    check(first.at("containers").size() == 3, "Diagnostic container identities published");
+    check(!c.request("preview", {{"action", {{"kind", "open_container"}, {"container", 0}}}})
+                  .at("data")
+                  .at("accepted") &&
+              c.protocol.state() == first,
+          "Container preview uses checked access without mutation");
+    check(!c.request("preview", {{"action", {{"kind", "open_container"}, {"container", containerCapacity}}}})
+                  .at("ok") &&
+              c.protocol.state() == first,
+          "Invalid container wire handle rejects without mutation");
     const auto pose = c.protocol.session()->game().movement().player;
     const auto movement = Json{{"kind", "move"}, {"direction", "forward"}};
     check(c.request("preview", {{"action", movement}}).at("data").at("accepted") &&

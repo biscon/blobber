@@ -58,9 +58,13 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
                 (!map.solid(b) && map.surface(b).floor != map.surface(f.cell).floor))
                 throw std::invalid_argument("Door requires a level threshold");
         }
-        for (const auto& d : map.definition().decorations)
-            if (!d.cutout() && d.cell == f.cell)
+        for (const auto& d : map.definition().decorations) {
+            if (!d.cutout() && d.kind != DecorationKind::DoorSurround && d.cell == f.cell)
                 throw std::invalid_argument("Prop overlaps fixture");
+            for (unsigned n = 0; n < d.footprintCount(); ++n)
+                if (d.footprint(n) == f.cell)
+                    throw std::invalid_argument("Furniture overlaps fixture");
+        }
         auto& cell = index_[std::size_t(f.cell.y * map.width() + f.cell.x)];
         if (cell != UINT8_MAX)
             throw std::invalid_argument("Overlapping floor fixtures");
@@ -80,6 +84,12 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
         if (map.solid(c) || !defs.npcExcluded[std::size_t(c.y * map.width() + c.x)])
             throw std::invalid_argument("Invalid protected landing");
     }
+    for (const auto& d : map.definition().decorations)
+        for (unsigned n = 0; n < d.footprintCount(); ++n) {
+            const auto c = d.footprint(n);
+            if (defs.npcExcluded[std::size_t(c.y * map.width() + c.x)])
+                throw std::invalid_argument("Furniture overlaps protected stairs room");
+        }
     if (keys != locks)
         throw std::invalid_argument("Unmatched key and lock");
 }
@@ -100,7 +110,7 @@ bool GeometryView::solid(Cell c) const noexcept {
            fixtureBlocks(fixtures_->definition().entries[unsigned(i)], fixtures_->open(unsigned(i)));
 }
 bool GeometryView::npcAllowed(Cell c) const noexcept {
-    if (solid(c))
+    if (movementBlocked(c))
         return false;
     if (!fixtures_)
         return true;

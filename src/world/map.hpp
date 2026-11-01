@@ -15,6 +15,7 @@ class Map {
     static Map load(const std::string& path);
     bool solid(Cell cell) const noexcept;
     CellSurface surface(Cell cell) const noexcept;
+    bool movementBlocked(Cell cell) const noexcept;
     bool canStep(Cell from, Cell to) const noexcept;
     const WorldDefinition& definition() const noexcept { return world_; }
     bool flat() const noexcept { return flat_; }
@@ -22,10 +23,14 @@ class Map {
     float lower() const noexcept { return lower_; }
     int width() const noexcept { return width_; }
     int height() const noexcept { return height_; }
+    std::size_t storageBytes() const noexcept {
+        return sizeof(*this) + cells_.capacity() + occupied_.capacity() + world_.bytes() -
+               sizeof(WorldDefinition);
+    }
     bool connected(Cell start) const; // Loading-time validation; may allocate.
   private:
     int width_ = 0, height_ = 0;
-    std::vector<std::uint8_t> cells_;
+    std::vector<std::uint8_t> cells_, occupied_;
     WorldDefinition world_;
     float lower_ = 0, upper_ = 1;
     bool flat_ = true;

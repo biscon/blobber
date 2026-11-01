@@ -5,17 +5,17 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 8, templateVersion = 6;
+constexpr unsigned generatorVersion = 9, templateVersion = 7;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 constexpr int floorDimension = 36;
 constexpr std::size_t fixtureScratchBytes = maxCells * 4 * (sizeof(std::uint8_t) + sizeof(std::uint16_t));
 enum class Role : std::uint8_t { Junction, Entrance, Approach, Objective, Optional };
-enum class Domain : std::uint32_t { Topology = 1, Interior, Encounter, Reward, Runtime };
+enum class Domain : std::uint32_t { Topology = 1, Interior, Encounter, Reward, Runtime, Dressing };
 struct GenerationRequest {
     std::uint32_t seed = 0;
     unsigned depth = 1, generator = generatorVersion, templates = templateVersion;
 };
-enum class BiomeId : std::uint8_t { Stone };
+enum class BiomeId : std::uint8_t { Underkeep };
 enum class AlgorithmId : std::uint8_t { StoneRooms };
 enum class LayoutProfile : std::uint8_t { CompactWings, ChamberNetwork };
 struct BiomeDefinition {
@@ -31,7 +31,7 @@ struct FloorSpec {
     unsigned populationBand;
     bool keyedSector, finalFloor;
 };
-const BiomeDefinition& stoneBiome() noexcept;
+const BiomeDefinition& underkeepBiome() noexcept;
 std::optional<FloorSpec> floorSpec(unsigned depth) noexcept;
 const char* profileName(LayoutProfile) noexcept;
 constexpr std::uint8_t noRegion = 255;
@@ -69,13 +69,20 @@ struct PopulationPlacement {
     std::uint8_t id = 0;
     bool guardian = false;
 };
+struct CacheSite {
+    Cell cell{};
+    Heading facing = Heading::North;
+};
 struct FloorLayout {
+    std::array<CacheSite, 3> caches{};
+    unsigned cacheCount = 0;
+    std::uint64_t dressingFingerprint = 0;
     int width = floorDimension, height = floorDimension;
     std::array<std::uint8_t, maxCells> floor{};
     std::array<std::uint8_t, maxCells> membership{};
     std::array<std::uint16_t, maxCells> paths{};
     unsigned pathCount = 0;
-    BiomeId biome = BiomeId::Stone;
+    BiomeId biome = BiomeId::Underkeep;
     AlgorithmId algorithm = AlgorithmId::StoneRooms;
     LayoutProfile profile = LayoutProfile::CompactWings;
     FloorLayout() noexcept { membership.fill(noRegion); }

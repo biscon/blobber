@@ -1,5 +1,6 @@
 #include "world/map.hpp"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <fstream>
 #include <stdexcept>
@@ -54,13 +55,16 @@ Map Map::load(const std::string& path) {
 bool Map::solid(Cell c) const noexcept {
     return c.x < 0 || c.y < 0 || c.x >= width_ || c.y >= height_ || cells_[c.y * width_ + c.x] != 0;
 }
+bool Map::movementBlocked(Cell c) const noexcept {
+    return solid(c) || (!occupied_.empty() && occupied_[std::size_t(c.y * width_ + c.x)]);
+}
 CellSurface Map::surface(Cell c) const noexcept {
     return c.x < 0 || c.y < 0 || c.x >= width_ || c.y >= height_
                ? CellSurface{}
                : world_.surfaces[std::size_t(c.y) * width_ + c.x];
 }
 bool Map::canStep(Cell a, Cell b) const noexcept {
-    return std::abs(a.x - b.x) + std::abs(a.y - b.y) == 1 && !solid(a) && !solid(b) &&
+    return std::abs(a.x - b.x) + std::abs(a.y - b.y) == 1 && !movementBlocked(a) && !movementBlocked(b) &&
            surfacePassage(surface(a), surface(b));
 }
 void Map::validateWorld() {
@@ -91,40 +95,71 @@ void Map::validateWorld() {
                     upper_ = std::max(upper_, elevation(s.ceiling));
             }
         }
-    unsigned decals = 0, props = 0;
+    unsigned decals = 0, props = 0, containers = 0;
+    occupied_.assign(count, 0);
+    std::array<bool, containerCapacity> containerIds{};
     for (std::size_t i = 0; i < world_.decorations.size(); ++i) {
         const auto& d = world_.decorations[i];
-        if (unsigned(d.face) > 3 || unsigned(d.kind) > 3 || d.material >= 32 || d.cell.x < 0 ||
+        if (unsigned(d.face) > 3 || unsigned(d.kind) >= decorationKinds || d.material >= 32 || d.cell.x < 0 ||
             d.cell.y < 0 || d.cell.x >= width_ || d.cell.y >= height_ || !std::isfinite(d.offset) ||
             !std::isfinite(d.elevation) || !std::isfinite(d.width) || !std::isfinite(d.height) ||
             !std::isfinite(d.depth) || d.width <= 0 || d.width > 1 || d.height <= 0 || d.height > 4 ||
-            d.depth <= 0 || d.depth > 1 || d.offset - d.width * .5f < 0 || d.offset + d.width * .5f > 1)
+            d.depth <= 0 || d.depth > 2 || d.offset - d.width * .5f < 0 || d.offset + d.width * .5f > 1)
             throw std::invalid_argument("Invalid world decoration");
+        if (d.blocks()) {
+            if (d.width > 1 || d.height > 1 || d.depth > (d.kind == DecorationKind::Rack ? 2 : 1))
+                throw std::invalid_argument("Invalid furniture dimensions");
+            for (unsigned n = 0; n < d.footprintCount(); ++n) {
+                const auto c = d.footprint(n);
+                if (solid(c) || occupied_[std::size_t(c.y * width_ + c.x)])
+                    throw std::invalid_argument("Furniture overlaps wall or furniture");
+                occupied_[std::size_t(c.y * width_ + c.x)] = 1;
+            }
+        }
+        if (d.kind == DecorationKind::Chest) {
+            if (d.container >= containerCapacity || containerIds[d.container])
+                throw std::invalid_argument("Invalid or duplicate container identity");
+            containerIds[d.container] = true;
+            ++containers;
+        } else if (d.container != noContainer || d.sealed) {
+            throw std::invalid_argument("Container state on decoration");
+        }
         if (d.cutout()) {
             ++decals;
             const auto s = surface(d.cell);
-            if (solid(d.cell) || !solid(d.cell + forward(d.face)) || d.elevation - d.height * .5f < 0 ||
+            if (d.web() && !solid(d.cell + right(d.face)))
+                throw std::invalid_argument("Web requires adjoining corner walls");
+            if (d.floorCutout() && (d.height > 1 || d.elevation < 0 || d.elevation > .05f))
+                throw std::invalid_argument("Floor cutout outside floor strip");
+            if (solid(d.cell) || ((!d.floorCutout()) && !solid(d.cell + forward(d.face))) ||
+                (!d.floorCutout() && d.elevation - d.height * .5f < 0) ||
                 elevation(s.floor) + d.elevation + d.height * .5f >
                     (s.ceiling == noCeiling ? upper_ : elevation(s.ceiling)))
                 throw std::invalid_argument("Invalid wall decoration attachment");
             for (std::size_t j = 0; j < i; ++j) {
                 const auto& o = world_.decorations[j];
-                if (o.cutout() && o.cell == d.cell && o.face == d.face &&
-                    std::abs(o.offset - d.offset) < (o.width + d.width) * .5f &&
+                if (o.cutout() && o.floorCutout() == d.floorCutout() && o.cell == d.cell &&
+                    o.face == d.face && std::abs(o.offset - d.offset) < (o.width + d.width) * .5f &&
                     std::abs(o.elevation - d.elevation) < (o.height + d.height) * .5f)
                     throw std::invalid_argument("Overlapping wall decorations");
             }
         } else {
             ++props;
-            if (!solid(d.cell) && (d.height > .25f || d.depth > .25f || !solid(d.cell + forward(d.face))))
+            if (!d.blocks() && d.kind != DecorationKind::DoorSurround && !solid(d.cell) &&
+                (d.kind <= DecorationKind::Urn
+                     ? (d.height > .25f || d.depth > .25f || !solid(d.cell + forward(d.face)))
+                     : (d.depth > .12f || !solid(d.cell + forward(d.face)))))
                 throw std::invalid_argument("Nonblocking props require a low perimeter strip");
         }
     }
+    for (unsigned i = 0; i < containers; ++i)
+        if (!containerIds[i])
+            throw std::invalid_argument("Noncontiguous container identities");
     if (decals > 256 || props > 128)
         throw std::invalid_argument("World decoration capacity exceeded");
 }
 bool Map::connected(Cell start) const {
-    if (solid(start))
+    if (movementBlocked(start))
         return false;
     std::vector<std::uint8_t> visited(cells_.size(), 0);
     std::vector<Cell> todo;
@@ -141,7 +176,7 @@ bool Map::connected(Cell start) const {
         }
     }
     for (std::size_t i = 0; i < cells_.size(); ++i)
-        if (!cells_[i] && !visited[i])
+        if (!cells_[i] && !occupied_[i] && !visited[i])
             return false;
     return true;
 }

@@ -58,6 +58,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop);
     };
     std::vector<world_assets::Pack> packs;
+    std::vector<world_assets::PropMesh> meshes;
     std::vector<fs::path> packDirectories;
     for (const auto& entry : fs::directory_iterator(source / "packs"))
         if (entry.is_directory())
@@ -118,6 +119,70 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         pack.sky = addPack("sky", false, 2048, false);
         if (manifest.contains("guardianEmblem"))
             pack.guardianEmblem = addPack("guardianEmblem", true, 256, false);
+        if (manifest.contains("decorations")) {
+            for (unsigned kind = unsigned(DecorationKind::DampA); kind <= unsigned(DecorationKind::BonesB);
+                 ++kind) {
+                const auto name = decorationName(DecorationKind(kind));
+                if (manifest["decorations"].contains(name)) {
+                    const auto role = std::string("decoration-") + name;
+                    auto extra = manifest;
+                    extra[role] = manifest["decorations"][name];
+                    // addPack reads the current manifest, so load bounded source directly.
+                    unsigned w, h;
+                    auto rgba = pixels(source / relative(extra[role].get<std::string>()), w, h);
+                    OwnedImage image(
+                        LoadImage((source / relative(extra[role].get<std::string>())).string().c_str()));
+                    const float scale = std::min(1.f, 256.f / std::max(w, h));
+                    if (scale < 1)
+                        ImageResize(&image.value, std::max(1, int(w * scale)), std::max(1, int(h * scale)));
+                    ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+                    const auto* first = static_cast<const unsigned char*>(image.value.data);
+                    rgba.assign(first, first + std::size_t(image.value.width) * image.value.height * 4);
+                    pack.decorations[kind] =
+                        std::uint16_t(writer.add("pack/" + pack.id + "/" + name, image.value.width,
+                                                 image.value.height, true, rgba, 16, {}, false));
+                }
+            }
+        }
+        if (manifest.contains("models")) {
+            unsigned slot = 0;
+            for (const auto& path : manifest["models"]) {
+                if (slot >= 4 || meshes.size() >= 16)
+                    throw std::runtime_error("Too many prop meshes");
+                const auto model = read(source / relative(path.get<std::string>()));
+                const auto texture = model.at("texture").get<std::string>();
+                const auto textureName = "pack/" + pack.id + "/atlas/" + texture;
+                auto found = std::find_if(meshes.begin(), meshes.end(), [&](const auto& m) {
+                    return m.name == pack.id + "/" + model.at("name").get<std::string>();
+                });
+                if (found != meshes.end())
+                    throw std::runtime_error("Duplicate prop mesh");
+                // Chest variants deliberately share their one atlas.
+                static_cast<void>(textureName);
+                unsigned textureId = UINT16_MAX;
+                for (unsigned i = 0; i < slot; ++i) {
+                    const auto previous = read(source / relative(manifest["models"][i].get<std::string>()));
+                    if (previous.at("texture") == texture)
+                        textureId = meshes[pack.models[i]].texture;
+                }
+                if (textureId == UINT16_MAX) {
+                    textureId = add(textureName, source / relative(texture), false);
+                    if (pack.materialCount == 32)
+                        throw std::runtime_error("Prop material palette full");
+                    pack.materials[pack.materialCount++] = std::uint16_t(textureId);
+                }
+                world_assets::PropMesh mesh;
+                mesh.name = pack.id + "/" + model.at("name").get<std::string>();
+                mesh.texture = std::uint16_t(textureId);
+                if (!model.at("vertices").is_array() || model.at("vertices").size() > 6000)
+                    throw std::runtime_error("Prop mesh capacity exceeded");
+                mesh.vertices = model.at("vertices").get<std::vector<std::array<float, 8>>>();
+                pack.models[slot++] = std::uint16_t(meshes.size());
+                meshes.push_back(std::move(mesh));
+            }
+            if (slot != 4)
+                throw std::runtime_error("Expected chest variants, cage and rack");
+        }
         packs.push_back(std::move(pack));
     }
     if (packs.empty() || packs.size() > 8)
@@ -241,7 +306,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         add(std::string("fixture/") + name, source / "fixtures" / (std::string(name) + ".png"), true);
     if (sourceFingerprints(source) != inputs)
         throw std::runtime_error("World source assets changed during preparation; rebuild");
-    writer.finish(appearances, parsed.definitionFingerprint, packs);
+    writer.finish(appearances, parsed.definitionFingerprint, packs, meshes);
     {
         std::ofstream provenance(output / "sources.json");
         provenance << Json(inputs).dump(2) << '\n';

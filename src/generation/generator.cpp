@@ -1,3 +1,4 @@
+#include "generation/dressing.hpp"
 #include "generation/floor.hpp"
 #include "generation/stone_layout.hpp"
 #include <algorithm>
@@ -17,7 +18,7 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback
     f.width = spec->width;
     f.height = spec->height;
     f.biome = spec->biome;
-    f.algorithm = stoneBiome().algorithm;
+    f.algorithm = underkeepBiome().algorithm;
     switch (f.algorithm) {
     case AlgorithmId::StoneRooms:
         if (!buildStoneLayout(f, request, attempt, fallback))
@@ -31,7 +32,10 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback
 } // namespace
 std::uint64_t seedFor(GenerationRequest r, Domain domain, unsigned id, unsigned attempt) noexcept {
     auto h = mix(0x424c4f4242455255ull ^ r.seed);
-    for (const auto value : {r.depth, r.generator, r.templates, unsigned(domain), id, attempt})
+    // Dressing changes metadata, not the accepted terrain/population seed streams.
+    const unsigned randomGenerator = domain == Domain::Dressing ? r.generator : 8;
+    const unsigned randomCatalog = domain == Domain::Dressing ? r.templates : 6;
+    for (const auto value : {r.depth, randomGenerator, randomCatalog, unsigned(domain), id, attempt})
         h = mix(h ^ (std::uint64_t(value) + 0x9e3779b97f4a7c15ull));
     return h;
 }
@@ -50,6 +54,14 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
     for (int i = 0; i < f.width * f.height; ++i)
         number(f.floor[std::size_t(i)]);
     number(f.depth);
+    number(std::uint32_t(f.dressingFingerprint));
+    number(std::uint32_t(f.dressingFingerprint >> 32));
+    number(f.cacheCount);
+    for (unsigned i = 0; i < f.cacheCount; ++i) {
+        number(f.caches[i].cell.x);
+        number(f.caches[i].cell.y);
+        number(unsigned(f.caches[i].facing));
+    }
     number(unsigned(f.biome));
     number(unsigned(f.algorithm));
     number(unsigned(f.profile));
@@ -153,6 +165,7 @@ GenerationResult generate(GenerationRequest request, bool forceFallback) {
     }
     FloorLayout layout;
     bool valid = false;
+    WorldDefinition dressing;
     for (unsigned i = 0; i < maxAttempts; ++i) {
         ++out.diagnostics.attempts;
         if (forceFallback) {
@@ -162,6 +175,8 @@ GenerationResult generate(GenerationRequest request, bool forceFallback) {
         layout = candidate(request, i, false);
         const auto failure = validate(layout);
         if (!failure) {
+            if (!dressUnderkeep(layout, request, dressing))
+                continue;
             valid = true;
             break;
         }
@@ -176,14 +191,19 @@ GenerationResult generate(GenerationRequest request, bool forceFallback) {
             return out;
         }
     }
+    if (!valid && !dressUnderkeep(layout, request, dressing)) {
+        out.diagnostics.failure = {Error::Fixture};
+        return out;
+    }
     std::vector<std::string> rows(std::size_t(layout.height), std::string(std::size_t(layout.width), '#'));
     for (int y = 0; y < layout.height; ++y)
         for (int x = 0; x < layout.width; ++x)
             if (layout.floor[y * layout.width + x])
                 rows[y][x] = '.';
-    out.floor.emplace(GeneratedFloor{
-        request, layout, Map(rows, WorldDefinition{stoneBiome().assetPack, {}, {}}), out.diagnostics,
-        fingerprint(layout), std::uint32_t(seedFor(request, Domain::Runtime))});
+    Map map(rows, std::move(dressing));
+    layout.dressingFingerprint = map.definition().fingerprint();
+    out.floor.emplace(GeneratedFloor{request, layout, std::move(map), out.diagnostics, fingerprint(layout),
+                                     std::uint32_t(seedFor(request, Domain::Runtime))});
     return out;
 }
 std::string ascii(const FloorLayout& f) {

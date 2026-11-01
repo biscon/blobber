@@ -1,0 +1,51 @@
+{
+  "mode": "built-in",
+  "materialAtlas": {
+    "prompt": "Use case: stylized-concept. Asset type: flat square UV colour texture atlas for low-poly medieval dungeon props. Create ONE texture atlas filling entire image, exactly 2 by 2 equally sized square tiles, zero gutters or labels: upper left weathered medium brown oak planks with horizontal grain and softly shaded plank seams; upper right slightly lighter oak endgrain boards with worn edges; lower left very dark brown interior wood, softly occluded corners and plank seams; lower right dull dark grey wrought iron, mottled subtle rust and softly shaded edges. Each tile has a softly darker narrow border as painted ambient occlusion and restrained lighter inner rim as wear. Rich hand-painted 1990s pixel dungeon game surface artwork, broad readable grain, warm muted earth tones, no photorealism, no PBR gloss, no perspective, no objects, no cast shadows or directional lighting. Flat straight-on texture only. Exact four quadrant layout matters for UV mapping.",
+    "result": "Generated images are saved to /home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5 as /home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-e90d3754-72bb-4a68-9474-355d029c9eb3.png by default.\nIf you need to use a generated image at another path, copy it and leave the original in place unless the user explicitly asks you to delete it.\nThe generated image is already displayed to the user. There is no need to render it in the final response as a Markdown image or file link."
+  },
+  "damp-a": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent wall decal for Underkeep abandoned fortress game. One irregular low wide patch of dark olive moss and green damp mineral staining for the base of a castle wall. Small soft fringe of moss, transparent holes. No wall background. Hand painted late-1990s dungeon crawler pixel art, subdued warm grey/olive palette, broad readable detail at 256 pixels. Flat straight-on orthographic, no perspective, no directional lighting or cast shadow, no text, no frame. Isolated decal on genuinely transparent background, generous empty transparent margin.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-ae1acaf8-8e92-4706-9172-49cdee3a79e7.png"
+  },
+  "damp-b": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent wall decal for Underkeep abandoned fortress game. One irregular vertical grey-green water stain with a little moss at the bottom, subtle branching runoff streaks and soft edges, no wall background. Hand painted late-1990s dungeon crawler pixel art, subdued warm grey/olive palette, broad readable detail at 256 pixels. Flat straight-on orthographic, no perspective, no directional lighting or cast shadow, no text, no frame. Isolated decal on genuinely transparent background, generous empty transparent margin.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-7002e786-a921-4bc2-ada6-365c47da2535.png"
+  },
+  "cracks": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent wall decal for Underkeep abandoned fortress game. One branching irregular patch of fine dark cracks in aged masonry, a few chipped pale edges with soft painted occlusion; only the cracks and edge chips, no solid stone background. Hand painted late-1990s dungeon crawler pixel art, subdued warm grey/olive palette, broad readable detail at 256 pixels. Flat straight-on orthographic, no perspective, no directional lighting or cast shadow, no text, no frame. Isolated decal on genuinely transparent background, generous empty transparent margin.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-407446df-bcec-4330-aa8d-542111fe4013.png"
+  },
+  "soot": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent surface decal for Underkeep abandoned fortress game. One irregular faded charcoal-grey soot stain with narrow upwards wisps and soft sparse edges, no flame or object. Rich hand painted late-1990s dungeon-crawler pixel art, muted low contrast, broad readable detail at 256 pixels. Flat straight-on, no perspective, no directional light, no cast shadow, no solid wall background, no text or frame. Isolated on genuinely transparent background, generous transparent margins.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-fbd1dcae-32bf-4641-97f2-4a8910e49490.png"
+  },
+  "blood": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent surface decal for Underkeep abandoned fortress game. One small old dried dark reddish-brown blood spatter stain, sparse droplets and a faded smear. Environmental decal only, no person, wound, body or scene. Subdued and not graphic. Rich hand painted late-1990s dungeon-crawler pixel art, muted low contrast, broad readable detail at 256 pixels. Flat straight-on, no perspective, no directional light, no cast shadow, no solid wall background, no text or frame. Isolated on genuinely transparent background, generous transparent margins.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-d925c949-fe9a-4c4c-b264-7758bb17a10a.png"
+  },
+  "banner-a": {
+    "prompt": "Use case: stylized-concept. Asset: single hanging wall banner cutout for Underkeep abandoned fortress game. Full plain rectangular faded burgundy wool banner, simple worn gold lion-like heraldic silhouette centered, narrow dull gold border, tattered pointed lower edge, small horizontal dark iron rod at top. Straight-on flat front view, broad gentle vertical fabric folds painted with soft AO, no directional lighting. Rich painted late-1990s dungeon crawler pixel art, muted colours, detail readable at 256 pixels, entire object visible with generous margins. Genuinely transparent background. No text, no wall, no ground shadow, no perspective.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-8ed7b3e1-7b72-4e30-be6f-143b8c853df3.png"
+  },
+  "banner-b": {
+    "prompt": "Use case: stylized-concept. Asset: a single transparent wall banner cutout for Underkeep abandoned fortress dungeon game. Entire long narrow faded dark blue-grey medieval wool banner, simple worn ochre tower emblem centered, a little tattered at the bottom, small plain dark iron hanging rod. Flat front view, broad shallow fabric folds painted with soft AO only, no directional lighting or ground shadow. Rich hand painted 1990s dungeon-crawler pixel art with muted colours and broad detail at 256 pixels. No text, wall or scene. Generous genuinely transparent margin around whole banner.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-d36ee964-b6d7-4e18-8d4f-0be8c290f5d0.png"
+  },
+  "web-a": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent cobweb cutout for corner of Underkeep fortress ceiling. A delicate triangular fan of dusty pale grey spider silk, right angle at top left, thickest anchoring strands along top and left, sagging concentric threads across open transparent holes. No spider, no wall or scene, no opaque background. Hand painted 1990s dungeon-crawler pixel art, readable slightly thick threads at 256 pixels, subdued grey beige, no glow, no shadow, no light effects, no text. Genuine transparent background with generous transparent margin.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-05bb13e6-1ff6-4fa2-9036-86de21715fc9.png"
+  },
+  "web-b": {
+    "prompt": "Use case: stylized-concept. Asset: one transparent corner cobweb cutout for Underkeep fortress game. A sparse irregular triangular fan of dusty grey-beige spider silk, anchored at top right and along upper and right edges, torn sagging concentric threads toward lower left. Genuinely transparent open spaces between strands, no spider, no wall or environment. Rich hand-painted 1990s dungeon crawler pixel art, muted pale grey, fairly thick readable strands at 256 pixels, no coloured fringe, glow, shadow, light effects, text or perspective. Whole web isolated with transparent margins.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-8bd205f2-1833-45e7-b33b-67dbb7c03d05.png"
+  },
+  "bones-a": {
+    "prompt": "Use case: stylized-concept. Asset: single transparent floor scatter for Underkeep fortress game. Top-down orthographic view of a small loose scatter of old dry animal bones: three pale yellow-grey gnawed long bones and several small fragments, no skull, flesh, blood, person or whole skeleton. Hand painted late-1990s dungeon crawler pixel art, soft AO in bone grooves, muted ivory and warm grey, broad readable detail at 256 pixels, no directional cast shadows, no ground, no scene or text. Genuinely transparent background and generous transparent margins. Bones lie flat in a roughly circular loose arrangement.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-52bb8a70-58ed-47cb-b790-de828780bcb6.png"
+  },
+  "bones-b": {
+    "prompt": "Use case: stylized-concept. Asset: one transparent floor scatter for Underkeep abandoned fortress game. Top-down orthographic view of a sparse pile of old dry animal rib fragments, one short gnawed long bone and a few pale chips, arranged asymmetrically. No skull, flesh, blood, person, complete skeleton or ground. Rich hand-painted 1990s dungeon-crawler pixel art, muted yellow-grey ivory, soft AO creases and shaded undersides, broad readable detail at 256 pixels. No directional cast shadow, light effects, text, frame or scene. Genuinely transparent background with generous clear margins. All bones lie flat.",
+    "path": "/home/bison/.codex/generated_images/01a1985a-b6a0-7a31-a1cf-7056f8de14c5/exec-18b3b500-da89-40e4-bf67-9540008f3e6e.png"
+  }
+}

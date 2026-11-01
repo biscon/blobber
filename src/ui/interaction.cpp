@@ -26,7 +26,7 @@ UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bo
 
 void routeHudInput(CommandController& commands, const UiInput& physical, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
-                   std::optional<FixtureId> fixtureHit) noexcept {
+                   std::optional<FixtureId> fixtureHit, std::optional<ContainerId> containerHit) noexcept {
     const auto input = routeHudButtons(commands, physical, allowConfirm);
     if (!input.focused) {
         commands.hover(HoverKind::None);
@@ -293,6 +293,11 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     if (allowConfirm && (input.has(UiKey::Interact) || (click && fixtureHit)) && !state.magic.casting() &&
         !state.magic.armed && !state.inventory.itemTargeting) {
         commands.interactFixture(input.has(UiKey::Interact) ? std::nullopt : fixtureHit);
+        return;
+    }
+    if (containerHit && click && allowConfirm && !state.magic.casting() && !state.magic.armed &&
+        !state.inventory.itemTargeting) {
+        commands.openContainer(*containerHit);
         return;
     }
     if (lootHit && !state.magic.casting() && !state.magic.armed && !state.inventory.itemTargeting) {

@@ -6,8 +6,7 @@ std::optional<generation::GeneratedFloor> prepare(const Scenario& s, Mode mode) 
     if (const auto* generated = std::get_if<GeneratedScenario>(&s)) {
         if (generated->forceFallback && mode != Mode::Diagnostic)
             throw std::runtime_error("Forced fallback requires diagnostic mode");
-        auto result =
-            generation::generate(generated->generation, generated->forceFallback);
+        auto result = generation::generate(generated->generation, generated->forceFallback);
         if (!result)
             throw std::runtime_error(std::string("Generation failed: ") +
                                      generation::errorName(result.diagnostics.failure.code));
@@ -82,6 +81,10 @@ void Session::observe(Observation& out, bool diagnostic) {
     }
     for (std::size_t i = 0; i < out.targets.count; ++i)
         out.visible[out.targets.ids[i].slot] = true;
+    for (unsigned i = 0; i < containerCapacity; ++i)
+        out.containerVisible[i] =
+            out.diagnostic ||
+            (visibility_ && visibility_->containerVisible({game().loot().snapshot().world, std::uint8_t(i)}));
     for (std::size_t i = 0; i < lootCapacity; ++i) {
         const auto& loot = game().loot().snapshot().stacks[i];
         out.lootVisible[i] =
@@ -155,6 +158,12 @@ ActionResult Session::action(const ActionRequest& r, bool preview) {
     case Operation::Drop: {
         const auto res = game().dropItem(r.item, r.inventory.revision, preview);
         return okay(bool(res), res.reason);
+    }
+    case Operation::OpenContainer: {
+        if (mode_ == Mode::Visual && (!visibility_ || !visibility_->containerVisible(r.container)))
+            return {false, "Not visible"};
+        const auto result = preview ? game().containerAccess(r.container) : game().openContainer(r.container);
+        return okay(bool(result), result.reason);
     }
     case Operation::Pickup: {
         if (mode_ == Mode::Visual) {

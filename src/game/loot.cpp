@@ -1,9 +1,17 @@
 #include "game/loot.hpp"
+#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 namespace blobber {
 LootWorld::LootWorld(const ActorWorld& actors, const RecoveryLevel& level, std::uint32_t seed) {
     state_.world = actors.snapshot().world;
+    for (const auto& d : actors.map().base().definition().decorations)
+        if (d.kind == DecorationKind::Chest) {
+            if (d.container >= containerCapacity)
+                throw std::runtime_error("Container capacity exceeded");
+            state_.containerCount = std::max(state_.containerCount, unsigned(d.container) + 1);
+            state_.containers[d.container] = {d.cell, d.face, false, d.sealed};
+        }
     if (level.groundCount > level.ground.size() || level.sanctuaryCount > level.sanctuaries.size())
         throw std::runtime_error("Recovery level capacity exceeded");
     for (std::size_t i = 0; i < level.sanctuaryCount; ++i)
@@ -24,9 +32,12 @@ LootWorld::LootWorld(const ActorWorld& actors, const RecoveryLevel& level, std::
     for (std::size_t i = 0; i < level.groundCount; ++i) {
         const auto& p = level.ground[i];
         const auto* d = actors.catalog().item(p.item);
-        if (actors.map().solid(p.cell) || !d || !p.quantity || p.quantity > rules::stackLimit(*d))
+        if (actors.map().solid(p.cell) || !d || !p.quantity || p.quantity > rules::stackLimit(*d) ||
+            (p.container != noContainer &&
+             (p.container >= state_.containerCount || !(state_.containers[p.container].cell == p.cell))))
             throw std::runtime_error("Invalid ground loot placement");
-        state_.stacks[NpcWorld::maxInstances * lootPerActor + i] = {p.cell, p.item, p.quantity, true};
+        state_.stacks[NpcWorld::maxInstances * lootPerActor + i] = {p.cell, p.item, p.quantity,
+                                                                    true,   1,      p.container};
     }
 }
 const FloorLoot* LootWorld::find(LootId id) const noexcept {

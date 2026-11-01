@@ -5,17 +5,17 @@ Cell rotate(Cell c, int extent, unsigned n) noexcept {
         c = {extent - 1 - c.y, c.x};
     return c;
 }
-const BiomeDefinition& stoneBiome() noexcept {
-    static constexpr BiomeDefinition biome{BiomeId::Stone,
+const BiomeDefinition& underkeepBiome() noexcept {
+    static constexpr BiomeDefinition biome{BiomeId::Underkeep,
                                            AlgorithmId::StoneRooms,
-                                           "dungeon",
+                                           "underkeep",
                                            {LayoutProfile::CompactWings, LayoutProfile::ChamberNetwork}};
     return biome;
 }
 std::optional<FloorSpec> floorSpec(unsigned depth) noexcept {
     if (depth < 1 || depth > 3)
         return std::nullopt;
-    return FloorSpec{depth, floorDimension, floorDimension, BiomeId::Stone, depth, depth > 1, depth == 3};
+    return FloorSpec{depth, floorDimension, floorDimension, BiomeId::Underkeep, depth, depth > 1, depth == 3};
 }
 const char* profileName(LayoutProfile p) noexcept {
     return p == LayoutProfile::CompactWings ? "compact_wings" : "chamber_network";

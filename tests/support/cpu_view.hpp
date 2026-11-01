@@ -9,8 +9,8 @@ struct CpuView {
     NpcAnimator animator;
     CpuView(const GameSession& game, const world_assets::CpuAssets& assets,
             const std::vector<NpcTimings>& timings)
-        : scene(world_render::prepare(game.geometry().base())), visibility(scene, assets), effects(assets),
-          animator(game.actors(), timings) {}
+        : scene(world_render::prepare(game.geometry(), {}, {}, {}, &assets)), visibility(scene, assets),
+          effects(assets), animator(game.actors(), timings) {}
     void update(const GameSession& game, const SpellArea* preview = nullptr) {
         animator.setTime(game.timeMs(), &game.effects());
         SpellArea area = preview ? *preview : SpellArea{};
