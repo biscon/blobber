@@ -160,30 +160,47 @@ bool MenuInteraction::routeDrag(MenuModel& m, const LibrarySnapshot& library, co
         pointer = *input.pointer;
     if (!pointerDown && input.has(UiKey::Click) && input.pointer) {
         PartyChoice choice;
+        originSlot = -1;
         for (int i = 0; i < 6; ++i) {
             const auto n = m.firstRow * 3 + std::size_t(i);
-            if (n < m.visibleCount && menuLayout::available(i).contains(pointer))
+            if (n < m.visibleCount && menuLayout::available(i).contains(pointer)) {
                 choice = {library.records[m.visible[n]].id, -1};
+                originRect = menuLayout::available(i);
+            }
         }
         for (int i = 0; i < 4; ++i)
-            if (menuLayout::formation(i).contains(pointer) && !menuLayout::remove(i).contains(pointer))
+            if (menuLayout::formation(i).contains(pointer) && !menuLayout::remove(i).contains(pointer)) {
                 choice = m.choices[i];
+                originRect = menuLayout::formation(i);
+                originSlot = i;
+            }
         if (!choice.empty()) {
             carried = choice;
             origin = pointer;
             pointerDown = true;
             dragging = false;
+            clickCancelled = false;
             focusSearch(false);
             return true;
         }
     }
     if (!pointerDown)
         return false;
+    if (!input.pointer || !originRect.contains(pointer))
+        clickCancelled = true;
     const auto dx = pointer.x - origin.x, dy = pointer.y - origin.y;
     if (input.pointer && dx * dx + dy * dy >= 9)
         dragging = true;
     target = dragging && input.pointer ? menuLayout::dropSlot(pointer) : -1;
     if (input.pointerReleased) {
+        if (!dragging && !clickCancelled && input.pointer && originRect.contains(pointer)) {
+            if (originSlot >= 0)
+                m.activeSlot = std::size_t(originSlot);
+            else
+                m.assign(carried);
+            if (carried.preset < 0)
+                m.selected = carried.saved;
+        }
         if (dragging && target >= 0 &&
             (carried.snapshot >= 0 || carried.preset >= 0 || library.find(carried.saved))) {
             m.activeSlot = std::size_t(target);

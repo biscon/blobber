@@ -1,4 +1,5 @@
 #include "generation/floor.hpp"
+#include "generation/topology.hpp"
 #include <algorithm>
 namespace blobber::generation {
 namespace {
@@ -18,56 +19,12 @@ struct Random {
 Cell origin(Cell site) noexcept {
     return {1 + site.x * 9, 1 + site.y * 9};
 }
-void edge(FloorLayout& f, unsigned a, unsigned b) {
-    f.connections[f.connectionCount++] = {std::uint8_t(a), std::uint8_t(b)};
-}
-void room(FloorLayout& f, Cell site, Role role) {
-    auto& r = f.rooms[f.roomCount];
-    r.site = site;
-    r.role = role;
-    r.id = std::uint8_t(f.roomCount++);
-}
 FloorLayout candidate(GenerationRequest request, unsigned attempt, const TemplateCatalog& catalog,
                       bool fallback) {
     FloorLayout f;
     f.depth = request.depth;
-    Random rng{seedFor(request, Domain::Topology, 0, attempt)};
-    f.family = fallback ? 0 : rng.next(2);
-    f.rotation = fallback ? request.depth - 1 : rng.next(4);
-    const Cell six[]{{0, 1}, {1, 1}, {2, 1}, {2, 2}, {1, 2}, {0, 2}};
-    const Cell eight[]{{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}};
-    const unsigned count = f.family ? 8 : 6;
-    for (unsigned i = 0; i < count; ++i)
-        room(f, f.family ? eight[i] : six[i], Role::Junction);
-    for (unsigned i = 0; i < count; ++i)
-        edge(f, i, (i + 1) % count);
-    if (!f.family) {
-        const unsigned entrance = fallback ? 0 : rng.next(2);
-        room(f, {int(entrance), 0}, Role::Entrance);
-        edge(f, entrance, 6);
-        room(f, {3, 1}, Role::Approach);
-        edge(f, 2, 7);
-        room(f, {3, fallback ? 0 : int(rng.next(2) * 2)}, Role::Objective);
-        edge(f, 7, 8);
-        const unsigned branch = fallback ? 0 : rng.next(2);
-        room(f, {int(branch), 3}, Role::Optional);
-        edge(f, branch ? 4 : 5, 9);
-        if (!fallback && rng.next(2)) {
-            room(f, {2, 3}, Role::Optional);
-            edge(f, 3, 10);
-        }
-    } else {
-        room(f, {0, 3}, Role::Entrance);
-        edge(f, 6, 8);
-        room(f, {3, 1}, Role::Approach);
-        edge(f, 3, 9);
-        room(f, {3, int(rng.next(2) * 2)}, Role::Objective);
-        edge(f, 9, 10);
-        room(f, {2, 3}, Role::Optional);
-        edge(f, 4, 11);
-    }
-    for (unsigned i = 0; i < f.roomCount; ++i)
-        f.rooms[i].site = rotate(f.rooms[i].site, 4, f.rotation);
+    if (!buildTopology(f, request, attempt, fallback))
+        return f;
     for (unsigned i = 0; i < f.roomCount; ++i) {
         auto& r = f.rooms[i];
         Random interior{seedFor(request, Domain::Interior, r.id, attempt)};

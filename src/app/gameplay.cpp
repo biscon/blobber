@@ -71,7 +71,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         const rules::PresetParty* starting, const GameplayLaunch* launch) {
     const Player spawn = launch ? launch->spawn : Player{};
     const auto idle = gameplayPlacements(map, placements, spawn.cell);
-    const std::uint32_t seed = launch ? launch->seed : options.seed.value_or(std::random_device{}());
+    const std::uint32_t seed =
+        launch ? launch->seed : chooseCampaignSeed(options.seed, {}, [] { return std::random_device{}(); });
     std::cout << "Gameplay seed: " << seed << '\n';
     bool inputArmed = false;
     Input input; // Keep edge latches across restart, so held confirmation never replays.
@@ -87,6 +88,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                       launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
                       launch ? launch->arenaScenario : nullptr);
         auto& initial = *current;
+        if (campaign)
+            initial.commands.reportCampaignSeed(campaign->location(0).seed);
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
         initial.session.enableDevelopment(options.development);
@@ -120,8 +123,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 debug = false;
                 sample.ui.pressed[static_cast<std::size_t>(UiKey::Cancel)] = false;
             }
-            if (sample.clearPending)
+            if (sample.clearPending) {
                 view.session.clearPending();
+                view.commands.cancelPointerButtons();
+            }
             if (sample.toggleMap && !view.commands.snapshot().modal())
                 debug = !debug;
             if (debug && options.development && sample.ui.has(UiKey::Click) && sample.ui.pointer &&
@@ -162,6 +167,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             const bool terminalCampaign = campaign && campaign->status() != CampaignStatus::Active;
             const bool result =
                 terminalCampaign || phase == CombatPhase::Victory || phase == CombatPhase::Defeat;
+            sample.ui = routeHudButtons(view.commands, sample.ui, samePresentedTurn);
             const bool confirmResult = (!terminalCampaign || presentedCampaignTerminal) &&
                                        sample.ui.focused && !paused &&
                                        (sample.ui.has(UiKey::Confirm) ||
@@ -207,8 +213,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (campaign) {
                 std::optional<SavingScreen> saving;
                 const auto intent = view.commands.saveMenu().intent;
-                if (intent == SaveIntent::Save || intent == SaveIntent::SaveMenu)
+                if (intent == SaveIntent::Save || intent == SaveIntent::SaveMenu) {
+                    view.commands.cancelPointerButtons();
                     saving.emplace(presenter.loadingWorker(), presenter);
+                }
                 const bool leave = saveFlow.poll(*campaign, view.commands);
                 const bool closing = saving && saving->closing();
                 saving.reset();

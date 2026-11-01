@@ -17,10 +17,11 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
                             "Restoration and Spiritual Weapon are always prepared by your Life Domain.";
     case C::Rogue:
         return level == 2
-                   ? "Cunning Action: Defend once per own turn without spending your normal action. Activate "
-                     "before or after it; End Turn skips an unused allowance."
+                   ? "Cunning Action: Defend automatically after your last normal action and advance "
+                     "initiative. You may activate it earlier."
                    : "Thief / Fast Hands: use your Cunning Action allowance for a potion instead of Defend. "
-                     "Sneak Attack increases to 2d6. Expertise, locks, traps and climbing remain deferred.";
+                     "Use a quick potion before your last normal action. Sneak Attack increases to 2d6. "
+                     "Expertise, locks, traps and climbing remain deferred.";
     case C::Wizard:
         return level == 2 ? "Evocation / Sculpt Spells: Shatter protects your other three companions. You "
                             "remain vulnerable to your own blast. Learn two spells. Spell copying and "
@@ -50,6 +51,14 @@ void AdvancementHud::sync() noexcept {
 }
 void layoutAdvancement(FlowControls& w, const AdvancementHud& h) noexcept {
     w.clear();
+    w.context = {2,
+                 unsigned(h.step),
+                 h.request.character.index,
+                 unsigned(h.identity.level),
+                 h.selection.offset,
+                 h.selection.context.available,
+                 h.selection.context.locked,
+                 0};
     w.add({14, 330, 90, 20}, FlowAction::Cancel);
     w.add({414, 330, 90, 20}, FlowAction::Back, 0, h.step != AdvancementStep::Overview);
     const bool choosing = h.step == AdvancementStep::Learned || h.step == AdvancementStep::Prepared;

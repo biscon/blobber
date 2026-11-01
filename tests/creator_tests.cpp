@@ -398,6 +398,8 @@ void preparation(const Catalog& c) {
     r = request(s);
     r.preparation = s.party().preparationRequest();
     check(s.rest(r).error == RestError::NoBenefit, "unchanged lists alone no benefit");
+    check(bool(s.party().acquire({{0}, c.findItem("camp_kit"), 2, s.party().inventory().revision()})),
+          "preparation fixture owns kits for repeated rest scenarios");
     CommandController ui(s);
     ui.refresh({}, false, false, true);
     check(ui.snapshot().restAvailable, "full-health rest icon allows preparation");

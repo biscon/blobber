@@ -4,6 +4,14 @@
 namespace blobber {
 void layoutPreparation(FlowControls& w, const CampHud& h) noexcept {
     w.clear();
+    w.context = {3,
+                 h.preparationMember,
+                 h.selection.offset,
+                 h.selection.context.available,
+                 h.selection.context.locked,
+                 0,
+                 0,
+                 0};
     for (unsigned i = 0; i < 4; ++i)
         if (h.casters[i])
             w.add({174 + int(i) * 112, 36, 107, 20}, FlowAction::Member, int(i));

@@ -254,7 +254,7 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
         p.text("End of summary. Scroll up to review choices.", 182, 130, muted);
     return row;
 }
-void drawCreator(void* context, const UiFonts& fonts, const UiArt& art) {
+static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt& art) {
     auto& view = *static_cast<CreatorView*>(context);
     auto& m = view.model;
     const auto& c = view.catalog;
@@ -664,4 +664,10 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
     }
     p.clipped(h.message.data(), 174, 350, 448, red, UiTextStyle::Small);
 }
+void drawCreator(void* context, const UiFonts& fonts, const UiArt& art) {
+    drawCreatorContent(context, fonts, art);
+    const auto& view = *static_cast<CreatorView*>(context);
+    HudPainter(&fonts, &art).buttonFeedback(view.controls.buttons.feedback);
+}
+
 } // namespace blobber

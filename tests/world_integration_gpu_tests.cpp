@@ -60,6 +60,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--pc072-controls") {
+            test::pc072ControlsReview(argv[1], argv[2]);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--pc072-review") {
             test::pc072Review(argv[1], argv[2]);
             return 0;

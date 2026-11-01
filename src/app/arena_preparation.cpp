@@ -82,6 +82,7 @@ void ArenaPreparationFlow::layout() noexcept {
         return;
     }
     controls.clear();
+    controls.context = {4, unsigned(step), transition, member, candidate.preparation.targetLevel, 0, 0, 0};
     controls.add({20, 320, 100, 25}, FlowAction::Cancel);
     if (step == ArenaPreparationStep::Level)
         for (int level = 1; level <= 3; ++level)

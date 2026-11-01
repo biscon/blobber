@@ -43,10 +43,12 @@ struct MenuModel {
     rules::PresetParty resolve(const rules::Catalog&, const LibrarySnapshot&) const;
 };
 struct MenuInteraction {
-    bool searchFocused = false, pointerDown = false, dragging = false;
+    bool searchFocused = false, pointerDown = false, dragging = false, clickCancelled = false;
     float blink = 0;
     PartyChoice carried{};
     ArtPoint origin{}, pointer{};
+    UiRect originRect{};
+    int originSlot = -1;
     int target = -1;
     void focusSearch(bool focused) noexcept {
         searchFocused = focused;

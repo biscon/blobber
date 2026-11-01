@@ -60,8 +60,8 @@ int main() {
             }
             return count;
         };
-        check(kitCount(first) == 3 && kitCount(restarted) == 3,
-              "each independent launch has exactly three kits");
+        check(kitCount(first) == 1 && kitCount(restarted) == 1,
+              "each independent launch has exactly one kit");
         m.activeSlot = 1;
         m.assign({});
         check(!m.ready(empty), "empty slot blocks launch");
@@ -143,6 +143,26 @@ int main() {
         check(interaction.caretVisible(), "caret repeats");
         interaction.tick(.1f, false);
         check(!interaction.caretVisible() && !interaction.searchFocused, "blur removes text focus");
+        MenuModel clicks;
+        clicks.screen = MenuScreen::Picker;
+        clicks.filter(library);
+        MenuInteraction clicking;
+        const auto row = menuLayout::available(0);
+        UiInput downClick;
+        downClick.pressed[std::size_t(UiKey::Click)] = true;
+        downClick.pointerHeld = true;
+        downClick.pointer = ArtPoint{row.x + .5f, row.y + .5f};
+        clicking.routeDrag(clicks, library, downClick);
+        auto held = downClick;
+        held.pressed.fill(false);
+        held.pointer = ArtPoint{row.x - 1.f, row.y + .5f};
+        clicking.routeDrag(clicks, library, held);
+        held.pointer = downClick.pointer;
+        clicking.routeDrag(clicks, library, held);
+        held.pointerHeld = false;
+        held.pointerReleased = true;
+        clicking.routeDrag(clicks, library, held);
+        check(clicks.choices[0].empty(), "party-row leave/reenter cancels even below the drag threshold");
         std::cout << "Menu tests passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

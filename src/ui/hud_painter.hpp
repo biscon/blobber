@@ -46,6 +46,15 @@ class HudPainter {
         if (r.width > 16 && r.height > 16)
             border({r.x + 2, r.y + 2, r.width - 4, r.height - 4}, {29, 36, 33, 255});
     }
+    void buttonFeedback(std::optional<UiRect> rect) const {
+        if (!rect)
+            return;
+        const auto r = *rect;
+        fill(r, {0, 0, 0, 105});
+        border(r, hudInk::gold);
+        if (r.width > 6 && r.height > 6)
+            border({r.x + 2, r.y + 2, r.width - 4, r.height - 4}, hudInk::teal);
+    }
     void overlayBox(UiRect r, Color color = hudInk::gold) const { box(r, color); }
     void gear(UiRect r) const {
         const auto center = native(Vector2{r.x + r.width * .5f, r.y + r.height * .5f});

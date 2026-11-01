@@ -54,16 +54,14 @@ Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingPa
         const auto kit = catalog.findItem("camp_kit");
         if (!catalog.item(kit))
             throw std::runtime_error("Missing launch camp kit content");
-        for (unsigned n = 0; n < 3; ++n) {
-            bool placed = false;
-            for (auto id : state_.formation)
-                if (acquire({id, kit, 1, inventory_.revision()})) {
-                    placed = true;
-                    break;
-                }
-            if (!placed)
-                throw std::runtime_error("Starting party cannot carry three camp kits");
-        }
+        bool placed = false;
+        for (auto id : state_.formation)
+            if (acquire({id, kit, 1, inventory_.revision()})) {
+                placed = true;
+                break;
+            }
+        if (!placed)
+            throw std::runtime_error("Starting party cannot carry the starting camp kit");
     }
 }
 rules::SpellAccess Party::spellAccess(rules::CharacterId id, rules::SpellId spell) const noexcept {

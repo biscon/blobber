@@ -5,6 +5,11 @@ implementation with “Implement the plan” and accepted with “slice accepted
 it in the doc”. PC02 is next eligible for separate planning; later implementation
 is not authorized.
 
+Current topology is generator 7 under the implemented [PC07.2 variety amendment](pc072_variety_controls.md):
+sampled connected lattice masks replace the two authored normal loop families below.
+The fixed checked fallback remains. This document retains the original PC01 design
+and acceptance evidence; later campaign ownership is described in the system overview.
+
 ## Responsibilities and ownership
 
 A graphics-independent generation subsystem owns bounded topology/template records,

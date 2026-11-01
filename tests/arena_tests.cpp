@@ -243,7 +243,7 @@ void preparation() {
         const auto decoded = decodeArena(c, text);
         check(encodeArena(c, decoded) == text, "prepared scenario roundtrips spell IDs");
         auto party = prepareArenaParty(c, decoded);
-        check(party->campSupplies().kits == 3, "higher-level party grants kits once");
+        check(party->campSupplies().kits == 1, "higher-level party grants kits once");
         for (std::uint16_t i = 0; i < 4; ++i) {
             const auto& member = *party->character({i});
             check(member.build.level == int(level) && member.hitPoints == member.stats.maxHitPoints &&

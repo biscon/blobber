@@ -22,7 +22,12 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                           const ArenaScenario* arena, CampaignStore* saves = nullptr,
                           std::unique_ptr<CampaignRun> restored = {}) {
     auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
-    const auto seed = arena ? arena->seed : options.seed ? *options.seed : std::random_device{}();
+    const auto seed =
+        arena ? arena->seed
+              : chooseCampaignSeed(options.seed,
+                                   restored ? std::optional<std::uint32_t>(restored->location(0).seed)
+                                            : std::nullopt,
+                                   [] { return std::random_device{}(); });
     auto definitions = prepareCpu([&] {
         preparationPoint("Reading creature definitions");
         return loadNpcDefinitions(options.assets / "npcs/level.json");

@@ -10,6 +10,12 @@
 #include <stdexcept>
 
 namespace blobber {
+void CommandController::reportCampaignSeed(std::uint32_t seed) noexcept {
+    char line[64];
+    std::snprintf(line, sizeof(line), "Campaign seed: %u.", seed);
+    appendLog(line);
+}
+
 const char* actionName(PartyAction action) noexcept {
     constexpr const char* names[]{"Melee", "Back-row melee", "Defend", "Ranged",
                                   "Spell", "Item",           "Aid",    "Ability"};

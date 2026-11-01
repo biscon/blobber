@@ -123,6 +123,11 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         detectContact();
         discover();
     }
+    if (f->kind == FixtureKind::Door && f->key && !closing)
+        return {true, !preview,
+                preview       ? "Open with the seal key."
+                : f->key == 2 ? "Bronze seal key used. Door opened."
+                              : "Silver seal key used. Door opened."};
     if (firstOpening && objective_.count && r.id.slot == objectiveDefinition_.approachDoor)
         return {true, !preview,
                 floor_.definition().depth == 3 ? "Final guardians beyond! Combat prevents movement."

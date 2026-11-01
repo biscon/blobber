@@ -238,7 +238,14 @@ void turnAllowances() {
                 normal();
             } else {
                 normal();
-                optional();
+                if (id == 0)
+                    optional();
+            }
+            if (id == 2) {
+                check(!s.combat().snapshot().activeCharacter ||
+                          s.combat().snapshot().activeCharacter->index != 2,
+                      "rogue automatically advances after the last normal action");
+                continue;
             }
             check(s.combat().snapshot().round == round && s.combat().snapshot().gameplayMs == clock,
                   "reopened action does not advance round clock");
@@ -258,7 +265,6 @@ void turnAllowances() {
     thief.party().damage({2}, 3);
     auto normal = featureCommand(thief, 2, Feature::None);
     normal.action = PartyAction::Defend;
-    check(thief.submit(normal).reason == CommandReason::Resolved, "Thief spends normal action first");
     PartyCommand potion = featureCommand(thief, 2, Feature::None);
     potion.action = PartyAction::Item;
     potion.ally = CharacterId{2};
@@ -272,10 +278,16 @@ void turnAllowances() {
     }
     potion.inventoryRevision = thief.party().inventory().revision();
     check(thief.submit(potion).reason == CommandReason::Resolved,
-          "Thief potion consumes optional allowance after normal action");
+          "Thief can spend its optional allowance before the normal action");
     thief.update(1.1, false);
     check(thief.submit(featureCommand(thief, 2, Feature::CunningAction)).reason != CommandReason::Resolved,
           "potion and Cunning Action share allowance");
+    normal = featureCommand(thief, 2, Feature::None);
+    normal.action = PartyAction::Defend;
+    check(thief.submit(normal).reason == CommandReason::Resolved &&
+              (!thief.combat().snapshot().activeCharacter ||
+               thief.combat().snapshot().activeCharacter->index != 2),
+          "normal action ends the Thief turn after a quick potion");
 }
 
 void automaticCunningDefend() {
@@ -306,6 +318,84 @@ void automaticCunningDefend() {
             check(s.submit(end).reason != CommandReason::Resolved,
                   "repeated End Turn cannot grant another defence");
         }
+}
+void rogueAttackCompletion() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const NpcWorld places(map, spellSpawn.cell, {"goblin"},
+                          {{{0}, {6, 7}, {0, 0}, Heading::South}, {{0}, {6, 7}, {1, 0}, Heading::South}});
+    for (int level : {2, 3})
+        for (auto kind : {PartyAction::BackMelee, PartyAction::Ranged})
+            for (bool manual : {false, true}) {
+                GameSession s(map, catalog, places, 7, spellSpawn, false);
+                levelParty(s, level);
+                levelReady(s, 2);
+                if (manual) {
+                    check(s.submit(featureCommand(s, 2, Feature::CunningAction)).reason ==
+                              CommandReason::Resolved,
+                          "early defence legal");
+                    s.update(1.1, false);
+                }
+                auto attack = featureCommand(s, 2, Feature::None);
+                attack.action = kind;
+                attack.target = s.actors().id(0);
+                check(s.submit(attack).reason == CommandReason::Resolved, "rogue weapon attack accepted");
+                check(s.combat().snapshot().activeCharacter &&
+                          s.combat().snapshot().activeCharacter->index == 2 &&
+                          !s.combat().snapshot().awaitingAction,
+                      "attack resolution finishes before initiative advances");
+                unsigned defences = 0;
+                for (unsigned tick = 0; tick < 40; ++tick) {
+                    s.update(.1, false);
+                    for (const auto& e : s.events())
+                        if (e.event == CombatEvent::Defend && e.character.index == 2 &&
+                            e.feature == Feature::CunningAction)
+                            ++defences;
+                    if (!s.combat().snapshot().activeCharacter ||
+                        s.combat().snapshot().activeCharacter->index != 2)
+                        break;
+                }
+                check((!s.combat().snapshot().activeCharacter ||
+                       s.combat().snapshot().activeCharacter->index != 2) &&
+                          s.combat().snapshot().defending[2] && defences == (manual ? 0u : 1u),
+                      "melee/ranged resolution defends once and advances without another input");
+            }
+}
+void rogueInterruptedAttack() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const NpcWorld places(map, spellSpawn.cell, {"goblin"}, {{{0}, {6, 7}, {0, 0}, Heading::South}});
+    for (bool terminal : {false, true}) {
+        GameSession s(map, catalog, places, 7, spellSpawn, false);
+        levelParty(s, 2);
+        levelReady(s, 2);
+        auto attack = featureCommand(s, 2, Feature::None);
+        attack.action = PartyAction::Ranged;
+        attack.target = s.actors().id(0);
+        check(s.submit(attack).reason == CommandReason::Resolved,
+              "interruption fixture releases a legal attack");
+        if (terminal)
+            s.actors().damage(s.actors().id(0), 10000, s.timeMs());
+        else
+            s.party().damage({2}, s.party().character({2})->hitPoints);
+        unsigned defence = 0;
+        for (unsigned i = 0; i < 40; ++i) {
+            s.update(.1, false);
+            for (const auto& e : s.events())
+                if (e.event == CombatEvent::Defend && e.character.index == 2)
+                    ++defence;
+            if (s.combat().snapshot().phase == CombatPhase::Victory ||
+                !s.combat().snapshot().activeCharacter || s.combat().snapshot().activeCharacter->index != 2)
+                break;
+        }
+        check(!defence, "downed rogue and terminal combat do not gain automatic defence");
+        if (terminal)
+            check(s.combat().snapshot().phase == CombatPhase::Victory,
+                  "target disappearing during attack reaches victory");
+        else
+            check(!s.combat().snapshot().activeCharacter || s.combat().snapshot().activeCharacter->index != 2,
+                  "downed attacker does not hold initiative open");
+    }
 }
 void capacityStress() {
     const auto map = arenaMap();
@@ -368,6 +458,8 @@ int main(int argc, char**) {
         features();
         turnAllowances();
         automaticCunningDefend();
+        rogueAttackCompletion();
+        rogueInterruptedAttack();
         std::cout << "Level spell checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

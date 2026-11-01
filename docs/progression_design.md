@@ -43,14 +43,17 @@ level 3 Champion weapon criticals on 19–20. Cleric: level 2 Preserve Life, act
 one short/long-rest charge, pool 5×level, recipients capped at half effective max HP.
 Automatically distribute lowest HP percentage first, stable character-ID ties;
 preview allocation and reject no benefit. Rogue: level 2 free existing Defend once
-per own turn, automatically applying an unused allowance on explicit End Turn
-(PC07.2 review correction); level 3 Thief Fast Hands may instead spend that same allowance on a
-potion; Sneak Attack 2d6. Wizard: level 2 Evocation/Sculpt Spells, level 3 second-level
+per own turn. After the last normal action resolves, automatically apply an unused
+allowance and advance initiative, preserving terminal combat outcomes. Manual early
+defence and explicit End Turn remain supported. Level 3 Thief Fast Hands may instead
+spend that allowance on a potion before the last normal action; Sneak Attack 2d6.
+See the [PC07.2 correction](pc072_variety_controls.md). Wizard: level 2 Evocation/Sculpt Spells, level 3 second-level
 spells and existing four-mana Arcane Recovery scaling. Clearly disclose deferred
 Turn Undead, skills/Expertise, locks/traps/climbing and spell-copying/Evocation Savant.
 
-Actions and optional activations work in either order. After impacts/tails settle,
-retain the actor while useful actions remain; End Turn skips them. Reopened input
+Except for the rogue completion rule above, actions and optional activations work
+in either order. After impacts/tails settle, retain the actor while useful actions
+remain; End Turn skips them. Reopened input
 gets a fresh command token, not another turn/effect/allowance refresh. Sequential
 actions reuse one owner attack slot. Real-time optional activations use separate
 six-second deadlines; Action Surge grants one extra opportunity without resetting

@@ -545,6 +545,8 @@ void recallAndWaypoints() {
     check(!run.location(1).visited, "preparation does not unlock entry");
     check(run.commitTravel(first) && run.location(1).visited, "stairs alone unlock entry on commit");
     rejects(run.waypointRequest(1));
+    check(bool(party.acquire({{0}, cat.findItem("camp_kit"), 2, party.inventory().revision()})),
+          "split-supply fixture owns a multi-kit stack");
     auto stale = run.recallRequest();
     check(bool(party.acquire({{1}, cat.findItem("camp_kit"), 1, party.inventory().revision()})),
           "fixture adds separate supplier stack");
@@ -819,6 +821,8 @@ void travelUi() {
           "hub F enters the single destination without a selector");
     auto enter = run.prepareTravel(*hub.snapshot().travelRequested);
     check(run.commitTravel(enter), "confirmed first entry commits");
+    check(bool(run.party().acquire({{0}, cat.findItem("camp_kit"), 1, run.party().inventory().revision()})),
+          "recall UI fixture owns a kit for stale-panel consumption and another for commit");
     CommandController ui(run.game());
     ui.refresh({}, false, false, true);
     const auto supply = run.party().inventory().locate(run.party().campSupplies().supply);

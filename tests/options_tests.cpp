@@ -5,6 +5,12 @@
 using namespace blobber;
 int main() {
     try {
+        unsigned draws = 0;
+        auto entropy = [&] { return 100 + ++draws; };
+        check(chooseCampaignSeed({}, {}, entropy) == 101 && chooseCampaignSeed({}, {}, entropy) == 102,
+              "each new unseeded campaign samples fresh entropy");
+        check(chooseCampaignSeed(5, {}, entropy) == 5 && chooseCampaignSeed(5, 8, entropy) == 8 && draws == 2,
+              "explicit overrides and Continue do not draw entropy; Continue retains its saved seed");
         char program[] = "blobber", development[] = "--development", help[] = "--help";
         char* normal[]{program};
         check(!parseOptions(1, normal).development, "normal launch keeps development disabled");

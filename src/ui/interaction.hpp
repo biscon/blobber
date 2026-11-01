@@ -7,6 +7,7 @@ inline bool confirmationMatches(const CombatSnapshot& presented, const CombatSna
     return presented.world == current.world && presented.turn == current.turn &&
            presented.phase == current.phase && presented.awaitingAction == current.awaitingAction;
 }
+UiInput routeHudButtons(CommandController&, const UiInput&, bool acceptPress = true) noexcept;
 // Optional viewport hit has already been mapped by the renderer's read-only picking buffer.
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit = {},
                    bool allowConfirm = true, std::optional<LootId> lootHit = {},

@@ -16,6 +16,23 @@ bool CombatController::freeAction(const PartyCommand& c) const noexcept {
     return c.action == PartyAction::Item && party_.character(c.character)->build.level >= 3 &&
            cunningAvailable(c.character);
 }
+void CombatController::cunningDefend(rules::CharacterId id, std::uint64_t now,
+                                     CombatEvents& events) noexcept {
+    if (!effects_.canAct(id) || !cunningAvailable(id) || state_.defending[id.index])
+        return;
+    cunningReady_[id.index] = state_.gameplayMs + combatRoundMs;
+    state_.defending[id.index] = true;
+    defendDue_[id.index] = state_.gameplayMs + combatRoundMs;
+    CombatOutcome event;
+    event.reason = CommandReason::Resolved;
+    event.character = event.recipient = id;
+    event.feature = rules::Feature::CunningAction;
+    event.event = CombatEvent::Defend;
+    event.hit = true;
+    event.occurredMs = now;
+    event.phase = state_.phase;
+    events.append(event);
+}
 bool CombatController::hasActions(rules::CharacterId id) const noexcept {
     const auto* c = party_.character(id);
     const auto* weapon = effects_.spiritualWeapon(id);
@@ -35,6 +52,20 @@ void CombatController::spendAction(const PartyCommand& c) noexcept {
     state_.spent[c.character.index] = true;
 }
 void CombatController::completeAction(std::uint64_t now) noexcept {
+    if (state_.phase == CombatPhase::Turns && state_.activeCharacter &&
+        party_.progressionClass(*state_.activeCharacter) == rules::ProgressionClass::Rogue &&
+        party_.character(*state_.activeCharacter)->build.level >= 2 &&
+        !normalAction(*state_.activeCharacter)) {
+        if (finish(now)) {
+            refreshReadiness();
+            return;
+        }
+        if (currentEvents_)
+            cunningDefend(*state_.activeCharacter, now, *currentEvents_);
+        advance(now);
+        refreshReadiness();
+        return;
+    }
     if (state_.activeCharacter && hasActions(*state_.activeCharacter)) {
         state_.awaitingAction = true;
         state_.resolvingAction = false;

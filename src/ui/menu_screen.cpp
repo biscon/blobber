@@ -2,7 +2,7 @@
 #include "ui/menu_layout.hpp"
 #include <cstring>
 namespace blobber {
-void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
+static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& art) {
     auto& v = *static_cast<MenuView*>(context);
     if (v.creation.active) {
         drawCreator(&v.creator, fonts, art);
@@ -11,6 +11,7 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
     auto& m = v.model;
     HudPainter p(&fonts, &art);
     v.count = 0;
+    v.controlOverflow = false;
     if (m.screen != MenuScreen::Main)
         p.fill({0, 0, 640, 360}, {12, 18, 18, 245});
     p.border({8, 8, 624, 344}, hudInk::edge);
@@ -122,7 +123,7 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
             v.button(p, {470, 325, 150, 22},
                      m.ready(v.library.snapshot()) ? (m.arenaPicker ? "Use party" : "Enter dungeon")
                                                    : "Choose four characters",
-                     30);
+                     30, m.ready(v.library.snapshot()));
         }
         if (v.usable && v.library.snapshot().count < LibrarySnapshot::capacity)
             v.button(p, {picker ? 310 : 470, 325, 150, 22}, "New character", 50);
@@ -155,6 +156,7 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
         p.fill({0, 0, 640, 360}, {0, 0, 0, 220});
         p.box({170, 55, 300, 250}, hudInk::gold);
         v.count = 0;
+        v.controlOverflow = false;
         p.text("Delete character?", 230, 70, hudInk::gold, UiTextStyle::Control);
         art.draw(64 + m.deletion->draft.portrait.index, {280, 102, 80, 100});
         p.clipped(m.deletion->draft.name.data(), 205, 212, 230, hudInk::gold);
@@ -164,4 +166,18 @@ void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
         p.clipped(v.error.data(), 180, 292, 280, hudInk::red, UiTextStyle::Small);
     }
 }
+void drawMenu(void* context, const UiFonts& fonts, const UiArt& art) {
+    drawMenuContent(context, fonts, art);
+    const auto& v = *static_cast<MenuView*>(context);
+    HudPainter p(&fonts, &art);
+    if (!v.creation.active)
+        p.buttonFeedback(v.pointerButtons.feedback);
+    if (v.interaction.pointerDown && !v.interaction.dragging && !v.interaction.clickCancelled)
+        p.buttonFeedback(v.interaction.originRect);
+    if (v.arena.preparation.active) {
+        p.buttonFeedback(v.arena.preparation.controls.buttons.feedback);
+        p.buttonFeedback(v.arena.preparation.advancement.controls.buttons.feedback);
+    }
+}
+
 } // namespace blobber

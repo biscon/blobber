@@ -1,4 +1,5 @@
 #pragma once
+#include "input/buttons.hpp"
 #include "input/text_edit.hpp"
 #include "input/ui_input.hpp"
 #include "rules/spell_selection.hpp"
@@ -82,6 +83,8 @@ struct FlowControl {
     bool enabled = true;
 };
 struct FlowControls {
+    ButtonPress buttons;
+    ButtonContext context{};
     std::array<FlowControl, 128> entries{};
     unsigned count = 0, focus = 0;
     bool overflow = false;

@@ -127,6 +127,7 @@ struct TravelHud {
 };
 enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton, Bugbear, GiantRat, Zombie, Shaman };
 struct HudSnapshot {
+    ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
     std::array<HudCard, rules::partySize> cards{};
     PartyCommand selection;
@@ -296,6 +297,13 @@ class CommandController {
     CommandReason validate(const PartyCommand& command) const noexcept;
     CommandReason submit(const PartyCommand& command) noexcept;
     CommandReason confirm() noexcept;
+    ButtonPress& pointerButtons() noexcept { return state_.buttons; }
+    void cancelPointerButtons() noexcept {
+        state_.buttons.cancel();
+        state_.camp.controls.buttons.cancel();
+        state_.advancement.controls.buttons.cancel();
+    }
+    void reportCampaignSeed(std::uint32_t) noexcept;
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:

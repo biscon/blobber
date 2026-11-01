@@ -39,6 +39,7 @@ struct UiInput {
     TextInput text;
     bool focused = true, shift = false;
     bool pointerHeld = false, pointerReleased = false;
+    bool pointerTracked = false; // Physical edges need capture/release; false denotes logical activation.
     bool has(UiKey key) const noexcept { return pressed[static_cast<std::size_t>(key)]; }
 };
 class UiInputEdges {
@@ -46,6 +47,7 @@ class UiInputEdges {
     UiInput sample(const std::array<bool, uiKeyCount>& down, bool focused,
                    std::optional<ArtPoint> pointer = {}, int scroll = 0) noexcept {
         UiInput result;
+        result.pointerTracked = true;
         result.focused = focused;
         result.pointer = focused ? pointer : std::nullopt;
         result.scroll = focused && previousFocus_ ? scroll : 0;

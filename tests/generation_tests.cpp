@@ -75,7 +75,7 @@ void deterministic() {
             check(!validate(rotated(a.floor->layout, turn)),
                   "all four full-layout rotations preserve routes and facing");
     }
-    check(identities.size() >= 8 && families.size() == 2 && shapes.size() == 5 && rotations.size() == 4,
+    check(identities.size() >= 8 && families.size() == 1 && shapes.size() == 5 && rotations.size() == 4,
           "fixed fixtures exercise meaningful topology/interior/orientation variation");
     std::set<std::uint64_t> streams;
     for (unsigned domain = 1; domain <= 5; ++domain)
@@ -134,6 +134,68 @@ void sectorLocks() {
                 check(bool(validate(broken)), "sector doors must face along their corridor");
             }
     check(families.size() == 2, "sector fixtures cover both topology families");
+}
+std::string graphSignature(const FloorLayout& f) {
+    std::string best;
+    for (unsigned mirror = 0; mirror < 2; ++mirror)
+        for (unsigned turn = 0; turn < 4; ++turn) {
+            std::array<Cell, maxRooms> sites{};
+            int minX = 4, minY = 4;
+            for (unsigned i = 0; i < f.roomCount; ++i) {
+                auto c = f.rooms[i].site;
+                if (mirror)
+                    c.x = 3 - c.x;
+                sites[i] = rotate(c, 4, turn);
+                minX = std::min(minX, sites[i].x);
+                minY = std::min(minY, sites[i].y);
+            }
+            std::vector<std::string> records;
+            auto site = [&](unsigned i) {
+                return std::to_string((sites[i].y - minY) * 4 + sites[i].x - minX);
+            };
+            for (unsigned i = 0; i < f.roomCount; ++i)
+                records.push_back("r" + site(i) + ":" + std::to_string(unsigned(f.rooms[i].role)));
+            for (unsigned i = 0; i < f.connectionCount; ++i) {
+                auto a = site(f.connections[i].a), b = site(f.connections[i].b);
+                if (b < a)
+                    std::swap(a, b);
+                records.push_back("e" + a + ":" + b);
+            }
+            std::sort(records.begin(), records.end());
+            std::string key;
+            for (const auto& r : records)
+                key += r + ";";
+            if (best.empty() || key < best)
+                best = key;
+        }
+    return best;
+}
+void variety() {
+    for (unsigned depth = 1; depth <= 3; ++depth) {
+        std::set<std::string> graphs, profiles;
+        for (unsigned seed = 0; seed < 16; ++seed) {
+            const auto f = generate({seed, depth});
+            check(bool(f) && !f.floor->diagnostics.fallback, "fixed structural sample generates normally");
+            graphs.insert(graphSignature(f.floor->layout));
+            std::array<unsigned, maxRooms> degree{};
+            for (unsigned i = 0; i < f.floor->layout.connectionCount; ++i) {
+                const auto e = f.floor->layout.connections[i];
+                ++degree[e.a];
+                ++degree[e.b];
+            }
+            std::vector<unsigned> junctions;
+            for (unsigned i = 0; i < f.floor->layout.roomCount; ++i)
+                if (f.floor->layout.rooms[i].role == Role::Junction)
+                    junctions.push_back(degree[i]);
+            std::sort(junctions.begin(), junctions.end());
+            std::string p;
+            for (auto d : junctions)
+                p += char('0' + d);
+            profiles.insert(p);
+        }
+        check(graphs.size() >= 8 && profiles.size() > 1,
+              "variation changes structure beyond rotation and reflection");
+    }
 }
 void failures() {
     check(!generate({1, 0}) && !generate({1, 4}) && !generate({1, 1, 999}) && !generate({1, 1, 1, 0}),
@@ -210,6 +272,7 @@ void failures() {
 int main() {
     try {
         deterministic();
+        variety();
         sectorLocks();
         failures();
         std::cout << "Generation contracts passed; retained upper bound=" << sizeof(GeneratedFloor) + maxCells

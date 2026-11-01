@@ -54,9 +54,14 @@ shared XP. The bounded 36-trial study completed: all victories, three downings, 
 deaths. [Costs and recommendations](pc071_calibration/README.md) and
 [verification](pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
 
+PC07.2 [variety and controls](pc072_variety_controls.md) are **Ready for review**
+under the approved review plan: generated room graphs, one starting kit,
+key-use logs, release-activated buttons and automatic rogue action completion.
+
 PC07.2 [review corrections](pc072_review_corrections.md) are **Ready for review**
 under the user-approved plan: sector locks, reduced guaranteed potions, automatic
-End Turn Cunning Defend, responsive saving feedback and alpha-aware presentation.
+End Turn Cunning Defend (superseded by automatic action completion above), responsive
+saving feedback and alpha-aware presentation.
 The original route study remains historical evidence for the previous budgets.
 
 PC07.2 [population and generated-route checks](pc072_population_design.md) are
@@ -290,7 +295,7 @@ Effect requests/instances/events carry tagged party or world-checked actor sourc
 NPC Bless reservations share the 64 slots; damage and burning Web notify source
 concentration exactly once. NPC sources/resources remain floor-owned across travel,
 canonical restore and disk persistence (introduced in schema/simulation 4/7;
-current identities are 5/9). Additive protocol
+current identities are 5/10). Additive protocol
 source tags, hover/log feedback, full production art and portrait reuse existing
 owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
 all budgets/count capacities remain fixed. [Verification](b05_verification.md)
@@ -354,9 +359,9 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 5/9 and generator/templates 6/5. Older saves reject
+Campaign schema/simulation are 5/10 and generator/templates 7/5. Older saves reject
 without being modified; no migration. World publication is format 3, appearance 4,
-visibility world-visibility-v6 and terrain-rules-v2. Door scheduling identity is
+visibility world-visibility-v7 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

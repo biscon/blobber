@@ -312,5 +312,10 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.travel(*h);
     if (h->advancement.open)
         drawAdvancement(p, h->advancement);
+    p.buttonFeedback(h->buttons.feedback);
+    if (h->advancement.open)
+        p.buttonFeedback(h->advancement.controls.buttons.feedback);
+    if (h->camp.open && h->camp.preparing)
+        p.buttonFeedback(h->camp.controls.buttons.feedback);
 }
 } // namespace blobber

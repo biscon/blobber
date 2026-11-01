@@ -80,6 +80,47 @@ void interactions() {
               !reset->fixtures().known(2),
           "Reset isolates identity, keys, geometry and knowledge");
 }
+void keyedLogs() {
+    const auto cat = fixtureCatalog();
+    const auto map = fixtureMap();
+    const NpcWorld empty(map, {3, 3}, {"goblin"}, {});
+    for (unsigned key : {2u, 3u}) {
+        auto defs = fixtureDefinitions();
+        for (unsigned i = 0; i < defs.count; ++i)
+            if (defs.entries[i].key)
+                defs.entries[i].key = std::uint8_t(key);
+        GameSession game(map, cat, empty, 5, {{3, 3}, Heading::East}, false, {}, {}, defs);
+        game.setAnimated(false);
+        CommandController commands(game);
+        commands.refresh({}, false, false, true);
+        commands.interactFixture(game.fixtures().id(0));
+        check(std::string(commands.snapshot().log.newest(0)).find("used") == std::string::npos,
+              "missing key does not report key use");
+        game.restorePose({{2, 2}, Heading::North}, false);
+        game.update(0, false);
+        check(game.interact(fixtureRequest(game, 1)).changed, "owned log fixture acquires its key");
+        game.restorePose({{3, 3}, Heading::East}, false);
+        game.update(0, false);
+        commands.refresh({}, false, false, true);
+        const auto size = commands.snapshot().log.size();
+        const auto revision = game.fixtures().revision();
+        check(bool(game.interact(fixtureRequest(game, 0), true)) && game.fixtures().revision() == revision &&
+                  commands.snapshot().log.size() == size,
+              "door preview has no key-use log or mutation");
+        const char* expected =
+            key == 2 ? "Bronze seal key used. Door opened." : "Silver seal key used. Door opened.";
+        commands.interactFixture(game.fixtures().id(0));
+        check(std::string(commands.snapshot().log.newest(0)) == expected,
+              "opening logs the specific key used");
+        commands.interactFixture(game.fixtures().id(0));
+        check(std::string(commands.snapshot().log.newest(0)) == "Door closed.",
+              "closing does not report key use");
+        commands.interactFixture(game.fixtures().id(0));
+        check(std::string(commands.snapshot().log.newest(0)) == expected &&
+                  game.party().questKeys() == (1u << key),
+              "reopening logs reusable key use without consumption");
+    }
+}
 void geometry() {
     auto cat = fixtureCatalog();
     auto map = fixtureMap();
@@ -258,6 +299,7 @@ void generationContracts() {
 int main() {
     try {
         interactions();
+        keyedLogs();
         geometry();
         safetyAndUi();
         incrementalAndThreats();

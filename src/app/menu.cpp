@@ -69,6 +69,10 @@ int runMenus(const Options& options) try {
         auto& m = v.model;
         v.interaction.tick(GetFrameTime(), sample.ui.focused);
         if (!sample.ui.focused) {
+            v.pointerButtons.cancel();
+            v.creator.controls.buttons.cancel();
+            v.arena.preparation.controls.buttons.cancel();
+            v.arena.preparation.advancement.controls.buttons.cancel();
             v.arena.preparation.route(catalog, sample.ui, {}, 0);
             v.arena.blur();
             v.creation.model.nameEdit.tick(0, false);
@@ -112,10 +116,12 @@ int runMenus(const Options& options) try {
             continue;
         }
         if (v.interaction.routeDrag(m, library.snapshot(), sample.ui)) {
+            v.pointerButtons.cancel();
             while (GetCharPressed()) {
             }
             continue;
         }
+        sample.ui = v.pointerInput(sample.ui);
         const bool arenaScreen = m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios;
         if (arenaScreen) {
             auto& a = v.arena;
@@ -163,7 +169,7 @@ int runMenus(const Options& options) try {
             (!sample.ui.pointer || !menuLayout::search.contains(*sample.ui.pointer)))
             v.interaction.focusSearch(false);
         int action = 0;
-        if (sample.ui.has(UiKey::Confirm) && v.focus < v.count)
+        if (sample.ui.has(UiKey::Confirm) && !v.controlOverflow && v.focus < v.count && v.enabled[v.focus])
             action = v.actions[v.focus];
         if (sample.ui.has(UiKey::Click) && sample.ui.pointer)
             for (int i = 0; i < v.count; ++i)

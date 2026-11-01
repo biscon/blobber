@@ -417,7 +417,7 @@ def main():
                 name = f"{package['id']}-{seed}-{'reserve' if reserve else 'direct'}"
                 directory = args.output/name
                 directory.mkdir()
-                scenario = dict(kind="campaign", schema_version=1, generator_version=6, template_version=5,
+                scenario = dict(kind="campaign", schema_version=1, generator_version=7, template_version=5,
                                 seed=seed, party=package["scenario"]["party"])
                 (directory/"scenario.json").write_text(json.dumps(scenario, indent=2)+"\n")
                 route = Route(args.runner, args.assets, directory, scenario, reserve, deadline)

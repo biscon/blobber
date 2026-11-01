@@ -237,6 +237,7 @@ class CombatController {
     std::array<bool, 4> extraAction_{};
     bool normalAction(rules::CharacterId) const noexcept;
     bool cunningAvailable(rules::CharacterId) const noexcept;
+    void cunningDefend(rules::CharacterId, std::uint64_t, CombatEvents&) noexcept;
     bool hasActions(rules::CharacterId) const noexcept;
     bool freeAction(const PartyCommand&) const noexcept;
     void spendAction(const PartyCommand&) noexcept;

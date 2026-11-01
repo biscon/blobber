@@ -56,11 +56,11 @@ arena and test fixtures; it does not imply retaining the old game mode.
 | Field | Current value |
 | --- | --- |
 | Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06, PC07.1 and P-A/P-B accepted; renderer R01–R06 and bestiary B01–B05 accepted |
-| Active slice | PC07.2 — Ready for review, including approved corrections |
+| Active slice | PC07.2 — Ready for review, including variety and controls corrections |
 | Awaiting user review | PC07.2 population, route evidence and limitations; parent PC07 remains incomplete |
 | Blockers | None; later slices require their own plans and approvals |
 | Next eligible slice | No new slice until PC07 acceptance; PC08 follows accepted PC07 |
-| Next action | User review of [implemented corrections](pc072_review_corrections.md); no experiment expansion or PC08 planning |
+| Next action | User review of [implemented variety and controls corrections](pc072_variety_controls.md); no experiment expansion or PC08 planning |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
 | Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 and P-A/P-B closed; PC07 absorbs useful B06 scope; PC07.1 Accepted and closed; PC07.2 approved and Ready for review; PC08–PC09 plans unapproved |
 
@@ -1100,7 +1100,7 @@ The 1,200-XP target applies to an intended direct route; ordinary encounters rem
 bypassable, explicitly replacing the compulsory-route interpretation. Acceptance
 remains pending. PC08 and P-C do not advance automatically.
 
-### PC07.2 implementation and next-agent handoff (2026-11-01, current)
+### PC07.2 implementation and next-agent handoff (2026-11-01, historical)
 
 **Stage:** Ready for review. User approval: “Implement the plan”, including the
 eight-case bounded study. [Design](pc072_population_design.md),
@@ -1141,3 +1141,30 @@ placements and XP selection unchanged; natural perspective overlap remains. Gene
 Focused CPU and hidden GPU checks, screenshots and limitations are recorded in the
 linked handoff. Previous eight-route evidence remains historical; no balance study
 rerun. PC07.2 is Ready for review; only the user accepts PC07/P-C. PC08 stays unapproved.
+
+
+### PC07.2 variety and controls handoff (2026-11-01, current)
+
+User approved the plan with “Implement the plan.” [Design and verification](pc072_variety_controls.md)
+and [gallery](screenshots/pc072-variety/index.html) record the implemented changes:
+one starting camp kit total; sampled room graphs rather than two authored loops;
+fresh entropy for unseeded New Game, saved seed precedence for Continue and seed
+logging; named reusable-key logs; release activation with held/cancelled button
+feedback; and automatic Cunning Defend plus initiative advance after a level 2+
+rogue's last normal action resolves. Level 3 quick potions precede that action.
+The authored hub, encounter recipes/counts, XP and floor reward/potion budgets stay
+unchanged. This supersedes earlier starting-stock and End-Turn-only descriptions.
+
+Generator/templates 7/5 and campaign schema/simulation 5/10 require fresh campaigns;
+visibility remains v7. Release and Debug applications build. Twenty-two distinct
+focused Release CPU suites pass, including full persistence once; hidden pressed
+captures pass OpenGL and engine allocation/resource checks. A fixed sixteen-seed
+sample at each depth passes structural diversity and access invariants. Four maps
+are retained as visual evidence. No expedition study or balance sample was rerun;
+the original eight routes used generator 5, three starting kits and older supplies.
+
+**Next action:** user review of PC07.2. Only the user accepts PC07/P-C; PC08 remains
+unapproved. Human interaction/feel and balance with the new stock/graphs remain
+unverified. Preserve prior study artifacts and do not broaden experiments merely
+to refresh historical evidence. No desktop input/focus automation, commit, reset
+or stash was performed.

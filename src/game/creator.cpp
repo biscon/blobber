@@ -234,25 +234,45 @@ void FlowControls::add(UiRect r, FlowAction a, int value, bool enabled) noexcept
     entries[count++] = {r, a, value, enabled};
 }
 FlowControl FlowControls::input(const UiInput& in) noexcept {
-    if (!count || overflow || !in.focused)
+    if (!count || overflow || !in.focused) {
+        buttons.cancel();
         return {};
+    }
+    ButtonTargets targets;
+    targets.context = context;
+    for (unsigned i = 0; i < count; ++i) {
+        const auto& c = entries[i];
+        const bool raw = c.action == FlowAction::Name || c.action == FlowAction::Search ||
+                         c.action == FlowAction::Scrollbar || c.action == FlowAction::DetailsScrollbar;
+        targets.add(c.rect, c.enabled, raw,
+                    (std::uint64_t(unsigned(c.action)) << 32) | std::uint32_t(c.value));
+    }
+    const auto routed = buttons.route(in, targets);
     focus = std::min(focus, count - 1);
-    if (in.has(UiKey::Tab) || in.has(UiKey::Down) || in.has(UiKey::Right))
+    if (routed.has(UiKey::Tab) || routed.has(UiKey::Down) || routed.has(UiKey::Right))
         focus = (focus + (in.shift ? count - 1 : 1)) % count;
-    if (in.has(UiKey::Up) || in.has(UiKey::Left))
+    if (routed.has(UiKey::Up) || routed.has(UiKey::Left))
         focus = (focus + count - 1) % count;
-    if (in.has(UiKey::Click) && in.pointer)
+    if (routed.has(UiKey::Click) && routed.pointer)
         for (unsigned i = 0; i < count; ++i)
-            if (entries[i].rect.contains(*in.pointer)) {
+            if (entries[i].rect.contains(*routed.pointer)) {
                 focus = i;
                 return entries[i].enabled ? entries[i] : FlowControl{};
             }
-    if (in.has(UiKey::Confirm) && entries[focus].enabled)
+    if (routed.has(UiKey::Confirm) && entries[focus].enabled)
         return entries[focus];
     return {};
 }
 void layoutCreator(FlowControls& w, const CreatorModel& m, const Catalog& c) noexcept {
     w.clear();
+    w.context = {1,
+                 unsigned(m.step),
+                 m.discard,
+                 m.draft.race.index,
+                 m.draft.characterClass.index,
+                 m.selection.offset,
+                 m.selection.context.available,
+                 m.selection.context.locked};
     if (m.discard) {
         w.add({218, 204, 114, 24}, FlowAction::Keep);
         w.add({344, 204, 114, 24}, FlowAction::Discard);
@@ -348,6 +368,7 @@ void routeCreator(CreatorModel& m, FlowControls& w, const Catalog& c, const UiIn
     m.nameEdit.tick(dt, input.focused);
     m.searchEdit.tick(dt, input.focused);
     if (!input.focused) {
+        w.buttons.cancel();
         m.selection.dragging = 0;
         return;
     }

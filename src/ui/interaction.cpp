@@ -1,12 +1,33 @@
 #include "ui/interaction.hpp"
+#include "ui/button_targets.hpp"
 #include "ui/camp_layout.hpp"
 #include "ui/inventory_interaction.hpp"
 #include "ui/loot_layout.hpp"
 #include "ui/travel_layout.hpp"
 namespace blobber {
-void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit,
+UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bool acceptPress) noexcept {
+    auto input = physical;
+    if (input.pointerTracked && !acceptPress) {
+        commands.cancelPointerButtons();
+        input.pressed[std::size_t(UiKey::Click)] = false;
+    }
+    const auto& h = commands.snapshot();
+    if (!input.focused)
+        commands.cancelPointerButtons();
+    if (h.advancement.open || (h.camp.open && h.camp.preparing)) {
+        commands.pointerButtons().cancel();
+        return input; // FlowControls owns these physical edges.
+    }
+    const bool world = !h.modal() && !h.campaignTerminal && h.combat.phase != CombatPhase::Victory &&
+                       h.combat.phase != CombatPhase::Defeat && input.pointer &&
+                       hudLayout::viewport.contains(*input.pointer);
+    return commands.pointerButtons().route(input, hudButtonTargets(h), world);
+}
+
+void routeHudInput(CommandController& commands, const UiInput& physical, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
                    std::optional<FixtureId> fixtureHit) noexcept {
+    const auto input = routeHudButtons(commands, physical, allowConfirm);
     if (!input.focused) {
         commands.hover(HoverKind::None);
         return;

@@ -4,6 +4,10 @@ Status: **Ready for review**. User approved the review plan on 2026-11-01.
 This remains PC07.2 review work, not acceptance or PC08. Keep existing rooms,
 encounters, placements and XP; quiet rooms remain for now.
 
+The later [variety and controls correction](pc072_variety_controls.md) supersedes
+the fixed room graphs, starting kit count, End-Turn-only rogue behaviour and version
+identities below. Other delivered corrections and historical evidence remain.
+
 ## Gameplay and bounded data
 
 Floors 2–3 lock both loop ports of the junction immediately before the guardian
