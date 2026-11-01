@@ -100,9 +100,9 @@ void CommandController::refreshMagic() noexcept {
                   0);
         if (cls->progression == rules::ProgressionClass::Rogue)
             entry({}, rules::Feature::CunningAction, "Cunning Action / Defend",
-                  c->build.level >= 3
-                      ? "Defend freely once per turn. Thief may use this allowance for a potion instead."
-                      : "Defend freely once per turn, before or after your normal action.",
+                  c->build.level >= 3 ? "Defend freely once per turn; automatic on End Turn if unused. Thief "
+                                        "may use this allowance for a potion instead."
+                                      : "Defend freely once per turn; automatic on End Turn if unused.",
                   0);
     }
     if (session_.effects().has(caster, EffectKind::Restrained))

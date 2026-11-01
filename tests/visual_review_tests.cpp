@@ -276,6 +276,29 @@ void badgeLayout() {
             for (const auto& row : status)
                 if (row)
                     check(!badgesOverlap(*cast, *row), "Casting badges cannot cover status badges");
+    PickingBuffer depth;
+    hud.targets.count = 1;
+    hud.magic.affectedCount = 1;
+    hud.targets.anchors[0].badgeX = 400;
+    hud.targets.anchors[0].badgeTop = 20;
+    hud.combat.phase = CombatPhase::Turns;
+    hud.combat.upcomingCount = 6;
+    depth.badgeAnchor(0, 400, 20, 3);
+    for (int y = 0; y < 32; ++y)
+        for (int x = 0; x < viewWidth; ++x)
+            depth.writeDepth(std::size_t(y) * viewWidth + x, PickingBuffer::empty, 2, true);
+    const auto relocated = statusMarkerLayout(hud, &depth);
+    check(relocated[0] && relocated[0]->y >= 60 && completeMarker(&depth, 0, *relocated[0]),
+          "ceiling and initiative move the entire badge to a nearby clear position");
+    const auto targeted = spellMarkerLayout(hud, &depth);
+    check(targeted[0] && completeMarker(&depth, 0, *targeted[0]) &&
+              !badgesOverlap(*targeted[0], *relocated[0]),
+          "targeting and status use the same occlusion-aware placement");
+    for (int y = 0; y < viewHeight; ++y)
+        for (int x = 0; x < viewWidth; ++x)
+            depth.writeDepth(std::size_t(y) * viewWidth + x, PickingBuffer::empty, 2, true);
+    check(!statusMarkerLayout(hud, &depth)[0] && !spellMarkerLayout(hud, &depth)[0],
+          "no clear badge position omits the indicator instead of drawing clipped fragments");
 }
 } // namespace
 int main() {

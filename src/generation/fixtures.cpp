@@ -29,6 +29,35 @@ std::array<unsigned, maxRooms> distances(const FloorLayout& f, unsigned start) n
 bool floorCell(const FloorLayout& f, Cell c) noexcept {
     return c.x >= 0 && c.y >= 0 && c.x < f.width && c.y < f.height && f.floor[c.y * f.width + c.x];
 }
+unsigned sectorJunction(const FloorLayout& f) noexcept {
+    for (unsigned i = 0; i < f.connectionCount; ++i) {
+        const auto e = f.connections[i];
+        if (e.a >= f.roomCount || e.b >= f.roomCount)
+            continue;
+        if (f.rooms[e.a].role == Role::Approach && f.rooms[e.b].role == Role::Junction)
+            return e.b;
+        if (f.rooms[e.b].role == Role::Approach && f.rooms[e.a].role == Role::Junction)
+            return e.a;
+    }
+    return maxRooms;
+}
+bool sectorDoor(const FloorLayout& f, Cell cell, Heading facing) noexcept {
+    const auto junction = sectorJunction(f);
+    if (junction == maxRooms)
+        return false;
+    const auto a = center(f.rooms[junction]);
+    for (unsigned i = 0; i < f.connectionCount; ++i) {
+        const auto e = f.connections[i];
+        const auto other = e.a == junction ? e.b : e.b == junction ? e.a : maxRooms;
+        if (other >= f.roomCount || f.rooms[other].role != Role::Junction)
+            continue;
+        const auto c = center(f.rooms[other]);
+        const Cell d{(a.x - c.x) / 9, (a.y - c.y) / 9};
+        if (cell == c + d * 4 && forward(facing) == d)
+            return true;
+    }
+    return false;
+}
 } // namespace
 void placeFixtures(FloorLayout& f) noexcept {
     auto& defs = f.fixtures;
@@ -62,9 +91,24 @@ void placeFixtures(FloorLayout& f) noexcept {
     for (unsigned h = 0; h < 4; ++h)
         if (forward(Heading(h)) == delta)
             facing = Heading(h);
-    defs.entries[defs.count++] = {a + delta * 4, facing, FixtureKind::Door,
-                                  std::uint8_t(f.depth > 1 ? f.depth : 0)};
+    defs.entries[defs.count++] = {a + delta * 4, facing, FixtureKind::Door, 0};
     if (f.depth > 1) {
+        // Both sides of the loop must be locked: the key opens the entire final
+        // junction/guardian sector, not just its last doorway. Keep room/population
+        // selection independent of these locks.
+        for (unsigned i = 0; i < f.connectionCount; ++i) {
+            const auto e = f.connections[i];
+            const auto other = e.a == aa ? e.b : e.b == aa ? e.a : maxRooms;
+            if (other >= f.roomCount || f.rooms[other].role != Role::Junction)
+                continue;
+            const auto c = center(f.rooms[other]);
+            const Cell d{(a.x - c.x) / 9, (a.y - c.y) / 9};
+            Heading h = Heading::North;
+            for (unsigned n = 0; n < 4; ++n)
+                if (forward(Heading(n)) == d)
+                    h = Heading(n);
+            defs.entries[defs.count++] = {c + d * 4, h, FixtureKind::Door, std::uint8_t(f.depth)};
+        }
         const auto e = distances(f, ea), aDist = distances(f, aa);
         unsigned chosen = maxRooms, best = 0;
         for (unsigned i = 0; i < f.roomCount; ++i) {
@@ -119,11 +163,11 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
         return {Error::Capacity};
     const auto& defs = f.fixtures;
     if (f.depth < 1 || f.depth > 3 || defs.depth != f.depth || !defs.discovery ||
-        defs.count < (f.depth == 1 ? 6u : 7u) || defs.count > fixtureCapacity || defs.landingCount != 2 ||
+        defs.count < (f.depth == 1 ? 6u : 9u) || defs.count > fixtureCapacity || defs.landingCount != 2 ||
         f.approachDoor >= defs.count || f.guardianGate >= defs.count)
         return {Error::Fixture};
     int key = -1, up = -1, goal = -1;
-    unsigned doors = 0, gates = 0;
+    unsigned doors = 0, gates = 0, locks = 0;
     for (unsigned i = 0; i < defs.count; ++i) {
         const auto& d = defs.entries[i];
         if (!floorCell(f, d.cell) || unsigned(d.facing) > 3 ||
@@ -132,12 +176,17 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
         for (unsigned j = 0; j < i; ++j)
             if (d.cell == defs.entries[j].cell)
                 return {Error::Fixture};
-        const auto expected =
-            (i == f.approachDoor || d.kind == FixtureKind::Key) && f.depth > 1 ? f.depth : 0u;
+        const auto expected = (d.kind == FixtureKind::Key ||
+                               (d.kind == FixtureKind::Door && sectorDoor(f, d.cell, d.facing))) &&
+                                      f.depth > 1
+                                  ? f.depth
+                                  : 0u;
         if (d.key != expected)
             return {Error::Fixture};
         if (d.kind == FixtureKind::Door)
             ++doors;
+        if (d.kind == FixtureKind::Door && d.key)
+            ++locks;
         if (d.kind == FixtureKind::GuardianGate)
             ++gates;
         if (d.kind == FixtureKind::Key) {
@@ -156,8 +205,8 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
             goal = int(i);
         }
     }
-    if (doors < 3 || gates != 1 || up < 0 || goal < 0 || (key >= 0) != (f.depth > 1) ||
-        defs.entries[f.approachDoor].kind != FixtureKind::Door ||
+    if (locks != (f.depth > 1 ? 2u : 0u) || doors < 3 || gates != 1 || up < 0 || goal < 0 ||
+        (key >= 0) != (f.depth > 1) || defs.entries[f.approachDoor].kind != FixtureKind::Door ||
         defs.entries[f.guardianGate].kind != FixtureKind::GuardianGate ||
         !(stairLanding(defs.entries[up]) == f.spawn.cell) ||
         defs.entries[goal].kind != (f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs))
@@ -251,7 +300,10 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
         const auto& r = f.rooms[i];
         if (!floorCell(f, r.anchor))
             return {Error::Room};
-        if ((r.role == Role::Optional || r.role == Role::Junction) && !seen[index(r.anchor)])
+        const bool sector = f.depth > 1 && i == sectorJunction(f);
+        if (sector && (seen[index(r.anchor)] || !seen[index(r.anchor) + maxCells]))
+            return {Error::Progression};
+        if ((r.role == Role::Optional || (r.role == Role::Junction && !sector)) && !seen[index(r.anchor)])
             return {Error::Progression};
     }
     if (const auto failure = validatePopulation(f))

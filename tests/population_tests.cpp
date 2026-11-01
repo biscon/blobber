@@ -72,10 +72,10 @@ void budgets() {
             check(reserveXp == (depth == 1 ? 75u : 100u), "finite accessible reserve XP");
             check(p.count <= 32 && f.encounterCount <= 5 && f.fixtures.count <= 32,
                   "population stays within fixed content admission bounds");
-            check(p.recovery.groundCount == 6 && p.recovery.ground[0].quantity == 2 &&
-                      p.recovery.ground[1].quantity == 4 && p.recovery.ground[2].quantity == 20 &&
-                      p.recovery.ground[3].quantity == 1 && p.recovery.ground[4].quantity == 2 &&
-                      p.recovery.ground[5].quantity == 10 && p.objective.rewardCount == (depth < 3 ? 2u : 0u),
+            check(p.recovery.groundCount == 6 && p.recovery.ground[0].quantity == 1 &&
+                      p.recovery.ground[1].quantity == 2 && p.recovery.ground[2].quantity == 20 &&
+                      p.recovery.ground[3].quantity == 1 && p.recovery.ground[4].quantity == 1 &&
+                      p.recovery.ground[5].quantity == 10 && p.objective.rewardCount == (depth < 3 ? 1u : 0u),
                   "main/reserve caches and final victory have explicit finite budgets");
             for (unsigned i = 0; i < p.count; ++i)
                 check(depth == 3 || c.monster(*p.actors[i].monster)->id != "bugbear",

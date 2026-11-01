@@ -45,8 +45,24 @@ void Presenter::drawGame(Rectangle destination) const {
                     artHeight * .5f, {202, 178, 118, 255}, UiTextStyle::Label);
         rlPopMatrix();
     }
+    if (saving_) {
+        rlPushMatrix();
+        rlTranslatef(destination.x, destination.y, 0);
+        rlScalef(destination.width / gameWidth, destination.height / gameHeight, 1);
+        DrawRectangle(0, 0, gameWidth, gameHeight, {0, 0, 0, 160});
+        constexpr Rectangle dialog{gameWidth * .5f - 210, gameHeight * .5f - 65, 420, 130};
+        DrawRectangleRec(dialog, {15, 23, 23, 255});
+        DrawRectangleLinesEx(dialog, 2, {202, 178, 118, 255});
+        // Font coordinates are in the native HUD's 640x360 space.
+        constexpr const char* label = "Saving...";
+        fonts_.draw(label, (artWidth - fonts_.width(label, UiTextStyle::Heading)) * .5f,
+                    fonts_.centeredY(label, artHeight * .5f - 20, 40, UiTextStyle::Heading),
+                    {202, 178, 118, 255}, UiTextStyle::Heading);
+        rlPopMatrix();
+    }
 }
 void Presenter::presentCached(float fade, const char* status) {
+    saving_ = false;
     fade_ = std::clamp(fade, 0.f, 1.f);
     std::snprintf(loadingLabel_.data(), loadingLabel_.size(), "%s", status ? status : "");
     BeginDrawing();
@@ -59,9 +75,26 @@ void Presenter::presentCached(float fade, const char* status) {
     }
     finishFrame();
 }
+void Presenter::presentSaving() {
+    saving_ = true;
+    fade_ = 0;
+    loadingLabel_[0] = 0;
+    BeginDrawing();
+    ClearBackground(BLACK);
+    const int rw = GetRenderWidth(), rh = GetRenderHeight();
+    if (rw > 0 && rh > 0 && !IsWindowMinimized()) {
+        const auto fit = aspectFit(rw, rh);
+        const Rectangle destination{
+            fit.x * float(GetScreenWidth()) / rw, fit.y * float(GetScreenHeight()) / rh,
+            fit.width * float(GetScreenWidth()) / rw, fit.height * float(GetScreenHeight()) / rh};
+        drawGame(destination);
+    }
+    finishFrame();
+}
 void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
                              const Map& map, const HudSnapshot* hud, const PickingBuffer* picking, bool debug,
                              const generation::DiagnosticView* diagnostic, bool reveal) {
+    saving_ = false;
     loadingLabel_[0] = 0;
     const auto& target = resources_.target(logical);
     if (!revision || target.texture.width != viewWidth || target.texture.height != viewHeight)
@@ -111,6 +144,7 @@ void Presenter::prepareMenu() {
     }
 }
 void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context) {
+    saving_ = false;
     loadingLabel_[0] = 0;
     fade_ = 0;
     SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_BILINEAR);

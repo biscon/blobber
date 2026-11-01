@@ -96,7 +96,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     const HudPainter p(fonts, art, metrics);
     const auto& combat = h->combat;
     if (!h->modal() && picking && (!h->suspended || h->magic.armed)) {
-        const auto statuses = statusMarkerLayout(*h);
+        const auto statuses = statusMarkerLayout(*h, picking);
         for (std::size_t slot = 0; slot < statuses.size(); ++slot)
             if (statuses[slot]) {
                 const auto row = *statuses[slot];
@@ -218,7 +218,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             }
         }
     }
-    p.spellMarkers(*h);
+    p.spellMarkers(*h, picking);
     for (const auto& feedback : h->feedback)
         if (const auto rect = feedbackRect(feedback, h->cards))
             splash(p, feedback, *rect);

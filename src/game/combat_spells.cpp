@@ -362,6 +362,19 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
     const auto* ch = party_.character(c.character);
     const bool turn = state_.phase == CombatPhase::Turns;
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::EndTurn) {
+        if (cunningAvailable(c.character)) {
+            auto defence = c;
+            defence.feature = rules::Feature::CunningAction;
+            spendAction(defence);
+            state_.defending[c.character.index] = true;
+            defendDue_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            auto event = out;
+            event.feature = rules::Feature::CunningAction;
+            event.event = CombatEvent::Defend;
+            event.recipient = c.character;
+            event.hit = true;
+            events.append(event);
+        }
         extraAction_[c.character.index] = false;
         state_.spent[c.character.index] = true;
         advance(now);

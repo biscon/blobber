@@ -97,6 +97,44 @@ void deterministic() {
     check(original.floor->fingerprint != altered.floor->fingerprint,
           "canonical fingerprint includes actual cells");
 }
+void sectorLocks() {
+    std::set<unsigned> families;
+    for (unsigned seed : {5u, 8u, 13u, 21u})
+        for (unsigned depth : {2u, 3u})
+            for (bool fallback : {false, true}) {
+                const auto result = generate({seed, depth}, templates(), fallback);
+                check(bool(result), "sector fixture generates");
+                const auto& f = result.floor->layout;
+                FloorGeometry runtime(result.floor->map, f.fixtures);
+                families.insert(f.family);
+                unsigned locks = 0;
+                for (unsigned i = 0; i < f.fixtures.count; ++i)
+                    locks +=
+                        f.fixtures.entries[i].kind == FixtureKind::Door && f.fixtures.entries[i].key == depth;
+                check(locks == 2 && !f.fixtures.entries[f.approachDoor].key,
+                      "both loop entrances lock the sector; final approach is ordinary");
+                for (unsigned turn = 0; turn < 4; ++turn)
+                    check(!validate(rotated(f, turn)), "sector progression survives every rotation");
+                auto broken = f;
+                for (unsigned i = 0; i < broken.fixtures.count; ++i)
+                    if (broken.fixtures.entries[i].kind == FixtureKind::Door &&
+                        broken.fixtures.entries[i].key) {
+                        broken.fixtures.entries[i].key = 0;
+                        break;
+                    }
+                check(bool(validate(broken)), "opening either loop bypass rejects");
+                broken = f;
+                for (unsigned i = 0; i < broken.fixtures.count; ++i)
+                    if (broken.fixtures.entries[i].kind == FixtureKind::Door &&
+                        broken.fixtures.entries[i].key) {
+                        auto& d = broken.fixtures.entries[i];
+                        d.facing = Heading((unsigned(d.facing) + 1) % 4);
+                        break;
+                    }
+                check(bool(validate(broken)), "sector doors must face along their corridor");
+            }
+    check(families.size() == 2, "sector fixtures cover both topology families");
+}
 void failures() {
     check(!generate({1, 0}) && !generate({1, 4}) && !generate({1, 1, 999}) && !generate({1, 1, 1, 0}),
           "unsupported depth/version fails before generation");
@@ -172,6 +210,7 @@ void failures() {
 int main() {
     try {
         deterministic();
+        sectorLocks();
         failures();
         std::cout << "Generation contracts passed; retained upper bound=" << sizeof(GeneratedFloor) + maxCells
                   << " scratch=" << scratchBytes() << '\n';

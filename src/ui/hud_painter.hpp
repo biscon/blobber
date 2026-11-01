@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstring>
 namespace blobber {
+class PickingBuffer;
 namespace hudInk {
 inline constexpr Color background{12, 18, 18, 255}, panel{17, 24, 24, 255}, edge{96, 83, 57, 255};
 inline constexpr Color gold{204, 166, 94, 255}, bright{244, 203, 103, 255}, text{220, 216, 199, 255};
@@ -134,7 +135,7 @@ class HudPainter {
     void itemTargets(const HudSnapshot& h) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
-    void spellMarkers(const HudSnapshot& h) const;
+    void spellMarkers(const HudSnapshot& h, const PickingBuffer* picking) const;
     void checkmark(UiRect r) const {
         fill(r, hudInk::teal);
         line({float(r.x + 1), float(r.y + r.height / 2)},

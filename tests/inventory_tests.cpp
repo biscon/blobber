@@ -166,6 +166,8 @@ void sessionIntegration() {
     check(!s.effects().has(rules::CharacterId{1}, EffectKind::MageArmor) && s.events().count >= 1,
           "Armor ends effect immediately with event");
     s.party().damage({1}, s.party().character({1})->hitPoints);
+    check(bool(s.party().stabilize({1})) && s.party().character({1})->life == rules::Life::Stable,
+          "stable unconscious ally is a legal administered potion recipient");
     auto c = potionCommand(s, 0, 10, 1);
     const auto original = quantities(s.party());
     const auto out = s.submit(c);

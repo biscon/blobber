@@ -1,4 +1,5 @@
 #include "automation/world_visual.hpp"
+#include "support/actor_fixtures.hpp"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
@@ -6,8 +7,64 @@
 #include "ui/status_occlusion.hpp"
 #include <iostream>
 using namespace blobber;
+namespace {
+void alphaAnchorsAndWalls() {
+    test::VisibilityFixture fixture(1, 2, true);
+    auto publication = fixture.publication();
+    publication.appearances[0].clips[0].width = 1.f;
+    world_assets::CpuAssets assets(std::move(publication));
+    const auto catalog = creationCatalog(true);
+    const auto map = test::worldRoom(9, 9);
+    auto scene = world_render::prepare(map);
+    world_render::VisibilityPipeline pipeline(scene, assets);
+    const Cell cells[]{{1, 4}, {4, 1}, {7, 4}, {4, 7}};
+    const Cell players[]{{1, 6}, {2, 1}, {7, 2}, {6, 7}};
+    const Cell subcells[]{{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+    for (unsigned h = 0; h < 4; ++h) {
+        MovementState movement;
+        movement.player = {players[h], Heading(h)};
+        NpcWorld placements(map, players[h], {"goblin"}, {{{0}, cells[h], subcells[h], Heading(h)}});
+        ActorWorld actors(map, catalog, placements);
+        pipeline.update({map, movement, &actors});
+        const world_render::Billboard* billboard = nullptr;
+        for (unsigned i = 0; i < pipeline.frame().count; ++i)
+            if (pipeline.frame().billboards[i].id == 0)
+                billboard = &pipeline.frame().billboards[i];
+        check(billboard && billboard->width < 1.f, "wide actor fits a neighboring wall");
+        const auto& b = *billboard;
+        const auto position = actorPosition(*actors.actor(actors.id(0)), 0);
+        check(std::abs(b.feet.x - position.x) < 1e-6f && std::abs(b.feet.z - position.y) < 1e-6f,
+              "fitting preserves the authoritative subcell ground anchor");
+        // Owned source has alpha only in columns [2,10) of a 12-wide canvas.
+        // Crops retain a transparent filtering border which may cross the wall.
+        for (float edge : {-1.f / 3, 1.f / 3}) {
+            const auto right = pipeline.frame().camera.right;
+            const float x = b.feet.x + right.x * b.width * edge;
+            const float z = b.feet.z + right.z * b.width * edge;
+            check(x >= 1 && x <= 8 && z >= 1 && z <= 8,
+                  "visible alpha stays on the floor side of all four walls");
+        }
+        const auto canonical = assets.publication.appearances[0].clips[0].textures[0][0];
+        const auto& texture = assets.publication.textures[canonical];
+        const float top = float(texture.canvas.y + assets.bounds[canonical].top) / texture.canvas.height;
+        const auto head = world_render::project(
+            pipeline.frame().camera,
+            {b.feet.x, b.feet.y + b.height * (assets.publication.anchors[canonical].y - top), b.feet.z});
+        check(top > 0 && pipeline.picking()->targets().anchors[0].badgeTop == int(std::round(head.y)),
+              "transparent canvas margin does not float the badge above the fitted silhouette");
+    }
+    // The reported mixed undead pair keeps distinct front/rear slots even though
+    // their projections may overlap. Exercise moving into a used slot.
+    const auto undead = testMonsterCatalog({"skeleton", "zombie"});
+    NpcWorld placements(map, {4, 6}, {"skeleton", "zombie"}, {{{0}, {4, 4}, {0, 0}}, {{1}, {4, 4}, {0, 1}}});
+    ActorWorld actors(map, undead, placements);
+    check(actors.walk(actors.id(1), {4, 4}, {0, 0}, {4, 6}, 0).error == ActorError::Occupied,
+          "mixed undead pair cannot walk into the same logical subcell");
+}
+} // namespace
 int main() {
     try {
+        alphaAnchorsAndWalls();
         test::VisibilityFixture fixture;
         world_assets::CpuAssets assets(fixture.publication());
         const auto catalog = creationCatalog(true);

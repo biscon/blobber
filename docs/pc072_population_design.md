@@ -1,6 +1,9 @@
 # PC07.2 — Population and generated-route checks
 
-Status: **Ready for review**, 2026-11-01. The user approved the
+Status: **Ready for review, including approved corrections**, 2026-11-01.
+The [review correction design](pc072_review_corrections.md) supersedes the original
+potion budgets, lock placement and version identities below. The retained eight-route
+study describes the original population delivery; encounters and XP stay unchanged. The user approved the
 reviewed plan with “Implement the plan”, including eight bounded serial routes.
 PC07.1 stays accepted. PC08 exploration agents remain outside this slice.
 

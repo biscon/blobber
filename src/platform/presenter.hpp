@@ -16,6 +16,7 @@ class Presenter {
               PreparationWorker* worker = nullptr);
     PreparationWorker* loadingWorker() const noexcept { return worker_; }
     void presentCached(float fade, const char* status = nullptr);
+    void presentSaving(); // Cached composite only; no live simulation/UI readers.
     void fade(float alpha) noexcept { fade_ = std::clamp(alpha, 0.f, 1.f); }
     GpuResources& resources() noexcept { return resources_; }
     void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
@@ -34,7 +35,7 @@ class Presenter {
     void compose(const Texture2D&, bool flipped, const MovementState&, const Map&, bool debug,
                  const HudSnapshot*, const PickingBuffer*, const generation::DiagnosticView*, bool reveal);
     PreparationWorker* worker_ = nullptr;
-    bool showFps_ = false;
+    bool showFps_ = false, saving_ = false;
     float fade_ = 0;
     std::array<char, 96> loadingLabel_{};
     GpuResources& resources_;

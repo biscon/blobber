@@ -1,5 +1,6 @@
 #include "app/campaign_saves.hpp"
 #include "app/result_flow.hpp"
+#include "core/preparation.hpp"
 #include "persistence/campaign_store.hpp"
 #include "persistence/character_library.hpp"
 #include "support/campaign_fixtures.hpp"
@@ -89,6 +90,13 @@ void roundtrip() {
     check(run.commitTravel(travel), "enter dungeon");
     run.party().damage({0}, 2);
     auto floor = run.checkpoint();
+    auto duplicate = run.checkpoint();
+    auto& actors = duplicate->locations[1].state->actors;
+    check(actors.count >= 2, "owned generated floor contains a pair");
+    actors.actors[1].npc.cell = actors.actors[0].npc.cell;
+    actors.actors[1].npc.subcell = actors.actors[0].npc.subcell;
+    rejects([&] { CampaignRun invalid(c, std::move(*duplicate), d.timings); },
+            "campaign restoration rejects duplicate living actor subcells");
     auto floorText = encodeCampaign(c, d, content, *floor);
     auto floorDecoded = decodeCampaign(c, d, content, floorText);
     CampaignRun resumed(c, std::move(*floorDecoded), d.timings);
@@ -389,11 +397,13 @@ class CountedCampaignDisk final : public CampaignFiles {
   public:
     explicit CountedCampaignDisk(const std::filesystem::path& path) : disk_(path) {}
     CampaignIoReply exchange(const CampaignIoRequest& request) override {
+        ioThread = std::this_thread::get_id();
         reads += request.operation == "read";
         writes += request.operation == "replace";
         return disk_.exchange(request);
     }
     unsigned reads = 0, writes = 0;
+    std::thread::id ioThread;
 
   private:
     CampaignDisk disk_;
@@ -427,7 +437,17 @@ void pausePolling() {
           "opening/reopening and 120 paused frames perform no slot I/O or clock advancement");
     commands.toggleMenu();
     commands.saveMenu().intent = SaveIntent::Save;
-    check(!flow.poll(run, commands) && disk.reads > reads && disk.writes == writes + 1 &&
+    bool left = false;
+    unsigned pumps = 0;
+    {
+        PreparationWorker worker;
+        PreparationScope saving(
+            {[](void* p, const char*) { ++*static_cast<unsigned*>(p); }, &pumps, &worker});
+        left = flow.poll(run, commands);
+    }
+    check(pumps && disk.ioThread != std::this_thread::get_id(),
+          "save inspection/publication use the worker while the caller pumps presentation");
+    check(!left && disk.reads > reads && disk.writes == writes + 1 &&
               std::string_view(commands.saveMenu().message.data()) == "Campaign saved.",
           "explicit Save still inspects and publishes the current run");
     CampaignRun other(c, *c.preset(), d.types, d.timings, 7);

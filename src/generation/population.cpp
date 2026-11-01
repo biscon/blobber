@@ -31,14 +31,13 @@ PopulationDefinition resolvePopulation(const FloorLayout& layout, GenerationRequ
         return value;
     };
     auto& recovery = out.recovery;
-    recovery.ground[recovery.groundCount++] = {layout.supply, item("healing_potion"), 2};
-    recovery.ground[recovery.groundCount++] = {layout.supply, item("mana_potion"), 4};
+    recovery.ground[recovery.groundCount++] = {layout.supply, item("healing_potion"), 1};
+    recovery.ground[recovery.groundCount++] = {layout.supply, item("mana_potion"), 2};
     recovery.ground[recovery.groundCount++] = {layout.supply, item("arrow"), 20};
     recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("healing_potion"), 1};
-    recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("mana_potion"), 2};
+    recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("mana_potion"), 1};
     recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("arrow"), 10};
     if (layout.depth < 3) {
-        objective.rewards[objective.rewardCount++] = {layout.guardianReward, item("healing_potion"), 1};
         objective.rewards[objective.rewardCount++] = {layout.guardianReward, item("camp_kit"), 1};
     }
     return out;

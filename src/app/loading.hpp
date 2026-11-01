@@ -2,6 +2,36 @@
 #include "core/preparation.hpp"
 #include "platform/presenter.hpp"
 namespace blobber {
+// A save is joined even after a native close request: publication is not cancellable.
+// Pumping borrows only the cached presenter, never the run, commands or store.
+class SavingScreen {
+  public:
+    SavingScreen(PreparationWorker* worker, Presenter& presenter,
+                 bool (*closeRequested)() = WindowShouldClose)
+        : presenter_(presenter), closeRequested_(closeRequested),
+          scope_(
+              {[](void* owner, const char*) { static_cast<SavingScreen*>(owner)->point(); }, this, worker}) {
+        if (worker)
+            worker->reset();
+        point(); // Display feedback before inspection or snapshot work starts.
+    }
+    bool closing() const noexcept { return closing_; }
+
+  private:
+    void point() {
+        const auto now = GetTime();
+        if (last_ >= 0 && now - last_ < .004)
+            return;
+        closing_ |= closeRequested_();
+        presenter_.presentSaving();
+        last_ = GetTime();
+    }
+    Presenter& presenter_;
+    bool (*closeRequested_)(); // Injectable close probe; verification never sends OS input.
+    double last_ = -1;
+    bool closing_ = false;
+    PreparationScope scope_;
+};
 // Main-thread loading presentation. Scope ends only after every submitted task is joined.
 class LoadingScreen {
   public:

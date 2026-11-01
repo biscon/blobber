@@ -7,6 +7,10 @@ on 2026-10-30; delivery is tracked separately. PC01–PC06 and milestones P-A/P-
 are Accepted and closed;
 PC07.1 arena preparation/calibration is Accepted and closed (2026-11-01); PC07.2 campaign population
 is implemented and Ready for review; PC08–PC09 remain unimplemented.**
+The approved [PC07.2 review corrections](pc072_review_corrections.md) are implemented
+and Ready for review: retain room/encounter/XP structure, use key-controlled guardian
+sectors, reduce guaranteed potions, streamline rogue End Turn and improve saving/rendering.
+Earlier route results remain historical evidence for the previous supplies.
 The separate [multi-slice delivery roadmap](procedural_campaign_plan.md) is accepted. It supersedes the closed static-demo roadmap for future delivery.
 
 ### Opening-slice clarification (2026-10-31)

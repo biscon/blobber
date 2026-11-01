@@ -55,8 +55,8 @@ void objective() {
     g.update(0, false);
     check(g.objective().completed && g.objective().rewardIssued && !g.geometry().solid(gate),
           "all authoritative deaths open gate and issue reward");
-    check(g.fixtures().geometryRevision() == revision + 1 && active(g) == before + 3,
-          "one gate revision, one corpse stack and two reserved supplies");
+    check(g.fixtures().geometryRevision() == revision + 1 && active(g) == before + 2,
+          "one gate revision, one corpse stack and the reserved camp kit");
     const auto loot = g.loot().snapshot().revision;
     const auto xp = g.party().character({0})->experience;
     for (unsigned i = 0; i < 10; ++i)
@@ -102,7 +102,7 @@ void objective() {
     for (unsigned n = 0; n < drops.objective().count; ++n)
         drops.actors().damage(drops.objective().members[n], 1000, 0);
     drops.update(0, false);
-    check(drops.objective().completed && active(drops) == lootDropCapacity + 12,
+    check(drops.objective().completed && active(drops) == lootDropCapacity + 11,
           "full player-drop pool cannot exhaust reserved guardian rewards");
     const LootId reward{drops.actors().snapshot().world,
                         std::uint16_t(NpcWorld::maxInstances * lootPerActor + p.recovery.groundCount), 1};
@@ -145,7 +145,7 @@ void objective() {
     }
     check(rejected, "invalid guardian binding rejects preparation");
     auto full = p.recovery;
-    full.groundCount = 63;
+    full.groundCount = 64;
     for (auto& r : full.ground)
         r = p.recovery.ground[0];
     rejected = false;
@@ -195,7 +195,18 @@ void landings() {
                 g.update(.1, false);
             check(g.combat().snapshot().phase == CombatPhase::Exploration && g.landingSafety(0).safe,
                   "initial arrival remains out of contact under real AI");
-            const auto doorIndex = depth == 1 ? 3u : 4u;
+            unsigned doorIndex = fixtures.count;
+            int nearest = 10000;
+            for (unsigned i = 0; i < fixtures.count; ++i) {
+                const auto& d = fixtures.entries[i];
+                const auto landing = fixtures.landings[0];
+                const int distance = std::abs(d.cell.x - landing.x) + std::abs(d.cell.y - landing.y);
+                if (d.kind == FixtureKind::Door && !d.key && distance < nearest) {
+                    nearest = distance;
+                    doorIndex = i;
+                }
+            }
+            check(doorIndex < fixtures.count, "arrival has an ordinary exit door");
             const auto door = fixtures.entries[doorIndex];
             GameSession opened(f.map, cat, p.placements, 5,
                                {door.cell + forward(door.facing) * -1, door.facing}, false, defs.timings,

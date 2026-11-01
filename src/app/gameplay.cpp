@@ -204,8 +204,20 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                                          int(sample.ui.pointer->y) - viewY)
                                   : std::nullopt);
             }
-            if (campaign && saveFlow.poll(*campaign, view.commands))
-                return PlayOutcome::MainMenu;
+            if (campaign) {
+                std::optional<SavingScreen> saving;
+                const auto intent = view.commands.saveMenu().intent;
+                if (intent == SaveIntent::Save || intent == SaveIntent::SaveMenu)
+                    saving.emplace(presenter.loadingWorker(), presenter);
+                const bool leave = saveFlow.poll(*campaign, view.commands);
+                const bool closing = saving && saving->closing();
+                saving.reset();
+                if (closing) {
+                    if (saveFlow.closeRequested(*campaign, view.commands))
+                        return PlayOutcome::Quit;
+                } else if (leave)
+                    return PlayOutcome::MainMenu;
+            }
             if (campaign && view.commands.snapshot().travelRequested) {
                 const auto request = *view.commands.snapshot().travelRequested;
                 view.commands.cancelTravel();

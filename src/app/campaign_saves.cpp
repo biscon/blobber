@@ -1,4 +1,5 @@
 #include "app/campaign_saves.hpp"
+#include "core/preparation.hpp"
 #include <cstdio>
 namespace blobber {
 bool CampaignSaveFlow::closeRequested(CampaignRun& run, CommandController& commands) {
@@ -44,7 +45,7 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
     // Inspecting restores/validates the entire saved run. Never do it on pause entry
     // or idle menu frames. A confirmed overwrite must keep its previously reviewed revision.
     if (!h.replace)
-        slot_ = store_->inspect();
+        slot_ = prepareCpu([&] { return store_->inspect(); });
     h.leaveAfter = intent == SaveIntent::SaveMenu;
     if (slot_.exists && (!slot_.active || slot_.runId != run.runId()) && !h.replace) {
         h.confirmation = SaveConfirmation::Overwrite;
@@ -53,7 +54,7 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
         return false;
     }
     try {
-        const auto result = store_->save(run, slot_.revision, h.replace);
+        const auto result = prepareCpu([&] { return store_->save(run, slot_.revision, h.replace); });
         h.replace = false;
         if (result.published)
             slot_.revision = result.revision;
@@ -65,11 +66,11 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
         }
         message(result.published ? "Save published, but durability is unconfirmed. Retry before leaving."
                                  : result.error.c_str());
-        slot_ = store_->inspect();
+        slot_ = prepareCpu([&] { return store_->inspect(); });
     } catch (const std::exception& e) {
         h.replace = false;
         message(e.what());
-        slot_ = store_->inspect();
+        slot_ = prepareCpu([&] { return store_->inspect(); });
     }
     return false;
 }

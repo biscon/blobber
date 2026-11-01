@@ -43,7 +43,8 @@ level 3 Champion weapon criticals on 19–20. Cleric: level 2 Preserve Life, act
 one short/long-rest charge, pool 5×level, recipients capped at half effective max HP.
 Automatically distribute lowest HP percentage first, stable character-ID ties;
 preview allocation and reject no benefit. Rogue: level 2 free existing Defend once
-per own turn; level 3 Thief Fast Hands may instead spend that same allowance on a
+per own turn, automatically applying an unused allowance on explicit End Turn
+(PC07.2 review correction); level 3 Thief Fast Hands may instead spend that same allowance on a
 potion; Sneak Attack 2d6. Wizard: level 2 Evocation/Sculpt Spells, level 3 second-level
 spells and existing four-mana Arcane Recovery scaling. Clearly disclose deferred
 Turn Undead, skills/Expertise, locks/traps/climbing and spell-copying/Evocation Savant.

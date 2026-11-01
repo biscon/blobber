@@ -257,11 +257,11 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
                 }
     }
 }
-void HudPainter::spellMarkers(const HudSnapshot& h) const {
+void HudPainter::spellMarkers(const HudSnapshot& h, const PickingBuffer* picking) const {
     const auto& m = h.magic;
     if (!m.armed || h.modal())
         return;
-    const auto markers = spellMarkerLayout(h);
+    const auto markers = spellMarkerLayout(h, picking);
     for (std::size_t i = 0; i < m.affectedCount; ++i) {
         if (!markers[i])
             continue;

@@ -2,7 +2,7 @@
 
 Created: 2026-10-30. Last updated: 2026-11-01.
 Status: **Roadmap accepted; PC01–PC06 Accepted and closed; milestones P-A/P-B Accepted (2026-10-30).**
-PC07.1 is **Accepted and closed** (2026-11-01); PC07.2 is **Ready for review**; PC08–PC09 plans remain unapproved.
+PC07.1 is **Accepted and closed** (2026-11-01); PC07.2 and its approved review corrections are **Ready for review**; PC08–PC09 plans remain unapproved.
 Do not advance automatically.
 
 **Campaign planning resumed (2026-11-01), at the user's direction.** The
@@ -56,11 +56,11 @@ arena and test fixtures; it does not imply retaining the old game mode.
 | Field | Current value |
 | --- | --- |
 | Latest accepted foundation | Demo slices through 13.3 and milestones A/B/C; campaign PC01–PC06, PC07.1 and P-A/P-B accepted; renderer R01–R06 and bestiary B01–B05 accepted |
-| Active slice | PC07.2 — Ready for review |
+| Active slice | PC07.2 — Ready for review, including approved corrections |
 | Awaiting user review | PC07.2 population, route evidence and limitations; parent PC07 remains incomplete |
 | Blockers | None; later slices require their own plans and approvals |
 | Next eligible slice | No new slice until PC07 acceptance; PC08 follows accepted PC07 |
-| Next action | User review of PC07.2; no automatic implementation, experiment expansion or PC08 planning |
+| Next action | User review of [implemented corrections](pc072_review_corrections.md); no experiment expansion or PC08 planning |
 | Accepted direction | Replace the static New Game mode and remaining static-demo work with this MVP; paid recall, floor-entry return, optional walking fallback, no respawns, finite optional encounters for recovery/XP |
 | Accepted roadmap | Scope, sequence and defaults accepted; PC01–PC06 and P-A/P-B closed; PC07 absorbs useful B06 scope; PC07.1 Accepted and closed; PC07.2 approved and Ready for review; PC08–PC09 plans unapproved |
 
@@ -355,7 +355,7 @@ individual detailed plan before implementation; a roadmap approval is not that p
 | PC06 | [Campaign save and resume](#pc06-campaign-save-and-resume) | PC05 | Accepted (2026-10-30) | P-B |
 | PC07 | [Depth bands and finite recovery encounters](#pc07-depth-bands-and-finite-recovery-encounters), including targeted calibration | PC06; bestiary B01–B05 accepted | In progress — PC07.1 Accepted; PC07.2 Ready for review | P-C |
 | PC07.1 | [Arena preparation and calibration](pc071_arena_calibration_design.md) | PC06 and B01–B05 accepted | Accepted (2026-11-01) | P-C |
-| PC07.2 | [Population selection and generated-route checks](pc072_population_design.md) | PC07.1 acceptance | Ready for review | P-C |
+| PC07.2 | [Population selection and generated-route checks](pc072_population_design.md) | PC07.1 acceptance | Ready for review — including approved corrections | P-C |
 | PC08 | [Campaign agents and expedition reports](#pc08-campaign-agents-and-expedition-reports) | PC07 | Planned | P-C |
 | PC09 | [Integrated expedition and MVP acceptance](#pc09-integrated-expedition-and-mvp-acceptance) | PC08 | Planned | P-C |
 
@@ -1129,3 +1129,15 @@ renderer/help-text builds may reject those traces strictly. Player observations 
 expose seed/version/fingerprint identity, but hidden route/recipes remain diagnostic.
 No human interactive fun/feel or live-host MCP review is claimed; no OS input/focus
 automation, installed configuration change, commit, reset or stash was performed.
+
+### PC07.2 review corrections handoff (2026-11-01)
+
+User approved [the review correction plan](pc072_review_corrections.md) with
+“Implement the plan.” Implemented two reusable-key sector entrances on floors 2–3,
+reduced guaranteed potions, unused Cunning Defend on End Turn, worker-backed blocking
+saving feedback and alpha-aware billboard/badge placement. Keep rooms, encounters,
+placements and XP selection unchanged; natural perspective overlap remains. Generator
+6/templates 5, campaign schema 5/simulation 9 and visibility v7 require fresh runs.
+Focused CPU and hidden GPU checks, screenshots and limitations are recorded in the
+linked handoff. Previous eight-route evidence remains historical; no balance study
+rerun. PC07.2 is Ready for review; only the user accepts PC07/P-C. PC08 stays unapproved.

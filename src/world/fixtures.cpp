@@ -67,8 +67,8 @@ FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
         cell = std::uint8_t(i);
         if (f.key) {
             auto& bits = f.kind == FixtureKind::Key ? keys : locks;
-            if (bits & (1u << f.key))
-                throw std::invalid_argument("Duplicate key or lock");
+            if (f.kind == FixtureKind::Key && (bits & (1u << f.key)))
+                throw std::invalid_argument("Duplicate key");
             bits |= 1u << f.key;
         }
     }

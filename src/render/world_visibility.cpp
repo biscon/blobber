@@ -158,20 +158,56 @@ Vec playerCenter(const MovementState& s) {
     const auto a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
     return {a.cell.x + .5f + (b.cell.x - a.cell.x) * e, 0, a.cell.y + .5f + (b.cell.y - a.cell.y) * e};
 }
-float fit(float lateral, float depth, float halfWidth) {
-    const float f = depth - .4f;
-    if (f > .25f && f < 1.75f) {
-        const float limit = std::max(0.f, (viewWidth * .5f - 2) * depth / focal() - halfWidth);
-        const float blend =
-            std::min({std::clamp((f - .25f) * 2, 0.f, 1.f), std::clamp((1.75f - f) * 2, 0.f, 1.f),
-                      std::clamp((1.75f - std::abs(lateral)) * 2, 0.f, 1.f)});
-        if (std::abs(lateral) > .25f) {
-            const float scale = std::clamp((limit - .25f), 0.f, 1.f);
-            const float fitted = .25f + (std::abs(lateral) - .25f) * scale;
-            lateral = std::copysign(std::abs(lateral) + (fitted - std::abs(lateral)) * blend, lateral);
+// Bounded DDA along the camera-facing sprite plane. A solid neighboring cell
+// limits the visible silhouette; fitting never moves the actor's ground anchor.
+float clearance(GeometryView geometry, Vec feet, Vec direction, float limit) noexcept {
+    Cell cell{int(std::floor(feet.x)), int(std::floor(feet.z))};
+    const int sx = direction.x < 0 ? -1 : 1, sz = direction.z < 0 ? -1 : 1;
+    const float infinity = std::numeric_limits<float>::infinity();
+    const float dx = std::abs(direction.x) > epsilon ? 1 / std::abs(direction.x) : infinity;
+    const float dz = std::abs(direction.z) > epsilon ? 1 / std::abs(direction.z) : infinity;
+    float tx = std::isfinite(dx) ? (sx > 0 ? cell.x + 1 - feet.x : feet.x - cell.x) * dx : infinity;
+    float tz = std::isfinite(dz) ? (sz > 0 ? cell.y + 1 - feet.z : feet.z - cell.y) * dz : infinity;
+    for (unsigned step = 0; step < 16; ++step) {
+        const float distance = std::min(tx, tz);
+        if (distance >= limit)
+            return limit;
+        const bool crossX = tx <= tz, crossZ = tz <= tx;
+        // At a corner both side cells must be clear as well as the diagonal.
+        if ((crossX && geometry.solid(cell + Cell{sx, 0})) || (crossZ && geometry.solid(cell + Cell{0, sz})))
+            return std::max(0.f, distance - .005f);
+        if (crossX) {
+            cell.x += sx;
+            tx += dx;
         }
+        if (crossZ) {
+            cell.y += sz;
+            tz += dz;
+        }
+        if (geometry.solid(cell))
+            return std::max(0.f, distance - .005f);
     }
-    return lateral;
+    return 0; // Explicit conservative exhaustion for unusually large appearances.
+}
+float billboardScale(GeometryView geometry, const Camera& camera, Vec feet, float depth, float left,
+                     float right) noexcept {
+    float scale = 1;
+    if (left > epsilon)
+        scale =
+            std::min(scale, clearance(geometry, feet, {-camera.right.x, 0, -camera.right.z}, left) / left);
+    if (right > epsilon)
+        scale = std::min(scale, clearance(geometry, feet, camera.right, right) / right);
+    const float lateral = dot(sub(feet, camera.position), camera.right);
+    const float edge = (viewWidth * .5f - 2) * depth / focal();
+    // Off-screen centers may still have visible partial bodies. Fit on-screen
+    // centers only; normal clipping handles entering/leaving the viewport.
+    if (std::abs(lateral) < edge) {
+        if (left > epsilon)
+            scale = std::min(scale, (edge + lateral) / left);
+        if (right > epsilon)
+            scale = std::min(scale, (edge - lateral) / right);
+    }
+    return std::clamp(scale, 0.f, 1.f);
 }
 } // namespace
 VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::CpuAssets& assets)
@@ -312,10 +348,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const float depth = dot(sub(foot, out.camera.position), out.camera.forward);
             if (depth < nearPlane || depth > farPlane)
                 continue;
-            const float lateral = dot(sub(foot, out.camera.position), out.camera.right);
-            const float fitted = fit(lateral, depth, assets_.edgeHalfWidths[npc.type.index]);
-            const Vec feet{foot.x + out.camera.right.x * (fitted - lateral), 0,
-                           foot.z + out.camera.right.z * (fitted - lateral)};
+            const Vec feet = foot;
             Billboard b{feet,
                         cl.width ? cl.width : a.width,
                         a.height,
@@ -334,17 +367,28 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                       float(stored.canvas.y) / stored.canvas.height,
                       float(stored.canvas.x + stored.width) / stored.canvas.width,
                       float(stored.canvas.y + stored.height) / stored.canvas.height};
+            const auto bounds = assets_.bounds[texture];
+            const float alphaLeft = float(stored.canvas.x + bounds.left) / stored.canvas.width;
+            const float alphaRight = float(stored.canvas.x + bounds.right) / stored.canvas.width;
+            const float scale = billboardScale(in.geometry, out.camera, feet, depth,
+                                               std::max(0.f, (anchor.x - alphaLeft) * b.width),
+                                               std::max(0.f, (alphaRight - anchor.x) * b.width));
+            b.width *= scale;
+            b.height *= scale;
+            b.shadowRadius *= scale;
+            if (scale <= epsilon)
+                continue;
             append(b);
             auto canonical = a.clips[0].textures[0][0];
-            float top = 0;
             if (clip == unsigned(NpcAnimation::Prone) && a.clips[clip].textures[side][0] != UINT16_MAX) {
                 canonical = a.clips[clip].textures[side][0];
-                const auto& stored = assets_.publication.textures[canonical];
-                top = float(stored.canvas.y + assets_.bounds[canonical].top) / stored.canvas.height;
             }
+            const auto& canonicalTexture = assets_.publication.textures[canonical];
+            const float top = float(canonicalTexture.canvas.y + assets_.bounds[canonical].top) /
+                              canonicalTexture.canvas.height;
             const auto badge = project(
                 out.camera,
-                {feet.x, feet.y + a.height * (assets_.publication.anchors[canonical].y - top), feet.z});
+                {feet.x, feet.y + b.height * (assets_.publication.anchors[canonical].y - top), feet.z});
             out.picking.badgeAnchor(std::uint16_t(i), int(std::round(badge.x)), int(std::round(badge.y)),
                                     depth);
         }

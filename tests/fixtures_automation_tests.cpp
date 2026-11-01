@@ -25,8 +25,14 @@ std::unique_ptr<Visibility> visibility(void*, const Map&, const GameSession&) {
 void move(Client& c, const char* action) {
     if (c.protocol.session()->game().opening())
         c.advance(30, false);
-    check(c.act({{"kind", "move"}, {"direction", action}}).at("data").at("accepted"),
-          "Fixture walking uses legal movement");
+    if (!realTime(c.protocol.session()->game().combat().snapshot().phase)) {
+        fight(c, true, 2000, true);
+        if (c.protocol.session()->game().combat().snapshot().phase == CombatPhase::Victory)
+            c.act({{"kind", "continue"}});
+    }
+    const auto result = c.act({{"kind", "move"}, {"direction", action}}).at("data");
+    if (!result.at("accepted"))
+        throw std::runtime_error(std::string("Fixture movement ") + action + ": " + result.dump());
     check(c.advance(17, false).at("ok"), "Fixture movement settles");
 }
 void face(Client& c, Heading h) {
@@ -120,9 +126,14 @@ void run(const char* exe, const char* retain = nullptr) {
         c.trace = &writer;
         check(c.request("start", {{"scenario", setup}}).at("ok"), "Record keyed floor");
         const auto& floor = c.protocol.session()->game().fixtures().definition();
-        walk(c, floor.entries[1].cell);
+        unsigned keyIndex = floor.count;
+        for (unsigned i = 0; i < floor.count; ++i)
+            if (floor.entries[i].kind == FixtureKind::Key)
+                keyIndex = i;
+        check(keyIndex < floor.count, "generated keyed floor declares its key");
+        walk(c, floor.entries[keyIndex].cell);
         const auto before = c.protocol.state();
-        Json key{{"kind", "interact"}, {"fixture", 1}};
+        Json key{{"kind", "interact"}, {"fixture", keyIndex}};
         check(c.request("preview", {{"action", key}}).at("data").at("accepted") &&
                   c.protocol.state() == before,
               "Key preview preserves full replay state");
@@ -130,9 +141,15 @@ void run(const char* exe, const char* retain = nullptr) {
         check(c.act(key).at("data").at("accepted"), "Repeated key safely unchanged");
         const auto door = floor.entries[0];
         walk(c, door.cell + forward(door.facing) * -1);
+        unsigned sectorDoors = 0;
+        for (unsigned i = 0; i < floor.count; ++i)
+            sectorDoors += floor.entries[i].kind == FixtureKind::Door && floor.entries[i].key &&
+                           c.protocol.session()->game().fixtures().open(i);
+        check(sectorDoors && c.protocol.session()->game().party().questKeys() == 4,
+              "transport enters the guardian sector using its reusable key");
         face(c, door.facing);
         check(c.act({{"kind", "interact"}, {"fixture", 0}}).at("data").at("accepted"),
-              "Transport opens matching door");
+              "Transport opens ordinary approach after unlocking sector");
         check(!c.protocol.session()->decision(), "Opening barrier is not an actionable automation decision");
         move(c, "forward");
         check(c.protocol.session()->game().movement().player.cell == door.cell,

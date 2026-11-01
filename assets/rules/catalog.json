@@ -979,7 +979,7 @@
           },
           {
             "item": "healing_potion",
-            "quantity": 2
+            "quantity": 1
           }
         ],
         "equipment": {
@@ -1032,11 +1032,11 @@
           },
           {
             "item": "healing_potion",
-            "quantity": 2
+            "quantity": 1
           },
           {
             "item": "mana_potion",
-            "quantity": 2
+            "quantity": 1
           }
         ],
         "equipment": {
@@ -1101,7 +1101,7 @@
           },
           {
             "item": "healing_potion",
-            "quantity": 2
+            "quantity": 1
           }
         ],
         "equipment": {
@@ -1150,11 +1150,11 @@
           },
           {
             "item": "healing_potion",
-            "quantity": 2
+            "quantity": 1
           },
           {
             "item": "mana_potion",
-            "quantity": 2
+            "quantity": 1
           }
         ],
         "equipment": {
@@ -1485,7 +1485,7 @@
       "supplies": [
         {
           "item": "healing_potion",
-          "quantity": 2,
+          "quantity": 1,
           "slot": "bag"
         }
       ],
@@ -1587,12 +1587,12 @@
         },
         {
           "item": "healing_potion",
-          "quantity": 2,
+          "quantity": 1,
           "slot": "bag"
         },
         {
           "item": "mana_potion",
-          "quantity": 2,
+          "quantity": 1,
           "slot": "bag"
         }
       ],
@@ -1667,7 +1667,7 @@
       "supplies": [
         {
           "item": "healing_potion",
-          "quantity": 2,
+          "quantity": 1,
           "slot": "bag"
         }
       ],
@@ -1721,12 +1721,12 @@
         },
         {
           "item": "healing_potion",
-          "quantity": 2,
+          "quantity": 1,
           "slot": "bag"
         },
         {
           "item": "mana_potion",
-          "quantity": 2,
+          "quantity": 1,
           "slot": "bag"
         }
       ],

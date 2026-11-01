@@ -278,6 +278,35 @@ void turnAllowances() {
           "potion and Cunning Action share allowance");
 }
 
+void automaticCunningDefend() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
+    for (int level : {2, 3})
+        for (bool manualFirst : {false, true}) {
+            GameSession s(map, catalog, places, 7, spellSpawn, false);
+            levelParty(s, level);
+            levelReady(s, 2);
+            if (manualFirst) {
+                check(s.submit(featureCommand(s, 2, Feature::CunningAction)).reason ==
+                          CommandReason::Resolved,
+                      "rogue can still defend before acting");
+                s.update(1.1, false);
+            }
+            const auto end = featureCommand(s, 2, Feature::EndTurn);
+            check(s.submit(end).reason == CommandReason::Resolved && s.combat().snapshot().defending[2],
+                  "End Turn leaves a conscious rogue defending");
+            unsigned defences = 0;
+            for (const auto& event : s.events())
+                if (event.event == CombatEvent::Defend && event.character.index == 2 &&
+                    event.feature == Feature::CunningAction)
+                    ++defences;
+            check(defences == (manualFirst ? 0u : 1u),
+                  "only an unused allowance emits automatic defence, without duplicate activation");
+            check(s.submit(end).reason != CommandReason::Resolved,
+                  "repeated End Turn cannot grant another defence");
+        }
+}
 void capacityStress() {
     const auto map = arenaMap();
     const auto catalog = creationCatalog(true);
@@ -338,6 +367,7 @@ int main(int argc, char**) {
         effects();
         features();
         turnAllowances();
+        automaticCunningDefend();
         std::cout << "Level spell checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
