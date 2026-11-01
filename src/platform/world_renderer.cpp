@@ -19,10 +19,11 @@ out vec2 uv;out vec3 normal;out float depth;out vec3 worldPosition;out float sha
 void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4 p=matModel*vec4(vertexPosition,1);worldPosition=p.xyz;shade=vertexShade;depth=-(matView*p).z;gl_Position=mvp*p;})";
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
-uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;
+uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec2 doorUv;
 void main(){if(idPass!=0){finalColor=idColor;return;}vec2 mapped=uv;
 if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
 if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
+if(uvMode==3) mapped=vec2(1.0-(1.0-uv.x)*doorUv.x,0.5+(uv.y-0.5)*doorUv.y);
 if(uvMode<2) mapped*=worldScale;
 vec4 c=texture(texture0,mapped);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
@@ -132,6 +133,7 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     forward_ = GetShaderLocation(shader, "forward");
     model_ = GetShaderLocation(shader, "matModel");
     uvMode_ = GetShaderLocation(shader, "uvMode");
+    doorUv_ = GetShaderLocation(shader, "doorUv");
     idMode_ = GetShaderLocation(shader, "idPass");
     idColor_ = GetShaderLocation(shader, "idColor");
     if (mvp_ < 0 || view_ < 0 || forward_ < 0)
@@ -390,6 +392,11 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
             rlSetUniformMatrix(model_, model);
             const int mode = box.worldMapped ? 1 : 3;
             rlSetUniform(uvMode_, &mode, SHADER_UNIFORM_INT, 1);
+            if (!box.worldMapped) {
+                const auto& texture = assets_->publication.textures[box.texture];
+                const auto span = world_render::doorUvSpan(box, texture.width, texture.height);
+                rlSetUniform(doorUv_, span.data(), SHADER_UNIFORM_VEC2, 1);
+            }
             const auto id = box.id;
             const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
             rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);

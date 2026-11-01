@@ -559,8 +559,9 @@ does not run combat, a broad sweep or a performance benchmark.
 ## Underkeep containers (current follow-up)
 
 Generator/catalog 9/7, campaign schema/simulation 7/11 and visibility
-`world-visibility-v9` supersede the earlier examples' identities. Visibility v9
-includes the Underkeep scale/moss/door and subcell-facing review fixes; save and
+`world-visibility-v10` supersede the earlier examples' identities. Visibility v10
+adds door surface mapping, door-aware sprite clearance and wall-side walkable
+chests to the earlier Underkeep scale/moss and subcell-facing review fixes; save and
 generator versions remain unchanged. The new checked
 action is `{"kind":"open_container","container":0}` inside the ordinary
 act/preview envelope. Slots are world-scoped and bounded to eight per floor.

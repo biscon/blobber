@@ -16,6 +16,7 @@ class Map {
     bool solid(Cell cell) const noexcept;
     CellSurface surface(Cell cell) const noexcept;
     bool movementBlocked(Cell cell) const noexcept;
+    bool npcBlocked(Cell cell) const noexcept;
     bool canStep(Cell from, Cell to) const noexcept;
     const WorldDefinition& definition() const noexcept { return world_; }
     bool flat() const noexcept { return flat_; }

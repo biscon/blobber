@@ -85,7 +85,7 @@ bool ActorWorld::occupied(Cell c) const noexcept {
            occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x] != 0;
 }
 std::uint8_t ActorWorld::occupiedSlots(Cell c) const noexcept {
-    return map_.movementBlocked(c) ? 15 : occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x];
+    return !map_.npcAllowed(c) ? 15 : occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x];
 }
 ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs,
                              std::uint64_t durationMs) noexcept {

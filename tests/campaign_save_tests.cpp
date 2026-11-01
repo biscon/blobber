@@ -185,12 +185,18 @@ void chestRoundtrip() {
     game.restorePose({chest.cell + forward(chest.facing) * -1, chest.facing}, false);
     check(bool(game.openContainer({game.loot().snapshot().world, 0})),
           "Opened supply chest in owned campaign fixture");
+    game.move(Action::Forward);
+    check(game.movement().player.cell == chest.cell &&
+              bool(game.containerAccess({game.loot().snapshot().world, 0})),
+          "Campaign party can stand on its chest tile and collect contents");
     const auto slot = std::uint16_t(NpcWorld::maxInstances * lootPerActor);
     check(bool(game.pickup(
               {{game.loot().snapshot().world, slot, 1}, {0}, game.party().inventory().revision()})),
           "Partially loot campaign chest");
     auto loaded = copy(c, d, *run);
     check(loaded->game().loot().snapshot().containers[0].opened &&
+              loaded->game().movement().player.cell == chest.cell &&
+              bool(loaded->game().containerAccess({loaded->game().loot().snapshot().world, 0})) &&
               !loaded->game().loot().snapshot().stacks[slot].active &&
               loaded->game().loot().snapshot().stacks[slot + 1].active,
           "Continue retains open state and exact remaining contents");

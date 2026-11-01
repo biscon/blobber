@@ -104,8 +104,8 @@ int main() {
                 for (unsigned i = r.first; i < r.first + r.count; ++i) {
                     const auto p = scene.vertices[scene.indices[i]].position;
                     check(std::abs(p.x - 4.5f) <= .15001f && p.y >= 0 &&
-                              p.y <= (r.variant == 1 ? .35001f : .15001f),
-                          "Both chest variants scale uniformly by half about floor anchor");
+                              p.y <= (r.variant == 1 ? .35001f : .15001f) && p.z >= 3.0124f && p.z < 3.2f,
+                          "Both half-size chest states share a floor anchor tucked toward the wall");
                 }
         auto raisedWorld = world;
         raisedWorld.surfaces.resize(rows.size() * rows[0].size());

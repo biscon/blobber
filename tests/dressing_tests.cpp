@@ -35,7 +35,8 @@ void generated() {
                     check(depth == 3, "Rack only at deepest depth");
                 for (unsigned k = 0; k < d.footprintCount(); ++k) {
                     const auto c = d.footprint(k);
-                    check(!f.map.solid(c) && f.map.movementBlocked(c), "Furniture is occupancy, not wall");
+                    check(!f.map.solid(c) && f.map.movementBlocked(c) == d.blocks() && f.map.npcBlocked(c),
+                          "Physical furniture stays reserved; only chest cells admit the player");
                     check(!f.layout.fixtures.npcExcluded[unsigned(c.y * f.layout.width + c.x)],
                           "Stairs protected");
                     for (unsigned n = 0; n < f.layout.pathCount; ++n)
@@ -85,8 +86,18 @@ void containers() {
     const auto world = game.loot().snapshot().world;
     const ContainerId chest{world, 0};
     const LootId first{world, std::uint16_t(NpcWorld::maxInstances * lootPerActor), 1};
-    check(!map.canStep(pose.cell, {3, 4}) && map.canStep(pose.cell, {4, 5}),
-          "Furniture blocks only occupied cells");
+    check(map.canStep(pose.cell, {3, 4}) && map.canStep(pose.cell, {4, 5}) &&
+              !game.geometry().npcAllowed({3, 4}),
+          "Player can enter chest cell while NPCs cannot overlap it");
+    game.setAnimated(false);
+    game.move(Action::Forward);
+    check(game.movement().player.cell == Cell{3, 4} && game.nearbyContainer().slot == 0 &&
+              bool(game.containerAccess(chest)),
+          "Step onto chest tile and face its backing wall to interact");
+    game.move(Action::TurnRight);
+    check(bool(game.containerAccess(chest)),
+          "Same-cell chest access remains available while turning in place");
+    game.move(Action::TurnLeft);
     check(!game.geometry().npcAllowed({5, 6}) && !game.geometry().npcAllowed({6, 6}),
           "Both rack cells block NPCs");
     check(lineOfSight(game.geometry(), pose.cell, {3, 3}),
@@ -144,7 +155,12 @@ void containers() {
     game.exportFloor(*saved);
     saved->loot.state.stacks[first.slot].container = 1;
     rejects([&] { restored->importFloor(*saved); }, "Foreign stack ownership rejected");
-    rejects([&] { game.restorePose({{3, 4}, Heading::North}, false); }, "Saved player cannot occupy chest");
+    game.restorePose({{3, 4}, Heading::North}, false);
+    game.exportFloor(*saved);
+    restored->importFloor(*saved);
+    restored->restorePose(game.movement().player, false);
+    check(bool(restored->openContainer({restored->loot().snapshot().world, 0})),
+          "Player pose and opened chest state restore on walkable chest cell");
     auto overlapping = furniture();
     overlapping.decorations[3].cell = {3, 4};
     rejects([&] { Map bad(rows, overlapping); }, "Overlapping furniture rejected");

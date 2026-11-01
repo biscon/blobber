@@ -91,7 +91,7 @@ class WorldRenderer {
     void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool,
                         const world_render::Scene*);
     void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground);
-    int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1;
+    int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1, doorUv_ = -1;
     GpuLease<TargetHandle> high_;
     std::unique_ptr<View> active_, staged_;
     world_render::DrawList draws_;

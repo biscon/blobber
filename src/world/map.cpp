@@ -56,6 +56,9 @@ bool Map::solid(Cell c) const noexcept {
     return c.x < 0 || c.y < 0 || c.x >= width_ || c.y >= height_ || cells_[c.y * width_ + c.x] != 0;
 }
 bool Map::movementBlocked(Cell c) const noexcept {
+    return solid(c) || (!occupied_.empty() && (occupied_[std::size_t(c.y * width_ + c.x)] & 1));
+}
+bool Map::npcBlocked(Cell c) const noexcept {
     return solid(c) || (!occupied_.empty() && occupied_[std::size_t(c.y * width_ + c.x)]);
 }
 CellSurface Map::surface(Cell c) const noexcept {
@@ -106,14 +109,14 @@ void Map::validateWorld() {
             !std::isfinite(d.depth) || d.width <= 0 || d.width > 1 || d.height <= 0 || d.height > 4 ||
             d.depth <= 0 || d.depth > 2 || d.offset - d.width * .5f < 0 || d.offset + d.width * .5f > 1)
             throw std::invalid_argument("Invalid world decoration");
-        if (d.blocks()) {
+        if (d.footprintCount()) {
             if (d.width > 1 || d.height > 1 || d.depth > (d.kind == DecorationKind::Rack ? 2 : 1))
                 throw std::invalid_argument("Invalid furniture dimensions");
             for (unsigned n = 0; n < d.footprintCount(); ++n) {
                 const auto c = d.footprint(n);
                 if (solid(c) || occupied_[std::size_t(c.y * width_ + c.x)])
                     throw std::invalid_argument("Furniture overlaps wall or furniture");
-                occupied_[std::size_t(c.y * width_ + c.x)] = 1;
+                occupied_[std::size_t(c.y * width_ + c.x)] = 2 | unsigned(d.blocks());
             }
         }
         if (d.kind == DecorationKind::Chest) {
@@ -145,7 +148,7 @@ void Map::validateWorld() {
             }
         } else {
             ++props;
-            if (!d.blocks() && d.kind != DecorationKind::DoorSurround && !solid(d.cell) &&
+            if (!d.footprintCount() && d.kind != DecorationKind::DoorSurround && !solid(d.cell) &&
                 (d.kind <= DecorationKind::Urn
                      ? (d.height > .25f || d.depth > .25f || !solid(d.cell + forward(d.face)))
                      : (d.depth > .12f || !solid(d.cell + forward(d.face)))))
@@ -176,7 +179,7 @@ bool Map::connected(Cell start) const {
         }
     }
     for (std::size_t i = 0; i < cells_.size(); ++i)
-        if (!cells_[i] && !occupied_[i] && !visited[i])
+        if (!cells_[i] && !(occupied_[i] & 1) && !visited[i])
             return false;
     return true;
 }

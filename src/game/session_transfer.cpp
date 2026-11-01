@@ -175,7 +175,7 @@ void GameSession::importFloor(const FloorState& s) {
             (a.life == ActorLife::Alive && (!a.hitPoints || a.hasDeath)))
             reject();
         if (a.life == ActorLife::Alive) {
-            if (map_.base().movementBlocked(a.npc.cell) ||
+            if (map_.base().npcBlocked(a.npc.cell) ||
                 floor_.definition_.npcExcluded[std::size_t(a.npc.cell.y * map_.width() + a.npc.cell.x)])
                 reject();
             for (unsigned f = 0; f < floor_.definition_.count; ++f)

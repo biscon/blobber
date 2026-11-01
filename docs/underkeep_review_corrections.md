@@ -3,6 +3,10 @@
 Status: **Implemented and verified; awaiting user review**, 2026-11-01.
 The design below was recorded before implementation.
 
+The later [door/chest review](door_chest_followup.md) supersedes full-cell chest
+blocking, centers instances toward their backing walls, corrects door surface UVs
+and extends sprite fitting to actual door geometry. Earlier verification below is historical.
+
 Chest instances use a uniform 0.5 scale at scene preparation, about their floor
 anchor, for both closed/open triangles and CPU/GPU picking. Preserve source mesh
 units, occupied cells, container access, generated records and saves. Moss uses

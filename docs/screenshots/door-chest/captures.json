@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-02",
+  "visibility": "world-visibility-v10",
+  "generator": 9,
+  "catalog": 7,
+  "schema": 7,
+  "simulation": 11,
+  "save_sha256": "3d1d6b49eec2a7bfb69376b54e6824f05f1deca94042cc546bdbee49271b0357",
+  "mode": "--door-chest-review",
+  "gpu": "NVIDIA GeForce RTX 3060; OpenGL 3.3 NVIDIA 615.78.08",
+  "runner_sha256": "eb0cd3eb636a8d6f34836440a6261ff03a3f08f992e6ed599550d0316f08288e",
+  "world_metadata_sha256": "1c1611ff604b4bff17e583794db51e07732a7d8a20bca9fc13e1fa3158606a3b",
+  "captures": [
+    {
+      "path": "saved-door.png",
+      "sha256": "e9cd144a13174df10da3778af0ac867f6de235597f0c90bccb75dbb30c93ee6b"
+    },
+    {
+      "path": "door-front-closed.png",
+      "sha256": "e9cd144a13174df10da3778af0ac867f6de235597f0c90bccb75dbb30c93ee6b"
+    },
+    {
+      "path": "door-front-open.png",
+      "sha256": "56902f18adbf402ce3249eef45ee60a1141e51411de0ffdeb2fc847f8b7f318b"
+    },
+    {
+      "path": "door-back-closed.png",
+      "sha256": "a2373b83be1e3886ad4f8b59556c8fd088c197f34be9440bf1a561d1b4886ba7"
+    },
+    {
+      "path": "door-back-open.png",
+      "sha256": "0b173e68dfe36a1f546ecb71b12158eed2c75cc28dc44d863a51610c3edb356f"
+    },
+    {
+      "path": "chest-at-wall.png",
+      "sha256": "106b491351c1271cefbbd562c01a5401f1c4af13b642f58916a67b23f70361b0"
+    },
+    {
+      "path": "standing-on-chest-cell.png",
+      "sha256": "2c9930eab80da4b9cd70b5bd197daf8220e91acd710e575e13c9405b34d64617"
+    },
+    {
+      "path": "chest-open-from-own-cell.png",
+      "sha256": "3cd06b0fe563ab027b48af27a848ee7a2756d3bb58a5b887a4ab1d5907e5dbcf"
+    },
+    {
+      "path": "rats-at-open-door-0.png",
+      "sha256": "0a615b76fcb22ba256fd56c896cc0bdafd12484cbafde0e128bb474f5b7250a1"
+    },
+    {
+      "path": "rats-at-open-door-150.png",
+      "sha256": "f30c189a40980013f9b75873a45a2c7fdd79752d44d240be7c4d1473b5459685"
+    },
+    {
+      "path": "rats-at-open-door-300.png",
+      "sha256": "7776839dd22635158b35c926d7d36f1fed47895bf5d36c66da5cdafe25398398"
+    },
+    {
+      "path": "rats-at-open-door-450.png",
+      "sha256": "9fef6c40a787485476394ae4890332e9a91dd9901029bbdc9beb889ca464ab29"
+    },
+    {
+      "path": "rats-at-open-door-600.png",
+      "sha256": "943058a917853f0c9fee1c0b02e7a467de38940fc75312560b46f5db8fafcab8"
+    }
+  ]
+}

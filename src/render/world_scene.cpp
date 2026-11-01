@@ -174,8 +174,20 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                                    : d.kind == DecorationKind::Cage ? 2
                                                                     : 3;
             const unsigned last = d.kind == DecorationKind::Chest ? 2 : first + 1;
-            const float cx = d.cell.x + .5f + f.x * (d.kind == DecorationKind::Rack ? .5f : 0.f);
-            const float cz = d.cell.y + .5f + f.y * (d.kind == DecorationKind::Rack ? .5f : 0.f);
+            float wallward = d.kind == DecorationKind::Rack ? .5f : 0.f;
+            if (d.kind == DecorationKind::Chest) {
+                float back = 0;
+                for (unsigned variant = 0; variant < 2; ++variant) {
+                    if (pack.models[variant] >= assets->publication.meshes.size())
+                        throw std::runtime_error("Missing chest mesh binding");
+                    for (const auto& v : assets->publication.meshes[pack.models[variant]].vertices)
+                        back = std::max(back, -.5f * v[2]);
+                }
+                // One transform for both states: leave clearance for the open lid.
+                wallward = std::max(0.f, .5f - back - .0125f);
+            }
+            const float cx = d.cell.x + .5f + f.x * wallward;
+            const float cz = d.cell.y + .5f + f.y * wallward;
             for (unsigned model = first; model < last; ++model) {
                 if (pack.models[model] >= assets->publication.meshes.size())
                     throw std::runtime_error("Missing prop mesh binding");

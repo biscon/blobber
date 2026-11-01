@@ -9,6 +9,7 @@
 #include "support/automation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/campaign_startup_review.hpp"
+#include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
 #include "support/fixture_world.hpp"
 #include "support/layout_review.hpp"
@@ -63,6 +64,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 5 && std::string_view(argv[3]) == "--door-chest-review") {
+            test::doorChestReview(argv[1], argv[2], argv[4]);
+            return 0;
+        }
         if (argc == 5 && std::string_view(argv[3]) == "--campaign-startup-review") {
             test::campaignStartupReview(argv[1], argv[2], argv[4]);
             return 0;

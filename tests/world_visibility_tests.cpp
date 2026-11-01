@@ -8,9 +8,128 @@
 #include "support/hybrid_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/status_occlusion.hpp"
+#include <cmath>
 #include <iostream>
 using namespace blobber;
 namespace {
+void spritesAtDoorLeaves() {
+    test::VisibilityFixture fixture;
+    auto publication = fixture.publication();
+    publication.appearances[0].width = .4f;
+    publication.appearances[0].height = .3f;
+    for (auto& clip : publication.appearances[0].clips)
+        clip.width = .7f;
+    world_assets::CpuAssets assets(std::move(publication));
+    const auto catalog = hybridCatalog(false);
+    const auto map = test::worldRoom(9, 9);
+    for (unsigned h = 0; h < 4; ++h)
+        for (int slot = 0; slot < 4; ++slot) {
+            const auto heading = Heading(h);
+            const auto f = forward(heading);
+            const Cell doorCell{4, 4}, subcell{slot % 2, slot / 2};
+            const Player pose{doorCell + f * -1, heading};
+            FloorFixtures fixtures;
+            fixtures.count = 1;
+            fixtures.entries[0] = {doorCell, heading, FixtureKind::Door};
+            NpcWorld places(map, pose.cell, {"goblin"}, {{{0}, doorCell + f, subcell, Heading((h + 2) % 4)}});
+            GameSession game(map, catalog, places, 5, pose, false, fixture.timings, {}, fixtures);
+            game.setAnimated(false);
+            check(bool(game.interact(game.nearbyFixture())), "Door sprite fixture opens normally");
+            const auto id = game.actors().id(0);
+            check(bool(game.actors().walk(id, doorCell, subcell, pose.cell, 0, 600)),
+                  "Door fixture rat walks into its threshold subslot");
+            const auto scene = world_render::prepare(game.geometry());
+            world_render::VisibilityPipeline pipeline(scene, assets);
+            NpcAnimator animator(game.actors(), fixture.timings);
+            auto doors = game.doors();
+            for (unsigned angle : {0u, 150u, 300u}) {
+                doors.now = angle;
+                doors.until[0] = 300;
+                ++doors.revision;
+                for (unsigned time : {0u, 150u, 300u, 450u, 600u}) {
+                    animator.setTime(time);
+                    world_render::FrameInput input{game.geometry(),      game.movement(), &game.actors(),
+                                                   &animator.snapshot(), nullptr,         &doors};
+                    input.now = time;
+                    watching = true;
+                    allocations = 0;
+                    pipeline.update(input);
+                    watching = false;
+                    check(allocations == 0, "Door-fitting walking views allocate no C++ storage");
+                    bool found = false;
+                    for (unsigned n = 0; n < pipeline.frame().count; ++n) {
+                        const auto& b = pipeline.frame().billboards[n];
+                        if (b.id != id.slot || !b.alive)
+                            continue;
+                        found = true;
+                        const auto actual = actorPosition(*game.actors().actor(id), time);
+                        check(std::floor(b.feet.x * 2) == std::floor(actual.x * 2) &&
+                                  std::floor(b.feet.z * 2) == std::floor(actual.y * 2) &&
+                                  std::hypot(b.feet.x - actual.x, b.feet.z - actual.y) <= .12501f,
+                              "Door fit stays within the moving actor's own visual subslot");
+                        const auto& bounds = assets.bounds[b.texture];
+                        const auto& texture = assets.publication.textures[b.texture];
+                        const float left = std::max(0.f, b.anchorX - float(bounds.left) / texture.width) *
+                                           b.width,
+                                    right = std::max(0.f, float(bounds.right) / texture.width - b.anchorX) *
+                                            b.width;
+                        const auto direction = pipeline.frame().camera.right;
+                        for (unsigned i = 0; i < pipeline.frame().doorCount; ++i) {
+                            const auto& box = pipeline.frame().doors[i];
+                            check(world_render::doorClearance(box, b.feet, {-direction.x, 0, -direction.z},
+                                                              left, b.feet.y,
+                                                              b.feet.y + b.height) >= left - 1e-5f &&
+                                      world_render::doorClearance(box, b.feet, direction, right, b.feet.y,
+                                                                  b.feet.y + b.height) >= right - 1e-5f,
+                                  "Visible rat silhouette cannot intersect the actual door/frame volume");
+                        }
+                    }
+                    if (angle == 300 && time == 600)
+                        check(found, "Rat retains a visible billboard in the settled open threshold");
+                }
+            }
+        }
+    // Near the frustum edge, moving away from a jamb must not move the body axis
+    // out of view and recreate a locked-facing/unselectable-target situation.
+    FloorFixtures fixtures;
+    fixtures.count = 1;
+    fixtures.entries[0] = {{3, 4}, Heading::North, FixtureKind::Door};
+    NpcWorld places(map, {3, 5}, {"goblin"}, {{{0}, {3, 3}, {1, 1}, Heading::South}});
+    GameSession edge(map, catalog, places, 5, {{3, 5}, Heading::North}, false, fixture.timings, {}, fixtures);
+    edge.setAnimated(false);
+    check(bool(edge.interact(edge.nearbyFixture())), "Edge fixture opens door");
+    edge.restorePose({{4, 5}, Heading::North}, false);
+    const auto id = edge.actors().id(0);
+    check(bool(edge.actors().move(id, {3, 4}, {1, 1}, {4, 5})) &&
+              bool(edge.actors().move(id, {3, 5}, {1, 1}, {4, 5})) &&
+              bool(edge.actors().walk(id, {3, 4}, {1, 1}, {4, 5}, 0, 600)),
+          "Edge fixture walks beside the jamb at the viewport boundary");
+    const auto scene = world_render::prepare(edge.geometry());
+    world_render::VisibilityPipeline pipeline(scene, assets);
+    NpcAnimator animator(edge.actors(), fixture.timings);
+    for (unsigned time : {450u, 455u, 465u, 480u, 490u}) {
+        animator.setTime(time);
+        pipeline.update(
+            {edge.geometry(), edge.movement(), &edge.actors(), &animator.snapshot(), nullptr, &edge.doors()});
+        bool found = false;
+        const auto original = actorPosition(*edge.actors().actor(id), time);
+        const auto originalPoint = world_render::project(pipeline.frame().camera, {original.x, 0, original.y});
+        check(originalPoint.x >= 2 && originalPoint.x <= viewWidth - 2,
+              "Edge fixture starts from an on-screen actor axis");
+        for (unsigned i = 0; i < pipeline.frame().count; ++i) {
+            const auto& b = pipeline.frame().billboards[i];
+            if (b.id == id.slot && b.alive) {
+                found = true;
+                const auto point = world_render::project(pipeline.frame().camera, b.feet);
+                check(point.x >= 2 && point.x <= viewWidth - 2,
+                      "Door fitting cannot shift an on-screen target axis beyond the viewport");
+            }
+        }
+        check(found, "Door-edge fitting retains the visible moving target");
+        check(pipeline.frame().picking.targets().count == 1,
+              "Door-edge target remains selectable through the actual pixel/alpha gate");
+    }
+}
 void diagonalCombatTarget() {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
@@ -125,6 +244,7 @@ void alphaAnchorsAndWalls() {
 } // namespace
 int main() {
     try {
+        spritesAtDoorLeaves();
         diagonalCombatTarget();
         alphaAnchorsAndWalls();
         test::VisibilityFixture fixture;

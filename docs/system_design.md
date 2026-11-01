@@ -1,5 +1,13 @@
 # System design
 
+Door/chest review follow-up (implemented and verified, 2026-11-02):
+[door surfaces, sprite clearance and walkable chests](door_chest_followup.md)
+records shared door geometry/UV corrections, bounded sprite fitting against door
+boxes, and wall-side chest instances with player access to their cells. Existing
+campaign definitions and save bytes remain compatible. Nineteen affected suites
+pass, with focused viewport-edge follow-up and hidden CPU/GPU capture verification.
+[Review gallery](screenshots/door-chest/README.md); user visual acceptance is pending.
+
 Campaign Continue correction (implemented and verified, 2026-11-02): graphical startup must
 borrow the already restored CampaignRun session without rebuilding initial NPC
 placements against the saved party pose. A party may legitimately occupy a dead

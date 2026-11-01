@@ -110,7 +110,7 @@ bool GeometryView::solid(Cell c) const noexcept {
            fixtureBlocks(fixtures_->definition().entries[unsigned(i)], fixtures_->open(unsigned(i)));
 }
 bool GeometryView::npcAllowed(Cell c) const noexcept {
-    if (movementBlocked(c))
+    if (movementBlocked(c) || base().npcBlocked(c))
         return false;
     if (!fixtures_)
         return true;

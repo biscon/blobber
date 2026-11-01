@@ -209,6 +209,57 @@ float billboardScale(GeometryView geometry, const Camera& camera, Vec feet, floa
     }
     return std::clamp(scale, 0.f, 1.f);
 }
+float doorScale(const WorldFrame& frame, Vec feet, float left, float right, float low, float high) {
+    float scale = 1;
+    for (unsigned i = 0; i < frame.doorCount; ++i) {
+        if (left > epsilon)
+            scale = std::min(scale, doorClearance(frame.doors[i], feet,
+                                                  {-frame.camera.right.x, 0, -frame.camera.right.z}, left,
+                                                  low, high) /
+                                        left);
+        if (right > epsilon)
+            scale = std::min(
+                scale, doorClearance(frame.doors[i], feet, frame.camera.right, right, low, high) / right);
+    }
+    return scale;
+}
+float subslotShift(Vec feet, Vec direction, float shift) {
+    float low = -.125f, high = .125f;
+    for (const auto pair :
+         {std::array<float, 2>{feet.x, direction.x}, std::array<float, 2>{feet.z, direction.z}}) {
+        if (std::abs(pair[1]) < epsilon)
+            continue;
+        const float base = std::floor(pair[0] * 2) * .5f;
+        const float a = (std::min(pair[0], base + .005f) - pair[0]) / pair[1],
+                    b = (std::max(pair[0], base + .495f) - pair[0]) / pair[1];
+        low = std::max(low, std::min(a, b));
+        high = std::min(high, std::max(a, b));
+    }
+    return std::clamp(shift, low, high);
+}
+float fitDoors(GeometryView geometry, const WorldFrame& frame, Vec& feet, float depth, float left,
+               float right, float low, float high) {
+    const float original = billboardScale(geometry, frame.camera, feet, depth, left, right);
+    float best = std::min(original, doorScale(frame, feet, left, right, low, high));
+    if (best >= original - epsilon)
+        return best;
+    const Vec anchor = feet;
+    for (float requested : {.0625f, -.0625f, .125f, -.125f}) {
+        const float shift = subslotShift(anchor, frame.camera.right, requested);
+        const Vec candidate{anchor.x + shift * frame.camera.right.x, anchor.y,
+                            anchor.z + shift * frame.camera.right.z};
+        const float edge = (viewWidth * .5f - 2) * depth / focal();
+        if (std::abs(dot(sub(candidate, frame.camera.position), frame.camera.right)) >= edge)
+            continue; // A clearance adjustment must not move a target offscreen.
+        const float scale = std::min(billboardScale(geometry, frame.camera, candidate, depth, left, right),
+                                     doorScale(frame, candidate, left, right, low, high));
+        if (scale > best + epsilon) {
+            best = scale;
+            feet = candidate;
+        }
+    }
+    return best;
+}
 } // namespace
 VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::CpuAssets& assets)
     : scene_(scene), assets_(assets) {
@@ -365,7 +416,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const float depth = dot(sub(foot, out.camera.position), out.camera.forward);
             if (depth < nearPlane || depth > farPlane)
                 continue;
-            const Vec feet = foot;
+            Vec feet = foot;
             Billboard b{feet,
                         cl.width ? cl.width : a.width,
                         a.height,
@@ -387,9 +438,16 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const auto bounds = assets_.bounds[texture];
             const float alphaLeft = float(stored.canvas.x + bounds.left) / stored.canvas.width;
             const float alphaRight = float(stored.canvas.x + bounds.right) / stored.canvas.width;
-            const float scale = billboardScale(in.geometry, out.camera, feet, depth,
-                                               std::max(0.f, (anchor.x - alphaLeft) * b.width),
-                                               std::max(0.f, (alphaRight - anchor.x) * b.width));
+            const float low =
+                feet.y +
+                std::min(0.f, (anchor.y - float(stored.canvas.y + bounds.bottom) / stored.canvas.height) *
+                                  b.height);
+            const float high =
+                feet.y + (anchor.y - float(stored.canvas.y + bounds.top) / stored.canvas.height) * b.height;
+            const float scale =
+                fitDoors(in.geometry, out, feet, depth, std::max(0.f, (anchor.x - alphaLeft) * b.width),
+                         std::max(0.f, (alphaRight - anchor.x) * b.width), low, high);
+            b.feet = feet;
             b.width *= scale;
             b.height *= scale;
             b.shadowRadius *= scale;
@@ -597,12 +655,14 @@ Scene billboardMesh() {
 }
 Scene proxyMesh() {
     Scene s;
+    unsigned face = 0;
     cube({0, 0}, [&](const auto& p, Vec n) {
         const auto first = std::uint32_t(s.vertices.size());
         for (unsigned i = 0; i < 4; ++i)
-            s.vertices.push_back({p[i], n, float(i == 1 || i == 2), float(i < 2)});
+            s.vertices.push_back({p[i], n, float((i == 1 || i == 2) != (face == 1)), float(i < 2)});
         for (unsigned k : {0u, 1u, 2u, 0u, 2u, 3u})
             s.indices.push_back(first + k);
+        ++face;
     });
     return s;
 }

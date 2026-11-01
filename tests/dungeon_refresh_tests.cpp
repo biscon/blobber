@@ -147,6 +147,13 @@ void stairsAndFrames() {
             for (unsigned i = 0; i < 3; ++i)
                 check(boxes[i].worldMapped, "All frame strips use world UV mapping");
             check(!boxes[3].worldMapped, "Leaf uses fitted art independently of frame density");
+            const auto uv = world_render::doorUvSpan(boxes[3], 512, 512);
+            check(std::abs(std::hypot(boxes[3].x.x, boxes[3].x.z) / uv[0] - boxes[3].y.y / uv[1]) < 1e-5f,
+                  "Square door artwork retains physical aspect rather than stretching the ring");
+            const auto mesh = world_render::proxyMesh();
+            for (unsigned k = 0; k < 8; ++k)
+                check(std::abs(mesh.vertices[k].u - mesh.vertices[k].position.x) < 1e-5f,
+                      "Both broad faces place the latch at physical free edge x=1");
             const auto length = [](world_render::Vec v) { return std::hypot(v.x, v.z); };
             const float jamb = length(boxes[0].x), leaf = length(boxes[3].x);
             check(std::abs(leaf - .88f * .65f) < 1e-5f && std::abs(boxes[3].y.y - .92f * .875f) < 1e-5f,

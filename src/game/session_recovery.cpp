@@ -41,6 +41,9 @@ ContainerId GameSession::nearbyContainer() const noexcept {
     const auto cell = movement().player.cell + forward(movement().player.heading);
     const auto& s = loot_.snapshot();
     for (unsigned i = 0; i < s.containerCount; ++i)
+        if (s.containers[i].cell == movement().player.cell)
+            return {s.world, std::uint8_t(i)};
+    for (unsigned i = 0; i < s.containerCount; ++i)
         if (s.containers[i].cell == cell)
             return {s.world, std::uint8_t(i)};
     return {};
@@ -63,6 +66,8 @@ PickupResult GameSession::containerAccess(ContainerId id) const noexcept {
     if (c->sealed)
         return {InventoryError::Unavailable, "The guardians' seal holds this chest shut."};
     const auto from = movement().player.cell;
+    if (from == c->cell)
+        return {};
     if (!inFrontBand(from, movement().player.heading, c->cell) ||
         !surfacePassage(map_.surface(from), map_.surface(c->cell)) || !lineOfSight(map_, from, c->cell))
         return {InventoryError::Unavailable, "Move closer and face the chest."};
