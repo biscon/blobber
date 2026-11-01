@@ -1,6 +1,7 @@
 #pragma once
 #include "rules/creation.hpp"
 #include <filesystem>
+#include <string>
 
 namespace blobber {
 struct SavedCharacterId {
@@ -57,7 +58,7 @@ class CharacterLibrary {
     CharacterLibrary(const rules::Catalog&&, std::filesystem::path, LibraryIoHooks = {}) = delete;
     const LibrarySnapshot& snapshot() const noexcept { return state_; }
     const std::filesystem::path& path() const noexcept { return path_; }
-    LibraryResult load();       // On failure, preserve the last successful snapshot and disallow mutation.
+    LibraryResult load();       // Skip incompatible records; I/O failures disallow mutation.
     LibraryResult initialize(); // Seed only a genuinely absent store.
     LibraryResult create(const rules::CharacterDraft&, std::uint64_t expectedRevision);
     LibraryResult replace(SavedCharacterId, const rules::CharacterDraft&, std::uint64_t expectedRevision);
@@ -71,6 +72,7 @@ class CharacterLibrary {
     LibraryIoHooks hooks_;
     LibrarySnapshot state_;
     bool loaded_ = false;
+    std::string diskText_; // Exact observed bytes, including ignored data, for checked writes.
     LibraryResult commit(LibrarySnapshot&, std::uint64_t expected, bool initial = false);
     SavedCharacterId newId(const LibrarySnapshot&);
 };

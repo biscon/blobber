@@ -92,6 +92,28 @@ low-priority worker. `ctest --preset release -R '^campaign_save_smoke$'` passed
 overwrite rejection. No GPU workload or desktop input automation ran while the
 user was playing; interactive FPS/latency confirmation remains user review.
 
+[Character-library compatibility follow-up](library_compatibility_fix.md) (2026-11-01, implemented): disk loading
+admits each valid current character independently and skips incompatible records.
+An unreadable library envelope becomes an empty usable library after a bounded
+successful file read; real I/O failures remain reported. Strict decoding stays
+available for validation. Loading never rewrites ignored data; the next explicit
+character save writes the accepted records plus the new draft, backing up the old
+bytes. CharacterLibrary retains the exact bytes observed at load and compares them
+under the existing writer lock before committing, so filtering does not weaken
+concurrent-writer protection. Storage and parsing remain preparation/I/O work,
+outside steady frames. Lock files alone are not recovery data. Campaign inspection
+already disables Continue on incompatible/corrupt saves while leaving New Game
+available; preserve strict save validation and explicit replacement confirmation.
+Owned regressions cover mixed/all-invalid characters, malformed/versioned envelopes,
+creation/reload after filtering, stale writes and incompatible campaign replacement.
+
+Inventory tab feedback follow-up (2026-11-01): page labels and party tabs paint
+their own held state behind their text/portraits, using a subtle fill and teal
+underline. Preserve the selected page/character treatment. The final generic button
+feedback pass skips these rectangles, avoiding the inset button border and text
+dimming on tabs. Capture/release/cancel semantics and storage remain unchanged;
+verify through hidden application-owned captures, without OS input automation.
+
 ## Boundaries and data flow
 
 - **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID

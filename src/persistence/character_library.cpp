@@ -95,7 +95,7 @@ bool systemEntropy(std::array<std::uint8_t, 16>& bytes) {
 }
 bool artifacts(const std::filesystem::path& p) {
     return std::filesystem::exists(p.string() + ".bak") || std::filesystem::exists(p.string() + ".tmp") ||
-           std::filesystem::exists(p.string() + ".bak.tmp") || std::filesystem::exists(p.string() + ".lock");
+           std::filesystem::exists(p.string() + ".bak.tmp");
 }
 } // namespace
 bool validSavedCharacterId(const SavedCharacterId& id) noexcept {
@@ -136,10 +136,23 @@ LibraryResult CharacterLibrary::load() {
         if (!std::filesystem::exists(path_))
             return result(artifacts(path_) ? LibraryError::RecoveryRequired : LibraryError::Missing,
                           "Library missing; existing artifacts require manual recovery");
-        auto candidate = decodeLibrary(catalog_, readFile(path_));
+        auto bytes = readFile(path_);
+        LibrarySnapshot candidate;
+        std::size_t skipped = 0;
+        bool ignoredEnvelope = false;
+        try {
+            candidate = decodeLibrary(catalog_, bytes, &skipped);
+        } catch (const std::bad_alloc&) {
+            throw;
+        } catch (const std::exception&) {
+            ignoredEnvelope = true;
+        }
         state_ = candidate;
+        diskText_ = std::move(bytes);
         loaded_ = true;
-        return {};
+        return result(LibraryError::None,
+                      ignoredEnvelope ? "Incompatible character library ignored; create new characters."
+                      : skipped ? "Incompatible characters ignored." : "");
     } catch (const LibraryException& e) {
         return result(e.code, e.what());
     } catch (const std::exception& e) {
@@ -187,8 +200,7 @@ LibraryResult CharacterLibrary::commit(LibrarySnapshot& candidate, std::uint64_t
         std::string old;
         if (std::filesystem::exists(path_)) {
             old = readFile(path_);
-            const auto disk = decodeLibrary(catalog_, old);
-            if (initial || disk.revision != expected)
+            if (initial || old != diskText_)
                 return result(LibraryError::Stale, "Library changed on disk; reload it");
         } else if (!initial)
             return result(LibraryError::RecoveryRequired, "Library disappeared; original artifacts retained");
@@ -197,7 +209,7 @@ LibraryResult CharacterLibrary::commit(LibrarySnapshot& candidate, std::uint64_t
             return result(LibraryError::RecoveryRequired,
                           "Existing library artifacts require manual recovery");
         candidate.revision = expected + 1;
-        const auto text = encodeLibrary(catalog_, candidate);
+        auto text = encodeLibrary(catalog_, candidate);
         writeFile(temporary, text, hooks_);
         ownTemporary = true;
         fault(hooks_, LibraryStage::Backup);
@@ -218,6 +230,7 @@ LibraryResult CharacterLibrary::commit(LibrarySnapshot& candidate, std::uint64_t
         ownTemporary = false;
         committed = true;
         state_ = candidate;
+        diskText_ = std::move(text);
         loaded_ = true;
         fault(hooks_, LibraryStage::DirectoryFlush);
         if (::fsync(directory.fd) < 0)

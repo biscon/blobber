@@ -21,6 +21,26 @@ template <class F> void rejects(F f, const char* message) {
     }
     check(rejected, message);
 }
+void ignoredCampaigns() {
+    const auto c = catalog();
+    const auto d = definitions();
+    Directory directory;
+    const auto path = directory.path / "campaign.json";
+    CampaignDisk disk(path);
+    CampaignStore store(c, d, {"fixture", 0}, disk);
+    for (const auto* bytes : {"{", "{\"schema\":0,\"simulation\":0}"}) {
+        std::ofstream(path) << bytes;
+        const auto slot = store.inspect();
+        check(slot.exists && !slot.active && !slot.error.empty(),
+              "incompatible/corrupt campaign disables only Continue");
+        CampaignRun fresh(c, *c.preset(), d.types, d.timings, 5);
+        rejects([&] { store.save(fresh, slot.revision); }, "old slot still needs replacement confirmation");
+        check(store.save(fresh, slot.revision, true).durable,
+              "fresh game can replace ignored slot after confirmation");
+        check(store.inspect().active && store.load()->runId() == fresh.runId(),
+              "new campaign is loadable after ignored save");
+    }
+}
 void environmentRoundtrip() {
     const auto c = catalog();
     const auto d = definitions();
@@ -839,6 +859,7 @@ void navigationContinuation() {
 int main(int argc, char** argv) {
     try {
         if (argc == 2 && std::string(argv[1]) == "--smoke") {
+            ignoredCampaigns();
             environmentRoundtrip();
             roundtrip();
             saveUi();
@@ -849,6 +870,7 @@ int main(int argc, char** argv) {
         }
         if (argc != 1)
             throw std::invalid_argument("Expected no arguments or --smoke");
+        ignoredCampaigns();
         environmentRoundtrip();
         roundtrip();
         std::cerr << "progression/floors\n";

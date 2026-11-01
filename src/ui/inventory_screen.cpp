@@ -86,16 +86,23 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     const auto& i = h.inventory;
     fill({0, 0, 640, 360}, background);
     overlayBox(inventoryLayout::panel);
-    text("INVENTORY", inventoryLayout::inventoryPage.x, 11,
-         i.page == CharacterPage::Inventory ? bright : gold, UiTextStyle::Display);
+    const auto pressed = [&](UiRect r) {
+        const auto held = h.buttons.feedback;
+        return held && held->x == r.x && held->y == r.y && held->width == r.width &&
+               held->height == r.height;
+    };
+    const auto pageTab = [&](const char* label, UiRect r, bool selected) {
+        const bool held = pressed(r);
+        if (held)
+            fill(r, {29, 43, 40, 255});
+        text(label, r.x, 11, held ? teal : selected ? bright : gold, UiTextStyle::Display);
+        const float width = fonts ? fonts->width(label, UiTextStyle::Display) : r.width;
+        if (selected || held)
+            line({float(r.x), 23}, {r.x + width, 23}, held ? teal : bright, 2);
+    };
+    pageTab("INVENTORY", inventoryLayout::inventoryPage, i.page == CharacterPage::Inventory);
     line({81, 10}, {81, 25}, edge);
-    text("CHARACTER", inventoryLayout::characterPage.x, 11,
-         i.page == CharacterPage::Character ? bright : gold, UiTextStyle::Display);
-    const auto activePage =
-        i.page == CharacterPage::Inventory ? inventoryLayout::inventoryPage : inventoryLayout::characterPage;
-    const auto activeLabel = i.page == CharacterPage::Inventory ? "INVENTORY" : "CHARACTER";
-    const float tabWidth = fonts ? fonts->width(activeLabel, UiTextStyle::Display) : activePage.width;
-    line({float(activePage.x), 23}, {activePage.x + tabWidth, 23}, bright, 2);
+    pageTab("CHARACTER", inventoryLayout::characterPage, i.page == CharacterPage::Character);
     text("PAUSED", 282, 13, teal, UiTextStyle::Small);
     box(inventoryLayout::close);
     centered("X", inventoryLayout::close, gold);
@@ -103,6 +110,11 @@ void HudPainter::inventory(const HudSnapshot& h) const {
         const auto r = inventoryLayout::tab(n);
         const auto& c = h.cards[n];
         box(r, c.id.index == i.character.index ? bright : edge);
+        if (pressed(r)) {
+            fill({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, {29, 43, 40, 255});
+            line({float(r.x + 2), float(r.y + r.height - 2)},
+                 {float(r.x + r.width - 2), float(r.y + r.height - 2)}, teal, 2);
+        }
         picture(c.portrait, {r.x + 3, r.y + 3, 19, 22});
         char line[96];
         std::snprintf(line, sizeof(line), "%d  %s", n + 1, c.name);

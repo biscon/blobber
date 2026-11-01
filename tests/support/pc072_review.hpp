@@ -100,6 +100,28 @@ inline void pc072ControlsReview(const std::filesystem::path& source, const std::
     routeHudInput(commands, sample(invEdges, false, {630, 350}));
     commands.closeOverlay();
     commands.refresh({}, false, false, true);
+    commands.openInventory();
+    commands.refresh({}, false, false, true);
+    UiInputEdges tabEdges;
+    const auto characterTab = inventoryLayout::characterPage;
+    routeHudInput(commands, sample(tabEdges, true,
+                                  {float(characterTab.x + 4), float(characterTab.y + 4)}));
+    check(commands.snapshot().inventory.page == CharacterPage::Inventory &&
+              commands.snapshot().buttons.feedback.has_value(), "held page tab waits for release");
+    show();
+    presenter.capture(output / "inventory-character-tab-pressed.png");
+    routeHudInput(commands, sample(tabEdges, false,
+                                  {float(characterTab.x + 4), float(characterTab.y + 4)}));
+    check(commands.snapshot().inventory.page == CharacterPage::Character, "page tab changes on release");
+    const auto inventoryTab = inventoryLayout::inventoryPage;
+    routeHudInput(commands, sample(tabEdges, true,
+                                  {float(inventoryTab.x + 4), float(inventoryTab.y + 4)}));
+    show();
+    presenter.capture(output / "character-inventory-tab-pressed.png");
+    routeHudInput(commands, sample(tabEdges, false, {630, 350}));
+    check(commands.snapshot().inventory.page == CharacterPage::Character, "page tab outside release cancels");
+    commands.closeOverlay();
+    commands.refresh({}, false, false, true);
     const auto counts = resources.counts();
     allocations = 0;
     watching = true;

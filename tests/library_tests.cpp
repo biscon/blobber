@@ -41,9 +41,64 @@ struct Temp {
         std::filesystem::remove_all(path, ec);
     }
 };
+void tolerantLoading() {
+    const auto cat = creationCatalog();
+    Temp temp;
+    const auto path = temp.path / "characters.json";
+    // A persistent writer lock contains no character recovery data.
+    write(path.string() + ".lock", "");
+    CharacterLibrary seeded(cat, path);
+    check(bool(seeded.initialize()) && seeded.snapshot().count == 4, "lock alone permits first run");
+    const auto valid = read(path);
+    const auto draft = seeded.snapshot().records[0].draft;
+    const auto json = nlohmann::json::parse(valid);
+    auto checkIgnored = [&](const std::string& bytes, std::size_t accepted) {
+        write(path, bytes);
+        CharacterLibrary library(cat, path);
+        check(bool(library.initialize()) && library.snapshot().count == accepted,
+              "incompatible records never disable the library");
+        check(read(path) == bytes, "load never rewrites ignored records");
+        const auto created = library.create(draft, library.snapshot().revision);
+        check(created && created.committed && library.snapshot().count == accepted + 1,
+              "new character can be saved after incompatible data");
+        check(read(path.string() + ".bak") == bytes, "explicit save backs up ignored data");
+        CharacterLibrary reloaded(cat, path);
+        check(bool(reloaded.load()) && reloaded.snapshot().count == accepted + 1 &&
+                  reloaded.snapshot().find(created.id),
+              "filtered library and new draft survive reload");
+    };
+    auto bad = json;
+    bad["characters"][0]["gear"]["items"][0]["quantity"] = 999;
+    checkIgnored(bad.dump(), 3);
+    bad = json;
+    bad["characters"][0]["portrait"] = "retired";
+    checkIgnored(bad.dump(), 3);
+    bad = json;
+    bad["characters"][1]["id"] = bad["characters"][0]["id"];
+    checkIgnored(bad.dump(), 3);
+    bad = json;
+    for (auto& character : bad["characters"])
+        character["class"] = "retired";
+    checkIgnored(bad.dump(), 0);
+    bad = json;
+    bad["schema_version"] = 99;
+    checkIgnored(bad.dump(), 0);
+    checkIgnored("{", 0);
+    checkIgnored("{\"schema_version\":1,\"schema_version\":1}", 0);
+    write(path, bad.dump());
+    CharacterLibrary filtered(cat, path);
+    check(bool(filtered.load()), "load ignored envelope for concurrency check");
+    write(path, valid);
+    check(filtered.create(draft, filtered.snapshot().revision).error == LibraryError::Stale &&
+              read(path) == valid, "filtered load cannot overwrite a concurrent valid library");
+    write(path, std::string(libraryMaxBytes + 1, ' '));
+    check(!filtered.load() && filtered.create(draft, filtered.snapshot().revision).error == LibraryError::Stale,
+          "bounded read failure remains explicit and cannot overwrite unseen data");
+}
 } // namespace
 int main() {
     try {
+        tolerantLoading();
         const auto cat = creationCatalog();
         Temp temp;
         const auto path = temp.path / "characters.json";
@@ -108,12 +163,15 @@ int main() {
         auto json = nlohmann::json::parse(prior);
         auto invalid = [&](const std::string& bytes, LibraryError error = LibraryError::Invalid) {
             write(path, bytes);
-            const auto n = library.snapshot().count;
-            auto r = library.load();
-            check(r.error == error, "invalid library status");
-            check(library.snapshot().count == n && read(path) == bytes, "invalid library preserved");
-            check(library.create(draft, library.snapshot().revision).error == LibraryError::Stale,
-                  "invalid load disables mutation");
+            bool rejected = false;
+            try {
+                (void)decodeLibrary(cat, bytes);
+            } catch (const LibraryException& e) {
+                rejected = e.code == error;
+            } catch (const std::exception&) {
+                rejected = error == LibraryError::Invalid;
+            }
+            check(rejected && read(path) == bytes, "strict decoding rejects without rewriting");
             write(path, prior);
             check(bool(library.load()), "reload valid snapshot");
         };
@@ -163,7 +221,8 @@ int main() {
         auto over = nlohmann::json::parse(read(path));
         over["characters"].push_back(over["characters"][0]);
         write(path, over.dump());
-        check(!library.load(), "oversized record count rejects");
+        check(bool(library.load()) && library.snapshot().count == 0,
+              "oversized record envelope is ignored without blocking creation");
         LibrarySnapshot empty;
         empty.revision = 7;
         write(path, encodeLibrary(cat, empty));

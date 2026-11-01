@@ -4,6 +4,10 @@ Status: implemented, **accepted and closed** (2026-10-29). The user approved
 this slice's plan with “Implement the plan.” Slice 12.3 is accepted and closed.
 No advancement, XP controls, new gameplay content or run-save implementation.
 
+Current follow-up: [incompatible-character admission](library_compatibility_fix.md)
+skips old records without disabling new-character creation. The historical slice
+acceptance below remains unchanged.
+
 ## Ownership and flow
 
 A fixed graphics-independent CreatorModel owns CharacterDraft, its initial baseline,

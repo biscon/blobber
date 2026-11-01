@@ -8,6 +8,17 @@ constexpr UiRect inventoryPage{14, 9, 65, 17}, characterPage{88, 9, 78, 17};
 constexpr UiRect tab(int i) {
     return {14 + i * 154, 33, 150, 28};
 }
+constexpr bool isTab(UiRect r) {
+    const auto same = [r](UiRect b) {
+        return r.x == b.x && r.y == b.y && r.width == b.width && r.height == b.height;
+    };
+    if (same(inventoryPage) || same(characterPage))
+        return true;
+    for (int i = 0; i < 4; ++i)
+        if (same(tab(i)))
+            return true;
+    return false;
+}
 constexpr UiRect cell(int i) {
     return {178 + (i % 8) * 38, 83 + (i / 8) * 38, 35, 35};
 }

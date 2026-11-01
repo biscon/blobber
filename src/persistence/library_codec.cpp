@@ -145,7 +145,9 @@ std::string encodeLibrary(const rules::Catalog& c, const LibrarySnapshot& state)
         throw LibraryException(LibraryError::Full, "Serialized library exceeds 1 MiB");
     return text;
 }
-LibrarySnapshot decodeLibrary(const rules::Catalog& c, const std::string& text) {
+LibrarySnapshot decodeLibrary(const rules::Catalog& c, const std::string& text, std::size_t* skipped) {
+    if (skipped)
+        *skipped = 0;
     using namespace rules;
     if (text.size() > libraryMaxBytes)
         throw LibraryException(LibraryError::Invalid, "Library exceeds 1 MiB");
@@ -173,18 +175,26 @@ LibrarySnapshot decodeLibrary(const rules::Catalog& c, const std::string& text) 
     out.revision = revision(root.at("revision"));
     array(root.at("characters"), "characters", LibrarySnapshot::capacity);
     for (const auto& j : root.at("characters")) {
-        fields(j, "character",
-               {"id", "name", "race", "class", "portrait", "abilities", "level", "defense", "life_domain",
-                "spells", "choices", "gear"});
-        SavedCharacter r;
-        const auto id = string(j.at("id"), "id");
-        if (id.size() != 36)
-            fail("id", "expected UUIDv4");
-        std::copy(id.begin(), id.end(), r.id.text.begin());
-        if (!validSavedCharacterId(r.id) || out.find(r.id))
-            fail("id", "invalid or duplicate UUIDv4");
-        r.draft = decodeStartingDraft(c, j);
-        out.records[out.count++] = r;
+        try {
+            fields(j, "character",
+                   {"id", "name", "race", "class", "portrait", "abilities", "level", "defense", "life_domain",
+                    "spells", "choices", "gear"});
+            SavedCharacter r;
+            const auto id = string(j.at("id"), "id");
+            if (id.size() != 36)
+                fail("id", "expected UUIDv4");
+            std::copy(id.begin(), id.end(), r.id.text.begin());
+            if (!validSavedCharacterId(r.id) || out.find(r.id))
+                fail("id", "invalid or duplicate UUIDv4");
+            r.draft = decodeStartingDraft(c, j);
+            out.records[out.count++] = r;
+        } catch (const std::bad_alloc&) {
+            throw;
+        } catch (const std::exception&) {
+            if (!skipped)
+                throw;
+            ++*skipped;
+        }
     }
     return out;
 }
