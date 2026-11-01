@@ -115,6 +115,8 @@ feedback pass skips these rectangles, avoiding the inset button border and text
 dimming on tabs. Capture/release/cancel semantics and storage remain unchanged;
 verify through hidden application-owned captures, without OS input automation.
 
+Implemented follow-up: [variable stone layouts](procedural_layout_design.md) replaces the lattice with explicit chamber membership, boundary sockets and passage paths. The preparation-only stone generator selects compact wings or chamber networks through biome/floor specifications, using variable rooms, bounded routing, checked loops and two frozen fallbacks. Fixtures, encounters and persistence consume actual geometry. Campaign population/resources and presentation remain unchanged. Generator/catalog 8/6 and campaign schema/simulation 6/10 reject older campaigns without rewriting them. [Review maps and captures](screenshots/variable-layouts/README.md) accompany 12 passing integration checks and hidden production GPU verification; user review is pending.
+
 ## Boundaries and data flow
 
 - **World:** each immutable WorldDefinition selects a prepared asset pack by stable ID
@@ -318,7 +320,7 @@ Effect requests/instances/events carry tagged party or world-checked actor sourc
 NPC Bless reservations share the 64 slots; damage and burning Web notify source
 concentration exactly once. NPC sources/resources remain floor-owned across travel,
 canonical restore and disk persistence (introduced in schema/simulation 4/7;
-current identities are 5/10). Additive protocol
+current identities are 6/10). Additive protocol
 source tags, hover/log feedback, full production art and portrait reuse existing
 owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
 all budgets/count capacities remain fixed. [Verification](b05_verification.md)
@@ -382,7 +384,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 5/10 and generator/templates 7/5. Older saves reject
+Campaign schema/simulation are 6/10 and generator/templates 8/6. Older saves reject
 without being modified; no migration. World publication is format 3, appearance 4,
 visibility world-visibility-v7 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
@@ -409,7 +411,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 
 | Location | Responsibility and design |
 | --- | --- |
-| `src/world/`, `src/generation/` | Immutable quantized maps/surfaces, fixtures, bounded procedural generation; [environment](renderer_environment_design.md), [generation](procedural_generation_design.md) |
+| `src/world/`, `src/generation/` | Immutable quantized maps/surfaces, fixtures, bounded procedural generation; [environment](renderer_environment_design.md), [generation](procedural_layout_design.md), [historical PC01](procedural_generation_design.md) |
 | `src/game/`, `src/rules/` | Session, Party, actors, combat/effects, movement, navigation; [actors](actors_design.md), [combat](melee_combat_design.md), [effects](effects_design.md), [inventory](inventory_design.md); accepted [bestiary roadmap](bestiary_plan.md) |
 | `src/render/world_*`, `src/assets/world_assets.*` | Geometry, camera, effects, depth/IDs and reusable publication; [world](renderer_world_design.md), [visibility](renderer_visibility_design.md), [integration](renderer_integration_design.md) |
 | `src/platform/`, `src/ui/` | GPU resources, sole renderer, view leases, input and native presentation; [native HUD](native_hud_design.md), [cutover](renderer_cutover_design.md) |

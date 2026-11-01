@@ -10,272 +10,253 @@ namespace {
 FloorLayout rotated(const FloorLayout& source, unsigned turn) {
     auto f = source;
     f.floor.fill(0);
+    f.membership.fill(noRegion);
+    f.fixtures.npcExcluded.reset();
+    auto heading = [&](Heading h) { return Heading((unsigned(h) + turn) % 4); };
     for (int y = 0; y < f.height; ++y)
         for (int x = 0; x < f.width; ++x) {
             const auto p = rotate({x, y}, f.width, turn);
-            f.floor[p.y * f.width + p.x] = source.floor[y * f.width + x];
+            const auto a = unsigned(y * f.width + x), b = unsigned(p.y * f.width + p.x);
+            f.floor[b] = source.floor[a];
+            f.membership[b] = source.membership[a];
+            if (source.fixtures.npcExcluded[a])
+                f.fixtures.npcExcluded.set(b);
         }
     f.rotation = (f.rotation + turn) % 4;
     for (unsigned i = 0; i < f.roomCount; ++i) {
         auto& r = f.rooms[i];
-        r.site = rotate(r.site, 4, turn);
+        const auto p = rotate(r.origin, f.width, turn);
+        const auto q = rotate(r.origin + r.size + Cell{-1, -1}, f.width, turn);
+        r.origin = {std::min(p.x, q.x), std::min(p.y, q.y)};
+        if (turn % 2)
+            std::swap(r.size.x, r.size.y);
         r.anchor = rotate(r.anchor, f.width, turn);
         r.rotation = std::uint8_t((r.rotation + turn) % 4);
-        r.facing = Heading((unsigned(r.facing) + turn) % 4);
-        r.ports = std::uint8_t(((r.ports << turn) | (r.ports >> (4 - turn))) & 15);
+        r.facing = heading(r.facing);
+    }
+    for (unsigned i = 0; i < f.connectionCount; ++i) {
+        auto& e = f.connections[i];
+        e.socketA = rotate(e.socketA, f.width, turn);
+        e.socketB = rotate(e.socketB, f.width, turn);
+        e.facingA = heading(e.facingA);
+        e.facingB = heading(e.facingB);
+    }
+    for (unsigned i = 0; i < f.pathCount; ++i) {
+        const auto p =
+            rotate({int(source.paths[i]) % f.width, int(source.paths[i]) / f.width}, f.width, turn);
+        f.paths[i] = std::uint16_t(p.y * f.width + p.x);
     }
     for (unsigned i = 0; i < f.fixtures.count; ++i) {
         auto& v = f.fixtures.entries[i];
         v.cell = rotate(v.cell, f.width, turn);
-        v.facing = Heading((unsigned(v.facing) + turn) % 4);
+        v.facing = heading(v.facing);
     }
-    f.fixtures.npcExcluded.reset();
-    for (int y = 0; y < f.height; ++y)
-        for (int x = 0; x < f.width; ++x)
-            if (source.fixtures.npcExcluded[unsigned(y * f.width + x)]) {
-                auto c = rotate({x, y}, f.width, turn);
-                f.fixtures.npcExcluded.set(unsigned(c.y * f.width + c.x));
-            }
     for (unsigned i = 0; i < f.fixtures.landingCount; ++i)
         f.fixtures.landings[i] = rotate(f.fixtures.landings[i], f.width, turn);
     for (unsigned i = 0; i < f.populationCount; ++i) {
         auto& p = f.population[i];
         p.cell = rotate(p.cell, f.width, turn);
         p.subcell = rotate(p.subcell, 2, turn);
-        p.facing = Heading((unsigned(p.facing) + turn) % 4);
+        p.facing = heading(p.facing);
     }
-    f.guardianReward = rotate(f.guardianReward, f.width, turn);
-    f.optionalSupply = rotate(f.optionalSupply, f.width, turn);
-    f.guardianApproach = rotate(f.guardianApproach, f.width, turn);
-    f.supply = rotate(f.supply, f.width, turn);
-    f.spawn.cell = rotate(f.spawn.cell, f.width, turn);
-    f.spawn.heading = Heading((unsigned(f.spawn.heading) + turn) % 4);
+    for (auto* c : {&f.guardianReward, &f.guardianApproach, &f.optionalSupply, &f.supply, &f.spawn.cell})
+        *c = rotate(*c, f.width, turn);
+    f.spawn.heading = heading(f.spawn.heading);
     return f;
 }
-void deterministic() {
-    std::set<std::uint64_t> identities;
-    std::set<unsigned> families, shapes, rotations;
-    // Small, fixed structural sample, not a seed sweep or balance workload.
-    for (unsigned seed : {0u, 1u, 5u, 8u, 13u, 21u, 34u, 55u, 89u, UINT32_MAX}) {
-        auto a = generate({seed}), b = generate({seed});
-        check(bool(a) && bool(b) && !a.floor->diagnostics.fallback,
-              "built-in templates generate without fallback");
-        check(a.floor->fingerprint == b.floor->fingerprint &&
-                  ascii(a.floor->layout) == ascii(b.floor->layout),
-              "same seed/versions reproduce cells and role metadata");
-        identities.insert(a.floor->fingerprint);
-        families.insert(a.floor->layout.family);
-        for (unsigned i = 0; i < a.floor->layout.roomCount; ++i) {
-            shapes.insert(a.floor->layout.rooms[i].shape);
-            rotations.insert(a.floor->layout.rooms[i].rotation);
+std::string signature(const FloorLayout& f) {
+    std::string best;
+    for (unsigned mirror = 0; mirror < 2; ++mirror)
+        for (unsigned turn = 0; turn < 4; ++turn) {
+            std::string s(unsigned(f.width * f.height), '#');
+            for (int y = 0; y < f.height; ++y)
+                for (int x = 0; x < f.width; ++x) {
+                    const auto p = rotate({mirror ? f.width - 1 - x : x, y}, f.width, turn);
+                    s[unsigned(p.y * f.width + p.x)] = f.floor[unsigned(y * f.width + x)] ? '.' : '#';
+                }
+            if (best.empty() || s < best)
+                best = s;
         }
-        check(a.floor->map.connected(a.floor->layout.spawn.cell),
-              "published Map agrees with tile validation");
-        for (unsigned turn = 0; turn < 4; ++turn)
-            check(!validate(rotated(a.floor->layout, turn)),
-                  "all four full-layout rotations preserve routes and facing");
+    return best;
+}
+void deterministicAndVariety() {
+    std::set<LayoutProfile> profiles;
+    for (unsigned depth = 1; depth <= 3; ++depth) {
+        std::set<std::string> shapes, degrees;
+        for (unsigned seed : {0u, 1u, 5u, 8u, 13u, 21u, 34u, 55u}) {
+            const auto a = generate({seed, depth}), b = generate({seed, depth});
+            check(bool(a) && bool(b) && !a.diagnostics.fallback,
+                  "fixed normal sample generates without fallback");
+            const auto& f = a.floor->layout;
+            check(!validate(f) && a.floor->map.connected(f.spawn.cell), "published cells and metadata agree");
+            check(a.floor->fingerprint == b.floor->fingerprint && ascii(f) == ascii(b.floor->layout),
+                  "deterministic geometry and metadata");
+            profiles.insert(f.profile);
+            shapes.insert(signature(f));
+            std::array<unsigned, maxRooms> d{};
+            for (unsigned i = 0; i < f.connectionCount; ++i) {
+                ++d[f.connections[i].a];
+                ++d[f.connections[i].b];
+            }
+            std::sort(d.begin(), d.begin() + f.roomCount);
+            std::string degree;
+            for (unsigned i = 0; i < f.roomCount; ++i)
+                degree += char('0' + d[i]);
+            degrees.insert(degree);
+            for (unsigned turn = 0; turn < 4; ++turn)
+                check(!validate(rotated(f, turn)), "full geometry/progression rotates consistently");
+            std::set<unsigned> areas;
+            for (unsigned r = 0; r < f.roomCount; ++r) {
+                unsigned area = 0;
+                for (auto id : f.membership)
+                    area += id == r;
+                areas.insert(area);
+            }
+            check(areas.size() >= 4, "room scale changes within a floor");
+        }
+        check(shapes.size() == 8 && degrees.size() > 1,
+              "layouts differ beyond rotation/reflection and vary connectivity");
     }
-    check(identities.size() >= 8 && families.size() == 1 && shapes.size() == 5 && rotations.size() == 4,
-          "fixed fixtures exercise meaningful topology/interior/orientation variation");
+    check(profiles.size() == 2, "both spatial profiles are exercised");
     std::set<std::uint64_t> streams;
     for (unsigned domain = 1; domain <= 5; ++domain)
         for (unsigned depth = 1; depth <= 3; ++depth)
             streams.insert(seedFor({5, depth}, Domain(domain)));
-    check(streams.size() == 15, "depth and phase seeds are separated");
-    check(seedFor({5}, Domain::Interior, 1) != seedFor({5}, Domain::Interior, 2) &&
-              seedFor({5}, Domain::Topology, 0, 0) != seedFor({5}, Domain::Topology, 0, 1),
-          "stable room IDs and attempt number separate draws");
-    const auto original = generate({5});
-    auto changed = templates();
-    // Mutate a template this owned layout actually uses, independently of version-dependent seed selection.
-    const auto used = original.floor->layout.rooms[0].shape;
-    check(used < 4, "First junction uses an ordinary interior template");
-    changed[used].floor[5 * 7 + 5] = 0;
-    const auto altered = generate({5}, changed);
-    check(bool(altered) && original.floor->runtimeSeed == altered.floor->runtimeSeed,
-          "interior edits cannot consume runtime random draws");
-    check(original.floor->fingerprint != altered.floor->fingerprint,
-          "canonical fingerprint includes actual cells");
+    check(streams.size() == 15 && seedFor({5}, Domain::Interior, 1) != seedFor({5}, Domain::Interior, 2),
+          "domains/depths/regions isolate random streams");
+    check(!floorSpec(0) && !floorSpec(4) && floorSpec(2)->keyedSector && floorSpec(3)->finalFloor &&
+              std::string(stoneBiome().assetPack) == "dungeon",
+          "floor/biome specification preserves campaign bands");
 }
-void sectorLocks() {
-    std::set<unsigned> families;
-    for (unsigned seed : {5u, 8u, 13u, 21u})
-        for (unsigned depth : {2u, 3u})
-            for (bool fallback : {false, true}) {
-                const auto result = generate({seed, depth}, templates(), fallback);
-                check(bool(result), "sector fixture generates");
-                const auto& f = result.floor->layout;
-                FloorGeometry runtime(result.floor->map, f.fixtures);
-                families.insert(f.family);
-                unsigned locks = 0;
-                for (unsigned i = 0; i < f.fixtures.count; ++i)
-                    locks +=
-                        f.fixtures.entries[i].kind == FixtureKind::Door && f.fixtures.entries[i].key == depth;
-                check(locks == 2 && !f.fixtures.entries[f.approachDoor].key,
-                      "both loop entrances lock the sector; final approach is ordinary");
-                for (unsigned turn = 0; turn < 4; ++turn)
-                    check(!validate(rotated(f, turn)), "sector progression survives every rotation");
-                auto broken = f;
-                for (unsigned i = 0; i < broken.fixtures.count; ++i)
-                    if (broken.fixtures.entries[i].kind == FixtureKind::Door &&
-                        broken.fixtures.entries[i].key) {
-                        broken.fixtures.entries[i].key = 0;
-                        break;
-                    }
-                check(bool(validate(broken)), "opening either loop bypass rejects");
-                broken = f;
-                for (unsigned i = 0; i < broken.fixtures.count; ++i)
-                    if (broken.fixtures.entries[i].kind == FixtureKind::Door &&
-                        broken.fixtures.entries[i].key) {
-                        auto& d = broken.fixtures.entries[i];
-                        d.facing = Heading((unsigned(d.facing) + 1) % 4);
-                        break;
-                    }
-                check(bool(validate(broken)), "sector doors must face along their corridor");
-            }
-    check(families.size() == 2, "sector fixtures cover both topology families");
-}
-std::string graphSignature(const FloorLayout& f) {
-    std::string best;
-    for (unsigned mirror = 0; mirror < 2; ++mirror)
-        for (unsigned turn = 0; turn < 4; ++turn) {
-            std::array<Cell, maxRooms> sites{};
-            int minX = 4, minY = 4;
-            for (unsigned i = 0; i < f.roomCount; ++i) {
-                auto c = f.rooms[i].site;
-                if (mirror)
-                    c.x = 3 - c.x;
-                sites[i] = rotate(c, 4, turn);
-                minX = std::min(minX, sites[i].x);
-                minY = std::min(minY, sites[i].y);
-            }
-            std::vector<std::string> records;
-            auto site = [&](unsigned i) {
-                return std::to_string((sites[i].y - minY) * 4 + sites[i].x - minX);
-            };
-            for (unsigned i = 0; i < f.roomCount; ++i)
-                records.push_back("r" + site(i) + ":" + std::to_string(unsigned(f.rooms[i].role)));
-            for (unsigned i = 0; i < f.connectionCount; ++i) {
-                auto a = site(f.connections[i].a), b = site(f.connections[i].b);
-                if (b < a)
-                    std::swap(a, b);
-                records.push_back("e" + a + ":" + b);
-            }
-            std::sort(records.begin(), records.end());
-            std::string key;
-            for (const auto& r : records)
-                key += r + ";";
-            if (best.empty() || key < best)
-                best = key;
-        }
-    return best;
-}
-void variety() {
+void pacing() {
+    constexpr std::array<unsigned, 3> baseline{54, 90, 84};
     for (unsigned depth = 1; depth <= 3; ++depth) {
-        std::set<std::string> graphs, profiles;
-        for (unsigned seed = 0; seed < 16; ++seed) {
-            const auto f = generate({seed, depth});
-            check(bool(f) && !f.floor->diagnostics.fallback, "fixed structural sample generates normally");
-            graphs.insert(graphSignature(f.floor->layout));
-            std::array<unsigned, maxRooms> degree{};
-            for (unsigned i = 0; i < f.floor->layout.connectionCount; ++i) {
-                const auto e = f.floor->layout.connections[i];
-                ++degree[e.a];
-                ++degree[e.b];
-            }
-            std::vector<unsigned> junctions;
-            for (unsigned i = 0; i < f.floor->layout.roomCount; ++i)
-                if (f.floor->layout.rooms[i].role == Role::Junction)
-                    junctions.push_back(degree[i]);
-            std::sort(junctions.begin(), junctions.end());
-            std::string p;
-            for (auto d : junctions)
-                p += char('0' + d);
-            profiles.insert(p);
+        std::array<unsigned, 4> walks{};
+        for (unsigned seed = 0; seed < 4; ++seed) {
+            const auto result = generate({seed, depth});
+            check(bool(result) && !result.diagnostics.fallback, "review floor generates normally");
+            const auto m = layoutMetrics(result.floor->layout);
+            check(m.walkableCells >= 230 && m.walkableCells <= 390 && m.distinctRoomAreas >= 4 &&
+                      m.maxRoomArea >= m.minRoomArea * 2 && m.distinctConnectionLengths >= 3,
+                  "review spatial variety/area budgets");
+            walks[seed] = m.progressionSteps;
         }
-        check(graphs.size() >= 8 && profiles.size() > 1,
-              "variation changes structure beyond rotation and reflection");
+        std::sort(walks.begin(), walks.end());
+        const unsigned twiceMedian = walks[1] + walks[2];
+        check(twiceMedian * 2 >= baseline[depth - 1] * 3 && twiceMedian * 2 <= baseline[depth - 1] * 5,
+              "review median pacing within 25 percent of baseline");
     }
 }
 void failures() {
     check(!generate({1, 0}) && !generate({1, 4}) && !generate({1, 1, 999}) && !generate({1, 1, 1, 0}),
-          "unsupported depth/version fails before generation");
+          "unsupported generation requests reject");
     const auto good = generate({5});
-    check(bool(good), "fixture generated");
-    auto f = good.floor->layout;
-    f.roomCount = maxRooms + 1;
-    check(validate(f).code == Error::Capacity, "room capacity rejection");
-    f = good.floor->layout;
-    f.connectionCount = maxConnections + 1;
-    check(validate(f).code == Error::Capacity, "connection capacity rejection");
-    f = good.floor->layout;
-    f.width = 41;
-    check(validate(f).code == Error::Capacity, "dimension rejected before indexing");
-    f = good.floor->layout;
-    f.floor[0] = 1;
-    check(validate(f).code == Error::Bounds, "enclosed perimeter");
-    f = good.floor->layout;
-    f.rooms[1].site = f.rooms[0].site;
-    check(validate(f).code == Error::Room, "overlapping room sites");
-    f = good.floor->layout;
-    f.rooms[0].ports ^= 1;
-    check(validate(f).code == Error::Port, "metadata cannot invent a port");
-    f = good.floor->layout;
-    f.connections[1] = f.connections[0];
-    check(validate(f).code == Error::Connection, "duplicate connection");
-    f = good.floor->layout;
-    f.spawn.cell = {0, 0};
-    check(validate(f).code == Error::Anchor, "invalid spawn");
-    f = good.floor->layout;
-    f.floor[1 * f.width + 1] = 1;
-    check(validate(f).code == Error::Port, "unplanned tile outside declared rooms and corridors");
-    f = good.floor->layout;
-    const auto& r = f.rooms[0];
-    const Cell center{4 + r.site.x * 9, 4 + r.site.y * 9};
-    for (int y = -2; y <= 2; ++y)
-        for (int x = -2; x <= 2; ++x)
-            f.floor[(center.y + y) * f.width + center.x + x] = 0;
-    f.floor[r.anchor.y * f.width + r.anchor.x] = 1;
-    check(validate(f).code == Error::Disconnected,
-          "tile flood rejects disconnected interior despite valid graph");
-    f = good.floor->layout;
-    f.loopConnection = f.connectionCount - 1;
-    check(validate(f).code == Error::Loop, "dead-end branch cannot masquerade as useful loop");
-    auto catalog = templates();
-    catalog[2].floor[0] = 1;
-    const auto invalid = generate({5}, catalog);
-    check(!invalid && invalid.diagnostics.failure.code == Error::Template &&
-              invalid.diagnostics.attempts == 0,
-          "malformed authored rim rejects before candidates");
-    for (unsigned depth = 1; depth <= 3; ++depth) {
-        const auto a = generate({1, depth}, templates(), true), b = generate({99, depth}, templates(), true);
-        check(bool(a) && bool(b) && a.diagnostics.fallback && a.diagnostics.attempts == maxAttempts &&
-                  a.diagnostics.fallbackId == depth,
-              "bounded forced exhaustion publishes validated depth fallback");
-        check(a.floor->fingerprint == b.floor->fingerprint && !validate(a.floor->layout),
-              "authored fallback layout independent of failed seed");
-        for (auto rejection : a.diagnostics.rejected)
-            check(rejection.code == Error::ForcedFallback, "retain every forced rejection reason");
-    }
-    catalog = templates();
-    catalog[0].floor.fill(0);
-    catalog[0].floor[24] = 1;
-    const auto broken = generate({5}, catalog);
-    check(!broken && broken.diagnostics.attempts == maxAttempts && broken.diagnostics.fallback &&
-              broken.diagnostics.failure.code == Error::Anchor,
-          "invalid actual fallback fails without relaxing arrival-clearance validation");
+    check(bool(good), "owned mutation fixture");
+    const auto original = good.floor->layout;
+    const auto extreme = generate({UINT32_MAX, 3});
+    check(bool(extreme) && !validate(extreme.floor->layout), "maximum seed publishes validated geometry");
+    auto bad = [&](auto mutate) {
+        auto f = original;
+        mutate(f);
+        check(bool(validate(f)), "corrupt explicit geometry rejects");
+    };
+    bad([](auto& f) { f.roomCount = maxRooms + 1; });
+    bad([](auto& f) { f.connectionCount = maxConnections + 1; });
+    bad([](auto& f) { f.pathCount = maxCells + 1; });
+    bad([](auto& f) { f.width = 41; });
+    bad([](auto& f) { f.floor[0] = 1; });
+    bad([](auto& f) { f.rooms[0].origin = {-1, -1}; });
+    bad([](auto& f) { f.rooms[0].origin = {INT32_MAX, INT32_MAX}; });
+    bad([](auto& f) { f.rooms[0].size = {INT32_MAX, INT32_MAX}; });
+    bad([](auto& f) {
+        f.connections[0].facingA = Heading::North;
+        f.connections[0].socketA = {0, 0};
+    });
+    bad([](auto& f) { f.connections[1] = f.connections[0]; });
+    bad([](auto& f) { f.spawn.cell = {0, 0}; });
+    bad([](auto& f) {
+        f.membership[unsigned(f.rooms[0].anchor.y * f.width + f.rooms[0].anchor.x)] = noRegion;
+    });
+    bad([](auto& f) { f.paths[0] = 0; });
+    bad([](auto& f) { f.connections[0].count = 0; });
+    bad([](auto& f) { f.loopConnection = f.connectionCount - 1; });
+    bad([](auto& f) {
+        for (unsigned i = 0; i < unsigned(f.width * f.height); ++i)
+            if (!f.floor[i]) {
+                f.floor[i] = 1;
+                break;
+            }
+    });
+    bad([](auto& f) {
+        const auto c = f.rooms[0].anchor;
+        f.floor[unsigned(c.y * f.width + c.x)] = 0;
+    });
+    auto changed = original;
+    changed.profile = original.profile == LayoutProfile::CompactWings ? LayoutProfile::ChamberNetwork
+                                                                      : LayoutProfile::CompactWings;
+    check(fingerprint(changed) != fingerprint(original), "canonical identity includes profile and geometry");
+    changed = original;
+    ++changed.paths[0];
+    check(fingerprint(changed) != fingerprint(original), "canonical identity includes passage cells");
+    std::set<LayoutProfile> fallbackProfiles;
+    for (unsigned depth = 1; depth <= 3; ++depth)
+        for (unsigned seed : {0u, 5u}) {
+            const auto a = generate({seed, depth}, true), b = generate({seed, depth}, true);
+            check(bool(a) && bool(b) && a.diagnostics.fallback && a.diagnostics.attempts == maxAttempts &&
+                      a.diagnostics.fallbackId == depth && !validate(a.floor->layout),
+                  "bounded exhaustion publishes checked authored fallback");
+            check(a.floor->fingerprint == b.floor->fingerprint, "fallback reproducible");
+            fallbackProfiles.insert(a.floor->layout.profile);
+            for (auto rejection : a.diagnostics.rejected)
+                check(rejection.code == Error::ForcedFallback, "every exhausted attempt diagnosed");
+            auto broken = a.floor->layout;
+            broken.floor[unsigned(broken.spawn.cell.y * broken.width + broken.spawn.cell.x)] = 0;
+            check(bool(validate(broken)), "broken authored fallback cannot pass validation");
+        }
+    check(fallbackProfiles.size() == 2, "both authored fallbacks covered");
     const auto view = diagnosticView(*good.floor);
-    check(view.count >= 4 && view.lines[2][0],
-          "prepared diagnostic model contains role markers and identity");
+    check(view.count >= 4 && view.lines[2][0], "prepared diagnostic identity/markers");
+}
+void progression() {
+    for (unsigned depth : {2u, 3u})
+        for (bool fallback : {false, true}) {
+            const auto result = generate({5, depth}, fallback);
+            check(bool(result), "sector fixture");
+            auto f = result.floor->layout;
+            unsigned locks = 0;
+            for (unsigned i = 0; i < f.fixtures.count; ++i)
+                if (f.fixtures.entries[i].key && f.fixtures.entries[i].kind == FixtureKind::Door) {
+                    ++locks;
+                    auto broken = f;
+                    broken.fixtures.entries[i].key = 0;
+                    check(bool(validate(broken)), "either sector bypass rejects");
+                }
+            check(locks == 2, "both entrances protect sector");
+            for (unsigned i = 0; i < f.fixtures.count; ++i)
+                if (f.fixtures.entries[i].kind == FixtureKind::Key) {
+                    auto broken = f;
+                    broken.fixtures.entries[i].cell = f.guardianApproach;
+                    check(bool(validate(broken)), "key behind its own locks rejects");
+                }
+            auto broken = f;
+            broken.fixtures.entries[f.guardianGate].cell = f.spawn.cell;
+            check(bool(validate(broken)), "guardian gate moved off its threshold rejects");
+            broken = f;
+            broken.fixtures.npcExcluded.reset();
+            check(bool(validate(broken)), "unprotected landing rejects");
+            broken = f;
+            broken.population[0].cell = f.spawn.cell;
+            check(bool(validate(broken)), "population cannot occupy a landing");
+        }
 }
 } // namespace
 int main() {
     try {
-        deterministic();
-        variety();
-        sectorLocks();
+        deterministicAndVariety();
+        pacing();
         failures();
-        std::cout << "Generation contracts passed; retained upper bound=" << sizeof(GeneratedFloor) + maxCells
+        progression();
+        std::cout << "Generation contracts passed; retained=" << sizeof(GeneratedFloor) + maxCells
                   << " scratch=" << scratchBytes() << '\n';
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

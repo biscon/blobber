@@ -37,7 +37,7 @@ PopulationDefinition resolvePopulation(const FloorLayout& layout, GenerationRequ
     recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("healing_potion"), 1};
     recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("mana_potion"), 1};
     recovery.ground[recovery.groundCount++] = {layout.optionalSupply, item("arrow"), 10};
-    if (layout.depth < 3) {
+    if (!floorSpec(layout.depth)->finalFloor) {
         objective.rewards[objective.rewardCount++] = {layout.guardianReward, item("camp_kit"), 1};
     }
     return out;

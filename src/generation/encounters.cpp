@@ -27,16 +27,10 @@ const DepthBand& band(unsigned depth) noexcept {
         {{R::GoblinPair, R::GoblinPair}, 2, R::RatPack, R::GoblinSupport},
         {{R::UndeadPair, R::GoblinSupport}, 2, R::GoblinPair, R::GoblinSupport},
         {{R::GoblinPair, R::UndeadPair, R::GoblinPair}, 3, R::UndeadPair, R::BugbearSupport}};
-    return bands[depth >= 1 && depth <= 3 ? depth - 1 : 0];
+    const auto spec = floorSpec(depth);
+    return bands[spec ? spec->populationBand - 1 : 0];
 }
-Cell center(const Room& r) noexcept {
-    return {4 + 9 * r.site.x, 4 + 9 * r.site.y};
-}
-Heading toward(Cell from, Cell to) noexcept {
-    const auto d = to + from * -1;
-    return d.x ? (d.x > 0 ? Heading::East : Heading::West) : (d.y > 0 ? Heading::South : Heading::North);
-}
-bool path(FloorLayout& f, unsigned from, unsigned to) noexcept {
+bool path(FloorLayout& f, unsigned from, unsigned to, unsigned blocked = maxRooms) noexcept {
     std::array<unsigned, maxRooms> parents{}, queue{};
     parents.fill(maxRooms);
     unsigned head = 0, tail = 1;
@@ -51,7 +45,7 @@ bool path(FloorLayout& f, unsigned from, unsigned to) noexcept {
                 const auto e = f.connections[i];
                 edge |= (e.a == here && e.b == next) || (e.b == here && e.a == next);
             }
-            if (edge && parents[next] == maxRooms) {
+            if (edge && next != blocked && parents[next] == maxRooms) {
                 parents[next] = here;
                 queue[tail++] = next;
             }
@@ -88,7 +82,7 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
     if (entry == maxRooms || approach == maxRooms || optional == maxRooms)
         return;
     f.route[f.routeCount++] = std::uint8_t(entry);
-    if (key < maxRooms && !path(f, entry, key))
+    if (key < maxRooms && !path(f, entry, key, sectorJunction(f)))
         return;
     if (!path(f, key < maxRooms ? key : entry, approach))
         return;
@@ -119,7 +113,7 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
             continue;
         used[room] = true;
         add(room, depth.ordinary[f.encounterCount], EncounterRole::Direct,
-            toward(f.rooms[room].site, f.rooms[f.route[i - 1]].site));
+            incomingFacing(*connectionBetween(f, room, f.route[i - 1]), room));
     }
     if (f.encounterCount != wanted)
         return;
@@ -132,11 +126,12 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
             neighbor = e.a;
     }
     add(optional, depth.optional, EncounterRole::Optional,
-        toward(f.rooms[optional].site, f.rooms[neighbor].site));
+        incomingFacing(*connectionBetween(f, optional, neighbor), optional));
     f.optionalSupply = f.rooms[optional].anchor;
     const auto& door = f.fixtures.entries[f.approachDoor];
     f.supply = door.cell + forward(door.facing) * -1;
-    add(approach, depth.guardian, EncounterRole::Guardian, Heading((unsigned(door.facing) + 2) % 4));
+    add(approach, depth.guardian, EncounterRole::Guardian,
+        incomingFacing(*connectionBetween(f, sectorJunction(f), approach), approach));
     // One ordinary door per populated-room connection; existing special doors win.
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         const auto e = f.connections[i];
@@ -146,17 +141,12 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
                          (f.encounters[j].room == e.a || f.encounters[j].room == e.b);
         if (!populated)
             continue;
-        const auto a = center(f.rooms[e.a]), b = center(f.rooms[e.b]);
-        const auto h = toward(a, b);
-        // Adjacent rims sit at steps 3/6. Either orientation's corridor center is safe.
-        const auto c = a + forward(h) * 4;
+        const auto c = threshold(e);
         bool existing = false;
-        for (unsigned j = 0; j < f.fixtures.count; ++j) {
-            const auto p = f.fixtures.entries[j].cell;
-            existing |= p == a + forward(h) * 4 || p == a + forward(h) * 5;
-        }
+        for (unsigned j = 0; j < f.fixtures.count; ++j)
+            existing |= f.fixtures.entries[j].cell == c;
         if (!existing && f.fixtures.count < fixtureCapacity)
-            f.fixtures.entries[f.fixtures.count++] = {c, h, FixtureKind::Door, 0};
+            f.fixtures.entries[f.fixtures.count++] = {c, e.facingA, FixtureKind::Door, 0};
     }
 }
 Failure validatePopulation(const FloorLayout& f) noexcept {
@@ -226,12 +216,10 @@ Failure validatePopulation(const FloorLayout& f) noexcept {
                          (f.encounters[j].room == edge.a || f.encounters[j].room == edge.b);
         if (!populated)
             continue;
-        const auto a = center(f.rooms[edge.a]), b = center(f.rooms[edge.b]);
-        const auto d = forward(toward(a, b));
         bool door = false;
         for (unsigned j = 0; j < f.fixtures.count; ++j)
             door |= f.fixtures.entries[j].kind == FixtureKind::Door &&
-                    (f.fixtures.entries[j].cell == a + d * 4 || f.fixtures.entries[j].cell == a + d * 5);
+                    f.fixtures.entries[j].cell == threshold(edge);
         if (!door)
             return {Error::Population};
     }

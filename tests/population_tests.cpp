@@ -50,7 +50,7 @@ void budgets() {
     unsigned beforeFinal = 0, optional = 0;
     for (unsigned depth = 1; depth <= 3; ++depth) {
         for (bool fallback : {false, true}) {
-            const auto floor = generate({5, depth}, templates(), fallback);
+            const auto floor = generate({5, depth}, fallback);
             check(bool(floor), "population and fallback generate");
             const auto& f = floor.floor->layout;
             const auto p = resolvePopulation(f, floor.floor->request, c, d.types);
@@ -113,21 +113,53 @@ void approaches() {
         for (unsigned i = 0; i + 1 < f.layout.encounterCount; ++i) {
             const auto& e = f.layout.encounters[i];
             const auto& actor = f.layout.population[e.first];
-            const auto& room = f.layout.rooms[e.room];
-            const Cell center{4 + 9 * room.site.x, 4 + 9 * room.site.y};
-            const auto direction = forward(actor.facing);
-            int door = -1;
-            for (unsigned j = 0; j < f.layout.fixtures.count; ++j) {
-                const auto& fixture = f.layout.fixtures.entries[j];
-                if (fixture.kind == FixtureKind::Door &&
-                    (fixture.cell == center + direction * 4 || fixture.cell == center + direction * 5))
-                    door = int(j);
+
+            unsigned previous = maxRooms;
+            if (e.role == EncounterRole::Direct) {
+                for (unsigned j = 1; j < f.layout.routeCount; ++j)
+                    if (f.layout.route[j] == e.room) {
+                        previous = f.layout.route[j - 1];
+                        break;
+                    }
+            } else {
+                for (unsigned j = 0; j < f.layout.connectionCount; ++j) {
+                    const auto& edge = f.layout.connections[j];
+                    if (edge.a == e.room)
+                        previous = edge.b;
+                    if (edge.b == e.room)
+                        previous = edge.a;
+                }
             }
-            check(door >= 0, "incoming encounter port has an isolation door");
-            const auto fixture = f.layout.fixtures.entries[unsigned(door)];
-            GameSession game(f.map, c, p.placements, f.runtimeSeed,
-                             {fixture.cell + direction, Heading((unsigned(actor.facing) + 2) % 4)}, false,
-                             d.timings, p.recovery, f.layout.fixtures, p.objective);
+            const auto* edge = connectionBetween(f.layout, previous, e.room);
+            check(edge, "encounter has its recorded incoming connection");
+            int door = -1;
+            for (unsigned j = 0; j < f.layout.fixtures.count; ++j)
+                if (f.layout.fixtures.entries[j].kind == FixtureKind::Door &&
+                    f.layout.fixtures.entries[j].cell == threshold(*edge))
+                    door = int(j);
+            check(door >= 0, "incoming encounter connection has an isolation door");
+            const auto towardDoor =
+                edge->a == e.room ? Heading((unsigned(edge->facingA) + 2) % 4) : edge->facingA;
+            const auto outside = threshold(*edge) + forward(towardDoor) * -1;
+            Player spawn{outside, towardDoor};
+            int key = -1;
+            for (unsigned j = 0; j < f.layout.fixtures.count; ++j)
+                if (f.layout.fixtures.entries[j].kind == FixtureKind::Key) {
+                    key = int(j);
+                    spawn.cell = f.layout.fixtures.entries[j].cell;
+                }
+            GameSession game(f.map, c, p.placements, f.runtimeSeed, spawn, false, d.timings, p.recovery,
+                             f.layout.fixtures, p.objective);
+            // Arrival from a previously cleared room must not create an unrelated encounter behind us.
+            for (unsigned n = 0; n < game.actors().snapshot().count; ++n)
+                if (regionAt(f.layout, game.actors().snapshot().actors[n].npc.cell) == previous)
+                    game.actors().damage(game.actors().id(n), 100000, 0);
+            game.update(0, false);
+            if (key >= 0)
+                check(game.interact({game.fixtures().id(unsigned(key)), game.fixtures().revision()}).accepted,
+                      "checked key acquisition before sector approach");
+            game.restorePose({outside, towardDoor}, false);
+            game.update(0, false);
             check(game.interact({game.fixtures().id(unsigned(door)), game.fixtures().revision()}).accepted,
                   "ordinary approach opens by checked interaction");
             // Walk only through this room's opened port toward a legal contact cell.

@@ -427,18 +427,25 @@ template <class A> void visit(A& a, generation::GenerationRequest& v) {
     a("templates", v.templates);
 }
 template <class A> void visit(A& a, generation::Room& v) {
-    a("site", v.site);
+    a("origin", v.origin);
+    a("size", v.size);
     a("anchor", v.anchor);
     a("role", v.role);
     a("id", v.id);
     a("shape", v.shape);
     a("rotation", v.rotation);
-    a("ports", v.ports);
+    a("clearance", v.clearance);
     a("facing", v.facing);
 }
 template <class A> void visit(A& a, generation::Connection& v) {
     a("a", v.a);
     a("b", v.b);
+    a("socketA", v.socketA);
+    a("socketB", v.socketB);
+    a("facingA", v.facingA);
+    a("facingB", v.facingB);
+    a("first", v.first);
+    a("count", v.count);
 }
 template <class A> void visit(A& a, generation::PopulationPlacement& v) {
     a("cell", v.cell);
@@ -459,6 +466,12 @@ template <class A> void visit(A& a, generation::FloorLayout& v) {
     a("width", v.width);
     a("height", v.height);
     a("floor", v.floor);
+    a("membership", v.membership);
+    a("paths", v.paths);
+    a("pathCount", v.pathCount);
+    a("biome", v.biome);
+    a("algorithm", v.algorithm);
+    a("profile", v.profile);
     a("rooms", v.rooms);
     a("connections", v.connections);
     a("roomCount", v.roomCount);

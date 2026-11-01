@@ -29,8 +29,18 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
         return j;
     j["runtime_seed"] = f.runtimeSeed;
     const auto& l = f.layout;
+    j["biome"] = "stone";
+    j["algorithm"] = "stone_rooms";
+    j["profile"] = profileName(l.profile);
     j["family"] = l.family;
     j["rotation"] = l.rotation;
+    const auto m = layoutMetrics(l);
+    j["metrics"] = {{"walkable_cells", m.walkableCells},
+                    {"min_room_area", m.minRoomArea},
+                    {"max_room_area", m.maxRoomArea},
+                    {"distinct_room_areas", m.distinctRoomAreas},
+                    {"distinct_connection_lengths", m.distinctConnectionLengths},
+                    {"progression_steps", m.progressionSteps}};
     j["width"] = l.width;
     j["height"] = l.height;
     j["map"] = ascii(l);
@@ -39,13 +49,20 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
     j["rooms"] = nlohmann::json::array();
     for (unsigned i = 0; i < l.roomCount; ++i) {
         const auto& r = l.rooms[i];
-        j["rooms"].push_back({{"id", r.id},
-                              {"site", {r.site.x, r.site.y}},
+        nlohmann::json cells = nlohmann::json::array();
+        for (int y = 0; y < l.height; ++y)
+            for (int x = 0; x < l.width; ++x)
+                if (regionAt(l, {x, y}) == i)
+                    cells.push_back({x, y});
+        j["rooms"].push_back({{"cells", cells},
+                              {"id", r.id},
+                              {"origin", {r.origin.x, r.origin.y}},
+                              {"size", {r.size.x, r.size.y}},
                               {"anchor", {r.anchor.x, r.anchor.y}},
                               {"role", roleName(r.role)},
-                              {"template", r.shape},
+                              {"shape", r.shape},
                               {"rotation", r.rotation},
-                              {"ports", r.ports},
+                              {"clearance", r.clearance},
                               {"facing", unsigned(r.facing)}});
     }
     j["fixtures"] = nlohmann::json::array();
@@ -98,8 +115,21 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                       {"approach", {l.guardianApproach.x, l.guardianApproach.y}},
                       {"reward", {l.guardianReward.x, l.guardianReward.y}}};
     j["connections"] = nlohmann::json::array();
-    for (unsigned i = 0; i < l.connectionCount; ++i)
-        j["connections"].push_back({l.connections[i].a, l.connections[i].b});
+    for (unsigned i = 0; i < l.connectionCount; ++i) {
+        const auto& e = l.connections[i];
+        nlohmann::json path = nlohmann::json::array();
+        for (unsigned k = 0; k < e.count; ++k) {
+            const auto c = pathCell(l, e, k);
+            path.push_back({c.x, c.y});
+        }
+        j["connections"].push_back({{"a", e.a},
+                                    {"b", e.b},
+                                    {"socket_a", {e.socketA.x, e.socketA.y}},
+                                    {"socket_b", {e.socketB.x, e.socketB.y}},
+                                    {"facing_a", unsigned(e.facingA)},
+                                    {"facing_b", unsigned(e.facingB)},
+                                    {"path", path}});
+    }
     return j;
 }
 nlohmann::json report(const GenerationResult& result, GenerationRequest request, bool detail) {

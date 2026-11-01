@@ -1,5 +1,5 @@
 #include "generation/floor.hpp"
-#include "generation/topology.hpp"
+#include "generation/stone_layout.hpp"
 #include <algorithm>
 namespace blobber::generation {
 namespace {
@@ -8,77 +8,22 @@ std::uint64_t mix(std::uint64_t z) noexcept {
     z = (z ^ (z >> 27)) * 0x94d049bb133111ebull;
     return z ^ (z >> 31);
 }
-struct Random {
-    std::uint64_t state;
-    unsigned next(unsigned bound) noexcept {
-        state += 0x9e3779b97f4a7c15ull;
-        const auto word = std::uint32_t(mix(state) >> 32);
-        return unsigned((std::uint64_t(word) * bound) >> 32);
-    }
-};
-Cell origin(Cell site) noexcept {
-    return {1 + site.x * 9, 1 + site.y * 9};
-}
-FloorLayout candidate(GenerationRequest request, unsigned attempt, const TemplateCatalog& catalog,
-                      bool fallback) {
+FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback) {
     FloorLayout f;
-    f.depth = request.depth;
-    if (!buildTopology(f, request, attempt, fallback))
+    const auto spec = floorSpec(request.depth);
+    if (!spec)
         return f;
-    for (unsigned i = 0; i < f.roomCount; ++i) {
-        auto& r = f.rooms[i];
-        Random interior{seedFor(request, Domain::Interior, r.id, attempt)};
-        r.shape = fallback || (r.role != Role::Junction && r.role != Role::Optional)
-                      ? 0
-                      : std::uint8_t(interior.next(4));
-        r.rotation = fallback ? std::uint8_t(f.rotation) : std::uint8_t(interior.next(4));
-        if (r.role == Role::Entrance || r.role == Role::Objective) {
-            r.shape = 4;
-            for (unsigned e = 0; e < f.connectionCount; ++e) {
-                const auto edge = f.connections[e];
-                const auto other = edge.a == i ? edge.b : edge.b == i ? edge.a : maxRooms;
-                if (other == maxRooms)
-                    continue;
-                const auto site = f.rooms[other].site;
-                for (unsigned d = 0; d < 4; ++d)
-                    if (r.site + forward(Heading(d)) == site)
-                        r.rotation = std::uint8_t((d + 2) % 4);
-            }
-        }
-        const auto base = origin(r.site);
-        r.anchor = base + rotate(catalog[r.shape].anchor, 7, r.rotation);
-        r.facing = static_cast<Heading>(f.rotation);
-        for (int y = 0; y < 7; ++y)
-            for (int x = 0; x < 7; ++x) {
-                const auto p = base + rotate({x, y}, 7, r.rotation);
-                f.floor[p.y * f.width + p.x] = catalog[r.shape].floor[y * 7 + x];
-            }
+    f.depth = spec->depth;
+    f.width = spec->width;
+    f.height = spec->height;
+    f.biome = spec->biome;
+    f.algorithm = stoneBiome().algorithm;
+    switch (f.algorithm) {
+    case AlgorithmId::StoneRooms:
+        if (!buildStoneLayout(f, request, attempt, fallback))
+            return f;
+        break;
     }
-    for (unsigned i = 0; i < f.connectionCount; ++i) {
-        const auto e = f.connections[i];
-        auto& a = f.rooms[e.a];
-        auto& b = f.rooms[e.b];
-        for (unsigned d = 0; d < 4; ++d) {
-            const auto direction = forward(static_cast<Heading>(d));
-            if (!(a.site + direction == b.site))
-                continue;
-            a.ports |= std::uint8_t(1u << d);
-            b.ports |= std::uint8_t(1u << ((d + 2) % 4));
-            const auto center = origin(a.site) + Cell{3, 3};
-            for (int step = 3; step <= 6; ++step) {
-                const auto p = center + direction * step;
-                f.floor[p.y * f.width + p.x] = 1;
-            }
-            // Entrance faces inward along its only connection.
-            if (a.role == Role::Entrance)
-                a.facing = static_cast<Heading>(d);
-            if (b.role == Role::Entrance)
-                b.facing = static_cast<Heading>((d + 2) % 4);
-        }
-    }
-    for (unsigned i = 0; i < f.roomCount; ++i)
-        if (f.rooms[i].role == Role::Entrance)
-            f.spawn = {f.rooms[i].anchor, f.rooms[i].facing};
     placeFixtures(f);
     placePopulation(f, request, attempt, fallback);
     return f;
@@ -105,6 +50,14 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
     for (int i = 0; i < f.width * f.height; ++i)
         number(f.floor[std::size_t(i)]);
     number(f.depth);
+    number(unsigned(f.biome));
+    number(unsigned(f.algorithm));
+    number(unsigned(f.profile));
+    number(f.pathCount);
+    for (int i = 0; i < f.width * f.height; ++i)
+        number(f.membership[unsigned(i)]);
+    for (unsigned i = 0; i < f.pathCount; ++i)
+        number(f.paths[i]);
     number(f.fixtures.count);
     number(f.fixtures.discovery);
     number(f.fixtures.depth);
@@ -161,34 +114,41 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
     for (unsigned i = 0; i < f.roomCount; ++i) {
         const auto& r = f.rooms[i];
         number(r.id);
-        number(unsigned(r.site.x));
-        number(unsigned(r.site.y));
+        number(unsigned(r.origin.x));
+        number(unsigned(r.origin.y));
+        number(unsigned(r.size.x));
+        number(unsigned(r.size.y));
         number(unsigned(r.anchor.x));
         number(unsigned(r.anchor.y));
         number(unsigned(r.role));
         number(r.shape);
         number(r.rotation);
-        number(r.ports);
+        number(r.clearance);
         number(unsigned(r.facing));
     }
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         number(f.connections[i].a);
         number(f.connections[i].b);
+        const auto& e = f.connections[i];
+        for (auto c : {e.socketA, e.socketB}) {
+            number(unsigned(c.x));
+            number(unsigned(c.y));
+        }
+        number(unsigned(e.facingA));
+        number(unsigned(e.facingB));
+        number(e.first);
+        number(e.count);
     }
     number(unsigned(f.spawn.cell.x));
     number(unsigned(f.spawn.cell.y));
     number(unsigned(f.spawn.heading));
     return h;
 }
-GenerationResult generate(GenerationRequest request, const TemplateCatalog& catalog, bool forceFallback) {
+GenerationResult generate(GenerationRequest request, bool forceFallback) {
     GenerationResult out;
     if (request.depth < 1 || request.depth > 3 || request.generator != generatorVersion ||
         request.templates != templateVersion) {
         out.diagnostics.failure = {Error::Request};
-        return out;
-    }
-    if (const auto failure = validateTemplates(catalog)) {
-        out.diagnostics.failure = failure;
         return out;
     }
     FloorLayout layout;
@@ -199,7 +159,7 @@ GenerationResult generate(GenerationRequest request, const TemplateCatalog& cata
             out.diagnostics.rejected[i] = {Error::ForcedFallback};
             continue;
         }
-        layout = candidate(request, i, catalog, false);
+        layout = candidate(request, i, false);
         const auto failure = validate(layout);
         if (!failure) {
             valid = true;
@@ -210,7 +170,7 @@ GenerationResult generate(GenerationRequest request, const TemplateCatalog& cata
     if (!valid) {
         out.diagnostics.fallback = true;
         out.diagnostics.fallbackId = request.depth;
-        layout = candidate(request, 0, catalog, true);
+        layout = candidate(request, 0, true);
         if (const auto failure = validate(layout)) {
             out.diagnostics.failure = failure;
             return out;
@@ -221,8 +181,9 @@ GenerationResult generate(GenerationRequest request, const TemplateCatalog& cata
         for (int x = 0; x < layout.width; ++x)
             if (layout.floor[y * layout.width + x])
                 rows[y][x] = '.';
-    out.floor.emplace(GeneratedFloor{request, layout, Map(rows), out.diagnostics, fingerprint(layout),
-                                     std::uint32_t(seedFor(request, Domain::Runtime))});
+    out.floor.emplace(GeneratedFloor{
+        request, layout, Map(rows, WorldDefinition{stoneBiome().assetPack, {}, {}}), out.diagnostics,
+        fingerprint(layout), std::uint32_t(seedFor(request, Domain::Runtime))});
     return out;
 }
 std::string ascii(const FloorLayout& f) {

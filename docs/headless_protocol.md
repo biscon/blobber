@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 5/8 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 6/10 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -125,8 +125,8 @@ same starting-draft codec as arena `party`):
 {
   "kind": "generated_floor",
   "schema_version": 1,
-  "generator_version": 5,
-  "template_version": 5,
+  "generator_version": 8,
+  "template_version": 6,
   "seed": 5,
   "depth": 1,
   "party": ["replace with four existing starting-draft objects"]
@@ -136,14 +136,15 @@ same starting-draft codec as arena `party`):
 This skeleton is illustrative; `party` must actually contain four distinct, valid
 level-one draft objects. Do not include arena `name`, `layout_version` or `monsters`.
 Depths 1–3 are separate generation identities, not connected campaign locations.
-Each floor has an intentionally small placeholder population: one ordinary melee
-goblin, one optional melee goblin, and a designated 14-HP melee guardian plus archer.
+Each floor uses the current campaign depth band: direct ordinary encounters,
+an optional reserve and a designated guardian group. See the generation report
+for diagnostic recipe/member metadata.
 Depth 1 has an unlocked guardian approach; depths 2–3 require their Bronze/Silver key.
 A separate guardian gate opens and publishes reserved supplies only after all
 designated deaths. Ordinary victories do not complete the floor. Protected stairs
 rooms have ordinary reusable unlocked doors. Campaign stairs use protected landings; floor
 completion is nonterminal and depth 3 does not yet produce campaign victory.
-Generator/template versions are 3/3; older generated scenarios/traces are rejected.
+Generator/template versions are 8/6; older generated scenarios/traces are rejected.
 The generated scenario schema and JSON-lines protocol remain version 1.
 `reset` reuses the same inputs; optional `seed` explicitly regenerates the floor.
 Failed generation/version/party validation preserves an existing session and tokens.
@@ -359,8 +360,8 @@ no focus, desktop or OS input automation is used. See [MCP usage](mcp_usage.md).
 
 ## PC04 persistent campaign scenarios
 
-`kind: "campaign"` uses scenario schema 1, `generator_version: 5`,
-`template_version: 5`, a uint32 `seed` and the existing four-entry `party` array.
+`kind: "campaign"` uses scenario schema 1, `generator_version: 8`,
+`template_version: 6`, a uint32 `seed` and the existing four-entry `party` array.
 There is no `depth` input: launch starts in the fixed sanctuary hub and eagerly
 prepares all three depths. Arena and single generated-floor diagnostic scenarios
 remain supported. Normal graphical New Game uses this same campaign owner.
@@ -531,7 +532,7 @@ saves reject unchanged, and local sources/resources do not travel with the party
 
 ### PC07.2 population and diagnostic route metadata
 
-Current campaign schema/simulation are **5/8**, generator/templates **5/5**; older
+Current campaign schema/simulation are **6/10**, generator/templates **8/6**; older
 incompatible saves reject unchanged. Protocol v1 and arena schema 2 remain.
 Diagnostic active campaigns expose `generation` with the same full floor report as
 generated-floor scenarios: ordered room `route`, bounded `encounters` with recipe,
@@ -540,3 +541,17 @@ Player observations do not receive this hidden metadata or new objective knowled
 Normal pickup, advancement, rest, interaction and travel commands remain authoritative.
 The explicitly invoked PC07.2 route tool is diagnostic; it does not implement the
 PC08 player exploration agent or claim human exploration timing.
+
+## Variable stone layout geometry
+
+Generator/catalog 8/6 and campaign schema/simulation 6/10 replace lattice sites
+with explicit region `origin`, `size`, `cells`, anchor and clearance, plus connections
+containing endpoint IDs, boundary sockets/facings and ordered tile paths. Diagnostic
+reports include stone biome/algorithm/profile and bounded layout metrics. Player
+observations retain generation identity without disclosing hidden geometry. The
+CLI remains seed/depth driven; `--force-fallback` exercises either checked authored
+profile under the existing diagnostic-only admission. No new gameplay commands.
+
+`tools/layout_gallery.py GENERATOR NEW_OUTPUT_DIRECTORY` exports the fixed twelve
+floor review sample, both fallbacks and metric summaries. It requires Pillow and
+does not run combat, a broad sweep or a performance benchmark.

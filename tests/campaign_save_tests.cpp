@@ -344,6 +344,12 @@ void malformed() {
             "malformed state rejected transactionally");
     };
     bad([](auto& j) { j["schema"] = 1; });
+    bad([](auto& j) { j["schema"] = 5; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["membership"][0] = 0; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["paths"][0] = 0; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["pathCount"] = 1601; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["connections"][0]["facingA"] = 255; });
+    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["profile"] = 255; });
     bad([](auto& j) { j["campaign"]["gameplayMs"] = "18446744073709551615"; });
     bad([](auto& j) { j["catalog"] = "other"; });
     bad([](auto& j) {

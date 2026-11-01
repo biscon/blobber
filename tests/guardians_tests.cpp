@@ -162,7 +162,7 @@ void landings() {
     const auto defs = definitions();
     for (unsigned depth = 1; depth <= 3; ++depth)
         for (bool fallback : {false, true}) {
-            const auto result = generate({13, depth}, templates(), fallback);
+            const auto result = generate({13, depth}, fallback);
             check(bool(result), "valid landing fixture and fallback");
             const auto& f = *result.floor;
             const auto p = preparePopulation(f, cat, defs.types);

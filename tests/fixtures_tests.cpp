@@ -280,7 +280,7 @@ void generationContracts() {
     for (unsigned depth = 1; depth <= 3; ++depth)
         for (unsigned seed : {1u, 5u, 8u})
             for (bool fallback : {false, true}) {
-                const auto result = generate({seed, depth}, templates(), fallback);
+                const auto result = generate({seed, depth}, fallback);
                 check(bool(result) && !validateFixtures(result.floor->layout),
                       "Normal and fallback fixture progression validated at each depth");
                 auto f = result.floor->layout;

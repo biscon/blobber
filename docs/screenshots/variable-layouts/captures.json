@@ -1,0 +1,36 @@
+{
+  "mode": "Hidden application-owned window; preparation-only in-process camera poses; no OS input",
+  "generator": 8,
+  "catalog": 6,
+  "campaign_schema": 6,
+  "simulation": 10,
+  "world_metadata_sha256": "4e9a84547c95e07ede1c958c9e74e34dc5a8cff2871db5aa0db497c1649537bc",
+  "captures": [
+    {
+      "seed": 0,
+      "depth": 3,
+      "profile": "compact_wings",
+      "fingerprint": "8952968567530381446",
+      "files": [
+        "compact_wings-bend.png",
+        "compact_wings-guardian-threshold.png",
+        "compact_wings-hall.png",
+        "compact_wings-landing.png",
+        "compact_wings-shared-wall.png"
+      ]
+    },
+    {
+      "seed": 5,
+      "depth": 3,
+      "profile": "chamber_network",
+      "fingerprint": "7129395151330231876",
+      "files": [
+        "chamber_network-bend.png",
+        "chamber_network-guardian-threshold.png",
+        "chamber_network-hall.png",
+        "chamber_network-landing.png",
+        "chamber_network-shared-wall.png"
+      ]
+    }
+  ]
+}

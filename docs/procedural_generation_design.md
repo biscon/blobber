@@ -5,10 +5,11 @@ implementation with “Implement the plan” and accepted with “slice accepted
 it in the doc”. PC02 is next eligible for separate planning; later implementation
 is not authorized.
 
-Current topology is generator 7 under the implemented [PC07.2 variety amendment](pc072_variety_controls.md):
-sampled connected lattice masks replace the two authored normal loop families below.
-The fixed checked fallback remains. This document retains the original PC01 design
-and acceptance evidence; later campaign ownership is described in the system overview.
+Current generation is generator/catalog **8/6**, implemented by the separately
+approved [variable stone layout follow-up](procedural_layout_design.md). It replaces
+the lattice, including the generator-7 [PC07.2 variety amendment](pc072_variety_controls.md),
+with explicit region/socket/path geometry. The original PC01 design and acceptance
+evidence below remain historical; campaign ownership follows the system overview.
 
 ## Responsibilities and ownership
 

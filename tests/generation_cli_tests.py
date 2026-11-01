@@ -30,7 +30,11 @@ def open_door(request, state):
             if nxt not in previous and nxt not in blocked and nxt != tuple(door['position']) and rows[nxt[1]][nxt[0]] != '#':
                 previous[nxt] = here
                 queue.append(nxt)
-    assert target in previous
+    if target not in previous:
+        door_dx, door_dy = directions[door['heading']]
+        target = door['position'][0]+door_dx, door['position'][1]+door_dy
+        assert target in previous
+        door = dict(door, heading=(door['heading']+2)%4)
     path = []
     at = target
     while previous[at] is not None:
@@ -99,8 +103,8 @@ def main(generator, runner):
         for name in ('goblin', 'goblin.archer', 'skeleton', 'zombie', 'giant.rat', 'goblin_shaman', 'bugbear'):
             (root / f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name)))
         (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')]], instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=7,
-                     template_version=5, seed=5, depth=1, party=arena['party'])
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=8,
+                     template_version=6, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
             start = client.request('start', scenario=setup)

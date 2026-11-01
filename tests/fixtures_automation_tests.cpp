@@ -83,11 +83,17 @@ void walk(Client& c, Cell target) {
             if (g.combat().snapshot().phase == CombatPhase::Victory)
                 c.act({{"kind", "continue"}});
         }
+        for (unsigned settle = 0; settle < 150 && !g.combat().settledActions(g.timeMs()); ++settle)
+            c.advance(1, false);
         const auto fi = g.fixtures().at(*i);
         if (fi >= 0 && g.fixtures().definition().entries[fi].kind == FixtureKind::Door &&
-            !g.fixtures().completed(unsigned(fi)))
-            check(c.act({{"kind", "interact"}, {"fixture", fi}}).at("data").at("accepted"),
-                  "Open route door");
+            !g.fixtures().completed(unsigned(fi))) {
+            const auto opened = c.act({{"kind", "interact"}, {"fixture", fi}}).at("data");
+            if (!opened.at("accepted"))
+                throw std::runtime_error(std::string("Open route door ") + std::to_string(fi) + ": " +
+                                         opened.value("reason", std::string{}) +
+                                         " phase=" + std::to_string(unsigned(g.combat().snapshot().phase)));
+        }
         move(c, "forward");
     }
 }

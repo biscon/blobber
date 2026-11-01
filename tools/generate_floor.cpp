@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
         fingerprints.reserve(count);
         for (unsigned i = 0; i < count; ++i, ++request.seed) {
             const auto start = std::chrono::steady_clock::now();
-            const auto result = generate(request, templates(), fallback);
+            const auto result = generate(request, fallback);
             const auto us = std::uint64_t(std::chrono::duration_cast<std::chrono::microseconds>(
                                               std::chrono::steady_clock::now() - start)
                                               .count());
@@ -75,9 +75,14 @@ int main(int argc, char** argv) {
                 for (const char* field : {"map", "rooms", "connections"})
                     j.erase(field);
             j["generation_us"] = us;
-            j["retained_bytes"] =
+            const auto metadataBytes =
                 sizeof(GeneratedFloor) +
                 (result ? unsigned(result.floor->layout.width * result.floor->layout.height) : 0);
+            const auto worldBytes =
+                result ? result.floor->map.definition().bytes() - sizeof(blobber::WorldDefinition) : 0;
+            j["generation_metadata_bytes"] = metadataBytes;
+            j["world_definition_dynamic_bytes"] = worldBytes;
+            j["retained_bytes"] = metadataBytes + worldBytes;
             j["scratch_bytes"] = scratchBytes();
             if (json || count > 1 || !result)
                 std::cout << j.dump() << '\n';

@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 7, templateVersion = 5;
+constexpr unsigned generatorVersion = 8, templateVersion = 6;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 constexpr int floorDimension = 36;
 constexpr std::size_t fixtureScratchBytes = maxCells * 4 * (sizeof(std::uint8_t) + sizeof(std::uint16_t));
@@ -15,21 +15,37 @@ struct GenerationRequest {
     std::uint32_t seed = 0;
     unsigned depth = 1, generator = generatorVersion, templates = templateVersion;
 };
-struct RoomTemplate {
-    std::array<std::uint8_t, 49> floor{}; // Closed rim; cardinal sockets are opened by stamping.
-    Cell anchor{3, 3};
+enum class BiomeId : std::uint8_t { Stone };
+enum class AlgorithmId : std::uint8_t { StoneRooms };
+enum class LayoutProfile : std::uint8_t { CompactWings, ChamberNetwork };
+struct BiomeDefinition {
+    BiomeId id;
+    AlgorithmId algorithm;
+    const char* assetPack;
+    std::array<LayoutProfile, 2> profiles;
 };
-using TemplateCatalog = std::array<RoomTemplate, 5>;
-const TemplateCatalog& templates() noexcept;
+struct FloorSpec {
+    unsigned depth;
+    int width, height;
+    BiomeId biome;
+    unsigned populationBand;
+    bool keyedSector, finalFloor;
+};
+const BiomeDefinition& stoneBiome() noexcept;
+std::optional<FloorSpec> floorSpec(unsigned depth) noexcept;
+const char* profileName(LayoutProfile) noexcept;
+constexpr std::uint8_t noRegion = 255;
 struct Room {
-    Cell site;
-    Cell anchor;
+    Cell origin{}, size{}, anchor{};
     Role role = Role::Junction;
-    std::uint8_t id = 0, shape = 0, rotation = 0, ports = 0;
+    std::uint8_t id = 0, shape = 0, rotation = 0, clearance = 1;
     Heading facing = Heading::North;
 };
 struct Connection {
     std::uint8_t a = 0, b = 0;
+    Cell socketA{}, socketB{};
+    Heading facingA = Heading::North, facingB = Heading::South;
+    std::uint16_t first = 0, count = 0;
 };
 enum class ActorRecipe : std::uint8_t { Goblin, Archer, Skeleton, Zombie, Rat, Shaman, Bugbear };
 enum class EncounterRecipe : std::uint8_t { GoblinPair, RatPack, UndeadPair, GoblinSupport, BugbearSupport };
@@ -56,6 +72,13 @@ struct PopulationPlacement {
 struct FloorLayout {
     int width = floorDimension, height = floorDimension;
     std::array<std::uint8_t, maxCells> floor{};
+    std::array<std::uint8_t, maxCells> membership{};
+    std::array<std::uint16_t, maxCells> paths{};
+    unsigned pathCount = 0;
+    BiomeId biome = BiomeId::Stone;
+    AlgorithmId algorithm = AlgorithmId::StoneRooms;
+    LayoutProfile profile = LayoutProfile::CompactWings;
+    FloorLayout() noexcept { membership.fill(noRegion); }
     std::array<Room, maxRooms> rooms{};
     std::array<Connection, maxConnections> connections{};
     unsigned roomCount = 0, connectionCount = 0, family = 0, rotation = 0;
@@ -117,19 +140,31 @@ struct GenerationResult {
     explicit operator bool() const noexcept { return floor.has_value(); }
 };
 // All generation/Map construction is a preparation phase. No runtime borrowing.
-GenerationResult generate(GenerationRequest, const TemplateCatalog& = templates(),
-                          bool forceFallback = false);
+GenerationResult generate(GenerationRequest, bool forceFallback = false);
 Failure validate(const FloorLayout&) noexcept;
 Failure validateFixtures(const FloorLayout&) noexcept;
 void placeFixtures(FloorLayout&) noexcept;
 void placePopulation(FloorLayout&, GenerationRequest, unsigned attempt, bool fallback) noexcept;
 Failure validatePopulation(const FloorLayout&) noexcept;
-Failure validateTemplates(const TemplateCatalog&) noexcept;
+bool inside(const FloorLayout&, Cell) noexcept;
+bool floorCell(const FloorLayout&, Cell) noexcept;
+unsigned regionAt(const FloorLayout&, Cell) noexcept;
+Cell pathCell(const FloorLayout&, const Connection&, unsigned step) noexcept;
+unsigned sectorJunction(const FloorLayout&) noexcept;
+const Connection* connectionBetween(const FloorLayout&, unsigned, unsigned) noexcept;
+Heading incomingFacing(const Connection&, unsigned room) noexcept;
+Cell threshold(const Connection&) noexcept;
+Failure validateStone(const FloorLayout&) noexcept;
 std::uint64_t seedFor(GenerationRequest, Domain, unsigned stableId = 0, unsigned attempt = 0) noexcept;
 std::uint64_t fingerprint(const FloorLayout&) noexcept;
 const char* errorName(Error) noexcept;
 const char* roleName(Role) noexcept;
 Cell rotate(Cell, int extent, unsigned quarterTurns) noexcept;
+struct LayoutMetrics {
+    unsigned walkableCells = 0, minRoomArea = 0, maxRoomArea = 0, distinctRoomAreas = 0;
+    unsigned distinctConnectionLengths = 0, progressionSteps = 0;
+};
+LayoutMetrics layoutMetrics(const FloorLayout&) noexcept;
 std::size_t scratchBytes() noexcept;
 // Diagnostic helpers allocate only during inspection/export.
 std::string ascii(const FloorLayout&);

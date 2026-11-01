@@ -3,10 +3,8 @@
 #include <algorithm>
 namespace blobber::generation {
 namespace {
-Cell center(const Room& r) noexcept {
-    return {4 + 9 * r.site.x, 4 + 9 * r.site.y};
-}
-std::array<unsigned, maxRooms> distances(const FloorLayout& f, unsigned start) noexcept {
+std::array<unsigned, maxRooms> distances(const FloorLayout& f, unsigned start,
+                                         unsigned blocked = maxRooms) noexcept {
     std::array<unsigned, maxRooms> d;
     d.fill(maxRooms);
     std::array<unsigned, maxRooms> q{};
@@ -18,7 +16,7 @@ std::array<unsigned, maxRooms> distances(const FloorLayout& f, unsigned start) n
         for (unsigned i = 0; i < f.connectionCount; ++i) {
             auto e = f.connections[i];
             auto b = e.a == a ? e.b : e.b == a ? e.a : maxRooms;
-            if (b < maxRooms && d[b] == maxRooms) {
+            if (b < maxRooms && b != blocked && d[b] == maxRooms) {
                 d[b] = d[a] + 1;
                 q[tail++] = b;
             }
@@ -26,34 +24,13 @@ std::array<unsigned, maxRooms> distances(const FloorLayout& f, unsigned start) n
     }
     return d;
 }
-bool floorCell(const FloorLayout& f, Cell c) noexcept {
-    return c.x >= 0 && c.y >= 0 && c.x < f.width && c.y < f.height && f.floor[c.y * f.width + c.x];
-}
-unsigned sectorJunction(const FloorLayout& f) noexcept {
-    for (unsigned i = 0; i < f.connectionCount; ++i) {
-        const auto e = f.connections[i];
-        if (e.a >= f.roomCount || e.b >= f.roomCount)
-            continue;
-        if (f.rooms[e.a].role == Role::Approach && f.rooms[e.b].role == Role::Junction)
-            return e.b;
-        if (f.rooms[e.b].role == Role::Approach && f.rooms[e.a].role == Role::Junction)
-            return e.a;
-    }
-    return maxRooms;
-}
 bool sectorDoor(const FloorLayout& f, Cell cell, Heading facing) noexcept {
-    const auto junction = sectorJunction(f);
-    if (junction == maxRooms)
-        return false;
-    const auto a = center(f.rooms[junction]);
+    const auto sector = sectorJunction(f);
     for (unsigned i = 0; i < f.connectionCount; ++i) {
-        const auto e = f.connections[i];
-        const auto other = e.a == junction ? e.b : e.b == junction ? e.a : maxRooms;
-        if (other >= f.roomCount || f.rooms[other].role != Role::Junction)
-            continue;
-        const auto c = center(f.rooms[other]);
-        const Cell d{(a.x - c.x) / 9, (a.y - c.y) / 9};
-        if (cell == c + d * 4 && forward(facing) == d)
+        const auto& e = f.connections[i];
+        const auto other = e.a == sector ? e.b : e.b == sector ? e.a : maxRooms;
+        if (other < f.roomCount && f.rooms[other].role == Role::Junction && threshold(e) == cell &&
+            e.facingA == facing)
             return true;
     }
     return false;
@@ -64,7 +41,10 @@ void placeFixtures(FloorLayout& f) noexcept {
     defs = {};
     defs.discovery = true;
     defs.depth = f.depth;
-    unsigned entry = 0, approach = 0, objective = 0;
+    const auto spec = floorSpec(f.depth);
+    if (!spec)
+        return;
+    unsigned entry = maxRooms, approach = maxRooms, objective = maxRooms;
     for (unsigned i = 0; i < f.roomCount; ++i) {
         if (f.rooms[i].role == Role::Entrance)
             entry = i;
@@ -73,88 +53,57 @@ void placeFixtures(FloorLayout& f) noexcept {
         if (f.rooms[i].role == Role::Objective)
             objective = i;
     }
-    unsigned ea = 0, aa = 0;
-    for (unsigned i = 0; i < f.connectionCount; ++i) {
-        auto e = f.connections[i];
-        if (e.a == entry)
-            ea = e.b;
-        if (e.b == entry)
-            ea = e.a;
-        if (e.a == approach && e.b != objective)
-            aa = e.b;
-        if (e.b == approach && e.a != objective)
-            aa = e.a;
-    }
-    const auto a = center(f.rooms[aa]), b = center(f.rooms[approach]);
-    const Cell delta{(b.x - a.x) / 9, (b.y - a.y) / 9};
-    Heading facing = Heading::North;
-    for (unsigned h = 0; h < 4; ++h)
-        if (forward(Heading(h)) == delta)
-            facing = Heading(h);
-    defs.entries[defs.count++] = {a + delta * 4, facing, FixtureKind::Door, 0};
-    if (f.depth > 1) {
-        // Both sides of the loop must be locked: the key opens the entire final
-        // junction/guardian sector, not just its last doorway. Keep room/population
-        // selection independent of these locks.
+    const auto sector = sectorJunction(f);
+    if (entry == maxRooms || approach == maxRooms || objective == maxRooms || sector == maxRooms)
+        return;
+    const auto* approachEdge = connectionBetween(f, sector, approach);
+    const auto* gateEdge = connectionBetween(f, approach, objective);
+    if (!approachEdge || !gateEdge || gateEdge->count < 3)
+        return;
+    defs.entries[defs.count++] = {threshold(*approachEdge), approachEdge->facingA, FixtureKind::Door, 0};
+    if (spec->keyedSector) {
         for (unsigned i = 0; i < f.connectionCount; ++i) {
-            const auto e = f.connections[i];
-            const auto other = e.a == aa ? e.b : e.b == aa ? e.a : maxRooms;
-            if (other >= f.roomCount || f.rooms[other].role != Role::Junction)
-                continue;
-            const auto c = center(f.rooms[other]);
-            const Cell d{(a.x - c.x) / 9, (a.y - c.y) / 9};
-            Heading h = Heading::North;
-            for (unsigned n = 0; n < 4; ++n)
-                if (forward(Heading(n)) == d)
-                    h = Heading(n);
-            defs.entries[defs.count++] = {c + d * 4, h, FixtureKind::Door, std::uint8_t(f.depth)};
+            const auto& e = f.connections[i];
+            const auto other = e.a == sector ? e.b : e.b == sector ? e.a : maxRooms;
+            if (other < f.roomCount && f.rooms[other].role == Role::Junction)
+                defs.entries[defs.count++] = {threshold(e), e.facingA, FixtureKind::Door,
+                                              std::uint8_t(f.depth)};
         }
-        const auto e = distances(f, ea), aDist = distances(f, aa);
+        const auto d = distances(f, entry, sector);
         unsigned chosen = maxRooms, best = 0;
-        for (unsigned i = 0; i < f.roomCount; ++i) {
-            if (f.rooms[i].role != Role::Junction || i == ea || i == aa)
-                continue;
-            const auto score = std::min(e[i], aDist[i]);
-            if (chosen == maxRooms || score > best || (score == best && f.rooms[i].id < f.rooms[chosen].id)) {
-                chosen = i;
-                best = score;
+        for (unsigned i = 0; i < f.roomCount; ++i)
+            if (f.rooms[i].role == Role::Junction && i != sector) {
+                if (chosen == maxRooms || d[i] > best) {
+                    chosen = i;
+                    best = d[i];
+                }
             }
-        }
         if (chosen < maxRooms)
-            defs.entries[defs.count++] = {f.rooms[chosen].anchor, f.rooms[chosen].facing, FixtureKind::Key,
+            defs.entries[defs.count++] = {f.rooms[chosen].anchor, Heading::North, FixtureKind::Key,
                                           std::uint8_t(f.depth)};
     }
-    const auto upFacing = Heading(f.rooms[entry].rotation);
-    const auto downFacing = Heading(f.rooms[objective].rotation);
+    const auto upFacing = Heading(f.rooms[entry].rotation), downFacing = Heading(f.rooms[objective].rotation);
     defs.entries[defs.count++] = {f.rooms[entry].anchor + forward(upFacing), upFacing, FixtureKind::Upstairs,
                                   0};
-    defs.entries[defs.count++] = {f.rooms[objective].anchor + (f.depth == 3 ? Cell{} : forward(downFacing)),
-                                  downFacing, f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs,
-                                  0};
-    const auto entranceCenter = center(f.rooms[entry]), neighbor = center(f.rooms[ea]);
-    const Cell entryDirection{(neighbor.x - entranceCenter.x) / 9, (neighbor.y - entranceCenter.y) / 9};
-    defs.entries[defs.count++] = {entranceCenter + entryDirection * 4, f.rooms[entry].facing,
-                                  FixtureKind::Door, 0};
-    const auto from = center(f.rooms[approach]), to = center(f.rooms[objective]);
-    const Cell exitDirection{(to.x - from.x) / 9, (to.y - from.y) / 9};
-    Heading exitFacing = Heading::North;
-    for (unsigned h = 0; h < 4; ++h)
-        if (forward(Heading(h)) == exitDirection)
-            exitFacing = Heading(h);
+    defs.entries[defs.count++] = {
+        f.rooms[objective].anchor + (spec->finalFloor ? Cell{} : forward(downFacing)), downFacing,
+        spec->finalFloor ? FixtureKind::Endpoint : FixtureKind::Downstairs, 0};
+    for (unsigned i = 0; i < f.connectionCount; ++i) {
+        const auto& e = f.connections[i];
+        if (e.a == entry || e.b == entry)
+            defs.entries[defs.count++] = {threshold(e), e.facingA, FixtureKind::Door, 0};
+    }
     f.guardianGate = std::uint8_t(defs.count);
-    defs.entries[defs.count++] = {from + exitDirection * 3, exitFacing, FixtureKind::GuardianGate, 0};
-    defs.entries[defs.count++] = {from + exitDirection * 6, exitFacing, FixtureKind::Door, 0};
-    f.guardianReward = from + exitDirection * 5;
-    f.guardianApproach = b + delta * -2;
+    defs.entries[defs.count++] = {gateEdge->socketA, gateEdge->facingA, FixtureKind::GuardianGate, 0};
+    defs.entries[defs.count++] = {gateEdge->socketB, gateEdge->facingB, FixtureKind::Door, 0};
+    f.guardianReward = pathCell(f, *gateEdge, 1);
+    f.guardianApproach = approachEdge->socketB + forward(approachEdge->facingB) * -1;
     for (auto room : {entry, objective}) {
         defs.landings[defs.landingCount++] = f.rooms[room].anchor;
-        const auto c = center(f.rooms[room]);
-        for (int y = -2; y <= 2; ++y)
-            for (int x = -2; x <= 2; ++x) {
-                const auto p = c + Cell{x, y};
-                if (floorCell(f, p))
-                    defs.npcExcluded.set(unsigned(p.y * f.width + p.x));
-            }
+        for (int y = 0; y < f.height; ++y)
+            for (int x = 0; x < f.width; ++x)
+                if (regionAt(f, {x, y}) == room)
+                    defs.npcExcluded.set(unsigned(y * f.width + x));
     }
 }
 Failure validateFixtures(const FloorLayout& f) noexcept {
@@ -212,34 +161,21 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
         defs.entries[goal].kind != (f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs))
         return {Error::Fixture};
     bool approachPort = false, gatePort = false, goalAnchor = false;
-    for (unsigned i = 0; i < f.roomCount; ++i) {
-        const auto& r = f.rooms[i];
-        if (r.role == Role::Objective)
-            goalAnchor |=
-                r.anchor == (stairFixture(defs.entries[goal].kind) ? stairLanding(defs.entries[goal])
-                                                                   : defs.entries[goal].cell);
-    }
+    for (unsigned i = 0; i < f.roomCount; ++i)
+        if (f.rooms[i].role == Role::Objective)
+            goalAnchor =
+                f.rooms[i].anchor == (stairFixture(defs.entries[goal].kind) ? stairLanding(defs.entries[goal])
+                                                                            : defs.entries[goal].cell);
     for (unsigned i = 0; i < f.connectionCount; ++i) {
-        const auto e = f.connections[i];
-        if (e.a >= f.roomCount || e.b >= f.roomCount)
-            return {Error::Connection};
-        const auto& a = f.rooms[e.a];
-        const auto& b = f.rooms[e.b];
-        const Room* approach = a.role == Role::Approach ? &a : b.role == Role::Approach ? &b : nullptr;
-        const Room* junction = a.role == Role::Junction ? &a : b.role == Role::Junction ? &b : nullptr;
-        const Room* objective = a.role == Role::Objective ? &a : b.role == Role::Objective ? &b : nullptr;
-        if (approach && junction) {
-            const auto c = center(*junction), t = center(*approach);
-            const Cell d{(t.x - c.x) / 9, (t.y - c.y) / 9};
-            approachPort |= defs.entries[f.approachDoor].cell == c + d * 4 &&
-                            forward(defs.entries[f.approachDoor].facing) == d &&
-                            f.guardianApproach == t + d * -2;
-        }
-        if (approach && objective) {
-            const auto c = center(*approach), t = center(*objective);
-            const Cell d{(t.x - c.x) / 9, (t.y - c.y) / 9};
-            gatePort |= defs.entries[f.guardianGate].cell == c + d * 3 && f.guardianReward == c + d * 5;
-        }
+        const auto& e = f.connections[i];
+        if (f.rooms[e.a].role == Role::Junction && f.rooms[e.b].role == Role::Approach)
+            approachPort = defs.entries[f.approachDoor].cell == threshold(e) &&
+                           defs.entries[f.approachDoor].facing == e.facingA &&
+                           f.guardianApproach == e.socketB + forward(e.facingB) * -1;
+        if (f.rooms[e.a].role == Role::Approach && f.rooms[e.b].role == Role::Objective)
+            gatePort = defs.entries[f.guardianGate].cell == e.socketA &&
+                       defs.entries[f.guardianGate].facing == e.facingA &&
+                       f.guardianReward == pathCell(f, e, 1);
     }
     if (!approachPort || !gatePort || !goalAnchor)
         return {Error::Fixture};
@@ -323,12 +259,8 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
         for (unsigned j = 0; j < defs.count; ++j)
             if (p.cell == defs.entries[j].cell)
                 return {Error::Population};
-        const Room* room = nullptr;
-        for (unsigned j = 0; j < f.roomCount; ++j) {
-            const auto c = center(f.rooms[j]);
-            if (std::abs(p.cell.x - c.x) <= 2 && std::abs(p.cell.y - c.y) <= 2)
-                room = &f.rooms[j];
-        }
+        const auto membership = regionAt(f, p.cell);
+        const Room* room = membership < f.roomCount ? &f.rooms[membership] : nullptr;
         if (!room || (p.guardian && room->role != Role::Approach) ||
             (!p.guardian && room->role != Role::Junction && room->role != Role::Optional))
             return {Error::Population};

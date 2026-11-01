@@ -7,7 +7,7 @@ std::optional<generation::GeneratedFloor> prepare(const Scenario& s, Mode mode) 
         if (generated->forceFallback && mode != Mode::Diagnostic)
             throw std::runtime_error("Forced fallback requires diagnostic mode");
         auto result =
-            generation::generate(generated->generation, generation::templates(), generated->forceFallback);
+            generation::generate(generated->generation, generated->forceFallback);
         if (!result)
             throw std::runtime_error(std::string("Generation failed: ") +
                                      generation::errorName(result.diagnostics.failure.code));

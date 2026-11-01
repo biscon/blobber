@@ -46,6 +46,10 @@ template <class T> constexpr unsigned enumMaximum() {
         return unsigned(rules::Life::Dead);
     else if constexpr (std::is_same_v<T, FixtureKind>)
         return unsigned(FixtureKind::GuardianGate);
+    else if constexpr (std::is_same_v<T, generation::BiomeId> || std::is_same_v<T, generation::AlgorithmId>)
+        return 0;
+    else if constexpr (std::is_same_v<T, generation::LayoutProfile>)
+        return 1;
     else if constexpr (std::is_same_v<T, generation::Role>)
         return unsigned(generation::Role::Optional);
     else if constexpr (std::is_same_v<T, generation::ActorRecipe>)
@@ -347,7 +351,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 5 || j.at("simulation") != 10 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 6 || j.at("simulation") != 10 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -364,7 +368,7 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 5},
+    Json j = {{"schema", 6},
               {"simulation", 10},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
