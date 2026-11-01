@@ -14,7 +14,10 @@
 #include <stdexcept>
 
 namespace blobber {
-NpcWorld gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn) {
+std::optional<NpcWorld> gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn,
+                                           const CampaignRun* campaign) {
+    if (campaign)
+        return std::nullopt;
     auto instances = source.instances();
     for (auto& npc : instances)
         npc.animation = NpcAnimation::Idle;
@@ -70,20 +73,20 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         WorldRenderer& world, const RecoveryLevel& recovery,
                         const rules::PresetParty* starting, const GameplayLaunch* launch) {
     const Player spawn = launch ? launch->spawn : Player{};
-    const auto idle = gameplayPlacements(map, placements, spawn.cell);
+    auto* campaign = launch ? launch->campaign : nullptr;
+    const auto idle = gameplayPlacements(map, placements, spawn.cell, campaign);
     const std::uint32_t seed =
         launch ? launch->seed : chooseCampaignSeed(options.seed, {}, [] { return std::random_device{}(); });
     std::cout << "Gameplay seed: " << seed << '\n';
     bool inputArmed = false;
     Input input; // Keep edge latches across restart, so held confirmation never replays.
-    auto* campaign = launch ? launch->campaign : nullptr;
     for (;;) {
         auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
         auto current =
             campaign
                 ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, world)
                 : std::make_unique<PlayView>(
-                      map, catalog, idle, timings, world, seed, spawn, launch ? launch->enableAi : true,
+                      map, catalog, *idle, timings, world, seed, spawn, launch ? launch->enableAi : true,
                       recovery, starting, launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
                       launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
                       launch ? launch->arenaScenario : nullptr);

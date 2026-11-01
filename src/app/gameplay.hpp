@@ -2,12 +2,16 @@
 #include "app/options.hpp"
 #include "generation/diagnostic_view.hpp"
 #include "platform/presenter.hpp"
+#include <optional>
 namespace blobber {
 class WorldRenderer;
 class CampaignRun;
 struct ArenaScenario;
 class CampaignStore;
-NpcWorld gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn = Player{}.cell);
+// Standalone sessions start from idle placements. Campaigns already own restored
+// actors, so rebuilding initial placements against their current pose is invalid.
+std::optional<NpcWorld> gameplayPlacements(const Map& map, const NpcWorld& source, Cell spawn = Player{}.cell,
+                                           const CampaignRun* campaign = nullptr);
 enum class PlayOutcome { MainMenu, ArenaSetup, Quit };
 struct GameplayLaunch {
     Player spawn;

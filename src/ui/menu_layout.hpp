@@ -1,6 +1,7 @@
 #pragma once
 #include "ui/layout.hpp"
 namespace blobber::menuLayout {
+constexpr UiRect mainError{20, 328, 600, 25};
 constexpr UiRect search{20, 48, 250, 22};
 constexpr UiRect available(int i) {
     return {20 + (i % 3) * 130, 80 + (i / 3) * 112, 125, 108};

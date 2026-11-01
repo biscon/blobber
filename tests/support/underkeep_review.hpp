@@ -10,7 +10,7 @@
 #include <iostream>
 namespace blobber::test {
 inline void underkeepReview(const std::filesystem::path& source, const std::filesystem::path& output,
-                            bool corrections = false) {
+                            bool corrections = false, bool props = false) {
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Review output must be new");
     const auto catalog = loadRules(source / "rules/catalog.json");
@@ -70,7 +70,47 @@ inline void underkeepReview(const std::filesystem::path& source, const std::file
                 if (expectActor >= 0)
                     check(cpuActor > 10 && gpuActor > 10, "Resumed enemy is visible on CPU and GPU");
             };
-            if (corrections) {
+            if (props) {
+                const std::vector<std::string> room{"#########", "#.......#", "#.......#",
+                                                    "#.......#", "#.......#", "#.......#",
+                                                    "#.......#", "#.......#", "#########"};
+                for (auto kind : {DecorationKind::Chest, DecorationKind::Cage, DecorationKind::Rack}) {
+                    WorldDefinition world;
+                    world.assetPack = "underkeep";
+                    Decoration prop{{4, 4}, Heading::North, kind, 0, .5f, 0, .76f, .36f, .58f};
+                    if (kind == DecorationKind::Chest)
+                        prop.container = 0;
+                    world.decorations = {prop};
+                    const Map map(room, world);
+                    const Player initial{{4, 5}, Heading::North};
+                    NpcWorld empty(map, initial.cell, definitions.types, {});
+                    GameSession game(map, catalog, empty, 5, initial, false, definitions.timings);
+                    for (unsigned state = 0; state < (kind == DecorationKind::Chest ? 2u : 1u); ++state) {
+                        if (state) {
+                            game.restorePose(initial, false);
+                            check(bool(game.openContainer({game.loot().snapshot().world, 0})),
+                                  "Review opens chest");
+                        }
+                        const std::string prefix =
+                            std::string(decorationName(kind)) + (state ? "-open" : "-closed");
+                        for (unsigned h = 0; h < 4; ++h) {
+                            const auto heading = Heading(h);
+                            game.restorePose({prop.cell + forward(heading) * -2, heading}, false);
+                            capture(game, prefix + "-side-" + std::to_string(h),
+                                    kind == DecorationKind::Chest);
+                        }
+                        game.restorePose(initial, false);
+                        capture(game, prefix + "-close", kind == DecorationKind::Chest);
+                        game.setAnimated(true);
+                        game.move(Action::TurnLeft);
+                        for (unsigned frame = 0; frame < 5; ++frame) {
+                            game.update(.025, false);
+                            capture(game, prefix + "-motion-" + std::to_string(frame));
+                        }
+                        game.setAnimated(false);
+                    }
+                }
+            } else if (corrections) {
                 const std::vector<std::string> room{"#########", "#.......#", "#.......#",
                                                     "#.......#", "#.......#", "#.......#",
                                                     "#.......#", "#.......#", "#########"};

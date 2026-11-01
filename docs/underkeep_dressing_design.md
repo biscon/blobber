@@ -6,6 +6,9 @@ The user requested [scale, moss anchoring and combat-facing corrections](underke
 on 2026-11-01. That follow-up supersedes the original chest instance size and
 visibility identity below; the original delivery evidence remains historical.
 
+The [prop surface revision](underkeep_props_revision.md) supersedes the original
+mesh construction and UV mapping; see its before/after gallery for current art.
+
 ## Intent and art
 
 The opening three stone floors become the Underkeep biome: an abandoned fortress,

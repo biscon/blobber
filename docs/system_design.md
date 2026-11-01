@@ -1,5 +1,27 @@
 # System design
 
+Campaign Continue correction (implemented and verified, 2026-11-02): graphical startup must
+borrow the already restored CampaignRun session without rebuilding initial NPC
+placements against the saved party pose. A party may legitimately occupy a dead
+or moved NPC's original spawn. `gameplayPlacements` becomes a preparation-only
+optional result: absent when a campaign supplies the live session, otherwise the
+existing validated idle placements for a standalone/arena session. Keep saved
+definitions, current-actor collision validation and disk bytes unchanged. The
+existing [save design](procedural_campaign_save_design.md) applies; no schema or
+simulation change. Owned startup regressions cover save/restore at an old spawn,
+preserved live state and strict standalone spawn rejection. Verify a read-only
+copy of the reported save through application startup/view preparation. Main-menu
+errors use a solid inset panel and larger high-contrast text above the bottom
+border; other menu layout/input behavior remains. Focused CPU checks and a hidden
+application-owned error capture verify the correction, without desktop input.
+The owned startup regression and campaign-save smoke check pass; a read-only copy
+of the reported save loads/renders successfully, with original bytes unchanged.
+[Details and captures](procedural_campaign_save_design.md#graphical-continue-at-an-old-npc-spawn-2026-11-02).
+
+Underkeep prop art **approved (2026-11-01)**: [geometry and metric UVs](underkeep_props_revision.md),
+corrected to the dungeon’s 256 texels/cell after user review of the coarse version.
+Future authoring: [painted dungeon prop guide](prop_modelling_guide.md).
+
 Current work: [Underkeep dressing](underkeep_dressing_design.md) records the approved
 biome art, procedural relief, furniture occupancy and persistent treasure-chest
 delivery. Implementation and verification are recorded there; user visual acceptance is pending.

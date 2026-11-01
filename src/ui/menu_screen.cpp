@@ -151,7 +151,11 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
             p.clipped(draft->name.data(), x + 4, y + 64, 64, hudInk::gold, UiTextStyle::Small);
         }
     }
-    p.clipped(v.error.data(), 25, 351, 590, hudInk::red, UiTextStyle::Small);
+    if (v.error[0] && m.screen == MenuScreen::Main) {
+        p.box(menuLayout::mainError, hudInk::gold);
+        p.label(v.error.data(), menuLayout::mainError, {255, 198, 165, 255}, UiTextStyle::Heading);
+    } else
+        p.clipped(v.error.data(), 25, 351, 590, hudInk::red, UiTextStyle::Small);
     if (m.deletion) {
         p.fill({0, 0, 640, 360}, {0, 0, 0, 220});
         p.box({170, 55, 300, 250}, hudInk::gold);

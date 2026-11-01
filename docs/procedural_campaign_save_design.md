@@ -166,3 +166,53 @@ admission. Unrelated old saves remain byte-identical with no warning; matching s
 receive the durable terminal marker. Genuine read/write failures retain denial and
 retry. There is no migration. Owned regressions and verification are recorded in
 [dungeon flow polish](dungeon_flow_polish.md).
+
+## Graphical Continue at an old NPC spawn (2026-11-02)
+
+Implemented and verified; interactive user review remains. Continue correctly
+restored the run, but `runGameplay` unconditionally called `gameplayPlacements`,
+rebuilding immutable initial NPC placements against the saved player position.
+After killing or moving an NPC, that position can legitimately be its original
+spawn. The reported save had the party at depth 1, cell (32,25), the original
+spawn of three now-dead rats. This caused a graphical-startup rejection after
+ordinary store inspection and restore had succeeded. Prop asset changes were
+unrelated to the rejection.
+
+The preparation helper now returns no standalone placements when CampaignRun
+supplies its authoritative live session. `runGameplay` passes that same campaign
+to the helper and borrows its GameSession for the view. Standalone/arena sessions
+retain their validated initial placement copy and idle-clip normalization. No
+NPC validation is relaxed, no saved records are filtered, and no state is rebuilt
+or regenerated. Save schema/simulation/content identities remain unchanged.
+
+`gameplay_startup_tests` owns generated campaign fixtures and exercises an encoded
+save/restore at an old occupied spawn, reproduces the old rejection through the
+standalone branch, verifies corrected startup preserves canonical state, and
+keeps standalone overlap rejection and copy normalization covered. It links the
+graphical application preparation code but runs without a window. The new case
+initially waited on an automatically opening guardian gate after diagnostic
+deaths; disabling animation before fixture setup made that controlled boundary
+settled without weakening save safety.
+
+Main-menu errors now appear in an opaque inset panel at art coordinates
+(20,328,600,25), using 27px native bold heading text in a light peach colour.
+The panel clears the navigation hint and bottom frame. Existing error storage,
+button/input routing and non-main screens retain their behavior.
+
+Release and the user's Debug application built with two low-priority workers.
+Focused `campaign_save_smoke` passed in 1.24 s; `gameplay_startup` passed in 0.11 s.
+The latter alone was rerun after the fixture correction. No broad matrix,
+benchmark or balance route was run.
+
+The explicit hidden diagnostic mode `blobber_world_integration_gpu_tests ASSETS
+NEW_OUTPUT --campaign-startup-review COPIED_SAVE` loads through CampaignStore,
+executes the same startup helper, renders the restored GameView, and captures an
+injected main-menu error for readability review. It checks unchanged floor-state
+digest and copied save bytes, world resource release and GL errors. It passed
+using the actual reported save copied to `~/.cache/blobber-campaign-startup/`.
+The original save SHA256 remained
+`37e736762683aa00f9aa7bca688055cb06092a2638132d51040f6da596319eec`.
+[Inspected native captures](screenshots/campaign-startup/README.md) show the
+continued game and readable error panel. No OS input/focus automation or original
+save writes were used. Logs are `~/.cache/campaign-startup-{build,regression-build,
+debug-build,gpu}.log`. `git diff --check` passed.
