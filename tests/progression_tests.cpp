@@ -2,6 +2,7 @@
 #include "game/session.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include <cstring>
 #include <iostream>
 using namespace blobber;
 using namespace blobber::rules;
@@ -26,6 +27,7 @@ void identities() {
             start.characters[cls] = finishBuild(cat, draft, "advance." + std::to_string(cls));
         }
         GameSession s(map, cat, start, empty, 5, spellSpawn, false);
+        s.audioEvents().enabled = true;
         auto& p = s.party();
         std::array<SpellGrants, 4> originals{};
         std::array<int, 4> oldHp{};
@@ -43,6 +45,7 @@ void identities() {
             check(s.grantNextLevelExperience(), "development grant earns threshold");
             check(!s.grantNextLevelExperience(), "repeated grant before advancement is no-op");
             for (std::uint16_t i = 0; i < 4; ++i) {
+                s.audioEvents().clear();
                 const auto before = s.restToken();
                 auto r = chosen(s, {i});
                 auto bad = r;
@@ -50,9 +53,15 @@ void identities() {
                 check(!s.advance(bad), "forged choices reject");
                 check(p.character({i})->build.level == level - 1 && s.restToken() == before,
                       "failed commit is atomic");
+                check(bool(s.previewAdvancement(r)), "Advancement can be previewed without a bell");
+                check(s.audioEvents().count == 0, "Preview and rejected advancement are silent");
                 const auto result = s.advance(r);
                 check(bool(result), advancementMessage(result.error));
+                check(s.audioEvents().count == 1 &&
+                          std::strcmp(s.audioEvents().entries[0].cue, "advancement") == 0,
+                      "Successful advancement emits one bell; preview and rejection stay silent");
                 check(!s.advance(r), "repeat request cannot level twice");
+                check(s.audioEvents().count == 1, "Rejected repeated request cannot replay the bell");
                 const auto& c = *p.character({i});
                 check(c.build.id == start.characters[i].id && c.build.name == start.characters[i].name &&
                           c.build.portrait.index == start.characters[i].portrait.index &&

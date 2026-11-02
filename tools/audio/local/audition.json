@@ -1,0 +1,26 @@
+[
+  {
+    "name": "door",
+    "prompt": "A single heavy wooden door creaks open slowly, dry timber friction and one iron latch click. Close isolated recording, quiet background, no music.",
+    "duration": 4,
+    "seed": 410
+  },
+  {
+    "name": "potion",
+    "prompt": "One cork pops from a small glass bottle, followed by a short liquid glug as a potion is drunk. Close dry foley, no speech or music.",
+    "duration": 3,
+    "seed": 411
+  },
+  {
+    "name": "bones",
+    "prompt": "A small pile of dry bones collapses on stone, irregular hollow clacks and a brief rattle. Close isolated foley, no music.",
+    "duration": 3,
+    "seed": 412
+  },
+  {
+    "name": "hurt",
+    "prompt": "One brief human gasp of pain after a sudden hit. A breathy startled reaction, not speech, not a growl, no music.",
+    "duration": 2,
+    "seed": 413
+  }
+]

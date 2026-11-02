@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Offline Csound authoring. Only generated/ and authoring reports are writable outputs."""
-import argparse, hashlib, html, json, os, pathlib, subprocess, tempfile, wave
+import argparse, hashlib, html, json, os, pathlib, random, subprocess, tempfile, wave
 import numpy as np
 from scipy.io import wavfile
 ROOT=pathlib.Path(__file__).resolve().parents[2]
@@ -19,6 +19,29 @@ def metrics(path,loop=False):
     if loop: assert seam<.04,(path,seam)
     else: assert max(np.max(np.abs(data[:1])),np.max(np.abs(data[-1:])))<.02,(path,'endpoints')
     return dict(seconds=len(data)/48000,channels=channels,peak_dbfs=20*np.log10(peak),rms_dbfs=20*np.log10(rms),dc=dc,seam=seam,sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+
+def score_for(name, recipe, index, loop):
+    """Schedule Csound layers; randomness changes strikes, not musical key."""
+    duration=recipe['duration']; seed=recipe['seed']+index*17
+    if 'layers' in recipe:
+        rng=random.Random(seed);lines=[]
+        for layer in recipe['layers']:
+            start=layer.get('start',0)+rng.uniform(0,layer.get('timing_spread',0))
+            length=layer['duration']
+            if start<0 or length<=0 or start+length>duration+1e-6:
+                raise ValueError(f'{name}: layer falls outside export duration')
+            frequency=layer['frequency']*(1+rng.uniform(-1,1)*layer.get('frequency_spread',0))
+            tone=layer.get('tone',1)*(1+rng.uniform(-1,1)*layer.get('tone_spread',.06))
+            gain=layer.get('gain',1)
+            lines.append(f'i {layer["instrument"]} {start:.6f} {length:.6f} {frequency:.6f} {tone:.6f} {gain:.6f}')
+        # Silence to the declared length keeps tails/export endpoints consistent.
+        return '\n'.join(lines)+f'\nf 0 {duration}\n'
+    frequency=recipe['frequency']*(.94+.04*index)
+    score=f'i {recipe["instrument"]} 0 {duration+(.25 if loop else 0)} {frequency} {recipe["tone"]} 1\n'
+    if name=='ambience':
+        score+=''.join(f'i 1 {t} .6 {620+(i%3)*213} .1 .055\n' for i,t in enumerate([7,18.2,19.7,36,51]))
+        score+='i 3 28 1.7 32 .3 .025\n'
+    return score
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--cue',action='append');ap.add_argument('--variant');ap.add_argument('--dry-run',action='store_true');ap.add_argument('--validate',action='store_true');args=ap.parse_args()
     bank=json.loads((AUDIO/'bank.json').read_text());recipes=json.loads((ROOT/'tools/audio/recipes.json').read_text())['cues']
@@ -39,12 +62,8 @@ def main():
                 if output.parent!=AUDIO/'generated':raise ValueError('Refusing non-generated output')
                 if args.dry_run:print(name,v['id'],output);continue
                 if not args.validate:
-                    seed=r['seed']+index*17;freq=r['frequency']*(.94+.04*index);duration=r['duration'];loop=c.get('loop',False)
-                    length=duration+(.25 if loop else 0)
-                    score=f'i {r["instrument"]} 0 {length} {freq} {r["tone"]} 1\n'
-                    if name=='ambience':
-                        score+=''.join(f'i 1 {t} .6 {620+(i%3)*213} .1 .055\n' for i,t in enumerate([7,18.2,19.7,36,51]))
-                        score+='i 3 28 1.7 32 .3 .025\n'
+                    seed=r['seed']+index*17;duration=r['duration'];loop=c.get('loop',False)
+                    score=score_for(name,r,index,loop)
                     # p6 is per-layer level; the sound design itself stays in Csound.
                     lines=[]
                     for line in template.splitlines():
@@ -64,7 +83,7 @@ def main():
                         wavfile.write(raw,rate,y.astype(np.float32))
                     output.parent.mkdir(exist_ok=True)
                     final=tmp/'final.wav'
-                    effects=['highpass','35','gain','-n','-6']
+                    effects=['highpass','35','gain','-n',str(r.get('peak_dbfs',-6))]
                     if not loop:effects+=['fade','t','.002',str(duration),'.015']
                     run(['sox','-R',str(raw),'-r','48000','-b','16',str(final)]+effects)
                     m=metrics(final,loop)
@@ -75,10 +94,14 @@ def main():
             print(name,flush=True)
     if args.dry_run:return
     reportpath.write_text(json.dumps(report,indent=2)+'\n')
-    rows=['<!doctype html><meta charset="utf-8"><title>Blobber audio audition</title><style>body{background:#151d1d;color:#ddd;font:16px sans-serif;max-width:1000px;margin:30px auto}section{border-top:1px solid #789;padding:12px}audio{width:300px}small{color:#dcc58f}</style><h1>Underkeep sound bank</h1><p>Generated provisional sound design. Creature voices and creaks need listening review. Use game Settings to assess mix balance.</p>']
+    revised=[n for n in cues if recipes[n].get('revision')==2]
+    rows=['<!doctype html><meta charset="utf-8"><title>Blobber audio audition</title><style>body{background:#151d1d;color:#ddd;font:16px sans-serif;max-width:1000px;margin:30px auto}section{border-top:1px solid #789;padding:12px}audio{width:300px}small{color:#dcc58f}a{color:#acd}</style><h1>Underkeep sound bank</h1><p>Generated provisional sound design. Creature voices and creaks need listening review. Use game Settings to assess mix balance.</p>']
+    if revised:
+        rows.append('<h2>Revised synth palette — start here</h2><p>'+ ' · '.join(f'<a href="#{n}">{html.escape(n)}</a>' for n in ['advancement']+[n for n in revised if n!='advancement'])+'</p>')
     playlist=['#EXTM3U'];review=[]
     for name,c in cues.items():
-        rows.append('<section><h2>'+html.escape(name)+'</h2>')
+        rows.append('<section id="'+html.escape(name)+'"><h2>'+html.escape(name)+'</h2>')
+        if recipes[name].get('description'):rows.append('<p>'+html.escape(recipes[name]['description'])+'</p>')
         if recipes[name]['review']:review.append(name);rows.append('<small>Listening review: realism / timbre</small><br>')
         for v in c['variants']:
             rows.append(f'<label>{v["id"]} <audio controls preload="none" src="{html.escape(v["path"])}"></audio></label>');playlist.append(v['path'])

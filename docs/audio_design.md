@@ -2,6 +2,11 @@
 
 Status: implemented and mechanically verified (2026-11-02). Subjective listening and interactive acceptance remain user review.
 
+Listening feedback found the initial bank too repetitive and the voices unsuitable.
+The [authoring revision](audio_revision.md) replaces selected synth cues and adds
+an isolated local AI audition workflow. Mechanical checks below are historical
+delivery evidence, not acceptance of the initial sounds.
+
 The application owns a prepared audio bank and raylib device. Simulation publishes
 transient, bounded semantic observations, never raylib resources. Audio consumes
 neither combat nor AI randomness, and has no save/hash representation. A compact

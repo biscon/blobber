@@ -3136,12 +3136,29 @@
     "variant": "01",
     "seed": 4333,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.5,
       "seed": 4333,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two small bright key-ring tinkles.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1760,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        },
+        {
+          "instrument": 8,
+          "frequency": 2637,
+          "duration": 0.28,
+          "start": 0.11,
+          "gain": 0.4,
+          "tone": 1.4
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3150,27 +3167,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.5,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.1944473710441,
-      "dc": 0.0002885356093897964,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -25.6129658422241,
+      "dc": 3.88336181640625e-06,
       "seam": 0.0,
-      "sha256": "a8b3d5eb45e20ff9e7b2b258a86b8bde0d67e6e8d3ff880af3dbc7eb83ab750e"
+      "sha256": "8ebc9213501348aa80d1a21d77169323ab68649d1e05dc0d97600f6bbe0772ad"
     },
-    "recipe_sha256": "2d15eb9d2aa56808a8d0ec7422ffa05d1d237d34260429b7c703505717a66aba"
+    "recipe_sha256": "7412e7eb38b1b33af1081963eb3839af400178d51e6eda4a7c6c60595796d5fc"
   },
   "generated/key.pickup_02.wav": {
     "cue": "key.pickup",
     "variant": "02",
     "seed": 4350,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.5,
       "seed": 4333,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two small bright key-ring tinkles.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1760,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        },
+        {
+          "instrument": 8,
+          "frequency": 2637,
+          "duration": 0.28,
+          "start": 0.11,
+          "gain": 0.4,
+          "tone": 1.4
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3179,27 +3213,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.5,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.473828361928735,
-      "dc": 0.0002943212335759943,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -25.667985671730918,
+      "dc": 3.897349039713542e-06,
       "seam": 0.0,
-      "sha256": "262b106dcb1ea3ffb040d0b8f0e39ec47a1bbad4b0a50defa70a8b56a7bff433"
+      "sha256": "ec43a620a1fb5ed4e3d71f60e00a0d1641f78296a9b3c59e02edf527d227bf07"
     },
-    "recipe_sha256": "013837b0e85879a410c283d217cfe47e4b5f6ff4e0e96a051dfdb21439820164"
+    "recipe_sha256": "0465db7f96b4384ddcb82ed3164b2db129491519b0c7b2cd4f41cc293cf691c0"
   },
   "generated/key.pickup_03.wav": {
     "cue": "key.pickup",
     "variant": "03",
     "seed": 4367,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.5,
       "seed": 4333,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two small bright key-ring tinkles.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1760,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        },
+        {
+          "instrument": 8,
+          "frequency": 2637,
+          "duration": 0.28,
+          "start": 0.11,
+          "gain": 0.4,
+          "tone": 1.4
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3208,27 +3259,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.5,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.603409223507033,
-      "dc": 0.00025904395363547585,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -25.554898567923185,
+      "dc": 3.8604736328125e-06,
       "seam": 0.0,
-      "sha256": "49567fbaa597f0259bb8f8454883e90aeb16ced616555d9596de2f6829302c05"
+      "sha256": "4de7d63365ccd48bfa8f28774ebc3421f11766f64e7b55c21c7a42407b037d45"
     },
-    "recipe_sha256": "0db61949f3ec89ba4fa8eb0bf4f420d244b46244ac442dd8a77c357b27ecbe17"
+    "recipe_sha256": "c0bf8916822469ceb9c8d73e6e99363623345e3784f9879ea2581084e69dd420"
   },
   "generated/loot.pickup_01.wav": {
     "cue": "loot.pickup",
     "variant": "01",
     "seed": 4434,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.47,
       "seed": 4434,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A brief glass sparkle for collected treasure, brighter than UI confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1318.51,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 1.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 1975.53,
+          "duration": 0.27,
+          "start": 0.12,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3237,27 +3305,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.47,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.046331443383536,
-      "dc": 0.0003168337272875237,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.208860046960794,
+      "dc": 4.944226420517509e-06,
       "seam": 0.0,
-      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+      "sha256": "4fa4ca93743d06d6173c54dfe3ab3e6fd00803a5c55d67dfa87c72c2306d85b1"
     },
-    "recipe_sha256": "05ff9042b198dea761876773be484c647526cff3b2ac6c3b637d12a20eecf3d3"
+    "recipe_sha256": "dc4380d094fe457cda20830905f25a914300098d03c05a7f039eaac98913a3bb"
   },
   "generated/loot.pickup_02.wav": {
     "cue": "loot.pickup",
     "variant": "02",
     "seed": 4451,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.47,
       "seed": 4434,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A brief glass sparkle for collected treasure, brighter than UI confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1318.51,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 1.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 1975.53,
+          "duration": 0.27,
+          "start": 0.12,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3266,27 +3351,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.47,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.467586186286756,
-      "dc": 0.0003196138324159564,
+      "rms_dbfs": -24.073383774677637,
+      "dc": 5.0172738149656475e-06,
       "seam": 0.0,
-      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+      "sha256": "d393ae49a4f38330c85fa86a428171b6b20a3d4c4ea25407e131712a95313dba"
     },
-    "recipe_sha256": "922ee1191ae13cfd86081aec19acb636a58970f5f206e5adf7337e290679b6c6"
+    "recipe_sha256": "c13f37bf70a5067cefd6cf1134401857cae78d8f76cb87a4a01a6998c0e38d3d"
   },
   "generated/loot.pickup_03.wav": {
     "cue": "loot.pickup",
     "variant": "03",
     "seed": 4468,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.47,
       "seed": 4434,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A brief glass sparkle for collected treasure, brighter than UI confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1318.51,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 1.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 1975.53,
+          "duration": 0.27,
+          "start": 0.12,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3295,27 +3397,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.47,
       "channels": 1,
-      "peak_dbfs": -5.999419971943649,
-      "rms_dbfs": -22.91512460637305,
-      "dc": 0.0003045139890728575,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.32287622396377,
+      "dc": 4.7656661229776155e-06,
       "seam": 0.0,
-      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+      "sha256": "67d31dd3f635ce907a3d50127d1c1505b83bada0f16d8b45762de61602744574"
     },
-    "recipe_sha256": "640885ed74af9031fadf933a37608948316ae8df43b57c093cf073115fdb2e19"
+    "recipe_sha256": "75bc9173f0a71c9a8412f40a9b8bef86cbacde2dac5084bd3e6341ba00e1d996"
   },
   "generated/inventory.equip_01.wav": {
     "cue": "inventory.equip",
     "variant": "01",
     "seed": 4535,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4535,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A leather slide ending in a close double buckle snap.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 3200,
+          "duration": 0.2,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1100,
+          "duration": 0.04,
+          "start": 0.15,
+          "gain": 0.55,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1750,
+          "duration": 0.035,
+          "start": 0.21,
+          "gain": 0.8,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3324,27 +3451,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.3,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.1944473710441,
-      "dc": 0.0002885356093897964,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.051653847793798,
+      "dc": 1.8013848198784722e-07,
       "seam": 0.0,
-      "sha256": "a8b3d5eb45e20ff9e7b2b258a86b8bde0d67e6e8d3ff880af3dbc7eb83ab750e"
+      "sha256": "e52cf680553babe8851199c4fbbe1171e9f786f8bbb88345eff7cebb7ea00887"
     },
-    "recipe_sha256": "5877a0513590e67bc822f160d8267eefe562e90b457a24d7124de968a7da3190"
+    "recipe_sha256": "d1112321f339a1f83ffb4bf6a6bead1d012a19a195297a00c3072130ed378ceb"
   },
   "generated/inventory.equip_02.wav": {
     "cue": "inventory.equip",
     "variant": "02",
     "seed": 4552,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4535,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A leather slide ending in a close double buckle snap.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 3200,
+          "duration": 0.2,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1100,
+          "duration": 0.04,
+          "start": 0.15,
+          "gain": 0.55,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1750,
+          "duration": 0.035,
+          "start": 0.21,
+          "gain": 0.8,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3353,27 +3505,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.3,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.473828361928735,
-      "dc": 0.0002943212335759943,
+      "rms_dbfs": -21.344078320103563,
+      "dc": 1.5470716688368055e-07,
       "seam": 0.0,
-      "sha256": "262b106dcb1ea3ffb040d0b8f0e39ec47a1bbad4b0a50defa70a8b56a7bff433"
+      "sha256": "b9e57fe27975e44c67eefba1041e606564ebd44a72fbfd0051cd7468bf38a72e"
     },
-    "recipe_sha256": "5c1810052b0597043e6ab03faef073d79427aa3ccc74b1b2d54db3495d10ad8d"
+    "recipe_sha256": "6b6d73d0e7ccd044e03ab89b0d491df49b38dca1ae05e147083f8bd059b297f8"
   },
   "generated/inventory.equip_03.wav": {
     "cue": "inventory.equip",
     "variant": "03",
     "seed": 4569,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4535,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A leather slide ending in a close double buckle snap.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 3200,
+          "duration": 0.2,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1100,
+          "duration": 0.04,
+          "start": 0.15,
+          "gain": 0.55,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1750,
+          "duration": 0.035,
+          "start": 0.21,
+          "gain": 0.8,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3382,27 +3559,36 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.3,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.603409223507033,
-      "dc": 0.00025904395363547585,
+      "rms_dbfs": -21.85922688405899,
+      "dc": 8.265177408854167e-08,
       "seam": 0.0,
-      "sha256": "49567fbaa597f0259bb8f8454883e90aeb16ced616555d9596de2f6829302c05"
+      "sha256": "df1b99b37e38b5065367d13a4c5f1780c3f8171fa8ff729831f9f3bfec28b859"
     },
-    "recipe_sha256": "afad41571b961226671b37be543af645841c1b17569532172a9e594faf7b1f05"
+    "recipe_sha256": "e4b4914544f10ed2a63701e50d4bc3025f965fc0a68b941184b5d7d50bc755ed"
   },
   "generated/inventory.move_01.wav": {
     "cue": "inventory.move",
     "variant": "01",
     "seed": 4636,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.09,
       "seed": 4636,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A dry wooden tick for a small inventory move.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 630,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3411,27 +3597,36 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.09,
       "channels": 1,
       "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.046331443383536,
-      "dc": 0.0003168337272875237,
+      "rms_dbfs": -24.54912760118657,
+      "dc": 0.0008412396466290509,
       "seam": 0.0,
-      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+      "sha256": "729eb5e3fbabc72cb950aa6c932417b9480901de9db9a5357021009d45eb7369"
     },
-    "recipe_sha256": "5636a0706776460d1e59bb69b6258b4891233a6d7c6a7b4f96af3a43b6ca1073"
+    "recipe_sha256": "df862d182ac2c8244eba6f4a5d4b24746a0d464c73672a25799b0753290f0aa6"
   },
   "generated/inventory.move_02.wav": {
     "cue": "inventory.move",
     "variant": "02",
     "seed": 4653,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.09,
       "seed": 4636,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A dry wooden tick for a small inventory move.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 630,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3440,27 +3635,36 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.09,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.467586186286756,
-      "dc": 0.0003196138324159564,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -24.547641194943232,
+      "dc": 0.0008421297426576968,
       "seam": 0.0,
-      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+      "sha256": "2fea69e95a140f22e8bf0b7124cd75de5cb6432ca097501b2770008d63001dd9"
     },
-    "recipe_sha256": "3571b0731906cf007f4130bcfccf73eeb6623f91ef5fd629953b056d23d24b5c"
+    "recipe_sha256": "b2cadd9a5712646dd13ec593c4d2fe89a49cd3630bd6d6ed6ae868fc761f25e2"
   },
   "generated/inventory.move_03.wav": {
     "cue": "inventory.move",
     "variant": "03",
     "seed": 4670,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.09,
       "seed": 4636,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A dry wooden tick for a small inventory move.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 630,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3469,27 +3673,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.09,
       "channels": 1,
-      "peak_dbfs": -5.999419971943649,
-      "rms_dbfs": -22.91512460637305,
-      "dc": 0.0003045139890728575,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -24.430958585009137,
+      "dc": 0.0008985660694263599,
       "seam": 0.0,
-      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+      "sha256": "06cf1fd66c59bcb732d2cf2e5666d5f57eb05d6451bf51fe781c15655b8da48e"
     },
-    "recipe_sha256": "495879619637f1dc8810474ce5f86693465cb9c16ca6d4b1d19239b40c213ac9"
+    "recipe_sha256": "b5efd3ac6e4b38f4ac82322179516d378433af9d3b88c6aa3f1ed8e4878deccc"
   },
   "generated/inventory.drop_01.wav": {
     "cue": "inventory.drop",
     "variant": "01",
     "seed": 4737,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4737,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A soft fabric movement followed by a low padded placement.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 1700,
+          "duration": 0.18,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 170,
+          "duration": 0.13,
+          "start": 0.13,
+          "gain": 1,
+          "tone": 1.2
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3498,27 +3719,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.3,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.046331443383536,
-      "dc": 0.0003168337272875237,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.608075097005166,
+      "dc": 1.3563368055555556e-07,
       "seam": 0.0,
-      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+      "sha256": "5e94aaad0e9929429ec641462edbc95b506f1da590247004ed759e39828cc594"
     },
-    "recipe_sha256": "b5fd4f4198bca4ab583c52dc3225864cdbb509abd396bd3f6ae9809c04b0e985"
+    "recipe_sha256": "e71934fb6d0beff5d660da8e999ed560171d8e36f52747f2cc7e18997c082064"
   },
   "generated/inventory.drop_02.wav": {
     "cue": "inventory.drop",
     "variant": "02",
     "seed": 4754,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4737,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A soft fabric movement followed by a low padded placement.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 1700,
+          "duration": 0.18,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 170,
+          "duration": 0.13,
+          "start": 0.13,
+          "gain": 1,
+          "tone": 1.2
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3527,27 +3765,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.3,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.467586186286756,
-      "dc": 0.0003196138324159564,
+      "rms_dbfs": -20.920963247866467,
+      "dc": 4.874335394965278e-08,
       "seam": 0.0,
-      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+      "sha256": "79c6a6fbb47cb1a72eef7fb5b72564c801d128b65f0547fe9f97752df87396eb"
     },
-    "recipe_sha256": "8ed98270d7a3596c2ff96dce3bdd1ff110207a948c0a56a940d2d287c4c920ca"
+    "recipe_sha256": "6f0c18b20eb0545da83c2ad42fe78120ad53f06e71bf6531a8225a74d9dbb67f"
   },
   "generated/inventory.drop_03.wav": {
     "cue": "inventory.drop",
     "variant": "03",
     "seed": 4771,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4737,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A soft fabric movement followed by a low padded placement.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 1700,
+          "duration": 0.18,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 170,
+          "duration": 0.13,
+          "start": 0.13,
+          "gain": 1,
+          "tone": 1.2
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -3556,102 +3811,201 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.3,
       "channels": 1,
-      "peak_dbfs": -5.999419971943649,
-      "rms_dbfs": -22.91512460637305,
-      "dc": 0.0003045139890728575,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.4898891028308,
+      "dc": 1.3563368055555556e-07,
       "seam": 0.0,
-      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+      "sha256": "d44102748bccda68cb44b4c276985ce172c87bd12d52c23d6dd8d1e2f2f8d0f2"
     },
-    "recipe_sha256": "aba4d12f49a2b7a1c0d072fb3f96ab8692ddb529ed0e2bb3a1a8bd97c02158e8"
+    "recipe_sha256": "2213eb0c3b0df2ab253de0109ec8d6f096f47dabc37eed7a5ac69eab2aa682d8"
   },
   "generated/potion_01.wav": {
     "cue": "potion",
     "variant": "01",
     "seed": 4838,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.78,
       "seed": 4838,
-      "review": false
+      "review": true,
+      "revision": 2,
+      "description": "Provisional cork pop and irregular hollow liquid bubbles; listening review needed for believable drinking.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 520,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 12,
+          "frequency": 390,
+          "duration": 0.14,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 12,
+          "frequency": 265,
+          "duration": 0.18,
+          "start": 0.29,
+          "gain": 1,
+          "tone": 0.65
+        },
+        {
+          "instrument": 12,
+          "frequency": 440,
+          "duration": 0.12,
+          "start": 0.52,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
       "sox": "sox:      SoX_ng v14.8.0.1"
     },
     "generated": true,
-    "review": false,
+    "review": true,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.78,
       "channels": 1,
       "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.046331443383536,
-      "dc": 0.0003168337272875237,
+      "rms_dbfs": -24.95700751264549,
+      "dc": 5.699304433969351e-05,
       "seam": 0.0,
-      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+      "sha256": "e5d4746c19330c6dd77af2b9c9f92f9bb4b97062ecc29186ce25bf0f8ae2af20"
     },
-    "recipe_sha256": "105596355d8ac687cc1f00d87e532fa1b211aa96439a1ec67cca42d672ad1fea"
+    "recipe_sha256": "b1fafe64700b2b85dbf227d90a17f36f9cad0a38f96022b7f4962adb9c2d9863"
   },
   "generated/potion_02.wav": {
     "cue": "potion",
     "variant": "02",
     "seed": 4855,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.78,
       "seed": 4838,
-      "review": false
+      "review": true,
+      "revision": 2,
+      "description": "Provisional cork pop and irregular hollow liquid bubbles; listening review needed for believable drinking.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 520,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 12,
+          "frequency": 390,
+          "duration": 0.14,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 12,
+          "frequency": 265,
+          "duration": 0.18,
+          "start": 0.29,
+          "gain": 1,
+          "tone": 0.65
+        },
+        {
+          "instrument": 12,
+          "frequency": 440,
+          "duration": 0.12,
+          "start": 0.52,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
       "sox": "sox:      SoX_ng v14.8.0.1"
     },
     "generated": true,
-    "review": false,
+    "review": true,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.78,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.467586186286756,
-      "dc": 0.0003196138324159564,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.013746215685913,
+      "dc": 5.571169730944511e-05,
       "seam": 0.0,
-      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+      "sha256": "c0738cec8acfbcc00d5b4ba2120e3324a1c33a376bdb2ad4f14b6c1a478cbba7"
     },
-    "recipe_sha256": "5fb77cfd113119ef0751667379707aa7b9baa4156ee0cb026ef687e196fda4e3"
+    "recipe_sha256": "63773368770f51534b46f957b122077a5ea8e04d6fa3429ff4ed33c5f55aa228"
   },
   "generated/potion_03.wav": {
     "cue": "potion",
     "variant": "03",
     "seed": 4872,
     "recipe": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.78,
       "seed": 4838,
-      "review": false
+      "review": true,
+      "revision": 2,
+      "description": "Provisional cork pop and irregular hollow liquid bubbles; listening review needed for believable drinking.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 520,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 12,
+          "frequency": 390,
+          "duration": 0.14,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 12,
+          "frequency": 265,
+          "duration": 0.18,
+          "start": 0.29,
+          "gain": 1,
+          "tone": 0.65
+        },
+        {
+          "instrument": 12,
+          "frequency": 440,
+          "duration": 0.12,
+          "start": 0.52,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
       "sox": "sox:      SoX_ng v14.8.0.1"
     },
     "generated": true,
-    "review": false,
+    "review": true,
     "metrics": {
-      "seconds": 0.22,
+      "seconds": 0.78,
       "channels": 1,
-      "peak_dbfs": -5.999419971943649,
-      "rms_dbfs": -22.91512460637305,
-      "dc": 0.0003045139890728575,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -24.913095703087258,
+      "dc": 5.745683979784322e-05,
       "seam": 0.0,
-      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+      "sha256": "c860a8fc9d7eeb4ac50c6b67b9103c55570a1c2b388b23f8762cd280730ee243"
     },
-    "recipe_sha256": "cc5d2c2ab2c83bbe3f65c7b439aa7b8f25dab9d654fa5afb2c06a104e0ec35c0"
+    "recipe_sha256": "c8de8e045c4e0ae9f6967e702933229ccc9797b1107793cc9a61b4992df79781"
   },
   "generated/weapon.blunt_01.wav": {
     "cue": "weapon.blunt",
@@ -4267,12 +4621,37 @@
     "variant": "01",
     "seed": 5646,
     "recipe": {
-      "instrument": 5,
-      "frequency": 700,
-      "tone": 1.6,
-      "duration": 0.55,
+      "duration": 0.85,
       "seed": 5646,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Clear high chimes above a warm tonal halo.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1567.98,
+          "duration": 0.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.9
+        },
+        {
+          "instrument": 9,
+          "frequency": 2349.32,
+          "duration": 0.6,
+          "start": 0.1,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 783.99,
+          "duration": 0.8,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4281,27 +4660,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.55,
+      "seconds": 0.85,
       "channels": 1,
-      "peak_dbfs": -5.999419971943649,
-      "rms_dbfs": -25.664294941148324,
-      "dc": 3.9915605024857955e-06,
-      "seam": 0.0,
-      "sha256": "0f53339fe8a7adfc7c9d975169fff7b7bd4ed089afc3eede6b806aa7ca8a5f32"
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.77906934323711,
+      "dc": 2.0876117781096813e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "e6b2466e49c6173214f1e2d6c102cb2c3ffb845da1c3cb0305368874d508b684"
     },
-    "recipe_sha256": "867b5688f4f60db4ce0b528889334734749f3405c9743ff079ffab8d871c528d"
+    "recipe_sha256": "5cd98d78f8fe5fc29677b78b24e0b82dfa8dc49f9e9634fd9c053d8a9a723cc9"
   },
   "generated/radiant_02.wav": {
     "cue": "radiant",
     "variant": "02",
     "seed": 5663,
     "recipe": {
-      "instrument": 5,
-      "frequency": 700,
-      "tone": 1.6,
-      "duration": 0.55,
+      "duration": 0.85,
       "seed": 5646,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Clear high chimes above a warm tonal halo.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1567.98,
+          "duration": 0.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.9
+        },
+        {
+          "instrument": 9,
+          "frequency": 2349.32,
+          "duration": 0.6,
+          "start": 0.1,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 783.99,
+          "duration": 0.8,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4310,27 +4714,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.55,
+      "seconds": 0.85,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.221867800360673,
-      "dc": 3.613558682528409e-06,
-      "seam": 0.0,
-      "sha256": "5721fb98872a2bdb0c286f4355c447cadd3c261e5dc7a40c7f4a8cc094202914"
+      "rms_dbfs": -21.62142841495616,
+      "dc": 2.129498650045956e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "3602990106f1ef30fd244633f9bfafe93bd9c97f136e0f885f8e7939fe1071b4"
     },
-    "recipe_sha256": "bce17d42d6175429d391acc74e7217a4f79e260e354b461a0db1d0453fcb9ca5"
+    "recipe_sha256": "80f6caa607ee0ff064edb5b932f428a00f36b3bc839865666c3c71019ff2e077"
   },
   "generated/radiant_03.wav": {
     "cue": "radiant",
     "variant": "03",
     "seed": 5680,
     "recipe": {
-      "instrument": 5,
-      "frequency": 700,
-      "tone": 1.6,
-      "duration": 0.55,
+      "duration": 0.85,
       "seed": 5646,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Clear high chimes above a warm tonal halo.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1567.98,
+          "duration": 0.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.9
+        },
+        {
+          "instrument": 9,
+          "frequency": 2349.32,
+          "duration": 0.6,
+          "start": 0.1,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 783.99,
+          "duration": 0.8,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4339,27 +4768,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.55,
+      "seconds": 0.85,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -25.43633659551989,
-      "dc": 3.104932380445076e-06,
-      "seam": 0.0,
-      "sha256": "812c86b8cbfe7dec638d17fcbc19094b54dc0492e135130cff8c5d1fc3a433ff"
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.695011020093816,
+      "dc": 2.0935956169577206e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "7b9ce33f89f4c991e57d0a7c32062292d5de442ee8185e545a00daeadc6cf38a"
     },
-    "recipe_sha256": "da9ce766949783305f602df3fe9a43d340150e529bac583163f2e129d0a950aa"
+    "recipe_sha256": "68b7a2653bb0bdf6097f4d61c806569b285eb6b9d8450da9e5c227344e8e3506"
   },
   "generated/healing_01.wav": {
     "cue": "healing",
     "variant": "01",
     "seed": 5747,
     "recipe": {
-      "instrument": 5,
-      "frequency": 510,
-      "tone": 1.25,
-      "duration": 0.8,
+      "duration": 0.95,
       "seed": 5747,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Warm sustained harmonic healing with a soft attack and light shimmer.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 523.25,
+          "duration": 0.9,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 659.25,
+          "duration": 0.78,
+          "start": 0.08,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1046.5,
+          "duration": 0.4,
+          "start": 0.4,
+          "gain": 0.15,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4368,27 +4822,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.8,
+      "seconds": 0.95,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.628099272464752,
-      "dc": 1.8302599589029948e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "58124ba71bb22f6ebf23b3c4b99faee13abeeb564b5d1dc56b83f857f049a778"
+      "rms_dbfs": -17.29141262792987,
+      "dc": 1.3184129146107457e-07,
+      "seam": 0.0,
+      "sha256": "db25ba38c1d4127c7bc3657f2848149f82fde587949148bd62fb7ab6c984cb79"
     },
-    "recipe_sha256": "6cf554fecad6e95a02abda1e3d083c324b268e19bb3c5aac8eae715a190f3bbb"
+    "recipe_sha256": "a564a9a883c1abfba65011f5b48e0281c7c18cbec4f2be790c13969345a9f6d1"
   },
   "generated/healing_02.wav": {
     "cue": "healing",
     "variant": "02",
     "seed": 5764,
     "recipe": {
-      "instrument": 5,
-      "frequency": 510,
-      "tone": 1.25,
-      "duration": 0.8,
+      "duration": 0.95,
       "seed": 5747,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Warm sustained harmonic healing with a soft attack and light shimmer.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 523.25,
+          "duration": 0.9,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 659.25,
+          "duration": 0.78,
+          "start": 0.08,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1046.5,
+          "duration": 0.4,
+          "start": 0.4,
+          "gain": 0.15,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4397,27 +4876,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.8,
+      "seconds": 0.95,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -26.056369782175874,
-      "dc": 2.2403399149576823e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "5eb8f58414a5afe8aca1e720e00b53133436a9878235464b1c90a1408c9b1ab9"
+      "rms_dbfs": -17.345643113162296,
+      "dc": 1.586110968338816e-07,
+      "seam": 0.0,
+      "sha256": "989ef7cabf434fc7c87d21be96e8dc4d8c43676db7bbeec3c4814bd7df990b5f"
     },
-    "recipe_sha256": "8d803cdd51527ffdcc249b51de6d15792aa592964b8bf468b8bc97d0f664b931"
+    "recipe_sha256": "9fde085504c65a6a21abc27f5224ae122a571a946680ae0fc3a34687e2322d07"
   },
   "generated/healing_03.wav": {
     "cue": "healing",
     "variant": "03",
     "seed": 5781,
     "recipe": {
-      "instrument": 5,
-      "frequency": 510,
-      "tone": 1.25,
-      "duration": 0.8,
+      "duration": 0.95,
       "seed": 5747,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Warm sustained harmonic healing with a soft attack and light shimmer.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 523.25,
+          "duration": 0.9,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 659.25,
+          "duration": 0.78,
+          "start": 0.08,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1046.5,
+          "duration": 0.4,
+          "start": 0.4,
+          "gain": 0.15,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4426,15 +4930,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.8,
+      "seconds": 0.95,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.090076736181555,
-      "dc": 3.1391779581705728e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "836583b61081bd2180b9df4402519d3f0bc09df4d208fb7fd314da828ce27dea"
+      "rms_dbfs": -17.264554980553303,
+      "dc": 1.693190189830044e-07,
+      "seam": 0.0,
+      "sha256": "d4702df68236a98d704b90b99a3464bae70a355a68f2b7dc2d2c61786223c19e"
     },
-    "recipe_sha256": "bc8ff053ba47da9b931e691bb32990b11345aa53700db9d507a1485609eba543"
+    "recipe_sha256": "a595e7319abc15eae8ae173be166d0c2dfbf41f7f4c173ae287a94fddaae63c7"
   },
   "generated/dark_01.wav": {
     "cue": "dark",
@@ -4615,12 +5119,45 @@
     "variant": "01",
     "seed": 6050,
     "recipe": {
-      "instrument": 5,
-      "frequency": 1400,
-      "tone": 0.55,
-      "duration": 0.55,
+      "duration": 0.65,
       "seed": 6050,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Brittle glass-like tinkling over a brief dry frost hiss.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 2093,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 2
+        },
+        {
+          "instrument": 9,
+          "frequency": 3136,
+          "duration": 0.28,
+          "start": 0.055,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 6500,
+          "duration": 0.42,
+          "start": 0.1,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 2489,
+          "duration": 0.22,
+          "start": 0.21,
+          "gain": 0.28,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4629,27 +5166,60 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.55,
+      "seconds": 0.65,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.75264097314152,
-      "dc": 1.9697709517045454e-06,
+      "rms_dbfs": -26.547631338558272,
+      "dc": 1.3028658353365384e-06,
       "seam": 0.0,
-      "sha256": "480481e000f9f8b94cb416bac53c3c0e7e4606ee35c2e6295b3083869e5e38be"
+      "sha256": "963a74768f11bf947cb4bdc8968019ac7a637956d800edbf2c52e2c1053b8f66"
     },
-    "recipe_sha256": "df54f9b2a51b636762674fdd752b2a14db1562e2ee44247af7accd4a40b8e118"
+    "recipe_sha256": "da079b50def5a6ce52465708ad4e55942c6e95d0192a5d3a71e7ef9d758e1b2f"
   },
   "generated/ice_02.wav": {
     "cue": "ice",
     "variant": "02",
     "seed": 6067,
     "recipe": {
-      "instrument": 5,
-      "frequency": 1400,
-      "tone": 0.55,
-      "duration": 0.55,
+      "duration": 0.65,
       "seed": 6050,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Brittle glass-like tinkling over a brief dry frost hiss.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 2093,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 2
+        },
+        {
+          "instrument": 9,
+          "frequency": 3136,
+          "duration": 0.28,
+          "start": 0.055,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 6500,
+          "duration": 0.42,
+          "start": 0.1,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 2489,
+          "duration": 0.22,
+          "start": 0.21,
+          "gain": 0.28,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4658,27 +5228,60 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.55,
+      "seconds": 0.65,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -27.029315154996517,
-      "dc": 1.6553474195075758e-06,
+      "rms_dbfs": -26.395298237495943,
+      "dc": 1.4075254782652244e-06,
       "seam": 0.0,
-      "sha256": "f20b3d0f36a8ce4c45084f389f85a3be08d6b2ff6663838e85ba398e329ca73d"
+      "sha256": "357548b402a2db3182cafd9f729179012978d31aa5adaec33b64851b2aa1cce2"
     },
-    "recipe_sha256": "a9c043039ad72e2cb99cacbfdbad40321da9c7014168511f9f8b1f936c448944"
+    "recipe_sha256": "2a29586aabe82a5dded45f4c0dacd128306b97eafd525b8dd8064fae820d692d"
   },
   "generated/ice_03.wav": {
     "cue": "ice",
     "variant": "03",
     "seed": 6084,
     "recipe": {
-      "instrument": 5,
-      "frequency": 1400,
-      "tone": 0.55,
-      "duration": 0.55,
+      "duration": 0.65,
       "seed": 6050,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Brittle glass-like tinkling over a brief dry frost hiss.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 2093,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 2
+        },
+        {
+          "instrument": 9,
+          "frequency": 3136,
+          "duration": 0.28,
+          "start": 0.055,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 6500,
+          "duration": 0.42,
+          "start": 0.1,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 2489,
+          "duration": 0.22,
+          "start": 0.21,
+          "gain": 0.28,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -4687,15 +5290,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.55,
+      "seconds": 0.65,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -27.030204352835803,
-      "dc": 1.695806329900568e-06,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -26.65657255763039,
+      "dc": 1.3048220903445513e-06,
       "seam": 0.0,
-      "sha256": "d04c85d0cd4aee3f2498fe8a75883b018d28fa8e8b7e2ae1aad52f4866531fb1"
+      "sha256": "21baa9c07a22dcf7dd46b06871abee8587d413623d8ec8fc692d1fe2f7780e39"
     },
-    "recipe_sha256": "ad21d57c3fddbd7df9c3c1ad9a3c22794b0ee71817c3e2b933bb4bfcc3882b7c"
+    "recipe_sha256": "6a02c7f7cf702aa9788cbcfb271609ae99e9c9fe848c83e3101060f816cf5055"
   },
   "generated/lightning_01.wav": {
     "cue": "lightning",
@@ -5050,12 +5653,29 @@
     "variant": "01",
     "seed": 6555,
     "recipe": {
-      "instrument": 5,
-      "frequency": 220,
-      "tone": 0.7,
-      "duration": 0.7,
+      "duration": 1.0,
       "seed": 6555,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A low, soft sustained open fifth for sleep and binding magic.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 293.66,
+          "duration": 0.96,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 440,
+          "duration": 0.88,
+          "start": 0.04,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5064,27 +5684,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.7,
+      "seconds": 1.0,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -25.093550785098657,
-      "dc": 3.957294282459077e-06,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -15.794515934949096,
+      "dc": 4.1325887044270835e-07,
       "seam": 0.0,
-      "sha256": "3bf08757708eb13f420049ccbd6830968db3a6259c4050be651f8a50fc4e31dc"
+      "sha256": "52ba2133a8d4391a7edda953b4a0a6f863836dc4309b4d6284561ebc6594589e"
     },
-    "recipe_sha256": "7cbb1eafc34f18c08745f86fcf45a508300e5dfbc9779a547fdb00cfa6203431"
+    "recipe_sha256": "a91320e1821d208e65682be7bc0f779187fa6282a3f1c379e88e53c48b9e939d"
   },
   "generated/control_02.wav": {
     "cue": "control",
     "variant": "02",
     "seed": 6572,
     "recipe": {
-      "instrument": 5,
-      "frequency": 220,
-      "tone": 0.7,
-      "duration": 0.7,
+      "duration": 1.0,
       "seed": 6555,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A low, soft sustained open fifth for sleep and binding magic.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 293.66,
+          "duration": 0.96,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 440,
+          "duration": 0.88,
+          "start": 0.04,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5093,27 +5730,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.7,
+      "seconds": 1.0,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.297275272234888,
-      "dc": 3.223419189453125e-06,
+      "rms_dbfs": -15.834908111528929,
+      "dc": 4.8828125e-07,
       "seam": 0.0,
-      "sha256": "80eb7f46ab5bb5f750b2f6ca609a9a4d7acea3585aa66b9ca9f77e3cac7bc6ea"
+      "sha256": "37fa0eca42cda5474a00a8072429f23bc133c495de9fcfbf7b06c5651bc6522c"
     },
-    "recipe_sha256": "e43bb8db3527e10ca44a425b77cac3fd49194781dc47f6c74cfa3144711ccabf"
+    "recipe_sha256": "b100476f85ee5ee6dfcd554050ce7a91fdb41078f0ecffaf8797205c3075a4e8"
   },
   "generated/control_03.wav": {
     "cue": "control",
     "variant": "03",
     "seed": 6589,
     "recipe": {
-      "instrument": 5,
-      "frequency": 220,
-      "tone": 0.7,
-      "duration": 0.7,
+      "duration": 1.0,
       "seed": 6555,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A low, soft sustained open fifth for sleep and binding magic.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 293.66,
+          "duration": 0.96,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 440,
+          "duration": 0.88,
+          "start": 0.04,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5122,15 +5776,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.7,
+      "seconds": 1.0,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.2976976178854,
-      "dc": 2.953665597098214e-06,
+      "rms_dbfs": -15.794925291978307,
+      "dc": 4.482269287109375e-07,
       "seam": 0.0,
-      "sha256": "047f8757bc85b80c942c44303b404f446d5cd3b96c46e8575937be6cf308a1f9"
+      "sha256": "ba311ffc001fb0b8d391e58299d808fb90cf97771d3683847a1b9389a936e83c"
     },
-    "recipe_sha256": "5372d6a07d5d88db764cc146c554f516a5cae5ccbde510c77c9aa31af0742a06"
+    "recipe_sha256": "042764d10e3fadff1710c19103bbf792e4119e3c8913769bc353b37b74fe7a22"
   },
   "generated/material_01.wav": {
     "cue": "material",
@@ -5224,12 +5878,37 @@
     "variant": "01",
     "seed": 6757,
     "recipe": {
-      "instrument": 5,
-      "frequency": 830,
-      "tone": 1.4,
-      "duration": 0.45,
+      "duration": 0.7,
       "seed": 6757,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "An open fourth and octave crystal figure, distinct from the restorative major harmony.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 880,
+          "duration": 0.6,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 1174.66,
+          "duration": 0.48,
+          "start": 0.08,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1760,
+          "duration": 0.45,
+          "start": 0.17,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5238,27 +5917,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.45,
+      "seconds": 0.7,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -26.22893819743996,
-      "dc": 3.147831669560185e-06,
+      "rms_dbfs": -21.498581956936835,
+      "dc": 1.2405032203311013e-05,
       "seam": 0.0,
-      "sha256": "dd6ebdcc3485a542d7f5ac0a7bd7bd53960cf3cf1849b7e705b595f8bfe06292"
+      "sha256": "de3f65c68387df2e61c24ab069706624f7e38a9f830a19e5bf1b9fe4422f7a24"
     },
-    "recipe_sha256": "50e480e439ca1e8480f2d10a8172af46ebf1a7b3f39cea9c00df558e8a3c1f7e"
+    "recipe_sha256": "94465c50f8956530389b7bdd0c08691880d2ce78a7a75b1187071b51e5318c37"
   },
   "generated/arcane_02.wav": {
     "cue": "arcane",
     "variant": "02",
     "seed": 6774,
     "recipe": {
-      "instrument": 5,
-      "frequency": 830,
-      "tone": 1.4,
-      "duration": 0.45,
+      "duration": 0.7,
       "seed": 6757,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "An open fourth and octave crystal figure, distinct from the restorative major harmony.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 880,
+          "duration": 0.6,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 1174.66,
+          "duration": 0.48,
+          "start": 0.08,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1760,
+          "duration": 0.45,
+          "start": 0.17,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5267,27 +5971,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.45,
+      "seconds": 0.7,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.99564800556726,
-      "dc": 3.207171404803241e-06,
+      "rms_dbfs": -21.494361581004085,
+      "dc": 1.2415023077101935e-05,
       "seam": 0.0,
-      "sha256": "4a80ef7c181781cbc1b24871fbe8570e3b30f1020ad6eddc261928a119622316"
+      "sha256": "5b067c4082ca6566dfd347a538a3bac68bf8352d7d0139ff6ce4012782af365f"
     },
-    "recipe_sha256": "cededcccad75818ff51103463235513c8e4732a3cfbdc6092733d5f1920dad86"
+    "recipe_sha256": "fe37b13bb4e65b4780885ef2559aad83f62c89dc0d3cf5802167ca6eb4469cc9"
   },
   "generated/arcane_03.wav": {
     "cue": "arcane",
     "variant": "03",
     "seed": 6791,
     "recipe": {
-      "instrument": 5,
-      "frequency": 830,
-      "tone": 1.4,
-      "duration": 0.45,
+      "duration": 0.7,
       "seed": 6757,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "An open fourth and octave crystal figure, distinct from the restorative major harmony.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 880,
+          "duration": 0.6,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 1174.66,
+          "duration": 0.48,
+          "start": 0.08,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1760,
+          "duration": 0.45,
+          "start": 0.17,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5296,27 +6025,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.45,
+      "seconds": 0.7,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.166229193064304,
-      "dc": 3.4148604781539352e-06,
+      "rms_dbfs": -21.504331695056322,
+      "dc": 1.2461344401041666e-05,
       "seam": 0.0,
-      "sha256": "61a51f288c4928c6ca591cca3a0a677cc1b95eb531e5583a287d6046c603ea2d"
+      "sha256": "d543cd9b9762c41e151ec068722d4da38034dc956a86286cf692114cd8b7df67"
     },
-    "recipe_sha256": "1fdc33b33f15a6e8b522d188830739a3c974138a12eff97fb2a391cfa1c3c692"
+    "recipe_sha256": "915127707f3492eb1a3a5484523d149abae90d8c5b7557abbcd6a81ca8c9d744"
   },
   "generated/ui.confirm_01.wav": {
     "cue": "ui.confirm",
     "variant": "01",
     "seed": 6858,
     "recipe": {
-      "instrument": 5,
-      "frequency": 660,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.27,
       "seed": 6858,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Soft rising two-note glass confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 659.25,
+          "duration": 0.14,
+          "start": 0,
+          "gain": 0.6,
+          "tone": 0.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 987.77,
+          "duration": 0.19,
+          "start": 0.07,
+          "gain": 1,
+          "tone": 0.4
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5325,27 +6071,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.12,
+      "seconds": 0.27,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -24.354048222046405,
-      "dc": 3.227657741970486e-05,
-      "seam": 3.0517578125e-05,
-      "sha256": "f2041cddc39f5e69fc44ff1f3c715e50b6f4c4d081fc1e21b475700a59ad5fa4"
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -21.826263443761093,
+      "dc": 1.8861558702256945e-05,
+      "seam": 0.0,
+      "sha256": "77910b94e7ddd14796a870baa851d547e3104422dbc8d8fa02fac7fe4a699857"
     },
-    "recipe_sha256": "a9e34babc6d8dec676480ab264c71fda34b4d32d7fa08f0f71c9008214558edb"
+    "recipe_sha256": "8d7f26c4037346752dbb7c4a00d4e26eb7fb2b6ae887603755200f0bd98f4acf"
   },
   "generated/ui.confirm_02.wav": {
     "cue": "ui.confirm",
     "variant": "02",
     "seed": 6875,
     "recipe": {
-      "instrument": 5,
-      "frequency": 660,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.27,
       "seed": 6858,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Soft rising two-note glass confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 659.25,
+          "duration": 0.14,
+          "start": 0,
+          "gain": 0.6,
+          "tone": 0.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 987.77,
+          "duration": 0.19,
+          "start": 0.07,
+          "gain": 1,
+          "tone": 0.4
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5354,27 +6117,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.12,
+      "seconds": 0.27,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.95317937403597,
-      "dc": 2.9918882581922744e-05,
-      "seam": 3.0517578125e-05,
-      "sha256": "330570860a2d0885c2a3b8bdc2e85ce0abf2c73358b352fc17aeedbcda832652"
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -21.82904827787741,
+      "dc": 1.884036593967014e-05,
+      "seam": 0.0,
+      "sha256": "092cd53cd0d7b39eacb1b6d8bf46ea17bb51fe63a4265520f3e6b500e267d281"
     },
-    "recipe_sha256": "2f354828c7d91aefa159a1fd5119e364068fc18537fa64e36cd37df74dac51bb"
+    "recipe_sha256": "c5247c7836f7a2d59d2eb96c6b371feaca50ee95a127f5e8e93b430a2f116531"
   },
   "generated/ui.cancel_01.wav": {
     "cue": "ui.cancel",
     "variant": "01",
     "seed": 6959,
     "recipe": {
-      "instrument": 5,
-      "frequency": 330,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.19,
       "seed": 6959,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "One warm muted pluck that closes without a flourish.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 392,
+          "duration": 0.17,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.08
+        },
+        {
+          "instrument": 10,
+          "frequency": 280,
+          "duration": 0.055,
+          "start": 0,
+          "gain": 0.16,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5383,27 +6163,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.12,
+      "seconds": 0.19,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.254898830017407,
-      "dc": 7.735358344184028e-07,
-      "seam": 3.0517578125e-05,
-      "sha256": "ec3ad04fd5c8b0e05263059fb4538d1084fb9f92ca2a72b4f0fff3f57c9ada97"
+      "rms_dbfs": -21.682124013352105,
+      "dc": 0.0002361766079015899,
+      "seam": 0.0,
+      "sha256": "c9fc4615269605c4820abd77c2be3e03c7602322ad15462f15b032aeb0547141"
     },
-    "recipe_sha256": "bd0359d4422cff65a64f9ca3eb5dc43a1547c92c78104e182998add9f7f4d27a"
+    "recipe_sha256": "d63a86ef3f90065b6493abeb9952724c9ce096dd09c04e0fc9fec089e781b196"
   },
   "generated/ui.cancel_02.wav": {
     "cue": "ui.cancel",
     "variant": "02",
     "seed": 6976,
     "recipe": {
-      "instrument": 5,
-      "frequency": 330,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.19,
       "seed": 6959,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "One warm muted pluck that closes without a flourish.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 392,
+          "duration": 0.17,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.08
+        },
+        {
+          "instrument": 10,
+          "frequency": 280,
+          "duration": 0.055,
+          "start": 0,
+          "gain": 0.16,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5412,27 +6209,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.12,
+      "seconds": 0.19,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.944851773913772,
-      "dc": 4.238552517361111e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "3e76512712e7a1554e04f76cccbf5a71bdfe4c121159f1b41a6bb2871c3c986d"
+      "rms_dbfs": -21.687951169208773,
+      "dc": 0.0002338141725774397,
+      "seam": 0.0,
+      "sha256": "dbe38d5cbc557cc83323a7a2586a9b01c0d9ca9df1c0b31fa9bee7e94e2a84ae"
     },
-    "recipe_sha256": "4f7c37017f58633e37db33b22fb5b2cc40304a9b6b922f28fb25dc01f6771d74"
+    "recipe_sha256": "402fe3b46edc7c41fd656d5c48c4701a0b06fbf53b11896a24b0e0a2e1dbd137"
   },
   "generated/ui.reject_01.wav": {
     "cue": "ui.reject",
     "variant": "01",
     "seed": 7060,
     "recipe": {
-      "instrument": 5,
-      "frequency": 145,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.24,
       "seed": 7060,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two rounded low pulses: a quiet, unmistakable refusal.",
+      "layers": [
+        {
+          "instrument": 14,
+          "frequency": 174.61,
+          "duration": 0.08,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.55
+        },
+        {
+          "instrument": 14,
+          "frequency": 174.61,
+          "duration": 0.09,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 0.55
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5441,27 +6255,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.12,
+      "seconds": 0.24,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -21.778418280559954,
-      "dc": 4.672474331325955e-05,
-      "seam": 3.0517578125e-05,
-      "sha256": "4023bf1be2100728f1e42972a70a04abd12ec55cbc27789036196fe697abab64"
+      "rms_dbfs": -12.561685182892843,
+      "dc": 0.00010646449195014105,
+      "seam": 0.0,
+      "sha256": "bbfcc42da86f2fb393c92fb7eb80b84b922009771992eaa04ecf0557370d7e75"
     },
-    "recipe_sha256": "8e9cc5ecda70834c2e7cb66f57b1ddb546b34fe10ea3d39ae2a5c1f0b5bbb5e0"
+    "recipe_sha256": "7e60d4e8a3492329b0b74e332df37e3981f23d892b870e0fa26e4341074de886"
   },
   "generated/ui.reject_02.wav": {
     "cue": "ui.reject",
     "variant": "02",
     "seed": 7077,
     "recipe": {
-      "instrument": 5,
-      "frequency": 145,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.24,
       "seed": 7060,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two rounded low pulses: a quiet, unmistakable refusal.",
+      "layers": [
+        {
+          "instrument": 14,
+          "frequency": 174.61,
+          "duration": 0.08,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.55
+        },
+        {
+          "instrument": 14,
+          "frequency": 174.61,
+          "duration": 0.09,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 0.55
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5470,15 +6301,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.12,
+      "seconds": 0.24,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -22.86412795079551,
-      "dc": 4.378424750434028e-05,
-      "seam": 3.0517578125e-05,
-      "sha256": "1f30be757a81f4bf575e9ff4943be9ab880dfa2b7bb196b07354a494f8d36d74"
+      "rms_dbfs": -12.589909337251184,
+      "dc": 0.00010556644863552517,
+      "seam": 0.0,
+      "sha256": "e845b14dc54ab130072b53206e75a3c14f627e8429827736243f0c2b0b653a76"
     },
-    "recipe_sha256": "4ab01c049200a30442cad3f71f3f40a5165e15f1436efc61226294c8e5dbf245"
+    "recipe_sha256": "cdfc40f4cb520dd58db629cbd3ff2a99498dc8ca2acdf357804bcd80b4c35cdc"
   },
   "generated/effect.change_01.wav": {
     "cue": "effect.change",
@@ -5601,12 +6432,37 @@
     "variant": "01",
     "seed": 7363,
     "recipe": {
-      "instrument": 5,
-      "frequency": 550,
-      "tone": 1.5,
-      "duration": 0.9,
+      "duration": 1.35,
       "seed": 7363,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A restrained rising major arpeggio that resolves the encounter.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 523.25,
+          "duration": 0.68,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 659.25,
+          "duration": 0.7,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 783.99,
+          "duration": 1.0,
+          "start": 0.25,
+          "gain": 1,
+          "tone": 0.6
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5615,27 +6471,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.35,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.013972800446034,
-      "dc": 2.753646285445602e-06,
+      "rms_dbfs": -20.78962164327558,
+      "dc": 7.4155831042631176e-06,
       "seam": 0.0,
-      "sha256": "83aa398f8d285ade9c38d8397f7093e41213eb244a14e2729df1ab857e3e73b9"
+      "sha256": "289599e0c7f6821263f7dcc05857a2df36adf500ba240dcd2de5a354f265f74c"
     },
-    "recipe_sha256": "6e9f33f569f8a19c8e55f043767cd35ef534a4657da45db317974051bbd12cc5"
+    "recipe_sha256": "e49e5155419c33e7ed45647048054bbfd248932913dc16167b3271b43f4adcf8"
   },
   "generated/victory_02.wav": {
     "cue": "victory",
     "variant": "02",
     "seed": 7380,
     "recipe": {
-      "instrument": 5,
-      "frequency": 550,
-      "tone": 1.5,
-      "duration": 0.9,
+      "duration": 1.35,
       "seed": 7363,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A restrained rising major arpeggio that resolves the encounter.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 523.25,
+          "duration": 0.68,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 659.25,
+          "duration": 0.7,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 783.99,
+          "duration": 1.0,
+          "start": 0.25,
+          "gain": 1,
+          "tone": 0.6
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5644,27 +6525,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.35,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.585057360133575,
-      "dc": 2.9691060384114583e-06,
+      "rms_dbfs": -20.771053075281863,
+      "dc": 7.488109447337963e-06,
       "seam": 0.0,
-      "sha256": "fcaac5f5fe529f6d627b1bd36e904da4fe25763c26087a78bb7ee6b88d5b2715"
+      "sha256": "49c71c545490df783ca4c219aabde3db60a7f3370dfa1aeed8b7c0ce42aa5be1"
     },
-    "recipe_sha256": "84211e64ee157e73c66b3d09c6b3a4ab7c922fe7ccf208fa021319004e120f0a"
+    "recipe_sha256": "73ff807df00eb39745a8ec44f5ef1f9bf3bdafa7f2f3563a68232dc1c0f3dc24"
   },
   "generated/defeat_01.wav": {
     "cue": "defeat",
     "variant": "01",
     "seed": 7464,
     "recipe": {
-      "instrument": 5,
-      "frequency": 95,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.4,
       "seed": 7464,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A subdued falling minor-colored chord, with no brass or impact stinger.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 196,
+          "duration": 1.35,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 13,
+          "frequency": 233.08,
+          "duration": 1.2,
+          "start": 0.08,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 146.83,
+          "duration": 1.15,
+          "start": 0.15,
+          "gain": 0.65,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5673,27 +6579,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.4,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -24.49785092973435,
-      "dc": 5.7693764015480325e-06,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -18.061602525141037,
+      "dc": 2.288818359375e-07,
       "seam": 0.0,
-      "sha256": "04ac23d0fa66d4c30801cddc998717f86016746b0620da34ab0cfd2f783e36fe"
+      "sha256": "7dbe1cde7ec987f991896fe596429da74390ab80d23e37a53fc5732c282c82bb"
     },
-    "recipe_sha256": "1fdff55dabfaebd9d8d83754a05ec059ade2a16e6cd414038f7f37d133d4c808"
+    "recipe_sha256": "719bd9a1d7f8aecf12bfc52308aefc84d097f9dfa7e2107d3ef81b3cb31a1d45"
   },
   "generated/defeat_02.wav": {
     "cue": "defeat",
     "variant": "02",
     "seed": 7481,
     "recipe": {
-      "instrument": 5,
-      "frequency": 95,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.4,
       "seed": 7464,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A subdued falling minor-colored chord, with no brass or impact stinger.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 196,
+          "duration": 1.35,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 13,
+          "frequency": 233.08,
+          "duration": 1.2,
+          "start": 0.08,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 146.83,
+          "duration": 1.15,
+          "start": 0.15,
+          "gain": 0.65,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5702,27 +6633,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.4,
       "channels": 1,
       "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -25.189587621123927,
-      "dc": 5.527072482638889e-06,
+      "rms_dbfs": -18.073966998750215,
+      "dc": 2.529507591610863e-07,
       "seam": 0.0,
-      "sha256": "b4b62873af9f75fe15d5666030e06eeb197b6372b0000b0dae98ad7f0d5f04b4"
+      "sha256": "96b059b3635778949533c6436ea47c390b1d7dd25f51dc7a35ceaf80f646b353"
     },
-    "recipe_sha256": "ff3df44495eb7274de457e46a91847927ec579aa1daf40771a38d235863ecbf4"
+    "recipe_sha256": "fd0017b47f0ebda5bb113bb92b1fc413681e06dc1133ce51ca6c2340890a3e7f"
   },
   "generated/travel_01.wav": {
     "cue": "travel",
     "variant": "01",
     "seed": 7565,
     "recipe": {
-      "instrument": 5,
-      "frequency": 350,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.25,
       "seed": 7565,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A gentle air swell and open harmonic interval for travel.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 1.1,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 392,
+          "duration": 1.2,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 587.33,
+          "duration": 1.0,
+          "start": 0.15,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5731,27 +6687,52 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.25,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -25.710673147876935,
-      "dc": 8.003800003616898e-07,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -16.477350152943735,
+      "dc": 1.0782877604166666e-07,
       "seam": 0.0,
-      "sha256": "657b4460176f987dfe6aaebd2d51fdac95d75d56ad1365c645181e1867b1c909"
+      "sha256": "72c1f01d84ebe20ba6501673c784275302e0307ba80919552db1df02fec70335"
     },
-    "recipe_sha256": "886f708b98e3d172a3b05d5f8d8303890e897d906e049b19c56931389b1a6f29"
+    "recipe_sha256": "52c81c198c64d9134a4b18ab827f2f81abe5d065443ec9f82686fe6fe1308ec3"
   },
   "generated/travel_02.wav": {
     "cue": "travel",
     "variant": "02",
     "seed": 7582,
     "recipe": {
-      "instrument": 5,
-      "frequency": 350,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.25,
       "seed": 7565,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A gentle air swell and open harmonic interval for travel.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 1.1,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 392,
+          "duration": 1.2,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 587.33,
+          "duration": 1.0,
+          "start": 0.15,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5760,27 +6741,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.25,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.74064650421102,
-      "dc": 1.0928401240596066e-06,
+      "rms_dbfs": -16.09971137295115,
+      "dc": 1.220703125e-07,
       "seam": 0.0,
-      "sha256": "bc6b80685300dca0b9f171eaa8886302f31f7b4b2f61ab5a14b1382d2a16fcdc"
+      "sha256": "047f1df1c7237569bf162809f45f12e30a96ff74e3908c5994c5640a7bfb57ed"
     },
-    "recipe_sha256": "292e56d3228bf0156b69f82cffee460cea660812fb0ecbc0d4272650d8c82010"
+    "recipe_sha256": "014d40de7b3709f5fa5d680ccd0e9b287af9b82025040a26206a672bc0060538"
   },
   "generated/recovery_01.wav": {
     "cue": "recovery",
     "variant": "01",
     "seed": 7666,
     "recipe": {
-      "instrument": 5,
-      "frequency": 490,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.15,
       "seed": 7666,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A warm breath-like harmonic bloom with one light restorative chime.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 392,
+          "duration": 1.1,
+          "start": 0,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 783.99,
+          "duration": 0.65,
+          "start": 0.35,
+          "gain": 0.25,
+          "tone": 0.2
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5789,27 +6787,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.15,
       "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.2182142740236,
-      "dc": 1.1733726218894676e-06,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -16.38390022160865,
+      "dc": 3.869982733242754e-09,
       "seam": 0.0,
-      "sha256": "ee6aebd2a1daf220204c0f6201195d52f214a347e9683c52e348615070b35eb3"
+      "sha256": "09fd106baf91bdda8080551924494f39593e3aba91c64cb1abbad6575d213681"
     },
-    "recipe_sha256": "a79e1ecceecf2020f8d65a8c34012695de49b8e088688383e85e7857771d633a"
+    "recipe_sha256": "c09b47be8bc696f38d415d3021c90f64baf5162d1a0aaf1c5fce348a2058703e"
   },
   "generated/recovery_02.wav": {
     "cue": "recovery",
     "variant": "02",
     "seed": 7683,
     "recipe": {
-      "instrument": 5,
-      "frequency": 490,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.15,
       "seed": 7666,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A warm breath-like harmonic bloom with one light restorative chime.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 392,
+          "duration": 1.1,
+          "start": 0,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 783.99,
+          "duration": 0.65,
+          "start": 0.35,
+          "gain": 0.25,
+          "tone": 0.2
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5818,27 +6833,36 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 1.15,
       "channels": 1,
       "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -25.322515286074598,
-      "dc": 1.6332555700231482e-06,
+      "rms_dbfs": -16.260004399009425,
+      "dc": 1.2162802875905797e-07,
       "seam": 0.0,
-      "sha256": "4384ab4dfaeff8598406e187a8e1bc6169282aafed0f775d9b1fb07eb491dcc2"
+      "sha256": "38100b3658457bdd39b38e7122f9e5c30aff90f80aad2f54637cefabaf4a18a7"
     },
-    "recipe_sha256": "6a8f249754d8cb3058d1feaccf119ed0ac899f3b93fa78570267d10f022ab0d0"
+    "recipe_sha256": "d0d0b840a51e0a5a56d3da5b1c17b3481eea519f7f983288425960880484a811"
   },
   "generated/advancement_01.wav": {
     "cue": "advancement",
     "variant": "01",
     "seed": 7767,
     "recipe": {
-      "instrument": 5,
-      "frequency": 740,
-      "tone": 1.5,
-      "duration": 0.9,
+      "duration": 2.8,
       "seed": 7767,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "DIIING! A bright struck bell with a singing prime, lower hum and independently fading bronze partials.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1046.5,
+          "duration": 2.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.85
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5847,27 +6871,36 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 2.8,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.389410018170793,
-      "dc": 1.9772847493489583e-06,
+      "rms_dbfs": -25.36399086251096,
+      "dc": 1.5179316202799478e-06,
       "seam": 0.0,
-      "sha256": "8c2f55865ca63eb21a2188121acd364835d9eaa3d17eb20637c17b0bcd85c6f4"
+      "sha256": "0c3427442d92770875e68d47baf3cd1e29640c9806dde37a6eb98bb16eea3195"
     },
-    "recipe_sha256": "9461b6a858a939f337b2347d0db201f8822a4c496a8637fee4b852e13b9f51df"
+    "recipe_sha256": "d4c2b9e10c344b4a58a99476276b2e981ad3d919505bc8c351470293b7a9e243"
   },
   "generated/advancement_02.wav": {
     "cue": "advancement",
     "variant": "02",
     "seed": 7784,
     "recipe": {
-      "instrument": 5,
-      "frequency": 740,
-      "tone": 1.5,
-      "duration": 0.9,
+      "duration": 2.8,
       "seed": 7767,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "DIIING! A bright struck bell with a singing prime, lower hum and independently fading bronze partials.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1046.5,
+          "duration": 2.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.85
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -5876,15 +6909,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 2.8,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -26.056544500368855,
-      "dc": 1.586631492332176e-06,
+      "rms_dbfs": -25.293579703208362,
+      "dc": 1.518385750906808e-06,
       "seam": 0.0,
-      "sha256": "24b2b0a71cf34b20e24330b0939bd06321c3a395e1f62c6798f7903c01d6f6ec"
+      "sha256": "9b17d571de59a9820c505d2258da592017ba64fdd008bf53bf8fad06e3f30888"
     },
-    "recipe_sha256": "c84b0a9bba95a8dcd7e1f17d7d4798d7aac68d8cdfbc6d60c9c22e9499c4ff72"
+    "recipe_sha256": "83430b67df63243a3e54094bdda74c45d85fa1bf4bc870b3272afdc7ff4f3c61"
   },
   "generated/ambience_01.wav": {
     "cue": "ambience",
@@ -6152,12 +7185,29 @@
     "variant": "01",
     "seed": 20373,
     "recipe": {
-      "instrument": 1,
-      "frequency": 330,
-      "tone": 1,
-      "duration": 0.2,
+      "duration": 0.27,
       "seed": 20373,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A fast buckle release followed by a softer cloth withdrawal.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 950,
+          "duration": 0.045,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 0.23,
+          "start": 0.025,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -6166,27 +7216,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.2,
+      "seconds": 0.27,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.36431716360832,
-      "dc": 0.00044210433959960936,
-      "seam": 3.0517578125e-05,
-      "sha256": "fa4581a40fa4ee1d3723c902839fc074126384138c0e25f3cb206eb815634af9"
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.878787033370685,
+      "dc": 5.538375289351852e-06,
+      "seam": 0.0,
+      "sha256": "9b2c5166114b4f151f5cd7d1981107472dcf290ddd4e29da4a64eba129fba2d4"
     },
-    "recipe_sha256": "fe14bd39592915f3e687b15a5825dedd51fa0ca6612d688b77a98140b44e155f"
+    "recipe_sha256": "89ebe3ae4658ab93db0e78f25bbe52339cefed14db55063ff3633e1733bb02e2"
   },
   "generated/inventory.unequip_02.wav": {
     "cue": "inventory.unequip",
     "variant": "02",
     "seed": 20390,
     "recipe": {
-      "instrument": 1,
-      "frequency": 330,
-      "tone": 1,
-      "duration": 0.2,
+      "duration": 0.27,
       "seed": 20373,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A fast buckle release followed by a softer cloth withdrawal.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 950,
+          "duration": 0.045,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 0.23,
+          "start": 0.025,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -6195,27 +7262,44 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.2,
+      "seconds": 0.27,
       "channels": 1,
-      "peak_dbfs": -6.000477743319013,
-      "rms_dbfs": -22.695676318325138,
-      "dc": 0.00041625022888183596,
-      "seam": 3.0517578125e-05,
-      "sha256": "1bdb19de488bc4c99d04b2aeca595e1e4b86351a2e7269c417e023ccf8cec787"
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.38471434123847,
+      "dc": 6.291895736882716e-06,
+      "seam": 0.0,
+      "sha256": "ea4622f584091f4f48dd88cf059ab29459599a343d39cf21ed9f185d5b53f043"
     },
-    "recipe_sha256": "6ac2145511fbe90ceecb4b3167820f21bbeaf097d997af3e354f45856d369095"
+    "recipe_sha256": "245ff780ee6b345090f6cf9fb4795123e7d29092b7938b0ed45028cfb4a0c0aa"
   },
   "generated/inventory.unequip_03.wav": {
     "cue": "inventory.unequip",
     "variant": "03",
     "seed": 20407,
     "recipe": {
-      "instrument": 1,
-      "frequency": 330,
-      "tone": 1,
-      "duration": 0.2,
+      "duration": 0.27,
       "seed": 20373,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A fast buckle release followed by a softer cloth withdrawal.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 950,
+          "duration": 0.045,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 0.23,
+          "start": 0.025,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -6224,15 +7308,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.2,
+      "seconds": 0.27,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -24.310786797382015,
-      "dc": 0.00032436370849609375,
-      "seam": 3.0517578125e-05,
-      "sha256": "54881d537e12834cb0ab09f8a3702bca71243cdddcc2994de425aa7db5bc0cbd"
+      "rms_dbfs": -20.525001382727655,
+      "dc": 1.0497481734664352e-05,
+      "seam": 0.0,
+      "sha256": "bd61c3d2d0e427b57c63768965ffb60b7e99b25eb217c9b4eae8d14d281fa3cc"
     },
-    "recipe_sha256": "5d0b9f22c802a81ff8951f1a03264e5971033b58cfd46d4ad985190c829fb8a8"
+    "recipe_sha256": "40672f8d179ace448b0a6c0184c570bfc4070762172d47729cea478f4e9e682e"
   },
   "generated/weapon.heavy_01.wav": {
     "cue": "weapon.heavy",

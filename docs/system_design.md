@@ -1,5 +1,10 @@
 # System design
 
+Audio authoring revision (implemented, listening review pending):
+[local model and distinct synth cues](audio_revision.md) records the listening
+feedback, verified offline Docker/GPU generation, 20 redesigned synth cues and
+the level-up bell. Model weights, credentials and experiments remain Git-ignored.
+
 Audio delivery (implemented and mechanically verified, 2026-11-02):
 [runtime, editable bank and verification](audio_design.md). Includes 75 cues / 218
 generated variants, shared main/pause Settings, bounded playback and authoritative

@@ -21,3 +21,4 @@ door.open
 door.close
 gate.open
 chest.open
+potion

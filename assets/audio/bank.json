@@ -1004,10 +1004,10 @@
       ]
     },
     "key.pickup": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.28,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1033,10 +1033,10 @@
       ]
     },
     "loot.pickup": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.27,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1062,10 +1062,10 @@
       ]
     },
     "inventory.equip": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.28,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1091,10 +1091,10 @@
       ]
     },
     "inventory.move": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.22,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1120,10 +1120,10 @@
       ]
     },
     "inventory.drop": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.27,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1149,10 +1149,10 @@
       ]
     },
     "potion": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.3,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1381,10 +1381,10 @@
       ]
     },
     "radiant": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.32,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1410,10 +1410,10 @@
       ]
     },
     "healing": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.34,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1497,10 +1497,10 @@
       ]
     },
     "ice": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.3,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1642,10 +1642,10 @@
       ]
     },
     "control": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.32,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1700,10 +1700,10 @@
       ]
     },
     "arcane": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.32,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1729,10 +1729,10 @@
       ]
     },
     "ui.confirm": {
-      "gain": 0.17,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.2,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1753,10 +1753,10 @@
       ]
     },
     "ui.cancel": {
-      "gain": 0.17,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.16,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1777,10 +1777,10 @@
       ]
     },
     "ui.reject": {
-      "gain": 0.17,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.08,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,
@@ -1849,10 +1849,10 @@
       ]
     },
     "victory": {
-      "gain": 0.36,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.32,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 4,
       "range": 6,
@@ -1873,10 +1873,10 @@
       ]
     },
     "defeat": {
-      "gain": 0.36,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.3,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 4,
       "range": 6,
@@ -1897,10 +1897,10 @@
       ]
     },
     "travel": {
-      "gain": 0.36,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.27,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1921,10 +1921,10 @@
       ]
     },
     "recovery": {
-      "gain": 0.36,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.3,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 1,
       "range": 6,
@@ -1945,15 +1945,15 @@
       ]
     },
     "advancement": {
-      "gain": 0.36,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.65,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
-      "priority": 1,
+      "priority": 3,
       "range": 6,
-      "cooldown": 0.06,
-      "concurrency": 4,
+      "cooldown": 0.3,
+      "concurrency": 1,
       "aliases": 4,
       "variants": [
         {
@@ -2087,10 +2087,10 @@
       ]
     },
     "inventory.unequip": {
-      "gain": 0.45,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.25,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 3,
       "priority": 1,
       "range": 6,

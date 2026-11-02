@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "cues": {
     "party.step": {
       "instrument": 1,
@@ -266,52 +266,170 @@
       "review": false
     },
     "key.pickup": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.5,
       "seed": 4333,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two small bright key-ring tinkles.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1760,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        },
+        {
+          "instrument": 8,
+          "frequency": 2637,
+          "duration": 0.28,
+          "start": 0.11,
+          "gain": 0.4,
+          "tone": 1.4
+        }
+      ]
     },
     "loot.pickup": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.47,
       "seed": 4434,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A brief glass sparkle for collected treasure, brighter than UI confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1318.51,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 1.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 1975.53,
+          "duration": 0.27,
+          "start": 0.12,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "inventory.equip": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 1,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4535,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A leather slide ending in a close double buckle snap.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 3200,
+          "duration": 0.2,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1100,
+          "duration": 0.04,
+          "start": 0.15,
+          "gain": 0.55,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 1750,
+          "duration": 0.035,
+          "start": 0.21,
+          "gain": 0.8,
+          "tone": 1
+        }
+      ]
     },
     "inventory.move": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.09,
       "seed": 4636,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A dry wooden tick for a small inventory move.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 630,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "inventory.drop": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.3,
       "seed": 4737,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A soft fabric movement followed by a low padded placement.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 1700,
+          "duration": 0.18,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 10,
+          "frequency": 170,
+          "duration": 0.13,
+          "start": 0.13,
+          "gain": 1,
+          "tone": 1.2
+        }
+      ]
     },
     "potion": {
-      "instrument": 1,
-      "frequency": 430,
-      "tone": 0.15,
-      "duration": 0.22,
+      "duration": 0.78,
       "seed": 4838,
-      "review": false
+      "review": true,
+      "revision": 2,
+      "description": "Provisional cork pop and irregular hollow liquid bubbles; listening review needed for believable drinking.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 520,
+          "duration": 0.07,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 12,
+          "frequency": 390,
+          "duration": 0.14,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 12,
+          "frequency": 265,
+          "duration": 0.18,
+          "start": 0.29,
+          "gain": 1,
+          "tone": 0.65
+        },
+        {
+          "instrument": 12,
+          "frequency": 440,
+          "duration": 0.12,
+          "start": 0.52,
+          "gain": 0.55,
+          "tone": 1
+        }
+      ]
     },
     "weapon.blunt": {
       "instrument": 1,
@@ -370,20 +488,70 @@
       "review": false
     },
     "radiant": {
-      "instrument": 5,
-      "frequency": 700,
-      "tone": 1.6,
-      "duration": 0.55,
+      "duration": 0.85,
       "seed": 5646,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Clear high chimes above a warm tonal halo.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1567.98,
+          "duration": 0.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.9
+        },
+        {
+          "instrument": 9,
+          "frequency": 2349.32,
+          "duration": 0.6,
+          "start": 0.1,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 783.99,
+          "duration": 0.8,
+          "start": 0,
+          "gain": 0.4,
+          "tone": 1
+        }
+      ]
     },
     "healing": {
-      "instrument": 5,
-      "frequency": 510,
-      "tone": 1.25,
-      "duration": 0.8,
+      "duration": 0.95,
       "seed": 5747,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Warm sustained harmonic healing with a soft attack and light shimmer.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 523.25,
+          "duration": 0.9,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 659.25,
+          "duration": 0.78,
+          "start": 0.08,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1046.5,
+          "duration": 0.4,
+          "start": 0.4,
+          "gain": 0.15,
+          "tone": 1
+        }
+      ]
     },
     "dark": {
       "instrument": 5,
@@ -402,12 +570,45 @@
       "review": false
     },
     "ice": {
-      "instrument": 5,
-      "frequency": 1400,
-      "tone": 0.55,
-      "duration": 0.55,
+      "duration": 0.65,
       "seed": 6050,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Brittle glass-like tinkling over a brief dry frost hiss.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 2093,
+          "duration": 0.32,
+          "start": 0,
+          "gain": 1,
+          "tone": 2
+        },
+        {
+          "instrument": 9,
+          "frequency": 3136,
+          "duration": 0.28,
+          "start": 0.055,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 6500,
+          "duration": 0.42,
+          "start": 0.1,
+          "gain": 0.35,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 2489,
+          "duration": 0.22,
+          "start": 0.21,
+          "gain": 0.28,
+          "tone": 1
+        }
+      ]
     },
     "lightning": {
       "instrument": 5,
@@ -442,12 +643,29 @@
       "review": false
     },
     "control": {
-      "instrument": 5,
-      "frequency": 220,
-      "tone": 0.7,
-      "duration": 0.7,
+      "duration": 1.0,
       "seed": 6555,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A low, soft sustained open fifth for sleep and binding magic.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 293.66,
+          "duration": 0.96,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 440,
+          "duration": 0.88,
+          "start": 0.04,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "material": {
       "instrument": 5,
@@ -458,36 +676,112 @@
       "review": false
     },
     "arcane": {
-      "instrument": 5,
-      "frequency": 830,
-      "tone": 1.4,
-      "duration": 0.45,
+      "duration": 0.7,
       "seed": 6757,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "An open fourth and octave crystal figure, distinct from the restorative major harmony.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 880,
+          "duration": 0.6,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 1174.66,
+          "duration": 0.48,
+          "start": 0.08,
+          "gain": 0.45,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 1760,
+          "duration": 0.45,
+          "start": 0.17,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "ui.confirm": {
-      "instrument": 5,
-      "frequency": 660,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.27,
       "seed": 6858,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Soft rising two-note glass confirmation.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 659.25,
+          "duration": 0.14,
+          "start": 0,
+          "gain": 0.6,
+          "tone": 0.3
+        },
+        {
+          "instrument": 9,
+          "frequency": 987.77,
+          "duration": 0.19,
+          "start": 0.07,
+          "gain": 1,
+          "tone": 0.4
+        }
+      ]
     },
     "ui.cancel": {
-      "instrument": 5,
-      "frequency": 330,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.19,
       "seed": 6959,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "One warm muted pluck that closes without a flourish.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 392,
+          "duration": 0.17,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.08
+        },
+        {
+          "instrument": 10,
+          "frequency": 280,
+          "duration": 0.055,
+          "start": 0,
+          "gain": 0.16,
+          "tone": 1
+        }
+      ]
     },
     "ui.reject": {
-      "instrument": 5,
-      "frequency": 145,
-      "tone": 0.7,
-      "duration": 0.12,
+      "duration": 0.24,
       "seed": 7060,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "Two rounded low pulses: a quiet, unmistakable refusal.",
+      "layers": [
+        {
+          "instrument": 14,
+          "frequency": 174.61,
+          "duration": 0.08,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.55
+        },
+        {
+          "instrument": 14,
+          "frequency": 174.61,
+          "duration": 0.09,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 0.55
+        }
+      ]
     },
     "effect.change": {
       "instrument": 5,
@@ -506,44 +800,145 @@
       "review": false
     },
     "victory": {
-      "instrument": 5,
-      "frequency": 550,
-      "tone": 1.5,
-      "duration": 0.9,
+      "duration": 1.35,
       "seed": 7363,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A restrained rising major arpeggio that resolves the encounter.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 523.25,
+          "duration": 0.68,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 659.25,
+          "duration": 0.7,
+          "start": 0.12,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 9,
+          "frequency": 783.99,
+          "duration": 1.0,
+          "start": 0.25,
+          "gain": 1,
+          "tone": 0.6
+        }
+      ]
     },
     "defeat": {
-      "instrument": 5,
-      "frequency": 95,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.4,
       "seed": 7464,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A subdued falling minor-colored chord, with no brass or impact stinger.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 196,
+          "duration": 1.35,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.5
+        },
+        {
+          "instrument": 13,
+          "frequency": 233.08,
+          "duration": 1.2,
+          "start": 0.08,
+          "gain": 0.4,
+          "tone": 1
+        },
+        {
+          "instrument": 13,
+          "frequency": 146.83,
+          "duration": 1.15,
+          "start": 0.15,
+          "gain": 0.65,
+          "tone": 1
+        }
+      ]
     },
     "travel": {
-      "instrument": 5,
-      "frequency": 350,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.25,
       "seed": 7565,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A gentle air swell and open harmonic interval for travel.",
+      "layers": [
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 1.1,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 0.7
+        },
+        {
+          "instrument": 13,
+          "frequency": 392,
+          "duration": 1.2,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.3
+        },
+        {
+          "instrument": 13,
+          "frequency": 587.33,
+          "duration": 1.0,
+          "start": 0.15,
+          "gain": 0.3,
+          "tone": 1
+        }
+      ]
     },
     "recovery": {
-      "instrument": 5,
-      "frequency": 490,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 1.15,
       "seed": 7666,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A warm breath-like harmonic bloom with one light restorative chime.",
+      "layers": [
+        {
+          "instrument": 13,
+          "frequency": 392,
+          "duration": 1.1,
+          "start": 0,
+          "gain": 1,
+          "tone": 1
+        },
+        {
+          "instrument": 9,
+          "frequency": 783.99,
+          "duration": 0.65,
+          "start": 0.35,
+          "gain": 0.25,
+          "tone": 0.2
+        }
+      ]
     },
     "advancement": {
-      "instrument": 5,
-      "frequency": 740,
-      "tone": 1.5,
-      "duration": 0.9,
+      "duration": 2.8,
       "seed": 7767,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "DIIING! A bright struck bell with a singing prime, lower hum and independently fading bronze partials.",
+      "layers": [
+        {
+          "instrument": 8,
+          "frequency": 1046.5,
+          "duration": 2.75,
+          "start": 0,
+          "gain": 1,
+          "tone": 0.85
+        }
+      ]
     },
     "ambience": {
       "instrument": 6,
@@ -586,12 +981,29 @@
       "review": false
     },
     "inventory.unequip": {
-      "instrument": 1,
-      "frequency": 330,
-      "tone": 1,
-      "duration": 0.2,
+      "duration": 0.27,
       "seed": 20373,
-      "review": false
+      "review": false,
+      "revision": 2,
+      "description": "A fast buckle release followed by a softer cloth withdrawal.",
+      "layers": [
+        {
+          "instrument": 10,
+          "frequency": 950,
+          "duration": 0.045,
+          "start": 0,
+          "gain": 0.5,
+          "tone": 1
+        },
+        {
+          "instrument": 11,
+          "frequency": 2400,
+          "duration": 0.23,
+          "start": 0.025,
+          "gain": 1,
+          "tone": 0.8
+        }
+      ]
     },
     "weapon.heavy": {
       "instrument": 2,

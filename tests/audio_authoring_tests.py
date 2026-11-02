@@ -15,4 +15,31 @@ with tempfile.TemporaryDirectory(prefix='blobber-author-test-') as tmp:
     author.main();assert hashlib.sha256(output.read_bytes()).digest()==digest,'fixed recipe must reproduce output'
     assert replacement.read_bytes()==b'user-owned-preserve' and override.read_bytes()==before
     sys.argv=['generate','--validate'];author.main()
+    # Two differently pitched chimes separated by silence: schedule survives export,
+    # variation preserves the musical intervals, and selective rebuild touches one file.
+    bank['cues']['layered']={'variants':[{'id':'01','path':'generated/layered_01.wav'},
+                                        {'id':'02','path':'generated/layered_02.wav'}]}
+    layered={'duration':.6,'seed':92,'review':False,'layers':[
+        {'instrument':9,'frequency':660,'duration':.15,'tone':.2},
+        {'instrument':9,'frequency':880,'start':.35,'duration':.2,'tone':.2}]}
+    (root/'assets/audio/bank.json').write_text(json.dumps(bank))
+    (root/'tools/audio/recipes.json').write_text(json.dumps({'cues':{'owned':recipe,'layered':layered}}))
+    sys.argv=['generate','--cue','layered'];author.main()
+    import numpy as np
+    from scipy.io import wavfile
+    paths=[root/f'assets/audio/generated/layered_{v}.wav' for v in ['01','02']]
+    original=[p.read_bytes() for p in paths]
+    for path in paths:
+        rate,data=wavfile.read(path);data=data.astype(float)/32768
+        assert abs(len(data)/rate-.6)<1/rate
+        assert np.max(np.abs(data[int(.2*rate):int(.3*rate)]))<.001,'scheduled gap must remain quiet'
+        for begin,end,target in [(0,.12,660),(.35,.52,880)]:
+            section=data[int(begin*rate):int(end*rate)]
+            frequencies=np.fft.rfftfreq(len(section),1/rate)
+            dominant=frequencies[np.argmax(np.abs(np.fft.rfft(section*np.hanning(len(section)))))]
+            assert abs(dominant-target)<12,'musical note preserved across variants'
+    sys.argv=['generate','--cue','layered','--variant','01'];author.main()
+    assert [p.read_bytes() for p in paths]==original,'selective layered recipe is deterministic'
+    assert hashlib.sha256(output.read_bytes()).digest()==digest,'unselected cue untouched'
+    assert replacement.read_bytes()==b'user-owned-preserve' and override.read_bytes()==before
 print('Selective authoring, reproducibility, validation and replacement preservation passed')

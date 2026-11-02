@@ -4,6 +4,17 @@ This is an original, provisional synthesized bank: **75 cues / 218 WAV variants*
 Csound produces the sound layers; SoX processes and exports them. Runtime needs
 only the exported files and raylib. No authoring tools are required by players.
 
+Listening revision (2026-11-02): 20 cues / 52 variants have been redesigned with
+separate bell, glass chime, wood/felt tap, fabric, liquid-bubble and harmonic-bloom
+structures. Start with **advancement** for the level-up DIIING, then the three UI
+cues and inventory sounds. Musical pitches stay stable across variants. Potion
+bubbles remain a stylized experiment needing review; existing creature vocals and
+other unrevised physical sounds still retain the initial bank's limitations.
+The audition page links directly to all revised cues.
+
+An isolated [local AI authoring setup](../../tools/audio/local/README.md) produces
+separate, ignored experiments. It never automatically replaces the playable bank.
+
 Open [audition.html](audition.html) in a browser or [audition.m3u](audition.m3u) in a
 player. [generated/review.txt](generated/review.txt) prioritizes creature voices and
 door/chest creaks for listening review. Technical checks do not establish realism.
@@ -63,6 +74,12 @@ SoX repeatable dither make reruns deterministic on the same recorded toolchain.
 `generated/provenance.json` records recipes, seeds, tool versions, hashes, peak/RMS,
 DC and loop-seam measurements. Byte identity across different tool versions is not
 promised. Exported peaks are at most -3 dBFS (the initial recipes target -6 dBFS).
+
+Revision-2 recipes accept a `layers` array: each entry schedules a Csound
+`instrument`, `frequency`, `duration`, optional `start`, `gain` and `tone`.
+Optional spreads vary strike brightness/frequency/timing within that recipe;
+musical layers default to fixed frequencies. Layer endpoints must fit the cue's
+declared duration. Python schedules these events; Csound synthesizes the audio.
 
 Audio preferences use `$XDG_CONFIG_HOME/blobber/settings.json`, or
 `$HOME/.config/blobber/settings.json`. `--settings FILE` overrides that location;
