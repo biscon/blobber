@@ -99,6 +99,7 @@ class GameSession {
     std::uint64_t timeMs() const noexcept { return timeMs_; }
     const EffectController& effects() const noexcept { return effects_; }
     // All simulation operations invalidate the previous borrowed event batch.
+    audio::Journal& audioEvents() noexcept { return audio_; }
     const CombatEvents& events() const noexcept { return events_; }
     EffectResult applyEffect(const EffectRequest&) noexcept;
     EffectResult removeEffect(EffectId) noexcept;
@@ -115,6 +116,9 @@ class GameSession {
         doorPending_.reset();
     }
     void setAnimated(bool enabled) noexcept {
+        if (!enabled && movement().transition.active() &&
+            !(movement().transition.from.cell == movement().transition.to.cell))
+            audio_.emit({"party.step"});
         movement_.setAnimated(enabled);
         if (!enabled) {
             doors_.until.fill(0);
@@ -167,6 +171,8 @@ class GameSession {
     NpcAiController ai_;
     EffectController effects_;
     CombatController combat_;
+    audio::Journal audio_;
+    std::array<std::uint64_t, NpcWorld::maxInstances> audioWalks_{};
     CombatEvents events_;
     bool enableAi_ = true, development_ = false;
     std::array<bool, NpcWorld::maxInstances> creditedDeaths_{};

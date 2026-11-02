@@ -10,8 +10,10 @@
 #include <algorithm>
 #include <filesystem>
 namespace blobber {
+class AudioRuntime;
 class Presenter {
   public:
+    AudioRuntime* audio = nullptr; // Application-owned; outlives presentation loops.
     Presenter(GpuResources& resources, const std::filesystem::path& assets,
               PreparationWorker* worker = nullptr);
     PreparationWorker* loadingWorker() const noexcept { return worker_; }

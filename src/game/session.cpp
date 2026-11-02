@@ -39,6 +39,8 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
       combat_(map_, party_, actors_, rng_, ai_, effects_, timings), enableAi_(true) {
     if (map_.movementBlocked(spawn.cell) || actors_.occupied(spawn.cell))
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
+    audio_.enabled = false; // Headless simulation has no audio observer.
+    events_.audioJournal = &audio_;
     doors_.world = floor_.world();
     prepareObjective();
     ai_.bindEffects(&effects_);
@@ -80,6 +82,16 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     remainderMs_ -= static_cast<double>(elapsed);
     doors_.now = timeMs_;
     combat_.resolveImpacts(movement_.state().player, timeMs_, events_, elapsed);
+    // Arrival before AI can replace the completed travel record.
+    for (std::size_t i = 0; audio_.enabled && i < actors_.snapshot().count; ++i) {
+        const auto& a = actors_.snapshot().actors[i];
+        const auto end = a.walkTimeMs + a.walkDurationMs;
+        if (a.hasTravel && a.life == ActorLife::Alive && previousTime < end && timeMs_ >= end &&
+            audioWalks_[i] != end) {
+            audioWalks_[i] = end;
+            audio_.emit({"step", actors_.id(i), 0, 0, true, true});
+        }
+    }
     // Final objective completion closes command admission immediately. Drain already
     // accepted consequences/presentation, without starting another movement, AI or turn.
     reconcileRewards();
@@ -112,10 +124,14 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     // Remember the settled endpoint before Controller consumes that queued step.
     const auto& transition = movement().transition;
     if (transition.active() && transition.elapsed + movementSeconds >= transition.durationSeconds) {
+        if (!(transition.from.cell == transition.to.cell))
+            audio_.emit({"party.step"});
         floor_.discover(movement().player.cell, movement().player.heading);
         detectContact(true);
     }
     movement_.update(map_, movementSeconds, &actors_);
+    if (!movement().animated && !(oldCell == movement().player.cell))
+        audio_.emit({"party.step"});
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))
         for (std::uint16_t i = 0; i < rules::partySize; ++i)
@@ -156,6 +172,8 @@ void GameSession::move(Action action, bool fresh) noexcept {
         return;
     const auto oldCell = movement_.state().player.cell;
     movement_.submit(map_, action, fresh, &actors_);
+    if (!movement().animated && !(oldCell == movement().player.cell))
+        audio_.emit({"party.step"});
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))
         for (std::uint16_t i = 0; i < rules::partySize; ++i)
@@ -188,9 +206,21 @@ InventoryResult GameSession::inventoryChange(const InventoryRequest& request) no
     const auto access = inventoryAccess(request);
     if (access != InventoryError::None)
         return {access};
+    const bool unequip =
+        party_.inventory().locate(request.source).cell >= bagCells && request.destination.cell < bagCells;
     auto result = party_.inventoryChange(request);
-    if (result && result.changed)
+    if (result && result.changed) {
+        audio_.emit({request.destination.cell >= bagCells ? "inventory.equip"
+                     : unequip                            ? "inventory.unequip"
+                                                          : "inventory.move",
+                     {},
+                     0,
+                     0,
+                     false,
+                     false,
+                     true});
         combat_.reconcileEffects(timeMs_, events_);
+    }
     return result;
 }
 CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {

@@ -52,8 +52,11 @@ void EffectController::resolveMirror(MirrorReservation r, bool canceled, std::ui
     for (auto& e : instances_)
         if (e.active && e.id.serial == r.effect.serial) {
             e.reserved &= ~r.duplicate;
-            if (!canceled && r.hit)
+            if (!canceled && r.hit) {
+                if (events.audioJournal)
+                    events.audioJournal->emit({"mirror.shatter"});
                 e.duplicates &= ~r.duplicate;
+            }
             if (!e.duplicates)
                 end(e, EffectEnd::Consumed, now, events);
             return;
@@ -209,6 +212,9 @@ bool EffectController::escapeWeb(EffectTarget t, std::uint64_t now, CombatEvents
 void EffectController::ignite(Cell cell) noexcept {
     for (auto& a : ground_.areas)
         if (a.active && a.web && a.cell == cell && !a.burnMs) {
+            if (events_ && events_->audioJournal)
+                events_->audioJournal->emit(
+                    {"web.ignite", {}, float(cell.x) + .5f, float(cell.y) + .5f, true});
             a.burnMs = gameplayMs_ + 6000;
             ++ground_.revision;
         }

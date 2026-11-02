@@ -291,6 +291,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         if (!h->leaveConfirmation) {
             p.box(hudLayout::quit);
             p.label("QUIT GAME", hudLayout::quit);
+            p.box({242, 286, 156, 24});
+            p.label("SETTINGS", {242, 286, 156, 24});
         }
     }
     if (h->lootHover[0] && !h->modal()) {

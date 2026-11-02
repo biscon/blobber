@@ -316,6 +316,8 @@ void GameSession::importFloor(const FloorState& s) {
     objective_ = s.objective;
     creditedDeaths_ = s.creditedDeaths;
     rewardRevision_ = s.rewardRevision;
+    audio_.clear();
+    audioWalks_.fill(0);
     timeMs_ = s.timeMs;
     doors_.now = timeMs_;
     doors_.until.fill(0);

@@ -35,6 +35,7 @@ void CommandController::openContainer(ContainerId id) noexcept {
         return;
     const auto result = session_.openContainer(id);
     if (!result) {
+        session_.audioEvents().emit({"ui.reject", {}, 0, 0, false, false, true});
         state_.log.append(result.reason);
         return;
     }

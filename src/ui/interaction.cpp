@@ -257,6 +257,10 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
             if (click && inside(hudLayout::logLatest))
                 commands.latestLog();
         } else if (state.menuOpen) {
+            if (!state.leaveConfirmation && click && inside({242, 286, 156, 24})) {
+                commands.saveMenu().settingsRequested = true;
+                return;
+            }
             if (state.development && click && inside(hudLayout::developmentXp)) {
                 commands.developmentExperience();
                 return;

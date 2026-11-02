@@ -1,0 +1,605 @@
+{
+  "version": 1,
+  "cues": {
+    "party.step": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "party.hurt": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 0.55,
+      "seed": 1101,
+      "review": true
+    },
+    "party.down": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1202,
+      "review": true
+    },
+    "party.death": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1303,
+      "review": true
+    },
+    "goblin.step": {
+      "instrument": 1,
+      "frequency": 260,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1404,
+      "review": false
+    },
+    "goblin.attack": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.4,
+      "seed": 1505,
+      "review": true
+    },
+    "goblin.hurt": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.32,
+      "seed": 1606,
+      "review": true
+    },
+    "goblin.death": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.95,
+      "seed": 1707,
+      "review": true
+    },
+    "shaman.step": {
+      "instrument": 1,
+      "frequency": 210,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1808,
+      "review": false
+    },
+    "shaman.attack": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.4,
+      "seed": 1909,
+      "review": true
+    },
+    "shaman.hurt": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.32,
+      "seed": 2010,
+      "review": true
+    },
+    "shaman.death": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.95,
+      "seed": 2111,
+      "review": true
+    },
+    "rat.step": {
+      "instrument": 2,
+      "frequency": 550,
+      "tone": 0.03,
+      "duration": 0.22,
+      "seed": 2212,
+      "review": false
+    },
+    "rat.attack": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.4,
+      "seed": 2313,
+      "review": true
+    },
+    "rat.hurt": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.32,
+      "seed": 2414,
+      "review": true
+    },
+    "rat.death": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.95,
+      "seed": 2515,
+      "review": true
+    },
+    "skeleton.step": {
+      "instrument": 1,
+      "frequency": 490,
+      "tone": 0.8,
+      "duration": 0.32,
+      "seed": 2616,
+      "review": false
+    },
+    "skeleton.attack": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.4,
+      "seed": 2717,
+      "review": false
+    },
+    "skeleton.hurt": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.32,
+      "seed": 2818,
+      "review": false
+    },
+    "skeleton.death": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.95,
+      "seed": 2919,
+      "review": false
+    },
+    "bugbear.step": {
+      "instrument": 1,
+      "frequency": 90,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3020,
+      "review": false
+    },
+    "bugbear.attack": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.4,
+      "seed": 3121,
+      "review": true
+    },
+    "bugbear.hurt": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.32,
+      "seed": 3222,
+      "review": true
+    },
+    "bugbear.death": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.95,
+      "seed": 3323,
+      "review": true
+    },
+    "zombie.step": {
+      "instrument": 1,
+      "frequency": 120,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3424,
+      "review": false
+    },
+    "zombie.attack": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.4,
+      "seed": 3525,
+      "review": true
+    },
+    "zombie.hurt": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.32,
+      "seed": 3626,
+      "review": true
+    },
+    "zombie.death": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.95,
+      "seed": 3727,
+      "review": true
+    },
+    "door.open": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.29,
+      "seed": 3828,
+      "review": true
+    },
+    "door.close": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.28,
+      "seed": 3929,
+      "review": true
+    },
+    "gate.open": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.3,
+      "seed": 4030,
+      "review": true
+    },
+    "chest.open": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.5,
+      "seed": 4131,
+      "review": true
+    },
+    "door.locked": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4232,
+      "review": false
+    },
+    "key.pickup": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4333,
+      "review": false
+    },
+    "loot.pickup": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4434,
+      "review": false
+    },
+    "inventory.equip": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4535,
+      "review": false
+    },
+    "inventory.move": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4636,
+      "review": false
+    },
+    "inventory.drop": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4737,
+      "review": false
+    },
+    "potion": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4838,
+      "review": false
+    },
+    "weapon.blunt": {
+      "instrument": 1,
+      "frequency": 110,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4939,
+      "review": false
+    },
+    "weapon.slash": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5040,
+      "review": false
+    },
+    "weapon.pierce": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5141,
+      "review": false
+    },
+    "weapon.arrow_impact": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5242,
+      "review": false
+    },
+    "weapon.swing": {
+      "instrument": 2,
+      "frequency": 850,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5343,
+      "review": false
+    },
+    "weapon.miss": {
+      "instrument": 2,
+      "frequency": 1200,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5444,
+      "review": false
+    },
+    "weapon.release": {
+      "instrument": 2,
+      "frequency": 2100,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5545,
+      "review": false
+    },
+    "radiant": {
+      "instrument": 5,
+      "frequency": 700,
+      "tone": 1.6,
+      "duration": 0.55,
+      "seed": 5646,
+      "review": false
+    },
+    "healing": {
+      "instrument": 5,
+      "frequency": 510,
+      "tone": 1.25,
+      "duration": 0.8,
+      "seed": 5747,
+      "review": false
+    },
+    "dark": {
+      "instrument": 5,
+      "frequency": 96,
+      "tone": 0.65,
+      "duration": 0.65,
+      "seed": 5848,
+      "review": false
+    },
+    "fire": {
+      "instrument": 5,
+      "frequency": 210,
+      "tone": 2.1,
+      "duration": 0.45,
+      "seed": 5949,
+      "review": false
+    },
+    "ice": {
+      "instrument": 5,
+      "frequency": 1400,
+      "tone": 0.55,
+      "duration": 0.55,
+      "seed": 6050,
+      "review": false
+    },
+    "lightning": {
+      "instrument": 5,
+      "frequency": 360,
+      "tone": 4,
+      "duration": 0.28,
+      "seed": 6151,
+      "review": false
+    },
+    "acid": {
+      "instrument": 5,
+      "frequency": 480,
+      "tone": 0.32,
+      "duration": 0.5,
+      "seed": 6252,
+      "review": false
+    },
+    "poison": {
+      "instrument": 5,
+      "frequency": 165,
+      "tone": 0.5,
+      "duration": 0.6,
+      "seed": 6353,
+      "review": false
+    },
+    "thunder": {
+      "instrument": 5,
+      "frequency": 65,
+      "tone": 0.4,
+      "duration": 0.7,
+      "seed": 6454,
+      "review": false
+    },
+    "control": {
+      "instrument": 5,
+      "frequency": 220,
+      "tone": 0.7,
+      "duration": 0.7,
+      "seed": 6555,
+      "review": false
+    },
+    "material": {
+      "instrument": 5,
+      "frequency": 150,
+      "tone": 0.6,
+      "duration": 0.45,
+      "seed": 6656,
+      "review": false
+    },
+    "arcane": {
+      "instrument": 5,
+      "frequency": 830,
+      "tone": 1.4,
+      "duration": 0.45,
+      "seed": 6757,
+      "review": false
+    },
+    "ui.confirm": {
+      "instrument": 5,
+      "frequency": 660,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 6858,
+      "review": false
+    },
+    "ui.cancel": {
+      "instrument": 5,
+      "frequency": 330,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 6959,
+      "review": false
+    },
+    "ui.reject": {
+      "instrument": 5,
+      "frequency": 145,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 7060,
+      "review": false
+    },
+    "effect.change": {
+      "instrument": 5,
+      "frequency": 910,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7161,
+      "review": false
+    },
+    "encounter": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7262,
+      "review": false
+    },
+    "victory": {
+      "instrument": 5,
+      "frequency": 550,
+      "tone": 1.5,
+      "duration": 0.9,
+      "seed": 7363,
+      "review": false
+    },
+    "defeat": {
+      "instrument": 5,
+      "frequency": 95,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7464,
+      "review": false
+    },
+    "travel": {
+      "instrument": 5,
+      "frequency": 350,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7565,
+      "review": false
+    },
+    "recovery": {
+      "instrument": 5,
+      "frequency": 490,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7666,
+      "review": false
+    },
+    "advancement": {
+      "instrument": 5,
+      "frequency": 740,
+      "tone": 1.5,
+      "duration": 0.9,
+      "seed": 7767,
+      "review": false
+    },
+    "ambience": {
+      "instrument": 6,
+      "frequency": 120,
+      "tone": 0.1,
+      "duration": 60,
+      "seed": 7868,
+      "review": false
+    },
+    "web.loop": {
+      "instrument": 7,
+      "frequency": 1800,
+      "tone": 83,
+      "duration": 6,
+      "seed": 7969,
+      "review": false
+    },
+    "spiritual.loop": {
+      "instrument": 7,
+      "frequency": 220,
+      "tone": 370,
+      "duration": 6,
+      "seed": 8070,
+      "review": false
+    },
+    "mirror.shatter": {
+      "instrument": 5,
+      "frequency": 1900,
+      "tone": 0.55,
+      "duration": 0.35,
+      "seed": 20171,
+      "review": false
+    },
+    "web.ignite": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 2.1,
+      "duration": 0.6,
+      "seed": 20272,
+      "review": false
+    },
+    "inventory.unequip": {
+      "instrument": 1,
+      "frequency": 330,
+      "tone": 1,
+      "duration": 0.2,
+      "seed": 20373,
+      "review": false
+    },
+    "weapon.heavy": {
+      "instrument": 2,
+      "frequency": 430,
+      "tone": 0.5,
+      "duration": 0.35,
+      "seed": 20474,
+      "review": false
+    }
+  }
+}

@@ -368,7 +368,10 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
             out.rawDamage = resolved.raw;
             out.damage = resolved.damage;
             out.damageAdjustment = resolved.adjustment;
+            const bool conscious = party_.character(out.recipient)->life == rules::Life::Conscious;
             out.died = party_.damage(out.recipient, out.damage, out.critical).died;
+            out.downed =
+                conscious && !out.died && party_.character(out.recipient)->life != rules::Life::Conscious;
             if (party_.character(out.recipient)->life != rules::Life::Conscious)
                 state_.defending[out.recipient.index] = false;
         } else {

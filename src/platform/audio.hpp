@@ -1,0 +1,63 @@
+#pragma once
+#include "audio/bank.hpp"
+#include "audio/events.hpp"
+#include "game/session.hpp"
+#include <raylib.h>
+namespace blobber {
+class AudioRuntime {
+  public:
+    AudioRuntime() = default;
+    ~AudioRuntime();
+    AudioRuntime(const AudioRuntime&) = delete;
+    AudioRuntime& operator=(const AudioRuntime&) = delete;
+    void prepare(const std::filesystem::path&, bool disabled = false,
+                 const std::filesystem::path& settings = {});
+    void update(GameSession*, bool paused, bool focused, float dt);
+    audio::Handle play(const char*, float x = 0, float z = 0, bool positional = false, bool interface = false,
+                       unsigned priority = 0);
+    bool stop(audio::Handle) noexcept;
+    void detach() noexcept;
+    void shutdown() noexcept;
+    audio::Settings settings;
+    float worldGain = 1; // Travel fade, never persisted.
+    bool ready() const noexcept { return ready_; }
+    void persist();
+    const std::string& warning() const noexcept { return warning_; }
+
+  private:
+    struct Sample {
+        Sound source{};
+        std::array<Sound, 8> voices{};
+        unsigned count = 0;
+        std::string path;
+    };
+    struct Prepared {
+        std::array<unsigned, 16> samples{};
+        audio::Variation variation;
+        float since = 100;
+    };
+    struct Stream {
+        Music music{};
+        bool valid = false, active = false, paused = false;
+        unsigned cue = 0;
+        float x = 0, z = 0;
+        bool positional = false;
+        std::uint64_t identity = 0;
+    };
+    std::array<audio::Voice, 64> voices_{};
+    std::vector<Sample> samples_;
+    std::vector<Prepared> cues_;
+    std::array<Stream, 8> streams_{};
+    audio::Bank bank_;
+    std::filesystem::path root_, settingsPath_;
+    std::string warning_;
+    bool ready_ = false, worldPaused_ = false, focused_ = true;
+    std::uint64_t owner_ = 0, sequence_ = 0, world_ = 0;
+    float x_ = 0, z_ = 0, rx_ = 1, rz_ = 0;
+    GameSession* session_ = nullptr;
+    unsigned cue(const char*) const noexcept;
+    float gain(unsigned category, bool interface) const noexcept;
+    void release(unsigned) noexcept;
+    void streamUpdate(float);
+};
+} // namespace blobber

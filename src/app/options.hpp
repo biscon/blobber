@@ -4,9 +4,9 @@
 #include <optional>
 namespace blobber {
 struct Options {
-    bool development = false, supersampling = true, help = false;
+    bool noAudio = false, development = false, supersampling = true, help = false;
     int width = 1920, height = 1080;
-    std::filesystem::path assets, campaignSave;
+    std::filesystem::path assets, campaignSave, settings;
     std::optional<std::uint32_t> seed;
 };
 Options parseOptions(int argc, char** argv);

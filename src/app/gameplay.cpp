@@ -1,10 +1,12 @@
 #include "app/gameplay.hpp"
+#include "app/audio_settings.hpp"
 #include "app/campaign_saves.hpp"
 #include "app/loading.hpp"
 #include "app/result_flow.hpp"
 #include "app/travel_fade.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
+#include "platform/audio.hpp"
 #include "platform/game_view.hpp"
 #include "platform/input.hpp"
 #include "ui/interaction.hpp"
@@ -72,6 +74,15 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         const std::vector<NpcTimings>& timings, Presenter& presenter, const Options& options,
                         WorldRenderer& world, const RecoveryLevel& recovery,
                         const rules::PresetParty* starting, const GameplayLaunch* launch) {
+    struct AudioLeave {
+        AudioRuntime* audio;
+        ~AudioLeave() {
+            if (audio) {
+                audio->detach();
+                audio->worldGain = 1;
+            }
+        }
+    } audioLeave{presenter.audio};
     const Player spawn = launch ? launch->spawn : Player{};
     auto* campaign = launch ? launch->campaign : nullptr;
     const auto idle = gameplayPlacements(map, placements, spawn.cell, campaign);
@@ -103,6 +114,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             initial.commands.arenaContext(false);
         initial.refresh();
         initial.frames.activate();
+        if (presenter.audio)
+            presenter.audio->update(&initial.session, false, true, 0);
         if (loading->closing())
             return PlayOutcome::Quit;
         loading.reset();
@@ -241,10 +254,16 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     if (WindowShouldClose())
                         return PlayOutcome::Quit;
                     fade.advance(GetFrameTime());
+                    if (presenter.audio) {
+                        presenter.audio->worldGain = 1 - fade.alpha();
+                        presenter.audio->update(&current->session, false, IsWindowFocused(), GetFrameTime());
+                    }
                     presenter.presentCached(fade.alpha());
                 }
                 presenter.presentCached(1); // A fully black frame precedes any destination work.
                 fade.blackPresented();
+                if (presenter.audio)
+                    presenter.audio->update(&current->session, true, IsWindowFocused(), 0);
                 bool closing = false;
                 {
                     LoadingScreen travelLoading(presenter.loadingWorker(), &presenter, true);
@@ -279,6 +298,9 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 if (closing)
                     return PlayOutcome::Quit;
                 auto& arrived = *current;
+                if (presenter.audio) {
+                    presenter.audio->update(&arrived.session, true, IsWindowFocused(), 0);
+                }
                 arrived.refresh(debug, sample.ui.focused);
                 presenter.fade(1);
                 arrived.frames.present(presenter, arrived.session, arrived.map, debug, true,
@@ -289,9 +311,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     if (WindowShouldClose())
                         return PlayOutcome::Quit;
                     fade.advance(GetFrameTime());
+                    if (presenter.audio) {
+                        presenter.audio->worldGain = 1 - fade.alpha();
+                        presenter.audio->update(&current->session, false, IsWindowFocused(), GetFrameTime());
+                    }
                     presenter.presentCached(fade.alpha());
                 }
                 presenter.fade(0);
+                if (presenter.audio) {
+                    presenter.audio->worldGain = 1;
+                    presenter.audio->play("travel");
+                }
                 inputArmed = false;
                 first = true;
                 continue;
@@ -305,6 +335,15 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 return launch && launch->arena ? PlayOutcome::ArenaSetup : PlayOutcome::MainMenu;
             if (view.commands.snapshot().quitRequested)
                 return PlayOutcome::Quit;
+            if (presenter.audio)
+                presenter.audio->update(&view.session, paused || view.commands.snapshot().modal(),
+                                        sample.ui.focused, dt);
+            if (view.commands.saveMenu().settingsRequested) {
+                view.commands.saveMenu().settingsRequested = false;
+                runAudioSettings(presenter, &view.session);
+                inputArmed = false;
+                first = true;
+            }
             changed |= view.refresh(debug, sample.ui.focused);
             view.frames.present(presenter, view.session, view.map, debug, changed || first,
                                 &view.commands.snapshot(),

@@ -32,6 +32,7 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
     if (!result)
         return {result.error, inventoryMessage(result.error)};
     if (!preview) {
+        audio_.emit({"inventory.drop", {}, 0, 0, false, false, true});
         loot_.publishDrop(ticket, movement().player.cell, item, quantity);
         combat_.reconcileEffects(timeMs_, events_);
     }
@@ -83,6 +84,7 @@ PickupResult GameSession::openContainer(ContainerId id) noexcept {
         return access;
     auto& c = loot_.state_.containers[id.slot];
     if (!c.opened) {
+        audio_.emit({"chest.open", {}, float(c.cell.x) + .5f, float(c.cell.y) + .5f, true, false, true});
         c.opened = true;
         ++loot_.state_.revision;
         if (mutation_ != UINT64_MAX)
@@ -131,8 +133,10 @@ PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept 
     const auto result = party_.acquire({r.recipient, s->item, s->quantity, r.inventoryRevision}, preview);
     if (!result)
         return {result.error, inventoryMessage(result.error)};
-    if (!preview)
+    if (!preview) {
+        audio_.emit({"loot.pickup", {}, 0, 0, false, false, true});
         loot_.collect(r.loot);
+    }
     return {};
 }
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
@@ -181,6 +185,7 @@ RestResult GameSession::rest(const RestRequest& r) noexcept {
     const auto out = party_.recover(r, p.supply, rng_);
     if (!out)
         return out;
+    audio_.emit({"recovery", {}, 0, 0, false, false, true});
     ++restToken_;
     movement_.clearPending();
     combat_.restTime(p.elapsedMs, timeMs_, events_);

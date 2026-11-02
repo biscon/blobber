@@ -43,6 +43,7 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         panel(3);
     } else if (h.leaveConfirmation) {
         panel(4);
+        t.add({242, 286, 156, 24}, !h.leaveConfirmation);
         t.add(hudLayout::resume);
         t.add(hudLayout::mainMenu);
     } else if (h.loot.open) {
@@ -134,6 +135,7 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         t.add(hudLayout::logLatest);
     } else if (h.menuOpen) {
         panel(11);
+        t.add({242, 286, 156, 24}, !h.leaveConfirmation);
         t.add(hudLayout::resume);
         t.add(hudLayout::gear);
         t.add(hudLayout::rest);

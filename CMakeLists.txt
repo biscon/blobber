@@ -10,14 +10,30 @@ option(BLOBBER_BUILD_GRAPHICS "Build the game, image tools and optional GPU repl
 if(BLOBBER_BUILD_GRAPHICS)
     option(BLOBBER_USE_SYSTEM_RAYLIB "Prefer an installed raylib 6.2 package" ON)
     if(BLOBBER_USE_SYSTEM_RAYLIB)
-        find_package(raylib 6.2 EXACT QUIET)
+        # Keep incompatible imported targets scoped out so the source fallback remains usable.
+        function(blobber_find_audio_raylib)
+            find_package(raylib 6.2 EXACT QUIET)
+            if(TARGET raylib)
+                include(CheckCXXSourceCompiles)
+                set(CMAKE_REQUIRED_LIBRARIES raylib)
+                unset(BLOBBER_SYSTEM_AUDIO CACHE)
+                check_cxx_source_compiles("#include <raylib.h>
+int main(){InitAudioDevice(); Sound s{}; auto a=LoadSoundAlias(s); SetSoundPan(a,-1); UnloadSoundAlias(a); Music m{}; UpdateMusicStream(m); CloseAudioDevice();}" BLOBBER_SYSTEM_AUDIO)
+                if(BLOBBER_SYSTEM_AUDIO)
+                    set_property(TARGET raylib PROPERTY IMPORTED_GLOBAL TRUE)
+                else()
+                    message(STATUS "System raylib lacks required audio; using pinned fallback")
+                endif()
+            endif()
+        endfunction()
+        blobber_find_audio_raylib()
     endif()
     if(NOT TARGET raylib)
         include(FetchContent)
         set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
         set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
         set(CUSTOMIZE_BUILD ON CACHE BOOL "" FORCE)
-        set(SUPPORT_MODULE_RAUDIO OFF CACHE BOOL "" FORCE)
+        set(SUPPORT_MODULE_RAUDIO ON CACHE BOOL "" FORCE)
         FetchContent_Declare(raylib
             URL https://github.com/raysan5/raylib/archive/refs/tags/6.2.tar.gz
             URL_HASH SHA256=df7a13129b1bec9e73a6962efff170beba310ee6eab8f94cd000b7316b4db5ee
@@ -55,7 +71,7 @@ target_include_directories(blobber_rules PUBLIC src)
 add_library(blobber_rules_io src/persistence/campaign_store.cpp src/persistence/campaign_codec.cpp src/persistence/arena_store.cpp src/persistence/library_codec.cpp src/persistence/character_library.cpp src/assets/rules_loader.cpp src/assets/rules_character_loader.cpp)
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
 find_package(Threads REQUIRED)
-add_library(blobber_core src/world/surfaces.cpp src/world/environment_maps.cpp src/render/attack_visuals.cpp src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/generation/encounters.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/stone_layout.cpp src/generation/fallback.cpp src/generation/metrics.cpp src/generation/fixtures.cpp src/generation/geometry.cpp
+add_library(blobber_core src/audio/events.cpp src/audio/policy.cpp src/world/surfaces.cpp src/world/environment_maps.cpp src/render/attack_visuals.cpp src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/generation/encounters.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/stone_layout.cpp src/generation/fallback.cpp src/generation/metrics.cpp src/generation/fixtures.cpp src/generation/geometry.cpp
     src/generation/dressing.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/enemy_effects.cpp src/game/enemy_spells.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/damage_resolution.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/ui/button_targets.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules Threads::Threads)
@@ -67,6 +83,9 @@ blobber_warnings(blobber_npc_io)
 foreach(target blobber_rules blobber_rules_io blobber_core)
     blobber_warnings(${target})
 endforeach()
+
+add_library(blobber_audio_io src/audio/bank.cpp)
+target_link_libraries(blobber_audio_io PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 
 add_library(blobber_world_assets src/assets/world_assets.cpp)
 target_link_libraries(blobber_world_assets PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
@@ -87,10 +106,11 @@ if(BLOBBER_BUILD_GRAPHICS)
         src/assets/npc_sheet.cpp src/render/image_sampling.cpp)
     target_link_libraries(blobber_assets_io PUBLIC blobber_core blobber_npc_io raylib PRIVATE nlohmann_json::nlohmann_json)
     add_library(blobber_platform
+        src/platform/audio.cpp
         src/platform/gpu_resources.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
         src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
-    target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu raylib)
-    add_library(blobber_application src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
+    target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu blobber_audio_io raylib)
+    add_library(blobber_application src/app/audio_settings.cpp src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
         src/ui/arena_screen.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp
         src/app/menu.cpp src/app/menu_model.cpp src/app/application.cpp src/app/options.cpp src/app/gameplay.cpp)
     add_executable(blobber src/main.cpp)
@@ -115,6 +135,7 @@ if(BLOBBER_BUILD_GRAPHICS)
     endif()
     file(GLOB_RECURSE BLOBBER_COPY_INPUTS CONFIGURE_DEPENDS LIST_DIRECTORIES false
         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/*"
@@ -532,4 +553,31 @@ if(BUILD_TESTING)
     add_test(NAME retired_assets COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/retired_assets_tests.py
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RetireAssets.cmake)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(blobber_audio_tests tests/audio_tests.cpp)
+    target_include_directories(blobber_audio_tests PRIVATE tests)
+    target_link_libraries(blobber_audio_tests PRIVATE blobber_audio_io)
+    blobber_warnings(blobber_audio_tests)
+    add_test(NAME audio COMMAND blobber_audio_tests)
+endif()
+if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
+    # Fake raylib functions exercise our runtime without opening a device or window.
+    add_executable(blobber_audio_runtime_tests tests/audio_runtime_tests.cpp src/platform/audio.cpp)
+    target_include_directories(blobber_audio_runtime_tests PRIVATE tests)
+    target_link_libraries(blobber_audio_runtime_tests PRIVATE blobber_audio_io blobber_world_cpu raylib)
+    blobber_warnings(blobber_audio_runtime_tests)
+    add_test(NAME audio_runtime COMMAND blobber_audio_runtime_tests)
+endif()
+if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
+    add_executable(blobber_audio_device_check EXCLUDE_FROM_ALL tests/audio_device_check.cpp)
+    target_include_directories(blobber_audio_device_check PRIVATE tests)
+    target_link_libraries(blobber_audio_device_check PRIVATE blobber_platform)
+    blobber_warnings(blobber_audio_device_check)
+endif()
+if(BLOBBER_BUILD_GRAPHICS)
+    add_executable(blobber_capture_audio_settings EXCLUDE_FROM_ALL tools/capture_audio_settings.cpp)
+    target_link_libraries(blobber_capture_audio_settings PRIVATE blobber_application)
+    blobber_warnings(blobber_capture_audio_settings)
 endif()

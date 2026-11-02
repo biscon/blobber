@@ -25,7 +25,8 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
         v.button(p, {210, 133, 220, 30}, "Start new game", 1);
         v.button(p, {210, 176, 220, 30}, "Arena", 4000);
         v.button(p, {210, 219, 220, 30}, "Character Creator", 2);
-        v.button(p, {210, 262, 220, 30}, "Quit", 3);
+        v.button(p, {210, 257, 105, 30}, "Settings", 70);
+        v.button(p, {325, 257, 105, 30}, "Quit", 3);
         p.text("Arrows / Tab: navigate     Enter: select", 220, 310, hudInk::muted);
     } else if (m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios) {
         drawArena(v, p, art);

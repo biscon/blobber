@@ -1,5 +1,11 @@
 # System design
 
+Audio delivery (implemented and mechanically verified, 2026-11-02):
+[runtime, editable bank and verification](audio_design.md). Includes 75 cues / 218
+generated variants, shared main/pause Settings, bounded playback and authoritative
+event timing. Debug graphical/headless builds, 13 focused suites and real-device
+checks pass. Subjective listening and interactive acceptance remain user review.
+
 Combat-entry/front-slot follow-up (implemented and verified, 2026-11-02):
 [settled contact and current-facing approaches](combat_entry_followup.md) addresses
 premature destination-based contact, hidden front protectors holding the camera,

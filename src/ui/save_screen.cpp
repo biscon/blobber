@@ -14,7 +14,8 @@ void drawSaveMenu(const HudPainter& p, const SaveHud& h) {
                                             : "PAUSED";
     p.centered(title, {panel.x + 10, panel.y + 13, 330, 24}, hudInk::gold, UiTextStyle::Control);
     const char* labels[]{
-        "Resume", "Save", "Save and Main Menu", "Rest", "Main Menu without saving", "Quit without saving"};
+        "Resume",  "Save", "Save and Main Menu", "Rest", "Main Menu without saving", "Quit without saving",
+        "Settings"};
     const char* warning[]{"Retry", "Main Menu", "Quit"};
     const char* confirm[]{"Cancel", h.confirmation == SaveConfirmation::Overwrite ? "Replace save" : "Leave"};
     const unsigned count = saveLayout::rowCount(h);

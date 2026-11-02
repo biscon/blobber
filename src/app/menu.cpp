@@ -1,9 +1,11 @@
 #include "app/menu.hpp"
+#include "app/audio_settings.hpp"
 #include "app/loading.hpp"
 #include "app/menu_model.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
 #include "persistence/campaign_store.hpp"
+#include "platform/audio.hpp"
 #include "platform/input.hpp"
 #include "platform/window.hpp"
 #include "ui/hud_painter.hpp"
@@ -22,7 +24,10 @@ int runMenus(const Options& options) try {
         return loadRules(options.assets / "rules/catalog.json");
     });
     GpuResources resources;
+    AudioRuntime audio;
+    audio.prepare(options.assets, options.noAudio, options.settings);
     Presenter presenter(resources, options.assets, &worker);
+    presenter.audio = &audio;
     loading->attach(presenter);
     presenter.prepareMenu();
     CharacterLibrary library(catalog, characterLibraryPath());
@@ -66,6 +71,7 @@ int runMenus(const Options& options) try {
     while (!WindowShouldClose()) {
         presenter.presentMenu(drawMenu, &v);
         auto sample = input.poll(GetFrameTime());
+        audio.update(nullptr, false, sample.ui.focused, GetFrameTime());
         auto& m = v.model;
         v.interaction.tick(GetFrameTime(), sample.ui.focused);
         if (!sample.ui.focused) {
@@ -196,6 +202,12 @@ int runMenus(const Options& options) try {
                                                        : (sample.ui.scroll > 0 ? 4007 : 4008);
         if (!action)
             continue;
+        audio.play(action == 4 ? "ui.cancel" : "ui.confirm", 0, 0, false, true);
+        if (action == 70) {
+            runAudioSettings(presenter);
+            suppress = true;
+            continue;
+        }
         if (arenaScreen)
             v.arena.blur();
         if (action >= 4000) {

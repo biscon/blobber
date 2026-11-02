@@ -1,0 +1,23 @@
+All sounds remain pending subjective acceptance. Priority listening review:
+party.hurt
+party.down
+party.death
+goblin.attack
+goblin.hurt
+goblin.death
+shaman.attack
+shaman.hurt
+shaman.death
+rat.attack
+rat.hurt
+rat.death
+bugbear.attack
+bugbear.hurt
+bugbear.death
+zombie.attack
+zombie.hurt
+zombie.death
+door.open
+door.close
+gate.open
+chest.open

@@ -808,6 +808,7 @@ CommandReason CommandController::submit(const PartyCommand& command) noexcept {
         updateAvailability();
         return out.reason;
     }
+    session_.audioEvents().emit({"ui.reject", {}, 0, 0, false, false, true});
     char line[CombatLog::messageBytes];
     const auto* member = party_.character(command.character);
     if (command.target && command.action != PartyAction::Defend)

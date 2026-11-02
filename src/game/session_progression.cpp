@@ -46,6 +46,7 @@ AdvancementResult GameSession::advance(const AdvancementRequest& r) noexcept {
         return {error, {}};
     auto result = party_.advance(r);
     if (result) {
+        audio_.emit({"advancement", {}, 0, 0, false, false, true});
         ++restToken_;
         movement_.clearPending();
         combat_.reconcileEffects(timeMs_, events_);

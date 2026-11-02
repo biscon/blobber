@@ -6,6 +6,15 @@ bool GameSession::completeFixture(unsigned slot) noexcept {
     if (!floor_.complete(slot))
         return false;
     const auto kind = floor_.definition().entries[slot].kind;
+    if (kind == FixtureKind::GuardianGate)
+        audio_.emit({"gate.open",
+                     {},
+                     float(floor_.definition().entries[slot].cell.x) + .5f,
+                     float(floor_.definition().entries[slot].cell.y) + .5f,
+                     true,
+                     false,
+                     false,
+                     3});
     if (kind == FixtureKind::Door || kind == FixtureKind::GuardianGate) {
         doors_.now = timeMs_;
         clearPending();
@@ -86,9 +95,12 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
                                      : "Travel is not available yet."};
     if (floor_.completed(r.id.slot) && f->kind != FixtureKind::Door)
         return {true, false, "Already completed."};
-    if (f->kind == FixtureKind::Door && f->key && !(party_.questKeys_ & (1u << f->key)))
+    if (f->kind == FixtureKind::Door && f->key && !(party_.questKeys_ & (1u << f->key))) {
+        if (!preview)
+            audio_.emit({"door.locked", {}, float(f->cell.x) + .5f, float(f->cell.y) + .5f, true});
         return {false, false,
                 f->key == 2 ? "Requires the Bronze seal key." : "Requires the Silver seal key."};
+    }
     const bool closing = f->kind == FixtureKind::Door && floor_.open(r.id.slot);
     if (closing) {
         if (pose.cell == f->cell || actors_.occupied(f->cell))
@@ -119,6 +131,13 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
             return {false, false, "Fixture unavailable."};
         if (f->kind == FixtureKind::Key)
             party_.questKeys_ |= std::uint8_t(1u << f->key);
+        audio_.emit({f->kind == FixtureKind::Key ? "key.pickup"
+                     : closing                   ? "door.close"
+                                                 : "door.open",
+                     {},
+                     float(f->cell.x) + .5f,
+                     float(f->cell.y) + .5f,
+                     true});
         movement_.clearPending();
         detectContact();
         discover();

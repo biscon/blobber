@@ -6,8 +6,9 @@ namespace blobber {
 int run(int argc, char** argv) {
     const auto options = parseOptions(argc, argv);
     if (options.help) {
-        std::cout << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--campaign-save FILE] "
-                     "[--seed UINT32] [--development] [--supersampling on|off]\n";
+        std::cout
+            << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--campaign-save FILE] "
+               "[--no-audio] [--settings FILE] [--seed UINT32] [--development] [--supersampling on|off]\n";
         return 0;
     }
     return runMenus(options);

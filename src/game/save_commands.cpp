@@ -68,6 +68,9 @@ void CommandController::routeSaveMenu(const UiInput& input) noexcept {
         h.confirmation = SaveConfirmation::Leave;
         h.cursor = 0;
         break;
+    case 6:
+        h.settingsRequested = true;
+        break;
     case 5:
         h.confirmation = SaveConfirmation::Quit;
         h.cursor = 0;

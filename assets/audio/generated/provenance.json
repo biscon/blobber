@@ -1,0 +1,6324 @@
+{
+  "generated/party.step_01.wav": {
+    "cue": "party.step",
+    "variant": "01",
+    "seed": 1000,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.188765481149908,
+      "dc": 0.00026646931966145835,
+      "seam": 3.0517578125e-05,
+      "sha256": "5791776b4516797ea497dc4fe7440d5c60f9aa56222c98aef2a4654d16896e4a"
+    },
+    "recipe_sha256": "b4c578c520935d79031e5019da9271e967d852fc7eafc2c4c60173996992dc23"
+  },
+  "generated/party.step_02.wav": {
+    "cue": "party.step",
+    "variant": "02",
+    "seed": 1017,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.886052790067772,
+      "dc": 0.00027538617451985676,
+      "seam": 3.0517578125e-05,
+      "sha256": "13139163de53fd03c8975bd777e45564604622f48cada67f4168ad879d9a0c7e"
+    },
+    "recipe_sha256": "b7b27615e4bd853f71cc2f1a64442fe5420fb7782d1f17a8d888f5e8c95ff040"
+  },
+  "generated/party.step_03.wav": {
+    "cue": "party.step",
+    "variant": "03",
+    "seed": 1034,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -21.46740691430214,
+      "dc": 0.00029591878255208335,
+      "seam": 3.0517578125e-05,
+      "sha256": "429a37582148cf9ad87c1a1a633dc0e424c782bddb90bbaf7f4daf8159a5890f"
+    },
+    "recipe_sha256": "c6dd891138ec38aba23254b7911a72e9cd3060a1306827d938504fdde64322ea"
+  },
+  "generated/party.step_04.wav": {
+    "cue": "party.step",
+    "variant": "04",
+    "seed": 1051,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.11279732127603,
+      "dc": 0.00033533414204915365,
+      "seam": 3.0517578125e-05,
+      "sha256": "e516b8900df18c92cd69e2e529e6bde4fd26973109dd3bb6e1e7c39e8e264956"
+    },
+    "recipe_sha256": "88ab1392a00f774f00fedc7fdc595bf4557ba8b72b671c0928b685b091cc381d"
+  },
+  "generated/party.step_05.wav": {
+    "cue": "party.step",
+    "variant": "05",
+    "seed": 1068,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.198630506691817,
+      "dc": 0.00037082990010579424,
+      "seam": 3.0517578125e-05,
+      "sha256": "d10b16e47c53f1304d00028529d15cda2eaf4d2f43d980571a3ed0ca945359dd"
+    },
+    "recipe_sha256": "cd3a4b55bea1ebfdb35ffb8ef7b08231bbb2d72501a4cbcba9890230fbc909ca"
+  },
+  "generated/party.step_06.wav": {
+    "cue": "party.step",
+    "variant": "06",
+    "seed": 1085,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 140,
+      "tone": 0.02,
+      "duration": 0.2,
+      "seed": 1000,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -21.04834059900403,
+      "dc": 0.0004135862986246745,
+      "seam": 3.0517578125e-05,
+      "sha256": "f85fea28069c0b9378d3654878b9b105028004e1222c9acffafe976c6fe585e8"
+    },
+    "recipe_sha256": "175a2d754e934d4aaeb3851cbfcd03fda5739c946c0df469f7eae5c84da80572"
+  },
+  "generated/party.hurt_01.wav": {
+    "cue": "party.hurt",
+    "variant": "01",
+    "seed": 1101,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 0.55,
+      "seed": 1101,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.470939305093104,
+      "dc": 1.546570748993845e-05,
+      "seam": 0.0,
+      "sha256": "89c33d1b1809404c965da5d08745b54aa5355de9edc19588578217b1c3920a81"
+    },
+    "recipe_sha256": "632438705cbbb3a098d0489c60b8e93a5ca42a7a73f60c3b7cf773d6d1d016dc"
+  },
+  "generated/party.hurt_02.wav": {
+    "cue": "party.hurt",
+    "variant": "02",
+    "seed": 1118,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 0.55,
+      "seed": 1101,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.554517546622584,
+      "dc": 1.519174286813447e-05,
+      "seam": 0.0,
+      "sha256": "b963bc9454dc62e39ab3f24bb0fa3a8dc2331090a56d6e0010509b60f97b2ebb"
+    },
+    "recipe_sha256": "57d4ff80362755428d6ebb4fb6c3de4c02b12e7180e8e7ad403fedf78328de41"
+  },
+  "generated/party.hurt_03.wav": {
+    "cue": "party.hurt",
+    "variant": "03",
+    "seed": 1135,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 0.55,
+      "seed": 1101,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.81573483128191,
+      "dc": 1.3984911369554924e-05,
+      "seam": 0.0,
+      "sha256": "0a7219b6ff9c68f53add873ca3813917f83333e2f94d6088263aa5a52b8a8778"
+    },
+    "recipe_sha256": "6b9b66360fc51cf57fc00ee8f1fb88235b4039c23cdc2454b1ecedfeacd3ecc8"
+  },
+  "generated/party.down_01.wav": {
+    "cue": "party.down",
+    "variant": "01",
+    "seed": 1202,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1202,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 1.1,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.673937118439127,
+      "dc": 7.792386141690342e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "33508b181254134f4e9da5567d7e6b3bdc7fab14c905efcfeae8fe772bdb125e"
+    },
+    "recipe_sha256": "6371bdecd0ebb8fcbd451fd66567c939257b8c41de6c4bf3e4b539ff21d8248a"
+  },
+  "generated/party.down_02.wav": {
+    "cue": "party.down",
+    "variant": "02",
+    "seed": 1219,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1202,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 1.1,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.45532629364669,
+      "dc": 7.691816850142046e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "ce933afe977473231981172ca536fb30749fedf538561bf0596bc7c3f7e35ea0"
+    },
+    "recipe_sha256": "7e48d521e583c61af7bdc78b32238b6a40cbc8647340010e7a46f4e3c716a3b6"
+  },
+  "generated/party.down_03.wav": {
+    "cue": "party.down",
+    "variant": "03",
+    "seed": 1236,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1202,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 1.1,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.445103316245348,
+      "dc": 7.753083200165719e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "9eb9ced1b90614ed98009316b928aa4b14fdc9dc302164a262b9ba8588d32403"
+    },
+    "recipe_sha256": "619370108bbf48e6e61044aad97ccb1c7329042436ca2c3c3fbd4ef5c770b8ce"
+  },
+  "generated/party.death_01.wav": {
+    "cue": "party.death",
+    "variant": "01",
+    "seed": 1303,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1303,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 1.1,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.750353170593264,
+      "dc": 7.665229566169507e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "b0c74dca4e62eadc4fc69391259cb7cece575a9b22f37c9a328a8894590a69aa"
+    },
+    "recipe_sha256": "80201c551a282496119012f69ac9c2f9cfe6fbe5b843033cef109417bcafd347"
+  },
+  "generated/party.death_02.wav": {
+    "cue": "party.death",
+    "variant": "02",
+    "seed": 1320,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1303,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 1.1,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.419422089403902,
+      "dc": 8.074442545572917e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "5d045e9c572ad3edd0cc9fd278751ac5ed10ccb6219ce2f367dff4cb91d6d9e5"
+    },
+    "recipe_sha256": "c098ccbd6d6e0a08343aadae5d76bd1dff33a7ac25a0523164635e2376cc5d6c"
+  },
+  "generated/party.death_03.wav": {
+    "cue": "party.death",
+    "variant": "03",
+    "seed": 1337,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 110,
+      "tone": 520,
+      "duration": 1.1,
+      "seed": 1303,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 1.1,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.484315058667626,
+      "dc": 7.801055908203125e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "02ea6e61104cb73bb8ed50b02cd4622c169a08d4f5c728c02e8fcb134f3b7182"
+    },
+    "recipe_sha256": "03f646bada5b4ed880036e4ba6a4647ac471e6f49e040ba1144f42eef9a0849f"
+  },
+  "generated/goblin.step_01.wav": {
+    "cue": "goblin.step",
+    "variant": "01",
+    "seed": 1404,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 260,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1404,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.101287309974587,
+      "dc": 0.00021879871686299643,
+      "seam": 0.0,
+      "sha256": "d87ed69c620c75193922bb2b2f1cc78fe1863aaee6d997b8fb81bfd2dbcb0af3"
+    },
+    "recipe_sha256": "5d5981540937a675280af155c6b5824686ce8718eed131b395d3283705fd1b87"
+  },
+  "generated/goblin.step_02.wav": {
+    "cue": "goblin.step",
+    "variant": "02",
+    "seed": 1421,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 260,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1404,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.194436094917386,
+      "dc": 0.00019824703534444173,
+      "seam": 0.0,
+      "sha256": "bfd85be14e7d4a08476ef0a27c8e93e89d3acff4e6ebd22dc52fafb4210c2276"
+    },
+    "recipe_sha256": "3094e20884af4f5b322a158f3918457baad9eb12fa8bd0bd45e5795cb9e24e5b"
+  },
+  "generated/goblin.step_03.wav": {
+    "cue": "goblin.step",
+    "variant": "03",
+    "seed": 1438,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 260,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1404,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.7486077060776,
+      "dc": 0.00021903316179911297,
+      "seam": 0.0,
+      "sha256": "c657849536401014dc566b659390e0735fc687334cacc7947d4b49cf8d110825"
+    },
+    "recipe_sha256": "c637d0006860e66ba4080e3891699aa841d5243f8b40c401f65ef37545af6849"
+  },
+  "generated/goblin.step_04.wav": {
+    "cue": "goblin.step",
+    "variant": "04",
+    "seed": 1455,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 260,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1404,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.45210437494235,
+      "dc": 0.00024752020835876464,
+      "seam": 0.0,
+      "sha256": "7ca256a2a8e27e4a4409d4e4e8f3463d8b363ca9e35058e5d72abab2bf28cffc"
+    },
+    "recipe_sha256": "cd484c820a7c571fb7c45005fb62978c57e8f47e3734312afca8938a929a37dc"
+  },
+  "generated/goblin.attack_01.wav": {
+    "cue": "goblin.attack",
+    "variant": "01",
+    "seed": 1505,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.4,
+      "seed": 1505,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.684338498613972,
+      "dc": 4.0801366170247396e-06,
+      "seam": 0.0,
+      "sha256": "e9caf8dba7f91c539d7448850b563374440d4616bb3a1e07fafe699dbee9e856"
+    },
+    "recipe_sha256": "d7b213b38a2e7fdeb9b83490e313ee8db80edd574aa5ce0dfc285e62ef329e28"
+  },
+  "generated/goblin.attack_02.wav": {
+    "cue": "goblin.attack",
+    "variant": "02",
+    "seed": 1522,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.4,
+      "seed": 1505,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.31518449976427,
+      "dc": 5.3469340006510415e-06,
+      "seam": 0.0,
+      "sha256": "b28e27282394d2199d402e60d64fd3cca8e666659f03557034d4a26edfead72e"
+    },
+    "recipe_sha256": "cd8cf701e04dafaa3a9f61558f51313e52712d279c6934e024d2c4b66f5a5ff6"
+  },
+  "generated/goblin.attack_03.wav": {
+    "cue": "goblin.attack",
+    "variant": "03",
+    "seed": 1539,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.4,
+      "seed": 1505,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.65272227524915,
+      "dc": 6.591478983561198e-06,
+      "seam": 0.0,
+      "sha256": "fc677c5111de1124f9d11dc5ceea39d521eea984eb022912bc05920d6240d626"
+    },
+    "recipe_sha256": "497eee069576b4e32077e952dea759a64a7be6cf8a017a5f99469882534342af"
+  },
+  "generated/goblin.hurt_01.wav": {
+    "cue": "goblin.hurt",
+    "variant": "01",
+    "seed": 1606,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.32,
+      "seed": 1606,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.595516269008478,
+      "dc": 6.566445032755534e-06,
+      "seam": 0.0,
+      "sha256": "4ecbbc72473cc3713c06e54fbff45e69917433dbc31db6f11c793e4e6fc91701"
+    },
+    "recipe_sha256": "7b761bce32e8af25351830bebd29e3eecd81c084105038f2e792d63c0094d0e0"
+  },
+  "generated/goblin.hurt_02.wav": {
+    "cue": "goblin.hurt",
+    "variant": "02",
+    "seed": 1623,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.32,
+      "seed": 1606,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.016263027367202,
+      "dc": 7.329384485880534e-06,
+      "seam": 0.0,
+      "sha256": "5f9e6e0029e16afc13e8f3bb8eb04aa6ddad744b82fa679e607e0668730f3cf3"
+    },
+    "recipe_sha256": "a752f2a3862e5fa7de453f58e248a74b9a7a617e27a4d159dd585f46c524b8f8"
+  },
+  "generated/goblin.hurt_03.wav": {
+    "cue": "goblin.hurt",
+    "variant": "03",
+    "seed": 1640,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.32,
+      "seed": 1606,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.84304726201804,
+      "dc": 8.726119995117188e-06,
+      "seam": 0.0,
+      "sha256": "25eac4b07b1d9946f8b6e45379c09dd3d75f4764226dc0f103b3ef11040406cb"
+    },
+    "recipe_sha256": "65378ee3c81d673f2af0e0dad274b84c30a90d382d249936f2234294eea95827"
+  },
+  "generated/goblin.death_01.wav": {
+    "cue": "goblin.death",
+    "variant": "01",
+    "seed": 1707,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.95,
+      "seed": 1707,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.432626645578598,
+      "dc": 1.2300725568804826e-06,
+      "seam": 0.0,
+      "sha256": "815a21cf2ba9ba04db7ca82e97510e6634aa1bb2707bc5d9607514f79232cac6"
+    },
+    "recipe_sha256": "c1df61b9eb59965aa8ff67b8139158718381adc9b2360484b11b1feea8c7a423"
+  },
+  "generated/goblin.death_02.wav": {
+    "cue": "goblin.death",
+    "variant": "02",
+    "seed": 1724,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.95,
+      "seed": 1707,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.787222146445178,
+      "dc": 1.7059058473821272e-06,
+      "seam": 0.0,
+      "sha256": "ba9b7f4655f775e026047cc6bd62a8058e28a3033c466e067882383fae75f1b8"
+    },
+    "recipe_sha256": "a707d64de3055d9c393fb98f1fea23b080d836d28dcd0c6dffc98790d5c26c85"
+  },
+  "generated/goblin.death_03.wav": {
+    "cue": "goblin.death",
+    "variant": "03",
+    "seed": 1741,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 220,
+      "tone": 710,
+      "duration": 0.95,
+      "seed": 1707,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.26906525309415,
+      "dc": 2.1154838695860745e-06,
+      "seam": 0.0,
+      "sha256": "a7ffab66f8cc0e71d7183713bdd81ab7e5dd85bef7f5d500c1601c5c64dc3536"
+    },
+    "recipe_sha256": "1d58f3f4c4aeade3e32090137c0c65b089f59aaf0f74a3c257f016c3598cf060"
+  },
+  "generated/shaman.step_01.wav": {
+    "cue": "shaman.step",
+    "variant": "01",
+    "seed": 1808,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 210,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1808,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.824950757414406,
+      "dc": 0.0002332607905069987,
+      "seam": 0.0,
+      "sha256": "0d3b8e1e4e8ca87054d8fbd07a3d76f57e4949fbd8202a6a88ac6941b4a0a633"
+    },
+    "recipe_sha256": "feba4ad01a98097451c10629923a1fa6e6902239a97b96c934e148872645e4b3"
+  },
+  "generated/shaman.step_02.wav": {
+    "cue": "shaman.step",
+    "variant": "02",
+    "seed": 1825,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 210,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1808,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.877643956873083,
+      "dc": 0.00025111238161722816,
+      "seam": 0.0,
+      "sha256": "c0aa34396e158522a8511f68e08dddeb6e55110f22bea9b74edd31f1fd02ac32"
+    },
+    "recipe_sha256": "19244e2611faecb96188e9e91f9577b3c1d2f3de5defc13319c69647878aa544"
+  },
+  "generated/shaman.step_03.wav": {
+    "cue": "shaman.step",
+    "variant": "03",
+    "seed": 1842,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 210,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1808,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.7624318608262,
+      "dc": 0.00023563504219055177,
+      "seam": 0.0,
+      "sha256": "92e695591118435de859f4398072e62880693e47891782d92908315e391893fb"
+    },
+    "recipe_sha256": "a4464c9116f86896a0da0139a59386453c717d7ad6d9ae70750997043abad6be"
+  },
+  "generated/shaman.step_04.wav": {
+    "cue": "shaman.step",
+    "variant": "04",
+    "seed": 1859,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 210,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 1808,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.593036752217827,
+      "dc": 0.00022365649541219076,
+      "seam": 0.0,
+      "sha256": "106e1b9722b549a0dd6449c4fc602fc41e945b4e251fd2c6fb6b3258605f8ead"
+    },
+    "recipe_sha256": "9f0af210b0f14fcd29c68c4df4788de3a296d0b2009caafa7ee2508bee0e1b13"
+  },
+  "generated/shaman.attack_01.wav": {
+    "cue": "shaman.attack",
+    "variant": "01",
+    "seed": 1909,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.4,
+      "seed": 1909,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.09189304124365,
+      "dc": 6.214777628580729e-07,
+      "seam": 0.0,
+      "sha256": "c7afca2163ef6b5e3e036e9687e3a82211917510113c7a81f87d164041d0b491"
+    },
+    "recipe_sha256": "9721f7e929cbe13ac8a2c3b15523b321fbe8067ce0fcd4f08f19d866f4e19d6f"
+  },
+  "generated/shaman.attack_02.wav": {
+    "cue": "shaman.attack",
+    "variant": "02",
+    "seed": 1926,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.4,
+      "seed": 1909,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.147859455383816,
+      "dc": 5.372365315755209e-07,
+      "seam": 0.0,
+      "sha256": "1605052bd519185740c796687512a8361bbb2dde70e7d057326f23c9f78a4c95"
+    },
+    "recipe_sha256": "9281d1ade32f3731ea2efe9021d2a912e0bc4800d03615de91e1a725c24a3a10"
+  },
+  "generated/shaman.attack_03.wav": {
+    "cue": "shaman.attack",
+    "variant": "03",
+    "seed": 1943,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.4,
+      "seed": 1909,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.107737313274736,
+      "dc": 2.6718775431315105e-06,
+      "seam": 0.0,
+      "sha256": "606d4ffc3f210e23affc4221d1dbd516772a861b44cbe9e8f98395acdbd49cbd"
+    },
+    "recipe_sha256": "73da3b8f4ccf419a64ba311afee72e9d82e4cb0fce9e60dc75a2ed1ea9dc7079"
+  },
+  "generated/shaman.hurt_01.wav": {
+    "cue": "shaman.hurt",
+    "variant": "01",
+    "seed": 2010,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.32,
+      "seed": 2010,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.890408632955314,
+      "dc": 1.2119611104329426e-07,
+      "seam": 0.0,
+      "sha256": "2d0240d852b93c8bcd0f1a972906b366f7b26c2770f81634f56ee928b02afc7f"
+    },
+    "recipe_sha256": "40752dc4c1626924778479ec7bf578c511bac2ee94e175ca91aa57681b7b80c2"
+  },
+  "generated/shaman.hurt_02.wav": {
+    "cue": "shaman.hurt",
+    "variant": "02",
+    "seed": 2027,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.32,
+      "seed": 2010,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.414649896967315,
+      "dc": 1.629193623860677e-06,
+      "seam": 0.0,
+      "sha256": "983906c2adc0075bc80d66f00ab4fbc140df76cd66eb4be176163653c67121b7"
+    },
+    "recipe_sha256": "35567c0dc325e88dc55d9112f942ed1b34545795f4f54624b21a61f7fc7ebd76"
+  },
+  "generated/shaman.hurt_03.wav": {
+    "cue": "shaman.hurt",
+    "variant": "03",
+    "seed": 2044,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.32,
+      "seed": 2010,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.41506978907509,
+      "dc": 3.975629806518555e-06,
+      "seam": 0.0,
+      "sha256": "9202c7a0ca20a6899c04f57911166dea3285733e4df81dded0110de1d4b98c30"
+    },
+    "recipe_sha256": "0d54a2e6fa6d4d3c58e3a707c4f66cb70adfe3cb66ad48fc58b5b8b09e21dbaa"
+  },
+  "generated/shaman.death_01.wav": {
+    "cue": "shaman.death",
+    "variant": "01",
+    "seed": 2111,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.95,
+      "seed": 2111,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.148475375072458,
+      "dc": 8.017556709155702e-07,
+      "seam": 0.0,
+      "sha256": "47aad1e4b6bbad2d9ba4426bf93c89fbbe6c3e25085fb7b203d4794046ceb66a"
+    },
+    "recipe_sha256": "353d70a7a5ec4edc6e8d596b7fddcf6309bc99c9688f2d37077becf8574b039e"
+  },
+  "generated/shaman.death_02.wav": {
+    "cue": "shaman.death",
+    "variant": "02",
+    "seed": 2128,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.95,
+      "seed": 2111,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.71306533392462,
+      "dc": 2.422667386239035e-07,
+      "seam": 0.0,
+      "sha256": "d12861c932e376c83968119245d4dad09c8ff9a72a4f27617ad431835caf44f1"
+    },
+    "recipe_sha256": "13014b1f182b4b61be1f8fec4ef82a1eb4337b35eac2397a78603860a6757c12"
+  },
+  "generated/shaman.death_03.wav": {
+    "cue": "shaman.death",
+    "variant": "03",
+    "seed": 2145,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 185,
+      "tone": 820,
+      "duration": 0.95,
+      "seed": 2111,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -20.3435081348805,
+      "dc": 3.031680458470395e-07,
+      "seam": 0.0,
+      "sha256": "9c1bc1f7b020eff15673c31cade832670432a05fd2f5b5e93ad34aaa882b46f1"
+    },
+    "recipe_sha256": "302e32a90dac5a515adff17a033635ab2ca05d53ced9bb8fed44efcceef54d8d"
+  },
+  "generated/rat.step_01.wav": {
+    "cue": "rat.step",
+    "variant": "01",
+    "seed": 2212,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 550,
+      "tone": 0.03,
+      "duration": 0.22,
+      "seed": 2212,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -18.864463499566632,
+      "dc": 0.00013549978082830257,
+      "seam": 0.0,
+      "sha256": "39f4f0144c1175288b596b6a4bf6aaba1df18065afb183fe77fe3bfd882ae11c"
+    },
+    "recipe_sha256": "4a07a35d346f43cc77b81a2e7bf3a8cd1b96499454b9e705a4523cc32e7cefa6"
+  },
+  "generated/rat.step_02.wav": {
+    "cue": "rat.step",
+    "variant": "02",
+    "seed": 2229,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 550,
+      "tone": 0.03,
+      "duration": 0.22,
+      "seed": 2212,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.999790906504163,
+      "dc": 0.00013182957967122395,
+      "seam": 0.0,
+      "sha256": "b45225476eaffa142b9a255994bb31383e43b3c6a1ec8088a4456e77690fdca9"
+    },
+    "recipe_sha256": "80e2b10f2e320564703ccc4feb283a342d630704f6da395f3d9a8a2477988182"
+  },
+  "generated/rat.step_03.wav": {
+    "cue": "rat.step",
+    "variant": "03",
+    "seed": 2246,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 550,
+      "tone": 0.03,
+      "duration": 0.22,
+      "seed": 2212,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -19.032963428441796,
+      "dc": 0.00012980952407374527,
+      "seam": 0.0,
+      "sha256": "40beb739bff46c5dca7fa2e1a9f97ca11112927bbdce3e906a8dd85b452ad23b"
+    },
+    "recipe_sha256": "0bf2f86dfb3ed924a1266c770a6f38f748b0ecbca40d0e28b375ab94dd55aba0"
+  },
+  "generated/rat.step_04.wav": {
+    "cue": "rat.step",
+    "variant": "04",
+    "seed": 2263,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 550,
+      "tone": 0.03,
+      "duration": 0.22,
+      "seed": 2212,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.035174926838696,
+      "dc": 0.00012817093820282908,
+      "seam": 0.0,
+      "sha256": "562d11301e867b166f91adb58e1ab316390fc088130d572a9fa4203c1a2ca194"
+    },
+    "recipe_sha256": "350f355cd0181a04768901f132dce691919381037e8d9d4813e0814d579b87f4"
+  },
+  "generated/rat.attack_01.wav": {
+    "cue": "rat.attack",
+    "variant": "01",
+    "seed": 2313,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.4,
+      "seed": 2313,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -17.689056137176536,
+      "dc": 8.972485860188802e-06,
+      "seam": 0.0,
+      "sha256": "ead294025d5d0c1465ae175263c01eb43246a008eefdbaf4c3d9e505c1d8b89a"
+    },
+    "recipe_sha256": "2163fc09fbfaefee0ebff1483919b3678800fe97e7920d737e1d4d085e61127f"
+  },
+  "generated/rat.attack_02.wav": {
+    "cue": "rat.attack",
+    "variant": "02",
+    "seed": 2330,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.4,
+      "seed": 2313,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -20.273248186821675,
+      "dc": 6.643931070963542e-06,
+      "seam": 0.0,
+      "sha256": "5f44b75e8198fa5114bb6c26e6ed6c5f47788731bf8de7e8595bed7f2ea6c717"
+    },
+    "recipe_sha256": "f69360bf65279caf5cf405f7905543ef20a95730e0c34fd62c1a914840590462"
+  },
+  "generated/rat.attack_03.wav": {
+    "cue": "rat.attack",
+    "variant": "03",
+    "seed": 2347,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.4,
+      "seed": 2313,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -21.31047636663473,
+      "dc": 4.445711771647136e-06,
+      "seam": 0.0,
+      "sha256": "437105266cbf8000e1aecf60bd87844066fc63302edf7f0f36a1e4a66a70897a"
+    },
+    "recipe_sha256": "50294fbf8fa4a087887a061bd468e0c15dc4ed436e91b374891206c2d21c4088"
+  },
+  "generated/rat.hurt_01.wav": {
+    "cue": "rat.hurt",
+    "variant": "01",
+    "seed": 2414,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.32,
+      "seed": 2414,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.433975882342857,
+      "dc": 1.0935465494791667e-05,
+      "seam": 0.0,
+      "sha256": "e940585cbf753e81d7474ea3d440f6753c628c101b8a7b4b9b7b582c83314bc2"
+    },
+    "recipe_sha256": "cad011599e8582d8bdcaaf1adb3b7615c835449c3d64ef63cee1a5516a11b39d"
+  },
+  "generated/rat.hurt_02.wav": {
+    "cue": "rat.hurt",
+    "variant": "02",
+    "seed": 2431,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.32,
+      "seed": 2414,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.820406455527532,
+      "dc": 9.304285049438476e-06,
+      "seam": 0.0,
+      "sha256": "9acfd917da8cc5adbc8f64ca12d232b9b694dbaef03d6173c401a5099b36a703"
+    },
+    "recipe_sha256": "c8dbb6b24a3731b72fef37e5a2b6bb18fed5214df7b5377e62985747b0b8bf01"
+  },
+  "generated/rat.hurt_03.wav": {
+    "cue": "rat.hurt",
+    "variant": "03",
+    "seed": 2448,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.32,
+      "seed": 2414,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -21.336616219970747,
+      "dc": 6.127357482910156e-06,
+      "seam": 0.0,
+      "sha256": "591559626a768a222ad9ed2bb89b8d92f7a2860e659c68f0834e945bb453cb7d"
+    },
+    "recipe_sha256": "78fb2e346cf7825280ab9c31b21fb7a72d936387246b8b1839ae8063eb854560"
+  },
+  "generated/rat.death_01.wav": {
+    "cue": "rat.death",
+    "variant": "01",
+    "seed": 2515,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.95,
+      "seed": 2515,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.73191356662376,
+      "dc": 2.154969332510965e-06,
+      "seam": 0.0,
+      "sha256": "d774b9c79c36e6db881bf9d5cdd28cf3cb609a1e47f0518d5af72a03a8ecaa17"
+    },
+    "recipe_sha256": "6d63da405160c97750c92829a642d375e9a08a507576f0c58b87272d63060f11"
+  },
+  "generated/rat.death_02.wav": {
+    "cue": "rat.death",
+    "variant": "02",
+    "seed": 2532,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.95,
+      "seed": 2515,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -19.80045646481775,
+      "dc": 2.1074529279742325e-06,
+      "seam": 0.0,
+      "sha256": "b9776f4b92e516d2928dfe23a8f67e897f032484dcce4e839ff4072368c639cf"
+    },
+    "recipe_sha256": "6fa005dfab5bf361380279910f38c3149d327fb5f79250030e7f832f954f9a1e"
+  },
+  "generated/rat.death_03.wav": {
+    "cue": "rat.death",
+    "variant": "03",
+    "seed": 2549,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 840,
+      "tone": 1900,
+      "duration": 0.95,
+      "seed": 2515,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.86703020326432,
+      "dc": 1.4315153423108553e-06,
+      "seam": 0.0,
+      "sha256": "50490d7017bda4491004be24227b04b80fb534243ddd2b40ef525d0f4046e52d"
+    },
+    "recipe_sha256": "f19699472db108a35b7bb06afcfb656b752891fc0298fc7f4e56019318a7684f"
+  },
+  "generated/skeleton.step_01.wav": {
+    "cue": "skeleton.step",
+    "variant": "01",
+    "seed": 2616,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 490,
+      "tone": 0.8,
+      "duration": 0.32,
+      "seed": 2616,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.888910651270038,
+      "dc": 0.00015095074971516927,
+      "seam": 0.0,
+      "sha256": "b92d2d7ac64f7d1d0ecc9b5b30999a5a6f3fbfec6df8fca32c5055461fc5a317"
+    },
+    "recipe_sha256": "6747b2bde9dcaa2e9fb6412f1fee6eaeb90414e6ade5fce333d22b0cdcc09482"
+  },
+  "generated/skeleton.step_02.wav": {
+    "cue": "skeleton.step",
+    "variant": "02",
+    "seed": 2633,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 490,
+      "tone": 0.8,
+      "duration": 0.32,
+      "seed": 2616,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -23.351088285779703,
+      "dc": 0.00015997489293416342,
+      "seam": 0.0,
+      "sha256": "b616ef6cc12586db60d80eeb111ecb4280b95cf6bbd5edfef7175878294315f1"
+    },
+    "recipe_sha256": "6ad1ce8675e01728fbfbe4db6117664696e42706423094ccf1d07a90a972e580"
+  },
+  "generated/skeleton.step_03.wav": {
+    "cue": "skeleton.step",
+    "variant": "03",
+    "seed": 2650,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 490,
+      "tone": 0.8,
+      "duration": 0.32,
+      "seed": 2616,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.739191625714493,
+      "dc": 0.00015998681386311848,
+      "seam": 0.0,
+      "sha256": "1706dc39ae7aadb72b6e86ff7d01d2be35bfaa7e2b591433166f4cc5986fb227"
+    },
+    "recipe_sha256": "21b4087070f9b81255877eb0dadf1400069c1e3ebadb467c65c14114a0ffd018"
+  },
+  "generated/skeleton.step_04.wav": {
+    "cue": "skeleton.step",
+    "variant": "04",
+    "seed": 2667,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 490,
+      "tone": 0.8,
+      "duration": 0.32,
+      "seed": 2616,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.822276826045,
+      "dc": 0.0001429458459218343,
+      "seam": 0.0,
+      "sha256": "fe0d9fd2f7206a29bfc2e20582f742af4618aad5f0c9a11fc79734dd5db749c7"
+    },
+    "recipe_sha256": "a067bf965f60ac2891a28b92cdd86af1fce402012f4758d5785a31edde0ce73f"
+  },
+  "generated/skeleton.attack_01.wav": {
+    "cue": "skeleton.attack",
+    "variant": "01",
+    "seed": 2717,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.4,
+      "seed": 2717,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.29025226118521,
+      "dc": 0.00011247634887695312,
+      "seam": 0.0,
+      "sha256": "804fdb05ce373af9472c47792e370d0d429db4f2f7994a75925ad662c894bced"
+    },
+    "recipe_sha256": "92a39dc0cea7379da7e9c66153f06ccaa27a013a2a2ef42c0f25d785c153cf22"
+  },
+  "generated/skeleton.attack_02.wav": {
+    "cue": "skeleton.attack",
+    "variant": "02",
+    "seed": 2734,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.4,
+      "seed": 2717,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.281612615273882,
+      "dc": 0.00014427502950032552,
+      "seam": 0.0,
+      "sha256": "a664e2ae71fa746c32e6a5e214d23eb27b91c6e4f64fb9f7c7a24a19c2a52928"
+    },
+    "recipe_sha256": "c54eba8c4e6fb9f8ee8b753529f85537b877c0eadf9a954003463518c4d217b1"
+  },
+  "generated/skeleton.attack_03.wav": {
+    "cue": "skeleton.attack",
+    "variant": "03",
+    "seed": 2751,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.4,
+      "seed": 2717,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -23.465316579352518,
+      "dc": 0.00012267589569091796,
+      "seam": 0.0,
+      "sha256": "67c67cb5e930ea33911946584a179c15d084ab9830da462c3041d3867ed817cd"
+    },
+    "recipe_sha256": "23026823a260d3a221b3717e2d2e5f1ed17b22d0f2a5fd5f12ee7d184200b576"
+  },
+  "generated/skeleton.hurt_01.wav": {
+    "cue": "skeleton.hurt",
+    "variant": "01",
+    "seed": 2818,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.32,
+      "seed": 2818,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.777864689924904,
+      "dc": 0.00015949408213297527,
+      "seam": 0.0,
+      "sha256": "176a45eeb8b3e7b718293d572bdd0e75ed722690a9ee29a65fd603c6c4c47cd5"
+    },
+    "recipe_sha256": "8094cc23da31d7cf9d26f321b0df76dbf8fd2510a2d5c9d8bcf3368b9e79979e"
+  },
+  "generated/skeleton.hurt_02.wav": {
+    "cue": "skeleton.hurt",
+    "variant": "02",
+    "seed": 2835,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.32,
+      "seed": 2818,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.86735773141427,
+      "dc": 0.00020365317662556965,
+      "seam": 0.0,
+      "sha256": "2d94d00a5fce6ba4422eec603437e92e4a05d613a5f4bfa06b37d964c7a0d3b2"
+    },
+    "recipe_sha256": "0333966351878bb000058234a8d4cb137bda4e6e42d747f2c94210f5871bdf8c"
+  },
+  "generated/skeleton.hurt_03.wav": {
+    "cue": "skeleton.hurt",
+    "variant": "03",
+    "seed": 2852,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.32,
+      "seed": 2818,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -23.278142898655307,
+      "dc": 0.0001681665579477946,
+      "seam": 0.0,
+      "sha256": "8372039db5e3f431f456cbf846755c72d71f84033823619eb3c4f3ea5c1b4e37"
+    },
+    "recipe_sha256": "7c1b711d468c2476f68475661a985429635e958d32a55e62ea65a86dddfad46d"
+  },
+  "generated/skeleton.death_01.wav": {
+    "cue": "skeleton.death",
+    "variant": "01",
+    "seed": 2919,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.95,
+      "seed": 2919,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.12555335613539,
+      "dc": 3.5405075340940244e-05,
+      "seam": 0.0,
+      "sha256": "23bcf6770fb80ad31e7cf580274e426d55581fc3eef89acac25a115c024d756f"
+    },
+    "recipe_sha256": "60aed11eeda2655be62d5f7af4dae0149fd975d791429e561240ca4f1f8d666c"
+  },
+  "generated/skeleton.death_02.wav": {
+    "cue": "skeleton.death",
+    "variant": "02",
+    "seed": 2936,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.95,
+      "seed": 2919,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -24.58040492023697,
+      "dc": 3.859670538651316e-05,
+      "seam": 0.0,
+      "sha256": "6ae745589cf8b56fa66d1f09a994b4710e670f79e77bbcc41f74a554b6d6b419"
+    },
+    "recipe_sha256": "dff6d084304b8c5ec81f6cbe0ca26a79dec3ad65bfcb2ad361a64ef2e7ffdbb3"
+  },
+  "generated/skeleton.death_03.wav": {
+    "cue": "skeleton.death",
+    "variant": "03",
+    "seed": 2953,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 240,
+      "tone": 1.4,
+      "duration": 0.95,
+      "seed": 2919,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.792243214026414,
+      "dc": 3.319924337822094e-05,
+      "seam": 0.0,
+      "sha256": "e3b04f017ef130865fb3ec4723467e72c7a185d3ddaf1d7742950f4b60d181ad"
+    },
+    "recipe_sha256": "0cd327b8784e5f5300e7897b2fc8bac0b8abc68e552155af7e7f1cf0de03eaa6"
+  },
+  "generated/bugbear.step_01.wav": {
+    "cue": "bugbear.step",
+    "variant": "01",
+    "seed": 3020,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 90,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3020,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.063348802067594,
+      "dc": 0.0001187443733215332,
+      "seam": 0.0,
+      "sha256": "f5a56494861a9c0e68a92e2f147dfb566d438f22829a69bdedb79f8524e62e71"
+    },
+    "recipe_sha256": "fd0f1e676753938612c154f5c78a5b8ba006c95f782225e081b76eec6d75fdb5"
+  },
+  "generated/bugbear.step_02.wav": {
+    "cue": "bugbear.step",
+    "variant": "02",
+    "seed": 3037,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 90,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3020,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.673100672381846,
+      "dc": 0.00012184977531433105,
+      "seam": 0.0,
+      "sha256": "09ff3cd3fb98abf4a2c1189308c296ad53332d5dea1d05c42a9c3ce120354f26"
+    },
+    "recipe_sha256": "4decbd7ec5cbc89d5cd9eaae1a8a668451044e76958ea523db65eaab8bb7681e"
+  },
+  "generated/bugbear.step_03.wav": {
+    "cue": "bugbear.step",
+    "variant": "03",
+    "seed": 3054,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 90,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3020,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.061571671554887,
+      "dc": 0.00013249516487121583,
+      "seam": 0.0,
+      "sha256": "e9418f6d3e3f4425260578a01bf22ff0e1ef0a4a687ca9d25367b07e471d84a5"
+    },
+    "recipe_sha256": "9e03478f13b7c919836f1a88ffa32be88df104c0787998f5ef565b0baa8457d2"
+  },
+  "generated/bugbear.step_04.wav": {
+    "cue": "bugbear.step",
+    "variant": "04",
+    "seed": 3071,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 90,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3020,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.647070716457286,
+      "dc": 0.00012976725896199544,
+      "seam": 0.0,
+      "sha256": "59d5751a8abc88ee6925d2a9ec38a475161f9d132ab10607fcc85a9e7cd9ea4d"
+    },
+    "recipe_sha256": "f1d629c7263f43c9d4a67a638a5ad6537dec88e1ed6290bc363cd428a5e2533c"
+  },
+  "generated/bugbear.attack_01.wav": {
+    "cue": "bugbear.attack",
+    "variant": "01",
+    "seed": 3121,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.4,
+      "seed": 3121,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.224302254129412,
+      "dc": 2.0372072855631512e-05,
+      "seam": 0.0,
+      "sha256": "0d4183f1ac586747c38f36c123c7d3d1e22bb5f6e82e71a83f47739a70741e34"
+    },
+    "recipe_sha256": "0d9cd3e99ccf2fcb1737b13a1e091b49fced5e4ec27b14c389db50de0020fc32"
+  },
+  "generated/bugbear.attack_02.wav": {
+    "cue": "bugbear.attack",
+    "variant": "02",
+    "seed": 3138,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.4,
+      "seed": 3121,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.390479332662068,
+      "dc": 2.7138392130533854e-05,
+      "seam": 0.0,
+      "sha256": "d926fc77a0eb5e8aaba23e787463bf98ebc473de3223e54ea333cdef21c6f2df"
+    },
+    "recipe_sha256": "facaad0a54a43b8d90921cdc30cd860a692f8476c17a903bdd1f1067e1705226"
+  },
+  "generated/bugbear.attack_03.wav": {
+    "cue": "bugbear.attack",
+    "variant": "03",
+    "seed": 3155,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.4,
+      "seed": 3121,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.268379963143772,
+      "dc": 2.025286356608073e-05,
+      "seam": 0.0,
+      "sha256": "3b05515550c4eef0744554ece6876afd919e32637b7163b6140e6c2f1a1f532e"
+    },
+    "recipe_sha256": "2821ff23a96384dfaeb4238576ae36413c28d06d355f8272f89922e9985d5651"
+  },
+  "generated/bugbear.hurt_01.wav": {
+    "cue": "bugbear.hurt",
+    "variant": "01",
+    "seed": 3222,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.32,
+      "seed": 3222,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.346169120136587,
+      "dc": 3.914038340250651e-05,
+      "seam": 0.0,
+      "sha256": "40753befc5976726c6d95151c004b3cba8134c29c0cce2021e8832f7815d4b46"
+    },
+    "recipe_sha256": "048e6b8f4fbbaac186e1ceac87bbfd897febb11de026f54f8ddfd56cb9e9db08"
+  },
+  "generated/bugbear.hurt_02.wav": {
+    "cue": "bugbear.hurt",
+    "variant": "02",
+    "seed": 3239,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.32,
+      "seed": 3222,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.236770972669134,
+      "dc": 3.225803375244141e-05,
+      "seam": 0.0,
+      "sha256": "787d162b159a61b3a3849197086a6e24144e08b1e5234a55c1feb29bf922a99b"
+    },
+    "recipe_sha256": "3880414647810cc06c0c48b2873247e909dad1d176e2d9377089dc1e0a38a13c"
+  },
+  "generated/bugbear.hurt_03.wav": {
+    "cue": "bugbear.hurt",
+    "variant": "03",
+    "seed": 3256,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.32,
+      "seed": 3222,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -17.98658513594056,
+      "dc": 2.555251121520996e-05,
+      "seam": 0.0,
+      "sha256": "4c8b1f7456d49977fcbc8d9eb552c99c3eed47d3ebb6d6989ce431828c63ce27"
+    },
+    "recipe_sha256": "f8d00b3ce42f513fad64d863d75322659294803ced00f62063ca1cb44850a014"
+  },
+  "generated/bugbear.death_01.wav": {
+    "cue": "bugbear.death",
+    "variant": "01",
+    "seed": 3323,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.95,
+      "seed": 3323,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.349239966930195,
+      "dc": 1.0272243566680374e-05,
+      "seam": 0.0,
+      "sha256": "4275dca61e9c64699ff6ab3b25c6e11ae4a889201a3684853f77f18349c5b66e"
+    },
+    "recipe_sha256": "fc905e4bc826406eb6a5e2141005544d742582b96c85ba12ef2afd9fee05d9bd"
+  },
+  "generated/bugbear.death_02.wav": {
+    "cue": "bugbear.death",
+    "variant": "02",
+    "seed": 3340,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.95,
+      "seed": 3323,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.217464507386204,
+      "dc": 1.0400738632469846e-05,
+      "seam": 0.0,
+      "sha256": "cadad9907df4873487e52863f0d6befd1adaa1931fc29bf6c048e8709a17ecf2"
+    },
+    "recipe_sha256": "b81358ab91219da5e770aa4ee91d6662396558b6061c2265d88f80718eebf6ba"
+  },
+  "generated/bugbear.death_03.wav": {
+    "cue": "bugbear.death",
+    "variant": "03",
+    "seed": 3357,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 68,
+      "tone": 350,
+      "duration": 0.95,
+      "seed": 3323,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.683807829212956,
+      "dc": 1.0042692485608552e-05,
+      "seam": 0.0,
+      "sha256": "80a73ca1871040451349072cc07dced7c2ab3f06278b54c2fc4c6b07daed59ef"
+    },
+    "recipe_sha256": "508d94641a4c2682f48ae803fe87cdc6b83617c0d3317f845df1602ca84ac75c"
+  },
+  "generated/zombie.step_01.wav": {
+    "cue": "zombie.step",
+    "variant": "01",
+    "seed": 3424,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 120,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3424,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.407118734672316,
+      "dc": 0.0001274247964223226,
+      "seam": 0.0,
+      "sha256": "73d406c3396fb73c2a8b9d75767f9b2dd3fdf7a82c9bf392bfd667bd8bdd87dd"
+    },
+    "recipe_sha256": "5e71764094f29c0d98e2be4a7aea97618c1c6ff0c71de9775b8cbabe6ebc8814"
+  },
+  "generated/zombie.step_02.wav": {
+    "cue": "zombie.step",
+    "variant": "02",
+    "seed": 3441,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 120,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3424,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -23.355426640106142,
+      "dc": 0.0001356979211171468,
+      "seam": 0.0,
+      "sha256": "7a2f0ebd52a9583b29ae5a0f8b727bb71d696a8ae371f7cc7ca9a5b456fd75e2"
+    },
+    "recipe_sha256": "1ee6fcc52fcc8add94b7622063c6f11feeb7c35d4a46eea5ccee0c0903b3369f"
+  },
+  "generated/zombie.step_03.wav": {
+    "cue": "zombie.step",
+    "variant": "03",
+    "seed": 3458,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 120,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3424,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -23.454630136838972,
+      "dc": 0.00013611714045206705,
+      "seam": 0.0,
+      "sha256": "552b590d710b81d022eef7ade64570a8724d43656825131e1ab4ba50d466d085"
+    },
+    "recipe_sha256": "cd3596c62165ca5f4be29531dd6ad189fc9f92bbc08c2ec6e19a8cdc7164b060"
+  },
+  "generated/zombie.step_04.wav": {
+    "cue": "zombie.step",
+    "variant": "04",
+    "seed": 3475,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 120,
+      "tone": 0.03,
+      "duration": 0.32,
+      "seed": 3424,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -23.07433696981176,
+      "dc": 0.00013749996821085613,
+      "seam": 0.0,
+      "sha256": "dab1fa1d108fa78e34b3b99e8cc9c277e4dc703ea54f8cfcf4090eb96a67bdaa"
+    },
+    "recipe_sha256": "e92b89a5e327ca7df3a4e3a481e0156977f74173f43480b5b5bc3976c73cecef"
+  },
+  "generated/zombie.attack_01.wav": {
+    "cue": "zombie.attack",
+    "variant": "01",
+    "seed": 3525,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.4,
+      "seed": 3525,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.46938119876026,
+      "dc": 2.7208328247070314e-05,
+      "seam": 0.0,
+      "sha256": "0a32c0530bf7864039e4acc562b596af2ab43ac84c59e06660e775941f59fbec"
+    },
+    "recipe_sha256": "eaefdaf695d41b0622618bcd86200670b742968d6f13286a45563c4b26d3ae08"
+  },
+  "generated/zombie.attack_02.wav": {
+    "cue": "zombie.attack",
+    "variant": "02",
+    "seed": 3542,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.4,
+      "seed": 3525,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.62945311508396,
+      "dc": 2.177874247233073e-05,
+      "seam": 0.0,
+      "sha256": "556167ff8429f9f83fa9dd6ba48912333e2f3928e899df9eb38d0427d4f7da53"
+    },
+    "recipe_sha256": "61e52dcc7e7b4f5e01f44cdde72537fa914e8a7c02f9bb0a7ab36c8025ef7959"
+  },
+  "generated/zombie.attack_03.wav": {
+    "cue": "zombie.attack",
+    "variant": "03",
+    "seed": 3559,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.4,
+      "seed": 3525,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.4,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.8684207261892,
+      "dc": 2.4204254150390624e-05,
+      "seam": 0.0,
+      "sha256": "4213dba6b884ca6cdb73b46ed3d88b54baddc41a2defb017b62a07347d821dfb"
+    },
+    "recipe_sha256": "d4724eb37973d54bbf905d69e299b6dbdccae5e92bf279d954e544975013dae1"
+  },
+  "generated/zombie.hurt_01.wav": {
+    "cue": "zombie.hurt",
+    "variant": "01",
+    "seed": 3626,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.32,
+      "seed": 3626,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.399181690464733,
+      "dc": 2.4062395095825195e-05,
+      "seam": 0.0,
+      "sha256": "57d92d3becf2b0798e6e4e5ac3f695bc4e8148426dfe33764c0e3616b96efac1"
+    },
+    "recipe_sha256": "6063aa7b56c847a6aa51cc62d2fe065084884b25bcd63cd657b7c9f756d09993"
+  },
+  "generated/zombie.hurt_02.wav": {
+    "cue": "zombie.hurt",
+    "variant": "02",
+    "seed": 3643,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.32,
+      "seed": 3626,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.18333714134763,
+      "dc": 2.8244654337565105e-05,
+      "seam": 0.0,
+      "sha256": "678eeb0677713633fe101f299957d5f551eb928b4b07bcf69df2691ef23de308"
+    },
+    "recipe_sha256": "2a8e5f215bf60bd02c5f32cbae2f7eb60e567fb35664dbf830fbfebb7c9ecf48"
+  },
+  "generated/zombie.hurt_03.wav": {
+    "cue": "zombie.hurt",
+    "variant": "03",
+    "seed": 3660,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.32,
+      "seed": 3626,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.759043522854494,
+      "dc": 2.32239564259847e-05,
+      "seam": 0.0,
+      "sha256": "b3e09558ee486905f1ceae4235747ad88425c3cdff43a0c1777edc13a8d6a51b"
+    },
+    "recipe_sha256": "610a1524505e5c3660584417edfedc635f2830b575e80bfa2b06f98da29bd728"
+  },
+  "generated/zombie.death_01.wav": {
+    "cue": "zombie.death",
+    "variant": "01",
+    "seed": 3727,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.95,
+      "seed": 3727,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -18.811359206718294,
+      "dc": 9.779009902686404e-06,
+      "seam": 0.0,
+      "sha256": "e15fbb78229bd924c79967966b5861a4b0336c090ba74afada66be02bbfca921"
+    },
+    "recipe_sha256": "0d3f4f55ffe2aaa1d5e91978468d8df79749e59b81a03c5b0322f6a9df60061c"
+  },
+  "generated/zombie.death_02.wav": {
+    "cue": "zombie.death",
+    "variant": "02",
+    "seed": 3744,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.95,
+      "seed": 3727,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.13867411994722,
+      "dc": 9.553474292420505e-06,
+      "seam": 0.0,
+      "sha256": "31e7bfa7043ede2aa2047a26aad8f7a4393bce63951a736523440cfd4017d890"
+    },
+    "recipe_sha256": "c5c8ea6f65079802971b2d3148439a9bad350d3f72caae5767fa78935c8ee392"
+  },
+  "generated/zombie.death_03.wav": {
+    "cue": "zombie.death",
+    "variant": "03",
+    "seed": 3761,
+    "recipe": {
+      "instrument": 4,
+      "frequency": 82,
+      "tone": 440,
+      "duration": 0.95,
+      "seed": 3727,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.95,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.016693978453368,
+      "dc": 1.0013245699698465e-05,
+      "seam": 0.0,
+      "sha256": "341370916d6efdfd98127a4be7eee289bd6040db4d58acf83885a0b42e2999c8"
+    },
+    "recipe_sha256": "4487ff7a9ceaa6f446309309e5790a817dda949fa1fb6727a85154246bd58812"
+  },
+  "generated/door.open_01.wav": {
+    "cue": "door.open",
+    "variant": "01",
+    "seed": 3828,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.29,
+      "seed": 3828,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.29,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -19.22802277084996,
+      "dc": 0.00015338590775413076,
+      "seam": 3.0517578125e-05,
+      "sha256": "23709565da3ca2ae6393807782986f29f27799ccaf7216265498ea0b7cf9aca5"
+    },
+    "recipe_sha256": "c2aaf4251d768c07ad46b88be0aa222a041057931dcd78b7340c1ef0ca00d328"
+  },
+  "generated/door.open_02.wav": {
+    "cue": "door.open",
+    "variant": "02",
+    "seed": 3845,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.29,
+      "seed": 3828,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.29,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.01934609515332,
+      "dc": 1.1220471612338362e-05,
+      "seam": 0.0,
+      "sha256": "35a5ff6b8a83f3bac95d01f484352681704f28a6f9f8e7bab561561de446c1f8"
+    },
+    "recipe_sha256": "61754024e5e31021e07f59c4805067fe2f03071e9260856b18826aa57bf87a43"
+  },
+  "generated/door.open_03.wav": {
+    "cue": "door.open",
+    "variant": "03",
+    "seed": 3862,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.29,
+      "seed": 3828,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.29,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.681208685790278,
+      "dc": 3.1701449690193965e-06,
+      "seam": 0.0,
+      "sha256": "d68edb0e7ced4c94524bf061935737dd31560ed1b799556e33931cd9fd37edd3"
+    },
+    "recipe_sha256": "b508ea665bcf317d35786eb8fb495fb142fefca7872edeca68696c725e8f2890"
+  },
+  "generated/door.close_01.wav": {
+    "cue": "door.close",
+    "variant": "01",
+    "seed": 3929,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.28,
+      "seed": 3929,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.28,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.676734814229558,
+      "dc": 2.0835513160342262e-05,
+      "seam": 0.0,
+      "sha256": "366754f49785f7374ecd40f193030c302c5431c744c95e10871213c557f04bf4"
+    },
+    "recipe_sha256": "4a2544d68ce53583080f661172a65a0f73ab692229e6b98752ec4c9ad3313d3b"
+  },
+  "generated/door.close_02.wav": {
+    "cue": "door.close",
+    "variant": "02",
+    "seed": 3946,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.28,
+      "seed": 3929,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.28,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.22596128596173,
+      "dc": 0.00012571016947428385,
+      "seam": 0.0,
+      "sha256": "4f6e8b3121c21638a4454db16d2b2887737c6e6c97e722d0941b1d23137acc39"
+    },
+    "recipe_sha256": "d996555b330869bbd734db00ce22ac674b578c4c55f00da032a63c28f630781a"
+  },
+  "generated/door.close_03.wav": {
+    "cue": "door.close",
+    "variant": "03",
+    "seed": 3963,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.28,
+      "seed": 3929,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.28,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.53918486504765,
+      "dc": 0.000158366702851795,
+      "seam": 0.0,
+      "sha256": "11f7420fee84b31805517a53ebf2e1726a87d690508920b2981914a0a914b3e5"
+    },
+    "recipe_sha256": "db76206227c919c6e59a92b87efc4e134c3d1b337b0f88c85603384fc5eb96e7"
+  },
+  "generated/gate.open_01.wav": {
+    "cue": "gate.open",
+    "variant": "01",
+    "seed": 4030,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.3,
+      "seed": 4030,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.3,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.574690385108568,
+      "dc": 1.48773193359375e-05,
+      "seam": 0.0,
+      "sha256": "c282bb639cb4d81b5479ebf523720cfb98e3f16d442c21f6bab7733237c3c01b"
+    },
+    "recipe_sha256": "aa153984ce36cf027db78b93d2a233283e25e92b3e6b8aeabfb187563558b91d"
+  },
+  "generated/gate.open_02.wav": {
+    "cue": "gate.open",
+    "variant": "02",
+    "seed": 4047,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.3,
+      "seed": 4030,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.3,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.87180031895572,
+      "dc": 2.255545722113715e-05,
+      "seam": 0.0,
+      "sha256": "8e6f58e123c410abaad3552d5581e842e8413025056e9052c98b79d497e474b7"
+    },
+    "recipe_sha256": "d1a78e58784a96c8771337291b66fd1ebcb874b8928f86dd1ae13af42479e66c"
+  },
+  "generated/gate.open_03.wav": {
+    "cue": "gate.open",
+    "variant": "03",
+    "seed": 4064,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.3,
+      "seed": 4030,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.3,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.629212504003146,
+      "dc": 1.366085476345486e-05,
+      "seam": 0.0,
+      "sha256": "b64bc0dd2c30ecc32e46d4b0205e073b699a7b1f58c208291ec20a7845d9a03c"
+    },
+    "recipe_sha256": "37a4d675411af914eccc40bf8e79fe95e9a1e8e06d27ae0fcf87fe1be0e42a6a"
+  },
+  "generated/chest.open_01.wav": {
+    "cue": "chest.open",
+    "variant": "01",
+    "seed": 4131,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.5,
+      "seed": 4131,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.5,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -20.906510950478356,
+      "dc": 3.71551513671875e-06,
+      "seam": 0.0,
+      "sha256": "e5a0bc42923f2a033f3780e2f407a54216345b3d674e01cc474b802a28bb578f"
+    },
+    "recipe_sha256": "2ba83bd271212c95fcd23d2fdfe18f3f3564841a601f11447f473f8d4e6306ba"
+  },
+  "generated/chest.open_02.wav": {
+    "cue": "chest.open",
+    "variant": "02",
+    "seed": 4148,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.5,
+      "seed": 4131,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.5,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.086077395664503,
+      "dc": 1.0402679443359374e-05,
+      "seam": 0.0,
+      "sha256": "a46e2d4644f011dd765ef326890b1ae314e8daed3740cbb85c6bb4fe53badacb"
+    },
+    "recipe_sha256": "ee2a455d9ae8b6bd83bac85549abc77020c91f31aaefc3ae1d0d309a2388309e"
+  },
+  "generated/chest.open_03.wav": {
+    "cue": "chest.open",
+    "variant": "03",
+    "seed": 4165,
+    "recipe": {
+      "instrument": 3,
+      "frequency": 45,
+      "tone": 1,
+      "duration": 0.5,
+      "seed": 4131,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.5,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.40271429682637,
+      "dc": 3.479639689127604e-05,
+      "seam": 0.0,
+      "sha256": "382098284a97c9fbc46af09b4670b405645ade4abf991ee699a837ff2ee8be21"
+    },
+    "recipe_sha256": "85758f788b35220b094a456a0359163a8ddbcfb7fdef51476d3133d862b10307"
+  },
+  "generated/door.locked_01.wav": {
+    "cue": "door.locked",
+    "variant": "01",
+    "seed": 4232,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4232,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.1944473710441,
+      "dc": 0.0002885356093897964,
+      "seam": 0.0,
+      "sha256": "a8b3d5eb45e20ff9e7b2b258a86b8bde0d67e6e8d3ff880af3dbc7eb83ab750e"
+    },
+    "recipe_sha256": "39abdf11759ca68affaf079513d8e6fb54dd3642cab0916e81528e6e82096ec5"
+  },
+  "generated/door.locked_02.wav": {
+    "cue": "door.locked",
+    "variant": "02",
+    "seed": 4249,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4232,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.473828361928735,
+      "dc": 0.0002943212335759943,
+      "seam": 0.0,
+      "sha256": "262b106dcb1ea3ffb040d0b8f0e39ec47a1bbad4b0a50defa70a8b56a7bff433"
+    },
+    "recipe_sha256": "d27bb3c4ab904f56b79e1a6784136d9aba8ba97a5327be5333fe7d3e7a850087"
+  },
+  "generated/door.locked_03.wav": {
+    "cue": "door.locked",
+    "variant": "03",
+    "seed": 4266,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4232,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.603409223507033,
+      "dc": 0.00025904395363547585,
+      "seam": 0.0,
+      "sha256": "49567fbaa597f0259bb8f8454883e90aeb16ced616555d9596de2f6829302c05"
+    },
+    "recipe_sha256": "944ab6a8f9c7aec0c1b4c1595ef5112099a4b273a8b93040e1576e828e7414db"
+  },
+  "generated/key.pickup_01.wav": {
+    "cue": "key.pickup",
+    "variant": "01",
+    "seed": 4333,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4333,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.1944473710441,
+      "dc": 0.0002885356093897964,
+      "seam": 0.0,
+      "sha256": "a8b3d5eb45e20ff9e7b2b258a86b8bde0d67e6e8d3ff880af3dbc7eb83ab750e"
+    },
+    "recipe_sha256": "2d15eb9d2aa56808a8d0ec7422ffa05d1d237d34260429b7c703505717a66aba"
+  },
+  "generated/key.pickup_02.wav": {
+    "cue": "key.pickup",
+    "variant": "02",
+    "seed": 4350,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4333,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.473828361928735,
+      "dc": 0.0002943212335759943,
+      "seam": 0.0,
+      "sha256": "262b106dcb1ea3ffb040d0b8f0e39ec47a1bbad4b0a50defa70a8b56a7bff433"
+    },
+    "recipe_sha256": "013837b0e85879a410c283d217cfe47e4b5f6ff4e0e96a051dfdb21439820164"
+  },
+  "generated/key.pickup_03.wav": {
+    "cue": "key.pickup",
+    "variant": "03",
+    "seed": 4367,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4333,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.603409223507033,
+      "dc": 0.00025904395363547585,
+      "seam": 0.0,
+      "sha256": "49567fbaa597f0259bb8f8454883e90aeb16ced616555d9596de2f6829302c05"
+    },
+    "recipe_sha256": "0db61949f3ec89ba4fa8eb0bf4f420d244b46244ac442dd8a77c357b27ecbe17"
+  },
+  "generated/loot.pickup_01.wav": {
+    "cue": "loot.pickup",
+    "variant": "01",
+    "seed": 4434,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4434,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "05ff9042b198dea761876773be484c647526cff3b2ac6c3b637d12a20eecf3d3"
+  },
+  "generated/loot.pickup_02.wav": {
+    "cue": "loot.pickup",
+    "variant": "02",
+    "seed": 4451,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4434,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "922ee1191ae13cfd86081aec19acb636a58970f5f206e5adf7337e290679b6c6"
+  },
+  "generated/loot.pickup_03.wav": {
+    "cue": "loot.pickup",
+    "variant": "03",
+    "seed": 4468,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4434,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "640885ed74af9031fadf933a37608948316ae8df43b57c093cf073115fdb2e19"
+  },
+  "generated/inventory.equip_01.wav": {
+    "cue": "inventory.equip",
+    "variant": "01",
+    "seed": 4535,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4535,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.1944473710441,
+      "dc": 0.0002885356093897964,
+      "seam": 0.0,
+      "sha256": "a8b3d5eb45e20ff9e7b2b258a86b8bde0d67e6e8d3ff880af3dbc7eb83ab750e"
+    },
+    "recipe_sha256": "5877a0513590e67bc822f160d8267eefe562e90b457a24d7124de968a7da3190"
+  },
+  "generated/inventory.equip_02.wav": {
+    "cue": "inventory.equip",
+    "variant": "02",
+    "seed": 4552,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4535,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.473828361928735,
+      "dc": 0.0002943212335759943,
+      "seam": 0.0,
+      "sha256": "262b106dcb1ea3ffb040d0b8f0e39ec47a1bbad4b0a50defa70a8b56a7bff433"
+    },
+    "recipe_sha256": "5c1810052b0597043e6ab03faef073d79427aa3ccc74b1b2d54db3495d10ad8d"
+  },
+  "generated/inventory.equip_03.wav": {
+    "cue": "inventory.equip",
+    "variant": "03",
+    "seed": 4569,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 1,
+      "duration": 0.22,
+      "seed": 4535,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.603409223507033,
+      "dc": 0.00025904395363547585,
+      "seam": 0.0,
+      "sha256": "49567fbaa597f0259bb8f8454883e90aeb16ced616555d9596de2f6829302c05"
+    },
+    "recipe_sha256": "afad41571b961226671b37be543af645841c1b17569532172a9e594faf7b1f05"
+  },
+  "generated/inventory.move_01.wav": {
+    "cue": "inventory.move",
+    "variant": "01",
+    "seed": 4636,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4636,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "5636a0706776460d1e59bb69b6258b4891233a6d7c6a7b4f96af3a43b6ca1073"
+  },
+  "generated/inventory.move_02.wav": {
+    "cue": "inventory.move",
+    "variant": "02",
+    "seed": 4653,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4636,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "3571b0731906cf007f4130bcfccf73eeb6623f91ef5fd629953b056d23d24b5c"
+  },
+  "generated/inventory.move_03.wav": {
+    "cue": "inventory.move",
+    "variant": "03",
+    "seed": 4670,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4636,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "495879619637f1dc8810474ce5f86693465cb9c16ca6d4b1d19239b40c213ac9"
+  },
+  "generated/inventory.drop_01.wav": {
+    "cue": "inventory.drop",
+    "variant": "01",
+    "seed": 4737,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4737,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "b5fd4f4198bca4ab583c52dc3225864cdbb509abd396bd3f6ae9809c04b0e985"
+  },
+  "generated/inventory.drop_02.wav": {
+    "cue": "inventory.drop",
+    "variant": "02",
+    "seed": 4754,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4737,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "8ed98270d7a3596c2ff96dce3bdd1ff110207a948c0a56a940d2d287c4c920ca"
+  },
+  "generated/inventory.drop_03.wav": {
+    "cue": "inventory.drop",
+    "variant": "03",
+    "seed": 4771,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4737,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "aba4d12f49a2b7a1c0d072fb3f96ab8692ddb529ed0e2bb3a1a8bd97c02158e8"
+  },
+  "generated/potion_01.wav": {
+    "cue": "potion",
+    "variant": "01",
+    "seed": 4838,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4838,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "105596355d8ac687cc1f00d87e532fa1b211aa96439a1ec67cca42d672ad1fea"
+  },
+  "generated/potion_02.wav": {
+    "cue": "potion",
+    "variant": "02",
+    "seed": 4855,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4838,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "5fb77cfd113119ef0751667379707aa7b9baa4156ee0cb026ef687e196fda4e3"
+  },
+  "generated/potion_03.wav": {
+    "cue": "potion",
+    "variant": "03",
+    "seed": 4872,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4838,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "cc5d2c2ab2c83bbe3f65c7b439aa7b8f25dab9d654fa5afb2c06a104e0ec35c0"
+  },
+  "generated/weapon.blunt_01.wav": {
+    "cue": "weapon.blunt",
+    "variant": "01",
+    "seed": 4939,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 110,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4939,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.249354175800164,
+      "dc": 0.0001903851826985677,
+      "seam": 0.0,
+      "sha256": "5cfd4c4857e83fa7e8b0bea21eb99a2d4f85828a61f1dad77bbc4cf7ff22c692"
+    },
+    "recipe_sha256": "d7efe08fb023c5889e6f3a3f4d21aa6c057b7b3078813990e51406368f368cdd"
+  },
+  "generated/weapon.blunt_02.wav": {
+    "cue": "weapon.blunt",
+    "variant": "02",
+    "seed": 4956,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 110,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4939,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.73293896053742,
+      "dc": 0.00019903182983398436,
+      "seam": 0.0,
+      "sha256": "068b29cfddc2db1ca07ddb4404df2130250041dbe1bf7d0ec7b8be5e5e13baa3"
+    },
+    "recipe_sha256": "45ba187b97989c8a3688b487969183ee98fa47b1d87e042b53e7bda2b6a0df16"
+  },
+  "generated/weapon.blunt_03.wav": {
+    "cue": "weapon.blunt",
+    "variant": "03",
+    "seed": 4973,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 110,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 4939,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.99825242898153,
+      "dc": 0.00020983146898674243,
+      "seam": 0.0,
+      "sha256": "2dbdfd7bf9c6fa698c783d20b0e337be26f72e9e05f76b9a245cbde0ce49df26"
+    },
+    "recipe_sha256": "7e3321bae1006a0e046825416ef874d1cb3021e740beb9f52ddf9562fd06e746"
+  },
+  "generated/weapon.slash_01.wav": {
+    "cue": "weapon.slash",
+    "variant": "01",
+    "seed": 5040,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5040,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "2f1ce4510f1d929662705cc583b0d556696fbcea90234d10c9f63babd920b583"
+  },
+  "generated/weapon.slash_02.wav": {
+    "cue": "weapon.slash",
+    "variant": "02",
+    "seed": 5057,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5040,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "5ccdfd4465dea1fbfa475b3290da5dd2fee98accc8720fe64f155360ce01bdd6"
+  },
+  "generated/weapon.slash_03.wav": {
+    "cue": "weapon.slash",
+    "variant": "03",
+    "seed": 5074,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5040,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "bd6952c71e12689813266c04ae9b8f8273f162ed315bc3ccf52a00ee170d99d0"
+  },
+  "generated/weapon.pierce_01.wav": {
+    "cue": "weapon.pierce",
+    "variant": "01",
+    "seed": 5141,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5141,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "c127f2261f8a6c6eea1435537e900f734f8a21b351bda62b66f9f846fd8bf9c6"
+  },
+  "generated/weapon.pierce_02.wav": {
+    "cue": "weapon.pierce",
+    "variant": "02",
+    "seed": 5158,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5141,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "3d5d20a06ae9ba8632b9f3bac74fa362f1cfea0eca0c3c33f4cafa1fd640c558"
+  },
+  "generated/weapon.pierce_03.wav": {
+    "cue": "weapon.pierce",
+    "variant": "03",
+    "seed": 5175,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5141,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "53aee7ff0fd58d42ab1cd51fe349046ccb0a8624e35e7345263bebde8f99f0b2"
+  },
+  "generated/weapon.arrow_impact_01.wav": {
+    "cue": "weapon.arrow_impact",
+    "variant": "01",
+    "seed": 5242,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5242,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.046331443383536,
+      "dc": 0.0003168337272875237,
+      "seam": 0.0,
+      "sha256": "8add567ae7f3a999e09fbd794589a8ea3dc27984a3b32f05fcacf7b372981e81"
+    },
+    "recipe_sha256": "fed10b735d992259a4d2dac7a1383cb4d933f9275d39fc60d32ca516d0ab9119"
+  },
+  "generated/weapon.arrow_impact_02.wav": {
+    "cue": "weapon.arrow_impact",
+    "variant": "02",
+    "seed": 5259,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5242,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.467586186286756,
+      "dc": 0.0003196138324159564,
+      "seam": 0.0,
+      "sha256": "2d1fa0a9a2568f52ecb771dd031cf02250d3a296acd5a6ac6b60d6722aadf7b6"
+    },
+    "recipe_sha256": "b4086cd27c47bb2c758c82db20cb1c9de22187477a9c191f830d1073f0a623e6"
+  },
+  "generated/weapon.arrow_impact_03.wav": {
+    "cue": "weapon.arrow_impact",
+    "variant": "03",
+    "seed": 5276,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 430,
+      "tone": 0.15,
+      "duration": 0.22,
+      "seed": 5242,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -22.91512460637305,
+      "dc": 0.0003045139890728575,
+      "seam": 0.0,
+      "sha256": "666176782a8286f797df75be217dbd1528ae469e18ff0f42e2afeced6c78d984"
+    },
+    "recipe_sha256": "eac7d791cb707a9eaeef38ca8ead977bac07c2399ecaf389d4601938ea7b47ab"
+  },
+  "generated/weapon.swing_01.wav": {
+    "cue": "weapon.swing",
+    "variant": "01",
+    "seed": 5343,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 850,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5343,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.740599763319782,
+      "dc": 0.00010027451948686079,
+      "seam": 0.0,
+      "sha256": "9205d9b7b83b11bfa734d761be288a44662497c2613c702b267970772543f22f"
+    },
+    "recipe_sha256": "502763938f31f65ada6d4461282dab4aeb50255b4ab84f8ee45ad73e9f83430e"
+  },
+  "generated/weapon.swing_02.wav": {
+    "cue": "weapon.swing",
+    "variant": "02",
+    "seed": 5360,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 850,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5343,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.756689434713742,
+      "dc": 9.667945630622633e-05,
+      "seam": 0.0,
+      "sha256": "0f469bbd868117bf4f719668f422b1bd2266b92d36f46004f9742e1e36f0892a"
+    },
+    "recipe_sha256": "80c6e5570640b551aaaac29add6c417b993176254092df1a844a1b91310e971d"
+  },
+  "generated/weapon.swing_03.wav": {
+    "cue": "weapon.swing",
+    "variant": "03",
+    "seed": 5377,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 850,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5343,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.66669345723699,
+      "dc": 9.423169222745029e-05,
+      "seam": 0.0,
+      "sha256": "426d01e27dbc13d52feddf06f8d32f9a26dbc9d2c10fb20420b3a4e2d351e747"
+    },
+    "recipe_sha256": "b88925753fc73416ba3b26f74c2af18d4ebc2529b48a981cb6b7a0c7b1788ad7"
+  },
+  "generated/weapon.miss_01.wav": {
+    "cue": "weapon.miss",
+    "variant": "01",
+    "seed": 5444,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 1200,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5444,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.25132224638366,
+      "dc": 7.625926624644887e-05,
+      "seam": 0.0,
+      "sha256": "cd4dffb3b2e74b3dc1ebeb4ee91730339466c1fbc848f6283e93f8087cbbc663"
+    },
+    "recipe_sha256": "dd55e24eed66d2e48125af176342bf7da9b3613db187e9f225ad30317eb36d04"
+  },
+  "generated/weapon.miss_02.wav": {
+    "cue": "weapon.miss",
+    "variant": "02",
+    "seed": 5461,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 1200,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5444,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.013509699339895,
+      "dc": 7.562637329101562e-05,
+      "seam": 0.0,
+      "sha256": "13509fef865f0627409413c1e3b03c9ace11b237455f46e493e3e2bd268387f8"
+    },
+    "recipe_sha256": "98852fb8796bfc346e2120cd2256a9a2cae1f1fcbaaab30661c6c7977cc9c9c6"
+  },
+  "generated/weapon.miss_03.wav": {
+    "cue": "weapon.miss",
+    "variant": "03",
+    "seed": 5478,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 1200,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5444,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -18.72575794178775,
+      "dc": 7.56957314231179e-05,
+      "seam": 0.0,
+      "sha256": "9df9c867749c79026911823344c576fcc3162002189ac5d9c83c6855fbb8a6d5"
+    },
+    "recipe_sha256": "fe154d0de11b45f4625c65740db6f33912339d3f371ac135470e17e3593b7bad"
+  },
+  "generated/weapon.release_01.wav": {
+    "cue": "weapon.release",
+    "variant": "01",
+    "seed": 5545,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 2100,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5545,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.261711424684098,
+      "dc": 5.1403045654296874e-05,
+      "seam": 0.0,
+      "sha256": "798b1c948101d5966cfe814a6c4d79f5a15fb63330fc2e803bb8ef0038cb1c83"
+    },
+    "recipe_sha256": "4e67b8d7ed44d872931345ed2af9043ff9a0d0010a4dd44858b9dbb311438769"
+  },
+  "generated/weapon.release_02.wav": {
+    "cue": "weapon.release",
+    "variant": "02",
+    "seed": 5562,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 2100,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5545,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.196950681119212,
+      "dc": 5.0888639507871685e-05,
+      "seam": 0.0,
+      "sha256": "f27b4fa59ae2a5d33da5a32359bc31c148c95797c4fd33ca627ce93953fe4b36"
+    },
+    "recipe_sha256": "a2eee16f4c7dd66492e27db8c992586132f48889076e2d90cc8e0472dd15402c"
+  },
+  "generated/weapon.release_03.wav": {
+    "cue": "weapon.release",
+    "variant": "03",
+    "seed": 5579,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 2100,
+      "tone": 0.5,
+      "duration": 0.22,
+      "seed": 5545,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.22,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.127850154822873,
+      "dc": 5.065455581202652e-05,
+      "seam": 0.0,
+      "sha256": "62d8b41ca4d97d702629c058428442b50b2c349e2842a60e3814cac54f662013"
+    },
+    "recipe_sha256": "b2b2c419f03dd727de8df54ccd58eb79c4694fdededf7a05a873d0994976c948"
+  },
+  "generated/radiant_01.wav": {
+    "cue": "radiant",
+    "variant": "01",
+    "seed": 5646,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 700,
+      "tone": 1.6,
+      "duration": 0.55,
+      "seed": 5646,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -25.664294941148324,
+      "dc": 3.9915605024857955e-06,
+      "seam": 0.0,
+      "sha256": "0f53339fe8a7adfc7c9d975169fff7b7bd4ed089afc3eede6b806aa7ca8a5f32"
+    },
+    "recipe_sha256": "867b5688f4f60db4ce0b528889334734749f3405c9743ff079ffab8d871c528d"
+  },
+  "generated/radiant_02.wav": {
+    "cue": "radiant",
+    "variant": "02",
+    "seed": 5663,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 700,
+      "tone": 1.6,
+      "duration": 0.55,
+      "seed": 5646,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.221867800360673,
+      "dc": 3.613558682528409e-06,
+      "seam": 0.0,
+      "sha256": "5721fb98872a2bdb0c286f4355c447cadd3c261e5dc7a40c7f4a8cc094202914"
+    },
+    "recipe_sha256": "bce17d42d6175429d391acc74e7217a4f79e260e354b461a0db1d0453fcb9ca5"
+  },
+  "generated/radiant_03.wav": {
+    "cue": "radiant",
+    "variant": "03",
+    "seed": 5680,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 700,
+      "tone": 1.6,
+      "duration": 0.55,
+      "seed": 5646,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.43633659551989,
+      "dc": 3.104932380445076e-06,
+      "seam": 0.0,
+      "sha256": "812c86b8cbfe7dec638d17fcbc19094b54dc0492e135130cff8c5d1fc3a433ff"
+    },
+    "recipe_sha256": "da9ce766949783305f602df3fe9a43d340150e529bac583163f2e129d0a950aa"
+  },
+  "generated/healing_01.wav": {
+    "cue": "healing",
+    "variant": "01",
+    "seed": 5747,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 510,
+      "tone": 1.25,
+      "duration": 0.8,
+      "seed": 5747,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.8,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.628099272464752,
+      "dc": 1.8302599589029948e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "58124ba71bb22f6ebf23b3c4b99faee13abeeb564b5d1dc56b83f857f049a778"
+    },
+    "recipe_sha256": "6cf554fecad6e95a02abda1e3d083c324b268e19bb3c5aac8eae715a190f3bbb"
+  },
+  "generated/healing_02.wav": {
+    "cue": "healing",
+    "variant": "02",
+    "seed": 5764,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 510,
+      "tone": 1.25,
+      "duration": 0.8,
+      "seed": 5747,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.8,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -26.056369782175874,
+      "dc": 2.2403399149576823e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "5eb8f58414a5afe8aca1e720e00b53133436a9878235464b1c90a1408c9b1ab9"
+    },
+    "recipe_sha256": "8d803cdd51527ffdcc249b51de6d15792aa592964b8bf468b8bc97d0f664b931"
+  },
+  "generated/healing_03.wav": {
+    "cue": "healing",
+    "variant": "03",
+    "seed": 5781,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 510,
+      "tone": 1.25,
+      "duration": 0.8,
+      "seed": 5747,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.8,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.090076736181555,
+      "dc": 3.1391779581705728e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "836583b61081bd2180b9df4402519d3f0bc09df4d208fb7fd314da828ce27dea"
+    },
+    "recipe_sha256": "bc8ff053ba47da9b931e691bb32990b11345aa53700db9d507a1485609eba543"
+  },
+  "generated/dark_01.wav": {
+    "cue": "dark",
+    "variant": "01",
+    "seed": 5848,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 96,
+      "tone": 0.65,
+      "duration": 0.65,
+      "seed": 5848,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.65,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.632309301183838,
+      "dc": 9.077023237179487e-06,
+      "seam": 0.0,
+      "sha256": "ea247696b49a45ab9a85c5ca73df0ecb5ca2134cc2644edee308bb45386512c4"
+    },
+    "recipe_sha256": "ac93b8f0d6207c24abf17599de3a0f41cd7088fa9e4d34efa53c700ef1eeffab"
+  },
+  "generated/dark_02.wav": {
+    "cue": "dark",
+    "variant": "02",
+    "seed": 5865,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 96,
+      "tone": 0.65,
+      "duration": 0.65,
+      "seed": 5848,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.65,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.737565350325546,
+      "dc": 9.216895470252404e-06,
+      "seam": 0.0,
+      "sha256": "0f341724a21c8eed419f2367b70bf5a4b4cbcc46f1af053c9d78bd8fe8402f05"
+    },
+    "recipe_sha256": "046491f719f2f0f9424bbafa8dc23745328b7a3957085119e6fd1b273401c18c"
+  },
+  "generated/dark_03.wav": {
+    "cue": "dark",
+    "variant": "03",
+    "seed": 5882,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 96,
+      "tone": 0.65,
+      "duration": 0.65,
+      "seed": 5848,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.65,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.839191619870284,
+      "dc": 8.362990159254808e-06,
+      "seam": 0.0,
+      "sha256": "f20a14f6811ecc118564bb4cfa41002513b3925f1f52883f54a75d1204f9912d"
+    },
+    "recipe_sha256": "8147f344d377f1ba636e71d37ba60c75539f5debfd772ff50676780d2fd47a1d"
+  },
+  "generated/fire_01.wav": {
+    "cue": "fire",
+    "variant": "01",
+    "seed": 5949,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 210,
+      "tone": 2.1,
+      "duration": 0.45,
+      "seed": 5949,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.762130421135573,
+      "dc": 8.04477267795139e-06,
+      "seam": 0.0,
+      "sha256": "845e024bde00ac7edc424f107a72a85196913d901f86605d3eeb7c8da8250530"
+    },
+    "recipe_sha256": "da93d66415f463ab07452e2b66d6de3371f8b4034d29755aea9e2431f5002170"
+  },
+  "generated/fire_02.wav": {
+    "cue": "fire",
+    "variant": "02",
+    "seed": 5966,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 210,
+      "tone": 2.1,
+      "duration": 0.45,
+      "seed": 5949,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.34963109866046,
+      "dc": 6.511829517505787e-06,
+      "seam": 0.0,
+      "sha256": "2e0a728e66739bcfd3eaf6213baf1a5938681cbe6b23b771524e369cd9d99f7b"
+    },
+    "recipe_sha256": "a1c7b8fc03c3af503e50fd61a7adbfc15ba834d715fe1aef20d2cf99f36ebb02"
+  },
+  "generated/fire_03.wav": {
+    "cue": "fire",
+    "variant": "03",
+    "seed": 5983,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 210,
+      "tone": 2.1,
+      "duration": 0.45,
+      "seed": 5949,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -24.40092553081292,
+      "dc": 5.9424506293402775e-06,
+      "seam": 0.0,
+      "sha256": "89c0b4820bc54a7ba0839155ea396f85f3bcc3c8449c446c2601554dbbcd4b9d"
+    },
+    "recipe_sha256": "5f0976f6eb21067e42fbaee8adac6295ee925125ab8d69658c978d4da89fa8ff"
+  },
+  "generated/ice_01.wav": {
+    "cue": "ice",
+    "variant": "01",
+    "seed": 6050,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 1400,
+      "tone": 0.55,
+      "duration": 0.55,
+      "seed": 6050,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.75264097314152,
+      "dc": 1.9697709517045454e-06,
+      "seam": 0.0,
+      "sha256": "480481e000f9f8b94cb416bac53c3c0e7e4606ee35c2e6295b3083869e5e38be"
+    },
+    "recipe_sha256": "df54f9b2a51b636762674fdd752b2a14db1562e2ee44247af7accd4a40b8e118"
+  },
+  "generated/ice_02.wav": {
+    "cue": "ice",
+    "variant": "02",
+    "seed": 6067,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 1400,
+      "tone": 0.55,
+      "duration": 0.55,
+      "seed": 6050,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -27.029315154996517,
+      "dc": 1.6553474195075758e-06,
+      "seam": 0.0,
+      "sha256": "f20b3d0f36a8ce4c45084f389f85a3be08d6b2ff6663838e85ba398e329ca73d"
+    },
+    "recipe_sha256": "a9c043039ad72e2cb99cacbfdbad40321da9c7014168511f9f8b1f936c448944"
+  },
+  "generated/ice_03.wav": {
+    "cue": "ice",
+    "variant": "03",
+    "seed": 6084,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 1400,
+      "tone": 0.55,
+      "duration": 0.55,
+      "seed": 6050,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.55,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -27.030204352835803,
+      "dc": 1.695806329900568e-06,
+      "seam": 0.0,
+      "sha256": "d04c85d0cd4aee3f2498fe8a75883b018d28fa8e8b7e2ae1aad52f4866531fb1"
+    },
+    "recipe_sha256": "ad21d57c3fddbd7df9c3c1ad9a3c22794b0ee71817c3e2b933bb4bfcc3882b7c"
+  },
+  "generated/lightning_01.wav": {
+    "cue": "lightning",
+    "variant": "01",
+    "seed": 6151,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 360,
+      "tone": 4,
+      "duration": 0.28,
+      "seed": 6151,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.28,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.192489993551938,
+      "dc": 4.393713814871651e-06,
+      "seam": 0.0,
+      "sha256": "a1b8584b566ea4938b5cae0cb52f5a632ad0b194608c652ef2cb64820479a520"
+    },
+    "recipe_sha256": "636a8a7e64195381bf03997c84ec2402c7d65f2278ddbe2266588e54a8012369"
+  },
+  "generated/lightning_02.wav": {
+    "cue": "lightning",
+    "variant": "02",
+    "seed": 6168,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 360,
+      "tone": 4,
+      "duration": 0.28,
+      "seed": 6151,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.28,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.359322713659466,
+      "dc": 4.675274803524926e-06,
+      "seam": 0.0,
+      "sha256": "323798242abafaf700eadb0e7832245d2d212e9cceb88913fd90ec4afb94a5ce"
+    },
+    "recipe_sha256": "67961d85e7794adf8e250e54f079d860c12d6bb8b012dc4ec6d5cf345f1a5192"
+  },
+  "generated/lightning_03.wav": {
+    "cue": "lightning",
+    "variant": "03",
+    "seed": 6185,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 360,
+      "tone": 4,
+      "duration": 0.28,
+      "seed": 6151,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.28,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -24.183211089160853,
+      "dc": 3.821509225027902e-06,
+      "seam": 0.0,
+      "sha256": "759b66d2f315c6dfb4f0c7069fc34042c3487e31dd7384173edecebfcf9c3736"
+    },
+    "recipe_sha256": "294fd5d13af7cbf6c4131d9d7850c0380975afc3cc516fd52c82afb7c6fbaa1f"
+  },
+  "generated/acid_01.wav": {
+    "cue": "acid",
+    "variant": "01",
+    "seed": 6252,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 480,
+      "tone": 0.32,
+      "duration": 0.5,
+      "seed": 6252,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.5,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -24.253041890550783,
+      "dc": 1.8310546875e-06,
+      "seam": 0.0,
+      "sha256": "6f4c893ca6fd51f64e3fd09b17dc1e3621d84b78053e3957c9bc328b5d7ebda6"
+    },
+    "recipe_sha256": "3ed5450b5d48734f2a09b36d88be554408813df29cb8e1f77fd911bdab9e0835"
+  },
+  "generated/acid_02.wav": {
+    "cue": "acid",
+    "variant": "02",
+    "seed": 6269,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 480,
+      "tone": 0.32,
+      "duration": 0.5,
+      "seed": 6252,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.5,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -26.146872432515607,
+      "dc": 2.368927001953125e-06,
+      "seam": 0.0,
+      "sha256": "d7692e8accf552b65912ca9d104df48226c1a4dd883cd3cc38da8bc025c2e263"
+    },
+    "recipe_sha256": "9126dfb8958722e0e0b246ea092f1811cfd9f95dca88d099bf42365d6def0ac6"
+  },
+  "generated/acid_03.wav": {
+    "cue": "acid",
+    "variant": "03",
+    "seed": 6286,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 480,
+      "tone": 0.32,
+      "duration": 0.5,
+      "seed": 6252,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.5,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.70375238244175,
+      "dc": 3.849029541015625e-06,
+      "seam": 0.0,
+      "sha256": "582dbe6715e9fe61a96abe2943bcd07fa6b94e7a67b107f67ba67cfb4366411c"
+    },
+    "recipe_sha256": "d96fde5dd309d4ba98f5afc578edced29dac77aaa6daaed92a91d707e02ee6c5"
+  },
+  "generated/poison_01.wav": {
+    "cue": "poison",
+    "variant": "01",
+    "seed": 6353,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 165,
+      "tone": 0.5,
+      "duration": 0.6,
+      "seed": 6353,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.27445559645177,
+      "dc": 6.691614786783854e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "5c24d45a292841f027a8c0936d701ae25a0de8b391d6c23566ccd1a510445c32"
+    },
+    "recipe_sha256": "42fa259ac312c466a4699115af1ac6cd9998cbc29ad7486c3bbe74bb104efb6d"
+  },
+  "generated/poison_02.wav": {
+    "cue": "poison",
+    "variant": "02",
+    "seed": 6370,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 165,
+      "tone": 0.5,
+      "duration": 0.6,
+      "seed": 6353,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.92977165730979,
+      "dc": 8.484522501627604e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "99156c53ebce1468424ad724000acdd4c643786021ac0eb02421dac270341841"
+    },
+    "recipe_sha256": "b4ebdca91c43457b78f782f565b5b6ae17a7e0d4211f41f0bb5d86ff13f9a374"
+  },
+  "generated/poison_03.wav": {
+    "cue": "poison",
+    "variant": "03",
+    "seed": 6387,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 165,
+      "tone": 0.5,
+      "duration": 0.6,
+      "seed": 6353,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.60373390463733,
+      "dc": 8.592605590820312e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "0e503df92eef9695ade7977e752dbde484a8684fc4a86c68aaf9f5dc441d8fc1"
+    },
+    "recipe_sha256": "724a51e0e0d62a787862e827f6f79bdf7f66933a177cc053c106e095d12ca0df"
+  },
+  "generated/thunder_01.wav": {
+    "cue": "thunder",
+    "variant": "01",
+    "seed": 6454,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 65,
+      "tone": 0.4,
+      "duration": 0.7,
+      "seed": 6454,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.7,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.608487304463576,
+      "dc": 3.683907645089286e-06,
+      "seam": 0.0,
+      "sha256": "fa09e3dfa417d82b4f9513871b2a886a6846d9706da1156d7fdd759018b9bf6c"
+    },
+    "recipe_sha256": "6615c033fbc4747d5953c56bf8bacc0d025211b1c423438ae777b5094d4ed384"
+  },
+  "generated/thunder_02.wav": {
+    "cue": "thunder",
+    "variant": "02",
+    "seed": 6471,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 65,
+      "tone": 0.4,
+      "duration": 0.7,
+      "seed": 6454,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.7,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.537923309358757,
+      "dc": 2.010890415736607e-06,
+      "seam": 0.0,
+      "sha256": "83a50553f0308f1fa19fddd1b2dee683b1467ea7ae33c4349725be857766e289"
+    },
+    "recipe_sha256": "f80dddbeee9207ad9e0a0fcc0c550801cf0a30ce1483f269191548117a0a2be7"
+  },
+  "generated/thunder_03.wav": {
+    "cue": "thunder",
+    "variant": "03",
+    "seed": 6488,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 65,
+      "tone": 0.4,
+      "duration": 0.7,
+      "seed": 6454,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.7,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.79242791197839,
+      "dc": 5.077180408296131e-07,
+      "seam": 0.0,
+      "sha256": "f789247fc1ab40f6bd2b57dc4ae83ebf5b61e5c60295466501c99daea1dd8d6b"
+    },
+    "recipe_sha256": "e163cd4c113e6b9b26484557d496c8d283b92506ab564575caee986742dc9619"
+  },
+  "generated/control_01.wav": {
+    "cue": "control",
+    "variant": "01",
+    "seed": 6555,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 220,
+      "tone": 0.7,
+      "duration": 0.7,
+      "seed": 6555,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.7,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.093550785098657,
+      "dc": 3.957294282459077e-06,
+      "seam": 0.0,
+      "sha256": "3bf08757708eb13f420049ccbd6830968db3a6259c4050be651f8a50fc4e31dc"
+    },
+    "recipe_sha256": "7cbb1eafc34f18c08745f86fcf45a508300e5dfbc9779a547fdb00cfa6203431"
+  },
+  "generated/control_02.wav": {
+    "cue": "control",
+    "variant": "02",
+    "seed": 6572,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 220,
+      "tone": 0.7,
+      "duration": 0.7,
+      "seed": 6555,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.7,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.297275272234888,
+      "dc": 3.223419189453125e-06,
+      "seam": 0.0,
+      "sha256": "80eb7f46ab5bb5f750b2f6ca609a9a4d7acea3585aa66b9ca9f77e3cac7bc6ea"
+    },
+    "recipe_sha256": "e43bb8db3527e10ca44a425b77cac3fd49194781dc47f6c74cfa3144711ccabf"
+  },
+  "generated/control_03.wav": {
+    "cue": "control",
+    "variant": "03",
+    "seed": 6589,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 220,
+      "tone": 0.7,
+      "duration": 0.7,
+      "seed": 6555,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.7,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.2976976178854,
+      "dc": 2.953665597098214e-06,
+      "seam": 0.0,
+      "sha256": "047f8757bc85b80c942c44303b404f446d5cd3b96c46e8575937be6cf308a1f9"
+    },
+    "recipe_sha256": "5372d6a07d5d88db764cc146c554f516a5cae5ccbde510c77c9aa31af0742a06"
+  },
+  "generated/material_01.wav": {
+    "cue": "material",
+    "variant": "01",
+    "seed": 6656,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 150,
+      "tone": 0.6,
+      "duration": 0.45,
+      "seed": 6656,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.469009332049666,
+      "dc": 7.89642333984375e-06,
+      "seam": 0.0,
+      "sha256": "19857da47c968c9729278970d0bb9cea6d9cb5f3fc93cb4996e4e084054309a1"
+    },
+    "recipe_sha256": "3804b4397173e075a487bcc5289aa3a50226ad800942c865bc39c4dd783563ad"
+  },
+  "generated/material_02.wav": {
+    "cue": "material",
+    "variant": "02",
+    "seed": 6673,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 150,
+      "tone": 0.6,
+      "duration": 0.45,
+      "seed": 6656,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.09651264467074,
+      "dc": 8.54350902416088e-06,
+      "seam": 0.0,
+      "sha256": "f529f942b590e26c4d35245d5c03bdd47a3c6626b511eb692f5078769cb1c7ab"
+    },
+    "recipe_sha256": "21bde0d4622317c6da9748278a34d6ca69de288b8a176f8a95cdf22289de65b5"
+  },
+  "generated/material_03.wav": {
+    "cue": "material",
+    "variant": "03",
+    "seed": 6690,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 150,
+      "tone": 0.6,
+      "duration": 0.45,
+      "seed": 6656,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.99399329069749,
+      "dc": 1.0424013491030093e-05,
+      "seam": 0.0,
+      "sha256": "f598199cc2d767faa2f8c464b7c880bbce61d40a8a233e7cbc3a5749021247a1"
+    },
+    "recipe_sha256": "7f650bb60e2f9c108adc056a117084a1e00dcfd836d13480705982db8a65199a"
+  },
+  "generated/arcane_01.wav": {
+    "cue": "arcane",
+    "variant": "01",
+    "seed": 6757,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 830,
+      "tone": 1.4,
+      "duration": 0.45,
+      "seed": 6757,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -26.22893819743996,
+      "dc": 3.147831669560185e-06,
+      "seam": 0.0,
+      "sha256": "dd6ebdcc3485a542d7f5ac0a7bd7bd53960cf3cf1849b7e705b595f8bfe06292"
+    },
+    "recipe_sha256": "50e480e439ca1e8480f2d10a8172af46ebf1a7b3f39cea9c00df558e8a3c1f7e"
+  },
+  "generated/arcane_02.wav": {
+    "cue": "arcane",
+    "variant": "02",
+    "seed": 6774,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 830,
+      "tone": 1.4,
+      "duration": 0.45,
+      "seed": 6757,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.99564800556726,
+      "dc": 3.207171404803241e-06,
+      "seam": 0.0,
+      "sha256": "4a80ef7c181781cbc1b24871fbe8570e3b30f1020ad6eddc261928a119622316"
+    },
+    "recipe_sha256": "cededcccad75818ff51103463235513c8e4732a3cfbdc6092733d5f1920dad86"
+  },
+  "generated/arcane_03.wav": {
+    "cue": "arcane",
+    "variant": "03",
+    "seed": 6791,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 830,
+      "tone": 1.4,
+      "duration": 0.45,
+      "seed": 6757,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.45,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.166229193064304,
+      "dc": 3.4148604781539352e-06,
+      "seam": 0.0,
+      "sha256": "61a51f288c4928c6ca591cca3a0a677cc1b95eb531e5583a287d6046c603ea2d"
+    },
+    "recipe_sha256": "1fdc33b33f15a6e8b522d188830739a3c974138a12eff97fb2a391cfa1c3c692"
+  },
+  "generated/ui.confirm_01.wav": {
+    "cue": "ui.confirm",
+    "variant": "01",
+    "seed": 6858,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 660,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 6858,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.354048222046405,
+      "dc": 3.227657741970486e-05,
+      "seam": 3.0517578125e-05,
+      "sha256": "f2041cddc39f5e69fc44ff1f3c715e50b6f4c4d081fc1e21b475700a59ad5fa4"
+    },
+    "recipe_sha256": "a9e34babc6d8dec676480ab264c71fda34b4d32d7fa08f0f71c9008214558edb"
+  },
+  "generated/ui.confirm_02.wav": {
+    "cue": "ui.confirm",
+    "variant": "02",
+    "seed": 6875,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 660,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 6858,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.95317937403597,
+      "dc": 2.9918882581922744e-05,
+      "seam": 3.0517578125e-05,
+      "sha256": "330570860a2d0885c2a3b8bdc2e85ce0abf2c73358b352fc17aeedbcda832652"
+    },
+    "recipe_sha256": "2f354828c7d91aefa159a1fd5119e364068fc18537fa64e36cd37df74dac51bb"
+  },
+  "generated/ui.cancel_01.wav": {
+    "cue": "ui.cancel",
+    "variant": "01",
+    "seed": 6959,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 330,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 6959,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.254898830017407,
+      "dc": 7.735358344184028e-07,
+      "seam": 3.0517578125e-05,
+      "sha256": "ec3ad04fd5c8b0e05263059fb4538d1084fb9f92ca2a72b4f0fff3f57c9ada97"
+    },
+    "recipe_sha256": "bd0359d4422cff65a64f9ca3eb5dc43a1547c92c78104e182998add9f7f4d27a"
+  },
+  "generated/ui.cancel_02.wav": {
+    "cue": "ui.cancel",
+    "variant": "02",
+    "seed": 6976,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 330,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 6959,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.944851773913772,
+      "dc": 4.238552517361111e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "3e76512712e7a1554e04f76cccbf5a71bdfe4c121159f1b41a6bb2871c3c986d"
+    },
+    "recipe_sha256": "4f7c37017f58633e37db33b22fb5b2cc40304a9b6b922f28fb25dc01f6771d74"
+  },
+  "generated/ui.reject_01.wav": {
+    "cue": "ui.reject",
+    "variant": "01",
+    "seed": 7060,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 145,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 7060,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -21.778418280559954,
+      "dc": 4.672474331325955e-05,
+      "seam": 3.0517578125e-05,
+      "sha256": "4023bf1be2100728f1e42972a70a04abd12ec55cbc27789036196fe697abab64"
+    },
+    "recipe_sha256": "8e9cc5ecda70834c2e7cb66f57b1ddb546b34fe10ea3d39ae2a5c1f0b5bbb5e0"
+  },
+  "generated/ui.reject_02.wav": {
+    "cue": "ui.reject",
+    "variant": "02",
+    "seed": 7077,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 145,
+      "tone": 0.7,
+      "duration": 0.12,
+      "seed": 7060,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.86412795079551,
+      "dc": 4.378424750434028e-05,
+      "seam": 3.0517578125e-05,
+      "sha256": "1f30be757a81f4bf575e9ff4943be9ab880dfa2b7bb196b07354a494f8d36d74"
+    },
+    "recipe_sha256": "4ab01c049200a30442cad3f71f3f40a5165e15f1436efc61226294c8e5dbf245"
+  },
+  "generated/effect.change_01.wav": {
+    "cue": "effect.change",
+    "variant": "01",
+    "seed": 7161,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 910,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7161,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -26.3243729416341,
+      "dc": 1.365520336009838e-06,
+      "seam": 0.0,
+      "sha256": "7038221ab9ab40adac572c082184153eb948664dfef435690c4e642fc8d17a30"
+    },
+    "recipe_sha256": "f747f5d1fe7c7796affbe3e944243219409e357a44c4c7e0817b0c9de0ced28d"
+  },
+  "generated/effect.change_02.wav": {
+    "cue": "effect.change",
+    "variant": "02",
+    "seed": 7178,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 910,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7161,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.60403976623867,
+      "dc": 1.483493381076389e-06,
+      "seam": 0.0,
+      "sha256": "c32d361dbf147cec9d76f97eca17b34ca54c5bbff5cf61fcceea135cc1337d84"
+    },
+    "recipe_sha256": "0c4699c94048cc5b16b472dba2f022d8f8b7ebfcf642f2069f43467835467f66"
+  },
+  "generated/encounter_01.wav": {
+    "cue": "encounter",
+    "variant": "01",
+    "seed": 7262,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7262,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.522262969138268,
+      "dc": 4.95981287073206e-06,
+      "seam": 0.0,
+      "sha256": "6f5e2e2e25f87dd41d7698911d0bc6f8c69da0b446eea705284aba09594896fa"
+    },
+    "recipe_sha256": "f03177c544e2fc5687c27ac5b97e66fbd8aa703b276399a78a811705318d009f"
+  },
+  "generated/encounter_02.wav": {
+    "cue": "encounter",
+    "variant": "02",
+    "seed": 7279,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7262,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.26441783357518,
+      "dc": 4.509113453052662e-06,
+      "seam": 0.0,
+      "sha256": "c299243daa1529a9579f11277f41e1a794b4d50d632381b85da83c8934a0e06f"
+    },
+    "recipe_sha256": "374cd2c8c273412e7284bbca503dbe4b921fcbd08e838d690ec443a2dc178a06"
+  },
+  "generated/victory_01.wav": {
+    "cue": "victory",
+    "variant": "01",
+    "seed": 7363,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 550,
+      "tone": 1.5,
+      "duration": 0.9,
+      "seed": 7363,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.013972800446034,
+      "dc": 2.753646285445602e-06,
+      "seam": 0.0,
+      "sha256": "83aa398f8d285ade9c38d8397f7093e41213eb244a14e2729df1ab857e3e73b9"
+    },
+    "recipe_sha256": "6e9f33f569f8a19c8e55f043767cd35ef534a4657da45db317974051bbd12cc5"
+  },
+  "generated/victory_02.wav": {
+    "cue": "victory",
+    "variant": "02",
+    "seed": 7380,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 550,
+      "tone": 1.5,
+      "duration": 0.9,
+      "seed": 7363,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.585057360133575,
+      "dc": 2.9691060384114583e-06,
+      "seam": 0.0,
+      "sha256": "fcaac5f5fe529f6d627b1bd36e904da4fe25763c26087a78bb7ee6b88d5b2715"
+    },
+    "recipe_sha256": "84211e64ee157e73c66b3d09c6b3a4ab7c922fe7ccf208fa021319004e120f0a"
+  },
+  "generated/defeat_01.wav": {
+    "cue": "defeat",
+    "variant": "01",
+    "seed": 7464,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 95,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7464,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.49785092973435,
+      "dc": 5.7693764015480325e-06,
+      "seam": 0.0,
+      "sha256": "04ac23d0fa66d4c30801cddc998717f86016746b0620da34ab0cfd2f783e36fe"
+    },
+    "recipe_sha256": "1fdff55dabfaebd9d8d83754a05ec059ade2a16e6cd414038f7f37d133d4c808"
+  },
+  "generated/defeat_02.wav": {
+    "cue": "defeat",
+    "variant": "02",
+    "seed": 7481,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 95,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7464,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.189587621123927,
+      "dc": 5.527072482638889e-06,
+      "seam": 0.0,
+      "sha256": "b4b62873af9f75fe15d5666030e06eeb197b6372b0000b0dae98ad7f0d5f04b4"
+    },
+    "recipe_sha256": "ff3df44495eb7274de457e46a91847927ec579aa1daf40771a38d235863ecbf4"
+  },
+  "generated/travel_01.wav": {
+    "cue": "travel",
+    "variant": "01",
+    "seed": 7565,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 350,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7565,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.710673147876935,
+      "dc": 8.003800003616898e-07,
+      "seam": 0.0,
+      "sha256": "657b4460176f987dfe6aaebd2d51fdac95d75d56ad1365c645181e1867b1c909"
+    },
+    "recipe_sha256": "886f708b98e3d172a3b05d5f8d8303890e897d906e049b19c56931389b1a6f29"
+  },
+  "generated/travel_02.wav": {
+    "cue": "travel",
+    "variant": "02",
+    "seed": 7582,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 350,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7565,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.74064650421102,
+      "dc": 1.0928401240596066e-06,
+      "seam": 0.0,
+      "sha256": "bc6b80685300dca0b9f171eaa8886302f31f7b4b2f61ab5a14b1382d2a16fcdc"
+    },
+    "recipe_sha256": "292e56d3228bf0156b69f82cffee460cea660812fb0ecbc0d4272650d8c82010"
+  },
+  "generated/recovery_01.wav": {
+    "cue": "recovery",
+    "variant": "01",
+    "seed": 7666,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 490,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7666,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.2182142740236,
+      "dc": 1.1733726218894676e-06,
+      "seam": 0.0,
+      "sha256": "ee6aebd2a1daf220204c0f6201195d52f214a347e9683c52e348615070b35eb3"
+    },
+    "recipe_sha256": "a79e1ecceecf2020f8d65a8c34012695de49b8e088688383e85e7857771d633a"
+  },
+  "generated/recovery_02.wav": {
+    "cue": "recovery",
+    "variant": "02",
+    "seed": 7683,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 490,
+      "tone": 0.7,
+      "duration": 0.9,
+      "seed": 7666,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.322515286074598,
+      "dc": 1.6332555700231482e-06,
+      "seam": 0.0,
+      "sha256": "4384ab4dfaeff8598406e187a8e1bc6169282aafed0f775d9b1fb07eb491dcc2"
+    },
+    "recipe_sha256": "6a8f249754d8cb3058d1feaccf119ed0ac899f3b93fa78570267d10f022ab0d0"
+  },
+  "generated/advancement_01.wav": {
+    "cue": "advancement",
+    "variant": "01",
+    "seed": 7767,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 740,
+      "tone": 1.5,
+      "duration": 0.9,
+      "seed": 7767,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.389410018170793,
+      "dc": 1.9772847493489583e-06,
+      "seam": 0.0,
+      "sha256": "8c2f55865ca63eb21a2188121acd364835d9eaa3d17eb20637c17b0bcd85c6f4"
+    },
+    "recipe_sha256": "9461b6a858a939f337b2347d0db201f8822a4c496a8637fee4b852e13b9f51df"
+  },
+  "generated/advancement_02.wav": {
+    "cue": "advancement",
+    "variant": "02",
+    "seed": 7784,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 740,
+      "tone": 1.5,
+      "duration": 0.9,
+      "seed": 7767,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.9,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -26.056544500368855,
+      "dc": 1.586631492332176e-06,
+      "seam": 0.0,
+      "sha256": "24b2b0a71cf34b20e24330b0939bd06321c3a395e1f62c6798f7903c01d6f6ec"
+    },
+    "recipe_sha256": "c84b0a9bba95a8dcd7e1f17d7d4798d7aac68d8cdfbc6d60c9c22e9499c4ff72"
+  },
+  "generated/ambience_01.wav": {
+    "cue": "ambience",
+    "variant": "01",
+    "seed": 7868,
+    "recipe": {
+      "instrument": 6,
+      "frequency": 120,
+      "tone": 0.1,
+      "duration": 60,
+      "seed": 7868,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 60.0,
+      "channels": 2,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -20.39635491623393,
+      "dc": 1.3415230645073785e-06,
+      "seam": 0.009002685546875,
+      "sha256": "78e9a008729bdc15e86646a474a814f4152a470e4bbdea160439ead2103f8218"
+    },
+    "recipe_sha256": "37d6181bb45d1d228dc53ad8f0d905c26219e6c4eafab06071169139e684442f"
+  },
+  "generated/web.loop_01.wav": {
+    "cue": "web.loop",
+    "variant": "01",
+    "seed": 7969,
+    "recipe": {
+      "instrument": 7,
+      "frequency": 1800,
+      "tone": 83,
+      "duration": 6,
+      "seed": 7969,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 6.0,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.90133035503623,
+      "dc": 5.715688069661459e-07,
+      "seam": 0.0013427734375,
+      "sha256": "da56584f52d3a77a0a853521e6e826e486a7609fcdd8f09ef2cbf5a6bd5baa48"
+    },
+    "recipe_sha256": "030c201852f1e0a48a3fbe1b94674e035db813bb052318a8076aa6b8e9c1ef0d"
+  },
+  "generated/spiritual.loop_01.wav": {
+    "cue": "spiritual.loop",
+    "variant": "01",
+    "seed": 8070,
+    "recipe": {
+      "instrument": 7,
+      "frequency": 220,
+      "tone": 370,
+      "duration": 6,
+      "seed": 8070,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 6.0,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -17.36186708307564,
+      "dc": 1.707405514187283e-05,
+      "seam": 0.020751953125,
+      "sha256": "2eb068aca8c4b8920ae02152e99805fc2d3a41b887cf677de4cb48038677f931"
+    },
+    "recipe_sha256": "1fb362ae6c7532edb3a9698efecda7d986b99dc7f63b008ae0849a6ee87e7a4b"
+  },
+  "generated/mirror.shatter_01.wav": {
+    "cue": "mirror.shatter",
+    "variant": "01",
+    "seed": 20171,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 1900,
+      "tone": 0.55,
+      "duration": 0.35,
+      "seed": 20171,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.35,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -27.893704147764133,
+      "dc": 2.348763602120536e-06,
+      "seam": 0.0,
+      "sha256": "7fed07df94698e2750053b97c918b4c23c37560563e416e1f37302a359ca80cb"
+    },
+    "recipe_sha256": "eb37f4d2dbbdfb8f765ec44500ecb588c3afb952b460ec15adf532cde2b282cd"
+  },
+  "generated/mirror.shatter_02.wav": {
+    "cue": "mirror.shatter",
+    "variant": "02",
+    "seed": 20188,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 1900,
+      "tone": 0.55,
+      "duration": 0.35,
+      "seed": 20171,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.35,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -26.797721609616577,
+      "dc": 2.254304431733631e-06,
+      "seam": 0.0,
+      "sha256": "da32ddd15f20bf782a0d8baa538c7af6e5e69656eaece3e5538970786b9e9fa6"
+    },
+    "recipe_sha256": "d30dfe7c6fd16ede6070e0f3cfc39e9db57f597b15338d9b1c6ac28014250324"
+  },
+  "generated/mirror.shatter_03.wav": {
+    "cue": "mirror.shatter",
+    "variant": "03",
+    "seed": 20205,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 1900,
+      "tone": 0.55,
+      "duration": 0.35,
+      "seed": 20171,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.35,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.963947704518866,
+      "dc": 2.4504888625372024e-06,
+      "seam": 0.0,
+      "sha256": "274761dc8512fbc1557324a546ad13151e9fd71c6ee9f01757b3396d2c29d78b"
+    },
+    "recipe_sha256": "bcb003868f5f9eeff0bb0b10ad0f999c797b8b98d2e6653c0a7738561ff05f18"
+  },
+  "generated/web.ignite_01.wav": {
+    "cue": "web.ignite",
+    "variant": "01",
+    "seed": 20272,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 2.1,
+      "duration": 0.6,
+      "seed": 20272,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -25.303501918504132,
+      "dc": 7.20871819390191e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "a1314f34c1f1b8712910cd1724ed9579f1568254d49dc0a989c9661399650547"
+    },
+    "recipe_sha256": "b9a2c82b0c1a4b7882f36dd30888bdbb51d1494b2713e3558f3b18819b9cabc2"
+  },
+  "generated/web.ignite_02.wav": {
+    "cue": "web.ignite",
+    "variant": "02",
+    "seed": 20289,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 2.1,
+      "duration": 0.6,
+      "seed": 20272,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.845245174777155,
+      "dc": 7.1133507622612845e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "282ace2cc391e75d5a4ef8d4cf48346e38e8d2027e714ef0abb8dd48daf7a21c"
+    },
+    "recipe_sha256": "1c4b559cfe865facb0c22fcb85139edab3f6baa5a5dc5c745be6d59b86e9b158"
+  },
+  "generated/web.ignite_03.wav": {
+    "cue": "web.ignite",
+    "variant": "03",
+    "seed": 20306,
+    "recipe": {
+      "instrument": 5,
+      "frequency": 180,
+      "tone": 2.1,
+      "duration": 0.6,
+      "seed": 20272,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -25.0264553966597,
+      "dc": 6.725523206922743e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "ac5a529d63eca158f2a60c933655866036539a04934d53fd6a99c82de4458d47"
+    },
+    "recipe_sha256": "345ee8ad706b03cef2fef55e9fbfb5d1b8e330334799a38c530c64c93a93540a"
+  },
+  "generated/inventory.unequip_01.wav": {
+    "cue": "inventory.unequip",
+    "variant": "01",
+    "seed": 20373,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 330,
+      "tone": 1,
+      "duration": 0.2,
+      "seed": 20373,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.36431716360832,
+      "dc": 0.00044210433959960936,
+      "seam": 3.0517578125e-05,
+      "sha256": "fa4581a40fa4ee1d3723c902839fc074126384138c0e25f3cb206eb815634af9"
+    },
+    "recipe_sha256": "fe14bd39592915f3e687b15a5825dedd51fa0ca6612d688b77a98140b44e155f"
+  },
+  "generated/inventory.unequip_02.wav": {
+    "cue": "inventory.unequip",
+    "variant": "02",
+    "seed": 20390,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 330,
+      "tone": 1,
+      "duration": 0.2,
+      "seed": 20373,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -22.695676318325138,
+      "dc": 0.00041625022888183596,
+      "seam": 3.0517578125e-05,
+      "sha256": "1bdb19de488bc4c99d04b2aeca595e1e4b86351a2e7269c417e023ccf8cec787"
+    },
+    "recipe_sha256": "6ac2145511fbe90ceecb4b3167820f21bbeaf097d997af3e354f45856d369095"
+  },
+  "generated/inventory.unequip_03.wav": {
+    "cue": "inventory.unequip",
+    "variant": "03",
+    "seed": 20407,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 330,
+      "tone": 1,
+      "duration": 0.2,
+      "seed": 20373,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.2,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.310786797382015,
+      "dc": 0.00032436370849609375,
+      "seam": 3.0517578125e-05,
+      "sha256": "54881d537e12834cb0ab09f8a3702bca71243cdddcc2994de425aa7db5bc0cbd"
+    },
+    "recipe_sha256": "5d0b9f22c802a81ff8951f1a03264e5971033b58cfd46d4ad985190c829fb8a8"
+  },
+  "generated/weapon.heavy_01.wav": {
+    "cue": "weapon.heavy",
+    "variant": "01",
+    "seed": 20474,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 430,
+      "tone": 0.5,
+      "duration": 0.35,
+      "seed": 20474,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.35,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -18.36325971584352,
+      "dc": 5.832308814639137e-05,
+      "seam": 0.0,
+      "sha256": "f803cb09f70c7f6afd6773ce5ff09988f05f6b3340d3917a5ae6011e3592a5da"
+    },
+    "recipe_sha256": "37e6a183b85d0aa0b898315901d073f3ffca42d64884fafe876dacc40149f9d8"
+  },
+  "generated/weapon.heavy_02.wav": {
+    "cue": "weapon.heavy",
+    "variant": "02",
+    "seed": 20491,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 430,
+      "tone": 0.5,
+      "duration": 0.35,
+      "seed": 20474,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.35,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.493530557742535,
+      "dc": 5.840664818173363e-05,
+      "seam": 0.0,
+      "sha256": "a01a8520e442737969076156e29e12bfeda31a3d0fcf3aefd4821a4f38a523f5"
+    },
+    "recipe_sha256": "888002c6f05e9a2d70f3c3d84231a8efb79ea95cb3bc08b2717a421123218352"
+  },
+  "generated/weapon.heavy_03.wav": {
+    "cue": "weapon.heavy",
+    "variant": "03",
+    "seed": 20508,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 430,
+      "tone": 0.5,
+      "duration": 0.35,
+      "seed": 20474,
+      "review": false
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": false,
+    "metrics": {
+      "seconds": 0.35,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.744075836915897,
+      "dc": 5.7541983468191965e-05,
+      "seam": 0.0,
+      "sha256": "ef827e86420d8fbcf1907e674f6ab81850ae7b74aa438b4c01fdf3a69615fcae"
+    },
+    "recipe_sha256": "dae29489b9dc9a7f2ba178e569f5b7c797bca77cb4dfe148a23f50be3d11b4a9"
+  }
+}

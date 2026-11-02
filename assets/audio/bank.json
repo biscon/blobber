@@ -1,0 +1,2148 @@
+{
+  "version": 1,
+  "cues": {
+    "party.step": {
+      "gain": 0.32,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 4,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/party.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/party.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/party.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/party.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "05",
+          "path": "generated/party.step_05.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "06",
+          "path": "generated/party.step_06.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "party.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/party.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/party.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/party.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "party.down": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/party.down_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/party.down_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/party.down_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "party.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/party.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/party.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/party.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "goblin.step": {
+      "gain": 0.28,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 3,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/goblin.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/goblin.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/goblin.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/goblin.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "goblin.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/goblin.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/goblin.attack_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/goblin.attack_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "goblin.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/goblin.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/goblin.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/goblin.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "goblin.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/goblin.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/goblin.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/goblin.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "shaman.step": {
+      "gain": 0.28,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 3,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/shaman.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/shaman.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/shaman.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/shaman.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "shaman.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/shaman.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/shaman.attack_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/shaman.attack_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "shaman.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/shaman.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/shaman.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/shaman.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "shaman.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/shaman.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/shaman.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/shaman.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "rat.step": {
+      "gain": 0.28,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 3,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/rat.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/rat.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/rat.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/rat.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "rat.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/rat.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/rat.attack_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/rat.attack_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "rat.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/rat.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/rat.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/rat.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "rat.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/rat.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/rat.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/rat.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "skeleton.step": {
+      "gain": 0.28,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 4,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/skeleton.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/skeleton.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/skeleton.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/skeleton.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "skeleton.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/skeleton.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/skeleton.attack_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/skeleton.attack_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "skeleton.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/skeleton.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/skeleton.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/skeleton.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "skeleton.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/skeleton.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/skeleton.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/skeleton.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "bugbear.step": {
+      "gain": 0.28,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 5,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/bugbear.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/bugbear.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/bugbear.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/bugbear.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "bugbear.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/bugbear.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/bugbear.attack_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/bugbear.attack_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "bugbear.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/bugbear.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/bugbear.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/bugbear.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "bugbear.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/bugbear.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/bugbear.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/bugbear.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "zombie.step": {
+      "gain": 0.28,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 4,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/zombie.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/zombie.step_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/zombie.step_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "04",
+          "path": "generated/zombie.step_04.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "zombie.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/zombie.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/zombie.attack_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/zombie.attack_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "zombie.hurt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/zombie.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/zombie.hurt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/zombie.hurt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "zombie.death": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/zombie.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/zombie.death_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/zombie.death_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "door.open": {
+      "gain": 0.4,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/door.open_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/door.open_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/door.open_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "door.close": {
+      "gain": 0.4,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/door.close_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/door.close_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/door.close_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "gate.open": {
+      "gain": 0.4,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/gate.open_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/gate.open_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/gate.open_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "chest.open": {
+      "gain": 0.4,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/chest.open_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/chest.open_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/chest.open_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "door.locked": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/door.locked_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/door.locked_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/door.locked_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "key.pickup": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/key.pickup_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/key.pickup_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/key.pickup_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "loot.pickup": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/loot.pickup_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/loot.pickup_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/loot.pickup_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "inventory.equip": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/inventory.equip_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/inventory.equip_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/inventory.equip_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "inventory.move": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/inventory.move_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/inventory.move_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/inventory.move_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "inventory.drop": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/inventory.drop_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/inventory.drop_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/inventory.drop_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "potion": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/potion_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/potion_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/potion_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.blunt": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.blunt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.blunt_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.blunt_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.slash": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.slash_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.slash_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.slash_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.pierce": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.pierce_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.pierce_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.pierce_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.arrow_impact": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.arrow_impact_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.arrow_impact_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.arrow_impact_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.swing": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.swing_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.swing_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.swing_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.miss": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.miss_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.miss_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.miss_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.release": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.release_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.release_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.release_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "radiant": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/radiant_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/radiant_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/radiant_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "healing": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/healing_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/healing_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/healing_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "dark": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/dark_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/dark_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/dark_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "fire": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/fire_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/fire_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/fire_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "ice": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/ice_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/ice_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/ice_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "lightning": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/lightning_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/lightning_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/lightning_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "acid": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/acid_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/acid_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/acid_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "poison": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/poison_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/poison_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/poison_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "thunder": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/thunder_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/thunder_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/thunder_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "control": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/control_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/control_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/control_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "material": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/material_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/material_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/material_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "arcane": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/arcane_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/arcane_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/arcane_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "ui.confirm": {
+      "gain": 0.17,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/ui.confirm_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/ui.confirm_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "ui.cancel": {
+      "gain": 0.17,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/ui.cancel_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/ui.cancel_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "ui.reject": {
+      "gain": 0.17,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/ui.reject_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/ui.reject_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "effect.change": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/effect.change_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/effect.change_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "encounter": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/encounter_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/encounter_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "victory": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 4,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/victory_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/victory_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "defeat": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 4,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/defeat_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/defeat_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "travel": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/travel_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/travel_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "recovery": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/recovery_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/recovery_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "advancement": {
+      "gain": 0.36,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/advancement_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/advancement_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "ambience": {
+      "gain": 0.2,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.9,
+      "category": 2,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "loop": true,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/ambience_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "web.loop": {
+      "gain": 0.13,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "loop": true,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/web.loop_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "spiritual.loop": {
+      "gain": 0.07,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "loop": true,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/spiritual.loop_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "mirror.shatter": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/mirror.shatter_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/mirror.shatter_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/mirror.shatter_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "web.ignite": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/web.ignite_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/web.ignite_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/web.ignite_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "inventory.unequip": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 3,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/inventory.unequip_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/inventory.unequip_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/inventory.unequip_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "weapon.heavy": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/weapon.heavy_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "02",
+          "path": "generated/weapon.heavy_02.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        },
+        {
+          "id": "03",
+          "path": "generated/weapon.heavy_03.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    }
+  }
+}

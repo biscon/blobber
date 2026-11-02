@@ -1,4 +1,5 @@
 #pragma once
+#include "audio/events.hpp"
 #include "game/attack_timeline.hpp"
 #include "game/damage_resolution.hpp"
 #include "game/effects.hpp"
@@ -51,6 +52,7 @@ struct CombatOutcome {
     rules::CharacterId character{}, recipient{};
     ActorId enemy{};
     bool enemyAttack = false, hit = false, critical = false, died = false;
+    bool downed = false; // Presentation-only conscious -> unconscious transition.
     std::int64_t damage = 0;
     std::int64_t rawDamage = 0;
     rules::DamageType damageType = rules::DamageType::Bludgeoning;
@@ -76,6 +78,7 @@ struct CombatOutcome {
     MirrorReservation mirror;
 };
 struct CombatEvents {
+    audio::Journal* audioJournal = nullptr;
     static constexpr std::size_t capacity = 8192;
     // Allocate once at owner construction; never resize during simulation.
     std::vector<CombatOutcome> values = std::vector<CombatOutcome>(capacity);
@@ -92,6 +95,8 @@ struct CombatEvents {
         if (count >= capacity)
             std::abort(); // Internal bound violation must never drop consequences.
         values[count++] = out;
+        if (audioJournal)
+            audioJournal->combat(out);
     }
     const CombatOutcome* begin() const noexcept { return values.data(); }
     const CombatOutcome* end() const noexcept { return values.data() + count; }
