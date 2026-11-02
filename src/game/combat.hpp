@@ -159,7 +159,7 @@ class CombatController {
     const AttackVisualSnapshot& attacks() const noexcept { return visuals_; }
     void resolveImpacts(Player pose, std::uint64_t now, CombatEvents&, std::uint64_t elapsed = 0) noexcept;
     void reconcileEffects(std::uint64_t now, CombatEvents&) noexcept;
-    bool contact(Player pose) noexcept;
+    bool contact(Player pose, std::uint64_t now = 0) noexcept;
     void elapse(std::uint64_t elapsed) noexcept;
     void observe(Player pose) noexcept;
     std::array<bool, NpcWorld::maxInstances> movementLocks(std::uint64_t now) const noexcept;
@@ -268,8 +268,7 @@ class CombatController {
     std::array<Timing, NpcWorld::maxTypes> presentation_{};
     std::array<rules::MonsterId, rules::Catalog::maxMonsters> groups_{};
     std::array<Entry, rules::partySize + rules::Catalog::maxMonsters> order_{};
-    std::array<bool, NpcWorld::maxInstances> members_{}, surprised_{}, closeNext_{}, known_{},
-        episodeActors_{};
+    std::array<bool, NpcWorld::maxInstances> members_{}, surprised_{}, known_{}, episodeActors_{};
     std::array<std::uint64_t, NpcWorld::maxInstances> knownUntil_{}, enemyReady_{}, enemyBusy_{};
     std::array<std::uint64_t, rules::partySize> partyReady_{}, saveDue_{}, defendDue_{};
     std::size_t groupCount_ = 0, orderCount_ = 0, position_ = 0, enemyCursor_ = 0, autoCursor_ = 0;
@@ -283,6 +282,7 @@ class CombatController {
     bool presentationBusy(std::uint64_t now) const noexcept;
     void approach() noexcept;
     bool near(const ActorState&, Heading approach) const noexcept;
+    bool exposed(ActorId, Heading approach) const noexcept;
     std::optional<Cell> meleeSlot(ActorId, std::uint8_t occupied) const noexcept;
     bool finish(std::uint64_t now) noexcept;
     void begin(std::uint64_t now) noexcept;

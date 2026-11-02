@@ -1,5 +1,12 @@
 # System design
 
+Combat-entry/front-slot follow-up (implemented and verified, 2026-11-02):
+[settled contact and current-facing approaches](combat_entry_followup.md) addresses
+premature destination-based contact, hidden front protectors holding the camera,
+stale navigation after turns, and rear-slot arrivals during exploration/turns.
+Nineteen affected CPU suites and two hidden production-art captures pass;
+[capture notes](screenshots/combat-entry/README.md). Interactive acceptance remains user review.
+
 Door/chest review follow-up (implemented and verified, 2026-11-02):
 [door surfaces, sprite clearance and walkable chests](door_chest_followup.md)
 records shared door geometry/UV corrections, bounded sprite fitting against door

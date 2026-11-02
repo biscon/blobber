@@ -2,6 +2,8 @@
 
 Status: implemented and Accepted, including all review corrections, 2026-10-26.
 See [verification and handoff](slice08_verification.md).
+Subsequent [settled contact and current-facing approach correction](combat_entry_followup.md)
+records the 2026-11-02 entry, target exposure and movement-policy changes.
 User approved the planning conversation with “Implement the plan.” Slice 07 and
 its two review corrections are accepted. The user has now accepted slice 08 and
 milestone B. Discuss graphical changes before planning or starting slice 09.

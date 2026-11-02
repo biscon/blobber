@@ -38,12 +38,8 @@ void NpcAiController::face(std::size_t slot, Cell target) noexcept {
                                                     : (dy > 0 ? Heading::South : Heading::North);
     actors_.face(actors_.id(slot), facing);
 }
-std::optional<Cell> NpcAiController::preferredFront(Cell from, Player party) const noexcept {
-    const auto f = forward(party.heading);
-    const auto delta = from + party.cell * -1;
-    if (delta.x * f.x + delta.y * f.y > 0)
-        return party.cell + f;
-    return {};
+std::optional<Cell> NpcAiController::preferredFront(Player party) const noexcept {
+    return party.cell + forward(party.heading);
 }
 NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noexcept {
     auto& a = state_.actors[slot];
@@ -80,7 +76,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
             face(slot, party.cell);
             return {};
         }
-        return {true, true, a.lastSeen, preferredFront(here, party)};
+        return {true, true, a.lastSeen, preferredFront(party)};
     }
     if (a.awareness == Awareness::Investigating) {
         if (!(here == a.lastSeen)) {
@@ -93,7 +89,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
                 return {};
             }
             return {true, occupiedByParty, a.lastSeen,
-                    occupiedByParty ? preferredFront(here, party) : std::nullopt};
+                    occupiedByParty ? preferredFront(party) : std::nullopt};
         }
         a.awareness = Awareness::Searching;
         a.searchStartMs = now;
@@ -132,13 +128,39 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
     }
     return {}; // Local wandering does not need a path search.
 }
-bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::uint64_t now) noexcept {
+bool NpcAiController::step(std::size_t slot, Cell destination, Player party, std::uint64_t now,
+                           bool approaching) noexcept {
     const auto& actor = actors_.snapshot().actors[slot];
     if (actor.life != ActorLife::Alive || destination == actor.npc.cell)
         return false;
     const auto occupied = actors_.occupiedSlots(destination);
     auto subcell = actor.npc.subcell;
-    if (occupied & (1u << (subcell.x + 2 * subcell.y))) {
+    if (approaching) {
+        const auto f = forward(party.heading);
+        auto near = subcell;
+        if (f.x)
+            near.x = f.x > 0 ? 0 : 1;
+        else
+            near.y = f.y > 0 ? 0 : 1;
+        auto other = near;
+        if (f.x)
+            other.y = 1 - other.y;
+        else
+            other.x = 1 - other.x;
+        bool found = false;
+        for (unsigned pass = 0; pass < 2 && !found; ++pass)
+            for (const auto candidate : {near, other, near + f, other + f})
+                if (!(occupied & (1u << (candidate.x + 2 * candidate.y))) &&
+                    (pass || inPartyViewport(party.cell, party.heading, destination, candidate))) {
+                    subcell = candidate;
+                    found = true;
+                    break;
+                }
+        if (!found) {
+            prepared_[slot].reset();
+            return false;
+        }
+    } else if (occupied & (1u << (subcell.x + 2 * subcell.y))) {
         unsigned free = 0;
         while (free < 4 && (occupied & (1u << free)))
             ++free;
@@ -149,7 +171,7 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::
         subcell = {int(free % 2), int(free / 2)};
     }
     const auto old = actor.npc.cell;
-    if (!map_.npcAllowed(destination) || destination == party) {
+    if (!map_.npcAllowed(destination) || destination == party.cell) {
         prepared_[slot].reset();
         return false;
     }
@@ -159,7 +181,8 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Cell party, std::
         return true;
     }
     prepared_[slot].reset();
-    if (!actors_.walk(actors_.id(slot), destination, subcell, party, now, npcWalkDurationMs * factor).changed)
+    if (!actors_.walk(actors_.id(slot), destination, subcell, party.cell, now, npcWalkDurationMs * factor)
+             .changed)
         return false;
     if (effects_)
         effects_->enter(actors_.id(slot), destination, now);
@@ -214,7 +237,7 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
                 continue;
             if (result.found && result.from == actor.npc.cell && result.target == goals[i].target &&
                 result.adjacent == goals[i].adjacent && result.preferred == goals[i].preferred)
-                step(i, result.step, party.cell, sessionTime);
+                step(i, result.step, party, sessionTime, goals[i].adjacent && goals[i].target == party.cell);
             a.moveDueMs =
                 state_.timeMs +
                 ((a.awareness == Awareness::Pursuing || a.awareness == Awareness::Investigating) ? 600
@@ -238,7 +261,7 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
                 word = static_cast<std::uint32_t>(rng_());
             } while (word < threshold);
             const auto choice = word % bound;
-            step(i, choices[static_cast<std::size_t>(choice)], party.cell, sessionTime);
+            step(i, choices[static_cast<std::size_t>(choice)], party, sessionTime);
             a.moveDueMs = state_.timeMs + 1200 * (actor.hasWalk && actor.walkTimeMs == sessionTime
                                                       ? actor.walkDurationMs / npcWalkDurationMs
                                                       : 1);
@@ -269,12 +292,12 @@ bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noex
     if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
         return false;
     const auto goal = effects_ && !effects_->sees(id) ? state_.actors[id.slot].lastSeen : party.cell;
-    const auto preferred = goal == party.cell ? preferredFront(actor->npc.cell, party) : std::nullopt;
+    const auto preferred = goal == party.cell ? preferredFront(party) : std::nullopt;
     navigation_.request(id.slot, actor->npc.cell, goal, true, preferred);
     navigation_.update(party.cell);
     const auto result = navigation_.take(id.slot);
     return result.ready && result.found && result.from == actor->npc.cell && result.target == goal &&
-           result.preferred == preferred && step(id.slot, result.step, party.cell, now);
+           result.preferred == preferred && step(id.slot, result.step, party, now, goal == party.cell);
 }
 bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);
@@ -286,7 +309,7 @@ bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexce
         const auto separation = [&](Cell cell) {
             return std::max(std::abs(cell.x - party.cell.x), std::abs(cell.y - party.cell.y));
         };
-        if (separation(dest) > separation(actor->npc.cell) && step(id.slot, dest, party.cell, now))
+        if (separation(dest) > separation(actor->npc.cell) && step(id.slot, dest, party, now))
             return true;
     }
     return false;

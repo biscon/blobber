@@ -347,14 +347,17 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
     bool moved = false;
     if (adjacent && ranged && (!melee || wounded))
         moved = ai_.escape(id, origin_, now);
+    // Healthy melee combatants converge on the central front before settling
+    // for diagonal contact; re-use the same route/slot policy as approach.
+    if (!moved && adjacent && melee && !wounded && !(a->npc.cell == origin_.cell + forward(origin_.heading)))
+        moved = ai_.approach(id, origin_, now);
     if (!moved && adjacent && melee) {
         const auto slot = meleeSlot(id, actors_.occupiedSlots(a->npc.cell));
         if (slot && (a->npc.subcell == *slot || actors_.move(id, a->npc.cell, *slot, origin_.cell)))
             return enemyAttack(id, false, now);
     }
-    if (!moved && !adjacent && (!shot || (melee && !wounded && closeNext_[id.slot]))) {
+    if (!moved && !adjacent && (!shot || (melee && !wounded))) {
         moved = ai_.approach(id, origin_, now);
-        closeNext_[id.slot] = false;
     }
     if (moved) {
         out.event = CombatEvent::Move;
@@ -365,7 +368,6 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
         return out;
     }
     if (shot) {
-        closeNext_[id.slot] = melee && !wounded;
         return enemyAttack(id, true, now);
     }
     if (currentEvents_)

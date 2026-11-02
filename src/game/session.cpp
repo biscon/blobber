@@ -46,11 +46,12 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
     effects_.partyCell(spawn.cell);
     combat_.enableRoaming(enableAi_);
 }
-void GameSession::detectContact() noexcept {
+void GameSession::detectContact(bool settlingEndpoint) noexcept {
     if (opening())
         return;
     combat_.observe(movement_.state().player);
-    if (combat_.contact(movement_.state().player))
+    if ((!movement().transition.active() || settlingEndpoint) &&
+        combat_.contact(movement_.state().player, timeMs_))
         clearPending();
 }
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
@@ -110,8 +111,10 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     // A queued step may immediately start another transition at this boundary.
     // Remember the settled endpoint before Controller consumes that queued step.
     const auto& transition = movement().transition;
-    if (transition.active() && transition.elapsed + movementSeconds >= transition.durationSeconds)
+    if (transition.active() && transition.elapsed + movementSeconds >= transition.durationSeconds) {
         floor_.discover(movement().player.cell, movement().player.heading);
+        detectContact(true);
+    }
     movement_.update(map_, movementSeconds, &actors_);
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))

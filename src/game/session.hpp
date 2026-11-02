@@ -177,7 +177,7 @@ class GameSession {
     Player discoveredPose_;
     bool discoveredReady_ = false;
     std::uint64_t discoveredFixtures_ = 0;
-    void detectContact() noexcept;
+    void detectContact(bool settlingEndpoint = false) noexcept;
     void driveFacing() noexcept;
 };
 } // namespace blobber

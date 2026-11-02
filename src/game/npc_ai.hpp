@@ -67,8 +67,9 @@ class NpcAiController {
         std::optional<Cell> preferred{};
     };
     Goal think(std::size_t slot, Player party) noexcept;
-    std::optional<Cell> preferredFront(Cell from, Player party) const noexcept;
-    bool step(std::size_t slot, Cell destination, Cell party, std::uint64_t now) noexcept;
+    std::optional<Cell> preferredFront(Player party) const noexcept;
+    bool step(std::size_t slot, Cell destination, Player party, std::uint64_t now,
+              bool approaching = false) noexcept;
     void face(std::size_t slot, Cell target) noexcept;
 };
 } // namespace blobber

@@ -154,17 +154,68 @@ void arrivalBeforeCombat() {
     GameSession game(map, catalog, placements, 5, player, false);
     game.actors().walk(game.actors().id(0), {3, 4}, {0, 0}, player.cell, 0);
     game.update(0, false);
-    check(game.combat().snapshot().phase == CombatPhase::Contact && !game.combat().snapshot().awaitingAction,
-          "Approach locks contact without enabling an attack");
+    check(realTime(game.combat().snapshot().phase) && !game.combat().snapshot().awaitingAction,
+          "Reserved adjacent destination does not lock the party before arrival");
     game.update(.599, false);
-    check(game.combat().snapshot().phase == CombatPhase::Contact,
-          "Combat waits through the last travel frame");
+    check(realTime(game.combat().snapshot().phase), "Approach remains movable through the last travel frame");
     game.update(60, true);
-    check(game.timeMs() == 599 && game.combat().snapshot().phase == CombatPhase::Contact,
-          "Pause cannot skip arrival");
+    check(game.timeMs() == 599 && realTime(game.combat().snapshot().phase), "Pause cannot skip arrival");
     const auto outcome = game.update(.001, false).step;
     check(outcome.event == CombatEvent::Started && game.combat().snapshot().phase == CombatPhase::Turns,
           "Combat starts exactly at arrival");
+}
+void retargetedRoutesAndFrontSlots() {
+    const auto map = room();
+    const auto catalog = combatCatalog();
+    for (unsigned h = 0; h < 4; ++h) {
+        const Player party{{7, 7}, Heading(h)};
+        const auto f = forward(party.heading), r = right(party.heading);
+        const Cell from = party.cell + f * 2 + r;
+        NpcWorld places(map, party.cell, {"goblin"}, {npc(from)});
+        ActorWorld actors(map, catalog, places);
+        Navigation nav(map, actors);
+        nav.request(0, from, party.cell, true, party.cell + f);
+        nav.update(party.cell); // Retain a completed result from before the turn.
+        nav.request(0, from, party.cell, true, party.cell + r);
+        nav.update(party.cell);
+        const auto result = nav.take(0);
+        check(result.ready && result.found && result.preferred == party.cell + r &&
+                  result.step == from + f * -1,
+              "Turning replaces an already-ready path to the old front");
+
+        std::vector<NpcInstance> pack;
+        for (int sub = 0; sub < 4; ++sub)
+            pack.push_back(npc(party.cell + f * 2, Heading((h + 2) % 4), {sub % 2, sub / 2}));
+        NpcWorld group(map, party.cell, {"goblin"}, pack);
+        ActorWorld arrivals(map, catalog, group);
+        NpcAiController ai(map, arrivals, 5);
+        for (unsigned i = 0; i < 4; ++i) {
+            check(ai.approach(arrivals.id(i), party, 0), "Pack member approaches current front");
+            const auto& a = *arrivals.actor(arrivals.id(i));
+            const Cell local{2 * a.npc.subcell.x - 1, 2 * a.npc.subcell.y - 1};
+            check(a.npc.cell == party.cell + f && ((local.x * f.x + local.y * f.y < 0) == (i < 2)),
+                  "Both near-row slots fill before either rear slot in every heading");
+        }
+        check(arrivals.occupiedSlots(party.cell + f) == 15,
+              "Front-slot contention retains four distinct slots");
+    }
+    // Minimal square beyond a single 4096-node BFS budget; no scale/stress sweep.
+    const auto large = room(67, 67);
+    NpcWorld places(large, {33, 33}, {"goblin"}, {npc({1, 1})});
+    ActorWorld actors(large, catalog, places);
+    Navigation nav(large, actors);
+    nav.request(0, {1, 1}, {65, 65}, false);
+    nav.update({33, 33});
+    check(!nav.take(0).ready, "Retarget fixture retains an unfinished search");
+    nav.request(0, {1, 1}, {1, 3}, false);
+    Navigation::Result result;
+    for (unsigned i = 0; i < 4 && !result.ready; ++i) {
+        nav.update({33, 33});
+        check(nav.lastWork() <= Navigation::nodeBudget, "Retarget cleanup respects the existing work budget");
+        result = nav.take(0);
+    }
+    check(result.ready && result.found && result.target == Cell{1, 3} && result.step == Cell{1, 2},
+          "An active old search is cancelled and replaced without publishing its result");
 }
 void contentionAndSession() {
     const auto map = room();
@@ -438,6 +489,7 @@ int main(int argc, char** argv) {
             navigation();
             contentionAndSession();
             arrivalBeforeCombat();
+            retargetedRoutesAndFrontSlots();
             preferredApproachRoutes();
             fullCenterUsesDiagonalFront();
             blockedRoutesAndRng();

@@ -26,8 +26,21 @@ void Navigation::invalidateGeometry() noexcept {
 void Navigation::request(std::size_t slot, Cell from, Cell target, bool adjacent,
                          std::optional<Cell> preferred) noexcept {
     invalidateGeometry();
-    if (slot >= requests_.size() || owner_ == slot || results_[slot].ready)
+    if (slot >= requests_.size())
         return;
+    const auto matches = [&](const auto& r) {
+        return r.from == from && r.target == target && r.adjacent == adjacent && r.preferred == preferred;
+    };
+    if (results_[slot].ready) {
+        if (matches(results_[slot]))
+            return;
+        results_[slot] = {};
+    }
+    if (owner_ == slot) {
+        if (!canceled_ && !cleaning_ && matches(active_))
+            return;
+        canceled_ = true;
+    }
     requests_[slot] = {true, from, target, adjacent, preferred};
 }
 void Navigation::cancel(std::size_t slot) noexcept {

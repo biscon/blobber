@@ -53,7 +53,8 @@ bool CombatController::occupiedFront(Player pose) const noexcept {
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
         if (a.life == ActorLife::Alive && inMeleeFront(map_, pose.cell, pose.heading, a.npc.cell) &&
-            inPartyViewport(pose.cell, pose.heading, a.npc.cell, a.npc.subcell))
+            inPartyViewport(pose.cell, pose.heading, a.npc.cell, a.npc.subcell) &&
+            exposed(actors_.id(i), pose.heading))
             return true;
     }
     return false;
@@ -126,10 +127,12 @@ bool CombatController::settleFront(std::uint64_t now) noexcept {
     return true;
 }
 bool CombatController::exposed(ActorId id) const noexcept {
+    return exposed(id, origin_.heading);
+}
+bool CombatController::exposed(ActorId id, Heading approach) const noexcept {
     const auto* a = actors_.actor(id);
     if (!a || a->life != ActorLife::Alive)
         return false;
-    const auto approach = origin_.heading;
     if (near(*a, approach))
         return true;
     const auto front = a->npc.subcell + forward(approach) * -1;
@@ -237,8 +240,16 @@ void CombatController::enroll(Player pose, bool opening) noexcept {
         episodeActors_[i] = true;
     }
 }
-bool CombatController::contact(Player pose) noexcept {
+bool CombatController::contact(Player pose, std::uint64_t now) noexcept {
     if (!realTime(state_.phase) || !adjacent(pose.cell))
+        return false;
+    bool arrived = false;
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto& a = actors_.snapshot().actors[i];
+        arrived |= a.life == ActorLife::Alive && !actorWalking(a, now) &&
+                   combatAdjacent(map_, pose.cell, a.npc.cell);
+    }
+    if (!arrived)
         return false;
     origin_ = pose;
     enroll(pose, true);

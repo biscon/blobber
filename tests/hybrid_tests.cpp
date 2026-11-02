@@ -516,6 +516,79 @@ void offscreenDiagonalHandoff() {
                 }
     check(offscreenCases >= 8, "Regression covers actual offscreen subslots in all orientations");
 }
+void contactNeedsAnActionableFront() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false);
+    for (unsigned h = 0; h < 4; ++h)
+        for (int side : {-1, 1}) {
+            const Player pose{{6, 6}, Heading(h)};
+            const auto f = forward(pose.heading);
+            const auto cell = pose.cell + f + right(pose.heading) * side;
+            Cell rear{}, front{};
+            bool found = false;
+            for (int sub = 0; sub < 4 && !found; ++sub) {
+                rear = {sub % 2, sub / 2};
+                front = rear + f * -1;
+                if (front.x < 0 || front.x > 1 || front.y < 0 || front.y > 1)
+                    continue;
+                found = inPartyViewport(pose.cell, pose.heading, cell, rear) &&
+                        !inPartyViewport(pose.cell, pose.heading, cell, front);
+            }
+            check(found, "Owned diagonal fixture has a visible protected rear and offscreen protector");
+            NpcWorld places(map, pose.cell, {"goblin"},
+                            {npc(cell, headingToward(cell, pose.cell), front),
+                             npc(cell, headingToward(cell, pose.cell), rear)});
+            GameSession game(map, catalog, places, 5, pose, false);
+            check(!game.combat().occupiedFront(pose), "Protected rear alone cannot hold the facing lock");
+            for (unsigned i = 0; i < 12 && game.combat().snapshot().phase != CombatPhase::Turns; ++i)
+                game.update(.16, false);
+            check(game.combat().snapshot().phase == CombatPhase::Turns &&
+                      game.movement().player.heading != pose.heading,
+                  "Entry automatically faces a reachable exposed body before presenting initiative");
+            for (unsigned i = 0; i < 100 && !(game.combat().snapshot().awaitingAction &&
+                                              game.combat().snapshot().activeCharacter->index == 0);
+                 ++i)
+                tick(game);
+            check(game.combat().snapshot().awaitingAction &&
+                      game.combat().snapshot().activeCharacter->index == 0,
+                  "Fighter decision reached");
+            bool melee = false;
+            for (unsigned i = 0; i < 2; ++i) {
+                auto command = turnCommand(game, PartyAction::Melee);
+                command.target = game.actors().id(i);
+                melee |= game.combat().validate(command, game.movement().player) == CommandReason::Ready;
+            }
+            check(melee, "Entry cannot strand the fighter with only protected/out-of-range targets");
+        }
+
+    const Player pose{{5, 7}, Heading::North};
+    NpcWorld close(map, pose.cell, {"goblin"}, {npc({5, 6}, Heading::South, {0, 1})});
+    GameSession cleared(map, catalog, close, 5, pose, false);
+    cleared.setAnimated(false);
+    cleared.update(0, false);
+    const auto clock = cleared.combat().snapshot().gameplayMs;
+    const auto id = cleared.actors().id(0);
+    check(bool(cleared.actors().move(id, {5, 5}, {0, 1}, pose.cell)) &&
+              bool(cleared.actors().move(id, {5, 4}, {0, 1}, pose.cell)),
+          "Fixture withdraws the last close body");
+    cleared.update(0, false);
+    check(realTime(cleared.combat().snapshot().phase) && cleared.combat().snapshot().gameplayMs == clock,
+          "Only distant enemies cannot keep the player in turnbased or charge a partial round");
+    cleared.move(Action::Forward);
+    check(cleared.movement().player.cell == Cell{5, 6}, "Player can close the distance normally");
+
+    NpcWorld ahead(map, pose.cell, {"goblin"}, {npc({5, 5}, Heading::South, {0, 1})});
+    GameSession queued(map, catalog, ahead, 5, pose, false);
+    queued.move(Action::Forward);
+    check(realTime(queued.combat().snapshot().phase), "Moving player has not yet reached close contact");
+    queued.move(Action::TurnRight); // Queued input must not rotate away at the contact endpoint.
+    queued.update(.159, false);
+    check(realTime(queued.combat().snapshot().phase), "Contact waits for the settled endpoint");
+    queued.update(.001, false);
+    check(!realTime(queued.combat().snapshot().phase) && queued.movement().player.heading == Heading::North &&
+              !queued.movement().transition.active() && queued.movement().revision == 1,
+          "Settled endpoint takes contact before consuming queued exploration input");
+}
 void frontApproachInCombat() {
     const auto map = hybridRoom();
     const auto catalog = hybridCatalog();
@@ -528,11 +601,19 @@ void frontApproachInCombat() {
                          npc(start, headingToward(start, party.cell), {1, 0})});
         GameSession s(map, catalog, places, 5, party, true);
         int melee = 0;
+        bool approached = false;
         for (int i = 0; i < 500 && melee < 2; ++i) {
             if (s.combat().snapshot().awaitingAction)
                 s.submit(turnCommand(s));
             else {
                 const auto out = s.update(.5, false).step;
+                if (out.enemy.slot == 1) {
+                    if (out.event == CombatEvent::Move)
+                        approached = true;
+                    if (out.event == CombatEvent::AttackStarted)
+                        check(approached && out.kind == rules::AttackKind::Melee,
+                              "Healthy mixed goblin closes before choosing a ranged attack");
+                }
                 melee += out.event == CombatEvent::AttackStarted && out.enemy.slot == 1 &&
                          out.kind == rules::AttackKind::Melee;
             }
@@ -542,7 +623,7 @@ void frontApproachInCombat() {
                   "Healthy approaching goblin stays in the frontal fight across rounds");
             check(actor->hitPoints == actor->maxHitPoints, "Route fixture stays at full health");
         }
-        check(melee == 2 && s.actors().actor(s.actors().id(1))->npc.cell == front,
+        check(approached && melee == 2 && s.actors().actor(s.actors().id(1))->npc.cell == front,
               "Approaching goblin joins the existing front group and keeps attacking");
     }
 }
@@ -819,6 +900,7 @@ int main() {
         reinforcementAndSaves();
         capacityAndBlockedEscape();
         threeCellFront();
+        contactNeedsAnActionableFront();
         offscreenDiagonalHandoff();
         frontApproachInCombat();
         singleWeaponPolicies();

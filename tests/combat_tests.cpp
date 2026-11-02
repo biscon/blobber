@@ -428,8 +428,14 @@ void movementAndPause() {
         } else
             s.move(Action::Forward);
         check(s.movement().player.cell == Cell{3, 3}, "Queued or instant move reaches contact cell");
-        check(s.combat().snapshot().phase == CombatPhase::Contact,
-              "Contact captured at committed destination");
+        if (animated) {
+            check(realTime(s.combat().snapshot().phase) && s.movement().transition.active(),
+                  "Reserved player destination does not take contact before arrival");
+            s.move(Action::Back);
+            s.move(Action::TurnRight);
+            s.update(.16, false);
+        }
+        check(!realTime(s.combat().snapshot().phase), "Contact captured at settled destination");
         s.move(Action::Back);
         s.move(Action::TurnRight);
         s.update(.16, false);
