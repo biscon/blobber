@@ -126,12 +126,26 @@ struct TravelHud {
     FixtureResult preview;
 };
 enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton, Bugbear, GiantRat, Zombie, Shaman };
+struct EnemyTargetRow {
+    ActorId id;
+    std::array<char, 96> name{}, detail{};
+    CommandReason reason = CommandReason::Unavailable;
+    bool selected = false;
+};
+struct EnemyTargetPicker {
+    bool available = false, open = false, canConfirm = false;
+    unsigned count = 0;
+    std::array<EnemyTargetRow, 4> rows{};
+    std::array<char, 128> readout{}, feedback{};
+    std::uint64_t revision = 0;
+};
 struct HudSnapshot {
     ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
     std::array<HudCard, rules::partySize> cards{};
     PartyCommand selection;
     TargetSnapshot targets;
+    EnemyTargetPicker targetPicker;
     std::array<bool, NpcWorld::maxInstances> protectedTargets{};
     std::array<std::uint32_t, NpcWorld::maxInstances> conditions{};
     std::size_t targetPage = 0, logOffset = 0;
@@ -226,6 +240,13 @@ class CommandController {
     void selectTarget(ActorId target) noexcept;
     void cycleTarget(int delta) noexcept;
     void pageTargets(int delta) noexcept;
+    void toggleTargetPicker() noexcept;
+    void closeTargetPicker() noexcept { state_.targetPicker.open = false; }
+    void activateTargetRow(unsigned row, bool remove = false) noexcept;
+    void cycleEnemyTarget(int delta) noexcept;
+    CommandReason enemyEligibility(ActorId) const noexcept;
+    void targetPickerConfirm() noexcept;
+    void hoverEnemyTarget(ActorId) noexcept;
     void scrollLog(int delta) noexcept;
     void toggleLog() noexcept;
     void latestLog() noexcept { state_.logOffset = 0; }
@@ -308,6 +329,9 @@ class CommandController {
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    void refreshTargetPicker() noexcept;
+    bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;
+    PartyCommand targetContext_;
     void refreshInventory() noexcept;
     void refreshCharacterSheet() noexcept;
     void refreshInventoryActions() noexcept;

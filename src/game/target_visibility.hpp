@@ -1,7 +1,7 @@
 #pragma once
 #include "game/command_types.hpp"
 namespace blobber {
-// This supplements authoritative combat validation with the UI's current body picking.
+// Geometry exposure supplements authoritative validation independently of body picking.
 inline CommandReason targetVisibility(const PartyCommand& command, const rules::Catalog& catalog,
                                       const TargetSnapshot& targets, const ActorSnapshot& actors) noexcept {
     if (command.targetCount > command.enemies.size())
@@ -9,6 +9,11 @@ inline CommandReason targetVisibility(const PartyCommand& command, const rules::
     const auto visible = [&](ActorId id) {
         if (id.world != targets.world || targets.world != actors.world || targets.revision != actors.revision)
             return false;
+        if (targets.candidateCount > targets.candidates.size() || targets.count > targets.ids.size())
+            return false;
+        for (std::size_t i = 0; i < targets.candidateCount; ++i)
+            if (sameActor(id, targets.candidates[i]))
+                return true;
         for (std::size_t i = 0; i < targets.count; ++i)
             if (sameActor(id, targets.ids[i]))
                 return true;

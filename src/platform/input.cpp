@@ -50,7 +50,7 @@ InputSample Input::poll(float seconds) {
                                           : 0);
     result.ui.shift = focused && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT));
     if (focused && previousFocus_) {
-        result.toggleAnimation = IsKeyPressed(KEY_TAB);
+        result.toggleAnimation = IsKeyPressed(KEY_F2);
         result.toggleMap = IsKeyPressed(KEY_M);
         constexpr std::array<int, 6> keys{KEY_W, KEY_S, KEY_A, KEY_D, KEY_Q, KEY_E};
         std::array<bool, 6> down{}, pressed{};

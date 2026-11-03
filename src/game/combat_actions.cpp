@@ -77,7 +77,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
             return CommandReason::OutOfRange;
         if (!lineOfSight(map_, pose.cell, a->npc.cell))
             return CommandReason::NotVisible;
-        // Rendering additionally verifies that the current body is visible.
+        // Rendering additionally verifies exposure to dungeon geometry, ignoring actor overlap.
         if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell))
             return CommandReason::NotVisible;
         return CommandReason::Ready;

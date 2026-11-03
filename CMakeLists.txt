@@ -74,7 +74,7 @@ add_library(blobber_rules_io src/persistence/campaign_store.cpp src/persistence/
 target_link_libraries(blobber_rules_io PUBLIC blobber_rules PRIVATE nlohmann_json::nlohmann_json)
 find_package(Threads REQUIRED)
 add_library(blobber_core src/audio/music.cpp src/audio/events.cpp src/audio/policy.cpp src/world/surfaces.cpp src/world/environment_maps.cpp src/render/attack_visuals.cpp src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/generation/encounters.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/stone_layout.cpp src/generation/fallback.cpp src/generation/metrics.cpp src/generation/fixtures.cpp src/generation/geometry.cpp
-    src/generation/dressing.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/enemy_effects.cpp src/game/enemy_spells.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/damage_resolution.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/ui/button_targets.cpp src/input/key_repeat.cpp)
+    src/generation/dressing.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/target_commands.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/enemy_effects.cpp src/game/enemy_spells.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/damage_resolution.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/ui/button_targets.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
 target_link_libraries(blobber_core PUBLIC blobber_rules Threads::Threads)
 # Level recovery loading validates world cells and exposes core recovery data.
@@ -110,7 +110,7 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_library(blobber_platform
         src/platform/audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
         src/platform/gpu_resources.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
-        src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
+        src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu blobber_audio_io raylib)
     add_library(blobber_application src/app/audio_settings.cpp src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
         src/ui/arena_screen.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp
@@ -191,7 +191,7 @@ if(BUILD_TESTING)
     add_test(NAME options COMMAND blobber_options_tests)
     add_test(NAME development_cli COMMAND blobber --development --help)
     endif()
-    foreach(suite dressing buttons shaman zombie giant_rat bugbear damage animation progression_allocations level_spells progression portraits creation library visual_review expanded_spells recovery  inventory spells effects  impact  image_preparation hybrid ai health combat hud commands  actors  core       rules rules_content party party_content)
+    foreach(suite targeting dressing buttons shaman zombie giant_rat bugbear damage animation progression_allocations level_spells progression portraits creation library visual_review expanded_spells recovery  inventory spells effects  impact  image_preparation hybrid ai health combat hud commands  actors  core       rules rules_content party party_content)
         if(NOT BLOBBER_BUILD_GRAPHICS AND suite MATCHES "^(portraits|image_preparation)$")
             continue()
         endif()
@@ -203,7 +203,7 @@ if(BUILD_TESTING)
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules)
         elseif(suite STREQUAL "rules_content" OR suite STREQUAL "party_content" OR suite STREQUAL "creation" OR suite STREQUAL "library")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
-        elseif(suite STREQUAL "visual_review")
+        elseif(suite STREQUAL "visual_review" OR suite STREQUAL "targeting")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_world_cpu)
         else()
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_core)
@@ -599,4 +599,11 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_executable(blobber_capture_music_banner EXCLUDE_FROM_ALL tools/capture_music_banner.cpp)
     target_link_libraries(blobber_capture_music_banner PRIVATE blobber_platform)
     blobber_warnings(blobber_capture_music_banner)
+endif()
+
+if(BLOBBER_BUILD_GRAPHICS AND BUILD_TESTING)
+    add_executable(blobber_capture_targeting EXCLUDE_FROM_ALL tools/capture_targeting.cpp)
+    target_include_directories(blobber_capture_targeting PRIVATE tests)
+    target_link_libraries(blobber_capture_targeting PRIVATE blobber_platform blobber_npc_io blobber_rules_io)
+    blobber_warnings(blobber_capture_targeting)
 endif()

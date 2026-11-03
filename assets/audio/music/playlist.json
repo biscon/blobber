@@ -6,7 +6,7 @@
       "path": "combat/nickpanek-80s-video-game-battle-chiptune-216255.mp3",
       "title": "80s Video Game Battle Chiptune",
       "artist": "Nick Panek",
-      "gain_db": -2.68,
+      "gain_db": 0,
       "measured_lufs": -15.32,
       "measured_true_peak_db": -4.82
     },
@@ -15,7 +15,7 @@
       "path": "combat/nickpanek-aggressive-groove-high-energy-funk-metal.mp3",
       "title": "Aggressive Groove High Energy Funk Metal",
       "artist": "Nick Panek",
-      "gain_db": -5.03,
+      "gain_db": 0,
       "measured_lufs": -12.97,
       "measured_true_peak_db": 0.44
     },
@@ -24,7 +24,7 @@
       "path": "combat/nickpanek-chiptune-boss-fight-music-265080.mp3",
       "title": "Chiptune Boss Fight Music",
       "artist": "Nick Panek",
-      "gain_db": -2.54,
+      "gain_db": 0,
       "measured_lufs": -15.46,
       "measured_true_peak_db": -4.28
     },
@@ -33,7 +33,7 @@
       "path": "combat/nickpanek-chiptune-hard-boss-mode-218071.mp3",
       "title": "Chiptune Hard Boss Mode",
       "artist": "Nick Panek",
-      "gain_db": -2.79,
+      "gain_db": 0,
       "measured_lufs": -15.21,
       "measured_true_peak_db": -5.04
     },
@@ -42,7 +42,7 @@
       "path": "combat/nickpanek-chiptune-medium-boss-218095.mp3",
       "title": "Chiptune Medium Boss",
       "artist": "Nick Panek",
-      "gain_db": -2.8,
+      "gain_db": 0,
       "measured_lufs": -15.2,
       "measured_true_peak_db": -5.4
     },
@@ -51,7 +51,7 @@
       "path": "combat/nickpanek-cqb-tense-80s-synthwave-instrumental.mp3",
       "title": "CQB Tense 80s Synthwave Instrumental",
       "artist": "Nick Panek",
-      "gain_db": -3.63,
+      "gain_db": 0,
       "measured_lufs": -14.37,
       "measured_true_peak_db": -3.1
     },
@@ -69,7 +69,7 @@
       "path": "combat/nickpanek-epic-chiptune-end-credits-music-235893.mp3",
       "title": "Epic Chiptune End Credits Music",
       "artist": "Nick Panek",
-      "gain_db": -2.94,
+      "gain_db": 0,
       "measured_lufs": -15.06,
       "measured_true_peak_db": -5.07
     },
@@ -78,7 +78,7 @@
       "path": "combat/nickpanek-epic-hair-metal-synth-rock-instrumental-high-energy-motivation-299977.mp3",
       "title": "Epic Hair Metal Synth Rock Instrumental High Energy Motivation",
       "artist": "Nick Panek",
-      "gain_db": -4.72,
+      "gain_db": 0,
       "measured_lufs": -13.28,
       "measured_true_peak_db": -3.38
     },
@@ -87,7 +87,7 @@
       "path": "combat/nickpanek-fast-battle-intense-8-bit-chiptune-instrumental-378777.mp3",
       "title": "Fast Battle Intense 8-bit Chiptune Instrumental",
       "artist": "Nick Panek",
-      "gain_db": -4.99,
+      "gain_db": 0,
       "measured_lufs": -13.01,
       "measured_true_peak_db": -2.83
     },
@@ -96,7 +96,7 @@
       "path": "combat/nickpanek-hauntsync-style-cosmic-cthulhu-nu-doom-overture.mp3",
       "title": "Hauntsync Style Cosmic Cthulhu Nu Doom Overture",
       "artist": "Nick Panek",
-      "gain_db": -5.29,
+      "gain_db": 0,
       "measured_lufs": -12.71,
       "measured_true_peak_db": -0.65
     },
@@ -105,7 +105,7 @@
       "path": "combat/nickpanek-high-energy-chiptune-for-platform-games-225292.mp3",
       "title": "High Energy Chiptune For Platform Games",
       "artist": "Nick Panek",
-      "gain_db": -2.77,
+      "gain_db": 0,
       "measured_lufs": -15.23,
       "measured_true_peak_db": -0.84
     },
@@ -114,7 +114,7 @@
       "path": "combat/nickpanek-kansas-wheat-harvest-thrash-metal-instrumental.mp3",
       "title": "Kansas Wheat Harvest Thrash Metal Instrumental",
       "artist": "Nick Panek",
-      "gain_db": -5.23,
+      "gain_db": 0,
       "measured_lufs": -12.77,
       "measured_true_peak_db": -0.77
     },
@@ -123,7 +123,7 @@
       "path": "combat/nickpanek-paid-in-full-heavy-brostep-thrash-metal-563731.mp3",
       "title": "Paid In Full Heavy Brostep Thrash Metal",
       "artist": "Nick Panek",
-      "gain_db": -5.44,
+      "gain_db": 0,
       "measured_lufs": -12.56,
       "measured_true_peak_db": 0.02
     },
@@ -132,7 +132,7 @@
       "path": "combat/nickpanek-pokos-thrash-metal-instrumental-for-video-games.mp3",
       "title": "Pokos Thrash Metal Instrumental For Video Games",
       "artist": "Nick Panek",
-      "gain_db": -3.13,
+      "gain_db": 0,
       "measured_lufs": -14.87,
       "measured_true_peak_db": -4.74
     },
@@ -141,7 +141,7 @@
       "path": "combat/nickpanek-qeexe-progressive-power-metal-instrumental.mp3",
       "title": "Qeexe Progressive Power Metal Instrumental",
       "artist": "Nick Panek",
-      "gain_db": -3.45,
+      "gain_db": 0,
       "measured_lufs": -14.55,
       "measured_true_peak_db": -5.16
     },
@@ -150,7 +150,7 @@
       "path": "combat/nickpanek-retro-8-bit-chiptune-action-high-energy-90s-video-game-music-499059.mp3",
       "title": "Retro 8-bit Chiptune Action High Energy 90s Video Game Music",
       "artist": "Nick Panek",
-      "gain_db": -4.44,
+      "gain_db": 0,
       "measured_lufs": -13.56,
       "measured_true_peak_db": -2.71
     },
@@ -159,7 +159,7 @@
       "path": "combat/nickpanek-revelation-118-heavy-brostep-thrash-metal-banger.mp3",
       "title": "Revelation 11:8 Heavy Brostep Thrash Metal Banger",
       "artist": "Nick Panek",
-      "gain_db": -5.32,
+      "gain_db": 0,
       "measured_lufs": -12.68,
       "measured_true_peak_db": 0.33
     },
@@ -168,7 +168,7 @@
       "path": "combat/nickpanek-riff-storm-brutal-thrash-metal-instrumental.mp3",
       "title": "Riff Storm Brutal Thrash Metal Instrumental",
       "artist": "Nick Panek",
-      "gain_db": -3.5,
+      "gain_db": 0,
       "measured_lufs": -14.5,
       "measured_true_peak_db": -4.48
     },
@@ -177,7 +177,7 @@
       "path": "combat/nickpanek-rpg-battle-chiptune-video-game-music-346666.mp3",
       "title": "RPG Battle Chiptune Video Game Music",
       "artist": "Nick Panek",
-      "gain_db": -3.81,
+      "gain_db": 0,
       "measured_lufs": -14.19,
       "measured_true_peak_db": -2.96
     },
@@ -186,7 +186,7 @@
       "path": "combat/nickpanek-svt-speed-metal-trance-with-chiptune-vibes-374771.mp3",
       "title": "SVT Speed Metal Trance With Chiptune Vibes",
       "artist": "Nick Panek",
-      "gain_db": -5.18,
+      "gain_db": 0,
       "measured_lufs": -12.82,
       "measured_true_peak_db": -3.42
     }

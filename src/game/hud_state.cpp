@@ -133,6 +133,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    closeTargetPicker();
     cancelPointerButtons();
     state_.advancement.open = false;
     state_.loot.open = false;

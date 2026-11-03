@@ -179,8 +179,8 @@ Json encodeObservation(const Observation& o) {
         }
         j["party"].push_back(std::move(c));
     }
-    for (std::size_t i = 0; i < o.targets.count; ++i)
-        j["targets"].push_back(o.targets.ids[i].slot);
+    for (std::size_t i = 0; i < o.targets.candidateCount; ++i)
+        j["targets"].push_back(o.targets.candidates[i].slot);
     const auto& actors = g.actors().snapshot();
     for (std::size_t i = 0; i < actors.count; ++i) {
         if (!o.diagnostic && !o.visible[i])

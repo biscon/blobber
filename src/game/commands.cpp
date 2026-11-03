@@ -428,8 +428,8 @@ bool CommandController::visible(ActorId id) const noexcept {
     if (state_.targets.world != actors_.snapshot().world ||
         state_.targets.revision != actors_.snapshot().revision)
         return false;
-    for (std::size_t i = 0; i < state_.targets.count; ++i)
-        if (sameActor(id, state_.targets.ids[i]))
+    for (std::size_t i = 0; i < state_.targets.candidateCount; ++i)
+        if (sameActor(id, state_.targets.candidates[i]))
             return true;
     return false;
 }
@@ -541,8 +541,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                             : CommandReason::Ready;
     state_.suspended = suspension_ != CommandReason::Ready;
     TargetSnapshot normalized;
-    if (targets.count <= targets.ids.size() && targets.world == actors_.snapshot().world &&
-        targets.revision == actors_.snapshot().revision) {
+    if (targets.count <= targets.ids.size() && targets.candidateCount <= targets.candidates.size() &&
+        targets.world == actors_.snapshot().world && targets.revision == actors_.snapshot().revision) {
         normalized.world = targets.world;
         normalized.revision = targets.revision;
         normalized.anchors = targets.anchors;
@@ -559,6 +559,37 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                 normalized.anchors[i] = targets.anchors[i];
             }
     }
+    if (normalized.world) {
+        std::array<bool, NpcWorld::maxInstances> included{};
+        const auto add = [&](ActorId id) {
+            const auto* a = actors_.actor(id);
+            if (a && a->life == ActorLife::Alive)
+                included[id.slot] = true;
+        };
+        for (std::size_t i = 0; i < normalized.count; ++i)
+            add(normalized.ids[i]);
+        for (std::size_t i = 0; i < targets.candidateCount; ++i)
+            add(targets.candidates[i]);
+        for (std::size_t i = 0; i < included.size(); ++i)
+            if (included[i])
+                normalized.candidates[normalized.candidateCount++] = actors_.id(i);
+        const auto pose = session_.movement().player;
+        const auto distance = [&](ActorId id) {
+            const auto p = actorPosition(*actors_.actor(id), session_.timeMs());
+            const double x = double(p.x) - (pose.cell.x + .5), y = double(p.y) - (pose.cell.y + .5);
+            return x * x + y * y;
+        };
+        std::sort(normalized.candidates.begin(), normalized.candidates.begin() + normalized.candidateCount,
+                  [&](ActorId a, ActorId b) {
+                      const auto da = distance(a), db = distance(b);
+                      return da != db ? da < db : a.slot < b.slot;
+                  });
+    }
+    if (normalized.world != state_.targets.world || normalized.revision != state_.targets.revision ||
+        normalized.candidateCount != state_.targets.candidateCount ||
+        !std::equal(normalized.candidates.begin(), normalized.candidates.begin() + normalized.candidateCount,
+                    state_.targets.candidates.begin(), sameActor))
+        ++state_.targetPicker.revision;
     state_.targets = normalized;
     for (auto& feedback : state_.feedback) {
         if (!feedback.active || feedback.party)
@@ -646,7 +677,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                                                 : CommandReason::NotVisible));
         state_.selection.target.reset();
     }
-    const auto pages = (state_.targets.count + 3) / 4;
+    const auto pages = (state_.targets.candidateCount + 3) / 4;
     state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
     if (moving) {
         state_.selection.targetCount = 0;
@@ -680,6 +711,7 @@ void CommandController::updateAvailability() noexcept {
         preview.action = static_cast<PartyAction>(i);
         state_.actionAvailability[i] = validate(preview);
     }
+    refreshTargetPicker();
 }
 void CommandController::selectCharacter(std::size_t index) noexcept {
     if (state_.selection.action == PartyAction::Aid && index < rules::partySize) {
@@ -718,8 +750,8 @@ void CommandController::selectTarget(ActorId target) noexcept {
     if (state_.suspended || !visible(target))
         return;
     state_.selection.target = target;
-    for (std::size_t i = 0; i < state_.targets.count; ++i)
-        if (sameActor(target, state_.targets.ids[i]))
+    for (std::size_t i = 0; i < state_.targets.candidateCount; ++i)
+        if (sameActor(target, state_.targets.candidates[i]))
             state_.targetPage = i / 4;
     updateAvailability();
 }
@@ -735,22 +767,15 @@ void CommandController::cycleTarget(int delta) noexcept {
         selectAlly(next);
         return;
     }
-    if (state_.suspended || !state_.targets.count)
-        return;
-    const auto count = state_.targets.count;
-    std::size_t next = delta < 0 ? count - 1 : 0;
-    if (state_.selection.target)
-        for (std::size_t i = 0; i < count; ++i)
-            if (sameActor(*state_.selection.target, state_.targets.ids[i]))
-                next = (i + (delta < 0 ? count - 1 : 1)) % count;
-    selectTarget(state_.targets.ids[next]);
+    cycleEnemyTarget(delta);
 }
 void CommandController::pageTargets(int delta) noexcept {
     if (state_.suspended)
         return;
-    const auto pages = (state_.targets.count + 3) / 4;
+    const auto pages = (state_.targets.candidateCount + 3) / 4;
     if (pages)
         state_.targetPage = (state_.targetPage + (delta < 0 ? pages - 1 : 1)) % pages;
+    refreshTargetPicker();
 }
 void CommandController::scrollLog(int delta) noexcept {
     const auto count = state_.log.lineCount(state_.logExpanded       ? hudLayout::expandedLogColumns
@@ -761,6 +786,7 @@ void CommandController::scrollLog(int delta) noexcept {
         static_cast<std::int64_t>(state_.logOffset) + delta, 0, static_cast<std::int64_t>(maximum)));
 }
 void CommandController::cancel() noexcept {
+    closeTargetPicker();
     state_.inventory.itemTargeting = false;
     state_.selection.targetCount = 0;
     state_.selection.spell = {};

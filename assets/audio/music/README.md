@@ -25,9 +25,11 @@ skipped with a startup diagnostic. Paths stay within this music directory. Use
 printable ASCII titles for the existing HUD font atlas; long titles wrap/truncate.
 
 `gain_db` is an attenuation-only trim (-60 through 0 dB), independent of the Music
-slider. The current values target -18 LUFS and at most -3 dBTP using FFmpeg analysis;
-measurements are recorded beside each track. The final runtime limiter also protects
-combined effects/music peaks. Listen and adjust the slider to taste.
+slider. The supplied tracks use 0 dB: keep their mastered loudness. At 100% Master/Music,
+runtime compensates raylib's centered-stereo attenuation so playback is at the
+source level before the final limiter. Measurements remain beside each track for
+reference; they do not impose a normalization target. The final limiter protects
+combined effects/music sample peaks. Listen and adjust the slider to taste.
 
 To remeasure the MP3s under `combat/` without changing audio bytes:
 
@@ -36,7 +38,8 @@ nice -n 15 ionice -c 3 python3 tools/audio/music_levels.py
 ```
 
 This rebuilds the manifest from that directory, preserving existing IDs/titles/artist
-for matching paths and updating measured levels/trims. It requires FFmpeg offline.
+and manual trims for matching paths, updating measurements only. New tracks get
+0 dB gain. It requires FFmpeg offline.
 
 The shuffled order and cursor live in `music-state.json` beside your settings
 (normally `~/.config/blobber/`). It is independent of campaign saves and is flushed

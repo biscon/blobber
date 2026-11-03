@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v10";
+constexpr const char* visibilityVersion = "world-visibility-v11";
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;

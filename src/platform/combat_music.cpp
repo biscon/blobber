@@ -41,6 +41,10 @@ void CombatMusic::prepare(const std::filesystem::path& root, const std::filesyst
 }
 void CombatMusic::update(audio::MusicInput input, float volume) {
     input.audible &= std::isfinite(volume) && volume > 0;
+    // raylib 6.2 applies its pan law to stereo music too: at center each channel
+    // receives 0.5 * 0.5 * (3 - 0.5^2) = 0.6875. Preserve mastered stereo level.
+    // The final mixed-output limiter still protects hot files and overlapping SFX.
+    volume /= .6875f;
     if (playing_ < tracks_.size()) {
         const auto stream = streams_[playing_];
         input.remaining = std::max(0.f, GetMusicTimeLength(stream) - GetMusicTimePlayed(stream));

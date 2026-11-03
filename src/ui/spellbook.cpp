@@ -214,16 +214,17 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         hint = c.action == PartyAction::Feature ? "Waiting for the ability to finish."
                                                 : "Waiting for the cast to finish.";
     clipped(hint, 53, 347, 229, muted, UiTextStyle::Small);
-    box(hudLayout::spellCast, enabled && !m.single ? bright : edge);
-    if (enabled && !m.single)
+    const bool confirmEnabled = (enabled && !m.single) || h.targetPicker.canConfirm;
+    box(hudLayout::spellCast, confirmEnabled ? bright : edge);
+    if (confirmEnabled)
         fill({290, 312, 86, 15}, {65, 48, 18, 255});
     label(resolving                                 ? "RESOLVING"
-          : m.single                                ? "Click a target"
+          : m.single && !m.hostile                  ? "Click a target"
           : c.feature == rules::Feature::SecondWind ? "Use Second Wind [Enter]"
           : c.action == PartyAction::Feature        ? "Use [Enter]"
           : m.kind == rules::SpellKind::Bless       ? "Cast Bless [Enter]"
                                                     : "Cast [Enter]",
-          hudLayout::spellCast, enabled && !m.single ? bright : muted,
+          hudLayout::spellCast, confirmEnabled ? bright : muted,
           c.feature == rules::Feature::SecondWind ? UiTextStyle::Small : UiTextStyle::Heading);
     box(hudLayout::spellBack);
     label("Back [B]", hudLayout::spellBack, resolving ? muted : gold, UiTextStyle::Small);

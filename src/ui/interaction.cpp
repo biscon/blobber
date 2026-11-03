@@ -168,6 +168,68 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     const bool moved = input.pointer && commands.pointerMoved(input.pointer->x, input.pointer->y);
     const bool click = input.has(UiKey::Click);
     const auto inside = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
+    if (!state.modal() && state.targetPicker.available) {
+        if (input.has(UiKey::Tab)) {
+            commands.cycleEnemyTarget(input.shift ? -1 : 1);
+            return;
+        }
+        if (click && inside(hudLayout::enemyTargetButton(state.magic.armed))) {
+            commands.toggleTargetPicker();
+            return;
+        }
+        if (state.targetPicker.open) {
+            if (input.has(UiKey::Cancel)) {
+                commands.closeTargetPicker();
+                commands.hover(HoverKind::None);
+                return;
+            }
+            for (unsigned i = 0; i < state.targetPicker.count; ++i) {
+                if (!inside(hudLayout::enemyTargetRow(i, state.targetPicker.count)))
+                    continue;
+                if (click || input.has(UiKey::RightClick)) {
+                    if (allowConfirm && (click || (state.magic.armed && !state.magic.single)))
+                        commands.activateTargetRow(i, input.shift || input.has(UiKey::RightClick));
+                    else if (input.has(UiKey::RightClick))
+                        commands.closeTargetPicker();
+                    return;
+                }
+                if (moved)
+                    commands.hoverEnemyTarget(state.targetPicker.rows[i].id);
+            }
+            if (input.has(UiKey::RightClick) ||
+                (click && !inside(hudLayout::enemyPicker(state.targetPicker.count)))) {
+                commands.closeTargetPicker();
+                commands.hover(HoverKind::None);
+                return;
+            }
+            if (click && (inside(hudLayout::enemyPrevious) || inside(hudLayout::enemyNext))) {
+                commands.pageTargets(inside(hudLayout::enemyPrevious) ? -1 : 1);
+                return;
+            }
+            if (input.has(UiKey::Confirm) || (click && inside(hudLayout::enemyConfirm))) {
+                if (allowConfirm)
+                    commands.targetPickerConfirm();
+                return;
+            }
+            if (input.has(UiKey::Left) || input.has(UiKey::Right)) {
+                commands.cycleEnemyTarget(input.has(UiKey::Left) ? -1 : 1);
+                return;
+            }
+            if (state.magic.armed && !state.magic.single && state.magic.pending.target &&
+                (input.has(UiKey::Up) || input.has(UiKey::Down))) {
+                if (allowConfirm)
+                    commands.magicEnemy(*state.magic.pending.target, input.has(UiKey::Down));
+                return;
+            }
+            // The popover owns pointer activity; action hotkeys can still change context.
+            bool actionKey = false;
+            for (unsigned i = 0; i < 6; ++i)
+                actionKey |= input.has(static_cast<UiKey>(i));
+            if (!actionKey)
+                return;
+            commands.closeTargetPicker();
+        }
+    }
     if (input.has(UiKey::Cancel) || (input.has(UiKey::RightClick) && !state.magic.casting())) {
         if (state.modal())
             commands.closeOverlay();
@@ -366,9 +428,7 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
             commands.magicKeyboardTarget(input.has(UiKey::Left) ? -1 : 1);
             const auto& c = state.magic.pending;
             if (state.magic.hostile && c.target) {
-                const auto anchor = state.targets.anchors[c.target->slot];
-                commands.hover(HoverKind::Enemy, 0, c.target, float(viewX + anchor.x),
-                               float(viewY + anchor.y));
+                commands.hoverEnemyTarget(*c.target);
             } else if (c.ally) {
                 for (int i = 0; i < 4; ++i)
                     if (state.cards[i].id.index == c.ally->index)
@@ -394,8 +454,7 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
             }
             return;
         }
-        if (allowConfirm &&
-            (input.has(UiKey::Confirm) || (!state.magic.single && click && inside(hudLayout::spellCast)))) {
+        if (allowConfirm && (input.has(UiKey::Confirm) || (click && inside(hudLayout::spellCast)))) {
             if (state.availability == CommandReason::Ready || state.magic.single)
                 commands.confirm();
             return;
@@ -478,9 +537,7 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     if (!actionInput && (input.has(UiKey::Left) || input.has(UiKey::Right))) {
         commands.cycleTarget(input.has(UiKey::Left) ? -1 : 1);
         if (state.selection.target) {
-            const auto id = *state.selection.target;
-            const auto anchor = state.targets.anchors[id.slot];
-            commands.hover(HoverKind::Enemy, 0, id, float(viewX + anchor.x), float(viewY + anchor.y));
+            commands.hoverEnemyTarget(*state.selection.target);
         } else if (state.selection.ally) {
             for (int i = 0; i < 4; ++i)
                 if (state.cards[i].id.index == state.selection.ally->index)

@@ -20,6 +20,21 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         for (int i = 0; i < 4; ++i)
             t.add(hudLayout::card(i));
     };
+    if (h.targetPicker.open && h.targetPicker.available && !h.modal()) {
+        panel(14);
+        t.context[4] = h.targetPicker.revision;
+        t.context[6] = h.targetPage;
+        t.context[7] = unsigned(h.selection.action) + 256u * unsigned(h.magic.kind);
+        for (unsigned i = 0; i < h.targetPicker.count; ++i)
+            t.add(hudLayout::enemyTargetRow(i, h.targetPicker.count), true, false,
+                  0x20000u + h.targetPicker.rows[i].id.slot);
+        t.add(hudLayout::enemyPrevious, h.targets.candidateCount > 4);
+        t.add(hudLayout::enemyNext, h.targets.candidateCount > 4);
+        t.add(hudLayout::enemyConfirm, h.targetPicker.canConfirm);
+        t.add(hudLayout::enemyTargetButton(h.magic.armed));
+        t.add({0, 0, artWidth, artHeight}, true, true); // Dismiss outside without a world action.
+        return t;
+    }
     if (h.menuOpen && h.save.enabled) {
         panel(1);
         t.context[6] = unsigned(h.save.confirmation);
@@ -160,12 +175,15 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         t.add(hudLayout::restButton, h.restAvailable);
         t.add(hudLayout::logExpand);
         t.add(hudLayout::logLatest);
+        if (h.targetPicker.available)
+            t.add(hudLayout::enemyTargetButton(h.magic.armed));
         for (int i = 0; i < 4; ++i)
             t.add(hudLayout::detail(i));
         if (h.magic.casting()) {
             t.add(hudLayout::spellBack, h.magic.state != CastingState::Resolving);
             t.add(hudLayout::spellCancel, h.magic.state != CastingState::Resolving);
-            t.add(hudLayout::spellCast, h.availability == CommandReason::Ready && !h.magic.single);
+            t.add(hudLayout::spellCast,
+                  (h.availability == CommandReason::Ready && !h.magic.single) || h.targetPicker.canConfirm);
             if (h.magic.kind == rules::SpellKind::LesserRestoration)
                 t.add(hudLayout::restorationChoice);
             for (unsigned i = 0; i < h.magic.pending.targetCount && !h.magic.hostile; ++i)

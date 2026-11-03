@@ -35,6 +35,15 @@ int main(int argc, char** argv) {
     SetMasterVolume(0); // Measurements are before device master; speakers stay silent.
     runtime.settings.values.fill(1);
     runtime.settings.musicVolume = 1;
+    // Decode the owned quiet MP3 as a reference for source-level stereo playback.
+    auto reference = LoadWave((root / "audio/music/short.mp3").c_str());
+    check(IsWaveValid(reference), "Owned source-level reference decodes");
+    WaveFormat(&reference, 48000, 32, 2);
+    const auto* referencePcm = static_cast<const float*>(reference.data);
+    float sourcePeak = 0;
+    for (unsigned i = 0; i < std::min(reference.frameCount, 14400u) * 2; ++i)
+        sourcePeak = std::max(sourcePeak, std::abs(referencePcm[i]));
+    UnloadWave(reference);
     AttachAudioMixedProcessor(capture);
     const auto map = hybridRoom();
     const auto catalog = hybridCatalog();
@@ -52,6 +61,10 @@ int main(int argc, char** argv) {
     session.audioEvents().combat(event);
     tick(300);
     check(audibleFrames > 0 && runtime.musicBanner().visible, "Real MP3 produces mixed samples and banner");
+    const float musicPeak = peak.load();
+    check(sourcePeak > .001f && musicPeak > sourcePeak * .96f && musicPeak < sourcePeak * 1.04f,
+          "100 percent music matches decoded stereo source level, without center attenuation");
+    std::cout << "Source peak=" << sourcePeak << " music peak=" << musicPeak << '\n';
     const auto first = runtime.musicBanner().revision;
     tick(80, true);
     audibleFrames = 0;

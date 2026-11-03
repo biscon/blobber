@@ -90,12 +90,14 @@ int main() {
         for (std::size_t i = 0; i < all.count; ++i)
             all.ids[i] = many.id(i);
         paged.refresh(all, false, false, true);
-        paged.cycleTarget(-1);
-        check(paged.snapshot().selection.target->slot == all.count - 1 && paged.snapshot().targetPage == 63,
+        const auto lastCandidate = paged.snapshot().targets.candidates[all.count - 1];
+        paged.selectTarget(lastCandidate);
+        check(sameActor(*paged.snapshot().selection.target, lastCandidate) &&
+                  paged.snapshot().targetPage == 63,
               "Last of 256 targets remains selectable and paginated");
-        paged.cycleTarget(1);
+        paged.selectTarget(many.id(0));
         check(paged.snapshot().selection.target->slot == 0 && paged.snapshot().targetPage == 0,
-              "Target cycling wraps");
+              "First candidate remains selectable");
         paged.pageTargets(-1);
         check(paged.snapshot().targetPage == 63, "Paging wraps to last page");
         all.count = all.ids.size() + 1;

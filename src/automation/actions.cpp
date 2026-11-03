@@ -61,8 +61,8 @@ Json describeActions(const GameSession& g, const Observation& o) {
             if (a == unsigned(PartyAction::Melee) || a == unsigned(PartyAction::BackMelee) ||
                 a == unsigned(PartyAction::Ranged)) {
                 d["targets"] = Json::array();
-                for (std::size_t n = 0; n < o.targets.count; ++n) {
-                    c.target = o.targets.ids[n];
+                for (std::size_t n = 0; n < o.targets.candidateCount; ++n) {
+                    c.target = o.targets.candidates[n];
                     auto e = eligibility(c);
                     e["actor"] = c.target->slot;
                     d["targets"].push_back(e);
@@ -131,8 +131,8 @@ Json describeActions(const GameSession& g, const Observation& o) {
         result["fixtures"].push_back({{"fixture", i}, {"name", fixtureName(f)}});
     }
     result["targets"] = Json::array();
-    for (std::size_t i = 0; i < o.targets.count; ++i)
-        result["targets"].push_back(o.targets.ids[i].slot);
+    for (std::size_t i = 0; i < o.targets.candidateCount; ++i)
+        result["targets"].push_back(o.targets.candidates[i].slot);
     return result;
 }
 } // namespace blobber::automation

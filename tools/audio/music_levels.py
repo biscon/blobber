@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure the supplied MP3s and write attenuation-only playlist trims; never rewrite audio."""
+"""Measure supplied MP3s without normalizing them; preserve manual trims and audio bytes."""
 import json
 import math
 from pathlib import Path
@@ -22,8 +22,8 @@ for path in sorted((root / 'combat').glob('*.mp3')):
     stem = re.sub(r'-\d{6}$', '', path.stem.removeprefix('nickpanek-'))
     track = old.get(relative, {'id': path.stem, 'path': relative,
                               'title': stem.replace('-', ' ').title(), 'artist': 'Nick Panek'})
-    track.update(gain_db=round(min(0, -18-loudness, -3-peak), 2),
-                 measured_lufs=loudness, measured_true_peak_db=peak)
+    track.setdefault('gain_db', 0)
+    track.update(measured_lufs=loudness, measured_true_peak_db=peak)
     tracks.append(track)
     print(f'{path.name}: {loudness:.2f} LUFS, trim {track["gain_db"]:.2f} dB', flush=True)
 manifest.write_text(json.dumps({'version': 1, 'tracks': tracks}, indent=2)+'\n')

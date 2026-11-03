@@ -198,7 +198,7 @@ missing selected clips, mixed formats, and invalid images fail loading with path
 context. `phase_ms` is an integer from 0 through 2147483647 in JSON. A missing
 animation snapshot renders living actors at frame zero of their selected clip
 (and frame-zero idle for missing directions); dead/removed actors are hidden. Animation time is independent of the
-TAB movement-transition toggle. Actor slot indices stay fixed for the session, including after removal.
+F2 movement-transition toggle. Actor slot indices stay fixed for the session, including after removal.
 
 The built-in imagegen tool authored seventeen selected sheets (forty-four poses):
 the original nine loop/attack sheets plus eight slice 06 reaction sheets. Original

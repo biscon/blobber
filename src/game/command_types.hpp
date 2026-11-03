@@ -71,7 +71,7 @@ struct PartyCommand {
     std::optional<Cell> aimedCell;
     bool restoreParalysis = false;
 };
-// Presentation visibility only. Combat independently validates range, rank, life and turn.
+// Body visibility and geometry-exposed targeting. Combat validates range, rank, life and turn.
 struct TargetAnchor {
     int x = 0, y = 0; // Viewport-local visible-body center, not a world coordinate.
     bool valid = false;
@@ -79,6 +79,8 @@ struct TargetAnchor {
     int badgeX = 0, badgeTop = 0; // Canonical projected geometry, independent of pose alpha bounds.
 };
 struct TargetSnapshot {
+    std::array<ActorId, NpcWorld::maxInstances> candidates{};
+    std::size_t candidateCount = 0;
     std::array<ActorId, NpcWorld::maxInstances> ids{};
     std::size_t count = 0;
     std::uint64_t world = 0, revision = 0;

@@ -49,7 +49,7 @@ changing the base tile at a strafe endpoint does not flip their artwork.
 
 Forward/backward zoom/inset and turn-strip effects are a new implementation of
 the broad image-space idea, not a reproduction of every Westwood animation frame.
-They are deliberately brief and can be disabled with Tab.
+They are deliberately brief and can be disabled with F2.
 
 ### Strafe correction
 

@@ -572,3 +572,13 @@ include a nullable `container` owner. Unopened contents remain hidden in visual
 mode. Diagnostic generation reports include dressing placements and occupied
 footprints. State digests/checkpoints retain opened/remaining content state.
 See [Underkeep dressing](underkeep_dressing_design.md) for ownership and compatibility.
+
+## Enemy targeting follow-up
+
+Visibility identity advances to `world-visibility-v11`. Visual-mode `targets`,
+`targetable` and per-action target descriptions now include living enemies whose
+sprites are covered by other actors but exposed to dungeon geometry. Pixel picking
+and presentation anchors still describe visible body pixels only. Walls, closed
+doors, attack range and combat protection remain authoritative. Protocol/save
+schemas and simulation identity are unchanged; strict older visual traces reject
+the changed visibility identity. See [target selection](target_selection_design.md).

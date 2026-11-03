@@ -231,6 +231,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                                                       : "WASD move / Q E turn / M map / R camp";
         p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
+    p.enemyTargets(*h, false);
     if ((h->combat.knownDirections || h->combat.pendingCount)) {
         char threats[96];
         char dirs[5]{};

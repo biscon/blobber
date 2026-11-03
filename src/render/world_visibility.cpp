@@ -103,12 +103,14 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                 const float z = area / (e0 * iz[0] + e1 * iz[1] + e2 * iz[2]);
                 const auto pixel = std::size_t(py) * viewWidth + px;
                 if (assets) {
-                    if (z >= out.picking.opaqueDepth(pixel) - epsilon ||
-                        z > out.picking.depth(pixel) + epsilon)
+                    if (z >= out.picking.opaqueDepth(pixel) - epsilon)
                         continue;
                     const auto old = out.picking.slot(px, py);
-                    if (std::abs(z - out.picking.depth(pixel)) <= epsilon && old < NpcWorld::maxInstances &&
-                        id >= NpcWorld::maxInstances)
+                    const bool covered = z > out.picking.depth(pixel) + epsilon ||
+                                         (std::abs(z - out.picking.depth(pixel)) <= epsilon &&
+                                          old < NpcWorld::maxInstances && id >= NpcWorld::maxInstances);
+                    const bool candidate = !cutoutOpaque && id < NpcWorld::maxInstances;
+                    if (covered && (!candidate || out.picking.exposed(id)))
                         continue;
                     const float u =
                         (e0 * t[0].u * iz[0] + e1 * t[1].u * iz[1] + e2 * t[2].u * iz[2]) * z / area;
@@ -120,6 +122,10 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                     const unsigned sy =
                         unsigned(std::clamp(int(std::floor(v * tex.height)), 0, int(tex.height) - 1));
                     if (assets->masks[texture][std::size_t(sy) * tex.width + sx] < threshold)
+                        continue;
+                    if (candidate)
+                        out.picking.expose(id);
+                    if (covered)
                         continue;
                 } else if (z >= out.picking.depth(pixel))
                     continue;

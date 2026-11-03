@@ -1,5 +1,12 @@
 # System design
 
+Target selection follow-up (implemented and mechanically verified, 2026-11-03):
+[geometry-exposed enemy candidates, compact picker and Tab cycling](target_selection_design.md).
+Twelve affected CPU/headless suites and hidden production-art captures pass;
+[review captures](screenshots/targeting/README.md). Interactive acceptance remains user review.
+
+Music level correction implemented and verified: [restore mastered levels and compensate raylib center attenuation](combat_music.md#music-level-correction-2026-11-03-implemented).
+
 Combat music (implemented and mechanically verified): [persistent playlist and animated track announcements](combat_music.md)
 plays the 21 supplied Nick Panek tracks, with independent settings, bounded prepared
 streams, five-second/remaining-time fades and local shuffle persistence. Headless

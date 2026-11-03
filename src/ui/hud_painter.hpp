@@ -144,6 +144,7 @@ class HudPainter {
     void itemTargets(const HudSnapshot& h) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
+    void enemyTargets(const HudSnapshot&, bool popover) const;
     void spellMarkers(const HudSnapshot& h, const PickingBuffer* picking) const;
     void checkmark(UiRect r) const {
         fill(r, hudInk::teal);

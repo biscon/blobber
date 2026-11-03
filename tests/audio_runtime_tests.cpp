@@ -283,6 +283,10 @@ int main() {
     check(fake::musicPlays == initialPlays + 1 && runtime.musicBanner().visible,
           "Encounter starts prepared music and banner once");
     const auto song = fake::lastMusic;
+    check(std::abs(fake::musicBuffers[song].volume * .6875f -
+                   runtime.settings.values[0] * runtime.settings.musicVolume * std::pow(10.f, -6.f / 20.f)) <
+              1e-6f,
+          "Music compensates raylib center loss while preserving master, slider and manual trim");
     const auto bannerRevision = runtime.musicBanner().revision;
     session.audioEvents().combat(start);
     runtime.update(&session, true, true, .01f, false, false);

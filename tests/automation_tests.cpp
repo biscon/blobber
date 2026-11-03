@@ -9,6 +9,37 @@ using namespace blobber;
 using namespace blobber::automation;
 using namespace blobber::automation::test;
 namespace {
+class CoveredCandidates final : public Visibility {
+    TargetSnapshot snapshot_;
+
+  public:
+    const TargetSnapshot& sample(const Map&, const GameSession& game) override {
+        snapshot_ = {};
+        snapshot_.world = game.actors().snapshot().world;
+        snapshot_.revision = game.actors().snapshot().revision;
+        snapshot_.candidates[snapshot_.candidateCount++] = game.actors().id(0);
+        return snapshot_; // A target candidate with no body pixels.
+    }
+    bool lootVisible(LootId) const noexcept override { return false; }
+};
+void coveredObservations() {
+    const auto c = catalog();
+    const auto d = definitions();
+    Session session(c, d, scenario(c), Mode::Visual,
+                    [](void*, const Map&, const GameSession&) -> std::unique_ptr<Visibility> {
+                        return std::make_unique<CoveredCandidates>();
+                    });
+    Observation o;
+    session.observe(o);
+    check(o.targets.count == 0 && o.targets.candidateCount == 1 && o.visible[0],
+          "Visual observations retain covered command candidates separately from body pixels");
+    const auto encoded = encodeObservation(o);
+    check(encoded.at("targets") == Json::array({0}) && encoded.at("enemies").size() == 1 &&
+              encoded.at("enemies")[0].at("targetable"),
+          "Covered target is discoverable in player observations");
+    const auto actions = describeActions(session.game(), o);
+    check(actions.at("targets") == Json::array({0}), "Headless action targets include covered candidate");
+}
 void preparedArena() {
     const auto c = catalog();
     const auto d = definitions();
@@ -384,6 +415,8 @@ void timingParity() {
         targets.world = normal.actors().snapshot().world;
         for (std::size_t i = 0; i < targets.count; ++i)
             targets.ids[i] = normal.actors().id(targets.ids[i].slot);
+        for (std::size_t i = 0; i < targets.candidateCount; ++i)
+            targets.candidates[i] = normal.actors().id(targets.candidates[i].slot);
         commands.record(b);
         commands.refresh(targets, normal.movement().transition.active(), false, true);
         const auto& st = runner.game().combat().snapshot();
@@ -550,6 +583,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        coveredObservations();
         preparedArena();
         casterSourceEvents();
         packEvents();

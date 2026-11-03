@@ -16,6 +16,9 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
          !(h.magic.open && (hover.kind == HoverKind::Status || hover.kind == HoverKind::Concentration))) ||
         h.suspended)
         return;
+    if (hover.kind == HoverKind::Enemy && hover.enemy &&
+        (hover.enemy->slot >= h.targets.anchors.size() || !h.targets.anchors[hover.enemy->slot].valid))
+        return; // Hidden candidates are identified in the dock, never by a floating world tooltip.
     int rows = 0;
     for (const auto& line : hover.lines)
         if (line[0])
@@ -305,7 +308,9 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.loot(*h);
     }
     p.spellbook(*h);
-    p.tooltip(*h);
+    if (!h->targetPicker.open)
+        p.tooltip(*h);
+    p.enemyTargets(*h, true);
     if (h->inventory.open)
         p.inventory(*h);
     if (h->camp.open)

@@ -25,6 +25,7 @@ class PickingBuffer {
             std::fill_n(opaqueDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
         }
         targets_ = {};
+        exposed_.fill(false);
         badgeAnchors_ = {};
         bodyDepth_.fill(std::numeric_limits<float>::infinity());
         lootWorld_ = 0;
@@ -61,6 +62,11 @@ class PickingBuffer {
     std::uint16_t slot(int x, int y) const noexcept {
         return x >= 0 && x < viewWidth && y >= 0 && y < viewHeight ? pixels_[y * viewWidth + x] : empty;
     }
+    bool exposed(std::uint16_t slot) const noexcept { return slot < exposed_.size() && exposed_[slot]; }
+    void expose(std::uint16_t slot) noexcept {
+        if (slot < exposed_.size())
+            exposed_[slot] = true;
+    }
     void finish(const ActorWorld* actors) noexcept {
         targets_ = {};
         if (!actors)
@@ -84,7 +90,9 @@ class PickingBuffer {
                     maximum[slot].y = std::max(maximum[slot].y, y);
                 }
             }
-        for (std::size_t i = 0; i < actors->snapshot().count; ++i)
+        for (std::size_t i = 0; i < actors->snapshot().count; ++i) {
+            if ((seen[i] || exposed_[i]) && actors->snapshot().actors[i].life == ActorLife::Alive)
+                targets_.candidates[targets_.candidateCount++] = actors->id(i);
             if (seen[i]) {
                 if (actors->snapshot().actors[i].life == ActorLife::Alive)
                     targets_.ids[targets_.count++] = actors->id(i);
@@ -95,6 +103,7 @@ class PickingBuffer {
                                        badgeAnchors_[i].x,
                                        badgeAnchors_[i].y};
             }
+        }
     }
     std::optional<ContainerId> pickContainer(int x, int y) const noexcept {
         const auto s = slot(x, y);
@@ -137,6 +146,7 @@ class PickingBuffer {
     std::unique_ptr<std::uint16_t[]> pixels_;
     std::unique_ptr<float[]> pixelDepth_, opaqueDepth_;
     TargetSnapshot targets_;
+    std::array<bool, NpcWorld::maxInstances> exposed_{};
     std::uint64_t lootWorld_ = 0, fixtureWorld_ = 0;
     std::array<Cell, lootCapacity> lootAnchors_{};
     std::array<std::uint64_t, lootCapacity> lootGenerations_{};

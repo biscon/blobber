@@ -234,6 +234,7 @@ void CommandController::refreshMagic() noexcept {
         std::snprintf(m.targets.data(), m.targets.size(), "Self / confirm to use");
 }
 void CommandController::setCastingState(CastingState next) noexcept {
+    closeTargetPicker();
     auto& m = state_.magic;
     if (!state_.logExpanded) {
         const int before = m.casting() ? hudLayout::castingLogColumns : hudLayout::logColumns;
@@ -516,13 +517,8 @@ void CommandController::magicKeyboardTarget(int delta) noexcept {
             magicGround(cells[(index + count + (delta < 0 ? -1 : 1)) % count], true);
         return;
     }
-    if (m.hostile && state_.targets.count) {
-        std::size_t index = delta < 0 ? 0 : state_.targets.count - 1;
-        for (std::size_t i = 0; i < state_.targets.count; ++i)
-            if (m.pending.target && sameActor(*m.pending.target, state_.targets.ids[i]))
-                index = i;
-        index = (index + state_.targets.count + (delta < 0 ? -1 : 1)) % state_.targets.count;
-        m.pending.target = state_.targets.ids[index];
+    if (m.hostile && !m.area) {
+        cycleEnemyTarget(delta);
     } else if (!m.hostile) {
         unsigned index = delta < 0 ? 0 : 3;
         for (unsigned i = 0; i < rules::partySize; ++i)
@@ -576,6 +572,8 @@ void CommandController::reconcileMagic() noexcept {
     }
     if (state_.suspended)
         return;
+    if (m.hostile && m.pending.target && !visible(*m.pending.target))
+        m.pending.target.reset();
     for (std::size_t i = 0; i < m.pending.targetCount;) {
         const auto reason = session_.combat().spellRecipient(m.pending, session_.movement().player, i);
         if (reason != CommandReason::Ready || (m.hostile && !visible(m.pending.enemies[i]))) {

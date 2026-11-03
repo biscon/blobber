@@ -20,7 +20,7 @@ def main():
             raise SystemExit('Choose an output without existing review artifacts')
     sheet = Image.new('RGB', (TILE_W * 2, TILE_H + 80), BACKGROUND)
     manifest = dict(seed=0, generator=9, catalog=7, schema=7, simulation=11,
-                    visibility='world-visibility-v10', samples=[], captures=[])
+                    visibility='world-visibility-v11', samples=[], captures=[])
     for col, depth in enumerate((1, 3)):
         report = json.loads(subprocess.check_output(
             [str(args.generator.resolve()), '--seed', '0', '--depth', str(depth), '--format', 'json'],

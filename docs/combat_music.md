@@ -3,6 +3,35 @@
 Status: implemented and mechanically verified, 2026-11-02. Subjective listening and
 interactive acceptance remain user review.
 
+
+## Music level correction (2026-11-03, implemented)
+
+Listening feedback finds music too quiet even at Master/Music 100%. The initial
+-18 LUFS attenuation-only policy removes up to 5.44 dB; raylib 6.2's centered stereo
+pan law multiplies both channels by 0.6875 (another -3.25 dB). This was excessive
+for these already mastered tracks alongside the boosted SFX.
+
+Set the supplied track trims to 0 dB, retaining editable manual attenuation and
+measurement metadata. Change the offline measurement tool to preserve manual trims
+and default new tracks to 0 dB rather than applying normalization. At the platform
+boundary multiply music volume by 1/0.6875 to cancel the pinned raylib center law;
+leave the stereo pan centered. Master, Music, travel/fade and manual trims continue
+to multiply normally. The existing final stereo limiter remains the sample-peak
+safety ceiling; occasional peak reduction is expected for hot originals and effects.
+No MP3 rewrite, user settings or playlist state change. Validate actual quiet MP3
+output against decoded source level before checking mixed peaks, plus focused runtime
+and music tests. No full-bank reanalysis or unrelated test matrix is needed.
+
+Verification: Debug game and affected checkers build without warnings; focused
+music/runtime suites pass (2/2). The muted real-device MP3 test compares quiet stereo
+output against its decoded source and passes, then passes pause/mute/advance/fade
+and the existing mixed-peak ceiling check. The owned authoring probe confirms manual
+trims survive remeasurement and newly discovered tracks default to 0 dB. All 21
+supplied entries now have zero trim. `git diff --check` passes. No user settings,
+playlist progress or audio file bytes were changed. Subjective balance remains
+listening review; hot peaks can still be reduced by the shared limiter.
+
+
 ## Ownership and data
 
 A graphics-independent bounded playlist/transport owns a shuffle of at most 64
@@ -37,8 +66,11 @@ settings remain compatible. Master/music mute freezes the current track during
 the same encounter; combat ending while muted discards it. Muted encounters consume
 nothing. Explicit pause/settings and lost focus freeze music. Tactical panels do
 not. Music uses Master × Music × track trim × travel/fade, with no SFX boost, then
-the existing stereo peak limiter. Offline FFmpeg analysis supplies attenuation-only
-trims toward -18 LUFS and -3 dBTP; subjective balance remains listening review.
+the existing stereo peak limiter. The initial attenuation-only -18 LUFS/-3 dBTP
+policy was superseded by the 2026-11-03 level correction above: supplied tracks use
+0 dB trims and the platform compensates raylib center attenuation. Offline FFmpeg
+analysis now records measurements and preserves manual trims; subjective balance
+remains listening review.
 
 ## Announcement
 

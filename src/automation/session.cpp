@@ -1,4 +1,5 @@
 #include "automation/session.hpp"
+#include <algorithm>
 #include <stdexcept>
 namespace blobber::automation {
 namespace {
@@ -79,8 +80,12 @@ void Session::observe(Observation& out, bool diagnostic) {
                 if (game().actors().snapshot().actors[i].life == ActorLife::Alive)
                     out.targets.ids[out.targets.count++] = game().actors().id(i);
     }
-    for (std::size_t i = 0; i < out.targets.count; ++i)
-        out.visible[out.targets.ids[i].slot] = true;
+    if (!out.targets.candidateCount) {
+        out.targets.candidateCount = out.targets.count;
+        std::copy_n(out.targets.ids.begin(), out.targets.count, out.targets.candidates.begin());
+    }
+    for (std::size_t i = 0; i < out.targets.candidateCount; ++i)
+        out.visible[out.targets.candidates[i].slot] = true;
     for (unsigned i = 0; i < containerCapacity; ++i)
         out.containerVisible[i] =
             out.diagnostic ||

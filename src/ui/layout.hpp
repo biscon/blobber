@@ -73,6 +73,19 @@ constexpr UiRect menu{222, 50, 196, 278}, resume{242, 130, 156, 24}, rest{242, 1
 constexpr UiRect viewport{viewX, viewY, viewWidth, viewHeight};
 constexpr UiRect result{102, 118, 304, 91}, resultButton{174, 174, 160, 22};
 constexpr UiRect arenaRematch{116, 174, 134, 22}, arenaEdit{258, 174, 134, 22};
+constexpr unsigned enemyRows(unsigned count) {
+    return count ? std::min(count, 4u) : 1u;
+}
+constexpr UiRect enemyPicker(unsigned count) {
+    return {8, 174 + int(4 - enemyRows(count)) * 18, 296, 126 - int(4 - enemyRows(count)) * 18};
+}
+constexpr UiRect enemyTargetButton(bool magic) {
+    return {magic ? 53 : 12, magic ? 347 : 349, 44, 9};
+}
+constexpr UiRect enemyTargetRow(unsigned i, unsigned count) {
+    return {14, enemyPicker(count).y + 18 + int(i) * 18, 284, 17};
+}
+constexpr UiRect enemyPrevious{14, 268, 46, 12}, enemyNext{64, 268, 46, 12}, enemyConfirm{212, 268, 86, 12};
 constexpr UiRect feedback{10, 350, 284, 8};
 constexpr UiRect travelButton{578, 2, 16, 13};
 constexpr UiRect restButton{600, 2, 16, 13};

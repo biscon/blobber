@@ -113,7 +113,8 @@ void spritesAtDoorLeaves() {
             {edge.geometry(), edge.movement(), &edge.actors(), &animator.snapshot(), nullptr, &edge.doors()});
         bool found = false;
         const auto original = actorPosition(*edge.actors().actor(id), time);
-        const auto originalPoint = world_render::project(pipeline.frame().camera, {original.x, 0, original.y});
+        const auto originalPoint =
+            world_render::project(pipeline.frame().camera, {original.x, 0, original.y});
         check(originalPoint.x >= 2 && originalPoint.x <= viewWidth - 2,
               "Edge fixture starts from an on-screen actor axis");
         for (unsigned i = 0; i < pipeline.frame().count; ++i) {
@@ -419,6 +420,10 @@ int main() {
                   "Windowless and live visibility tokens agree");
             for (unsigned i = 0; i < actual.count; ++i)
                 check(sameActor(actual.ids[i], expected.ids[i]), "Windowless/live target identity");
+            check(actual.candidateCount == expected.candidateCount, "Windowless/live candidate count");
+            for (unsigned i = 0; i < actual.candidateCount; ++i)
+                check(sameActor(actual.candidates[i], expected.candidates[i]),
+                      "Windowless/live candidate identity");
             commands.refresh(expected, game.movement().transition.active(), false, true);
             for (unsigned i = 0; i < actual.count; ++i) {
                 PartyCommand c;
