@@ -190,14 +190,20 @@ void retargetedRoutesAndFrontSlots() {
         ActorWorld arrivals(map, catalog, group);
         NpcAiController ai(map, arrivals, 5);
         for (unsigned i = 0; i < 4; ++i) {
-            check(ai.approach(arrivals.id(i), party, 0), "Pack member approaches current front");
-            const auto& a = *arrivals.actor(arrivals.id(i));
-            const Cell local{2 * a.npc.subcell.x - 1, 2 * a.npc.subcell.y - 1};
-            check(a.npc.cell == party.cell + f && ((local.x * f.x + local.y * f.y < 0) == (i < 2)),
-                  "Both near-row slots fill before either rear slot in every heading");
+            bool arrived = false;
+            for (unsigned step = 0; step < 6 && !arrived; ++step) {
+                check(ai.approach(arrivals.id(i), party, step * npcWalkDurationMs),
+                      "Pack member advances toward a free visible near-row slot");
+                const auto& a = *arrivals.actor(arrivals.id(i));
+                const Cell local{2 * a.npc.subcell.x - 1, 2 * a.npc.subcell.y - 1};
+                arrived = inFrontBand(party.cell, party.heading, a.npc.cell) &&
+                          inPartyViewport(party.cell, party.heading, a.npc.cell, a.npc.subcell) &&
+                          local.x * f.x + local.y * f.y < 0;
+            }
+            check(arrived, "Visible near-row openings across the band fill before rear staging slots");
         }
-        check(arrivals.occupiedSlots(party.cell + f) == 15,
-              "Front-slot contention retains four distinct slots");
+        check(arrivals.occupiedSlots(party.cell + f) != 15,
+              "Available diagonal attack slots take priority over filling the centre rear row");
     }
     // Minimal square beyond a single 4096-node BFS budget; no scale/stress sweep.
     const auto large = room(67, 67);

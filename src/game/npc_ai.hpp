@@ -17,6 +17,7 @@ struct NpcAiSnapshot {
     std::uint64_t timeMs = 0;
 };
 bool npcSees(GeometryView map, Cell from, Heading facing, Cell target) noexcept;
+enum class PositioningResult { Pending, Moved, AtGoal, Blocked };
 class NpcAiController {
   public:
     NpcAiController(GeometryView map, ActorWorld& actors, std::uint32_t seed);
@@ -36,6 +37,7 @@ class NpcAiController {
     }
     bool aware(ActorId id) const noexcept;
     bool approach(ActorId id, Player party, std::uint64_t now) noexcept;
+    PositioningResult position(ActorId id, Player party, std::uint64_t now) noexcept;
     bool escape(ActorId id, Player party, std::uint64_t now) noexcept;
     const NpcAiSnapshot& snapshot() const noexcept { return state_; }
 

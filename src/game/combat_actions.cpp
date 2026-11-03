@@ -312,11 +312,12 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     alert(id, origin_);
     return queueAttack(out, origin_, now);
 }
-CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcept {
+CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& waitingForPath) noexcept {
+    waitingForPath = false;
     CombatOutcome out;
     out.enemy = id;
     const auto* a = actors_.actor(id);
-    if (!frontal(id))
+    if (!a || a->life != ActorLife::Alive)
         return out;
     if (currentEvents_ && effects_.stand(id, now, *currentEvents_)) {
         out.event = CombatEvent::Spent;
@@ -342,22 +343,24 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now) noexcep
         a->hitPoints * 2 <= a->maxHitPoints;
     const bool melee = actors_.catalog().attack(melee_[id.slot]);
     const bool ranged = actors_.catalog().attack(ranged_[id.slot]);
-    const bool shot = ranged && effects_.sees(id) && inBowRange(a->npc.cell, origin_.cell) &&
+    const bool shot = frontal(id) && ranged && effects_.sees(id) && inBowRange(a->npc.cell, origin_.cell) &&
                       lineOfSight(map_, a->npc.cell, origin_.cell);
     bool moved = false;
     if (adjacent && ranged && (!melee || wounded))
         moved = ai_.escape(id, origin_, now);
-    // Healthy melee combatants converge on the central front before settling
-    // for diagonal contact; re-use the same route/slot policy as approach.
-    if (!moved && adjacent && melee && !wounded && !(a->npc.cell == origin_.cell + forward(origin_.heading)))
-        moved = ai_.approach(id, origin_, now);
-    if (!moved && adjacent && melee) {
+    // Hold usable positions; only waiting combatants route into vacancies.
+    if (!moved && adjacent && melee && frontal(id)) {
         const auto slot = meleeSlot(id, actors_.occupiedSlots(a->npc.cell));
         if (slot && (a->npc.subcell == *slot || actors_.move(id, a->npc.cell, *slot, origin_.cell)))
             return enemyAttack(id, false, now);
     }
-    if (!moved && !adjacent && (!shot || (melee && !wounded))) {
-        moved = ai_.approach(id, origin_, now);
+    if (!moved && (!shot || (melee && !wounded))) {
+        const auto position = ai_.position(id, origin_, now);
+        if (position == PositioningResult::Pending) {
+            waitingForPath = true;
+            return out;
+        }
+        moved = position == PositioningResult::Moved;
     }
     if (moved) {
         out.event = CombatEvent::Move;

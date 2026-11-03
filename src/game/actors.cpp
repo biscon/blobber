@@ -96,11 +96,10 @@ ActorResult ActorWorld::walk(ActorId id, Cell cell, Cell subcell, Cell partyCell
         return {ActorError::InvalidHandle};
     if (a->hasWalk && timeMs < a->walkTimeMs)
         return {ActorError::InvalidTime};
-    const bool crossCell = !(a->npc.cell == cell);
     const auto from = actorPosition(*a, timeMs);
     const auto fromHeight = actorElevation(*a, map_, timeMs);
     const auto result = move(id, cell, subcell, partyCell);
-    if (result.changed && crossCell) {
+    if (result.changed) {
         state_.actors[id.slot].hasTravel = true;
         state_.actors[id.slot].walkFrom = from;
         state_.actors[id.slot].walkFromElevation = fromHeight;

@@ -121,14 +121,14 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
                 const auto id = actors_.id(i);
                 before[i] = actors_.snapshot().actors[i].npc.cell;
-                if (!(members_[i] && frontal(id)) && enemyReady_[i] <= state_.gameplayMs &&
+                if (!members_[i] && enemyReady_[i] <= state_.gameplayMs &&
                     effects_.has(id, EffectKind::Restrained) && effects_.canAct(id)) {
                     effects_.escapeWeb(id, now, events);
                     enemyReady_[i] = state_.gameplayMs + combatRoundMs;
                 }
-                const bool stood = !(members_[i] && frontal(id)) && effects_.stand(id, now, events);
-                frozen[i] = stood || !effects_.canAct(id) || (members_[i] && frontal(id)) ||
-                            now < enemyBusy_[i] || attackBusy(i) || enemyReady_[i] > state_.gameplayMs ||
+                const bool stood = !members_[i] && effects_.stand(id, now, events);
+                frozen[i] = stood || !effects_.canAct(id) || members_[i] || now < enemyBusy_[i] ||
+                            attackBusy(i) || enemyReady_[i] > state_.gameplayMs ||
                             (ai_.aware(actors_.id(i)) && enemySpellGeometry(actors_.id(i)));
             }
             if (enableRoaming_) {
@@ -139,7 +139,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                 if (!(before[i] == actors_.snapshot().actors[i].npc.cell))
                     enemyReady_[i] = state_.gameplayMs + combatRoundMs;
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
-                if (!(members_[i] && frontal(actors_.id(i))))
+                if (!members_[i])
                     effects_.groundCheck(actors_.id(i), actors_.snapshot().actors[i].npc.cell, now, events);
             observe(pose);
             enroll(pose, false);
@@ -194,8 +194,9 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                     out.phase = state_.phase;
                     return out;
                 }
-                out = enemyTurn(*state_.activeEnemy, now);
-                if (!state_.resolvingAction)
+                bool waitingForPath = false;
+                out = enemyTurn(*state_.activeEnemy, now, waitingForPath);
+                if (!state_.resolvingAction && !waitingForPath)
                     advance(now);
             } else
                 selectTurn();

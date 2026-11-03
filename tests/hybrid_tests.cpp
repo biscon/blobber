@@ -468,8 +468,12 @@ void offscreenDiagonalHandoff() {
                                 game.submit(turnCommand(game));
                             else
                                 for (const auto& out : game.update(.5, false))
-                                    check(out.event != CombatEvent::AttackStarted || out.enemy.slot != 1,
-                                          "Offscreen diagonal enemy cannot attack behind the facing lock");
+                                    if (out.event == CombatEvent::AttackStarted && out.enemy.slot == 1) {
+                                        const auto& actor = *game.actors().actor(target);
+                                        check(inPartyView(map, p.cell, p.heading, actor.npc.cell,
+                                                          actor.npc.subcell),
+                                              "A diagonal enemy must reposition into view before attacking");
+                                    }
                             check(game.movement().player.heading == p.heading,
                                   "Visible central group keeps the camera steady");
                         }
@@ -481,6 +485,10 @@ void offscreenDiagonalHandoff() {
                              ++i)
                             tick(game);
                     }
+                    // Re-establish the stationary handoff arrangement: the earlier
+                    // full-round check now legitimately permits enemy repositioning.
+                    check(bool(game.actors().move(target, diagonal, slot, p.cell)),
+                          "Handoff fixture restores the original diagonal body position");
                     const auto before = game.combat().snapshot();
                     check(before.awaitingAction && before.activeCharacter->index == 0,
                           "Preserve fighter's actionable turn at the handoff");

@@ -1,4 +1,5 @@
 #include "game/npc_ai.hpp"
+#include "game/approach_slots.hpp"
 #include "game/effects.hpp"
 #include "game/perception.hpp"
 #include <algorithm>
@@ -131,35 +132,17 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
 bool NpcAiController::step(std::size_t slot, Cell destination, Player party, std::uint64_t now,
                            bool approaching) noexcept {
     const auto& actor = actors_.snapshot().actors[slot];
-    if (actor.life != ActorLife::Alive || destination == actor.npc.cell)
+    if (actor.life != ActorLife::Alive || (!approaching && destination == actor.npc.cell))
         return false;
     const auto occupied = actors_.occupiedSlots(destination);
     auto subcell = actor.npc.subcell;
     if (approaching) {
-        const auto f = forward(party.heading);
-        auto near = subcell;
-        if (f.x)
-            near.x = f.x > 0 ? 0 : 1;
-        else
-            near.y = f.y > 0 ? 0 : 1;
-        auto other = near;
-        if (f.x)
-            other.y = 1 - other.y;
-        else
-            other.x = 1 - other.x;
-        bool found = false;
-        for (unsigned pass = 0; pass < 2 && !found; ++pass)
-            for (const auto candidate : {near, other, near + f, other + f})
-                if (!(occupied & (1u << (candidate.x + 2 * candidate.y))) &&
-                    (pass || inPartyViewport(party.cell, party.heading, destination, candidate))) {
-                    subcell = candidate;
-                    found = true;
-                    break;
-                }
-        if (!found) {
+        const auto choice = approachSlot(map_, actors_, actors_.id(slot), party, destination, true);
+        if (!choice || (destination == actor.npc.cell && choice->subcell == actor.npc.subcell)) {
             prepared_[slot].reset();
             return false;
         }
+        subcell = choice->subcell;
     } else if (occupied & (1u << (subcell.x + 2 * subcell.y))) {
         unsigned free = 0;
         while (free < 4 && (occupied & (1u << free)))
@@ -171,6 +154,7 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Player party, std
         subcell = {int(free % 2), int(free / 2)};
     }
     const auto old = actor.npc.cell;
+    const auto oldSubcell = actor.npc.subcell;
     if (!map_.npcAllowed(destination) || destination == party.cell) {
         prepared_[slot].reset();
         return false;
@@ -184,10 +168,10 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Player party, std
     if (!actors_.walk(actors_.id(slot), destination, subcell, party.cell, now, npcWalkDurationMs * factor)
              .changed)
         return false;
-    if (effects_)
+    if (effects_ && !(old == destination))
         effects_->enter(actors_.id(slot), destination, now);
     // Face along the committed step, never turn toward a blocked attempted move.
-    const auto delta = Cell{destination.x - old.x, destination.y - old.y};
+    const auto delta = destination == old ? subcell + oldSubcell * -1 : destination + old * -1;
     const auto heading = delta.x ? (delta.x > 0 ? Heading::East : Heading::West)
                                  : (delta.y > 0 ? Heading::South : Heading::North);
     actors_.face(actors_.id(slot), heading);
@@ -288,16 +272,31 @@ bool NpcAiController::aware(ActorId id) const noexcept {
     return a == Awareness::Pursuing || a == Awareness::Investigating || a == Awareness::Searching;
 }
 bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noexcept {
+    return position(id, party, now) == PositioningResult::Moved;
+}
+PositioningResult NpcAiController::position(ActorId id, Player party, std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);
     if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
-        return false;
+        return PositioningResult::Blocked;
     const auto goal = effects_ && !effects_->sees(id) ? state_.actors[id.slot].lastSeen : party.cell;
     const auto preferred = goal == party.cell ? preferredFront(party) : std::nullopt;
     navigation_.request(id.slot, actor->npc.cell, goal, true, preferred);
     navigation_.update(party.cell);
     const auto result = navigation_.take(id.slot);
-    return result.ready && result.found && result.from == actor->npc.cell && result.target == goal &&
-           result.preferred == preferred && step(id.slot, result.step, party, now, goal == party.cell);
+    if (!result.ready)
+        return PositioningResult::Pending;
+    if (!result.found || !(result.from == actor->npc.cell) || !(result.target == goal) ||
+        !(result.preferred == preferred))
+        return PositioningResult::Blocked;
+    if (result.step == actor->npc.cell) {
+        const auto choice = approachSlot(map_, actors_, id, party, result.step, true);
+        if (!choice || choice->subcell == actor->npc.subcell) {
+            prepared_[id.slot].reset();
+            return PositioningResult::AtGoal;
+        }
+    }
+    return step(id.slot, result.step, party, now, goal == party.cell) ? PositioningResult::Moved
+                                                                      : PositioningResult::Blocked;
 }
 bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);

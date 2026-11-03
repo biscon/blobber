@@ -1,4 +1,5 @@
 #include "game/navigation.hpp"
+#include "game/approach_slots.hpp"
 #include "game/perception.hpp"
 #include <cstdlib>
 #include <utility>
@@ -74,15 +75,9 @@ bool Navigation::start() noexcept {
         frontStep_.reset();
         preferAvailable_ = centerAvailable_ = false;
         if (active_.adjacent && active_.preferred && cellDistance(*active_.preferred, active_.target) == 1) {
-            const auto heading = headingToward(active_.target, *active_.preferred);
-            for (int side = -1; side <= 1; ++side) {
-                const auto cell = *active_.preferred + right(heading) * side;
-                const bool available = map_.npcAllowed(cell) && combatAdjacent(map_, active_.target, cell) &&
-                                       actors_.occupiedSlots(cell) != 15;
-                preferAvailable_ |= available;
-                if (!side)
-                    centerAvailable_ = available;
-            }
+            preferAvailable_ = true;
+            const auto goal = approachGoal(false);
+            centerAvailable_ = goal && *goal == *active_.preferred;
         }
         if (map_.solid(active_.from)) {
             finish(false, {});
@@ -95,6 +90,28 @@ bool Navigation::start() noexcept {
         return true;
     }
     return false;
+}
+std::optional<Cell> Navigation::approachGoal(bool reachedOnly) const noexcept {
+    const Player party{active_.target, headingToward(active_.target, *active_.preferred)};
+    const auto id = actors_.id(owner_);
+    std::optional<Cell> best;
+    unsigned score = 0;
+    for (int y = -1; y <= 1; ++y)
+        for (int x = -1; x <= 1; ++x) {
+            const auto destination = party.cell + Cell{x, y};
+            if (!combatAdjacent(map_, party.cell, destination) || (reachedOnly && !seen_[index(destination)]))
+                continue;
+            const auto choice = approachSlot(map_, actors_, id, party, destination, true);
+            if (!choice)
+                continue;
+            const unsigned rank = 4 * unsigned(choice->rank) + (destination == active_.from ? 2 : 0) +
+                                  (destination == *active_.preferred ? 1 : 0);
+            if (rank > score) {
+                best = destination;
+                score = rank;
+            }
+        }
+    return best;
 }
 void Navigation::finish(bool found, Cell step) noexcept {
     if (!canceled_)
@@ -123,30 +140,31 @@ void Navigation::update(Cell party) noexcept {
             break;
         if (cleaning_)
             continue;
+        const bool approaching =
+            active_.adjacent && active_.preferred && cellDistance(*active_.preferred, active_.target) == 1;
+        if (approaching && !canceled_) {
+            const auto goal = approachGoal(head_ == tail_);
+            if (goal && seen_[index(*goal)]) {
+                const auto first = first_[index(*goal)];
+                finish(true, first == 4 ? active_.from : active_.from + forward(Heading(first)));
+                continue;
+            }
+        }
         if (canceled_ || head_ == tail_) {
-            finish(frontStep_.has_value() || fallbackStep_.has_value(),
-                   frontStep_.value_or(fallbackStep_.value_or(Cell{})));
+            finish(false, {});
             continue;
         }
         const auto current = queue_[head_++];
         const auto c = cell(current);
         ++work_;
-        if ((active_.adjacent ? combatAdjacent(map_, active_.target, c) : c == active_.target) &&
+        if (!approaching &&
+            (active_.adjacent ? combatAdjacent(map_, active_.target, c) : c == active_.target) &&
             !(c == party)) {
             const auto step = first_[current] == 4
                                   ? active_.from
                                   : active_.from + forward(static_cast<Heading>(first_[current]));
-            const bool front =
-                preferAvailable_ &&
-                inMeleeFront(map_, active_.target, headingToward(active_.target, *active_.preferred), c);
-            if (!preferAvailable_ || c == *active_.preferred || (front && !centerAvailable_)) {
-                finish(true, step);
-                continue;
-            }
-            if (front && !frontStep_)
-                frontStep_ = step;
-            if (!fallbackStep_)
-                fallbackStep_ = step;
+            finish(true, step);
+            continue;
         }
         std::array<int, 4> directions{0, 1, 2, 3};
         if (preferAvailable_ && first_[current] == 4) {

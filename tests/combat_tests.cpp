@@ -121,7 +121,9 @@ void rows() {
     }
 }
 void advancement() {
-    const auto map = combatMap();
+    // A genuine cross-shaped chokepoint isolates paired rank advancement from
+    // the separate open-room repositioning behavior.
+    const Map map({"#######", "###.###", "###.###", "#.....#", "###.###", "###.###", "#######"});
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
     enum Scenario { Paired, Diagonal, Competition, BothOpen, Blocked };
     for (auto heading : {Heading::North, Heading::East, Heading::South, Heading::West})
@@ -167,17 +169,13 @@ void advancement() {
                         listed |= sameActor(*id, advancing);
                         rearCount += sameActor(*id, rear[0]) || sameActor(*id, rear[1]);
                     }
-                check(rearCount == (scenario == Blocked    ? 0u
-                                    : scenario == BothOpen ? 2u
-                                                           : 1u),
-                      "Preview reserves each vacancy for only one upcoming rear actor");
-                check(scenario == Competition || listed == (scenario != Blocked),
-                      "Preview includes rear enemies able to fill either gap");
+                check(rearCount == (scenario == Paired || scenario == Diagonal ? 1u : 2u) && listed,
+                      "Preview includes living waiting rear actors as well as immediate attackers");
                 s.update(20, true);
                 check(s.actors().snapshot().revision == revision, "Preview and pause cannot advance actors");
                 std::array<unsigned, 4> attacks{};
                 std::array<std::uint64_t, 4> lastRound{};
-                for (int step = 0; step < 40; ++step) {
+                for (int step = 0; step < 80; ++step) {
                     const auto round = s.combat().snapshot().round;
                     if (s.combat().snapshot().awaitingAction)
                         s.submit(turnCommand(s));
@@ -659,8 +657,10 @@ void initiativeAndDefend() {
         start(s);
         int previous = -1;
         bool firstEnemy = true;
-        for (int step = 0; step < 10 && s.combat().snapshot().round == 1; ++step) {
+        for (int step = 0; step < 40 && s.combat().snapshot().round == 1; ++step) {
             const auto state = s.combat().snapshot();
+            if (state.phase != CombatPhase::Turns)
+                break;
             const int current = state.activeCharacter ? state.activeCharacter->index : 4;
             if (previous >= 0) {
                 check(totals[previous] >= totals[current], "Observed initiative totals descend");
@@ -675,15 +675,15 @@ void initiativeAndDefend() {
             if (state.awaitingAction)
                 s.submit(turnCommand(s));
             else {
-                // Defending is target-specific, and only actual defended attacks consume two d20s.
-                if (firstEnemy) {
+                const auto accepted = s.update(.45, false).step;
+                // Waiting enemies may move first. Only a committed attack may
+                // consume recipient/Defend rolls from the independent RNG oracle.
+                if (firstEnemy && accepted.event == CombatEvent::AttackStarted) {
                     const auto recipient = (expected.roll({1, 4, 0}).value.total - 1) % 2;
                     const bool defending = state.defending[static_cast<std::size_t>(recipient)];
                     const auto roll =
                         expected.d20(defending ? rules::RollMode::Disadvantage : rules::RollMode::Normal)
                             .value;
-                    const auto accepted = s.update(.45, false).step;
-                    check(accepted.event == CombatEvent::AttackStarted, "Enemy accepts an attack");
                     const auto& impacts = s.update(0, false);
                     check(impacts.count != 0, "Zero-marker fixture resolves at current timestamp");
                     const auto out = impacts.values[0];
@@ -691,8 +691,7 @@ void initiativeAndDefend() {
                           "Enemy choice and Defend use the seeded unbiased rolls");
                     defendedAttack |= defending;
                     firstEnemy = false;
-                } else
-                    s.update(.45, false);
+                }
             }
         }
     }

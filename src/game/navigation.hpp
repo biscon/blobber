@@ -65,6 +65,7 @@ class Navigation {
     std::uint32_t index(Cell cell) const noexcept;
     Cell cell(std::uint32_t index) const noexcept;
     bool start() noexcept;
+    std::optional<Cell> approachGoal(bool reachedOnly) const noexcept;
     void finish(bool found, Cell step) noexcept;
 };
 } // namespace blobber

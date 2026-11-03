@@ -300,7 +300,7 @@ class CombatController {
     void leave() noexcept;
     const rules::WeaponPreview* weapon(rules::CharacterId, bool ranged = false) const noexcept;
     CombatOutcome enemyAttack(ActorId, bool ranged, std::uint64_t now, bool opening = false) noexcept;
-    CombatOutcome enemyTurn(ActorId, std::uint64_t now) noexcept;
+    CombatOutcome enemyTurn(ActorId, std::uint64_t now, bool& waitingForPath) noexcept;
     bool enemyCaster(ActorId) const noexcept;
     bool enemySpellGeometry(ActorId) const noexcept;
     CombatOutcome enemySpell(ActorId, std::uint64_t now) noexcept;

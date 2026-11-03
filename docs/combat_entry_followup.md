@@ -3,6 +3,10 @@
 Status: implemented and verified, 2026-11-02. Design recorded before implementation;
 interactive acceptance remains user review.
 
+[Combat positioning](combat_positioning.md) supersedes the central convergence and
+frontal-only turn eligibility policies. Earlier entry/facing fixes and historical
+verification below remain recorded.
+
 Keep the accepted frontal hybrid loop: real-time movement until genuine close
 contact, locked party movement during initiative, automatic facing when the active
 front clears, normal initiative/action costs and dedicated ranged retreat policy.

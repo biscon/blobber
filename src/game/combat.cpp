@@ -345,10 +345,7 @@ void CombatController::selectTurn() noexcept {
             for (; enemyCursor_ < state_.enemyCount; ++enemyCursor_) {
                 const auto id = state_.enemies[enemyCursor_];
                 const auto* a = actors_.actor(id);
-                if (frontal(id) && a->monster.index == groups_[e.index].index &&
-                    (enemyCaster(id) || actors_.catalog().attack(ranged_[id.slot]) ||
-                     !combatAdjacent(map_, a->npc.cell, origin_.cell) ||
-                     meleeSlot(id, actors_.occupiedSlots(a->npc.cell)))) {
+                if (a && a->life == ActorLife::Alive && a->monster.index == groups_[e.index].index) {
                     state_.activeEnemy = id;
                     ++state_.turn;
                     return;
@@ -457,12 +454,6 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
     dst.upcomingCount = 0;
     if (state_.phase != CombatPhase::Turns)
         return;
-    std::array<std::uint8_t, NpcWorld::maxInstances> occupied{};
-    for (std::size_t i = 0; i < state_.enemyCount; ++i) {
-        const auto* a = actors_.actor(state_.enemies[i]);
-        if (a)
-            occupied[i] = actors_.occupiedSlots(a->npc.cell);
-    }
     for (std::size_t p = position_; p < orderCount_ && dst.upcomingCount < dst.upcoming.size(); ++p) {
         const auto e = order_[p];
         if (e.party) {
@@ -475,19 +466,10 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
                  i < state_.enemyCount && dst.upcomingCount < dst.upcoming.size(); ++i) {
                 const auto id = state_.enemies[i];
                 const auto* a = actors_.actor(id);
-                if (!frontal(id) || a->monster.index != groups_[e.index].index)
-                    continue;
-                const auto slot = meleeSlot(id, occupied[i]);
-                if (!slot && !enemyCaster(id) && !actors_.catalog().attack(ranged_[id.slot]) &&
-                    combatAdjacent(map_, a->npc.cell, origin_.cell))
+                if (!a || a->life != ActorLife::Alive || !known_[id.slot] ||
+                    a->monster.index != groups_[e.index].index)
                     continue;
                 dst.upcoming[dst.upcomingCount++] = {{}, id, false};
-                if (slot)
-                    for (std::size_t j = 0; j < state_.enemyCount; ++j) {
-                        const auto* other = actors_.actor(state_.enemies[j]);
-                        if (other && other->npc.cell == a->npc.cell)
-                            occupied[j] |= 1u << (slot->x + 2 * slot->y);
-                    }
             }
     }
 }

@@ -1,5 +1,13 @@
 # System design
 
+Combat positioning correction (implemented and mechanically verified, 2026-11-03):
+[waiting enemies receive turns and route into usable front slots](combat_positioning.md)
+separates attack geometry from initiative, preserves usable attackers' positions,
+and uses shared slot selection with bounded navigation for flanking/blocked actors.
+Twenty-one affected suites and a hidden four-goblin encounter pass;
+[review captures](screenshots/combat-positioning/README.md) show both flankers
+joining the populated front. Interactive acceptance remains user review.
+
 Creature occlusion correction (implemented and mechanically verified, 2026-11-03):
 [stable creature dimensions and shared scenery masks](creature_occlusion.md)
 replaces wall/door/viewport shrinking and lateral anchor fitting with per-fragment
