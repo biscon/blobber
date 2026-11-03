@@ -1,4 +1,5 @@
 #include "platform/audio.hpp"
+#include "audio/limiter.hpp"
 #include "render/world_scene.hpp"
 #include <atomic>
 #include <cstdio>
@@ -8,7 +9,11 @@
 namespace blobber {
 namespace {
 std::atomic<std::uint64_t> audioOwner{1};
+audio::PeakLimiter outputLimiter;
+void limitOutput(void* samples, unsigned frames) {
+    outputLimiter.process(static_cast<float*>(samples), frames);
 }
+} // namespace
 AudioRuntime::~AudioRuntime() {
     shutdown();
 }
@@ -110,11 +115,29 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
         if (s.valid)
             s.music.looping = true;
     }
+    music_.prepare(root_ / "music",
+                   settingsPath_.empty() ? std::filesystem::path{}
+                                         : settingsPath_.parent_path() / "music-state.json",
+                   warning_);
+    unsigned sampleRate = samples_.empty() ? 0 : samples_.front().source.stream.sampleRate;
+    if (!sampleRate) {
+        float silence = 0;
+        Wave probe{1, 48000, 32, 1, &silence};
+        auto sound = LoadSoundFromWave(probe);
+        if (IsSoundValid(sound)) {
+            sampleRate = sound.stream.sampleRate;
+            UnloadSound(sound);
+        }
+    }
+    outputLimiter.reset(sampleRate ? sampleRate : 48000);
+    AttachAudioMixedProcessor(limitOutput);
+    limiterAttached_ = true;
     if (!warning_.empty())
         std::cerr << warning_ << '\n';
 }
 float AudioRuntime::gain(unsigned category, bool interface) const noexcept {
-    float g = settings.values[0] * settings.values[category] * (interface ? 1.f : worldGain);
+    float g = settings.values[0] * settings.values[category] * bank_.categoryGain[category] *
+              (interface ? 1.f : worldGain);
     if (category == 4)
         g *= settings.values[1];
     return g;
@@ -220,6 +243,7 @@ audio::Handle AudioRuntime::play(const char* id, float x, float z, bool position
     return {slot, v.generation, owner_};
 }
 void AudioRuntime::detach() noexcept {
+    music_.detach();
     for (unsigned i = 0; i < 64; ++i)
         if (voices_[i].active && !voices_[i].interface)
             release(i);
@@ -233,7 +257,8 @@ void AudioRuntime::detach() noexcept {
     session_ = nullptr;
     world_ = 0;
 }
-void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt) {
+void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt, bool musicPaused,
+                          bool bannerVisible) {
     dt = std::isfinite(dt) ? std::clamp(dt, 0.f, .1f) : 0;
     const auto world = game ? game->actors().snapshot().world : 0;
     if (world != world_) {
@@ -243,6 +268,13 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
         if (game) {
             game->audioEvents().enabled = ready_;
             game->audioEvents().clear();
+            const auto& combat = game->combat().snapshot();
+            if (!game->audioEvents().encounterActive && combat.round > 0 &&
+                combat.phase != CombatPhase::Exploration && combat.phase != CombatPhase::Victory &&
+                combat.phase != CombatPhase::Defeat) {
+                game->audioEvents().encounterActive = true;
+                ++game->audioEvents().encounter;
+            }
         }
     }
     session_ = game;
@@ -311,8 +343,19 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
         }
         journal.clear();
     }
-    if (ready_)
+    if (ready_) {
         streamUpdate(dt);
+        audio::MusicInput input;
+        if (game) {
+            input.encounter = game->audioEvents().encounter;
+            input.active = game->audioEvents().encounterActive;
+        }
+        input.audible = settings.musicEnabled && settings.musicVolume > 0 && settings.values[0] > 0;
+        input.paused = musicPaused || !focused;
+        input.bannerVisible = bannerVisible;
+        input.dt = dt;
+        music_.update(input, settings.values[0] * settings.musicVolume * worldGain);
+    }
 }
 void AudioRuntime::streamUpdate(float dt) {
     (void)dt;
@@ -411,18 +454,32 @@ void AudioRuntime::streamUpdate(float dt) {
             UpdateMusicStream(s.music);
     }
 }
+void AudioRuntime::persistMusic() {
+    music_.persist(warning_);
+}
 void AudioRuntime::persist() {
     warning_.clear();
     audio::saveSettings(settingsPath_, settings, warning_);
+    persistMusic();
     if (!warning_.empty())
         std::cerr << warning_ << '\n';
 }
 void AudioRuntime::shutdown() noexcept {
     if (ready_) {
+        // Shutdown is an allocation/I/O boundary. Keep destructors nonthrowing.
+        try {
+            persistMusic();
+        } catch (...) {
+        }
         detach();
         for (unsigned i = 0; i < 64; ++i)
             if (voices_[i].active)
                 release(i);
+        if (limiterAttached_) {
+            DetachAudioMixedProcessor(limitOutput);
+            limiterAttached_ = false;
+        }
+        music_.shutdown();
         for (auto& s : streams_)
             if (s.valid)
                 UnloadMusicStream(s.music);

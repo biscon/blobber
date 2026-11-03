@@ -1394,18 +1394,9 @@
       "variants": [
         {
           "id": "01",
-          "path": "generated/radiant_01.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "02",
-          "path": "generated/radiant_02.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "03",
-          "path": "generated/radiant_03.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
+          "path": "replacements/radiant_a.wav",
+          "gain": 1,
+          "provenance": "User-selected Stable Audio 3 export; see replacements/provenance.json"
         }
       ]
     },
@@ -1452,18 +1443,9 @@
       "variants": [
         {
           "id": "01",
-          "path": "generated/dark_01.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "02",
-          "path": "generated/dark_02.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "03",
-          "path": "generated/dark_03.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
+          "path": "replacements/dark_b.wav",
+          "gain": 1,
+          "provenance": "User-selected Stable Audio 3 export; see replacements/provenance.json"
         }
       ]
     },
@@ -1481,18 +1463,9 @@
       "variants": [
         {
           "id": "01",
-          "path": "generated/fire_01.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "02",
-          "path": "generated/fire_02.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "03",
-          "path": "generated/fire_03.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
+          "path": "replacements/fire_b.wav",
+          "gain": 1,
+          "provenance": "User-selected Stable Audio 3 export; see replacements/provenance.json"
         }
       ]
     },
@@ -1626,18 +1599,9 @@
       "variants": [
         {
           "id": "01",
-          "path": "generated/thunder_01.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "02",
-          "path": "generated/thunder_02.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
-        },
-        {
-          "id": "03",
-          "path": "generated/thunder_03.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
+          "path": "replacements/thunder_b.wav",
+          "gain": 1,
+          "provenance": "User-selected Stable Audio 3 export; see replacements/provenance.json"
         }
       ]
     },
@@ -1825,10 +1789,10 @@
       ]
     },
     "encounter": {
-      "gain": 0.36,
-      "pitch_min": 0.96,
-      "pitch_max": 1.04,
-      "volume_min": 0.9,
+      "gain": 0.26,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.95,
       "category": 1,
       "priority": 3,
       "range": 6,
@@ -2023,8 +1987,9 @@
       "variants": [
         {
           "id": "01",
-          "path": "generated/spiritual.loop_01.wav",
-          "provenance": "Csound synthesis; Blobber original recipe"
+          "path": "replacements/spiritual_loop_a.wav",
+          "gain": 1,
+          "provenance": "User-selected Stable Audio 3 export; see replacements/provenance.json"
         }
       ]
     },
@@ -2144,5 +2109,11 @@
         }
       ]
     }
+  },
+  "mix_gain_db": {
+    "effects": 12,
+    "ambience": 6,
+    "ui": 9,
+    "party_footsteps": 12
   }
 }

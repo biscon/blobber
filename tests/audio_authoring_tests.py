@@ -42,4 +42,18 @@ with tempfile.TemporaryDirectory(prefix='blobber-author-test-') as tmp:
     assert [p.read_bytes() for p in paths]==original,'selective layered recipe is deterministic'
     assert hashlib.sha256(output.read_bytes()).digest()==digest,'unselected cue untouched'
     assert replacement.read_bytes()==b'user-owned-preserve' and override.read_bytes()==before
+    # An adopted sample is authoritative content, not a recipe to regenerate.
+    imported=root/'assets/audio/replacements/imported.wav';imported.write_bytes(output.read_bytes())
+    bank['cues']['adopted']={'variants':[{'id':'01','path':'replacements/imported.wav'}]}
+    (root/'assets/audio/bank.json').write_text(json.dumps(bank))
+    (root/'tools/audio/recipes.json').write_text(json.dumps({'cues':{
+        'owned':recipe,'layered':layered,'adopted':{'source':'retained','review':False}}}))
+    before_import=imported.read_bytes()
+    sys.argv=['generate','--cue','adopted'];author.main()
+    assert imported.read_bytes()==before_import,'retained sample survives regeneration byte-for-byte'
+    assert not (root/'assets/audio/generated/adopted_01.wav').exists(),'no discarded synth recreated'
+    imported.unlink()
+    try:
+        author.main();raise AssertionError('missing retained asset silently accepted')
+    except FileNotFoundError:pass
 print('Selective authoring, reproducibility, validation and replacement preservation passed')

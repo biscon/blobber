@@ -48,10 +48,6 @@ rules.ninja
 # Local IDE state, caches, editor backups, and OS metadata.
 /.idea/
 .cache/
-# Offline audio model downloads, tokens and unselected experiments live here.
-/.cache/audio-model/
-/tools/audio/local/.env
-/tools/audio/local/hf-token*
 __pycache__/
 *.py[cod]
 .venv/

@@ -77,6 +77,12 @@ void Journal::emit(Event e) noexcept {
     entries[count++] = e;
 }
 void Journal::combat(const CombatOutcome& o) noexcept {
+    if (o.event == CombatEvent::Started && !encounterActive) {
+        encounterActive = true;
+        ++encounter;
+    } else if (o.event == CombatEvent::Finished) {
+        encounterActive = false;
+    }
     if (!enabled)
         return;
     Event e;

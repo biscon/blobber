@@ -147,6 +147,9 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     events_.step =
         combat_.update(movement_.state().player, movement_.state().transition.active(), timeMs_, events_);
     events_.append(events_.step);
+    // Escaping all threats ends an episode without a victory/defeat cue.
+    if (combat_.snapshot().phase == CombatPhase::Exploration)
+        audio_.encounterActive = false;
     driveFacing();
     loot_.reconcile(actors_);
     reconcileRewards();

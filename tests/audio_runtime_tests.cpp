@@ -14,6 +14,17 @@ struct Buffer {
 };
 std::array<Buffer, 4096> buffers{};
 unsigned next = 1, plays = 0, streams = 0, updates = 0;
+unsigned lastPlayed = 0;
+struct MusicBuffer {
+    bool live = false, playing = false, paused = false;
+    float position = 0, duration = 10, volume = 0;
+};
+std::array<MusicBuffer, 256> musicBuffers{};
+unsigned musicNext = 1, lastMusic = 0, musicPlays = 0;
+unsigned musicId(Music m) {
+    return unsigned(reinterpret_cast<std::uintptr_t>(m.ctxData));
+}
+AudioCallback processor = nullptr;
 bool device = false, fail = false, aliasFail = false;
 unsigned id(Sound s) {
     return unsigned(reinterpret_cast<std::uintptr_t>(s.stream.buffer));
@@ -24,6 +35,7 @@ Sound make(bool alias = false, unsigned parent = 0) {
     buffers[n] = {true, alias, false, false, parent, 0, 0};
     Sound s{};
     s.frameCount = 4800;
+    s.stream.sampleRate = 48000;
     s.stream.buffer = reinterpret_cast<rAudioBuffer*>(std::uintptr_t(n));
     return s;
 }
@@ -36,10 +48,19 @@ bool IsAudioDeviceReady() {
     return fake::device;
 }
 void CloseAudioDevice() {
+    check(!fake::processor, "Processor detached before device close");
     for (const auto& b : fake::buffers)
         check(!b.live, "Device closes after buffers");
     check(!fake::streams, "Device closes after streams");
     fake::device = false;
+}
+void AttachAudioMixedProcessor(AudioCallback processor) {
+    check(fake::device && !fake::processor, "Exactly one limiter attached to prepared device");
+    fake::processor = processor;
+}
+void DetachAudioMixedProcessor(AudioCallback processor) {
+    check(fake::processor == processor, "Detach only the runtime's own limiter");
+    fake::processor = nullptr;
 }
 Wave LoadWave(const char*) {
     static short data[4800]{};
@@ -70,6 +91,7 @@ void UnloadSound(Sound s) {
     fake::buffers[n].live = false;
 }
 void PlaySound(Sound s) {
+    fake::lastPlayed = fake::id(s);
     auto& b = fake::buffers[fake::id(s)];
     b.playing = true;
     b.paused = false;
@@ -98,22 +120,63 @@ void SetSoundPan(Sound s, float v) {
 Music LoadMusicStream(const char*) {
     ++fake::streams;
     Music m{};
-    m.frameCount = 48000;
+    m.frameCount = 480000;
+    m.stream.sampleRate = 48000;
+    auto n = fake::musicNext++;
+    check(n < fake::musicBuffers.size(), "Mock stream bound");
+    fake::musicBuffers[n] = {true, false, false, 0, 10, 0};
+    m.ctxData = reinterpret_cast<void*>(std::uintptr_t(n));
     return m;
 }
 bool IsMusicValid(Music m) {
     return m.frameCount != 0;
 }
-void UnloadMusicStream(Music) {
+void UnloadMusicStream(Music m) {
+    auto& b = fake::musicBuffers[fake::musicId(m)];
+    check(b.live && !b.playing, "Music stopped before unload");
+    b.live = false;
     --fake::streams;
 }
-void PlayMusicStream(Music) {}
-void StopMusicStream(Music) {}
-void PauseMusicStream(Music) {}
-void ResumeMusicStream(Music) {}
-void SetMusicVolume(Music, float) {}
+void PlayMusicStream(Music m) {
+    auto& b = fake::musicBuffers[fake::musicId(m)];
+    check(b.live, "Only prepared streams play");
+    b.playing = true;
+    b.paused = false;
+    fake::lastMusic = fake::musicId(m);
+    ++fake::musicPlays;
+}
+void StopMusicStream(Music m) {
+    auto& b = fake::musicBuffers[fake::musicId(m)];
+    b.playing = b.paused = false;
+    b.position = 0;
+}
+void PauseMusicStream(Music m) {
+    fake::musicBuffers[fake::musicId(m)].paused = true;
+}
+void ResumeMusicStream(Music m) {
+    fake::musicBuffers[fake::musicId(m)].paused = false;
+}
+void SetMusicVolume(Music m, float v) {
+    fake::musicBuffers[fake::musicId(m)].volume = v;
+}
 void SetMusicPan(Music, float) {}
-void UpdateMusicStream(Music) {
+bool IsMusicStreamPlaying(Music m) {
+    auto& b = fake::musicBuffers[fake::musicId(m)];
+    return b.playing && !b.paused;
+}
+float GetMusicTimePlayed(Music m) {
+    return fake::musicBuffers[fake::musicId(m)].position;
+}
+float GetMusicTimeLength(Music m) {
+    return fake::musicBuffers[fake::musicId(m)].duration;
+}
+void UpdateMusicStream(Music m) {
+    auto& b = fake::musicBuffers[fake::musicId(m)];
+    if (b.playing && !b.paused) {
+        b.position += .01f;
+        if (!m.looping && b.position >= b.duration)
+            StopMusicStream(m);
+    }
     ++fake::updates;
 }
 }
@@ -128,18 +191,28 @@ int main() {
     }
     {
         std::ofstream f(dir / "audio/bank.json");
-        f << R"({"cues":{"test":{"cooldown":0,"concurrency":8,"variants":[{"id":"01","path":"sample.wav"}]},"ambience":{"loop":true,"category":2,"variants":[{"id":"01","path":"sample.wav"}]}}})";
+        f << R"({"mix_gain_db":{"effects":12},"cues":{"test":{"gain":0.8,"volume_min":1,"cooldown":0,"concurrency":8,"variants":[{"id":"01","path":"sample.wav"}]},"ambience":{"loop":true,"category":2,"variants":[{"id":"01","path":"sample.wav"}]}}})";
     }
     AudioRuntime runtime;
     runtime.prepare(dir, true, dir / "settings.json");
     check(!runtime.ready(), "Disabled never opens device");
+    check(!fake::processor, "Disabled mode has no processor");
     fake::fail = true;
     runtime.prepare(dir, false, dir / "settings.json");
     check(!runtime.ready(), "Missing device nonfatal");
+    check(!fake::processor, "Missing device has no processor");
     fake::fail = false;
     runtime.prepare(dir, false, dir / "settings.json");
     check(runtime.ready(), "Prepared mock runtime");
     auto first = runtime.play("test");
+    check(std::abs(fake::buffers[fake::lastPlayed].volume - .8f * .7f * .8f * 3.9810717f) < 1e-5f,
+          "Runtime applies the prepared bus boost without clipping individual voice gain");
+    runtime.settings.values[1] = 0;
+    check(runtime.play("test").slot == 64, "Boost never defeats the Effects mute");
+    runtime.settings.values[1] = .8f;
+    float peak[]{12.f, -6.f};
+    fake::processor(peak, 1);
+    check(peak[0] < .842f && peak[1] > -.422f, "Final callback limits both channels together");
     for (unsigned i = 0; i < 4; ++i)
         runtime.play("test");
     check(!runtime.stop(first), "Alias replacement invalidates handle");
@@ -158,6 +231,8 @@ int main() {
     for (unsigned i = 0; i < 100; ++i) {
         runtime.update(nullptr, false, true, .01f);
         runtime.play("test");
+        float samples[]{4.f, -2.f, .1f, -.1f};
+        fake::processor(samples, 2);
     }
     watching = false;
     check(allocations == 0, "Prepared voice processing allocates no C++ memory");
@@ -183,11 +258,87 @@ int main() {
     auto oldHandle = runtime.play("test");
     runtime.prepare(dir, false, dir / "settings.json");
     check(!runtime.stop(oldHandle), "Cross-runtime generation rejected");
+    float quiet[]{.2f, -.1f};
+    fake::processor(quiet, 1);
+    check(quiet[0] == .2f && quiet[1] == -.1f, "Reprepare resets limiter history");
     runtime.shutdown();
     runtime.shutdown();
     fake::aliasFail = true;
     runtime.prepare(dir, false, dir / "settings.json");
     check(runtime.play("test").slot == 64, "Alias failure degrades safely");
+    runtime.shutdown();
+    fake::aliasFail = false;
+    std::filesystem::create_directories(dir / "audio/music");
+    std::ofstream(dir / "audio/music/a.mp3") << "mock-owned fixture";
+    std::ofstream(dir / "audio/music/b.mp3") << "mock-owned fixture";
+    std::ofstream(dir / "audio/music/playlist.json")
+        << R"({"tracks":[{"id":"a","path":"a.mp3","title":"First Track","artist":"Fixture","gain_db":-6},{"id":"b","path":"b.mp3","title":"Second Track","artist":"Fixture","gain_db":-6}]})";
+    runtime.prepare(dir, false, dir / "settings.json");
+    runtime.update(&session, false, true, 0, false);
+    CombatOutcome start;
+    start.event = CombatEvent::Started;
+    session.audioEvents().combat(start);
+    const auto initialPlays = fake::musicPlays;
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::musicPlays == initialPlays + 1 && runtime.musicBanner().visible,
+          "Encounter starts prepared music and banner once");
+    const auto song = fake::lastMusic;
+    const auto bannerRevision = runtime.musicBanner().revision;
+    session.audioEvents().combat(start);
+    runtime.update(&session, true, true, .01f, false, false);
+    check(fake::musicPlays == initialPlays + 1 && !fake::musicBuffers[song].paused &&
+              !runtime.musicBanner().visible,
+          "Repeated encounter and tactical modal preserve playback; banner defers");
+    runtime.update(&session, true, true, .01f, true);
+    check(fake::musicBuffers[song].paused, "Explicit menu pauses music");
+    const auto position = fake::musicBuffers[song].position;
+    runtime.update(&session, true, true, .01f, true);
+    check(fake::musicBuffers[song].position == position, "Paused decoder is not serviced");
+    runtime.settings.musicEnabled = false;
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::musicBuffers[song].paused && !runtime.musicBanner().visible, "Toggle off freezes and hides");
+    runtime.settings.musicEnabled = true;
+    runtime.update(&session, false, true, .01f, false);
+    check(!fake::musicBuffers[song].paused && runtime.musicBanner().revision == bannerRevision,
+          "Same encounter resumes without announcement restart");
+    fake::musicBuffers[song].position = 10;
+    allocations = 0;
+    watching = true;
+    runtime.update(&session, false, true, .01f, false);
+    watching = false;
+    check(allocations == 0 && fake::lastMusic != song && runtime.musicBanner().revision > bannerRevision,
+          "EOF advances to next prepared stream without C++ allocation");
+    const auto second = fake::lastMusic;
+    fake::musicBuffers[second].position = 9.8f;
+    CombatOutcome finish;
+    finish.event = CombatEvent::Finished;
+    session.audioEvents().combat(finish);
+    runtime.update(&session, false, true, .1f, false);
+    check(fake::musicBuffers[second].volume > 0 && fake::musicBuffers[second].volume < .7f * .5f * .5012f,
+          "Short remaining track starts attenuating");
+    runtime.update(&session, false, true, .1f, false);
+    runtime.update(&session, false, true, .1f, false);
+    check(!fake::musicBuffers[second].playing && !runtime.musicBanner().visible,
+          "Fade stops without starting another song");
+    // Attach after a real, owned session has already entered initiative. This is
+    // the same presentation adoption path used after restoring an active save.
+    NpcWorld contactPlaces(map, {5, 8}, {"goblin"}, {{{0}, {5, 7}, {0, 1}, Heading::South}});
+    GameSession active(map, catalog, contactPlaces, 8, {{5, 8}, Heading::North}, false);
+    active.setAnimated(false);
+    for (unsigned i = 0; i < 20 && active.combat().snapshot().round == 0; ++i)
+        active.update(.1, false);
+    check(active.combat().snapshot().round > 0, "Owned session reaches real initiative");
+    active.audioEvents().encounterActive = false; // Imported simulation has no audio transport history.
+    const auto beforeAttach = fake::musicPlays;
+    runtime.update(&active, false, true, 0, false);
+    runtime.update(&active, false, true, .01f, false);
+    check(fake::musicPlays == beforeAttach + 2 && runtime.musicBanner().visible,
+          "Attach adopts active combat once (one ambience start and one song)");
+    const auto afterAttach = fake::musicPlays;
+    runtime.update(&active, false, true, .01f, false);
+    check(fake::musicPlays == afterAttach, "Repeated restored session snapshot does not restart music");
+    runtime.persistMusic();
+    check(std::filesystem::is_regular_file(dir / "music-state.json"), "Explicit boundary persists playlist");
     runtime.shutdown();
     std::filesystem::remove_all(dir);
     std::cout << "Audio runtime ownership, failure and allocation checks passed\n";

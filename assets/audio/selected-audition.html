@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>Selected Blobber sounds</title>
+<style>body{background:#151d1d;color:#ddd;font:16px system-ui;max-width:850px;margin:32px auto;padding:0 18px}section{border-top:1px solid #789;padding:12px 0}audio{display:block;width:100%;max-width:600px;margin:8px 0}</style>
+<h1>Selected sounds</h1><p>The five retained model exports and the revised short encounter chime. All other cues keep their current synth sounds. The model and rejected samples have been removed.</p>
+<section><h2>encounter</h2><p>A short, clear struck warning chime at fight start; no heartbeat rhythm.</p>
+<audio controls preload="none" src="generated/encounter_01.wav"></audio>
+<audio controls preload="none" src="generated/encounter_02.wav"></audio>
+</section>
+<section><h2>radiant</h2><p>User-selected radiant candidate A; retained WAV, no model required. See replacements/provenance.json.</p>
+<audio controls preload="none" src="replacements/radiant_a.wav"></audio>
+</section>
+<section><h2>dark</h2><p>User-selected dark candidate B; retained WAV, no model required. See replacements/provenance.json.</p>
+<audio controls preload="none" src="replacements/dark_b.wav"></audio>
+</section>
+<section><h2>fire</h2><p>User-selected fire candidate B; retained WAV, no model required. See replacements/provenance.json.</p>
+<audio controls preload="none" src="replacements/fire_b.wav"></audio>
+</section>
+<section><h2>thunder</h2><p>User-selected thunder candidate B; retained WAV, no model required. See replacements/provenance.json.</p>
+<audio controls preload="none" src="replacements/thunder_b.wav"></audio>
+</section>
+<section><h2>spiritual.loop</h2><p>User-selected spiritual.loop candidate A; retained WAV, no model required. See replacements/provenance.json.</p>
+<audio controls preload="none" src="replacements/spiritual_loop_a.wav"></audio>
+</section>
+<script>document.addEventListener("play",e=>{if(e.target.tagName==="AUDIO")for(const a of document.querySelectorAll("audio"))if(a!==e.target)a.pause()},true)</script>

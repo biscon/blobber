@@ -1,0 +1,97 @@
+{
+  "pass": "organic-v1",
+  "notes": {
+    "encounter": {
+      "choice": "Retry",
+      "note": "try as short chime/bell your candidates sounds more like heartbeats"
+    },
+    "weapon.swing": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.heavy": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.miss": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.release": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.arrow_impact": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.blunt": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.slash": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "weapon.pierce": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "goblin.step": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "goblin.attack": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "goblin.hurt": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "goblin.death": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "shaman.step": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "shaman.attack": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "shaman.hurt": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "shaman.death": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "dark": {
+      "choice": "B",
+      "note": ""
+    },
+    "radiant": {
+      "choice": "A",
+      "note": ""
+    },
+    "fire": {
+      "choice": "B",
+      "note": ""
+    },
+    "thunder": {
+      "choice": "B",
+      "note": ""
+    },
+    "ambience": {
+      "choice": "Keep current",
+      "note": ""
+    },
+    "spiritual.loop": {
+      "choice": "A",
+      "note": ""
+    }
+  }
+}

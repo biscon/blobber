@@ -32,6 +32,14 @@ Bank loadBank(const std::filesystem::path& root) {
     Bank bank;
     try {
         const auto base = read(root / "bank.json");
+        if (base.contains("mix_gain_db")) {
+            const auto& mix = base.at("mix_gain_db");
+            if (!mix.is_object())
+                throw std::runtime_error("Invalid mix_gain_db");
+            const char* categories[]{"", "effects", "ambience", "ui", "party_footsteps"};
+            for (unsigned i = 1; i < bank.categoryGain.size(); ++i)
+                bank.categoryGain[i] = std::pow(10.f, number(mix, categories[i], 0, -24, 18) / 20.f);
+        }
         Json overrides = Json::object();
         if (std::filesystem::exists(root / "overrides.json")) {
             try {
@@ -116,6 +124,8 @@ Settings loadSettings(const std::filesystem::path& p, std::string& warning) {
                 if (!std::isfinite(x) || x < 0 || x > 1)
                     throw std::runtime_error("Invalid audio volume");
             s.values = v;
+            s.musicVolume = number(j, "music_volume", .5f, 0, 1);
+            s.musicEnabled = j.value("music_enabled", true);
         }
     } catch (const std::exception& e) {
         warning = e.what();
@@ -130,7 +140,12 @@ bool saveSettings(const std::filesystem::path& p, const Settings& s, std::string
         const auto temp = p.string() + ".tmp";
         {
             std::ofstream out(temp);
-            out << Json{{"version", 1}, {"audio", s.values}}.dump(2) << '\n';
+            out << Json{{"version", 2},
+                        {"audio", s.values},
+                        {"music_volume", s.musicVolume},
+                        {"music_enabled", s.musicEnabled}}
+                       .dump(2)
+                << '\n';
             out.close();
             if (!out)
                 throw std::runtime_error("Cannot write settings");

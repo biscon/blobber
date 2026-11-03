@@ -18,6 +18,9 @@ class Journal {
   public:
     static constexpr unsigned capacity = 1024;
     bool enabled = true;
+    // Non-droppable transport state, independent of cue capacity/enabled.
+    bool encounterActive = false;
+    std::uint64_t encounter = 0;
     void emit(Event event) noexcept;
     void combat(const CombatOutcome&) noexcept;
     void clear() noexcept { count = 0; }

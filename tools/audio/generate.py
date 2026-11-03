@@ -59,6 +59,12 @@ def main():
             for index,v in enumerate(c['variants']):
                 if args.variant and v['id']!=args.variant:continue
                 output=AUDIO/v['path']
+                if r.get('source')=='retained':
+                    if output.parent!=AUDIO/'replacements':raise ValueError('Retained sample must live in replacements/')
+                    if args.dry_run:print(name,v['id'],'preserve',output);continue
+                    metrics(output,c.get('loop',False))
+                    checked+=1
+                    continue
                 if output.parent!=AUDIO/'generated':raise ValueError('Refusing non-generated output')
                 if args.dry_run:print(name,v['id'],output);continue
                 if not args.validate:
@@ -107,6 +113,19 @@ def main():
             rows.append(f'<label>{v["id"]} <audio controls preload="none" src="{html.escape(v["path"])}"></audio></label>');playlist.append(v['path'])
         rows.append('</section>')
     (AUDIO/'audition.html').write_text('\n'.join(rows));(AUDIO/'audition.m3u').write_text('\n'.join(playlist)+'\n')
+    retained=[name for name in cues if recipes[name].get('source')=='retained']
+    if retained:
+        selected=['<!doctype html><meta charset="utf-8"><title>Selected Blobber sounds</title>',
+                  '<style>body{background:#151d1d;color:#ddd;font:16px system-ui;max-width:850px;margin:32px auto;padding:0 18px}section{border-top:1px solid #789;padding:12px 0}audio{display:block;width:100%;max-width:600px;margin:8px 0}</style>',
+                  '<h1>Selected sounds</h1><p>The five retained model exports and the revised short encounter chime. All other cues keep their current synth sounds. The model and rejected samples have been removed.</p>']
+        for name in ['encounter']+retained:
+            if name not in cues:continue
+            selected.append('<section><h2>'+html.escape(name)+'</h2><p>'+html.escape(recipes[name].get('description',''))+'</p>')
+            for variant in cues[name]['variants']:
+                selected.append(f'<audio controls preload="none" src="{html.escape(variant["path"])}"></audio>')
+            selected.append('</section>')
+        selected.append('<script>document.addEventListener("play",e=>{if(e.target.tagName==="AUDIO")for(const a of document.querySelectorAll("audio"))if(a!==e.target)a.pause()},true)</script>')
+        (AUDIO/'selected-audition.html').write_text('\n'.join(selected))
     (AUDIO/'generated/review.txt').write_text('All sounds remain pending subjective acceptance. Priority listening review:\n'+'\n'.join(review)+'\n')
     print(f'{checked} exports mechanically checked ({len(report)} recorded in bank); listening acceptance pending.')
 if __name__=='__main__':main()

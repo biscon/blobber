@@ -18,6 +18,7 @@ struct Cue {
 struct Bank {
     std::vector<Cue> cues;
     std::string warning;
+    std::array<float, 5> categoryGain{{1, 1, 1, 1, 1}};
 };
 Bank loadBank(const std::filesystem::path&);
 std::filesystem::path settingsPath(const std::filesystem::path& overridePath = {});

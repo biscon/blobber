@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8"><title>Blobber audio audition</title><style>body{background:#151d1d;color:#ddd;font:16px sans-serif;max-width:1000px;margin:30px auto}section{border-top:1px solid #789;padding:12px}audio{width:300px}small{color:#dcc58f}a{color:#acd}</style><h1>Underkeep sound bank</h1><p>Generated provisional sound design. Creature voices and creaks need listening review. Use game Settings to assess mix balance.</p>
-<h2>Revised synth palette — start here</h2><p><a href="#advancement">advancement</a> · <a href="#key.pickup">key.pickup</a> · <a href="#loot.pickup">loot.pickup</a> · <a href="#inventory.equip">inventory.equip</a> · <a href="#inventory.move">inventory.move</a> · <a href="#inventory.drop">inventory.drop</a> · <a href="#potion">potion</a> · <a href="#radiant">radiant</a> · <a href="#healing">healing</a> · <a href="#ice">ice</a> · <a href="#control">control</a> · <a href="#arcane">arcane</a> · <a href="#ui.confirm">ui.confirm</a> · <a href="#ui.cancel">ui.cancel</a> · <a href="#ui.reject">ui.reject</a> · <a href="#victory">victory</a> · <a href="#defeat">defeat</a> · <a href="#travel">travel</a> · <a href="#recovery">recovery</a> · <a href="#inventory.unequip">inventory.unequip</a></p>
+<h2>Revised synth palette — start here</h2><p><a href="#advancement">advancement</a> · <a href="#key.pickup">key.pickup</a> · <a href="#loot.pickup">loot.pickup</a> · <a href="#inventory.equip">inventory.equip</a> · <a href="#inventory.move">inventory.move</a> · <a href="#inventory.drop">inventory.drop</a> · <a href="#potion">potion</a> · <a href="#healing">healing</a> · <a href="#ice">ice</a> · <a href="#control">control</a> · <a href="#arcane">arcane</a> · <a href="#ui.confirm">ui.confirm</a> · <a href="#ui.cancel">ui.cancel</a> · <a href="#ui.reject">ui.reject</a> · <a href="#victory">victory</a> · <a href="#defeat">defeat</a> · <a href="#travel">travel</a> · <a href="#recovery">recovery</a> · <a href="#inventory.unequip">inventory.unequip</a></p>
 <section id="party.step"><h2>party.step</h2>
 <label>01 <audio controls preload="none" src="generated/party.step_01.wav"></audio></label>
 <label>02 <audio controls preload="none" src="generated/party.step_02.wav"></audio></label>
@@ -269,10 +269,8 @@
 <label>03 <audio controls preload="none" src="generated/weapon.release_03.wav"></audio></label>
 </section>
 <section id="radiant"><h2>radiant</h2>
-<p>Clear high chimes above a warm tonal halo.</p>
-<label>01 <audio controls preload="none" src="generated/radiant_01.wav"></audio></label>
-<label>02 <audio controls preload="none" src="generated/radiant_02.wav"></audio></label>
-<label>03 <audio controls preload="none" src="generated/radiant_03.wav"></audio></label>
+<p>User-selected radiant candidate A; retained WAV, no model required. See replacements/provenance.json.</p>
+<label>01 <audio controls preload="none" src="replacements/radiant_a.wav"></audio></label>
 </section>
 <section id="healing"><h2>healing</h2>
 <p>Warm sustained harmonic healing with a soft attack and light shimmer.</p>
@@ -281,14 +279,12 @@
 <label>03 <audio controls preload="none" src="generated/healing_03.wav"></audio></label>
 </section>
 <section id="dark"><h2>dark</h2>
-<label>01 <audio controls preload="none" src="generated/dark_01.wav"></audio></label>
-<label>02 <audio controls preload="none" src="generated/dark_02.wav"></audio></label>
-<label>03 <audio controls preload="none" src="generated/dark_03.wav"></audio></label>
+<p>User-selected dark candidate B; retained WAV, no model required. See replacements/provenance.json.</p>
+<label>01 <audio controls preload="none" src="replacements/dark_b.wav"></audio></label>
 </section>
 <section id="fire"><h2>fire</h2>
-<label>01 <audio controls preload="none" src="generated/fire_01.wav"></audio></label>
-<label>02 <audio controls preload="none" src="generated/fire_02.wav"></audio></label>
-<label>03 <audio controls preload="none" src="generated/fire_03.wav"></audio></label>
+<p>User-selected fire candidate B; retained WAV, no model required. See replacements/provenance.json.</p>
+<label>01 <audio controls preload="none" src="replacements/fire_b.wav"></audio></label>
 </section>
 <section id="ice"><h2>ice</h2>
 <p>Brittle glass-like tinkling over a brief dry frost hiss.</p>
@@ -312,9 +308,8 @@
 <label>03 <audio controls preload="none" src="generated/poison_03.wav"></audio></label>
 </section>
 <section id="thunder"><h2>thunder</h2>
-<label>01 <audio controls preload="none" src="generated/thunder_01.wav"></audio></label>
-<label>02 <audio controls preload="none" src="generated/thunder_02.wav"></audio></label>
-<label>03 <audio controls preload="none" src="generated/thunder_03.wav"></audio></label>
+<p>User-selected thunder candidate B; retained WAV, no model required. See replacements/provenance.json.</p>
+<label>01 <audio controls preload="none" src="replacements/thunder_b.wav"></audio></label>
 </section>
 <section id="control"><h2>control</h2>
 <p>A low, soft sustained open fifth for sleep and binding magic.</p>
@@ -353,6 +348,7 @@
 <label>02 <audio controls preload="none" src="generated/effect.change_02.wav"></audio></label>
 </section>
 <section id="encounter"><h2>encounter</h2>
+<p>A short, clear struck warning chime at fight start; no heartbeat rhythm.</p>
 <label>01 <audio controls preload="none" src="generated/encounter_01.wav"></audio></label>
 <label>02 <audio controls preload="none" src="generated/encounter_02.wav"></audio></label>
 </section>
@@ -388,7 +384,8 @@
 <label>01 <audio controls preload="none" src="generated/web.loop_01.wav"></audio></label>
 </section>
 <section id="spiritual.loop"><h2>spiritual.loop</h2>
-<label>01 <audio controls preload="none" src="generated/spiritual.loop_01.wav"></audio></label>
+<p>User-selected spiritual.loop candidate A; retained WAV, no model required. See replacements/provenance.json.</p>
+<label>01 <audio controls preload="none" src="replacements/spiritual_loop_a.wav"></audio></label>
 </section>
 <section id="mirror.shatter"><h2>mirror.shatter</h2>
 <label>01 <audio controls preload="none" src="generated/mirror.shatter_01.wav"></audio></label>

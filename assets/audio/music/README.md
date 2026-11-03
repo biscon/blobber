@@ -1,0 +1,50 @@
+# Combat music
+
+The 21 supplied Nick Panek MP3s are played directly; no authoring/model tools are
+needed on a player's machine. Original downloads are unchanged. Titles are readable
+versions of their filenames (these files do not contain embedded title/artist tags).
+
+In **Settings / Audio**, use **Combat music** to drag the volume slider, or select it
+with Tab and adjust with Left/Right. The separate On/Off button remembers the chosen
+volume. Music starts enabled at 50%. Master also controls music. Pause/settings and
+focus loss freeze playback; spell selection and other tactical panels keep it going.
+
+Each encounter starts the next shuffled track from the beginning. Longer fights
+advance through tracks. Ending combat fades only the current song for up to five
+seconds; a new encounter interrupts that fade with the next song. Muting freezes the
+current track, which resumes if the same encounter is still active. Muted encounters
+do not consume playlist entries. The title announcement is hidden while muted.
+
+## Editing the bank
+
+Edit `playlist.json` to change a display title, artist, relative path or `gain_db`.
+Keep the `id` when replacing a song to preserve its place in the rotation. Add or
+remove manifest entries to change the playlist (up to 64 tracks); simply dropping
+an unlisted file into the directory does not activate it. Missing/invalid files are
+skipped with a startup diagnostic. Paths stay within this music directory. Use
+printable ASCII titles for the existing HUD font atlas; long titles wrap/truncate.
+
+`gain_db` is an attenuation-only trim (-60 through 0 dB), independent of the Music
+slider. The current values target -18 LUFS and at most -3 dBTP using FFmpeg analysis;
+measurements are recorded beside each track. The final runtime limiter also protects
+combined effects/music peaks. Listen and adjust the slider to taste.
+
+To remeasure the MP3s under `combat/` without changing audio bytes:
+
+```sh
+nice -n 15 ionice -c 3 python3 tools/audio/music_levels.py
+```
+
+This rebuilds the manifest from that directory, preserving existing IDs/titles/artist
+for matching paths and updating measured levels/trims. It requires FFmpeg offline.
+
+The shuffled order and cursor live in `music-state.json` beside your settings
+(normally `~/.config/blobber/`). It is independent of campaign saves and is flushed
+on menu exit from gameplay, settings, travel and orderly shutdown. A crash may lose
+progress since the last checkpoint. To reset the rotation, remove that file while
+Blobber is closed. The next encounter after restarting always starts a new song;
+partial song positions are deliberately not saved.
+
+Source/provenance: tracks supplied by the user as royalty-free Nick Panek downloads.
+Original filenames and artist credit are retained; no new license verification or
+source attribution beyond the supplied information is claimed.

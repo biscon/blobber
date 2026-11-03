@@ -1,9 +1,25 @@
 # System design
 
-Audio authoring revision (implemented, listening review pending):
+Combat music (implemented and mechanically verified): [persistent playlist and animated track announcements](combat_music.md)
+plays the 21 supplied Nick Panek tracks, with independent settings, bounded prepared
+streams, five-second/remaining-time fades and local shuffle persistence. Headless
+and runtime checks, muted real MP3 integration and hidden UI captures pass; listening
+balance and interactive acceptance remain user review.
+
+Audio loudness correction (implemented and verified): [mix gain and peak protection](audio_mix.md)
+raises runtime bus levels without rewriting samples or user settings; a final
+stereo-linked limiter bounds overlapping peaks before device output.
+
+Organic audio experiment (closed): [listening selections and retirement](audio_model_pass.md)
+retains five selected exports, keeps all other synth cues, and replaces encounter
+with a short bell. The model, task Docker images, credentials and unused audio
+were removed. The active bank has 75 cues / 210 samples; individual replacements
+and Csound authoring remain supported.
+
+Audio authoring revision (implemented, revised synth palette accepted):
 [local model and distinct synth cues](audio_revision.md) records the listening
-feedback, verified offline Docker/GPU generation, 20 redesigned synth cues and
-the level-up bell. Model weights, credentials and experiments remain Git-ignored.
+feedback, the historical local-model trial, 20 redesigned synth cues and
+the level-up bell. The model installation was subsequently retired as above.
 
 Audio delivery (implemented and mechanically verified, 2026-11-02):
 [runtime, editable bank and verification](audio_design.md). Includes 75 cues / 218

@@ -1,6 +1,10 @@
 # Audio authoring revision
 
-Status: implemented and mechanically verified, 2026-11-02; listening review pending.
+Status: implemented and mechanically verified, 2026-11-02; revised synth palette
+accepted in user listening review. The separate [organic candidate pass](audio_model_pass.md)
+adds further model auditions and a new encounter cue for listening review.
+The model trial is now closed: five exports retained, model/setup/unused audio
+removed. See the linked retirement record for the current bank and authoring state.
 The first bank passed mechanical
 checks but failed listening review: excessive shared modal/FM/formant structures
 made unrelated actions sound alike. File count is not perceptual variety.
@@ -63,8 +67,8 @@ acceptance. No full build/test matrix or batch GPU workload.
   All four WAVs are finite, non-silent stereo 44.1 kHz with expected durations and
   unclipped raw peaks. Prompts, seeds, model IDs and hashes accompany the ignored
   outputs. No network was available in the generation containers.
-- Local auditions: `.cache/audio-model/output/index.html`; reproducible commands
-  and selection instructions: [local README](../tools/audio/local/README.md).
+- Historical local auditions: `.cache/audio-model/output/index.html`; these
+  experiments and their model installation tools have since been removed.
   These are unselected raw float experiments, not installed game replacements.
 - Twenty synth cues / 52 variants were selectively rebuilt with Csound and SoX:
   UI confirm/cancel/reject; inventory move/drop/equip/unequip; key/loot pickup;
@@ -85,7 +89,8 @@ acceptance. No full build/test matrix or batch GPU workload.
   tokens, model weights and experimental WAVs are excluded from normal adds; the
   Docker build context permits only its Dockerfile and driver.
 
-Listening acceptance remains with the user. Neither the model outputs nor the new
-bell/palette have been claimed realistic or subjectively approved. Existing creature
+The user subsequently accepted the new synth palette, including the stylized potion,
+healing and control cues. Initial model outputs were considered promising, with the
+hurt performance needing improvement. Existing creature
 and physical combat cues retain their known initial-bank limitations. No desktop
 input, playback automation, full test matrix or host Python/toolchain changes occurred.

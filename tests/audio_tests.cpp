@@ -1,5 +1,6 @@
 #include "audio/bank.hpp"
 #include "audio/events.hpp"
+#include "audio/limiter.hpp"
 #include "audio/policy.hpp"
 #include "game/session.hpp"
 #include "support/check.hpp"
@@ -8,9 +9,48 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <set>
 using namespace blobber;
 int main() {
+    audio::PeakLimiter limiter;
+    limiter.reset(48000);
+    std::array<float, 4> quiet{{.2f, -.1f, -.5f, .4f}};
+    const auto unchanged = quiet;
+    limiter.process(quiet.data(), 2);
+    check(quiet == unchanged, "Quiet stereo passes unchanged");
+    std::array<float, 4> hot{{8.f, -4.f, -16.f, 8.f}};
+    limiter.process(hot.data(), 2);
+    for (float sample : hot)
+        check(std::abs(sample) <= audio::PeakLimiter::ceiling + 1e-6f,
+              "Summed positive/negative peaks stay below the output ceiling");
+    check(std::abs(hot[0] + 2 * hot[1]) < 1e-6f && std::abs(hot[2] + 2 * hot[3]) < 1e-6f,
+          "Linked gain preserves channel balance under limiting");
+    float previousGain = 0;
+    for (unsigned i = 0; i < 48000; ++i) {
+        float frame[]{.1f, -.05f};
+        limiter.process(frame, 1);
+        check(frame[0] >= previousGain && frame[0] <= .1f, "Release recovers without overshoot");
+        previousGain = frame[0];
+    }
+    check(previousGain > .0999f, "Gain recovers after the overload");
+    float invalid[]{std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()};
+    limiter.process(invalid, 1);
+    check(invalid[0] == 0 && invalid[1] == 0, "Invalid samples cannot poison the output");
+    std::array<float, 2048> whole{}, chunked{};
+    for (unsigned i = 0; i < whole.size(); ++i)
+        whole[i] = std::sin(float(i) * .23f) * (i < 512 ? 3.f : .2f);
+    chunked = whole;
+    limiter.reset(44100);
+    limiter.process(whole.data(), 1024);
+    limiter.reset(44100);
+    for (unsigned i = 0; i < 1024; i += 32)
+        limiter.process(chunked.data() + 2 * i, 32);
+    check(whole == chunked, "Limiter behavior is independent of callback partitioning");
+    limiter.reset(48000);
+    quiet = unchanged;
+    limiter.process(quiet.data(), 2);
+    check(quiet == unchanged, "New device starts with no residual attenuation");
     audio::Variation variation;
     unsigned previous = 16;
     for (unsigned cycle = 0; cycle < 10; ++cycle) {
@@ -158,6 +198,23 @@ int main() {
     const auto bank = audio::loadBank(tmp);
     check(bank.cues.size() == 1 && bank.cues[0].variants[0].path == "base.wav" && bank.cues[0].gain == .2f,
           "Per-variant override fallback");
+    check(bank.categoryGain[1] == 1 && bank.categoryGain[4] == 1, "Old banks keep unity bus gain");
+    {
+        std::ofstream f(tmp / "bank.json");
+        f << R"({"mix_gain_db":{"effects":12,"party_footsteps":6},"cues":{}})";
+    }
+    const auto boosted = audio::loadBank(tmp);
+    check(std::abs(boosted.categoryGain[1] - 3.9810717f) < 1e-5f &&
+              std::abs(boosted.categoryGain[4] - 1.9952623f) < 1e-5f && boosted.categoryGain[2] == 1,
+          "Bus dB controls convert once; absent categories retain unity");
+    for (const char* malformed :
+         {R"({"mix_gain_db":2,"cues":{}})", R"({"mix_gain_db":{"effects":100},"cues":{}})"}) {
+        {
+            std::ofstream f(tmp / "bank.json");
+            f << malformed;
+        }
+        check(!audio::loadBank(tmp).warning.empty(), "Malformed/excessive mix gain is diagnosed");
+    }
     std::filesystem::remove_all(tmp);
     std::cout << "Audio policy and events passed\n";
 }

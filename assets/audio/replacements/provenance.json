@@ -1,0 +1,211 @@
+{
+  "dark": {
+    "selection": "B",
+    "path": "replacements/dark_b.wav",
+    "origin": "AI-generated; selected by user from organic-v1 audition",
+    "license_reference": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx/blob/05ca3857881c94a2b84026b1111c537d78f5f9f0/LICENSE.md",
+    "raw_sha256": "f554ddaad9c5b7ce8d83c2aebafa5aa2d695bfe132de52e44e30b7c04ebabd3b",
+    "trim_start": 0.025,
+    "bursts": 1,
+    "processing": "SoX highpass 35Hz; 48kHz; wrap equal-power 1.25s or energy trim + 2/20ms edge fades; peak -6dBFS; PCM16",
+    "metrics": {
+      "seconds": 2.085,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -24.03861985089403,
+      "dc": 4.1177995103916866e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "7860b587ac07ab8a86cfb15c3daf65040dcdea0c23d8c6d3210ae7c61db12e89"
+    },
+    "review_flags": [
+      "Long for a one-shot; inspect action timing before use"
+    ],
+    "provenance": {
+      "model": "stabilityai/stable-audio-3-small-sfx",
+      "revision": "05ca3857881c94a2b84026b1111c537d78f5f9f0",
+      "source_revision": "5f5e6ac21ae9ff78a6e8847eb7a1dcbe969ffb84",
+      "prompt": "A shadow spell released, dry rushing air contracts into a deep soft thump, no music. Close dry isolated game sound effect, no background music.",
+      "duration": 3,
+      "seed": 12479,
+      "steps": 8,
+      "cfg_scale": 1,
+      "generated": true,
+      "sample_rate": 44100,
+      "peak": 0.44287109375,
+      "seconds": 0.2188670359992102,
+      "torch": "2.7.1+cu126",
+      "device": "NVIDIA GeForce RTX 3060",
+      "peak_vram_bytes": 2284434432,
+      "sha256": "f554ddaad9c5b7ce8d83c2aebafa5aa2d695bfe132de52e44e30b7c04ebabd3b",
+      "listening_review": "pending"
+    },
+    "listening_review": "Selected by user in organic-v1; installed unchanged"
+  },
+  "radiant": {
+    "selection": "A",
+    "path": "replacements/radiant_a.wav",
+    "origin": "AI-generated; selected by user from organic-v1 audition",
+    "license_reference": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx/blob/05ca3857881c94a2b84026b1111c537d78f5f9f0/LICENSE.md",
+    "raw_sha256": "ada25294b9808a32dcf0b0c6fd8f38b37c0e0db940f9f3d03c86704eaedc1da8",
+    "trim_start": 0.0,
+    "bursts": 1,
+    "processing": "SoX highpass 35Hz; 48kHz; wrap equal-power 1.25s or energy trim + 2/20ms edge fades; peak -6dBFS; PCM16",
+    "metrics": {
+      "seconds": 1.81,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.159797255678583,
+      "dc": 3.6671675371201655e-07,
+      "seam": 0.0,
+      "sha256": "052b7a508e8873fc7aea1e4f41f9a97061f1324e83321377f81eb9b2cc8f889f"
+    },
+    "review_flags": [
+      "Long for a one-shot; inspect action timing before use"
+    ],
+    "provenance": {
+      "model": "stabilityai/stable-audio-3-small-sfx",
+      "revision": "05ca3857881c94a2b84026b1111c537d78f5f9f0",
+      "source_revision": "5f5e6ac21ae9ff78a6e8847eb7a1dcbe969ffb84",
+      "prompt": "One holy light spell bursts, luminous crystalline shimmer with a warm airy impact. Close dry isolated game sound effect, no background music.",
+      "duration": 3,
+      "seed": 12341,
+      "steps": 8,
+      "cfg_scale": 1,
+      "generated": true,
+      "sample_rate": 44100,
+      "peak": 0.5146484375,
+      "seconds": 0.2142726109996147,
+      "torch": "2.7.1+cu126",
+      "device": "NVIDIA GeForce RTX 3060",
+      "peak_vram_bytes": 2284434432,
+      "sha256": "ada25294b9808a32dcf0b0c6fd8f38b37c0e0db940f9f3d03c86704eaedc1da8",
+      "listening_review": "pending"
+    },
+    "listening_review": "Selected by user in organic-v1; installed unchanged"
+  },
+  "fire": {
+    "selection": "B",
+    "path": "replacements/fire_b.wav",
+    "origin": "AI-generated; selected by user from organic-v1 audition",
+    "license_reference": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx/blob/05ca3857881c94a2b84026b1111c537d78f5f9f0/LICENSE.md",
+    "raw_sha256": "09dfde149bb4c26729771fe5cbd1e81d14a7a89d48ef2300e84137d1371acb2a",
+    "trim_start": 0.085,
+    "bursts": 2,
+    "processing": "SoX highpass 35Hz; 48kHz; wrap equal-power 1.25s or energy trim + 2/20ms edge fades; peak -6dBFS; PCM16",
+    "metrics": {
+      "seconds": 2.015,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.637964554620133,
+      "dc": 4.88117176999328e-07,
+      "seam": 0.0,
+      "sha256": "d45bde7a3021400a578161766e98c9f034c0796e78294daa59c93e45e12212bf"
+    },
+    "review_flags": [
+      "Separated bursts: check for unwanted repeated actions",
+      "Long for a one-shot; inspect action timing before use"
+    ],
+    "provenance": {
+      "model": "stabilityai/stable-audio-3-small-sfx",
+      "revision": "05ca3857881c94a2b84026b1111c537d78f5f9f0",
+      "source_revision": "5f5e6ac21ae9ff78a6e8847eb7a1dcbe969ffb84",
+      "prompt": "A compact fireball release and hit, short hot rushing flame and crisp ember pops. Close dry isolated game sound effect, no background music.",
+      "duration": 3,
+      "seed": 12580,
+      "steps": 8,
+      "cfg_scale": 1,
+      "generated": true,
+      "sample_rate": 44100,
+      "peak": 0.68359375,
+      "seconds": 0.21793592799986072,
+      "torch": "2.7.1+cu126",
+      "device": "NVIDIA GeForce RTX 3060",
+      "peak_vram_bytes": 2284434432,
+      "sha256": "09dfde149bb4c26729771fe5cbd1e81d14a7a89d48ef2300e84137d1371acb2a",
+      "listening_review": "pending"
+    },
+    "listening_review": "Selected by user in organic-v1; installed unchanged"
+  },
+  "thunder": {
+    "selection": "B",
+    "path": "replacements/thunder_b.wav",
+    "origin": "AI-generated; selected by user from organic-v1 audition",
+    "license_reference": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx/blob/05ca3857881c94a2b84026b1111c537d78f5f9f0/LICENSE.md",
+    "raw_sha256": "3b269330c02c85b7b37736b22f2da85c09031dcd5b79da3c2a291aba3e13ad41",
+    "trim_start": 0.025,
+    "bursts": 1,
+    "processing": "SoX highpass 35Hz; 48kHz; wrap equal-power 1.25s or energy trim + 2/20ms edge fades; peak -6dBFS; PCM16",
+    "metrics": {
+      "seconds": 1.915,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -22.99685923168656,
+      "dc": 1.3220299836134683e-06,
+      "seam": 0.0,
+      "sha256": "136652d2fae66ebe4a4ab66ec30b1d553a861951cb04e062982187ccc750dd4b"
+    },
+    "review_flags": [
+      "Long for a one-shot; inspect action timing before use"
+    ],
+    "provenance": {
+      "model": "stabilityai/stable-audio-3-small-sfx",
+      "revision": "05ca3857881c94a2b84026b1111c537d78f5f9f0",
+      "source_revision": "5f5e6ac21ae9ff78a6e8847eb7a1dcbe969ffb84",
+      "prompt": "A compact thunderwave blast, sudden air concussion and a short rolling bass decay. Close dry isolated game sound effect, no background music.",
+      "duration": 3,
+      "seed": 13085,
+      "steps": 8,
+      "cfg_scale": 1,
+      "generated": true,
+      "sample_rate": 44100,
+      "peak": 0.7578125,
+      "seconds": 0.2086715360001108,
+      "torch": "2.7.1+cu126",
+      "device": "NVIDIA GeForce RTX 3060",
+      "peak_vram_bytes": 2284434432,
+      "sha256": "3b269330c02c85b7b37736b22f2da85c09031dcd5b79da3c2a291aba3e13ad41",
+      "listening_review": "pending"
+    },
+    "listening_review": "Selected by user in organic-v1; installed unchanged"
+  },
+  "spiritual.loop": {
+    "selection": "A",
+    "path": "replacements/spiritual_loop_a.wav",
+    "origin": "AI-generated; selected by user from organic-v1 audition",
+    "license_reference": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx/blob/05ca3857881c94a2b84026b1111c537d78f5f9f0/LICENSE.md",
+    "raw_sha256": "36cbbd74c073c9d2b1a6bbd261dfe2d7e9e368db15213fe5391d68d9daa32215",
+    "trim_start": 0,
+    "bursts": 0,
+    "processing": "SoX highpass 35Hz; 48kHz; wrap equal-power 1.25s or energy trim + 2/20ms edge fades; peak -6dBFS; PCM16",
+    "metrics": {
+      "seconds": 14.75,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.028596038040764,
+      "dc": 2.1379546257062146e-08,
+      "seam": 0.0001220703125,
+      "sha256": "c3bbf684045e0e29aa05bb92bfdc0364c4701d147102abbb8e2fc2f9f33da1ed"
+    },
+    "review_flags": [],
+    "provenance": {
+      "model": "stabilityai/stable-audio-3-small-sfx",
+      "revision": "05ca3857881c94a2b84026b1111c537d78f5f9f0",
+      "source_revision": "5f5e6ac21ae9ff78a6e8847eb7a1dcbe969ffb84",
+      "prompt": "A softly hovering magical spectral weapon, very quiet airy shimmering resonance, diffuse and nonmelodic. Continuous restrained texture, no beat, no music, no voice, no start or end.",
+      "duration": 16,
+      "seed": 13755,
+      "steps": 8,
+      "cfg_scale": 1,
+      "generated": true,
+      "sample_rate": 44100,
+      "peak": 0.82568359375,
+      "seconds": 0.35694788200089533,
+      "torch": "2.7.1+cu126",
+      "device": "NVIDIA GeForce RTX 3060",
+      "peak_vram_bytes": 2284434432,
+      "sha256": "36cbbd74c073c9d2b1a6bbd261dfe2d7e9e368db15213fe5391d68d9daa32215",
+      "listening_review": "pending"
+    },
+    "listening_review": "Selected by user in organic-v1; installed unchanged"
+  }
+}

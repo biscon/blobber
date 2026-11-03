@@ -1,8 +1,10 @@
 #include "platform/presenter.hpp"
 #include "assets/image.hpp"
 #include "assets/prepared_image.hpp"
+#include "platform/audio.hpp"
 #include "rlgl.h"
 #include "ui/hud.hpp"
+#include "ui/music_banner.hpp"
 #include <cmath>
 #include <cstdio>
 #include <stdexcept>
@@ -120,6 +122,8 @@ void Presenter::compose(const Texture2D& texture, bool flipped, const MovementSt
     drawUI(state, debug, map, hud, &fonts_, &uiArt_);
     if (debug)
         drawMapOverlay(state, map, &fonts_, generation, hud, reveal);
+    if (audio && hud && !hud->modal() && !debug)
+        drawMusicBanner(audio->musicBanner(), fonts_);
     drawHudOverlay(hud, picking, &fonts_, &uiArt_);
     EndBlendMode();
     EndTextureMode();

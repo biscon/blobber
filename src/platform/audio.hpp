@@ -2,6 +2,7 @@
 #include "audio/bank.hpp"
 #include "audio/events.hpp"
 #include "game/session.hpp"
+#include "platform/combat_music.hpp"
 #include <raylib.h>
 namespace blobber {
 class AudioRuntime {
@@ -12,7 +13,8 @@ class AudioRuntime {
     AudioRuntime& operator=(const AudioRuntime&) = delete;
     void prepare(const std::filesystem::path&, bool disabled = false,
                  const std::filesystem::path& settings = {});
-    void update(GameSession*, bool paused, bool focused, float dt);
+    void update(GameSession*, bool paused, bool focused, float dt, bool musicPaused = true,
+                bool bannerVisible = true);
     audio::Handle play(const char*, float x = 0, float z = 0, bool positional = false, bool interface = false,
                        unsigned priority = 0);
     bool stop(audio::Handle) noexcept;
@@ -22,9 +24,12 @@ class AudioRuntime {
     float worldGain = 1; // Travel fade, never persisted.
     bool ready() const noexcept { return ready_; }
     void persist();
+    void persistMusic(); // Explicit I/O boundary, never called by update.
+    MusicBanner musicBanner() const noexcept { return music_.banner(); }
     const std::string& warning() const noexcept { return warning_; }
 
   private:
+    CombatMusic music_;
     struct Sample {
         Sound source{};
         std::array<Sound, 8> voices{};
@@ -52,6 +57,7 @@ class AudioRuntime {
     std::filesystem::path root_, settingsPath_;
     std::string warning_;
     bool ready_ = false, worldPaused_ = false, focused_ = true;
+    bool limiterAttached_ = false;
     std::uint64_t owner_ = 0, sequence_ = 0, world_ = 0;
     float x_ = 0, z_ = 0, rx_ = 1, rz_ = 0;
     GameSession* session_ = nullptr;

@@ -78,6 +78,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         AudioRuntime* audio;
         ~AudioLeave() {
             if (audio) {
+                audio->persistMusic();
                 audio->detach();
                 audio->worldGain = 1;
             }
@@ -262,8 +263,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 }
                 presenter.presentCached(1); // A fully black frame precedes any destination work.
                 fade.blackPresented();
-                if (presenter.audio)
+                if (presenter.audio) {
+                    presenter.audio->persistMusic();
                     presenter.audio->update(&current->session, true, IsWindowFocused(), 0);
+                }
                 bool closing = false;
                 {
                     LoadingScreen travelLoading(presenter.loadingWorker(), &presenter, true);
@@ -337,7 +340,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 return PlayOutcome::Quit;
             if (presenter.audio)
                 presenter.audio->update(&view.session, paused || view.commands.snapshot().modal(),
-                                        sample.ui.focused, dt);
+                                        sample.ui.focused, dt, view.commands.snapshot().menuOpen || debug,
+                                        !view.commands.snapshot().modal() && !debug);
             if (view.commands.saveMenu().settingsRequested) {
                 view.commands.saveMenu().settingsRequested = false;
                 runAudioSettings(presenter, &view.session);

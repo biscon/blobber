@@ -4616,168 +4616,6 @@
     },
     "recipe_sha256": "b2b2c419f03dd727de8df54ccd58eb79c4694fdededf7a05a873d0994976c948"
   },
-  "generated/radiant_01.wav": {
-    "cue": "radiant",
-    "variant": "01",
-    "seed": 5646,
-    "recipe": {
-      "duration": 0.85,
-      "seed": 5646,
-      "review": false,
-      "revision": 2,
-      "description": "Clear high chimes above a warm tonal halo.",
-      "layers": [
-        {
-          "instrument": 9,
-          "frequency": 1567.98,
-          "duration": 0.75,
-          "start": 0,
-          "gain": 1,
-          "tone": 0.9
-        },
-        {
-          "instrument": 9,
-          "frequency": 2349.32,
-          "duration": 0.6,
-          "start": 0.1,
-          "gain": 0.4,
-          "tone": 1
-        },
-        {
-          "instrument": 13,
-          "frequency": 783.99,
-          "duration": 0.8,
-          "start": 0,
-          "gain": 0.4,
-          "tone": 1
-        }
-      ]
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.85,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -21.77906934323711,
-      "dc": 2.0876117781096813e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "e6b2466e49c6173214f1e2d6c102cb2c3ffb845da1c3cb0305368874d508b684"
-    },
-    "recipe_sha256": "5cd98d78f8fe5fc29677b78b24e0b82dfa8dc49f9e9634fd9c053d8a9a723cc9"
-  },
-  "generated/radiant_02.wav": {
-    "cue": "radiant",
-    "variant": "02",
-    "seed": 5663,
-    "recipe": {
-      "duration": 0.85,
-      "seed": 5646,
-      "review": false,
-      "revision": 2,
-      "description": "Clear high chimes above a warm tonal halo.",
-      "layers": [
-        {
-          "instrument": 9,
-          "frequency": 1567.98,
-          "duration": 0.75,
-          "start": 0,
-          "gain": 1,
-          "tone": 0.9
-        },
-        {
-          "instrument": 9,
-          "frequency": 2349.32,
-          "duration": 0.6,
-          "start": 0.1,
-          "gain": 0.4,
-          "tone": 1
-        },
-        {
-          "instrument": 13,
-          "frequency": 783.99,
-          "duration": 0.8,
-          "start": 0,
-          "gain": 0.4,
-          "tone": 1
-        }
-      ]
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.85,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -21.62142841495616,
-      "dc": 2.129498650045956e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "3602990106f1ef30fd244633f9bfafe93bd9c97f136e0f885f8e7939fe1071b4"
-    },
-    "recipe_sha256": "80f6caa607ee0ff064edb5b932f428a00f36b3bc839865666c3c71019ff2e077"
-  },
-  "generated/radiant_03.wav": {
-    "cue": "radiant",
-    "variant": "03",
-    "seed": 5680,
-    "recipe": {
-      "duration": 0.85,
-      "seed": 5646,
-      "review": false,
-      "revision": 2,
-      "description": "Clear high chimes above a warm tonal halo.",
-      "layers": [
-        {
-          "instrument": 9,
-          "frequency": 1567.98,
-          "duration": 0.75,
-          "start": 0,
-          "gain": 1,
-          "tone": 0.9
-        },
-        {
-          "instrument": 9,
-          "frequency": 2349.32,
-          "duration": 0.6,
-          "start": 0.1,
-          "gain": 0.4,
-          "tone": 1
-        },
-        {
-          "instrument": 13,
-          "frequency": 783.99,
-          "duration": 0.8,
-          "start": 0,
-          "gain": 0.4,
-          "tone": 1
-        }
-      ]
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.85,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -21.695011020093816,
-      "dc": 2.0935956169577206e-06,
-      "seam": 3.0517578125e-05,
-      "sha256": "7b9ce33f89f4c991e57d0a7c32062292d5de442ee8185e545a00daeadc6cf38a"
-    },
-    "recipe_sha256": "68b7a2653bb0bdf6097f4d61c806569b285eb6b9d8450da9e5c227344e8e3506"
-  },
   "generated/healing_01.wav": {
     "cue": "healing",
     "variant": "01",
@@ -4939,180 +4777,6 @@
       "sha256": "d4702df68236a98d704b90b99a3464bae70a355a68f2b7dc2d2c61786223c19e"
     },
     "recipe_sha256": "a595e7319abc15eae8ae173be166d0c2dfbf41f7f4c173ae287a94fddaae63c7"
-  },
-  "generated/dark_01.wav": {
-    "cue": "dark",
-    "variant": "01",
-    "seed": 5848,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 96,
-      "tone": 0.65,
-      "duration": 0.65,
-      "seed": 5848,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.65,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.632309301183838,
-      "dc": 9.077023237179487e-06,
-      "seam": 0.0,
-      "sha256": "ea247696b49a45ab9a85c5ca73df0ecb5ca2134cc2644edee308bb45386512c4"
-    },
-    "recipe_sha256": "ac93b8f0d6207c24abf17599de3a0f41cd7088fa9e4d34efa53c700ef1eeffab"
-  },
-  "generated/dark_02.wav": {
-    "cue": "dark",
-    "variant": "02",
-    "seed": 5865,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 96,
-      "tone": 0.65,
-      "duration": 0.65,
-      "seed": 5848,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.65,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.737565350325546,
-      "dc": 9.216895470252404e-06,
-      "seam": 0.0,
-      "sha256": "0f341724a21c8eed419f2367b70bf5a4b4cbcc46f1af053c9d78bd8fe8402f05"
-    },
-    "recipe_sha256": "046491f719f2f0f9424bbafa8dc23745328b7a3957085119e6fd1b273401c18c"
-  },
-  "generated/dark_03.wav": {
-    "cue": "dark",
-    "variant": "03",
-    "seed": 5882,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 96,
-      "tone": 0.65,
-      "duration": 0.65,
-      "seed": 5848,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.65,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -23.839191619870284,
-      "dc": 8.362990159254808e-06,
-      "seam": 0.0,
-      "sha256": "f20a14f6811ecc118564bb4cfa41002513b3925f1f52883f54a75d1204f9912d"
-    },
-    "recipe_sha256": "8147f344d377f1ba636e71d37ba60c75539f5debfd772ff50676780d2fd47a1d"
-  },
-  "generated/fire_01.wav": {
-    "cue": "fire",
-    "variant": "01",
-    "seed": 5949,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 210,
-      "tone": 2.1,
-      "duration": 0.45,
-      "seed": 5949,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.45,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -24.762130421135573,
-      "dc": 8.04477267795139e-06,
-      "seam": 0.0,
-      "sha256": "845e024bde00ac7edc424f107a72a85196913d901f86605d3eeb7c8da8250530"
-    },
-    "recipe_sha256": "da93d66415f463ab07452e2b66d6de3371f8b4034d29755aea9e2431f5002170"
-  },
-  "generated/fire_02.wav": {
-    "cue": "fire",
-    "variant": "02",
-    "seed": 5966,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 210,
-      "tone": 2.1,
-      "duration": 0.45,
-      "seed": 5949,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.45,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.34963109866046,
-      "dc": 6.511829517505787e-06,
-      "seam": 0.0,
-      "sha256": "2e0a728e66739bcfd3eaf6213baf1a5938681cbe6b23b771524e369cd9d99f7b"
-    },
-    "recipe_sha256": "a1c7b8fc03c3af503e50fd61a7adbfc15ba834d715fe1aef20d2cf99f36ebb02"
-  },
-  "generated/fire_03.wav": {
-    "cue": "fire",
-    "variant": "03",
-    "seed": 5983,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 210,
-      "tone": 2.1,
-      "duration": 0.45,
-      "seed": 5949,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.45,
-      "channels": 1,
-      "peak_dbfs": -5.999419971943649,
-      "rms_dbfs": -24.40092553081292,
-      "dc": 5.9424506293402775e-06,
-      "seam": 0.0,
-      "sha256": "89c0b4820bc54a7ba0839155ea396f85f3bcc3c8449c446c2601554dbbcd4b9d"
-    },
-    "recipe_sha256": "5f0976f6eb21067e42fbaee8adac6295ee925125ab8d69658c978d4da89fa8ff"
   },
   "generated/ice_01.wav": {
     "cue": "ice",
@@ -5560,93 +5224,6 @@
       "sha256": "0e503df92eef9695ade7977e752dbde484a8684fc4a86c68aaf9f5dc441d8fc1"
     },
     "recipe_sha256": "724a51e0e0d62a787862e827f6f79bdf7f66933a177cc053c106e095d12ca0df"
-  },
-  "generated/thunder_01.wav": {
-    "cue": "thunder",
-    "variant": "01",
-    "seed": 6454,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 65,
-      "tone": 0.4,
-      "duration": 0.7,
-      "seed": 6454,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.7,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.608487304463576,
-      "dc": 3.683907645089286e-06,
-      "seam": 0.0,
-      "sha256": "fa09e3dfa417d82b4f9513871b2a886a6846d9706da1156d7fdd759018b9bf6c"
-    },
-    "recipe_sha256": "6615c033fbc4747d5953c56bf8bacc0d025211b1c423438ae777b5094d4ed384"
-  },
-  "generated/thunder_02.wav": {
-    "cue": "thunder",
-    "variant": "02",
-    "seed": 6471,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 65,
-      "tone": 0.4,
-      "duration": 0.7,
-      "seed": 6454,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.7,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.537923309358757,
-      "dc": 2.010890415736607e-06,
-      "seam": 0.0,
-      "sha256": "83a50553f0308f1fa19fddd1b2dee683b1467ea7ae33c4349725be857766e289"
-    },
-    "recipe_sha256": "f80dddbeee9207ad9e0a0fcc0c550801cf0a30ce1483f269191548117a0a2be7"
-  },
-  "generated/thunder_03.wav": {
-    "cue": "thunder",
-    "variant": "03",
-    "seed": 6488,
-    "recipe": {
-      "instrument": 5,
-      "frequency": 65,
-      "tone": 0.4,
-      "duration": 0.7,
-      "seed": 6454,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 0.7,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.79242791197839,
-      "dc": 5.077180408296131e-07,
-      "seam": 0.0,
-      "sha256": "f789247fc1ab40f6bd2b57dc4ae83ebf5b61e5c60295466501c99daea1dd8d6b"
-    },
-    "recipe_sha256": "e163cd4c113e6b9b26484557d496c8d283b92506ab564575caee986742dc9619"
   },
   "generated/control_01.wav": {
     "cue": "control",
@@ -6374,12 +5951,26 @@
     "variant": "01",
     "seed": 7262,
     "recipe": {
-      "instrument": 5,
-      "frequency": 180,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 0.48,
       "seed": 7262,
-      "review": false
+      "review": false,
+      "revision": 4,
+      "description": "A short, clear struck warning chime at fight start; no heartbeat rhythm.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1174.66,
+          "duration": 0.46,
+          "tone": 0.85
+        },
+        {
+          "instrument": 8,
+          "frequency": 587.33,
+          "duration": 0.44,
+          "gain": 0.18,
+          "tone": 0.3
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -6388,27 +5979,41 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 0.48,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -24.522262969138268,
-      "dc": 4.95981287073206e-06,
-      "seam": 0.0,
-      "sha256": "6f5e2e2e25f87dd41d7698911d0bc6f8c69da0b446eea705284aba09594896fa"
+      "rms_dbfs": -23.388316961960413,
+      "dc": 9.987089369032119e-07,
+      "seam": 3.0517578125e-05,
+      "sha256": "24470892c2217090d9cbcf43f2b556cae0bc14769653ca6d34553a945cebdb4e"
     },
-    "recipe_sha256": "f03177c544e2fc5687c27ac5b97e66fbd8aa703b276399a78a811705318d009f"
+    "recipe_sha256": "a2cb486f05cd280662cd20e36759a43e7e863213a7fdbdb2298c5601af8339ee"
   },
   "generated/encounter_02.wav": {
     "cue": "encounter",
     "variant": "02",
     "seed": 7279,
     "recipe": {
-      "instrument": 5,
-      "frequency": 180,
-      "tone": 0.7,
-      "duration": 0.9,
+      "duration": 0.48,
       "seed": 7262,
-      "review": false
+      "review": false,
+      "revision": 4,
+      "description": "A short, clear struck warning chime at fight start; no heartbeat rhythm.",
+      "layers": [
+        {
+          "instrument": 9,
+          "frequency": 1174.66,
+          "duration": 0.46,
+          "tone": 0.85
+        },
+        {
+          "instrument": 8,
+          "frequency": 587.33,
+          "duration": 0.44,
+          "gain": 0.18,
+          "tone": 0.3
+        }
+      ]
     },
     "tools": {
       "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
@@ -6417,15 +6022,15 @@
     "generated": true,
     "review": false,
     "metrics": {
-      "seconds": 0.9,
+      "seconds": 0.48,
       "channels": 1,
       "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -25.26441783357518,
-      "dc": 4.509113453052662e-06,
-      "seam": 0.0,
-      "sha256": "c299243daa1529a9579f11277f41e1a794b4d50d632381b85da83c8934a0e06f"
+      "rms_dbfs": -23.39377512983299,
+      "dc": 9.801652696397569e-07,
+      "seam": 3.0517578125e-05,
+      "sha256": "bdd1d7e569302e5e480f4dbbba38154fd17efd0936834f29102b230840dda27b"
     },
-    "recipe_sha256": "374cd2c8c273412e7284bbca503dbe4b921fcbd08e838d690ec443a2dc178a06"
+    "recipe_sha256": "262ccf345bd9352bb6999242640a7fa1cbf4325f7d33659655f25a7c39fdeaaf"
   },
   "generated/victory_01.wav": {
     "cue": "victory",
@@ -6976,35 +6581,6 @@
       "sha256": "da56584f52d3a77a0a853521e6e826e486a7609fcdd8f09ef2cbf5a6bd5baa48"
     },
     "recipe_sha256": "030c201852f1e0a48a3fbe1b94674e035db813bb052318a8076aa6b8e9c1ef0d"
-  },
-  "generated/spiritual.loop_01.wav": {
-    "cue": "spiritual.loop",
-    "variant": "01",
-    "seed": 8070,
-    "recipe": {
-      "instrument": 7,
-      "frequency": 220,
-      "tone": 370,
-      "duration": 6,
-      "seed": 8070,
-      "review": false
-    },
-    "tools": {
-      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
-      "sox": "sox:      SoX_ng v14.8.0.1"
-    },
-    "generated": true,
-    "review": false,
-    "metrics": {
-      "seconds": 6.0,
-      "channels": 1,
-      "peak_dbfs": -5.99994884152935,
-      "rms_dbfs": -17.36186708307564,
-      "dc": 1.707405514187283e-05,
-      "seam": 0.020751953125,
-      "sha256": "2eb068aca8c4b8920ae02152e99805fc2d3a41b887cf677de4cb48038677f931"
-    },
-    "recipe_sha256": "1fb362ae6c7532edb3a9698efecda7d986b99dc7f63b008ae0849a6ee87e7a4b"
   },
   "generated/mirror.shatter_01.wav": {
     "cue": "mirror.shatter",
