@@ -1,5 +1,13 @@
 # System design
 
+Creature occlusion correction (implemented and mechanically verified, 2026-11-03):
+[stable creature dimensions and shared scenery masks](creature_occlusion.md)
+replaces wall/door/viewport shrinking and lateral anchor fitting with per-fragment
+intersection clipping plus existing depth. CPU picking and GPU drawing share
+bounded masks; simulation and save data are unchanged. Eight focused CPU/headless
+suites and hidden GPU checks pass; production captures are inspected. Interactive
+acceptance remains user review.
+
 Target selection follow-up (implemented and mechanically verified, 2026-11-03):
 [geometry-exposed enemy candidates, compact picker and Tab cycling](target_selection_design.md).
 Twelve affected CPU/headless suites and hidden production-art captures pass;

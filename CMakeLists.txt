@@ -92,7 +92,7 @@ target_link_libraries(blobber_audio_io PUBLIC blobber_core PRIVATE nlohmann_json
 add_library(blobber_world_assets src/assets/world_assets.cpp)
 target_link_libraries(blobber_world_assets PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_assets)
-add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/world_scene.cpp src/render/world_visibility.cpp)
+add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_billboard_clip.cpp)
 target_link_libraries(blobber_world_cpu PUBLIC blobber_core blobber_world_assets PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_cpu)
 

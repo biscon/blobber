@@ -5,6 +5,7 @@
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/creature_occlusion_checks.hpp"
 #include "support/hybrid_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/status_occlusion.hpp"
@@ -55,7 +56,7 @@ void spritesAtDoorLeaves() {
                     allocations = 0;
                     pipeline.update(input);
                     watching = false;
-                    check(allocations == 0, "Door-fitting walking views allocate no C++ storage");
+                    check(allocations == 0, "Door-clipping walking views allocate no C++ storage");
                     bool found = false;
                     for (unsigned n = 0; n < pipeline.frame().count; ++n) {
                         const auto& b = pipeline.frame().billboards[n];
@@ -63,26 +64,39 @@ void spritesAtDoorLeaves() {
                             continue;
                         found = true;
                         const auto actual = actorPosition(*game.actors().actor(id), time);
-                        check(std::floor(b.feet.x * 2) == std::floor(actual.x * 2) &&
-                                  std::floor(b.feet.z * 2) == std::floor(actual.y * 2) &&
-                                  std::hypot(b.feet.x - actual.x, b.feet.z - actual.y) <= .12501f,
-                              "Door fit stays within the moving actor's own visual subslot");
-                        const auto& bounds = assets.bounds[b.texture];
-                        const auto& texture = assets.publication.textures[b.texture];
-                        const float left = std::max(0.f, b.anchorX - float(bounds.left) / texture.width) *
-                                           b.width,
-                                    right = std::max(0.f, float(bounds.right) / texture.width - b.anchorX) *
-                                            b.width;
-                        const auto direction = pipeline.frame().camera.right;
-                        for (unsigned i = 0; i < pipeline.frame().doorCount; ++i) {
-                            const auto& box = pipeline.frame().doors[i];
-                            check(world_render::doorClearance(box, b.feet, {-direction.x, 0, -direction.z},
-                                                              left, b.feet.y,
-                                                              b.feet.y + b.height) >= left - 1e-5f &&
-                                      world_render::doorClearance(box, b.feet, direction, right, b.feet.y,
-                                                                  b.feet.y + b.height) >= right - 1e-5f,
-                                  "Visible rat silhouette cannot intersect the actual door/frame volume");
-                        }
+                        check(std::abs(b.feet.x - actual.x) < 1e-6f &&
+                                  std::abs(b.feet.z - actual.y) < 1e-6f && std::abs(b.width - .7f) < 1e-6f &&
+                                  std::abs(b.height - .3f) < 1e-6f &&
+                                  std::abs(b.shadowRadius - .4f * .45f) < 1e-6f,
+                              "Door traversal preserves the animated anchor, dimensions and shadow");
+                        const auto attached = world_render::attachment(pipeline.frame().camera, b, b.release);
+                        check(std::abs(attached.position.y - (b.feet.y + .3f * (b.anchorY - b.release.y))) <
+                                  1e-6f,
+                              "Door clipping does not move registered attachments");
+                        const auto& camera = pipeline.frame().camera;
+                        const auto foot = world_render::project(camera, b.feet);
+                        for (int y = 0; y < viewHeight; ++y)
+                            for (int x = 0; x < viewWidth; ++x) {
+                                if (pipeline.frame().picking.slot(x, y) != id.slot)
+                                    continue;
+                                const float lateral = (x + .5f - foot.x) * b.depth / world_render::focal();
+                                const world_render::Vec point{b.feet.x + camera.right.x * lateral,
+                                                              b.feet.y + (foot.y - y - .5f) * b.depth /
+                                                                             world_render::focal(),
+                                                              b.feet.z + camera.right.z * lateral};
+                                for (unsigned i = 0; i < pipeline.frame().doorCount; ++i) {
+                                    const auto& box = pipeline.frame().doors[i];
+                                    const float dx = point.x - box.origin.x, dz = point.z - box.origin.z;
+                                    const float u = (dx * box.x.x + dz * box.x.z) /
+                                                    (box.x.x * box.x.x + box.x.z * box.x.z),
+                                                v = (dx * box.z.x + dz * box.z.z) /
+                                                    (box.z.x * box.z.x + box.z.z * box.z.z);
+                                    check(!(u > 1e-4f && u < 1 - 1e-4f && v > 1e-4f && v < 1 - 1e-4f &&
+                                            point.y > box.origin.y + 1e-4f &&
+                                            point.y < box.origin.y + box.y.y - 1e-4f),
+                                          "No pickable body sample remains inside leaf, jamb or lintel");
+                                }
+                            }
                     }
                     if (angle == 300 && time == 600)
                         check(found, "Rat retains a visible billboard in the settled open threshold");
@@ -123,10 +137,10 @@ void spritesAtDoorLeaves() {
                 found = true;
                 const auto point = world_render::project(pipeline.frame().camera, b.feet);
                 check(point.x >= 2 && point.x <= viewWidth - 2,
-                      "Door fitting cannot shift an on-screen target axis beyond the viewport");
+                      "Door clipping preserves the on-screen target axis");
             }
         }
-        check(found, "Door-edge fitting retains the visible moving target");
+        check(found, "Door-edge clipping retains the visible moving target");
         check(pipeline.frame().picking.targets().count == 1,
               "Door-edge target remains selectable through the actual pixel/alpha gate");
     }
@@ -211,20 +225,26 @@ void alphaAnchorsAndWalls() {
         for (unsigned i = 0; i < pipeline.frame().count; ++i)
             if (pipeline.frame().billboards[i].id == 0)
                 billboard = &pipeline.frame().billboards[i];
-        check(billboard && billboard->width < 1.f, "wide actor fits a neighboring wall");
+        check(billboard && billboard->width == 1.f && billboard->height == .7f,
+              "Wide actor retains authored dimensions beside a wall");
         const auto& b = *billboard;
         const auto position = actorPosition(*actors.actor(actors.id(0)), 0);
         check(std::abs(b.feet.x - position.x) < 1e-6f && std::abs(b.feet.z - position.y) < 1e-6f,
-              "fitting preserves the authoritative subcell ground anchor");
-        // Owned source has alpha only in columns [2,10) of a 12-wide canvas.
-        // Crops retain a transparent filtering border which may cross the wall.
-        for (float edge : {-1.f / 3, 1.f / 3}) {
-            const auto right = pipeline.frame().camera.right;
-            const float x = b.feet.x + right.x * b.width * edge;
-            const float z = b.feet.z + right.z * b.width * edge;
-            check(x >= 1 && x <= 8 && z >= 1 && z <= 8,
-                  "visible alpha stays on the floor side of all four walls");
-        }
+              "Clipping preserves the authoritative subcell ground anchor");
+        unsigned samples = 0;
+        const auto foot = world_render::project(pipeline.frame().camera, b.feet);
+        for (int y = 0; y < viewHeight; ++y)
+            for (int x = 0; x < viewWidth; ++x) {
+                if (pipeline.frame().picking.slot(x, y) != 0)
+                    continue;
+                ++samples;
+                const float lateral = (x + .5f - foot.x) * b.depth / world_render::focal();
+                const auto right = pipeline.frame().camera.right;
+                const float wx = b.feet.x + right.x * lateral, wz = b.feet.z + right.z * lateral;
+                check(wx >= 1 - 1e-5f && wx <= 8 + 1e-5f && wz >= 1 - 1e-5f && wz <= 8 + 1e-5f,
+                      "Pickable silhouette never extends inside neighboring walls");
+            }
+        check(samples > 0, "Wall clipping preserves the exposed part of a wide creature");
         const auto canonical = assets.publication.appearances[0].clips[0].textures[0][0];
         const auto& texture = assets.publication.textures[canonical];
         const float top = float(texture.canvas.y + assets.bounds[canonical].top) / texture.canvas.height;
@@ -232,7 +252,7 @@ void alphaAnchorsAndWalls() {
             pipeline.frame().camera,
             {b.feet.x, b.feet.y + b.height * (assets.publication.anchors[canonical].y - top), b.feet.z});
         check(top > 0 && pipeline.picking()->targets().anchors[0].badgeTop == int(std::round(head.y)),
-              "transparent canvas margin does not float the badge above the fitted silhouette");
+              "Transparent canvas margin preserves the full-size badge registration");
     }
     // The reported mixed undead pair keeps distinct front/rear slots even though
     // their projections may overlap. Exercise moving into a used slot.
@@ -245,6 +265,8 @@ void alphaAnchorsAndWalls() {
 } // namespace
 int main() {
     try {
+        test::creatureIntersectionMasks();
+        test::creatureMaskExposure();
         spritesAtDoorLeaves();
         diagonalCombatTarget();
         alphaAnchorsAndWalls();

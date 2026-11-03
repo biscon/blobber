@@ -14,7 +14,5 @@ unsigned doorBoxes(GeometryView, const DoorSnapshot*, std::array<DoorBox, doorBo
                    unsigned guardianEmblem = UINT16_MAX, unsigned guardianDoor = UINT16_MAX);
 std::array<Vec, 8> corners(const DoorBox&) noexcept;
 std::array<float, 2> doorUvSpan(const DoorBox&, unsigned textureWidth, unsigned textureHeight) noexcept;
-// Horizontal ray distance to an oriented box over the sprite's visible height.
-float doorClearance(const DoorBox&, Vec origin, Vec direction, float limit, float low, float high) noexcept;
 std::array<Vec, 4> doorEmblemQuad(const DoorBox&, bool back) noexcept;
 } // namespace blobber::world_render

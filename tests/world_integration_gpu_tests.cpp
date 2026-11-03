@@ -10,6 +10,7 @@
 #include "support/campaign_startup_review.hpp"
 #include "support/check.hpp"
 #include "support/combat_entry_review.hpp"
+#include "support/creature_occlusion_review.hpp"
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
 #include "support/fixture_world.hpp"
@@ -65,6 +66,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--creature-occlusion-review") {
+            test::creatureOcclusionReview(argv[1], argv[2]);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--combat-entry-review") {
             test::combatEntryReview(argv[1], argv[2]);
             return 0;

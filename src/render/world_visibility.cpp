@@ -40,7 +40,7 @@ bool inclusive(float ax, float ay, float bx, float by) {
 }
 void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint16_t id,
               const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
-              bool cutoutOpaque = false) {
+              bool cutoutOpaque = false, const BillboardClips* clips = nullptr) {
     std::array<ClipVertex, 16> a{}, b{};
     unsigned count = 3;
     for (unsigned i = 0; i < 3; ++i) {
@@ -116,6 +116,8 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                         (e0 * t[0].u * iz[0] + e1 * t[1].u * iz[1] + e2 * t[2].u * iz[2]) * z / area;
                     const float v =
                         (e0 * t[0].v * iz[0] + e1 * t[1].v * iz[1] + e2 * t[2].v * iz[2]) * z / area;
+                    if (clips && clips->contains(u, v))
+                        continue;
                     const auto& tex = assets->publication.textures[texture];
                     const unsigned sx =
                         unsigned(std::clamp(int(std::floor(u * tex.width)), 0, int(tex.width) - 1));
@@ -135,10 +137,11 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
     }
 }
 void quad(WorldFrame& out, const std::array<Vec, 4>& p, std::uint16_t id,
-          const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1) {
+          const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
+          const BillboardClips* clips = nullptr) {
     const std::array<Vertex, 4> v{{{p[0], {}, 0, 1}, {p[1], {}, 1, 1}, {p[2], {}, 1, 0}, {p[3], {}, 0, 0}}};
-    triangle(out, {v[0], v[1], v[2]}, id, assets, texture, threshold);
-    triangle(out, {v[0], v[2], v[3]}, id, assets, texture, threshold);
+    triangle(out, {v[0], v[1], v[2]}, id, assets, texture, threshold, false, clips);
+    triangle(out, {v[0], v[2], v[3]}, id, assets, texture, threshold, false, clips);
 }
 template <class F> void cube(Cell c, F emit) {
     const float x = float(c.x), z = float(c.y);
@@ -163,108 +166,6 @@ Vec playerCenter(const MovementState& s) {
     const float p = t.active() ? t.progress() : 1, e = p * p * (3 - 2 * p);
     const auto a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
     return {a.cell.x + .5f + (b.cell.x - a.cell.x) * e, 0, a.cell.y + .5f + (b.cell.y - a.cell.y) * e};
-}
-// Bounded DDA along the camera-facing sprite plane. A solid neighboring cell
-// limits the visible silhouette; fitting never moves the actor's ground anchor.
-float clearance(GeometryView geometry, Vec feet, Vec direction, float limit) noexcept {
-    Cell cell{int(std::floor(feet.x)), int(std::floor(feet.z))};
-    const int sx = direction.x < 0 ? -1 : 1, sz = direction.z < 0 ? -1 : 1;
-    const float infinity = std::numeric_limits<float>::infinity();
-    const float dx = std::abs(direction.x) > epsilon ? 1 / std::abs(direction.x) : infinity;
-    const float dz = std::abs(direction.z) > epsilon ? 1 / std::abs(direction.z) : infinity;
-    float tx = std::isfinite(dx) ? (sx > 0 ? cell.x + 1 - feet.x : feet.x - cell.x) * dx : infinity;
-    float tz = std::isfinite(dz) ? (sz > 0 ? cell.y + 1 - feet.z : feet.z - cell.y) * dz : infinity;
-    for (unsigned step = 0; step < 16; ++step) {
-        const float distance = std::min(tx, tz);
-        if (distance >= limit)
-            return limit;
-        const bool crossX = tx <= tz, crossZ = tz <= tx;
-        // At a corner both side cells must be clear as well as the diagonal.
-        if ((crossX && geometry.solid(cell + Cell{sx, 0})) || (crossZ && geometry.solid(cell + Cell{0, sz})))
-            return std::max(0.f, distance - .005f);
-        if (crossX) {
-            cell.x += sx;
-            tx += dx;
-        }
-        if (crossZ) {
-            cell.y += sz;
-            tz += dz;
-        }
-        if (geometry.solid(cell))
-            return std::max(0.f, distance - .005f);
-    }
-    return 0; // Explicit conservative exhaustion for unusually large appearances.
-}
-float billboardScale(GeometryView geometry, const Camera& camera, Vec feet, float depth, float left,
-                     float right) noexcept {
-    float scale = 1;
-    if (left > epsilon)
-        scale =
-            std::min(scale, clearance(geometry, feet, {-camera.right.x, 0, -camera.right.z}, left) / left);
-    if (right > epsilon)
-        scale = std::min(scale, clearance(geometry, feet, camera.right, right) / right);
-    const float lateral = dot(sub(feet, camera.position), camera.right);
-    const float edge = (viewWidth * .5f - 2) * depth / focal();
-    // Off-screen centers may still have visible partial bodies. Fit on-screen
-    // centers only; normal clipping handles entering/leaving the viewport.
-    if (std::abs(lateral) < edge) {
-        if (left > epsilon)
-            scale = std::min(scale, (edge + lateral) / left);
-        if (right > epsilon)
-            scale = std::min(scale, (edge - lateral) / right);
-    }
-    return std::clamp(scale, 0.f, 1.f);
-}
-float doorScale(const WorldFrame& frame, Vec feet, float left, float right, float low, float high) {
-    float scale = 1;
-    for (unsigned i = 0; i < frame.doorCount; ++i) {
-        if (left > epsilon)
-            scale = std::min(scale, doorClearance(frame.doors[i], feet,
-                                                  {-frame.camera.right.x, 0, -frame.camera.right.z}, left,
-                                                  low, high) /
-                                        left);
-        if (right > epsilon)
-            scale = std::min(
-                scale, doorClearance(frame.doors[i], feet, frame.camera.right, right, low, high) / right);
-    }
-    return scale;
-}
-float subslotShift(Vec feet, Vec direction, float shift) {
-    float low = -.125f, high = .125f;
-    for (const auto pair :
-         {std::array<float, 2>{feet.x, direction.x}, std::array<float, 2>{feet.z, direction.z}}) {
-        if (std::abs(pair[1]) < epsilon)
-            continue;
-        const float base = std::floor(pair[0] * 2) * .5f;
-        const float a = (std::min(pair[0], base + .005f) - pair[0]) / pair[1],
-                    b = (std::max(pair[0], base + .495f) - pair[0]) / pair[1];
-        low = std::max(low, std::min(a, b));
-        high = std::min(high, std::max(a, b));
-    }
-    return std::clamp(shift, low, high);
-}
-float fitDoors(GeometryView geometry, const WorldFrame& frame, Vec& feet, float depth, float left,
-               float right, float low, float high) {
-    const float original = billboardScale(geometry, frame.camera, feet, depth, left, right);
-    float best = std::min(original, doorScale(frame, feet, left, right, low, high));
-    if (best >= original - epsilon)
-        return best;
-    const Vec anchor = feet;
-    for (float requested : {.0625f, -.0625f, .125f, -.125f}) {
-        const float shift = subslotShift(anchor, frame.camera.right, requested);
-        const Vec candidate{anchor.x + shift * frame.camera.right.x, anchor.y,
-                            anchor.z + shift * frame.camera.right.z};
-        const float edge = (viewWidth * .5f - 2) * depth / focal();
-        if (std::abs(dot(sub(candidate, frame.camera.position), frame.camera.right)) >= edge)
-            continue; // A clearance adjustment must not move a target offscreen.
-        const float scale = std::min(billboardScale(geometry, frame.camera, candidate, depth, left, right),
-                                     doorScale(frame, candidate, left, right, low, high));
-        if (scale > best + epsilon) {
-            best = scale;
-            feet = candidate;
-        }
-    }
-    return best;
 }
 } // namespace
 VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::CpuAssets& assets)
@@ -422,7 +323,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const float depth = dot(sub(foot, out.camera.position), out.camera.forward);
             if (depth < nearPlane || depth > farPlane)
                 continue;
-            Vec feet = foot;
+            const Vec feet = foot;
             Billboard b{feet,
                         cl.width ? cl.width : a.width,
                         a.height,
@@ -441,24 +342,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                       float(stored.canvas.y) / stored.canvas.height,
                       float(stored.canvas.x + stored.width) / stored.canvas.width,
                       float(stored.canvas.y + stored.height) / stored.canvas.height};
-            const auto bounds = assets_.bounds[texture];
-            const float alphaLeft = float(stored.canvas.x + bounds.left) / stored.canvas.width;
-            const float alphaRight = float(stored.canvas.x + bounds.right) / stored.canvas.width;
-            const float low =
-                feet.y +
-                std::min(0.f, (anchor.y - float(stored.canvas.y + bounds.bottom) / stored.canvas.height) *
-                                  b.height);
-            const float high =
-                feet.y + (anchor.y - float(stored.canvas.y + bounds.top) / stored.canvas.height) * b.height;
-            const float scale =
-                fitDoors(in.geometry, out, feet, depth, std::max(0.f, (anchor.x - alphaLeft) * b.width),
-                         std::max(0.f, (alphaRight - anchor.x) * b.width), low, high);
-            b.feet = feet;
-            b.width *= scale;
-            b.height *= scale;
-            b.shadowRadius *= scale;
-            if (scale <= epsilon)
-                continue;
+            prepareTerrainClips(in.geometry, out.camera, b, out.terrainClips[i]);
             append(b);
             auto canonical = a.clips[0].textures[0][0];
             if (clip == unsigned(NpcAnimation::Prone) && a.clips[clip].textures[side][0] != UINT16_MAX) {
@@ -592,9 +476,12 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
         opaqueCache_.copyRaster(out.picking);
     } else
         out.picking.copyRaster(opaqueCache_);
+    BillboardClips clips;
     for (unsigned i = 0; i < out.count; ++i) {
         const auto& b = out.billboards[i];
-        quad(out, corners(out.camera, b), b.id, &assets_, b.texture, b.id < NpcWorld::maxInstances ? 1 : 16);
+        billboardClips(out, b, clips);
+        quad(out, corners(out.camera, b), b.id, &assets_, b.texture, b.id < NpcWorld::maxInstances ? 1 : 16,
+             &clips);
     }
 }
 std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, int y) const noexcept {

@@ -3,6 +3,10 @@
 Status: **Implemented and verified; awaiting user review**, 2026-11-02.
 The design below was recorded before implementation.
 
+The sprite-fitting policy below is superseded by
+[stable creature dimensions and scenery occlusion](creature_occlusion.md).
+Door surfaces/chest behavior and the historical verification remain recorded here.
+
 Keep the reviewed door dimensions and hinge motion. Mirror only the reverse broad
 face in U (left/right), so both rings occupy the free edge opposite the hinge.
 Square door artwork needs an aspect-preserving UV crop on the taller leaf: retain

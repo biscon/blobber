@@ -1,0 +1,33 @@
+{
+  "visibility_version": "world-visibility-v12",
+  "renderer": "NVIDIA GeForce RTX 3060 / OpenGL 3.3",
+  "runner": "cmake-build-release/blobber_world_integration_gpu_tests",
+  "runner_sha256": "ffd908ee415e547f583535718d99fdd9db5d39641e2050ab457de881e3756ade",
+  "captures": {
+    "bugbear-back-0.png": "f697080d9e7d6bda9dea4645390b7d7bfb5f905ab935cdd0925ec407d9428c87",
+    "bugbear-back-1050.png": "6388205174e794cdb11147882e92c4076e23818961f2b42f2b0d67616f933b58",
+    "bugbear-back-1100.png": "d905743e0ad6f077145484c41966b68038f6844ae38301411aed40e8172049bb",
+    "bugbear-back-1200.png": "66dd3a6191d0172712c7df0507d8604813fcd2879e92bc25f8452a0598e56f4c",
+    "bugbear-back-1600.png": "37e91c4dd0927002df8d40c29abfc91cff6324922d3b3c6b70a1aaac7b8c804d",
+    "bugbear-back-600.png": "4bdca451351d999d0d41eab676c59c4cfe9add06d606e7fe0e179f71fe4424ac",
+    "bugbear-front-0.png": "8055a76004df50fe6ec4f8393ba65a38c168ed6224dfc059a166b46be8d13efb",
+    "bugbear-front-1050.png": "921300075fa3c53ea639a23d2490966ea3542abbdc49bcc70358995fb39e625d",
+    "bugbear-front-1100.png": "227a6ac520cb091fb5e0ead0c1082095352eacf786d5e25485fc0184ebb11cf5",
+    "bugbear-front-1200.png": "e9c014ce6e24a3dc1623dbf96490dd407ab17d7e09198759654279ce1048e7fb",
+    "bugbear-front-1600.png": "c505826b2af778b36eafcf6ebf617f81bcbe181fb081495a7ee62f9ab85148fd",
+    "bugbear-front-600.png": "5549e14af03e604a80bcd080e0bd909b36323c873709a8bd9f2abe49f5db722a",
+    "goblin-back-0.png": "4ee1c24dd1b3338d701482867a2df8c3c8063813a1b657956c17328925fc263d",
+    "goblin-back-1050.png": "72cb0ea5365424a085ffbc088d2c6593f27c119b106ddddd689c8b00c965e357",
+    "goblin-back-1100.png": "2664ccc23cdb050585f5060ea65e5f0f0fa167d8bf15d486f9eecc400cb6791b",
+    "goblin-back-1200.png": "0c7c65b8add3dc4b8b93faecc54c8a0309bcaeec9a5033f4272149c31e98ea33",
+    "goblin-back-1600.png": "2132bdc4ef45f560d0566a655fd08916dd4183aa183c03f40f9c2026bb6351d0",
+    "goblin-back-600.png": "58cb7c9a4fcbb51433a214b3b87049fed488dec9df0173d90b3d0785291fffb0",
+    "goblin-front-0.png": "1fb9166c346bd63187a13c7d704a8d8991bef3efb23c843a9c6dedae23db33fa",
+    "goblin-front-1050.png": "3f78fb7b641ce82ec667fd72883241605225cd5c848fc0735b2d2d65c5750a27",
+    "goblin-front-1100.png": "0fc4401c91e285bc9649837b724d78ed36d56025b7f948f0b0a3ce015e82ed22",
+    "goblin-front-1200.png": "13159a7d5fc1bb9e01bd00e2dad8304d1443acb1765e3eda5405942d0e850ad7",
+    "goblin-front-1600.png": "3f7c6b2e5787e51addb97f8f339943919625c9af6fac3bcb29098beb92f9f901",
+    "goblin-front-600.png": "43682da83c99626d49e82fac4e4397be68f8d09e2f1c63f6b4e565b6d656f78f",
+    "overview.png": "bad28cdae6fe94d9362f38a461840c33915e7a257a40c121bcd786f221002731"
+  }
+}

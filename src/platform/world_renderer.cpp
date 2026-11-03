@@ -33,11 +33,13 @@ finalColor=vec4((c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;out vec4 finalColor;
 uniform float daylight;uniform vec3 horizon;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
+uniform int clipCount;uniform vec4 clipRects[136];
 void main(){
 float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
 if(kind==5){vec4 c=texture(texture0,uv)*idColor;float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
 finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
+for(int i=0;i<clipCount;++i){vec4 r=clipRects[i];if(uv.x>=r.x&&uv.y>=r.y&&uv.x<=r.z&&uv.y<=r.w)discard;}
 ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(uv*vec2(size))),ivec2(0),size-1);
 float base=texelFetch(texture0,p,0).a;bool covered=base*255.0+0.01>=float(threshold);
 vec4 c=texture(texture0,uv);
@@ -186,8 +188,10 @@ void WorldRenderer::prepareBillboards() {
     GpuLease<ShaderHandle> shader(resources_, resources_.createShader(vertex, billboardFragment));
     GpuLease<MeshHandle> quad(resources_, resources_.createMesh(world_render::billboardMesh()));
     GpuLease<MeshHandle> proxy(resources_, resources_.createMesh(world_render::proxyMesh()));
-    constexpr const char* names[]{"mvp", "matView", "matModel", "kind", "threshold", "flash", "idColor"};
-    std::array<int, 7> locations{};
+    static_assert(world_render::billboardClipCapacity == 136, "Keep shader clipping capacity in sync");
+    constexpr const char* names[]{"mvp",   "matView", "matModel",  "kind",        "threshold",
+                                  "flash", "idColor", "clipCount", "clipRects[0]"};
+    std::array<int, 9> locations{};
     for (unsigned i = 0; i < locations.size(); ++i) {
         locations[i] = GetShaderLocation(resources_.shader(shader.get()), names[i]);
         if (locations[i] < 0)
@@ -471,6 +475,8 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
     const int modelLoc = billboardLocations_[2], kindLoc = billboardLocations_[3],
               thresholdLoc = billboardLocations_[4], flashLoc = billboardLocations_[5],
               colorLoc = billboardLocations_[6];
+    const int noClips = 0;
+    rlSetUniform(billboardLocations_[7], &noClips, SHADER_UNIFORM_INT, 1);
     rlDisableBackfaceCulling();
     auto draw = [&](const Matrix& model, int kind, int threshold, bool flash, std::uint16_t id) {
         const int f = flash ? 1 : 0;
@@ -548,6 +554,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
             draw(model, 3, 1, false, 0);
         }
     }
+    world_render::BillboardClips clips;
     for (unsigned i = 0; i < frame.count; ++i) {
         const auto& b = frame.billboards[i];
         const auto foot = world_render::project(frame.camera, b.feet);
@@ -557,6 +564,11 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
             foot.y - b.anchorY * b.height * scale > viewHeight ||
             foot.y + (1 - b.anchorY) * b.height * scale < 0)
             continue;
+        world_render::billboardClips(frame, b, clips);
+        const int clipCount = int(clips.count);
+        rlSetUniform(billboardLocations_[7], &clipCount, SHADER_UNIFORM_INT, 1);
+        if (clipCount)
+            rlSetUniform(billboardLocations_[8], clips.rectangles.data(), SHADER_UNIFORM_VEC4, clipCount);
         rlEnableTexture(resources_.texture(textures_[b.texture].get()).id);
         // CPU picking and GPU drawing share the registered crop geometry.
         const auto q = world_render::corners(frame.camera, b);
@@ -590,6 +602,8 @@ void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const fl
     rlEnableShader(resources_.shader(billboard_.get()).id);
     rlSetUniformMatrix(billboardLocations_[0], matrix(vp));
     rlSetUniformMatrix(billboardLocations_[1], matrix(view));
+    const int noClips = 0;
+    rlSetUniform(billboardLocations_[7], &noClips, SHADER_UNIFORM_INT, 1);
     const int kind = 5;
     rlSetUniform(billboardLocations_[3], &kind, SHADER_UNIFORM_INT, 1);
     rlEnableDepthTest();

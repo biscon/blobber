@@ -8,7 +8,23 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v11";
+constexpr const char* visibilityVersion = "world-visibility-v12";
+// Rectangles in stored texture UVs, not logical canvas coordinates.
+struct BillboardClipRect {
+    float left = 0, top = 0, right = 0, bottom = 0;
+};
+static_assert(sizeof(BillboardClipRect) == 4 * sizeof(float));
+constexpr unsigned terrainClipCapacity = 8;
+constexpr unsigned billboardClipCapacity = terrainClipCapacity + doorBoxCapacity;
+struct TerrainClips {
+    std::array<BillboardClipRect, terrainClipCapacity> rectangles{};
+    unsigned count = 0;
+};
+struct BillboardClips {
+    std::array<BillboardClipRect, billboardClipCapacity> rectangles{};
+    unsigned count = 0;
+    bool contains(float u, float v) const noexcept;
+};
 struct FrameInput {
     GeometryView geometry;
     const MovementState& movement;
@@ -34,6 +50,7 @@ struct Billboard {
 };
 struct WorldFrame {
     Camera camera{};
+    std::array<TerrainClips, NpcWorld::maxInstances> terrainClips{};
     std::array<bool, containerCapacity> containerOpened{};
     std::array<Billboard, billboardCapacity> billboards{};
     unsigned count = 0;
@@ -86,6 +103,9 @@ class VisibilityPipeline {
 Scene billboardMesh();
 Scene proxyMesh();
 std::array<Vec, 4> corners(const Camera&, const Billboard&) noexcept;
+void prepareTerrainClips(GeometryView, const Camera&, const Billboard&, TerrainClips&);
+// Reuses caller-owned scratch; only NPC bodies receive masks.
+void billboardClips(const WorldFrame&, const Billboard&, BillboardClips&) noexcept;
 struct Attachment {
     Vec position{};
     float depth = 0;

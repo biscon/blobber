@@ -86,7 +86,7 @@ class WorldRenderer {
     std::vector<GpuLease<TextureHandle>> textures_;
     GpuLease<ShaderHandle> world_, resolve_, billboard_, sky_;
     GpuLease<MeshHandle> quad_, proxy_;
-    std::array<int, 7> billboardLocations_{};
+    std::array<int, 9> billboardLocations_{};
     void prepareBillboards();
     void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool,
                         const world_render::Scene*);

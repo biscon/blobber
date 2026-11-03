@@ -582,3 +582,13 @@ and presentation anchors still describe visible body pixels only. Walls, closed
 doors, attack range and combat protection remain authoritative. Protocol/save
 schemas and simulation identity are unchanged; strict older visual traces reject
 the changed visibility identity. See [target selection](target_selection_design.md).
+
+
+## Creature occlusion correction
+
+Current visibility identity is `world-visibility-v12`. Creature bodies retain authored
+animation dimensions and animated anchors beside walls, door geometry and viewport
+edges. Shared scenery intersection masks and opaque depth gate body picking and
+geometry exposure; other actors retain the v11 candidate behavior. Protocol/save
+schemas, simulation and prepared asset identities are unchanged. Strict earlier
+visual traces reject the new visibility identity. See [creature occlusion](creature_occlusion.md).

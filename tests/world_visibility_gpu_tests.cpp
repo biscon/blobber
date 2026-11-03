@@ -43,6 +43,119 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
     check(cpu == gpu, "CPU/GPU exact visible object membership");
     return mismatch;
 }
+unsigned creatureDoorClipping(GpuResources& resources) {
+    test::VisibilityFixture fixture(1, 2, true);
+    auto publication = fixture.publication();
+    publication.appearances[0].clips[unsigned(NpcAnimation::Attack)].width = .9f;
+    const auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
+    const auto catalog = creationCatalog(true);
+    const auto map = test::worldRoom(9, 9);
+    unsigned differences = 0;
+    for (unsigned h = 0; h < 4; ++h)
+        for (int slot : {0, 3}) {
+            const auto heading = Heading(h);
+            const auto f = forward(heading);
+            const Cell doorCell{4, 4}, subcell{slot % 2, slot / 2};
+            const Player pose{doorCell + f * -1, heading};
+            FloorFixtures fixtures;
+            fixtures.count = 1;
+            fixtures.entries[0] = {doorCell, heading, FixtureKind::Door};
+            NpcWorld places(map, pose.cell, {"goblin"}, {{{0}, doorCell + f, subcell, Heading((h + 2) % 4)}});
+            GameSession game(map, catalog, places, 5, pose, false, fixture.timings, {}, fixtures);
+            game.setAnimated(false);
+            check(bool(game.interact(game.nearbyFixture())), "GPU clipping fixture opens door");
+            const auto id = game.actors().id(0);
+            check(bool(game.actors().walk(id, doorCell, subcell, pose.cell, 0, 600)),
+                  "GPU clipping creature enters doorway");
+            WorldRenderer renderer(resources, assets);
+            NpcAnimator animator(game.actors(), fixture.timings);
+            auto doors = game.doors();
+            auto movement = game.movement();
+            auto input = [&] {
+                return world_render::FrameInput{game.geometry(),      movement, &game.actors(),
+                                                &animator.snapshot(), nullptr,  &doors};
+            };
+            renderer.stage(input());
+            renderer.commit();
+            GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
+            const auto transfers = resources.transfers();
+            for (unsigned angle : {0u, 150u, 300u}) {
+                doors.now = angle;
+                doors.until[0] = 300;
+                ++doors.revision;
+                for (unsigned time : {0u, 300u, 600u}) {
+                    animator.setTime(time);
+                    // Include wide registered attack art at the middle walk sample.
+                    auto animation = animator.snapshot();
+                    if (time == 300)
+                        animation.frames[0].clip = NpcAnimation::Attack;
+                    auto in = input();
+                    in.animation = &animation;
+                    renderer.supersampling(angle != 150);
+                    allocations = 0;
+                    watching = true;
+                    renderer.render(in);
+                    watching = false;
+                    check(allocations == 0, "Scenery-clipped GPU frame allocates no engine C++ storage");
+                    differences += compare(resources, renderer, ids.get());
+                }
+            }
+            check(bool(game.actors().walk(id, doorCell + f, subcell, pose.cell, 1000, 600)),
+                  "GPU clipping creature leaves doorway in reverse");
+            for (unsigned time : {1000u, 1300u, 1600u}) {
+                animator.setTime(time);
+                renderer.render(input());
+                differences += compare(resources, renderer, ids.get());
+            }
+            movement.transition = {pose, {pose.cell, Heading((h + 1) % 4)}, Action::TurnRight, .04f, .16f};
+            renderer.render(input());
+            differences += compare(resources, renderer, ids.get());
+            check(resources.transfers().uploads == transfers.uploads &&
+                      resources.transfers().bytes == transfers.bytes,
+                  "Clipping masks require no texture or mesh resource uploads");
+        }
+    {
+        // A wide body crosses a neighboring raised floor/low ceiling. A nearer
+        // bag is drawn afterward, checking that the body masks are reset.
+        WorldDefinition definition;
+        definition.surfaces.resize(81);
+        for (auto& surface : definition.surfaces)
+            surface.ceiling = 8;
+        definition.surfaces[4 * 9 + 3] = {1, 5};
+        const Map terrain({"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#",
+                           "#.......#", "#.......#", "#########"},
+                          definition);
+        MovementState movement;
+        movement.player = {{4, 6}, Heading::North};
+        NpcWorld places(terrain, movement.player.cell, {"goblin"}, {{{0}, {4, 4}, {0, 0}, Heading::South}});
+        ActorWorld actors(terrain, catalog, places);
+        NpcAnimationSnapshot animation;
+        animation.world = actors.snapshot().world;
+        animation.actorRevision = actors.snapshot().revision;
+        animation.count = 1;
+        animation.frames[0].clip = NpcAnimation::Attack;
+        LootSnapshot loot;
+        loot.world = 12;
+        loot.stacks[0] = {{4, 5}, {0}, 1, true, 8};
+        const world_render::FrameInput input{terrain, movement, &actors, &animation, &loot};
+        WorldRenderer renderer(resources, assets);
+        renderer.stage(input);
+        renderer.commit();
+        GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
+        for (float elevation : {0.f, .6f})
+            for (bool quality : {false, true}) {
+                animation.frames[0].elevation = elevation;
+                ++animation.revision;
+                renderer.supersampling(quality);
+                renderer.render(input);
+                differences += compare(resources, renderer, ids.get());
+            }
+        movement.transition = {movement.player, {{4, 6}, Heading::East}, Action::TurnRight, .025f, .16f};
+        renderer.render(input);
+        differences += compare(resources, renderer, ids.get());
+    }
+    return differences;
+}
 } // namespace
 int main() {
     try {
@@ -67,7 +180,7 @@ int main() {
         Window window(640, 360, true);
         check(IsWindowState(FLAG_WINDOW_HIDDEN), "GPU review remains hidden");
         GpuResources resources;
-        unsigned differences = 0;
+        unsigned differences = creatureDoorClipping(resources);
         {
             WorldRenderer renderer(resources, assets);
             world_render::FrameInput input{map, movement, &actors, &animation, &loot};

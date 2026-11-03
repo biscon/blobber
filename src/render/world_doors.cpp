@@ -3,33 +3,6 @@
 #include <cmath>
 #include <stdexcept>
 namespace blobber::world_render {
-float doorClearance(const DoorBox& b, Vec origin, Vec direction, float limit, float low,
-                    float high) noexcept {
-    if (high <= b.origin.y || low >= b.origin.y + b.y.y)
-        return limit;
-    const float cx = b.origin.x + .5f * (b.x.x + b.z.x), cz = b.origin.z + .5f * (b.x.z + b.z.z),
-                rx = .5f * (std::abs(b.x.x) + std::abs(b.z.x)),
-                rz = .5f * (std::abs(b.x.z) + std::abs(b.z.z));
-    if (std::abs(origin.x - cx) > rx + limit || std::abs(origin.z - cz) > rz + limit)
-        return limit;
-    float enter = 0, leave = limit;
-    for (const Vec axis : {b.x, b.z}) {
-        const float length2 = axis.x * axis.x + axis.z * axis.z;
-        const float at = ((origin.x - b.origin.x) * axis.x + (origin.z - b.origin.z) * axis.z) / length2,
-                    delta = (direction.x * axis.x + direction.z * axis.z) / length2;
-        if (std::abs(delta) < 1e-6f) {
-            if (at < 0 || at > 1)
-                return limit;
-        } else {
-            const float a = -at / delta, c = (1 - at) / delta;
-            enter = std::max(enter, std::min(a, c));
-            leave = std::min(leave, std::max(a, c));
-            if (enter > leave)
-                return limit;
-        }
-    }
-    return std::max(0.f, enter - .005f);
-}
 std::array<float, 2> doorUvSpan(const DoorBox& b, unsigned textureWidth, unsigned textureHeight) noexcept {
     const float width = std::hypot(b.x.x, b.x.z), ratio = width * textureHeight / (b.y.y * textureWidth);
     return {std::min(1.f, ratio), std::min(1.f, 1.f / ratio)};
