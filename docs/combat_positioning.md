@@ -130,3 +130,25 @@ Interactive gameplay/balance review remains unverified; no benchmark, stress run
 sanitizer or additional configuration matrix was run.
 
 Logs: `/tmp/combat-positioning-{final-build,tests,hazard-build,review}.log`.
+
+## Arrival facing follow-up — 2026-11-04
+
+Implemented and verified: combat action completion turns a
+living, able-to-act enemy with completed travel in the melee front toward the
+current party before handing off the turn. Keep travel-facing through the final
+walk frame. This uses the existing completion boundary and checked ActorWorld
+facing mutation, with no arrival queue, extra action, RNG, frame allocation or save
+state. Dead/incapacitated actors and arrivals outside the front are not redirected.
+Owned regressions cover cell/subcell movement in all four headings, the last
+millisecond, pause, exact arrival before any attack, unchanged round/gameplay clock
+and zero C++ allocations. Positioning, combat and hybrid checks pass. One fixture
+initially required every travel direction to differ from the arrival direction;
+some diagonal moves already face the party, so that precondition was corrected
+while retaining the arrival/timing assertions and requiring actual direction changes.
+
+Release game and diagnostic are rebuilt. The existing hidden positioning review
+passes with new [arrival captures](screenshots/combat-arrival-facing/README.md);
+both inspected arrival frames face the party before those enemies attack.
+GL error and resource-release checks pass on RTX 3060/OpenGL 3.3. No broader
+configuration matrix or interactive desktop review. Logs are
+`/tmp/combat-arrival-facing-{build,test-build,review}.log`.

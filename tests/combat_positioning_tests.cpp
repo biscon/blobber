@@ -260,6 +260,62 @@ void reopenedVacancy() {
     }
     check(moves > 0 && claimed == 1, "Waiting enemies retry a death-opened gap; exactly one claims it");
 }
+void facePartyOnArrival() {
+    const auto map = hybridRoom();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    unsigned changedDirections = 0;
+    for (unsigned h = 0; h < 4; ++h)
+        for (bool sameCell : {false, true}) {
+            const Player party{{6, 6}, Heading(h)};
+            const auto f = forward(party.heading), r = right(party.heading);
+            const auto start = sameCell ? party.cell + f + r * -1 : party.cell + r * -1;
+            const auto slot = nearSlot(party.heading, h < 2 ? 0 : 1);
+            NpcWorld places(map, party.cell, {"goblin"},
+                            {npc(party.cell + f, nearSlot(party.heading, 0), party.cell),
+                             npc(party.cell + f, nearSlot(party.heading, 1), party.cell),
+                             npc(start, slot, party.cell)});
+            GameSession game(map, catalog, places, 5, party, false);
+            const auto id = game.actors().id(2);
+            bool moved = false;
+            for (unsigned tick = 0; tick < 100 && !moved; ++tick) {
+                if (game.combat().snapshot().awaitingAction)
+                    game.submit(turnCommand(game));
+                else
+                    moved = game.update(.25, false).step.event == CombatEvent::Move &&
+                            sameActor(game.events().step.enemy, id);
+            }
+            check(moved, "Facing fixture reaches the waiting enemy's positioning move");
+            const auto* actor = game.actors().actor(id);
+            const auto travelFacing = actor->npc.facing;
+            const auto arrivedFacing = headingToward(actor->npc.cell, party.cell);
+            changedDirections += travelFacing != arrivedFacing;
+            check(actorWalking(*actor, game.timeMs()), "Arrival fixture starts during committed travel");
+            const auto end = actor->walkTimeMs + actor->walkDurationMs;
+            const auto turn = game.combat().snapshot().turn;
+            const auto round = game.combat().snapshot().round;
+            const auto gameplay = game.combat().snapshot().gameplayMs;
+            game.update(double(end - game.timeMs() - 1) / 1000, false);
+            check(game.timeMs() == end - 1 && actor->npc.facing == travelFacing &&
+                      game.combat().snapshot().turn == turn,
+                  "Travel-facing holds through the last millisecond before arrival");
+            game.update(60, true);
+            check(game.timeMs() == end - 1 && actor->npc.facing == travelFacing,
+                  "Pause cannot trigger arrival-facing early");
+            allocations = 0;
+            watching = true;
+            const auto& events = game.update(.001, false);
+            watching = false;
+            check(allocations == 0 && game.timeMs() == end && !actorWalking(*actor, game.timeMs()) &&
+                      actor->npc.facing == arrivedFacing && !actor->hasAttack &&
+                      game.combat().snapshot().round == round &&
+                      game.combat().snapshot().gameplayMs == gameplay,
+                  "Arrival faces the party immediately without an attack, extra action or allocation");
+            for (const auto& out : events)
+                check(out.event != CombatEvent::AttackStarted,
+                      "Arrival-facing must not begin the next enemy's attack");
+        }
+    check(changedDirections >= 4, "Arrival cases exercise actual direction changes across all headings");
+}
 } // namespace
 
 int main() {
@@ -268,6 +324,7 @@ int main() {
         detourAndLocalMotion();
         pendingSearchTurn();
         reopenedVacancy();
+        facePartyOnArrival();
         std::cout << "Combat positioning, route, turn-cost and allocation checks passed\n";
     } catch (const std::exception& e) {
         watching = false;

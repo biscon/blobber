@@ -1,4 +1,5 @@
 #include "game/combat.hpp"
+#include "game/perception.hpp"
 namespace blobber {
 bool CombatController::normalAction(rules::CharacterId id) const noexcept {
     return extraAction_[id.index] ||
@@ -52,6 +53,13 @@ void CombatController::spendAction(const PartyCommand& c) noexcept {
     state_.spent[c.character.index] = true;
 }
 void CombatController::completeAction(std::uint64_t now) noexcept {
+    if (state_.activeEnemy) {
+        const auto id = *state_.activeEnemy;
+        const auto* actor = actors_.actor(id);
+        if (actor && actor->hasTravel && !actorWalking(*actor, now) && effects_.canAct(id) &&
+            inMeleeFront(map_, origin_.cell, origin_.heading, actor->npc.cell))
+            actors_.face(id, headingToward(actor->npc.cell, origin_.cell));
+    }
     if (state_.phase == CombatPhase::Turns && state_.activeCharacter &&
         party_.progressionClass(*state_.activeCharacter) == rules::ProgressionClass::Rogue &&
         party_.character(*state_.activeCharacter)->build.level >= 2 &&

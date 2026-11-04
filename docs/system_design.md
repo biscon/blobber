@@ -1,5 +1,10 @@
 # System design
 
+Arrival-facing correction (implemented and verified, 2026-11-04):
+[turn settled front-line enemies toward the party at movement completion](combat_positioning.md#arrival-facing-follow-up--2026-11-04)
+uses the existing combat presentation handoff, preserving travel-facing and action costs.
+Focused checks and hidden arrival captures pass; interactive acceptance remains user review.
+
 Combat positioning correction (implemented and mechanically verified, 2026-11-03):
 [waiting enemies receive turns and route into usable front slots](combat_positioning.md)
 separates attack geometry from initiative, preserves usable attackers' positions,
