@@ -6,6 +6,7 @@ struct DoorBox {
     Vec origin{}, x{}, y{}, z{};
     std::uint16_t id = PickingBuffer::empty, texture = 0, edgeTexture = 0;
     bool worldMapped = false;
+    bool leaf = false;
     std::uint16_t emblemTexture = UINT16_MAX;
 };
 constexpr unsigned doorBoxCapacity = fixtureCapacity * 4;

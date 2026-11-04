@@ -20,13 +20,17 @@ enum class MapMarker : std::uint8_t {
 };
 MapMarker mapFixtureMarker(const FloorGeometry&, unsigned slot, bool reveal) noexcept;
 
-// Headless layout in art units. Oversized axes retain the party at the center.
+struct MapBounds {
+    Cell first{};
+    int width = 0, height = 0;
+};
+// Headless layout in art units. Fit each axis or track within its terrain bounds.
 struct MapGridView {
     static constexpr int cellSize = 9;
     Cell first{};
     int columns = 0, rows = 0;
     float x = 0, y = 0;
-    static MapGridView fit(int width, int height, Cell party, int x, int y, int w, int h) noexcept;
+    static MapGridView fit(MapBounds, Cell party, int x, int y, int w, int h) noexcept;
     bool contains(Cell c) const noexcept {
         return c.x >= first.x && c.y >= first.y && c.x < first.x + columns && c.y < first.y + rows;
     }
@@ -40,9 +44,11 @@ class MapOverlayModel {
     void prepare(const Map&, const generation::FloorLayout* rooms = nullptr) noexcept;
     void refresh(const FloorGeometry*) noexcept;
     MapTile tile(Cell, bool reveal = false) const noexcept;
+    MapBounds bounds() const noexcept { return bounds_; }
 
   private:
     const Map* map_ = nullptr;
+    MapBounds bounds_{};
     std::array<std::uint8_t, discoveryCapacity> rooms_{};
     std::bitset<discoveryCapacity> floors_, walls_;
     unsigned roomCount_ = 0;

@@ -31,14 +31,25 @@ if(uvMode==4) face=1.0;
 float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
 finalColor=vec4((c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
-in vec2 uv;in float depth;out vec4 finalColor;
+in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
 uniform float daylight;uniform vec3 horizon;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
+uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;
+bool slab(float at,float delta,float low,float high,inout float enter,inout float leave){
+if(abs(delta)<1e-6)return at>=low&&at<=high;
+float a=(low-at)/delta,b=(high-at)/delta;enter=max(enter,min(a,b));leave=min(leave,max(a,b));return leave-enter>1e-6;}
+bool leafHidden(){vec3 ray=(worldPosition-eye)/depth;
+for(int i=0;i<leafCount;++i){vec4 o=leafData[i*3],x=leafData[i*3+1],z=leafData[i*3+2];
+if(x.w==1.0)continue;vec3 d=eye-o.xyz;float enter=0.025,leave=16.0;
+if(slab(dot(d,x.xyz),dot(ray,x.xyz),0,1,enter,leave)&&slab(d.y,ray.y,0,o.w,enter,leave)&&
+slab(dot(d,z.xyz),dot(ray,z.xyz),0,1,enter,leave)&&(x.w==2.0||enter<=depth+1e-5))return true;}return false;}
+
 void main(){
 float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
-if(kind==5){vec4 c=texture(texture0,uv)*idColor;float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+if(kind==5){if(leafHidden())discard;vec4 c=texture(texture0,uv)*idColor;float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
 finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
+if(leafHidden())discard;
 for(int i=0;i<clipCount;++i){vec4 r=clipRects[i];if(uv.x>=r.x&&uv.y>=r.y&&uv.x<=r.z&&uv.y<=r.w)discard;}
 ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(uv*vec2(size))),ivec2(0),size-1);
 float base=texelFetch(texture0,p,0).a;bool covered=base*255.0+0.01>=float(threshold);
@@ -58,6 +69,13 @@ constexpr const char* resolveFragment = R"(#version 330
 in vec2 fragTexCoord;out vec4 finalColor;uniform sampler2D texture0;
 void main(){ivec2 p=clamp(ivec2(fragTexCoord*vec2(500,282)),ivec2(0),ivec2(499,281))*2;
 finalColor=(texelFetch(texture0,p,0)+texelFetch(texture0,p+ivec2(1,0),0)+texelFetch(texture0,p+ivec2(0,1),0)+texelFetch(texture0,p+ivec2(1,1),0))*0.25;})";
+constexpr const char* compositeVertex = R"(#version 330
+in vec3 vertexPosition;
+void main(){gl_Position=vec4(vertexPosition.x*2.0,vertexPosition.y*2.0-1.0,0,1);})";
+constexpr const char* compositeFragment = R"(#version 330
+uniform sampler2D bodies;uniform sampler2D bodyDepth;out vec4 finalColor;
+void main(){ivec2 p=ivec2(gl_FragCoord.xy);vec4 c=texelFetch(bodies,p,0);
+if(c.a<=0.0)discard;finalColor=c;gl_FragDepth=texelFetch(bodyDepth,p,0).r;})";
 int anisotropy() {
     using String = const unsigned char* (*)(unsigned, unsigned);
     using Int = void (*)(unsigned, int*);
@@ -141,6 +159,9 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     if (mvp_ < 0 || view_ < 0 || forward_ < 0)
         throw std::runtime_error("World shader interface unavailable");
     high_ = {r, r.createTarget(1000, 564)};
+    creaturesLow_ = {r, r.createTarget(500, 282, true)};
+    creaturesHigh_ = {r, r.createTarget(1000, 564, true)};
+    creatureComposite_ = {r, r.createShader(compositeVertex, compositeFragment)};
     if (assets_->bytes() > 68u * world_assets::MiB)
         throw std::runtime_error("World shared CPU storage budget exceeded");
 }
@@ -188,10 +209,13 @@ void WorldRenderer::prepareBillboards() {
     GpuLease<ShaderHandle> shader(resources_, resources_.createShader(vertex, billboardFragment));
     GpuLease<MeshHandle> quad(resources_, resources_.createMesh(world_render::billboardMesh()));
     GpuLease<MeshHandle> proxy(resources_, resources_.createMesh(world_render::proxyMesh()));
-    static_assert(world_render::billboardClipCapacity == 136, "Keep shader clipping capacity in sync");
-    constexpr const char* names[]{"mvp",   "matView", "matModel",  "kind",        "threshold",
-                                  "flash", "idColor", "clipCount", "clipRects[0]"};
-    std::array<int, 9> locations{};
+    static_assert(world_render::billboardClipCapacity == 136 && fixtureCapacity == 32,
+                  "Keep shader clipping/leaf capacities in sync");
+    static_assert(4 * world_render::billboardClipCapacity + 12 * fixtureCapacity + 32 <= 1024,
+                  "Fragment uniforms must fit OpenGL 3.3 minimum capacity");
+    constexpr const char* names[]{"mvp",     "matView",   "matModel",     "kind",      "threshold",   "flash",
+                                  "idColor", "clipCount", "clipRects[0]", "leafCount", "leafData[0]", "eye"};
+    std::array<int, 12> locations{};
     for (unsigned i = 0; i < locations.size(); ++i) {
         locations[i] = GetShaderLocation(resources_.shader(shader.get()), names[i]);
         if (locations[i] < 0)
@@ -213,7 +237,7 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
             preparationPoint("Preparing dungeon");
             return std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
         });
-        prepareCpu([&] { staged_->visibility->update(in); });
+        prepareCpu([&] { staged_->visibility->update(in, false); });
         if (in.attacks || in.area) {
             staged_->effects = std::make_unique<world_render::EffectsPipeline>(*assets_);
             staged_->effects->update(in, staged_->visibility->frame());
@@ -250,7 +274,7 @@ WorldImage WorldRenderer::renderStaged(const world_render::FrameInput& in) {
 WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& in) {
     using Clock = std::chrono::steady_clock;
     const auto start = measure_ ? Clock::now() : Clock::time_point{};
-    v.visibility->update(in);
+    v.visibility->update(in, false);
     const auto prepared = measure_ ? Clock::now() : Clock::time_point{};
     if ((in.attacks || in.area) && !v.effects)
         throw std::logic_error("Effects require preparation before frame processing");
@@ -272,6 +296,7 @@ void WorldRenderer::diagnosticIds(TargetHandle destination) {
     if (t.texture.width != viewWidth || t.texture.height != viewHeight ||
         t.id == resources_.target(active_->output.get()).id || t.id == resources_.target(high_.get()).id)
         throw std::invalid_argument("Diagnostic IDs require a separate logical target");
+    active_->visibility->rasterForDiagnostics();
     render(*active_, active_->movement, &active_->visibility->frame(), destination);
 }
 bool WorldRenderer::commit() noexcept {
@@ -303,7 +328,10 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     }
     world_render::cull(v.cpu, camera, draws_);
     stats.chunks = draws_.tested;
-    const auto& target = resources_.target(ids ? ids : supersampling_ ? high_.get() : v.output.get());
+    const auto targetHandle = ids ? ids : supersampling_ ? high_.get() : v.output.get();
+    const auto& target = resources_.target(targetHandle);
+    const auto creatureHandle = !ids && supersampling_ ? creaturesHigh_.get() : creaturesLow_.get();
+    const auto& creatureTarget = resources_.target(creatureHandle);
     const auto shader = resources_.shader(world_.get());
     // All checked resource lookups happen before entering a render pass.
     (void)resources_.mesh(v.mesh.get());
@@ -378,52 +406,94 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         ++stats.draws;
     }
     if (frame) {
-        for (unsigned i = 0; i < frame->doorCount; ++i) {
-            const auto& box = frame->doors[i];
-            auto model = MatrixIdentity();
-            model.m0 = box.x.x;
-            model.m1 = box.x.y;
-            model.m2 = box.x.z;
-            model.m4 = box.y.x;
-            model.m5 = box.y.y;
-            model.m6 = box.y.z;
-            model.m8 = box.z.x;
-            model.m9 = box.z.y;
-            model.m10 = box.z.z;
-            model.m12 = box.origin.x;
-            model.m13 = box.origin.y;
-            model.m14 = box.origin.z;
-            rlSetUniformMatrix(model_, model);
-            const int mode = box.worldMapped ? 1 : 3;
-            rlSetUniform(uvMode_, &mode, SHADER_UNIFORM_INT, 1);
-            if (!box.worldMapped) {
-                const auto& texture = assets_->publication.textures[box.texture];
-                const auto span = world_render::doorUvSpan(box, texture.width, texture.height);
-                rlSetUniform(doorUv_, span.data(), SHADER_UNIFORM_VEC2, 1);
-            }
-            const auto id = box.id;
-            const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
-            rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
-            rlEnableTexture(resources_.texture(textures_[box.texture].get()).id);
-            rlDisableBackfaceCulling();
-            resources_.draw(proxy_.get(), 0, box.worldMapped ? 36 : 12);
-            ++stats.draws;
-            if (!box.worldMapped) {
-                const int edgeMode = 2;
-                rlSetUniform(uvMode_, &edgeMode, SHADER_UNIFORM_INT, 1);
-                rlEnableTexture(resources_.texture(textures_[box.edgeTexture].get()).id);
-                resources_.draw(proxy_.get(), 12, 24);
-                ++stats.draws;
-            }
-        }
         const auto vp = MatrixMultiply(rlGetMatrixModelview(), projection);
         const auto view = rlGetMatrixModelview();
         const auto a = MatrixToFloatV(vp), b = MatrixToFloatV(view);
+        for (unsigned doorPhase = 0; doorPhase < 2; ++doorPhase) {
+            if (doorPhase == 1) {
+                drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::Scenery);
+                // Preserve leaf-free scenery/nonbody depth for the transparent body layer.
+                resources_.copyDepth(targetHandle, creatureHandle);
+                rlEnableShader(shader.id);
+                rlSetBlendMode(BLEND_ALPHA);
+                rlEnableDepthMask();
+            }
+            for (unsigned i = 0; i < frame->doorCount; ++i) {
+                const auto& box = frame->doors[i];
+                if (box.leaf != bool(doorPhase))
+                    continue;
+                auto model = MatrixIdentity();
+                model.m0 = box.x.x;
+                model.m1 = box.x.y;
+                model.m2 = box.x.z;
+                model.m4 = box.y.x;
+                model.m5 = box.y.y;
+                model.m6 = box.y.z;
+                model.m8 = box.z.x;
+                model.m9 = box.z.y;
+                model.m10 = box.z.z;
+                model.m12 = box.origin.x;
+                model.m13 = box.origin.y;
+                model.m14 = box.origin.z;
+                rlSetUniformMatrix(model_, model);
+                const int mode = box.worldMapped ? 1 : 3;
+                rlSetUniform(uvMode_, &mode, SHADER_UNIFORM_INT, 1);
+                if (!box.worldMapped) {
+                    const auto& texture = assets_->publication.textures[box.texture];
+                    const auto span = world_render::doorUvSpan(box, texture.width, texture.height);
+                    rlSetUniform(doorUv_, span.data(), SHADER_UNIFORM_VEC2, 1);
+                }
+                const auto id = box.id;
+                const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
+                rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
+                rlEnableTexture(resources_.texture(textures_[box.texture].get()).id);
+                rlDisableBackfaceCulling();
+                resources_.draw(proxy_.get(), 0, box.worldMapped ? 36 : 12);
+                ++stats.draws;
+                if (!box.worldMapped) {
+                    const int edgeMode = 2;
+                    rlSetUniform(uvMode_, &edgeMode, SHADER_UNIFORM_INT, 1);
+                    rlEnableTexture(resources_.texture(textures_[box.edgeTexture].get()).id);
+                    resources_.draw(proxy_.get(), 12, 24);
+                    ++stats.draws;
+                }
+            }
+        }
+        drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::LeafArt);
         if (effects && !ids)
-            drawEffects(*effects, a.v, b.v, true);
-        drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu);
+            drawEffects(*effects, a.v, b.v, true, *frame);
+        rlEnableFramebuffer(creatureTarget.id);
+        // Clear colour only: the copied leaf-free depth belongs to this frame.
+        rlClearColor(0, 0, 0, 0);
+        using Clear = void (*)(unsigned);
+        reinterpret_cast<Clear>(rlGetProcAddress("glClear"))(0x00004000);
+        drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::Creatures);
+        rlEnableFramebuffer(target.id);
+        // Blend changes flush raylib's batch and can replace the current shader.
+        rlSetBlendMode(ids ? BLEND_ALPHA : BLEND_ALPHA_PREMULTIPLY);
+        const auto composite = resources_.shader(creatureComposite_.get());
+        rlEnableShader(composite.id);
+        const int colorUnit = 0, depthUnit = 1;
+        rlSetUniform(GetShaderLocation(composite, "bodies"), &colorUnit, SHADER_UNIFORM_INT, 1);
+        rlSetUniform(GetShaderLocation(composite, "bodyDepth"), &depthUnit, SHADER_UNIFORM_INT, 1);
+        rlActiveTextureSlot(0);
+        rlEnableTexture(creatureTarget.texture.id);
+        rlActiveTextureSlot(1);
+        rlEnableTexture(creatureTarget.depth.id);
+        rlActiveTextureSlot(0);
+        rlEnableDepthMask();
+        rlEnableDepthTest();
+        using DepthFunction = void (*)(unsigned);
+        const auto depthFunction = reinterpret_cast<DepthFunction>(rlGetProcAddress("glDepthFunc"));
+        depthFunction(0x0207); // GL_ALWAYS: body fragments already passed scenery and leaf tests.
+        resources_.draw(quad_.get(), 0, 6);
+        ++stats.draws;
+        depthFunction(0x0203); // GL_LEQUAL, raylib's standard comparison.
+        rlActiveTextureSlot(1);
+        rlDisableTexture();
+        rlActiveTextureSlot(0);
         if (effects && !ids)
-            drawEffects(*effects, a.v, b.v, false);
+            drawEffects(*effects, a.v, b.v, false, *frame);
     }
     rlDisableTexture();
     rlDisableShader();
@@ -458,7 +528,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     return {v.output.get(), v.revision};
 }
 void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const float* vp, const float* view,
-                                   bool ids, const world_render::Scene* scene) {
+                                   bool ids, const world_render::Scene* scene, BillboardPass phase) {
     Matrix projection{}, cameraView{};
     // raymath's field declaration order differs from its column-major float representation.
     auto matrix = [](const float* v) {
@@ -477,6 +547,8 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
               colorLoc = billboardLocations_[6];
     const int noClips = 0;
     rlSetUniform(billboardLocations_[7], &noClips, SHADER_UNIFORM_INT, 1);
+    rlSetUniform(billboardLocations_[9], &noClips, SHADER_UNIFORM_INT, 1);
+    rlSetUniform(billboardLocations_[11], &frame.camera.position, SHADER_UNIFORM_VEC3, 1);
     rlDisableBackfaceCulling();
     auto draw = [&](const Matrix& model, int kind, int threshold, bool flash, std::uint16_t id) {
         const int f = flash ? 1 : 0;
@@ -489,7 +561,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
         resources_.draw(quad_.get(), 0, 6);
         ++stats.draws;
     };
-    if (scene)
+    if (scene && phase == BillboardPass::Scenery)
         for (const auto& d : scene->decals) {
             const auto texture = d.texture != UINT16_MAX ? d.texture
                                  : d.motif               ? frame.vineTexture
@@ -518,45 +590,56 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
     if (!ids) {
         // Guardian art rides on both leaf faces. The opaque leaf owns all depth/IDs.
         rlDisableDepthMask();
-        for (unsigned i = 0; i < frame.doorCount; ++i) {
-            const auto& door = frame.doors[i];
-            if (door.emblemTexture == UINT16_MAX)
-                continue;
-            rlEnableTexture(resources_.texture(textures_[door.emblemTexture].get()).id);
-            for (bool back : {false, true}) {
-                const auto q = world_render::doorEmblemQuad(door, back);
-                auto m = MatrixIdentity();
-                m.m0 = q[1].x - q[0].x;
-                m.m1 = q[1].y - q[0].y;
-                m.m2 = q[1].z - q[0].z;
-                m.m4 = q[3].x - q[0].x;
-                m.m5 = q[3].y - q[0].y;
-                m.m6 = q[3].z - q[0].z;
-                m.m12 = (q[0].x + q[1].x) * .5f;
-                m.m13 = (q[0].y + q[1].y) * .5f;
-                m.m14 = (q[0].z + q[1].z) * .5f;
-                draw(m, 1, 16, false, door.id);
-                draw(m, 2, 16, false, door.id);
+        if (phase == BillboardPass::LeafArt)
+            for (unsigned i = 0; i < frame.doorCount; ++i) {
+                const auto& door = frame.doors[i];
+                if (door.emblemTexture == UINT16_MAX)
+                    continue;
+                rlEnableTexture(resources_.texture(textures_[door.emblemTexture].get()).id);
+                for (bool back : {false, true}) {
+                    const auto q = world_render::doorEmblemQuad(door, back);
+                    auto m = MatrixIdentity();
+                    m.m0 = q[1].x - q[0].x;
+                    m.m1 = q[1].y - q[0].y;
+                    m.m2 = q[1].z - q[0].z;
+                    m.m4 = q[3].x - q[0].x;
+                    m.m5 = q[3].y - q[0].y;
+                    m.m6 = q[3].z - q[0].z;
+                    m.m12 = (q[0].x + q[1].x) * .5f;
+                    m.m13 = (q[0].y + q[1].y) * .5f;
+                    m.m14 = (q[0].z + q[1].z) * .5f;
+                    draw(m, 1, 16, false, door.id);
+                    draw(m, 2, 16, false, door.id);
+                }
             }
-        }
-        for (unsigned i = 0; i < frame.count; ++i) {
-            const auto& b = frame.billboards[i];
-            if (!b.shadowRadius)
-                continue;
-            float floor = b.feet.y;
-            const Cell under{int(std::floor(b.feet.x)), int(std::floor(b.feet.z))};
-            if (scene && scene->map && !scene->map->solid(under))
-                floor = elevation(scene->map->surface(under).floor);
-            const auto model =
-                MatrixMultiply(MatrixMultiply(MatrixScale(2 * b.shadowRadius, 2 * b.shadowRadius, 1),
-                                              MatrixRotateX(world_render::pi / 2)),
-                               MatrixTranslate(b.feet.x, floor + .001f, b.feet.z - b.shadowRadius));
-            draw(model, 3, 1, false, 0);
-        }
+        if (phase == BillboardPass::Scenery)
+            for (unsigned i = 0; i < frame.count; ++i) {
+                const auto& b = frame.billboards[i];
+                if (!b.shadowRadius)
+                    continue;
+                float floor = b.feet.y;
+                const Cell under{int(std::floor(b.feet.x)), int(std::floor(b.feet.z))};
+                if (scene && scene->map && !scene->map->solid(under))
+                    floor = elevation(scene->map->surface(under).floor);
+                const auto model =
+                    MatrixMultiply(MatrixMultiply(MatrixScale(2 * b.shadowRadius, 2 * b.shadowRadius, 1),
+                                                  MatrixRotateX(world_render::pi / 2)),
+                                   MatrixTranslate(b.feet.x, floor + .001f, b.feet.z - b.shadowRadius));
+                draw(model, 3, 1, false, 0);
+            }
     }
     world_render::BillboardClips clips;
+    world_render::LeafQueries leaves;
     for (unsigned i = 0; i < frame.count; ++i) {
         const auto& b = frame.billboards[i];
+        const bool body = b.id < NpcWorld::maxInstances;
+        if (phase == BillboardPass::LeafArt || body != (phase == BillboardPass::Creatures))
+            continue;
+        world_render::prepareLeafQueries(frame, body ? &b : nullptr, leaves, true);
+        const int leafCount = int(leaves.count);
+        rlSetUniform(billboardLocations_[9], &leafCount, SHADER_UNIFORM_INT, 1);
+        if (leafCount)
+            rlSetUniform(billboardLocations_[10], leaves.leaves.data(), SHADER_UNIFORM_VEC4, leafCount * 3);
         const auto foot = world_render::project(frame.camera, b.feet);
         const float scale = world_render::focal() / b.depth;
         if (foot.x + (1 - b.anchorX) * b.width * scale < 0 ||
@@ -593,7 +676,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
     rlSetBlendMode(BLEND_ALPHA);
 }
 void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const float* vp, const float* view,
-                                bool ground) {
+                                bool ground, const world_render::WorldFrame& worldFrame) {
     auto matrix = [](const float* v) {
         return Matrix{v[0], v[4], v[8],  v[12], v[1], v[5], v[9],  v[13],
                       v[2], v[6], v[10], v[14], v[3], v[7], v[11], v[15]};
@@ -604,6 +687,13 @@ void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const fl
     rlSetUniformMatrix(billboardLocations_[1], matrix(view));
     const int noClips = 0;
     rlSetUniform(billboardLocations_[7], &noClips, SHADER_UNIFORM_INT, 1);
+    world_render::LeafQueries leaves;
+    world_render::prepareLeafQueries(worldFrame, nullptr, leaves);
+    const int leafCount = int(leaves.count);
+    rlSetUniform(billboardLocations_[9], &leafCount, SHADER_UNIFORM_INT, 1);
+    if (leafCount)
+        rlSetUniform(billboardLocations_[10], leaves.leaves.data(), SHADER_UNIFORM_VEC4, leafCount * 3);
+    rlSetUniform(billboardLocations_[11], &worldFrame.camera.position, SHADER_UNIFORM_VEC3, 1);
     const int kind = 5;
     rlSetUniform(billboardLocations_[3], &kind, SHADER_UNIFORM_INT, 1);
     rlEnableDepthTest();
@@ -656,8 +746,8 @@ std::size_t WorldRenderer::cpuBytes() const noexcept {
     return n;
 }
 std::size_t WorldRenderer::gpuBytes() const noexcept {
-    std::size_t n =
-        publication_.textureBytes + 1000u * 564 * 8 + (quad_ ? 4u * 32 + 6u * 4 + 24u * 32 + 36u * 4 : 0);
+    std::size_t n = publication_.textureBytes + (2u * 1000 * 564 + 500u * 282) * 8 +
+                    (quad_ ? 4u * 32 + 6u * 4 + 24u * 32 + 36u * 4 : 0);
     if (active_)
         n += active_->cpu.meshBytes() + 500u * 282 * 8;
     if (staged_)

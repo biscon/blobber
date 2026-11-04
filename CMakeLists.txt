@@ -93,7 +93,14 @@ target_link_libraries(blobber_audio_io PUBLIC blobber_core PRIVATE nlohmann_json
 add_library(blobber_world_assets src/assets/world_assets.cpp)
 target_link_libraries(blobber_world_assets PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_assets)
-add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_billboard_clip.cpp)
+add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
+# Keep gameplay/orchestration unoptimized in Debug; only the numerical picking
+# kernels need optimized scalar loops. Symbols and Debug assertions are retained.
+option(BLOBBER_OPTIMIZE_DEBUG_RASTER "Optimize numerical visibility kernels in Debug" ON)
+if(BLOBBER_OPTIMIZE_DEBUG_RASTER AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_source_files_properties(src/render/world_raster.cpp src/render/world_billboard_clip.cpp
+        PROPERTIES COMPILE_OPTIONS "$<$<CONFIG:Debug>:-O2>")
+endif()
 target_link_libraries(blobber_world_cpu PUBLIC blobber_core blobber_world_assets PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_cpu)
 
@@ -491,6 +498,9 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
+    add_executable(blobber_world_movement_profile EXCLUDE_FROM_ALL tests/world_movement_profile.cpp)
+    target_link_libraries(blobber_world_movement_profile PRIVATE blobber_platform blobber_rules_io)
+    blobber_warnings(blobber_world_movement_profile)
     add_executable(blobber_world_visibility_gpu_tests EXCLUDE_FROM_ALL tests/world_visibility_gpu_tests.cpp)
     target_link_libraries(blobber_world_visibility_gpu_tests PRIVATE blobber_platform)
     target_include_directories(blobber_world_visibility_gpu_tests PRIVATE tests)

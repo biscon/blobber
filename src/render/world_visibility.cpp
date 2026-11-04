@@ -12,137 +12,6 @@ float dot(Vec a, Vec b) {
 Vec sub(Vec a, Vec b) {
     return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
-struct ClipVertex {
-    float x, y, z, u, v;
-};
-float plane(const ClipVertex& p, unsigned face) {
-    const float half = viewWidth * .5f / focal();
-    switch (face) {
-    case 0:
-        return p.z - nearPlane;
-    case 1:
-        return farPlane - p.z;
-    case 2:
-        return p.x + p.z * half;
-    case 3:
-        return p.z * half - p.x;
-    case 4:
-        return p.z * viewHeight * .34f / focal() - p.y;
-    default:
-        return p.y + p.z * viewHeight * .66f / focal();
-    }
-}
-float edge(float ax, float ay, float bx, float by, float x, float y) {
-    return (bx - ax) * (y - ay) - (by - ay) * (x - ax);
-}
-bool inclusive(float ax, float ay, float bx, float by) {
-    return by < ay || (by == ay && bx > ax);
-}
-void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint16_t id,
-              const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
-              bool cutoutOpaque = false, const BillboardClips* clips = nullptr) {
-    std::array<ClipVertex, 16> a{}, b{};
-    unsigned count = 3;
-    for (unsigned i = 0; i < 3; ++i) {
-        const auto delta = sub(vertices[i].position, out.camera.position);
-        a[i] = {dot(delta, out.camera.right), delta.y, dot(delta, out.camera.forward), vertices[i].u,
-                vertices[i].v};
-    }
-    for (unsigned face = 0; face < 6 && count; ++face) {
-        unsigned n = 0;
-        for (unsigned i = 0; i < count; ++i) {
-            const auto p = a[i], q = a[(i + 1) % count];
-            const float dp = plane(p, face), dq = plane(q, face);
-            if (dp >= 0)
-                b[n++] = p;
-            if ((dp >= 0) != (dq >= 0)) {
-                const float t = dp / (dp - dq);
-                b[n++] = {p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, p.z + (q.z - p.z) * t,
-                          p.u + (q.u - p.u) * t, p.v + (q.v - p.v) * t};
-            }
-        }
-        a = b;
-        count = n;
-    }
-    for (unsigned k = 1; k + 1 < count; ++k) {
-        std::array<ClipVertex, 3> t{a[0], a[k], a[k + 1]};
-        std::array<float, 3> x{}, y{}, iz{};
-        for (unsigned i = 0; i < 3; ++i) {
-            iz[i] = 1 / t[i].z;
-            x[i] = viewWidth * .5f + focal() * t[i].x * iz[i];
-            y[i] = viewHeight * .34f - focal() * t[i].y * iz[i];
-        }
-        float area = edge(x[0], y[0], x[1], y[1], x[2], y[2]);
-        if (std::abs(area) < 1e-10f)
-            continue;
-        if (area < 0) {
-            std::swap(t[1], t[2]);
-            std::swap(x[1], x[2]);
-            std::swap(y[1], y[2]);
-            std::swap(iz[1], iz[2]);
-            area = -area;
-        }
-        const int left =
-            std::clamp(int(std::ceil(*std::min_element(x.begin(), x.end()) - .5f)), 0, viewWidth);
-        const int right =
-            std::clamp(int(std::floor(*std::max_element(x.begin(), x.end()) - .5f)) + 1, 0, viewWidth);
-        const int top =
-            std::clamp(int(std::ceil(*std::min_element(y.begin(), y.end()) - .5f)), 0, viewHeight);
-        const int bottom =
-            std::clamp(int(std::floor(*std::max_element(y.begin(), y.end()) - .5f)) + 1, 0, viewHeight);
-        const std::array<bool, 3> inc{inclusive(x[1], y[1], x[2], y[2]), inclusive(x[2], y[2], x[0], y[0]),
-                                      inclusive(x[0], y[0], x[1], y[1])};
-        for (int py = top; py < bottom; ++py) {
-            float e0 = edge(x[1], y[1], x[2], y[2], left + .5f, py + .5f);
-            float e1 = edge(x[2], y[2], x[0], y[0], left + .5f, py + .5f);
-            float e2 = edge(x[0], y[0], x[1], y[1], left + .5f, py + .5f);
-            for (int px = left; px < right; ++px, e0 += y[1] - y[2], e1 += y[2] - y[0], e2 += y[0] - y[1]) {
-                if (e0 < 0 || (e0 == 0 && !inc[0]) || e1 < 0 || (e1 == 0 && !inc[1]) || e2 < 0 ||
-                    (e2 == 0 && !inc[2]))
-                    continue;
-                const float z = area / (e0 * iz[0] + e1 * iz[1] + e2 * iz[2]);
-                const auto pixel = std::size_t(py) * viewWidth + px;
-                if (assets) {
-                    if (z >= out.picking.opaqueDepth(pixel) - epsilon)
-                        continue;
-                    const auto old = out.picking.slot(px, py);
-                    const bool covered = z > out.picking.depth(pixel) + epsilon ||
-                                         (std::abs(z - out.picking.depth(pixel)) <= epsilon &&
-                                          old < NpcWorld::maxInstances && id >= NpcWorld::maxInstances);
-                    const bool candidate = !cutoutOpaque && id < NpcWorld::maxInstances;
-                    if (covered && (!candidate || out.picking.exposed(id)))
-                        continue;
-                    const float u =
-                        (e0 * t[0].u * iz[0] + e1 * t[1].u * iz[1] + e2 * t[2].u * iz[2]) * z / area;
-                    const float v =
-                        (e0 * t[0].v * iz[0] + e1 * t[1].v * iz[1] + e2 * t[2].v * iz[2]) * z / area;
-                    if (clips && clips->contains(u, v))
-                        continue;
-                    const auto& tex = assets->publication.textures[texture];
-                    const unsigned sx =
-                        unsigned(std::clamp(int(std::floor(u * tex.width)), 0, int(tex.width) - 1));
-                    const unsigned sy =
-                        unsigned(std::clamp(int(std::floor(v * tex.height)), 0, int(tex.height) - 1));
-                    if (assets->masks[texture][std::size_t(sy) * tex.width + sx] < threshold)
-                        continue;
-                    if (candidate)
-                        out.picking.expose(id);
-                    if (covered)
-                        continue;
-                } else if (z >= out.picking.depth(pixel))
-                    continue;
-                out.picking.writeDepth(pixel, id, z, !assets || cutoutOpaque);
-            }
-        }
-    }
-}
-void quad(WorldFrame& out, const std::array<Vec, 4>& p, std::uint16_t id,
-          const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
-          const BillboardClips* clips = nullptr) {
-    const std::array<Vertex, 4> v{{{p[0], {}, 0, 1}, {p[1], {}, 1, 1}, {p[2], {}, 1, 0}, {p[3], {}, 0, 0}}};
-    triangle(out, {v[0], v[1], v[2]}, id, assets, texture, threshold, false, clips);
-    triangle(out, {v[0], v[2], v[3]}, id, assets, texture, threshold, false, clips);
-}
 template <class F> void cube(Cell c, F emit) {
     const float x = float(c.x), z = float(c.y);
     emit(std::array<Vec, 4>{{{x, 0, z}, {x + 1, 0, z}, {x + 1, 1, z}, {x, 1, z}}}, Vec{0, 0, -1});
@@ -188,12 +57,13 @@ VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::C
         throw std::runtime_error("World visibility scratch budget exceeded");
 }
 std::size_t VisibilityPipeline::bytes() const noexcept {
-    return sizeof(*this) + 3u * viewWidth * viewHeight * (sizeof(std::uint16_t) + 2 * sizeof(float));
+    return sizeof(*this) + 4u * viewWidth * viewHeight * (sizeof(std::uint16_t) + 2 * sizeof(float)) +
+           2u * viewWidth * viewHeight * sizeof(float);
 }
 bool VisibilityPipeline::lootVisible(LootId id) const noexcept {
     return ready_ && !frame().moving && id.slot < lootCapacity && frame().visibleLoot[id.slot] == id;
 }
-bool VisibilityPipeline::update(const FrameInput& in) {
+bool VisibilityPipeline::update(const FrameInput& in, bool rasterMoving) {
     if ((scene_.map && scene_.map != &in.geometry.base()) || (map_ && map_ != &in.geometry.base()))
         throw std::invalid_argument("World visibility belongs to another map; prepare a new view");
     if (in.geometry.width() != scene_.width || in.geometry.height() != scene_.height)
@@ -234,38 +104,23 @@ bool VisibilityPipeline::update(const FrameInput& in) {
                                               in.doors && in.doors->active() ? in.doors->now : 0,
                                               in.guardianDoor};
     if (ready_ && stamp == stamp_ && sameCamera(c, frame().camera) &&
-        frame().moving == (in.movement.transition.active() || (in.doors && in.doors->active())))
+        frame().moving == (in.movement.transition.active() || (in.doors && in.doors->active())) &&
+        (!rasterMoving || !frame().moving || frame().rasterized))
         return false;
     auto& out = frames_[1 - current_];
-    out.picking.clear();
+    out.picking.clearMetadata();
     out.visibleLoot = {};
     out.visibleContainers = {};
     out.count = out.proxyCount = 0;
     out.camera = c;
     out.moving = in.movement.transition.active() || (in.doors && in.doors->active());
-    const bool opaqueChanged = !ready_ || !sameCamera(c, frame().camera) || stamp[0] != stamp_[0] ||
-                               stamp[1] != stamp_[1] || stamp[2] != stamp_[2] || stamp[8] != stamp_[8] ||
-                               stamp[9] != stamp_[9] || stamp[7] != stamp_[7];
+    out.rasterized = !out.moving || rasterMoving;
+    const bool opaqueChanged = !ready_ || !frame().rasterized || !sameCamera(c, frame().camera) ||
+                               stamp[0] != stamp_[0] || stamp[1] != stamp_[1] || stamp[2] != stamp_[2] ||
+                               stamp[8] != stamp_[8] || stamp[9] != stamp_[9] || stamp[7] != stamp_[7];
     build(out, in);
-    raster(out, opaqueChanged);
-    out.picking.finish(in.actors);
-    if (in.loot) {
-        for (int y = 0; y < viewHeight; ++y) {
-            for (int x = 0; x < viewWidth; ++x) {
-                if (auto id = out.picking.pickLoot(x, y))
-                    out.visibleLoot[id->slot] = *id;
-                else if (auto chest = out.picking.pickContainer(x, y))
-                    out.visibleContainers[chest->slot] = *chest;
-            }
-        }
-    }
-    if (in.loot)
-        for (unsigned i = 0; i < lootCapacity; ++i) {
-            const auto& stack = in.loot->stacks[i];
-            if (stack.active && stack.container != noContainer && out.visibleContainers[stack.container] &&
-                out.containerOpened[stack.container])
-                out.visibleLoot[i] = {in.loot->world, std::uint16_t(i), stack.generation};
-        }
+    if (out.rasterized)
+        finishPicking(out, in, opaqueChanged);
     out.revision = frame().revision + 1;
     map_ = &in.geometry.base();
     current_ = 1 - current_;
@@ -274,6 +129,7 @@ bool VisibilityPipeline::update(const FrameInput& in) {
     return true;
 }
 void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
+    out.bodyIndex.fill(-1);
     out.containerOpened = {};
     if (in.loot)
         for (unsigned i = 0; i < in.loot->containerCount; ++i)
@@ -439,50 +295,40 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             return !a.alive;
         return a.id < b.id;
     });
-}
-void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
-    if (rebuildOpaque) {
-        DrawList draws;
-        cull(scene_, out.camera, draws);
-        for (unsigned r = 0; r < draws.count; ++r) {
-            const auto& range = scene_.ranges[draws.ranges[r]];
-            if (range.variant != noContainer &&
-                out.containerOpened[range.id - PickingBuffer::containerBase] != bool(range.variant))
-                continue;
-            for (unsigned i = range.first; i < range.first + range.count; i += 3) {
-                const std::array<Vertex, 3> v{scene_.vertices[scene_.indices[i]],
-                                              scene_.vertices[scene_.indices[i + 1]],
-                                              scene_.vertices[scene_.indices[i + 2]]};
-                if (dot(v[0].normal, sub(out.camera.position, v[0].position)) <= 0)
-                    continue;
-                triangle(out, v, range.id);
-            }
-        }
-        for (const auto& decal : scene_.decals) {
-            const auto texture = decal.texture != UINT16_MAX ? decal.texture
-                                 : decal.motif               ? pack_.vine
-                                                             : pack_.crest;
-            const auto& p = decal.vertices;
-            triangle(out, {p[0], p[1], p[2]}, PickingBuffer::empty, &assets_, texture, 16, true);
-            triangle(out, {p[0], p[2], p[3]}, PickingBuffer::empty, &assets_, texture, 16, true);
-        }
-        constexpr unsigned faces[6][4]{{0, 1, 3, 2}, {4, 6, 7, 5}, {0, 2, 6, 4},
-                                       {1, 5, 7, 3}, {2, 3, 7, 6}, {0, 4, 5, 1}};
-        for (unsigned i = 0; i < out.doorCount; ++i) {
-            const auto p = corners(out.doors[i]);
-            for (const auto& f : faces)
-                quad(out, {p[f[0]], p[f[1]], p[f[2]], p[f[3]]}, out.doors[i].id);
-        }
-        opaqueCache_.copyRaster(out.picking);
-    } else
-        out.picking.copyRaster(opaqueCache_);
-    BillboardClips clips;
+    for (unsigned i = 0; i < out.count; ++i)
+        if (out.billboards[i].id < NpcWorld::maxInstances)
+            out.bodyIndex[out.billboards[i].id] = int(i);
+    prepareLeafQueries(out, nullptr, out.leaves);
+    LeafQueries bodyLeaves;
     for (unsigned i = 0; i < out.count; ++i) {
-        const auto& b = out.billboards[i];
-        billboardClips(out, b, clips);
-        quad(out, corners(out.camera, b), b.id, &assets_, b.texture, b.id < NpcWorld::maxInstances ? 1 : 16,
-             &clips);
+        const auto& body = out.billboards[i];
+        if (body.id >= NpcWorld::maxInstances)
+            continue;
+        prepareLeafQueries(out, &body, bodyLeaves);
+        for (unsigned leaf = 0; leaf < bodyLeaves.count; ++leaf)
+            out.bodyLeafRelations[body.id][leaf] = std::uint8_t(bodyLeaves.leaves[leaf].xMode[3]);
     }
+    out.picking.bodyVisibility(&out, [](const void* context, std::uint16_t owner, int x, int y, float depth) {
+        const auto& frame = *static_cast<const WorldFrame*>(context);
+        if (depth >= frame.bodyOpaqueDepth[y * viewWidth + x] || frame.bodyIndex[owner] < 0)
+            return false;
+        const float lateral = (x + .5f - viewWidth * .5f) / focal();
+        if (frame.leaves.hides(frame.camera,
+                               {frame.camera.forward.x + frame.camera.right.x * lateral,
+                                (viewHeight * .34f - y - .5f) / focal(),
+                                frame.camera.forward.z + frame.camera.right.z * lateral},
+                               depth, frame.bodyLeafRelations[owner].data()))
+            return false;
+        const auto visible = frame.picking.slot(x, y);
+        if (visible == owner || frame.picking.depth(y * viewWidth + x) > depth)
+            return true;
+        // A leaf underneath an owner-bound badge has already been evaluated with
+        // that owner's relation. Other bodies and nonbody sprites still occlude.
+        for (unsigned i = 0; i < frame.doorCount; ++i)
+            if (frame.doors[i].leaf && frame.doors[i].id == visible)
+                return true;
+        return false;
+    });
 }
 std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, int y) const noexcept {
     if (!ready_ || map_ != &in.geometry.base() || (in.doors && in.doors->active()) ||

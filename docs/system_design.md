@@ -1,5 +1,27 @@
 # System design
 
+Movement-frame performance (implemented and mechanically verified, 2026-11-04):
+[skip unavailable picking and reuse visibility work](movement_frame_work.md) removes
+moving software rasterization and empty HUD outline scans, caches owner/leaf relations,
+and isolates optimized Debug raster kernels. The bounded 1920×1080 profile exceeds
+400 FPS in Debug and Release, including movement stops and hover. `--uncapped`
+disables VSync/the frame cap; F1 displays FPS. Campaign desktop review remains user-owned.
+
+Ground-anchored door-leaf occlusion (implemented and mechanically verified, 2026-11-04):
+[shared leaf relationships and creature compositing](creature_occlusion.md) replaces
+leaf-volume strip deletion while preserving gameplay occupancy and artwork size.
+The presentation interface separates ground anchors/artwork from future physical footprints.
+Extended-plane classification avoids free-tip popping; only finite leaf silhouettes
+occlude. Focused CPU/headless and hidden GPU checks pass; [review gallery](screenshots/ground-anchored-doors/README.md)
+includes both sides and dense motion samples. Interactive acceptance remains user review.
+
+Floor map camera correction (implemented and mechanically verified, 2026-11-04):
+[per-axis centering and bounded tracking](map_revision.md#camera-bounds-correction)
+uses stable floor/boundary-wall bounds, excluding unused exterior solid padding.
+Fitting axes stay centered; larger axes track the party and stop at map edges.
+All 41×28 whole cells are used; [corner captures](screenshots/map-camera/README.md)
+and focused Debug/hidden GPU checks verify centering, clamping and allocation behavior.
+
 Floor map revision (implemented and mechanically verified, 2026-11-04):
 [viewport-sized floor map and room discovery](map_revision.md) adds fixed-size
 27-pixel cells, complete explored-room walls and shared imagegen markers/legend.

@@ -69,14 +69,31 @@ TextureHandle GpuResources::createTexture(const Image& image) {
     transfers_.bytes += textureBytes(t);
     return textures_.insert(t);
 }
-TargetHandle GpuResources::createTarget(int w, int h) {
+TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
     preparationPoint("Preparing presentation");
     if (!targets_.available())
         throw std::runtime_error("Render target capacity exhausted (8)");
     if (w <= 0 || h <= 0 || w > 8192 || h > 8192)
         throw std::invalid_argument("Invalid render target dimensions");
     checkpoint();
-    auto t = LoadRenderTexture(w, h);
+    RenderTexture2D t{};
+    if (!sampleDepth)
+        t = LoadRenderTexture(w, h);
+    else {
+        t.id = rlLoadFramebuffer();
+        if (!t.id)
+            throw std::runtime_error("Cannot create sampled-depth framebuffer");
+        t.texture = {rlLoadTexture(nullptr, w, h, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1), w, h, 1,
+                     PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+        t.depth = {rlLoadTextureDepth(w, h, false), w, h, 1, 19};
+        rlFramebufferAttach(t.id, t.texture.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(t.id, t.depth.id, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_TEXTURE2D, 0);
+        if (!rlFramebufferComplete(t.id)) {
+            UnloadRenderTexture(t);
+            throw std::runtime_error("Cannot create sampled-depth target");
+        }
+        rlDisableFramebuffer();
+    }
     if (!IsRenderTextureValid(t) || !glOkay()) {
         UnloadRenderTexture(t);
         throw std::runtime_error("Cannot create render target");
@@ -85,6 +102,24 @@ TargetHandle GpuResources::createTarget(int w, int h) {
     ++counts_.targets;
     counts_.bytes += targetBytes(t);
     return targets_.insert(t);
+}
+void GpuResources::copyDepth(TargetHandle source, TargetHandle destination) {
+    const auto& a = target(source);
+    const auto& b = target(destination);
+    if (a.texture.width != b.texture.width || a.texture.height != b.texture.height)
+        throw std::invalid_argument("Depth copy dimensions differ");
+    using Bind = void (*)(unsigned, unsigned);
+    using Blit = void (*)(int, int, int, int, int, int, int, int, unsigned, unsigned);
+    const auto bind = reinterpret_cast<Bind>(rlGetProcAddress("glBindFramebuffer"));
+    const auto blit = reinterpret_cast<Blit>(rlGetProcAddress("glBlitFramebuffer"));
+    if (!bind || !blit)
+        throw std::runtime_error("OpenGL 3.3 depth copy unavailable");
+    rlDrawRenderBatchActive();
+    bind(0x8CA8, a.id); // GL_READ_FRAMEBUFFER
+    bind(0x8CA9, b.id); // GL_DRAW_FRAMEBUFFER
+    blit(0, 0, a.texture.width, a.texture.height, 0, 0, b.texture.width, b.texture.height, 0x00000100,
+         0x2600); // GL_DEPTH_BUFFER_BIT, GL_NEAREST
+    rlEnableFramebuffer(a.id);
 }
 MeshHandle GpuResources::createMesh(const world_render::Scene& s) {
     preparationPoint("Preparing dungeon");

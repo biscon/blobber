@@ -7,6 +7,7 @@
 #include "support/creation_fixtures.hpp"
 #include "support/creature_occlusion_checks.hpp"
 #include "support/hybrid_fixtures.hpp"
+#include "support/moving_visibility_checks.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/status_occlusion.hpp"
 #include <cmath>
@@ -14,6 +15,7 @@
 using namespace blobber;
 namespace {
 void spritesAtDoorLeaves() {
+    unsigned frontLeafSamples = 0;
     test::VisibilityFixture fixture;
     auto publication = fixture.publication();
     publication.appearances[0].width = .4f;
@@ -79,6 +81,12 @@ void spritesAtDoorLeaves() {
                             for (int x = 0; x < viewWidth; ++x) {
                                 if (pipeline.frame().picking.slot(x, y) != id.slot)
                                     continue;
+                                const auto pixel = std::size_t(y) * viewWidth + x;
+                                if (b.depth > pipeline.frame().picking.opaqueDepth(pixel) + 1e-5f) {
+                                    ++frontLeafSamples;
+                                    check(pipeline.frame().picking.badgeVisible(id.slot, x, y),
+                                          "An owner-bound badge shares its body's in-front leaf relation");
+                                }
                                 const float lateral = (x + .5f - foot.x) * b.depth / world_render::focal();
                                 const world_render::Vec point{b.feet.x + camera.right.x * lateral,
                                                               b.feet.y + (foot.y - y - .5f) * b.depth /
@@ -86,6 +94,8 @@ void spritesAtDoorLeaves() {
                                                               b.feet.z + camera.right.z * lateral};
                                 for (unsigned i = 0; i < pipeline.frame().doorCount; ++i) {
                                     const auto& box = pipeline.frame().doors[i];
+                                    if (box.leaf)
+                                        continue;
                                     const float dx = point.x - box.origin.x, dz = point.z - box.origin.z;
                                     const float u = (dx * box.x.x + dz * box.x.z) /
                                                     (box.x.x * box.x.x + box.x.z * box.x.z),
@@ -94,7 +104,7 @@ void spritesAtDoorLeaves() {
                                     check(!(u > 1e-4f && u < 1 - 1e-4f && v > 1e-4f && v < 1 - 1e-4f &&
                                             point.y > box.origin.y + 1e-4f &&
                                             point.y < box.origin.y + box.y.y - 1e-4f),
-                                          "No pickable body sample remains inside leaf, jamb or lintel");
+                                          "No pickable body sample remains inside a static jamb or lintel");
                                 }
                             }
                     }
@@ -103,6 +113,7 @@ void spritesAtDoorLeaves() {
                 }
             }
         }
+    check(frontLeafSamples > 0, "Door fixtures exercise bodies and badges in front of nearer leaf depth");
     // Near the frustum edge, moving away from a jamb must not move the body axis
     // out of view and recreate a locked-facing/unselectable-target situation.
     FloorFixtures fixtures;
@@ -265,6 +276,7 @@ void alphaAnchorsAndWalls() {
 } // namespace
 int main() {
     try {
+        test::movingVisibilityWork();
         test::creatureIntersectionMasks();
         test::creatureMaskExposure();
         spritesAtDoorLeaves();

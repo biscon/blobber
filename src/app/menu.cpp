@@ -16,7 +16,7 @@
 #include <random>
 namespace blobber {
 int runMenus(const Options& options) try {
-    Window window(options.width, options.height);
+    Window window(options.width, options.height, false, options.uncapped);
     PreparationWorker worker;
     auto loading = std::make_unique<LoadingScreen>(&worker);
     const auto catalog = prepareCpu([&] {

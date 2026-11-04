@@ -2,8 +2,8 @@
 #include "raylib.h"
 #include <stdexcept>
 namespace blobber {
-Window::Window(int width, int height, bool hidden) {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI |
+Window::Window(int width, int height, bool hidden, bool uncapped) {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | (uncapped ? 0 : FLAG_VSYNC_HINT) | FLAG_WINDOW_HIGHDPI |
                    (hidden ? FLAG_WINDOW_HIDDEN : 0));
     InitWindow(width, height, "Stone & Shadow | Blobber");
     if (!IsWindowReady()) {
@@ -11,9 +11,11 @@ Window::Window(int width, int height, bool hidden) {
         // CloseWindow path assumes initialized GL resources.
         throw std::runtime_error("Graphics unavailable: cannot open an OpenGL window");
     }
+    if (uncapped)
+        ClearWindowState(FLAG_VSYNC_HINT);
     SetExitKey(KEY_NULL);
     SetWindowMinSize(320, 240);
-    SetTargetFPS(60);
+    SetTargetFPS(uncapped ? 0 : 60);
 }
 Window::~Window() {
     CloseWindow();

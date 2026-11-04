@@ -210,6 +210,33 @@ int main() {
                           "Both quality paths retain interaction");
                 }
             }
+            // IDs do not exercise the premultiplied colour blend transition.
+            // A fully opaque flashed body has a known white interior in both qualities.
+            animation.frames[0].clip = NpcAnimation::Idle;
+            animation.frames[0].active = 1;
+            animation.frames[0].flash = true;
+            ++animation.revision;
+            for (bool quality : {false, true}) {
+                renderer.supersampling(quality);
+                renderer.render(input);
+                OwnedImage color(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+                ImageFlipVertical(&color.value);
+                unsigned white = 0;
+                const auto& picking = renderer.visibility()->frame().picking;
+                for (int y = 2; y < viewHeight - 2; ++y)
+                    for (int x = 2; x < viewWidth - 2; ++x) {
+                        if (picking.slot(x, y) != 0 || picking.slot(x - 2, y) != 0 ||
+                            picking.slot(x + 2, y) != 0 || picking.slot(x, y - 2) != 0 ||
+                            picking.slot(x, y + 2) != 0)
+                            continue;
+                        const auto c = GetImageColor(color.value, x, y);
+                        white += c.r > 240 && c.g > 240 && c.b > 240;
+                    }
+                check(white > 20, "Composited colour shows opaque flashed body interiors at both qualities");
+            }
+            animation.frames[0].flash = false;
+            ++animation.revision;
+            renderer.render(input);
             const auto canonicalRevision = renderer.visibility()->frame().revision;
             const auto* canonicalPicking = renderer.picking();
             renderer.supersampling(false);

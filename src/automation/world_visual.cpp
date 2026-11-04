@@ -13,7 +13,8 @@ class WorldVisual final : public Visibility {
         animator_.setTime(game.timeMs(), &game.effects());
         pipeline_.update({game.geometry(), game.movement(), &game.actors(), &animator_.snapshot(),
                           &game.loot().snapshot(), &game.doors(), nullptr, nullptr, game.timeMs(),
-                          game.guardianDoor()});
+                          game.guardianDoor()},
+                         false);
         const auto* picking = pipeline_.picking();
         return picking ? picking->targets() : empty_;
     }

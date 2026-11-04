@@ -40,7 +40,8 @@ inline void creatureOcclusionReview(const std::filesystem::path& assets,
                 const Player pose{doorCell + f * -2, heading};
                 NpcWorld places(map, pose.cell, definitions.types,
                                 {{type, doorCell + f, {0, 1}, Heading((unsigned(heading) + 2) % 4)},
-                                 {type, doorCell + f, {1, 1}, Heading((unsigned(heading) + 2) % 4)}});
+                                 {type, doorCell + f, {1, 1}, Heading((unsigned(heading) + 2) % 4)},
+                                 {type, doorCell + f * 2, {1, 1}, Heading((unsigned(heading) + 2) % 4)}});
                 FloorFixtures fixtures;
                 fixtures.count = 1;
                 fixtures.entries[0] = {doorCell, Heading::North, FixtureKind::Door};
@@ -85,13 +86,16 @@ inline void creatureOcclusionReview(const std::filesystem::path& assets,
                     check(bool(game.actors().walk(game.actors().id(i), doorCell, {int(i), 1}, pose.cell, 0,
                                                   600)),
                           "Review creatures approach doorway");
-                for (unsigned time : {0u, 600u})
+                for (unsigned time : {0u, 250u, 300u, 350u, 375u, 400u, 425u, 450u, 600u})
                     capture(time);
+                game.restorePose(adjacent, false);
+                capture(700);
+                game.restorePose(pose, false);
                 for (unsigned i = 0; i < 2; ++i)
                     check(bool(game.actors().walk(game.actors().id(i), doorCell + f * -1, {int(i), 1},
                                                   pose.cell, 1000, 600)),
                           "Review creatures pass through doorway");
-                for (unsigned time : {1050u, 1100u, 1200u, 1600u})
+                for (unsigned time : {1000u, 1050u, 1075u, 1100u, 1125u, 1150u, 1200u, 1300u, 1600u})
                     capture(time);
                 check(sawMasks, "Production motion sample exercises scenery intersection clipping");
             }

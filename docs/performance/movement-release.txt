@@ -1,0 +1,4 @@
+PROFILE_CONFIG resolution=1920x1080 supersampling=1 vsync=0 cap=0 ai=0 warmup=32
+PROFILE stationary-animation samples=256 moving=0 mean_fps=2921.67 total_p50_p95_max_ms=0.298998/0.799973/1.65646 update=0.003056/0.003456/0.00546 view_audio_hud=0.021209/0.419984/0.511926 present_gpu_complete=0.274552/0.37503/1.63236 audio=1
+PROFILE hover samples=256 moving=0 mean_fps=2493.93 total_p50_p95_max_ms=0.355924/0.863521/2.07203 update=0.003146/0.003737/0.012664 view_audio_hud=0.022923/0.421817/0.523236 present_gpu_complete=0.329676/0.430924/2.0391 audio=1
+PROFILE movement samples=256 moving=243 mean_fps=1994.03 total_p50_p95_max_ms=0.419784/1.53899/2.10321 update=0.003216/0.004829/0.012634 view_audio_hud=0.065703/1.17015/1.70001 present_gpu_complete=0.350244/0.366433/1.76132 audio=1

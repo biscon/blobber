@@ -84,15 +84,17 @@ class WorldRenderer {
     std::shared_ptr<const world_assets::CpuAssets> assets_;
     const world_assets::Publication& publication_;
     std::vector<GpuLease<TextureHandle>> textures_;
-    GpuLease<ShaderHandle> world_, resolve_, billboard_, sky_;
+    GpuLease<ShaderHandle> world_, resolve_, billboard_, sky_, creatureComposite_;
     GpuLease<MeshHandle> quad_, proxy_;
-    std::array<int, 9> billboardLocations_{};
+    std::array<int, 12> billboardLocations_{};
     void prepareBillboards();
+    enum class BillboardPass { Scenery, LeafArt, Creatures };
     void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool,
-                        const world_render::Scene*);
-    void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground);
+                        const world_render::Scene*, BillboardPass);
+    void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground,
+                     const world_render::WorldFrame&);
     int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1, doorUv_ = -1;
-    GpuLease<TargetHandle> high_;
+    GpuLease<TargetHandle> high_, creaturesLow_, creaturesHigh_;
     std::unique_ptr<View> active_, staged_;
     world_render::DrawList draws_;
     int mvp_ = -1, view_ = -1, forward_ = -1, anisotropy_ = 1;

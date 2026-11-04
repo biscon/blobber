@@ -146,19 +146,56 @@ void corridorAndFallback() {
           "Non-discovery maps show full terrain and out-of-map cells stay dark");
 }
 void framing() {
-    auto view = MapGridView::fit(12, 10, {1, 1}, 8, 42, 370, 254);
+    auto view = MapGridView::fit({{0, 0}, 12, 10}, {1, 1}, 8, 42, 370, 254);
     check(view.first == Cell{0, 0} && view.columns == 12 && view.rows == 10 && view.x == 139 && view.y == 124,
           "Small maps center independently on both axes");
-    view = MapGridView::fit(100, 10, {0, 1}, 8, 42, 370, 254);
-    check(view.columns == 41 && view.first.x == -20 && view.rows == 10 && view.first.y == 0 &&
-              view.left({0, 1}) + 4.5f == 193 && view.y == 124,
-          "Wide maps keep the party centered even at a map edge while fitting the short axis");
-    view = MapGridView::fit(100, 100, {99, 99}, 8, 42, 370, 254);
-    check(view.columns == 41 && view.rows == 27 && view.first == Cell{79, 86} &&
-              view.left({99, 99}) + 4.5f == 193 && view.top({99, 99}) + 4.5f == 169,
-          "Oversized axes keep fixed cell size and center the party without edge clamping");
-    check(!view.contains({78, 99}) && !view.contains({99, 113}) && view.contains({79, 86}),
+    for (int y = 0; y < 10; ++y)
+        for (int x = 0; x < 12; ++x) {
+            const auto moved = MapGridView::fit({{0, 0}, 12, 10}, {x, y}, 8, 42, 370, 254);
+            check(moved.first == view.first && moved.x == view.x && moved.y == view.y,
+                  "A fitting map never scrolls as the party moves to any cell");
+        }
+    view = MapGridView::fit({{0, 0}, 100, 10}, {0, 1}, 8, 42, 370, 254);
+    check(view.columns == 41 && view.first.x == 0 && view.rows == 10 && view.first.y == 0 && view.x == 8.5f &&
+              view.y == 124,
+          "Wide maps stop at the left edge while centering the fitting vertical axis");
+    view = MapGridView::fit({{0, 0}, 12, 100}, {11, 99}, 8, 42, 370, 254);
+    check(view.first == Cell{0, 72} && view.columns == 12 && view.rows == 28 && view.x == 139,
+          "Tall maps clamp vertically while the fitting horizontal axis remains centered");
+    view = MapGridView::fit({{0, 0}, 100, 100}, {99, 99}, 8, 42, 370, 254);
+    check(view.columns == 41 && view.rows == 28 && view.first == Cell{59, 72} &&
+              view.left({99, 99}) + 9 == 377.5f && view.top({99, 99}) + 9 == 295,
+          "Bottom-right camera uses all whole cells and stops at both terrain edges");
+    check(!view.contains({58, 99}) && !view.contains({99, 100}) && view.contains({59, 72}),
           "Whole-cell crop rejects both offscreen axes");
+    for (int y = 0; y < 100; ++y)
+        for (int x = 0; x < 100; ++x) {
+            view = MapGridView::fit({{0, 0}, 100, 100}, {x, y}, 8, 42, 370, 254);
+            check(view.first.x >= 0 && view.first.y >= 0 && view.first.x + view.columns <= 100 &&
+                      view.first.y + view.rows <= 100 && view.contains({x, y}),
+                  "Tracking across the level never exposes outside cells or loses the party");
+            if (x >= 20 && x <= 79)
+                check(view.left({x, y}) + 4.5f == 193,
+                      "Horizontal tracking centers the party away from edges");
+            if (y >= 14 && y <= 85)
+                check(view.top({x, y}) + 4.5f == 173.5f,
+                      "Even row counts track within half a cell of the canvas center");
+        }
+    view = MapGridView::fit({{0, 0}, 100, 100}, {99, 0}, 8, 42, 370, 254);
+    check(view.first == Cell{59, 0}, "Top-right corner clamps both axes");
+    view = MapGridView::fit({{0, 0}, 100, 100}, {0, 99}, 8, 42, 370, 254);
+    check(view.first == Cell{0, 72}, "Bottom-left corner clamps both axes");
+    view = MapGridView::fit({{7, 13}, 41, 28}, {47, 40}, 8, 42, 370, 254);
+    check(view.first == Cell{7, 13} && view.columns == 41 && view.rows == 28 && view.x == 8.5f &&
+              view.y == 43,
+          "Exact fits retain even capacity and center fixed nonzero world bounds");
+    view = MapGridView::fit({{7, 13}, 100, 100}, {106, 13}, 8, 42, 370, 254);
+    check(view.first == Cell{66, 13}, "Oversized offset bounds clamp in world coordinates");
+    view = MapGridView::fit({{0, 0}, 100, 100}, {99, 99}, 8, 42, 8, 0);
+    check(view.columns == 0 && view.rows == 0 && !view.contains({99, 99}),
+          "A viewport smaller than one cell has no drawable cells");
+    view = MapGridView::fit({}, {}, 8, 42, 370, 254);
+    check(view.columns == 0 && view.rows == 0, "Empty bounds do not produce drawable cells");
     std::vector<std::string> rows(45, std::string(75, '#'));
     for (int y = 1; y < 44; ++y)
         for (int x = 1; x < 74; ++x)
@@ -169,6 +206,45 @@ void framing() {
     model.refresh(nullptr);
     check(model.tile({73, 43}) == MapTile::Floor,
           "Large non-discovery maps are not truncated to discovery mask capacity");
+}
+void paddedBounds() {
+    std::vector<std::string> rows(36, std::string(36, '#'));
+    for (int y = 8; y <= 17; ++y)
+        for (int x = 11; x <= 22; ++x)
+            rows[y][x] = '.';
+    const Map map(rows);
+    MapOverlayModel model;
+    model.prepare(map);
+    const auto bounds = model.bounds();
+    check(bounds.first == Cell{10, 7} && bounds.width == 14 && bounds.height == 12,
+          "Camera bounds include the dungeon wall ring but exclude unused storage padding");
+    const auto before = MapGridView::fit(bounds, {11, 8}, 8, 42, 370, 254);
+    const auto after = MapGridView::fit(bounds, {22, 17}, 8, 42, 370, 254);
+    check(before.first == after.first && before.x == after.x && before.y == after.y && before.x == 130 &&
+              before.y == 115,
+          "A padded dungeon that fits stays centered at opposite party corners");
+    FloorFixtures fixtures;
+    fixtures.discovery = true;
+    FloorGeometry floor(map, fixtures);
+    allocations = 0;
+    watching = true;
+    model.refresh(&floor);
+    const auto hidden = model.bounds();
+    model.refresh(nullptr);
+    const auto full = model.bounds();
+    const auto fitted = MapGridView::fit(full, {22, 17}, 8, 42, 370, 254);
+    watching = false;
+    check(allocations == 0 && hidden.first == full.first && hidden.width == full.width &&
+              hidden.height == full.height && fitted.x == before.x && fitted.y == before.y,
+          "Discovery/full-map changes and repeated fitting do not move bounds or allocate");
+    const Map edge({"###", "#.#", "###"});
+    model.prepare(edge);
+    check(model.bounds().first == Cell{0, 0} && model.bounds().width == 3 && model.bounds().height == 3,
+          "Boundary ring clips to actual storage edges");
+    const Map solid({"###", "###"});
+    model.prepare(solid);
+    check(model.bounds().first == Cell{0, 0} && model.bounds().width == 3 && model.bounds().height == 2,
+          "All-solid maps retain stable fallback bounds");
 }
 void keyMemory() {
     const auto catalog = fixtureCatalog();
@@ -191,6 +267,7 @@ int main() {
         roomKnowledge();
         corridorAndFallback();
         framing();
+        paddedBounds();
         keyMemory();
         std::cout << "Floor map checks passed\n";
     } catch (const std::exception& e) {

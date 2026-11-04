@@ -29,6 +29,11 @@ int main() {
         }
         check(rejected, "unknown options still reject");
         check(parseOptions(1, normal).supersampling, "Game defaults to supersampling");
+        check(!parseOptions(1, normal).uncapped, "Normal launch retains frame pacing");
+        char uncapped[] = "--uncapped";
+        char* fast[]{program, uncapped, help};
+        check(parseOptions(3, fast).uncapped && parseOptions(3, fast).help,
+              "Uncapped launch does not consume the following option");
         char quality[] = "--supersampling", off[] = "off", bad[] = "nearest";
         char* lower[]{program, quality, off};
         check(!parseOptions(3, lower).supersampling, "Off selects native filtered quality for normal game");

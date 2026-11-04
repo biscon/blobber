@@ -31,8 +31,8 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
     p.line({5, 39}, {503, 39}, edge);
     const auto canvas = hudLayout::mapCanvas;
     p.fill(canvas, {9, 15, 15, 255});
-    const auto view = MapGridView::fit(map.width(), map.height(), state.player.cell, canvas.x, canvas.y,
-                                       canvas.width, canvas.height);
+    const auto view =
+        MapGridView::fit(model->bounds(), state.player.cell, canvas.x, canvas.y, canvas.width, canvas.height);
     // A subtle background grid uses exactly the same phase as the centered map.
     const float firstX =
         view.x - std::floor((view.x - canvas.x) / MapGridView::cellSize) * MapGridView::cellSize;

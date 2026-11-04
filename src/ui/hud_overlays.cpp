@@ -140,8 +140,9 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             marks[h->hover.enemy->slot] = marks[h->hover.enemy->slot]               ? 4
                                           : h->hover.reason == CommandReason::Ready ? 3
                                                                                     : 5;
-        for (int y = 0; y < viewHeight; ++y)
-            for (int x = 0; x < viewWidth; ++x) {
+        const auto bounds = picking->markedBounds(marks);
+        for (int y = bounds.top; y < bounds.bottom; ++y)
+            for (int x = bounds.left; x < bounds.right; ++x) {
                 const auto slot = picking->slot(x, y);
                 if (slot >= marks.size() || !marks[slot])
                     continue;

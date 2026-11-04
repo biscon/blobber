@@ -1,0 +1,313 @@
+{
+  "native_size": [
+    1920,
+    1080
+  ],
+  "source_directory": "/tmp/blobber-leaf-stable",
+  "captures": [
+    {
+      "file": "bugbear-back-0.png",
+      "sha256": "834efe30b3589d55b642962544eb7a298f07d70c29ac32a0331f6ff57efa83d8"
+    },
+    {
+      "file": "bugbear-back-1000.png",
+      "sha256": "f635ccc8f55667bd374d37f4d9d24f7c0810ac1c18096f9172e6fb10a3c24dc6"
+    },
+    {
+      "file": "bugbear-back-1050.png",
+      "sha256": "05345a34942cc435b493e36d0fc200098c518d1829d2bf30ca3546199b30c6c3"
+    },
+    {
+      "file": "bugbear-back-1075.png",
+      "sha256": "ae1632cf2c1304225054853903c94e0e782b0b11a1414ba60d52ef003272a78d"
+    },
+    {
+      "file": "bugbear-back-1100.png",
+      "sha256": "7519ae6fc01e813b423a9114fba88c97bbbf13fa0193ca7978ea1ffa48797b0b"
+    },
+    {
+      "file": "bugbear-back-1125.png",
+      "sha256": "c5dc4fe300b8925a3b0a6d7c316482bc91a2b2f38ed5b90380f32fabd1dbbd1a"
+    },
+    {
+      "file": "bugbear-back-1150.png",
+      "sha256": "6c7222ac63f10185265168f8d5106637f1b6e975eae5bb6f7b2cbbc095f728be"
+    },
+    {
+      "file": "bugbear-back-1200.png",
+      "sha256": "9ca9c304519232bd20c60781456dba959b61cc2b06dcadeefe5beb0d9c00f008"
+    },
+    {
+      "file": "bugbear-back-1300.png",
+      "sha256": "6d1ea3e007968de1517554959d76298827c6d2d5ea9261645834071a5f1d6af6"
+    },
+    {
+      "file": "bugbear-back-1600.png",
+      "sha256": "2717c9b1cffcc454be4c2805a1a102e83c94c928897c68b8ec36125c112ee64f"
+    },
+    {
+      "file": "bugbear-back-250.png",
+      "sha256": "ffe3f668fa44785d90103bb4f9231121e6f38b423bc85f86f5488c0d54602e1d"
+    },
+    {
+      "file": "bugbear-back-300.png",
+      "sha256": "bd643d4ce76d58aa0c92eaec0b6bc765f3b9b539d066c2c0a19a5167fff063aa"
+    },
+    {
+      "file": "bugbear-back-350.png",
+      "sha256": "d8e48c1fc4d819c07866b453737ef89757453e400eb0408ad75285772d03288c"
+    },
+    {
+      "file": "bugbear-back-375.png",
+      "sha256": "0ae9523e9b04e8fb9ffcad97a0aea6752351a7f14d3187fe75066796357f0545"
+    },
+    {
+      "file": "bugbear-back-400.png",
+      "sha256": "8c71a9a0065e93342bb7ffc7cdecd8b3129e699620620959b937a55392fde0bd"
+    },
+    {
+      "file": "bugbear-back-425.png",
+      "sha256": "d61dadaf3461c9c0af57f03a16900408533c1a7cac122a8d36b21cda36aa5242"
+    },
+    {
+      "file": "bugbear-back-450.png",
+      "sha256": "9ca2563281490e16c8ff211431b5865a5bc68bb17981275d1e2cc9239bf64880"
+    },
+    {
+      "file": "bugbear-back-600.png",
+      "sha256": "b7710526899bd415777ef60d0f457f8e41422c8ca0b21b282c14aeffefdf31d5"
+    },
+    {
+      "file": "bugbear-back-700.png",
+      "sha256": "d227a7afae81263e215eb4c87cd0ff4ccd70dd5ebea51bf12ef4a5458f3027ae"
+    },
+    {
+      "file": "bugbear-front-0.png",
+      "sha256": "1da16028227775efb3dea52656af05b19c96ad833fea0fd028761ae0f61dae62"
+    },
+    {
+      "file": "bugbear-front-1000.png",
+      "sha256": "eca12541656709c65b0f79ef3b8c104b36cb65056ac90f4a4deb5c873b1cebfc"
+    },
+    {
+      "file": "bugbear-front-1050.png",
+      "sha256": "7ba6cd2fef5f29a3c296510bae25768d295956550d2b67a19842546d1cc0b3f7"
+    },
+    {
+      "file": "bugbear-front-1075.png",
+      "sha256": "b3bfc92266e4d72aa5758a72938e6218023ba507f58501911f589fe465022a76"
+    },
+    {
+      "file": "bugbear-front-1100.png",
+      "sha256": "8c4756cecd36d63a27be438a5ac87b2d5546956a75287e14487dae41d76519e1"
+    },
+    {
+      "file": "bugbear-front-1125.png",
+      "sha256": "aa607a4bf0d26dabe05fdede185489df4cb0de65602524fa3420bf52c2a57d24"
+    },
+    {
+      "file": "bugbear-front-1150.png",
+      "sha256": "40dc9ac9fc4992cc93c7b4b6fffcc58a641cbe839f05be025c5bec1bb519cd2d"
+    },
+    {
+      "file": "bugbear-front-1200.png",
+      "sha256": "01d4a048893c79585925acce010af8f777854d8f087b651c6d3a8b63eaeab65c"
+    },
+    {
+      "file": "bugbear-front-1300.png",
+      "sha256": "de44fec3080f0d7b2511eabeee65ab95114c8d0104d18f6583885f5536da51ea"
+    },
+    {
+      "file": "bugbear-front-1600.png",
+      "sha256": "8383301c05f5ef0adfe6f69c3fe615eda352fafab69dae167734e68ce6b7fe92"
+    },
+    {
+      "file": "bugbear-front-250.png",
+      "sha256": "d58c35578b631f82c8e70b6646e6a1945e3b50c150f0fe9ceb37b2c1ab62ef68"
+    },
+    {
+      "file": "bugbear-front-300.png",
+      "sha256": "e79851020d6fb7d8f995ca7031c072185b867ca67790ca1d39f41ce5c3b5aa8b"
+    },
+    {
+      "file": "bugbear-front-350.png",
+      "sha256": "1a2306c5be464f20b962dccca9704a12e8b642d2c5d405629542766eaa58692c"
+    },
+    {
+      "file": "bugbear-front-375.png",
+      "sha256": "13aaa17fe34eb7754529ad46524b86f641ca5d063ca7c63489510f84d9182477"
+    },
+    {
+      "file": "bugbear-front-400.png",
+      "sha256": "51df3cdb0cc4978e7db114489ff06573f4a9e015bced3dbc8822b62a693fea9a"
+    },
+    {
+      "file": "bugbear-front-425.png",
+      "sha256": "77e0487c5e6f685d1e2c6861c554fd49d11753951aec32a87bb9700ab548a9c3"
+    },
+    {
+      "file": "bugbear-front-450.png",
+      "sha256": "db9d1b42bac74e1249d090e913bd314d3fa7098f502ff6038c5f576ed7ede55e"
+    },
+    {
+      "file": "bugbear-front-600.png",
+      "sha256": "4c4d5f1ce85a504d8a6fba9ab40cab2e654f0a38718dd139ef4807578c690c6a"
+    },
+    {
+      "file": "bugbear-front-700.png",
+      "sha256": "3be99111cc90b6172da0ef6179ffb00b06927b62ac360545d9dc71c402c6d240"
+    },
+    {
+      "file": "goblin-back-0.png",
+      "sha256": "581e985023ff3d2a20b3c70c7891401d44b14c5872415d2fdd85fbe6315cb956"
+    },
+    {
+      "file": "goblin-back-1000.png",
+      "sha256": "7db7e24462a506b82321885e11f7f12af1001985ce4bd7ccabb6054abe085c1a"
+    },
+    {
+      "file": "goblin-back-1050.png",
+      "sha256": "814dc1caa2d780101ce26754cf33e59cf291e74c8e4fa504ca85825b760c976e"
+    },
+    {
+      "file": "goblin-back-1075.png",
+      "sha256": "3b4f9270985b12778c42bbc3e30d3334dc59199f94b5fcbbb5405b96feb94db5"
+    },
+    {
+      "file": "goblin-back-1100.png",
+      "sha256": "c3a06029a051549f80b0aaa53c4c1ad31af8950d7fbed314420864e126ea3f7a"
+    },
+    {
+      "file": "goblin-back-1125.png",
+      "sha256": "7463ef14abfdd410f3ad1bb16c31f3672f8c07bb9fd97e6a0631f3473475be23"
+    },
+    {
+      "file": "goblin-back-1150.png",
+      "sha256": "4ebbd90258d5c77433bdd390814a53f08306236a663bdca9e16bb699f7656b11"
+    },
+    {
+      "file": "goblin-back-1200.png",
+      "sha256": "a2ee48ca9e706c90059e683ab0d0a30f0a97ee4cc508ef0676d0f9358cc8643d"
+    },
+    {
+      "file": "goblin-back-1300.png",
+      "sha256": "d043d4a048d00971929b0724bf1b72d1379404345c6b86989ec62d42205754d8"
+    },
+    {
+      "file": "goblin-back-1600.png",
+      "sha256": "b7df80afd66ecdd47f83c3ab87eb9ad453c8f76b4d9b607072cba867862da528"
+    },
+    {
+      "file": "goblin-back-250.png",
+      "sha256": "f8359aece165fe4e84e8f2edde274f394385bf5d9d0d0257de2dd26c85ea47cd"
+    },
+    {
+      "file": "goblin-back-300.png",
+      "sha256": "45465361f0979cb67eaf951e3a5fe58fffa0d25b6fe713b572e19999a0f7071b"
+    },
+    {
+      "file": "goblin-back-350.png",
+      "sha256": "1b78a7a9f87a6f7ba4b9d6a7b36aad5e51b572f8105dd10cf3bd50f98d5d383c"
+    },
+    {
+      "file": "goblin-back-375.png",
+      "sha256": "9c145506531fbfbd5774d2c99b3987dbd15227cb5c3e22d94e1a34316ab30150"
+    },
+    {
+      "file": "goblin-back-400.png",
+      "sha256": "255f5e583062aac2585e88eeb2acd375fccb655fd6f5ab96db7e327228ff15d1"
+    },
+    {
+      "file": "goblin-back-425.png",
+      "sha256": "44db643592e46e319370ec119578f0e28df55baba331d444b8d929d48467d4e1"
+    },
+    {
+      "file": "goblin-back-450.png",
+      "sha256": "cfe79b76c300a0cb7f077dd78556d9516ffa6306d2e51002aa26a71c66985058"
+    },
+    {
+      "file": "goblin-back-600.png",
+      "sha256": "ef27240cdedf245541b1f99259c123ff7f3ed41b5bd7b21745f094a3a7a25bab"
+    },
+    {
+      "file": "goblin-back-700.png",
+      "sha256": "814b48ec8d63146364db34d185e23be00ec9b8d04d89a78786035b1a50a31255"
+    },
+    {
+      "file": "goblin-front-0.png",
+      "sha256": "38eb109995ba7980f4561f044d7ee7ff85d0e249d9a3b9d35204a87be6b09828"
+    },
+    {
+      "file": "goblin-front-1000.png",
+      "sha256": "21faa31f1edee84174d0622b43868fb9ac4e4390b5560d0bf95148a13cc40431"
+    },
+    {
+      "file": "goblin-front-1050.png",
+      "sha256": "2d73a3883690b4584878a1f082dd1ed7898ee4a3f7203e31f9829b717a62ec7c"
+    },
+    {
+      "file": "goblin-front-1075.png",
+      "sha256": "603661e8c5f23d7d31cb7153102da4cd0ac644c6cb745ed399e53da26aa5feeb"
+    },
+    {
+      "file": "goblin-front-1100.png",
+      "sha256": "65453c71503d64a3b179faad1c8b0ed9d607f6d04d23ed4a2385ce48ca603549"
+    },
+    {
+      "file": "goblin-front-1125.png",
+      "sha256": "1b29f5c68b7ec1836ee53ab45fbecd2998e6b055d3f5152ceaf9750bca9c4c31"
+    },
+    {
+      "file": "goblin-front-1150.png",
+      "sha256": "9c570240124cc44e7c73da57156e6eb9314488ee00b781e5b56eae4a09c11ebd"
+    },
+    {
+      "file": "goblin-front-1200.png",
+      "sha256": "896116d696f6348c3580d388d6eeb2341bd907a1de0ad2f2b8d0a67acca021ba"
+    },
+    {
+      "file": "goblin-front-1300.png",
+      "sha256": "67b6de028921ab1b1c3552891e12616144ad86b797ade8ada650d1436118b494"
+    },
+    {
+      "file": "goblin-front-1600.png",
+      "sha256": "8081531f1bcc439ed619f1d67e44804097ab2a8facf607ac909b96a016166c15"
+    },
+    {
+      "file": "goblin-front-250.png",
+      "sha256": "e950f02a7cece3a864dc4408553f77e8f9e5afadf0c0136f918213c1262094a4"
+    },
+    {
+      "file": "goblin-front-300.png",
+      "sha256": "58e43261afa9b55c455e565bbdd8cff8014e6d3e1b06cd98b89884810d2809d7"
+    },
+    {
+      "file": "goblin-front-350.png",
+      "sha256": "6a97afec229db1a0ee8171d21eddf9ad86223f7defed430bc7e70b63cb82326d"
+    },
+    {
+      "file": "goblin-front-375.png",
+      "sha256": "2bea480d1c8da7b5f149de75ffdf61fd8fabc075562655429997f2e8187754f7"
+    },
+    {
+      "file": "goblin-front-400.png",
+      "sha256": "0510b3343099de7f19f68a29dfd08bdd384a91cb724625998b65fff823afdc50"
+    },
+    {
+      "file": "goblin-front-425.png",
+      "sha256": "8069e2e5a6cdc0bd7a924636e487f5de236d8fd9e51e5434d7feb522059edd54"
+    },
+    {
+      "file": "goblin-front-450.png",
+      "sha256": "9c64e5fc9e7a1c53e390de321d86a1a61aec41771c10d9d8f0e39540daf707ee"
+    },
+    {
+      "file": "goblin-front-600.png",
+      "sha256": "057ae9d3fe3bb949d3fab54a918b2aebe7ca0efa64f95e3c1fed917352d3855d"
+    },
+    {
+      "file": "goblin-front-700.png",
+      "sha256": "1191d3fe4cf88a6c800b3c74f5bbdf03161659d0c19c6a3902b50403a23b70ac"
+    }
+  ]
+}

@@ -73,6 +73,7 @@ unsigned doorBoxes(GeometryView g, const DoorSnapshot* doors, std::array<DoorBox
         add(jamb + .03f - .03f * std::cos(angle), 0, .06f - .03f * std::sin(angle), width, leafHeight, .06f,
             angle, f.key || f.kind == FixtureKind::GuardianGate ? locked : ordinary,
             std::uint16_t(PickingBuffer::fixtureBase + i));
+        out[count - 1].leaf = true;
         if (f.kind == FixtureKind::GuardianGate || i == guardianDoor)
             out[count - 1].emblemTexture = std::uint16_t(guardianEmblem);
     }

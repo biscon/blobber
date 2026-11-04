@@ -21,6 +21,8 @@ Options parseOptions(int argc, char** argv) {
             result.assets = argv[++i];
         else if (arg == "--no-audio")
             result.noAudio = true;
+        else if (arg == "--uncapped")
+            result.uncapped = true;
         else if (arg == "--settings" && i + 1 < argc)
             result.settings = std::filesystem::absolute(argv[++i]);
         else if (arg == "--campaign-save" && i + 1 < argc)

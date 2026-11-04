@@ -8,7 +8,8 @@ int run(int argc, char** argv) {
     if (options.help) {
         std::cout
             << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--campaign-save FILE] "
-               "[--no-audio] [--settings FILE] [--seed UINT32] [--development] [--supersampling on|off]\n";
+               "[--no-audio] [--settings FILE] [--seed UINT32] [--development] [--supersampling on|off] "
+               "[--uncapped]\n";
         return 0;
     }
     return runMenus(options);

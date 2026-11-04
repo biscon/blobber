@@ -9,6 +9,9 @@ namespace blobber {
 // Fixed ID/depth allocations; never resized. Slot IDs are meaningful only with targets.world.
 class PickingBuffer {
   public:
+    struct PixelBounds {
+        int left = 0, top = 0, right = 0, bottom = 0; // Half-open viewport coordinates.
+    };
     static constexpr std::uint16_t fixtureBase = NpcWorld::maxInstances + lootCapacity;
     static constexpr std::uint16_t containerBase = fixtureBase + fixtureCapacity;
     static constexpr std::uint16_t empty = UINT16_MAX;
@@ -19,12 +22,19 @@ class PickingBuffer {
         clear();
     }
     void clear() noexcept {
+        clearRaster();
+        clearMetadata();
+    }
+    void clearRaster() noexcept {
         std::fill_n(pixels_.get(), viewWidth * viewHeight, empty);
         {
             std::fill_n(pixelDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
             std::fill_n(opaqueDepth_.get(), viewWidth * viewHeight, std::numeric_limits<float>::infinity());
         }
+    }
+    void clearMetadata() noexcept {
         targets_ = {};
+        bodyBounds_ = {};
         exposed_.fill(false);
         badgeAnchors_ = {};
         bodyDepth_.fill(std::numeric_limits<float>::infinity());
@@ -41,6 +51,8 @@ class PickingBuffer {
         if (owner >= bodyDepth_.size() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight)
             return false;
         const auto depth = bodyDepth_[owner];
+        if (bodyVisibility_)
+            return bodyVisibility_(bodyContext_, owner, x, y, depth);
         if (depth >= opaqueDepth_[y * viewWidth + x])
             return false;
         const auto body = slot(x, y);
@@ -51,8 +63,31 @@ class PickingBuffer {
         std::copy_n(other.pixelDepth_.get(), viewWidth * viewHeight, pixelDepth_.get());
         std::copy_n(other.opaqueDepth_.get(), viewWidth * viewHeight, opaqueDepth_.get());
     }
+    // The immutable published frame owns context; it outlives this buffer's use.
+    void bodyVisibility(const void* context,
+                        bool (*query)(const void*, std::uint16_t, int, int, float)) noexcept {
+        bodyContext_ = context;
+        bodyVisibility_ = query;
+    }
+    void swapRaster(PickingBuffer& other) noexcept {
+        pixels_.swap(other.pixels_);
+        pixelDepth_.swap(other.pixelDepth_);
+        opaqueDepth_.swap(other.opaqueDepth_);
+    }
+    void compositeBodies(const PickingBuffer& scenery) noexcept {
+        for (std::size_t p = 0; p < viewWidth * viewHeight; ++p) {
+            if (pixels_[p] >= NpcWorld::maxInstances) {
+                pixels_[p] = scenery.pixels_[p];
+                pixelDepth_[p] = scenery.pixelDepth_[p];
+            }
+            opaqueDepth_[p] = scenery.opaqueDepth_[p];
+        }
+    }
     float depth(std::size_t pixel) const noexcept { return pixelDepth_[pixel]; }
     float opaqueDepth(std::size_t pixel) const noexcept { return opaqueDepth_[pixel]; }
+    void recordOpaqueDepth(std::size_t pixel, float depth) noexcept {
+        opaqueDepth_[pixel] = std::min(opaqueDepth_[pixel], depth);
+    }
     void writeDepth(std::size_t pixel, std::uint16_t id, float depth, bool opaque = false) noexcept {
         pixels_[pixel] = id;
         pixelDepth_[pixel] = depth;
@@ -69,6 +104,7 @@ class PickingBuffer {
     }
     void finish(const ActorWorld* actors) noexcept {
         targets_ = {};
+        bodyBounds_ = {};
         if (!actors)
             return;
         targets_.world = actors->snapshot().world;
@@ -94,6 +130,7 @@ class PickingBuffer {
             if ((seen[i] || exposed_[i]) && actors->snapshot().actors[i].life == ActorLife::Alive)
                 targets_.candidates[targets_.candidateCount++] = actors->id(i);
             if (seen[i]) {
+                bodyBounds_[i] = {minimum[i].x, minimum[i].y, maximum[i].x + 1, maximum[i].y + 1};
                 if (actors->snapshot().actors[i].life == ActorLife::Alive)
                     targets_.ids[targets_.count++] = actors->id(i);
                 targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2,
@@ -104,6 +141,19 @@ class PickingBuffer {
                                        badgeAnchors_[i].y};
             }
         }
+    }
+    PixelBounds markedBounds(const std::array<std::uint8_t, NpcWorld::maxInstances>& marks) const noexcept {
+        PixelBounds result{viewWidth, viewHeight, 0, 0};
+        for (unsigned i = 0; i < marks.size(); ++i) {
+            const auto& b = bodyBounds_[i];
+            if (!marks[i] || b.left == b.right || b.top == b.bottom)
+                continue;
+            result.left = std::min(result.left, b.left);
+            result.top = std::min(result.top, b.top);
+            result.right = std::max(result.right, b.right);
+            result.bottom = std::max(result.bottom, b.bottom);
+        }
+        return result.left < result.right && result.top < result.bottom ? result : PixelBounds{};
     }
     std::optional<ContainerId> pickContainer(int x, int y) const noexcept {
         const auto s = slot(x, y);
@@ -143,9 +193,12 @@ class PickingBuffer {
     const TargetSnapshot& targets() const noexcept { return targets_; }
 
   private:
+    const void* bodyContext_ = nullptr;
+    bool (*bodyVisibility_)(const void*, std::uint16_t, int, int, float) = nullptr;
     std::unique_ptr<std::uint16_t[]> pixels_;
     std::unique_ptr<float[]> pixelDepth_, opaqueDepth_;
     TargetSnapshot targets_;
+    std::array<PixelBounds, NpcWorld::maxInstances> bodyBounds_{};
     std::array<bool, NpcWorld::maxInstances> exposed_{};
     std::uint64_t lootWorld_ = 0, fixtureWorld_ = 0;
     std::array<Cell, lootCapacity> lootAnchors_{};

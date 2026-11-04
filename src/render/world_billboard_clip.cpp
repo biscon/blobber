@@ -36,6 +36,27 @@ bool rectangle(const Billboard& b, const Extents& e, float left, float right, fl
            (e.high - low) / height};
     return true;
 }
+// Conservative screen bounds; a box crossing the near plane is never culled.
+bool overlapsProjection(const Camera& camera, const Billboard& body, const DoorBox& box) noexcept {
+    float left = 1e30f, right = -1e30f, top = 1e30f, bottom = -1e30f;
+    for (const auto& corner : corners(box)) {
+        const auto p = project(camera, corner);
+        if (p.depth <= nearPlane)
+            return true;
+        left = std::min(left, p.x);
+        right = std::max(right, p.x);
+        top = std::min(top, p.y);
+        bottom = std::max(bottom, p.y);
+    }
+    const auto foot = project(camera, body.feet);
+    if (foot.depth <= nearPlane)
+        return true;
+    const float scale = focal() / foot.depth;
+    return right >= foot.x + (body.crop.left - body.anchorX) * body.width * scale - 1 &&
+           left <= foot.x + (body.crop.right - body.anchorX) * body.width * scale + 1 &&
+           bottom >= foot.y - (body.anchorY - body.crop.top) * body.height * scale - 1 &&
+           top <= foot.y - (body.anchorY - body.crop.bottom) * body.height * scale + 1;
+}
 } // namespace
 
 bool BillboardClips::contains(float u, float v) const noexcept {
@@ -88,6 +109,8 @@ void billboardClips(const WorldFrame& frame, const Billboard& b, BillboardClips&
     const auto e = extents(b);
     for (unsigned i = 0; i < frame.doorCount; ++i) {
         const auto& box = frame.doors[i];
+        if (box.leaf)
+            continue;
         if (box.origin.y >= e.high || box.origin.y + box.y.y <= e.low)
             continue;
         float left = e.left, right = e.right;
@@ -106,5 +129,67 @@ void billboardClips(const WorldFrame& frame, const Billboard& b, BillboardClips&
             rectangle(b, e, left, right, box.origin.y, box.origin.y + box.y.y, out.rectangles[out.count]))
             ++out.count;
     }
+}
+
+void prepareLeafQueries(const WorldFrame& frame, const Billboard* body, LeafQueries& out,
+                        bool cullToBody) noexcept {
+    out.count = 0;
+    for (unsigned i = 0; i < frame.doorCount; ++i) {
+        const auto& box = frame.doors[i];
+        if (!box.leaf || (body && cullToBody && !overlapsProjection(frame.camera, *body, box)))
+            continue;
+        const float xx = box.x.x * box.x.x + box.x.z * box.x.z;
+        const float zz = box.z.x * box.z.x + box.z.z * box.z.z;
+        LeafQuery q{{box.origin.x, box.origin.y, box.origin.z, box.y.y},
+                    {box.x.x / xx, 0, box.x.z / xx, 0},
+                    {box.z.x / zz, 0, box.z.z / zz, 0}};
+        if (body) {
+            const auto e = extents(*body);
+            float left = e.left, right = e.right;
+            // Resolve straddling of the extended broad slab, not the finite leaf
+            // volume. A finite-volume switch pops a whole shoulder into view at
+            // the free tip. Ray coverage below still uses the actual finite box.
+            const float at =
+                (body->feet.x - box.origin.x) * q.zAxis[0] + (body->feet.z - box.origin.z) * q.zAxis[2];
+            const float delta = frame.camera.right.x * q.zAxis[0] + frame.camera.right.z * q.zAxis[2];
+            const bool intersects = slab(at, delta, 0, 1, left, right);
+            if (intersects) {
+                const float anchor =
+                    (body->feet.x - box.origin.x) * q.zAxis[0] + (body->feet.z - box.origin.z) * q.zAxis[2];
+                const float camera = (frame.camera.position.x - box.origin.x) * q.zAxis[0] +
+                                     (frame.camera.position.z - box.origin.z) * q.zAxis[2];
+                const float tolerance = 1e-5f / std::sqrt(zz);
+                const auto side = [tolerance](float p) {
+                    return p < -tolerance ? -1 : p > 1 + tolerance ? 1 : 0;
+                };
+                const int cs = side(camera), as = side(anchor);
+                if (cs)
+                    q.xMode[3] = as && as == cs ? 1.f : 2.f;
+            }
+        }
+        out.leaves[out.count++] = q;
+    }
+}
+
+bool LeafQueries::hides(const Camera& camera, Vec ray, float depth,
+                        const std::uint8_t* relations) const noexcept {
+    for (unsigned i = 0; i < count; ++i) {
+        const auto& q = leaves[i];
+        const auto relation = relations ? float(relations[i]) : q.xMode[3];
+        if (relation == 1)
+            continue;
+        float enter = nearPlane, leave = farPlane;
+        const float dx = camera.position.x - q.originHeight[0], dy = camera.position.y - q.originHeight[1],
+                    dz = camera.position.z - q.originHeight[2];
+        if (!slab(dx * q.xMode[0] + dz * q.xMode[2], ray.x * q.xMode[0] + ray.z * q.xMode[2], 0, 1, enter,
+                  leave) ||
+            !slab(dy, ray.y, 0, q.originHeight[3], enter, leave) ||
+            !slab(dx * q.zAxis[0] + dz * q.zAxis[2], ray.x * q.zAxis[0] + ray.z * q.zAxis[2], 0, 1, enter,
+                  leave))
+            continue;
+        if (relation == 2 || enter <= depth + 1e-5f)
+            return true;
+    }
+    return false;
 }
 } // namespace blobber::world_render

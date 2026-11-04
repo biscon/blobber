@@ -107,9 +107,40 @@ inline void mapReview(const std::filesystem::path& assets, const std::filesystem
             MapOverlayModel largeModel;
             largeModel.prepare(large);
             largeModel.refresh(&largeGame.fixtures());
-            presenter.presentWorld(blank.get(), 1, largeGame.movement(), large, &largeCommands.snapshot(),
-                                   nullptr, true, nullptr, false, &largeModel);
-            presenter.capture(output / "oversized-near-edge.png");
+            const auto largePose = [&](Cell cell, const char* name) {
+                auto movement = largeGame.movement();
+                movement.player.cell = cell;
+                presenter.presentWorld(blank.get(), 1, movement, large, &largeCommands.snapshot(), nullptr,
+                                       true, nullptr, false, &largeModel);
+                presenter.capture(output / name);
+            };
+            largePose({1, 1}, "oversized-near-edge.png");
+            largePose({83, 1}, "oversized-top-right.png");
+            largePose({1, 53}, "oversized-bottom-left.png");
+            largePose({83, 53}, "oversized-bottom-right.png");
+            largePose({42, 27}, "oversized-center.png");
+
+            std::vector<std::string> paddedRows(36, std::string(36, '#'));
+            for (int y = 8; y <= 17; ++y)
+                for (int x = 11; x <= 22; ++x)
+                    paddedRows[y][x] = '.';
+            const Map padded(paddedRows);
+            const NpcWorld paddedEmpty(padded, {11, 8}, definitions.types, {});
+            GameSession paddedGame(padded, catalog, paddedEmpty, 5, {{11, 8}, Heading::North}, false,
+                                   definitions.timings);
+            CommandController paddedCommands(paddedGame, definitions.timings);
+            paddedCommands.refresh({}, false, true, true);
+            MapOverlayModel paddedModel;
+            paddedModel.prepare(padded);
+            paddedModel.refresh(&paddedGame.fixtures());
+            auto movement = paddedGame.movement();
+            presenter.presentWorld(blank.get(), 1, movement, padded, &paddedCommands.snapshot(), nullptr,
+                                   true, nullptr, false, &paddedModel);
+            presenter.capture(output / "small-padded-top-left.png");
+            movement.player.cell = {22, 17};
+            presenter.presentWorld(blank.get(), 1, movement, padded, &paddedCommands.snapshot(), nullptr,
+                                   true, nullptr, false, &paddedModel);
+            presenter.capture(output / "small-padded-bottom-right.png");
         }
         if (!copiedSave.empty()) {
             const auto before = fingerprintFile(copiedSave);
