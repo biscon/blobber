@@ -57,6 +57,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         auto rgba = pixels(path, w, h);
         return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop);
     };
+    std::map<std::string, std::uint16_t> preparedPackTextures;
     std::vector<world_assets::Pack> packs;
     std::vector<world_assets::PropMesh> meshes;
     std::vector<fs::path> packDirectories;
@@ -72,6 +73,12 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         pack.horizon = manifest.at("horizon").get<std::array<float, 3>>();
         const auto addPack = [&](const std::string& role, bool sprite, unsigned maximum, bool material) {
             const auto path = source / relative(manifest.at(role).get<std::string>());
+            const auto key = path.lexically_normal().generic_string() + ":" + std::to_string(sprite) + ":" +
+                             std::to_string(maximum) + ":" + std::to_string(material) + ":" +
+                             std::to_string(role == "sky");
+            const auto existing = preparedPackTextures.find(key);
+            if (existing != preparedPackTextures.end())
+                return existing->second;
             OwnedImage image(LoadImage(path.string().c_str()));
             if (!image.value.data || image.value.width > 4096 || image.value.height > 4096)
                 throw std::runtime_error("Invalid pack artwork: " + path.string());
@@ -105,9 +112,11 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
                         }
                     }
             }
-            return std::uint16_t(writer.add("pack/" + pack.id + "/" + role, unsigned(image.value.width),
-                                            unsigned(image.value.height), sprite, rgba, sprite ? 16 : 0, {},
-                                            material));
+            const auto id = std::uint16_t(
+                writer.add("pack/" + pack.id + "/" + role, unsigned(image.value.width),
+                           unsigned(image.value.height), sprite, rgba, sprite ? 16 : 0, {}, material));
+            preparedPackTextures.emplace(key, id);
+            return id;
         };
         for (const auto* role : {"wall", "floor", "ceiling", "stairWall", "stairFloor"})
             pack.materials[pack.materialCount++] = addPack(role, false, 256, true);
@@ -147,7 +156,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         if (manifest.contains("models")) {
             unsigned slot = 0;
             for (const auto& path : manifest["models"]) {
-                if (slot >= 4 || meshes.size() >= 16)
+                if (slot >= 4 || meshes.size() >= world_assets::meshCapacity)
                     throw std::runtime_error("Too many prop meshes");
                 const auto model = read(source / relative(path.get<std::string>()));
                 const auto texture = model.at("texture").get<std::string>();
@@ -185,8 +194,8 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         }
         packs.push_back(std::move(pack));
     }
-    if (packs.empty() || packs.size() > 8)
-        throw std::runtime_error("Expected one to eight world asset packs");
+    if (packs.empty() || packs.size() > world_assets::packCapacity)
+        throw std::runtime_error("World asset pack capacity exceeded");
     for (const auto* name : {"grease", "web", "spiritual_weapon"})
         add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
             source / "effects" / (std::string(name) + ".png"), true);

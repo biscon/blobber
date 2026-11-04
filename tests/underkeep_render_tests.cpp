@@ -65,6 +65,7 @@ int main() {
         check(publication.meshes.size() == 2 && publication.packs[0].models[1] == 1,
               "Prepared mesh bindings round trip");
         world_assets::CpuAssets assets(publication);
+        const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         WorldDefinition world;
         world.assetPack = "underkeep";
         Decoration chest{{4, 3}, Heading::North, DecorationKind::Chest, 0, .5f, 0, .76f, .36f, .58f};
@@ -145,15 +146,18 @@ int main() {
         const bool idle = pipeline.update(input);
         watching = false;
         check(!idle && allocations == 0, "Idle decorated view stays cached without C++ allocations");
-        auto corrupt = publication;
+        auto decoded = publication;
+        for (unsigned i = 0; i < decoded.meshes.size(); ++i)
+            decoded.meshes[i] = publication.readMesh(i);
+        auto corrupt = decoded;
         corrupt.meshes[0].vertices[0][6] = std::numeric_limits<float>::quiet_NaN();
         rejects([&] { world_assets::CpuAssets invalid(corrupt); }, "Invalid mesh UV rejected before use");
-        corrupt = publication;
+        corrupt = decoded;
         for (auto& v : corrupt.meshes[0].vertices)
             v[0] += .6f;
         rejects([&] { world_assets::CpuAssets invalid(corrupt); },
                 "Model must fit its reserved movement footprint");
-        corrupt = publication;
+        corrupt = decoded;
         corrupt.meshes[0].vertices.resize(6003);
         rejects([&] { world_assets::CpuAssets invalid(corrupt); }, "Over-cap mesh rejected");
         rejects([&] { world_render::prepare(map, {}, {}, {1, 65536, 64 * 1024 * 1024}, &assets); },

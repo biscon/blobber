@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
-Created: 2026-11-04. Last updated: 2026-11-04.
-Status: **Four-slice direction and boundaries agreed; roadmap recorded. No slice implementation started.**
+Created: 2026-11-04. Last updated: 2026-11-05.
+Status: **SC01.1 accepted. SC01.2 detailed planning is next.**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,13 +16,13 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | None |
-| Awaiting review | No implemented slice |
-| Next eligible slice | SC01 — Architecture foundation and street corner, detailed planning only |
-| Next action | Inspect current code and write the SC01 detailed design for review |
+| Active slice | None; SC01.1 — Location-owned assets accepted 2026-11-05 |
+| Awaiting review | None; SC01.1 [verification/handoff](sc011_verification.md) accepted |
+| Next eligible slice | SC01.2 — Architecture foundation and finished street corner |
+| Next action | Detailed planning for SC01.2 when requested |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Prepared low-poly geometry, material batching and basic frustum culling; no speculative advanced visibility system |
-| Blockers | None for SC01 planning |
+| Blockers | None |
 
 Update this checkpoint, tracker, decision log and relevant handoff together.
 Direction agreement, detailed-plan approval, implementation and delivered-slice
@@ -198,7 +198,9 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| SC01 | Architecture foundation and finished street corner | Agreed roadmap direction | Planned |
+| SC01 | Asset residency foundation and finished street corner | Agreed roadmap direction | In progress — implementation |
+| SC01.1 | Location-owned assets and memory accounting | Approved detailed plan | Accepted 2026-11-05 |
+| SC01.2 | Architecture foundation and finished street corner | SC01.1 Accepted | Planned |
 | SC02 | Complete town architecture and walkable layout | SC01 Accepted | Planned |
 | SC03 | Vegetation, market and fountain | SC02 Accepted | Planned |
 | SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
@@ -209,7 +211,14 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 | S-B | Complete dressed city accepted through SC03 | Planned |
 | S-C | City is the working campaign hub through SC04 | Planned |
 
-### SC01 — Architecture foundation and street corner
+### SC01 — Asset residency and architecture foundation
+
+SC01.1 implements the approved [location-owned asset design](sc011_design.md)
+and was accepted by the user on 2026-11-05. SC01.2 retains the architectural
+deliverable below and is now eligible for detailed planning. Supersampling remains on by default; 512 MiB–1 GiB is
+a memory target, not a quality-reduction mandate. No automatic continuation.
+
+### SC01.2 — Architecture foundation and street corner
 
 **Purpose:** prove the actual appearance and model/world integration before mass art production.
 
@@ -345,8 +354,13 @@ Each handoff records:
 
 ## Decision log
 
+2026-11-05: Approved SC01.1 residency prerequisite / SC01.2 architecture split
+and implementation. Dedicated city review flag selected for SC01.2. Supersampling
+stays on; prioritize fidelity over strict adherence to the memory target.
+
 | Date | Decision |
 | --- | --- |
+| 2026-11-05 | User accepted SC01.1 location-owned assets and memory accounting. SC01.2 is eligible for detailed planning; no further implementation authorized by this acceptance. |
 | 2026-11-04 | User requested a walkable city inspired by supplied Wizardry 7 architecture, with original art and house interiors deferred. |
 | 2026-11-04 | User selected older/slightly overgrown character and occasional two-storey houses; two ImageGen mockups were retained under docs/mockups/sanctuary-city-v1 and endorsed as useful visual references. |
 | 2026-11-04 | User agreed to four slices and proposed scope boundaries, and requested this roadmap before slice planning/implementation. |
@@ -356,10 +370,14 @@ Each handoff records:
 
 ## Current next-agent handoff
 
-No city code or production assets have been implemented. The existing ImageGen
-mockups are the art direction; this roadmap records the agreed four-slice scope.
-Next: inspect the current world/asset/scene/visibility code and write the SC01
-detailed design. Confirm concrete capacities, model placement, footprint and wall
-replacement contracts before implementation. Do not plan every later slice in
-implementation detail or begin campaign cutover. Later designs should use the
-accepted in-engine evidence and actual asset requirements from earlier slices.
+SC01.1 was accepted by the user on 2026-11-05. Read the [design](sc011_design.md) and
+[verification/handoff](sc011_verification.md). Supersampling and texture fidelity
+are unchanged. Current supersampled production evidence is about 178 MiB in the
+hub, 371 MiB on floor one and 373 MiB during their transition, including UI/fonts.
+Unused biome/creature payloads stay on disk; source-only assets release on travel.
+The 512 MiB–1 GiB target and 384/448 MiB reference lines are advisory. Hardware
+with that memory capacity was not available for verification.
+
+No city architecture or new hub has been implemented. The next eligible action
+is SC01.2 detailed planning when requested. Preserve the dedicated launch-flag decision and
+retained ImageGen references. Do not advance PC08, SC02 or campaign cutover.

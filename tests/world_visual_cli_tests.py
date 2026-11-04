@@ -73,13 +73,24 @@ def main(runner, writer):
         assert result.returncode and "header" in result.stderr, result.stderr
         result = subprocess.run([runner, "--visibility", "world"], env=env, capture_output=True, text=True)
         assert result.returncode and "Unknown" in result.stderr, result.stderr
-        # Publication errors cannot fall back to permissive diagnostic visibility.
+        # Opening metadata does not read unrelated payloads. A required corrupt mask
+        # rejects session preparation, with no permissive visibility fallback.
         payload = root / "prepared/world/textures.bin"
-        data = bytearray(payload.read_bytes())
-        data[-1] ^= 1
+        metadata = json.loads((payload.parent / "metadata.json").read_text())
+        required = next(t for t in metadata["textures"] if t["name"] == "loot/bag")
+        original = payload.read_bytes()
+        data = bytearray(original)
+        data[required["alpha_offset"]] ^= 1
         payload.write_bytes(data)
         result = subprocess.run(command, input="", env=env, capture_output=True, text=True)
-        assert result.returncode and "rebuild" in result.stderr, result.stderr
+        assert result.returncode == 0, result.stderr
+        with Client(runner, root, "visual") as client:
+            rejected = client.request("start", scenario=scenario)
+            assert not rejected["ok"] and "rebuild" in json.dumps(rejected), rejected
+            payload.write_bytes(original)
+            restored = client.request("start", scenario=scenario)
+            assert restored["ok"], restored
+            assert client.request("close")["ok"]
     print("World visibility: display-free CLI/client, strict replay, backend identity and publication failures passed")
 
 

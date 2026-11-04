@@ -11,7 +11,8 @@
 namespace blobber {
 Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets, PreparationWorker* worker)
     : worker_(worker), resources_(resources), assetsMenuPath_(assets / "ui/menu-background.png"),
-      fonts_(assets / "fonts"), uiArt_(resources_, assets / "ui") {
+      fonts_(assets / "fonts"), fontMemory_(resources_, fonts_.gpuBytes()),
+      uiArt_(resources_, assets / "ui") {
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);
@@ -180,6 +181,7 @@ void Presenter::capture(const std::filesystem::path& path, int width, int height
     // Diagnostic-only allocation: the normal frame loop reuses its two targets.
     GpuResources captureResources;
     const auto composite = captureResources.createTarget(width, height);
+    GpuExternalLease captureMemory(resources_, captureResources.counts().bytes);
     BeginTextureMode(captureResources.target(composite));
     ClearBackground(BLACK);
     const auto fit = aspectFit(width, height);

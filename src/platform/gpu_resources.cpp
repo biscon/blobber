@@ -65,6 +65,7 @@ TextureHandle GpuResources::createTexture(const Image& image) {
     SetTextureFilter(t, TEXTURE_FILTER_POINT);
     ++counts_.textures;
     counts_.bytes += textureBytes(t);
+    recordPeak();
     ++transfers_.uploads;
     transfers_.bytes += textureBytes(t);
     return textures_.insert(t);
@@ -101,6 +102,7 @@ TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
     SetTextureFilter(t.texture, TEXTURE_FILTER_POINT);
     ++counts_.targets;
     counts_.bytes += targetBytes(t);
+    recordPeak();
     return targets_.insert(t);
 }
 void GpuResources::copyDepth(TargetHandle source, TargetHandle destination) {
@@ -174,6 +176,7 @@ MeshHandle GpuResources::createMesh(const world_render::Scene& s) {
     }
     ++counts_.meshes;
     counts_.bytes += m.bytes;
+    recordPeak();
     ++transfers_.uploads;
     transfers_.bytes += m.bytes;
     return meshes_.insert(m);

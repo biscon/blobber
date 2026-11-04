@@ -101,6 +101,7 @@ void acceptedImpacts() {
 void doorsAndEffects() {
     test::VisibilityFixture fixtures;
     world_assets::CpuAssets assets(fixtures.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     auto map = fixtureMap();
     const auto cat = fixtureCatalog();
     NpcWorld empty(map, {3, 3}, {"goblin"}, {});
@@ -202,6 +203,7 @@ void authoredFixtureKnowledge() {
 void spellVisuals() {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto map = test::worldRoom(9, 9);
     const auto cat = fixtureCatalog();
     const Player spawn{{4, 6}, Heading::North};
@@ -324,6 +326,7 @@ void captureBuilds() {
 void stressEffects() {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     auto map = fixtureMap();
     const auto cat = fixtureCatalog();
     NpcWorld empty(map, {3, 3}, {"goblin"}, {});

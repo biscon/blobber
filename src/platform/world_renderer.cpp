@@ -99,51 +99,19 @@ int anisotropy() {
     return 1;
 }
 } // namespace
-WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publication)
+WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publication, bool supersampling)
     : WorldRenderer(r, prepareCpu([&] {
                         preparationPoint("Preparing dungeon artwork");
                         return std::make_shared<const world_assets::CpuAssets>(std::move(publication));
-                    })) {}
-WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets::CpuAssets> assets)
+                    }),
+                    supersampling) {}
+WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets::CpuAssets> assets,
+                             bool supersampling)
     : resources_(r), assets_(std::move(assets)),
       publication_(assets_ ? assets_->publication : throw std::invalid_argument("Missing world CPU assets")) {
-    if (publication_.textures.size() > world_assets::textureCapacity ||
-        publication_.textureBytes > world_assets::textureBudget ||
-        publication_.alphaBytes > world_assets::alphaBudget)
-        throw std::runtime_error("World asset budget exceeded");
-    std::uint64_t colorBytes = 0, maskBytes = 0;
-    for (const auto& texture : publication_.textures) {
-        if (texture.levels != world_assets::mipLevels(texture.width, texture.height) ||
-            texture.bytes != world_assets::mipBytes(texture.width, texture.height) ||
-            texture.alphaBytes != (texture.clamp ? std::uint64_t(texture.width) * texture.height : 0))
-            throw std::invalid_argument("Malformed prepared world texture descriptor");
-        if (texture.bytes > world_assets::textureBudget - colorBytes ||
-            texture.alphaBytes > world_assets::alphaBudget - maskBytes)
-            throw std::runtime_error("World texture payload budget exceeded");
-        colorBytes += texture.bytes;
-        maskBytes += texture.alphaBytes;
-    }
-    if (colorBytes != publication_.textureBytes || maskBytes != publication_.alphaBytes)
-        throw std::invalid_argument("World publication byte totals differ");
     anisotropy_ = blobber::anisotropy();
-    textures_.reserve(publication_.textures.size());
-    for (unsigned i = 0; i < publication_.textures.size(); ++i) {
-        const auto& t = publication_.textures[i];
-        preparationPoint("Loading dungeon artwork");
-        auto pixels = prepareCpu([&] {
-            preparationPoint("Loading dungeon artwork");
-            return publication_.read(i);
-        });
-        Image im{pixels.data(), int(t.width), int(t.height), int(t.levels),
-                 PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
-        textures_.emplace_back(r, r.createTexture(im));
-        const auto texture = r.texture(textures_.back().get());
-        SetTextureWrap(texture, t.clamp ? TEXTURE_WRAP_CLAMP : TEXTURE_WRAP_MIRROR_REPEAT);
-        rlTextureParameters(texture.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
-        rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
-        if (!t.clamp && anisotropy_ > 1)
-            rlTextureParameters(texture.id, RL_TEXTURE_FILTER_ANISOTROPIC, anisotropy_);
-    }
+    textures_.resize(publication_.textures.size());
+    supersampling_ = supersampling;
     world_ = {r, r.createShader(vertex, fragment)};
     sky_ = {r, r.createShader(nullptr, skyFragment)};
     resolve_ = {r, r.createShader(nullptr, resolveFragment)};
@@ -158,23 +126,29 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     idColor_ = GetShaderLocation(shader, "idColor");
     if (mvp_ < 0 || view_ < 0 || forward_ < 0)
         throw std::runtime_error("World shader interface unavailable");
-    high_ = {r, r.createTarget(1000, 564)};
     creaturesLow_ = {r, r.createTarget(500, 282, true)};
-    creaturesHigh_ = {r, r.createTarget(1000, 564, true)};
     creatureComposite_ = {r, r.createShader(compositeVertex, compositeFragment)};
-    if (assets_->bytes() > 68u * world_assets::MiB)
+    this->supersampling(supersampling_);
+    if (assets_->bytes() > world_assets::worldCpuBudget)
         throw std::runtime_error("World shared CPU storage budget exceeded");
 }
 void WorldRenderer::stage(GeometryView geometry, const MovementState& state, world_render::Surfaces surfaces,
                           const std::vector<world_render::Surfaces>& overrides, world_render::Limits limits) {
+    stagePrepared(geometry, state, surfaces, overrides, limits,
+                  assets_->requirements(geometry.base().definition().assetPack));
+}
+void WorldRenderer::stagePrepared(GeometryView geometry, const MovementState& state,
+                                  world_render::Surfaces surfaces,
+                                  const std::vector<world_render::Surfaces>& overrides,
+                                  world_render::Limits limits,
+                                  const world_assets::AssetRequirements& required) {
     if (staged_)
         throw std::runtime_error("A world scene is already staged; commit or cancel it first");
     using Clock = std::chrono::steady_clock;
     const auto begin = Clock::now();
     auto candidate = std::make_unique<View>();
+    candidate->assets = prepareCpu([&] { return assets_->acquire(required); });
     candidate->pack = assets_->pack(geometry.base().definition().assetPack);
-    for (unsigned i = 0; i < candidate->pack.materialCount; ++i)
-        candidate->materials[i] = textures_.at(candidate->pack.materials[i]).get();
     if (!publication_.packs.empty() && candidate->pack.materialCount >= 5) {
         surfaces.stairWall = 3;
         surfaces.stairFloor = 4;
@@ -187,12 +161,16 @@ void WorldRenderer::stage(GeometryView geometry, const MovementState& state, wor
         if (range.material >= candidate->pack.materialCount)
             throw std::runtime_error("Scene references an unavailable world material");
     const auto built = Clock::now();
+    acquireTextures(*candidate, required);
+    for (unsigned i = 0; i < candidate->pack.materialCount; ++i)
+        candidate->materials[i] = candidate->textures.at(candidate->pack.materials[i]);
     preparationPoint("Preparing dungeon");
     candidate->mesh = {resources_, resources_.createMesh(candidate->cpu)};
     candidate->output = {resources_, resources_.createTarget(viewWidth, viewHeight)};
     const auto uploaded = Clock::now();
     render(*candidate, state);
     resources_.finishPreparation();
+    peakApplicationGpu_ = std::max(peakApplicationGpu_, resources_.counts().bytes);
     const auto drawn = Clock::now();
     preparation = {std::chrono::duration<double, std::milli>(built - begin).count(),
                    std::chrono::duration<double, std::milli>(uploaded - built).count(),
@@ -232,7 +210,9 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
     const bool hadBillboards = bool(billboard_);
     try {
         prepareBillboards();
-        stage(in.geometry, in.movement);
+        stagePrepared(in.geometry, in.movement, {}, {}, {},
+                      assets_->requirements(in.geometry.base().definition().assetPack,
+                                            in.actors ? &in.actors->snapshot() : nullptr, true));
         staged_->visibility = prepareCpu([&] {
             preparationPoint("Preparing dungeon");
             return std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
@@ -344,7 +324,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         SetShaderValue(sky, GetShaderLocation(sky, "viewport"), viewport, SHADER_UNIFORM_VEC2);
         SetShaderValue(sky, GetShaderLocation(sky, "forward"), &camera.forward, SHADER_UNIFORM_VEC3);
         SetShaderValue(sky, GetShaderLocation(sky, "right"), &camera.right, SHADER_UNIFORM_VEC3);
-        const auto skyTexture = resources_.texture(textures_[v.pack.sky].get());
+        const auto skyTexture = resources_.texture(v.textures[v.pack.sky]);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_REPEAT);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_T, RL_TEXTURE_WRAP_CLAMP);
         SetTextureFilter(skyTexture, TEXTURE_FILTER_BILINEAR);
@@ -411,7 +391,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         const auto a = MatrixToFloatV(vp), b = MatrixToFloatV(view);
         for (unsigned doorPhase = 0; doorPhase < 2; ++doorPhase) {
             if (doorPhase == 1) {
-                drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::Scenery);
+                drawBillboards(v, *frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::Scenery);
                 // Preserve leaf-free scenery/nonbody depth for the transparent body layer.
                 resources_.copyDepth(targetHandle, creatureHandle);
                 rlEnableShader(shader.id);
@@ -446,28 +426,28 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
                 const auto id = box.id;
                 const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
                 rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
-                rlEnableTexture(resources_.texture(textures_[box.texture].get()).id);
+                rlEnableTexture(resources_.texture(v.textures[box.texture]).id);
                 rlDisableBackfaceCulling();
                 resources_.draw(proxy_.get(), 0, box.worldMapped ? 36 : 12);
                 ++stats.draws;
                 if (!box.worldMapped) {
                     const int edgeMode = 2;
                     rlSetUniform(uvMode_, &edgeMode, SHADER_UNIFORM_INT, 1);
-                    rlEnableTexture(resources_.texture(textures_[box.edgeTexture].get()).id);
+                    rlEnableTexture(resources_.texture(v.textures[box.edgeTexture]).id);
                     resources_.draw(proxy_.get(), 12, 24);
                     ++stats.draws;
                 }
             }
         }
-        drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::LeafArt);
+        drawBillboards(v, *frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::LeafArt);
         if (effects && !ids)
-            drawEffects(*effects, a.v, b.v, true, *frame);
+            drawEffects(v, *effects, a.v, b.v, true, *frame);
         rlEnableFramebuffer(creatureTarget.id);
         // Clear colour only: the copied leaf-free depth belongs to this frame.
         rlClearColor(0, 0, 0, 0);
         using Clear = void (*)(unsigned);
         reinterpret_cast<Clear>(rlGetProcAddress("glClear"))(0x00004000);
-        drawBillboards(*frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::Creatures);
+        drawBillboards(v, *frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::Creatures);
         rlEnableFramebuffer(target.id);
         // Blend changes flush raylib's batch and can replace the current shader.
         rlSetBlendMode(ids ? BLEND_ALPHA : BLEND_ALPHA_PREMULTIPLY);
@@ -493,7 +473,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         rlDisableTexture();
         rlActiveTextureSlot(0);
         if (effects && !ids)
-            drawEffects(*effects, a.v, b.v, false, *frame);
+            drawEffects(v, *effects, a.v, b.v, false, *frame);
     }
     rlDisableTexture();
     rlDisableShader();
@@ -527,8 +507,9 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     v.revision = ++revision_;
     return {v.output.get(), v.revision};
 }
-void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const float* vp, const float* view,
-                                   bool ids, const world_render::Scene* scene, BillboardPass phase) {
+void WorldRenderer::drawBillboards(const View& v, const world_render::WorldFrame& frame, const float* vp,
+                                   const float* view, bool ids, const world_render::Scene* scene,
+                                   BillboardPass phase) {
     Matrix projection{}, cameraView{};
     // raymath's field declaration order differs from its column-major float representation.
     auto matrix = [](const float* v) {
@@ -566,7 +547,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
             const auto texture = d.texture != UINT16_MAX ? d.texture
                                  : d.motif               ? frame.vineTexture
                                                          : frame.crestTexture;
-            rlEnableTexture(resources_.texture(textures_[texture].get()).id);
+            rlEnableTexture(resources_.texture(v.textures[texture]).id);
             const auto& a = d.vertices[0].position;
             const auto& b = d.vertices[1].position;
             const auto& c = d.vertices[3].position;
@@ -595,7 +576,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
                 const auto& door = frame.doors[i];
                 if (door.emblemTexture == UINT16_MAX)
                     continue;
-                rlEnableTexture(resources_.texture(textures_[door.emblemTexture].get()).id);
+                rlEnableTexture(resources_.texture(v.textures[door.emblemTexture]).id);
                 for (bool back : {false, true}) {
                     const auto q = world_render::doorEmblemQuad(door, back);
                     auto m = MatrixIdentity();
@@ -652,7 +633,7 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
         rlSetUniform(billboardLocations_[7], &clipCount, SHADER_UNIFORM_INT, 1);
         if (clipCount)
             rlSetUniform(billboardLocations_[8], clips.rectangles.data(), SHADER_UNIFORM_VEC4, clipCount);
-        rlEnableTexture(resources_.texture(textures_[b.texture].get()).id);
+        rlEnableTexture(resources_.texture(v.textures[b.texture]).id);
         // CPU picking and GPU drawing share the registered crop geometry.
         const auto q = world_render::corners(frame.camera, b);
         auto model = MatrixIdentity();
@@ -675,8 +656,8 @@ void WorldRenderer::drawBillboards(const world_render::WorldFrame& frame, const 
     rlEnableDepthMask();
     rlSetBlendMode(BLEND_ALPHA);
 }
-void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const float* vp, const float* view,
-                                bool ground, const world_render::WorldFrame& worldFrame) {
+void WorldRenderer::drawEffects(const View& v, const world_render::EffectFrame& frame, const float* vp,
+                                const float* view, bool ground, const world_render::WorldFrame& worldFrame) {
     auto matrix = [](const float* v) {
         return Matrix{v[0], v[4], v[8],  v[12], v[1], v[5], v[9],  v[13],
                       v[2], v[6], v[10], v[14], v[3], v[7], v[11], v[15]};
@@ -722,7 +703,7 @@ void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const fl
         m.m14 = (a.z + b.z) * .5f;
         rlSetUniformMatrix(billboardLocations_[2], m);
         rlSetUniform(billboardLocations_[6], p.tint.data(), SHADER_UNIFORM_VEC4, 1);
-        rlEnableTexture(resources_.texture(textures_[p.texture].get()).id);
+        rlEnableTexture(resources_.texture(v.textures[p.texture]).id);
         resources_.draw(quad_.get(), 0, 6);
         ++stats.draws;
     }
@@ -730,14 +711,15 @@ void WorldRenderer::drawEffects(const world_render::EffectFrame& frame, const fl
     rlSetBlendMode(BLEND_ALPHA);
 }
 std::size_t WorldRenderer::cpuBytes() const noexcept {
-    std::size_t n = sizeof(*this) + assets_->bytes() + textures_.capacity() * sizeof(GpuLease<TextureHandle>);
+    std::size_t n = sizeof(*this) + assets_->bytes() + textures_.capacity() * sizeof(textures_[0]);
     if (active_ && active_->cpu.map)
         n += active_->cpu.map->storageBytes();
     if (staged_ && staged_->cpu.map && (!active_ || staged_->cpu.map != active_->cpu.map))
         n += staged_->cpu.map->storageBytes();
     for (const auto* v : {active_.get(), staged_.get()})
         if (v) {
-            n += sizeof(View) + v->cpu.bytes();
+            n += sizeof(View) + v->cpu.bytes() + v->textureLeases.capacity() * sizeof(SharedTexture) +
+                 v->textures.capacity() * sizeof(TextureHandle);
             if (v->visibility)
                 n += v->visibility->bytes();
             if (v->effects)
@@ -746,12 +728,87 @@ std::size_t WorldRenderer::cpuBytes() const noexcept {
     return n;
 }
 std::size_t WorldRenderer::gpuBytes() const noexcept {
-    std::size_t n = publication_.textureBytes + (2u * 1000 * 564 + 500u * 282) * 8 +
+    std::size_t n = ((high_ ? 1000u * 564 : 0) + (creaturesHigh_ ? 1000u * 564 : 0) + 500u * 282) * 8 +
                     (quad_ ? 4u * 32 + 6u * 4 + 24u * 32 + 36u * 4 : 0);
+    for (unsigned i = 0; i < textures_.size(); ++i)
+        if (!textures_[i].expired())
+            n += publication_.textures[i].bytes;
     if (active_)
         n += active_->cpu.meshBytes() + 500u * 282 * 8;
     if (staged_)
         n += staged_->cpu.meshBytes() + 500u * 282 * 8;
     return n;
+}
+WorldRenderer::MemoryReport WorldRenderer::memory() const noexcept {
+    MemoryReport r;
+    r.installedTextures = publication_.textureBytes;
+    for (unsigned i = 0; i < textures_.size(); ++i)
+        if (!textures_[i].expired()) {
+            ++r.textureCount;
+            r.residentTextures += publication_.textures[i].bytes;
+        }
+    const auto cpu = assets_->residency();
+    r.residentAlpha = cpu.alphaBytes;
+    r.residentMeshes = cpu.meshBytes;
+    r.worldGpu = gpuBytes();
+    r.applicationGpu = resources_.counts().bytes;
+    r.peakApplicationGpu = std::max(peakApplicationGpu_, resources_.counts().peakBytes);
+    return r;
+}
+void WorldRenderer::supersampling(bool enabled) {
+    if (enabled && !high_) {
+        GpuLease<TargetHandle> high{resources_, resources_.createTarget(1000, 564)};
+        GpuLease<TargetHandle> creatures{resources_, resources_.createTarget(1000, 564, true)};
+        high_ = std::move(high);
+        creaturesHigh_ = std::move(creatures);
+    }
+    // Once prepared, keep this bounded scratch for allocation-free quality switches.
+    supersampling_ = enabled;
+}
+void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequirements& required) {
+    std::size_t extra = 0, unionBytes = 0;
+    unsigned count = 0, extraCount = 0;
+    for (unsigned i = 0; i < textures_.size(); ++i) {
+        const bool resident = !textures_[i].expired();
+        if (resident || required.textures[i]) {
+            unionBytes += publication_.textures[i].bytes;
+            ++count;
+        }
+        if (!resident && required.textures[i]) {
+            extra += publication_.textures[i].bytes;
+            ++extraCount;
+        }
+    }
+    if (count > world_assets::textureCapacity || resources_.counts().textures + extraCount > 512 ||
+        unionBytes > world_assets::textureBudget ||
+        gpuBytes() + extra + v.cpu.meshBytes() + viewWidth * viewHeight * 8 > world_assets::worldGpuBudget)
+        throw std::runtime_error("Resident world active/staged GPU capacity exceeded");
+    v.textures.resize(textures_.size());
+    v.textureLeases.reserve(required.textures.count());
+    for (unsigned i = 0; i < textures_.size(); ++i)
+        if (required.textures[i]) {
+            auto lease = textures_[i].lock();
+            if (!lease) {
+                const auto& t = publication_.textures[i];
+                auto pixels = prepareCpu([&] {
+                    preparationPoint("Loading location artwork");
+                    return publication_.read(i);
+                });
+                Image im{pixels.data(), int(t.width), int(t.height), int(t.levels),
+                         PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+                lease = std::make_shared<GpuLease<TextureHandle>>();
+                *lease = {resources_, resources_.createTexture(im)};
+                const auto texture = resources_.texture(lease->get());
+                SetTextureWrap(texture, t.clamp ? TEXTURE_WRAP_CLAMP : TEXTURE_WRAP_MIRROR_REPEAT);
+                rlTextureParameters(texture.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
+                rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
+                if (!t.clamp && anisotropy_ > 1)
+                    rlTextureParameters(texture.id, RL_TEXTURE_FILTER_ANISOTROPIC, anisotropy_);
+                textures_[i] = lease;
+            }
+            v.textures[i] = lease->get();
+            v.textureLeases.push_back(std::move(lease));
+            peakApplicationGpu_ = std::max(peakApplicationGpu_, resources_.counts().bytes);
+        }
 }
 } // namespace blobber

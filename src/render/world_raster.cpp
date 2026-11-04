@@ -40,6 +40,12 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
               const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
               bool cutoutOpaque = false, const BillboardClips* clips = nullptr,
               const LeafQueries* leaves = nullptr) {
+    const unsigned char* mask = nullptr;
+    if (assets) {
+        if (texture >= assets->masks.size() || assets->masks[texture].empty())
+            throw std::logic_error("World alpha mask was not acquired at preparation");
+        mask = assets->masks[texture].data();
+    }
     std::array<ClipVertex, 16> a{}, b{};
     unsigned count = 3;
     for (unsigned i = 0; i < 3; ++i) {
@@ -130,7 +136,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                         unsigned(std::clamp(int(std::floor(u * tex.width)), 0, int(tex.width) - 1));
                     const unsigned sy =
                         unsigned(std::clamp(int(std::floor(v * tex.height)), 0, int(tex.height) - 1));
-                    if (assets->masks[texture][std::size_t(sy) * tex.width + sx] < threshold)
+                    if (mask[std::size_t(sy) * tex.width + sx] < threshold)
                         continue;
                     if (candidate)
                         out.picking.expose(id);

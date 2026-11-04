@@ -3,6 +3,8 @@
 #include "core/preparation.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <limits>
 #include <nlohmann/json.hpp>
 #include <set>
 #include <stdexcept>
@@ -62,12 +64,13 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
 
 void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>& textures,
                  const std::vector<Pack>& packs) {
-    require(meshes.size() <= 16);
+    require(meshes.size() <= meshCapacity);
     std::set<std::string> names;
     for (const auto& m : meshes) {
         require(!m.name.empty() && m.name.size() <= 64 && names.insert(m.name).second &&
                 m.texture < textures.size() && textures[m.texture].material);
-        require(!m.vertices.empty() && m.vertices.size() <= 6000 && m.vertices.size() % 3 == 0);
+        const auto count = m.vertices.empty() ? m.vertexCount : m.vertices.size();
+        require(count > 0 && count <= 6000 && count % 3 == 0);
         for (const auto& v : m.vertices) {
             for (float n : v)
                 require(std::isfinite(n));
@@ -199,6 +202,7 @@ Writer::~Writer() {
     std::filesystem::remove(temporary_, ec);
 }
 void Writer::bytes(const std::vector<unsigned char>& b) {
+    require(offset_ <= installedBudget && b.size() <= installedBudget - offset_);
     out_.write(reinterpret_cast<const char*>(b.data()), std::streamsize(b.size()));
     require(bool(out_));
     fingerprintBytes(hash_, b.data(), b.size());
@@ -207,14 +211,10 @@ void Writer::bytes(const std::vector<unsigned char>& b) {
 unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprite,
                      const std::vector<unsigned char>& rgba, unsigned cutoff, Anchor anchor, bool material,
                      bool crop) {
-    require(publication_.textures.size() < textureCapacity && !name.empty() && name.size() <= 256);
+    require(publication_.textures.size() < catalogTextureCapacity && !name.empty() && name.size() <= 256);
     for (const auto& t : publication_.textures)
         require(t.name != name);
     validAnchor(anchor);
-    unsigned sprites = 0, materials = 0;
-    for (const auto& t : publication_.textures)
-        t.clamp ? ++sprites : materials += unsigned(t.material);
-    require(sprite ? sprites < 448 : (!material || materials < 256));
     dimensions(w, h);
     require(rgba.size() == std::size_t(w) * h * 4 && cutoff < 255 && (!crop || sprite));
     SpriteCanvas canvas{w, h, 0, 0};
@@ -244,8 +244,8 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
     }
     std::vector<unsigned char> alpha;
     auto pixels = preparePixels(crop ? cropped : rgba, w, h, cutoff, sprite, alpha);
-    boundedAdd(publication_.textureBytes, pixels.size(), textureBudget);
-    boundedAdd(publication_.alphaBytes, alpha.size(), alphaBudget);
+    boundedAdd(publication_.textureBytes, pixels.size(), installedBudget);
+    boundedAdd(publication_.alphaBytes, alpha.size(), installedBudget);
     Texture t{name,        w, h, mipLevels(w, h), sprite, offset_, pixels.size(), offset_ + pixels.size(),
               alpha.size()};
     t.material = material && !sprite;
@@ -262,8 +262,10 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
 }
 void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t definitions,
                     const std::vector<Pack>& packs, const std::vector<PropMesh>& meshes) {
+    for (const auto& mesh : meshes)
+        require(!mesh.vertices.empty()); // Writer consumes authored payloads, not catalog descriptors.
     validMeshes(meshes, publication_.textures, packs);
-    require(appearances.size() <= 32 && packs.size() <= 8);
+    require(appearances.size() <= 32 && packs.size() <= packCapacity);
     std::set<std::string> ids;
     for (const auto& p : packs) {
         validPack(p, publication_.textures);
@@ -309,14 +311,32 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
             packJson.back()["guardianEmblem"] = p.guardianEmblem;
     }
     Json meshJson = Json::array();
-    for (const auto& m : meshes)
-        meshJson.push_back({{"name", m.name}, {"texture", m.texture}, {"vertices", m.vertices}});
+    for (const auto& m : meshes) {
+        std::vector<unsigned char> payload;
+        payload.reserve(m.vertices.size() * 32);
+        static_assert(sizeof(float) == 4 && std::numeric_limits<float>::is_iec559);
+        for (const auto& vertex : m.vertices)
+            for (float f : vertex) {
+                std::uint32_t bits;
+                std::memcpy(&bits, &f, sizeof(bits));
+                for (unsigned n = 0; n < 4; ++n)
+                    payload.push_back(static_cast<unsigned char>(bits >> (8 * n)));
+            }
+        auto checksum = fingerprintBasis;
+        fingerprintBytes(checksum, payload.data(), payload.size());
+        meshJson.push_back({{"name", m.name},
+                            {"texture", m.texture},
+                            {"count", m.vertices.size()},
+                            {"offset", offset_},
+                            {"checksum", checksum}});
+        bytes(payload);
+    }
     const Json manifest{
         {"meshes", meshJson},         {"format", version},     {"appearance_revision", appearanceRevision},
         {"definitions", definitions}, {"bytes", offset_},      {"checksum", hash_},
         {"textures", textures},       {"appearances", actors}, {"packs", packJson}};
     const auto text = manifest.dump(2);
-    require(text.size() <= 2 * 1024 * 1024);
+    require(text.size() <= metadataBudget);
     out_.close();
     require(bool(out_));
     // Invalidate publication before replacing payload; interrupted/mixed output rejects.
@@ -330,11 +350,11 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
         require(bool(out));
     }
     std::filesystem::rename(temp, directory_ / "metadata.json");
-    (void)load(directory_); // Validate writer and loader contract before reporting success.
+    load(directory_).verify(); // Full offline verification; runtime opening is metadata-only.
 }
 Publication load(const std::filesystem::path& directory) {
     try {
-        require(std::filesystem::file_size(directory / "metadata.json") <= 2 * 1024 * 1024);
+        require(std::filesystem::file_size(directory / "metadata.json") <= metadataBudget);
         std::ifstream in(directory / "metadata.json");
         std::array<std::set<std::string>, 33> keys;
         auto j = Json::parse(in, [&](int depth, Json::parse_event_t event, Json& value) {
@@ -349,21 +369,19 @@ Publication load(const std::filesystem::path& directory) {
                 integer(j.at("appearance_revision")) == appearanceRevision);
         Publication p;
         p.payload = directory / "textures.bin";
-        const auto payloadChecksum = integer(j.at("checksum"));
+        p.payloadChecksum = integer(j.at("checksum"));
         p.definitions = integer(j.at("definitions"));
         const auto length = integer(j.at("bytes"));
-        require(length <= textureBudget + alphaBudget && std::filesystem::file_size(p.payload) == length);
-        require(fingerprintFile(p.payload) == std::to_string(payloadChecksum));
+        require(length <= installedBudget && std::filesystem::file_size(p.payload) == length);
         // Publication identity includes bindings/sampling as well as the checked payload checksum.
         const auto canonical = j.dump();
         p.fingerprint = fingerprintBasis;
         fingerprintBytes(p.fingerprint, canonical.data(), canonical.size());
         const auto& ts = j.at("textures");
-        require(ts.is_array() && !ts.empty() && ts.size() <= textureCapacity);
+        require(ts.is_array() && !ts.empty() && ts.size() <= catalogTextureCapacity);
         p.textures.reserve(ts.size());
         p.anchors.reserve(ts.size());
         std::uint64_t offset = 0;
-        unsigned sprites = 0, materials = 0;
         std::set<std::string> names;
         for (const auto& v : ts) {
             Texture t{v.at("name").get<std::string>(),
@@ -389,12 +407,10 @@ Publication load(const std::filesystem::path& directory) {
             require(t.alphaOffset == offset);
             require(t.alphaBytes == (t.clamp ? std::uint64_t(t.width) * t.height : 0));
             boundedAdd(offset, t.alphaBytes, length);
-            boundedAdd(p.textureBytes, t.bytes, textureBudget);
-            boundedAdd(p.alphaBytes, t.alphaBytes, alphaBudget);
+            boundedAdd(p.textureBytes, t.bytes, installedBudget);
+            boundedAdd(p.alphaBytes, t.alphaBytes, installedBudget);
             t.material = v.at("material").get<bool>();
             require(!t.clamp || !t.material);
-            t.clamp ? ++sprites : materials += unsigned(t.material);
-            require(sprites <= 448 && materials <= 256);
             const auto& a = v.at("anchor");
             require(a.is_array() && a.size() == 2);
             Anchor anchor{a[0].get<float>(), a[1].get<float>()};
@@ -402,8 +418,7 @@ Publication load(const std::filesystem::path& directory) {
             p.textures.push_back(t);
             p.anchors.push_back(anchor);
         }
-        require(offset == length);
-        require(j.at("packs").is_array() && j.at("packs").size() <= 8);
+        require(j.at("packs").is_array() && j.at("packs").size() <= packCapacity);
         std::set<std::string> packIds;
         for (const auto& v : j.at("packs")) {
             Pack pack;
@@ -413,14 +428,14 @@ Publication load(const std::filesystem::path& directory) {
                         return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
                     }));
             const auto ref = [&](const char* name, bool sprite) {
-                const auto n = unsigned(integer(v.at(name), textureCapacity - 1));
+                const auto n = unsigned(integer(v.at(name), catalogTextureCapacity - 1));
                 require(n < p.textures.size() && p.textures[n].clamp == sprite);
                 return std::uint16_t(n);
             };
             const auto& palette = v.at("materials");
             require(palette.is_array() && palette.size() >= 3 && palette.size() <= 32);
             for (const auto& n : palette) {
-                const auto i = unsigned(integer(n, textureCapacity - 1));
+                const auto i = unsigned(integer(n, catalogTextureCapacity - 1));
                 require(i < p.textures.size() && p.textures[i].material);
                 pack.materials[pack.materialCount++] = std::uint16_t(i);
             }
@@ -447,18 +462,19 @@ Publication load(const std::filesystem::path& directory) {
             validPack(pack, p.textures);
             p.packs.push_back(std::move(pack));
         }
-        require(j.at("meshes").is_array() && j.at("meshes").size() <= 16);
+        require(j.at("meshes").is_array() && j.at("meshes").size() <= meshCapacity);
         for (const auto& v : j.at("meshes")) {
-            require(v.at("vertices").is_array() && v.at("vertices").size() <= 6000);
             PropMesh m;
             m.name = v.at("name").get<std::string>();
-            m.texture = std::uint16_t(integer(v.at("texture"), textureCapacity - 1));
-            for (const auto& a : v.at("vertices")) {
-                require(a.size() == 8);
-                m.vertices.push_back(a.get<std::array<float, 8>>());
-            }
+            m.texture = std::uint16_t(integer(v.at("texture"), catalogTextureCapacity - 1));
+            m.vertexCount = unsigned(integer(v.at("count"), 6000));
+            m.offset = integer(v.at("offset"));
+            m.checksum = integer(v.at("checksum"));
+            require(m.offset == offset);
+            boundedAdd(offset, std::uint64_t(m.vertexCount) * 32, length);
             p.meshes.push_back(std::move(m));
         }
+        require(offset == length);
         validMeshes(p.meshes, p.textures, p.packs);
         const auto& actors = j.at("appearances");
         require(actors.is_array() && actors.size() <= 32);
@@ -541,28 +557,73 @@ std::vector<unsigned char> Publication::read(unsigned index, bool alpha) const {
     require(hash == (alpha ? t.alphaChecksum : t.checksum));
     return data;
 }
+PropMesh Publication::readMesh(unsigned index) const {
+    if (index >= meshes.size())
+        throw std::out_of_range("World mesh index");
+    auto mesh = meshes[index];
+    if (mesh.vertices.empty()) {
+        require(mesh.vertexCount && mesh.vertexCount <= 6000 && mesh.vertexCount % 3 == 0);
+        std::vector<unsigned char> data(std::size_t(mesh.vertexCount) * 32);
+        std::ifstream in(payload, std::ios::binary);
+        in.seekg(std::streamoff(mesh.offset));
+        in.read(reinterpret_cast<char*>(data.data()), std::streamsize(data.size()));
+        require(bool(in));
+        auto checksum = fingerprintBasis;
+        fingerprintBytes(checksum, data.data(), data.size());
+        require(checksum == mesh.checksum);
+        mesh.vertices.resize(mesh.vertexCount);
+        std::size_t at = 0;
+        for (auto& vertex : mesh.vertices)
+            for (float& f : vertex) {
+                std::uint32_t bits = 0;
+                for (unsigned n = 0; n < 4; ++n)
+                    bits |= std::uint32_t(data[at++]) << (8 * n);
+                std::memcpy(&f, &bits, sizeof(f));
+            }
+    }
+    validMeshes({mesh}, textures, {});
+    for (const auto& pack : packs)
+        for (unsigned slot = 0; slot < pack.models.size(); ++slot)
+            if (pack.models[slot] == index)
+                for (const auto& v : mesh.vertices)
+                    require(std::abs(v[0]) <= .5f && std::abs(v[2]) <= (slot == 3 ? 1.f : .5f));
+    return mesh;
+}
+void Publication::verify() const {
+    require(fingerprintFile(payload) == std::to_string(payloadChecksum));
+    for (unsigned i = 0; i < textures.size(); ++i) {
+        (void)read(i);
+        if (textures[i].alphaBytes)
+            (void)read(i, true);
+    }
+    for (unsigned i = 0; i < meshes.size(); ++i)
+        (void)readMesh(i);
+}
+
 } // namespace blobber::world_assets
 
 namespace blobber::world_assets {
 CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
-    require(publication.textures.size() <= textureCapacity && publication.appearances.size() <= 32 &&
+    require(publication.textures.size() <= catalogTextureCapacity && publication.appearances.size() <= 32 &&
             publication.anchors.size() == publication.textures.size() &&
-            publication.alphaBytes <= alphaBudget && publication.textureBytes <= textureBudget);
-    require(publication.packs.size() <= 8);
+            publication.alphaBytes <= installedBudget && publication.textureBytes <= installedBudget);
+    require(publication.packs.size() <= packCapacity);
     validMeshes(publication.meshes, publication.textures, publication.packs);
     std::set<std::string> ids;
     for (const auto& p : publication.packs) {
         validPack(p, publication.textures);
         require(ids.insert(p.id).second);
     }
-    std::uint64_t totalAlpha = 0;
+    std::uint64_t totalAlpha = 0, totalColor = 0;
     for (const auto& t : publication.textures) {
         validCanvas(t);
         require(t.width && t.height && t.width <= 4096 && t.height <= 4096 &&
                 t.alphaBytes == (t.clamp ? std::uint64_t(t.width) * t.height : 0));
-        boundedAdd(totalAlpha, t.alphaBytes, alphaBudget);
+        require(t.levels == mipLevels(t.width, t.height) && t.bytes == mipBytes(t.width, t.height));
+        boundedAdd(totalAlpha, t.alphaBytes, installedBudget);
+        boundedAdd(totalColor, t.bytes, installedBudget);
     }
-    require(totalAlpha == publication.alphaBytes);
+    require(totalAlpha == publication.alphaBytes && totalColor == publication.textureBytes);
     for (const auto& anchor : publication.anchors)
         validAnchor(anchor);
     for (const auto& appearance : publication.appearances) {
@@ -586,24 +647,11 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
                     for (unsigned f = 0; f < timings[c].count; ++f)
                         require(appearance.clips[c].textures[side][f] != UINT16_MAX);
     }
-    masks.reserve(publication.textures.size());
-    bounds.reserve(publication.textures.size());
-    for (unsigned i = 0; i < publication.textures.size(); ++i) {
-        preparationPoint("Preparing artwork");
-        const auto& t = publication.textures[i];
-        masks.push_back(publication.read(i, true));
-        AlphaBounds b{t.width, t.height, 0, 0};
-        if (t.clamp)
-            for (unsigned y = 0; y < t.height; ++y)
-                for (unsigned x = 0; x < t.width; ++x)
-                    if (masks.back()[std::size_t(y) * t.width + x]) {
-                        b.left = std::min(b.left, x);
-                        b.top = std::min(b.top, y);
-                        b.right = std::max(b.right, x + 1);
-                        b.bottom = std::max(b.bottom, y + 1);
-                    }
-        bounds.push_back(b);
-    }
+    masks.resize(publication.textures.size());
+    bounds.resize(publication.textures.size());
+    textureRefs_.resize(publication.textures.size());
+    meshRefs_.resize(publication.meshes.size());
+    meshes_.resize(publication.meshes.size());
     for (unsigned i = 0; i < publication.appearances.size(); ++i) {
         const auto& a = publication.appearances[i];
         for (const auto& c : a.clips)
@@ -615,7 +663,7 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
                                                                             std::max(anchor.x, 1 - anchor.x));
                     }
     }
-    if (bytes() > 68 * MiB)
+    if (bytes() > worldCpuBudget)
         throw std::runtime_error("World shared CPU storage budget exceeded");
 }
 unsigned CpuAssets::named(const char* name) const {
@@ -668,6 +716,10 @@ std::size_t CpuAssets::bytes() const noexcept {
         n += a.id.capacity();
     for (const auto& p : publication.packs)
         n += p.id.capacity();
+    n += textureRefs_.capacity() * sizeof(unsigned) + meshRefs_.capacity() * sizeof(unsigned) +
+         meshes_.capacity() * sizeof(PropMesh);
+    for (const auto& m : meshes_)
+        n += m.name.capacity() + m.vertices.capacity() * sizeof(std::array<float, 8>);
     return n;
 }
 } // namespace blobber::world_assets

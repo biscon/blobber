@@ -155,6 +155,7 @@ inline void creatureMaskExposure() {
     auto publication = fixture.publication();
     publication.appearances[0].height = 1;
     world_assets::CpuAssets assets(std::move(publication));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     auto rows = std::vector<std::string>(9, std::string(9, '.'));
     rows.front() = rows.back() = std::string(9, '#');
     for (auto& row : rows)

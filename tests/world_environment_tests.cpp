@@ -120,6 +120,7 @@ int main(int argc, char**) {
         rejects([&] { Map m(rows, invalid); }, "Tall nonblocking prop rejects");
         test::VisibilityFixture fixture;
         world_assets::CpuAssets assets(fixture.publication());
+        const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         auto unavailable = d;
         unavailable.surfaces[4 * 9 + 4].floorMaterial = 31;
         Map badMaterial(rows, unavailable);

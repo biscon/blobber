@@ -100,6 +100,7 @@ int main(int argc, char**) {
         Session prepared(cat, defs, preparedSetup, Mode::Diagnostic);
         blobber::test::VisibilityFixture fixture(unsigned(defs.types.size()));
         const world_assets::CpuAssets assets(fixture.publication());
+        const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         defs.timings = fixture.timings;
         WorldVisualContext context{assets, defs.timings};
         Session visual(cat, defs, setup, Mode::Visual, makeWorldVisual, &context);

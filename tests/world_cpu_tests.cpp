@@ -147,7 +147,9 @@ int main() {
                                  std::ios::in | std::ios::out | std::ios::binary);
             payload.put('x');
         }
-        rejects([&] { world_assets::load(fixture.directory); }, "Corrupt texture payload rejected");
+        const auto lazy = world_assets::load(fixture.directory);
+        rejects([&] { lazy.read(0); }, "Corrupt texture payload rejected on acquisition");
+        rejects([&] { lazy.verify(); }, "Offline verification rejects any corrupt payload");
         std::cout << "World CPU/publication checks passed\n";
     } catch (const std::exception& e) {
         watching = false;

@@ -95,6 +95,7 @@ void targeting() {
     publication.appearances[0].width = .5f;
     publication.appearances[0].height = .9f;
     world_assets::CpuAssets assets(std::move(publication));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     // Solid owned silhouettes make total occlusion deterministic.
     for (auto& mask : assets.masks)
         std::fill(mask.begin(), mask.end(), 255);

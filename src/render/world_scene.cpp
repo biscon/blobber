@@ -180,7 +180,7 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 for (unsigned variant = 0; variant < 2; ++variant) {
                     if (pack.models[variant] >= assets->publication.meshes.size())
                         throw std::runtime_error("Missing chest mesh binding");
-                    for (const auto& v : assets->publication.meshes[pack.models[variant]].vertices)
+                    for (const auto& v : assets->mesh(pack.models[variant]).vertices)
                         back = std::max(back, -.5f * v[2]);
                 }
                 // One transform for both states: leave clearance for the open lid.
@@ -191,7 +191,7 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
             for (unsigned model = first; model < last; ++model) {
                 if (pack.models[model] >= assets->publication.meshes.size())
                     throw std::runtime_error("Missing prop mesh binding");
-                const auto& mesh = assets->publication.meshes[pack.models[model]];
+                const auto& mesh = assets->mesh(pack.models[model]);
                 const float scale = d.kind == DecorationKind::Chest ? .5f : 1.f;
                 unsigned material = 0;
                 while (material < pack.materialCount && pack.materials[material] != mesh.texture)
@@ -264,6 +264,9 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     limits.quads = std::min(limits.quads, std::size_t(262144));
     limits.ranges = std::min(limits.ranges, std::size_t(65536));
     limits.cpuBytes = std::min(limits.cpuBytes, std::size_t(64u * 1024 * 1024));
+    // Bounded preparation lease; transformed geometry owns its vertices after return.
+    const auto lease = assets ? assets->acquire(assets->requirements(m.base().definition().assetPack))
+                              : world_assets::AssetLease{};
     Scene s;
     const auto pack = assets ? assets->pack(m.base().definition().assetPack) : world_assets::Pack{};
     s.map = &m.base();

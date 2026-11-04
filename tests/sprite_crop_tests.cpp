@@ -96,6 +96,8 @@ void payload() {
 void geometry() {
     test::VisibilityFixture full(1, 6, false), crop(1, 6, true);
     world_assets::CpuAssets a(full.publication()), b(crop.publication());
+    const auto aLease = a.acquire(world_assets::allAssets(a.publication));
+    const auto bLease = b.acquire(world_assets::allAssets(b.publication));
     const auto catalog = creationCatalog(true);
     const auto map = test::worldRoom(11, 11);
     MovementState movement;

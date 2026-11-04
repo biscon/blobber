@@ -32,6 +32,18 @@ UiFonts::UiFonts(const std::filesystem::path& directory)
     : label_(directory / "IBMPlexSans-Regular.ttf", 24), small_(directory / "IBMPlexSans-Regular.ttf", 21),
       heading_(directory / "IBMPlexSans-Bold.ttf", 27), log_(directory / "Inconsolata.otf", 24),
       display_(directory / "DejaVuSerif-Bold.ttf", 27), control_(directory / "IBMPlexSans-Bold.ttf", 48) {}
+std::size_t UiFonts::gpuBytes() const noexcept {
+    std::size_t n = 0;
+    for (const auto* f : {&label_, &small_, &heading_, &log_, &display_, &control_}) {
+        auto t = f->value.texture;
+        for (int level = 0; level < t.mipmaps; ++level) {
+            n += GetPixelDataSize(t.width, t.height, t.format);
+            t.width = std::max(1, t.width / 2);
+            t.height = std::max(1, t.height / 2);
+        }
+    }
+    return n;
+}
 const Font& UiFonts::font(UiTextStyle style) const {
     switch (style) {
     case UiTextStyle::Control:

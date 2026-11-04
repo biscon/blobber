@@ -16,8 +16,8 @@ struct WorldDrawStats {
 };
 class WorldRenderer {
   public:
-    WorldRenderer(GpuResources&, world_assets::Publication);
-    WorldRenderer(GpuResources&, std::shared_ptr<const world_assets::CpuAssets>);
+    WorldRenderer(GpuResources&, world_assets::Publication, bool supersampling = true);
+    WorldRenderer(GpuResources&, std::shared_ptr<const world_assets::CpuAssets>, bool supersampling = true);
     ~WorldRenderer() = default;
     WorldRenderer(const WorldRenderer&) = delete;
     WorldRenderer& operator=(const WorldRenderer&) = delete;
@@ -47,7 +47,7 @@ class WorldRenderer {
     // Diagnostic only; caller owns a 500x282 target, no gameplay readback.
     void diagnosticIds(TargetHandle);
     void measureFrames(bool enabled) noexcept { measure_ = enabled; }
-    void supersampling(bool enabled) noexcept { supersampling_ = enabled; }
+    void supersampling(bool enabled); // Preparation boundary if high targets do not exist yet.
     bool supersampling() const noexcept { return supersampling_; }
     bool staged() const noexcept { return bool(staged_); }
     WorldImage image() const noexcept;
@@ -60,11 +60,21 @@ class WorldRenderer {
     WorldDrawStats stats{};
     std::size_t cpuBytes() const noexcept;
     std::size_t gpuBytes() const noexcept;
+    struct MemoryReport {
+        std::size_t installedTextures = 0, residentTextures = 0, residentAlpha = 0, residentMeshes = 0;
+        std::size_t worldGpu = 0, applicationGpu = 0, peakApplicationGpu = 0;
+        unsigned textureCount = 0;
+    };
+    MemoryReport memory() const noexcept;
     int anisotropy() const noexcept { return anisotropy_; }
     const world_render::Scene* scene() const noexcept { return active_ ? &active_->cpu : nullptr; }
 
   private:
+    using SharedTexture = std::shared_ptr<GpuLease<TextureHandle>>;
     struct View {
+        world_assets::AssetLease assets;
+        std::vector<SharedTexture> textureLeases;
+        std::vector<TextureHandle> textures;
         world_render::Scene cpu;
         world_assets::Pack pack;
         std::array<TextureHandle, 32> materials{};
@@ -83,15 +93,20 @@ class WorldRenderer {
     GpuResources& resources_;
     std::shared_ptr<const world_assets::CpuAssets> assets_;
     const world_assets::Publication& publication_;
-    std::vector<GpuLease<TextureHandle>> textures_;
+    std::vector<std::weak_ptr<GpuLease<TextureHandle>>> textures_;
+    std::size_t peakApplicationGpu_ = 0;
+    void acquireTextures(View&, const world_assets::AssetRequirements&);
+    void stagePrepared(GeometryView, const MovementState&, world_render::Surfaces,
+                       const std::vector<world_render::Surfaces>&, world_render::Limits,
+                       const world_assets::AssetRequirements&);
     GpuLease<ShaderHandle> world_, resolve_, billboard_, sky_, creatureComposite_;
     GpuLease<MeshHandle> quad_, proxy_;
     std::array<int, 12> billboardLocations_{};
     void prepareBillboards();
     enum class BillboardPass { Scenery, LeafArt, Creatures };
-    void drawBillboards(const world_render::WorldFrame&, const float*, const float*, bool,
+    void drawBillboards(const View&, const world_render::WorldFrame&, const float*, const float*, bool,
                         const world_render::Scene*, BillboardPass);
-    void drawEffects(const world_render::EffectFrame&, const float*, const float*, bool ground,
+    void drawEffects(const View&, const world_render::EffectFrame&, const float*, const float*, bool ground,
                      const world_render::WorldFrame&);
     int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1, doorUv_ = -1;
     GpuLease<TargetHandle> high_, creaturesLow_, creaturesHigh_;

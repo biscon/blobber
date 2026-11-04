@@ -1,13 +1,22 @@
 #pragma once
 #include "assets/npc_metadata.hpp"
 #include "world/surfaces.hpp"
+#include <bitset>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
+namespace blobber {
+struct ActorSnapshot;
+}
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
 constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
-constexpr unsigned version = 4, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned version = 5, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned catalogTextureCapacity = 4096, packCapacity = 64, meshCapacity = 512;
+constexpr std::size_t metadataBudget = 8 * MiB;
+constexpr std::uint64_t installedBudget = 8ull * 1024 * MiB;
+constexpr std::size_t steadyGpuReference = 384 * MiB, peakGpuReference = 448 * MiB;
 // Stored texels occupy [x,x+width) in the original registered canvas. Anchors
 // and attachments always refer to that canvas, including after offline cropping.
 struct SpriteCanvas {
@@ -44,7 +53,9 @@ struct Anchor {
 struct PropMesh {
     std::string name;
     std::uint16_t texture = 0;
-    std::vector<std::array<float, 8>> vertices;
+    std::vector<std::array<float, 8>> vertices; // Only populated in authoring or an acquired mesh.
+    std::uint64_t offset = 0, checksum = 0;
+    unsigned vertexCount = 0;
 };
 struct Pack {
     std::string id = "dungeon";
@@ -70,21 +81,65 @@ struct Publication {
     std::vector<Pack> packs;
     std::vector<PropMesh> meshes;
     std::vector<unsigned char> read(unsigned index, bool alpha = false) const;
+    PropMesh readMesh(unsigned index) const;
+    void verify() const; // Offline/full diagnostic verification, not startup.
+    std::uint64_t payloadChecksum = 0;
 };
-// Immutable preparation owner; safe to share between live and windowless views.
+struct AssetRequirements {
+    std::bitset<catalogTextureCapacity> textures;
+    std::bitset<meshCapacity> meshes;
+};
+// Explicit whole-publication selection for small owned fixtures/offline inspection.
+AssetRequirements allAssets(const Publication&);
+class CpuAssets;
+class AssetLease {
+  public:
+    AssetLease() = default;
+    ~AssetLease();
+    AssetLease(const AssetLease&) = delete;
+    AssetLease& operator=(const AssetLease&) = delete;
+    AssetLease(AssetLease&&) noexcept;
+    AssetLease& operator=(AssetLease&&) noexcept;
+
+  private:
+    friend class CpuAssets;
+    const CpuAssets* owner_ = nullptr; // Preparation owner outlives leases.
+    AssetRequirements held_{};
+    void reset() noexcept;
+};
+// Metadata is immutable; payloads change only at serialized preparation boundaries.
 struct AlphaBounds {
     unsigned left = 0, top = 0, right = 0, bottom = 0;
 };
 class CpuAssets {
   public:
     explicit CpuAssets(Publication);
+    CpuAssets(const CpuAssets&) = delete;
+    CpuAssets& operator=(const CpuAssets&) = delete;
     const Publication publication;
-    std::vector<std::vector<unsigned char>> masks;
-    std::vector<AlphaBounds> bounds;
+    mutable std::vector<std::vector<unsigned char>> masks;
+    mutable std::vector<AlphaBounds> bounds;
     std::array<float, 32> edgeHalfWidths{};
     unsigned named(const char*) const;
     Pack pack(const std::string&) const;
     std::size_t bytes() const noexcept;
+    AssetRequirements requirements(const std::string& pack, const ActorSnapshot* actors = nullptr,
+                                   bool interactive = false) const;
+    AssetLease acquire(const AssetRequirements&) const;
+    const PropMesh& mesh(unsigned) const;
+    struct Residency {
+        std::size_t alphaBytes = 0, meshBytes = 0;
+        unsigned textures = 0, meshes = 0;
+        std::uint64_t reads = 0, readBytes = 0;
+    };
+    Residency residency() const noexcept;
+
+  private:
+    friend class AssetLease;
+    mutable std::vector<unsigned> textureRefs_, meshRefs_;
+    mutable std::vector<PropMesh> meshes_;
+    mutable std::uint64_t reads_ = 0, readBytes_ = 0;
+    void release(const AssetRequirements&) const noexcept;
 };
 std::size_t mipBytes(unsigned width, unsigned height);
 unsigned mipLevels(unsigned width, unsigned height);

@@ -1,13 +1,16 @@
 # System design
 
-Sanctuary city (agreed direction; not implemented):
+Sanctuary city (SC01.1 implemented and accepted, 2026-11-05):
 [four-slice roadmap](sanctuary_city_plan.md) stages an in-engine architectural
 street corner, full town layout, vegetation/market/fountain, and campaign hub
 replacement. Retained [visual references](mockups/sanctuary-city-v1/README.md)
 guide an older, lightly overgrown town with occasional two-storey exterior shells.
 Use simple prepared low-poly geometry and basic frustum culling; optimize observed
 issues at slice handoffs. Interiors/services are deferred and existing development
-saves require no migration. SC01 detailed planning is next; no implementation started.
+saves require no migration. SC01 is split: [SC01.1 location-owned assets](sc011_design.md) is implemented with
+[verification and handoff](sc011_verification.md); SC01.2 architecture is eligible
+for separate detailed planning. Supersampling and texture fidelity remain unchanged;
+512 MiB–1 GiB is a memory target, not a mandate to reduce quality.
 
 Movement-frame performance (implemented and mechanically verified, 2026-11-04):
 [skip unavailable picking and reuse visibility work](movement_frame_work.md) removes
@@ -316,9 +319,10 @@ Implemented follow-up: [variable stone layouts](procedural_layout_design.md) rep
   prepared prop meshes, an optional reusable guardian-door emblem, and world UV scale.
   Texture purpose is independent of sprite alpha/sampling; panoramas do not occupy
   terrain palette slots. Publication identity hashes canonical metadata including the
-  checked payload checksum, so binding-only edits invalidate replay too. Runtime validates publication
-  fingerprints and definitions before creating immutable shared CPU assets and GPU
-  texture leases. Native portrait/creator atlases have independent retained bakers.
+  checked payload checksum, so binding-only edits invalidate replay too. Runtime validates bounded catalog metadata and definitions, then verifies
+  selected payload checksums when acquired. CPU masks/models and GPU textures are
+  leased by active/staged location requirements; unused packs/types stay on disk.
+  The offline baker verifies every payload. Native portrait/creator atlases have independent retained bakers.
 - **World rendering:** bounded static chunk/material meshes plus per-view CPU
   visibility and effects consume the same camera, actor animation, loot, doors and
   surface snapshots as GPU drawing. Prepared one-cell stairwells contain eight steps,
@@ -405,9 +409,10 @@ fixed result values without allocation. Lethal impact unblocks immediately; anim
 plays a 1200 ms goblin death/corpse clip, overlaying white for its first 100 ms,
 then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash.
 
-WorldRenderer retains immutable shared textures/alpha data and at most active and
-staged views. Each view owns bounded static scene geometry, visibility scratch,
-effects and GPU mesh/target leases. World asset budgets are 512 MiB mip textures
+WorldRenderer retains immutable catalog metadata and at most active and staged
+views. View-owned leases share current texture/alpha/model payloads and release
+source-only assets on commit, destination-only assets on cancel. Each view owns bounded static scene geometry, visibility scratch,
+effects and GPU mesh/target leases. Resident world safety ceilings are 512 MiB mip textures
 and 64 MiB alpha masks; scene limits are 64 MiB CPU/40 MiB GPU, view scratch 8 MiB,
 and tracked world ceilings are 352 MiB CPU / 608 MiB GPU. Preparation rejects capacity or
 allocation failures without replacing the playable view. These are preparation
@@ -531,9 +536,9 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 6/10 and generator/templates 8/6. Older saves reject
-without being modified; no migration. World publication is format 3, appearance 4,
-visibility world-visibility-v7 and terrain-rules-v2. Door scheduling identity is
+Campaign schema/simulation are 7/11 and generator/templates 8/6. Older saves reject
+without being modified; no migration. World publication is format 5, appearance 4,
+visibility world-visibility-v13 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

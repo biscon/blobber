@@ -23,6 +23,7 @@ void spritesAtDoorLeaves() {
     for (auto& clip : publication.appearances[0].clips)
         clip.width = .7f;
     world_assets::CpuAssets assets(std::move(publication));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto catalog = hybridCatalog(false);
     const auto map = test::worldRoom(9, 9);
     for (unsigned h = 0; h < 4; ++h)
@@ -159,6 +160,7 @@ void spritesAtDoorLeaves() {
 void diagonalCombatTarget() {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto catalog = hybridCatalog(false);
     const auto map = hybridRoom();
     const auto scene = world_render::prepare(map);
@@ -219,6 +221,7 @@ void alphaAnchorsAndWalls() {
     auto publication = fixture.publication();
     publication.appearances[0].clips[0].width = 1.f;
     world_assets::CpuAssets assets(std::move(publication));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto catalog = creationCatalog(true);
     const auto map = test::worldRoom(9, 9);
     auto scene = world_render::prepare(map);
@@ -284,6 +287,7 @@ int main() {
         alphaAnchorsAndWalls();
         test::VisibilityFixture fixture;
         world_assets::CpuAssets assets(fixture.publication());
+        const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         const auto catalog = creationCatalog(true);
         const auto map = test::worldRoom(9, 9);
         MovementState movement;
@@ -397,6 +401,8 @@ int main() {
         check(pipeline.bytes() < world_render::viewScratchBudget, "Double-buffered visibility fits budget");
         test::WorldFixture incompletePublication;
         world_assets::CpuAssets incompleteAssets(world_assets::load(incompletePublication.directory));
+        const auto incompleteAssetsLease =
+            incompleteAssets.acquire(world_assets::allAssets(incompleteAssets.publication));
         rejects([&] { world_render::VisibilityPipeline incomplete(scene, incompleteAssets); },
                 "Missing future loot/fixture sprites fail preparation before normal frames");
         // Status clipping compares the complete surface at each pixel and excludes its owner.

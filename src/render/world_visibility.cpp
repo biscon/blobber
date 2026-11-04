@@ -204,6 +204,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             if (clip == unsigned(NpcAnimation::Prone) && a.clips[clip].textures[side][0] != UINT16_MAX) {
                 canonical = a.clips[clip].textures[side][0];
             }
+            if (assets_.masks[canonical].empty() || assets_.masks[texture].empty())
+                throw std::logic_error("Actor artwork was not acquired at preparation");
             const auto& canonicalTexture = assets_.publication.textures[canonical];
             const float top = float(canonicalTexture.canvas.y + assets_.bounds[canonical].top) /
                               canonicalTexture.canvas.height;

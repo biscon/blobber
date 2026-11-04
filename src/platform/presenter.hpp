@@ -47,6 +47,7 @@ class Presenter {
     TextureHandle menuBackground_;
     std::filesystem::path assetsMenuPath_;
     UiFonts fonts_;
+    GpuExternalLease fontMemory_;
     UiArt uiArt_;
 };
 } // namespace blobber

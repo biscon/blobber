@@ -85,6 +85,7 @@ void doors() {
 void stairsAndFrames() {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     auto catalog = fixtureCatalog();
     const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
     for (unsigned h = 0; h < 4; ++h)
@@ -197,6 +198,7 @@ void packs() {
     pack.sky = std::uint16_t(writer.add("sky", 4, 4, false, pixels, 0, {}, false));
     writer.finish({}, 0, {pack});
     world_assets::CpuAssets assets(world_assets::load(fixture.directory));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     check(assets.pack("dungeon").materialCount == 3 && !assets.publication.textures[pack.sky].material,
           "Sky and door images remain outside the terrain palette");
     check(assets.pack("dungeon").guardianEmblem == pack.guardianEmblem,
@@ -239,6 +241,7 @@ void packs() {
 void lootBags() {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto map = test::worldRoom(9, 9);
     auto scene = world_render::prepare(map);
     world_render::VisibilityPipeline visibility(scene, assets);

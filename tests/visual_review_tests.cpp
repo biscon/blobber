@@ -130,6 +130,7 @@ void summaryAndPose() {
     const auto id = actors.id(0);
     test::VisibilityFixture fixture;
     const world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto& timings = fixture.timings;
     NpcAnimator animator(actors, timings);
     const auto scene = world_render::prepare(map);
