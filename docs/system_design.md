@@ -1,5 +1,14 @@
 # System design
 
+Sanctuary city (agreed direction; not implemented):
+[four-slice roadmap](sanctuary_city_plan.md) stages an in-engine architectural
+street corner, full town layout, vegetation/market/fountain, and campaign hub
+replacement. Retained [visual references](mockups/sanctuary-city-v1/README.md)
+guide an older, lightly overgrown town with occasional two-storey exterior shells.
+Use simple prepared low-poly geometry and basic frustum culling; optimize observed
+issues at slice handoffs. Interiors/services are deferred and existing development
+saves require no migration. SC01 detailed planning is next; no implementation started.
+
 Movement-frame performance (implemented and mechanically verified, 2026-11-04):
 [skip unavailable picking and reuse visibility work](movement_frame_work.md) removes
 moving software rasterization and empty HUD outline scans, caches owner/leaf relations,
