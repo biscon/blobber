@@ -1,5 +1,6 @@
 #include "assets/fingerprint.hpp"
 #include "assets/image.hpp"
+#include "assets/map_icons.hpp"
 #include "assets/npc_sheet.hpp"
 #include "render/image_sampling.hpp"
 #include "support/check.hpp"
@@ -15,6 +16,44 @@ using namespace blobber;
 namespace fs = std::filesystem;
 using Json = nlohmann::json;
 namespace {
+void mapIcons() {
+    OwnedImage sheet(GenImageColor(66, 33, {0, 255, 255, 0}));
+    for (int i = 0; i < mapIconCount; ++i) {
+        const int x = (i % 4) * sheet.value.width / 4, y = (i / 4) * sheet.value.height / 2;
+        ImageDrawRectangle(&sheet.value, x + 3, y + 4, 9, 6,
+                           {static_cast<unsigned char>(30 + 20 * i), 40, 50, 255});
+    }
+    OwnedImage atlas(prepareMapIconAtlas(sheet.value));
+    for (int i = 0; i < mapIconCount; ++i) {
+        const int ox = i % 4 * mapIconStride + mapIconPadding;
+        const int oy = i / 4 * mapIconStride + mapIconPadding;
+        int left = mapIconSize, right = -1, top = mapIconSize, bottom = -1;
+        for (int y = 0; y < mapIconSize; ++y)
+            for (int x = 0; x < mapIconSize; ++x) {
+                const auto c = GetImageColor(atlas.value, ox + x, oy + y);
+                if (c.a == 0)
+                    continue;
+                check(c.r == 30 + 20 * i && c.g == 40 && c.b == 50,
+                      "Map preparation preserves each source cell without hidden-RGB or neighbouring "
+                      "contamination");
+                left = std::min(left, x);
+                right = std::max(right, x);
+                top = std::min(top, y);
+                bottom = std::max(bottom, y);
+            }
+        check(right - left + 1 == 48 && bottom - top + 1 == 32 && std::abs(left + right - 47) <= 1 &&
+                  std::abs(top + bottom - 47) <= 1,
+              "Odd-sized source sheets normalize alpha bounds, preserve aspect and center each marker");
+    }
+    rejects([&] { prepareMapIconAtlas({}); }, "Missing map artwork fails explicitly");
+    OwnedImage opaque(GenImageColor(64, 32, RED));
+    rejects([&] { prepareMapIconAtlas(opaque.value); }, "Opaque map backing is rejected");
+    ImageDrawRectangle(&sheet.value, 3 * sheet.value.width / 4, sheet.value.height / 2,
+                       sheet.value.width - 3 * sheet.value.width / 4,
+                       sheet.value.height - sheet.value.height / 2, BLANK);
+    rejects([&] { prepareMapIconAtlas(sheet.value); },
+            "A missing marker is rejected without a procedural fallback");
+}
 void sampling() {
     const Color colors[]{{255, 0, 0, 255}, {0, 255, 255, 0}, {0, 255, 255, 0}, {0, 255, 255, 0}};
     AreaSampler sampler(colors, 2, 2, 2);
@@ -134,6 +173,7 @@ void derivatives() {
 int main() {
     try {
         SetTraceLogLevel(LOG_WARNING);
+        mapIcons();
         sampling();
         derivatives();
     } catch (const std::exception& e) {

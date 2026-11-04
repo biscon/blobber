@@ -1,9 +1,11 @@
 #include "assets/image.hpp"
+#include "assets/map_icons.hpp"
 #include "assets/portrait_atlas.hpp"
 #include "platform/gpu_resources.hpp"
 #include "platform/window.hpp"
 #include "support/check.hpp"
 #include "ui/hud_painter.hpp"
+#include "ui/map_model.hpp"
 #include <chrono>
 #include <iostream>
 #include <string_view>
@@ -19,6 +21,7 @@ struct FixtureDirectory {
         std::filesystem::create_directories(path / "spells");
         std::filesystem::create_directories(path / "items");
         std::filesystem::create_directories(path / "camp");
+        std::filesystem::create_directories(path / "map");
     }
     ~FixtureDirectory() {
         std::error_code e;
@@ -87,7 +90,12 @@ void nativeUi() {
                                   "spells/sanctuary",
                                   "spells/hold_person",
                                   "items/quarterstaff",
-                                  "travel"};
+                                  "travel",
+                                  "skeleton",
+                                  "bugbear",
+                                  "giant-rat",
+                                  "zombie",
+                                  "goblin-shaman"};
     for (unsigned i = 0; i < std::size(names); ++i) {
         OwnedImage image(GenImageColor(i < 4     ? 216
                                        : i >= 29 ? 168
@@ -120,11 +128,22 @@ void nativeUi() {
             ExportImage(atlas.value, (fixture.path.parent_path() / "prepared/creator.qoi").string().c_str()),
             "Generated creator atlas");
     }
+    {
+        OwnedImage icons(GenImageColor(128, 64, BLANK));
+        for (int i = 0; i < mapIconCount; ++i) {
+            const int x = (i % 4) * 32, y = (i / 4) * 32;
+            ImageDrawRectangle(&icons.value, x + 8, y + 8, 16, 16, i == 0 ? RED : i == 1 ? WHITE : ORANGE);
+            if (i == 0)
+                ImageDrawRectangle(&icons.value, x + 8, y + 8, 8, 8, GREEN);
+        }
+        check(ExportImage(icons.value, (fixture.path / "map/markers-v1.png").string().c_str()),
+              "Export owned map marker fixture");
+    }
     GpuResources resources;
     const UiArt art(resources, fixture.path);
     OwnedImage extra(GenImageColor(2, 2, WHITE));
     const auto viewport = resources.createTexture(extra.value), menu = resources.createTexture(extra.value);
-    check(bool(viewport) && bool(menu), "Creator plus viewport and menu fit eight texture slots");
+    check(bool(viewport) && bool(menu), "Prepared UI artwork plus viewport and menu fit the registry");
     const HudPainter painter(nullptr, &art);
     const auto target = resources.createTarget(400, 400);
     BeginTextureMode(resources.target(target));
@@ -139,9 +158,19 @@ void nativeUi() {
     painter.fill({101, 41, 18, 18}, RED);
     painter.overlayBox({100, 40, 20, 20});
     art.creator(10, {100, 80, 25, 25});
+    art.mapMarker(MapMarker::ClosedDoor, {0, 110, 12, 12});
+    art.mapMarker(MapMarker::OpenDoor, {16, 110, 12, 12});
+    art.mapMarker(MapMarker::Party, {32, 110, 12, 12}, Heading::East);
     EndTextureMode();
     OwnedImage result(LoadImageFromTexture(resources.target(target).texture));
     ImageFlipVertical(&result.value);
+    const auto closed = GetImageColor(result.value, 18, 348), open = GetImageColor(result.value, 66, 348);
+    check(closed.r > 240 && closed.g > 240 && closed.b > 240 && open.r > 240 && open.g > 100 &&
+              open.g < 190 && open.b < 20,
+          "Closed and open markers draw their own prepared raster regions");
+    const auto rotated = GetImageColor(result.value, 123, 339), other = GetImageColor(result.value, 105, 357);
+    check(rotated.g > 200 && rotated.r < 50 && other.r > 200 && other.g < 150,
+          "Party heading rotates the prepared texture about its cell center");
     for (int x = 10; x < 100; ++x) {
         const auto c = GetImageColor(result.value, x, 50);
         check(x % 2 ? c.r > 240 : c.r < 15, "One-native-pixel source detail survives the UI atlas and draw");

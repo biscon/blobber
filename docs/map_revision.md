@@ -2,19 +2,45 @@
 
 Status: implemented and mechanically verified (2026-11-04). Visual acceptance
 remains user review. [Approved layout reference](mockups/floor-map-approved.png)
-and [application captures](screenshots/map-revision-desktop/README.md).
+and [current application captures](screenshots/map-icons-desktop/README.md).
+
+### Readability/art follow-up (implemented and mechanically verified)
+
+Increase cells by 50%, to 9×9 art units / 27×27 native pixels, preserving the
+existing per-axis centering and character-centered crop. Replace all primitive
+map/legend pictograms with imagegen artwork in the game's existing painted UI
+style. Open/closed doors share the same frontal stone/brass frame, wood leaf,
+palette and lighting; leaf position and the visible opening communicate state.
+Only the party arrow uses teal. An eight-icon transparent 4×2 source sheet is
+prepared once at startup into a small padded atlas owned by UiArt/GpuResources;
+map, legend and quest keys share its regions, with rotation for party heading.
+Source-cell alpha bounds are normalized during preparation, never during frames.
+Missing/invalid artwork fails explicitly, with no procedural icon fallback.
+This follows the persistent icon-art requirement in AGENTS.md.
+
+The built-in imagegen source and exact prompt are retained in
+[`assets/ui/map/`](../assets/ui/map/markers-v1.prompt.json). Startup preparation
+accepts a bounded 2:1 RGBA sheet up to 4096×2048, splits fractional grid boundaries
+(the generated master is 1774×887), and fits each alpha-bounded icon into a 48×48
+region. Existing alpha-weighted area sampling excludes hidden RGB and faint
+alpha noise; two-pixel gutters prevent neighbouring-region bleed. UiArt owns one
+additional 208×104 RGBA GPU atlas (84.5 KiB) through the existing resource registry.
+Source images and sampling scratch die after preparation. Party heading rotates
+the shared raster region about its center. Map icons occupy 25×25 native pixels
+inside 27×27 cells; legend samples are 36×36 pixels. No frame-time image processing
+or allocation is introduced.
 
 ## Presentation
 
 The map replaces exactly the 500×282 art-unit dungeon viewport, retaining the
 1920×1080 presentation, portraits and bottom dock. The approved imagegen mockup
-is a layout reference only; cells and pictograms use exact code-native geometry.
+is a layout reference only; cell geometry is exact and marker artwork is generated.
 The title is FLOOR N with M CLOSE at the right. A large left canvas uses fixed
-6×6 art-unit (18×18 native-pixel) cells and one-native-pixel seams. Each axis
+9×9 art-unit (27×27 native-pixel) cells and one-native-pixel seams. Each axis
 centers the map when it fits, otherwise centers the party without edge clamping.
 Only whole cells inside the canvas are drawn. A right sidebar contains eight
-aligned legend rows and all held quest keys, or None collected. Shared pictogram
-geometry draws padded cell-centered markers and larger legend samples. The party
+aligned legend rows and all held quest keys, or None collected. Shared prepared
+artwork draws padded cell-centered markers and larger legend samples. The party
 arrow draws last. No explanatory copy, zoom, panning or gameplay changes.
 
 ## Knowledge and ownership
@@ -66,6 +92,27 @@ Use low CPU/I/O priority, at most two build workers and one heavy job at a time;
 never inject desktop input.
 
 ### Executed checks
+
+Readability/art follow-up:
+
+- Debug application and affected targets built with two low-priority workers;
+  prepared-art build dependencies refreshed once. No alternate configuration,
+  save-suite rerun or benchmark was needed for this presentation-only change.
+- `map` (0.01 s) and `image_preparation` (0.02 s) pass. Coverage includes 27-pixel
+  framing/cropping, odd-sized sprite sheets, alpha-bound centering/aspect, hidden
+  RGB isolation and explicit rejection of missing/opaque/empty icon cells.
+- The owned hidden GPU smoke check passes raster-region selection for open/closed
+  doors and texture rotation about the party's cell center, plus existing native
+  artwork and resource lifecycle checks. Its generated fixture images include
+  the newly required map sheet and the existing creature portraits.
+- The hidden map review passes OpenGL/resource-release checks, unchanged continued
+  simulation and zero engine-owned C++ allocations in warmed map frames. All eight
+  new [native/reduced captures](screenshots/map-icons-desktop/README.md) were inspected,
+  including the supplied save, both door states, all markers/quest keys and a map
+  cropped around the party near an edge. Both original and copied saves retain
+  their original SHA-256. Interactive acceptance remains user review.
+
+Initial 18-pixel/procedural-icon delivery (superseded by the follow-up above):
 
 - Built the Debug application, map/fixture/HUD/command/save test targets and the
   opt-in GPU review runner with two low-priority workers. Existing prepared-art

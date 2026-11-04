@@ -22,7 +22,7 @@ MapMarker mapFixtureMarker(const FloorGeometry&, unsigned slot, bool reveal) noe
 
 // Headless layout in art units. Oversized axes retain the party at the center.
 struct MapGridView {
-    static constexpr int cellSize = 6;
+    static constexpr int cellSize = 9;
     Cell first{};
     int columns = 0, rows = 0;
     float x = 0, y = 0;

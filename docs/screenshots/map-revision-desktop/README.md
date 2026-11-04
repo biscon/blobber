@@ -1,5 +1,9 @@
 # Floor map revision review
 
+Historical initial delivery. The [current readability/art revision](../map-icons-desktop/README.md)
+uses 27-pixel cells and generated icon artwork in place of these 18-pixel cells
+and primitive pictograms.
+
 Application-owned hidden captures, 2026-11-04. The map fits the dungeon viewport,
 retains fixed 18-pixel cells at native 1920×1080, and uses shared pictograms.
 The [approved mockup](../../mockups/floor-map-approved.png) guides layout only.

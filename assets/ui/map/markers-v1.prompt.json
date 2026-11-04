@@ -1,0 +1,24 @@
+{
+  "tool": "built-in image_gen",
+  "asset": "markers-v1.png",
+  "layout": {
+    "columns": 4,
+    "rows": 2,
+    "order": [
+      "party",
+      "closed_door",
+      "open_door",
+      "guardian_gate",
+      "key",
+      "stairs_up",
+      "stairs_down",
+      "objective"
+    ]
+  },
+  "style_references": [
+    "assets/ui/defend.png",
+    "assets/ui/items/healing_potion.png"
+  ],
+  "transparent_background": true,
+  "prompt": "Use case: ui-mockup.\nAsset type: production 4-column by 2-row transparent game icon sprite sheet for Stone & Shadow's dungeon map, NOT a screenshot or mockup.\nInput image 1 (shield) and input image 2 (potion): STYLE REFERENCES ONLY for the game's richly painted fantasy inventory icons. Create NEW artwork with similar warm dimensional highlights, dark outlines and crafted materials, adapted to very small readable map symbols.\n\nCreate one wide 2:1 canvas, ideally 1536x768 pixels, with EXACTLY eight icons on an exact evenly spaced 4x2 grid of equal square cells. Centers at 12.5%,37.5%,62.5%,87.5% horizontally and 25%,75% vertically. Every object fits inside the central 72% of its square cell, leaving at least 14% clear transparent padding to EVERY cell edge. Transparent background, including all gaps, without a rendered checkerboard, flat backing, tile, plaque, border or shadow rectangle. Only the isolated icon objects and tight painted edge shadows. No text, letters, numerals, labels, arrows outside icons or other objects.\n\nEXACT CELL CONTENT in reading order:\nTOP ROW:\n1. PARTY: a single chunky upward-pointing directional arrowhead, polished bright turquoise enamel with a dark outline and restrained brass edge. Clear triangular silhouette and small inward notch at base, no stem, no compass rose. North is straight up.\n2. CLOSED DOOR: front-facing small squat stone archway in warm gray/brown stone with brass-edged frame; closed dark honey-brown wooden door leaf filling the opening, broad brass hinges and one handle. Strong simple silhouette.\n3. OPEN DOOR: the EXACT SAME doorway as cell 2, identical stone/brass arch shape, dimensions, front-facing camera, brown wooden leaf, brass metal, golden illumination and palette. ONLY CHANGE is the leaf swung 70 degrees open on its right hinge, clearly exposing a large near-black doorway opening. Keep the open leaf within the outer frame's total width, no extra side extension. This must read as the open STATE of the same door, not another symbol. Neither door contains ANY blue or teal. Do not distinguish doors by color.\n4. GUARDIAN GATE: the same family of small stone archway, with thick brass portcullis bars and one large central brass padlock, distinct from a wooden door.\n\nBOTTOM ROW:\n5. KEY: one broad simple antique brass key, almost horizontal, large round bow on left and two large teeth on right, pale gold edge highlights, dark outline.\n6. STAIRS UP: chunky three-step warm-gray stone staircase ascending toward the upper right, with ONE broad integrated brass arrow on the right pointing UP. Simple solid treads, pale highlights, dark outlines; the arrow stays inside the icon footprint.\n7. STAIRS DOWN: matched stone staircase with identical materials/palette and ONE broad integrated brass arrow on the left pointing DOWN; obvious visual pair with cell 6, solid clearly separated treads.\n8. OBJECTIVE: one chunky cut golden diamond-shaped seal/gem with a dark center and a strong brass bevel, upright diamond silhouette, no scroll, pedestal or text.\n\nStyle: hand-painted fantasy game UI inventory art with bold clean silhouettes and broad light/dark planes. Restrained texture, no filigree or tiny decorative details, no blur, no photographic scenery. These icons will be displayed at only 25x25 pixels on the map and about 36x36 in the legend, so make them legible at thumbnail size. Keep visual weight consistent, each icon centered in its own cell, matched open/closed door silhouettes and matching stairs. Objects only on actual transparency, no green background copied from references."
+}

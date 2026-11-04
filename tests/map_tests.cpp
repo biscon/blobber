@@ -147,17 +147,17 @@ void corridorAndFallback() {
 }
 void framing() {
     auto view = MapGridView::fit(12, 10, {1, 1}, 8, 42, 370, 254);
-    check(view.first == Cell{0, 0} && view.columns == 12 && view.rows == 10 && view.x == 157 && view.y == 139,
+    check(view.first == Cell{0, 0} && view.columns == 12 && view.rows == 10 && view.x == 139 && view.y == 124,
           "Small maps center independently on both axes");
     view = MapGridView::fit(100, 10, {0, 1}, 8, 42, 370, 254);
-    check(view.columns == 61 && view.first.x == -30 && view.rows == 10 && view.first.y == 0 &&
-              view.left({0, 1}) + 3 == 193 && view.y == 139,
+    check(view.columns == 41 && view.first.x == -20 && view.rows == 10 && view.first.y == 0 &&
+              view.left({0, 1}) + 4.5f == 193 && view.y == 124,
           "Wide maps keep the party centered even at a map edge while fitting the short axis");
     view = MapGridView::fit(100, 100, {99, 99}, 8, 42, 370, 254);
-    check(view.columns == 61 && view.rows == 41 && view.first == Cell{69, 79} &&
-              view.left({99, 99}) + 3 == 193 && view.top({99, 99}) + 3 == 169,
+    check(view.columns == 41 && view.rows == 27 && view.first == Cell{79, 86} &&
+              view.left({99, 99}) + 4.5f == 193 && view.top({99, 99}) + 4.5f == 169,
           "Oversized axes keep fixed cell size and center the party without edge clamping");
-    check(!view.contains({68, 99}) && !view.contains({99, 120}) && view.contains({69, 79}),
+    check(!view.contains({78, 99}) && !view.contains({99, 113}) && view.contains({79, 86}),
           "Whole-cell crop rejects both offscreen axes");
     std::vector<std::string> rows(45, std::string(75, '#'));
     for (int y = 1; y < 44; ++y)

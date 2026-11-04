@@ -74,6 +74,15 @@ fallback for small dependencies such as raylib so a clean CLion/CMake checkout
 builds predictably. Do not install system packages or change toolchains
 unnecessarily; follow the execution environment's permission rules when needed.
 
+## Icon artwork
+
+- Use user-supplied icon artwork when provided. Otherwise, always use the imagegen
+  skill to create static icons, matching the existing game's artwork.
+- Only draw an icon procedurally when its behaviour requires procedural rendering.
+  Do not substitute functions such as `DrawIconName()` built from raylib lines,
+  rectangles, circles or other primitives for generated icon artwork. Drawing
+  supplied/generated icon textures through the normal UI pipeline is appropriate.
+
 ## Desktop verification restriction
 
 - Do not control the user's mouse or keyboard, switch window focus or desktops,

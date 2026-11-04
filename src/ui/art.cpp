@@ -1,10 +1,12 @@
 #include "ui/art.hpp"
 #include "assets/creator_art.hpp"
 #include "assets/image.hpp"
+#include "assets/map_icons.hpp"
 #include "assets/portrait_atlas.hpp"
 #include "assets/prepared_image.hpp"
 #include "core/preparation.hpp"
 #include "game/effects.hpp"
+#include "ui/map_model.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -108,6 +110,16 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     loot_ = resources_.createTexture(lootImage.value);
     SetTextureFilter(resources_.texture(camp_), TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(resources_.texture(loot_), TEXTURE_FILTER_BILINEAR);
+    {
+        preparationPoint("Preparing map artwork");
+        OwnedImage sheet(preparedImage(directory / "map/markers-v1.png"));
+        if (!sheet.value.data)
+            throw std::runtime_error("Missing map icon artwork");
+        ImageFormat(&sheet.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        OwnedImage mapAtlas(prepareMapIconAtlas(sheet.value));
+        map_ = resources_.createTexture(mapAtlas.value);
+        SetTextureFilter(resources_.texture(map_), TEXTURE_FILTER_BILINEAR);
+    }
     OwnedImage atlas(GenImageColor(2048, 2048, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
@@ -181,6 +193,20 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
 }
 unsigned UiArt::effectIcon(EffectKind kind) noexcept {
     return kind == EffectKind::HoldPerson ? holdPersonIcon : spellIcon(effectSpell(kind));
+}
+void UiArt::mapMarker(MapMarker kind, Rectangle destination, Heading facing) const {
+    const auto n = unsigned(kind);
+    if (!n || n > mapIconCount)
+        return;
+    const int index = int(n - 1);
+    const Rectangle source{float(index % mapIconColumns * mapIconStride + mapIconPadding),
+                           float(index / mapIconColumns * mapIconStride + mapIconPadding), float(mapIconSize),
+                           float(mapIconSize)};
+    constexpr float scale = float(gameWidth) / artWidth;
+    const float w = destination.width * scale, h = destination.height * scale;
+    const Rectangle target{destination.x * scale + w * .5f, destination.y * scale + h * .5f, w, h};
+    const float rotation = kind == MapMarker::Party ? float(unsigned(facing) % 4) * 90.f : 0.f;
+    DrawTexturePro(resources_.texture(map_), source, target, {w * .5f, h * .5f}, rotation, WHITE);
 }
 void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     if (index >= 128 && index < 160) {

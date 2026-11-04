@@ -4,11 +4,13 @@
 #include "rules/creation.hpp"
 #include "rules/spells.hpp"
 #include "ui/layout.hpp"
+#include "world/grid.hpp"
 #include <array>
 #include <filesystem>
 namespace blobber {
 // One startup-prepared atlas, owned by Presenter's resource registry.
 enum class EffectKind : std::uint8_t;
+enum class MapMarker : std::uint8_t;
 class UiArt {
   public:
     static constexpr unsigned classFeaturesIcon = 28, silhouetteIcon = 44, restIcon = 48;
@@ -24,10 +26,11 @@ class UiArt {
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
     void creator(unsigned index, UiRect destination, Color tint = WHITE) const;
     void camp(unsigned frame, UiRect destination, Color tint = WHITE) const;
+    void mapMarker(MapMarker, Rectangle destination, Heading facing = Heading::North) const;
 
   private:
     GpuResources& resources_;
-    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_;
+    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_;
     std::array<Rectangle, 64> regions_{};
 };
 } // namespace blobber

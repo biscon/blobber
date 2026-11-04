@@ -123,7 +123,7 @@ void Presenter::compose(const Texture2D& texture, bool flipped, const MovementSt
     BeginBlendMode(BLEND_CUSTOM_SEPARATE);
     drawUI(state, debug, map, hud, &fonts_, &uiArt_);
     if (debug)
-        drawMapOverlay(state, map, &fonts_, generation, hud, reveal, mapModel);
+        drawMapOverlay(state, map, &fonts_, generation, hud, reveal, mapModel, &uiArt_);
     if (audio && hud && !hud->modal() && !debug)
         drawMusicBanner(audio->musicBanner(), fonts_);
     drawHudOverlay(hud, picking, &fonts_, &uiArt_);
