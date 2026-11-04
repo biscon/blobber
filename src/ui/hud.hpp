@@ -6,9 +6,10 @@
 namespace blobber {
 class UiFonts;
 class UiArt;
+class MapOverlayModel;
 void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* fonts = nullptr,
                     const generation::DiagnosticView* generation = nullptr, const HudSnapshot* hud = nullptr,
-                    bool reveal = false);
+                    bool reveal = false, const MapOverlayModel* model = nullptr);
 // One native-resolution UI pass; optional fonts/art permit isolated geometry diagnostics.
 void drawUI(const MovementState& state, bool debug, const Map& map, const HudSnapshot* hud = nullptr,
             const UiFonts* fonts = nullptr, const UiArt* art = nullptr);

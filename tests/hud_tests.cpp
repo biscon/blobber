@@ -241,13 +241,13 @@ void initiative() {
     s.actors().damage(s.actors().id(2), 1000, s.timeMs());
     CombatSnapshot preview = s.combat().snapshot();
     s.combat().previewTurns(preview);
-    bool dead = false, blocked = false;
+    bool dead = false, waiting = false;
     for (std::size_t i = 0; i < preview.upcomingCount; ++i)
         if (preview.upcoming[i].enemy) {
             dead |= preview.upcoming[i].enemy->slot == 2;
-            blocked |= preview.upcoming[i].enemy->slot == 1;
+            waiting |= preview.upcoming[i].enemy->slot == 1;
         }
-    check(!dead && !blocked, "Preview excludes dead enemies and rear enemies whose gap is claimed earlier");
+    check(!dead && waiting, "Preview excludes dead enemies and retains waiting enemies that receive turns");
     s.actors().damage(s.actors().id(0), 1000, s.timeMs());
     s.combat().previewTurns(preview);
     bool diagonal = false;

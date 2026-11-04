@@ -1,5 +1,13 @@
 # System design
 
+Floor map revision (implemented and mechanically verified, 2026-11-04):
+[viewport-sized floor map and room discovery](map_revision.md) adds fixed-size
+cells, complete explored-room walls and shared pictographic markers/legend.
+Knowledge is derived from existing LOS discovery; save and simulation data remain
+unchanged. Five focused CPU suites and hidden application captures pass;
+[review captures](screenshots/map-revision-desktop/README.md) include a read-only
+copy of the user's save. Interactive acceptance remains user review.
+
 Arrival-facing correction (implemented and verified, 2026-11-04):
 [turn settled front-line enemies toward the party at movement completion](combat_positioning.md#arrival-facing-follow-up--2026-11-04)
 uses the existing combat presentation handoff, preserving travel-facing and action costs.

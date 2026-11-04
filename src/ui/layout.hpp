@@ -13,7 +13,8 @@ struct UiRect {
     }
 };
 namespace hudLayout {
-constexpr UiRect diagnosticMap{300, 252, 300, 20};
+constexpr UiRect mapCanvas{8, 42, 370, 254}, mapSidebar{394, 46, 102, 242};
+constexpr UiRect diagnosticMap{394, 280, 102, 12};
 constexpr UiRect restorationChoice{180, 280, 210, 20};
 constexpr UiRect endTurn{410, 278, 86, 19};
 constexpr UiRect developmentXp{200, 300, 240, 20};

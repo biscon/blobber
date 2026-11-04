@@ -95,17 +95,19 @@ void Presenter::presentSaving() {
 }
 void Presenter::presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState& state,
                              const Map& map, const HudSnapshot* hud, const PickingBuffer* picking, bool debug,
-                             const generation::DiagnosticView* diagnostic, bool reveal) {
+                             const generation::DiagnosticView* diagnostic, bool reveal,
+                             const MapOverlayModel* mapModel) {
     saving_ = false;
     loadingLabel_[0] = 0;
     const auto& target = resources_.target(logical);
     if (!revision || target.texture.width != viewWidth || target.texture.height != viewHeight)
         throw std::invalid_argument("Invalid world image publication");
-    compose(target.texture, true, state, map, debug, hud, picking, diagnostic, reveal);
+    compose(target.texture, true, state, map, debug, hud, picking, diagnostic, reveal, mapModel);
 }
 void Presenter::compose(const Texture2D& texture, bool flipped, const MovementState& state, const Map& map,
                         bool debug, const HudSnapshot* hud, const PickingBuffer* picking,
-                        const generation::DiagnosticView* generation, bool reveal) {
+                        const generation::DiagnosticView* generation, bool reveal,
+                        const MapOverlayModel* mapModel) {
     SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_POINT);
     BeginTextureMode(resources_.target(game_));
     ClearBackground({12, 18, 18, 255});
@@ -121,7 +123,7 @@ void Presenter::compose(const Texture2D& texture, bool flipped, const MovementSt
     BeginBlendMode(BLEND_CUSTOM_SEPARATE);
     drawUI(state, debug, map, hud, &fonts_, &uiArt_);
     if (debug)
-        drawMapOverlay(state, map, &fonts_, generation, hud, reveal);
+        drawMapOverlay(state, map, &fonts_, generation, hud, reveal, mapModel);
     if (audio && hud && !hud->modal() && !debug)
         drawMusicBanner(audio->musicBanner(), fonts_);
     drawHudOverlay(hud, picking, &fonts_, &uiArt_);

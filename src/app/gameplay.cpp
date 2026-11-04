@@ -51,7 +51,8 @@ struct PlayView {
           commands(session, timings), map(m) {}
     PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, WorldRenderer& world,
              const generation::GeneratedFloor* floor = nullptr)
-        : session(game), animator(game.actors(), timings), frames(world), commands(game, timings), map(m) {
+        : session(game), animator(game.actors(), timings), frames(world, floor ? &floor->layout : nullptr),
+          commands(game, timings), map(m) {
         if (floor)
             diagnostics = generation::diagnosticView(*floor);
     }
@@ -96,7 +97,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
         auto current =
             campaign
-                ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, world)
+                ? std::make_unique<PlayView>(campaign->game(), campaign->map(), timings, world,
+                                             campaign->location(campaign->activeLocation()).generated
+                                                 ? &*campaign->location(campaign->activeLocation()).generated
+                                                 : nullptr)
                 : std::make_unique<PlayView>(
                       map, catalog, *idle, timings, world, seed, spawn, launch ? launch->enableAi : true,
                       recovery, starting, launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},

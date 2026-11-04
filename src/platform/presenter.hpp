@@ -11,6 +11,7 @@
 #include <filesystem>
 namespace blobber {
 class AudioRuntime;
+class MapOverlayModel;
 class Presenter {
   public:
     AudioRuntime* audio = nullptr; // Application-owned; outlives presentation loops.
@@ -24,7 +25,7 @@ class Presenter {
     void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
                       const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
                       bool debug = false, const generation::DiagnosticView* diagnostic = nullptr,
-                      bool reveal = false);
+                      bool reveal = false, const MapOverlayModel* mapModel = nullptr);
     void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
     void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
     // Diagnostic operation: readback and export may allocate; never used during normal play.
@@ -35,7 +36,8 @@ class Presenter {
     void drawTarget(TargetHandle handle, Rectangle destination) const;
     void drawGame(Rectangle destination) const;
     void compose(const Texture2D&, bool flipped, const MovementState&, const Map&, bool debug,
-                 const HudSnapshot*, const PickingBuffer*, const generation::DiagnosticView*, bool reveal);
+                 const HudSnapshot*, const PickingBuffer*, const generation::DiagnosticView*, bool reveal,
+                 const MapOverlayModel*);
     PreparationWorker* worker_ = nullptr;
     bool showFps_ = false, saving_ = false;
     float fade_ = 0;

@@ -2,12 +2,14 @@
 #include "game/session.hpp"
 #include "platform/presenter.hpp"
 #include "platform/world_renderer.hpp"
+#include "ui/map_model.hpp"
 #include <stdexcept>
 namespace blobber {
 // Session view lease. GPU scenes remain owned by the shared active/staged renderer.
 class GameView {
   public:
-    explicit GameView(WorldRenderer& world) : world_(world) {}
+    explicit GameView(WorldRenderer& world, const generation::FloorLayout* rooms = nullptr)
+        : world_(world), rooms_(rooms) {}
     ~GameView() {
         if (staged_)
             world_.cancel();
@@ -20,6 +22,8 @@ class GameView {
             &game.doors(),   &game.combat().attacks(), &area,          game.timeMs(), game.guardianDoor()};
         const auto previous = image_.revision;
         if (!ready_) {
+            map_.prepare(game.geometry().base(), rooms_);
+            rooms_ = nullptr; // Membership is copied; no long-lived generation borrow.
             world_.stage(input);
             staged_ = true;
             ready_ = true;
@@ -48,13 +52,17 @@ class GameView {
                  const HudSnapshot* hud = nullptr, const generation::DiagnosticView* diagnostic = nullptr,
                  bool reveal = false) {
         activate();
+        if (debug)
+            map_.refresh(&g.fixtures());
         p.presentWorld(image_.target, image_.revision, g.movement(), map, hud, picking(), debug, diagnostic,
-                       reveal);
+                       reveal, &map_);
     }
 
   private:
     WorldRenderer& world_;
     WorldImage image_{};
+    MapOverlayModel map_;
+    const generation::FloorLayout* rooms_ = nullptr; // Preparation-only borrow.
     const world_render::VisibilityPipeline* active_ = nullptr;
     bool ready_ = false, staged_ = false;
 };
