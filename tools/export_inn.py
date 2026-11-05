@@ -27,14 +27,31 @@ tiles=extract_tiles(load(CITY/'source/material-master.png'))
 tiles.append(tiles[0].copy()) # Retain shared city tile numbering: iron=7, clay=8.
 iron=tiles[5].copy();iron[:,:,:3]=np.mean(iron[:,:,:3],axis=2)[:,:,None]*[.23,.24,.25];tiles.append(iron)
 clay=tiles[1].copy();clay[:,:,:3]*=[.68,.38,.23];tiles.append(clay)
-# Repeating floor has painted plank joints, not an enlarged material swatch.
-wood=sample_mirrored(tiles[3],256,256,256).copy()
-# .0625-cell / ~20 cm planks: the old .25-cell boards amplified the giant scale.
-for i,x in enumerate(range(0,256,16)):
-    wood[:,x:x+1,:3]*=.42
-    for y in ((i*47)%128,128+(i*47)%128):wood[y:y+1,x:x+16,:3]*=.48
+# The wood panel already has board joints. Use only interiors, otherwise adding
+# our own joints produces double seams and tiny slivers between competing grids.
+grain=tiles[3]
+board_grains=[grain[:,int(a*grain.shape[1]):int(b*grain.shape[1])].copy()
+              for a,b in ((.17,.25),(.32,.40),(.61,.68),(.76,.83))]
+def planks():
+    out=np.ones((256,256,4),dtype=np.float32)
+    for i,x in enumerate(range(0,256,16)):
+        src=board_grains[i%len(board_grains)]
+        xx=np.floor((np.arange(16)+.5)/16*src.shape[1]).astype(int)
+        yy=(np.floor((np.arange(256)+.5)/256*src.shape[0]).astype(int)+i*37)%src.shape[0]
+        out[:,x:x+16]=src[yy[:,None],xx[None,:]]
+        out[:,x:x+1,:3]*=.42
+        for y in ((i*47)%128,128+(i*47)%128):out[y:y+1,x:x+16,:3]*=.48
+    return out
+wood=planks()
 save('floor',wood)
-save('wall',sample_mirrored(tiles[1],256,256,256));save('ceiling',sample_mirrored(tiles[3],256,256,256)*[.72,.72,.72,1])
+save('wall',sample_mirrored(tiles[1],256,256,256));save('ceiling',wood*[.72,.72,.72,1])
+# Preserve source aspect/density: mirror the narrow grain strip horizontally,
+# rather than stretching that strip across a square tile. Furniture keeps its
+# accepted plank material; only structural timbers use this joint-free field.
+strip=board_grains[2]
+xx=np.arange(grain.shape[1]);sw=strip.shape[1]
+xx=np.where((xx//sw)%2,sw-1-xx%sw,xx%sw)
+tiles.append(strip[:,xx].copy()) # tile 9
 save('foliage',load(CITY/'source/foliage-master.png',(256,256)))
 save('flame',load(PACK/'source/flame-master.png',(128,192)))
 models={};special={}
@@ -71,8 +88,8 @@ for name in ('wall','exit-door'):
     box(h,(0,.11,-.525),(1,.22,.04),0)
     for x in (-.46,.46): box(h,(x,1,-.55),(.08,2,.10),3,.80)
     for y in (.23,1.82,1.96): box(h,(0,y,-.55),(1,.07,.10),3,.85)
+    wall_faces=len(h.faces)
     if name=='exit-door':
-        wall_faces=len(h.faces)
         box(h,(0,.56,-.58),(.66,1.12,.07),3,.72)
         for x in (-.38,.38): box(h,(x,.60,-.61),(.09,1.20,.12),5)
         box(h,(0,1.18,-.61),(.85,.10,.12),5)
@@ -82,6 +99,11 @@ for name in ('wall','exit-door'):
         for pts,_,_ in h.faces[wall_faces:]:
             for p in pts:
                 p.x*=.65;p.y*=.60
+    for pts,_,_ in h.faces:
+        for p in pts:
+            if p.y>.8:p.y=.8+(p.y-.8)*(1.5-.8)/(2-.8)
+    h.faces=[(pts,9 if i<wall_faces and tile==3 else tile,shade)
+             for i,(pts,tile,shade) in enumerate(h.faces)]
 h=model('table-group')
 # Table + four chairs fit precisely in a two-by-two physical reservation.
 box(h,(.5,.42,.5),(1.08,.075,.60))
@@ -126,7 +148,7 @@ for x in (.20,.53,.86):
 for x in (.04,.34,.65,.96):box(h,(x,.21,-.34),(.025,.23,.025),7)
 box(h,(.5,.18,-.35),(1.04,.025,.025),7)
 h=model('stairs')
-for i in range(24):
+for i in range(20):
     z=2.44-i*.12;high=.065+i*.065
     box(h,(0,high/2,z),(.50,high,.12),3,.80)
     box(h,(0,high,z+.005),(.54,.018,.13))
@@ -134,11 +156,11 @@ for i in range(24):
         for x in (-.25,.25):box(h,(x,high+.14,z),(.035,.28,.035))
 # Sloped rails are small oriented prisms.
 for x in (-.25,.25):
-    a,b=Vector((x,.34,2.45)),Vector((x,1.91,-.45));u=Vector((.02,0,0));v=Vector((0,.022,.012))
+    a,b=Vector((x,.34,2.45)),Vector((x,1.47,.36));u=Vector((.02,0,0));v=Vector((0,.022,.012))
     for pts in ([a-u-v,a+u-v,b+u-v,b-u-v],[a-u+v,b-u+v,b+u+v,a+u+v],
                 [a-u-v,b-u-v,b-u+v,a-u+v],[a+u-v,a+u+v,b+u+v,b+u-v]):h.face(pts,3)
-box(h,(0,1.60,-.36),(.54,.04,.28))
-box(h,(0,1.81,-.46),(.49,.40,.04),3,.6)
+box(h,(0,1.33,-.12),(.54,.04,.50))
+box(h,(0,1.41,-.46),(.49,.16,.04),3,.6)
 h=model('plant')
 cylinder(h,0,0,0,.17,.30,8)
 cylinder(h,0,.28,0,.19,.045,8)
@@ -165,7 +187,7 @@ for pts,_,_ in models['hearth'].faces:
     for p in pts:
         p.x=.5+(p.x-.5)*.65
         p.z=-.12+(p.z+.12)*.65 # Preserve the fire anchor at the logs.
-        if p.y>1.1: p.y=.7175+(p.y-1.1)*(1.9-.7175)/.8 # Chimney meets the tall shell.
+        if p.y>1.1: p.y=.7175+(p.y-1.1)*(1.5-.7175)/.8 # Chimney meets the lowered ceiling.
         elif p.y>.25:p.y=.25+(p.y-.25)*.55
 
 # Shared atlas with metric 256 texels/cell UVs and bounded packing.

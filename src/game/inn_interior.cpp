@@ -12,7 +12,7 @@ SanctuaryHub innInterior() {
     world.assetPack = "sanctuary-inn";
     world.surfaces.resize(width * height);
     for (auto& surface : world.surfaces) {
-        surface.ceiling = 8; // Two cells: human-scale beams above the .5-cell camera.
+        surface.ceiling = 6; // 1.5-cell ceiling above the fixed .5-cell eye.
         surface.environment = Environment::Daylight;
     }
     // Wall modules own the solid backing and include the beams/wainscot.
@@ -56,8 +56,17 @@ void validateInnInterior(const Map& map, const CampaignLocationState& state) {
     const auto expected = innInterior();
     const auto& f = state.fixtures;
     const auto& e = expected.fixtures;
+    bool canonical = map.definition().fingerprint() == expected.map.definition().fingerprint();
+    if (!canonical) {
+        // Only the previously shipped uniform ceiling is compatible. Validate
+        // the entire old definition before the loader adopts today's ceiling.
+        auto previous = expected.map.definition();
+        for (auto& surface : previous.surfaces)
+            surface.ceiling = 8;
+        canonical = map.definition().fingerprint() == previous.fingerprint();
+    }
     if (map.width() != expected.map.width() || map.height() != expected.map.height() ||
-        map.definition().fingerprint() != expected.map.definition().fingerprint() ||
+        !canonical ||
         !(state.entry == expected.entry) || !(state.exit == expected.exit) || !state.placements.empty() ||
         state.objective.count || state.recovery.groundCount || state.recovery.sanctuaryCount ||
         !state.recovery.freeRestEverywhere || f.count || f.depth || !f.discovery ||

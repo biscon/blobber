@@ -115,3 +115,28 @@ hearth in the seating view, stairs and exit. See the updated [gallery](screensho
 This is an offline asset correction: runtime camera, map/collision data, save
 schema and gameplay code did not change. Existing gameplay suites were not rerun.
 `git diff --check` passes. Interactive acceptance remains user-owned.
+
+
+## Ceiling, wood joints and rest prompt — 2026-11-05
+
+Lowered the ceiling to 1.5 cells (25%), shortened wall tops/chimney and adjusted
+the decorative stair landing. The inn loader accepts the exact previous canonical
+2-cell ceiling definition and reconstructs the current one, preserving saved pose,
+loot and other session state. Mixed or otherwise altered definitions still reject;
+schema 10 / simulation 14 and rejection of older save formats remain unchanged.
+
+The source wood already had painted joints; overlaying regular joints produced
+sliver-width boards. The inn now samples only board interiors for floor/ceiling
+boards, with one joint pattern. Wall timbers use a separate joint-free grain field
+that preserves source aspect. Accepted furniture materials and city assets remain.
+Removed the free-rest fixture prompt and its interaction prefixes; the normal rest
+icon, hotkey and rest panel still work. Doorway text remains.
+
+Debug graphical/headless builds, exporter checks and the focused `inn` / `campaign`
+suites passed (5.41 seconds). New coverage checks an enabled rest icon, no persistent
+rest prompt, unchanged exit text, old-ceiling disk roundtrip with pose/loot retention,
+and rejection of mixed ceilings. The final hidden OpenGL runner passed travel,
+Continue, fire/pause/picking and full lease release checks. Inspected north/south
+room views and stairs; the toolbar rest icon is visible without bottom rest text.
+[Current captures](screenshots/inn/README.md). `git diff --check` is clean.
+No desktop input or focus automation; interactive acceptance remains user-owned.

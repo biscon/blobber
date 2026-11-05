@@ -456,7 +456,6 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.campaignTerminal = state_.campaign && session_.campaign()->status() != CampaignStatus::Active;
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";
-    const bool sanctuary = state_.campaign && !state_.campaignTerminal && session_.atSanctuary();
     state_.fixturePrompt[0] = 0;
     if (state_.campaignTerminal)
         std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
@@ -465,15 +464,12 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.questKeys = session_.party().questKeys();
     if (!state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
         !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
-        if (sanctuary)
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "R: rest (free)");
         const auto door = state_.campaign ? session_.campaign()->doorwayRequest() : TravelRequest{};
         const bool doorway =
             state_.campaign && door.kind == TravelKind::Doorway && door.doorway.slot != UINT16_MAX;
         if (doorway) {
             const auto check = session_.campaign()->previewTravel(door);
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%sF: %s",
-                          sanctuary ? "R: rest (free) | " : "", check.reason);
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F: %s", check.reason);
         }
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
@@ -481,8 +477,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
             std::snprintf(
-                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%sF / %s - %s",
-                sanctuary ? "R: rest | " : "", fixtureName(*f),
+                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / %s - %s", fixtureName(*f),
                 state_.campaign && session_.campaign()->activeLocation() == 0 && result
                     ? (session_.campaign()->location(2).visited || session_.campaign()->location(3).visited
                            ? "Choose a floor entry."

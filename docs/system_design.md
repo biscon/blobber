@@ -10,7 +10,10 @@ hidden OpenGL captures and 348.09 MiB city–inn texture overlap within existing
 [Capture gallery](screenshots/inn/README.md); interactive acceptance remains user-owned.
 The [human-scale correction](inn_interior_design.md#human-scale-correction-2026-11-05)
 reduces oversized furnishings against the fixed eye height through offline meshes;
-map data and saves remain compatible.
+map data and saves remain compatible. The subsequent
+[ceiling/wood/UI correction](inn_interior_design.md#ceiling-wood-joints-and-rest-affordance-2026-11-05)
+lowers the ceiling with bounded compatibility for existing inn saves, cleans up
+duplicate wood joints and removes the free-rest fixture prompt.
 
 Environment AO **Accepted and closed (2026-11-05)**:
 [design and verification](environment_ao_design.md) adds default-on environment-only

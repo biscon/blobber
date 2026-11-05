@@ -9,6 +9,9 @@ Furniture is authored against the fixed .5-cell eye height: the counter is .3465
 cells high, tables .2516 and chair seats .1471. Loose props are narrower; the
 doorway, wall trim and stair risers follow the same adult proportions. Geometry
 is resized before metric UV packing; the export report retains final mesh bounds.
+The ceiling is 1.5 cells high. Inn floor/ceiling boards use sampled plank interiors
+and one regular joint pattern; structural timbers use joint-free grain at preserved
+source aspect. The furniture retains the accepted city wood material.
 
 `source/concept.png` and `source/flame-master.png` were created with the built-in
 imagegen tool; exact prompts are retained in [prompts.json](prompts.json). Material

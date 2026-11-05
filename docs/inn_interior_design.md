@@ -72,8 +72,9 @@ exhaustion rejects preparation; no frame storage grows.
 
 HUD and map titles use authored location names at depth zero. Rest retains the
 existing preview/command API (`atSanctuary` / `RestPreview::sanctuary`) while its
-whole-map policy comes from RecoveryLevel. Free-rest prompts and the rest panel
-identify the inn. The existing rest illustration/animation is reused.
+whole-map policy comes from RecoveryLevel. The rest panel identifies the inn;
+the toolbar icon remains the rest affordance without a persistent fixture prompt.
+The existing rest illustration/animation is reused.
 
 [Verification and resource measurements](inn_interior_verification.md) and
 [captures](screenshots/inn/README.md) record the delivered result and review limits.
@@ -99,3 +100,23 @@ travel, saves and fire simulation remain unchanged; there is no frame-path cost.
 Verify exported dimensions and inspect hidden entry, adjacent counter, seating,
 hearth, stairs and exit captures. The existing gameplay tests need not be repeated
 for this asset-only correction.
+
+## Ceiling, wood joints and rest affordance (2026-11-05)
+
+Lower the authored ceiling from 2 to 1.5 cells; compress only wall height above the
+existing doorway, shorten the chimney and refit the decorative stair landing.
+Keep furniture and eye height accepted in the preceding review. Older schema-10
+inn definitions with uniform 2-cell ceilings remain loadable: validate their exact
+canonical geometry/fixtures first, then reconstruct the inn using the current
+ceiling. No other historical definition is accepted; files change only on normal
+save. This is a bounded authored-content update, not general save migration.
+
+The city wood master already contains painted joints. Extract grain from plank
+interiors for inn timbers, and sample separate grain patches into evenly spaced
+floor/ceiling boards before drawing a single set of joints. Preserve 256 texels per
+cell and atlas gutters. Do not alter accepted city materials.
+
+Remove sanctuary/free-rest text from fixture prompts. Doorway and other interaction
+prompts remain; the existing camp toolbar/hotkey and rest panel remain available.
+Check inn prompt suppression, doorway text, camp availability and old-ceiling
+restore with focused CPU tests, then inspect hidden ceiling/wood/UI captures.

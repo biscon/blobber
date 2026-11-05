@@ -182,8 +182,12 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
         } else {
             if (i == unsigned(CampaignLocationId::City))
                 validateSanctuaryHub(map, from);
-            else
+            else {
                 validateInnInterior(map, from);
+                // Reconstruct accepted authored content; this also lowers the
+                // legacy inn ceiling without discarding any saved session state.
+                map = innInterior().map;
+            }
             to.authored.emplace(std::move(map));
         }
         to.entry = from.entry;

@@ -95,6 +95,7 @@ int main(int argc, char** argv) try {
         {"stairs", {{7, 5}, Heading::East}},       {"plants-exit", {{5, 7}, Heading::South}},
         {"staff-aisle", {{4, 3}, Heading::East}},
         {"plant-close", {{3, 9}, Heading::West}},  {"ale-barrels", {{8, 3}, Heading::North}},
+        {"south-wall", {{5, 5}, Heading::South}},
     };
     for (const auto& shot : shots) {
         run->game().restorePose(shot.second, false);
