@@ -74,8 +74,9 @@ void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>
         for (const auto& v : m.vertices) {
             for (float n : v)
                 require(std::isfinite(n));
-            require(std::abs(v[0]) <= 1 && v[1] >= -.001f && v[1] <= 1 && std::abs(v[2]) <= 1 && v[6] >= 0 &&
-                    v[6] <= 1 && v[7] >= 0 && v[7] <= 1);
+            const float extent = m.architecture ? 4.f : 1.f;
+            require(std::abs(v[0]) <= extent && v[1] >= (m.architecture ? 0.f : -.001f) && v[1] <= extent &&
+                    std::abs(v[2]) <= extent && v[6] >= 0 && v[6] <= 1 && v[7] >= 0 && v[7] <= 1);
             const float n = v[3] * v[3] + v[4] * v[4] + v[5] * v[5];
             require(n > .99f && n < 1.01f);
         }
@@ -90,19 +91,41 @@ void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>
         }
     }
     for (const auto& p : packs) {
+        require(p.materialCount <= p.materials.size());
         for (auto id : p.decorations)
             if (id != UINT16_MAX)
                 require(id < textures.size() && textures[id].clamp && !textures[id].material);
         for (unsigned slot = 0; slot < p.models.size(); ++slot) {
             const auto id = p.models[slot];
             if (id != UINT16_MAX) {
-                require(id < meshes.size());
+                require(id < meshes.size() && !meshes[id].architecture);
                 bool bound = false;
                 for (unsigned i = 0; i < p.materialCount; ++i)
                     bound |= p.materials[i] == meshes[id].texture;
                 require(bound);
                 for (const auto& v : meshes[id].vertices)
                     require(std::abs(v[0]) <= .5f && std::abs(v[2]) <= (slot == 3 ? 1.f : .5f));
+            }
+        }
+        require(p.buildings.size() <= staticModelCapacity);
+        std::set<std::string> buildingIds;
+        for (const auto& b : p.buildings) {
+            require(!b.id.empty() && b.id.size() <= 32 && buildingIds.insert(b.id).second &&
+                    std::all_of(b.id.begin(), b.id.end(),
+                                [](unsigned char c) {
+                                    return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+                                           c == '_';
+                                }) &&
+                    !b.parts.empty() && b.parts.size() <= staticPartCapacity);
+            unsigned vertices = 0;
+            std::set<unsigned> parts;
+            for (auto id : b.parts) {
+                require(id < meshes.size() && meshes[id].architecture && parts.insert(id).second);
+                const auto& mesh = meshes[id];
+                vertices += unsigned(mesh.vertices.empty() ? mesh.vertexCount : mesh.vertices.size());
+                require(vertices <= staticVertexCapacity);
+                require(std::find(p.materials.begin(), p.materials.begin() + p.materialCount, mesh.texture) !=
+                        p.materials.begin() + p.materialCount);
             }
         }
     }
@@ -307,6 +330,9 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"horizon", p.horizon}});
         packJson.back()["decorations"] = p.decorations;
         packJson.back()["models"] = p.models;
+        packJson.back()["buildings"] = Json::array();
+        for (const auto& b : p.buildings)
+            packJson.back()["buildings"].push_back({{"id", b.id}, {"parts", b.parts}});
         if (p.guardianEmblem != UINT16_MAX)
             packJson.back()["guardianEmblem"] = p.guardianEmblem;
     }
@@ -325,6 +351,7 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
         auto checksum = fingerprintBasis;
         fingerprintBytes(checksum, payload.data(), payload.size());
         meshJson.push_back({{"name", m.name},
+                            {"architecture", m.architecture},
                             {"texture", m.texture},
                             {"count", m.vertices.size()},
                             {"offset", offset_},
@@ -452,6 +479,15 @@ Publication load(const std::filesystem::path& directory) {
                 pack.decorations[i] = std::uint16_t(integer(v.at("decorations")[i], UINT16_MAX));
             for (unsigned i = 0; i < 4; ++i)
                 pack.models[i] = std::uint16_t(integer(v.at("models")[i], UINT16_MAX));
+            require(v.at("buildings").is_array() && v.at("buildings").size() <= staticModelCapacity);
+            for (const auto& b : v.at("buildings")) {
+                StaticModel model;
+                model.id = b.at("id").get<std::string>();
+                require(b.at("parts").is_array() && b.at("parts").size() <= staticPartCapacity);
+                for (const auto& part : b.at("parts"))
+                    model.parts.push_back(std::uint16_t(integer(part, meshCapacity - 1)));
+                pack.buildings.push_back(std::move(model));
+            }
             pack.worldScale = v.at("worldScale").get<float>();
             require(std::isfinite(pack.worldScale) && pack.worldScale > 0 && pack.worldScale <= 16);
             require(v.at("horizon").size() == 3);
@@ -466,6 +502,8 @@ Publication load(const std::filesystem::path& directory) {
         for (const auto& v : j.at("meshes")) {
             PropMesh m;
             m.name = v.at("name").get<std::string>();
+            require(v.at("architecture").is_boolean());
+            m.architecture = v.at("architecture").get<bool>();
             m.texture = std::uint16_t(integer(v.at("texture"), catalogTextureCapacity - 1));
             m.vertexCount = unsigned(integer(v.at("count"), 6000));
             m.offset = integer(v.at("offset"));
@@ -699,6 +737,12 @@ Pack CpuAssets::pack(const std::string& id) const {
     p.sky = optional("sky");
     return p;
 }
+StaticModelId Pack::building(const std::string& name) const {
+    for (unsigned i = 0; i < buildings.size(); ++i)
+        if (buildings[i].id == name)
+            return {std::uint16_t(i)};
+    throw std::invalid_argument("Unavailable building model: " + id + "/" + name);
+}
 std::size_t CpuAssets::bytes() const noexcept {
     std::size_t meshBytes = publication.meshes.capacity() * sizeof(PropMesh);
     for (const auto& m : publication.meshes)
@@ -714,8 +758,9 @@ std::size_t CpuAssets::bytes() const noexcept {
         n += t.name.capacity();
     for (const auto& a : publication.appearances)
         n += a.id.capacity();
-    for (const auto& p : publication.packs)
-        n += p.id.capacity();
+    for (const auto& p : publication.packs) {
+        n += p.dynamicBytes();
+    }
     n += textureRefs_.capacity() * sizeof(unsigned) + meshRefs_.capacity() * sizeof(unsigned) +
          meshes_.capacity() * sizeof(PropMesh);
     for (const auto& m : meshes_)

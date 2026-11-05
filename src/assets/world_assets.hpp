@@ -12,7 +12,7 @@ struct ActorSnapshot;
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
 constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
-constexpr unsigned version = 5, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned version = 6, appearanceRevision = 4, textureCapacity = 480;
 constexpr unsigned catalogTextureCapacity = 4096, packCapacity = 64, meshCapacity = 512;
 constexpr std::size_t metadataBudget = 8 * MiB;
 constexpr std::uint64_t installedBudget = 8ull * 1024 * MiB;
@@ -56,6 +56,15 @@ struct PropMesh {
     std::vector<std::array<float, 8>> vertices; // Only populated in authoring or an acquired mesh.
     std::uint64_t offset = 0, checksum = 0;
     unsigned vertexCount = 0;
+    bool architecture = false;
+};
+constexpr unsigned staticModelCapacity = 32, staticPartCapacity = 8, staticVertexCapacity = 24000;
+struct StaticModelId {
+    std::uint16_t index = UINT16_MAX;
+};
+struct StaticModel {
+    std::string id;
+    std::vector<std::uint16_t> parts;
 };
 struct Pack {
     std::string id = "dungeon";
@@ -69,6 +78,14 @@ struct Pack {
         return a;
     }();
     std::array<std::uint16_t, 4> models{UINT16_MAX, UINT16_MAX, UINT16_MAX, UINT16_MAX};
+    std::vector<StaticModel> buildings;
+    StaticModelId building(const std::string& name) const;
+    std::size_t dynamicBytes() const noexcept {
+        std::size_t n = id.capacity() + buildings.capacity() * sizeof(StaticModel);
+        for (const auto& b : buildings)
+            n += b.id.capacity() + b.parts.capacity() * sizeof(std::uint16_t);
+        return n;
+    }
     float worldScale = 1;
     std::array<float, 3> horizon{.60f, .67f, .72f};
 };

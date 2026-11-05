@@ -19,6 +19,8 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
+        else if (arg == "--sanctuary-city-review")
+            result.sanctuaryCityReview = true;
         else if (arg == "--no-audio")
             result.noAudio = true;
         else if (arg == "--uncapped")
@@ -49,6 +51,8 @@ Options parseOptions(int argc, char** argv) {
         else
             throw std::runtime_error("Unknown or incomplete argument: " + arg);
     }
+    if (result.sanctuaryCityReview && !result.campaignSave.empty())
+        throw std::invalid_argument("City review does not use campaign saves");
     if (result.width < 320 || result.height < 240)
         throw std::runtime_error("Window must be at least 320 x 240");
     return result;

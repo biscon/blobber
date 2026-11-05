@@ -65,13 +65,30 @@ struct Decoration {
     }
     bool web() const noexcept { return kind == DecorationKind::WebA || kind == DecorationKind::WebB; }
 };
+constexpr unsigned buildingCapacity = 128;
+// Local footprint cells rotate with the model about the anchor cell center.
+struct BuildingPlacement {
+    std::string model;
+    Cell anchor, footprint;
+    Heading facing = Heading::North;
+    unsigned width = 1, depth = 1;
+    Cell cell(unsigned x, unsigned z) const noexcept {
+        const auto r = right(facing), f = forward(facing);
+        return anchor + r * (footprint.x + int(x)) + f * -(footprint.y + int(z));
+    }
+};
 struct WorldDefinition {
     std::string assetPack = "dungeon";
     std::vector<CellSurface> surfaces;
     std::vector<Decoration> decorations;
+    std::vector<BuildingPlacement> buildings;
     std::size_t bytes() const noexcept {
-        return sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
-               decorations.capacity() * sizeof(Decoration);
+        std::size_t n = sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
+                        decorations.capacity() * sizeof(Decoration) +
+                        buildings.capacity() * sizeof(BuildingPlacement);
+        for (const auto& b : buildings)
+            n += b.model.capacity();
+        return n;
     }
     std::uint64_t fingerprint() const noexcept;
 };

@@ -57,7 +57,8 @@ VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::C
         throw std::runtime_error("World visibility scratch budget exceeded");
 }
 std::size_t VisibilityPipeline::bytes() const noexcept {
-    return sizeof(*this) + 4u * viewWidth * viewHeight * (sizeof(std::uint16_t) + 2 * sizeof(float)) +
+    return sizeof(*this) + pack_.dynamicBytes() +
+           4u * viewWidth * viewHeight * (sizeof(std::uint16_t) + 2 * sizeof(float)) +
            2u * viewWidth * viewHeight * sizeof(float);
 }
 bool VisibilityPipeline::lootVisible(LootId id) const noexcept {

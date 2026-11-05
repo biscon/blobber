@@ -61,6 +61,10 @@ bool Map::movementBlocked(Cell c) const noexcept {
 bool Map::npcBlocked(Cell c) const noexcept {
     return solid(c) || (!occupied_.empty() && occupied_[std::size_t(c.y * width_ + c.x)]);
 }
+bool Map::buildingOwned(Cell c) const noexcept {
+    return !buildings_.empty() && c.x >= 0 && c.y >= 0 && c.x < width_ && c.y < height_ &&
+           buildings_[std::size_t(c.y * width_ + c.x)] != 0;
+}
 CellSurface Map::surface(Cell c) const noexcept {
     return c.x < 0 || c.y < 0 || c.x >= width_ || c.y >= height_
                ? CellSurface{}
@@ -80,7 +84,7 @@ void Map::validateWorld() {
     if (world_.surfaces.empty())
         world_.surfaces.resize(count);
     if (world_.surfaces.size() != count || world_.decorations.size() > 384 ||
-        world_.bytes() > worldDefinitionBudget)
+        world_.buildings.size() > buildingCapacity || world_.bytes() > worldDefinitionBudget)
         throw std::invalid_argument("World definition capacity/dimensions exceeded");
     for (int y = 0; y < height_; ++y)
         for (int x = 0; x < width_; ++x) {
@@ -98,6 +102,35 @@ void Map::validateWorld() {
                     upper_ = std::max(upper_, elevation(s.ceiling));
             }
         }
+    if (!world_.buildings.empty())
+        buildings_.assign(count, 0);
+    for (const auto& b : world_.buildings) {
+        if (b.model.empty() || b.model.size() > 32 ||
+            !std::all_of(b.model.begin(), b.model.end(),
+                         [](unsigned char c) {
+                             return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+                         }) ||
+            unsigned(b.facing) > 3 || b.anchor.x < 1 || b.anchor.y < 1 || b.anchor.x >= width_ - 1 ||
+            b.anchor.y >= height_ - 1 || !b.width || !b.depth || b.width > 7 || b.depth > 7 ||
+            b.footprint.x < -3 || b.footprint.y < -3 || b.footprint.x > 0 || b.footprint.y > 0 ||
+            b.footprint.x + int(b.width) <= 0 || b.footprint.y + int(b.depth) <= 0 ||
+            b.footprint.x + int(b.width) > 4 || b.footprint.y + int(b.depth) > 4)
+            throw std::invalid_argument("Invalid building placement");
+        if (!solid(b.anchor))
+            throw std::invalid_argument("Building anchor requires solid terrain");
+        const auto floor = surface(b.anchor).floor;
+        for (unsigned z = 0; z < b.depth; ++z)
+            for (unsigned x = 0; x < b.width; ++x) {
+                const auto c = b.cell(x, z);
+                if (c.x < 1 || c.y < 1 || c.x >= width_ - 1 || c.y >= height_ - 1 || !solid(c) ||
+                    surface(c).floor != floor || buildingOwned(c))
+                    throw std::invalid_argument(
+                        "Building footprint overlaps, is unlevel or lacks solid backing");
+                buildings_[std::size_t(c.y * width_ + c.x)] = 1;
+            }
+        if (!buildingOwned(b.anchor))
+            throw std::invalid_argument("Building anchor must be inside its footprint");
+    }
     unsigned decals = 0, props = 0, containers = 0;
     occupied_.assign(count, 0);
     std::array<bool, containerCapacity> containerIds{};
@@ -109,6 +142,8 @@ void Map::validateWorld() {
             !std::isfinite(d.depth) || d.width <= 0 || d.width > 1 || d.height <= 0 || d.height > 4 ||
             d.depth <= 0 || d.depth > 2 || d.offset - d.width * .5f < 0 || d.offset + d.width * .5f > 1)
             throw std::invalid_argument("Invalid world decoration");
+        if (buildingOwned(d.cell) || buildingOwned(d.cell + forward(d.face)))
+            throw std::invalid_argument("Decoration conflicts with building shell");
         if (d.footprintCount()) {
             if (d.width > 1 || d.height > 1 || d.depth > (d.kind == DecorationKind::Rack ? 2 : 1))
                 throw std::invalid_argument("Invalid furniture dimensions");

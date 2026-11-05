@@ -38,6 +38,13 @@ AssetRequirements CpuAssets::requirements(const std::string& id, const ActorSnap
             r.meshes.set(i);
             texture(publication.meshes[i].texture);
         }
+    for (const auto& b : p.buildings)
+        for (auto i : b.parts) {
+            if (i >= publication.meshes.size())
+                throw std::invalid_argument("Invalid building mesh reference");
+            r.meshes.set(i);
+            texture(publication.meshes[i].texture);
+        }
     if (actors) {
         if (actors->count > NpcWorld::maxInstances || actors->typeCount != publication.appearances.size())
             throw std::invalid_argument("Location appearance/actor counts differ");

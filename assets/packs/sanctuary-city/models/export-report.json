@@ -1,0 +1,14 @@
+[
+  {
+    "model": "low-house",
+    "triangles": 821,
+    "atlas": 4096,
+    "texels_per_cell": 256
+  },
+  {
+    "model": "tall-house",
+    "triangles": 1419,
+    "atlas": 4096,
+    "texels_per_cell": 256
+  }
+]

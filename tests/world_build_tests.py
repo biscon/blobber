@@ -75,10 +75,32 @@ blobber_world_publication(publication "{baker.as_posix()}" "{source.as_posix()}"
                 assert (output/'textures.bin').read_bytes()==prior_payload, 'Failed bake replaced prior payload'
                 (source/'textures/wall.png').write_bytes(good); run(*command)
                 manifest=json.loads((output/'metadata.json').read_text())
-                assert len(manifest['appearances'])==1 and len(manifest['textures'])==25 and len(manifest['packs'])==1 and manifest['format']==5 and manifest['appearance_revision']==4
+                assert len(manifest['appearances'])==1 and len(manifest['textures'])==25 and len(manifest['packs'])==1 and manifest['format']==6 and manifest['appearance_revision']==4
                 prior=stamp(); manifest_path=pack/'pack.json'; data=json.loads(manifest_path.read_text()); data['worldScale']=1.25; data['guardianEmblem']='fixtures/key-bronze.png'; manifest_path.write_text(json.dumps(data)); run(*command)
                 assert stamp()!=prior, 'Changed pack manifest did not rebuild publication'
                 updated=json.loads((output/'metadata.json').read_text()); assert len(updated['textures'])==26 and 'guardianEmblem' in updated['packs'][0], 'Optional guardian art was not baked'
+                # The architecture source adapter participates in the same atomic publication.
+                png(pack/'building-atlas.png')
+                triangle=[[0,0,0,0,0,1,0,0],[1,0,0,0,0,1,1,0],[0,2,0,0,0,1,0,1]]
+                for part in ('shell','roof'):
+                    (pack/f'{part}.mesh.json').write_text(json.dumps(dict(name=part,texture='packs/dungeon/building-atlas.png',vertices=triangle)))
+                data['buildings']=[dict(id='house',parts=['packs/dungeon/shell.mesh.json','packs/dungeon/roof.mesh.json'])]
+                manifest_path.write_text(json.dumps(data));run(*command)
+                built=json.loads((output/'metadata.json').read_text())
+                assert len(built['meshes'])==2 and all(m['architecture'] for m in built['meshes'])
+                assert built['meshes'][0]['texture']==built['meshes'][1]['texture'], 'Building parts must share their atlas'
+                assert built['packs'][0]['buildings'][0]['parts']==[0,1]
+                before=(output/'metadata.json').read_bytes()
+                model_path=pack/'shell.mesh.json'; model=json.loads(model_path.read_text());model['vertices'][2][1]=2.5
+                model_path.write_text(json.dumps(model));run(*command)
+                assert (output/'metadata.json').read_bytes()!=before, 'Changed mesh was not rebuilt'
+                prior_payload=(output/'textures.bin').read_bytes();model['vertices'][2][1]=4.1
+                model_path.write_text(json.dumps(model));run(*command,okay=False)
+                assert (output/'textures.bin').read_bytes()==prior_payload, 'Invalid architecture replaced publication'
+                model['vertices'][2][1]=2.5;model_path.write_text(json.dumps(model));run(*command)
+                data.pop('buildings');manifest_path.write_text(json.dumps(data))
+                for part in ('shell.mesh.json','roof.mesh.json','building-atlas.png'):(pack/part).unlink()
+                run(*command);assert not json.loads((output/'metadata.json').read_text())['meshes']
                 print(generator,config,'clean/no-op/change/touch/missing/add/remove/failure: pass')
     print('World build fixtures passed')
 if __name__=='__main__': main()

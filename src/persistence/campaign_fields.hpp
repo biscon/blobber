@@ -81,10 +81,19 @@ template <class A> void visit(A& a, Decoration& v) {
     a("height", v.height);
     a("depth", v.depth);
 }
+template <class A> void visit(A& a, BuildingPlacement& v) {
+    a("model", v.model);
+    a("anchor", v.anchor);
+    a("footprint", v.footprint);
+    a("facing", v.facing);
+    a("width", v.width);
+    a("depth", v.depth);
+}
 template <class A> void visit(A& a, WorldDefinition& v) {
     a("assetPack", v.assetPack);
     a("surfaces", v.surfaces);
     a("decorations", v.decorations);
+    a("buildings", v.buildings);
 }
 template <class A> void visit(A& a, Cell& v) {
     a("x", v.x);

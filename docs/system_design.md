@@ -8,8 +8,9 @@ guide an older, lightly overgrown town with occasional two-storey exterior shell
 Use simple prepared low-poly geometry and basic frustum culling; optimize observed
 issues at slice handoffs. Interiors/services are deferred and existing development
 saves require no migration. SC01 is split: [SC01.1 location-owned assets](sc011_design.md) is implemented with
-[verification and handoff](sc011_verification.md); SC01.2 architecture is eligible
-for separate detailed planning. Supersampling and texture fidelity remain unchanged;
+[verification and handoff](sc011_verification.md); SC01.2 architecture is implemented
+and ready for review; see the [architecture design](sc01_design.md) and
+[verification/captures](sc01_verification.md). Supersampling and texture fidelity remain unchanged;
 512 MiB–1 GiB is a memory target, not a mandate to reduce quality.
 
 Movement-frame performance (implemented and mechanically verified, 2026-11-04):
@@ -418,6 +419,17 @@ and tracked world ceilings are 352 MiB CPU / 608 MiB GPU. Preparation rejects ca
 allocation failures without replacing the playable view. These are preparation
 boundaries, not frame-time growth policies.
 
+Static architecture uses up to 128 world-owned placements and a separate pack-local
+catalog of up to 32 named multipart models. Validated level solid footprints retain
+movement/sight blocking while a derived ownership mask suppresses generated backing
+walls. Prepared painted geometry lives in the anchor chunk; its bounds include roofs
+and overhangs. Building scenes search 32 cells/81 candidate chunks for diagonal
+far-frustum coverage; ordinary scenes retain 24/49. Fixed draw storage covers both.
+Frames borrow prepared geometry and resolve no model names. Furniture's four slots
+and tighter mesh profile remain intact. The standalone city review factory and
+launch path do not replace campaign Sanctuary. See [SC01.2](sc01_design.md) for
+ownership, capacities, exports and focused verification.
+
 Party stores four character identities/resources and owns one fixed 208-stack
 inventory: four 48-cell bags plus four equipment positions per character. Startup
 content retains up to 16 owned entries; live queries use inventory handles and
@@ -536,9 +548,9 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 7/11 and generator/templates 8/6. Older saves reject
-without being modified; no migration. World publication is format 5, appearance 4,
-visibility world-visibility-v13 and terrain-rules-v2. Door scheduling identity is
+Campaign schema/simulation are 8/11 and generator/templates 9/7. Older saves reject
+without being modified; no migration. World publication is format 6, appearance 4,
+visibility world-visibility-v14, world fingerprint revision 3 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

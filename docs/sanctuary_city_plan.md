@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01.1 accepted. SC01.2 detailed planning is next.**
+Status: **SC01.1 accepted. SC01.2 implemented; Ready for review.**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,10 +16,10 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | None; SC01.1 — Location-owned assets accepted 2026-11-05 |
-| Awaiting review | None; SC01.1 [verification/handoff](sc011_verification.md) accepted |
-| Next eligible slice | SC01.2 — Architecture foundation and finished street corner |
-| Next action | Detailed planning for SC01.2 when requested |
+| Active slice | SC01.2 — Architecture foundation and finished street corner |
+| Awaiting review | SC01.2 [verification/handoff](sc01_verification.md) and [captures](screenshots/sc01/README.md) |
+| Next eligible slice | SC02, only after SC01 acceptance |
+| Next action | User visual review of SC01.2; no automatic continuation |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Prepared low-poly geometry, material batching and basic frustum culling; no speculative advanced visibility system |
 | Blockers | None |
@@ -130,10 +130,10 @@ identity/placement information for later work without implementing a dormant por
 
 ### Prepared assets, geometry and visibility
 
-Current `world_assets::Pack` has four furniture model slots; mesh validation limits
-extent and count for the existing props. `DecorationKind` and scene preparation
-also contain prop-specific mappings. SC01 extends these deliberately for buildings
-without weakening validation or imposing city dependencies on the dungeon pack.
+`world_assets::Pack` retains four furniture model slots and their strict bounds.
+SC01.2 adds a separate bounded named building catalog and architecture profile;
+`WorldDefinition` owns static placements independently of `DecorationKind`.
+The dungeon pack has no city dependencies. See the [implemented design](sc01_design.md).
 Keep an explicit city asset pack and reproducible Blender source, export script,
 runtime mesh data, texture masters and prepared publication.
 
@@ -198,24 +198,25 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| SC01 | Asset residency foundation and finished street corner | Agreed roadmap direction | In progress — implementation |
+| SC01 | Asset residency foundation and finished street corner | Agreed roadmap direction | Ready for review |
 | SC01.1 | Location-owned assets and memory accounting | Approved detailed plan | Accepted 2026-11-05 |
-| SC01.2 | Architecture foundation and finished street corner | SC01.1 Accepted | Planned |
+| SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Ready for review |
 | SC02 | Complete town architecture and walkable layout | SC01 Accepted | Planned |
 | SC03 | Vegetation, market and fountain | SC02 Accepted | Planned |
 | SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
 
 | Milestone | Meaning | Status |
 | --- | --- | --- |
-| S-A | Architectural scale and art quality proven in-engine through SC01 | Planned |
+| S-A | Architectural scale and art quality proven in-engine through SC01 | Ready for review; acceptance pending |
 | S-B | Complete dressed city accepted through SC03 | Planned |
 | S-C | City is the working campaign hub through SC04 | Planned |
 
 ### SC01 — Asset residency and architecture foundation
 
 SC01.1 implements the approved [location-owned asset design](sc011_design.md)
-and was accepted by the user on 2026-11-05. SC01.2 retains the architectural
-deliverable below and is now eligible for detailed planning. Supersampling remains on by default; 512 MiB–1 GiB is
+and was accepted by the user on 2026-11-05. SC01.2 delivers the architectural
+foundation and residential corner below; its [handoff](sc01_verification.md) is
+ready for user review. Supersampling remains on by default; 512 MiB–1 GiB is
 a memory target, not a quality-reduction mandate. No automatic continuation.
 
 ### SC01.2 — Architecture foundation and street corner
@@ -241,8 +242,8 @@ Acceptance:
   cover geometry/depth, visibility agreement and resource lifetimes. Check affected
   frame allocation invariants and existing dungeon callers.
 
-Expected records: `docs/sc01_design.md` and `docs/sc01_verification.md`, created
-when that slice starts. A substantial foundation problem may warrant an explicit
+Delivered records: [design](sc01_design.md), [verification/handoff](sc01_verification.md)
+and [capture index](screenshots/sc01/README.md). A substantial foundation problem may warrant an explicit
 split; do not pass off a crude proof as the agreed finished visual checkpoint.
 
 ### SC02 — Complete town architecture and layout
@@ -354,6 +355,15 @@ Each handoff records:
 
 ## Decision log
 
+2026-11-05: Delivered SC01.2 for review: bounded static architecture, two finished
+houses, dedicated review launch and deterministic captures. Focused CPU/publication
+and hidden GPU checks passed. Diagonal overhang coverage required a 32-cell candidate
+search for building scenes; ordinary scenes retain 24 and the far plane stays 16.
+User visual acceptance is pending; SC02 and campaign cutover have not begun.
+
+2026-11-05: User selected the residential L-corner, approved the detailed
+[SC01.2 design](sc01_design.md), and requested implementation.
+
 2026-11-05: Approved SC01.1 residency prerequisite / SC01.2 architecture split
 and implementation. Dedicated city review flag selected for SC01.2. Supersampling
 stays on; prioritize fidelity over strict adherence to the memory target.
@@ -370,14 +380,22 @@ stays on; prioritize fidelity over strict adherence to the memory target.
 
 ## Current next-agent handoff
 
-SC01.1 was accepted by the user on 2026-11-05. Read the [design](sc011_design.md) and
-[verification/handoff](sc011_verification.md). Supersampling and texture fidelity
-are unchanged. Current supersampled production evidence is about 178 MiB in the
-hub, 371 MiB on floor one and 373 MiB during their transition, including UI/fonts.
-Unused biome/creature payloads stay on disk; source-only assets release on travel.
-The 512 MiB–1 GiB target and 384/448 MiB reference lines are advisory. Hardware
-with that memory capacity was not available for verification.
+SC01.1 remains accepted; SC01.2 is implemented and **Ready for review**. Read the
+[architecture design](sc01_design.md), [verification/handoff](sc01_verification.md)
+and [capture index](screenshots/sc01/README.md). Launch
+`cmake-build-debug/blobber --sanctuary-city-review` for normal movement/HUD around
+the two-house corner. Normal campaign launch still uses the courtyard. The review
+does not initialize campaign saves or the character library.
 
-No city architecture or new hub has been implemented. The next eligible action
-is SC01.2 detailed planning when requested. Preserve the dedicated launch-flag decision and
-retained ImageGen references. Do not advance PC08, SC02 or campaign cutover.
+Current identities are publication/appearance 6/4, campaign schema/simulation 8/11,
+generator/templates 9/7, visibility v14 and world fingerprint revision 3. Older
+development saves reject unchanged; no migration. Generated original art, exact
+prompts and Blender/GLB/runtime sources are retained in the dedicated city pack.
+Both houses share one 4096² atlas. Supersampling and texture fidelity are unchanged.
+Measured application-owned GPU storage is about 259 MiB with a 275 MiB capture
+peak, including UI/fonts; world texture/model leases release completely with the
+view. These measurements exclude driver storage and do not establish performance
+on 512 MiB–1 GiB hardware, which was unavailable. Memory reference lines remain advisory.
+
+The next action is user visual review, with limitations recorded in the handoff.
+Do not mark accepted, advance PC08/SC02, or replace the campaign hub automatically.

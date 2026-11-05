@@ -586,10 +586,20 @@ the changed visibility identity. See [target selection](target_selection_design.
 
 ## Creature occlusion correction
 
-Current visibility identity is `world-visibility-v13`. Creature bodies retain authored
+That correction introduced `world-visibility-v13`. Creature bodies retain authored
 animation dimensions and animated anchors beside walls, door geometry and viewport
 edges. Terrain/static-frame masks and leaf-free scenery depth gate body picking;
 moving leaves use shared ground-anchor ordering and finite ray coverage, including
 stable ordering around free tips. Other actors retain the v11 candidate behavior. Protocol/save
 schemas, simulation and prepared asset identities are unchanged. Strict earlier
 visual traces reject the new visibility identity. See [creature occlusion](creature_occlusion.md).
+
+## Sanctuary architecture foundation (SC01.2)
+
+Current visibility is `world-visibility-v14`, world publication format 6/appearance
+4, and campaign schema/simulation 8/11. Static building placement fields are
+serialized and hashed with world-definition revision 3. Generator/templates remain
+9/7 and terrain-rules-v2 is unchanged. Strict old recordings/saves reject rather
+than migrate. Protocol v1 gains no new scenario or command: the city is an explicit
+graphical development review flag, with a separate hidden capture tool. Normal
+campaign startup still uses the courtyard. See [SC01 design](sc01_design.md).

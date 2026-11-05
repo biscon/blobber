@@ -1,0 +1,35 @@
+{
+  "id": "sanctuary-city",
+  "worldScale": 1.0,
+  "horizon": [
+    0.6,
+    0.65,
+    0.71
+  ],
+  "wall": "packs/sanctuary-city/source/wall.png",
+  "floor": "packs/sanctuary-city/source/paving.png",
+  "ceiling": "packs/sanctuary-city/source/ceiling.png",
+  "stairWall": "packs/sanctuary-city/source/wall.png",
+  "stairFloor": "packs/sanctuary-city/source/paving.png",
+  "door": "packs/dungeon/source/door.png",
+  "lockedDoor": "packs/dungeon/source/door-locked.png",
+  "doorEdge": "packs/dungeon/source/door.png",
+  "crest": "packs/dungeon/source/crest.png",
+  "vine": "packs/dungeon/source/vine.png",
+  "sky": "packs/dungeon/source/sky.png",
+  "guardianEmblem": "packs/dungeon/source/guardian-emblem.png",
+  "buildings": [
+    {
+      "id": "low-house",
+      "parts": [
+        "packs/sanctuary-city/models/low-house.mesh.json"
+      ]
+    },
+    {
+      "id": "tall-house",
+      "parts": [
+        "packs/sanctuary-city/models/tall-house.mesh.json"
+      ]
+    }
+  ]
+}

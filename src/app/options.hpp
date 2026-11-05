@@ -5,6 +5,7 @@
 namespace blobber {
 struct Options {
     bool noAudio = false, development = false, supersampling = true, uncapped = false, help = false;
+    bool sanctuaryCityReview = false;
     int width = 1920, height = 1080;
     std::filesystem::path assets, campaignSave, settings;
     std::optional<std::uint32_t> seed;

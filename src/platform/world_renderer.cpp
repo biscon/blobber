@@ -718,7 +718,8 @@ std::size_t WorldRenderer::cpuBytes() const noexcept {
         n += staged_->cpu.map->storageBytes();
     for (const auto* v : {active_.get(), staged_.get()})
         if (v) {
-            n += sizeof(View) + v->cpu.bytes() + v->textureLeases.capacity() * sizeof(SharedTexture) +
+            n += sizeof(View) + v->pack.dynamicBytes() + v->cpu.bytes() +
+                 v->textureLeases.capacity() * sizeof(SharedTexture) +
                  v->textures.capacity() * sizeof(TextureHandle);
             if (v->visibility)
                 n += v->visibility->bytes();

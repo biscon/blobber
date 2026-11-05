@@ -71,7 +71,8 @@ struct Face {
 };
 template <class F>
 void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides, F emit,
-           const world_assets::CpuAssets* assets, const world_assets::Pack& pack) {
+           const world_assets::CpuAssets* assets, const world_assets::Pack& pack,
+           const std::array<world_assets::StaticModelId, buildingCapacity>& buildings) {
     auto add = [&](std::array<Vec, 4> p, Vec n, unsigned material, bool wall) {
         Face q{};
         q.material = std::uint8_t(material);
@@ -120,15 +121,45 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                          Vec{px - r.x * .5f, high, pz - r.y * .5f}},
                         {float(-f.x), 0, float(-f.y)}, s.wall, true);
                 };
-                if (m.base().solid(next))
-                    wall(lo, hi);
-                else {
+                if (m.base().solid(next)) {
+                    if (!m.base().buildingOwned(next))
+                        wall(lo, hi);
+                } else {
                     wall(lo, std::min(hi, elevation(n.floor)));
                     if (n.ceiling != noCeiling)
                         wall(std::max(lo, elevation(n.ceiling)), hi);
                 }
             }
         }
+    const auto& placed = m.base().definition().buildings;
+    for (unsigned i = 0; i < placed.size(); ++i) {
+        const auto& b = placed[i];
+        if (b.anchor.x < cx || b.anchor.x >= cx + 8 || b.anchor.y < cz || b.anchor.y >= cz + 8)
+            continue;
+        const auto r = right(b.facing), f = forward(b.facing);
+        for (auto part : pack.buildings[buildings[i].index].parts) {
+            const auto& mesh = assets->mesh(part);
+            const auto material =
+                std::find(pack.materials.begin(), pack.materials.begin() + pack.materialCount, mesh.texture) -
+                pack.materials.begin();
+            for (unsigned n = 0; n < mesh.vertices.size(); n += 3) {
+                Face q{};
+                q.material = std::uint8_t(material);
+                q.painted = true;
+                for (unsigned k = 0; k < 3; ++k) {
+                    const auto& v = mesh.vertices[n + k];
+                    q.v[k] = {{b.anchor.x + .5f + r.x * v[0] - f.x * v[2],
+                               elevation(m.surface(b.anchor).floor) + v[1],
+                               b.anchor.y + .5f + r.y * v[0] - f.y * v[2]},
+                              {r.x * v[3] - f.x * v[5], v[4], r.y * v[3] - f.y * v[5]},
+                              v[6],
+                              v[7]};
+                }
+                q.v[3] = q.v[2];
+                emit(q);
+            }
+        }
+    }
     auto block = [&](float x, float z, float base, float width, float depth, float height, Cell r, Cell f,
                      unsigned material) {
         std::array<Vec, 4> bottom{}, top{};
@@ -268,7 +299,15 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     const auto lease = assets ? assets->acquire(assets->requirements(m.base().definition().assetPack))
                               : world_assets::AssetLease{};
     Scene s;
+    if (!m.base().definition().buildings.empty())
+        s.cullRadius = buildingCullRadius;
     const auto pack = assets ? assets->pack(m.base().definition().assetPack) : world_assets::Pack{};
+    std::array<world_assets::StaticModelId, buildingCapacity> buildings{};
+    for (unsigned i = 0; i < m.base().definition().buildings.size(); ++i) {
+        if (!assets)
+            throw std::invalid_argument("Buildings require prepared mesh assets");
+        buildings[i] = pack.building(m.base().definition().buildings[i].model);
+    }
     s.map = &m.base();
     for (auto h : m.base().definition().surfaces)
         s.outdoor |= h.ceiling == noCeiling;
@@ -342,7 +381,7 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
                                    4 +
                                unsigned(f.painted) * 2 + (f.variant == 1 ? 1 : 0))] = true;
                 },
-                assets, pack);
+                assets, pack, buildings);
             maxLocal = std::max(maxLocal, localCount);
             ranges += std::count(used.begin(), used.end(), true);
             if (quads > limits.quads || ranges > limits.ranges)
@@ -362,7 +401,9 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
         for (int x = 0; x < m.width(); x += 8) {
             preparationPoint("Preparing dungeon");
             unsigned count = 0;
-            faces(m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; }, assets, pack);
+            faces(
+                m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; }, assets, pack,
+                buildings);
             std::sort(local.begin(), local.begin() + count, [](const Face& a, const Face& b) {
                 return a.material != b.material ? a.material < b.material
                        : a.id != b.id           ? a.id < b.id
@@ -413,6 +454,15 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
                 s.ranges.back().count += 6;
             }
         }
+    // Static ranges have at most two paint modes per material in each candidate
+    // chunk. Fixture/container variants use the separately bounded global slots.
+    for (const auto& chunk : s.chunks) {
+        unsigned staticRanges = 0;
+        for (unsigned k = 0; k < chunk.count; ++k)
+            staticRanges += s.ranges[chunk.first + k].id == UINT16_MAX;
+        if (staticRanges > 2 * materialCapacity)
+            throw std::runtime_error("Static chunk draw capacity exceeded");
+    }
     if (s.bytes() > limits.cpuBytes)
         throw std::runtime_error("World CPU capacity budget exceeded");
     static std::atomic<std::uint64_t> next{1};
@@ -440,11 +490,11 @@ bool visible(const Camera& c, int x, int z, int width, int height, float low, fl
 }
 void cull(const Scene& s, const Camera& c, DrawList& out) noexcept {
     out.count = out.tested = 0;
-    const int left = std::max(0, int(std::floor((c.position.x - 24) / 8))),
-              right = std::min(s.columns - 1, int(std::floor((c.position.x + 24) / 8)));
-    const int top = std::max(0, int(std::floor((c.position.z - 24) / 8))),
-              bottom = std::min(s.rows - 1, int(std::floor((c.position.z + 24) / 8)));
-    std::array<unsigned, 49> chunks{};
+    const int left = std::max(0, int(std::floor((c.position.x - s.cullRadius) / 8))),
+              right = std::min(s.columns - 1, int(std::floor((c.position.x + s.cullRadius) / 8)));
+    const int top = std::max(0, int(std::floor((c.position.z - s.cullRadius) / 8))),
+              bottom = std::min(s.rows - 1, int(std::floor((c.position.z + s.cullRadius) / 8)));
+    std::array<unsigned, buildingCullChunks> chunks{};
     unsigned n = 0;
     for (int z = top; z <= bottom; ++z)
         for (int x = left; x <= right; ++x) {

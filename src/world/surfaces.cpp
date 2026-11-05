@@ -21,7 +21,7 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         std::memcpy(&bits, &f, sizeof(bits));
         add(bits);
     };
-    add(2);
+    add(3);
     add(assetPack.size());
     for (unsigned char c : assetPack)
         add(c);
@@ -48,6 +48,19 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         real(d.width);
         real(d.height);
         real(d.depth);
+    }
+    add(buildings.size());
+    for (const auto& b : buildings) {
+        add(b.model.size());
+        for (unsigned char c : b.model)
+            add(c);
+        add(b.anchor.x);
+        add(b.anchor.y);
+        add(unsigned(b.facing));
+        add(b.footprint.x);
+        add(b.footprint.y);
+        add(b.width);
+        add(b.depth);
     }
     return h;
 }

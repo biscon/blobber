@@ -49,6 +49,26 @@ void environmentRoundtrip() {
     auto& world = state->locations[0].world;
     world.surfaces[2 * 9 + 3].floor = 1;
     world.surfaces[2 * 9 + 3].ceiling = noCeiling;
+    // Own a one-cell static shell on an existing generated wall, away from dressing.
+    auto& architecture = state->locations[1];
+    bool placed = false;
+    for (unsigned y = 2; y + 2 < architecture.rows.size() && !placed; ++y)
+        for (unsigned x = 2; x + 2 < architecture.rows[y].size() && !placed; ++x) {
+            const Cell cell{int(x), int(y)};
+            if (architecture.rows[y][x] != '#')
+                continue;
+            bool conflict = false;
+            for (const auto& decoration : architecture.world.decorations)
+                conflict |= decoration.cell == cell || decoration.cell + forward(decoration.face) == cell;
+            if (conflict)
+                continue;
+            architecture.world.buildings.push_back({"owned-house", cell, {0, 0}, Heading::West, 1, 1});
+            placed = true;
+        }
+    check(placed, "Owned save fixture has a wall for static architecture");
+    architecture.worldFingerprint = architecture.world.fingerprint();
+    architecture.layout.dressingFingerprint = architecture.worldFingerprint;
+    architecture.fingerprint = generation::fingerprint(architecture.layout);
     state->locations[0].worldFingerprint = world.fingerprint();
     const auto fingerprint = world.fingerprint();
     const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
@@ -56,6 +76,10 @@ void environmentRoundtrip() {
     CampaignRun loaded(c, std::move(*decoded), d.timings);
     check(loaded.map().definition().fingerprint() == fingerprint,
           "Nonflat world and decorations survive Continue");
+    check(loaded.location(1).map().definition().buildings.size() == 1 &&
+              loaded.location(1).map().definition().buildings[0].model == "owned-house" &&
+              loaded.location(1).map().definition().buildings[0].facing == Heading::West,
+          "Static placement identity, footprint and rotation survive disk restore");
     auto travel = loaded.prepareTravel(loaded.request(loaded.game().nearbyFixture()));
     check(loaded.commitTravel(travel), "Travel from height-bearing hub");
     check(loaded.location(0).map().definition().fingerprint() == fingerprint,
@@ -74,6 +98,15 @@ void environmentRoundtrip() {
             CampaignRun invalid(c, std::move(*v), d.timings);
         },
         "Malformed surface retains prior session");
+    bad = blobber::automation::Json::parse(text);
+    bad["schema"] = 7;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
+    bad["schema"] = 8;
+    bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
+    for (unsigned i = 0; i <= buildingCapacity; ++i)
+        bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Placement decode capacity rejects before resizing");
     bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 6;
     Directory directory;

@@ -192,6 +192,46 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
             if (slot != 4)
                 throw std::runtime_error("Expected chest variants, cage and rack");
         }
+        if (manifest.contains("buildings")) {
+            if (!manifest["buildings"].is_array() ||
+                manifest["buildings"].size() > world_assets::staticModelCapacity)
+                throw std::runtime_error("Building catalog capacity exceeded");
+            std::map<std::string, unsigned> atlases;
+            for (const auto& binding : manifest["buildings"]) {
+                world_assets::StaticModel building;
+                building.id = binding.at("id").get<std::string>();
+                const auto& parts = binding.at("parts");
+                if (!parts.is_array() || parts.empty() || parts.size() > world_assets::staticPartCapacity)
+                    throw std::runtime_error("Building part capacity exceeded");
+                for (const auto& path : parts) {
+                    if (meshes.size() >= world_assets::meshCapacity)
+                        throw std::runtime_error("World mesh capacity exceeded");
+                    const auto model = read(source / relative(path.get<std::string>()));
+                    const auto texture = model.at("texture").get<std::string>();
+                    auto found = atlases.find(texture);
+                    unsigned textureId;
+                    if (found == atlases.end()) {
+                        if (pack.materialCount == pack.materials.size())
+                            throw std::runtime_error("Building material palette full");
+                        textureId =
+                            add("pack/" + pack.id + "/atlas/" + texture, source / relative(texture), false);
+                        atlases.emplace(texture, textureId);
+                        pack.materials[pack.materialCount++] = std::uint16_t(textureId);
+                    } else
+                        textureId = found->second;
+                    world_assets::PropMesh mesh;
+                    mesh.name = pack.id + "/" + model.at("name").get<std::string>();
+                    mesh.texture = std::uint16_t(textureId);
+                    mesh.architecture = true;
+                    if (!model.at("vertices").is_array() || model.at("vertices").size() > 6000)
+                        throw std::runtime_error("Building mesh capacity exceeded");
+                    mesh.vertices = model.at("vertices").get<std::vector<std::array<float, 8>>>();
+                    building.parts.push_back(std::uint16_t(meshes.size()));
+                    meshes.push_back(std::move(mesh));
+                }
+                pack.buildings.push_back(std::move(building));
+            }
+        }
         packs.push_back(std::move(pack));
     }
     if (packs.empty() || packs.size() > world_assets::packCapacity)
