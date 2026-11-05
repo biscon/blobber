@@ -12,7 +12,7 @@ struct ActorSnapshot;
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
 constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
-constexpr unsigned version = 6, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned version = 8, appearanceRevision = 4, textureCapacity = 480;
 constexpr unsigned catalogTextureCapacity = 4096, packCapacity = 64, meshCapacity = 512;
 constexpr std::size_t metadataBudget = 8 * MiB;
 constexpr std::uint64_t installedBudget = 8ull * 1024 * MiB;
@@ -57,7 +57,10 @@ struct PropMesh {
     std::uint64_t offset = 0, checksum = 0;
     unsigned vertexCount = 0;
     bool architecture = false;
+    bool water = false;  // Opaque architecture; eight fixed 4x2 atlas frames at 8 FPS.
+    bool cutout = false; // Named mesh parts only; fixed alpha threshold shared with CPU/GPU.
 };
+constexpr unsigned meshAlphaThreshold = 128;
 constexpr unsigned staticModelCapacity = 32, staticPartCapacity = 8, staticVertexCapacity = 24000;
 struct StaticModelId {
     std::uint16_t index = UINT16_MAX;
@@ -171,7 +174,7 @@ class Writer {
     ~Writer();
     unsigned add(const std::string& name, unsigned width, unsigned height, bool sprite,
                  const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {},
-                 bool material = true, bool crop = false);
+                 bool material = true, bool crop = false, bool cutoutMaterial = false);
     void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0,
                 const std::vector<Pack>& packs = {}, const std::vector<PropMesh>& meshes = {});
 

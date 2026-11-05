@@ -44,21 +44,24 @@
       "id": "inn",
       "parts": [
         "packs/sanctuary-city/models/inn.mesh.json",
-        "packs/sanctuary-city/models/inn-part-1.mesh.json"
+        "packs/sanctuary-city/models/inn-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-inn-sign-opaque.mesh.json"
       ]
     },
     {
       "id": "smithy",
       "parts": [
         "packs/sanctuary-city/models/smithy.mesh.json",
-        "packs/sanctuary-city/models/smithy-part-1.mesh.json"
+        "packs/sanctuary-city/models/smithy-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-smithy-sign-opaque.mesh.json"
       ]
     },
     {
       "id": "provisioner",
       "parts": [
         "packs/sanctuary-city/models/provisioner.mesh.json",
-        "packs/sanctuary-city/models/provisioner-part-1.mesh.json"
+        "packs/sanctuary-city/models/provisioner-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-provisioner-sign-opaque.mesh.json"
       ]
     },
     {
@@ -87,6 +90,73 @@
       "parts": [
         "packs/sanctuary-city/models/boundary-wall.mesh.json",
         "packs/sanctuary-city/models/boundary-wall-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "courtyard-tree",
+      "parts": [
+        "packs/sanctuary-city/models/courtyard-tree-bark.mesh.json",
+        "packs/sanctuary-city/models/courtyard-tree-foliage.mesh.json"
+      ]
+    },
+    {
+      "id": "low-house-hip-ivy",
+      "parts": [
+        "packs/sanctuary-city/models/low-house-hip.mesh.json",
+        "packs/sanctuary-city/models/low-house-hip-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-low-house-hip-ivy-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "tall-house-ivy",
+      "parts": [
+        "packs/sanctuary-city/models/tall-house.mesh.json",
+        "packs/sanctuary-city/models/tall-house-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-tall-house-ivy-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "courtyard-garden",
+      "parts": [
+        "packs/sanctuary-city/models/courtyard-tree-bark.mesh.json",
+        "packs/sanctuary-city/models/courtyard-tree-foliage.mesh.json",
+        "packs/sanctuary-city/models/dressing-courtyard-garden-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-courtyard-garden-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "lane-garden",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-lane-garden-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-lane-garden-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "east-garden",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-east-garden-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-east-garden-cutout.mesh.json",
+        "packs/sanctuary-city/models/dressing-east-tree-bark.mesh.json",
+        "packs/sanctuary-city/models/dressing-east-tree-foliage.mesh.json"
+      ]
+    },
+    {
+      "id": "market-produce",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-market-produce-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "market-grain",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-market-grain-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "fountain",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-fountain-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-fountain-water.mesh.json"
       ]
     }
   ]

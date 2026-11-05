@@ -84,7 +84,8 @@ void Map::validateWorld() {
     if (world_.surfaces.empty())
         world_.surfaces.resize(count);
     if (world_.surfaces.size() != count || world_.decorations.size() > 384 ||
-        world_.buildings.size() > buildingCapacity || world_.bytes() > worldDefinitionBudget)
+        world_.buildings.size() > buildingCapacity || world_.scenery.size() > sceneryCapacity ||
+        world_.bytes() > worldDefinitionBudget)
         throw std::invalid_argument("World definition capacity/dimensions exceeded");
     for (int y = 0; y < height_; ++y)
         for (int x = 0; x < width_; ++x) {
@@ -133,6 +134,27 @@ void Map::validateWorld() {
     }
     unsigned decals = 0, props = 0, containers = 0;
     occupied_.assign(count, 0);
+    for (const auto& s : world_.scenery) {
+        if (s.model.empty() || s.model.size() > 32 ||
+            !std::all_of(s.model.begin(), s.model.end(),
+                         [](unsigned char c) {
+                             return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+                         }) ||
+            unsigned(s.facing) > 3 || s.anchor.x < 1 || s.anchor.y < 1 || s.anchor.x >= width_ - 1 ||
+            s.anchor.y >= height_ - 1 || !s.width || !s.depth || s.width > 7 || s.depth > 7 ||
+            s.footprint.x < -3 || s.footprint.y < -3 || s.footprint.x > 0 || s.footprint.y > 0 ||
+            s.footprint.x + int(s.width) <= 0 || s.footprint.y + int(s.depth) <= 0 ||
+            s.footprint.x + int(s.width) > 4 || s.footprint.y + int(s.depth) > 4)
+            throw std::invalid_argument("Invalid scenery placement");
+        for (unsigned z = 0; z < s.depth; ++z)
+            for (unsigned x = 0; x < s.width; ++x) {
+                const auto c = s.cell(x, z);
+                if (c.x < 1 || c.y < 1 || c.x >= width_ - 1 || c.y >= height_ - 1 || solid(c) ||
+                    surface(c).floor != surface(s.anchor).floor || occupied_[std::size_t(c.y * width_ + c.x)])
+                    throw std::invalid_argument("Scenery base overlaps or is unlevel/outside map");
+                occupied_[std::size_t(c.y * width_ + c.x)] = 3;
+            }
+    }
     std::array<bool, containerCapacity> containerIds{};
     for (std::size_t i = 0; i < world_.decorations.size(); ++i) {
         const auto& d = world_.decorations[i];

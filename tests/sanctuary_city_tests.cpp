@@ -10,6 +10,10 @@ int main() try {
     check(city.map.width() == 24 && city.map.height() == 24 && city.doorCount == 12,
           "Complete ten-building town plus dungeon and gate");
     check(city.map.connected(city.spawn.cell), "Every street is connected");
+    check(city.map.definition().scenery.size() == 6 && city.map.movementBlocked({4, 4}) &&
+              !city.map.solid({4, 4}) && city.map.canStep({3, 5}, {4, 5}) &&
+              lineOfSight(city.map, {3, 4}, {5, 4}),
+          "Planting bases preserve adjacent walking and cell sight");
     check(city.map.definition().buildings.size() <= 96, "Town stays within content budget");
     for (unsigned i = 0; i < city.doorCount; ++i) {
         const auto p = city.doors[i].approach;
@@ -28,7 +32,16 @@ int main() try {
     }
     for (int y = 9; y <= 14; ++y)
         for (int x = 8; x <= 13; ++x)
-            check(!city.map.movementBlocked({x, y}), "Fountain has two-cell circulation margin");
+            check(city.map.movementBlocked({x, y}) == (x >= 10 && x <= 11 && y >= 11 && y <= 12),
+                  "Only fountain base occupies its two-cell circulation margin");
+    for (unsigned i = 0; i < city.reservationCount; ++i) {
+        const auto& r = city.reservations[i];
+        for (unsigned y = 0; y < r.depth; ++y)
+            for (unsigned x = 0; x < r.width; ++x)
+                check(city.map.movementBlocked({r.origin.x + int(x), r.origin.y + int(y)}) &&
+                          !city.map.solid({r.origin.x + int(x), r.origin.y + int(y)}),
+                      "Dressing fills reserved bases without changing terrain sight");
+    }
     FloorFixtures future;
     future.count = 1;
     future.entries[0] = {city.dungeonFixture, city.dungeonLanding.heading, FixtureKind::Downstairs};
@@ -73,11 +86,14 @@ int main() try {
     bad = city;
     // Cut off the otherwise walkable pocket between the western wall and a house.
     bad.reservations[1] = {"blocking", {2, 7}, 2, 3};
-    bad.reservations[2] = {"blocking-north", {2, 5}, 5, 1};
+    bad.reservations[bad.reservationCount++] = {"blocking-north", {2, 5}, 5, 1};
     rejects([&] { validateSanctuaryCity(bad); }, "Future scenery cannot break town circulation");
     bad = city;
     bad.reservations[0].origin = {23, 23};
     rejects([&] { validateSanctuaryCity(bad); }, "Out-of-bounds reservation rejects");
+    bad = city;
+    bad.reservations[2] = {"misplaced-planting", {3, 3}, 1, 1};
+    rejects([&] { validateSanctuaryCity(bad); }, "Installed base must belong to a dressing reservation");
     bad = city;
     bad.dungeonFixture = {14, 5};
     rejects([&] { validateSanctuaryCity(bad); }, "Future stair cannot occupy the solid building shell");

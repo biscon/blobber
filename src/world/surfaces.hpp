@@ -77,17 +77,32 @@ struct BuildingPlacement {
         return anchor + r * (footprint.x + int(x)) + f * -(footprint.y + int(z));
     }
 };
+constexpr unsigned sceneryCapacity = 32;
+// Open-terrain physical base; visual overhangs do not reserve extra cells.
+struct SceneryPlacement {
+    std::string model;
+    Cell anchor, footprint;
+    Heading facing = Heading::North;
+    unsigned width = 1, depth = 1;
+    Cell cell(unsigned x, unsigned z) const noexcept {
+        return anchor + right(facing) * (footprint.x + int(x)) + forward(facing) * -(footprint.y + int(z));
+    }
+};
 struct WorldDefinition {
     std::string assetPack = "dungeon";
     std::vector<CellSurface> surfaces;
     std::vector<Decoration> decorations;
     std::vector<BuildingPlacement> buildings;
+    std::vector<SceneryPlacement> scenery;
     std::size_t bytes() const noexcept {
         std::size_t n = sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
                         decorations.capacity() * sizeof(Decoration) +
-                        buildings.capacity() * sizeof(BuildingPlacement);
+                        buildings.capacity() * sizeof(BuildingPlacement) +
+                        scenery.capacity() * sizeof(SceneryPlacement);
         for (const auto& b : buildings)
             n += b.model.capacity();
+        for (const auto& s : scenery)
+            n += s.model.capacity();
         return n;
     }
     std::uint64_t fingerprint() const noexcept;

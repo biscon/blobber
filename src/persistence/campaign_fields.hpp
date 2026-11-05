@@ -1,6 +1,7 @@
 template <class A> void visit(A&, CellSurface&);
 template <class A> void visit(A&, Decoration&);
 template <class A> void visit(A&, WorldDefinition&);
+template <class A> void visit(A&, SceneryPlacement&);
 template <class A> void visit(A& a, NpcAiConfig& v) {
     a("routine", v.routine);
     a("waypoints", v.waypoints);
@@ -94,6 +95,15 @@ template <class A> void visit(A& a, WorldDefinition& v) {
     a("surfaces", v.surfaces);
     a("decorations", v.decorations);
     a("buildings", v.buildings);
+    a("scenery", v.scenery);
+}
+template <class A> void visit(A& a, SceneryPlacement& v) {
+    a("model", v.model);
+    a("anchor", v.anchor);
+    a("footprint", v.footprint);
+    a("facing", v.facing);
+    a("width", v.width);
+    a("depth", v.depth);
 }
 template <class A> void visit(A& a, Cell& v) {
     a("x", v.x);

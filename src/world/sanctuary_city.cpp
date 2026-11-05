@@ -51,6 +51,14 @@ void validateSanctuaryCity(const SanctuaryCityReview& city) {
     require(city.doorCount <= city.doors.size() && city.reservationCount <= city.reservations.size(),
             "metadata capacity exceeded");
     require(buildings.size() <= 96, "SC02 placement budget exceeded");
+    for (const auto& s : map.definition().scenery)
+        for (unsigned z = 0; z < s.depth; ++z)
+            for (unsigned x = 0; x < s.width; ++x) {
+                bool reserved = false;
+                for (unsigned i = 0; i < city.reservationCount; ++i)
+                    reserved |= city.reservations[i].contains(s.cell(x, z));
+                require(reserved, "installed scenery leaves dressing reservations");
+            }
     require(map.connected(city.spawn.cell), "streets must connect");
     for (unsigned i = 0; i < city.doorCount; ++i) {
         const auto& d = city.doors[i];
@@ -88,7 +96,7 @@ void validateSanctuaryCity(const SanctuaryCityReview& city) {
         for (unsigned y = 0; y < r.depth; ++y)
             for (unsigned x = 0; x < r.width; ++x) {
                 const Cell c = r.origin + Cell{int(x), int(y)};
-                require(!map.movementBlocked(c), std::string(r.name) + " overlaps architecture");
+                require(!map.solid(c), std::string(r.name) + " overlaps architecture");
                 require(!city.gateApproach.contains(c) && !city.alley.contains(c),
                         std::string(r.name) + " occupies a protected route");
                 require(!(c == city.spawn.cell) && !(c == city.rest.cell) &&
@@ -174,8 +182,8 @@ SanctuaryCityReview sanctuaryCityReview() {
     house("provisioner", "provisioner", {16, 9}, Heading::West);
     house("smithy", "smithy", {15, 12}, Heading::West);
     house("west-home", "low-house", {7, 8}, Heading::East);
-    house("alley-home", "low-house-hip", {7, 12}, Heading::East);
-    house("courtyard-home", "tall-house", {7, 17}, Heading::East, 4);
+    house("alley-home", "low-house-hip-ivy", {7, 12}, Heading::East);
+    house("courtyard-home", "tall-house-ivy", {7, 17}, Heading::East, 4);
     house("southwest-home", "low-house-hip", {8, 18}, Heading::North);
     house("southeast-home", "low-house", {16, 18}, Heading::North);
     house("east-home", "tall-house", {20, 14}, Heading::North, 4);
@@ -192,6 +200,15 @@ SanctuaryCityReview sanctuaryCityReview() {
                 const auto c = b.cell(x, z);
                 rows[c.y][c.x] = '#';
             }
+    // First SC03 review checkpoint: one tree, before producing the foliage set.
+    world.scenery = {
+        {"courtyard-garden", {4, 4}, {-1, -1}, Heading::North, 3, 2},
+        {"lane-garden", {4, 15}, {0, 0}, Heading::North, 2, 1},
+        {"east-garden", {20, 19}, {0, 0}, Heading::North, 2, 2},
+        {"market-produce", {20, 11}, {0, 0}, Heading::East, 1, 2},
+        {"market-grain", {20, 12}, {0, 0}, Heading::East, 1, 2},
+        {"fountain", {10, 11}, {0, 0}, Heading::North, 2, 2},
+    };
     SanctuaryCityReview result{Map(rows, std::move(world)), {{11, 8}, Heading::North}};
     result.doors = doors;
     result.doorCount = count;

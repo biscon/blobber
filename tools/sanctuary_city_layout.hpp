@@ -8,8 +8,8 @@ inline void writeCityLayout(std::ostream& out, const SanctuaryCityReview& city) 
     out << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1160\" height=\"920\" viewBox=\"0 0 1160 920\">"
            "<rect width=\"1160\" height=\"920\" fill=\"#f3eee0\"/>"
            "<g font-family=\"sans-serif\" fill=\"#302e28\"><text x=\"28\" y=\"32\" font-size=\"24\">"
-           "Sanctuary — SC02 architectural layout</text><text x=\"28\" y=\"55\" font-size=\"14\">"
-           "North ↑ · 24 × 24 cells · reserved dressing is deferred to SC03</text>";
+           "Sanctuary — SC03 tree checkpoint</text><text x=\"28\" y=\"55\" font-size=\"14\">"
+           "North ↑ · 24 × 24 cells · one courtyard tree; other dressing reserved</text>";
     auto cell = [&](Cell c, const char* color) {
         out << "<rect x=\"" << ox + c.x * scale << "\" y=\"" << oy + c.y * scale
             << "\" width=\"32\" height=\"32\" fill=\"" << color
@@ -26,6 +26,10 @@ inline void writeCityLayout(std::ostream& out, const SanctuaryCityReview& city) 
         out << "<text x=\"830\" y=\"" << 570 + i * 23 << "\" font-size=\"14\">" << r.name << " ("
             << r.origin.x << ',' << r.origin.y << ")</text>";
     }
+    for (const auto& s : city.map.definition().scenery)
+        for (unsigned z = 0; z < s.depth; ++z)
+            for (unsigned x = 0; x < s.width; ++x)
+                cell(s.cell(x, z), "#477349");
     for (const auto& loop : city.loops) {
         out << "<polyline fill=\"none\" stroke=\"#817143\" stroke-width=\"3\" stroke-dasharray=\"6 5\" "
                "points=\"";

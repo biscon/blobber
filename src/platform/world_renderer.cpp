@@ -19,13 +19,18 @@ out vec2 uv;out vec3 normal;out float depth;out vec3 worldPosition;out float sha
 void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4 p=matModel*vec4(vertexPosition,1);worldPosition=p.xyz;shade=vertexShade;depth=-(matView*p).z;gl_Position=mvp*p;})";
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
-uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec2 doorUv;
-void main(){if(idPass!=0){finalColor=idColor;return;}vec2 mapped=uv;
+uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
+void main(){vec2 mapped=uv;
 if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
 if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
 if(uvMode==3) mapped=vec2(1.0-(1.0-uv.x)*doorUv.x,0.5+(uv.y-0.5)*doorUv.y);
 if(uvMode<2) mapped*=worldScale;
+if(meshCutout!=0){ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(mapped*vec2(size))),ivec2(0),size-1);
+if(texelFetch(texture0,p,0).a*255.0+0.01<128.0)discard;}
+if(idPass!=0){finalColor=idColor;return;}
+if(waterFrame>=0)mapped+=vec2(float(waterFrame%4)*0.25,float(waterFrame/4)*0.5);
 vec4 c=texture(texture0,mapped);
+if(meshCutout!=0)c.rgb/=max(c.a,0.0001);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
 if(uvMode==4) face=1.0;
 float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,10.0,daylight))/mix(3.5,4.5,daylight),0.0,1.0);
@@ -122,6 +127,8 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     model_ = GetShaderLocation(shader, "matModel");
     uvMode_ = GetShaderLocation(shader, "uvMode");
     doorUv_ = GetShaderLocation(shader, "doorUv");
+    meshCutout_ = GetShaderLocation(shader, "meshCutout");
+    waterFrame_ = GetShaderLocation(shader, "waterFrame");
     idMode_ = GetShaderLocation(shader, "idPass");
     idColor_ = GetShaderLocation(shader, "idColor");
     if (mvp_ < 0 || view_ < 0 || forward_ < 0)
@@ -254,6 +261,7 @@ WorldImage WorldRenderer::renderStaged(const world_render::FrameInput& in) {
 WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& in) {
     using Clock = std::chrono::steady_clock;
     const auto start = measure_ ? Clock::now() : Clock::time_point{};
+    v.waterFrame = unsigned((in.now / 125) % 8);
     v.visibility->update(in, false);
     const auto prepared = measure_ ? Clock::now() : Clock::time_point{};
     if ((in.attacks || in.area) && !v.effects)
@@ -302,12 +310,13 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     stats = {};
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
-        world_render::sameCamera(camera, v.last)) {
+        (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) && world_render::sameCamera(camera, v.last)) {
         stats.cached = true;
         return {v.output.get(), v.revision};
     }
     world_render::cull(v.cpu, camera, draws_);
     stats.chunks = draws_.tested;
+    bool visibleWater = false;
     const auto targetHandle = ids ? ids : supersampling_ ? high_.get() : v.output.get();
     const auto& target = resources_.target(targetHandle);
     const auto creatureHandle = !ids && supersampling_ ? creaturesHigh_.get() : creaturesLow_.get();
@@ -377,6 +386,11 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
             (frame ? frame->containerOpened[range.id - PickingBuffer::containerBase] : false) !=
                 bool(range.variant))
             continue;
+        visibleWater |= range.water;
+        const int waterFrame = range.water ? int(v.waterFrame) : -1;
+        rlSetUniform(waterFrame_, &waterFrame, SHADER_UNIFORM_INT, 1);
+        const int rangeCutout = range.cutout ? 1 : 0;
+        rlSetUniform(meshCutout_, &rangeCutout, SHADER_UNIFORM_INT, 1);
         const int rangeUv = range.painted ? 4 : 0;
         rlSetUniform(uvMode_, &rangeUv, SHADER_UNIFORM_INT, 1);
         const float color[]{float(range.id & 255) / 255, float(range.id >> 8) / 255, 0, 1};
@@ -385,6 +399,10 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         resources_.draw(v.mesh.get(), range.first, range.count);
         ++stats.draws;
     }
+    const int noWater = -1;
+    rlSetUniform(waterFrame_, &noWater, SHADER_UNIFORM_INT, 1);
+    const int noCutout = 0;
+    rlSetUniform(meshCutout_, &noCutout, SHADER_UNIFORM_INT, 1);
     if (frame) {
         const auto vp = MatrixMultiply(rlGetMatrixModelview(), projection);
         const auto view = rlGetMatrixModelview();
@@ -503,6 +521,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     v.movement = state;
     v.last = camera;
     v.quality = supersampling_;
+    v.visibleWater = visibleWater;
+    v.drawnWaterFrame = v.waterFrame;
     v.ready = true;
     v.revision = ++revision_;
     return {v.output.get(), v.revision};

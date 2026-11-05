@@ -1,0 +1,27 @@
+SC03 dressed city; seed=5 supersampling=on native=1920x1080
+fountain-close cell=11,10 heading=SOUTH camera=11.5,0.5,10.1 yaw=3.14159 progress=1 draws=0
+fountain-west cell=9,11 heading=EAST camera=9.1,0.5,11.5 yaw=1.5708 progress=1 draws=25
+market-front cell=21,11 heading=WEST camera=21.9,0.5,11.5 yaw=4.71239 progress=1 draws=41
+market-grain cell=21,12 heading=WEST camera=21.9,0.5,12.5 yaw=4.71239 progress=1 draws=41
+east-garden cell=18,20 heading=EAST camera=18.1,0.5,20.5 yaw=1.5708 progress=1 draws=12
+lane-garden cell=7,15 heading=WEST camera=7.9,0.5,15.5 yaw=4.71239 progress=1 draws=14
+ivy-alley cell=7,13 heading=WEST camera=7.9,0.5,13.5 yaw=4.71239 progress=1 draws=18
+ivy-courtyard cell=7,16 heading=WEST camera=7.9,0.5,16.5 yaw=4.71239 progress=1 draws=14
+sign-inn cell=15,6 heading=EAST camera=15.1,0.5,6.5 yaw=1.5708 progress=1 draws=19
+sign-smithy cell=14,13 heading=EAST camera=14.1,0.5,13.5 yaw=1.5708 progress=1 draws=19
+sign-provisioner cell=15,10 heading=EAST camera=15.1,0.5,10.5 yaw=1.5708 progress=1 draws=19
+tree-east cell=7,4 heading=WEST camera=7.9,0.5,4.5 yaw=4.71239 progress=1 draws=17
+tree-south cell=4,5 heading=NORTH camera=4.5,0.5,5.9 yaw=0 progress=1 draws=12
+arrival cell=11,8 heading=NORTH camera=11.5,0.5,8.9 yaw=0 progress=1 draws=19
+square cell=12,8 heading=SOUTH camera=12.5,0.5,8.1 yaw=3.14159 progress=1 draws=27
+market cell=21,10 heading=SOUTH camera=21.5,0.5,10.1 yaw=3.14159 progress=1 draws=15
+door-inn cell=16,5 heading=EAST camera=16.1,0.5,5.5 yaw=1.5708 progress=1 draws=13
+door-provisioner cell=16,9 heading=EAST camera=16.1,0.5,9.5 yaw=1.5708 progress=1 draws=16
+door-smithy cell=15,12 heading=EAST camera=15.1,0.5,12.5 yaw=1.5708 progress=1 draws=19
+placements=91/96 scenery=6/32 models=19/24 materials=12/32 doorways=12/16 reservations=5/16
+captured_frames=19 scene_triangles=31658 world_cpu=19701160 world_gpu=287926276 visibility_bytes=7636402
+resident_textures=32 texture_bytes=273985940 alpha_bytes=8120976 model_bytes=1018848 scene_cpu=2660344 scene_gpu=2659272 app_gpu=409137232 app_peak=425726032
+Driver allocations excluded. Peak includes temporary capture target.
+active_plus_staged_cpu=30091692 active_plus_staged_gpu=291713548
+city_stage_cancel_preserved_active=1
+released_world_textures=0 released_models=0

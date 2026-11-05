@@ -10,7 +10,7 @@ using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
         throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT "
-                                 "[SHOT|materials|layout|stills|motion|gate-motion]");
+                                 "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water]");
     const std::string selected = argc == 4 ? argv[3] : "";
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
@@ -24,7 +24,27 @@ int main(int argc, char** argv) try {
         const char* name;
         Player player;
     };
-    const Pose poses[] = {{"arrival", city.spawn},
+    const Pose poses[] = {{"fountain-close", {{11, 10}, Heading::South}},
+                          {"fountain-west", {{9, 11}, Heading::East}},
+                          {"market-front", {{21, 11}, Heading::West}},
+                          {"market-grain", {{21, 12}, Heading::West}},
+                          {"east-garden", {{18, 20}, Heading::East}},
+                          {"lane-garden", {{7, 15}, Heading::West}},
+                          {"ivy-alley", {{7, 13}, Heading::West}},
+                          {"ivy-courtyard", {{7, 16}, Heading::West}},
+                          {"sign-inn", {{14, 6}, Heading::East}},
+                          {"sign-smithy", {{13, 13}, Heading::East}},
+                          {"sign-provisioner", {{14, 10}, Heading::East}},
+                          {"sign-inn-near", {{16, 7}, Heading::North}},
+                          {"sign-smithy-near", {{15, 14}, Heading::North}},
+                          {"sign-provisioner-near", {{16, 7}, Heading::South}},
+                          {"tree-square", {{12, 8}, Heading::West}},
+                          {"tree-east", {{7, 4}, Heading::West}},
+                          {"tree-west", {{2, 4}, Heading::East}},
+                          {"tree-north", {{4, 2}, Heading::South}},
+                          {"tree-south", {{4, 5}, Heading::North}},
+                          {"tree-street", {{7, 5}, Heading::West}},
+                          {"arrival", city.spawn},
                           {"square", {{12, 8}, Heading::South}},
                           {"gate-street", {{12, 16}, Heading::South}},
                           {"gate-roofline", {{12, 12}, Heading::South}},
@@ -55,7 +75,7 @@ int main(int argc, char** argv) try {
     Presenter presenter(resources, root);
     WorldRenderer renderer(resources, std::move(publication));
     std::ofstream report(output / "report.txt");
-    report << "SC02 complete town; seed=5 supersampling=on native=1920x1080\n";
+    report << "SC03 dressed city; seed=5 supersampling=on native=1920x1080\n";
     {
         GameView view(renderer);
         CommandController commands(game, definitions.timings);
@@ -64,9 +84,18 @@ int main(int argc, char** argv) try {
             const bool moving = name.rfind("motion-", 0) == 0;
             const bool materialShot = name == "door-sanctuary" || name == "door-west-home" ||
                                       name == "door-city-gate" || name == "alley" || name == "roofline";
-            if (!selected.empty() && name != selected && !(selected == "materials" && materialShot) &&
-                !(selected == "stills" && !moving) && !(selected == "motion" && moving) &&
-                !(selected == "gate-motion" && name.rfind("motion-gate-", 0) == 0))
+            const bool dressingShot = name == "arrival" || name == "square" || name == "market" ||
+                                      name == "tree-east" || name == "tree-south" ||
+                                      name.rfind("fountain-", 0) == 0 || name.rfind("market-", 0) == 0 ||
+                                      name.rfind("ivy-", 0) == 0 || name.rfind("sign-", 0) == 0 ||
+                                      name == "east-garden" || name == "lane-garden" || name == "door-inn" ||
+                                      name == "door-smithy" || name == "door-provisioner";
+            if (!selected.empty() && name != selected && !(selected == "dressing" && dressingShot) &&
+                !(selected == "water" && name.rfind("water-", 0) == 0) &&
+                !(selected == "materials" && materialShot) && !(selected == "stills" && !moving) &&
+                !(selected == "motion" && moving) &&
+                !(selected == "gate-motion" && name.rfind("motion-gate-", 0) == 0) &&
+                !(selected == "tree" && (name.rfind("tree-", 0) == 0 || name.rfind("motion-tree-", 0) == 0)))
                 return;
             ++captured;
             game.discover();
@@ -153,12 +182,53 @@ int main(int argc, char** argv) try {
                 capture("motion-gate-" + std::to_string(i) + "-" + std::to_string(step));
             }
         }
+        game.restorePose({{7, 4}, Heading::West}, true);
+        for (const auto action : {Action::Forward, Action::Back, Action::TurnRight}) {
+            game.move(action);
+            if (game.movement().blocked)
+                throw std::runtime_error("Tree capture approach blocked");
+            for (unsigned step = 1; step <= 4; ++step) {
+                game.update(.04f, false);
+                capture("motion-tree-" + std::to_string(unsigned(action)) + "-" + std::to_string(step));
+            }
+        }
+        if (selected == "dressing") {
+            game.restorePose({{21, 8}, Heading::South}, true);
+            game.move(Action::TurnRight);
+            game.update(.08f, false);
+            capture("market-oblique");
+            game.update(.08f, false);
+            game.restorePose({{9, 10}, Heading::East}, true);
+            game.move(Action::TurnRight);
+            game.update(.08f, false);
+            capture("fountain-turn");
+            game.update(.08f, false);
+        }
+        if (selected == "water") {
+            game.restorePose({{11, 10}, Heading::South}, true);
+            for (unsigned phase = 0; phase < 8; ++phase) {
+                capture("water-" + std::to_string(phase));
+                report << "water_game_time=" << game.timeMs() << " phase=" << ((game.timeMs() / 125) % 8)
+                       << " color_revision=" << renderer.image().revision
+                       << " picking_revision=" << renderer.visibility()->frame().revision << '\n';
+                if (phase < 7)
+                    game.update(.125f, false);
+            }
+            const auto beforePause = game.timeMs();
+            const auto pausedImage = renderer.image().revision;
+            game.update(.5, true);
+            capture("water-paused");
+            if (game.timeMs() != beforePause || renderer.image().revision != pausedImage)
+                throw std::runtime_error("Paused water changed clock or color image");
+            report << "water_pause_clock_and_color_unchanged=1\n";
+        }
         if (!captured)
             throw std::runtime_error("Unknown review shot");
         const auto m = renderer.memory();
         const auto& pack = renderer.assets().pack("sanctuary-city");
         report << "placements=" << city.map.definition().buildings.size()
-               << "/96 models=" << pack.buildings.size() << "/16 materials=" << pack.materialCount
+               << "/96 scenery=" << city.map.definition().scenery.size()
+               << "/32 models=" << pack.buildings.size() << "/24 materials=" << pack.materialCount
                << "/32 doorways=" << city.doorCount << "/16 reservations=" << city.reservationCount
                << "/16\n";
         const auto* scene = renderer.scene();

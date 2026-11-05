@@ -1,0 +1,26 @@
+{
+  "model": "courtyard-tree",
+  "triangles": 610,
+  "cards": 20,
+  "parts": 2,
+  "textures": [
+    1024,
+    512
+  ],
+  "texels_per_cell": 256,
+  "cutout_threshold": 128,
+  "bounds": [
+    [
+      -1.368438,
+      1.353557
+    ],
+    [
+      0.0,
+      2.690718
+    ],
+    [
+      -1.361152,
+      1.333355
+    ]
+  ]
+}

@@ -185,7 +185,11 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
                                               scene_.vertices[scene_.indices[i + 2]]};
                 if (dot(v[0].normal, sub(out.camera.position, v[0].position)) <= 0)
                     continue;
-                triangle(out, v, range.id);
+                if (range.cutout)
+                    triangle(out, v, range.id, &assets_, pack_.materials[range.material],
+                             world_assets::meshAlphaThreshold, true);
+                else
+                    triangle(out, v, range.id);
             }
         }
         for (const auto& decal : scene_.decals) {

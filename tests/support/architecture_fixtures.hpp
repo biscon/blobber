@@ -3,7 +3,7 @@
 namespace blobber::test {
 struct ArchitectureFixture {
     WorldFixture storage;
-    ArchitectureFixture() {
+    explicit ArchitectureFixture(bool foliage = false, bool water = false) {
         world_assets::Writer writer(storage.directory);
         std::vector<unsigned char> rgba(4 * 4 * 4, 255);
         const auto opaque = std::uint16_t(writer.add("door", 4, 4, false, rgba, 0, {}, false));
@@ -46,6 +46,56 @@ struct ArchitectureFixture {
         // Underside matters when looking up from the street.
         quad(1, {{{-1, 2, -1}, {1, 2, -1}, {1, 2, 1}, {-1, 2, 1}}}, {0, -1, 0});
         pack.buildings.push_back({"house", {0, 1}});
+        if (foliage) {
+            std::vector<unsigned char> leaves(16 * 16 * 4, 255);
+            for (unsigned y = 0; y < 16; ++y)
+                for (unsigned x = 0; x < 16; ++x) {
+                    const auto p = (y * 16 + x) * 4;
+                    leaves[p] = 70;
+                    leaves[p + 1] = 135;
+                    leaves[p + 2] = 40;
+                    leaves[p + 3] = x >= 6 && x <= 9 ? 0 : x < 6 ? 255 : 128;
+                }
+            const auto texture =
+                std::uint16_t(writer.add("leaves", 16, 16, true, leaves, 127, {}, true, false, true));
+            pack.materials[pack.materialCount++] = texture;
+            meshes.emplace_back();
+            meshes.back().name = "leaves";
+            meshes.back().texture = texture;
+            meshes.back().architecture = meshes.back().cutout = true;
+            quad(2, {{{-.8f, .1f, 0}, {-.8f, 1.5f, 0}, {.8f, 1.5f, 0}, {.8f, .1f, 0}}}, {0, 0, -1});
+            quad(2, {{{.8f, .1f, 0}, {.8f, 1.5f, 0}, {-.8f, 1.5f, 0}, {-.8f, .1f, 0}}}, {0, 0, 1});
+            for (auto& v : meshes[2].vertices) {
+                v[6] = (v[0] + .8f) / 1.6f;
+                v[7] = (1.5f - v[1]) / 1.4f;
+            }
+            pack.buildings.push_back({"leaf-screen", {2}});
+        }
+        if (water) {
+            std::vector<unsigned char> sheet(64 * 32 * 4, 255);
+            for (unsigned y = 0; y < 32; ++y)
+                for (unsigned x = 0; x < 64; ++x) {
+                    const auto phase = x / 16 + (y / 16) * 4;
+                    const auto p = (y * 64 + x) * 4;
+                    sheet[p] = 20 + phase * 25;
+                    sheet[p + 1] = 180 - phase * 15;
+                    sheet[p + 2] = 90;
+                }
+            const auto texture = std::uint16_t(writer.add("water", 64, 32, false, sheet));
+            pack.materials[pack.materialCount++] = texture;
+            const auto index = unsigned(meshes.size());
+            meshes.emplace_back();
+            meshes.back().name = "water";
+            meshes.back().texture = texture;
+            meshes.back().architecture = meshes.back().water = true;
+            quad(index, {{{-.8f, .1f, 0}, {-.8f, 1.5f, 0}, {.8f, 1.5f, 0}, {.8f, .1f, 0}}}, {0, 0, -1});
+            quad(index, {{{.8f, .1f, 0}, {.8f, 1.5f, 0}, {-.8f, 1.5f, 0}, {-.8f, .1f, 0}}}, {0, 0, 1});
+            for (auto& v : meshes.back().vertices) {
+                v[6] = (2 + v[6] * 12) / 64;
+                v[7] = (2 + v[7] * 12) / 32;
+            }
+            pack.buildings.push_back({"water-screen", {std::uint16_t(index)}});
+        }
         world_assets::Appearance actor;
         actor.id = "goblin";
         const auto sprite = std::uint16_t(writer.add("actor", 4, 4, true, rgba));
@@ -56,6 +106,23 @@ struct ArchitectureFixture {
     }
     world_assets::Publication publication() const { return world_assets::load(storage.directory); }
 };
+inline WorldDefinition sceneryWorld() {
+    WorldDefinition w;
+    w.assetPack = "architecture";
+    w.surfaces.resize(12 * 12);
+    for (auto& s : w.surfaces) {
+        s.ceiling = noCeiling;
+        s.environment = Environment::Daylight;
+    }
+    w.scenery.push_back({"leaf-screen", {7, 6}, {0, 0}, Heading::North, 1, 1});
+    return w;
+}
+inline std::vector<std::string> sceneryRows() {
+    std::vector<std::string> rows(12, std::string(12, '.'));
+    for (int i = 0; i < 12; ++i)
+        rows[0][i] = rows[11][i] = rows[i][0] = rows[i][11] = '#';
+    return rows;
+}
 inline std::vector<std::string> architectureRows(int size = 12, Cell anchor = {7, 7}) {
     std::vector<std::string> rows(size, std::string(size, '.'));
     for (int i = 0; i < size; ++i)

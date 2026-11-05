@@ -1,14 +1,23 @@
 # System design
 
+Sanctuary SC03 is implemented and **Ready for review**: [design](sc03_design.md),
+[verification](sc03_verification.md) and [captures](screenshots/sc03/README.md).
+Bounded scenery placements and prepared cutout meshes support two trees, bushes,
+three planting beds and sparse ivy; two stalls, a fountain and three painted service
+signs complete the dressing. The shorter representative tree is accepted. Opaque
+water uses eight prepared frames at 8 FPS, invalidating visible color only while
+preserving picking/geometry and the existing pause clock. Publication 8 carries
+cutout/water part flags; offline variant bindings share published mesh IDs.
+Final SC03 review is pending; campaign cutover remains SC04.
+
 Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
 and [verification/captures](sc02_verification.md). The 24×24 square-centered town
 has ten principal buildings, separate dungeon/gate landmarks, two street loops,
 and fixed named approaches/dressing reservations. Ten models and 91 placements
 reuse SC01 ownership/rendering; campaign cutover remains SC04. User review reports
 about 3,500 FPS uncapped; retain existing chunk/frustum culling without advanced
-occlusion or additional spatial subdivision. Planned SC03 dressing now includes
-distinct painted signs for the inn, smithy and provisioner, using prepared artwork
-and static meshes.
+occlusion or additional spatial subdivision. SC03 adds distinct painted signs for the inn, smithy and provisioner, using
+prepared artwork and static meshes.
 
 Sanctuary city (SC01.1 implemented and accepted, 2026-11-05):
 [four-slice roadmap](sanctuary_city_plan.md) stages an in-engine architectural
@@ -441,7 +450,11 @@ far-frustum coverage; ordinary scenes retain 24/49. Fixed draw storage covers bo
 Frames borrow prepared geometry and resolve no model names. Furniture's four slots
 and tighter mesh profile remain intact. The standalone full-town city factory owns bounded named doorway/anchor and
 future dressing metadata, validating connected routes with future bases blocked.
-Its review launch does not replace campaign Sanctuary. SC02 uses two shared
+Its review launch does not replace campaign Sanctuary. SC03 adds up to 32 separate
+scenery placements: open-terrain movement/NPC bases without solid-cell LOS or
+generated-wall replacement. Named mesh cutouts share prepared alpha/mips and
+CPU/GPU alpha rejection; view-owned geometry includes canopy bounds. No new
+visibility subdivision or frame-time resource work. SC02 uses two shared
 4096² atlases with existing multipart publication; no renderer or schema change. See [SC01.2](sc01_design.md) for
 ownership, capacities, exports and focused verification.
 
@@ -563,9 +576,9 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 8/11 and generator/templates 9/7. Older saves reject
-without being modified; no migration. World publication is format 6, appearance 4,
-visibility world-visibility-v14, world fingerprint revision 3 and terrain-rules-v2. Door scheduling identity is
+Campaign schema/simulation are 9/12 and generator/templates 9/7. Older saves reject
+without being modified; no migration. World publication is format 8, appearance 4,
+visibility world-visibility-v15, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

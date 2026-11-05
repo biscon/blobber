@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01 and SC02 accepted 2026-11-05.**
+Status: **SC01/SC02 accepted; SC03 Ready for review, representative tree accepted (2026-11-05).**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,10 +16,10 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | None; SC02 complete and accepted |
-| Awaiting review | None; SC02 accepted 2026-11-05 |
-| Next eligible slice | SC03 — Vegetation, market, fountain and service signs; eligible for detailed planning |
-| Next action | Await request to plan SC03; no automatic continuation or campaign cutover |
+| Active slice | SC03 — Ready for review |
+| Awaiting review | Complete dressed city and water; [handoff](sc03_verification.md) |
+| Next eligible slice | SC04, only after SC03 acceptance and separate planning |
+| Next action | User review of complete SC03; handle corrections within this slice |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Keep prepared geometry, material batching and existing chunk/frustum culling; no advanced occlusion or additional spatial subdivision |
 | Blockers | None |
@@ -210,7 +210,7 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 | SC01.1 | Location-owned assets and memory accounting | Approved detailed plan | Accepted 2026-11-05 |
 | SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Accepted 2026-11-05 |
 | SC02 | Complete town architecture and walkable layout | SC01 Accepted | Accepted 2026-11-05 |
-| SC03 | Vegetation, market, fountain and service signs | SC02 Accepted | Planned |
+| SC03 | Vegetation, market, fountain and service signs | SC02 Accepted | Ready for review |
 | SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
 
 | Milestone | Meaning | Status |
@@ -317,7 +317,9 @@ Acceptance:
   covers overlapping foliage, close door/sign views, stalls, fountain and turning.
   Record draw/asset totals and any observed performance issue for a scoped interlude.
 
-Expected records: `docs/sc03_design.md` and `docs/sc03_verification.md`.
+Current records: [implemented design](sc03_design.md), [verification/handoff](sc03_verification.md)
+and [final captures/water preview](screenshots/sc03/README.md). The shorter tree is
+accepted. Complete dressing and optional eight-frame water are Ready for review.
 
 ### SC04 — Campaign hub replacement and delivery
 
@@ -384,6 +386,19 @@ Each handoff records:
 > verification/handoff. Run focused checks and stop at Ready for review.
 
 ## Decision log
+
+2026-11-05: SC03 representative-tree checkpoint delivered for review with scenery
+placement, mesh cutouts, codecs/publication and focused CPU/GPU checks. The user
+liked the first screenshots and requested a shorter tree. The revision lowers
+height by 17.5% while preserving canopy width and walking clearance; eighteen
+matched still/movement captures are retained. Await tree approval before expanding
+foliage; SC03 remains in progress and unaccepted. See [handoff](sc03_verification.md).
+
+2026-11-05: User approved the detailed SC03 conversation plan and requested
+implementation. Keep tankard/anvil/provisions symbols and stop for user approval
+of one representative tree before expanding foliage. Pixel-art water animation
+is a bounded optional attempt; static water is permitted if complexity warrants
+deferral. See [approved design](sc03_design.md).
 
 2026-11-05: User explicitly accepted SC02 ("record this slice as accepted").
 The full town architecture/layout and closed gate are accepted. SC03 is eligible
@@ -481,3 +496,11 @@ spatial subdivision.
 Next action: await a request to plan SC03, including the agreed service-building
 signs. SC02 acceptance does not authorize automatic continuation, PC08 work, or
 campaign hub replacement. Milestone S-B remains planned until SC03 is accepted.
+
+2026-11-05: User accepted the shorter representative tree (“beautiful tree, I approve, continue”). Continue remaining SC03 implementation; final slice review remains pending.
+
+2026-11-05: Complete SC03 delivered Ready for review: two trees, three planted beds,
+bushes, two ivy variants, two market stalls, low fountain, three generated service
+signs, and eight-frame/8-FPS water. Focused CPU/GPU and production capture checks
+pass. See final verification for resource totals and limitations. Await final SC03
+review; no SC04 implementation or campaign cutover is authorized by this delivery.

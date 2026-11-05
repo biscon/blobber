@@ -192,3 +192,9 @@ for regeneration and helper checks. Supersampling remains ON.
 Next action: await a request for detailed SC03 planning, including service-building
 signs. SC02 is accepted; this does not automatically start SC03, advance PC08, or
 switch the campaign hub.
+
+## Subsequent handoff — 2026-11-05
+
+The user requested and approved SC03 planning/implementation. The first
+representative-tree checkpoint is tracked in [SC03 verification](sc03_verification.md);
+its user approval precedes the remaining foliage production. SC02 remains accepted.

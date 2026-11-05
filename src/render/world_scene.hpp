@@ -44,6 +44,8 @@ struct Range {
     std::uint16_t id = UINT16_MAX;
     bool painted = false;
     std::uint8_t variant = noContainer;
+    bool cutout = false;
+    bool water = false;
 };
 struct Chunk {
     std::uint32_t first = 0, count = 0;
@@ -78,7 +80,7 @@ Scene prepare(GeometryView, Surfaces = {}, const std::vector<Surfaces>& override
 bool visible(const Camera&, int x, int z, int width, int height, float low = 0, float high = 1) noexcept;
 struct DrawList {
     std::array<std::uint32_t,
-               buildingCullChunks * materialCapacity * 2 + fixtureCapacity * 3 + 128 + containerCapacity * 2>
+               buildingCullChunks * materialCapacity * 4 + fixtureCapacity * 3 + 128 + containerCapacity * 2>
         ranges{};
     unsigned count = 0, tested = 0;
 };

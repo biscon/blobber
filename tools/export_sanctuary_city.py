@@ -176,3 +176,9 @@ pack['buildings']=[{'id':h.name,'parts':model_parts[h.name]} for h in houses]
 (OUT/'pack.json').write_text(json.dumps(pack,indent=2)+'\n')
 (OUT/'models/export-report.json').write_text(json.dumps(report,indent=2)+'\n')
 print('Sanctuary exports:',report,flush=True)
+
+# Preserve SC03 prototype when regenerating the complete city pack.
+import runpy
+runpy.run_path(str(ROOT / "tools/export_city_tree.py"), run_name="__main__")
+
+runpy.run_path(str(ROOT / "tools/export_city_dressing.py"), run_name="__main__")

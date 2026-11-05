@@ -50,7 +50,7 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
             std::isfinite(p.worldScale) && p.worldScale > 0 && p.worldScale <= 16);
     for (unsigned i = 0; i < p.materialCount; ++i)
         require(p.materials[i] < textures.size() && textures[p.materials[i]].material &&
-                !textures[p.materials[i]].clamp);
+                (i >= 3 || !textures[p.materials[i]].clamp));
     for (auto i : {p.door, p.lockedDoor, p.doorEdge, p.sky})
         require(i < textures.size() && !textures[i].clamp && !textures[i].material);
     for (auto i : {p.crest, p.vine})
@@ -69,6 +69,9 @@ void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>
     for (const auto& m : meshes) {
         require(!m.name.empty() && m.name.size() <= 64 && names.insert(m.name).second &&
                 m.texture < textures.size() && textures[m.texture].material);
+        require(textures[m.texture].clamp == m.cutout && (!m.cutout || m.architecture));
+        require(!m.water || (m.architecture && !m.cutout && textures[m.texture].width % 4 == 0 &&
+                             textures[m.texture].height % 2 == 0));
         const auto count = m.vertices.empty() ? m.vertexCount : m.vertices.size();
         require(count > 0 && count <= 6000 && count % 3 == 0);
         for (const auto& v : m.vertices) {
@@ -77,6 +80,7 @@ void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>
             const float extent = m.architecture ? 4.f : 1.f;
             require(std::abs(v[0]) <= extent && v[1] >= (m.architecture ? 0.f : -.001f) && v[1] <= extent &&
                     std::abs(v[2]) <= extent && v[6] >= 0 && v[6] <= 1 && v[7] >= 0 && v[7] <= 1);
+            require(!m.water || (v[6] <= .25f && v[7] <= .5f));
             const float n = v[3] * v[3] + v[4] * v[4] + v[5] * v[5];
             require(n > .99f && n < 1.01f);
         }
@@ -233,13 +237,14 @@ void Writer::bytes(const std::vector<unsigned char>& b) {
 }
 unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprite,
                      const std::vector<unsigned char>& rgba, unsigned cutoff, Anchor anchor, bool material,
-                     bool crop) {
+                     bool crop, bool cutoutMaterial) {
     require(publication_.textures.size() < catalogTextureCapacity && !name.empty() && name.size() <= 256);
     for (const auto& t : publication_.textures)
         require(t.name != name);
     validAnchor(anchor);
     dimensions(w, h);
     require(rgba.size() == std::size_t(w) * h * 4 && cutoff < 255 && (!crop || sprite));
+    require(!cutoutMaterial || (sprite && material && !crop));
     SpriteCanvas canvas{w, h, 0, 0};
     std::vector<unsigned char> cropped;
     if (crop) {
@@ -271,7 +276,7 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
     boundedAdd(publication_.alphaBytes, alpha.size(), installedBudget);
     Texture t{name,        w, h, mipLevels(w, h), sprite, offset_, pixels.size(), offset_ + pixels.size(),
               alpha.size()};
-    t.material = material && !sprite;
+    t.material = material && (!sprite || cutoutMaterial);
     t.canvas = canvas;
     t.checksum = fingerprintBasis;
     t.alphaChecksum = fingerprintBasis;
@@ -352,6 +357,8 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
         fingerprintBytes(checksum, payload.data(), payload.size());
         meshJson.push_back({{"name", m.name},
                             {"architecture", m.architecture},
+                            {"cutout", m.cutout},
+                            {"water", m.water},
                             {"texture", m.texture},
                             {"count", m.vertices.size()},
                             {"offset", offset_},
@@ -437,7 +444,6 @@ Publication load(const std::filesystem::path& directory) {
             boundedAdd(p.textureBytes, t.bytes, installedBudget);
             boundedAdd(p.alphaBytes, t.alphaBytes, installedBudget);
             t.material = v.at("material").get<bool>();
-            require(!t.clamp || !t.material);
             const auto& a = v.at("anchor");
             require(a.is_array() && a.size() == 2);
             Anchor anchor{a[0].get<float>(), a[1].get<float>()};
@@ -504,6 +510,10 @@ Publication load(const std::filesystem::path& directory) {
             m.name = v.at("name").get<std::string>();
             require(v.at("architecture").is_boolean());
             m.architecture = v.at("architecture").get<bool>();
+            require(v.at("cutout").is_boolean());
+            m.cutout = v.at("cutout").get<bool>();
+            require(v.at("water").is_boolean());
+            m.water = v.at("water").get<bool>();
             m.texture = std::uint16_t(integer(v.at("texture"), catalogTextureCapacity - 1));
             m.vertexCount = unsigned(integer(v.at("count"), 6000));
             m.offset = integer(v.at("offset"));

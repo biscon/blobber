@@ -49,6 +49,7 @@ void environmentRoundtrip() {
     auto& world = state->locations[0].world;
     world.surfaces[2 * 9 + 3].floor = 1;
     world.surfaces[2 * 9 + 3].ceiling = noCeiling;
+    world.scenery.push_back({"owned-tree", {3, 2}, {0, 0}, Heading::East, 1, 1});
     // Own a one-cell static shell on an existing generated wall, away from dressing.
     auto& architecture = state->locations[1];
     bool placed = false;
@@ -80,6 +81,11 @@ void environmentRoundtrip() {
               loaded.location(1).map().definition().buildings[0].model == "owned-house" &&
               loaded.location(1).map().definition().buildings[0].facing == Heading::West,
           "Static placement identity, footprint and rotation survive disk restore");
+    check(loaded.map().definition().scenery.size() == 1 &&
+              loaded.map().definition().scenery[0].model == "owned-tree" &&
+              loaded.map().definition().scenery[0].facing == Heading::East &&
+              loaded.map().movementBlocked({3, 2}) && !loaded.map().solid({3, 2}),
+          "Scenery identity, orientation and physical base survive Continue");
     auto travel = loaded.prepareTravel(loaded.request(loaded.game().nearbyFixture()));
     check(loaded.commitTravel(travel), "Travel from height-bearing hub");
     check(loaded.location(0).map().definition().fingerprint() == fingerprint,
@@ -101,12 +107,21 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 8;
+    bad["schema"] = 9;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Placement decode capacity rejects before resizing");
+    bad = blobber::automation::Json::parse(text);
+    bad["campaign"]["locations"][0]["world"]["scenery"] = blobber::automation::Json::array();
+    for (unsigned i = 0; i <= sceneryCapacity; ++i)
+        bad["campaign"]["locations"][0]["world"]["scenery"].push_back(blobber::automation::Json::object());
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Scenery decode capacity rejects before resizing");
+    bad = blobber::automation::Json::parse(text);
+    bad["schema"] = 8;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-scenery saves reject clearly");
     bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 6;
     Directory directory;

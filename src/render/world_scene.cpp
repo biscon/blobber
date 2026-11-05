@@ -68,12 +68,17 @@ struct Face {
     std::uint16_t id = UINT16_MAX;
     bool painted = false;
     std::uint8_t variant = noContainer;
+    bool cutout = false;
+    bool water = false;
 };
 template <class F>
 void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides, F emit,
            const world_assets::CpuAssets* assets, const world_assets::Pack& pack,
-           const std::array<world_assets::StaticModelId, buildingCapacity>& buildings) {
+           const std::array<world_assets::StaticModelId, buildingCapacity + sceneryCapacity>& buildings) {
     auto add = [&](std::array<Vec, 4> p, Vec n, unsigned material, bool wall) {
+        if (assets && material < pack.materialCount &&
+            assets->publication.textures[pack.materials[material]].clamp)
+            throw std::invalid_argument("Generated terrain requires an opaque material");
         Face q{};
         q.material = std::uint8_t(material);
         for (unsigned i = 0; i < 4; ++i)
@@ -131,11 +136,9 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 }
             }
         }
-    const auto& placed = m.base().definition().buildings;
-    for (unsigned i = 0; i < placed.size(); ++i) {
-        const auto& b = placed[i];
+    auto placedModel = [&](const auto& b, unsigned i) {
         if (b.anchor.x < cx || b.anchor.x >= cx + 8 || b.anchor.y < cz || b.anchor.y >= cz + 8)
-            continue;
+            return;
         const auto r = right(b.facing), f = forward(b.facing);
         for (auto part : pack.buildings[buildings[i].index].parts) {
             const auto& mesh = assets->mesh(part);
@@ -146,6 +149,8 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 Face q{};
                 q.material = std::uint8_t(material);
                 q.painted = true;
+                q.cutout = mesh.cutout;
+                q.water = mesh.water;
                 for (unsigned k = 0; k < 3; ++k) {
                     const auto& v = mesh.vertices[n + k];
                     q.v[k] = {{b.anchor.x + .5f + r.x * v[0] - f.x * v[2],
@@ -159,7 +164,12 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 emit(q);
             }
         }
-    }
+    };
+    const auto& definition = m.base().definition();
+    for (unsigned i = 0; i < definition.buildings.size(); ++i)
+        placedModel(definition.buildings[i], i);
+    for (unsigned i = 0; i < definition.scenery.size(); ++i)
+        placedModel(definition.scenery[i], buildingCapacity + i);
     auto block = [&](float x, float z, float base, float width, float depth, float height, Cell r, Cell f,
                      unsigned material) {
         std::array<Vec, 4> bottom{}, top{};
@@ -299,14 +309,19 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     const auto lease = assets ? assets->acquire(assets->requirements(m.base().definition().assetPack))
                               : world_assets::AssetLease{};
     Scene s;
-    if (!m.base().definition().buildings.empty())
+    if (!m.base().definition().buildings.empty() || !m.base().definition().scenery.empty())
         s.cullRadius = buildingCullRadius;
     const auto pack = assets ? assets->pack(m.base().definition().assetPack) : world_assets::Pack{};
-    std::array<world_assets::StaticModelId, buildingCapacity> buildings{};
+    std::array<world_assets::StaticModelId, buildingCapacity + sceneryCapacity> buildings{};
     for (unsigned i = 0; i < m.base().definition().buildings.size(); ++i) {
         if (!assets)
             throw std::invalid_argument("Buildings require prepared mesh assets");
         buildings[i] = pack.building(m.base().definition().buildings[i].model);
+    }
+    for (unsigned i = 0; i < m.base().definition().scenery.size(); ++i) {
+        if (!assets)
+            throw std::invalid_argument("Scenery requires prepared mesh assets");
+        buildings[buildingCapacity + i] = pack.building(m.base().definition().scenery[i].model);
     }
     s.map = &m.base();
     for (auto h : m.base().definition().surfaces)
@@ -369,7 +384,7 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
             preparationPoint("Preparing dungeon");
-            std::array<bool, 32 * (fixtureCapacity + containerCapacity + 1) * 4> used{};
+            std::array<bool, 32 * (fixtureCapacity + containerCapacity + 1) * 16> used{};
             std::size_t localCount = 0;
             faces(
                 m, x, z, defaults, overrides,
@@ -378,8 +393,9 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
                     ++localCount;
                     used[f.material +
                          32 * ((f.id == UINT16_MAX ? 0u : unsigned(f.id - PickingBuffer::fixtureBase) + 1) *
-                                   4 +
-                               unsigned(f.painted) * 2 + (f.variant == 1 ? 1 : 0))] = true;
+                                   16 +
+                               unsigned(f.water) * 8 + unsigned(f.cutout) * 4 + unsigned(f.painted) * 2 +
+                               (f.variant == 1 ? 1 : 0))] = true;
                 },
                 assets, pack, buildings);
             maxLocal = std::max(maxLocal, localCount);
@@ -407,6 +423,8 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
             std::sort(local.begin(), local.begin() + count, [](const Face& a, const Face& b) {
                 return a.material != b.material ? a.material < b.material
                        : a.id != b.id           ? a.id < b.id
+                       : a.water != b.water     ? a.water < b.water
+                       : a.cutout != b.cutout   ? a.cutout < b.cutout
                        : a.painted != b.painted ? a.painted < b.painted
                                                 : a.variant < b.variant;
             });
@@ -442,9 +460,10 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
             for (unsigned i = 0; i < count; ++i) {
                 if (!i ||
                     (local[i].material != local[i - 1].material || local[i].id != local[i - 1].id ||
-                     local[i].painted != local[i - 1].painted || local[i].variant != local[i - 1].variant)) {
+                     local[i].painted != local[i - 1].painted || local[i].variant != local[i - 1].variant ||
+                     local[i].cutout != local[i - 1].cutout || local[i].water != local[i - 1].water)) {
                     s.ranges.push_back({std::uint32_t(s.indices.size()), 0, local[i].material, local[i].id,
-                                        local[i].painted, local[i].variant});
+                                        local[i].painted, local[i].variant, local[i].cutout, local[i].water});
                     ++chunk.count;
                 }
                 const auto first = std::uint32_t(s.vertices.size());

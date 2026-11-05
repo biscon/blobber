@@ -88,6 +88,8 @@ class WorldRenderer {
         GpuLease<TargetHandle> output;
         world_render::Camera last{};
         bool ready = false, quality = false;
+        bool visibleWater = false;
+        unsigned waterFrame = 0, drawnWaterFrame = 0;
         std::uint64_t revision = 0;
     };
     GpuResources& resources_;
@@ -108,7 +110,8 @@ class WorldRenderer {
                         const world_render::Scene*, BillboardPass);
     void drawEffects(const View&, const world_render::EffectFrame&, const float*, const float*, bool ground,
                      const world_render::WorldFrame&);
-    int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1, doorUv_ = -1;
+    int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1, doorUv_ = -1, meshCutout_ = -1,
+        waterFrame_ = -1;
     GpuLease<TargetHandle> high_, creaturesLow_, creaturesHigh_;
     std::unique_ptr<View> active_, staged_;
     world_render::DrawList draws_;

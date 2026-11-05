@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-11-05",
+  "foliage": {
+    "file": "foliage-master.png",
+    "transparent_background": true,
+    "prompt": "Use case: stylized-concept. Asset type: production alpha-cutout foliage texture for fixed clustered cards on a modeled low-poly tree in a medieval first-person pixel-art dungeon game. Create ONE isolated dense irregular leafy branch clump, broad spreading oval mass with several uneven lobes and small open gaps, no trunk, no ground, on a genuinely transparent background. Hand-painted late-1990s fantasy RPG texture style with crisp deliberate pixel-like clusters, finely painted small leaves that merge into readable masses, subdued olive and moss greens, ochre-green highlights, cool deep forest-green shadow recesses. Warm worn limestone town palette. Broad soft ambient lighting baked into the clump with darker undersides, no directional cast shadow. Front-on orthographic view. Fill most of a square canvas with safe transparent margin on every edge. Organic asymmetrical silhouette, scattered small leafy tips, visible tiny branching only deep inside. Not a whole tree, not individual separated leaves, not photoreal, not glossy, not cartoon outlines, no sky, no text or grid. Texture will be repeated on differently oriented cards viewed from every side; avoid a conspicuous central stem or symmetric pattern. Render high detail at 1024 square."
+  },
+  "bark": {
+    "file": "bark-master.png",
+    "transparent_background": false,
+    "prompt": "Use case: stylized-concept. Asset type: seamless hand-painted bark texture for a low-poly old deciduous courtyard tree in a medieval first-person pixel-art RPG. Square texture, front-on flat material only, fills canvas edge-to-edge, opaque. Narrow irregular vertical fissures, weathered grey-brown bark with muted olive touches, restrained warm highlights, dark recessed cracks baked into color. Fine deliberate pixel-like brush clusters consistent with detailed late-1990s painted fantasy game textures, not flat cartoon, not photoreal, no lighting gradient. Seamless tiling in both axes, no objects, no trunk silhouette, no leaves, no text, no borders. The physical bark ridges should be small, irregular and subtle rather than giant stripes."
+  }
+}

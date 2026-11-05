@@ -1,0 +1,25 @@
+SC03 representative tree; seed=5 supersampling=on native=1920x1080
+tree-east cell=7,4 heading=WEST camera=7.9,0.5,4.5 yaw=4.71239 progress=1 draws=0
+tree-west cell=2,4 heading=EAST camera=2.1,0.5,4.5 yaw=1.5708 progress=1 draws=26
+tree-north cell=4,2 heading=SOUTH camera=4.5,0.5,2.1 yaw=3.14159 progress=1 draws=26
+tree-south cell=4,5 heading=NORTH camera=4.5,0.5,5.9 yaw=0 progress=1 draws=10
+tree-street cell=7,5 heading=WEST camera=7.9,0.5,5.5 yaw=4.71239 progress=1 draws=13
+motion-tree-0-1 cell=6,4 heading=WEST camera=7.74375,0.5,4.5 yaw=4.71239 progress=0.25 draws=13
+motion-tree-0-2 cell=6,4 heading=WEST camera=7.4,0.5,4.5 yaw=4.71239 progress=0.5 draws=13
+motion-tree-0-3 cell=6,4 heading=WEST camera=7.05625,0.5,4.5 yaw=4.71239 progress=0.75 draws=13
+motion-tree-0-4 cell=6,4 heading=WEST camera=6.9,0.5,4.5 yaw=4.71239 progress=1 draws=10
+motion-tree-1-1 cell=7,4 heading=WEST camera=7.05625,0.5,4.5 yaw=4.71239 progress=0.25 draws=13
+motion-tree-1-2 cell=7,4 heading=WEST camera=7.4,0.5,4.5 yaw=4.71239 progress=0.5 draws=13
+motion-tree-1-3 cell=7,4 heading=WEST camera=7.74375,0.5,4.5 yaw=4.71239 progress=0.75 draws=13
+motion-tree-1-4 cell=7,4 heading=WEST camera=7.9,0.5,4.5 yaw=4.71239 progress=1 draws=13
+motion-tree-5-1 cell=7,4 heading=NORTH camera=7.88801,0.5,4.59719 yaw=4.95783 progress=0.25 draws=13
+motion-tree-5-2 cell=7,4 heading=NORTH camera=7.78284,0.5,4.78284 yaw=5.49779 progress=0.5 draws=10
+motion-tree-5-3 cell=7,4 heading=NORTH camera=7.59719,0.5,4.88801 yaw=6.03775 progress=0.75 draws=10
+motion-tree-5-4 cell=7,4 heading=NORTH camera=7.5,0.5,4.9 yaw=0 progress=1 draws=10
+placements=91/96 scenery=1/32 models=11/24 materials=9/32 doorways=12/16 reservations=5/16
+captured_frames=17 scene_triangles=27422 world_cpu=18073411 world_gpu=248423616 visibility_bytes=7635785
+resident_textures=29 texture_bytes=234839104 alpha_bytes=7072400 model_bytes=815520 scene_cpu=2304328 scene_gpu=2303448 app_gpu=369634572 app_peak=386223372
+Driver allocations excluded. Peak includes temporary capture target.
+active_plus_staged_cpu=28106589 active_plus_staged_gpu=251855064
+city_stage_cancel_preserved_active=1
+released_world_textures=0 released_models=0

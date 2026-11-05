@@ -52,10 +52,10 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     const auto inputs = sourceFingerprints(source);
     world_assets::Writer writer(output);
     auto add = [&](const std::string& name, const fs::path& path, bool sprite, unsigned cutoff = 0,
-                   world_assets::Anchor anchor = {}, bool crop = false) {
+                   world_assets::Anchor anchor = {}, bool crop = false, bool cutoutMaterial = false) {
         unsigned w = 0, h = 0;
         auto rgba = pixels(path, w, h);
-        return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop);
+        return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop, cutoutMaterial);
     };
     std::map<std::string, std::uint16_t> preparedPackTextures;
     std::vector<world_assets::Pack> packs;
@@ -197,6 +197,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
                 manifest["buildings"].size() > world_assets::staticModelCapacity)
                 throw std::runtime_error("Building catalog capacity exceeded");
             std::map<std::string, unsigned> atlases;
+            std::map<std::string, std::uint16_t> sharedParts;
             for (const auto& binding : manifest["buildings"]) {
                 world_assets::StaticModel building;
                 building.id = binding.at("id").get<std::string>();
@@ -204,17 +205,25 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
                 if (!parts.is_array() || parts.empty() || parts.size() > world_assets::staticPartCapacity)
                     throw std::runtime_error("Building part capacity exceeded");
                 for (const auto& path : parts) {
+                    const auto sourcePath = path.get<std::string>();
+                    const auto reused = sharedParts.find(sourcePath);
+                    if (reused != sharedParts.end()) {
+                        building.parts.push_back(reused->second);
+                        continue;
+                    }
                     if (meshes.size() >= world_assets::meshCapacity)
                         throw std::runtime_error("World mesh capacity exceeded");
-                    const auto model = read(source / relative(path.get<std::string>()));
+                    const auto model = read(source / relative(sourcePath));
                     const auto texture = model.at("texture").get<std::string>();
+                    const bool cutout = model.value("cutout", false);
                     auto found = atlases.find(texture);
                     unsigned textureId;
                     if (found == atlases.end()) {
                         if (pack.materialCount == pack.materials.size())
                             throw std::runtime_error("Building material palette full");
                         textureId =
-                            add("pack/" + pack.id + "/atlas/" + texture, source / relative(texture), false);
+                            add("pack/" + pack.id + "/atlas/" + texture, source / relative(texture), cutout,
+                                cutout ? world_assets::meshAlphaThreshold - 1 : 0, {}, false, cutout);
                         atlases.emplace(texture, textureId);
                         pack.materials[pack.materialCount++] = std::uint16_t(textureId);
                     } else
@@ -223,9 +232,12 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
                     mesh.name = pack.id + "/" + model.at("name").get<std::string>();
                     mesh.texture = std::uint16_t(textureId);
                     mesh.architecture = true;
+                    mesh.cutout = cutout;
+                    mesh.water = model.value("water", false);
                     if (!model.at("vertices").is_array() || model.at("vertices").size() > 6000)
                         throw std::runtime_error("Building mesh capacity exceeded");
                     mesh.vertices = model.at("vertices").get<std::vector<std::array<float, 8>>>();
+                    sharedParts.emplace(sourcePath, std::uint16_t(meshes.size()));
                     building.parts.push_back(std::uint16_t(meshes.size()));
                     meshes.push_back(std::move(mesh));
                 }
