@@ -3,7 +3,6 @@
 #include "support/allocations.hpp"
 #include "support/architecture_fixtures.hpp"
 #include "support/check.hpp"
-#include "world/sanctuary_city.hpp"
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -127,6 +126,26 @@ int main() try {
         d.surfaces[cell.y * 12 + cell.x].floor = 1;
         rejects([&] { Map unlevel(rr, d); }, "Unlevel foundation rejects");
     }
+    {
+        world_assets::CpuAssets gateAssets(test::gatePublication(publication));
+        Map gate(test::gateRows(), test::gateWorld());
+        const auto scene = world_render::prepare(gate, {}, {}, {}, &gateAssets);
+        bool westPier = false, eastPier = false;
+        for (const auto& range : scene.ranges)
+            for (unsigned i = range.first; i < range.first + range.count; ++i) {
+                const auto& v = scene.vertices[scene.indices[i]];
+                if (range.painted || v.normal.z != -1 || v.position.z != 7)
+                    continue;
+                check(v.position.x <= 5 || v.position.x >= 10,
+                      "Wide gate suppresses every generated front backing face");
+                westPier |= v.position.x == 5;
+                eastPier |= v.position.x == 10;
+            }
+        check(westPier && eastPier, "Boundary piers terminate at both gate edges");
+        for (int x = 5; x < 10; ++x)
+            check(!gate.canStep({x, 6}, {x, 7}) && !lineOfSight(gate, {x, 6}, {x, 9}),
+                  "Wide gate blocks movement and sight across every leaf cell");
+    }
     world_render::Limits limits;
     limits.quads = 1;
     rejects([&] { world_render::prepare(map, {}, {}, limits, &assets); },
@@ -160,12 +179,6 @@ int main() try {
     rejects([&] { auto lease = assets.acquire(assets.requirements("architecture")); },
             "Corrupt selected model rejects");
     check(!assets.residency().meshes, "Corrupt part rolls back earlier acquired part");
-    const auto city = sanctuaryCityReview();
-    check(city.map.connected(city.spawn.cell) && city.map.definition().buildings.size() == 2,
-          "Authored review route connects");
-    check(city.map.canStep({7, 7}, {8, 7}) && city.map.canStep({8, 7}, {8, 8}) &&
-              city.map.canStep({7, 7}, {7, 8}),
-          "Review corner retains a two-cell turning street");
     std::cout << "Architecture CPU/publication checks passed\n";
 } catch (const std::exception& e) {
     std::cerr << e.what() << '\n';

@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01 accepted: SC01.1 and SC01.2 accepted 2026-11-05.**
+Status: **SC01 and SC02 accepted 2026-11-05.**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,12 +16,12 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | None; SC01 complete and accepted |
-| Awaiting review | None; SC01.2 accepted after the [material seam correction](screenshots/sc01/material-seams/README.md) |
-| Next eligible slice | SC02 — Complete town architecture and walkable layout; eligible for detailed planning |
-| Next action | Await request to plan SC02; no automatic continuation or implementation |
+| Active slice | None; SC02 complete and accepted |
+| Awaiting review | None; SC02 accepted 2026-11-05 |
+| Next eligible slice | SC03 — Vegetation, market, fountain and service signs; eligible for detailed planning |
+| Next action | Await request to plan SC03; no automatic continuation or campaign cutover |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
-| Rendering policy | Prepared low-poly geometry, material batching and basic frustum culling; no speculative advanced visibility system |
+| Rendering policy | Keep prepared geometry, material batching and existing chunk/frustum culling; no advanced occlusion or additional spatial subdivision |
 | Blockers | None |
 
 Update this checkpoint, tracker, decision log and relevant handoff together.
@@ -77,7 +77,9 @@ not silently deferred. Subsequent user instructions determine interlude prioriti
   interaction/animation are deferred.
 - Mostly low houses with occasional two-storey exterior shells. Recognizable
   future inn, smithy and provisioner facades may reserve identities without
-  implementing services. Interior routes and upstairs traversal are absent.
+  implementing services. SC03 adds distinct painted signs for the inn, smithy and
+  provisioner so their roles are recognizable from the street. Interior routes and
+  upstairs traversal are absent.
 - Warm limestone and worn pale plaster, dark weathered roofs, thick rounded stone
   arches with real recess depth, timber doors with dull iron fittings, small inset
   windows and restrained vegetation. Age should read as wear in a lived-in refuge.
@@ -152,9 +154,10 @@ Avoid frame-time container growth, decoding or resource creation.
 Use the simple rendering baseline agreed with the user: submit prepared low-poly
 geometry in material batches and perform basic frustum/distance culling. The engine
 already uses 8×8 chunks with geometry-derived bounds and shares scene culling between
-GPU drawing and CPU visibility work. Reuse this where adequate. A flat list of
-building/object bounds is an option if it improves the actual placement design;
-per-building culling is not mandatory if chunk batching is sufficient.
+GPU drawing and CPU visibility work. Retain this existing structure; no additional
+spatial subdivision or per-building visibility system is planned. The user reported
+about 3,500 FPS uncapped in the SC02 town and reaffirmed the simple rendering approach
+on 2026-11-05. This is user-reported performance, not a controlled benchmark.
 Bounds must include roofs, overhangs and foliage beyond anchor cells, throughout turns.
 
 Do not add occlusion queries, octrees, portal traversal, streaming, automatic LOD
@@ -206,8 +209,8 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 | SC01 | Asset residency foundation and finished street corner | Agreed roadmap direction | Accepted 2026-11-05 |
 | SC01.1 | Location-owned assets and memory accounting | Approved detailed plan | Accepted 2026-11-05 |
 | SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Accepted 2026-11-05 |
-| SC02 | Complete town architecture and walkable layout | SC01 Accepted | Planned |
-| SC03 | Vegetation, market and fountain | SC02 Accepted | Planned |
+| SC02 | Complete town architecture and walkable layout | SC01 Accepted | Accepted 2026-11-05 |
+| SC03 | Vegetation, market, fountain and service signs | SC02 Accepted | Planned |
 | SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
 
 | Milestone | Meaning | Status |
@@ -278,9 +281,10 @@ Acceptance:
 - Focused connectivity/placement tests and selected movement captures cover the
   full layout. Record actual asset/scene totals against declared budgets.
 
-Expected records: `docs/sc02_design.md` and `docs/sc02_verification.md`.
+Delivered records: [design](sc02_design.md), [verification/handoff](sc02_verification.md),
+and [layout/capture index](screenshots/sc02/README.md). Accepted by the user on 2026-11-05.
 
-### SC03 — Vegetation, market and fountain
+### SC03 — Vegetation, market, fountain and service signs
 
 **Purpose:** deliver the complete city art and its lived-in character.
 
@@ -289,6 +293,15 @@ expanding the set. Add bushes, selective ivy, planting beds, timber market stall
 with muted cloth canopies, and a modest stone fountain with looping water.
 Integrate these into the town rather than merely delivering isolated models.
 
+Add distinct static signs to the inn, smithy and provisioner (the supplies shop).
+Use simple modeled timber boards/brackets with original ImageGen painted emblems
+matching the accepted architecture. Starting motifs are a tankard for the inn,
+an anvil for the smithy, and a provisions bundle for the provisioner; finalize the
+art during SC03 planning. Favor recognizable symbols over reliance on small text.
+Place signs where they read along the approach and near the doorway, with clear
+walking/head clearance. Reuse prepared meshes/materials; no swinging animation,
+shop interactions or procedural replacement icon artwork is implied.
+
 Acceptance:
 - The fountain square and residential street evoke the retained mockups while
   staying readable at the actual viewport resolution and during movement.
@@ -296,9 +309,12 @@ Acceptance:
   clean enough edges without objectionable shimmer or conspicuous card patterns.
 - Physical bases block movement where intended; canopies and decoration do not
   obstruct planned walking routes or reveal unwanted wall intersections.
+- Inn, smithy and provisioner signs are distinguishable at the actual viewport
+  resolution from street approaches and oblique views, without relying on UI labels.
+  Boards/brackets meet the facade cleanly and preserve movement clearance.
 - Water animation respects pause/time behavior and reuses bounded resources.
 - Focused foliage/depth/resource checks use owned fixtures; production art review
-  covers overlapping foliage, close door views, stalls, fountain and turning.
+  covers overlapping foliage, close door/sign views, stalls, fountain and turning.
   Record draw/asset totals and any observed performance issue for a scoped interlude.
 
 Expected records: `docs/sc03_design.md` and `docs/sc03_verification.md`.
@@ -369,6 +385,30 @@ Each handoff records:
 
 ## Decision log
 
+2026-11-05: User explicitly accepted SC02 ("record this slice as accepted").
+The full town architecture/layout and closed gate are accepted. SC03 is eligible
+for detailed planning, including the agreed inn, smithy and provisioner signs.
+Retain the simple rendering approach and the user's reported uncapped performance
+feedback. No automatic SC03 planning/implementation or campaign cutover is authorized.
+
+2026-11-05: User praised the SC02 result and reported about 3,500 FPS uncapped.
+Retain existing material batching and chunk/frustum culling; no advanced occlusion
+or additional spatial subdivision is needed or planned. This is user feedback,
+not an independently measured benchmark. User requested recognizable signs for the
+known service buildings; added inn, smithy and provisioner signs to SC03 scope and
+acceptance. Sign artwork is static, generated and integrated through the prepared
+asset pipeline. This scope update does not start SC03 implementation.
+
+2026-11-05: SC02 delivered Ready for review: 24×24 town, ten principal buildings,
+separate dungeon and closed gate landmarks, two loops, alley and SC03 reservations.
+Ten model assets/91 placements use two atlases at unchanged density. Focused CPU,
+export and hidden GPU checks pass; 63 selected frames and a top-down layout are
+retained. No renderer/schema/campaign change. See [handoff](sc02_verification.md).
+
+2026-11-05: User selected a square-centered layout and modest gatehouse, approved
+the detailed SC02 plan, and requested implementation. See [SC02 design](sc02_design.md).
+No campaign cutover or automatic SC03 continuation is authorized.
+
 2026-11-05: User requested a city gate for the final town, permanently closed for
 now, to make the settlement believable and leave open the possibility of future
 outside travel. Added to SC02 architecture/layout and SC04 final-hub acceptance.
@@ -411,29 +451,33 @@ stays on; prioritize fidelity over strict adherence to the memory target.
 
 ## Current next-agent handoff
 
-SC01.1 and SC01.2 are **Accepted (2026-11-05)**; SC01 and milestone S-A are complete.
-SC01.2 acceptance includes the material seam correction. Read the
-[architecture design](sc01_design.md), [verification/handoff](sc01_verification.md)
-and [capture index](screenshots/sc01/README.md). Launch
-`cmake-build-debug/blobber --sanctuary-city-review` for normal movement/HUD around
-the two-house corner. Normal campaign launch still uses the courtyard. The review
-does not initialize campaign saves or the character library.
+SC01 and SC02 are **Accepted (2026-11-05)**. SC03 is next for detailed planning.
+Read the [SC02 design](sc02_design.md), [verification/handoff](sc02_verification.md)
+and [layout/capture index](screenshots/sc02/README.md). The development flag
+`cmake-build-debug/blobber --sanctuary-city-review` now opens the complete town;
+normal campaign launch still uses the courtyard. No saves/library are initialized
+by city review. Supersampling and texture fidelity remain unchanged.
 
-Current identities are publication/appearance 6/4, campaign schema/simulation 8/11,
-generator/templates 9/7, visibility v14 and world fingerprint revision 3. Older
-development saves reject unchanged; no migration. Generated original art, exact
-prompts and Blender/GLB/runtime sources are retained in the dedicated city pack.
-Both houses share one 4096² atlas. Supersampling and texture fidelity are unchanged.
-Measured application-owned GPU storage is about 259 MiB with a 275 MiB capture
-peak, including UI/fonts; world texture/model leases release completely with the
-view. These measurements exclude driver storage and do not establish performance
-on 512 MiB–1 GiB hardware, which was unavailable. Memory reference lines remain advisory.
+The town has ten principal buildings plus dungeon and closed gate landmarks,
+91 placements, ten named models, two 4096² atlases and five reserved dressing bases.
+Prepared views retain existing asset leases, chunk culling and capacity checks.
+Tracked active world storage is 16.82 MiB CPU / 230.15 MiB GPU; active plus staged
+city is 26.29 / 233.33 MiB. Application GPU including UI/fonts is 345.75 MiB, with
+361.57 MiB capture peak. Driver memory is excluded and low-memory hardware was
+unavailable. All world texture/model leases release with the view.
 
-The latest [material seam correction](screenshots/sc01/material-seams/README.md)
-removes divider pixels retained by the original exporter and expands atlas gutters
-without changing texture density, atlas size, geometry or GPU memory totals.
-The next eligible work is detailed planning for SC02 when requested, using this
-accepted corner as the visual reference and preserving the handoff's limitations.
-Include the newly agreed closed city gate and its clear street approach in SC02's
-town boundary design; outside travel is deferred.
-Do not begin SC02 implementation, advance PC08, or replace the campaign hub automatically.
+Identities remain publication/appearance 6/4, campaign schema/simulation 8/11,
+generator/templates 9/7, visibility v14 and world fingerprint revision 3.
+Existing unsupported development saves still reject unchanged; no migration.
+The future dungeon stair cell (14,6) and landing (14,7) are clear, protected
+frontage cells admitted by the existing fixture contract; SC04 installs the actual
+stairwell and binds travel. Gate interaction/outside travel
+remain deferred. SC03 must preserve protected approaches and connected routes
+when filling its authored reservations. SC03 also includes distinct painted signs
+for the inn, smithy and provisioner. Keep existing chunk/frustum culling; the user
+reports about 3,500 FPS uncapped and requests no advanced occlusion or additional
+spatial subdivision.
+
+Next action: await a request to plan SC03, including the agreed service-building
+signs. SC02 acceptance does not authorize automatic continuation, PC08 work, or
+campaign hub replacement. Milestone S-B remains planned until SC03 is accepted.

@@ -1,8 +1,11 @@
 # SC01.2 — Architecture foundation and finished street corner
 
-Status: **Implemented; Ready for review** (2026-11-05).
+Status: **Implemented; Accepted** (2026-11-05).
 The user approved the detailed conversation plan and requested implementation.
 SC01.1 remains accepted. This slice does not replace the campaign hub.
+
+Historical SC01 evidence: SC02 now replaces the development factory and shot names.
+See [SC02 handoff](sc02_verification.md) for current review commands.
 
 ## Deliverable and ownership
 

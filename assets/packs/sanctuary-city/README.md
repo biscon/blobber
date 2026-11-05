@@ -1,60 +1,76 @@
-# Sanctuary city architecture — SC01.2
+# Sanctuary city architecture — SC02
 
-Original painted low/two-storey exterior shells for the development-only
-`--sanctuary-city-review` scene. No campaign hub replacement or interior routes.
+Original painted architectural kit for the development-only
+`--sanctuary-city-review` town. Normal campaign Sanctuary remains the courtyard.
 
-`source/material-master.png` was generated with the built-in ImageGen tool; the
-exact prompt is retained in `prompts.json`. The six source regions supply limestone,
-plaster, slate, oak, paving and sculpted stone. The exporter excludes eight source
-pixels around each 512-square panel to remove generated divider/shadow bands,
-then samples their interiors as continuous mirrored fields. It
-adds restrained baked recess/underside shading and prepares metric padded atlases.
-Iron is a dark, desaturated derivative of the generated stone grain.
+Ten named models provide low/gabled and hipped homes, a two-storey home, timber-
+framed inn, masonry smithy with broad chimney, shuttered provisioner, sanctuary
+with bell-cote, windowless dungeon entrance, paired closed gate and boundary wall.
+Six residences plus four service/landmark buildings, dungeon and gate use 91 total
+placements, including the complete modeled enclosure. Services and travel are not
+enabled. Fountain, market and planting areas are reserved for SC03.
 
-Regenerate from the repository root:
+## Regeneration
+
+Run sequentially from the repository root, with at most two workers:
 
 ```sh
-nice -n 15 ionice -c 3 timeout -k 5 90 env ALSOFT_DRIVERS=null blender --background --factory-startup -t 2 --python-exit-code 1 --python tools/export_sanctuary_city.py
+nice -n 15 ionice -c 3 timeout -k 5 120 env ALSOFT_DRIVERS=null OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 blender --background --factory-startup -t 2 --python-exit-code 1 --python tools/export_sanctuary_city.py
 nice -n 15 ionice -c 3 cmake --build cmake-build-debug --target blobber blobber_review_sanctuary_city -j 2
 ```
 
-Run these sequentially. Blender is an offline authoring dependency, not a runtime
-requirement. The normal CMake build bakes the checked-in PNG/mesh JSON files.
-The script writes the packed Blender source, a deterministic unlit GLB, runtime
-meshes, atlases, terrain textures, pack bindings and `models/export-report.json`.
-It uses ordinary uncompressed Blender save because this environment's compressed
-library export crashed; the GLB is written directly to avoid optional optimizer
-plugins. Model units are runtime cells; no instance scaling. Blender uses Z-up,
-runtime/GLB Y-up. The GLB displays the two models side by side.
+`tools/city_architecture.py` owns the reusable offline geometry;
+`tools/city_materials.py` owns extraction, padding, bounded atlas packing and mesh
+splitting. The exporter produces packed Blender source, deterministic unlit GLB,
+runtime mesh JSON, atlas PNGs, terrain textures, pack bindings and
+`models/export-report.json`. Blender is not required to build or run the game.
+The ordinary CMake publication consumes the checked-in runtime exports.
 
-Each mesh has real recessed arches, closed doors, inset shutters, roof undersides,
-and a chimney. The local origin is the anchor cell center, at ground level.
-Low house footprint: x/z [-1.5,1.5]. Tall house: x [-1.5,1.5], z [-2.5,1.5].
-Their cardinal placement rotates both models and grid footprints together.
-Geometry must remain inside +/-4 horizontal cells and 0–4 vertical cells.
+Model units are runtime cells, with no instance scaling. Blender uses Z-up and
+runtime/GLB Y-up; source/GLB display the models in a grid. Footprints retain the
+accepted low-house 3×3 and tall-house 3×4 conventions. Gate footprint is 5×2, with
+local offset (-2,0); wall modules cover one cell. All geometry stays inside +/-4
+horizontal cells and 0–4 vertical cells. Runtime model parts are capped at 6,000
+vertices, eight parts and 24,000 vertices per model. Current models use two parts
+each, split by atlas ownership.
 
-All triangles retain 256 texels per runtime cell, checked during export. Repeated
-wall fragments share continuous UV fields; 16-pixel gutters and aligned, fully
-edge-filled slots isolate adjacent regions through mip level 4 in the owned fixture.
-First-fit shelf packing reuses gaps while retaining the 4096-square capacity.
-Both houses share one 4096-square architecture atlas to preserve density and reuse
-the material fields. See the export report for exact
-triangle totals. Terrain is prepared to 256 square with one repeat per cell.
-The runtime uses painted materials with the existing distance/fog policy.
+## Materials
 
-The ordinary dungeon pack provides shared sky/unused fixture art through existing
-pack bindings; it has no dependency on these architecture payloads. Residency loads
-this pack only for the city review. The 384/448 MiB reference lines are advisory.
+The retained original `source/material-master.png` and `prompts.json` are the
+accepted ImageGen source. SC02 reuses this artwork without new generated icons.
+Limestone, plaster, slate, oak, paving and carved stone retain their physical scale;
+iron derives from desaturated stone grain. Joint/recess/underside shading is baked
+into the texture for the runtime painted mode. Blender materials use emission.
 
-See [design](../../../docs/sc01_design.md) and [verification](../../../docs/sc01_verification.md) for the
-engine contract, reproducible review commands, evidence and acceptance status.
+Preserve **256 texels per runtime cell**. Extraction discards eight pixels at each
+source-panel edge to exclude divider/shadow bands. Continuous mirrored fields keep
+fragmented walls coherent. Sixteen-pixel aligned, fully edge-filled atlas gutters
+retain the SC01 correction. Two shared 4096² atlases fit the expanded kit without
+reducing density; deterministic bounded packing rejects exhaustion. Mesh exports
+verify UV area density and geometry bounds, including the hipped roof's tangent
+projection. UV/mip fixture guarantees remain limited to the tested mip levels.
 
-Offline regression checks (NumPy is required, as in the Blender exporter):
+The dungeon pack supplies shared sky/fixture art through existing bindings and has
+no dependency on city geometry. City textures/models are acquired only by city
+views; active/staged limits and rollback remain unchanged.
+
+## Review and checks
 
 ```sh
+cmake-build-debug/blobber --sanctuary-city-review
+nice -n 15 ionice -c 3 cmake-build-debug/blobber_review_sanctuary_city cmake-build-debug/assets /path/to/new-review-directory
 nice -n 15 ionice -c 3 env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python3 tests/city_materials_tests.py
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-debug -R '^(sanctuary_city|architecture)$' -j 1 --output-on-failure
 ```
 
-The small synthetic fixtures cover panel-divider exclusion, phase continuity across
-fragmented/negative UV coordinates, mirrored joins, mip isolation, packing overlap
-and capacity rejection. They do not depend on this artwork or require a GPU.
+Capture output includes authoritative `layout.svg`, named views, sampled movement
+and resource/pose reports. Append an exact shot name, `materials`, `stills`, or
+`motion`, or `gate-motion` to reduce capture work. `layout` exports only the SVG and needs no graphics
+context or asset loading. Output directories must be new. Hidden windows and
+in-process input are used; never automate desktop input or focus.
+
+Owned tests use generated data independently of production art. The expanded town
+replaces SC01's two-house review factory and shot names; historical SC01 captures
+are retained. See [SC02 design](../../../docs/sc02_design.md) and
+[verification/handoff](../../../docs/sc02_verification.md) for delivered evidence,
+resource totals and current review status.

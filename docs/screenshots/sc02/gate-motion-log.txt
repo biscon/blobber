@@ -1,0 +1,302 @@
+INFO: Initializing raylib 6.2
+INFO: Platform backend: DESKTOP (GLFW)
+INFO: Supported raylib modules:
+INFO:     > rcore:..... loaded (mandatory)
+INFO:     > rlgl:...... loaded (mandatory)
+INFO:     > rshapes:... loaded (optional)
+INFO:     > rtextures:. loaded (optional)
+INFO:     > rtext:..... loaded (optional)
+INFO:     > rmodels:... loaded (optional)
+INFO:     > raudio:.... loaded (optional)
+INFO: DISPLAY: Trying to enable VSYNC
+INFO: DISPLAY: Device initialized successfully (HighDPI)
+INFO:     > Display size: 2560 x 1440
+INFO:     > Screen size:  1920 x 1080
+INFO:     > Render size:  1920 x 1080
+INFO:     > Viewport offsets: 0, 0
+INFO: GLAD: OpenGL extensions loaded successfully
+INFO: GL: Supported extensions count: 402
+INFO: GL: OpenGL device information:
+INFO:     > Vendor:   NVIDIA Corporation
+INFO:     > Renderer: NVIDIA GeForce RTX 3060/PCIe/SSE2
+INFO:     > Version:  3.3.0 NVIDIA 615.78.08
+INFO:     > GLSL:     3.30 NVIDIA via Cg compiler
+INFO: GL: VAO extension detected, VAO functions loaded successfully
+INFO: GL: NPOT textures extension detected, full NPOT textures supported
+INFO: GL: DXT compressed textures supported
+INFO: GL: ETC2/EAC compressed textures supported
+INFO: PLATFORM: DESKTOP (GLFW - X11): Initialized successfully
+INFO: TEXTURE: [ID 1] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 1] Default texture loaded successfully
+INFO: SHADER: [ID 1] Vertex shader compiled successfully
+INFO: SHADER: [ID 2] Fragment shader compiled successfully
+INFO: SHADER: [ID 3] Program shader loaded successfully
+INFO: SHADER: [ID 3] Default shader loaded successfully
+INFO: RLGL: Render batch vertex buffers loaded successfully in RAM (CPU)
+INFO: RLGL: Render batch vertex buffers loaded successfully in VRAM (GPU)
+INFO: RLGL: Default OpenGL state initialized successfully
+INFO: TEXTURE: [ID 2] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Default font loaded successfully (224 glyphs)
+INFO: SYSTEM: Working Directory: /home/bison/Projects/blobber
+INFO: TIMER: Target time per frame: 16.667 milliseconds
+INFO: TEXTURE: [ID 3] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: TEXTURE: [ID 4] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (21 pixel size | 95 glyphs)
+INFO: TEXTURE: [ID 5] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (27 pixel size | 95 glyphs)
+INFO: TEXTURE: [ID 6] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: TEXTURE: [ID 7] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (27 pixel size | 95 glyphs)
+INFO: TEXTURE: [ID 8] Texture loaded successfully (512x512 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (48 pixel size | 95 glyphs)
+INFO: IMAGE: Data loaded successfully (2048x2048 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 9] Texture loaded successfully (2048x2048 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (2048x1024 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 10] Texture loaded successfully (2048x1024 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (2048x4096 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 11] Texture loaded successfully (2048x4096 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (2172x724 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1261x1247 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 12] Texture loaded successfully (2172x724 | R8G8B8 | 1 mipmaps)
+INFO: TEXTURE: [ID 13] Texture loaded successfully (1261x1247 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1774x887 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 14] Texture loaded successfully (208x104 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1024x1536 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8A8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: IMAGE: Data loaded successfully (1254x1254 | R8G8B8 | 1 mipmaps)
+INFO: TEXTURE: [ID 15] Texture loaded successfully (2048x2048 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 16] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 1] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 1] Framebuffer object created successfully
+INFO: TEXTURE: [ID 17] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 2] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 2] Framebuffer object created successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 6] Program shader loaded successfully
+INFO: SHADER: [ID 4] Fragment shader compiled successfully
+INFO: SHADER: [ID 5] Program shader loaded successfully
+INFO: SHADER: [ID 4] Fragment shader compiled successfully
+INFO: SHADER: [ID 7] Program shader loaded successfully
+INFO: TEXTURE: [ID 18] Texture loaded successfully (500x282 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: Depth texture loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 8] Fragment shader compiled successfully
+INFO: SHADER: [ID 9] Program shader loaded successfully
+INFO: TEXTURE: [ID 20] Texture loaded successfully (1000x564 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 3] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 4] Framebuffer object created successfully
+INFO: TEXTURE: [ID 21] Texture loaded successfully (1000x564 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: Depth texture loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 8] Fragment shader compiled successfully
+INFO: SHADER: [ID 10] Program shader loaded successfully
+INFO: TEXTURE: [ID 23] Texture loaded successfully (512x512 | R8G8B8A8 | 10 mipmaps)
+INFO: TEXTURE: [ID 24] Texture loaded successfully (512x512 | R8G8B8A8 | 10 mipmaps)
+INFO: TEXTURE: [ID 25] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 26] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 27] Texture loaded successfully (256x384 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 28] Texture loaded successfully (1774x887 | R8G8B8A8 | 11 mipmaps)
+INFO: TEXTURE: [ID 29] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 30] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 31] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 32] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 33] Texture loaded successfully (4096x4096 | R8G8B8A8 | 13 mipmaps)
+INFO: TEXTURE: [ID 34] Texture loaded successfully (4096x4096 | R8G8B8A8 | 13 mipmaps)
+INFO: TEXTURE: [ID 35] Texture loaded successfully (1254x1254 | R8G8B8A8 | 11 mipmaps)
+INFO: TEXTURE: [ID 36] Texture loaded successfully (1254x1254 | R8G8B8A8 | 11 mipmaps)
+INFO: TEXTURE: [ID 37] Texture loaded successfully (1254x1254 | R8G8B8A8 | 11 mipmaps)
+INFO: TEXTURE: [ID 38] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 39] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 40] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 41] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 42] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 43] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 44] Texture loaded successfully (64x64 | R8G8B8A8 | 7 mipmaps)
+INFO: TEXTURE: [ID 45] Texture loaded successfully (1254x1254 | R8G8B8A8 | 11 mipmaps)
+INFO: TEXTURE: [ID 46] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 47] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 48] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 49] Texture loaded successfully (256x256 | R8G8B8A8 | 9 mipmaps)
+INFO: TEXTURE: [ID 50] Texture loaded successfully (500x282 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 4] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 6] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-1.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-1.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-2.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-2.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-3.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-3.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-4.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-0-4.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-1.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-1.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-2.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-2.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-3.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-3.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (1920x1080 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: TEXTURE: [ID 51] Pixel data retrieved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-4.png] File saved successfully
+INFO: FILEIO: [docs/screenshots/sc02/gate-motion/motion-gate-1-4.png] Image exported successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 51] Texture loaded successfully (500x282 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 7] Framebuffer object created successfully
+INFO: FBO: [ID 7] Unloaded framebuffer from VRAM (GPU)
+INFO: VAO: [ID 5] Unloaded vertex array data from VRAM (GPU)
+INFO: FBO: [ID 6] Unloaded framebuffer from VRAM (GPU)
+INFO: VAO: [ID 4] Unloaded vertex array data from VRAM (GPU)
+INFO: TEXTURE: [ID 23] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 24] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 25] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 26] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 27] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 28] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 29] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 30] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 31] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 32] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 33] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 34] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 35] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 36] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 37] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 38] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 39] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 40] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 41] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 42] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 43] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 44] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 45] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 46] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 47] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 48] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 49] Unloaded texture data from VRAM (GPU)
+City review exported to "docs/screenshots/sc02/gate-motion"
+INFO: FBO: [ID 5] Unloaded framebuffer from VRAM (GPU)
+INFO: FBO: [ID 3] Unloaded framebuffer from VRAM (GPU)
+INFO: FBO: [ID 4] Unloaded framebuffer from VRAM (GPU)
+INFO: VAO: [ID 3] Unloaded vertex array data from VRAM (GPU)
+INFO: VAO: [ID 2] Unloaded vertex array data from VRAM (GPU)
+INFO: SHADER: [ID 9] Unloaded shader program data from VRAM (GPU)
+INFO: SHADER: [ID 5] Unloaded shader program data from VRAM (GPU)
+INFO: SHADER: [ID 10] Unloaded shader program data from VRAM (GPU)
+INFO: SHADER: [ID 7] Unloaded shader program data from VRAM (GPU)
+INFO: SHADER: [ID 6] Unloaded shader program data from VRAM (GPU)
+INFO: TEXTURE: [ID 8] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 7] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 6] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 5] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 4] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 3] Unloaded texture data from VRAM (GPU)
+INFO: FBO: [ID 1] Unloaded framebuffer from VRAM (GPU)
+INFO: FBO: [ID 2] Unloaded framebuffer from VRAM (GPU)
+INFO: TEXTURE: [ID 9] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 10] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 11] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 12] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 13] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 14] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 15] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
+INFO: SHADER: [ID 3] Default shader unloaded successfully
+INFO: TEXTURE: [ID 1] Default texture unloaded successfully
+INFO: Window closed successfully

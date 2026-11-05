@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-from city_materials import extract_tiles, sample_mirrored, padded_extent, padded_patch, pack_regions
+from city_materials import extract_tiles, sample_mirrored, padded_extent, padded_patch, pack_regions, pack_pages, split_triangles
 
 
 class CityMaterialTests(unittest.TestCase):
@@ -77,6 +77,31 @@ class CityMaterialTests(unittest.TestCase):
             occupied[y:y + ph, x:x + pw] = True
         self.assertIsNone(pack_regions([(41, 1)], size, gutter))
         self.assertIsNone(pack_regions([(36, 20), (36, 20)], size, gutter))
+
+    def test_bounded_pages_and_triangle_parts(self):
+        dims = [(20, 20), (20, 20), (4, 4)]
+        pages = pack_pages(dims, 32, 2)
+        self.assertEqual(pages, pack_pages(dims, 32, 2))
+        self.assertEqual({p[0] for p in pages}, {0, 1})
+        occupied = np.zeros((2, 32, 32), dtype=bool)
+        for (w, h), (page, x, y) in zip(dims, pages):
+            area = occupied[page, y-2:y-2+padded_extent(h, 2), x-2:x-2+padded_extent(w, 2)]
+            self.assertEqual(area.shape, (padded_extent(h, 2), padded_extent(w, 2)))
+            self.assertFalse(area.any())
+            area[:] = True
+        for dimensions in ([(24, 24)] * 3, [(33, 1)], [(1, 33)], [(0, 1)]):
+            with self.assertRaises(ValueError):
+                pack_pages(dimensions, 32, 2)
+        vertices = list(range(6003))
+        parts = split_triangles(vertices)
+        self.assertEqual([len(p) for p in parts], [6000, 3])
+        self.assertEqual([v for p in parts for v in p], vertices)
+        self.assertEqual(len(split_triangles(list(range(24000)))), 4)
+        for count in (4, 24003):
+            with self.assertRaises(ValueError):
+                split_triangles(list(range(count)))
+        with self.assertRaises(ValueError):
+            split_triangles(vertices, capacity=1)
 
 
 if __name__ == "__main__":

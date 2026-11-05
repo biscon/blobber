@@ -22,13 +22,71 @@
     {
       "id": "low-house",
       "parts": [
-        "packs/sanctuary-city/models/low-house.mesh.json"
+        "packs/sanctuary-city/models/low-house.mesh.json",
+        "packs/sanctuary-city/models/low-house-part-1.mesh.json"
       ]
     },
     {
       "id": "tall-house",
       "parts": [
-        "packs/sanctuary-city/models/tall-house.mesh.json"
+        "packs/sanctuary-city/models/tall-house.mesh.json",
+        "packs/sanctuary-city/models/tall-house-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "low-house-hip",
+      "parts": [
+        "packs/sanctuary-city/models/low-house-hip.mesh.json",
+        "packs/sanctuary-city/models/low-house-hip-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "inn",
+      "parts": [
+        "packs/sanctuary-city/models/inn.mesh.json",
+        "packs/sanctuary-city/models/inn-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "smithy",
+      "parts": [
+        "packs/sanctuary-city/models/smithy.mesh.json",
+        "packs/sanctuary-city/models/smithy-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "provisioner",
+      "parts": [
+        "packs/sanctuary-city/models/provisioner.mesh.json",
+        "packs/sanctuary-city/models/provisioner-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "sanctuary",
+      "parts": [
+        "packs/sanctuary-city/models/sanctuary.mesh.json",
+        "packs/sanctuary-city/models/sanctuary-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "dungeon-entrance",
+      "parts": [
+        "packs/sanctuary-city/models/dungeon-entrance.mesh.json",
+        "packs/sanctuary-city/models/dungeon-entrance-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "city-gate",
+      "parts": [
+        "packs/sanctuary-city/models/city-gate.mesh.json",
+        "packs/sanctuary-city/models/city-gate-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "boundary-wall",
+      "parts": [
+        "packs/sanctuary-city/models/boundary-wall.mesh.json",
+        "packs/sanctuary-city/models/boundary-wall-part-1.mesh.json"
       ]
     }
   ]

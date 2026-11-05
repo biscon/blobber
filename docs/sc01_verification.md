@@ -1,6 +1,6 @@
 # SC01.2 verification and handoff
 
-Date: 2026-11-05. Status: **Ready for review; user acceptance pending.**
+Date: 2026-11-05. Status: **Accepted 2026-11-05**, including the material seam correction.
 Scope: the approved [architecture design](sc01_design.md). SC01.1 remains accepted;
 normal campaign Sanctuary remains the courtyard. No SC02/PC08 work or hub cutover.
 
@@ -166,5 +166,6 @@ assets world_assets/world_residency and baker; world_scene geometry/culling;
 app city_review and review_sanctuary_city capture tool. Owned fixtures live in
 `tests/support/architecture_fixtures.hpp` and the architecture CPU/GPU tests.
 
-Next action: user review of this slice. SC02 becomes eligible for
-separate planning only after SC01 acceptance. Do not automatically continue.
+Current handoff: SC01 was accepted on 2026-11-05. SC02 was subsequently planned
+and approved; see sc02_design.md. Earlier review statements above describe the
+historical delivery, not the current acceptance status.

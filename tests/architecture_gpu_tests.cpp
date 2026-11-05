@@ -34,89 +34,98 @@ unsigned compare(GpuResources& resources, WorldRenderer& renderer, TargetHandle 
 }
 int main() try {
     test::ArchitectureFixture fixture;
-    auto assets = std::make_shared<const world_assets::CpuAssets>(fixture.publication());
-    const auto catalog = creationCatalog(true);
-    const Map map(test::architectureRows(), test::architectureWorld());
-    const NpcWorld placements(map, {7, 4}, {"goblin"},
-                              {{{0}, {7, 8}, {0, 0}, Heading::North}, {{0}, {9, 7}, {0, 0}, Heading::North}});
-    ActorWorld actors(map, catalog, placements);
-    std::vector<NpcTimings> timings(1);
-    timings[0][0] = {{{100, 0, 0, 0}}, 1};
-    NpcAnimator animator(actors, timings);
-    MovementState movement;
-    movement.player = {{7, 4}, Heading::South};
-    auto input = [&] {
-        animator.setTime(0);
-        return world_render::FrameInput{map, movement, &actors, &animator.snapshot()};
-    };
-    Window window(640, 360, true);
-    check(IsWindowState(FLAG_WINDOW_HIDDEN), "GPU window stays hidden");
-    GpuResources resources;
-    {
-        WorldRenderer renderer(resources, assets);
-        GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
-        renderer.stage(input());
-        renderer.commit();
-        renderer.render(input());
-        check(!renderer.picking()->exposed(0) && renderer.picking()->exposed(1),
-              "Shell hides rear actor and exposes street actor");
-        unsigned differences = compare(resources, renderer, ids.get());
-        const auto image = renderer.image();
-        const auto resident = assets->residency();
-        world_render::Limits tiny;
-        tiny.quads = 1;
-        rejects([&] { renderer.stage(map, movement, {}, {}, tiny); }, "Failed architecture staging rejects");
-        check(renderer.image().revision == image.revision && assets->residency().meshes == resident.meshes,
-              "Failed stage preserves active image and dependencies");
-        for (unsigned i = 0; i < 3; ++i) {
+    for (bool gate : {false, true}) {
+        auto publication = gate ? test::gatePublication(fixture.publication()) : fixture.publication();
+        auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
+        const auto catalog = creationCatalog(true);
+        const Map map(gate ? test::gateRows() : test::architectureRows(),
+                      gate ? test::gateWorld() : test::architectureWorld());
+        const NpcWorld placements(map, {7, 4}, {"goblin"},
+                                  {{{0}, gate ? Cell{7, 10} : Cell{7, 8}, {0, 0}, Heading::North},
+                                   {{0}, gate ? Cell{10, 6} : Cell{9, 7}, {0, 0}, Heading::North}});
+        ActorWorld actors(map, catalog, placements);
+        std::vector<NpcTimings> timings(1);
+        timings[0][0] = {{{100, 0, 0, 0}}, 1};
+        NpcAnimator animator(actors, timings);
+        MovementState movement;
+        movement.player = {gate ? Cell{7, 2} : Cell{7, 4}, Heading::South};
+        auto input = [&] {
+            animator.setTime(0);
+            return world_render::FrameInput{map, movement, &actors, &animator.snapshot()};
+        };
+        Window window(640, 360, true);
+        check(IsWindowState(FLAG_WINDOW_HIDDEN), "GPU window stays hidden");
+        GpuResources resources;
+        {
+            WorldRenderer renderer(resources, assets);
+            GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
             renderer.stage(input());
-            renderer.cancel();
-            check(assets->residency().meshes == 2, "Cancel retains shared active parts");
-        }
-        for (const Player p :
-             {Player{{7, 3}, Heading::South}, Player{{5, 7}, Heading::East}, Player{{9, 7}, Heading::West}}) {
-            movement.player = p;
+            renderer.commit();
             renderer.render(input());
-            differences += compare(resources, renderer, ids.get());
-        }
-        movement.player = {{7, 4}, Heading::South};
-        renderer.render(input());
-        const auto reads = assets->residency().reads;
-        // Warm moving and settled paths before guarding engine-owned CPU allocation.
-        movement.transition = {movement.player, {{6, 4}, Heading::South}, Action::Right, .08f, .16f};
-        renderer.render(input());
-        movement.transition = {};
-        renderer.render(input());
-        const auto uploads = resources.transfers().uploads;
-        allocations = 0;
-        watching = true;
-        for (unsigned i = 0; i < 6; ++i) {
-            movement.transition = {
-                movement.player, {{6, 4}, Heading::South}, Action::Right, .04f + .01f * i, .16f};
+            check(!renderer.picking()->exposed(0) && renderer.picking()->exposed(1),
+                  "Shell hides rear actor and exposes street actor");
+            unsigned differences = compare(resources, renderer, ids.get());
+            const auto image = renderer.image();
+            const auto resident = assets->residency();
+            world_render::Limits tiny;
+            tiny.quads = 1;
+            rejects([&] { renderer.stage(map, movement, {}, {}, tiny); },
+                    "Failed architecture staging rejects");
+            check(renderer.image().revision == image.revision &&
+                      assets->residency().meshes == resident.meshes,
+                  "Failed stage preserves active image and dependencies");
+            for (unsigned i = 0; i < 3; ++i) {
+                renderer.stage(input());
+                renderer.cancel();
+                check(assets->residency().meshes == 2, "Cancel retains shared active parts");
+            }
+            for (const Player p : {Player{{7, 3}, Heading::South}, Player{{4, 5}, Heading::East},
+                                   Player{{10, 5}, Heading::West}}) {
+                movement.player = p;
+                renderer.render(input());
+                differences += compare(resources, renderer, ids.get());
+            }
+            movement.player = {{7, 4}, Heading::South};
+            renderer.render(input());
+            const auto reads = assets->residency().reads;
+            // Warm moving and settled paths before guarding engine-owned CPU allocation.
+            movement.transition = {movement.player, {{6, 4}, Heading::South}, Action::Right, .08f, .16f};
             renderer.render(input());
             movement.transition = {};
             renderer.render(input());
+            const auto uploads = resources.transfers().uploads;
+            allocations = 0;
+            watching = true;
+            for (unsigned i = 0; i < 6; ++i) {
+                movement.transition = {
+                    movement.player, {{6, 4}, Heading::South}, Action::Right, .04f + .01f * i, .16f};
+                renderer.render(input());
+                movement.transition = {};
+                renderer.render(input());
+            }
+            watching = false;
+            check(allocations == 0 && assets->residency().reads == reads &&
+                      resources.transfers().uploads == uploads,
+                  "Warmed architecture frames allocate/load/upload nothing");
+            renderer.clear();
+            check(!assets->residency().meshes && !assets->residency().alphaBytes &&
+                      !renderer.memory().textureCount,
+                  "Clearing view releases architecture assets");
+            const auto baseline = resources.counts();
+            renderer.stage(input());
+            renderer.commit();
+            renderer.clear();
+            const auto again = resources.counts();
+            check(again.textures == baseline.textures && again.meshes == baseline.meshes &&
+                      again.targets == baseline.targets,
+                  "Revisit returns to retained renderer resource baseline");
+            std::cout << (gate ? "Wide gate" : "Architecture")
+                      << " GPU checks passed; boundary pixel differences=" << differences << '\n';
         }
-        watching = false;
-        check(allocations == 0 && assets->residency().reads == reads &&
-                  resources.transfers().uploads == uploads,
-              "Warmed architecture frames allocate/load/upload nothing");
-        renderer.clear();
-        check(!assets->residency().meshes && !assets->residency().alphaBytes &&
-                  !renderer.memory().textureCount,
-              "Clearing view releases architecture assets");
-        const auto baseline = resources.counts();
-        renderer.stage(input());
-        renderer.commit();
-        renderer.clear();
-        const auto again = resources.counts();
-        check(again.textures == baseline.textures && again.meshes == baseline.meshes &&
-                  again.targets == baseline.targets,
-              "Revisit returns to retained renderer resource baseline");
-        std::cout << "Architecture GPU checks passed; boundary pixel differences=" << differences << '\n';
+        const auto end = resources.counts();
+        check(!end.textures && !end.targets && !end.meshes && !end.shaders,
+              "GPU owners release before window");
     }
-    const auto end = resources.counts();
-    check(!end.textures && !end.targets && !end.meshes && !end.shaders, "GPU owners release before window");
 } catch (const std::exception& e) {
     watching = false;
     std::cerr << e.what() << '\n';

@@ -74,4 +74,30 @@ inline WorldDefinition architectureWorld(int size = 12, Cell anchor = {7, 7}) {
     w.buildings.push_back({"house", anchor, {0, 0}, Heading::North, 1, 1});
     return w;
 }
+// Five-cell gate joined to generated stone boundary piers; no production art.
+inline world_assets::Publication gatePublication(world_assets::Publication publication) {
+    for (unsigned part = 0; part < publication.meshes.size(); ++part) {
+        publication.meshes[part] = publication.readMesh(part);
+        for (auto& v : publication.meshes[part].vertices) {
+            v[0] = v[0] < 0 ? -2.5f : 2.5f;
+            v[2] = v[2] < 0 ? (part ? -.5f : -.3f) : 1.5f;
+            v[1] = v[1] == 0 ? 0 : v[1] > 2 ? 2.9f : 2.8f;
+        }
+    }
+    return publication;
+}
+inline WorldDefinition gateWorld() {
+    auto world = architectureWorld();
+    world.buildings[0].footprint = {-2, 0};
+    world.buildings[0].width = 5;
+    world.buildings[0].depth = 2;
+    return world;
+}
+inline std::vector<std::string> gateRows() {
+    auto rows = architectureRows();
+    for (int y = 7; y <= 8; ++y)
+        for (int x = 4; x <= 10; ++x)
+            rows[y][x] = '#';
+    return rows;
+}
 } // namespace blobber::test

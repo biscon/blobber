@@ -1,5 +1,15 @@
 # System design
 
+Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
+and [verification/captures](sc02_verification.md). The 24×24 square-centered town
+has ten principal buildings, separate dungeon/gate landmarks, two street loops,
+and fixed named approaches/dressing reservations. Ten models and 91 placements
+reuse SC01 ownership/rendering; campaign cutover remains SC04. User review reports
+about 3,500 FPS uncapped; retain existing chunk/frustum culling without advanced
+occlusion or additional spatial subdivision. Planned SC03 dressing now includes
+distinct painted signs for the inn, smithy and provisioner, using prepared artwork
+and static meshes.
+
 Sanctuary city (SC01.1 implemented and accepted, 2026-11-05):
 [four-slice roadmap](sanctuary_city_plan.md) stages an in-engine architectural
 street corner, full town layout, vegetation/market/fountain, and campaign hub
@@ -9,7 +19,7 @@ Use simple prepared low-poly geometry and basic frustum culling; optimize observ
 issues at slice handoffs. Interiors/services are deferred and existing development
 saves require no migration. SC01 is split: [SC01.1 location-owned assets](sc011_design.md) is implemented with
 [verification and handoff](sc011_verification.md); SC01.2 architecture is implemented
-and ready for review; see the [architecture design](sc01_design.md) and
+and accepted (2026-11-05); see the [architecture design](sc01_design.md) and
 [verification/captures](sc01_verification.md). Supersampling and texture fidelity remain unchanged;
 512 MiB–1 GiB is a memory target, not a mandate to reduce quality.
 SC01.2 review follow-up corrects panel-divider contamination in the offline material
@@ -429,8 +439,10 @@ walls. Prepared painted geometry lives in the anchor chunk; its bounds include r
 and overhangs. Building scenes search 32 cells/81 candidate chunks for diagonal
 far-frustum coverage; ordinary scenes retain 24/49. Fixed draw storage covers both.
 Frames borrow prepared geometry and resolve no model names. Furniture's four slots
-and tighter mesh profile remain intact. The standalone city review factory and
-launch path do not replace campaign Sanctuary. See [SC01.2](sc01_design.md) for
+and tighter mesh profile remain intact. The standalone full-town city factory owns bounded named doorway/anchor and
+future dressing metadata, validating connected routes with future bases blocked.
+Its review launch does not replace campaign Sanctuary. SC02 uses two shared
+4096² atlases with existing multipart publication; no renderer or schema change. See [SC01.2](sc01_design.md) for
 ownership, capacities, exports and focused verification.
 
 Party stores four character identities/resources and owns one fixed 208-stack

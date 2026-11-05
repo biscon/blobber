@@ -1,0 +1,4 @@
+SC02 complete town; seed=5 supersampling=on native=1920x1080
+arrival cell=11,8 heading=NORTH camera=11.5,0.5,8.9 yaw=0 progress=1 draws=0
+square cell=12,8 heading=SOUTH camera=12.5,0.5,8.1 yaw=3.14159 progress=1 draws=18
+gate-street cell=12,16 heading=SOUTH camera=12.5,0.5,16.1 yaw=3.14159 progress=1 draws=11

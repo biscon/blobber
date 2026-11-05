@@ -63,3 +63,42 @@ def pack_regions(dimensions, size, gutter):
         result[i] = (row[0] + gutter, row[1] + gutter)
         row[0] += w
     return result
+
+
+def pack_pages(dimensions, size, gutter, capacity=2):
+    """Bounded deterministic atlas shelves; never shrink metric regions to fit."""
+    if capacity < 1:
+        raise ValueError("Atlas capacity must be positive")
+    slots = [(padded_extent(w, gutter), padded_extent(h, gutter)) for w, h in dimensions]
+    pages = []
+    result = [None] * len(slots)
+    for i in sorted(range(len(slots)), key=lambda i: (-slots[i][1], -slots[i][0], i)):
+        w, h = slots[i]
+        if w > size or h > size or min(dimensions[i]) <= 0:
+            raise ValueError("Material region exceeds atlas dimensions")
+        for page_index in range(capacity):
+            if page_index == len(pages):
+                pages.append([[], 0])
+            page = pages[page_index]
+            row = next((r for r in page[0] if r[0] + w <= size and r[2] >= h), None)
+            if row is None and page[1] + h <= size:
+                row = [0, page[1], h]
+                page[0].append(row)
+                page[1] += h
+            if row is not None:
+                result[i] = (page_index, row[0] + gutter, row[1] + gutter)
+                row[0] += w
+                break
+        if result[i] is None:
+            raise ValueError("Material atlas capacity exceeded")
+    return result
+
+
+def split_triangles(vertices, limit=6000, capacity=8):
+    """Split triangle-list payloads on triangle boundaries, rejecting oversized models."""
+    if len(vertices) % 3 or limit < 3 or limit % 3 or len(vertices) > 24000:
+        raise ValueError("Invalid architecture triangle list")
+    parts = [vertices[i:i + limit] for i in range(0, len(vertices), limit)]
+    if len(parts) > capacity:
+        raise ValueError("Model part capacity exceeded")
+    return parts

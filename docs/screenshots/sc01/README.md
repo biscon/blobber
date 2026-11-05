@@ -1,10 +1,13 @@
 # SC01.2 residential corner captures
 
-2026-11-05. **Ready for review; user visual acceptance pending.**
+2026-11-05. **Accepted 2026-11-05**, including the material seam correction.
 These are native 1920x1080 application-owned captures with the normal HUD and
 supersampling ON, generated in hidden windows with in-process actions. No desktop
 input or focus automation was used. See the [verification/handoff](../../sc01_verification.md)
 for checks, resource totals and limitations.
+
+Historical SC01 evidence: SC02 now replaces the development factory and shot names.
+See [SC02 handoff](../../sc02_verification.md) for current review commands.
 
 Latest material correction: [matching before/after and five corrected views](material-seams/README.md).
 The original 38 captures below are retained as historical evidence; their straight
