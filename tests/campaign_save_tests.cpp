@@ -120,7 +120,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 9;
+    bad["schema"] = 10;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
@@ -136,7 +136,8 @@ void environmentRoundtrip() {
     bad["schema"] = 8;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-scenery saves reject clearly");
     bad = blobber::automation::Json::parse(text);
-    bad["simulation"] = 12;
+    bad["schema"] = 9;
+    bad["simulation"] = 13;
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
     {
@@ -144,12 +145,12 @@ void environmentRoundtrip() {
         file << bad.dump();
     }
     CampaignStore store(c, d, {"fixture", 0}, disk);
-    check(!store.inspect().active, "Pre-city simulation is incompatible");
+    check(!store.inspect().active, "Pre-inn campaign is incompatible");
     std::ifstream unchanged(directory.path / "campaign.json");
     const std::string original((std::istreambuf_iterator<char>(unchanged)), {});
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
-            "Previous simulation 12 rejects explicitly");
+            "Previous schema/simulation 9/13 rejects explicitly");
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");
@@ -820,13 +821,15 @@ void groundAndInactive() {
     check(bool(run->game().endConcentration(run->game().actors().snapshot().world, {2})),
           "local Web explicitly dismissed before departure");
     travel(*run, FixtureKind::Upstairs);
+    enterInn(*run);
     RestRequest rest;
     rest.kind = RestKind::Long;
     rest.world = run->game().actors().snapshot().world;
     rest.token = run->game().restToken();
     run->party().damage({0}, 1);
-    check(bool(run->game().rest(rest)), "hub rest advances only portable campaign effects");
+    check(bool(run->game().rest(rest)), "inn rest advances only portable campaign effects");
     run = copy(c, d, *run);
+    leaveInn(*run);
     travel(*run, FixtureKind::Downstairs);
     check(run->game().effects().area(grease) && run->game().effects().guiding(run->game().actors().id(0)) &&
               run->game().effects().has(run->game().actors().id(0), EffectKind::Sleep) &&

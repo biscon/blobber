@@ -57,6 +57,7 @@ struct GroundPlacement {
     std::uint8_t container = noContainer;
 };
 struct RecoveryLevel {
+    bool freeRestEverywhere = false;
     std::array<Cell, 16> sanctuaries{};
     std::size_t sanctuaryCount = 0;
     std::array<GroundPlacement, 64> ground{};

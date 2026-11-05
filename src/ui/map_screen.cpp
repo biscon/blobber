@@ -25,7 +25,10 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
     char title[32];
     const auto depth =
         floor && (floor->definition().depth || (hud && hud->campaign)) ? floor->definition().depth : 1u;
-    std::snprintf(title, sizeof(title), "FLOOR %u", depth);
+    if (hud && hud->campaign && depth == 0)
+        std::snprintf(title, sizeof(title), "%s", hud->locationName);
+    else
+        std::snprintf(title, sizeof(title), "FLOOR %u", depth);
     p.text(title, 12, 24, gold, UiTextStyle::Display);
     p.rightAligned("M CLOSE", {420, 22, 76, 16}, gold, UiTextStyle::Small);
     p.line({5, 39}, {503, 39}, edge);

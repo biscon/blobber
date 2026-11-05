@@ -4,9 +4,14 @@
 #include "generation/population.hpp"
 namespace blobber {
 enum class CampaignStatus : std::uint8_t { Active, Victory, Defeat };
+struct DoorwayLink {
+    Player approach, arrival;
+    CampaignLocationId destination = CampaignLocationId::City;
+};
 struct CampaignLocation {
     std::optional<generation::GeneratedFloor> generated;
     std::optional<Map> authored;
+    std::optional<DoorwayLink> doorway; // Canonical, preparation-only; never restored from untrusted saves.
     std::optional<NpcWorld> placements;
     RecoveryLevel recovery;
     FloorFixtures fixtures;
@@ -36,7 +41,7 @@ struct CampaignLocationState {
 };
 struct CampaignCheckpoint {
     Party::Saved party;
-    std::array<CampaignLocationState, 4> locations;
+    std::array<CampaignLocationState, campaignLocationCount> locations;
     Navigation::Saved navigation;
     Player pose;
     bool animated = true;
@@ -90,6 +95,9 @@ class CampaignRun {
     CampaignStatus status() const noexcept;
     const char* name() const noexcept;
     TravelRequest request(FixtureRequest) const noexcept;
+    CampaignLocationId activeLocationId() const noexcept { return CampaignLocationId(location_); }
+    unsigned dungeonDepth() const noexcept { return dungeonLocation(location_) ? location_ : 0; }
+    TravelRequest doorwayRequest() const noexcept;
     TravelRequest recallRequest() const noexcept;
     TravelRequest waypointRequest(unsigned depth) const noexcept;
     FixtureResult previewTravel(const TravelRequest&) const noexcept;
@@ -99,16 +107,17 @@ class CampaignRun {
     static bool stairs(FixtureKind k) noexcept {
         return k == FixtureKind::Upstairs || k == FixtureKind::Downstairs;
     }
-    std::size_t snapshotBytes() const noexcept { return 4 * sizeof(FloorState); }
+    std::size_t snapshotBytes() const noexcept { return campaignLocationCount * sizeof(FloorState); }
 
   private:
     std::string runId_;
     Party party_;
-    std::array<CampaignLocation, 4> locations_;
+    std::array<CampaignLocation, campaignLocationCount> locations_;
     std::vector<NpcTimings> timings_;
     unsigned location_ = 0;
     std::uint64_t revision_ = 1, elapsed_ = 0, baseClock_ = 0;
     std::unique_ptr<GameSession> active_;
+    void configureDoorways();
     std::unique_ptr<GameSession> prepare(unsigned, Player, bool validate = false);
     std::array<std::uint64_t, 100> partyStamp() const noexcept;
 };

@@ -1,0 +1,15 @@
+{
+  "texels_per_cell": 256,
+  "atlas_size": 4096,
+  "models": {
+    "wall": 252,
+    "exit-door": 504,
+    "table-group": 2148,
+    "bar": 1422,
+    "shelves": 9144,
+    "barrels": 2214,
+    "hearth": 684,
+    "stairs": 1272,
+    "plant": 786
+  }
+}

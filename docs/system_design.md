@@ -1,5 +1,14 @@
 # System design
 
+Sanctuary inn **implemented and mechanically verified; awaiting user review (2026-11-05)**:
+[design](inn_interior_design.md) adds an authored fifth campaign location,
+facing-sensitive doorway travel, a furnished common room and decorative hearth,
+and moves free long rest from the city sanctuary cell to the entire inn.
+Campaign schema/simulation are 10/14; older saves reject without migration.
+[Verification](inn_interior_verification.md) records focused CPU/extended-save checks,
+hidden OpenGL captures and 348.09 MiB city–inn texture overlap within existing limits.
+[Capture gallery](screenshots/inn/README.md); interactive acceptance remains user-owned.
+
 Environment AO **Accepted and closed (2026-11-05)**:
 [design and verification](environment_ao_design.md) adds default-on environment-only
 contact shading with `--ambient-occlusion on|off`, excluding creatures and preserving
@@ -446,7 +455,7 @@ cells, reject occupied or moving-through thresholds, preserve acquired keys and 
 a 300ms motion barrier. Guardian gates remain automatic. Discovery, navigation and
 picking invalidate on both opening and closing; settled state survives save/travel.
 
-Maps own contiguous cell bytes. CampaignRun retains four stable locations and the
+Maps own contiguous cell bytes. CampaignRun retains five stable locations and the
 travelling Party; the application owns shared prepared rendering. One active
 session borrows its location/Party, with value snapshots for inactive locations.
 Travel stages replacement simulation/view owners at an explicit preparation
@@ -606,7 +615,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 9/13 and generator/templates 9/7. Older saves reject
+Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
 without being modified; no migration. World publication is format 10, appearance 4,
 visibility world-visibility-v17, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

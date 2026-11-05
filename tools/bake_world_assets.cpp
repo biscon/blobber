@@ -253,6 +253,8 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     for (const auto* name : {"grease", "web", "spiritual_weapon"})
         add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
             source / "effects" / (std::string(name) + ".png"), true);
+    if (std::filesystem::exists(source / "packs/sanctuary-inn/source/flame.png"))
+        add("effect/hearth-flame", source / "packs/sanctuary-inn/source/flame.png", true);
     // Code-authored source artwork; reusable base images replace perspective rasters.
     for (unsigned kind = 0; kind < 7; ++kind) {
         constexpr const char* names[]{"arrow", "tip", "feathers", "slash", "glint", "preview", "white"};

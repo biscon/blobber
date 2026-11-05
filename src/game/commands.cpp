@@ -456,9 +456,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.campaignTerminal = state_.campaign && session_.campaign()->status() != CampaignStatus::Active;
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";
-    const bool sanctuary = state_.campaign && !state_.campaignTerminal &&
-                           session_.atSanctuary() &&
-                           session_.campaign()->activeLocation() == 0;
+    const bool sanctuary = state_.campaign && !state_.campaignTerminal && session_.atSanctuary();
     state_.fixturePrompt[0] = 0;
     if (state_.campaignTerminal)
         std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
@@ -468,10 +466,18 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     if (!state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
         !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
         if (sanctuary)
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "R: rest");
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "R: rest (free)");
+        const auto door = state_.campaign ? session_.campaign()->doorwayRequest() : TravelRequest{};
+        const bool doorway =
+            state_.campaign && door.kind == TravelKind::Doorway && door.doorway.slot != UINT16_MAX;
+        if (doorway) {
+            const auto check = session_.campaign()->previewTravel(door);
+            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%sF: %s",
+                          sanctuary ? "R: rest (free) | " : "", check.reason);
+        }
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
-        if (f &&
+        if (!doorway && f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
             std::snprintf(
@@ -482,7 +488,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                            ? "Choose a floor entry."
                            : "Enter dungeon floor 1.")
                     : result.reason);
-        } else if (const auto chest = session_.nearbyContainer()) {
+        } else if (const auto chest = doorway ? ContainerId{} : session_.nearbyContainer()) {
             const auto access = session_.containerAccess(chest);
             const auto* container = session_.loot().findContainer(chest);
             std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / Treasure chest - %s",

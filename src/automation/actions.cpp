@@ -14,6 +14,9 @@ Json describeTravel(const CampaignRun& run) {
             out["waypoints"].push_back(
                 {{"depth", depth}, {"ready", check.accepted}, {"reason", check.reason}, {"cost", 0}});
         }
+    const auto door = run.doorwayRequest();
+    const auto check = run.previewTravel(door);
+    out["doorway"] = {{"ready", check.accepted}, {"reason", check.reason}, {"cost", 0}};
     return out;
 }
 Json describeActions(const GameSession& g, const Observation& o) {
@@ -26,6 +29,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
         {"note",
          "Descriptors are not complete combinations. Preview a fully specified action before submission."}};
     if (g.campaign()) {
+        result["management"].push_back("doorway");
         result["management"].push_back("recall");
         result["management"].push_back("waypoint");
         result["travel"] = describeTravel(*g.campaign());

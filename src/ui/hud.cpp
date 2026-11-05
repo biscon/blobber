@@ -140,7 +140,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     headerText(line, 245, gold, UiTextStyle::Small);
     {
         const auto depth = h && h->floor ? h->floor->definition().depth : 1;
-        headerText(h && h->campaign && depth == 0 ? "Sanctuary hub"
+        headerText(h && h->campaign && depth == 0 ? h->locationName
                    : h && h->arena                ? "Arena"
                    : depth == 2                   ? "Depth II"
                    : depth == 3                   ? "Depth III"

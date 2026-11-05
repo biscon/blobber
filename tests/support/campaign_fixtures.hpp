@@ -1,5 +1,6 @@
 #pragma once
 #include "automation_fixtures.hpp"
+#include "world/sanctuary_city.hpp"
 #include <queue>
 namespace blobber::campaign_test {
 using namespace blobber::automation::test;
@@ -71,6 +72,20 @@ inline void walk(GameSession& g, Cell to) {
         g.move(Action::Forward);
         check(g.movement().player.cell == *i, "checked fixture movement");
     }
+}
+inline void enterInn(CampaignRun& run) {
+    const auto approach = sanctuaryCity().doorway("inn").approach;
+    walk(run.game(), approach.cell);
+    face(run.game(), approach.heading);
+    auto ticket = run.prepareTravel(run.doorwayRequest());
+    check(run.commitTravel(ticket), "Enter authored inn");
+}
+inline void leaveInn(CampaignRun& run) {
+    const auto exit = run.location(unsigned(CampaignLocationId::Inn)).exit;
+    walk(run.game(), exit.cell);
+    face(run.game(), exit.heading);
+    auto ticket = run.prepareTravel(run.doorwayRequest());
+    check(run.commitTravel(ticket), "Leave authored inn");
 }
 inline void entrance(CampaignRun& run) {
     auto& g = run.game();

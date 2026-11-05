@@ -1,0 +1,85 @@
+{
+  "id": "sanctuary-inn",
+  "worldScale": 1.0,
+  "horizon": [
+    0.6,
+    0.65,
+    0.71
+  ],
+  "wall": "packs/sanctuary-inn/source/wall.png",
+  "floor": "packs/sanctuary-inn/source/floor.png",
+  "ceiling": "packs/sanctuary-inn/source/ceiling.png",
+  "stairWall": "packs/sanctuary-city/source/wall.png",
+  "stairFloor": "packs/sanctuary-city/source/paving.png",
+  "door": "packs/dungeon/source/door.png",
+  "lockedDoor": "packs/dungeon/source/door-locked.png",
+  "doorEdge": "packs/dungeon/source/door.png",
+  "crest": "packs/dungeon/source/crest.png",
+  "vine": "packs/dungeon/source/vine.png",
+  "sky": "packs/dungeon/source/sky.png",
+  "guardianEmblem": "packs/dungeon/source/guardian-emblem.png",
+  "buildings": [
+    {
+      "id": "wall",
+      "parts": [
+        "packs/sanctuary-inn/models/wall-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "exit-door",
+      "parts": [
+        "packs/sanctuary-inn/models/exit-door-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "table-group",
+      "parts": [
+        "packs/sanctuary-inn/models/table-group-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "bar",
+      "parts": [
+        "packs/sanctuary-inn/models/bar-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "shelves",
+      "parts": [
+        "packs/sanctuary-inn/models/shelves-opaque-0.mesh.json",
+        "packs/sanctuary-inn/models/shelves-opaque-1.mesh.json"
+      ]
+    },
+    {
+      "id": "barrels",
+      "parts": [
+        "packs/sanctuary-inn/models/barrels-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "hearth",
+      "parts": [
+        "packs/sanctuary-inn/models/hearth-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "stairs",
+      "parts": [
+        "packs/sanctuary-inn/models/stairs-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "plant",
+      "parts": [
+        "packs/sanctuary-inn/models/plant-opaque-0.mesh.json",
+        "packs/sanctuary-inn/models/plant-foliage-0.mesh.json"
+      ]
+    }
+  ],
+  "daylightFog": [
+    12,
+    4,
+    0
+  ],
+  "viewDistance": 16
+}

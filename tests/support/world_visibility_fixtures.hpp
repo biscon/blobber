@@ -6,7 +6,8 @@ namespace blobber::test {
 struct VisibilityFixture {
     WorldFixture location;
     std::vector<NpcTimings> timings;
-    VisibilityFixture(unsigned types = 1, unsigned padding = 0, bool crop = false, bool opaque = false) {
+    VisibilityFixture(unsigned types = 1, unsigned padding = 0, bool crop = false, bool opaque = false,
+                      bool hearth = false) {
         world_assets::Writer writer(location.directory);
         std::vector<unsigned char> pixels(8 * 12 * 4, 255);
         for (unsigned i = 0; i < 8 * 12; ++i) {
@@ -71,6 +72,8 @@ struct VisibilityFixture {
         for (const auto* n :
              {"arrow", "tip", "feathers", "slash", "glint", "grease", "web", "weapon", "preview", "white"})
             writer.add(std::string("effect/") + n, 8, 12, true, pixels);
+        if (hearth)
+            writer.add("effect/hearth-flame", 8, 12, true, pixels);
         const auto crest = writer.add("decoration/crest", 8, 12, true, pixels);
         const auto vine = writer.add("decoration/vine", 8, 12, true, pixels);
         finishWithUnderkeep(writer, actors, 0, door, locked, crest, vine);

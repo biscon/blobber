@@ -88,7 +88,7 @@ int main() try {
     bad.reservations[1] = {"blocking", {11, 19}, 1, 1};
     rejects([&] { validateSanctuaryCity(bad); }, "Gate approach remains reserved");
     bad = city;
-    bad.reservations[1] = {"blocking", city.rest.cell, 1, 1};
+    bad.reservations[1] = {"blocking", city.recallArrival.cell, 1, 1};
     rejects([&] { validateSanctuaryCity(bad); }, "Future scenery cannot occupy rest anchor");
     bad = city;
     bad.reservations[1] = {"blocking", {3, 6}, 1, 1};

@@ -88,7 +88,7 @@ void cityCampaign() {
     const auto kits = run.party().campSupplies().kits;
     auto recall = run.prepareTravel(run.recallRequest());
     check(run.commitTravel(recall) && !run.commitTravel(recall) &&
-              run.game().movement().player == Player{{9, 6}, Heading::North} && run.game().atSanctuary() &&
+              run.game().movement().player == Player{{9, 6}, Heading::North} && !run.game().atSanctuary() &&
               run.party().campSupplies().kits == kits - 1 && run.party().character({0})->hitPoints == hp,
           "Recall arrives at sanctuary and charges once without resting");
     check(!run.previewTravel(run.waypointRequest(1)), "Recall does not enable remote waypoint travel");
@@ -102,8 +102,7 @@ void campaign() {
     walk(run.game(), run.location(0).entry.cell);
     CommandController hubUi(run.game(), defs.timings);
     hubUi.refresh({}, false, false, true);
-    check(std::string_view(hubUi.snapshot().fixturePrompt.data()) == "R: rest",
-          "Sanctuary anchor exposes recovery");
+    check(!hubUi.snapshot().fixturePrompt[0], "Sanctuary arrival no longer exposes free recovery");
     walk(run.game(), {11, 8});
     hubUi.refresh({}, false, false, true);
     check(!hubUi.snapshot().fixturePrompt[0], "Idle campaign has no permanent location strip");
@@ -277,7 +276,7 @@ void transferFailuresAndEffects() {
     check(run.game().combat().snapshot().cooldownMs[3] == cooldown &&
               run.party().character({2})->temporaryHitPoints == 7,
           "action cooldown and temporary HP follow the party without reset");
-    walk(run.game(), run.location(0).entry.cell);
+    enterInn(run);
     run.party().damage({0}, 1);
     RestRequest rest;
     rest.kind = RestKind::Long;
@@ -285,7 +284,7 @@ void transferFailuresAndEffects() {
     rest.token = run.game().restToken();
     const auto hp = run.party().character({0})->hitPoints;
     const auto clock = run.gameplayMs();
-    check(bool(run.game().rest(rest)), "hub explicit sanctuary long rest");
+    check(bool(run.game().rest(rest)), "inn explicit free long rest");
     check(run.party().character({0})->hitPoints > hp && run.gameplayMs() == clock + 28800000,
           "rest advances campaign time exactly once");
     check(!run.game().effects().has(rules::CharacterId{0}, EffectKind::Bless) &&
@@ -294,6 +293,7 @@ void transferFailuresAndEffects() {
     check(run.party().character({2})->temporaryHitPoints == 0 &&
               run.game().combat().snapshot().cooldownMs[3] == 0,
           "rest expires temporary HP and readiness deadlines once on campaign time");
+    leaveInn(run);
     enter();
     auto after = std::make_unique<FloorState>();
     run.game().exportFloor(*after);
@@ -691,7 +691,7 @@ void recallAndWaypoints() {
     travel(run, FixtureKind::Upstairs);
     travel(run, FixtureKind::Upstairs);
     check(run.activeLocation() == 0 && !party.campSupplies().kits, "zero-kit walking remains free");
-    walk(run.game(), run.location(0).entry.cell);
+    enterInn(run);
     party.damage({0}, 1);
     RestRequest rest;
     rest.kind = RestKind::Long;
@@ -699,7 +699,8 @@ void recallAndWaypoints() {
     rest.token = run.game().restToken();
     const auto clock = run.gameplayMs();
     check(bool(run.game().rest(rest)) && !party.campSupplies().kits && run.gameplayMs() == clock + 28800000,
-          "explicit sanctuary rest restores without kit refill");
+          "explicit inn rest restores without kit refill");
+    leaveInn(run);
     entrance(run);
     CommandController selector(run.game());
     selector.refresh({}, false, false, true);

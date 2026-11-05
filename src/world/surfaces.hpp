@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
 #include <vector>
 namespace blobber {
@@ -88,7 +89,11 @@ struct SceneryPlacement {
         return anchor + right(facing) * (footprint.x + int(x)) + forward(facing) * -(footprint.y + int(z));
     }
 };
+struct AmbientFire {
+    float x = 0, y = 0, z = 0;
+};
 struct WorldDefinition {
+    std::optional<AmbientFire> hearth; // At most one decorative hearth per authored map.
     std::string assetPack = "dungeon";
     std::vector<CellSurface> surfaces;
     std::vector<Decoration> decorations;

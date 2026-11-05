@@ -614,3 +614,26 @@ return arrives facing into town. Callers must walk to the observed downstairs
 landing and face north before interacting or requesting an unlocked-floor waypoint.
 City discovery is incremental and persists across travel/Continue. Old save
 identities reject without modifying their bytes. See [SC04 design](sc04_design.md).
+
+
+### Inn doorway travel (2026-11-05)
+
+Campaign schema/simulation are **10/14**. Locations retain numeric IDs 0–3 for
+the city and dungeon floors; ID 4 is `Sanctuary inn`, an authored map with depth 0.
+`campaign.depth` is separate from `campaign.location`. `visited_entries` and
+`entry_unlocked` still refer only to dungeon floors. Diagnostic authored identities
+are `sanctuary-city-v2` and `sanctuary-inn-v1`. Old saves reject unchanged.
+
+Use `{"kind":"doorway"}` with the existing preview/act envelopes. It resolves the
+current facing-sensitive doorway and emits a `campaign_transition` with kind
+`doorway` and zero kit charge. `campaign.travel.doorway` exposes ready/reason/cost.
+The action requires the exact named approach and heading, settled safe exploration,
+and a current world/revision. No remote destination parameter is accepted.
+
+The inn grants free long rest on every walkable cell. The city's old recovery cell
+is removed; recall still arrives at sanctuary outdoors and never rests implicitly.
+Inn recall and waypoints reject with guidance to leave through the door. Canonical
+inn discovery, loot and saved pose survive travel and Continue. Generator/templates
+remain 9/7. The optional fingerprinted hearth has no simulation or picking effects;
+absent hearth metadata preserves existing dungeon world fingerprints. Strict replay
+also retains binary/content identity checks.

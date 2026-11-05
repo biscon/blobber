@@ -1,5 +1,6 @@
 #include "core/preparation.hpp"
 #include "game/campaign.hpp"
+#include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -93,7 +94,7 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     out->revision = revision_;
     out->runId = runId_;
     out->navigation = game().navigationCheckpoint();
-    for (unsigned i = 0; i < 4; ++i) {
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
         preparationPoint("Restoring campaign locations");
         const auto& from = locations_[i];
         auto& to = out->locations[i];
@@ -135,17 +136,19 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
     : runId_(s.runId), party_(catalog, s.party), timings_(timings), location_(s.activeLocation),
       revision_(s.revision), elapsed_(s.gameplayMs) {
     if (runId_.size() != 32 || runId_.find_first_not_of("0123456789abcdef") != std::string::npos ||
-        location_ > 3 || elapsed_ > maxCheckpointClock || !revision_ || revision_ == UINT64_MAX ||
-        !s.locations[0].visited || !s.locations[location_].visited || !s.locations[location_].state)
+        location_ >= campaignLocationCount || elapsed_ > maxCheckpointClock || !revision_ ||
+        revision_ == UINT64_MAX || !s.locations[0].visited || !s.locations[location_].visited ||
+        !s.locations[location_].state)
         throw std::invalid_argument("Invalid campaign checkpoint");
-    for (unsigned i = 0; i < 4; ++i) {
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
         preparationPoint("Restoring campaign locations");
         auto& from = s.locations[i];
         auto& to = locations_[i];
-        if (from.generated != (i != 0) || from.rows.empty() || from.rows.size() > 40 ||
+        if (from.generated != dungeonLocation(i) || from.rows.empty() || from.rows.size() > 40 ||
             from.rows.front().empty() || from.rows.front().size() > 40 || from.placements.size() > 32 ||
             from.types.empty() || from.types.size() != timings.size() ||
-            (i && from.visited && !s.locations[i - 1].visited) || (i && bool(from.state) != from.visited))
+            (dungeonLocation(i) && from.visited && !s.locations[i - 1].visited) ||
+            (i && bool(from.state) != from.visited))
             throw std::invalid_argument("Invalid campaign location definition");
         if (from.world.surfaces.empty() || from.world.fingerprint() != from.worldFingerprint)
             throw std::invalid_argument("Saved world definition fingerprint differs");
@@ -154,7 +157,9 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             throw std::invalid_argument("Saved surfaces disconnect the floor");
         if (map.width() * map.height() > int(generation::maxCells))
             throw std::invalid_argument("Campaign map capacity exceeded");
-        if (i) {
+        if (dungeonLocation(i)) {
+            if (from.recovery.freeRestEverywhere)
+                throw std::invalid_argument("Dungeon cannot grant free map-wide rest");
             for (auto value : from.layout.floor)
                 if (value > 1)
                     throw std::invalid_argument("Invalid saved tile value");
@@ -175,7 +180,10 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             to.generated.emplace(generation::GeneratedFloor{from.generation, from.layout, std::move(map),
                                                             from.diagnostics, from.fingerprint, from.seed});
         } else {
-            validateSanctuaryHub(map, from);
+            if (i == unsigned(CampaignLocationId::City))
+                validateSanctuaryHub(map, from);
+            else
+                validateInnInterior(map, from);
             to.authored.emplace(std::move(map));
         }
         to.entry = from.entry;
@@ -223,13 +231,13 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
     }
     if (locations_[3].saved && locations_[3].saved->objective.completed)
         throw std::invalid_argument("Completed campaign cannot resume as active");
+    configureDoorways();
     active_ = prepare(location_, locations_[location_].entry);
     active_->restorePose(s.pose, s.animated);
     active_->restoreNavigation(s.navigation);
     baseClock_ = game().combat().snapshot().gameplayMs;
     active_->campaign_ = this;
     for (unsigned i = 0; i < 4; ++i) {
-        preparationPoint("Restoring campaign locations");
         bool aided = false;
         for (const auto& e : game().effects().snapshot())
             if (e.active && e.kind == EffectKind::Aid)

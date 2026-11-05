@@ -84,6 +84,7 @@ class GameSession {
     }
     bool guardian(ActorId id) const noexcept;
     bool atSanctuary() const noexcept;
+    LandingSafety arrivalSafety(Cell) const noexcept;
     LandingSafety landingSafety(unsigned index) const noexcept;
     GeometryView geometry() const noexcept { return map_; }
     const FloorGeometry& fixtures() const noexcept { return floor_; }

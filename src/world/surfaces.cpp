@@ -75,6 +75,13 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         add(s.width);
         add(s.depth);
     }
+    // Absent extension retains established dungeon generation fingerprints.
+    if (hearth) {
+        add(0x686561727468ull);
+        real(hearth->x);
+        real(hearth->y);
+        real(hearth->z);
+    }
     return h;
 }
 } // namespace blobber

@@ -44,6 +44,9 @@ EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) {
     constexpr const char* names[]{"effect/arrow",   "effect/tip",    "effect/feathers", "effect/slash",
                                   "effect/glint",   "effect/grease", "effect/web",      "effect/weapon",
                                   "effect/preview", "effect/white"};
+    for (unsigned i = 0; i < assets.publication.textures.size(); ++i)
+        if (assets.publication.textures[i].name == "effect/hearth-flame")
+            flame_ = i;
     for (unsigned i = 0; i < textures_.size(); ++i)
         textures_[i] = assets.named(names[i]);
 }
@@ -54,9 +57,24 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     SpellArea area = in.area ? *in.area : SpellArea{};
     if (world.moving)
         area.eligible.fill(false);
-    if (!changed && visibility_ == world.revision && area.cells == area_.cells && area.kind == area_.kind &&
-        area.eligible == area_.eligible && area.ground.revision == area_.ground.revision)
+    const auto& fire = in.geometry.base().definition().hearth;
+    bool visibleFire = false;
+    if (fire) {
+        const Vec anchor{fire->x, fire->y, fire->z};
+        const float d = depth(world.camera, anchor);
+        const float side = (anchor.x - world.camera.position.x) * world.camera.right.x +
+                           (anchor.z - world.camera.position.z) * world.camera.right.z;
+        visibleFire = d > nearPlane - .6f && d < world.camera.farClip + .6f &&
+                      std::abs(side) <= std::max(0.f, d) * (viewWidth * .5f / focal()) + .6f;
+    }
+    const auto tick = visibleFire ? in.now / 50 + 1 : 0;
+    if (fire && flame_ == UINT16_MAX)
+        throw std::invalid_argument("Hearth flame artwork missing");
+    if (fireTick_ == tick && !changed && visibility_ == world.revision && area.cells == area_.cells &&
+        area.kind == area_.kind && area.eligible == area_.eligible &&
+        area.ground.revision == area_.ground.revision)
         return false;
+    fireTick_ = tick;
     area_ = area;
     visibility_ = world.revision;
     frame_.count = 0;
@@ -106,6 +124,24 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
         add(p);
     };
+    if (visibleFire) {
+        // Fixed analytic particles need no spawning, RNG state, allocation or save data.
+        const float t = float((in.now / 50) % 24000) * .05f;
+        for (unsigned i = 0; i < 24; ++i) {
+            const bool ember = i >= 16;
+            const float phase = std::fmod(t * (ember ? .48f : .8f) + float(i) * .618034f, 1.f);
+            const float lane = float(i % 5) * .065f - .13f;
+            Vec center{fire->x + .035f * std::sin(t * 2.3f + float(i)),
+                       fire->y + (ember ? .08f + phase * .52f : .07f + phase * .20f),
+                       fire->z + lane + .025f * std::sin(t * 3.f + float(i) * 2.f)};
+            const float h = ember ? .025f : .22f + .12f * (1.f - phase);
+            const unsigned before = frame_.count;
+            billboard(center, ember ? .012f : .13f, h, 9, .08f * std::sin(t + float(i)),
+                      {1, 1, 1, (ember ? .75f : .8f) * (1.f - phase * phase)});
+            if (frame_.count != before)
+                frame_.packets[before].texture = std::uint16_t(flame_);
+        }
+    }
     for (const auto& weapon : area.ground.weapons)
         if (weapon.active)
             billboard({weapon.cell.x + .5f, elevation(in.geometry.surface(weapon.cell).floor) + .5f,

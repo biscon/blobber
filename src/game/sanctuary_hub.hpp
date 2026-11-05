@@ -3,7 +3,7 @@
 #include "game/recovery.hpp"
 #include "world/fixtures.hpp"
 namespace blobber {
-inline constexpr const char* sanctuaryHubIdentity = "sanctuary-city-v1";
+inline constexpr const char* sanctuaryHubIdentity = "sanctuary-city-v2";
 struct CampaignLocationState;
 struct SanctuaryHub {
     Map map;

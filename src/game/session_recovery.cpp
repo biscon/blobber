@@ -140,6 +140,8 @@ PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept 
     return {};
 }
 bool GameSession::atSanctuary() const noexcept {
+    if (recovery_.freeRestEverywhere)
+        return true;
     for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
         if (recovery_.sanctuaries[i] == movement().player.cell)
             return true;

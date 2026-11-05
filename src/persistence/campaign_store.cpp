@@ -215,7 +215,7 @@ CampaignSlot CampaignStore::inspect() {
         }
         auto run = std::make_unique<CampaignRun>(catalog_, std::move(*s), definitions_.timings);
         out.active = true;
-        out.depth = run->activeLocation();
+        out.depth = run->dungeonDepth();
         out.location = run->name();
         for (const auto& member : run->party().snapshot().characters) {
             if (!out.partySummary.empty())

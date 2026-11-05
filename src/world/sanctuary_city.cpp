@@ -99,7 +99,7 @@ void validateSanctuaryCity(const SanctuaryCity& city) {
                 require(!map.solid(c), std::string(r.name) + " overlaps architecture");
                 require(!city.gateApproach.contains(c) && !city.alley.contains(c),
                         std::string(r.name) + " occupies a protected route");
-                require(!(c == city.spawn.cell) && !(c == city.rest.cell) &&
+                require(!(c == city.spawn.cell) && !(c == city.recallArrival.cell) &&
                             !(c == city.dungeonLanding.cell) && !(c == city.dungeonFixture),
                         std::string(r.name) + " occupies a protected anchor");
                 for (unsigned d = 0; d < city.doorCount; ++d)
@@ -140,9 +140,10 @@ void validateSanctuaryCity(const SanctuaryCity& city) {
             }
         }
     }
-    require(reachable(city.rest.cell) && reachable(city.dungeonLanding.cell) && reachable(city.gate.cell),
+    require(reachable(city.recallArrival.cell) && reachable(city.dungeonLanding.cell) &&
+                reachable(city.gate.cell),
             "landmark approach is unreachable");
-    require(city.rest.cell == city.doorway("sanctuary").approach.cell &&
+    require(city.recallArrival.cell == city.doorway("sanctuary").approach.cell &&
                 city.dungeonFixture == city.doorway("dungeon").approach.cell &&
                 city.gate.cell == city.doorway("city-gate").approach.cell,
             "landmark anchors differ from their doorways");
@@ -153,8 +154,9 @@ void validateSanctuaryCity(const SanctuaryCity& city) {
     auto distance = [&](const std::vector<int>& d, Cell c) {
         return d[std::size_t(c.y * map.width() + c.x)];
     };
-    require(distance(future, city.rest.cell) <= 6 && distance(future, city.dungeonLanding.cell) <= 6 &&
-                distance(distances(city, city.rest.cell, true), city.dungeonLanding.cell) <= 8,
+    require(distance(future, city.recallArrival.cell) <= 6 &&
+                distance(future, city.dungeonLanding.cell) <= 6 &&
+                distance(distances(city, city.recallArrival.cell, true), city.dungeonLanding.cell) <= 8,
             "arrival/rest/dungeon routes exceed walking budget");
 }
 SanctuaryCity sanctuaryCity() {
@@ -218,7 +220,7 @@ SanctuaryCity sanctuaryCity() {
     result.reservations[3] = {"lane-planting", {4, 15}, 2, 1};
     result.reservations[4] = {"east-planting", {20, 19}, 2, 2};
     result.reservationCount = 5;
-    result.rest = result.doorway("sanctuary").approach;
+    result.recallArrival = result.doorway("sanctuary").approach;
     result.dungeonFixture = result.doorway("dungeon").approach.cell;
     result.dungeonLanding = {result.dungeonFixture + forward(result.doorway("dungeon").approach.heading) * -1,
                              result.doorway("dungeon").approach.heading};

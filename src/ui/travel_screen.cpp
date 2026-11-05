@@ -26,7 +26,7 @@ void HudPainter::travel(const HudSnapshot& h) const {
                       t.kits ? t.kits - 1 : 0);
         text(line, 136, 106, gold, UiTextStyle::Small);
         text("Destination: Sanctuary hub", 136, 133, hudInk::text);
-        text("Recovery is a separate rest at the sanctuary.", 136, 159, muted, UiTextStyle::Small);
+        text("Free recovery is a separate rest inside the inn.", 136, 159, muted, UiTextStyle::Small);
         text("Return from the hub uses an unlocked floor entrance.", 136, 182, muted, UiTextStyle::Small);
         text("Your departure position is not a return waypoint.", 136, 202, muted, UiTextStyle::Small);
     }

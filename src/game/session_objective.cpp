@@ -77,10 +77,12 @@ LandingSafety GameSession::landingSafety(unsigned index) const noexcept {
     const auto& defs = floor_.definition();
     if (index >= defs.landingCount)
         return {};
-    const auto c = defs.landings[index];
+    return arrivalSafety(defs.landings[index]);
+}
+LandingSafety GameSession::arrivalSafety(Cell c) const noexcept {
     if (actionBusy())
         return {false, "Wait until movement finishes."};
-    if (map_.solid(c) || actors_.occupied(c))
+    if (geometry().movementBlocked(c) || actors_.occupied(c))
         return {false, "Landing is occupied."};
     if (effects_.area(c) || !combat_.settledRecovery({c, movement().player.heading}, timeMs_))
         return {false, "Landing is not settled and safe."};

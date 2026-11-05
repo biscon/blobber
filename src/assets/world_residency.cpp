@@ -45,6 +45,8 @@ AssetRequirements CpuAssets::requirements(const std::string& id, const ActorSnap
             r.meshes.set(i);
             texture(publication.meshes[i].texture);
         }
+    if (id == "sanctuary-inn")
+        texture(named("effect/hearth-flame"));
     if (actors) {
         if (actors->count > NpcWorld::maxInstances || actors->typeCount != publication.appearances.size())
             throw std::invalid_argument("Location appearance/actor counts differ");

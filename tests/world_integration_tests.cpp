@@ -10,6 +10,43 @@
 using namespace blobber;
 using namespace blobber::world_render;
 namespace {
+void hearthEffects() {
+    test::VisibilityFixture fixture(1, 0, false, false, true);
+    world_assets::CpuAssets assets(fixture.publication());
+    auto lease = assets.acquire(world_assets::allAssets(assets.publication));
+    WorldDefinition definition;
+    definition.hearth = AmbientFire{3.5f, .2f, 2.5f};
+    Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"}, definition);
+    MovementState movement;
+    movement.player = {{3, 4}, Heading::North};
+    WorldFrame world;
+    world.camera = camera(movement, map);
+    world.revision = 1;
+    EffectsPipeline effects(assets);
+    FrameInput input{map, movement};
+    check(effects.update(input, world) && effects.frame().count == 24, "Bounded hearth particles visible");
+    const auto first = effects.frame().packets[0].points;
+    check(!effects.update(input, world), "Paused hearth reuses frame");
+    input.now = 200;
+    check(effects.update(input, world) && effects.frame().packets[0].points[0].y != first[0].y,
+          "Hearth advances deterministically with view clock");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 60; ++i) {
+        input.now = 250 + i * 50;
+        effects.update(input, world);
+    }
+    watching = false;
+    check(allocations == 0 && effects.frame().count <= 24,
+          "Hearth frame work is bounded and allocation-free");
+    movement.player.heading = Heading::South;
+    world.camera = camera(movement, map);
+    ++world.revision;
+    effects.update(input, world);
+    check(!effects.frame().count, "Offscreen fire submits no particles");
+    input.now += 200;
+    check(!effects.update(input, world), "Offscreen hearth retains cached image");
+}
 void barriers() {
     auto map = fixtureMap();
     const auto cat = fixtureCatalog();
@@ -364,7 +401,7 @@ void stressEffects() {
     FrameInput input{game.geometry(), game.movement(), &game.actors(), nullptr, nullptr,
                      nullptr,         &attacks,        &area,          200};
     effects.update(input, world);
-    check(effects.frame().count == effectCapacity,
+    check(effects.frame().count == effectCapacity - 24,
           "Maximum ground/weapon/projectile capacity retains every packet");
     for (unsigned i = 0; i < 120; ++i) {
         input.now = 200 + i;
@@ -392,6 +429,7 @@ void stressEffects() {
 } // namespace
 int main(int argc, char**) {
     try {
+        hearthEffects();
         barriers();
         doorsAndEffects();
         acceptedImpacts();

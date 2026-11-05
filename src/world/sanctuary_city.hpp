@@ -30,7 +30,7 @@ struct SanctuaryCity {
     unsigned doorCount = 0;
     std::array<CityReservation, cityReservationCapacity> reservations{};
     unsigned reservationCount = 0;
-    Player rest{}, dungeonLanding{}, gate{};
+    Player recallArrival{}, dungeonLanding{}, gate{};
     Cell dungeonFixture{};
     CityReservation gateApproach{};
     std::array<CityLoop, 2> loops{};

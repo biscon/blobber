@@ -1,0 +1,16 @@
+{
+  "tool": "built-in image_gen",
+  "mode": "generate",
+  "assets": [
+    {
+      "file": "source/concept.png",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Create a production concept image for a cozy authored fantasy inn common room in a first-person retro dungeon crawler. Simple low-poly modeled geometry with richly hand-painted materials, muted warm oak beams and plank floor, cream plaster above rough limestone wainscot, square wooden tables and sturdy chairs in two groups, long timber bar at back with shelves and ale barrels and empty space for future innkeeper, potted green plants, substantial stone fireplace on left with cozy amber fire and logs, timber staircase on right going to a closed upper landing. Modest intimate room, easy clear walking aisles, solid ceiling beams. Eye-level wide view from entrance. Match a grounded medieval game, not photorealistic, not modern, not cartoon toy-like. No people, no text, no HUD. Warm restrained lighting, readable shapes. Save generated image for concept reference; this is not a gameplay screenshot."
+    },
+    {
+      "file": "source/flame-master.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Asset type: hand-painted flame sprite for a cozy medieval inn fireplace in a retro low-poly dungeon crawler. A single upright licking flame, slender teardrop base with two small curling tips, bright soft golden core and amber orange edges, restrained painterly texture, compact solid readable silhouette. Centered fully in frame with generous transparent padding. No logs, no embers, no scene, no floor, no smoke, no cast shadow, no border, no text. Genuinely transparent background, not black or white. Intended to be layered as small animated particles above fireplace logs."
+    }
+  ]
+}

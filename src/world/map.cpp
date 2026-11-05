@@ -80,6 +80,12 @@ void Map::validateWorld() {
             return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
         }))
         throw std::invalid_argument("Invalid world asset pack ID");
+    if (world_.hearth) {
+        const auto& f = *world_.hearth;
+        if (!std::isfinite(f.x) || !std::isfinite(f.y) || !std::isfinite(f.z) || f.x < 1 ||
+            f.x >= width_ - 1 || f.z < 1 || f.z >= height_ - 1 || f.y < 0 || f.y > 3)
+            throw std::invalid_argument("Invalid hearth anchor");
+    }
     const auto count = std::size_t(width_) * height_;
     if (world_.surfaces.empty())
         world_.surfaces.resize(count);
