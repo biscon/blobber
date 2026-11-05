@@ -4,15 +4,19 @@ Hidden application-owned 1920×1080 captures, seed 5, supersampling and environm
 AO enabled. No desktop mouse/keyboard/focus automation was used. Interactive review
 remains user-owned.
 
-- [Entry and common room](review-v2/entry.png)
-- [Bar and shelves](review-v2/bar.png), [staff aisle](review-v2/staff-aisle.png)
-- [Seating](review-v2/seating.png), [plants](review-v2/plant-close.png), [ale barrels](review-v2/ale-barrels.png)
-- [Hearth](review-v2/hearth.png), animation [phase 0](review-v2/fire-0.png) / [phase 1](review-v2/fire-1.png)
-- [Decorative staircase](review-v2/stairs.png)
-- [Free rest](review-v2/free-rest.png), [inn map](review-v2/inn-map.png)
-- [City entry prompt](review-v2/city-entry.png), [exit prompt](review-v2/exit.png), [return outdoors](review-v2/city-return.png)
-- [Continue inside](review-v2/continue-inn.png)
-- [Resource and behavior report](review-v2/report.txt)
+Current captures include the human-scale correction: lower furnishings, smaller
+loose props/doorway, normal stair risers and narrower floorboards. The previous
+[entry](review-v2/entry.png) and [counter](review-v2/bar.png) are retained for comparison.
+
+- [Entry and common room](human-scale/entry.png)
+- [Bar and shelves](human-scale/bar.png), [staff aisle](human-scale/staff-aisle.png)
+- [Seating](human-scale/seating.png), [plants](human-scale/plant-close.png), [ale barrels](human-scale/ale-barrels.png)
+- [Hearth](human-scale/hearth.png), animation [phase 0](human-scale/fire-0.png) / [phase 1](human-scale/fire-1.png)
+- [Decorative staircase](human-scale/stairs.png)
+- [Free rest](human-scale/free-rest.png), [inn map](human-scale/inn-map.png)
+- [City entry prompt](human-scale/city-entry.png), [exit prompt](human-scale/exit.png), [return outdoors](human-scale/city-return.png)
+- [Continue inside](human-scale/continue-inn.png)
+- [Resource and behavior report](human-scale/report.txt)
 
 Reproduce sequentially after a production build:
 

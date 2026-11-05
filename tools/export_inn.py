@@ -29,8 +29,10 @@ iron=tiles[5].copy();iron[:,:,:3]=np.mean(iron[:,:,:3],axis=2)[:,:,None]*[.23,.2
 clay=tiles[1].copy();clay[:,:,:3]*=[.68,.38,.23];tiles.append(clay)
 # Repeating floor has painted plank joints, not an enlarged material swatch.
 wood=sample_mirrored(tiles[3],256,256,256).copy()
-for x in (0,64,128,192): wood[:,x:x+2,:3]*=.42
-for x,y in ((0,94),(64,192),(128,64),(192,142)): wood[y:y+2,x:x+64,:3]*=.48
+# .0625-cell / ~20 cm planks: the old .25-cell boards amplified the giant scale.
+for i,x in enumerate(range(0,256,16)):
+    wood[:,x:x+1,:3]*=.42
+    for y in ((i*47)%128,128+(i*47)%128):wood[y:y+1,x:x+16,:3]*=.48
 save('floor',wood)
 save('wall',sample_mirrored(tiles[1],256,256,256));save('ceiling',sample_mirrored(tiles[3],256,256,256)*[.72,.72,.72,1])
 save('foliage',load(CITY/'source/foliage-master.png',(256,256)))
@@ -66,15 +68,20 @@ for name in ('wall','exit-door'):
     h=model(name)
     # Local front faces -Z; anchor lies in the solid boundary cell.
     box(h,(0,1,-.49),(1,2,.04),1)
-    box(h,(0,.18,-.525),(1,.36,.04),0)
+    box(h,(0,.11,-.525),(1,.22,.04),0)
     for x in (-.46,.46): box(h,(x,1,-.55),(.08,2,.10),3,.80)
-    for y in (.37,1.82,1.96): box(h,(0,y,-.55),(1,.07,.10),3,.85)
+    for y in (.23,1.82,1.96): box(h,(0,y,-.55),(1,.07,.10),3,.85)
     if name=='exit-door':
+        wall_faces=len(h.faces)
         box(h,(0,.56,-.58),(.66,1.12,.07),3,.72)
         for x in (-.38,.38): box(h,(x,.60,-.61),(.09,1.20,.12),5)
         box(h,(0,1.18,-.61),(.85,.10,.12),5)
         for y in (.22,.68): box(h,(0,y,-.625),(.61,.035,.025),7)
         box(h,(.22,.48,-.65),(.035,.075,.03),7)
+        # Adult door relative to the fixed .5-cell eye, without moving the wall.
+        for pts,_,_ in h.faces[wall_faces:]:
+            for p in pts:
+                p.x*=.65;p.y*=.60
 h=model('table-group')
 # Table + four chairs fit precisely in a two-by-two physical reservation.
 box(h,(.5,.42,.5),(1.08,.075,.60))
@@ -119,19 +126,19 @@ for x in (.20,.53,.86):
 for x in (.04,.34,.65,.96):box(h,(x,.21,-.34),(.025,.23,.025),7)
 box(h,(.5,.18,-.35),(1.04,.025,.025),7)
 h=model('stairs')
-for i in range(12):
-    z=2.38-i*.235;high=.12+i*.125
-    box(h,(0,high/2,z),(.80,high,.235),3,.80)
-    box(h,(0,high,z+.015),(.86,.035,.25))
-    if i%3==0:
-        for x in (-.40,.40):box(h,(x,high+.24,z),(.055,.48,.055))
+for i in range(24):
+    z=2.44-i*.12;high=.065+i*.065
+    box(h,(0,high/2,z),(.50,high,.12),3,.80)
+    box(h,(0,high,z+.005),(.54,.018,.13))
+    if i%5==0:
+        for x in (-.25,.25):box(h,(x,high+.14,z),(.035,.28,.035))
 # Sloped rails are small oriented prisms.
-for x in (-.4,.4):
-    a,b=Vector((x,.52,2.45)),Vector((x,1.92,-.25));u=Vector((.03,0,0));v=Vector((0,.035,.018))
+for x in (-.25,.25):
+    a,b=Vector((x,.34,2.45)),Vector((x,1.91,-.45));u=Vector((.02,0,0));v=Vector((0,.022,.012))
     for pts in ([a-u-v,a+u-v,b+u-v,b-u-v],[a-u+v,b-u+v,b+u+v,a+u+v],
                 [a-u-v,b-u-v,b-u+v,a-u+v],[a+u-v,a+u+v,b+u+v,b+u-v]):h.face(pts,3)
-box(h,(0,1.63,-.30),(.86,.08,.4))
-box(h,(0,1.83,-.46),(.75,.32,.06),3,.6)
+box(h,(0,1.60,-.36),(.54,.04,.28))
+box(h,(0,1.81,-.46),(.49,.40,.04),3,.6)
 h=model('plant')
 cylinder(h,0,0,0,.17,.30,8)
 cylinder(h,0,.28,0,.19,.045,8)
@@ -140,6 +147,27 @@ for i in range(4):
     a=math.pi*i/4;u=Vector((math.cos(a)*.30,0,math.sin(a)*.30));c=Vector((0,.51,0));v=Vector((0,.30,0))
     pts=[c-u-v,c+u-v,c+u+v,c-u+v];uv=[(0,1),(1,1),(1,0),(0,0)]
     special['plant'].append((pts,uv));special['plant'].append((list(reversed(pts)),list(reversed(uv))))
+# Source meshes above share the original layout; convert furnishings to adult
+# proportions BEFORE UV packing so density stays 256 texels per runtime cell.
+# Centers keep assemblies in their existing map/collision reservations.
+furniture_scales={
+    'table-group':((.65,.55,.65),(.5,0,.5)),
+    'bar':((1,.55,.65),(0,0,0)),
+    'shelves':((1,.55,.65),(0,0,-.35)),
+    'barrels':((.65,.55,.65),(0,0,0)),
+    'plant':((.65,.55,.65),(0,0,0)),
+}
+for name,(scale,pivot) in furniture_scales.items():
+    def scaled(p):return Vector(tuple(pivot[k]+(p[k]-pivot[k])*scale[k] for k in range(3)))
+    models[name].faces=[([scaled(p) for p in pts],t,s) for pts,t,s in models[name].faces]
+    special[name]=[([scaled(p) for p in pts],uv) for pts,uv in special[name]]
+for pts,_,_ in models['hearth'].faces:
+    for p in pts:
+        p.x=.5+(p.x-.5)*.65
+        p.z=-.12+(p.z+.12)*.65 # Preserve the fire anchor at the logs.
+        if p.y>1.1: p.y=.7175+(p.y-1.1)*(1.9-.7175)/.8 # Chimney meets the tall shell.
+        elif p.y>.25:p.y=.25+(p.y-.25)*.55
+
 # Shared atlas with metric 256 texels/cell UVs and bounded packing.
 regions={};mapped={}
 for name,h in models.items():
@@ -186,5 +214,11 @@ base['daylightFog']=[12,4,0];base['viewDistance']=16
 base['buildings']=[dict(id=name,parts=parts) for name,parts in bindings.items()]
 (PACK/'pack.json').write_text(json.dumps(base,indent=2)+'\n')
 export_collection(PACK,'sanctuary-inn',[(record,[(i%4)*4,0,(i//4)*4]) for i,record in enumerate(records.values())])
-(PACK/'models/export-report.json').write_text(json.dumps(dict(texels_per_cell=256,atlas_size=size,models={name:sum(len(records[p]['vertices']) for p in parts) for name,parts in bindings.items()}),indent=2)+'\n')
+bounds={name:dict(min=[min(v[k] for p in parts for v in records[p]['vertices']) for k in range(3)],
+                  max=[max(v[k] for p in parts for v in records[p]['vertices']) for k in range(3)])
+        for name,parts in bindings.items()}
+# Include pottery and chair backs: the whole seating group stays below eye.
+assert bounds['bar']['max'][1]<.5 and bounds['table-group']['max'][1]<.4
+assert bounds['barrels']['max'][1]<.5 and bounds['plant']['max'][1]<.5
+(PACK/'models/export-report.json').write_text(json.dumps(dict(texels_per_cell=256,atlas_size=size,bounds=bounds,models={name:sum(len(records[p]['vertices']) for p in parts) for name,parts in bindings.items()}),indent=2)+'\n')
 print('Exported',len(models),'inn models',flush=True)

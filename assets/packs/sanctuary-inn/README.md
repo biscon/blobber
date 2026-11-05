@@ -5,6 +5,10 @@ inn door. Runtime placement and collision live in `src/game/inn_interior.cpp`.
 Nine named models provide plaster/stone/timber walls, exit door, two seating groups,
 bar, shelves with pottery, ale barrels, plants, hearth and decorative upstairs stair.
 The room has an 8×8-cell floor enclosed by modeled walls and an outer solid pad.
+Furniture is authored against the fixed .5-cell eye height: the counter is .3465
+cells high, tables .2516 and chair seats .1471. Loose props are narrower; the
+doorway, wall trim and stair risers follow the same adult proportions. Geometry
+is resized before metric UV packing; the export report retains final mesh bounds.
 
 `source/concept.png` and `source/flame-master.png` were created with the built-in
 imagegen tool; exact prompts are retained in [prompts.json](prompts.json). Material

@@ -77,3 +77,25 @@ identify the inn. The existing rest illustration/animation is reused.
 
 [Verification and resource measurements](inn_interior_verification.md) and
 [captures](screenshots/inn/README.md) record the delivered result and review limits.
+
+## Human-scale correction (2026-11-05)
+
+User review identified oversized furnishings: the .63-cell counter exceeded the
+fixed .5-cell eye height. Correct the offline meshes rather than the shared camera.
+Use .55 of the original furniture height: counter .3465, tabletop .2516, chair
+seat .1471 cells (roughly 1.1 m, .8 m and .47 m for a 1.6 m eye height). Reduce
+loose-prop widths/depths by .65 around their existing assembly centers. Keep the
+long bar and shelving widths fitted to their reservations, with shallower bodies.
+Reduce the exit door and lower wall trim; retain the tall timber hall shell.
+Floorboard joints move from .25-cell boards to .0625-cell boards (about 20 cm),
+with staggered half-cell lengths, removing another oversized scale cue.
+The hearth keeps its fire bed and immutable emitter anchor, compresses the surround
+above the bed, and retains a chimney reaching the original shell. Stairs retain their
+upper landing but gain smaller risers and appropriately sized railings.
+
+All transformations precede metric UV packing, preserving 256 texels/cell and
+regenerating Blender, GLB and runtime meshes together. Map/collision reservations,
+travel, saves and fire simulation remain unchanged; there is no frame-path cost.
+Verify exported dimensions and inspect hidden entry, adjacent counter, seating,
+hearth, stairs and exit captures. The existing gameplay tests need not be repeated
+for this asset-only correction.

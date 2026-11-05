@@ -93,3 +93,25 @@ remain user-owned.
 Cancel and return restore city-only residency. Releasing the final view leaves zero
 location textures and alpha; renderer/UI scratch follows its existing lifetime.
 No resource ceiling or texture-density reduction was needed.
+
+
+## Human-scale review correction — 2026-11-05
+
+The user rejected the initial furniture scale. The original .63-cell counter was
+taller than the fixed .5-cell eye; its corrected top is .3465 cells. Table tops
+are .251625 and chair seats .147125 cells; loose props are narrower and lower.
+The doorway and wall trim are reduced, stair risers are .065 cells with .12-cell
+treads, and floorboards are .0625 cells wide. The tall hall shell is retained.
+The hearth surround is reduced around its unchanged fire bed/anchor and chimney.
+
+Re-exported all nine models, Blender/GLB, metric atlas and floor texture. Export
+assertions check outward cylinder faces, bounded geometry and below-eye furniture
+assemblies; final bounds are in `models/export-report.json`. Debug game assets and
+the review tool build successfully. The complete hidden OpenGL capture runner
+passes again, including staged cancellation, entry/exit, fire/pause/picking,
+Continue roundtrip and resource release. Inspected entry, adjacent counter, seating,
+hearth in the seating view, stairs and exit. See the updated [gallery](screenshots/inn/README.md).
+
+This is an offline asset correction: runtime camera, map/collision data, save
+schema and gameplay code did not change. Existing gameplay suites were not rerun.
+`git diff --check` passes. Interactive acceptance remains user-owned.

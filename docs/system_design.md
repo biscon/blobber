@@ -8,6 +8,9 @@ Campaign schema/simulation are 10/14; older saves reject without migration.
 [Verification](inn_interior_verification.md) records focused CPU/extended-save checks,
 hidden OpenGL captures and 348.09 MiB city–inn texture overlap within existing limits.
 [Capture gallery](screenshots/inn/README.md); interactive acceptance remains user-owned.
+The [human-scale correction](inn_interior_design.md#human-scale-correction-2026-11-05)
+reduces oversized furnishings against the fixed eye height through offline meshes;
+map data and saves remain compatible.
 
 Environment AO **Accepted and closed (2026-11-05)**:
 [design and verification](environment_ao_design.md) adds default-on environment-only
