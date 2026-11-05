@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01/SC02 accepted; SC03 Ready for review, representative tree accepted (2026-11-05).**
+Status: **SC01/SC02 accepted; SC03 corrections Ready for review, representative tree accepted (2026-11-05).**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -19,7 +19,7 @@ This roadmap does not authorize automatic implementation of every slice.
 | Active slice | SC03 — Ready for review |
 | Awaiting review | Complete dressed city and water; [handoff](sc03_verification.md) |
 | Next eligible slice | SC04, only after SC03 acceptance and separate planning |
-| Next action | User review of complete SC03; handle corrections within this slice |
+| Next action | Review corrected city captures; await final SC03 acceptance |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Keep prepared geometry, material batching and existing chunk/frustum culling; no advanced occlusion or additional spatial subdivision |
 | Blockers | None |
@@ -504,3 +504,12 @@ bushes, two ivy variants, two market stalls, low fountain, three generated servi
 signs, and eight-frame/8-FPS water. Focused CPU/GPU and production capture checks
 pass. See final verification for resource totals and limitations. Await final SC03
 review; no SC04 implementation or campaign cutover is authorized by this delivery.
+
+2026-11-05: Screenshot corrections implemented within SC03. Stalls are half-sized
+and relocated to (8–9,15) in the square; dungeon approach/landing move to (13,6)
+and (13,7), opening the inn frontage. Ivy stops below eaves, bushes meet dedicated
+earth, and the fountain has pale marble and six-sided animated water streams.
+City-only capped haze replaces the abrupt sky fade; dungeon fog remains unchanged.
+Focused CPU/GPU checks and hidden captures pass. SC03 returns to **Ready for review**;
+see [updated verification](sc03_verification.md) and [gallery](screenshots/sc03/README.md).
+Final acceptance and SC04 remain pending.

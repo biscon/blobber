@@ -1,38 +1,47 @@
 # SC03 complete dressing — Ready for review
 
-Final SC03 uses the accepted shorter tree, a smaller eastern tree, planted beds,
+Current SC03 uses the accepted shorter tree, a smaller eastern tree, planted beds,
 bushes, selective ivy, two timber stalls, three service signs and an animated
 stone fountain. [Verification, resource totals and limitations](../../sc03_verification.md).
 
-| Final view | Capture |
+## Screenshot corrections — current review
+
+| Correction | Capture |
 | --- | --- |
-| Fountain and square | [Square](dressing-v2/square.png), [mid-turn](dressing-v2/fountain-turn.png), [close](dressing-v2/fountain-close.png) |
-| Market | [Oblique canopy view](dressing-v2/market-oblique.png), [counter](dressing-v2/market-front.png) |
-| Inn | [Tankard sign](dressing-v2/sign-inn-near.png) |
-| Smithy | [Anvil sign](dressing-v2/sign-smithy-near.png), [oblique](dressing-v2/sign-smithy.png) |
-| Provisioner | [Provisions sign](dressing-v2/sign-provisioner.png) |
-| Planting | [Courtyard](dressing-v2/tree-east.png), [eastern garden](dressing-v2/east-garden.png), [lane bed](dressing-v2/lane-garden.png) |
-| Ivy | [Courtyard facade](dressing-v2/ivy-courtyard.png), [square context](dressing-v2/square.png) |
-| Layout and measurements | [Final layout](dressing-v2/layout.svg), [24-view report](dressing-v2/report.txt) |
+| Gentle city haze, visible far gate | [Current square](corrections-v1/square.png), [previous fog](dressing-v2/square.png) |
+| Half-size stalls in the open square | [Market context](corrections-v1/market.png), [counter](corrections-v1/market-front.png), [grain stall](corrections-v1/market-grain.png), [cleared old alley](corrections-v1/former-market.png) |
+| Room beside the inn | [Shifted dungeon entrance](corrections-v1/inn-spacing.png) |
+| Ivy below the eaves | [Low roof](corrections-v1/ivy-alley.png), [close facade](corrections-v1/ivy-courtyard.png) |
+| Grounded bushes and dedicated soil | [Lane bed](corrections-v1/lane-garden.png), [courtyard](corrections-v1/tree-east.png), [eastern bed](corrections-v1/east-garden.png) |
+| Pale marble and solid stream silhouettes | [Close fountain](corrections-v1/fountain-close.png), [western approach](corrections-v1/fountain-west.png) |
+| Layout and measurements | [Current layout](corrections-v1/layout.svg), [13-view report](corrections-v1/report.txt) |
 
-[Animated fountain preview](water-v1/fountain-loop.gif) is assembled from eight
-application-owned captures. It is half-size, nearest-neighbor, with a shared GIF
-palette. Native 1920×1080 PNGs in `water-v1/` are authoritative. The
-[clock/cache report](water-v1/report.txt) records all eight phases, constant picking
-revision and a paused update. The paused image is pixel-identical to the last
-active frame; [pixel checks](water-v1/pixel-checks.txt).
+Eight fountain angles: [N](fountain-orbit-v1/orbit-0.png),
+[E](fountain-orbit-v1/orbit-1.png), [S](fountain-orbit-v1/orbit-2.png),
+[W](fountain-orbit-v1/orbit-3.png), [NW](fountain-orbit-v1/orbit-4.png),
+[NE](fountain-orbit-v1/orbit-5.png), [SE](fountain-orbit-v1/orbit-6.png),
+[SW](fountain-orbit-v1/orbit-7.png). The four closed streams retain thickness;
+normal occlusion by the fountain and overlap between streams remain expected.
+Diagonal views are captured halfway through an in-process turn.
 
-The final captures are `dressing-v2/` and `water-v1/`. `dressing-v1/` retains the
-initial sign-height and dark-stream comparison. Close views deliberately retain
-the fixed camera; standing directly under signs/canopies may crop them. Final
-visual acceptance remains user review.
+The revised animation is captured in `water-v2/`: [first frame](water-v2/water-0.png),
+[last frame](water-v2/water-7.png), [clock/cache report](water-v2/report.txt),
+[pixel checks](water-v2/pixel-checks.txt). Every 125ms step changes water pixels;
+picking remains unchanged and the paused capture is pixel-identical to frame 7.
 
-[Layout/scenery checks](dressing-cpu-checks.txt),
-[CPU integration](dressing-integration-checks.txt),
-[GPU integration](dressing-gpu-checks.txt).
-Generated art masters live in [the pack source directory](../../../assets/packs/sanctuary-city/source);
-exact built-in ImageGen prompts are retained for [dressing](../../../assets/packs/sanctuary-city/source/dressing-art.prompt.json)
-and [tree art](../../../assets/packs/sanctuary-city/source/tree-art.prompt.json).
+[Four focused CPU suites](corrections-cpu-checks.txt) and
+[hidden GPU checks](corrections-gpu-checks.txt) pass. The atmosphere fixture verifies
+both distant walls and actors, plus identical dungeon pixels with either profile.
+Native captures are 1920×1080, supersampling ON, using hidden windows and in-process
+movement only. Interactive acceptance remains user review.
+
+Earlier `dressing-v1/`, `dressing-v2/` and `water-v1/` are retained for comparison;
+the [earlier animation GIF](water-v1/fountain-loop.gif) predates the material/stream
+corrections. Unchanged service signs: [inn](dressing-v2/sign-inn-near.png),
+[smithy](dressing-v2/sign-smithy-near.png), [provisioner](dressing-v2/sign-provisioner.png).
+Generated art and exact prompts live in the pack's
+[source directory](../../../assets/packs/sanctuary-city/source), including
+[soil/marble prompts](../../../assets/packs/sanctuary-city/source/review-art.prompt.json).
 
 ## Accepted representative tree comparison
 

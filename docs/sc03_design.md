@@ -1,6 +1,6 @@
 # SC03 — Vegetation, market, fountain and service signs
 
-Status: **Implemented — Ready for review** (2026-11-05).
+Status: **Ready for review — user corrections implemented** (2026-11-05).
 The user approved the shorter representative tree: “beautiful tree, I approve,
 continue”. That checkpoint is accepted; continue the already-approved SC03 scope.
 The complete dressed city and eight-frame water animation are delivered for final review.
@@ -147,3 +147,56 @@ geometry-only views keep phase zero. Conservatively treat a visible chunk with a
 water range as animated, even when actual water pixels are occluded. Final content,
 resource totals, checks and limitations are in [verification](sc03_verification.md).
 The first tree approval is satisfied; the final SC03 acceptance is pending.
+
+## User review corrections — 2026-11-05
+
+The user supplied seven in-game screenshots identifying oversized/back-alley
+stalls, ivy above the roof, crowding between the dungeon entrance and inn,
+floating bushes, paving recolored as soil, low fountain/ground contrast and
+edge-on disappearance of flat water streams. These are corrections within SC03.
+
+Move dungeon approach/fixture from (14,6) to (13,6) and derive its landing from the
+new doorway, opening two clear cells beside the inn while retaining a one-cell
+lane beside the sanctuary. Move the market reservation to (8,15), 2×1, south-west
+of the fountain square. Two north-facing 1×1 bases hold stalls authored at 50%
+linear size, centered within each base. Retain the fountain's two-cell circulation
+margin, both named loops and gate/rest/dungeon access; update placement tests.
+
+Keep ivy inside each facade's actual eaves and horizontal extent, using the
+existing artwork's UVs for the retained section rather than stretching the entire
+vine. Low-house ivy ends below 1.20-cell eaves; tall-house ivy stays below 2.15.
+Lower and shorten bushes, placing foliage through the soil surface so transparent
+card margins cannot leave crowns hanging. Add small modeled woody stems rooted
+in the bed. Replace recolored paving with a dedicated generated earth material,
+and use generated pale marble for fountain stone, all in the existing atlas.
+
+Replace each flat stream with a fixed six-sided swept tube following the existing
+curve, with closed end caps and continuous distance-based water UVs. This gives
+nonzero width from every azimuth without camera-facing transforms, per-frame mesh
+uploads or changes to CPU/GPU depth agreement. Reuse the eight-frame water atlas,
+clock and color cache unchanged. Geometry corrections require no schema change.
+Verification: focused layout regression checks, export geometry/material bounds,
+hidden captures of each reported issue and an eight-angle fountain sweep, plus
+the existing paused water capture. No unrelated renderer or test-matrix changes.
+
+### City atmosphere correction
+
+The subsequent city screenshot shows an abrupt near-total sky-color fade across
+the square. Add a pack-owned `daylightFog` triple (start distance, transition span,
+maximum opacity), defaulting to the existing outdoor values (10, 4.5, 1).
+Sanctuary-city alone overrides this to (4, 12, 0.22): a long, shallow haze that
+retains the enclosing walls. The indoor formula (9.4, 3.5, 1) stays unchanged.
+Both world and billboard/effect shaders receive the same prepared pack uniform;
+this adds no allocations, geometry work or uploads to the frame path.
+
+Publication 9 serializes and validates the triple (finite values, start 0–64,
+span greater than 0 and at most 64, opacity 0–1). The baker supplies legacy defaults
+for packs without an override; save and visibility formats stay unchanged.
+Verify publication roundtrips and rejection boundaries with generated fixtures,
+and compare GPU images for capped outdoor haze and identical indoor rendering
+across the two profiles. Inspect a matched city-square capture for the final art.
+
+Review outcome: all corrections are implemented and captured. Focused CPU tests,
+generated GPU atmosphere/architecture/foliage/water checks, eight fountain angles
+and the paused animation comparison pass. See the updated verification and gallery.
+SC03 is Ready for review; the accepted tree remains unchanged and SC04 is deferred.

@@ -10,7 +10,8 @@ using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
         throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT "
-                                 "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water]");
+                                 "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water|"
+                                 "corrections|fountain-orbit]");
     const std::string selected = argc == 4 ? argv[3] : "";
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
@@ -26,11 +27,11 @@ int main(int argc, char** argv) try {
     };
     const Pose poses[] = {{"fountain-close", {{11, 10}, Heading::South}},
                           {"fountain-west", {{9, 11}, Heading::East}},
-                          {"market-front", {{21, 11}, Heading::West}},
-                          {"market-grain", {{21, 12}, Heading::West}},
+                          {"market-front", {{8, 14}, Heading::South}},
+                          {"market-grain", {{9, 14}, Heading::South}},
                           {"east-garden", {{18, 20}, Heading::East}},
-                          {"lane-garden", {{7, 15}, Heading::West}},
-                          {"ivy-alley", {{7, 13}, Heading::West}},
+                          {"lane-garden", {{5, 14}, Heading::South}},
+                          {"ivy-alley", {{9, 12}, Heading::West}},
                           {"ivy-courtyard", {{7, 16}, Heading::West}},
                           {"sign-inn", {{14, 6}, Heading::East}},
                           {"sign-smithy", {{13, 13}, Heading::East}},
@@ -52,7 +53,9 @@ int main(int argc, char** argv) try {
                           {"gate-east-join", {{14, 19}, Heading::West}},
                           {"alley", {{3, 10}, Heading::East}},
                           {"courtyard", {{7, 3}, Heading::West}},
-                          {"market", {{21, 10}, Heading::South}},
+                          {"market", {{9, 12}, Heading::South}},
+                          {"former-market", {{21, 10}, Heading::South}},
+                          {"inn-spacing", {{14, 8}, Heading::North}},
                           {"roofline", {{12, 14}, Heading::North}},
                           {"south-lane", {{11, 18}, Heading::West}}};
     for (const auto& pose : poses)
@@ -90,7 +93,14 @@ int main(int argc, char** argv) try {
                                       name.rfind("ivy-", 0) == 0 || name.rfind("sign-", 0) == 0 ||
                                       name == "east-garden" || name == "lane-garden" || name == "door-inn" ||
                                       name == "door-smithy" || name == "door-provisioner";
+            const bool correctionShot =
+                name == "square" || name == "market" || name == "market-front" || name == "market-grain" ||
+                name == "former-market" || name == "inn-spacing" || name == "ivy-alley" ||
+                name == "ivy-courtyard" || name == "lane-garden" || name == "east-garden" ||
+                name == "tree-east" || name == "fountain-close" || name == "fountain-west";
             if (!selected.empty() && name != selected && !(selected == "dressing" && dressingShot) &&
+                !(selected == "corrections" && correctionShot) &&
+                !(selected == "fountain-orbit" && name.rfind("orbit-", 0) == 0) &&
                 !(selected == "water" && name.rfind("water-", 0) == 0) &&
                 !(selected == "materials" && materialShot) && !(selected == "stills" && !moving) &&
                 !(selected == "motion" && moving) &&
@@ -193,7 +203,7 @@ int main(int argc, char** argv) try {
             }
         }
         if (selected == "dressing") {
-            game.restorePose({{21, 8}, Heading::South}, true);
+            game.restorePose({{10, 13}, Heading::South}, true);
             game.move(Action::TurnRight);
             game.update(.08f, false);
             capture("market-oblique");
@@ -203,6 +213,20 @@ int main(int argc, char** argv) try {
             game.update(.08f, false);
             capture("fountain-turn");
             game.update(.08f, false);
+        }
+        if (selected == "fountain-orbit") {
+            const Player orbit[] = {{{11, 9}, Heading::South},  {{13, 11}, Heading::West},
+                                    {{11, 14}, Heading::North}, {{8, 11}, Heading::East},
+                                    {{9, 9}, Heading::East},    {{13, 9}, Heading::South},
+                                    {{13, 14}, Heading::West},  {{9, 14}, Heading::North}};
+            for (unsigned i = 0; i < 8; ++i) {
+                game.restorePose(orbit[i], true);
+                if (i >= 4) {
+                    game.move(Action::TurnRight);
+                    game.update(.08f, false);
+                }
+                capture("orbit-" + std::to_string(i));
+            }
         }
         if (selected == "water") {
             game.restorePose({{11, 10}, Heading::South}, true);

@@ -42,6 +42,16 @@ int main() try {
                           !city.map.solid({r.origin.x + int(x), r.origin.y + int(y)}),
                       "Dressing fills reserved bases without changing terrain sight");
     }
+    check(city.map.canStep({15, 4}, {16, 4}) && city.map.canStep({15, 5}, {16, 5}) &&
+              city.map.canStep({15, 5}, {15, 6}),
+          "Dungeon entrance leaves two clear cells beside the inn");
+    for (int x : {8, 9})
+        check(city.map.movementBlocked({x, 15}) && city.map.canStep({x, 13}, {x, 14}) &&
+                  city.map.canStep({x, 16}, {x, 17}),
+              "Compact stalls face the open square and preserve southern circulation");
+    for (int y : {11, 12})
+        check(city.map.canStep({19, y}, {20, y}) && city.map.canStep({20, y}, {21, y}),
+              "Former market alley is open");
     FloorFixtures future;
     future.count = 1;
     future.entries[0] = {city.dungeonFixture, city.dungeonLanding.heading, FixtureKind::Downstairs};

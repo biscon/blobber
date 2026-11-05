@@ -177,7 +177,7 @@ SanctuaryCityReview sanctuaryCityReview() {
             {model, approach + forward(facing) * -int(depth - 1), {-1, -int(depth - 2)}, facing, 3, depth});
     };
     house("sanctuary", "sanctuary", {9, 6}, Heading::South);
-    house("dungeon", "dungeon-entrance", {14, 6}, Heading::South);
+    house("dungeon", "dungeon-entrance", {13, 6}, Heading::South);
     house("inn", "inn", {16, 5}, Heading::West, 4);
     house("provisioner", "provisioner", {16, 9}, Heading::West);
     house("smithy", "smithy", {15, 12}, Heading::West);
@@ -200,27 +200,28 @@ SanctuaryCityReview sanctuaryCityReview() {
                 const auto c = b.cell(x, z);
                 rows[c.y][c.x] = '#';
             }
-    // First SC03 review checkpoint: one tree, before producing the foliage set.
+    // SC03 dressing and user-reviewed square layout.
     world.scenery = {
         {"courtyard-garden", {4, 4}, {-1, -1}, Heading::North, 3, 2},
         {"lane-garden", {4, 15}, {0, 0}, Heading::North, 2, 1},
         {"east-garden", {20, 19}, {0, 0}, Heading::North, 2, 2},
-        {"market-produce", {20, 11}, {0, 0}, Heading::East, 1, 2},
-        {"market-grain", {20, 12}, {0, 0}, Heading::East, 1, 2},
+        {"market-produce", {8, 15}, {0, 0}, Heading::North, 1, 1},
+        {"market-grain", {9, 15}, {0, 0}, Heading::North, 1, 1},
         {"fountain", {10, 11}, {0, 0}, Heading::North, 2, 2},
     };
     SanctuaryCityReview result{Map(rows, std::move(world)), {{11, 8}, Heading::North}};
     result.doors = doors;
     result.doorCount = count;
     result.reservations[0] = {"fountain", {10, 11}, 2, 2};
-    result.reservations[1] = {"market", {19, 11}, 2, 2};
+    result.reservations[1] = {"market", {8, 15}, 2, 1};
     result.reservations[2] = {"courtyard-planting", {3, 3}, 3, 2};
     result.reservations[3] = {"lane-planting", {4, 15}, 2, 1};
     result.reservations[4] = {"east-planting", {20, 19}, 2, 2};
     result.reservationCount = 5;
     result.rest = result.doorway("sanctuary").approach;
     result.dungeonFixture = result.doorway("dungeon").approach.cell;
-    result.dungeonLanding = {{14, 7}, Heading::North};
+    result.dungeonLanding = {result.dungeonFixture + forward(result.doorway("dungeon").approach.heading) * -1,
+                             result.doorway("dungeon").approach.heading};
     result.gate = result.doorway("city-gate").approach;
     result.gateApproach = {"gate-approach", {11, 18}, 3, 3};
     result.alley = {"residential-alley", {4, 10}, 3, 1};

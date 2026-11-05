@@ -3,17 +3,17 @@
     {
       "model": "courtyard-garden",
       "parts": 4,
-      "triangles": 718
+      "triangles": 766
     },
     {
       "model": "lane-garden",
       "parts": 2,
-      "triangles": 96
+      "triangles": 132
     },
     {
       "model": "east-garden",
       "parts": 4,
-      "triangles": 706
+      "triangles": 742
     },
     {
       "model": "market-produce",
@@ -28,7 +28,7 @@
     {
       "model": "fountain",
       "parts": 2,
-      "triangles": 604
+      "triangles": 732
     },
     {
       "model": "inn",
@@ -65,5 +65,9 @@
   "water_frames": 8,
   "fps": 8,
   "texels_per_cell": 256,
-  "gutter": 16
+  "gutter": 16,
+  "stall_scale": 0.5,
+  "stream_sides": 6,
+  "bush_top": 0.344,
+  "ivy_eaves_clearance": 0.04
 }

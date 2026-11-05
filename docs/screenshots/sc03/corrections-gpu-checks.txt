@@ -1,0 +1,14 @@
+Debug hidden-window GPU checks, 2026-11-05. Both executables exited 0.
+No desktop input/focus automation. Generated fixtures; production art is inspected separately.
+
+blobber_world_environment_gpu_tests:
+Height CPU/GPU edge differences: 0; allocations: 0
+Capped outdoor haze preserves distant wall and actor color: passed.
+Dungeon image with legacy vs city daylight profile: pixel-identical.
+All GPU resources released before closing hidden context: passed.
+
+blobber_architecture_gpu_tests:
+Architecture GPU checks passed; boundary pixel differences=0
+Wide gate GPU checks passed; boundary pixel differences=0
+Cutout scenery GPU checks passed; boundary pixel differences=0
+Animated water GPU checks passed; boundary pixel differences=0

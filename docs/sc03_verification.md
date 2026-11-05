@@ -33,7 +33,7 @@ sorting, reflection, particle or fluid simulation.
 
 [SC03 design](sc03_design.md) records placement ownership, cutout depth semantics,
 water interfaces, preparation/frame boundaries, capacities and tests. World
-publication is **8**, appearance **4**, campaign schema/simulation **9/12**,
+publication is **9**, appearance **4**, campaign schema/simulation **9/12**,
 generator/templates **9/7**, visibility **v15**, world fingerprint **4**. Old save
 versions reject without migration or modification. The water addition did not
 change save fields or depth identity after the tree checkpoint.
@@ -79,7 +79,7 @@ input, focus switching or OS automation was used.
   `underkeep_render`, `world_visual_cli` and `world_integration`. Those checks were
   not repeated after art-only corrections; save/persistence code did not change.
 - The production baker accepts all final meshes, normals, UVs, model bindings and
-  budgets. Final Debug game and review executable are built with publication 8.
+  budgets. Final Debug game and review executable are built with publication 9 after the atmosphere correction.
 - Hidden production captures traversed both complete loops, alley and gate/tree
   movement samples without blockage. Twenty-four final dressed views include two
   mid-turn views. Nine water captures cover eight distinct phases and a paused
@@ -96,7 +96,7 @@ Evidence: [layout/scenery checks](screenshots/sc03/dressing-cpu-checks.txt),
 
 ## Final resource measurements
 
-From [the final native capture report](screenshots/sc03/dressing-v2/report.txt).
+From [the final native capture report](screenshots/sc03/corrections-v1/report.txt).
 MiB means 1,048,576 bytes. These are residency measurements, not an FPS benchmark.
 
 | Resource | Measured | Declared limit |
@@ -106,18 +106,18 @@ MiB means 1,048,576 bytes. These are residency measurements, not an FPS benchmar
 | Resident textures | 32 | 480 |
 | Resident mip textures | 261.29 MiB | 512 MiB |
 | Resident alpha | 7.74 MiB | 64 MiB |
-| Resident model payload | 0.97 MiB | bounded model/part/vertex catalog |
-| Scene CPU / GPU | 2.54 / 2.54 MiB | 64 / 40 MiB |
+| Resident model payload | 0.99 MiB | bounded model/part/vertex catalog |
+| Scene CPU / GPU | 2.58 / 2.58 MiB | 64 / 40 MiB |
 | Visibility scratch | 7.28 MiB | 8 MiB combined view scratch |
-| Active world CPU / GPU | 18.79 / 274.59 MiB | 352 / 608 MiB |
-| Active + staged world CPU / GPU | 28.70 / 278.20 MiB | 352 / 608 MiB |
-| Application GPU / capture peak | 390.18 / 406.00 MiB | 384 / 448 MiB reference targets |
+| Active world CPU / GPU | 18.85 / 274.63 MiB | 352 / 608 MiB |
+| Active + staged world CPU / GPU | 28.80 / 278.28 MiB | 352 / 608 MiB |
+| Application GPU / capture peak | 390.22 / 406.04 MiB | 384 / 448 MiB reference targets |
 
-The application steady reference is exceeded by 6.18 MiB; hard world budgets and
+The application steady reference is exceeded by 6.22 MiB; hard world budgets and
 the capture peak reference remain satisfied. No budget was raised. The new atlas
 was reduced from 4096² to 2048² without reducing metric detail. Scene index triples
-are 31,658 (the prepared triangle-to-quad convention includes degenerate halves).
-Maximum observed draws in final selected views: 41. Installed publication contains
+are 32,154 (the prepared triangle-to-quad convention includes degenerate halves).
+Maximum observed draws in the 13 correction stills: 27. Installed publication contains
 397 textures, 570,711,452 mip bytes and 61,267,045 alpha bytes; location residency
 loads only its dependencies. Driver allocations are excluded from engine counts.
 
@@ -141,3 +141,40 @@ Launch `cmake-build-debug/blobber --sanctuary-city-review`. Regeneration and foc
 capture commands are in the [pack README](../assets/packs/sanctuary-city/README.md).
 **Stop at SC03 Ready for review.** Address review corrections within SC03. Do not
 mark accepted, begin SC04, or replace the campaign Sanctuary automatically.
+
+## Screenshot correction verification — 2026-11-05
+
+The requested corrections are implemented; SC03 is **Ready for review**.
+The [design addendum](sc03_design.md#user-review-corrections--2026-11-05) records
+placement, geometry and atmosphere decisions. Dedicated generated soil/marble
+masters and exact prompts are retained. Blender exports and the Debug application
+build completed at bounded worker counts; runtime geometry/material validation
+passed. The accepted tree mesh is unchanged.
+
+- Four focused CPU suites pass: sanctuary layout, architecture, scenery/publication
+  and resource residency. Regression coverage includes two cells beside the inn,
+  clear former market alley, square circulation, custom/default fog roundtrips
+  and invalid fog values. [Results](screenshots/sc03/corrections-cpu-checks.txt).
+- Hidden GPU environment and architecture checks pass. Generated atmosphere
+  fixtures retain distant wall and actor color with capped fog and produce
+  pixel-identical dungeon frames with either daylight profile. Shell, gate,
+  foliage and animated water CPU/GPU ID differences are zero; warmed engine-owned
+  allocations/uploads remain unchanged. [Results](screenshots/sc03/corrections-gpu-checks.txt).
+- Thirteen production correction stills and eight cardinal/diagonal fountain
+  views were inspected. Stalls fit the square, ivy no longer breaks the roofline,
+  bushes meet soil, and fountain stone contrasts with paving. Closed water streams
+  have visible thickness at every sampled angle, with ordinary physical occlusion.
+- Eight production water frames change only the water region. Picking revision is
+  constant; a paused update preserves time, cached image and every pixel.
+  [Pixel comparison](screenshots/sc03/water-v2/pixel-checks.txt).
+- Current resource table above uses the correction capture report. Texture count,
+  mip/alpha bytes and atlas dimensions are unchanged. The small geometry increase
+  stays inside existing hard budgets; the previously exceeded application steady
+  reference remains documented. Staging cancellation preserves the active view,
+  and clearing releases all city texture/model leases.
+
+Publication is now 9 for pack daylight fog. Only sanctuary-city overrides the
+legacy outdoor profile; indoor fog constants remain unchanged. No save, simulation
+or visibility format changes. No desktop input/focus automation, broad test matrix
+or performance benchmark was run. Final interactive art acceptance remains the
+user's review; SC04 has not started.

@@ -1,14 +1,18 @@
 # System design
 
-Sanctuary SC03 is implemented and **Ready for review**: [design](sc03_design.md),
+Sanctuary SC03 is **Ready for review — screenshot corrections implemented**: [design](sc03_design.md),
 [verification](sc03_verification.md) and [captures](screenshots/sc03/README.md).
 Bounded scenery placements and prepared cutout meshes support two trees, bushes,
 three planting beds and sparse ivy; two stalls, a fountain and three painted service
 signs complete the dressing. The shorter representative tree is accepted. Opaque
 water uses eight prepared frames at 8 FPS, invalidating visible color only while
-preserving picking/geometry and the existing pause clock. Publication 8 carries
-cutout/water part flags; offline variant bindings share published mesh IDs.
-Final SC03 review is pending; campaign cutover remains SC04.
+preserving picking/geometry and the existing pause clock. Publication 9 carries
+cutout/water part flags and a validated pack-owned daylight fog profile; offline
+variant bindings share published mesh IDs.
+Review corrections cover stall scale/location, entrance spacing, grounded planting,
+roof-contained ivy, soil/marble artwork, fixed volumetric water streams and a
+gentle city-only haze capped at 22% (dungeon defaults unchanged); see
+the SC03 design addendum. Campaign cutover remains SC04.
 
 Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
 and [verification/captures](sc02_verification.md). The 24×24 square-centered town

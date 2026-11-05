@@ -60,6 +60,10 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
                 !textures[p.guardianEmblem].material);
     for (float c : p.horizon)
         require(std::isfinite(c) && c >= 0 && c <= 1);
+    for (float c : p.daylightFog)
+        require(std::isfinite(c));
+    require(p.daylightFog[0] >= 0 && p.daylightFog[0] <= 64 && p.daylightFog[1] > 0 &&
+            p.daylightFog[1] <= 64 && p.daylightFog[2] >= 0 && p.daylightFog[2] <= 1);
 }
 
 void validMeshes(const std::vector<PropMesh>& meshes, const std::vector<Texture>& textures,
@@ -332,7 +336,8 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"vine", p.vine},
                             {"sky", p.sky},
                             {"worldScale", p.worldScale},
-                            {"horizon", p.horizon}});
+                            {"horizon", p.horizon},
+                            {"daylightFog", p.daylightFog}});
         packJson.back()["decorations"] = p.decorations;
         packJson.back()["models"] = p.models;
         packJson.back()["buildings"] = Json::array();
@@ -501,6 +506,7 @@ Publication load(const std::filesystem::path& directory) {
                 pack.horizon[i] = v.at("horizon")[i].get<float>();
                 require(std::isfinite(pack.horizon[i]) && pack.horizon[i] >= 0 && pack.horizon[i] <= 1);
             }
+            pack.daylightFog = v.at("daylightFog").get<std::array<float, 3>>();
             validPack(pack, p.textures);
             p.packs.push_back(std::move(pack));
         }

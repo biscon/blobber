@@ -3,7 +3,8 @@
 namespace blobber::test {
 struct ArchitectureFixture {
     WorldFixture storage;
-    explicit ArchitectureFixture(bool foliage = false, bool water = false) {
+    explicit ArchitectureFixture(bool foliage = false, bool water = false,
+                                 std::array<float, 3> fog = {10.f, 4.5f, 1.f}) {
         world_assets::Writer writer(storage.directory);
         std::vector<unsigned char> rgba(4 * 4 * 4, 255);
         const auto opaque = std::uint16_t(writer.add("door", 4, 4, false, rgba, 0, {}, false));
@@ -19,6 +20,7 @@ struct ArchitectureFixture {
             writer.add(name, 4, 4, true, rgba);
         world_assets::Pack pack;
         pack.id = "architecture";
+        pack.daylightFog = fog;
         pack.materialCount = 3;
         pack.materials[0] = stone;
         pack.materials[1] = roof;

@@ -10,6 +10,25 @@ int main() try {
     test::ArchitectureFixture fixture(true);
     auto publication = fixture.publication();
     publication.verify();
+    check(publication.packs[0].daylightFog == std::array<float, 3>{10.f, 4.5f, 1.f},
+          "Unconfigured packs preserve legacy daylight fog");
+    {
+        test::ArchitectureFixture hazeFixture(false, false, {4.f, 12.f, .22f});
+        const auto haze = hazeFixture.publication();
+        haze.verify();
+        check(haze.packs[0].daylightFog == std::array<float, 3>{4.f, 12.f, .22f},
+              "Capped pack atmosphere survives publication");
+        for (const auto badFog : {std::array<float, 3>{-1, 12, .22f},
+                                  {4, 0, .22f},
+                                  {4, 65, .22f},
+                                  {4, 12, 1.01f},
+                                  {4, 12, -.01f},
+                                  {std::numeric_limits<float>::infinity(), 12, .22f}}) {
+            auto invalidFog = haze;
+            invalidFog.packs[0].daylightFog = badFog;
+            rejects([&] { world_assets::CpuAssets a(invalidFog); }, "Invalid fog profile rejects");
+        }
+    }
     check(publication.meshes[2].cutout, "Cutout mesh publication roundtrips");
     {
         test::ArchitectureFixture waterFixture(false, true);

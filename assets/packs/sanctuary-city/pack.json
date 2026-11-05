@@ -159,5 +159,10 @@
         "packs/sanctuary-city/models/dressing-fountain-water.mesh.json"
       ]
     }
+  ],
+  "daylightFog": [
+    4,
+    12,
+    0.22
   ]
 }

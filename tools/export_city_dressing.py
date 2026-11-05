@@ -41,9 +41,7 @@ def save(name, data):
 
 tiles = extract_tiles(load('material-master'))
 # Reuse established timber/stone; these are material recolors, not drawn emblems.
-soil = tiles[4].copy()
-soil[:, :, :3] *= np.array([.38, .31, .22])
-tiles.append(soil)  # 6 soil
+tiles.append(load('soil-master'))  # 6 exposed earth, not recolored paving
 iron = tiles[5].copy()
 iron[:, :, :3] = np.mean(iron[:, :, :3], axis=2)[:, :, None] * np.array([.23, .24, .25])
 tiles.append(iron)  # 7 iron
@@ -55,6 +53,7 @@ tiles.append(cloth)  # 12 faded green cloth
 sack = tiles[11].copy()
 sack[:, :, :3] = np.mean(sack[:, :, :3], axis=2)[:, :, None] * np.array([.80, .70, .49])
 tiles.append(sack)  # 13 grain sacks
+tiles.append(load('marble-master'))  # 14 pale fountain marble
 
 # Shared cutout sheet: transparent gutters and metric patches for each size.
 cutout = np.zeros((1024, 1024, 4), dtype=np.float32)
@@ -95,7 +94,7 @@ def model(name):
     return h
 
 
-def card(h, center, size, angle, patch='bush', tilt=.1):
+def card(h, center, size, angle, patch='bush', tilt=.1, low=.012, high=4):
     x, y, w, hh = patches[patch]
     uv = [(x/1024, (y+hh)/1024), ((x+w)/1024, (y+hh)/1024),
           ((x+w)/1024, y/1024), (x/1024, y/1024)]
@@ -103,14 +102,25 @@ def card(h, center, size, angle, patch='bush', tilt=.1):
     u = Vector((math.cos(angle), 0, math.sin(angle))) * size[0]/2
     v = Vector((-math.sin(angle)*tilt, math.sqrt(1-tilt*tilt), math.cos(angle)*tilt)) * size[1]/2
     points = [center-u-v, center+u-v, center+u+v, center-u+v]
+    # Clip along each sloped edge and preserve texture coordinates. Bush foliage
+    # penetrates the soil; facade cards terminate below their actual eaves.
+    for bottom, top in ((0, 3), (1, 2)):
+        a, b = points[bottom].copy(), points[top].copy()
+        ua, ub = Vector(uv[bottom]), Vector(uv[top])
+        for index, height in ((bottom, max(low, a.y)), (top, min(high, b.y))):
+            t = (height-a.y)/(b.y-a.y)
+            points[index] = a.lerp(b, t)
+            uv[index] = tuple(ua.lerp(ub, t))
+    assert all(low-1e-6 <= p.y <= high+1e-6 for p in points)
     special[h.name].append(('cutout', points, uv))
     special[h.name].append(('cutout', list(reversed(points)), list(reversed(uv))))
 
 
 def bush(h, x, z):
+    h.box(x-.018,x+.018,.025,.15,z-.018,z+.018,3,.65)
     for i in range(3):
         a = i*math.pi/3
-        card(h, (x+.07*math.cos(a*3), .34, z+.07*math.sin(a*3)), (144/256, 144/256), a, tilt=.25)
+        card(h, (x+.07*math.cos(a*3), .14, z+.07*math.sin(a*3)), (144/256, .42), a, tilt=.25)
 
 
 def bed(h, x0, x1, z0, z1):
@@ -159,11 +169,19 @@ for name, cloth_tile in (('market-produce',11),('market-grain',12)):
     for x in (-.28,0,.28):
         h.box(x-.09,x+.09,.50,.60,-.30,-.09,13 if name=='market-grain' else 3,.95)
 
+    # Author half-size geometry before metric UV packing. Center the old depth
+    # span (-.55..1.43) in its new single-cell base; no runtime instance scaling.
+    for points, _, _ in h.faces:
+        for p in points:
+            p.x *= .5
+            p.y *= .5
+            p.z = (p.z-.44)*.5
+
 # Basin/profile rings: a low, broad fountain leaves the square sightlines open.
 h = model('fountain')
 def ring(radius, y, count=16):
     return [(0.5+radius*math.cos(i*2*math.pi/count),y,0.5+radius*math.sin(i*2*math.pi/count)) for i in range(count)]
-def profile(rings, tile=5):
+def profile(rings, tile=14):
     for (r0,y0),(r1,y1) in zip(rings,rings[1:]):
         aa,bb=ring(r0,y0),ring(r1,y1)
         for i in range(16):
@@ -178,19 +196,43 @@ for radius,y in ((.655,.275),(.245,.825)):
     pts=list(reversed(ring(radius,y)))
     uv=[((256+(p[0]-.5)*256)/2048,(256+(p[2]-.5)*256)/1024) for p in pts]
     special[h.name].append(('water',pts,uv))
-# Four narrow curved streams, crossed surfaces to read from every side.
+# Six-sided closed stream tubes retain width from all azimuths. Fixed geometry
+# shares the existing water atlas, visibility/depth cache and eight-frame clock.
+stream_sides = 6
 for i in range(4):
     a=i*math.pi/2
     path=[(.27,.80),(.34,.74),(.41,.57),(.45,.28)]
-    tangent=Vector((-math.sin(a),0,math.cos(a))) *.021
-    for j,((r0,y0),(r1,y1)) in enumerate(zip(path,path[1:])):
-        p0=Vector((.5+r0*math.cos(a),y0,.5+r0*math.sin(a)))
-        p1=Vector((.5+r1*math.cos(a),y1,.5+r1*math.sin(a)))
-        pts=[p0-tangent,p0+tangent,p1+tangent,p1-tangent]
-        uv=[(32/2048,(80+j*40)/1024),(45/2048,(80+j*40)/1024),
-            (45/2048,(120+j*40)/1024),(32/2048,(120+j*40)/1024)]
-        special[h.name].append(('water',pts,uv))
-        special[h.name].append(('water',list(reversed(pts)),list(reversed(uv))))
+    centers=[Vector((.5+r*math.cos(a),y,.5+r*math.sin(a))) for r,y in path]
+    tangent=Vector((-math.sin(a),0,math.cos(a)))
+    rings=[]
+    distance=[0.0]
+    for j,center in enumerate(centers):
+        direction=(centers[min(j+1,len(centers)-1)]-centers[max(j-1,0)]).normalized()
+        radial=direction.cross(tangent).normalized()
+        radius=.021 if j<3 else .024
+        rings.append([center+radius*(math.cos(k*2*math.pi/stream_sides)*tangent+
+                                      math.sin(k*2*math.pi/stream_sides)*radial)
+                      for k in range(stream_sides)])
+        if j:
+            distance.append(distance[-1]+(center-centers[j-1]).length)
+    for j in range(len(rings)-1):
+        for k in range(stream_sides):
+            n=(k+1)%stream_sides
+            pts=[rings[j][k],rings[j][n],rings[j+1][n],rings[j+1][k]]
+            # Each face repeats the narrow glint strip; V follows physical length.
+            uv=[(32/2048,(80+distance[j]*256)/1024), (45/2048,(80+distance[j]*256)/1024),
+                (45/2048,(80+distance[j+1]*256)/1024), (32/2048,(80+distance[j+1]*256)/1024)]
+            normal=(pts[1]-pts[0]).cross(pts[2]-pts[0])
+            outward=(pts[0]+pts[1]+pts[2]+pts[3])/4-(centers[j]+centers[j+1])/2
+            if normal.dot(outward)<0:
+                pts.reverse();uv.reverse()
+            special[h.name].append(('water',pts,uv))
+    for end in (0,len(rings)-1):
+        pts=rings[end].copy()
+        outward=centers[end]-centers[1 if end==0 else end-1]
+        if (pts[1]-pts[0]).cross(pts[2]-pts[0]).dot(outward)<0:
+            pts.reverse()
+        special[h.name].append(('water',pts,[(38/2048,(80+distance[end]*256)/1024)]*len(pts)))
 
 # Signs project perpendicular from the front wall beside, above the door.
 for name,front,tile in (('inn',-2.5,8),('smithy',-1.5,9),('provisioner',-1.5,10)):
@@ -205,11 +247,11 @@ for name,front,tile in (('inn',-2.5,8),('smithy',-1.5,9),('provisioner',-1.5,10)
         xx=x+side*.027
         h.face([(xx,1.02,front-.64),(xx,1.02,front-.14),(xx,1.42,front-.14),(xx,1.42,front-.64)],tile,(side,0,0))
 
-for name,front in (('low-house-hip-ivy',-1.5),('tall-house-ivy',-2.5)):
+for name,front,eaves in (('low-house-hip-ivy',-1.5,1.20),('tall-house-ivy',-2.5,2.15)):
     h=model(name)
     # Front corner away from door, plus sparse side clump away from windows.
-    card(h,(-1.22,.91,front-.041),(.875,1.75),0,'ivy',0)
-    card(h,(-1.543,1.02,front+.65),(.875,1.75),math.pi/2,'ivy',0)
+    card(h,(-1.04,.91,front-.012),(.875,1.75),0,'ivy',0,high=eaves-.04)
+    card(h,(-1.512,.91,front+.55),(.875,1.75),math.pi/2,'ivy',0,high=eaves-.04)
 
 # Pack shared metric material patches; signs deliberately map to full artwork.
 regions, mapped = {}, {}
@@ -299,6 +341,7 @@ for kind in ('bark','foliage'):
     bindings['east-garden']+=list(write_part('east-tree-'+kind,verts,'bark' if kind=='bark' else 'cutout'))
 
 manifest=json.loads((PACK/'pack.json').read_text())
+manifest['daylightFog']=[4,12,.22]
 base={b['id']:[p for p in b['parts'] if '/dressing-' not in p] for b in manifest['buildings']}
 base={name:parts for name,parts in base.items() if parts and name not in ('low-house-hip-ivy','tall-house-ivy','courtyard-garden')}
 for name in ('inn','smithy','provisioner'):
@@ -323,5 +366,5 @@ for i,name in enumerate(['courtyard-garden','lane-garden','east-garden','market-
     assert total<=24000,(name,total)
     report.append(dict(model=name,parts=len(base[name]),triangles=total//3))
 export_collection(PACK,'city-dressing',collection)
-(PACK/'models/dressing-export-report.json').write_text(json.dumps(dict(models=report,opaque_atlas=atlas_size,cutout_atlas=1024,water_atlas=[2048,1024],water_frames=8,fps=8,texels_per_cell=256,gutter=16),indent=2)+'\n')
+(PACK/'models/dressing-export-report.json').write_text(json.dumps(dict(models=report,opaque_atlas=atlas_size,cutout_atlas=1024,water_atlas=[2048,1024],water_frames=8,fps=8,texels_per_cell=256,gutter=16,stall_scale=.5,stream_sides=stream_sides,bush_top=.344,ivy_eaves_clearance=.04),indent=2)+'\n')
 print('SC03 dressing:',report,flush=True)
