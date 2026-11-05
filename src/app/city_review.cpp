@@ -23,7 +23,8 @@ int runCityReview(const Options& options) {
     auto publication = prepareCpu([&] { return world_assets::load(options.assets / "prepared/world"); });
     if (publication.definitions != definitions.definitionFingerprint)
         throw std::runtime_error("City review definitions differ; rebuild world assets");
-    WorldRenderer renderer(resources, std::move(publication), options.supersampling);
+    WorldRenderer renderer(resources, std::move(publication), options.supersampling,
+                           options.ambientOcclusion);
     GameplayLaunch launch;
     launch.spawn = scene.spawn;
     launch.enableAi = false;

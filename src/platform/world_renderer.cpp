@@ -1,5 +1,6 @@
 #include "platform/world_renderer.hpp"
 #include "core/preparation.hpp"
+#include "platform/world_projection.hpp"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include "raymath.h"
@@ -19,6 +20,7 @@ out vec2 uv;out vec3 normal;out float depth;out vec3 worldPosition;out float sha
 void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4 p=matModel*vec4(vertexPosition,1);worldPosition=p.xyz;shade=vertexShade;depth=-(matView*p).z;gl_Position=mvp*p;})";
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
+uniform int depthOnly;uniform int aoEnabled;uniform sampler2D environmentAo;uniform vec2 viewportSize;
 uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
 void main(){vec2 mapped=uv;
 if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
@@ -27,6 +29,7 @@ if(uvMode==3) mapped=vec2(1.0-(1.0-uv.x)*doorUv.x,0.5+(uv.y-0.5)*doorUv.y);
 if(uvMode<2) mapped*=worldScale;
 if(meshCutout!=0){ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(mapped*vec2(size))),ivec2(0),size-1);
 if(texelFetch(texture0,p,0).a*255.0+0.01<128.0)discard;}
+if(depthOnly!=0){finalColor=vec4(1);return;}
 if(idPass!=0){finalColor=idColor;return;}
 if(waterFrame>=0)mapped+=vec2(float(waterFrame%4)*0.25,float(waterFrame/4)*0.5);
 vec4 c=texture(texture0,mapped);
@@ -34,7 +37,8 @@ if(meshCutout!=0)c.rgb/=max(c.a,0.0001);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
 if(uvMode==4) face=1.0;
 float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
-finalColor=vec4((c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
+float ao=aoEnabled!=0?texture(environmentAo,gl_FragCoord.xy/viewportSize).r:1.0;
+finalColor=vec4((c.rgb*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
 uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
@@ -104,19 +108,21 @@ int anisotropy() {
     return 1;
 }
 } // namespace
-WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publication, bool supersampling)
+WorldRenderer::WorldRenderer(GpuResources& r, world_assets::Publication publication, bool supersampling,
+                             bool ambientOcclusion)
     : WorldRenderer(r, prepareCpu([&] {
                         preparationPoint("Preparing dungeon artwork");
                         return std::make_shared<const world_assets::CpuAssets>(std::move(publication));
                     }),
-                    supersampling) {}
+                    supersampling, ambientOcclusion) {}
 WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets::CpuAssets> assets,
-                             bool supersampling)
-    : resources_(r), assets_(std::move(assets)),
+                             bool supersampling, bool ambientOcclusion)
+    : resources_(r), ao_(r), assets_(std::move(assets)),
       publication_(assets_ ? assets_->publication : throw std::invalid_argument("Missing world CPU assets")) {
     anisotropy_ = blobber::anisotropy();
     textures_.resize(publication_.textures.size());
     supersampling_ = supersampling;
+    ambientOcclusion_ = ambientOcclusion;
     world_ = {r, r.createShader(vertex, fragment)};
     sky_ = {r, r.createShader(nullptr, skyFragment)};
     resolve_ = {r, r.createShader(nullptr, resolveFragment)};
@@ -282,7 +288,8 @@ void WorldRenderer::diagnosticIds(TargetHandle destination) {
         throw std::logic_error("No world visibility snapshot for diagnostic IDs");
     const auto& t = resources_.target(destination);
     if (t.texture.width != viewWidth || t.texture.height != viewHeight ||
-        t.id == resources_.target(active_->output.get()).id || t.id == resources_.target(high_.get()).id)
+        t.id == resources_.target(active_->output.get()).id ||
+        (high_ && t.id == resources_.target(high_.get()).id))
         throw std::invalid_argument("Diagnostic IDs require a separate logical target");
     active_->visibility->rasterForDiagnostics();
     render(*active_, active_->movement, &active_->visibility->frame(), destination);
@@ -311,7 +318,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     stats = {};
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
-        (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) && world_render::sameCamera(camera, v.last)) {
+        v.ao == ambientOcclusion_ && (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) &&
+        world_render::sameCamera(camera, v.last)) {
         stats.cached = true;
         return {v.output.get(), v.revision};
     }
@@ -325,6 +333,50 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     const auto shader = resources_.shader(world_.get());
     // All checked resource lookups happen before entering a render pass.
     (void)resources_.mesh(v.mesh.get());
+    Camera3D rc{
+        {camera.position.x, camera.position.y, camera.position.z},
+        {camera.position.x + camera.forward.x, camera.position.y, camera.position.z + camera.forward.z},
+        {0, 1, 0},
+        60,
+        CAMERA_PERSPECTIVE};
+    const auto projection = worldProjection(camera.farClip);
+    const int depthLocation = GetShaderLocation(shader, "depthOnly");
+    if (!ids && ambientOcclusion_) {
+        BeginTextureMode(resources_.target(ao_.depth()));
+        ClearBackground(WHITE);
+        BeginMode3D(rc);
+        rlSetMatrixProjection(projection);
+        rlDrawRenderBatchActive();
+        rlEnableShader(shader.id);
+        const int depthOnly = 1, noIds = 0;
+        rlSetUniform(depthLocation, &depthOnly, SHADER_UNIFORM_INT, 1);
+        rlSetUniform(idMode_, &noIds, SHADER_UNIFORM_INT, 1);
+        rlSetUniformMatrix(view_, rlGetMatrixModelview());
+        rlSetUniformMatrix(mvp_, MatrixMultiply(rlGetMatrixModelview(), projection));
+        rlSetUniformMatrix(model_, MatrixIdentity());
+        const float scale = v.pack.worldScale;
+        rlSetUniform(GetShaderLocation(shader, "worldScale"), &scale, SHADER_UNIFORM_FLOAT, 1);
+        ao_.bindSurface(shader, false, EnvironmentAo::width, EnvironmentAo::height);
+        rlEnableDepthTest();
+        rlEnableDepthMask();
+        rlEnableBackfaceCulling();
+        drawStaticGeometry(v, frame);
+        if (frame) {
+            drawDoorGeometry(v, *frame, 0);
+            drawDoorGeometry(v, *frame, 1);
+        }
+        rlDisableTexture();
+        rlDisableShader();
+        rlDisableVertexArray();
+        rlDisableVertexBuffer();
+        rlDisableVertexBufferElement();
+        EndMode3D();
+        EndTextureMode();
+        rlDisableDepthTest();
+        rlEnableBackfaceCulling();
+        ao_.render(projection);
+        stats.draws += 3;
+    }
     BeginTextureMode(target);
     ClearBackground(ids ? Color{255, 255, 0, 255} : Color{15, 18, 20, 255});
     const float ambient = v.cpu.map ? world_render::daylight(state, *v.cpu.map) : 0;
@@ -356,21 +408,13 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         SetShaderValue(b, GetShaderLocation(b, "daylightFog"), v.pack.daylightFog.data(),
                        SHADER_UNIFORM_VEC3);
     }
-    Camera3D rc{
-        {camera.position.x, camera.position.y, camera.position.z},
-        {camera.position.x + camera.forward.x, camera.position.y, camera.position.z + camera.forward.z},
-        {0, 1, 0},
-        60,
-        CAMERA_PERSPECTIVE};
     BeginMode3D(rc);
-    const double half = world_render::nearPlane * std::tan(84 * world_render::pi / 360);
-    const auto projection =
-        MatrixFrustum(-half, half, -viewHeight * .66 * world_render::nearPlane / world_render::focal(),
-                      viewHeight * .34 * world_render::nearPlane / world_render::focal(),
-                      world_render::nearPlane, camera.farClip);
     rlSetMatrixProjection(projection);
     rlDrawRenderBatchActive();
     rlEnableShader(shader.id);
+    const int colorPass = 0;
+    rlSetUniform(depthLocation, &colorPass, SHADER_UNIFORM_INT, 1);
+    ao_.bindSurface(shader, !ids && ambientOcclusion_, target.texture.width, target.texture.height);
     rlSetUniformMatrix(view_, rlGetMatrixModelview());
     rlSetUniformMatrix(mvp_, MatrixMultiply(rlGetMatrixModelview(), projection));
     rlSetUniform(forward_, &camera.forward, SHADER_UNIFORM_VEC3, 1);
@@ -386,29 +430,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     rlEnableDepthTest();
     rlEnableDepthMask();
     rlEnableBackfaceCulling();
-    for (unsigned i = 0; i < draws_.count; ++i) {
-        const auto& range = v.cpu.ranges[draws_.ranges[i]];
-        if (range.variant != noContainer &&
-            (frame ? frame->containerOpened[range.id - PickingBuffer::containerBase] : false) !=
-                bool(range.variant))
-            continue;
-        visibleWater |= range.water;
-        const int waterFrame = range.water ? int(v.waterFrame) : -1;
-        rlSetUniform(waterFrame_, &waterFrame, SHADER_UNIFORM_INT, 1);
-        const int rangeCutout = range.cutout ? 1 : 0;
-        rlSetUniform(meshCutout_, &rangeCutout, SHADER_UNIFORM_INT, 1);
-        const int rangeUv = range.painted ? 4 : 0;
-        rlSetUniform(uvMode_, &rangeUv, SHADER_UNIFORM_INT, 1);
-        const float color[]{float(range.id & 255) / 255, float(range.id >> 8) / 255, 0, 1};
-        rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
-        rlEnableTexture(resources_.texture(v.materials[range.material]).id);
-        resources_.draw(v.mesh.get(), range.first, range.count);
-        ++stats.draws;
-    }
-    const int noWater = -1;
-    rlSetUniform(waterFrame_, &noWater, SHADER_UNIFORM_INT, 1);
-    const int noCutout = 0;
-    rlSetUniform(meshCutout_, &noCutout, SHADER_UNIFORM_INT, 1);
+    visibleWater = drawStaticGeometry(v, frame);
     if (frame) {
         const auto vp = MatrixMultiply(rlGetMatrixModelview(), projection);
         const auto view = rlGetMatrixModelview();
@@ -422,46 +444,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
                 rlSetBlendMode(BLEND_ALPHA);
                 rlEnableDepthMask();
             }
-            for (unsigned i = 0; i < frame->doorCount; ++i) {
-                const auto& box = frame->doors[i];
-                if (box.leaf != bool(doorPhase))
-                    continue;
-                auto model = MatrixIdentity();
-                model.m0 = box.x.x;
-                model.m1 = box.x.y;
-                model.m2 = box.x.z;
-                model.m4 = box.y.x;
-                model.m5 = box.y.y;
-                model.m6 = box.y.z;
-                model.m8 = box.z.x;
-                model.m9 = box.z.y;
-                model.m10 = box.z.z;
-                model.m12 = box.origin.x;
-                model.m13 = box.origin.y;
-                model.m14 = box.origin.z;
-                rlSetUniformMatrix(model_, model);
-                const int mode = box.worldMapped ? 1 : 3;
-                rlSetUniform(uvMode_, &mode, SHADER_UNIFORM_INT, 1);
-                if (!box.worldMapped) {
-                    const auto& texture = assets_->publication.textures[box.texture];
-                    const auto span = world_render::doorUvSpan(box, texture.width, texture.height);
-                    rlSetUniform(doorUv_, span.data(), SHADER_UNIFORM_VEC2, 1);
-                }
-                const auto id = box.id;
-                const float color[]{float(id & 255) / 255, float(id >> 8) / 255, 0, 1};
-                rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);
-                rlEnableTexture(resources_.texture(v.textures[box.texture]).id);
-                rlDisableBackfaceCulling();
-                resources_.draw(proxy_.get(), 0, box.worldMapped ? 36 : 12);
-                ++stats.draws;
-                if (!box.worldMapped) {
-                    const int edgeMode = 2;
-                    rlSetUniform(uvMode_, &edgeMode, SHADER_UNIFORM_INT, 1);
-                    rlEnableTexture(resources_.texture(v.textures[box.edgeTexture]).id);
-                    resources_.draw(proxy_.get(), 12, 24);
-                    ++stats.draws;
-                }
-            }
+            drawDoorGeometry(v, *frame, doorPhase);
         }
         drawBillboards(v, *frame, a.v, b.v, bool(ids), &v.cpu, BillboardPass::LeafArt);
         if (effects && !ids)
@@ -515,6 +498,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         EndTextureMode();
         ++stats.draws;
     }
+    rlActiveTextureSlot(1);
+    rlDisableTexture();
     rlActiveTextureSlot(0);
     rlEnableDepthMask();
     rlDisableDepthTest();
@@ -527,6 +512,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     v.movement = state;
     v.last = camera;
     v.quality = supersampling_;
+    v.ao = ambientOcclusion_;
     v.visibleWater = visibleWater;
     v.drawnWaterFrame = v.waterFrame;
     v.ready = true;
@@ -764,7 +750,7 @@ std::size_t WorldRenderer::gpuBytes() const noexcept {
         n += active_->cpu.meshBytes() + 500u * 282 * 8;
     if (staged_)
         n += staged_->cpu.meshBytes() + 500u * 282 * 8;
-    return n;
+    return n + EnvironmentAo::bytes;
 }
 WorldRenderer::MemoryReport WorldRenderer::memory() const noexcept {
     MemoryReport r;

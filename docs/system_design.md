@@ -1,5 +1,12 @@
 # System design
 
+Environment AO (implemented and mechanically verified, 2026-11-05):
+[design and verification](environment_ao_design.md) adds default-on environment-only
+contact shading with `--ambient-occlusion on|off`, excluding creatures and preserving
+fog, composition and prepared-image presentation. Three reusable targets add 12.91 MiB;
+focused CPU/hidden GPU checks pass. [On/off captures](screenshots/environment-ao/README.md)
+are ready for user visual review; tuning remains provisional.
+
 Sanctuary SC04 is **Accepted and closed (2026-11-05)**: [design](sc04_design.md),
 [verification](sc04_verification.md) and [campaign captures](screenshots/sc04/README.md).
 Normal campaigns now use the accepted city. New Game starts in the square, recall
@@ -499,8 +506,8 @@ party-local; startup owned-item indices are character-local; catalog IDs remain
 catalog-local. See [inventory design](inventory_design.md) for schema 5, live item
 commands, safety, UI storage and tests.
 
-R02 expands the application-owned GPU registry to 512 standalone textures, eight
-render targets, eight static meshes and eight shaders. Presenter borrows the registry;
+The application-owned GPU registry holds 512 standalone textures, twelve
+render targets (expanded for environment AO), eight static meshes and eight shaders. Presenter borrows the registry;
 world scene/resource leases release resources at explicit preparation boundaries.
 The new path additionally enforces texture/mesh/scene byte budgets in the
 [R02 design](renderer_world_design.md). Normal gameplay always uses the world renderer. Supersampling defaults on;

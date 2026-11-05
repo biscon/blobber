@@ -34,6 +34,11 @@ Options parseOptions(int argc, char** argv) {
             if (value != "on" && value != "off")
                 throw std::invalid_argument("Supersampling expects on or off");
             result.supersampling = value == "on";
+        } else if (arg == "--ambient-occlusion" && i + 1 < argc) {
+            const std::string value = argv[++i];
+            if (value != "on" && value != "off")
+                throw std::invalid_argument("Ambient occlusion expects on or off");
+            result.ambientOcclusion = value == "on";
         } else if (arg == "--development")
             result.development = true;
         else if (arg == "--size" && i + 2 < argc) {

@@ -1,0 +1,8 @@
+city-fountain world_gpu_bytes=301503940 targets=9 shaders=7 draws=55
+city-facade world_gpu_bytes=301503940 targets=9 shaders=7 draws=45
+city-facade-turn world_gpu_bytes=301503940 targets=9 shaders=7 draws=51
+dungeon-door-closed world_gpu_bytes=121564444 targets=9 shaders=7 draws=26
+dungeon-door-creature world_gpu_bytes=121564444 targets=9 shaders=7 draws=26
+dungeon-chest world_gpu_bytes=121564444 targets=9 shaders=7 draws=26
+dungeon-chest-turn world_gpu_bytes=121564444 targets=9 shaders=7 draws=24
+dungeon-corner world_gpu_bytes=121564444 targets=9 shaders=7 draws=24

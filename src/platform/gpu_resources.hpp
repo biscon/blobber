@@ -63,7 +63,7 @@ class GpuResources {
   private:
     void checkpoint();
     ResourcePool<Texture2D, TextureTag, 512> textures_;
-    ResourcePool<RenderTexture2D, TargetTag, 8> targets_;
+    ResourcePool<RenderTexture2D, TargetTag, 12> targets_;
     ResourcePool<GpuMesh, MeshTag, 8> meshes_;
     ResourcePool<Shader, ShaderTag, 8> shaders_;
     GpuCounts counts_{};

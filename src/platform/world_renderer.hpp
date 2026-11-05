@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/world_assets.hpp"
-#include "platform/gpu_resources.hpp"
+#include "platform/environment_ao.hpp"
 #include "render/world_effects.hpp"
 #include "render/world_visibility.hpp"
 #include <memory>
@@ -16,8 +16,10 @@ struct WorldDrawStats {
 };
 class WorldRenderer {
   public:
-    WorldRenderer(GpuResources&, world_assets::Publication, bool supersampling = true);
-    WorldRenderer(GpuResources&, std::shared_ptr<const world_assets::CpuAssets>, bool supersampling = true);
+    WorldRenderer(GpuResources&, world_assets::Publication, bool supersampling = true,
+                  bool ambientOcclusion = true);
+    WorldRenderer(GpuResources&, std::shared_ptr<const world_assets::CpuAssets>, bool supersampling = true,
+                  bool ambientOcclusion = true);
     ~WorldRenderer() = default;
     WorldRenderer(const WorldRenderer&) = delete;
     WorldRenderer& operator=(const WorldRenderer&) = delete;
@@ -49,6 +51,10 @@ class WorldRenderer {
     void measureFrames(bool enabled) noexcept { measure_ = enabled; }
     void supersampling(bool enabled); // Preparation boundary if high targets do not exist yet.
     bool supersampling() const noexcept { return supersampling_; }
+    void ambientOcclusion(bool enabled) noexcept { ambientOcclusion_ = enabled; }
+    bool ambientOcclusion() const noexcept { return ambientOcclusion_; }
+    // Last AO evaluation only; staging may overwrite this shared scratch.
+    TargetHandle ambientOcclusionTarget() const noexcept { return ao_.image(); }
     bool staged() const noexcept { return bool(staged_); }
     WorldImage image() const noexcept;
     // Diagnostic readback only: scratch from the last supersampled draw, not a published scene.
@@ -87,12 +93,13 @@ class WorldRenderer {
         GpuLease<MeshHandle> mesh;
         GpuLease<TargetHandle> output;
         world_render::Camera last{};
-        bool ready = false, quality = false;
+        bool ready = false, quality = false, ao = false;
         bool visibleWater = false;
         unsigned waterFrame = 0, drawnWaterFrame = 0;
         std::uint64_t revision = 0;
     };
     GpuResources& resources_;
+    EnvironmentAo ao_;
     std::shared_ptr<const world_assets::CpuAssets> assets_;
     const world_assets::Publication& publication_;
     std::vector<std::weak_ptr<GpuLease<TextureHandle>>> textures_;
@@ -105,6 +112,8 @@ class WorldRenderer {
     GpuLease<MeshHandle> quad_, proxy_;
     std::array<int, 12> billboardLocations_{};
     void prepareBillboards();
+    bool drawStaticGeometry(const View&, const world_render::WorldFrame*);
+    void drawDoorGeometry(const View&, const world_render::WorldFrame&, unsigned phase);
     enum class BillboardPass { Scenery, LeafArt, Creatures };
     void drawBillboards(const View&, const world_render::WorldFrame&, const float*, const float*, bool,
                         const world_render::Scene*, BillboardPass);
@@ -116,7 +125,7 @@ class WorldRenderer {
     std::unique_ptr<View> active_, staged_;
     world_render::DrawList draws_;
     int mvp_ = -1, view_ = -1, forward_ = -1, anisotropy_ = 1;
-    bool supersampling_ = true, measure_ = false;
+    bool supersampling_ = true, measure_ = false, ambientOcclusion_ = true;
     std::uint64_t revision_ = 0;
     WorldImage renderInput(View&, const world_render::FrameInput&);
     WorldImage render(View&, const MovementState&, const world_render::WorldFrame* = nullptr,

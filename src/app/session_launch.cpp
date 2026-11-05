@@ -59,7 +59,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     });
     if (publication.definitions != loadedNpcs.definitionFingerprint)
         throw std::runtime_error("World NPC definitions differ; rebuild world assets");
-    WorldRenderer world(presenter.resources(), std::move(publication), options.supersampling);
+    WorldRenderer world(presenter.resources(), std::move(publication), options.supersampling,
+                        options.ambientOcclusion);
     const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena),    true,  nullptr,
                                 nullptr, nullptr,     campaign.get(), saves, arena};
     if (loading->closing())

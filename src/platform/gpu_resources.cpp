@@ -73,7 +73,7 @@ TextureHandle GpuResources::createTexture(const Image& image) {
 TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
     preparationPoint("Preparing presentation");
     if (!targets_.available())
-        throw std::runtime_error("Render target capacity exhausted (8)");
+        throw std::runtime_error("Render target capacity exhausted (12)");
     if (w <= 0 || h <= 0 || w > 8192 || h > 8192)
         throw std::invalid_argument("Invalid render target dimensions");
     checkpoint();

@@ -10,7 +10,7 @@ int run(int argc, char** argv) {
         std::cout
             << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--campaign-save FILE] "
                "[--no-audio] [--settings FILE] [--seed UINT32] [--development] [--supersampling on|off] "
-               "[--uncapped] [--sanctuary-city-review]\n";
+               "[--ambient-occlusion on|off] [--uncapped] [--sanctuary-city-review]\n";
         return 0;
     }
     return options.sanctuaryCityReview ? runCityReview(options) : runMenus(options);
