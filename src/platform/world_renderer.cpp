@@ -21,7 +21,7 @@ void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
 uniform int depthOnly;uniform int aoEnabled;uniform sampler2D environmentAo;uniform vec2 viewportSize;
-uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
+uniform vec2 dungeonLighting;uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
 void main(){vec2 mapped=uv;
 if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
 if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
@@ -36,12 +36,12 @@ vec4 c=texture(texture0,mapped);
 if(meshCutout!=0)c.rgb/=max(c.a,0.0001);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
 if(uvMode==4) face=1.0;
-float light=mix(face/(1.0+0.115*depth+0.015*depth*depth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
+float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(face/(1.0+0.115*litDepth+0.015*litDepth*litDepth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 float ao=aoEnabled!=0?texture(environmentAo,gl_FragCoord.xy/viewportSize).r:1.0;
 finalColor=vec4((c.rgb*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
-uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
+uniform vec2 dungeonLighting;uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
 uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;uniform float farClip;
 bool slab(float at,float delta,float low,float high,inout float enter,inout float leave){
@@ -56,7 +56,7 @@ slab(dot(d,z.xyz),dot(ray,z.xyz),0,1,enter,leave)&&(x.w==2.0||enter<=depth+1e-5)
 void main(){
 float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
-if(kind==5){if(leafHidden())discard;vec4 c=texture(texture0,uv)*idColor;float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+if(kind==5){if(leafHidden())discard;vec4 c=texture(texture0,uv)*idColor;float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
 finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
 if(leafHidden())discard;
 for(int i=0;i<clipCount;++i){vec4 r=clipRects[i];if(uv.x>=r.x&&uv.y>=r.y&&uv.x<=r.z&&uv.y<=r.w)discard;}
@@ -65,7 +65,7 @@ float base=texelFetch(texture0,p,0).a;bool covered=base*255.0+0.01>=float(thresh
 vec4 c=texture(texture0,uv);
 if(kind==2){if(covered||c.a<=0.001)discard;}else{if(!covered)discard;}
 if(kind==4){finalColor=idColor;return;}
-float light=mix(1.0/(1.0+0.115*depth+0.015*depth*depth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
 finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);
 })";
 constexpr const char* skyFragment = R"(#version 330
@@ -130,6 +130,9 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     mvp_ = GetShaderLocation(shader, "mvp");
     view_ = GetShaderLocation(shader, "matView");
     forward_ = GetShaderLocation(shader, "forward");
+    lightingLocation_ = GetShaderLocation(shader, "dungeonLighting");
+    if (lightingLocation_ < 0)
+        throw std::runtime_error("World lighting shader interface unavailable");
     model_ = GetShaderLocation(shader, "matModel");
     uvMode_ = GetShaderLocation(shader, "uvMode");
     doorUv_ = GetShaderLocation(shader, "doorUv");
@@ -212,6 +215,9 @@ void WorldRenderer::prepareBillboards() {
         if (locations[i] < 0)
             throw std::runtime_error("Billboard shader interface unavailable");
     }
+    billboardLightingLocation_ = GetShaderLocation(resources_.shader(shader.get()), "dungeonLighting");
+    if (billboardLightingLocation_ < 0)
+        throw std::runtime_error("Billboard lighting shader interface unavailable");
     billboardLocations_ = locations;
     billboard_ = std::move(shader);
     quad_ = std::move(quad);
@@ -316,10 +322,11 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     const auto camera =
         v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip) : world_render::camera(state);
     stats = {};
+    const auto lighting = world_render::effectiveDungeonLighting(dungeonLighting_, v.pack.id);
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
-        v.ao == ambientOcclusion_ && (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) &&
-        world_render::sameCamera(camera, v.last)) {
+        v.ao == ambientOcclusion_ && v.lighting == lighting &&
+        (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) && world_render::sameCamera(camera, v.last)) {
         stats.cached = true;
         return {v.output.get(), v.revision};
     }
@@ -395,6 +402,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         DrawRectangle(0, 0, target.texture.width, target.texture.height, WHITE);
         EndShaderMode();
     }
+    const auto lightingParameters = world_render::dungeonLightingParameters(lighting);
+    SetShaderValue(shader, lightingLocation_, lightingParameters.data(), SHADER_UNIFORM_VEC2);
     SetShaderValue(shader, GetShaderLocation(shader, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shader, GetShaderLocation(shader, "worldScale"), &v.pack.worldScale, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shader, GetShaderLocation(shader, "horizon"), v.pack.horizon.data(), SHADER_UNIFORM_VEC3);
@@ -402,6 +411,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
                    SHADER_UNIFORM_VEC3);
     if (billboard_) {
         const auto b = resources_.shader(billboard_.get());
+        SetShaderValue(b, billboardLightingLocation_, lightingParameters.data(), SHADER_UNIFORM_VEC2);
         SetShaderValue(b, GetShaderLocation(b, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
         SetShaderValue(b, GetShaderLocation(b, "farClip"), &camera.farClip, SHADER_UNIFORM_FLOAT);
         SetShaderValue(b, GetShaderLocation(b, "horizon"), v.pack.horizon.data(), SHADER_UNIFORM_VEC3);
@@ -510,7 +520,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
             const auto& ribbon = effects->swipes.ribbons[r];
             auto vertex = [&](unsigned i) {
                 const auto p = ribbon.vertices[i];
-                const float alpha = ribbon.alpha * world_render::swipeEdgeAlpha[i % world_render::swipeColumns];
+                const float alpha =
+                    ribbon.alpha * world_render::swipeEdgeAlpha[i % world_render::swipeColumns];
                 rlColor4ub(tint[0], tint[1], tint[2], static_cast<unsigned char>(255 * alpha));
                 rlVertex2f(p.x, p.y);
             };
@@ -549,6 +560,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     v.last = camera;
     v.quality = supersampling_;
     v.ao = ambientOcclusion_;
+    v.lighting = lighting;
     v.visibleWater = visibleWater;
     v.drawnWaterFrame = v.waterFrame;
     v.ready = true;

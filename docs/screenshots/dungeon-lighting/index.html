@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stone dungeon — C accepted</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: #101515; color: #eee8db; font: 16px/1.5 system-ui,sans-serif; }
+  main { max-width: 1600px; margin: auto; }
+  h1 { margin: 0; font-size: 28px; }
+  p { margin: 8px 0 18px; color: #b6bdb8; }
+  nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  button { border: 1px solid #626657; border-radius: 5px; background: #1c2523; color: inherit; padding: 9px 16px; font: inherit; cursor: pointer; }
+  button[aria-pressed="true"] { background: #c8a65f; color: #101515; border-color: #c8a65f; }
+  button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  figure { margin: 0; }
+  #capture { display: block; width: 100%; height: auto; aspect-ratio: 16/9; background: #080b0a; }
+  figcaption { padding: 12px 0; min-height: 48px; }
+  a { color: #e2c580; }
+  footer { margin-top: 16px; font-size: 14px; color: #a7b0a9; }
+</style>
+<main>
+  <h1>Stone dungeon lighting</h1>
+  <p>C / Early is accepted and is now the stone-dungeon default. Sanctuary city and inn stay unchanged.</p>
+  <nav aria-label="Scene">
+    <button type="button" data-scene="corridor" aria-pressed="true">Corridor</button>
+    <button type="button" data-scene="room" aria-pressed="false">Room &amp; creature</button>
+  </nav>
+  <nav aria-label="Lighting variant">
+    <button type="button" data-variant="0" aria-pressed="false">1 · Legacy reference</button>
+    <button type="button" data-variant="1" aria-pressed="true">2 · C — Early (accepted)</button>
+  </nav>
+  <figure>
+    <a id="original" href="corridor-c-early.png" target="_blank" rel="noopener" aria-label="Open original full-resolution capture">
+      <img id="capture" src="corridor-c-early.png" width="1920" height="1080" alt="Corridor with accepted C lighting">
+    </a>
+    <figcaption id="description" aria-live="polite">C — Early (accepted): faster falloff from the camera, including nearby surfaces.</figcaption>
+  </figure>
+  <footer>Use number keys 1–2 to compare at the same position. Click the image for full resolution.
+    <a href="README.md">Capture notes and individual image links</a>.
+    C / Early is the stone-dungeon gameplay default.</footer>
+</main>
+<script>
+  const variants = [
+    ['current', 'Legacy reference — previous distance falloff.'],
+    ['c-early', 'C — Early (accepted): faster falloff from the camera, including nearby surfaces.']
+  ];
+  let scene = 'corridor', variant = 1;
+  function update() {
+    const name = `${scene}-${variants[variant][0]}.png`;
+    document.getElementById('capture').src = name;
+    document.getElementById('capture').alt = `${scene}: ${variants[variant][1]}`;
+    document.getElementById('original').href = name;
+    document.getElementById('description').textContent = variants[variant][1];
+    document.querySelectorAll('[data-scene]').forEach(button =>
+      button.setAttribute('aria-pressed', String(button.dataset.scene === scene)));
+    document.querySelectorAll('[data-variant]').forEach(button =>
+      button.setAttribute('aria-pressed', String(Number(button.dataset.variant) === variant)));
+  }
+  document.querySelectorAll('[data-scene]').forEach(button => button.addEventListener('click', () => {
+    scene = button.dataset.scene; update();
+  }));
+  document.querySelectorAll('[data-variant]').forEach(button => button.addEventListener('click', () => {
+    variant = Number(button.dataset.variant); update();
+  }));
+  document.addEventListener('keydown', event => {
+    if (!event.ctrlKey && !event.altKey && !event.metaKey && /^[1-2]$/.test(event.key)) {
+      variant = Number(event.key) - 1; update();
+    }
+  });
+  // Preload the original images to make comparisons immediate without image processing.
+  const preload = [];
+  for (const shot of ['corridor', 'room']) for (const [id] of variants) {
+    const image = new Image(); image.src = `${shot}-${id}.png`; preload.push(image);
+  }
+</script>
+</html>

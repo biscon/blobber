@@ -1,5 +1,12 @@
 # System design
 
+Stone dungeon distance lighting **C / Early accepted and implemented (2026-11-05)**:
+[design](dungeon_lighting_design.md) defines three `underkeep`-only attenuation
+presets and [matched comparison captures](screenshots/dungeon-lighting/README.md).
+Focused CPU and hidden GPU checks pass; production city/inn images are identical
+across presets. The selected C preset is the stone-dungeon default;
+fog, AO and other biomes are unchanged.
+
 Configurable world-window screenshake **implemented and mechanically verified; awaiting user review (2026-11-05)**:
 [design](screenshake_design.md) adds bounded cosmetic impact impulses and a clipped
 prepared-image transform, with stationary HUD and inverse-mapped world picking.

@@ -1,6 +1,7 @@
 #pragma once
 #include "assets/world_assets.hpp"
 #include "platform/environment_ao.hpp"
+#include "render/dungeon_lighting.hpp"
 #include "render/world_effects.hpp"
 #include "render/world_visibility.hpp"
 #include <memory>
@@ -53,6 +54,8 @@ class WorldRenderer {
     bool supersampling() const noexcept { return supersampling_; }
     void ambientOcclusion(bool enabled) noexcept { ambientOcclusion_ = enabled; }
     bool ambientOcclusion() const noexcept { return ambientOcclusion_; }
+    void dungeonLighting(world_render::DungeonLighting preset) noexcept { dungeonLighting_ = preset; }
+    world_render::DungeonLighting dungeonLighting() const noexcept { return dungeonLighting_; }
     // Last AO evaluation only; staging may overwrite this shared scratch.
     TargetHandle ambientOcclusionTarget() const noexcept { return ao_.image(); }
     bool staged() const noexcept { return bool(staged_); }
@@ -94,6 +97,7 @@ class WorldRenderer {
         GpuLease<TargetHandle> output;
         world_render::Camera last{};
         bool ready = false, quality = false, ao = false;
+        world_render::DungeonLighting lighting = world_render::DungeonLighting::Current;
         bool visibleWater = false;
         unsigned waterFrame = 0, drawnWaterFrame = 0;
         std::uint64_t revision = 0;
@@ -126,6 +130,8 @@ class WorldRenderer {
     world_render::DrawList draws_;
     int mvp_ = -1, view_ = -1, forward_ = -1, anisotropy_ = 1;
     bool supersampling_ = true, measure_ = false, ambientOcclusion_ = true;
+    world_render::DungeonLighting dungeonLighting_ = world_render::DungeonLighting::Early;
+    int lightingLocation_ = -1, billboardLightingLocation_ = -1;
     std::uint64_t revision_ = 0;
     WorldImage renderInput(View&, const world_render::FrameInput&);
     WorldImage render(View&, const MovementState&, const world_render::WorldFrame* = nullptr,

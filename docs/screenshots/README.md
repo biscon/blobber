@@ -5,6 +5,8 @@ The [interaction prompt revision](interaction-prompts/README.md) subsequently ad
 four new hidden OpenGL captures with focused verification; user review is pending.
 The [melee swipe](melee-swipe/README.md) adds six phase/outcome captures, also awaiting review.
 The [screenshake](screenshake/README.md) adds six isolated preset previews; timing/feel review is pending.
+The [stone dungeon lighting](dungeon-lighting/README.md) retains four matched
+captures (legacy and accepted C in two scenes); C is the gameplay default.
 Keep six images per feature, or twelve awaiting review, unless a gallery explains
 the distinct cases requiring an exception. Generate raw captures in disposable
 [agent runs](../verification_workflow.md#artifact-housekeeping).
@@ -15,6 +17,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [dungeon-lighting](dungeon-lighting/README.md) | 4 |
 | [screenshake](screenshake/README.md) | 6 |
 | [audio](audio/README.md) | 1 |
 | [b01](b01/README.md) | 5 |
