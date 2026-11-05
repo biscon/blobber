@@ -1,10 +1,19 @@
-# SC03 complete dressing — Ready for review
+# SC03 complete dressing — Accepted 2026-11-05
 
 Current SC03 uses the accepted shorter tree, a smaller eastern tree, planted beds,
 bushes, selective ivy, two timber stalls, three service signs and an animated
 stone fountain. [Verification, resource totals and limitations](../../sc03_verification.md).
 
-## Far enclosure and fountain tone — latest
+The user accepted the complete slice after the inn-sign correction. Earlier
+review notes below are retained as history.
+
+## Inn sign mounting — latest
+
+The inn bracket now attaches to solid wall beside the upper window:
+[street view](inn-sign-v1/inn-spacing.png), [close view](inn-sign-v1/sign-inn-near.png).
+[Geometry check](inn-sign-checks.txt) and [capture report](inn-sign-v1/report.txt).
+
+## Far enclosure and fountain tone
 
 The city view distance is now 40 cells; other packs retain 16. The fountain uses
 the original carved stone with a subtle brightness lift. City fog remains capped.
@@ -50,7 +59,7 @@ picking remains unchanged and the paused capture is pixel-identical to frame 7.
 [hidden GPU checks](corrections-gpu-checks.txt) pass. The atmosphere fixture verifies
 both distant walls and actors, plus identical dungeon pixels with either profile.
 Native captures are 1920×1080, supersampling ON, using hidden windows and in-process
-movement only. Interactive acceptance remains user review.
+movement only. Final acceptance was recorded on 2026-11-05.
 
 Earlier `dressing-v1/`, `dressing-v2/` and `water-v1/` are retained for comparison;
 the [earlier animation GIF](water-v1/fountain-loop.gif) predates the material/stream
@@ -80,8 +89,8 @@ authorized the remaining dressing, now delivered below.
 movement at 25%, 50%, 75% and settled phases; filenames identify the movement
 action enum and sample. All captures use native 1920×1080 output, supersampling ON,
 seed 5, a hidden application window and scripted in-process movement. No desktop
-input or focus was controlled. Pixel-art readability and final visual acceptance
-remain user review; close-camera crown cropping is expected.
+input or focus was controlled. Final visual acceptance was recorded on 2026-11-05; close-camera crown cropping
+remains expected.
 
 [Tree checkpoint layout](tree-v2/layout.svg), [tree checkpoint poses/resource report](tree-v2/report.txt),
 [CPU integration](integration-checks.txt), [GPU integration](gpu-checks.txt),

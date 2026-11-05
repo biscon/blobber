@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01/SC02 accepted; SC03 corrections Ready for review, representative tree accepted (2026-11-05).**
+Status: **SC01–SC03 accepted (2026-11-05); SC04 planned.**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,10 +16,10 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | SC03 — Ready for review |
-| Awaiting review | Complete dressed city and water; [handoff](sc03_verification.md) |
-| Next eligible slice | SC04, only after SC03 acceptance and separate planning |
-| Next action | Review corrected city captures; await final SC03 acceptance |
+| Active slice | None — SC03 accepted 2026-11-05 |
+| Awaiting review | None; [accepted SC03 handoff](sc03_verification.md) |
+| Next eligible slice | SC04 — eligible for separate planning |
+| Next action | Await a request to plan SC04 |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Keep prepared geometry, material batching and existing chunk/frustum culling; no advanced occlusion or additional spatial subdivision |
 | Blockers | None |
@@ -210,13 +210,13 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 | SC01.1 | Location-owned assets and memory accounting | Approved detailed plan | Accepted 2026-11-05 |
 | SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Accepted 2026-11-05 |
 | SC02 | Complete town architecture and walkable layout | SC01 Accepted | Accepted 2026-11-05 |
-| SC03 | Vegetation, market, fountain and service signs | SC02 Accepted | Ready for review |
+| SC03 | Vegetation, market, fountain and service signs | SC02 Accepted | Accepted 2026-11-05 |
 | SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
 
 | Milestone | Meaning | Status |
 | --- | --- | --- |
 | S-A | Architectural scale and art quality proven in-engine through SC01 | Accepted 2026-11-05 |
-| S-B | Complete dressed city accepted through SC03 | Planned |
+| S-B | Complete dressed city accepted through SC03 | Accepted 2026-11-05 |
 | S-C | City is the working campaign hub through SC04 | Planned |
 
 ### SC01 — Asset residency and architecture foundation
@@ -519,3 +519,12 @@ Final acceptance and SC04 remain pending.
 Restore subtly brighter carved fountain stone after the white-marble attempt.
 Focused CPU/GPU/CLI checks and six native captures pass; SC03 remains **Ready for
 review**. See the [latest capture gallery](screenshots/sc03/README.md).
+
+2026-11-05: Move inn sign bracket clear of the upper window onto solid facade;
+export/rebuild and hidden street/close captures verified. SC03 stays Ready for review.
+
+2026-11-05: User explicitly accepted SC03 (“nice record the slice as accepted”)
+after the inn-sign mounting correction. Record SC03 and milestone S-B as
+**Accepted**. Acceptance includes the complete dressed city, animated fountain and
+all reviewed corrections. SC04 is eligible for separate planning; it has not
+started and campaign hub replacement remains deferred.

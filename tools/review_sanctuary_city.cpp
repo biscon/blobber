@@ -11,7 +11,7 @@ int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
         throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT "
                                  "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water|"
-                                 "corrections|fountain-orbit|distance-tone]");
+                                 "corrections|fountain-orbit|distance-tone|inn-sign]");
     const std::string selected = argc == 4 ? argv[3] : "";
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
@@ -104,6 +104,8 @@ int main(int argc, char** argv) try {
                 name == "tree-east" || name == "fountain-close" || name == "fountain-west";
             if (!selected.empty() && name != selected && !(selected == "dressing" && dressingShot) &&
                 !(selected == "corrections" && correctionShot) &&
+                !(selected == "inn-sign" &&
+                  (name == "sign-inn" || name == "sign-inn-near" || name == "inn-spacing")) &&
                 !(selected == "distance-tone" &&
                   (name.rfind("distance-", 0) == 0 || name == "fountain-north-facing" || name == "square")) &&
                 !(selected == "fountain-orbit" && name.rfind("orbit-", 0) == 0) &&

@@ -1,17 +1,17 @@
 # SC03 verification and handoff
 
-Date: 2026-11-05. Status: **Ready for review — complete SC03 implementation**.
+Date: 2026-11-05. Status: **Accepted by the user — complete SC03 implementation**.
 The user approved the shorter representative tree and authorized continuation.
 The remaining planting, market, fountain, three service signs and optional water
-animation are implemented. Final SC03 acceptance is pending; SC04 has not started.
+animation and all subsequent review corrections are accepted. SC04 has not started.
 
 ## Delivered behavior
 
 The accepted courtyard tree remains unchanged, now in a 3×2 planted bed at (4,4).
 A smaller eastern tree and bushes fill the 2×2 eastern bed; a 2×1 bush bed dresses
 the western lane. Sparse ivy appears on two selected residential facades. Two
-east-facing timber stalls with muted russet/green cloth occupy the market's four
-reserved cells. A low, broad stone fountain fills its 2×2 base in the square.
+north-facing timber stalls with muted russet/green cloth occupy two reserved
+cells at the square’s southwest edge. A low, broad stone fountain fills its 2×2 base in the square.
 Tankard, anvil and provisions emblems hang on modeled, double-sided timber signs
 at the inn, smithy and provisioner. Services and campaign cutover remain deferred.
 
@@ -132,15 +132,15 @@ include that behavior rather than changing camera/framing rules. Foliage remains
 fixed crossed/tilted cutout cards and can reveal its construction at some angles.
 
 The shorter-tree before/after comparison remains retained, and the user has
-accepted that tree. Final visual acceptance of the complete dressed city and water
-loop remains user review. Interactive desktop review, Release/sanitizer matrix,
+accepted the complete dressed city and water loop on 2026-11-05, after all review
+corrections. Agent-controlled interactive desktop review, Release/sanitizer matrix,
 benchmark, stress and low-memory-device checks were not run. Tested GPU agreement
 is not a claim of cross-device pixel identity or driver allocation freedom.
 
 Launch `cmake-build-debug/blobber --sanctuary-city-review`. Regeneration and focused
 capture commands are in the [pack README](../assets/packs/sanctuary-city/README.md).
-**Stop at SC03 Ready for review.** Address review corrections within SC03. Do not
-mark accepted, begin SC04, or replace the campaign Sanctuary automatically.
+**SC03 is accepted.** SC04 is eligible for separate planning; await the user’s
+request before starting it or replacing the campaign Sanctuary.
 
 ## Screenshot correction verification — 2026-11-05
 
@@ -207,3 +207,25 @@ were introduced. The resource table above reflects this capture, with unchanged
 GPU residency and visibility scratch. No unrelated broad test matrix, benchmark,
 OS input automation or campaign cutover was performed. Final visual acceptance
 remains user review.
+
+## Inn sign mount — 2026-11-05
+
+Shifted the inn sign 0.55 cell along its facade onto the solid strip between the
+upper-window trim and corner timber. Exported mesh comparison confirms unchanged
+height, wall penetration, normals and vertex count (UV rounding below 0.000002).
+Other runtime meshes and the atlas are unchanged. Blender export, Debug application
+asset rebuild and three hidden captures passed; street and close views confirm
+the mounting correction, while the frontal view crops the sign at the fixed camera.
+No runtime code changed, so no broad test suite was rerun. Resource counts are
+unchanged. [Geometry check](screenshots/sc03/inn-sign-checks.txt),
+[street](screenshots/sc03/inn-sign-v1/inn-spacing.png),
+[close](screenshots/sc03/inn-sign-v1/sign-inn-near.png),
+[capture report](screenshots/sc03/inn-sign-v1/report.txt). SC03 remains Ready for review.
+
+## Acceptance and next action — 2026-11-05
+
+User instruction: “nice record the slice as accepted”. SC03 is **Accepted**, including
+all screenshot corrections through the inn sign mount. Milestone S-B is accepted.
+The preceding dated verification entries retain their original handoff history;
+this acceptance supersedes their pending-review status. SC04 remains planned,
+with no implementation or campaign cutover started.

@@ -1,9 +1,9 @@
 # SC03 — Vegetation, market, fountain and service signs
 
-Status: **Ready for review — user corrections implemented** (2026-11-05).
+Status: **Accepted by the user** (2026-11-05).
 The user approved the shorter representative tree: “beautiful tree, I approve,
-continue”. That checkpoint is accepted; continue the already-approved SC03 scope.
-The complete dressed city and eight-frame water animation are delivered for final review.
+continue”. The complete dressed city, eight-frame water animation and subsequent
+review corrections are now accepted. The sections below retain the delivery history.
 Campaign cutover remains SC04.
 
 ## Content and sequence
@@ -234,3 +234,25 @@ the far enclosure and rear roofs; the southern pair checks adjacent positions.
 The default shader's fog is unchanged. Prepared draw-list capacity adds 104 KiB
 per renderer; city GPU residency and visibility scratch are unchanged. No benchmark
 was run. SC03 remains Ready for review.
+
+## Inn sign mounting correction — 2026-11-05
+
+Move only the inn sign and bracket from local facade x=0.70 to x=1.25, toward
+the facade corner. At bracket height the upper window spans x=0.60–1.08; the new
+mount sits on plaster between its trim and the corner timber at x=1.43. Keep the
+bracket embedded in the wall, existing projection, height, artwork and all other
+signs unchanged. This is an offline placement correction using the existing
+architecture design, with no runtime/system/schema change. Verify exported
+geometry and hidden street/front/close captures; no new test suite is needed.
+
+Outcome: export and Debug rebuild passed. Geometry comparison confirms a 0.55-cell
+translation with unchanged height/projection/normals and negligible UV rounding.
+Street and close hidden captures show the bracket attached beside the window.
+The frontal capture is retained but crops the sign with the fixed camera.
+SC03 remains Ready for review.
+
+## Final acceptance — 2026-11-05
+
+The user accepted SC03 after the inn-sign mounting correction: “nice record the
+slice as accepted”. SC03 and milestone S-B are complete and accepted. SC04 remains
+planned and requires a separate planning request before continuation.

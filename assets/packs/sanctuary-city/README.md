@@ -48,8 +48,8 @@ Tree foliage uses 20 fixed double-sided cards; the trunk/branches are modeled.
 The accepted tree geometry stays at (4,4), now inside the 3×2 courtyard garden
 base. Geometry overhangs remain nonblocking.
 Cutout threshold is 128/255, with prepared premultiplied mips/base alpha masks.
-The user accepted the shorter tree before dressing expansion. Complete SC03 still
-requires final user review. `tools/export_city_dressing.py` can regenerate only
+The user accepted the shorter tree before dressing expansion and the complete
+SC03 slice, including review corrections, on 2026-11-05. `tools/export_city_dressing.py` can regenerate only
 dressing; `tools/city_mesh_export.py` retains packed Blender/unlit GLB collections.
 The six new generated art masters and exact prompts are retained in
 `source/dressing-art.prompt.json` (built-in ImageGen, including the ivy alpha fix).
@@ -101,7 +101,9 @@ translation/turn samples. `dressing` selects final scenery/sign views; `water`
 exports eight 125ms water samples and clock/color/picking revisions.
 `corrections` selects the user-reported issues; `fountain-orbit` exports eight
 cardinal/diagonal angles to check stream thickness. `distance-tone` captures
-the south-to-north view, a forward step, the corner/diagonal and the toned fountain. `layout` exports only the SVG and needs no graphics
+the south-to-north view, a forward step, the corner/diagonal and the toned fountain.
+`inn-sign` selects the three mounting-review views; its bracket sits on plaster
+beside the upper window at local x=1.25. `layout` exports only the SVG and needs no graphics
 context or asset loading. Output directories must be new. Hidden windows and
 in-process input are used; never automate desktop input or focus.
 

@@ -1,6 +1,6 @@
 # System design
 
-Sanctuary SC03 is **Ready for review — screenshot corrections implemented**: [design](sc03_design.md),
+Sanctuary SC03 is **Accepted (2026-11-05)**: [design](sc03_design.md),
 [verification](sc03_verification.md) and [captures](screenshots/sc03/README.md).
 Bounded scenery placements and prepared cutout meshes support two trees, bushes,
 three planting beds and sparse ivy; two stalls, a fountain and three painted service
@@ -15,7 +15,9 @@ gentle city-only haze capped at 22% (dungeon defaults unchanged); see
 the SC03 design addendum. The city pack now uses a shared CPU/GPU 40-cell view distance and modestly
 brightened carved fountain stone; other packs retain 16 cells. See the
 SC03 far-enclosure addendum for bounded culling storage and verification.
-Campaign cutover remains SC04.
+The inn sign review correction moves its bracket onto the solid facade strip
+beside the upper window; see the SC03 mounting addendum. Milestone S-B is accepted.
+SC04 is eligible for separate planning; campaign cutover has not started.
 
 Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
 and [verification/captures](sc02_verification.md). The 24×24 square-centered town

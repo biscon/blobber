@@ -237,7 +237,8 @@ for i in range(4):
 # Signs project perpendicular from the front wall beside, above the door.
 for name,front,tile in (('inn',-2.5,8),('smithy',-1.5,9),('provisioner',-1.5,10)):
     h=model(name+'-sign')
-    x=.70
+    # Inn upper window ends at x=1.08; mount on plaster before the corner timber.
+    x=1.25 if name=='inn' else .70
     h.box(x-.022,x+.022,1.53,1.57,front-.68,front+.025,7)
     for z in (front-.57,front-.19):
         h.box(x-.012,x+.012,1.41,1.54,z-.012,z+.012,7)

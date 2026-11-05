@@ -1,0 +1,7 @@
+Export geometry verification: passed.
+156 vertices translated +0.55 cell along facade.
+Height, wall penetration and normals unchanged; UV roundoff <= 0.000002.
+Sign x bounds 1.223..1.277 clear window trim ending 1.115 and corner timber starting 1.395.
+Other runtime meshes and atlas unchanged (git diff).
+Blender export and Debug asset/application rebuild: passed.
+Three hidden captures exported and inspected; street/close confirm wall attachment.
