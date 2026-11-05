@@ -1,6 +1,7 @@
 #pragma once
 #include "game/actors.hpp"
 #include "game/party.hpp"
+#include "game/spell_visuals.hpp"
 #include "rules/spells.hpp"
 #include <optional>
 
@@ -205,6 +206,7 @@ class EffectController {
     void advance(std::uint64_t gameplayMs, std::uint64_t sessionMs, bool realTime, CombatEvents&) noexcept;
     void damaged(EffectTarget, std::int64_t damage, std::uint64_t sessionMs, CombatEvents&) noexcept;
     bool has(EffectTarget, EffectKind) const noexcept;
+    ActorConditionVisualSnapshot visualConditions() const noexcept;
     StatusSummary statuses(EffectTarget) const noexcept;
     std::optional<StatusEntry> concentrationStatus(EffectSource) const noexcept;
     bool canAct(EffectTarget) const noexcept;

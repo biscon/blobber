@@ -1,4 +1,5 @@
 #pragma once
+#include "support/elemental_assets.hpp"
 #include "support/world_fixtures.hpp"
 namespace blobber::test {
 struct ResidencyFixture {
@@ -46,6 +47,7 @@ struct ResidencyFixture {
         }
         for (unsigned i = 0; i < unused; ++i)
             w.add("unused-" + std::to_string(i), 4, 4, true, rgba);
+        elementalAssets(w);
         w.finish(actors, 0, packs, meshes);
     }
     world_assets::Publication publication() const { return world_assets::load(storage.directory); }

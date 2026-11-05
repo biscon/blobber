@@ -538,8 +538,14 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 std::sort(targets.begin(), targets.begin() + count,
                           [](ActorId a, ActorId b) { return a.slot < b.slot; });
             }
+            SpellCastVisual* castVisual = nullptr;
             if (kind == SpellKind::BurningHands) {
+                castVisual = spellVisuals_.begin(kind, c.character, pose, now);
                 const auto footprint = spellArea(actors_, pose);
+                if (castVisual) {
+                    std::copy_n(footprint.cells.begin(), 3, castVisual->cells.begin());
+                    std::copy_n(footprint.eligible.begin(), 3, castVisual->eligible.begin());
+                }
                 for (unsigned i = 0; i < footprint.cells.size(); ++i)
                     if (footprint.eligible[i])
                         effects_.ignite(footprint.cells[i]);
@@ -552,6 +558,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 const auto id = targets[i];
                 const auto* a = actors_.actor(id);
                 auto result = out;
+                bool visualSaved = false;
                 result.event = CombatEvent::Attack;
                 result.damageType = r.damage;
                 result.enemy = id;
@@ -607,6 +614,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     events.append(notice);
                     result.hit = !save.succeeded || r.area;
                     result.damage = save.succeeded ? (r.area ? sharedDamage / 2 : 0) : sharedDamage;
+                    visualSaved = save.succeeded;
                     push[i] = kind == SpellKind::Thunderwave && !save.succeeded;
                 }
                 if (delayed(kind))
@@ -614,6 +622,11 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 else {
                     alert(id, pose);
                     applyDamage(result, now, events);
+                    if (castVisual && castVisual->count < castVisual->targets.size()) {
+                        auto target = spellTarget(result, now);
+                        target.saved = visualSaved;
+                        castVisual->targets[castVisual->count++] = target;
+                    }
                     spellPulse(id, c.character, kind, pose, now);
                 }
             }

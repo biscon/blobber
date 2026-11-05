@@ -1,12 +1,11 @@
 # System design
 
-Spell effects **roadmap drafted; implementation not started (2026-11-05)**:
-[four-slice plan](spell_effects_plan.md) starts with Fire Bolt, Ray of Frost and
-Burning Hands, establishing authored animation, selective additive glow, bounded
-local lighting and creature aftermath. Later slices cover remaining offensive
-spells, support/persistent effects, and final catalogue integration. Existing
-combat rules, authoritative timing and prepared-image presentation remain intact.
-SE01 is next for detailed planning; no delivered slice is accepted.
+Spell effects SE01 **accepted and implemented (2026-11-05)**:
+[SE01 design](se01_design.md) implements Fire Bolt, Ray of Frost and Burning Hands
+with prepared animation, selective glow, bounded local light and creature aftermath.
+Combat timing/rules and prepared-image presentation remain unchanged. The user
+selected death-pose remnants and animated-door light occlusion. See the
+[four-slice roadmap](spell_effects_plan.md) and [motion/capture gallery](screenshots/spell-effects/README.md); the user accepted the slice, particularly its local lighting. SE02 is next eligible and remains Planned.
 
 Stone dungeon distance lighting **C / Early accepted and implemented (2026-11-05)**:
 [design](dungeon_lighting_design.md) defines three `underkeep`-only attenuation
@@ -704,7 +703,7 @@ Presenter accepts only world target/revision publications. Engine-owned frame wo
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
 Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
-without being modified; no migration. World publication is format 10, appearance 4,
+without being modified; no migration. World publication is format 11, appearance 5,
 visibility world-visibility-v17, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1

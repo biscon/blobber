@@ -2,6 +2,7 @@
 #include <cmath>
 #include <stdexcept>
 namespace blobber::world_render {
+static_assert(sizeof(EffectsPipeline) + sizeof(std::array<std::array<float, 4>, 1024>) <= 512u * 1024);
 namespace {
 float depth(const Camera& c, Vec p) {
     return (p.x - c.position.x) * c.forward.x + (p.z - c.position.z) * c.forward.z;
@@ -40,7 +41,7 @@ std::array<float, 4> spellTint(rules::SpellKind kind, float alpha) {
     }
 }
 } // namespace
-EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) {
+EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) : spells_(assets) {
     constexpr const char* names[]{"effect/arrow",   "effect/tip",    "effect/feathers", "effect/slash",
                                   "effect/glint",   "effect/grease", "effect/web",      "effect/weapon",
                                   "effect/preview", "effect/white"};
@@ -53,8 +54,13 @@ EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) {
 bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     if (in.attacks && (!in.actors || in.attacks->world != in.actors->snapshot().world))
         throw std::invalid_argument("Foreign world attack snapshot");
+    if (in.spells && (!in.actors || in.spells->world != in.actors->snapshot().world))
+        throw std::invalid_argument("Foreign world spell snapshot");
+    if (in.conditions && (!in.actors || in.conditions->world != in.actors->snapshot().world))
+        throw std::invalid_argument("Foreign world condition snapshot");
     const bool swipeChanged = swipes_.update(in, world);
-    const bool changed = shots_.update(in.attacks, in.now) || swipeChanged;
+    const bool spellChanged = spells_.update(in, world);
+    const bool changed = shots_.update(in.attacks, in.now) || swipeChanged || spellChanged;
     SpellArea area = in.area ? *in.area : SpellArea{};
     if (world.moving)
         area.eligible.fill(false);
@@ -79,6 +85,8 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     area_ = area;
     visibility_ = world.revision;
     frame_.count = 0;
+    frame_.lightCount = 0;
+    frame_.frost.fill(0);
     frame_.swipes = swipes_.frame();
     ++frame_.revision;
     auto add = [&](EffectPacket p) {
@@ -156,6 +164,8 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             bodies[b.id] = &b;
     }
     for (const auto& shot : shots_) {
+        if (in.spells && elementalSpell(shot.spell))
+            continue;
         const Billboard* body =
             in.actors && shot.enemy.world == in.actors->snapshot().world && shot.enemy.slot < bodies.size()
                 ? bodies[shot.enemy.slot]
@@ -223,6 +233,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             billboard(center, size, size, texture, std::atan2(a.y - b.y, b.x - a.x), tint);
         }
     }
+    spells_.append(in, world, frame_);
     // Stable bounded insertion sort: ground layers retain submission order, airborne packets far-first.
     for (unsigned i = 1; i < frame_.count; ++i) {
         const auto v = frame_.packets[i];

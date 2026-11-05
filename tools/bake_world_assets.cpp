@@ -371,6 +371,18 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         add(std::string("fixture/") + name, source / "fixtures" / (std::string(name) + ".png"), true);
     if (sourceFingerprints(source) != inputs)
         throw std::runtime_error("World source assets changed during preparation; rebuild");
+    unsigned effectWidth = 0, effectHeight = 0;
+    const auto bodyPixels = pixels(source / "effects/se01/body.png", effectWidth, effectHeight);
+    if (effectWidth != 1024 || effectHeight != 1024)
+        throw std::runtime_error("Invalid SE01 body atlas");
+    const auto body =
+        writer.add("effect/se01/body", effectWidth, effectHeight, true, bodyPixels, 0, {}, false);
+    const auto emissionPixels = pixels(source / "effects/se01/emission.png", effectWidth, effectHeight);
+    if (effectWidth != 1024 || effectHeight != 1024)
+        throw std::runtime_error("Invalid SE01 emission atlas");
+    const auto emission =
+        writer.add("effect/se01/emission", effectWidth, effectHeight, true, emissionPixels, 0, {}, false);
+    writer.effects(world_assets::atlasEffectClips(body, emission));
     writer.finish(appearances, parsed.definitionFingerprint, packs, meshes);
     {
         std::ofstream provenance(output / "sources.json");

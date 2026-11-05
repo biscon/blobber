@@ -70,6 +70,14 @@ TextureHandle GpuResources::createTexture(const Image& image) {
     transfers_.bytes += textureBytes(t);
     return textures_.insert(t);
 }
+void GpuResources::updateTexture(TextureHandle handle, const void* pixels, std::size_t bytes) {
+    const auto& t = texture(handle);
+    if (!pixels || t.mipmaps != 1 || bytes != std::size_t(GetPixelDataSize(t.width, t.height, t.format)))
+        throw std::invalid_argument("Invalid fixed texture update");
+    UpdateTexture(t, pixels);
+    ++transfers_.uploads;
+    transfers_.bytes += bytes;
+}
 TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
     preparationPoint("Preparing presentation");
     if (!targets_.available())

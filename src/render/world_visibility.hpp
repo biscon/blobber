@@ -36,6 +36,8 @@ struct FrameInput {
     const SpellArea* area = nullptr;
     std::uint64_t now = 0;
     unsigned guardianDoor = UINT16_MAX;
+    const SpellVisualSnapshot* spells = nullptr;
+    const ActorConditionVisualSnapshot* conditions = nullptr;
 };
 struct Billboard {
     Vec feet;

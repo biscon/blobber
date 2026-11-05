@@ -7,6 +7,9 @@ The [melee swipe](melee-swipe/README.md) adds six phase/outcome captures, also a
 The [screenshake](screenshake/README.md) adds six isolated preset previews; timing/feel review is pending.
 The [stone dungeon lighting](dungeon-lighting/README.md) retains four matched
 captures (legacy and accepted C in two scenes); C is the gameplay default.
+The [SE01 spell effects](spell-effects/README.md) add nine stills and three motion
+previews; SE01 is accepted, with the distinct reference cases retained as explained
+in its gallery.
 Keep six images per feature, or twelve awaiting review, unless a gallery explains
 the distinct cases requiring an exception. Generate raw captures in disposable
 [agent runs](../verification_workflow.md#artifact-housekeeping).
@@ -17,6 +20,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [spell-effects](spell-effects/README.md) | 12 |
 | [dungeon-lighting](dungeon-lighting/README.md) | 4 |
 | [screenshake](screenshake/README.md) | 6 |
 | [audio](audio/README.md) | 1 |

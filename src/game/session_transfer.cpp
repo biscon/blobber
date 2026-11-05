@@ -310,6 +310,7 @@ void GameSession::importFloor(const FloorState& s) {
     combat_.enemyReady_ = s.combat.enemyReady;
     combat_.enemyBusy_ = s.combat.enemyBusy;
     combat_.nextAttack_ = s.combat.nextAttack;
+    combat_.spellVisuals_.clear(actors_.snapshot().world);
     combat_.autoCursor_ = s.combat.autoCursor;
     combat_.enemyMana_ = s.combat.enemyMana;
     combat_.enemyTarget_ = s.combat.enemyTarget;

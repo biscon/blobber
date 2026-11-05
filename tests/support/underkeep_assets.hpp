@@ -1,11 +1,13 @@
 #pragma once
 #include "assets/world_assets.hpp"
+#include "support/elemental_assets.hpp"
 namespace blobber::test {
 // Tiny owned geometry for integration/allocation fixtures. No production art dependency.
 inline void finishWithUnderkeep(world_assets::Writer& writer,
                                 const std::vector<world_assets::Appearance>& actors,
                                 std::uint64_t definitions, unsigned door, unsigned locked, unsigned crest,
                                 unsigned vine) {
+    elementalAssets(writer);
     world_assets::Pack dungeon;
     dungeon.materialCount = 3;
     dungeon.materials[0] = 0;

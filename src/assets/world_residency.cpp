@@ -65,6 +65,12 @@ AssetRequirements CpuAssets::requirements(const std::string& id, const ActorSnap
                             texture(t);
     }
     if (interactive) {
+        if (publication.effects[0].body == UINT16_MAX)
+            throw std::invalid_argument("Interactive publication is missing elemental effect clips");
+        for (const auto& clip : publication.effects) {
+            texture(clip.body);
+            texture(clip.emission);
+        }
         constexpr const char* common[]{"loot/bag",         "fixture/key-bronze", "fixture/key-silver",
                                        "fixture/endpoint", "fixture/threshold",  "effect/arrow",
                                        "effect/tip",       "effect/feathers",    "effect/slash",

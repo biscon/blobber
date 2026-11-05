@@ -28,6 +28,7 @@ class GpuResources {
   public:
     ~GpuResources();
     TextureHandle createTexture(const Image& image);
+    void updateTexture(TextureHandle, const void* pixels, std::size_t bytes);
     TargetHandle createTarget(int width, int height, bool sampleDepth = false);
     void copyDepth(TargetHandle source, TargetHandle destination);
     MeshHandle createMesh(const world_render::Scene&);

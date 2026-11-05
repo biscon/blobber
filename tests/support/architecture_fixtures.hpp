@@ -1,4 +1,5 @@
 #pragma once
+#include "support/elemental_assets.hpp"
 #include "support/world_fixtures.hpp"
 namespace blobber::test {
 struct ArchitectureFixture {
@@ -105,6 +106,7 @@ struct ArchitectureFixture {
         actor.clips[0].timing = {{{100, 0, 0, 0}}, 1};
         for (auto& side : actor.clips[0].textures)
             side[0] = sprite;
+        elementalAssets(writer);
         writer.finish({actor}, 0, {pack}, meshes);
     }
     world_assets::Publication publication() const { return world_assets::load(storage.directory); }

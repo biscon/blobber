@@ -2,6 +2,7 @@
 #include "assets/world_assets.hpp"
 #include "platform/environment_ao.hpp"
 #include "render/dungeon_lighting.hpp"
+#include "render/spell_lights.hpp"
 #include "render/world_effects.hpp"
 #include "render/world_visibility.hpp"
 #include <memory>
@@ -11,8 +12,9 @@ struct WorldImage {
     std::uint64_t revision = 0;
 };
 struct WorldDrawStats {
-    unsigned draws = 0, chunks = 0;
+    unsigned draws = 0, chunks = 0, aoEvaluations = 0;
     bool cached = false;
+    world_render::SpellEffectDiagnostics effectDrops{};
     double visibilityMs = 0, submissionMs = 0;
 };
 class WorldRenderer {
@@ -89,6 +91,10 @@ class WorldRenderer {
         std::array<TextureHandle, 32> materials{};
         std::unique_ptr<world_render::VisibilityPipeline> visibility;
         std::unique_ptr<world_render::EffectsPipeline> effects;
+        GpuLease<TextureHandle> lightTexture;
+        world_render::SpellLightData lights;
+        std::uint64_t geometryRevision = 0, doorRevision = 0, doorTime = 0;
+
         std::uint64_t effectRevision = 0;
         const PickingBuffer* publishedPicking = nullptr;
         std::uint64_t contentRevision = 0;
@@ -116,6 +122,13 @@ class WorldRenderer {
     GpuLease<MeshHandle> quad_, proxy_;
     std::array<int, 12> billboardLocations_{};
     void prepareBillboards();
+    void updateLights(View&, const world_render::FrameInput&);
+    void bindLights(const View&, Shader, bool enabled);
+    const View* aoOwner_ = nullptr;
+    world_render::Camera aoCamera_{};
+    std::uint64_t aoGeometry_ = UINT64_MAX, aoDoors_ = UINT64_MAX, aoDoorTime_ = UINT64_MAX;
+    bool aoHadFrame_ = false;
+
     bool drawStaticGeometry(const View&, const world_render::WorldFrame*);
     void drawDoorGeometry(const View&, const world_render::WorldFrame&, unsigned phase);
     enum class BillboardPass { Scenery, LeafArt, Creatures };

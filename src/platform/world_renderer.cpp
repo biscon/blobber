@@ -1,5 +1,6 @@
 #include "platform/world_renderer.hpp"
 #include "core/preparation.hpp"
+#include "platform/spell_lighting_shader.hpp"
 #include "platform/world_projection.hpp"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -38,11 +39,15 @@ float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forwa
 if(uvMode==4) face=1.0;
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(face/(1.0+0.115*litDepth+0.015*litDepth*litDepth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 float ao=aoEnabled!=0?texture(environmentAo,gl_FragCoord.xy/viewportSize).r:1.0;
-finalColor=vec4((c.rgb*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
+if(spellLightCount==0){finalColor=vec4((c.rgb*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);return;}
+vec3 illumination=spellIllumination(worldPosition,normal,false);
+finalColor=vec4((c.rgb*(vec3(light)+illumination)*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
 uniform vec2 dungeonLighting;uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
+uniform vec4 effectUv;uniform int effectFootprint;uniform vec2 effectCells[3];uniform vec2 effectOrigin;
+uniform sampler2D frostAtlas;uniform float frostStrength;uniform vec4 frostUv;uniform vec4 frostRegistration;
 uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;uniform float farClip;
 bool slab(float at,float delta,float low,float high,inout float enter,inout float leave){
 if(abs(delta)<1e-6)return at>=low&&at<=high;
@@ -56,8 +61,15 @@ slab(dot(d,z.xyz),dot(ray,z.xyz),0,1,enter,leave)&&(x.w==2.0||enter<=depth+1e-5)
 void main(){
 float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
-if(kind==5){if(leafHidden())discard;vec4 c=texture(texture0,uv)*idColor;float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+if(kind==5||kind==6){if(leafHidden())discard;
+if(effectFootprint!=0){vec2 cell=floor(worldPosition.xz);bool inside=all(equal(cell,effectOrigin));
+for(int i=0;i<3;++i)if((effectFootprint&(1<<i))!=0&&all(equal(cell,effectCells[i])))inside=true;
+if(!inside)discard;}
+vec4 c=texture(texture0,effectUv.xy+uv*effectUv.zw)*idColor;
+if(kind==6){finalColor=vec4(c.rgb*idColor.a*(1.0-fog),0);return;}
+float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
 finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
+
 if(leafHidden())discard;
 for(int i=0;i<clipCount;++i){vec4 r=clipRects[i];if(uv.x>=r.x&&uv.y>=r.y&&uv.x<=r.z&&uv.y<=r.w)discard;}
 ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(uv*vec2(size))),ivec2(0),size-1);
@@ -66,6 +78,11 @@ vec4 c=texture(texture0,uv);
 if(kind==2){if(covered||c.a<=0.001)discard;}else{if(!covered)discard;}
 if(kind==4){finalColor=idColor;return;}
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+if(frostStrength>0.0){vec2 registered=frostRegistration.xy+uv*frostRegistration.zw;
+vec4 ice=texture(frostAtlas,frostUv.xy+clamp(registered,vec2(0),vec2(1))*frostUv.zw);
+c.rgb=c.rgb*(1.0-ice.a*frostStrength)+ice.rgb*c.a*frostStrength;}
+if(spellLightCount>0){vec3 lit=spellIllumination(worldPosition,normalize(eye-worldPosition),true);
+finalColor=vec4(flash!=0?vec3(c.a):c.rgb*(vec3(light)+lit)*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
 finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);
 })";
 constexpr const char* skyFragment = R"(#version 330
@@ -123,7 +140,7 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     textures_.resize(publication_.textures.size());
     supersampling_ = supersampling;
     ambientOcclusion_ = ambientOcclusion;
-    world_ = {r, r.createShader(vertex, fragment)};
+    world_ = {r, r.createShader(vertex, withSpellLighting(fragment).c_str())};
     sky_ = {r, r.createShader(nullptr, skyFragment)};
     resolve_ = {r, r.createShader(nullptr, resolveFragment)};
     const auto shader = r.shader(world_.get());
@@ -183,6 +200,9 @@ void WorldRenderer::stagePrepared(GeometryView geometry, const MovementState& st
     preparationPoint("Preparing dungeon");
     candidate->mesh = {resources_, resources_.createMesh(candidate->cpu)};
     candidate->output = {resources_, resources_.createTarget(viewWidth, viewHeight)};
+    Image lightImage{candidate->lights.texels.data(), 32, 32, 1, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32};
+    candidate->lightTexture = {resources_, resources_.createTexture(lightImage)};
+    aoOwner_ = nullptr;
     const auto uploaded = Clock::now();
     render(*candidate, state);
     resources_.finishPreparation();
@@ -200,12 +220,13 @@ void WorldRenderer::stagePrepared(GeometryView geometry, const MovementState& st
 void WorldRenderer::prepareBillboards() {
     if (billboard_)
         return;
-    GpuLease<ShaderHandle> shader(resources_, resources_.createShader(vertex, billboardFragment));
+    GpuLease<ShaderHandle> shader(
+        resources_, resources_.createShader(vertex, withSpellLighting(billboardFragment).c_str()));
     GpuLease<MeshHandle> quad(resources_, resources_.createMesh(world_render::billboardMesh()));
     GpuLease<MeshHandle> proxy(resources_, resources_.createMesh(world_render::proxyMesh()));
     static_assert(world_render::billboardClipCapacity == 136 && fixtureCapacity == 32,
                   "Keep shader clipping/leaf capacities in sync");
-    static_assert(4 * world_render::billboardClipCapacity + 12 * fixtureCapacity + 32 <= 1024,
+    static_assert(4 * world_render::billboardClipCapacity + 12 * fixtureCapacity + 64 <= 1024,
                   "Fragment uniforms must fit OpenGL 3.3 minimum capacity");
     constexpr const char* names[]{"mvp",     "matView",   "matModel",     "kind",      "threshold",   "flash",
                                   "idColor", "clipCount", "clipRects[0]", "leafCount", "leafData[0]", "eye"};
@@ -223,6 +244,26 @@ void WorldRenderer::prepareBillboards() {
     quad_ = std::move(quad);
     proxy_ = std::move(proxy);
 }
+void WorldRenderer::bindLights(const View& v, Shader shader, bool enabled) {
+    const int count = enabled ? int(v.lights.count) : 0, unit = 3;
+    rlSetUniform(GetShaderLocation(shader, "spellLightCount"), &count, SHADER_UNIFORM_INT, 1);
+    rlSetUniform(GetShaderLocation(shader, "spellLightData"), &unit, SHADER_UNIFORM_INT, 1);
+    rlActiveTextureSlot(3);
+    rlEnableTexture(resources_.texture(v.lightTexture.get()).id);
+    rlActiveTextureSlot(0);
+}
+void WorldRenderer::updateLights(View& v, const world_render::FrameInput& in) {
+    v.geometryRevision = in.geometry.revision();
+    v.doorRevision = in.doors ? in.doors->revision : 0;
+    v.doorTime = in.doors && in.doors->active() ? in.doors->now : 0;
+    if (!v.effects)
+        return;
+    const auto data = world_render::prepareSpellLights(in, v.visibility->frame(), v.effects->frame());
+    if (data.texels != v.lights.texels || data.count != v.lights.count) {
+        resources_.updateTexture(v.lightTexture.get(), data.texels.data(), sizeof(data.texels));
+        v.lights = data;
+    }
+}
 void WorldRenderer::stage(const world_render::FrameInput& in) {
     if (staged_)
         throw std::runtime_error("A world scene is already staged; commit or cancel it first");
@@ -237,13 +278,14 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
             return std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
         });
         prepareCpu([&] { staged_->visibility->update(in, false); });
-        if (in.attacks || in.area) {
+        if (in.attacks || in.area || in.spells || in.conditions) {
             staged_->effects = std::make_unique<world_render::EffectsPipeline>(*assets_);
             staged_->effects->update(in, staged_->visibility->frame());
             if (staged_->visibility->bytes() + sizeof(world_render::EffectsPipeline) >
                 world_render::viewScratchBudget)
                 throw std::runtime_error("Integrated world scratch budget exceeded");
         }
+        updateLights(*staged_, in);
         render(*staged_, in.movement, &staged_->visibility->frame(), {},
                staged_->effects ? &staged_->effects->frame() : nullptr);
         resources_.finishPreparation();
@@ -276,10 +318,11 @@ WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& i
     v.waterFrame = unsigned((in.now / 125) % 8);
     v.visibility->update(in, false);
     const auto prepared = measure_ ? Clock::now() : Clock::time_point{};
-    if ((in.attacks || in.area) && !v.effects)
+    if ((in.attacks || in.area || in.spells || in.conditions) && !v.effects)
         throw std::logic_error("Effects require preparation before frame processing");
     if (v.effects)
         v.effects->update(in, v.visibility->frame());
+    updateLights(v, in);
     const auto result =
         render(v, in.movement, &v.visibility->frame(), {}, v.effects ? &v.effects->frame() : nullptr);
     if (measure_) {
@@ -322,6 +365,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     const auto camera =
         v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip) : world_render::camera(state);
     stats = {};
+    if (v.effects)
+        stats.effectDrops = v.effects->diagnostics();
     const auto lighting = world_render::effectiveDungeonLighting(dungeonLighting_, v.pack.id);
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
@@ -348,7 +393,10 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         CAMERA_PERSPECTIVE};
     const auto projection = worldProjection(camera.farClip);
     const int depthLocation = GetShaderLocation(shader, "depthOnly");
-    if (!ids && ambientOcclusion_) {
+    if (!ids && ambientOcclusion_ &&
+        (aoOwner_ != &v || !world_render::sameCamera(camera, aoCamera_) ||
+         aoGeometry_ != v.geometryRevision || aoDoors_ != v.doorRevision || aoDoorTime_ != v.doorTime ||
+         aoHadFrame_ != bool(frame))) {
         BeginTextureMode(resources_.target(ao_.depth()));
         ClearBackground(WHITE);
         BeginMode3D(rc);
@@ -382,6 +430,13 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         rlDisableDepthTest();
         rlEnableBackfaceCulling();
         ao_.render(projection);
+        aoOwner_ = &v;
+        aoCamera_ = camera;
+        aoGeometry_ = v.geometryRevision;
+        aoDoors_ = v.doorRevision;
+        aoDoorTime_ = v.doorTime;
+        aoHadFrame_ = bool(frame);
+        ++stats.aoEvaluations;
         stats.draws += 3;
     }
     BeginTextureMode(target);
@@ -425,6 +480,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     const int colorPass = 0;
     rlSetUniform(depthLocation, &colorPass, SHADER_UNIFORM_INT, 1);
     ao_.bindSurface(shader, !ids && ambientOcclusion_, target.texture.width, target.texture.height);
+    bindLights(v, shader, !ids);
     rlSetUniformMatrix(view_, rlGetMatrixModelview());
     rlSetUniformMatrix(mvp_, MatrixMultiply(rlGetMatrixModelview(), projection));
     rlSetUniform(forward_, &camera.forward, SHADER_UNIFORM_VEC3, 1);
@@ -586,6 +642,9 @@ void WorldRenderer::drawBillboards(const View& v, const world_render::WorldFrame
     const int modelLoc = billboardLocations_[2], kindLoc = billboardLocations_[3],
               thresholdLoc = billboardLocations_[4], flashLoc = billboardLocations_[5],
               colorLoc = billboardLocations_[6];
+    bindLights(v, shader, !ids);
+    const float noFrost = 0;
+    rlSetUniform(GetShaderLocation(shader, "frostStrength"), &noFrost, SHADER_UNIFORM_FLOAT, 1);
     const int noClips = 0;
     rlSetUniform(billboardLocations_[7], &noClips, SHADER_UNIFORM_INT, 1);
     rlSetUniform(billboardLocations_[9], &noClips, SHADER_UNIFORM_INT, 1);
@@ -694,6 +753,22 @@ void WorldRenderer::drawBillboards(const View& v, const world_render::WorldFrame
         if (clipCount)
             rlSetUniform(billboardLocations_[8], clips.rectangles.data(), SHADER_UNIFORM_VEC4, clipCount);
         rlEnableTexture(resources_.texture(v.textures[b.texture]).id);
+        const auto* effects = v.effects ? &v.effects->frame() : nullptr;
+        const float frost = !ids && effects && body ? effects->frost[b.id] : 0.f;
+        rlSetUniform(GetShaderLocation(shader, "frostStrength"), &frost, SHADER_UNIFORM_FLOAT, 1);
+        if (frost > 0 && effects->frostTexture != UINT16_MAX) {
+            const int unit = 4;
+            const float registration[]{b.crop.left, b.crop.top, b.crop.right - b.crop.left,
+                                       b.crop.bottom - b.crop.top};
+            rlSetUniform(GetShaderLocation(shader, "frostAtlas"), &unit, SHADER_UNIFORM_INT, 1);
+            rlSetUniform(GetShaderLocation(shader, "frostUv"), effects->frostUv.data(), SHADER_UNIFORM_VEC4,
+                         1);
+            rlSetUniform(GetShaderLocation(shader, "frostRegistration"), registration, SHADER_UNIFORM_VEC4,
+                         1);
+            rlActiveTextureSlot(4);
+            rlEnableTexture(resources_.texture(v.textures[effects->frostTexture]).id);
+            rlActiveTextureSlot(0);
+        }
         // CPU picking and GPU drawing share the registered crop geometry.
         const auto q = world_render::corners(frame.camera, b);
         auto model = MatrixIdentity();
@@ -723,7 +798,8 @@ void WorldRenderer::drawEffects(const View& v, const world_render::EffectFrame& 
                       v[2], v[6], v[10], v[14], v[3], v[7], v[11], v[15]};
     };
     rlSetBlendMode(BLEND_ALPHA_PREMULTIPLY);
-    rlEnableShader(resources_.shader(billboard_.get()).id);
+    const auto shader = resources_.shader(billboard_.get());
+    rlEnableShader(shader.id);
     rlSetUniformMatrix(billboardLocations_[0], matrix(vp));
     rlSetUniformMatrix(billboardLocations_[1], matrix(view));
     const int noClips = 0;
@@ -735,8 +811,7 @@ void WorldRenderer::drawEffects(const View& v, const world_render::EffectFrame& 
     if (leafCount)
         rlSetUniform(billboardLocations_[10], leaves.leaves.data(), SHADER_UNIFORM_VEC4, leafCount * 3);
     rlSetUniform(billboardLocations_[11], &worldFrame.camera.position, SHADER_UNIFORM_VEC3, 1);
-    const int kind = 5;
-    rlSetUniform(billboardLocations_[3], &kind, SHADER_UNIFORM_INT, 1);
+    bool additive = false;
     rlEnableDepthTest();
     rlDisableDepthMask();
     rlDisableBackfaceCulling();
@@ -744,6 +819,22 @@ void WorldRenderer::drawEffects(const View& v, const world_render::EffectFrame& 
         const auto& p = frame.packets[i];
         if (p.ground != ground)
             continue;
+        if (p.additive != additive) {
+            rlSetBlendMode(p.additive ? BLEND_ADD_COLORS : BLEND_ALPHA_PREMULTIPLY);
+            rlEnableShader(shader.id);
+            additive = p.additive;
+        }
+        const int kind = p.additive ? 6 : 5, footprint = int(p.footprint);
+        const float cells[]{float(p.cells[0].x), float(p.cells[0].y), float(p.cells[1].x),
+                            float(p.cells[1].y), float(p.cells[2].x), float(p.cells[2].y)};
+        const float origin[]{float(p.origin.x), float(p.origin.y)};
+        rlSetUniform(billboardLocations_[3], &kind, SHADER_UNIFORM_INT, 1);
+        rlSetUniform(GetShaderLocation(shader, "effectUv"), p.uv.data(), SHADER_UNIFORM_VEC4, 1);
+        rlSetUniform(GetShaderLocation(shader, "effectFootprint"), &footprint, SHADER_UNIFORM_INT, 1);
+        if (footprint) {
+            rlSetUniform(GetShaderLocation(shader, "effectCells[0]"), cells, SHADER_UNIFORM_VEC2, 3);
+            rlSetUniform(GetShaderLocation(shader, "effectOrigin"), origin, SHADER_UNIFORM_VEC2, 1);
+        }
         const auto& a = p.points[0];
         const auto& b = p.points[1];
         const auto& d = p.points[3];
@@ -795,9 +886,9 @@ std::size_t WorldRenderer::gpuBytes() const noexcept {
         if (!textures_[i].expired())
             n += publication_.textures[i].bytes;
     if (active_)
-        n += active_->cpu.meshBytes() + 500u * 282 * 8;
+        n += active_->cpu.meshBytes() + 500u * 282 * 8 + sizeof(world_render::SpellLightData::texels);
     if (staged_)
-        n += staged_->cpu.meshBytes() + 500u * 282 * 8;
+        n += staged_->cpu.meshBytes() + 500u * 282 * 8 + sizeof(world_render::SpellLightData::texels);
     return n + EnvironmentAo::bytes;
 }
 WorldRenderer::MemoryReport WorldRenderer::memory() const noexcept {
@@ -863,6 +954,15 @@ void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequiremen
                 SetTextureWrap(texture, t.clamp ? TEXTURE_WRAP_CLAMP : TEXTURE_WRAP_MIRROR_REPEAT);
                 rlTextureParameters(texture.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
                 rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
+                if (t.name == "effect/se01/body" || t.name == "effect/se01/emission") {
+                    using Parameter = void (*)(unsigned, unsigned, float);
+                    const auto parameter = reinterpret_cast<Parameter>(rlGetProcAddress("glTexParameterf"));
+                    if (!parameter)
+                        throw std::runtime_error("Texture LOD interface unavailable");
+                    rlEnableTexture(texture.id);
+                    parameter(0x0DE1, 0x813B, 3.f); // GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD
+                    rlDisableTexture();
+                }
                 if (!t.clamp && anisotropy_ > 1)
                     rlTextureParameters(texture.id, RL_TEXTURE_FILTER_ANISOTROPIC, anisotropy_);
                 textures_[i] = lease;

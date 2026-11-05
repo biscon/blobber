@@ -1,7 +1,7 @@
 # Spell effects: design and delivery roadmap
 
 Created: 2026-11-05. Last updated: 2026-11-05.
-Status: **Roadmap drafted at the user's request; SE01–SE04 Planned. No implementation started.**
+Status: **SE01 Accepted; SE02–SE04 Planned.**
 
 Give spells distinct animated silhouettes, restrained glow, moving local light,
 and readable elemental impacts while preserving the game's textured pixel art.
@@ -17,10 +17,10 @@ asset foundation. This is a roadmap, not approval to implement all four slices.
 | --- | --- |
 | Agreed direction | Authored spell animation, procedural motion, selective additive glow, local illumination, and target aftermath within the existing aesthetic |
 | Proposed sequence | Four slices, SE01–SE04 |
-| Active slice | None |
-| Awaiting review | Roadmap; no delivered slice or detailed implementation plan |
-| Next eligible slice | SE01 — Fire, frost and cone foundation, for detailed planning |
-| Next action | When requested, inspect current code and write the SE01 detailed design for review |
+| Active slice | None — SE01 Accepted |
+| Awaiting review | None — user accepted SE01 and its local-light treatment |
+| Next eligible slice | SE02 — remaining offensive spells; prerequisite met |
+| Next action | Plan SE02 for review when requested; implementation is not yet approved |
 | Gameplay policy | Preserve damage, saves, targeting, costs, authoritative timing and existing conditions |
 | Rendering policy | Keep prepared assets, fixed 1920×1080 presentation, the current world renderer and discrete movement |
 | Blockers | None |
@@ -189,14 +189,14 @@ static preparation or picking merely because a flame frame changed.
 
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| SE01 | Fire Bolt, Ray of Frost and Burning Hands with animation, glow, local light and target aftermath | Roadmap direction; detailed plan approval | Planned |
+| SE01 | Fire Bolt, Ray of Frost and Burning Hands with animation, glow, local light and target aftermath | Approved detailed plan | Accepted |
 | SE02 | Remaining offensive spells with distinct trajectories, contact and area impacts | SE01 Accepted | Planned |
 | SE03 | Support, conditions and persistent ground/summoned effects | SE02 Accepted | Planned |
 | SE04 | Complete catalogue integration, visual consistency and delivery polish | SE03 Accepted | Planned |
 
 | Milestone | Meaning | Status |
 | --- | --- | --- |
-| E-A | In-engine visual quality and technical foundation proven through SE01 | Planned |
+| E-A | In-engine visual quality and technical foundation proven through SE01 | Accepted |
 | E-B | All current spell families have intentional treatment through SE03 | Planned |
 | E-C | Normal campaign delivery and final consistency review accepted through SE04 | Planned |
 
@@ -388,19 +388,23 @@ evidence, deviations, limitations, acceptance state and the next eligible action
 | 2026-11-05 | User endorsed the proposed visual direction and requested a 3–4 slice roadmap following the campaign/city workflow. |
 | 2026-11-05 | Four slices proposed; Fire Bolt, Ray of Frost and Burning Hands form SE01, including glow, local light and creature aftermath. |
 | 2026-11-05 | Roadmap creation only: no detailed slice approval, implementation or delivered acceptance is implied. |
+| 2026-11-05 | User approved the SE01 detailed plan and requested implementation; death-pose remnants and animated-door light occlusion selected. |
+| 2026-11-05 | SE01 implemented and mechanically verified; delivered motion/stills Ready for review. User acceptance remains pending; SE02 remains Planned. |
+| 2026-11-05 | User explicitly accepted SE01: “those are some nice spell effects, the local lighting especially sells it :) slice accepted”. E-A is Accepted; SE02 is next eligible and remains Planned. |
 
 ## Current next-agent handoff
 
-SE01–SE04 are **Planned**. Next, when requested, write SE01's detailed design after
-inspecting the current cast/pulse producers, projectile retention, effect compositor,
-world/billboard shaders, visibility/door masks, asset publication and condition clocks.
-Resolve numeric budgets, single-cone identity, light blocker handling and independent
-aftermath lifetime before implementation. Do not defer the first slice's local
-lighting or creature overlays to later slices without an explicit scope revision.
+SE01 is **Accepted** by the user (2026-11-05), with particular praise for the local
+lighting. Fire Bolt, Ray of Frost and Burning Hands use the
+new bounded presentation path through ordinary spell commands. See the
+[implemented design and verification](se01_design.md) and
+[selected motion/stills](screenshots/spell-effects/README.md). Death-pose remnants
+and animated-door occlusion follow the approved choices. Existing gameplay rejects
+an entirely empty Burning Hands cast; accepted cones fill all eligible cells,
+including empty ones. That gameplay rule was preserved.
 
-Documentation verification (2026-11-05): reviewed against current spell/attack/effect
-code and the campaign/city workflows. Local Markdown targets and diff whitespace
-checked; catalogue grouping covers all 32 current spell kinds exactly once across
-SE01–SE03. No gameplay build, test, asset generation or graphics launch was needed
-for this documentation-only task. Disposable task output was cleaned; no evidence
-or diagnostic exception retained.
+Delivered-slice acceptance is recorded; it does not add unexecuted verification.
+SE02 is next eligible. SE02–SE04 remain Planned; plan SE02 for review only when
+requested, and obtain detailed-plan approval before implementation. Verification,
+measured memory and limitations are recorded in the detailed design. Source artwork
+and preparation prompts remain under `assets/effects/se01/`.

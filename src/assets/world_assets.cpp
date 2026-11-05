@@ -41,6 +41,29 @@ void validCanvas(const Texture& t) {
     require(t.clamp ||
             (t.canvas.x == 0 && t.canvas.y == 0 && t.canvas.width == t.width && t.canvas.height == t.height));
 }
+void validEffects(const EffectClips& clips, const std::vector<Texture>& textures) {
+    const bool present = clips[0].body != UINT16_MAX;
+    for (const auto& c : clips) {
+        if (!present) {
+            require(c.body == UINT16_MAX && c.emission == UINT16_MAX && !c.count);
+            continue;
+        }
+        require(c.body < textures.size() && c.emission < textures.size() && c.body != c.emission);
+        for (unsigned t : {c.body, c.emission})
+            require(textures[t].clamp && !textures[t].material &&
+                    textures[t].width == textures[t].canvas.width &&
+                    textures[t].height == textures[t].canvas.height);
+        require(c.count > 0 && c.count <= 8 && c.frameMs >= 16 && c.frameMs <= 1000);
+        for (float x : c.anchor)
+            require(std::isfinite(x) && x >= 0 && x <= 1);
+        for (unsigned i = 0; i < c.count; ++i) {
+            const auto& r = c.frames[i];
+            for (float x : r)
+                require(std::isfinite(x) && x >= 0 && x <= 1);
+            require(r[2] > 0 && r[3] > 0 && r[0] + r[2] <= 1 && r[1] + r[3] <= 1);
+        }
+    }
+}
 void validPack(const Pack& p, const std::vector<Texture>& textures) {
     require(!p.id.empty() && p.id.size() <= 32 && p.materialCount >= 3 && p.materialCount <= 32 &&
             std::all_of(p.id.begin(), p.id.end(),
@@ -306,6 +329,16 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
         validPack(p, publication_.textures);
         require(ids.insert(p.id).second);
     }
+    validEffects(publication_.effects, publication_.textures);
+    Json effects = Json::array();
+    if (publication_.effects[0].body != UINT16_MAX)
+        for (const auto& c : publication_.effects)
+            effects.push_back({{"body", c.body},
+                               {"emission", c.emission},
+                               {"count", c.count},
+                               {"frameMs", c.frameMs},
+                               {"frames", c.frames},
+                               {"anchor", c.anchor}});
     Json textures = Json::array(), actors = Json::array();
     for (unsigned i = 0; i < publication_.textures.size(); ++i) {
         const auto& t = publication_.textures[i];
@@ -374,10 +407,11 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"checksum", checksum}});
         bytes(payload);
     }
-    const Json manifest{
-        {"meshes", meshJson},         {"format", version},     {"appearance_revision", appearanceRevision},
-        {"definitions", definitions}, {"bytes", offset_},      {"checksum", hash_},
-        {"textures", textures},       {"appearances", actors}, {"packs", packJson}};
+    const Json manifest{{"effects", effects},         {"meshes", meshJson},
+                        {"format", version},          {"appearance_revision", appearanceRevision},
+                        {"definitions", definitions}, {"bytes", offset_},
+                        {"checksum", hash_},          {"textures", textures},
+                        {"appearances", actors},      {"packs", packJson}};
     const auto text = manifest.dump(2);
     require(text.size() <= metadataBudget);
     out_.close();
@@ -460,6 +494,19 @@ Publication load(const std::filesystem::path& directory) {
             p.textures.push_back(t);
             p.anchors.push_back(anchor);
         }
+        const auto& effects = j.at("effects");
+        require(effects.is_array() && (effects.empty() || effects.size() == effectClipCount));
+        for (unsigned i = 0; i < effects.size(); ++i) {
+            const auto& v = effects[i];
+            auto& c = p.effects[i];
+            c.body = std::uint16_t(integer(v.at("body"), UINT16_MAX));
+            c.emission = std::uint16_t(integer(v.at("emission"), UINT16_MAX));
+            c.count = unsigned(integer(v.at("count"), 8));
+            c.frameMs = unsigned(integer(v.at("frameMs"), 1000));
+            c.frames = v.at("frames").get<decltype(c.frames)>();
+            c.anchor = v.at("anchor").get<decltype(c.anchor)>();
+        }
+        validEffects(p.effects, p.textures);
         require(j.at("packs").is_array() && j.at("packs").size() <= packCapacity);
         std::set<std::string> packIds;
         for (const auto& v : j.at("packs")) {
@@ -555,8 +602,8 @@ Publication load(const std::filesystem::path& directory) {
                     require(n.is_number() && std::isfinite(n.get<float>()) && n >= 0 && n <= 1);
                 a.attachments.release[s] = {attachments[s][0], attachments[s][1]};
                 a.attachments.torso[s] = {attachments[s][2], attachments[s][3]};
-                a.attachments.bodyBounds[s] = {attachments[s][4], attachments[s][5],
-                                               attachments[s][6], attachments[s][7]};
+                a.attachments.bodyBounds[s] = {attachments[s][4], attachments[s][5], attachments[s][6],
+                                               attachments[s][7]};
                 require(validBodyBounds(a.attachments.bodyBounds[s]));
             }
             const auto& clips = v.at("clips");

@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/effect_clips.hpp"
 #include "assets/npc_metadata.hpp"
 #include "world/surfaces.hpp"
 #include <bitset>
@@ -12,7 +13,7 @@ struct ActorSnapshot;
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
 constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
-constexpr unsigned version = 10, appearanceRevision = 5, textureCapacity = 480;
+constexpr unsigned version = 11, appearanceRevision = 5, textureCapacity = 480;
 constexpr unsigned catalogTextureCapacity = 4096, packCapacity = 64, meshCapacity = 512;
 constexpr std::size_t metadataBudget = 8 * MiB;
 constexpr std::uint64_t installedBudget = 8ull * 1024 * MiB;
@@ -96,6 +97,7 @@ struct Pack {
     std::array<float, 3> daylightFog{10.f, 4.5f, 1.f};
 };
 struct Publication {
+    EffectClips effects{};
     std::filesystem::path payload;
     std::uint64_t fingerprint = 0, definitions = 0, textureBytes = 0, alphaBytes = 0;
     std::vector<Texture> textures;
@@ -178,6 +180,7 @@ class Writer {
     unsigned add(const std::string& name, unsigned width, unsigned height, bool sprite,
                  const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {},
                  bool material = true, bool crop = false, bool cutoutMaterial = false);
+    void effects(const EffectClips& clips) { publication_.effects = clips; }
     void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0,
                 const std::vector<Pack>& packs = {}, const std::vector<PropMesh>& meshes = {});
 
