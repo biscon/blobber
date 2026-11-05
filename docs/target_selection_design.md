@@ -94,3 +94,32 @@ Tab-selected bow target, blocked melee picker and partial Magic Missile assignme
 [Captures and reproduction](screenshots/targeting/README.md) record the visual review.
 No OS mouse/keyboard input, focus selection or desktop automation was used. Native
 and reduced captures were inspected; interactive acceptance remains unverified.
+
+## Delayed creature hover — 2026-11-05 (implemented)
+
+Creature tooltips and their hover health bars require 250 ms of uninterrupted
+eligible hover on the same world-scoped ActorId. CommandController owns one optional
+identity and a session-time timestamp; HudHover publishes a tooltipVisible flag.
+Hover outlines, eligibility previews and command selection remain immediate.
+Small pointer moves within the same creature do not restart the delay. Changing
+creatures, leaving, suspension/modal UI, invisibility or an active attack resets it.
+Any retained party attack presentation, or the hovered creature's attack presentation,
+suppresses the tooltip until its existing endMs deadline; then a fresh 250 ms delay
+begins. Walking and the existing damage flash also suppress it. Unrelated enemy
+attacks do not suppress an idle creature. Session time provides deterministic,
+pause-aware timing; no allocation, platform clock or gameplay mutation is introduced.
+Other HUD tooltips keep their existing behavior. Verify delay boundaries, target
+changes, attack acceptance, recovery, focus/modal reset and immediate selection.
+
+
+Verification: Debug `hud`, `targeting` and `melee_swipe` CTest suites pass. The new
+HUD regression uses real accepted party/enemy attacks and verifies 249/250 ms
+boundaries, within-creature movement, target changes, leaving/re-entering, focus
+reset, immediate suppression on acceptance, unrelated idle enemies, fresh delay
+after attack completion, other HUD tooltips and allocation-free frame refresh.
+Hidden GPU integration also passes. Hover health bars share the tooltip visibility
+flag; outlines and click/keyboard targeting retain immediate feedback. Interactive
+feel is left to the user. Builds used two workers, tests one process, at low
+CPU/I/O priority. No benchmark or broad configuration matrix was run. Disposable
+logs in run `20261105T164048Z-af4c87c526ce4a8e8cdac1f74ab09bd1` were previewed and
+cleaned; no new screenshots or retained diagnostics were needed.

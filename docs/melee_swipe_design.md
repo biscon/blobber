@@ -4,8 +4,8 @@ Status: implemented and mechanically verified; awaiting user visual review (2026
 
 Outgoing party melee weapons receive a screen-space ivory Bézier ribbon. Existing
 200 ms authoritative impact, damage, reaction, textured impact and damage/MISS text
-remain unchanged. The ribbon begins at impact minus 50 ms and lasts 120 ms.
-Reveal occupies 0–35 ms, peak 35–65 ms, and retreat/thinning/fade 65–120 ms.
+remain unchanged. The ribbon begins at impact minus 100 ms and lasts 185 ms.
+Reveal occupies 0–70 ms, peak 70–130 ms, and retreat/thinning/fade 130–185 ms.
 Twenty segments sample the visible interval; both ends taper to points. Defaults
 are RGB 245/240/220, 135% body width span, 8.5% body height full thickness, 35-degree
 diagonal and 30% span control offset, with feathered edge opacity. The user made
@@ -136,3 +136,35 @@ All six prior gallery images have been replaced, preserving pending acceptance.
 The initial thin treatment was rejected by the user. The run
 `20261105T163045Z-4c729e5b113b48919ac10de4eca82c7d` was cleaned after preview; only
 six selected gallery captures remain, with no retained diagnostic exception.
+
+## Longer display — 2026-11-05 (implemented; timing awaiting user trial)
+
+The user accepts the revised shape and requests twice the display time. Scale all
+visual phase durations by two: 240 ms total, 70 ms reveal, retreat from 130 ms,
+and contact at visual age 100 ms. Anchor this to the unchanged authoritative
+200 ms impact: the swipe now runs from acceptance +100 through +340 ms.
+Appearance and combat rules remain unchanged. Update elapsed-time regression
+boundaries and the optional capture runner. Existing stills document the accepted
+shape; they do not establish acceptance of the new timing.
+
+
+Longer-display verification: Debug application and focused test targets rebuilt with
+at most two workers and low CPU/I/O priority. `ctest --test-dir cmake-build-debug
+-R '^(hud|targeting|melee_swipe)$' --output-on-failure -j 1` passes all three suites.
+The updated geometry tests exercise doubled phase boundaries and +340 ms expiry;
+allocation, capture anchoring and lifecycle coverage remain passing. Hidden
+`blobber_world_integration_gpu_tests` passes at both quality settings with updated
+expiry boundaries, blending, resource and allocation assertions. No new captures
+were exported for a duration-only change; retained stills show the accepted shape
+at the previous cadence. Shape is user-accepted; the new timing awaits user trial.
+See [delayed creature hover](target_selection_design.md#delayed-creature-hover--2026-11-05-implemented)
+for the accompanying tooltip change. Run `20261105T164048Z-af4c87c526ce4a8e8cdac1f74ab09bd1`
+was cleaned after preview, with no new evidence or diagnostic exceptions retained.
+
+
+## Duration tuning — 2026-11-05
+
+The 240 ms version felt too long. Set total duration to 185 ms, preserving the
+existing reveal/contact markers and shape; the retreat fades out sooner. This is
+a one-value tuning change for immediate user trial. Rebuild the application only;
+do not rerun tests or captures, as requested.

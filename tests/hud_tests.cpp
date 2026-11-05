@@ -1,3 +1,4 @@
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include "ui/interaction.hpp"
@@ -28,6 +29,95 @@ UiInput click(UiRect r) {
     input.pointer = ArtPoint{float(r.x + 3), float(r.y + 3)};
     input.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
     return input;
+}
+void delayedCreatureTooltip() {
+    const auto map = combatMap();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    const auto places = combatPlacements(map);
+    GameSession game(map, catalog, places, 5, spawn, false);
+    CommandController ui(game);
+    ready(game);
+    refresh(ui, game);
+    const auto first = game.actors().id(2), second = game.actors().id(3);
+    ui.hover(HoverKind::Enemy, 0, first, 210, 140);
+    check(!ui.snapshot().hover.tooltipVisible && ui.snapshot().hover.enemy,
+          "Creature remains immediately highlighted while tooltip waits");
+    game.update(.249, false);
+    refresh(ui, game);
+    check(!ui.snapshot().hover.tooltipVisible, "Tooltip stays hidden before 250 ms");
+    game.update(.001, false);
+    refresh(ui, game);
+    check(ui.snapshot().hover.tooltipVisible, "Tooltip appears at 250 ms");
+    ui.hover(HoverKind::Enemy, 0, first, 212, 141);
+    check(ui.snapshot().hover.tooltipVisible, "Movement within one creature preserves hover dwell");
+    ui.hover(HoverKind::Enemy, 0, second);
+    check(!ui.snapshot().hover.tooltipVisible, "Changing creature restarts dwell");
+    game.update(.250, false);
+    refresh(ui, game);
+    check(ui.snapshot().hover.tooltipVisible, "Second creature gets its own dwell");
+    ui.hover(HoverKind::None);
+    ui.hover(HoverKind::Enemy, 0, second);
+    check(!ui.snapshot().hover.tooltipVisible, "Leaving and returning restarts dwell");
+    ui.refresh(allCombatTargets(game), false, false, false);
+    refresh(ui, game);
+    ui.hover(HoverKind::Enemy, 0, first);
+    check(!ui.snapshot().hover.tooltipVisible, "Focus return starts fresh dwell");
+    game.update(.250, false);
+    refresh(ui, game);
+    check(ui.snapshot().hover.tooltipVisible, "Idle tooltip returns after fresh dwell");
+    auto command = turnCommand(game, PartyAction::Melee);
+    command.target = first;
+    const auto accepted = game.submit(command);
+    check(accepted.event == CombatEvent::AttackStarted, "Tooltip fixture accepts real party attack");
+    ui.record(accepted);
+    check(!ui.snapshot().hover.tooltipVisible, "Party attack acceptance immediately hides tooltip");
+    ui.hover(HoverKind::Enemy, 0, second);
+    check(!ui.snapshot().hover.tooltipVisible, "Party attack suppresses other creature tooltips too");
+    // Keep the pointer still through the entire presentation, including impact feedback.
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 20; ++i) {
+        game.update(.025, false);
+        refresh(ui, game);
+    }
+    watching = false;
+    check(allocations == 0 && !ui.snapshot().hover.tooltipVisible,
+          "Attacking hover refresh is allocation-free and cannot mature its timer");
+    // Advance until a real enemy attack begins. A different idle enemy remains inspectable.
+    CombatOutcome enemyAttack;
+    for (unsigned i = 0; i < 200; ++i) {
+        if (game.combat().snapshot().awaitingAction)
+            game.submit(turnCommand(game));
+        const auto& events = game.update(.05, false);
+        for (const auto& e : events)
+            if (e.event == CombatEvent::AttackStarted && e.enemyAttack)
+                enemyAttack = e;
+        if (enemyAttack.attackId.serial)
+            break;
+    }
+    check(enemyAttack.attackId.serial != 0, "Fixture reaches enemy attack");
+    refresh(ui, game);
+    ui.hover(HoverKind::Enemy, 0, enemyAttack.enemy);
+    check(!ui.snapshot().hover.tooltipVisible, "Attacking creature cannot show its tooltip");
+    const auto idle = sameActor(enemyAttack.enemy, first) ? second : first;
+    ui.hover(HoverKind::Enemy, 0, idle);
+    game.update(.250, false);
+    refresh(ui, game);
+    check(ui.snapshot().hover.tooltipVisible, "Unrelated enemy attack permits an idle creature tooltip");
+    ui.hover(HoverKind::Enemy, 0, enemyAttack.enemy);
+    const auto end = game.combat().attacks().attacks[enemyAttack.enemy.slot].endMs;
+    if (end > game.timeMs())
+        game.update(double(end - game.timeMs()) / 1000, false);
+    refresh(ui, game);
+    check(!ui.snapshot().hover.tooltipVisible, "Attack completion begins fresh dwell, not immediate popup");
+    game.update(.249, false);
+    refresh(ui, game);
+    check(!ui.snapshot().hover.tooltipVisible, "Recovery also requires full dwell");
+    game.update(.001, false);
+    refresh(ui, game);
+    check(ui.snapshot().hover.tooltipVisible, "Recovered creature tooltip appears after 250 ms");
+    ui.hover(HoverKind::Action, 0);
+    check(ui.snapshot().hover.tooltipVisible, "Other HUD tooltip behavior remains immediate");
 }
 void meleeRangeFeedback() {
     const auto map = combatMap();
@@ -300,6 +390,7 @@ void logs() {
 } // namespace
 int main() {
     try {
+        delayedCreatureTooltip();
         meleeRangeFeedback();
         directActions();
         keyboardHover();

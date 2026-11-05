@@ -5,7 +5,10 @@ Procedural party melee swipe **implemented and mechanically verified; awaiting u
 around the unchanged authoritative impact deadline, using prepared body-only bounds.
 Focused CPU/allocation and hidden OpenGL checks pass; [six review captures](screenshots/melee-swipe/README.md)
 show the revised thicker, broader crescent with translucent edges after the user rejected
-the first thin treatment. Save compatibility and existing impact feedback remain unchanged.
+the first thin treatment. The user accepted the shape; the display
+time is now tuned to 185 ms for trial (application rebuild only; tests not rerun). [Creature tooltips](target_selection_design.md#delayed-creature-hover--2026-11-05-implemented)
+now wait 250 ms and hide during party/hovered-creature attack presentation. Focused
+HUD/targeting/swipe and hidden GPU checks pass. Save compatibility and existing impact feedback remain unchanged.
 
 ## Agent artifacts and evidence
 

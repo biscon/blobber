@@ -2,7 +2,7 @@
 #include "render/world_visibility.hpp"
 namespace blobber::world_render {
 struct MeleeSwipeTuning {
-    unsigned durationMs = 120, revealMs = 35, retreatMs = 65, contactMs = 50;
+    unsigned durationMs = 185, revealMs = 70, retreatMs = 130, contactMs = 100;
     float span = 1.35f, thickness = .085f, curvature = .30f;
     float angleDegrees = 35, variationDegrees = 10, missOffset = 1.05f;
     std::array<unsigned char, 3> color{245, 240, 220};

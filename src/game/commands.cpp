@@ -157,6 +157,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         break;
     case CombatEvent::AttackStarted:
     case CombatEvent::ProjectileReleased:
+        updateHover();
         return;
     case CombatEvent::AttackCanceled:
         std::snprintf(line, sizeof(line), "Attack canceled: %s.",

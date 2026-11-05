@@ -486,9 +486,10 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
         // Casting owns the whole frame. Hover is read-only, including after mutations.
         if (input.pointer && (moved || click || input.has(UiKey::RightClick))) {
             const auto p = *input.pointer;
-            commands.hover(HoverKind::None);
             if (inside(hudLayout::viewport) && viewportHit)
                 commands.hover(HoverKind::Enemy, 0, viewportHit, p.x, p.y);
+            else
+                commands.hover(HoverKind::None);
             for (int i = 0; i < 4; ++i)
                 if (inside(hudLayout::card(i)))
                     commands.hover(HoverKind::Portrait, i, {}, p.x, p.y);

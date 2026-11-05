@@ -13,7 +13,7 @@ float distance(SwipePoint a, SwipePoint b) {
 }
 void geometry() {
     const SwipePoint center{250, 140};
-    const auto full = sampleSwipe(center, 100, 200, false, 0, 50);
+    const auto full = sampleSwipe(center, 100, 200, false, 0, 100);
     check(full.alpha == 1 && distance(full.vertices.front(), full.vertices[swipeColumns - 1]) == 0 &&
               distance(full.vertices[swipeSegments * swipeColumns],
                        full.vertices[swipeSegments * swipeColumns + swipeColumns - 1]) == 0,
@@ -33,8 +33,8 @@ void geometry() {
     check(swipeEdgeAlpha.front() == 0 && swipeEdgeAlpha.back() == 0 && swipeEdgeAlpha[1] > 0 &&
               swipeEdgeAlpha[1] < swipeEdgeAlpha[2] && swipeEdgeAlpha[2] == 1 && swipeEdgeAlpha[3] == 1,
           "Solid core fades through translucent bands to transparent outer edges");
-    const auto early = sampleSwipe(center, 100, 200, false, 0, 17);
-    const auto late = sampleSwipe(center, 100, 200, false, 0, 95);
+    const auto early = sampleSwipe(center, 100, 200, false, 0, 34);
+    const auto late = sampleSwipe(center, 100, 200, false, 0, 190);
     check(distance(early.vertices[0], full.vertices[0]) == 0 &&
               distance(early.vertices[swipeSegments * swipeColumns],
                        full.vertices[swipeSegments * swipeColumns]) > 20,
@@ -44,12 +44,12 @@ void geometry() {
                        full.vertices[swipeSegments * swipeColumns]) < .001f &&
               late.alpha < 1,
           "Trailing end catches up while fading");
-    for (unsigned age : {35u, 50u, 65u})
+    for (unsigned age : {70u, 100u, 130u})
         check(sampleSwipe(center, 100, 200, false, 0, age).alpha == 1, "Peak interval remains opaque");
     check(sampleSwipe(center, 100, 200, false, 0, 0).alpha == 0 &&
-              sampleSwipe(center, 100, 200, false, 0, 120).alpha == 0,
+              sampleSwipe(center, 100, 200, false, 0, 240).alpha == 0,
           "Invisible endpoints in time");
-    const auto mirror = sampleSwipe(center, 100, 200, true, 0, 50);
+    const auto mirror = sampleSwipe(center, 100, 200, true, 0, 100);
     for (unsigned i = 0; i < full.vertices.size(); ++i)
         check(std::abs(full.vertices[i].x + mirror.vertices[i].x - 500) < .001f &&
                   full.vertices[i].y == mirror.vertices[i].y,
@@ -87,7 +87,7 @@ void lifecycle() {
     allocations = 0;
     watching = true;
     player.update(in, world);
-    in.now = 150;
+    in.now = 100;
     player.update(in, world);
     const bool initial = player.frame().count == 0;
     in.now = 185;
@@ -104,7 +104,7 @@ void lifecycle() {
     in.now = 200;
     player.update(in, world);
     const auto contact = player.frame().ribbons[0];
-    in.now = 270;
+    in.now = 340;
     const bool expired = player.update(in, world) && !player.frame().count;
     const bool stable = !player.update(in, world);
     watching = false;

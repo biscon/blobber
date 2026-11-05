@@ -358,16 +358,16 @@ int main(int argc, char** argv) {
                 check(ivory()>8,"Opaque ivory swipe rendered at peak in both quality modes");
                 check(featherPixels > 8,"Swipe edges blend translucently with the actual background");
                 allocations=0; watching=true;
-                for (unsigned now=186;now<270;++now) { input.now=now; renderer.render(input); }
+                for (unsigned now=186;now<340;++now) { input.now=now; renderer.render(input); }
                 watching=false;
                 check(allocations==0,"GPU swipe frame processing allocates no engine C++ storage");
-                input.now=270;
+                input.now=340;
                 check(ivory()==0 && renderer.visibility()->frame().revision==visibilityRevision,
                       "Swipe expires without changing picking");
                 slash.id.serial = 2;
                 slash.impactMs = 500;
                 ++attacks.revision;
-                input.now = 300;
+                input.now = 350;
                 renderer.render(input);
                 input.now = 485;
                 check(ivory() > 8, "Mirrored swipe triangles remain visible with backface culling");

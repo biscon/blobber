@@ -63,14 +63,14 @@ inline void meleeSwipeReview(const std::filesystem::path& assets, const std::fil
         check(attack.impactMs == start + 200 && attack.hit != miss, "Review deadline and outcome");
         present(); // Capture geometry on acceptance, before any time elapses.
         unsigned impacts = 0;
-        for (unsigned offset : {167u, 185u, 200u, 245u, 270u}) {
+        for (unsigned offset : {134u, 170u, 200u, 290u, 340u}) {
             const auto& events = game.update(double(start + offset - game.timeMs()) / 1000, false);
             for (const auto& event : events)
                 if (event.event == CombatEvent::Attack && event.attackId.serial == accepted.attackId.serial)
                     ++impacts;
             commands.record(events);
             present();
-            if (!miss || offset == 185)
+            if (!miss || offset == 170)
                 presenter.capture(output /
                                   (std::string(miss ? "miss-" : "hit-") + std::to_string(offset) + ".png"));
             using Error = unsigned (*)();

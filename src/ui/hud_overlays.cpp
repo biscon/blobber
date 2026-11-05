@@ -11,7 +11,7 @@ namespace blobber {
 using namespace hudInk;
 void HudPainter::tooltip(const HudSnapshot& h) const {
     const auto& hover = h.hover;
-    if (hover.kind == HoverKind::None ||
+    if (!hover.tooltipVisible || hover.kind == HoverKind::None ||
         (h.modal() &&
          !(h.magic.open && (hover.kind == HoverKind::Status || hover.kind == HoverKind::Concentration))) ||
         h.suspended)
@@ -166,7 +166,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                         p.line({left, top + 1}, {left + 1, top + 1}, color);
                 }
             }
-        if (!h->magic.casting() && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
+        if (h->hover.tooltipVisible && !h->magic.casting() && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
             h->hover.enemy->slot < picking->targets().anchors.size()) {
             const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
             if (anchor.valid) {

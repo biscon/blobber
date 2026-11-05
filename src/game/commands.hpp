@@ -48,6 +48,7 @@ struct HudCard {
 };
 enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration, Travel };
 struct HudHover {
+    bool tooltipVisible = true;
     HoverKind kind = HoverKind::None;
     int index = 0;
     std::optional<ActorId> enemy;
@@ -359,6 +360,9 @@ class CommandController {
     void showFeedback(const CombatFeedback& feedback) noexcept;
     void refreshFeedback(bool clear) noexcept;
     void updateHover() noexcept;
+    void updateEnemyTooltip(ActorId) noexcept;
+    std::optional<ActorId> tooltipEnemy_;
+    std::uint64_t tooltipSinceMs_ = 0;
     void appendLog(const char* message) noexcept;
     bool objectiveReported_ = false, objectiveFailureReported_ = false;
     bool pointerKnown_ = false;
