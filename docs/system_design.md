@@ -1,5 +1,12 @@
 # System design
 
+Configurable world-window screenshake **implemented and mechanically verified; awaiting user review (2026-11-05)**:
+[design](screenshake_design.md) adds bounded cosmetic impact impulses and a clipped
+prepared-image transform, with stationary HUD and inverse-mapped world picking.
+World rendering, movement and save formats remain unchanged. Eight focused CPU suites
+and hidden OpenGL checks at both quality settings pass; [six preset previews](screenshots/screenshake/README.md)
+retain pending timing/feel acceptance.
+
 Procedural party melee swipe **implemented and mechanically verified; awaiting user review (2026-11-05)**:
 [design and verification](melee_swipe_design.md) adds a bounded screen-space ribbon
 around the unchanged authoritative impact deadline, using prepared body-only bounds.

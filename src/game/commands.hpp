@@ -1,4 +1,5 @@
 #pragma once
+#include "ui/screen_shake.hpp"
 #include "game/advancement_ui.hpp"
 #include "game/inventory_ui.hpp"
 #include "game/loot_ui.hpp"
@@ -141,6 +142,7 @@ struct EnemyTargetPicker {
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
+    WorldViewTransform worldTransform;
     ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
     std::array<HudCard, rules::partySize> cards{};
@@ -373,6 +375,7 @@ class CommandController {
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;
+    ScreenShakePlayer shake_;
     CommandReason suspension_ = CommandReason::Ready;
 };
 } // namespace blobber

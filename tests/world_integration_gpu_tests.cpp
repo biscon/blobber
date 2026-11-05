@@ -10,6 +10,8 @@
 #include "support/campaign_fixtures.hpp"
 #include "support/campaign_startup_review.hpp"
 #include "support/check.hpp"
+#include "support/screen_shake_gpu.hpp"
+#include "support/screen_shake_review.hpp"
 #include "support/combat_entry_review.hpp"
 #include "support/combat_positioning_review.hpp"
 #include "support/creature_occlusion_review.hpp"
@@ -70,6 +72,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--screen-shake-review") {
+            test::screenShakeReview(argv[1], argv[2]);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--melee-swipe-review") {
             test::meleeSwipeReview(argv[1], argv[2]);
             return 0;
@@ -329,6 +335,7 @@ int main(int argc, char** argv) {
                                                 nullptr,nullptr,&attacks};
                 renderer.supersampling(quality);
                 renderer.stage(input); renderer.commit();
+                test::screenShakeGpu(resources, renderer, input);
                 const auto visibilityRevision=renderer.visibility()->frame().revision;
                 std::vector<Color> swipeBase(viewWidth * viewHeight);
                 unsigned featherPixels = 0;

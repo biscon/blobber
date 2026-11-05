@@ -4,6 +4,7 @@ Existing captures were curated on 2026-11-05; no new rendering checks were run.
 The [interaction prompt revision](interaction-prompts/README.md) subsequently adds
 four new hidden OpenGL captures with focused verification; user review is pending.
 The [melee swipe](melee-swipe/README.md) adds six phase/outcome captures, also awaiting review.
+The [screenshake](screenshake/README.md) adds six isolated preset previews; timing/feel review is pending.
 Keep six images per feature, or twelve awaiting review, unless a gallery explains
 the distinct cases requiring an exception. Generate raw captures in disposable
 [agent runs](../verification_workflow.md#artifact-housekeeping).
@@ -14,6 +15,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [screenshake](screenshake/README.md) | 6 |
 | [audio](audio/README.md) | 1 |
 | [b01](b01/README.md) | 5 |
 | [b02](b02/README.md) | 6 |

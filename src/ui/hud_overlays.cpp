@@ -6,6 +6,7 @@
 #include "ui/save_screen.hpp"
 #include "ui/spell_layout.hpp"
 #include "ui/status_occlusion.hpp"
+#include "ui/world_view_draw.hpp"
 #include <cstring>
 namespace blobber {
 using namespace hudInk;
@@ -99,6 +100,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     const HudPainter p(fonts, art, metrics);
     const auto& combat = h->combat;
     if (!h->modal() && picking && (!h->suspended || h->magic.armed)) {
+        const WorldOverlayScope world(h->worldTransform);
         const auto statuses = statusMarkerLayout(*h, picking);
         for (std::size_t slot = 0; slot < statuses.size(); ++slot)
             if (statuses[slot]) {
@@ -110,8 +112,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                     if (h->conditions[slot] & (1u << k)) {
                         const UiRect r{row.x + int(n) * 12, row.y, 12, 12};
                         forEachStatusClip(*picking, static_cast<std::uint16_t>(slot), r, [&](UiRect clip) {
-                            BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
-                                             clip.width * HudPainter::scale, clip.height * HudPainter::scale);
+                            world.clip(clip);
                             if (n == 5 && count > 6) {
                                 char label[16];
                                 std::snprintf(label, sizeof(label), "+%u", count - 5);
@@ -121,7 +122,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                                 p.box(r, harmfulEffect(EffectKind(k)) ? red : teal);
                                 p.picture(UiArt::effectIcon(EffectKind(k)), {r.x + 1, r.y + 1, 10, 10});
                             }
-                            EndScissorMode();
+                            world.viewportClip();
                         });
                         ++n;
                     }
@@ -173,10 +174,9 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                 const UiRect r{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),
                                viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6};
                 forEachDepthClip(*picking, h->hover.enemy->slot, r, [&](UiRect clip) {
-                    BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
-                                     clip.width * HudPainter::scale, clip.height * HudPainter::scale);
+                    world.clip(clip);
                     p.health(r, h->hover.health);
-                    EndScissorMode();
+                    world.viewportClip();
                 });
             }
         }
@@ -222,10 +222,18 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             }
         }
     }
-    p.spellMarkers(*h, picking);
+    {
+        const WorldOverlayScope world(h->worldTransform);
+        p.spellMarkers(*h, picking);
+        for (const auto& feedback : h->feedback)
+            if (!feedback.party)
+                if (const auto rect = feedbackRect(feedback, h->cards))
+                    splash(p, feedback, *rect);
+    }
     for (const auto& feedback : h->feedback)
-        if (const auto rect = feedbackRect(feedback, h->cards))
-            splash(p, feedback, *rect);
+        if (feedback.party)
+            if (const auto rect = feedbackRect(feedback, h->cards))
+                splash(p, feedback, *rect);
     if (h->campaignTerminal || (h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory) ||
         combat.phase == CombatPhase::Defeat) {
         p.overlayBox(hudLayout::result);

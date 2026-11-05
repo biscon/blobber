@@ -36,6 +36,7 @@ struct PlayView {
     GameView frames;
     CommandController commands;
     const Map& map;
+    WorldViewTransform previousInputTransform;
     std::optional<generation::DiagnosticView> diagnostics;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, WorldRenderer& world, std::uint32_t seed, Player spawn,
@@ -210,27 +211,25 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             } else if ((!terminalCampaign || view.commands.snapshot().save.terminalWarning) &&
                        !(campWasOpen && !view.commands.snapshot().camp.open)) {
                 const auto* picking = view.frames.picking();
-                const auto hit =
-                    picking && sample.ui.pointer
-                        ? picking->pick(int(sample.ui.pointer->x) - viewX, int(sample.ui.pointer->y) - viewY)
-                        : std::nullopt;
-                auto lootHit = picking && sample.ui.pointer
-                                   ? picking->pickLoot(int(sample.ui.pointer->x) - viewX,
-                                                       int(sample.ui.pointer->y) - viewY)
-                                   : std::nullopt;
-                const auto groundHit =
-                    sample.ui.pointer
-                        ? view.frames.groundCell(view.session, int(sample.ui.pointer->x) - viewX,
-                                                 int(sample.ui.pointer->y) - viewY)
-                        : std::nullopt;
+                const auto displayed = presenter.displayedWorldTransform();
+                const auto previousTransform = view.previousInputTransform;
+                const bool imageMoved = displayed.x != previousTransform.x ||
+                                        displayed.y != previousTransform.y ||
+                                        displayed.zoom != previousTransform.zoom;
+                view.previousInputTransform = displayed;
+                const auto worldPointer = sample.ui.pointer ? displayed.inverse(*sample.ui.pointer)
+                                                           : std::nullopt;
+                const int px = worldPointer ? int(std::floor(worldPointer->x - viewX)) : -1;
+                const int py = worldPointer ? int(std::floor(worldPointer->y - viewY)) : -1;
+                const auto hit = picking && worldPointer ? picking->pick(px, py) : std::nullopt;
+                const auto lootHit = picking && worldPointer ? picking->pickLoot(px, py) : std::nullopt;
+                const auto groundHit = worldPointer ? view.frames.groundCell(view.session, px, py)
+                                                    : std::nullopt;
                 routeHudInput(
                     view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
-                    picking && sample.ui.pointer ? picking->pickFixture(int(sample.ui.pointer->x) - viewX,
-                                                                        int(sample.ui.pointer->y) - viewY)
-                                                 : std::nullopt,
-                    picking && sample.ui.pointer ? picking->pickContainer(int(sample.ui.pointer->x) - viewX,
-                                                                          int(sample.ui.pointer->y) - viewY)
-                                                 : std::nullopt);
+                    picking && worldPointer ? picking->pickFixture(px, py) : std::nullopt,
+                    picking && worldPointer ? picking->pickContainer(px, py) : std::nullopt,
+                    imageMoved);
             }
             if (campaign) {
                 std::optional<SavingScreen> saving;

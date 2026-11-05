@@ -26,7 +26,8 @@ UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bo
 
 void routeHudInput(CommandController& commands, const UiInput& physical, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
-                   std::optional<FixtureId> fixtureHit, std::optional<ContainerId> containerHit) noexcept {
+                   std::optional<FixtureId> fixtureHit, std::optional<ContainerId> containerHit,
+                   bool worldImageMoving) noexcept {
     const auto input = routeHudButtons(commands, physical, allowConfirm);
     if (!input.focused) {
         commands.hover(HoverKind::None);
@@ -165,7 +166,9 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     if (routeInventoryInput(commands, input, allowConfirm))
         return;
     const auto& state = commands.snapshot();
-    const bool moved = input.pointer && commands.pointerMoved(input.pointer->x, input.pointer->y);
+    const bool moved = input.pointer &&
+                       (commands.pointerMoved(input.pointer->x, input.pointer->y) ||
+                        (worldImageMoving && hudLayout::viewport.contains(*input.pointer)));
     const bool click = input.has(UiKey::Click);
     const auto inside = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
     if (!state.modal() && state.targetPicker.available) {

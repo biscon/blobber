@@ -137,6 +137,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     if (out.event == CombatEvent::None ||
         (out.attackId.world && out.attackId.world != actors_.snapshot().world))
         return;
+    shake_.record(out, session_.timeMs(), actors_.snapshot().world);
+    state_.worldTransform = shake_.sample(session_.timeMs(), actors_.snapshot().world);
     char line[CombatLog::messageBytes];
     const auto* actor = party_.character(out.character);
     const auto* recipient = party_.character(out.recipient);
@@ -430,6 +432,7 @@ bool CommandController::visible(ActorId id) const noexcept {
 }
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen,
                                 bool focused) noexcept {
+    state_.worldTransform = shake_.sample(session_.timeMs(), actors_.snapshot().world);
     moving |= session_.opening();
     if (session_.objective().known) {
         if (session_.objective().completed && !objectiveReported_) {
