@@ -21,6 +21,9 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 | Feature | Images |
 | --- | ---: |
 | [spell-effects](spell-effects/README.md) | 12 |
+| [SE02 spell effects](spell-effects/se02/README.md) | 6 |
+| [Painted combat feedback](combat-feedback/README.md) | 4 |
+| [Feedback concept references](combat-feedback-concepts/README.md) | 2 |
 | [dungeon-lighting](dungeon-lighting/README.md) | 4 |
 | [screenshake](screenshake/README.md) | 6 |
 | [audio](audio/README.md) | 1 |

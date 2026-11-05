@@ -74,6 +74,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 5 && std::string_view(argv[3]) == "--feedback-review") {
+            test::spellEffectsReview(argv[1], argv[2], argv[4], true, 20);
+            return 0;
+        }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se02-review") {
             test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr, true);
             return 0;

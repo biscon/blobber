@@ -1,6 +1,7 @@
 # SE02 review evidence
 
-Status: **Ready for review; user acceptance pending (2026-11-05)**.
+Status: **Accepted (2026-11-05)**, including colour corrections and the
+[painted-feedback follow-up](../../combat-feedback/README.md).
 See the [implementation, checks and memory totals](../../../se02_design.md),
 [roadmap](../../../spell_effects_plan.md) and [accepted SE01 references](../README.md).
 
@@ -31,8 +32,9 @@ the two PNGs below retain the complete native 1920×1080 output.
   Brunna. Small numbers remain, names stay in the log/status tooltips, and
   unaffected portraits remain untouched. Effects finish without looping.
 
-Existing world-enemy badges and white hit flashes remain visible by design. The
-party feedback change does not replace them. A successful save receives short
+The motion panels retain the earlier world-enemy badges. These have since been
+replaced by approved option A; see the current [painted feedback previews](../../combat-feedback/README.md).
+White hit flashes remain. The native poison still below includes the new backdrop. A successful save receives short
 cosmetic dissipation, without damaging aftermath or a new condition. Poison
 retains a dense initial cloud on saves but expires sooner than a damaging hit.
 
@@ -66,11 +68,12 @@ nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
 Output must be new or empty. An optional final argument selects one of:
 `magic-missile`, `missile-single`, `scorching-ray`, `guiding-bolt`, `sacred-flame`,
 `shocking-grasp`, `inflict-wounds`, `acid-splash`, `poison-spray`, `thunderwave`,
-`shatter`, `radiant-bright`, `portrait-healing`, `portrait-buff`, `portrait-damage`.
+`shatter`, `radiant-bright`, `portrait-healing`, `portrait-buff`, `portrait-damage`,
+`portrait-weapon` (added by the painted-feedback follow-up; not in these older GIFs).
 Each sequence contains 23 native frames; `checks.txt` records impact offsets and
 resource-accounting totals. Use `--se02-check` without asset/output paths for the
 small owned GPU fixture at both quality settings. Clean disposable output after
 selecting evidence.
 
-The agent inspected stills and phase filmstrips. Interactive feel and cross-device
-appearance remain for user review; passing checks does not constitute acceptance.
+The agent inspected stills and phase filmstrips; interactive desktop and cross-device
+verification were not performed. The user explicitly accepted the completed slice.

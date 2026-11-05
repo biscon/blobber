@@ -1,13 +1,15 @@
 # System design
 
-Spell effects SE02 **implemented; Ready for review (2026-11-05)**:
+Spell effects SE02 **accepted and implemented (2026-11-05)**:
 [SE02 design](se02_design.md) extends offensive spell identities and replaces party
 spell/healing/buff badges with prepared portrait animation and small readouts.
 Focused CPU and hidden GPU checks pass; [SE02 review gallery](screenshots/spell-effects/se02/README.md).
 Poison density/green and healing green were strengthened following user review.
-Acceptance is pending; SE03 remains Planned.
-World damage/outcome backdrop [concepts](screenshots/combat-feedback-concepts/README.md)
-are proposed for user selection; these are mockups, not implemented changes.
+The user accepted the slice including these corrections; SE03 is next eligible and remains Planned.
+World and ordinary weapon feedback option A is **accepted and implemented**:
+[painted feedback design](combat_feedback_design.md). Prepared blood/ink splashes
+appear instantly, with a brief damage-number tremor and fade-out; focused CPU and
+hidden OpenGL checks pass. See the [animation previews](screenshots/combat-feedback/README.md).
 
 Spell effects SE01 **accepted and implemented (2026-11-05)**:
 [SE01 design](se01_design.md) implements Fire Bolt, Ray of Frost and Burning Hands

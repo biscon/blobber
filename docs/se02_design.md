@@ -1,12 +1,14 @@
 # SE02 — Offensive spell identities and portrait feedback
 
-Status: **Implemented; Ready for review (2026-11-05)**. User acceptance pending.
+Status: **Accepted and implemented (2026-11-05)**. User acceptance includes the
+poison/healing colour corrections and option A painted combat feedback.
 Parent: [spell effects roadmap](spell_effects_plan.md). SE01 remains Accepted.
 
-World feedback backdrop follow-up: the user requested ImageGen alternatives to
-the existing jagged starbursts, including blood-puddle damage treatment and proposed
-instant appearance, local number shake and fade-out. [Two mockups](screenshots/combat-feedback-concepts/README.md)
-are proposed for selection only; no backdrop or animation implementation is included.
+World feedback backdrop follow-up: the user selected A from the
+[two mockups](screenshots/combat-feedback-concepts/README.md) and requested
+implementation. The [painted feedback design](combat_feedback_design.md) records
+the authored damage/outcome backdrops, instant appearance, local numeral tremor
+and fade-out. This supersedes the earlier decision to retain world/weapon badges.
 
 Review correction implemented (2026-11-05): Poison Spray now has a strong green
 tint and a denser cloud that holds its opacity through the first half of its
@@ -117,8 +119,9 @@ picking or quiet-scene caching. Incoming Sacred Flame uses portrait feedback.
 `CommandController` consumes resolved combat events into identity-indexed portrait
 channels. `portrait_feedback.hpp` samples their frames/tints without graphics, and
 `HudPainter` draws the startup-owned atlas below portrait borders/status icons.
-Ordinary weapon and world-enemy badges retain their existing treatment. Healing no
-longer activates the red recently-hit outline. No save fields or combat RNG/cost/
+Ordinary weapon and world-enemy badges initially retained their existing treatment;
+the approved [painted feedback follow-up](combat_feedback_design.md) now replaces
+their backdrops and adds fade/local numeral motion. Healing no longer activates the red recently-hit outline. No save fields or combat RNG/cost/
 targeting rules changed.
 
 [Source artwork, prompts and regeneration](../assets/effects/se02/README.md) are
@@ -175,6 +178,11 @@ nice -n 15 ionice -c 3 python3 tools/prepare_se02_effects.py --output RUN/repack
 
 ### Measured storage
 
+These original SE02 measurements precede the painted-feedback follow-up, which
+adds one 393,216-byte UI texture: combined added GPU storage is 24,859,984 bytes
+(23.71 MiB), still below 24 MiB. Current dungeon application GPU is 281,327,132
+bytes; world residency is unchanged.
+
 | Storage / residency | Bytes |
 | --- | ---: |
 | Per-view effects pipeline | 289,872 |
@@ -198,15 +206,15 @@ bytes. These are resource-accounting estimates, not driver process-memory metric
 
 ### Handoff and limitations
 
-SE02 is **Ready for review**, not Accepted. Review the ten offensive identities,
+SE02 is **Accepted** (2026-11-05), including the ten offensive identities,
 pressure-ring readability, three independent ray/dart deliveries, quiet guiding
 mark and portrait healing/buff/damage treatments. Sacred Flame and Poison Spray
 captures show successful saves; Acid Splash shows one save and one hit. Enemy
-badges and hit flashes remain intentional existing feedback. Interactive feel,
+feedback now uses the approved painted splashes; hit flashes remain. Interactive feel,
 cross-device appearance and production-scale performance remain unverified; small
 correctness fixtures are not benchmarks. No full Release/headless/sanitizer matrix
 was run. Support spell-specific and sustained presentation remains SE03, which
-requires SE02 acceptance and a separately approved plan.
+is now eligible for planning and requires a separately approved plan before implementation.
 
 Owned run: `output/agent-runs/20261105T200101Z-714f6ef3910b4ff69ee74243366b9fcd`.
 After promoting the six selected files, cleanup was previewed and applied:
@@ -234,5 +242,10 @@ Runtime atlas/source files and measured storage totals are unchanged.
 
 Correction run: `output/agent-runs/20261105T205246Z-841cb6112bf84adebac46d64dc08eb05`.
 Cleanup previewed and applied after evidence promotion: 63 disposable files /
-66,790,333 bytes removed, no retained diagnostics. SE02 remains Ready for review;
-interactive feel and user acceptance remain pending.
+66,790,333 bytes removed, no retained diagnostics. SE02 was Ready for review at this correction handoff. The user subsequently
+accepted the completed slice, including the painted-feedback follow-up (2026-11-05).
+
+Acceptance recorded (2026-11-05): roadmap checkpoint, tracker, decision log,
+handoff and linked status notes agree. Documentation-only verification: local
+Markdown links and `git diff --check` pass; no runtime checks rerun. The empty
+owned acceptance run was previewed and cleaned; no temporary artifacts retained.

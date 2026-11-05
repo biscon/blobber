@@ -1,12 +1,67 @@
 #include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include "ui/combat_feedback.hpp"
 #include "ui/interaction.hpp"
 #include "ui/inventory_layout.hpp"
 #include <cstring>
 #include <iostream>
 using namespace blobber;
 namespace {
+void paintedFeedback() {
+    CombatFeedback hit;
+    hit.active = hit.hit = true;
+    hit.damage = 12;
+    hit.startedMs = 1000;
+    check(feedbackPresentation(hit, 1000).alpha == 1,
+          "Damage is fully visible immediately, with no fade-in delay");
+    check(feedbackPresentation(hit, 1400).alpha == 1 && feedbackPresentation(hit, 1520).alpha > 0 &&
+              feedbackPresentation(hit, 1520).alpha < 1 && feedbackPresentation(hit, 1640).alpha == 0 &&
+              feedbackPresentation(hit, 999).alpha == 0,
+          "Feedback holds, fades, expires and rejects future outcomes at exact boundaries");
+    const auto moving = feedbackPresentation(hit, 1020);
+    const auto paused = feedbackPresentation(hit, 1020);
+    check(moving.backdrop == FeedbackBackdrop::Damage && moving.offsetX != 0 &&
+              moving.offsetX == paused.offsetX && moving.offsetY == paused.offsetY,
+          "Positive damage has deterministic local tremor frozen by a paused timestamp");
+    check(feedbackPresentation(hit, 1100).offsetX == 0 && feedbackPresentation(hit, 1100).offsetY == 0,
+          "Damage settles after 100ms");
+    allocations = 0;
+    watching = true;
+    for (unsigned now = 1000; now < 1700; ++now) {
+        const auto sample = feedbackPresentation(hit, now);
+        check(std::abs(sample.offsetX) * 3 <= 2 && std::abs(sample.offsetY) * 3 <= 2,
+              "Numeral motion stays within two native pixels");
+    }
+    watching = false;
+    check(!allocations, "Feedback sampling allocates nothing");
+    hit.damage = 0;
+    check(feedbackPresentation(hit, 1020).backdrop == FeedbackBackdrop::Outcome &&
+              feedbackPresentation(hit, 1020).offsetX == 0,
+          "Zero damage is neutral and steady");
+    hit.hit = false;
+    hit.text = "SAVED";
+    check(feedbackPresentation(hit, 1020).backdrop == FeedbackBackdrop::Outcome &&
+              feedbackPresentation(hit, 1020).offsetY == 0,
+          "Saved outcomes do not imply a damaging impact");
+    hit.immune = true;
+    check(feedbackPresentation(hit, 1020).backdrop == FeedbackBackdrop::Immune,
+          "Immunity uses its own slate backing");
+    hit.immune = false;
+    hit.hit = true;
+    hit.damage = 5;
+    hit.text = nullptr;
+    hit.healing = true;
+    check(feedbackPresentation(hit, 1020).backdrop == FeedbackBackdrop::Outcome &&
+              feedbackPresentation(hit, 1020).offsetX == 0,
+          "Healing never receives blood or damage tremor");
+    hit.healing = false;
+    hit.text = "1 HP";
+    check(feedbackPresentation(hit, 1020).offsetX == 0,
+          "Special outcome text stays steady even when associated with damage");
+    hit.active = false;
+    check(feedbackPresentation(hit, 1020).alpha == 0, "Cleared feedback cannot replay");
+}
 constexpr Player spawn{{3, 3}, Heading::North};
 void ready(GameSession& s) {
     s.update(0, false);
@@ -390,6 +445,7 @@ void logs() {
 } // namespace
 int main() {
     try {
+        paintedFeedback();
         delayedCreatureTooltip();
         meleeRangeFeedback();
         directActions();

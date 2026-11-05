@@ -62,40 +62,41 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
     }
 }
 namespace {
-void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
-    if (!feedback.party || feedback.portrait == PortraitFeedbackKind::None) {
-        const Color color = feedback.immune    ? Color{100, 112, 126, 255}
-                            : feedback.healing ? Color{35, 140, 95, 255}
-                            : feedback.hit     ? Color{190, 24, 18, 255}
-                                               : WHITE;
-        const Vector2 center{r.x + r.width * .5f, r.y + r.height * .5f};
-        for (std::size_t i = 0; i < bloodSplat.size(); ++i) {
-            const auto a = bloodSplat[i], b = bloodSplat[(i + 1) % bloodSplat.size()];
-            const Vector2 one{r.x + a.x * (r.width - 1), r.y + a.y * (r.height - 1)},
-                two{r.x + b.x * (r.width - 1), r.y + b.y * (r.height - 1)};
-            p.triangle(center, two, one, color);
-            p.line(one, two, {65, 16, 12, 255});
+void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r, std::uint64_t now) {
+    const auto sample = feedbackPresentation(feedback, now);
+    if (sample.alpha <= 0 || !p.fonts)
+        return;
+    const bool portraitOnly = feedback.party && feedback.portrait != PortraitFeedbackKind::None;
+    const auto alpha = static_cast<unsigned char>(255 * sample.alpha);
+    if (!portraitOnly && p.art)
+        p.art->feedbackBackdrop(sample.backdrop, r, {255, 255, 255, alpha});
+    char label[32];
+    if (feedback.text)
+        std::snprintf(label, sizeof(label), "%s", feedback.text);
+    else if (feedback.hit)
+        std::snprintf(label, sizeof(label), feedback.healing ? "+%lld" : "%lld",
+                      static_cast<long long>(feedback.damage));
+    else
+        std::snprintf(label, sizeof(label), "MISS");
+    auto style = portraitOnly ? UiTextStyle::Small : UiTextStyle::Display;
+    const float available = r.width - 10.f;
+    if (p.fonts->width(label, style) > available)
+        style = UiTextStyle::Small;
+    const Color ink = portraitOnly ? Color{255, 255, 255, alpha} : Color{244, 226, 184, alpha};
+    auto line = [&](const char* value, float top, float height) {
+        const auto width = p.fonts->width(value, style);
+        p.text(value, r.x + (r.width - width) * .5f + sample.offsetX,
+               p.fonts->centeredY(value, top, height, style) + sample.offsetY, ink, style);
+    };
+    // Keep longer special outcomes readable inside the existing bounded card/viewport region.
+    if (p.fonts->width(label, style) > available)
+        if (auto* space = std::strchr(label, ' ')) {
+            *space = '\0';
+            line(label, float(r.y + 4), float(r.height - 8) * .5f);
+            line(space + 1, r.y + r.height * .5f, float(r.height - 8) * .5f);
+            return;
         }
-    }
-    if (p.fonts) {
-        char label[32];
-        if (feedback.text)
-            std::snprintf(label, sizeof(label), "%s", feedback.text);
-        else if (feedback.hit)
-            std::snprintf(label, sizeof(label), feedback.healing ? "+%lld" : "%lld",
-                          static_cast<long long>(feedback.damage));
-        else
-            std::snprintf(label, sizeof(label), "MISS");
-        const auto style = feedback.party && feedback.portrait != PortraitFeedbackKind::None
-                               ? UiTextStyle::Small
-                               : UiTextStyle::Heading;
-        const auto width = p.fonts->width(label, style);
-        p.text(label, r.x + (r.width - width) * .5f,
-               p.fonts->centeredY(label, float(r.y), float(r.height), style),
-               (feedback.party && feedback.portrait != PortraitFeedbackKind::None) || feedback.hit ? WHITE
-                                                                                                   : BLACK,
-               style);
-    }
+    line(label, float(r.y), float(r.height));
 }
 } // namespace
 void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const UiFonts* fonts,
@@ -233,12 +234,12 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         for (const auto& feedback : h->feedback)
             if (!feedback.party)
                 if (const auto rect = feedbackRect(feedback, h->cards))
-                    splash(p, feedback, *rect);
+                    splash(p, feedback, *rect, h->presentationMs);
     }
     for (const auto& feedback : h->feedback)
         if (feedback.party)
             if (const auto rect = feedbackRect(feedback, h->cards))
-                splash(p, feedback, *rect);
+                splash(p, feedback, *rect, h->presentationMs);
     if (h->campaignTerminal || (h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory) ||
         combat.phase == CombatPhase::Defeat) {
         p.overlayBox(hudLayout::result);

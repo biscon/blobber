@@ -3,6 +3,7 @@
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/spell_fixtures.hpp"
 #include "support/spell_parties.hpp"
@@ -10,7 +11,7 @@
 #include <iostream>
 namespace blobber::test {
 inline void spellEffectsReview(const std::filesystem::path& assets, const std::filesystem::path& output,
-                               const char* selected = nullptr, bool se02 = false) {
+                               const char* selected = nullptr, bool se02 = false, unsigned frameStep = 60) {
     if (std::filesystem::exists(output) && !std::filesystem::is_empty(output))
         throw std::runtime_error("SE01 review output must be new or empty");
     std::filesystem::create_directories(output);
@@ -48,13 +49,15 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                            {"radiant-bright", rules::SpellKind::GuidingBolt, 3, 1, true, true},
                            {"portrait-healing", rules::SpellKind::CureWounds, 3, 1, true, false},
                            {"portrait-buff", rules::SpellKind::Bless, 3, 1, true, false},
-                           {"portrait-damage", rules::SpellKind::SacredFlame, 1, 1, true, false}};
+                           {"portrait-damage", rules::SpellKind::SacredFlame, 1, 1, true, false},
+                           {"portrait-weapon", rules::SpellKind::SacredFlame, 1, 1, true, false}};
     const auto* cases = se02 ? offensive : foundation;
     const unsigned caseCount = se02 ? unsigned(std::size(offensive)) : unsigned(std::size(foundation));
     std::ofstream report(output / "checks.txt");
     for (unsigned exampleIndex = 0; exampleIndex < caseCount; ++exampleIndex) {
         const auto& example = cases[exampleIndex];
-        const bool incoming = std::string_view(example.name) == "portrait-damage";
+        const bool weaponIncoming = std::string_view(example.name) == "portrait-weapon";
+        const bool incoming = weaponIncoming || std::string_view(example.name) == "portrait-damage";
         if (selected && std::string_view(selected) != example.name)
             continue;
         WorldDefinition definition;
@@ -73,7 +76,8 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                 rows[y][5] = rows[y][7] = '#';
         const Map map(rows, definition);
         const Player pose{{6, 8}, Heading::North};
-        const auto name = incoming                                          ? "goblin_shaman"
+        const auto name = weaponIncoming                                    ? "goblin"
+                          : incoming                                        ? "goblin_shaman"
                           : example.spell == rules::SpellKind::BurningHands ? "goblin"
                                                                             : "bugbear";
         const auto found = std::find(definitions.types.begin(), definitions.types.end(), name);
@@ -85,7 +89,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                 {type,
                  {6 + (example.spell != rules::SpellKind::AcidSplash && example.count > 1 ? i - 1 : 0),
                   8 - example.range},
-                 {example.spell == rules::SpellKind::AcidSplash ? i : 0, 1},
+                 {example.spell == rules::SpellKind::AcidSplash ? i : 0, weaponIncoming ? 0 : 1},
                  Heading::South});
         NpcWorld places(map, pose.cell, definitions.types, instances);
         const auto party = leveledSpellParty(catalog, example.spell);
@@ -111,17 +115,29 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         present();
         if (incoming) {
             bool resolved = false;
-            for (unsigned step = 0; step < 1500 && !resolved; ++step) {
-                if (game.combat().snapshot().awaitingAction)
-                    commands.record(game.submit(turnCommand(game)));
+            for (unsigned step = 0; step < (weaponIncoming ? 4500u : 1500u) && !resolved; ++step) {
+                if (game.combat().snapshot().awaitingAction) {
+                    auto turn =
+                        turnCommand(game, weaponIncoming ? PartyAction::Feature : PartyAction::Defend);
+                    if (weaponIncoming)
+                        turn.feature = rules::Feature::EndTurn;
+                    commands.record(game.submit(turn));
+                }
                 const auto& events = game.update(.02, false);
+                if (weaponIncoming)
+                    for (const auto& event : events)
+                        if (event.event == CombatEvent::Attack)
+                            report << "weapon outcome incoming=" << event.enemyAttack << " hit=" << event.hit
+                                   << " damage=" << event.damage << " at=" << game.timeMs() << '\n';
                 for (const auto& event : events)
                     if (event.event == CombatEvent::Attack && event.enemyAttack &&
-                        event.spell == rules::SpellKind::SacredFlame && event.hit && event.damage > 0)
+                        event.spell ==
+                            (weaponIncoming ? rules::SpellKind::Count : rules::SpellKind::SacredFlame) &&
+                        event.hit && event.damage > 0)
                         resolved = true;
                 commands.record(events);
             }
-            check(resolved, "Production enemy Sacred Flame resolves onto portrait");
+            check(resolved, "Production enemy attack resolves onto portrait");
         } else {
             auto command = spellCommand(game, example.spell);
             if (example.spell == rules::SpellKind::Shatter)
@@ -155,7 +171,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
             for (unsigned i = 0; i < 3; ++i)
                 check(commands.snapshot().portraitFeedback[i][0].kind == PortraitFeedbackKind::Protection,
                       "Buff review affects each selected portrait");
-        if (incoming) {
+        if (incoming && !weaponIncoming) {
             bool damagePulse = false;
             for (const auto& channels : commands.snapshot().portraitFeedback)
                 damagePulse |= channels[1].kind == PortraitFeedbackKind::Damage;
@@ -173,11 +189,18 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         if (example.motion)
             std::filesystem::create_directory(output / example.name);
         // Captures are deterministic application-owned targets, never OS screenshots/input.
-        for (unsigned frame = 0; frame <= 22; ++frame) {
-            const auto offset = frame * 60u;
+        for (unsigned frame = 0; frame * frameStep <= 1320; ++frame) {
+            const auto offset = frame * frameStep;
             if (offset)
                 commands.record(game.update(double(start + offset - game.timeMs()) / 1000, false));
             present();
+            if (frame == 2) {
+                allocations = 0;
+                watching = true;
+                present();
+                watching = false;
+                check(!allocations, "Warmed production feedback presentation allocates nothing");
+            }
             if (example.motion) {
                 const auto filename = std::string(frame < 10 ? "0" : "") + std::to_string(frame) + ".png";
                 presenter.capture(output / example.name / filename);

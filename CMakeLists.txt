@@ -152,7 +152,8 @@ if(BLOBBER_BUILD_GRAPHICS)
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/se02/portraits.png")
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/se02/portraits.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/combat-feedback/backdrops.png")
 
     set(BLOBBER_COPY_OUTPUTS)
     foreach(asset IN LISTS BLOBBER_COPY_INPUTS)

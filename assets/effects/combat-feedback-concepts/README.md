@@ -11,4 +11,6 @@ Mockups only, not runtime artwork or a prepared atlas.
 
 The user clarified that damage should evoke older party-RPG blood splashes/puddles,
 rather than pointed comic-book starbursts. These two retained prompts incorporate
-that clarification. Neither option has been selected or implemented.
+that clarification. The user selected A and requested implementation; B remains
+an unselected comparison. See the [production artwork](../combat-feedback/README.md)
+and [implementation design](../../../docs/combat_feedback_design.md).
