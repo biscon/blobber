@@ -149,7 +149,9 @@ Json appearanceJson(const Appearance& a) {
     Json attachments = Json::array();
     for (unsigned s = 0; s < 4; ++s)
         attachments.push_back({a.attachments.release[s].x, a.attachments.release[s].y,
-                               a.attachments.torso[s].x, a.attachments.torso[s].y});
+                               a.attachments.torso[s].x, a.attachments.torso[s].y,
+                               a.attachments.bodyBounds[s].left, a.attachments.bodyBounds[s].top,
+                               a.attachments.bodyBounds[s].right, a.attachments.bodyBounds[s].bottom});
     return {{"id", a.id},         {"width", a.width}, {"height", a.height},
             {"cutoff", a.cutoff}, {"clips", clips},   {"attachments", attachments}};
 }
@@ -548,11 +550,14 @@ Publication load(const std::filesystem::path& directory) {
             const auto& attachments = v.at("attachments");
             require(attachments.size() == 4);
             for (unsigned s = 0; s < 4; ++s) {
-                require(attachments[s].size() == 4);
+                require(attachments[s].size() == 8);
                 for (const auto& n : attachments[s])
                     require(n.is_number() && std::isfinite(n.get<float>()) && n >= 0 && n <= 1);
                 a.attachments.release[s] = {attachments[s][0], attachments[s][1]};
                 a.attachments.torso[s] = {attachments[s][2], attachments[s][3]};
+                a.attachments.bodyBounds[s] = {attachments[s][4], attachments[s][5],
+                                               attachments[s][6], attachments[s][7]};
+                require(validBodyBounds(a.attachments.bodyBounds[s]));
             }
             const auto& clips = v.at("clips");
             require(clips.size() == npcAnimationCount);

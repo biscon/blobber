@@ -498,6 +498,42 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         EndTextureMode();
         ++stats.draws;
     }
+    // Screen-space ribbons use the final art grid, independent of world supersampling.
+    if (!ids && effects && effects->swipes.count) {
+        BeginTextureMode(resources_.target(v.output.get()));
+        rlDisableDepthTest();
+        rlSetBlendMode(BLEND_ALPHA);
+        const auto& tint = world_render::meleeSwipeTuning.color;
+        rlSetTexture(0);
+        rlBegin(RL_TRIANGLES);
+        for (unsigned r = 0; r < effects->swipes.count; ++r) {
+            const auto& ribbon = effects->swipes.ribbons[r];
+            auto vertex = [&](unsigned i) {
+                const auto p = ribbon.vertices[i];
+                const float alpha = ribbon.alpha * world_render::swipeEdgeAlpha[i % world_render::swipeColumns];
+                rlColor4ub(tint[0], tint[1], tint[2], static_cast<unsigned char>(255 * alpha));
+                rlVertex2f(p.x, p.y);
+            };
+            auto triangle = [&](unsigned i, unsigned j, unsigned k) {
+                const auto a = ribbon.vertices[i], b = ribbon.vertices[j], c = ribbon.vertices[k];
+                if ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) > 0)
+                    std::swap(j, k);
+                vertex(i);
+                vertex(j);
+                vertex(k);
+            };
+            for (unsigned i = 0; i < world_render::swipeSegments; ++i)
+                for (unsigned band = 0; band + 1 < world_render::swipeColumns; ++band) {
+                    const unsigned a = i * world_render::swipeColumns + band;
+                    triangle(a, a + 1, a + world_render::swipeColumns);
+                    triangle(a + 1, a + world_render::swipeColumns + 1, a + world_render::swipeColumns);
+                }
+        }
+        rlEnd();
+        rlSetTexture(0);
+        EndTextureMode();
+        ++stats.draws;
+    }
     rlActiveTextureSlot(1);
     rlDisableTexture();
     rlActiveTextureSlot(0);

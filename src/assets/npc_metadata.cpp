@@ -163,7 +163,13 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
             const auto path = file.parent_path() / entry.get<std::string>();
             try {
                 const auto definition = readJson(path);
-                const auto canonical = definition.dump();
+                auto legacyDefinition = definition;
+                if (legacyDefinition.contains("attachments")) {
+                    legacyDefinition["attachments"].erase("body_bounds");
+                    if (legacyDefinition["attachments"].empty())
+                        legacyDefinition.erase("attachments");
+                }
+                const auto canonical = legacyDefinition.dump();
                 fingerprintBytes(definitionHash, canonical.data(), canonical.size());
                 const char separator = 0;
                 fingerprintBytes(definitionHash, &separator, 1);
@@ -189,6 +195,17 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
                     if (!anchors.is_object())
                         throw std::runtime_error("NPC attachments must be an object");
                     const std::array<const char*, 4> sides{"front", "back", "left", "right"};
+                    if (anchors.contains("body_bounds")) {
+                        for (std::size_t i = 0; i < 4; ++i) {
+                            const auto& box = anchors.at("body_bounds").at(sides[i]);
+                            if (!box.is_array() || box.size() != 4)
+                                throw std::runtime_error("NPC body bounds require [left,top,right,bottom]");
+                            auto& b = appearance.attachments.bodyBounds[i];
+                            b = {number(box[0]), number(box[1]), number(box[2]), number(box[3])};
+                            if (!validBodyBounds(b))
+                                throw std::runtime_error("Invalid normalized NPC body bounds");
+                        }
+                    }
                     for (const auto* kind : {"release", "torso"}) {
                         if (!anchors.contains(kind))
                             continue;

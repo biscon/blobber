@@ -1,5 +1,12 @@
 # System design
 
+Procedural party melee swipe **implemented and mechanically verified; awaiting user review (2026-11-05)**:
+[design and verification](melee_swipe_design.md) adds a bounded screen-space ribbon
+around the unchanged authoritative impact deadline, using prepared body-only bounds.
+Focused CPU/allocation and hidden OpenGL checks pass; [six review captures](screenshots/melee-swipe/README.md)
+show the revised thicker, broader crescent with translucent edges after the user rejected
+the first thin treatment. Save compatibility and existing impact feedback remain unchanged.
+
 ## Agent artifacts and evidence
 
 Artifact housekeeping is implemented (2026-11-05). Agents own disposable

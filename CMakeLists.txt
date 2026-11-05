@@ -93,7 +93,7 @@ target_link_libraries(blobber_audio_io PUBLIC blobber_core PRIVATE nlohmann_json
 add_library(blobber_world_assets src/assets/world_assets.cpp src/assets/world_residency.cpp)
 target_link_libraries(blobber_world_assets PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_assets)
-add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
+add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/melee_swipe.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
 # Keep gameplay/orchestration unoptimized in Debug; only the numerical picking
 # kernels need optimized scalar loops. Symbols and Debug assertions are retained.
 option(BLOBBER_OPTIMIZE_DEBUG_RASTER "Optimize numerical visibility kernels in Debug" ON)
@@ -575,6 +575,11 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING)
+    add_executable(blobber_melee_swipe_tests tests/melee_swipe_tests.cpp)
+    target_link_libraries(blobber_melee_swipe_tests PRIVATE blobber_world_cpu)
+    target_include_directories(blobber_melee_swipe_tests PRIVATE tests)
+    blobber_warnings(blobber_melee_swipe_tests)
+    add_test(NAME melee_swipe COMMAND blobber_melee_swipe_tests)
     add_executable(blobber_world_integration_tests tests/world_integration_tests.cpp)
     target_link_libraries(blobber_world_integration_tests PRIVATE blobber_world_cpu nlohmann_json::nlohmann_json)
     target_include_directories(blobber_world_integration_tests PRIVATE tests)

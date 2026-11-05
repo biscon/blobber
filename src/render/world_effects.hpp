@@ -1,5 +1,6 @@
 #pragma once
 #include "render/attack_visuals.hpp"
+#include "render/melee_swipe.hpp"
 #include "render/world_visibility.hpp"
 namespace blobber::world_render {
 struct EffectPacket {
@@ -13,6 +14,7 @@ struct EffectPacket {
 // additional Magic Missile glyphs beyond the retained record count.
 constexpr unsigned effectCapacity = attackCapacity + rules::partySize * 2 + 16 * 2 + 9 + 4 + 24;
 struct EffectFrame {
+    SwipeFrame swipes;
     std::array<EffectPacket, effectCapacity> packets{};
     unsigned count = 0;
     std::uint64_t revision = 0;
@@ -25,6 +27,7 @@ class EffectsPipeline {
 
   private:
     ProjectilePlayer shots_;
+    MeleeSwipePlayer swipes_;
     EffectFrame frame_;
     std::array<unsigned, 10> textures_{};
     SpellArea area_{};

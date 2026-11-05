@@ -31,6 +31,20 @@ int main() {
         check(loaded.types.size() == 1 && loaded.timings[0][0].count == 2 &&
                   loaded.timings[0][0].durationMs[1] == 60,
               "metadata loads real timing without image files");
+        auto bounded = definition;
+        for (const auto* side : {"front", "back", "left", "right"})
+            bounded["attachments"]["body_bounds"][side] = {.2, .1, .8, .95};
+        save(bounded);
+        const auto cosmetic = loadNpcDefinitions(dir.path / "level.json");
+        check(cosmetic.definitionFingerprint == loaded.definitionFingerprint &&
+                  cosmetic.attachments[0].bodyBounds[0].left == .2f,
+              "Cosmetic bounds load without invalidating existing saves");
+        for (const auto& box : {Json{.8,.1,.2,.95}, Json{-.1,0,1,1}, Json{0,0,1,1.1}, Json{0,0,1}}) {
+            auto bad = bounded;
+            bad["attachments"]["body_bounds"]["front"] = box;
+            save(bad);
+            rejects([&] { loadNpcDefinitions(dir.path / "level.json"); }, "Malformed body bounds reject");
+        }
         auto wideCanvas = definition;
         wideCanvas["animations"]["idle"]["width"] = .8;
         save(wideCanvas);

@@ -53,7 +53,8 @@ EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) {
 bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     if (in.attacks && (!in.actors || in.attacks->world != in.actors->snapshot().world))
         throw std::invalid_argument("Foreign world attack snapshot");
-    const bool changed = shots_.update(in.attacks, in.now);
+    const bool swipeChanged = swipes_.update(in, world);
+    const bool changed = shots_.update(in.attacks, in.now) || swipeChanged;
     SpellArea area = in.area ? *in.area : SpellArea{};
     if (world.moving)
         area.eligible.fill(false);
@@ -78,6 +79,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     area_ = area;
     visibility_ = world.revision;
     frame_.count = 0;
+    frame_.swipes = swipes_.frame();
     ++frame_.revision;
     auto add = [&](EffectPacket p) {
         if (frame_.count == effectCapacity)

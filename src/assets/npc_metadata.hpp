@@ -5,8 +5,16 @@ namespace blobber {
 struct NpcAttachment {
     float x = .5f, y = .45f;
 };
+struct NpcBodyBounds {
+    float left = 0, top = 0, right = 1, bottom = 1;
+};
+inline bool validBodyBounds(NpcBodyBounds b) noexcept {
+    return b.left >= 0 && b.top >= 0 && b.right <= 1 && b.bottom <= 1 &&
+           b.left < b.right && b.top < b.bottom;
+}
 struct NpcAttachments {
     std::array<NpcAttachment, 4> release{}, torso{};
+    std::array<NpcBodyBounds, 4> bodyBounds{};
 };
 struct NpcImageReference {
     std::filesystem::path path;

@@ -194,6 +194,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                         selection.flash};
             b.release = a.attachments.release[side];
             b.torso = a.attachments.torso[side];
+            b.bodyBounds = a.attachments.bodyBounds[side];
+            b.bodyCanvasWidth = a.clips[0].width ? a.clips[0].width : a.width;
             const auto& stored = assets_.publication.textures[texture];
             b.crop = {float(stored.canvas.x) / stored.canvas.width,
                       float(stored.canvas.y) / stored.canvas.height,

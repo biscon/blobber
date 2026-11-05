@@ -12,7 +12,7 @@ struct ActorSnapshot;
 namespace blobber::world_assets {
 constexpr std::size_t MiB = 1024 * 1024, textureBudget = 512 * MiB, alphaBudget = 64 * MiB;
 constexpr std::size_t worldCpuBudget = 352 * MiB, worldGpuBudget = 608 * MiB;
-constexpr unsigned version = 10, appearanceRevision = 4, textureCapacity = 480;
+constexpr unsigned version = 10, appearanceRevision = 5, textureCapacity = 480;
 constexpr unsigned catalogTextureCapacity = 4096, packCapacity = 64, meshCapacity = 512;
 constexpr std::size_t metadataBudget = 8 * MiB;
 constexpr std::uint64_t installedBudget = 8ull * 1024 * MiB;

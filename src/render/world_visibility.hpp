@@ -43,6 +43,8 @@ struct Billboard {
     std::uint16_t texture = UINT16_MAX, id = PickingBuffer::empty;
     bool alive = false, flash = false;
     NpcAttachment release{}, torso{};
+    NpcBodyBounds bodyBounds{};
+    float bodyCanvasWidth = 0; // Bounds refer to registered idle art, independent of attack canvas.
     // Drawable crop in logical canvas space; attachments/shadows keep that space.
     struct Region {
         float left = 0, top = 0, right = 1, bottom = 1;
