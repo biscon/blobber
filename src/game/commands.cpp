@@ -457,7 +457,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";
     const bool sanctuary = state_.campaign && !state_.campaignTerminal &&
-                           session_.movement().player.cell == Cell{4, 4} &&
+                           session_.atSanctuary() &&
                            session_.campaign()->activeLocation() == 0;
     state_.fixturePrompt[0] = 0;
     if (state_.campaignTerminal)

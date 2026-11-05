@@ -12,7 +12,7 @@ struct CampaignLocation {
     FloorFixtures fixtures;
     FloorObjectiveDefinition objective;
     std::unique_ptr<FloorState> saved;
-    Player entry{}, exit{};
+    Player entry{}, exit{}; // Hub: recall / dungeon return; floors: upper / lower landing.
     std::uint32_t seed = 0;
     bool visited = false;
     const Map& map() const noexcept { return generated ? generated->map : *authored; }
@@ -31,7 +31,7 @@ struct CampaignLocationState {
     FloorFixtures fixtures;
     FloorObjectiveDefinition objective;
     std::unique_ptr<FloorState> state;
-    Player entry{}, exit{};
+    Player entry{}, exit{}; // Hub: recall / dungeon return; floors: upper / lower landing.
     std::uint32_t seed = 0;
 };
 struct CampaignCheckpoint {

@@ -39,6 +39,11 @@ def main(runner):
             assert client.request('preview_save')['data']['eligible']
             result=client.request('save',slot_revision=status['slot_revision'])
             assert result['ok'] and result['data']['durable'],result
+            # New Game square -> north-facing dungeon landing, using ordinary wire input.
+            for direction in ('right', 'right', 'forward'):
+                moved=client.request('act',action=dict(kind='move',direction=direction))
+                assert moved['data']['accepted'],moved
+                client.request('advance',ticks=100,until_decision=False)
             hub=client.request('observe')['data']
             stair=hub['fixtures'][0]['fixture']
             result=client.request('act',action=dict(kind='interact',fixture=stair))

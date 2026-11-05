@@ -18,7 +18,7 @@ int runCityReview(const Options& options) {
         throw std::runtime_error("City review requires the preset party");
     const auto definitions =
         prepareCpu([&] { return loadNpcDefinitions(options.assets / "npcs/level.json"); });
-    const auto scene = prepareCpu([] { return sanctuaryCityReview(); });
+    const auto scene = prepareCpu([] { return sanctuaryCity(); });
     const NpcWorld empty(scene.map, scene.spawn.cell, definitions.types, {});
     auto publication = prepareCpu([&] { return world_assets::load(options.assets / "prepared/world"); });
     if (publication.definitions != definitions.definitionFingerprint)

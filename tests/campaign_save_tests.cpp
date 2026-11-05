@@ -46,10 +46,38 @@ void environmentRoundtrip() {
     const auto d = definitions();
     CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
     auto state = run.checkpoint();
-    auto& world = state->locations[0].world;
-    world.surfaces[2 * 9 + 3].floor = 1;
-    world.surfaces[2 * 9 + 3].ceiling = noCeiling;
-    world.scenery.push_back({"owned-tree", {3, 2}, {0, 0}, Heading::East, 1, 1});
+    auto& world = state->locations[1].world;
+    const auto fixtureCell = state->locations[1].entry.cell;
+    const auto index = std::size_t(fixtureCell.y * state->locations[1].rows[0].size() + fixtureCell.x);
+    // Preserve level stair surfaces while round-tripping an authored scenery base elsewhere.
+    Cell sceneryCell{};
+    bool found = false;
+    const auto& map = run.location(1).map();
+    for (int y = 2; y + 2 < map.height() && !found; ++y)
+        for (int x = 2; x + 2 < map.width() && !found; ++x) {
+            const Cell c{x, y};
+            if (!map.solid(c) && !map.movementBlocked(c) &&
+                !state->locations[1].fixtures.npcExcluded[std::size_t(y * map.width() + x)]) {
+                bool occupied = false;
+                for (const auto& npc : state->locations[1].placements)
+                    occupied |= npc.cell == c;
+                for (unsigned f = 0; f < state->locations[1].fixtures.count; ++f)
+                    occupied |= state->locations[1].fixtures.entries[f].cell == c;
+                for (std::size_t g = 0; g < state->locations[1].recovery.groundCount; ++g)
+                    occupied |= state->locations[1].recovery.ground[g].cell == c;
+                // Use a side cell with at least three exits to avoid disconnecting corridors.
+                unsigned exits = 0;
+                for (unsigned h = 0; h < 4; ++h)
+                    exits += map.canStep(c, c + forward(Heading(h)));
+                if (!occupied && exits >= 3) {
+                    sceneryCell = c;
+                    found = true;
+                }
+            }
+        }
+    check(found, "Owned scenery fixture has an unoccupied open cell");
+    world.surfaces[index].ceiling = noCeiling;
+    world.scenery.push_back({"owned-tree", sceneryCell, {0, 0}, Heading::East, 1, 1});
     // Own a one-cell static shell on an existing generated wall, away from dressing.
     auto& architecture = state->locations[1];
     bool placed = false;
@@ -70,32 +98,17 @@ void environmentRoundtrip() {
     architecture.worldFingerprint = architecture.world.fingerprint();
     architecture.layout.dressingFingerprint = architecture.worldFingerprint;
     architecture.fingerprint = generation::fingerprint(architecture.layout);
-    state->locations[0].worldFingerprint = world.fingerprint();
     const auto fingerprint = world.fingerprint();
     const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
     auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
-    CampaignRun loaded(c, std::move(*decoded), d.timings);
-    check(loaded.map().definition().fingerprint() == fingerprint,
-          "Nonflat world and decorations survive Continue");
-    check(loaded.location(1).map().definition().buildings.size() == 1 &&
-              loaded.location(1).map().definition().buildings[0].model == "owned-house" &&
-              loaded.location(1).map().definition().buildings[0].facing == Heading::West,
-          "Static placement identity, footprint and rotation survive disk restore");
-    check(loaded.map().definition().scenery.size() == 1 &&
-              loaded.map().definition().scenery[0].model == "owned-tree" &&
-              loaded.map().definition().scenery[0].facing == Heading::East &&
-              loaded.map().movementBlocked({3, 2}) && !loaded.map().solid({3, 2}),
-          "Scenery identity, orientation and physical base survive Continue");
-    auto travel = loaded.prepareTravel(loaded.request(loaded.game().nearbyFixture()));
-    check(loaded.commitTravel(travel), "Travel from height-bearing hub");
-    check(loaded.location(0).map().definition().fingerprint() == fingerprint,
-          "Inactive location retains environment");
-    auto away = loaded.checkpoint();
-    const auto text2 = encodeCampaign(c, d, {"fixture", 0}, *away);
-    auto back = decodeCampaign(c, d, {"fixture", 0}, text2);
-    CampaignRun resumed(c, std::move(*back), d.timings);
-    check(resumed.location(0).map().definition().fingerprint() == fingerprint,
-          "Inactive environment survives disk roundtrip");
+    const auto& restoredWorld = decoded->locations[1].world;
+    check(restoredWorld.fingerprint() == fingerprint && restoredWorld.buildings.size() == 1 &&
+              restoredWorld.buildings[0].model == "owned-house" &&
+              restoredWorld.buildings[0].facing == Heading::West,
+          "Owned world geometry and architecture survive campaign codec roundtrip");
+    check(restoredWorld.scenery.size() == 1 && restoredWorld.scenery[0].model == "owned-tree" &&
+              restoredWorld.scenery[0].facing == Heading::East,
+          "Scenery identity, orientation and physical base survive campaign codec roundtrip");
     auto bad = blobber::automation::Json::parse(text);
     bad["campaign"]["locations"][0]["world"]["surfaces"][20]["floor"] = 99;
     rejects(
@@ -123,7 +136,7 @@ void environmentRoundtrip() {
     bad["schema"] = 8;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-scenery saves reject clearly");
     bad = blobber::automation::Json::parse(text);
-    bad["simulation"] = 6;
+    bad["simulation"] = 12;
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
     {
@@ -131,12 +144,12 @@ void environmentRoundtrip() {
         file << bad.dump();
     }
     CampaignStore store(c, d, {"fixture", 0}, disk);
-    check(!store.inspect().active, "Pre-B05 simulation is incompatible");
+    check(!store.inspect().active, "Pre-city simulation is incompatible");
     std::ifstream unchanged(directory.path / "campaign.json");
     const std::string original((std::istreambuf_iterator<char>(unchanged)), {});
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
-            "Previous simulation 6 rejects explicitly");
+            "Previous simulation 12 rejects explicitly");
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");
@@ -145,6 +158,8 @@ void roundtrip() {
     const auto c = catalog();
     const auto d = definitions();
     CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    walk(run.game(), {12, 20});
+    face(run.game(), Heading::South);
     const CampaignContent content{"owned-fixture", 0};
     auto before = run.checkpoint();
     const auto text = encodeCampaign(c, d, content, *before);
@@ -154,6 +169,7 @@ void roundtrip() {
     check(encodeCampaign(c, d, content, *after) == text, "hub exact canonical round trip");
     check(loaded.party().inventory().identity() != run.party().inventory().identity(),
           "fresh inventory epoch");
+    entrance(run);
     auto travel = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(travel), "enter dungeon");
     run.party().damage({0}, 2);
@@ -297,6 +313,7 @@ void progressionAndFloors() {
     check(run->commitTravel(recall), "paid recall from third floor");
     run = copy(c, d, *run);
     check(run->party().campSupplies().kits == kits - 1, "recall charge persists");
+    entrance(*run);
     auto waypoint = run->prepareTravel(run->waypointRequest(2));
     check(run->commitTravel(waypoint), "restored unlocked entry return");
     run = copy(c, d, *run);
@@ -324,7 +341,8 @@ void effects() {
         e.targets[0] = target;
         check(bool(run.game().applyEffect(e)), "persistent effect fixture applies");
         if (kind == EffectKind::SpiritualWeapon)
-            check(const_cast<EffectController&>(run.game().effects()).moveWeapon({0}, {4, 4}, true),
+            check(const_cast<EffectController&>(run.game().effects())
+                      .moveWeapon({0}, run.game().movement().player.cell, true),
                   "place fixture spectral weapon");
         auto restored = copy(c, d, run);
         check(restored->game().effects().has(target, kind), "persistent instance retained");

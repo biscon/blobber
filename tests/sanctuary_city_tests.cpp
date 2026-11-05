@@ -5,7 +5,7 @@
 #include <iostream>
 using namespace blobber;
 int main() try {
-    const auto city = sanctuaryCityReview();
+    const auto city = sanctuaryCity();
     validateSanctuaryCity(city);
     check(city.map.width() == 24 && city.map.height() == 24 && city.doorCount == 12,
           "Complete ten-building town plus dungeon and gate");

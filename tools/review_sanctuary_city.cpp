@@ -16,7 +16,7 @@ int main(int argc, char** argv) try {
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
-    const auto city = sanctuaryCityReview();
+    const auto city = sanctuaryCity();
     std::ofstream layout(output / "layout.svg");
     writeCityLayout(layout, city);
     if (selected == "layout")

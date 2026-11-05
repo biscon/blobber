@@ -5,7 +5,7 @@
 #include "platform/game_view.hpp"
 #include "rlgl.h"
 #include "support/check.hpp"
-#include "world/environment_maps.hpp"
+#include "support/courtyard_fixture.hpp"
 #include <iostream>
 namespace blobber::test {
 inline void dungeonArtReview(const std::filesystem::path& source, const std::filesystem::path& output,
@@ -127,7 +127,7 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
                           f);
         capture(steps, stairs, kind == FixtureKind::Upstairs ? "stairs-up" : "stairs-down");
     }
-    const auto hub = sanctuaryMap();
+    const auto hub = courtyardMap();
     NpcWorld noHostiles(hub, {3, 4}, definitions.types, {});
     for (const auto& pose :
          {Player{{3, 4}, Heading::North}, Player{{2, 2}, Heading::West}, Player{{6, 2}, Heading::East}}) {

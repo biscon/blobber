@@ -603,3 +603,14 @@ serialized and hashed with world-definition revision 3. Generator/templates rema
 than migrate. Protocol v1 gains no new scenario or command: the city is an explicit
 graphical development review flag, with a separate hidden capture tool. Normal
 campaign startup still uses the courtyard. See [SC01 design](sc01_design.md).
+
+
+### SC04 Sanctuary city campaign cutover (2026-11-05)
+
+Campaign saves use schema **9**, simulation **13**, generator/templates **9/7**.
+The diagnostic authored-location identity is `sanctuary-city-v1`; protocol remains
+v1. New Game starts in the square, recall arrives at the sanctuary, and upstairs
+return arrives facing into town. Callers must walk to the observed downstairs
+landing and face north before interacting or requesting an unlocked-floor waypoint.
+City discovery is incremental and persists across travel/Continue. Old save
+identities reject without modifying their bytes. See [SC04 design](sc04_design.md).

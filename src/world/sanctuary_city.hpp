@@ -23,7 +23,7 @@ struct CityLoop {
     const char* name;
     std::array<Cell, 5> corners; // Closed cardinal rectangle; no frame-time routing.
 };
-struct SanctuaryCityReview {
+struct SanctuaryCity {
     Map map;
     Player spawn;
     std::array<CityDoorway, cityDoorwayCapacity> doors{};
@@ -38,7 +38,7 @@ struct SanctuaryCityReview {
     const CityDoorway& doorway(std::string_view name) const;
 };
 // Preparation-only validation; may allocate. Metadata never enters the save schema.
-void validateSanctuaryCity(const SanctuaryCityReview& city);
-// Development-only authored scene; never substitutes the campaign hub.
-SanctuaryCityReview sanctuaryCityReview();
+void validateSanctuaryCity(const SanctuaryCity& city);
+// Authored production city; constructed only at preparation boundaries.
+SanctuaryCity sanctuaryCity();
 } // namespace blobber

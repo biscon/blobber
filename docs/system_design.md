@@ -1,5 +1,17 @@
 # System design
 
+Sanctuary SC04 is **Accepted and closed (2026-11-05)**: [design](sc04_design.md),
+[verification](sc04_verification.md) and [campaign captures](screenshots/sc04/README.md).
+Normal campaigns now use the accepted city. New Game starts in the square, recall
+arrives at sanctuary, and dungeon ascent returns facing into town. Named content
+anchors drive travel, protected landings, recovery and HUD prompts. City discovery
+and pose survive Continue; restore checks the canonical immutable city definition.
+Schema/simulation are 9/13, without migration. Existing prepared view staging,
+resource ceilings and accepted artwork remain. Acceptance includes the entrance
+trim correction; milestone S-C and the [Sanctuary city roadmap](sanctuary_city_plan.md)
+are complete and closed. The [entrance trim correction](sc04_design.md#entrance-trim-review-correction-2026-11-05)
+recesses building-backed staircase terminal panels ahead of raised facade trim.
+
 Sanctuary SC03 is **Accepted (2026-11-05)**: [design](sc03_design.md),
 [verification](sc03_verification.md) and [captures](screenshots/sc03/README.md).
 Bounded scenery placements and prepared cutout meshes support two trees, bushes,
@@ -17,7 +29,7 @@ brightened carved fountain stone; other packs retain 16 cells. See the
 SC03 far-enclosure addendum for bounded culling storage and verification.
 The inn sign review correction moves its bracket onto the solid facade strip
 beside the upper window; see the SC03 mounting addendum. Milestone S-B is accepted.
-SC04 is eligible for separate planning; campaign cutover has not started.
+SC04 delivers the campaign cutover below; SC03 artwork remains accepted.
 
 Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
 and [verification/captures](sc02_verification.md). The 24×24 square-centered town
@@ -459,7 +471,7 @@ far-frustum coverage; ordinary scenes retain 24/49. Fixed draw storage covers bo
 Frames borrow prepared geometry and resolve no model names. Furniture's four slots
 and tighter mesh profile remain intact. The standalone full-town city factory owns bounded named doorway/anchor and
 future dressing metadata, validating connected routes with future bases blocked.
-Its review launch does not replace campaign Sanctuary. SC03 adds up to 32 separate
+SC04 makes this factory the production campaign Sanctuary; review tooling shares it. SC03 adds up to 32 separate
 scenery placements: open-terrain movement/NPC bases without solid-cell LOS or
 generated-wall replacement. Named mesh cutouts share prepared alpha/mips and
 CPU/GPU alpha rejection; view-owned geometry includes canopy bounds. No new
@@ -585,9 +597,9 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 9/12 and generator/templates 9/7. Older saves reject
+Campaign schema/simulation are 9/13 and generator/templates 9/7. Older saves reject
 without being modified; no migration. World publication is format 10, appearance 4,
-visibility world-visibility-v16, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
+visibility world-visibility-v17, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

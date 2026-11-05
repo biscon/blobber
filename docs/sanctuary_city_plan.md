@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01–SC03 accepted (2026-11-05); SC04 planned.**
+Status: **Accepted and closed (2026-11-05). All slices SC01–SC04 and milestones S-A–S-C accepted.**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,10 +16,10 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | None — SC03 accepted 2026-11-05 |
-| Awaiting review | None; [accepted SC03 handoff](sc03_verification.md) |
-| Next eligible slice | SC04 — eligible for separate planning |
-| Next action | Await a request to plan SC04 |
+| Active slice | None — roadmap closed |
+| Awaiting review | None — SC04 accepted, including the entrance trim correction |
+| Next eligible slice | None — all planned slices accepted |
+| Next action | None — future work requires a separate request |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Keep prepared geometry, material batching and existing chunk/frustum culling; no advanced occlusion or additional spatial subdivision |
 | Blockers | None |
@@ -211,13 +211,13 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 | SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Accepted 2026-11-05 |
 | SC02 | Complete town architecture and walkable layout | SC01 Accepted | Accepted 2026-11-05 |
 | SC03 | Vegetation, market, fountain and service signs | SC02 Accepted | Accepted 2026-11-05 |
-| SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
+| SC04 | Campaign hub replacement and delivery | SC03 Accepted | Accepted 2026-11-05 |
 
 | Milestone | Meaning | Status |
 | --- | --- | --- |
 | S-A | Architectural scale and art quality proven in-engine through SC01 | Accepted 2026-11-05 |
 | S-B | Complete dressed city accepted through SC03 | Accepted 2026-11-05 |
-| S-C | City is the working campaign hub through SC04 | Planned |
+| S-C | City is the working campaign hub through SC04 | Accepted 2026-11-05 |
 
 ### SC01 — Asset residency and architecture foundation
 
@@ -319,7 +319,7 @@ Acceptance:
 
 Current records: [implemented design](sc03_design.md), [verification/handoff](sc03_verification.md)
 and [final captures/water preview](screenshots/sc03/README.md). The shorter tree is
-accepted. Complete dressing and optional eight-frame water are Ready for review.
+accepted. Complete dressing and eight-frame water are accepted.
 
 ### SC04 — Campaign hub replacement and delivery
 
@@ -347,7 +347,10 @@ Acceptance:
 - No ordinary game flow depends on development review switches; document the
   final user review recipe and remaining limitations before requesting acceptance.
 
-Expected records: `docs/sc04_design.md` and `docs/sc04_verification.md`.
+Delivered records: [design](sc04_design.md), [verification/handoff](sc04_verification.md)
+and [campaign capture gallery](screenshots/sc04/README.md). Accepted by the user on
+2026-11-05, including the entrance trim correction. SC04 completes milestone S-C
+and closes this roadmap.
 
 ## Verification, resource limits and handoffs
 
@@ -466,36 +469,25 @@ stays on; prioritize fidelity over strict adherence to the memory target.
 
 ## Current next-agent handoff
 
-SC01 and SC02 are **Accepted (2026-11-05)**. SC03 is next for detailed planning.
-Read the [SC02 design](sc02_design.md), [verification/handoff](sc02_verification.md)
-and [layout/capture index](screenshots/sc02/README.md). The development flag
-`cmake-build-debug/blobber --sanctuary-city-review` now opens the complete town;
-normal campaign launch still uses the courtyard. No saves/library are initialized
-by city review. Supersampling and texture fidelity remain unchanged.
+SC01–SC04 and milestones S-A–S-C are **Accepted**. This roadmap is **closed**
+as of 2026-11-05, including the SC04 entrance trim correction. Read the
+[SC04 design](sc04_design.md), [verification](sc04_verification.md) and
+[campaign captures](screenshots/sc04/README.md). Normal New Game/Continue use the
+city without review flags. Square spawn is (11,8) north; recall is (9,6) north;
+dungeon return is (13,7) south. The north-facing downstairs fixture is at (13,6).
 
-The town has ten principal buildings plus dungeon and closed gate landmarks,
-91 placements, ten named models, two 4096² atlases and five reserved dressing bases.
-Prepared views retain existing asset leases, chunk culling and capacity checks.
-Tracked active world storage is 16.82 MiB CPU / 230.15 MiB GPU; active plus staged
-city is 26.29 / 233.33 MiB. Application GPU including UI/fonts is 345.75 MiB, with
-361.57 MiB capture peak. Driver memory is excluded and low-memory hardware was
-unavailable. All world texture/model leases release with the view.
+Current identities: publication/appearance 10/4, campaign schema/simulation 9/13,
+generator/templates 9/7, visibility v17, world fingerprint 4 and diagnostic hub
+sanctuary-city-v1. Old saves reject untouched. The gate stays closed; services,
+interiors and outside travel remain deferred. No PC08 work or new slice is started.
 
-Identities remain publication/appearance 6/4, campaign schema/simulation 8/11,
-generator/templates 9/7, visibility v14 and world fingerprint revision 3.
-Existing unsupported development saves still reject unchanged; no migration.
-The future dungeon stair cell (14,6) and landing (14,7) are clear, protected
-frontage cells admitted by the existing fixture contract; SC04 installs the actual
-stairwell and binds travel. Gate interaction/outside travel
-remain deferred. SC03 must preserve protected approaches and connected routes
-when filling its authored reservations. SC03 also includes distinct painted signs
-for the inn, smithy and provisioner. Keep existing chunk/frustum culling; the user
-reports about 3,500 FPS uncapped and requests no advanced occlusion or additional
-spatial subdivision.
-
-Next action: await a request to plan SC03, including the agreed service-building
-signs. SC02 acceptance does not authorize automatic continuation, PC08 work, or
-campaign hub replacement. Milestone S-B remains planned until SC03 is accepted.
+Focused campaign/save/CLI/map/recovery/allocation/startup and hidden GPU checks pass.
+The extended save suite passed once. The optional full scripted combat route hit
+its 30-second deadline; the changed city-entry route passes separately. Tracked
+application GPU peak is 590.82 MiB during city/floor overlap, above the advisory
+448 MiB reference; hard world ceilings remain satisfied. Low-memory hardware
+checks remain unverified. User acceptance closes the delivered scope; recorded
+verification limitations remain unchanged. No further work is scheduled.
 
 2026-11-05: User accepted the shorter representative tree (“beautiful tree, I approve, continue”). Continue remaining SC03 implementation; final slice review remains pending.
 
@@ -528,3 +520,26 @@ after the inn-sign mounting correction. Record SC03 and milestone S-B as
 **Accepted**. Acceptance includes the complete dressed city, animated fountain and
 all reviewed corrections. SC04 is eligible for separate planning; it has not
 started and campaign hub replacement remains deferred.
+
+2026-11-05: User approved SC04 plan and requested implementation. Distinct arrivals
+and exploration-based city discovery selected. See [design](sc04_design.md).
+
+2026-11-05: SC04 delivered **Ready for review**. Normal campaign city cutover,
+distinct arrivals, sanctuary recovery, discovery, canonical restore and identity
+updates are implemented. Focused CPU, extended persistence and hidden GPU/capture
+checks pass, with the optional full-route timeout and advisory GPU-memory excess
+recorded in the [handoff](sc04_verification.md). No acceptance is implied.
+
+
+2026-11-05: SC04 entrance review correction hides the raised door-arch strips that
+protruded into the black stair interior. Building-backed terminal panels are inset
+0.06 cells; shared visibility identity advances to v17. Focused staircase CPU and
+hidden GPU checks pass; four production views confirm the correction. See the
+[updated gallery](screenshots/sc04/README.md). SC04 remains **Ready for review**.
+
+
+2026-11-05: User explicitly accepted SC04 (“slice accepted”) after the entrance
+trim correction and requested closure of the final slice and plan. SC04 and
+milestone S-C are **Accepted**; all slices SC01–SC04 and milestones S-A–S-C are
+complete. The Sanctuary city roadmap is **Accepted and closed**. Existing
+verification limitations remain recorded; future work requires a separate request.

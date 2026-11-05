@@ -1,5 +1,6 @@
 #include "core/preparation.hpp"
 #include "game/campaign.hpp"
+#include "game/sanctuary_hub.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <random>
@@ -174,21 +175,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             to.generated.emplace(generation::GeneratedFloor{from.generation, from.layout, std::move(map),
                                                             from.diagnostics, from.fingerprint, from.seed});
         } else {
-            if (map.width() != 9 || map.height() != 9 || !(from.entry == Player{{4, 4}, Heading::East}) ||
-                !(from.exit == from.entry) || !from.placements.empty() || from.objective.count ||
-                from.recovery.groundCount || from.recovery.sanctuaryCount != 1 ||
-                !(from.recovery.sanctuaries[0] == Cell{4, 4}) || from.fixtures.count != 1 ||
-                from.fixtures.discovery || from.fixtures.depth || from.fixtures.landingCount != 1 ||
-                !(from.fixtures.landings[0] == Cell{4, 4}) ||
-                from.fixtures.entries[0].kind != FixtureKind::Downstairs ||
-                !(from.fixtures.entries[0].cell == Cell{5, 4}) ||
-                from.fixtures.entries[0].facing != Heading::East || from.fixtures.npcExcluded.count() != 2 ||
-                !from.fixtures.npcExcluded[40] || !from.fixtures.npcExcluded[41])
-                throw std::invalid_argument("Unsupported authored hub definition");
-            for (int y = 0; y < 9; ++y)
-                for (int x = 0; x < 9; ++x)
-                    if (map.solid({x, y}) != (x == 0 || y == 0 || x == 8 || y == 8))
-                        throw std::invalid_argument("Unsupported authored hub map");
+            validateSanctuaryHub(map, from);
             to.authored.emplace(std::move(map));
         }
         to.entry = from.entry;

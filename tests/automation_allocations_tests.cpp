@@ -185,6 +185,8 @@ int main(int argc, char**) {
                     campaign_test::travel(*rollback, FixtureKind::Upstairs);
                 }
             }
+            if (kind != TravelKind::Recall)
+                campaign_test::entrance(*rollback);
             const auto location = rollback->activeLocation();
             const auto kits = rollback->party().campSupplies().kits;
             const auto invRevision = rollback->party().inventory().revision();

@@ -3,7 +3,7 @@
 #include <ostream>
 namespace blobber {
 // Diagnostic vector map generated from authoritative cells; no texture/GPU dependency.
-inline void writeCityLayout(std::ostream& out, const SanctuaryCityReview& city) {
+inline void writeCityLayout(std::ostream& out, const SanctuaryCity& city) {
     constexpr int scale = 32, ox = 28, oy = 76;
     out << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1160\" height=\"920\" viewBox=\"0 0 1160 920\">"
            "<rect width=\"1160\" height=\"920\" fill=\"#f3eee0\"/>"

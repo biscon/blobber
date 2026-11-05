@@ -22,7 +22,7 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
     const auto cell = movement().player.cell;
     const auto& defs = floor_.definition();
     if (defs.landingCount && defs.npcExcluded[std::size_t(cell.y * map_.width() + cell.x)])
-        return {InventoryError::Unavailable, "Keep the protected stairs room clear."};
+        return {InventoryError::Unavailable, "Keep the protected arrival area clear."};
     const auto ticket = loot_.availableDrop();
     if (!ticket)
         return {InventoryError::Full, "Floor loot is full. Pick up a dropped stack first."};
@@ -139,6 +139,12 @@ PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept 
     }
     return {};
 }
+bool GameSession::atSanctuary() const noexcept {
+    for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
+        if (recovery_.sanctuaries[i] == movement().player.cell)
+            return true;
+    return false;
+}
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     if (!runActive()) {
         RestPreview out;
@@ -147,8 +153,7 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     }
     RestPreview p;
     p.elapsedMs = r.kind == RestKind::Short ? 3600000 : 28800000;
-    for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
-        p.sanctuary |= recovery_.sanctuaries[i] == movement().player.cell;
+    p.sanctuary = atSanctuary();
     const auto supplies = party_.campSupplies();
     p.kits = supplies.kits;
     p.supply = supplies.supply;

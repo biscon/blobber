@@ -1,6 +1,6 @@
 #include "game/campaign.hpp"
 #include "core/preparation.hpp"
-#include "world/environment_maps.hpp"
+#include "game/sanctuary_hub.hpp"
 #include <algorithm>
 #include <stdexcept>
 namespace blobber {
@@ -32,17 +32,13 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
                          std::uint32_t seed)
     : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
     auto& hub = locations_[0];
-    hub.authored.emplace(sanctuaryMap());
-    hub.entry = {{4, 4}, Heading::East};
-    hub.exit = hub.entry;
-    hub.fixtures.count = 1;
-    hub.fixtures.entries[0] = {{5, 4}, Heading::East, FixtureKind::Downstairs};
-    hub.fixtures.landingCount = 1;
-    hub.fixtures.landings[0] = hub.entry.cell;
-    hub.fixtures.npcExcluded.set(4 * 9 + 4);
-    hub.fixtures.npcExcluded.set(4 * 9 + 5);
-    hub.recovery.sanctuaries[0] = hub.entry.cell;
-    hub.recovery.sanctuaryCount = 1;
+    auto definition = sanctuaryHub();
+    const auto spawn = definition.spawn;
+    hub.authored.emplace(std::move(definition.map));
+    hub.entry = definition.entry;
+    hub.exit = definition.exit;
+    hub.fixtures = definition.fixtures;
+    hub.recovery = definition.recovery;
     hub.placements = NpcWorld(hub.map(), hub.entry.cell, types, {});
     hub.seed = seed;
     hub.visited = true;
@@ -68,7 +64,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
                 floor.exit.heading = Heading((unsigned(floor.fixtures.entries[i].facing) + 2) % 4);
         floor.seed = floor.generated->runtimeSeed;
     }
-    active_ = prepare(0, hub.entry);
+    active_ = prepare(0, spawn);
     active_->campaign_ = this;
     active_->discover();
 }
@@ -186,7 +182,7 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
     const bool stair = r.kind == TravelKind::Stairs;
     const bool down = stair && game().fixtures().find(r.fixture.id)->kind == FixtureKind::Downstairs;
     ticket.to = stair ? (down ? location_ + 1 : location_ - 1) : (r.kind == TravelKind::Recall ? 0 : r.depth);
-    ticket.landing = stair && !down && ticket.to != 0 ? 1 : 0;
+    ticket.landing = stair && !down ? 1 : 0;
     ticket.arrival = ticket.landing ? locations_[ticket.to].exit : locations_[ticket.to].entry;
     if (r.kind == TravelKind::Recall) {
         ticket.chargedInventory.emplace(party_.inventory());

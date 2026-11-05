@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
         auto assets = std::make_shared<const world_assets::CpuAssets>(fixture.publication());
         const auto catalog = creationCatalog(true);
         const auto map = test::rendererHeightMap();
-        const auto hub = sanctuaryMap();
+        const auto hub = courtyardMap();
         const NpcWorld placements(map, {3, 5}, {"goblin"}, {{{0}, {3, 2}, {0, 0}, Heading::South}});
         ActorWorld actors(map, catalog, placements);
         NpcAnimator animator(actors, fixture.timings);

@@ -12,7 +12,7 @@ void require(bool condition, const std::string& message) {
 bool inside(const Map& map, Cell c) {
     return c.x > 0 && c.y > 0 && c.x < map.width() - 1 && c.y < map.height() - 1;
 }
-std::vector<int> distances(const SanctuaryCityReview& city, Cell start, bool dressed) {
+std::vector<int> distances(const SanctuaryCity& city, Cell start, bool dressed) {
     const auto& map = city.map;
     std::vector<int> result(std::size_t(map.width()) * map.height(), -1);
     auto blocked = [&](Cell c) {
@@ -39,13 +39,13 @@ std::vector<int> distances(const SanctuaryCityReview& city, Cell start, bool dre
     return result;
 }
 } // namespace
-const CityDoorway& SanctuaryCityReview::doorway(std::string_view name) const {
+const CityDoorway& SanctuaryCity::doorway(std::string_view name) const {
     for (unsigned i = 0; i < doorCount && i < doors.size(); ++i)
         if (doors[i].name && name == doors[i].name)
             return doors[i];
     throw std::invalid_argument("Unknown city doorway: " + std::string(name));
 }
-void validateSanctuaryCity(const SanctuaryCityReview& city) {
+void validateSanctuaryCity(const SanctuaryCity& city) {
     const auto& map = city.map;
     const auto& buildings = map.definition().buildings;
     require(city.doorCount <= city.doors.size() && city.reservationCount <= city.reservations.size(),
@@ -157,7 +157,7 @@ void validateSanctuaryCity(const SanctuaryCityReview& city) {
                 distance(distances(city, city.rest.cell, true), city.dungeonLanding.cell) <= 8,
             "arrival/rest/dungeon routes exceed walking budget");
 }
-SanctuaryCityReview sanctuaryCityReview() {
+SanctuaryCity sanctuaryCity() {
     std::vector<std::string> rows(townSize, std::string(townSize, '.'));
     for (int i = 0; i < townSize; ++i)
         rows[0][i] = rows[23][i] = rows[i][0] = rows[i][23] = '#';
@@ -209,7 +209,7 @@ SanctuaryCityReview sanctuaryCityReview() {
         {"market-grain", {9, 15}, {0, 0}, Heading::North, 1, 1},
         {"fountain", {10, 11}, {0, 0}, Heading::North, 2, 2},
     };
-    SanctuaryCityReview result{Map(rows, std::move(world)), {{11, 8}, Heading::North}};
+    SanctuaryCity result{Map(rows, std::move(world)), {{11, 8}, Heading::North}};
     result.doors = doors;
     result.doorCount = count;
     result.reservations[0] = {"fountain", {10, 11}, 2, 2};

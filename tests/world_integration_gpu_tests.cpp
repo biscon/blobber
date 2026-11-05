@@ -6,7 +6,7 @@
 #include "rlgl.h"
 #include "support/allocations.hpp"
 #include "support/arena_preparation_review.hpp"
-#include "support/automation_fixtures.hpp"
+#include "support/campaign_fixtures.hpp"
 #include "support/campaign_startup_review.hpp"
 #include "support/check.hpp"
 #include "support/combat_entry_review.hpp"
@@ -304,12 +304,33 @@ int main(int argc, char** argv) {
             }
             auto campaign = std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types,
                                                           fixture.timings, 5);
+            campaign_test::entrance(*campaign);
             auto current = std::make_unique<GameView>(renderer);
             NpcAnimator animator(campaign->game().actors(), fixture.timings);
             animator.setTime(0);
             SpellArea area;
             current->update(campaign->game(), animator.snapshot(), area);
             current->activate();
+            differences += compare(resources, renderer, ids.get());
+            CommandController cityHud(campaign->game());
+            MapOverlayModel cityMap;
+            cityMap.prepare(campaign->map());
+            cityMap.refresh(&campaign->game().fixtures());
+            cityHud.refresh(current->picking()->targets(), false, false, true);
+            const auto cityTransfers = resources.transfers();
+            allocations = 0;
+            watching = true;
+            for (unsigned frame = 0; frame < 8; ++frame) {
+                campaign->game().move(frame % 2 ? Action::Right : Action::Left);
+                campaign->update(0, false);
+                animator.setTime(campaign->game().timeMs());
+                current->update(campaign->game(), animator.snapshot(), area);
+                cityMap.refresh(&campaign->game().fixtures());
+                cityHud.refresh(current->picking()->targets(), false, true, true);
+            }
+            watching = false;
+            check(!allocations && resources.transfers().uploads == cityTransfers.uploads,
+                  "Prepared city movement, HUD and discovery map allocate/upload nothing");
             const auto prior = renderer.image();
             const auto* pick = renderer.picking();
             auto ticket = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));

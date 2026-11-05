@@ -1,5 +1,6 @@
 #include "automation/protocol.hpp"
 #include "game/campaign.hpp"
+#include "game/sanctuary_hub.hpp"
 #include "generation/report.hpp"
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
@@ -57,7 +58,7 @@ Json Protocol::observation(bool diagnostic) {
                                {"visited", location.visited},
                                {"fingerprint", location.generated
                                                    ? std::to_string(location.generated->fingerprint)
-                                                   : "hub-v1"}};
+                                                   : sanctuaryHubIdentity}};
                 record["world_definition"] = std::to_string(location.map().definition().fingerprint());
                 if (i == campaign->activeLocation()) {
                     session_->game().exportFloor(*state);

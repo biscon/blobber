@@ -83,6 +83,7 @@ class GameSession {
         return objective_.count ? objectiveDefinition_.approachDoor : UINT16_MAX;
     }
     bool guardian(ActorId id) const noexcept;
+    bool atSanctuary() const noexcept;
     LandingSafety landingSafety(unsigned index) const noexcept;
     GeometryView geometry() const noexcept { return map_; }
     const FloorGeometry& fixtures() const noexcept { return floor_; }

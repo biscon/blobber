@@ -90,7 +90,7 @@ int main(int argc, char**) {
         invalid = d;
         invalid.surfaces[4 * 9 + 4].ceiling = 3;
         rejects([&] { Map m(rows, invalid); }, "Insufficient cell clearance rejects");
-        const auto hub = sanctuaryMap();
+        const auto hub = courtyardMap();
         check(hub.flat() && hub.connected({4, 4}), "Outdoor hub retains flat connectivity");
         check(hub.surface({3, 4}).ceiling == noCeiling && hub.surface({4, 4}).ceiling == 5,
               "Hub roof ends at courtyard");

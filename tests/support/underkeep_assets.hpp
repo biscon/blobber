@@ -34,6 +34,16 @@ inline void finishWithUnderkeep(world_assets::Writer& writer,
             const auto& n = normals[f];
             mesh.vertices.push_back({p[0], p[1], p[2], n[0], n[1], n[2], uv[k][0], uv[k][1]});
         }
-    writer.finish(actors, definitions, {dungeon, underkeep}, {mesh});
+    auto city = dungeon;
+    city.id = "sanctuary-city";
+    auto shell = mesh;
+    shell.name = "owned-city-shell";
+    shell.architecture = true;
+    for (const char* name :
+         {"sanctuary", "dungeon-entrance", "inn", "provisioner", "smithy", "low-house", "low-house-hip-ivy",
+          "tall-house-ivy", "low-house-hip", "tall-house", "city-gate", "boundary-wall", "courtyard-garden",
+          "lane-garden", "east-garden", "market-produce", "market-grain", "fountain"})
+        city.buildings.push_back({name, {1}});
+    writer.finish(actors, definitions, {dungeon, underkeep, city}, {mesh, shell});
 }
 } // namespace blobber::test

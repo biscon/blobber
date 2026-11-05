@@ -1,6 +1,7 @@
-#include "world/environment_maps.hpp"
+#pragma once
+#include "world/map.hpp"
 namespace blobber {
-Map sanctuaryMap() {
+inline Map courtyardMap() {
     const std::vector<std::string> rows{"#########", "#.......#", "#.......#", "#.......#", "#.......#",
                                         "#.......#", "#.......#", "#.......#", "#########"};
     WorldDefinition w;
