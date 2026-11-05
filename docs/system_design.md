@@ -1,5 +1,13 @@
 # System design
 
+Spell effects **roadmap drafted; implementation not started (2026-11-05)**:
+[four-slice plan](spell_effects_plan.md) starts with Fire Bolt, Ray of Frost and
+Burning Hands, establishing authored animation, selective additive glow, bounded
+local lighting and creature aftermath. Later slices cover remaining offensive
+spells, support/persistent effects, and final catalogue integration. Existing
+combat rules, authoritative timing and prepared-image presentation remain intact.
+SE01 is next for detailed planning; no delivered slice is accepted.
+
 Stone dungeon distance lighting **C / Early accepted and implemented (2026-11-05)**:
 [design](dungeon_lighting_design.md) defines three `underkeep`-only attenuation
 presets and [matched comparison captures](screenshots/dungeon-lighting/README.md).
