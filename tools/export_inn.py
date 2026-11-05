@@ -105,7 +105,7 @@ for name in ('wall','exit-door'):
     h.faces=[(pts,9 if i<wall_faces and tile==3 else tile,shade)
              for i,(pts,tile,shade) in enumerate(h.faces)]
 h=model('table-group')
-# Table + four chairs fit precisely in a two-by-two physical reservation.
+# Build around (.5, .5), then center the finished assembly on its one-cell anchor.
 box(h,(.5,.42,.5),(1.08,.075,.60))
 for x in (.04,.96):
     for z in (.28,.72):box(h,(x,.20,z),(.075,.4,.075),shade=.8)
@@ -183,6 +183,9 @@ for name,(scale,pivot) in furniture_scales.items():
     def scaled(p):return Vector(tuple(pivot[k]+(p[k]-pivot[k])*scale[k] for k in range(3)))
     models[name].faces=[([scaled(p) for p in pts],t,s) for pts,t,s in models[name].faces]
     special[name]=[([scaled(p) for p in pts],uv) for pts,uv in special[name]]
+for pts,_,_ in models['table-group'].faces:
+    for p in pts:
+        p.x-=.5;p.z-=.5
 for pts,_,_ in models['hearth'].faces:
     for p in pts:
         p.x=.5+(p.x-.5)*.65
@@ -242,5 +245,6 @@ bounds={name:dict(min=[min(v[k] for p in parts for v in records[p]['vertices']) 
 # Include pottery and chair backs: the whole seating group stays below eye.
 assert bounds['bar']['max'][1]<.5 and bounds['table-group']['max'][1]<.4
 assert bounds['barrels']['max'][1]<.5 and bounds['plant']['max'][1]<.5
+assert all(-.5<=bounds['table-group']['min'][k]<=bounds['table-group']['max'][k]<=.5 for k in (0,2))
 (PACK/'models/export-report.json').write_text(json.dumps(dict(texels_per_cell=256,atlas_size=size,bounds=bounds,models={name:sum(len(records[p]['vertices']) for p in parts) for name,parts in bindings.items()}),indent=2)+'\n')
 print('Exported',len(models),'inn models',flush=True)

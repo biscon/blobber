@@ -5,19 +5,20 @@ AO enabled. No desktop mouse/keyboard/focus automation was used. Interactive rev
 remains user-owned.
 
 Current captures include the human-scale correction, a 25% lower ceiling,
-cleaned-up wood joints and no persistent free-rest prompt.
-[South wall and ceiling](ceiling-wood-final/south-wall.png). The previous
+cleaned-up wood joints, single-cell seating groups and no persistent free-rest prompt.
+[South wall and ceiling](single-cell-tables/south-wall.png). The previous
 [entry](review-v2/entry.png) and [counter](review-v2/bar.png) are retained for comparison.
 
-- [Entry and common room](ceiling-wood-final/entry.png)
-- [Bar and shelves](ceiling-wood-final/bar.png), [staff aisle](ceiling-wood-final/staff-aisle.png)
-- [Seating](ceiling-wood-final/seating.png), [plants](ceiling-wood-final/plant-close.png), [ale barrels](ceiling-wood-final/ale-barrels.png)
-- [Hearth](ceiling-wood-final/hearth.png), animation [phase 0](ceiling-wood-final/fire-0.png) / [phase 1](ceiling-wood-final/fire-1.png)
-- [Decorative staircase](ceiling-wood-final/stairs.png)
-- [Free rest](ceiling-wood-final/free-rest.png), [inn map](ceiling-wood-final/inn-map.png)
-- [City entry prompt](ceiling-wood-final/city-entry.png), [exit prompt](ceiling-wood-final/exit.png), [return outdoors](ceiling-wood-final/city-return.png)
-- [Continue inside](ceiling-wood-final/continue-inn.png)
-- [Resource and behavior report](ceiling-wood-final/report.txt)
+- [Entry and common room](single-cell-tables/entry.png)
+- [Bar and shelves](single-cell-tables/bar.png), [staff aisle](single-cell-tables/staff-aisle.png)
+- Adjacent table views: [north](single-cell-tables/table-north.png), [south](single-cell-tables/table-south.png), [east](single-cell-tables/table-east.png), [west](single-cell-tables/table-west.png)
+- [Seating](single-cell-tables/seating.png), [plants](single-cell-tables/plant-close.png), [ale barrels](single-cell-tables/ale-barrels.png)
+- [Hearth](single-cell-tables/hearth.png), animation [phase 0](single-cell-tables/fire-0.png) / [phase 1](single-cell-tables/fire-1.png)
+- [Decorative staircase](single-cell-tables/stairs.png)
+- [Free rest](single-cell-tables/free-rest.png), [inn map](single-cell-tables/inn-map.png)
+- [City entry prompt](single-cell-tables/city-entry.png), [exit prompt](single-cell-tables/exit.png), [return outdoors](single-cell-tables/city-return.png)
+- [Continue inside](single-cell-tables/continue-inn.png)
+- [Resource and behavior report](single-cell-tables/report.txt)
 
 Reproduce sequentially after a production build:
 

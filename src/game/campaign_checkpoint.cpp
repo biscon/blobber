@@ -184,8 +184,8 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
                 validateSanctuaryHub(map, from);
             else {
                 validateInnInterior(map, from);
-                // Reconstruct accepted authored content; this also lowers the
-                // legacy inn ceiling without discarding any saved session state.
+                // Reconstruct accepted authored content (ceiling and seating
+                // reservations) without discarding any saved session state.
                 map = innInterior().map;
             }
             to.authored.emplace(std::move(map));

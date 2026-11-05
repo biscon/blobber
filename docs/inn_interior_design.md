@@ -120,3 +120,18 @@ Remove sanctuary/free-rest text from fixture prompts. Doorway and other interact
 prompts remain; the existing camp toolbar/hotkey and rest panel remain available.
 Check inn prompt suppression, doorway text, camp availability and old-ceiling
 restore with focused CPU tests, then inspect hidden ceiling/wood/UI captures.
+
+## Single-cell seating groups (2026-11-05)
+
+Center each table/chair assembly on its anchor cell rather than the four-cell
+intersection: translate the finished mesh by (-.5, 0, -.5), preserving dimensions
+and metric UVs. Reduce each scenery reservation from 2×2 to 1×1. Final horizontal
+bounds fit within ±.5 cells, so neighbouring cell centers and the .4-cell camera
+setback retain clearance. Keep all other placements and player movement unchanged.
+
+Extend the existing bounded authored-content compatibility to the two shipped
+2×2-table layouts (ceilings 6 and 8 quarter-cells). Validate the exact previous
+layout before rebuilding the current inn. The smaller reservations only free cells;
+existing poses and dropped items remain valid. Reject mixed table footprints.
+Verify blocked centers, traversable surrounding cells, old-save restoration and
+mesh bounds, then inspect hidden captures from all four adjacent directions.

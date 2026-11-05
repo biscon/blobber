@@ -14,6 +14,9 @@ map data and saves remain compatible. The subsequent
 [ceiling/wood/UI correction](inn_interior_design.md#ceiling-wood-joints-and-rest-affordance-2026-11-05)
 lowers the ceiling with bounded compatibility for existing inn saves, cleans up
 duplicate wood joints and removes the free-rest fixture prompt.
+[Single-cell seating groups](inn_interior_design.md#single-cell-seating-groups-2026-11-05)
+center each table/chair assembly on one cell and free the surrounding cells,
+with compatibility for the previous inn layouts.
 
 Environment AO **Accepted and closed (2026-11-05)**:
 [design and verification](environment_ao_design.md) adds default-on environment-only

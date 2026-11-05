@@ -140,3 +140,21 @@ Continue, fire/pause/picking and full lease release checks. Inspected north/sout
 room views and stairs; the toolbar rest icon is visible without bottom rest text.
 [Current captures](screenshots/inn/README.md). `git diff --check` is clean.
 No desktop input or focus automation; interactive acceptance remains user-owned.
+
+
+## Single-cell seating groups — 2026-11-05
+
+Both table/chair groups now center on their anchor cell and block exactly one
+cell. The mesh shifts by (-.5, 0, -.5) without resizing or changing UV density;
+final bounds are ±.351 X and ±.481 Z. All eight surrounding cells are walkable,
+and the complete room remains connected. The previous two shipped inn layouts
+(2×2 table reservations with either ceiling height) still load, preserving session
+state while adopting the smaller reservations. Mixed footprints reject.
+
+Exporter bounds checks, Debug graphical/headless builds and focused `inn` /
+`campaign` tests passed (6.26 seconds). Tests exercise blocked centers, all adjacent
+cells, navigation and both previous layouts through disk roundtrip. The hidden
+OpenGL runner passed; inspected all four adjacent views without clipping. Its
+existing travel, Continue, fire/pause/picking and resource release checks also pass.
+[Updated gallery](screenshots/inn/README.md). `git diff --check` is clean; no desktop
+input or focus automation was used. Interactive acceptance remains user-owned.

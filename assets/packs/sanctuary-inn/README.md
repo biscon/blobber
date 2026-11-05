@@ -5,6 +5,8 @@ inn door. Runtime placement and collision live in `src/game/inn_interior.cpp`.
 Nine named models provide plaster/stone/timber walls, exit door, two seating groups,
 bar, shelves with pottery, ale barrels, plants, hearth and decorative upstairs stair.
 The room has an 8×8-cell floor enclosed by modeled walls and an outer solid pad.
+Each table/chair assembly is centered on one cell and blocks only that cell.
+Its horizontal bounds are ±.351 by ±.481 cells, retaining neighbour camera clearance.
 Furniture is authored against the fixed .5-cell eye height: the counter is .3465
 cells high, tables .2516 and chair seats .1471. Loose props are narrower; the
 doorway, wall trim and stair risers follow the same adult proportions. Geometry

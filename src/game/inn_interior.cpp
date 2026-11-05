@@ -27,8 +27,8 @@ SanctuaryHub innInterior() {
     world.scenery = {
         {"bar", {5, 3}, {-1, 0}, Heading::North, 3, 1},
         {"shelves", {5, 1}, {-1, 0}, Heading::North, 3, 1},
-        {"table-group", {2, 5}, {0, 0}, Heading::North, 2, 2},
-        {"table-group", {6, 6}, {0, 0}, Heading::North, 2, 2},
+        {"table-group", {2, 5}, {0, 0}, Heading::North, 1, 1},
+        {"table-group", {6, 6}, {0, 0}, Heading::North, 1, 1},
         {"hearth", {1, 2}, {0, 0}, Heading::East, 2, 1},
         {"stairs", {8, 2}, {0, 0}, Heading::North, 1, 3},
         {"barrels", {7, 1}, {0, 0}, Heading::North, 1, 1},
@@ -58,12 +58,16 @@ void validateInnInterior(const Map& map, const CampaignLocationState& state) {
     const auto& e = expected.fixtures;
     bool canonical = map.definition().fingerprint() == expected.map.definition().fingerprint();
     if (!canonical) {
-        // Only the previously shipped uniform ceiling is compatible. Validate
-        // the entire old definition before the loader adopts today's ceiling.
+        // Accept only the two shipped four-cell-table layouts. Validate the
+        // entire definition before the loader adopts today's authored layout.
         auto previous = expected.map.definition();
+        for (auto& scenery : previous.scenery)
+            if (scenery.model == "table-group")
+                scenery.width = scenery.depth = 2;
+        canonical = map.definition().fingerprint() == previous.fingerprint();
         for (auto& surface : previous.surfaces)
             surface.ceiling = 8;
-        canonical = map.definition().fingerprint() == previous.fingerprint();
+        canonical |= map.definition().fingerprint() == previous.fingerprint();
     }
     if (map.width() != expected.map.width() || map.height() != expected.map.height() ||
         !canonical ||

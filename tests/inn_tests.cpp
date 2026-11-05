@@ -78,6 +78,15 @@ int main() {
             check(innControls.snapshot().camp.open, "Rest control still opens camp inside inn");
         }
         const auto& map = run.map();
+        for (const auto& scenery : map.definition().scenery)
+            if (scenery.model == "table-group") {
+                check(map.movementBlocked(scenery.anchor), "Seating center blocks movement");
+                for (int dy = -1; dy <= 1; ++dy)
+                    for (int dx = -1; dx <= 1; ++dx)
+                        if (dx || dy)
+                            check(!map.movementBlocked(scenery.anchor + Cell{dx, dy}),
+                                  "All eight cells around seating remain walkable");
+            }
         for (int y = 1; y < map.height() - 1; ++y)
             for (int x = 1; x < map.width() - 1; ++x)
                 if (!map.movementBlocked({x, y})) {
@@ -121,18 +130,26 @@ int main() {
                   restored.game().movement().player == pose,
               "Continue restores inn and pose");
         check(hasDropped(restored.game()), "Inn dropped items survive disk roundtrip");
-        {
+        for (const auto oldCeiling : {6, 8}) {
             auto previous = restored.checkpoint();
             auto& inn = previous->locations[4];
             for (auto& surface : inn.world.surfaces)
-                surface.ceiling = 8;
+                surface.ceiling = oldCeiling;
+            for (auto& scenery : inn.world.scenery)
+                if (scenery.model == "table-group")
+                    scenery.width = scenery.depth = 2;
             inn.worldFingerprint = inn.world.fingerprint();
             const auto oldBytes = encodeCampaign(cat, defs, {"fixture", 0}, *previous);
             auto decoded = decodeCampaign(cat, defs, {"fixture", 0}, oldBytes);
             CampaignRun upgraded(cat, std::move(*decoded), defs.timings);
             check(upgraded.map().surface(pose.cell).ceiling == 6 &&
                       upgraded.game().movement().player == pose && hasDropped(upgraded.game()),
-                  "Previous inn ceiling loads at current height with pose and loot preserved");
+                  "Previous inn layout loads at current height with pose and loot preserved");
+            check(!upgraded.map().movementBlocked({4, 6}) &&
+                      !upgraded.map().movementBlocked({8, 8}),
+                  "Previous saves adopt smaller seating footprints");
+        }
+        {
             auto malformed = restored.checkpoint();
             malformed->locations[4].world.surfaces[0].ceiling = 8;
             malformed->locations[4].worldFingerprint = malformed->locations[4].world.fingerprint();
@@ -143,6 +160,16 @@ int main() {
                 mixedRejected = true;
             }
             check(mixedRejected, "Compatibility does not accept arbitrary ceiling changes");
+            malformed = restored.checkpoint();
+            malformed->locations[4].world.scenery[2].width = 2;
+            malformed->locations[4].worldFingerprint = malformed->locations[4].world.fingerprint();
+            mixedRejected = false;
+            try {
+                CampaignRun invalid(cat, std::move(*malformed), defs.timings);
+            } catch (const std::invalid_argument&) {
+                mixedRejected = true;
+            }
+            check(mixedRejected, "Compatibility does not accept mixed seating footprints");
         }
         check(restored.checkpoint()->locations[4].state->fixtures.discovered ==
                   run.checkpoint()->locations[4].state->fixtures.discovered,

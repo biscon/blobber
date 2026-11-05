@@ -1,0 +1,33 @@
+city-entry location=Sanctuary hub cell=16,5 heading=EAST clock=0 prompt=F: Enter inn.
+city-only textures=273985940 alpha=8120976 world_gpu=301519228 world_cpu=19894489 app_peak=439318984
+staged-cancel textures=364993588 alpha=8211088 world_gpu=395452140 world_cpu=30126237 app_peak=516663096
+city-after-cancel textures=273985940 alpha=8120976 world_gpu=301519228 world_cpu=19894648 app_peak=516663096
+staged-commit textures=364993588 alpha=8211088 world_gpu=395452140 world_cpu=30126237 app_peak=516663096
+entry location=Sanctuary inn cell=5,9 heading=NORTH clock=0 prompt=
+inn-only textures=139549756 alpha=6900368 world_gpu=166164084 world_cpu=17306815 app_peak=516663096
+common-room location=Sanctuary inn cell=5,8 heading=NORTH clock=0 prompt=
+bar location=Sanctuary inn cell=6,5 heading=NORTH clock=0 prompt=
+hearth location=Sanctuary inn cell=4,4 heading=WEST clock=0 prompt=
+seating location=Sanctuary inn cell=5,6 heading=WEST clock=0 prompt=
+stairs location=Sanctuary inn cell=7,5 heading=EAST clock=0 prompt=
+plants-exit location=Sanctuary inn cell=5,7 heading=SOUTH clock=0 prompt=
+staff-aisle location=Sanctuary inn cell=4,3 heading=EAST clock=0 prompt=
+plant-close location=Sanctuary inn cell=3,9 heading=WEST clock=0 prompt=
+ale-barrels location=Sanctuary inn cell=8,3 heading=NORTH clock=0 prompt=
+south-wall location=Sanctuary inn cell=5,5 heading=SOUTH clock=0 prompt=
+table-north location=Sanctuary inn cell=3,5 heading=SOUTH clock=0 prompt=
+table-south location=Sanctuary inn cell=3,7 heading=NORTH clock=0 prompt=
+table-west location=Sanctuary inn cell=2,6 heading=EAST clock=0 prompt=
+table-east location=Sanctuary inn cell=4,6 heading=WEST clock=0 prompt=
+fire-0 location=Sanctuary inn cell=4,4 heading=WEST clock=0 prompt=
+fire-1 location=Sanctuary inn cell=4,4 heading=WEST clock=200 prompt=
+Fire animation preserves picking revision and paused image cache
+free-rest location=Sanctuary inn cell=4,4 heading=WEST clock=200 prompt=
+inn-map location=Sanctuary inn cell=4,4 heading=WEST clock=200 prompt=
+Active inn serialized bytes=2146360
+continue-inn location=Sanctuary inn cell=4,4 heading=WEST clock=200 prompt=
+exit location=Sanctuary inn cell=5,9 heading=SOUTH clock=200 prompt=F: Leave inn.
+staged-commit textures=364993588 alpha=8211088 world_gpu=395452140 world_cpu=30123910 app_peak=516663096
+city-return location=Sanctuary hub cell=16,5 heading=WEST clock=0 prompt=
+city-returned textures=273985940 alpha=8120976 world_gpu=301519228 world_cpu=19892321 app_peak=516663096
+released textures=0 alpha=0 world_gpu=23689064 world_cpu=264970 app_peak=516663096
