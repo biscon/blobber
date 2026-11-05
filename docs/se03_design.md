@@ -211,3 +211,76 @@ packer and fixtures are durable inputs. The owned run
 `20261105T215912Z-973947522e81471db97b8eb8cc90ee52` was cleaned after promotion,
 including unused captures, failed-fixture diagnostics, logs and regeneration/probe
 output. There are no retained diagnostic exceptions or unclosed runners.
+
+## Review correction — 2026-11-05 (implemented; Ready for review)
+
+User feedback requests lower NPC Bless placement, a gently hovering Spiritual Weapon,
+and clarification of its later-turn control. Anchor both transient and settled Bless
+to the registered feet midpoint, compensating for the prepared tile padding; other
+conditions retain their torso anchors. Sample a ±0.025-cell, 2.4-second sinusoidal
+weapon hover every 40ms using existing presentation time. This affects only packet
+positions and colour invalidation while the weapon projects into view; pause, removal
+and offscreen idle caching remain intact. Summon/strike/movement endpoint accents
+share the hover position. No new textures, allocations, gameplay movement or save state.
+
+The user confirmed the command works and additionally requested attack flight/return.
+Use the existing per-caster attack visual slot: lunge during its 200ms windup, reach
+the recorded enemy subcell at the authoritative impact, then return within 240ms.
+A small tilt follows the lunge. Read the bounded snapshot directly; retain no new
+attack history. Canceled attacks immediately resume hovering; missing/dead targets
+use the recorded point, and an absent/replaced weapon never leaves a ghost. Weapon
+movement still snaps to its legal destination cell before its local attack. The
+new motion must not extend action holds or change the authoritative cell.
+
+Verify the existing Spellbook → Abilities → Command Spiritual Weapon UI on the cleric's
+next round, including its independent once-per-round allowance, optional attack and
+zero additional mana/normal-action cost. Clarify that route in the displayed spell
+description without changing catalog fingerprints. Focus checks on spell effects,
+level spells and the two revised hidden production captures, not the prior full matrix.
+
+
+Correction verification: Debug `blobber`, `blobber_spell_effects_tests`,
+`blobber_level_spells_tests` and `blobber_world_integration_gpu_tests` built with
+`nice -n 15 ionice -c 3 cmake --build cmake-build-debug --target ... -j2`; no compiler
+warnings. `ctest --test-dir cmake-build-debug --output-on-failure -j1 -R
+'^(spell_effects|level_spells)$'` passed 2/2 in 0.25s. After the user's additional
+lunge request, the affected `spell_effects` suite passed again in 0.22s. Tests prove
+next-round Abilities selection/target/confirm before and after the cleric's normal
+action, one attack with no mana or normal-action expenditure, and rejection of a
+second command in that round. Rendering checks cover feet anchoring, bounded
+vertical hover, pause/offscreen/removal caching, zero hover allocations, lunge
+contact timing, disappeared targets, return to the unchanged authoritative cell
+and cancellation.
+
+Three authorized hidden production captures passed with the ordinary rules/art:
+
+```sh
+nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
+  cmake-build-debug/assets RUN/bless --se03-review npc-bless
+nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
+  cmake-build-debug/assets RUN/strike --se03-review weapon
+nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
+  cmake-build-debug/assets RUN/idle --se03-review weapon-idle
+```
+
+Inspected the lowered gold base between the feet, the 200ms contact/240ms return
+against a killed enemy, and the complete 2400ms idle cycle. Production checks include
+warmed zero engine-owned frame allocations and GL error checks. Texture/resource
+payloads match the corresponding dungeon/shaman rows above; the pipeline adds one
+8-byte cache timestamp, with no new assets or pools. The prior both-quality GPU
+matrix was not repeated for these packet-position/text changes. No OS input/focus
+control was used; interactive feel remains for user review.
+
+The persistent GIF was replaced with corrected Bless, attack/return and idle panels,
+retaining the earlier Grease/Web/fire panels. The gallery remains six files. The
+owned run `20261105T224822Z-4e648c7d08e040da955926fdeb305b08` was cleaned after promotion;
+no diagnostics are retained. SE03 remains Ready for review and SE04 remains Planned.
+
+Current game controls: the summon costs one normal action and 3 mana, immediately
+rolls a melee spell attack for 1d8 + Wisdom force damage, and lasts 60 gameplay
+seconds without concentration. On later cleric turns use Spellbook → Abilities →
+Command Spiritual Weapon, select an enemy or floor cell, then confirm. This allows
+up to two clear cardinal floor steps and an optional attack in the destination cell,
+once per round (once per six gameplay seconds outside turns), without more mana or
+normal-action cost. It does not take autonomous turns. The user confirmed that
+commanding it works; the description change improves discovery, not combat rules.

@@ -7,6 +7,16 @@ namespace {
 float depth(const Camera& c, Vec p) {
     return (p.x - c.position.x) * c.forward.x + (p.z - c.position.z) * c.forward.z;
 }
+const AttackVisual* weaponAttack(const FrameInput& in, unsigned caster) noexcept {
+    if (!in.attacks)
+        return nullptr;
+    const auto& shot = in.attacks->attacks[NpcWorld::maxInstances + caster];
+    if (shot.spell != rules::SpellKind::SpiritualWeapon || shot.incoming ||
+        shot.stage == AttackStage::Empty || shot.stage == AttackStage::Canceled || in.now < shot.startedMs ||
+        in.now >= shot.impactMs + 240)
+        return nullptr;
+    return &shot;
+}
 Vec partyAnchor(const AttackVisual& shot, Player player, GeometryView geometry) {
     const auto f = forward(player.heading), r = right(player.heading);
     const float lane = (shot.formationSlot % 2 ? 1.f : -1.f) * .15f;
@@ -41,6 +51,11 @@ std::array<float, 4> spellTint(rules::SpellKind kind, float alpha) {
     }
 }
 } // namespace
+Vec spiritualWeaponPosition(GeometryView geometry, Cell cell, std::uint64_t now) noexcept {
+    const float phase = float((now / 40) % 60) * (6.28318530718f / 60.f);
+    return {cell.x + .5f, elevation(geometry.surface(cell).floor) + .5f + .025f * std::sin(phase),
+            cell.y + .5f};
+}
 EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) : spells_(assets) {
     constexpr const char* names[]{"effect/arrow",   "effect/tip",    "effect/feathers", "effect/slash",
                                   "effect/glint",   "effect/grease", "effect/web",      "effect/weapon",
@@ -77,13 +92,30 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
                       std::abs(side) <= std::max(0.f, d) * (viewWidth * .5f / focal()) + .6f;
     }
     const auto tick = visibleFire ? in.now / 50 + 1 : 0;
+    bool visibleWeapon = false, attackingWeapon = false;
+    for (unsigned caster = 0; caster < area.ground.weapons.size(); ++caster) {
+        const auto& weapon = area.ground.weapons[caster];
+        if (!weapon.active)
+            continue;
+        const auto p = spiritualWeaponPosition(in.geometry, weapon.cell, in.now);
+        const auto d = depth(world.camera, p);
+        const float side = (p.x - world.camera.position.x) * world.camera.right.x +
+                           (p.z - world.camera.position.z) * world.camera.right.z;
+        const bool visible = d >= nearPlane && d <= world.camera.farClip &&
+                             std::abs(side) <= d * (viewWidth * .5f / focal()) + .325f;
+        visibleWeapon |= visible;
+        attackingWeapon |= visible && weaponAttack(in, caster);
+    }
+    const auto weaponTick =
+        visibleWeapon ? (in.now / (attackingWeapon ? 20 : 40) + 1) * 2 + attackingWeapon : 0;
     if (fire && flame_ == UINT16_MAX)
         throw std::invalid_argument("Hearth flame artwork missing");
-    if (fireTick_ == tick && !changed && visibility_ == world.revision && area.cells == area_.cells &&
-        area.kind == area_.kind && area.eligible == area_.eligible &&
+    if (fireTick_ == tick && weaponTick_ == weaponTick && !changed && visibility_ == world.revision &&
+        area.cells == area_.cells && area.kind == area_.kind && area.eligible == area_.eligible &&
         area.ground.revision == area_.ground.revision)
         return false;
     fireTick_ = tick;
+    weaponTick_ = weaponTick;
     area_ = area;
     visibility_ = world.revision;
     frame_.count = 0;
@@ -153,11 +185,31 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
                 frame_.packets[before].texture = std::uint16_t(flame_);
         }
     }
-    for (const auto& weapon : area.ground.weapons)
-        if (weapon.active)
-            billboard({weapon.cell.x + .5f, elevation(in.geometry.surface(weapon.cell).floor) + .5f,
-                       weapon.cell.y + .5f},
-                      .65f, .65f, 7);
+    for (unsigned caster = 0; caster < area.ground.weapons.size(); ++caster) {
+        const auto& weapon = area.ground.weapons[caster];
+        if (!weapon.active)
+            continue;
+        auto p = spiritualWeaponPosition(in.geometry, weapon.cell, in.now);
+        float angle = 0;
+        if (const auto* shot = weaponAttack(in, caster)) {
+            const float t = in.now < shot->impactMs
+                                ? float(in.now - shot->startedMs) /
+                                      float(std::max<std::uint64_t>(1, shot->impactMs - shot->startedMs))
+                                : 1.f - float(in.now - shot->impactMs) / 240.f;
+            const float travel = t * t * (3.f - 2.f * t);
+            // The simulation has already moved the weapon into the destination cell.
+            // This short local strike uses its recorded subcell, including misses/deaths.
+            const Vec target{shot->targetPosition.x,
+                             elevation(in.geometry.surface(shot->npcOrigin.cell).floor) + .32f,
+                             shot->targetPosition.y};
+            const float side =
+                (target.x - p.x) * world.camera.right.x + (target.z - p.z) * world.camera.right.z;
+            angle = (side < 0 ? .45f : -.45f) * travel;
+            p = {p.x + (target.x - p.x) * travel, p.y + (target.y - p.y) * travel,
+                 p.z + (target.z - p.z) * travel};
+        }
+        billboard(p, .65f, .65f, 7, angle);
+    }
     std::array<const Billboard*, NpcWorld::maxInstances> bodies{};
     for (unsigned i = 0; i < world.count; ++i) {
         const auto& b = world.billboards[i];

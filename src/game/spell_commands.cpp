@@ -72,7 +72,13 @@ void CommandController::refreshMagic() noexcept {
         if (!access)
             continue;
         const auto* s = party_.catalog().spell({i});
-        entry({i}, rules::Feature::None, s->name.c_str(), s->description.c_str(), access.cost);
+        const char* description =
+            s->kind == rules::SpellKind::SpiritualWeapon
+                ? "Summon and attack: 1d8 + WIS force. Lasts 60s, no concentration. Later: Abilities > "
+                  "Command Spiritual Weapon. Move up to 2 cells and attack, free once per turn (6s outside "
+                  "turns)."
+                : s->description.c_str();
+        entry({i}, rules::Feature::None, s->name.c_str(), description, access.cost);
         auto& row = m.entries[m.count - 1];
         row.source = access.source;
         row.casting = access.casting;

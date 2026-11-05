@@ -19,6 +19,7 @@ struct EffectPacket {
 // NPC attacks/pulses own one glyph; four party casters can each contribute two
 // additional Magic Missile glyphs beyond the retained record count.
 constexpr unsigned effectCapacity = 1024;
+Vec spiritualWeaponPosition(GeometryView, Cell, std::uint64_t now) noexcept;
 struct EffectFrame {
     SwipeFrame swipes;
     std::array<LocalLight, spellLightCapacity> lights{};
@@ -48,7 +49,7 @@ class EffectsPipeline {
     EffectFrame frame_;
     std::array<unsigned, 10> textures_{};
     SpellArea area_{};
-    std::uint64_t visibility_ = UINT64_MAX, fireTick_ = UINT64_MAX;
+    std::uint64_t visibility_ = UINT64_MAX, fireTick_ = UINT64_MAX, weaponTick_ = UINT64_MAX;
     unsigned flame_ = UINT16_MAX;
 };
 } // namespace blobber::world_render

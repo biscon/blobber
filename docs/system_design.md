@@ -6,7 +6,10 @@ presentation with selective quiet portrait cues. A bounded session journal carri
 cosmetic events; fixed condition snapshots reconstruct sustained cues after restore.
 Gameplay/save contracts remain unchanged. Thirteen focused CPU suites and hidden GPU
 checks at both quality settings pass; [six-file review gallery](screenshots/spell-effects/se03/README.md).
-User acceptance is pending; SE04 remains Planned.
+User acceptance is pending; SE04 remains Planned. The SE03 review correction lowers
+NPC Bless to the feet anchor and adds bounded cosmetic Spiritual Weapon bobbing and
+attack lunge/return. Next-round Abilities controls pass focused UI tests and the spell
+description now points to them (see SE03 design).
 
 Spell effects SE02 **accepted and implemented (2026-11-05)**:
 [SE02 design](se02_design.md) extends offensive spell identities and replaces party

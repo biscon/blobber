@@ -196,6 +196,10 @@ inline void se03Playback() {
     EffectsPipeline pipeline(assets);
     pipeline.update(input, world);
     check(pipeline.frame().count == 1, "Quiet NPC boon has one restrained packet");
+    const auto& boon = pipeline.frame().packets[0];
+    check(std::abs((boon.points[0].y + boon.points[2].y) * .5f - body.height * .8f * .4375f - body.feet.y) <
+              .0001f,
+          "Bless's authored lower edge meets registered feet, independent of torso");
     input.now = 200;
     check(!pipeline.update(input, world), "Static boon reuses idle colour");
     SupportVisual cue;
@@ -241,5 +245,87 @@ inline void se03Playback() {
           "Restore/removal clears support colour and light");
     input.now = 2600;
     check(!pipeline.update(input, world), "Idle caching resumes after support cleanup");
+
+    area.ground.weapons[0] = {{6, 7}, true};
+    ++area.ground.revision;
+    input.now = 2400;
+    pipeline.update(input, world);
+    const auto baseline = pipeline.frame().packets[0];
+    check(!pipeline.update(input, world), "Paused hover retains the same colour frame");
+    input.now = 2420;
+    check(!pipeline.update(input, world), "Hover reuses colour within its 40ms sample");
+    input.now = 3000;
+    check(pipeline.update(input, world), "Visible idle weapon animates without ground changes");
+    const auto high = pipeline.frame().packets[0];
+    check(high.points[0].y > baseline.points[0].y && high.points[0].y - baseline.points[0].y <= .0251f &&
+              high.points[0].x == baseline.points[0].x && high.points[0].z == baseline.points[0].z,
+          "Hover is small vertical-only presentation motion");
+    input.now = 4800;
+    pipeline.update(input, world);
+    check(std::abs(pipeline.frame().packets[0].points[0].y - baseline.points[0].y) < .0001f,
+          "Hover returns to its initial position each cycle");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 60; ++i) {
+        input.now += 40;
+        pipeline.update(input, world);
+    }
+    watching = false;
+    check(!allocations, "Idle hover allocates nothing");
+    AttackVisualSnapshot attacks;
+    attacks.world = actors.snapshot().world;
+    auto& attack = attacks.attacks[NpcWorld::maxInstances];
+    attack.id = {attacks.world, 1};
+    attack.stage = AttackStage::Windup;
+    attack.spell = rules::SpellKind::SpiritualWeapon;
+    attack.startedMs = input.now;
+    attack.impactMs = input.now + 200;
+    attack.targetPosition = {6.25f, 7.25f};
+    attack.npcOrigin.cell = {6, 7};
+    attack.enemy = actors.id(0);
+    input.attacks = &attacks;
+    auto weaponCenter = [&] {
+        const auto& packet = pipeline.frame().packets[0];
+        return Vec{(packet.points[0].x + packet.points[2].x) * .5f,
+                   (packet.points[0].y + packet.points[2].y) * .5f,
+                   (packet.points[0].z + packet.points[2].z) * .5f};
+    };
+    pipeline.update(input, world);
+    input.now += 100;
+    check(pipeline.update(input, world), "Weapon windup animates before melee impact");
+    const auto halfway = weaponCenter();
+    check(halfway.x < 6.5f && halfway.x > 6.25f, "Hammer flies toward recorded victim subcell");
+    input.now = attack.impactMs;
+    attack.stage = AttackStage::Resolved;
+    attack.targetGone = true;
+    ++attacks.revision;
+    pipeline.update(input, world);
+    const auto impact = weaponCenter();
+    check(std::abs(impact.x - 6.25f) < .0001f && std::abs(impact.z - 7.25f) < .0001f,
+          "Attack reaches recorded contact even if the target disappears");
+    input.now += 240;
+    pipeline.update(input, world);
+    const auto returned = weaponCenter();
+    const auto hovering = spiritualWeaponPosition(map, {6, 7}, input.now);
+    check(std::abs(returned.x - hovering.x) < .0001f && std::abs(returned.y - hovering.y) < .0001f &&
+              std::abs(returned.z - hovering.z) < .0001f && area.ground.weapons[0].cell == Cell{6, 7},
+          "Hammer returns to current hover without changing authoritative ground position");
+    input.now = attack.startedMs + 100;
+    attack.stage = AttackStage::Canceled;
+    ++attacks.revision;
+    pipeline.update(input, world);
+    check(std::abs(weaponCenter().x - 6.5f) < .0001f, "Canceled attack resumes hover immediately");
+    input.attacks = nullptr;
+    area.ground.weapons[0].cell = {6, 9}; // Behind the north-facing camera.
+    ++area.ground.revision;
+    pipeline.update(input, world);
+    input.now += 400;
+    check(!pipeline.update(input, world), "Offscreen weapon preserves idle caching");
+    area.ground.weapons[0].active = false;
+    ++area.ground.revision;
+    pipeline.update(input, world);
+    input.now += 400;
+    check(!pipeline.update(input, world) && !pipeline.frame().count,
+          "Dismissal clears weapon and restores idle caching");
 }
 } // namespace blobber::test

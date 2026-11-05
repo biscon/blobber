@@ -66,6 +66,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                          {"web", rules::SpellKind::Web, 2, 1, true, false},
                          {"web-burn", rules::SpellKind::Web, 2, 1, true, false},
                          {"weapon", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
+                         {"weapon-idle", rules::SpellKind::SpiritualWeapon, 1, 3, true, false},
                          {"weapon-move", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
                          {"npc-bless", rules::SpellKind::Bless, 1, 3, true, false}};
     const auto* cases = se03 ? support : se02 ? offensive : foundation;
@@ -266,6 +267,9 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                   "Weapon movement uses ordinary feature command");
             commands.record(game.events());
         }
+        const bool weaponIdle = std::string_view(example.name) == "weapon-idle";
+        if (weaponIdle)
+            commands.record(game.update(1.1, false));
         const auto start = game.timeMs();
         const auto& cue = game.combat().spellVisuals().casts[0];
         report << example.name << " cast=" << cue.id.serial;
@@ -279,8 +283,10 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         if (example.motion)
             std::filesystem::create_directory(output / example.name);
         // Captures are deterministic application-owned targets, never OS screenshots/input.
-        for (unsigned frame = 0; frame * frameStep <= 1320; ++frame) {
-            const auto offset = frame * frameStep;
+        const unsigned captureStep =
+            se03 && example.spell == rules::SpellKind::SpiritualWeapon ? 40 : frameStep;
+        for (unsigned frame = 0; frame * captureStep <= (weaponIdle ? 2400u : 1320u); ++frame) {
+            const auto offset = frame * captureStep;
             if (offset)
                 commands.record(game.update(double(start + offset - game.timeMs()) / 1000, false));
             present();

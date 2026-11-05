@@ -36,6 +36,13 @@ unsigned loopFrame(std::uint64_t now) noexcept {
 bool fresh(std::uint64_t now, std::uint64_t start, unsigned duration) noexcept {
     return now >= start && now - start < duration;
 }
+Vec boonAnchor(const Billboard& body, float height) noexcept {
+    auto p = body.feet;
+    // Authored content occupies 112 of the 128 tile texels; align its lower edge
+    // with the registered feet midpoint, independently of the torso attachment.
+    p.y += height * (112.f / 128.f) * .5f;
+    return p;
+}
 float depth(const Camera& camera, Vec p) noexcept {
     return (p.x - camera.position.x) * camera.forward.x + (p.z - camera.position.z) * camera.forward.z;
 }
@@ -129,9 +136,11 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                            : cue.phase == SupportPhase::Move || cue.phase == SupportPhase::End
                                ? C::WeaponMove
                                : C::WeaponStrike;
-                    emit(cellPoint(cue.cell, .5f), .72f, .72f, kind, animation, fade * .75f);
+                    emit(spiritualWeaponPosition(in.geometry, cue.cell, in.now), .72f, .72f, kind, animation,
+                         fade * .75f);
                     if (cue.phase == SupportPhase::Move && !(cue.from == cue.cell))
-                        emit(cellPoint(cue.from, .5f), .45f, .45f, C::WeaponMove, animation, fade * .4f);
+                        emit(spiritualWeaponPosition(in.geometry, cue.from, in.now), .45f, .45f,
+                             C::WeaponMove, animation, fade * .4f);
                     continue;
                 }
                 if (cue.phase == SupportPhase::Placement) {
@@ -152,7 +161,8 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                 const auto* body = bodies[cue.target.enemy.slot];
                 if (!body)
                     continue;
-                auto p = attachment(world.camera, *body, body->torso).position;
+                auto p = cue.spell == K::Bless ? boonAnchor(*body, body->height * .85f)
+                                               : attachment(world.camera, *body, body->torso).position;
                 p.x -= world.camera.forward.x * .004f;
                 p.z -= world.camera.forward.z * .004f;
                 if (cue.phase == SupportPhase::Negated)
@@ -198,7 +208,8 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                     ++used;
             }
             if (used < 2 && (mask & (1u << unsigned(EffectKind::Bless))))
-                emit(p, body->width * .65f, body->height * .8f, C::Boon, 5, .18f);
+                emit(boonAnchor(*body, body->height * .8f), body->width * .65f, body->height * .8f, C::Boon,
+                     5, .18f);
         }
     if (in.area) {
         std::array<Cell, 16> burning{};

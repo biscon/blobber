@@ -402,6 +402,8 @@ evidence, deviations, limitations, acceptance state and the next eligible action
 | 2026-11-05 | User approved the detailed SE03 plan and requested implementation, selecting quiet portrait cues for wards and disabling conditions. |
 | 2026-11-05 | SE03 implemented: all nineteen remaining spells, actual condition/duplicate state, ground and weapon accents. Thirteen focused CPU suites and both-quality hidden GPU checks pass; six review files delivered. SE03 and E-B are Ready for review, not Accepted; SE04 remains Planned. |
 
+| 2026-11-05 | SE03 review correction: lower NPC Bless to the feet midpoint; add Spiritual Weapon idle bob and attack lunge/return. User confirmed the existing command works; its Abilities route is now described in the spell picker and tested on later rounds. Focused CPU checks and three hidden capture cases pass; persistent gallery replaced. SE03 remains Ready for review. |
+
 ## Current next-agent handoff
 
 SE01 remains **Accepted** (2026-11-05), including its local-light treatment and
@@ -441,3 +443,10 @@ Web ignition and weapon movement. No OS input or focus control was used. Six SE0
 evidence files are retained and disposable run output was cleaned. Interactive feel,
 cross-device appearance and production-scale performance remain unverified.
 SE03/E-B await explicit user acceptance. SE04 remains Planned and was not started.
+
+
+Latest SE03 correction: NPC Bless now meets the feet midpoint; Spiritual Weapon
+bobs, lunges to its attack contact and returns. The existing Abilities command
+works before or after the cleric's normal action on later rounds. See the
+[correction checks and controls](se03_design.md#review-correction--2026-11-05-implemented-ready-for-review)
+and updated persistent motion gallery. User acceptance remains pending.

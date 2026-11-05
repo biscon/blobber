@@ -86,6 +86,65 @@ void spells() {
         }
     }
 }
+void weaponNextTurnControls() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
+    for (bool normalFirst : {false, true}) {
+        GameSession s(map, catalog, places, 7, spellSpawn, false);
+        levelParty(s, 3, SpellKind::SpiritualWeapon);
+        levelReady(s, 1);
+        const auto round = s.combat().snapshot().round;
+        auto cast = spellCommand(s, SpellKind::SpiritualWeapon);
+        cast.targetCount = 1;
+        cast.enemies[0] = s.actors().id(0);
+        check(s.submit(cast).reason == CommandReason::Resolved, "Cleric summons weapon on her turn");
+        s.update(1.1, false);
+        levelReady(s, 1);
+        check(s.combat().snapshot().round > round, "Follow-up reaches cleric's next round");
+        const auto mana = s.party().character({1})->mana;
+        if (normalFirst) {
+            auto defend = featureCommand(s, 1, Feature::None);
+            defend.action = PartyAction::Defend;
+            check(s.submit(defend).reason == CommandReason::Resolved, "Cleric spends normal action first");
+            s.update(1.1, false);
+        }
+        CommandController ui(s);
+        TargetSnapshot targets;
+        targets.world = s.actors().snapshot().world;
+        targets.revision = s.actors().snapshot().revision;
+        targets.ids[0] = s.actors().id(0);
+        targets.count = 1;
+        ui.refresh(targets, false, false, true);
+        ui.selectCharacter(1);
+        ui.openSpellbook();
+        ui.selectSpellbookTab(MagicHud::abilityTab);
+        const auto& book = ui.snapshot().magic;
+        std::size_t index = book.entries.size();
+        for (std::size_t i = 0; i < book.visibleCount; ++i)
+            if (book.entries[book.visible[i]].feature == Feature::SpiritualWeapon)
+                index = book.visible[i];
+        check(index < book.count && book.entries[index].reason == CommandReason::MissingTarget,
+              "Next-turn command is available under Abilities, before or after normal action");
+        ui.chooseSpellbook(index);
+        ui.magicEnemy(s.actors().id(0));
+        check(ui.confirm() == CommandReason::Resolved, "Abilities target and confirm orders another attack");
+        unsigned attacks = 0;
+        for (int n = 0; n < 12; ++n)
+            for (const auto& e : s.update(.1, false))
+                attacks += e.event == CombatEvent::Attack && e.spell == SpellKind::SpiritualWeapon;
+        check(attacks == 1 && s.party().character({1})->mana == mana,
+              "Follow-up resolves exactly one attack without additional mana");
+        if (!normalFirst) {
+            check(!s.combat().snapshot().spent[1], "Weapon command preserves normal action");
+            auto repeat = featureCommand(s, 1, Feature::SpiritualWeapon);
+            repeat.spell = cast.spell;
+            repeat.aimedCell = s.effects().spiritualWeapon({1})->cell;
+            check(s.submit(repeat).reason == CommandReason::Cooldown,
+                  "Weapon cannot be commanded twice in the same round");
+        }
+    }
+}
 void aidAndMirror() {
     const auto map = hybridRoom();
     const auto catalog = creationCatalog(true);
@@ -453,6 +512,7 @@ int main(int argc, char**) {
             return 0;
         }
         spells();
+        weaponNextTurnControls();
         aidAndMirror();
         effects();
         features();
