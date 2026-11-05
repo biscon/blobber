@@ -4,6 +4,37 @@ Date: 2026-11-05. Status: **Ready for review; user acceptance pending.**
 Scope: the approved [architecture design](sc01_design.md). SC01.1 remains accepted;
 normal campaign Sanctuary remains the courtyard. No SC02/PC08 work or hub cutover.
 
+## Material seam review correction — 2026-11-05
+
+User review identified straight lines in plaster and paving that the initial visual
+pass missed. They were already present in level-zero textures: the exporter retained
+divider/shadow pixels from the six-panel generated master and mirrored them into
+the material fields. Inset extraction now discards eight source pixels per edge;
+terrain and architectural atlas sampling share that correction. The retained master
+and prompts are unchanged. Sixteen-pixel aligned, fully edge-filled atlas gutters
+replace the original four-pixel padding. First-fit shelf packing keeps the result
+inside the same 4096² atlas. An initial 32-pixel candidate exceeded packing capacity
+and was rejected before publication; no texture-resolution reduction was used.
+
+[Matching before/after and five corrected views](screenshots/sc01/material-seams/README.md)
+show the marked straight lines removed. The close entrance, side, mid-turn and
+farther diagonal captures were also inspected. Mesh positions/normals and triangle
+counts match the prior models; UVs changed for the repacked atlas. The normal Debug
+application publication and Blender/GLB/runtime sources were rebuilt. Installed and
+resident texture byte counts, scene geometry bytes and application GPU totals are
+unchanged; the new capture report confirms full world lease release.
+
+Five fast owned `city_materials_tests.py` checks passed: divider exclusion, repeat/
+fragment continuity, padded mip isolation through level 4, packing without overlap,
+and invalid/capacity rejection. The fixture requires NumPy, like the offline Blender
+exporter, and is run explicitly via the pack README command. This is not a guarantee
+against every coarse-mip/anisotropic sampling footprint. No runtime rendering code
+changed; the prior engine suite/GPU matrix was not repeated for this material export
+correction. The hidden application captures exercise the production rendering path.
+Blender again reported a denied optional thumbnail-cache write but saved the delivered
+sources successfully. C++ formatting and `git diff --check` passed. SC01.2 remains
+Ready for review, not accepted.
+
 ## Delivered foundation
 
 WorldDefinition owns bounded static-building placements with stable pack-local IDs,

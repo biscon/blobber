@@ -6,6 +6,10 @@ supersampling ON, generated in hidden windows with in-process actions. No deskto
 input or focus automation was used. See the [verification/handoff](../../sc01_verification.md)
 for checks, resource totals and limitations.
 
+Latest material correction: [matching before/after and five corrected views](material-seams/README.md).
+The original 38 captures below are retained as historical evidence; their straight
+material divider lines were corrected after user review.
+
 | View | Purpose |
 | --- | --- |
 | [Corner](01-corner.png) | Starting residential L-corner |
@@ -35,14 +39,16 @@ spawn. `A` is the action index below; `S` is 1–4, sampling transition progress
 
 The main run contains 37 images. The additional farther roofline was exported
 separately using the same final scene and assets; its [report](roof/report.txt)
-records the selected shot. The current capture tool exports all 38 by default:
+records the selected shot. The current capture tool additionally includes the
+matching material-review pose, exporting all 39 by default:
 
 ```sh
 nice -n 15 ionice -c 3 cmake-build-debug/blobber_review_sanctuary_city cmake-build-debug/assets /path/to/new-directory
 ```
 
 Append an exact shot name (for example `10-roof-materials`) to export just that
-view. The destination must not exist. This tool needs graphics access; interactive
+view, or `materials` for the five material-review views. The destination must not exist.
+This tool needs graphics access; interactive
 review is `cmake-build-debug/blobber --sanctuary-city-review`.
 
 The fixed low camera crops nearby roofs; farther views show their silhouettes.

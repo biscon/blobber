@@ -1,0 +1,5 @@
+SC01.2 residential corner; seed=5 supersampling=on native=1920x1080
+11-material-seams cell=3,8 heading=EAST camera=3.1,0.5,8.5 yaw=1.5708 progress=1 draws=0
+resident_textures=26 texture_bytes=138370116 alpha_bytes=6810256 model_bytes=215040 scene_cpu=415576 scene_gpu=415128 app_gpu=271277264 app_peak=287866064
+Driver allocations excluded. Peak includes temporary capture target.
+released_world_textures=0 released_models=0

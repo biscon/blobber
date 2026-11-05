@@ -8,7 +8,7 @@
 using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
-        throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT [SHOT]");
+        throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT [SHOT|materials]");
     const std::string selected = argc == 4 ? argv[3] : "";
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
@@ -37,7 +37,10 @@ int main(int argc, char** argv) try {
         CommandController commands(game, definitions.timings);
         unsigned captured = 0;
         const auto capture = [&](const std::string& name) {
-            if (!selected.empty() && name != selected)
+            const bool materialShot = name == "11-material-seams" || name == "02-low-door" ||
+                                      name == "08-side" || name == "09-roofline-diagonal" ||
+                                      name == "motion-6-2";
+            if (!selected.empty() && name != selected && !(selected == "materials" && materialShot))
                 return;
             ++captured;
             game.discover();
@@ -66,7 +69,8 @@ int main(int argc, char** argv) try {
                               {"05-tall-roof", {{2, 8}, Heading::East}},
                               {"06-low-back", {{5, 2}, Heading::South}},
                               {"07-tall-back", {{14, 8}, Heading::West}},
-                              {"08-side", {{10, 12}, Heading::North}}};
+                              {"08-side", {{10, 12}, Heading::North}},
+                              {"11-material-seams", {{3, 8}, Heading::East}}};
         for (const auto& pose : poses) {
             game.restorePose(pose.player, true);
             capture(pose.name);

@@ -12,6 +12,9 @@ saves require no migration. SC01 is split: [SC01.1 location-owned assets](sc011_
 and ready for review; see the [architecture design](sc01_design.md) and
 [verification/captures](sc01_verification.md). Supersampling and texture fidelity remain unchanged;
 512 MiB–1 GiB is a memory target, not a mandate to reduce quality.
+SC01.2 review follow-up corrects panel-divider contamination in the offline material
+exporter, with aligned 16-pixel atlas gutters and focused verification; see
+[before/after evidence](screenshots/sc01/material-seams/README.md).
 
 Movement-frame performance (implemented and mechanically verified, 2026-11-04):
 [skip unavailable picking and reuse visibility work](movement_frame_work.md) removes

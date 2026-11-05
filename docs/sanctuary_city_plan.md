@@ -1,7 +1,7 @@
 # Sanctuary city: design and delivery roadmap
 
 Created: 2026-11-04. Last updated: 2026-11-05.
-Status: **SC01.1 accepted. SC01.2 implemented; Ready for review.**
+Status: **SC01 accepted: SC01.1 and SC01.2 accepted 2026-11-05.**
 
 Replace the small Sanctuary courtyard with an authored, walkable town: older and
 slightly overgrown but still cared for, with a fountain square, market scenery,
@@ -16,10 +16,10 @@ This roadmap does not authorize automatic implementation of every slice.
 | --- | --- |
 | Agreed direction | Four slices, SC01–SC04; original town architecture inspired by the supplied references |
 | Visual direction | [Fountain square](mockups/sanctuary-city-v1/01-fountain-square.png) and [residential lane](mockups/sanctuary-city-v1/02-residential-lane.png); user endorsed these as useful references, not a promise of pixel-identical rendering |
-| Active slice | SC01.2 — Architecture foundation and finished street corner |
-| Awaiting review | SC01.2 [verification/handoff](sc01_verification.md) and [captures](screenshots/sc01/README.md) |
-| Next eligible slice | SC02, only after SC01 acceptance |
-| Next action | User visual review of SC01.2; no automatic continuation |
+| Active slice | None; SC01 complete and accepted |
+| Awaiting review | None; SC01.2 accepted after the [material seam correction](screenshots/sc01/material-seams/README.md) |
+| Next eligible slice | SC02 — Complete town architecture and walkable layout; eligible for detailed planning |
+| Next action | Await request to plan SC02; no automatic continuation or implementation |
 | Save policy | Existing development campaign saves need no migration or compatibility layer |
 | Rendering policy | Prepared low-poly geometry, material batching and basic frustum culling; no speculative advanced visibility system |
 | Blockers | None |
@@ -70,6 +70,11 @@ not silently deferred. Subsequent user instructions determine interlude prioriti
   alley, planted courtyard, market edge, sanctuary/rest landmark and dungeon entrance.
   Main streets generally two or three cells wide, occasional one-cell alleys.
   Preserve convenient access to rest and dungeon travel; do not pad walking time.
+- A recognizable city gate integrated into the town boundary, with a connected
+  street approach. It stays permanently closed throughout this roadmap, grounding
+  the town as a place connected to a wider world. Reserve its identity and a clear
+  approach so a later feature can turn it into an exit; outside travel and gate
+  interaction/animation are deferred.
 - Mostly low houses with occasional two-storey exterior shells. Recognizable
   future inn, smithy and provisioner facades may reserve identities without
   implementing services. Interior routes and upstairs traversal are absent.
@@ -198,16 +203,16 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| SC01 | Asset residency foundation and finished street corner | Agreed roadmap direction | Ready for review |
+| SC01 | Asset residency foundation and finished street corner | Agreed roadmap direction | Accepted 2026-11-05 |
 | SC01.1 | Location-owned assets and memory accounting | Approved detailed plan | Accepted 2026-11-05 |
-| SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Ready for review |
+| SC01.2 | Architecture foundation and finished street corner | Approved detailed plan | Accepted 2026-11-05 |
 | SC02 | Complete town architecture and walkable layout | SC01 Accepted | Planned |
 | SC03 | Vegetation, market and fountain | SC02 Accepted | Planned |
 | SC04 | Campaign hub replacement and delivery | SC03 Accepted | Planned |
 
 | Milestone | Meaning | Status |
 | --- | --- | --- |
-| S-A | Architectural scale and art quality proven in-engine through SC01 | Ready for review; acceptance pending |
+| S-A | Architectural scale and art quality proven in-engine through SC01 | Accepted 2026-11-05 |
 | S-B | Complete dressed city accepted through SC03 | Planned |
 | S-C | City is the working campaign hub through SC04 | Planned |
 
@@ -215,8 +220,9 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 
 SC01.1 implements the approved [location-owned asset design](sc011_design.md)
 and was accepted by the user on 2026-11-05. SC01.2 delivers the architectural
-foundation and residential corner below; its [handoff](sc01_verification.md) is
-ready for user review. Supersampling remains on by default; 512 MiB–1 GiB is
+foundation and residential corner below; the user accepted it on 2026-11-05 after
+the material seam correction. Its [handoff](sc01_verification.md) records the
+delivered evidence and limitations. Supersampling remains on by default; 512 MiB–1 GiB is
 a memory target, not a quality-reduction mandate. No automatic continuation.
 
 ### SC01.2 — Architecture foundation and street corner
@@ -253,7 +259,10 @@ split; do not pass off a crude proof as the agreed finished visual checkpoint.
 Expand the architectural kit into the proposed building count and varied facades,
 windows, roof silhouettes and static door styles. Author square, loops, alley,
 courtyard and town boundary; place identifiable rest/dungeon landmarks and future
-service buildings. Keep the fountain/market/planting areas reserved for SC03.
+service buildings. Include a substantial closed city gate in the boundary, matching
+the stone, timber and iron architectural kit. Give it a readable street approach
+and a stable authored identity; preserve room for future travel without adding
+portal logic or an exterior map. Keep the fountain/market/planting areas reserved for SC03.
 Use a readable top-down layout alongside representative first-person views.
 
 Acceptance:
@@ -261,6 +270,9 @@ Acceptance:
   behave correctly. The layout has distinct landmarks and avoids excessive repetition.
 - The full town can be explored in the development review scenario without
   campaign cutover. Useful entrances face accessible standing cells.
+- The city gate reads as an intentional town entrance from the street, remains
+  opaque and impassable, and meets the boundary without gaps or duplicate faces.
+  Its approach is accessible and kept clear of permanent scenery.
 - Rooflines, distant streets and tall buildings behave under current camera,
   clipping and culling; any necessary visibility change is verified with its callers.
 - Focused connectivity/placement tests and selected movement captures cover the
@@ -304,6 +316,8 @@ Ensure prepared assets are available in the configuration the user will run.
 Acceptance:
 - New Game arrives at the intended town position/facing. The player can explore,
   enter the dungeon, return by the existing travel routes and rest at the sanctuary.
+- The city gate is present in the final hub and remains closed; it offers no
+  outside-travel action in this roadmap.
 - Recall costs, unlocked-floor return rules, Party identity/resources and inactive
   dungeon state remain correct. Arrival does not implicitly perform a rest.
 - New saves preserve town pose, exploration and the ongoing campaign through
@@ -355,11 +369,28 @@ Each handoff records:
 
 ## Decision log
 
+2026-11-05: User requested a city gate for the final town, permanently closed for
+now, to make the settlement believable and leave open the possibility of future
+outside travel. Added to SC02 architecture/layout and SC04 final-hub acceptance.
+Reserve an accessible approach and authored identity; gate operation and outside
+destinations remain future scope. SC01 acceptance is unchanged.
+
+2026-11-05: User explicitly accepted SC01.2 after reviewing the material seam
+correction ("slice accepted"). With SC01.1 already accepted, SC01 and milestone S-A
+are now accepted. The corrected residential corner is the architectural quality
+reference for expansion. SC02 is eligible for detailed planning; this acceptance
+does not authorize automatic planning, implementation, PC08 work or campaign cutover.
+
+2026-11-05: User reported straight material seams and requested correction. Fixed
+offline panel extraction and atlas padding; regenerated sources/publication and
+verified matching before/after plus near/oblique/far captures. SC01.2 was returned
+to Ready for review before the subsequent acceptance recorded above.
+
 2026-11-05: Delivered SC01.2 for review: bounded static architecture, two finished
 houses, dedicated review launch and deterministic captures. Focused CPU/publication
 and hidden GPU checks passed. Diagonal overhang coverage required a 32-cell candidate
 search for building scenes; ordinary scenes retain 24 and the far plane stays 16.
-User visual acceptance is pending; SC02 and campaign cutover have not begun.
+User visual acceptance was pending at this delivery; SC02 and campaign cutover had not begun.
 
 2026-11-05: User selected the residential L-corner, approved the detailed
 [SC01.2 design](sc01_design.md), and requested implementation.
@@ -380,7 +411,8 @@ stays on; prioritize fidelity over strict adherence to the memory target.
 
 ## Current next-agent handoff
 
-SC01.1 remains accepted; SC01.2 is implemented and **Ready for review**. Read the
+SC01.1 and SC01.2 are **Accepted (2026-11-05)**; SC01 and milestone S-A are complete.
+SC01.2 acceptance includes the material seam correction. Read the
 [architecture design](sc01_design.md), [verification/handoff](sc01_verification.md)
 and [capture index](screenshots/sc01/README.md). Launch
 `cmake-build-debug/blobber --sanctuary-city-review` for normal movement/HUD around
@@ -397,5 +429,11 @@ peak, including UI/fonts; world texture/model leases release completely with the
 view. These measurements exclude driver storage and do not establish performance
 on 512 MiB–1 GiB hardware, which was unavailable. Memory reference lines remain advisory.
 
-The next action is user visual review, with limitations recorded in the handoff.
-Do not mark accepted, advance PC08/SC02, or replace the campaign hub automatically.
+The latest [material seam correction](screenshots/sc01/material-seams/README.md)
+removes divider pixels retained by the original exporter and expands atlas gutters
+without changing texture density, atlas size, geometry or GPU memory totals.
+The next eligible work is detailed planning for SC02 when requested, using this
+accepted corner as the visual reference and preserving the handoff's limitations.
+Include the newly agreed closed city gate and its clear street approach in SC02's
+town boundary design; outside travel is deferred.
+Do not begin SC02 implementation, advance PC08, or replace the campaign hub automatically.

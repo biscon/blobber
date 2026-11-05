@@ -5,7 +5,9 @@ Original painted low/two-storey exterior shells for the development-only
 
 `source/material-master.png` was generated with the built-in ImageGen tool; the
 exact prompt is retained in `prompts.json`. The six source regions supply limestone,
-plaster, slate, oak, paving and sculpted stone. The exporter samples those masters,
+plaster, slate, oak, paving and sculpted stone. The exporter excludes eight source
+pixels around each 512-square panel to remove generated divider/shadow bands,
+then samples their interiors as continuous mirrored fields. It
 adds restrained baked recess/underside shading and prepares metric padded atlases.
 Iron is a dark, desaturated derivative of the generated stone grain.
 
@@ -32,7 +34,9 @@ Their cardinal placement rotates both models and grid footprints together.
 Geometry must remain inside +/-4 horizontal cells and 0–4 vertical cells.
 
 All triangles retain 256 texels per runtime cell, checked during export. Repeated
-wall fragments share continuous UV fields; four-pixel gutters protect atlases.
+wall fragments share continuous UV fields; 16-pixel gutters and aligned, fully
+edge-filled slots isolate adjacent regions through mip level 4 in the owned fixture.
+First-fit shelf packing reuses gaps while retaining the 4096-square capacity.
 Both houses share one 4096-square architecture atlas to preserve density and reuse
 the material fields. See the export report for exact
 triangle totals. Terrain is prepared to 256 square with one repeat per cell.
@@ -44,3 +48,13 @@ this pack only for the city review. The 384/448 MiB reference lines are advisory
 
 See [design](../../../docs/sc01_design.md) and [verification](../../../docs/sc01_verification.md) for the
 engine contract, reproducible review commands, evidence and acceptance status.
+
+Offline regression checks (NumPy is required, as in the Blender exporter):
+
+```sh
+nice -n 15 ionice -c 3 env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python3 tests/city_materials_tests.py
+```
+
+The small synthetic fixtures cover panel-divider exclusion, phase continuity across
+fragmented/negative UV coordinates, mirrored joins, mip isolation, packing overlap
+and capacity rejection. They do not depend on this artwork or require a GPU.

@@ -2,21 +2,23 @@
 All coordinates below are runtime cells; Blender converts (x,y,z) to (x,-z,y).
 Only this pack's outputs are written. Original generated master is never replaced.
 """
-import bpy, json, math, struct
+import bpy, json, math, struct, sys
 import numpy as np
 from pathlib import Path
 from mathutils import Vector
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from city_materials import extract_tiles, sample_mirrored, padded_extent, padded_patch, pack_regions
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'assets/packs/sanctuary-city'
-DENSITY, GUTTER = 256, 4
+DENSITY, GUTTER = 256, 16
 scene = bpy.data.scenes.new('SanctuaryCityAssets')
 scene.render.threads_mode = 'FIXED'; scene.render.threads = 2
 master = bpy.data.images.load(str(OUT/'source/material-master.png'), check_existing=True)
 w,h = master.size
 pixels = np.empty(w*h*4, dtype=np.float32); master.pixels.foreach_get(pixels)
 master_pixels = pixels.reshape(h,w,4)[::-1].copy()
-# Top-down retained original; six tiles occupy the exact generated grid.
-tiles = [master_pixels[(i//3)*h//2:(i//3+1)*h//2,(i%3)*w//3:(i%3+1)*w//3] for i in range(6)]
+# Top-down retained original; inset crops exclude generated panel dividers.
+tiles = extract_tiles(master_pixels)
 period = [1,2,1,1,1,.7,1]
 # Iron derives its restrained granular finish from the stone master, recolored in the authoring bake.
 iron = tiles[5].copy(); iron[:,:,:3] = np.mean(iron[:,:,:3],axis=2)[:,:,None]*np.array([.23,.24,.25])
@@ -30,12 +32,7 @@ def save_image(name, arr):
     return image
 
 def material_patch(tile, ww, hh, shade, offset=(0,0)):
-    src=tiles[tile]; sh,sw=src.shape[:2]
-    xx=np.floor((np.arange(ww)+offset[0])/(DENSITY*period[tile])*sw).astype(int)
-    yy=np.floor((np.arange(hh)+offset[1])/(DENSITY*period[tile])*sh).astype(int)
-    # Mirrored material repeats avoid a hard discontinuity at source edges.
-    xx=np.where((xx//sw)%2,sw-1-xx%sw,xx%sw); yy=np.where((yy//sh)%2,sh-1-yy%sh,yy%sh)
-    patch=src[yy[:,None],xx[None,:]].copy()
+    patch=sample_mirrored(tiles[tile],ww,hh,DENSITY*period[tile],offset)
     patch[:,:,:3]*=shade
     # Painted joint/recess shading has a fixed physical width, not a UV-sized blur.
     edge=np.minimum(np.minimum(np.arange(ww),ww-1-np.arange(ww))[None,:],
@@ -46,9 +43,7 @@ def material_patch(tile, ww, hh, shade, offset=(0,0)):
 
 # Native terrain repeats at one cell and keeps the normal pack baker path.
 for name,tile in [('wall',0),('paving',4),('ceiling',1)]:
-    src=tiles[tile]; sh,sw=src.shape[:2]
-    coords=np.floor(np.arange(256)/256*sw).astype(int)
-    save_image(name,src[(np.arange(256)*sh//256)[:,None],coords[None,:]])
+    save_image(name,sample_mirrored(tiles[tile],256,256,256))
 
 class House:
     def __init__(self,name,front,back,eaves,ridge):
@@ -211,23 +206,20 @@ for group,coords in groups.items():
     ww,hh=[max(1,hi[k]-lo[k]) for k in (0,1)]
     key=(ww,hh,group[0],group[1],group[2]);entries[key]=None;offsets[key]=lo
     groups[group]=(key,lo)
-print('Atlas used texels:',sum((k[0]+8)*(k[1]+8) for k in entries), 'regions:',len(entries),flush=True)
+print('Atlas used texels:',sum(padded_extent(k[0],GUTTER)*padded_extent(k[1],GUTTER) for k in entries), 'regions:',len(entries),flush=True)
 size=2048
 while True:
-    x=y=row=0;okay=True
-    for key in sorted(entries,key=lambda k:(-k[1],-k[0],k[2],k[3])):
-        ww,hh,*_=key
-        if x+ww+8>size:x=0;y+=row;row=0
-        if y+hh+8>size:okay=False;break
-        entries[key]=(x+4,y+4);x+=ww+8;row=max(row,hh+8)
-    if okay:break
+    positions=pack_regions([(k[0],k[1]) for k in entries],size,GUTTER)
+    if positions is not None:
+        entries=dict(zip(entries,positions));break
     size*=2
     assert size<=4096,'Atlas capacity exceeded; split material parts without shrinking density'
 atlas=np.zeros((size,size,4),dtype=np.float32);atlas[:,:,3]=1
 for key,(x,y) in entries.items():
     ww,hh,tile,shade,_=key
     patch=material_patch(tile,ww,hh,shade,offsets[key])
-    atlas[y-4:y+hh+4,x-4:x+ww+4]=np.pad(patch,((4,4),(4,4),(0,0)),mode='edge')
+    padded=padded_patch(patch,GUTTER)
+    atlas[y-GUTTER:y-GUTTER+padded.shape[0],x-GUTTER:x-GUTTER+padded.shape[1]]=padded
 img=save_image('architecture-atlas',atlas)
 for house in houses:
     mappings=[]
@@ -260,7 +252,7 @@ for house in houses:
     (OUT/'models'/f'{house.name}.mesh.json').write_text(json.dumps(data,separators=(',',':'))+'\n')
     gltf_models.append((house.name, exported))
     obj.location.x=houses.index(house)*4
-    report.append({'model':house.name,'triangles':len(exported)//3,'atlas':size,'texels_per_cell':DENSITY})
+    report.append({'model':house.name,'triangles':len(exported)//3,'atlas':size,'texels_per_cell':DENSITY,'gutter':GUTTER,'panel_inset':min(w//3,h//2)//64})
 # Keep the source scene independent of Blender's optional GLTF optimizer plugins.
 bpy.context.preferences.filepaths.save_version = 0
 bpy.context.window.scene = scene

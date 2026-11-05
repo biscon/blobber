@@ -63,12 +63,25 @@ triangles. Prompts, masters, script, packed blend, GLB and runtime exports live 
 the dedicated [sanctuary-city pack](../assets/packs/sanctuary-city/README.md).
 Actual camera captures guided proportion, reveal-normal and UV corrections.
 
+Material seam correction (implemented, 2026-11-05): the generated six-panel master
+contains divider pixels that the original exact-grid crop retained. The offline
+exporter samples an eight-pixel inset interior of each 512-square panel, shared by
+terrain and atlas generation, then mirrors those clean fields. The original master
+stays intact. Atlas gutters are 16 pixels, with fully edge-filled slots aligned to
+16 pixels; first-fit shelves reuse earlier gaps within the existing 4096² capacity.
+Synthetic colored regions remain isolated through mip level 4. This does not claim
+isolation at arbitrarily coarse mips or every anisotropic footprint. Runtime shaders,
+filtering, texture density and geometry are unchanged. Synthetic bordered panels
+test extraction, repeat joins, padding and packing. Selected hidden near/oblique/far
+captures verify the production result; see [before/after evidence](screenshots/sc01/material-seams/README.md).
+
 --sanctuary-city-review launches a deterministic standalone preset party with no
 NPCs, normal movement/HUD and no campaign save or character-library initialization.
 An opt-in hidden capture tool uses the same scene factory and renderer, scripted
 in-process actions, native screenshots, pose metadata and resource accounting.
 Its optional exact shot-name argument exports one selected view; default execution
-exports all 38. Output must be a new directory so earlier evidence is preserved.
+exports all 39. The `materials` selection exports five views for material review.
+Output must be a new directory so earlier evidence is preserved.
 Never control desktop input, focus or unrelated windows.
 
 ## Formats and verification
