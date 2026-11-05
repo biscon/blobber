@@ -98,4 +98,4 @@ retains depth information. The bottom strip is empty in idle exploration, appear
 for nearby fixture interactions, sanctuary rest, or terminal guidance. Release
 build and the campaign test passed, including idle-to-stair prompt transitions.
 The hidden GPU integration passed with zero ID differences; the updated
-[idle dungeon capture](screenshots/flow-polish/idle-dungeon.png) was inspected.
+idle dungeon capture (historical artifact removed) was inspected.

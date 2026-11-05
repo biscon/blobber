@@ -84,7 +84,7 @@ runs are evidence, not a requirement to repeat the full matrix or benchmarks.
 Publication tests apply when baking changes; stress/timing checks are opt-in.
 Capture deterministic motion
 and stills without desktop input automation. Record actual results/limitations in
-[r05_verification.md](r05_verification.md); only user acceptance closes R05.
+[r05_verification.md](verification/archive/r05_verification.md); only user acceptance closes R05.
 
 ## Implemented interfaces and final workflow
 
@@ -107,4 +107,4 @@ The user explicitly requested smaller, resource-bounded development verification
 [Verification workflow](verification_workflow.md) supersedes the original repeated
 four-configuration/benchmark recipe. Smoke tests, retained extended tests and
 resource limits preserve meaningful coverage without making every edit expensive.
-See [verification and limitations](r05_verification.md).
+See [verification and limitations](verification/archive/r05_verification.md).

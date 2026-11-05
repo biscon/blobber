@@ -1,7 +1,7 @@
 # Hybrid encounter loop — slice 08
 
 Status: implemented and Accepted, including all review corrections, 2026-10-26.
-See [verification and handoff](slice08_verification.md).
+See [verification and handoff](verification/archive/slice08_verification.md).
 Subsequent [settled contact and current-facing approach correction](combat_entry_followup.md)
 records the 2026-11-02 entry, target exposure and movement-policy changes.
 User approved the planning conversation with “Implement the plan.” Slice 07 and

@@ -1,9 +1,0 @@
-id,status,damage,downings,mana,healing_potions,mana_potions,arrows,rests,rounds,simulation_seconds,wall_seconds,trace_bytes
-balanced-5-direct,victory,62,2,62,2,12,13,3,14,335.69,16.67099715099903,141749322
-balanced-5-reserve,victory,107,5,66,5,17,14,3,19,466.93,22.220857868000166,193896318
-balanced-8-direct,victory,96,3,58,5,12,13,3,18,384.78,16.701113444993098,145203571
-balanced-8-reserve,victory,130,6,70,6,17,14,3,19,494.24,25.227760285997647,217704350
-no_wizard-5-direct,victory,92,3,34,5,10,22,3,14,322.03,15.187609220003651,122902954
-no_wizard-5-reserve,victory,95,4,42,7,15,28,3,20,465.62,20.868888978999166,175398278
-no_wizard-8-direct,victory,105,5,36,5,10,30,3,18,360.42,15.037307007994968,128367193
-no_wizard-8-reserve,victory,129,4,44,8,16,31,3,21,496.64,23.352740743997856,197257582

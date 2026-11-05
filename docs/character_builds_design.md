@@ -1,7 +1,7 @@
 # Slice 12.2: character builds, library and portraits
 
 Status: implemented, **accepted and closed** (2026-10-29), by explicit user acceptance.
-[Verification and next-agent handoff](slice122_verification.md). Slice 12.1 is
+[Verification and next-agent handoff](verification/archive/slice122_verification.md). Slice 12.1 is
 accepted; 12.3 is not started. Normal startup remains the existing dungeon route.
 
 ## Responsibilities and ownership

@@ -1,9 +1,0 @@
-SC03 representative tree; seed=5 supersampling=on native=1920x1080
-tree-square cell=12,8 heading=WEST camera=12.9,0.5,8.5 yaw=4.71239 progress=1 draws=0
-placements=91/96 scenery=1/32 models=11/24 materials=9/32 doorways=12/16 reservations=5/16
-captured_frames=1 scene_triangles=27422 world_cpu=18073411 world_gpu=248423616 visibility_bytes=7635785
-resident_textures=29 texture_bytes=234839104 alpha_bytes=7072400 model_bytes=815520 scene_cpu=2304328 scene_gpu=2303448 app_gpu=369634572 app_peak=386223372
-Driver allocations excluded. Peak includes temporary capture target.
-active_plus_staged_cpu=28106589 active_plus_staged_gpu=251855064
-city_stage_cancel_preserved_active=1
-released_world_textures=0 released_models=0

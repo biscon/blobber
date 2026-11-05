@@ -138,7 +138,7 @@ their contents as discovered knowledge. See [protocol](headless_protocol.md#pc06
 and [MCP usage](mcp_usage.md#pc06-campaign-save-and-resume).
 
 Measured verification and review evidence are recorded in
-[the PC06 handoff](pc06_verification.md). No balance experiments or later slices
+[the PC06 handoff](verification/archive/pc06_verification.md). No balance experiments or later slices
 are included.
 
 

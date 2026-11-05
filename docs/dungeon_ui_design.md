@@ -109,4 +109,4 @@ in this revision; no usable spell, item, ranged attack or mana rules were added.
 `--ui-demo` remains isolated and visibly marks its sample resource values.
 
 Executed checks, retained images, review steps and platform limits are recorded in
-[UI verification](dungeon_ui_verification.md). No slice 06 work was started.
+[UI verification](verification/archive/dungeon_ui_verification.md). No slice 06 work was started.

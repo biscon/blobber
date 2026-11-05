@@ -291,7 +291,7 @@ boundaries. Select a terminal operation from a completed recorded trial separate
 when investigating victory/defeat. Disconnect and verify owned processes stop and
 artifacts remain. Record unavailable graphics checks as unexecuted; interactive
 agent-host/desktop review belongs to the user. [Design](mcp_design.md) and
-[verification/handoff](slice133_verification.md) record the implemented boundary and evidence.
+[verification/handoff](verification/archive/slice133_verification.md) record the implemented boundary and evidence.
 
 ## PC02 fixture interactions
 
@@ -304,7 +304,7 @@ and acquired quest keys; diagnostic inspection remains explicit and does not rev
 cells to later player observations. Strict replay includes these states. Generated
 captures now include scene, discovered map and diagnostic map PNGs.
 See [protocol and rules](headless_protocol.md#generated-floor-scenarios-pc01pc03) and
-[PC02 verification](pc02_verification.md). No new MCP tools or balance policy are needed.
+[PC02 verification](verification/archive/pc02_verification.md). No new MCP tools or balance policy are needed.
 
 ## PC03 guardian progression
 

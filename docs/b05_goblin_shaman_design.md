@@ -146,7 +146,7 @@ and fallen staff detail; .86 logical canvas height includes margins while the bo
 matches goblin scale. No count/byte budget increase. The conservative combined
 event allowance is 6,728 <8,192; source cleanup stays in the existing lifecycle bound.
 
-Reference v1 is accepted. [Verification/gallery](b05_verification.md) records exact
+Reference v1 is accepted. [Verification/gallery](verification/archive/b05_verification.md) records exact
 checks, strict production arena recipes/captures, byte totals and limitations.
 The completed slice is accepted. B06 is superseded without implementation; campaign
 PC07 is next for detailed planning under the revised roadmap.

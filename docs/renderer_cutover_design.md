@@ -102,7 +102,7 @@ prone-art validation formerly supplied by the retired baker. CommandReason value
 zero is retired while the other persisted numeric values remain unchanged.
 
 All 124 deleted files and retained shared consumers are accounted for in the
-[removal inventory](r06_removal_inventory.md). [Verification](r06_verification.md)
+[removal inventory](r06_removal_inventory.md). [Verification](verification/archive/r06_verification.md)
 records actual runs, clean builds, affected final checks and sandbox limitations.
 The user accepted R06 and milestone R-C; the renderer roadmap is complete.
 Acceptance adds no new verification or coverage. No future cheat/debug interface

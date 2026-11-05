@@ -96,7 +96,7 @@ startup check. These checks do not assert third-party allocator behavior.
 
 The `rules_content` test executable also accepts `--validate FILE` for explicitly
 checking shipped/edited content; this diagnostic is separate from routine CTest
-fixtures. [Verification and review instructions](slice01_verification.md) record
+fixtures. [Verification and review instructions](verification/archive/slice01_verification.md) record
 executed checks. Delivery stopped at Ready for review; user acceptance was
 recorded on 2026-10-25. This slice does not make
 goblins fight or alter rendering/movement.

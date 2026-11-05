@@ -1,1 +1,0 @@
-Scenery placement, cutout publication/depth and allocation checks passed

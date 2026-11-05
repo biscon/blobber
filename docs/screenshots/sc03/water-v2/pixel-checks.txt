@@ -1,8 +1,0 @@
-frames 0->1: changed_pixels=20628 bounds=699,180..1319,476
-frames 1->2: changed_pixels=21447 bounds=702,198..1319,476
-frames 2->3: changed_pixels=21780 bounds=702,201..1319,476
-frames 3->4: changed_pixels=21285 bounds=699,180..1319,476
-frames 4->5: changed_pixels=21780 bounds=702,180..1319,476
-frames 5->6: changed_pixels=20952 bounds=705,180..1319,476
-frames 6->7: changed_pixels=20808 bounds=705,180..1319,476
-paused_vs_frame_7: pixel-identical

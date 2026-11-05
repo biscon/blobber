@@ -2,7 +2,7 @@
 
 Status: **Accepted and closed**, 2026-10-29, including all
 [visual and portrait follow-ups](spell_visual_review_design.md).
-[Verification and accepted handoff](slice121_verification.md).
+[Verification and accepted handoff](verification/archive/slice121_verification.md).
 Slice 12.2 is next eligible for planning; 12.2–12.4 and 13 remain unstarted.
 Source: [local SRD 5.1](references/README.md).
 
@@ -127,4 +127,4 @@ status labels and Grease tint: spell-level/Abilities tabs, portrait spell icons
 with authoritative lifetime tooltips, enemy spell badges, prepared oily floor
 art, and a required static four-direction Prone clip shared by sleeping and
 knocked-down actors. These changes preserve the gameplay contracts above.
-See the [current handoff](slice121_verification.md) for verification and assets.
+See the [current handoff](verification/archive/slice121_verification.md) for verification and assets.

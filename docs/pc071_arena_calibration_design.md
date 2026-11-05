@@ -89,8 +89,8 @@ acceptance and chooses population from these measurements.
 
 ## Delivered result
 
-[Verification/handoff](pc071_verification.md), [candidate cost table](pc071_calibration/README.md)
-and [gallery](screenshots/pc071/index.html) record the final result. All 36 authorized
+[Verification/handoff](verification/archive/pc071_verification.md), [candidate cost table](pc071_calibration/README.md)
+and [gallery](screenshots/pc071/README.md) record the final result. All 36 authorized
 trials completed: 36 victories, three observed downings, no permanent deaths or
 runner/policy/budget failures. Six retained traces strictly matched; 26 selected
 traces are retained compressed. No additional trials or population integration.

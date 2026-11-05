@@ -1,7 +1,7 @@
 # Slice 10: spells and class identity
 
 Status: implemented, **accepted and closed** (2026-10-27). The user explicitly accepted
-slice 10, including its spellcasting UI, native HUD and impact-alert corrections. See [verification and handoff](slice10_verification.md).
+slice 10, including its spellcasting UI, native HUD and impact-alert corrections. See [verification and handoff](verification/archive/slice10_verification.md).
 
 ## Rules and boundaries
 

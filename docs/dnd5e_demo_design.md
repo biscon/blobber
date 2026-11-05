@@ -22,7 +22,7 @@ user acceptance.
 | Blockers | None |
 | Next eligible slice | None in this closed roadmap; successor PC01 is eligible for detailed planning under the [accepted campaign roadmap](procedural_campaign_plan.md) |
 | Next action | Fresh context plans campaign PC01 only for review; do not start demo slice 14, 15 or 16 |
-| Accepted design | Slices 13.1–13.3 implemented and accepted, 2026-10-30; [13.3 design](mcp_design.md) and [closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff) |
+| Accepted design | Slices 13.1–13.3 implemented and accepted, 2026-10-30; [13.3 design](mcp_design.md) and [closeout/handoff](verification/archive/slice133_verification.md#accepted-closeout-and-next-agent-handoff) |
 
 Update this checkpoint, the tracker, and the relevant execution record together.
 Do not infer completion or user acceptance from code being present.
@@ -443,10 +443,10 @@ are included. Entry points: `src/rules/resolve.hpp`, `src/rules/content.hpp`,
 passed in each (including zero-allocation checks). Shipped/copied catalogs and
 startup failure ordering passed. X11/OpenGL startup from `/tmp`, 99 captures,
 and clean GPU/window shutdown passed; corridor and goblin captures inspected.
-See [exact commands, results, and limitations](slice01_verification.md).
+See [exact commands, results, and limitations](verification/archive/slice01_verification.md).
 **Review recipe:** Run the focused headless tests and `--validate` diagnostic,
 inspect/edit a temporary catalog, and optionally launch the existing dungeon as
-described in the [review instructions](slice01_verification.md#user-review).
+described in the [review instructions](verification/archive/slice01_verification.md#user-review).
 **Deviations / limitations:** No scope deviation. No gameplay integration beyond
 startup validation; character definitions and equipment remain slice 02.
 No Windows/macOS execution, interactive gameplay recheck, or GPU pixel-baseline
@@ -505,10 +505,10 @@ all 10 CTest suites passed in both, including the extended zero-allocation guard
 Shipped/copied catalogs and attribution checks passed. Six startup failure-order
 checks passed. Desktop startup from `/tmp` generated 99 captures and shut down
 cleanly; corridor and goblin captures were visually inspected. See
-[exact commands, results, and limitations](slice02_verification.md).
+[exact commands, results, and limitations](verification/archive/slice02_verification.md).
 **Review recipe:** Run focused tests and the `--validate` diagnostic; inspect the
 four builds and try temporary equipment edits described in the
-[review instructions](slice02_verification.md#user-review).
+[review instructions](verification/archive/slice02_verification.md#user-review).
 **Deviations / limitations:** No scope deviation. Party state is initialized but
 has no UI or combat/resource-spending commands. Mana and conditional/signature
 features remain deferred as documented. No interactive gameplay recheck, historical
@@ -571,9 +571,9 @@ suites passed in both, including expanded zero-allocation checks. Unknown monste
 binding failed before window initialization. Desktop capture from `/tmp` exited
 cleanly with 115 PNGs; all 99 original captures were pixel-identical. New actor
 captures were visually inspected. GPU lifecycle checks passed. See
-[commands, results and limitations](slice03_verification.md).
+[commands, results and limitations](verification/archive/slice03_verification.md).
 **Review recipe:** Run focused tests and generate the scripted captures described
-in the [user review](slice03_verification.md#user-review); compare move/turn,
+in the [user review](verification/archive/slice03_verification.md#user-review); compare move/turn,
 flash/expiry, removal and transition images.
 **Deviations / limitations:** No scope deviation. Normal gameplay initializes actors
 but exposes no mutation controls; scenarios exercise them explicitly. No spawning,
@@ -634,7 +634,7 @@ All 14 Debug/Release suites pass, including phase/lifecycle regressions and the
 allocation guard. Live desktop animation and 123 fixed-time captures were checked.
 The earlier 114-viewport identity result applies before this correction; side/back
 NPC captures now intentionally show staggered idle fallback poses. See
-[animation verification](slice04_verification.md#live-demo-animation-review-correction).
+[animation verification](verification/archive/slice04_verification.md#live-demo-animation-review-correction).
 Log follow-up: expanded entries now flow according to measured wrapped height
 with a small gap, replacing five oversized fixed slots. The panel fits 16 short
 entries; long targeted commands wrap cleanly. Debug/Release builds passed;
@@ -660,8 +660,8 @@ reuses prepared alpha/depth composition; no production resources are changed.
 Desktop GPU lifecycle passed; final capture run exported 123 PNGs. All 114 existing
 logical dungeon viewport crops were pixel-identical to the baseline. UI captures
 and desktop mouse/keyboard, held confirm, focus return, map, scenario controls,
-letterbox/pillarbox selections were inspected. See [commands/results/limits](slice04_verification.md).
-**Review recipe:** Follow [slice 04 user review](slice04_verification.md#user-review),
+letterbox/pillarbox selections were inspected. See [commands/results/limits](verification/archive/slice04_verification.md).
+**Review recipe:** Follow [slice 04 user review](verification/archive/slice04_verification.md#user-review),
 run --ui-demo, and inspect the new ui-* captures. Confirm previews never spend
 resources and held/focus-return input does not duplicate requests.
 **Deviations / limitations:** No scope deviation. Expanded log reading is a
@@ -735,12 +735,12 @@ user; the user subsequently accepted the revised UI, closing slice 05 and milest
 **Verification:** Debug/Release builds and all 17 headless CTest suites passed,
 including expanded zero-allocation HUD/gameplay checks. Authorized hidden-window
 captures and the GPU lifecycle check passed on Linux/X11/OpenGL. Native, reduced
-and letterboxed images were inspected. See [current UI verification](dungeon_ui_verification.md).
+and letterboxed images were inspected. See [current UI verification](verification/archive/dungeon_ui_verification.md).
 Earlier combat/sanitizer/catalog evidence and the invalid desktop automation
-attempt remain documented in [historical verification](slice05_verification.md).
+attempt remain documented in [historical verification](verification/archive/slice05_verification.md).
 No OS input or desktop/window control was used for the UI revision.
 **Review recipe:** Run --combat-demo --seed 5 and follow the
-[slice 05 user review](slice05_verification.md#user-review): front/rear restrictions,
+[slice 05 user review](verification/archive/slice05_verification.md#user-review): front/rear restrictions,
 Defend/Aid, death saves, a complete win/loss and restart. User performs desktop
 review; agents must not control mouse/keyboard, windows or desktops.
 **Deviations / limitations:** Approved temporary adaptations: frontal contact only,
@@ -754,7 +754,7 @@ benchmarks remain unverified; deterministic GPU visual QA passed. The user expli
 is now eligible for planning in a clean context; inspect relevant code and present
 its implementation plan for user review before implementation. No slice 06 work
 was started during this closeout.
-Read the [UI design](dungeon_ui_design.md) and [UI handoff](dungeon_ui_verification.md)
+Read the [UI design](dungeon_ui_design.md) and [UI handoff](verification/archive/dungeon_ui_verification.md)
 before changing presentation; old slice 04 controls/layout are historical.
 GameSession is immovable; map/catalog outlive it. Rebuild commands, animator and
 frame pipeline after restart. Party snapshots stay const; use checked health APIs.
@@ -818,7 +818,7 @@ again in both configurations. Hidden GPU lifecycle and 97 focused/252 full captu
 passed on Linux/X11/OpenGL; selected native/reduced images were inspected. Combined
 NPC pixel storage is 112.98 MiB within the unchanged 128 MiB limit. All 44 runtime
 frames and the manifest reproduce byte-for-byte; original 20 PNGs remain unchanged.
-Local documentation links and `git diff --check` passed. See [verification](slice06_verification.md).
+Local documentation links and `git diff --check` passed. See [verification](verification/archive/slice06_verification.md).
 **Front-slot correction (2026-10-26):** A protected rear enemy may advance into
 the opposite vacant front slot and attack on its turn, preferring straight ahead
 when available. Current target protection stays paired. Turn preview predicts
@@ -826,7 +826,7 @@ vacancy claims without moving actors, and execution rechecks occupancy. All 18
 suites pass in Debug/Release, including allocation coverage of diagonal advances;
 51 hidden HUD captures include inspected before/after examples. No slice 07 work.
 **Review recipe:** Run `--combat-demo --seed 5` and follow the
-[slice 06 review](slice06_verification.md#user-review). Use `--capture-reactions DIRECTORY`
+[slice 06 review](verification/archive/slice06_verification.md#user-review). Use `--capture-reactions DIRECTORY`
 for all four directions, timings, transitions, replacement overlap and outcomes.
 **Deviations / limitations:** No gameplay/scope deviation. Generated sheets needed
 explicit non-midpoint row splits; the left hurt dagger hand was corrected through
@@ -895,7 +895,7 @@ front-slot correction and prepared rendering remain intact.
 extended zero-allocation checks. Focused ASan/UBSan passed with leak detection
 disabled due to the environment's ptrace limitation. Hidden GPU lifecycle and
 40 AI captures passed; selected native images inspected. Separate 256-request
-stress runs respected work/storage limits. See [commands, measurements and review](slice07_verification.md).
+stress runs respected work/storage limits. See [commands, measurements and review](verification/archive/slice07_verification.md).
 **Review recipe:** Run --ai-demo --seed 5; observe routines, provoke directional
 pursuit, break sight around the wall, test pauses and face adjacent pursuers to
 enter combat. The verification report gives coordinates and capture alternatives.
@@ -946,7 +946,7 @@ duplicate actions or reset costs. User reviews milestone B and overall combat fe
 **Stage / last updated:** Accepted; 2026-10-26.
 **Approved plan:** User said “Implement the plan.” See [hybrid encounter design](hybrid_encounter_design.md).
 **Delivered:** Shared NPC AI/typed trait, ranged approach and bow clips, front-focused contact/automatic facing, fixed protection, NPC surprise, reinforcements, persistent clocks/costs and direct action controls. Single-weapon AI defaults and two bow-only demo goblins share the existing art; mixed-weapon behavior remains unchanged. The three-cell melee front includes diagonal contact, front-band routing and inward edge presentation.
-**Verification:** Debug and Release 20/20; focused ASan/UBSan, zero-allocation frame guard, separate scale checks, hidden GPU smoke and hybrid/HUD captures. See [verification and handoff](slice08_verification.md).
+**Verification:** Debug and Release 20/20; focused ASan/UBSan, zero-allocation frame guard, separate scale checks, hidden GPU smoke and hybrid/HUD captures. See [verification and handoff](verification/archive/slice08_verification.md).
 **Review recipe:** Run `cmake-build-debug/blobber --hybrid-demo --seed 5`; select Merrin, press 3 and click a goblin. Review direct attacks and automatic side/rear facing with preserved actions. Full recipe and capture locations are in the handoff.
 **Deviations / limitations:** Approved project adaptations are recorded in the design and SRD ledger. The user accepted the delivered combat feel and presentation; further graphical work is a separate discussion. Generated-fixture stress does not establish shipped-art performance at maximum population. LeakSanitizer was not run.
 **Next-agent handoff:** Slice 08 and milestone B are closed. Plan 8.1 next, then 8.2 and 8.3, with separate user acceptance. Preserve accepted combat geometry and presentation except where these subslices explicitly change it. The old 160 MiB cap is an implementation guardrail, not a user requirement; 8.1 may replace it with measured, documented budgets. Slice 8.3 intentionally supersedes immediate damage and occupancy release at attack calculation.
@@ -1036,7 +1036,7 @@ unavailable under tracing, loaded-bank allocation guard, hidden GPU lifecycle,
 396 final captures identical to the approved pre-compaction C reference, clean /
 incremental / input-triggered builds and source-free startup. Resident prepared
 storage is 147.55 MiB; NPC pixels fell about 61%. Two complete appearance sets fit.
-See [verification and handoff](slice81_verification.md) for measurements and limits.
+See [verification and handoff](verification/archive/slice81_verification.md) for measurements and limits.
 **Review recipe:** Build and run `cmake-build-release/blobber --hybrid-demo --seed 5`.
 Review startup, NPC edges/animation/travel and the retained point-sampled dungeon.
 **Deviations / limitations:** Both caches bake offline, superseding the original
@@ -1046,7 +1046,7 @@ Interactive desktop review remains the user's task. No 8.2 work has begun.
 **Next-agent handoff:** Slice 8.1 is accepted and closed. Preserve global NPC C /
 surface A and the appearance integration contract. Plan 8.2 only in a clean context;
 its implementation still requires review of its own plan.
-Predecessor: [slice 08 handoff](slice08_verification.md).
+Predecessor: [slice 08 handoff](verification/archive/slice08_verification.md).
 **Acceptance:** 2026-10-26 — the user said “slice accepted, close it so we can start
 8.2”. This explicitly accepts the completed slice; the verification limitations
 above remain recorded.
@@ -1095,7 +1095,7 @@ loaded two-role frame processing, hidden GPU lifecycle and shipped metadata/cata
 loading passed. 498 preparation captures include 102 archer images; 256 source-free
 runtime captures match byte-for-byte. Clean/repeated banks reproduce exactly.
 Combined runtime bank storage is 181,300,462 bytes, below the 512 MiB limit.
-See [complete verification](slice82_verification.md) for commands, accounting,
+See [complete verification](verification/archive/slice82_verification.md) for commands, accounting,
 selected native/reduced screenshots, visual findings and limitations.
 **Review recipe:** Open `docs/screenshots/slice82/`, then run
 `cmake-build-release/blobber --hybrid-demo --seed 5`. Check equipment continuity,
@@ -1104,7 +1104,7 @@ role readability, ground/scale consistency, bow release, travel and reactions.
 user's task. Leak detection is unverified; the pre-existing broad-capture victory
 failure remains documented, while focused preparation/hybrid suites passed.
 **Next-agent handoff:** Slice 8.2 is accepted and closed. Plan 8.3 in a clean context using
-[slice82_verification.md](slice82_verification.md#limitations-and-next-agent-contract).
+[slice82_verification.md](verification/archive/slice82_verification.md#limitations-and-next-agent-contract).
 Preserve both appearance IDs, global profile C, front-band presentation and the
 600 ms bow-release marker. Damage and occupancy release remain immediate until 8.3.
 **Acceptance:** Accepted on 2026-10-26. User said “slice accepted, close it up”.
@@ -1164,14 +1164,14 @@ ASan/UBSan 4/4 pass; zero tracked frame allocations. Full 260-attack stress deli
 520 events without loss/replay. Hidden GPU check passes; broad capture completes
 292 images (inherited victory failure did not recur). New suite exports 380 images,
 all byte-identical with source-free assets. 183 shared 8.2 images are unchanged.
-See [verification, selected captures and handoff](slice83_verification.md).
+See [verification, selected captures and handoff](verification/archive/slice83_verification.md).
 **Review correction (2026-10-27):** User reported center-cell monster overlap after
 the diagonal edge fit. The fit now preserves the original center-slot spacing and
 compresses only outside those pivots. A regression first failed on the old mapping,
 then passed in both rows/all headings. Release 24/24, focused Debug 5/5 (including
 zero frame allocations), and 320 hidden hybrid/appearance captures pass. Both
 center pairs and all six front-band targets remain pickable. See the
-[corrected captures](slice83_verification.md#review-correction-center-cell-pair-spacing).
+[corrected captures](verification/archive/slice83_verification.md#review-correction-center-cell-pair-spacing).
 **Review recipe:** Run `cmake-build-release/blobber --hybrid-demo --seed 5`.
 Review party/enemy arrows, recipient attribution, melee windup, impact feedback,
 pauses and hurt before release; deterministic capture instructions are in the report.
@@ -1213,7 +1213,7 @@ paralysis action/facing/formation integration, and deterministic headless review
 Spell casting, mana and slice 10 content remain unavailable.
 **Verification:** Final Debug 25/25, Release 25/25, focused ASan/UBSan 5/5;
 zero tracked C++ frame allocations. Separate effect-capacity and 260-attack stress
-pass. Debug/Release traces are byte-identical. See [verification and handoff](slice09_verification.md).
+pass. Debug/Release traces are byte-identical. See [verification and handoff](verification/archive/slice09_verification.md).
 **Review recipe:** `cmake-build-release/blobber_effects_tests --trace`; compare
 real-time retries, no retry while waiting on a player decision, one retry at the
 full-round boundary, and concentration/HP changing at impact. See [retained trace](slice09_trace.txt).
@@ -1261,11 +1261,11 @@ full-population spell/weapon and effect-capacity stress; hidden GPU lifecycle,
 The approved [UI correction](spellcasting_ui_design.md) adds the compact picker,
 60%-width casting dock, direct portrait/dart/area feedback, focus preservation,
 individual invalid-target pruning and seventeen painted icons. See the latest
-[UI verification and handoff](slice10_ui_verification.md), which supersedes the
-original [verification](slice10_verification.md) for casting interactions. Subsequent
+[UI verification and handoff](verification/archive/slice10_ui_verification.md), which supersedes the
+original [verification](verification/archive/slice10_verification.md) for casting interactions. Subsequent
 badge/spacing polish passed focused Debug 6/6 and Release 8/8, with 231 spell
 and 73 HUD captures; see the same handoff for the exact checks. The latest
-[native HUD and impact-alert correction](native_hud_verification.md) passed full
+[native HUD and impact-alert correction](verification/archive/native_hud_verification.md) passed full
 Debug/Release 26/26, focused sanitizers 5/5, generated-art GPU checks, allocation
 guards and capacity stress; native/reduced captures are retained there.
 **Acceptance:** Explicitly accepted by the user on 2026-10-27: “I accept the slice,
@@ -1301,15 +1301,15 @@ consumption/ammunition costs, and combat restrictions. Inspect the large-screen 
 **Stage / last updated:** Accepted and closed; 2026-10-27.
 **Approved plan:** User said “Implement the plan.” See [inventory design](inventory_design.md).
 **Implemented:** Four 48-cell bags and separate equipment, atomic weight/stack/equipment transactions, safe-only gear/transfers, paused bag organization, drag/button/keyboard controls, Shift-drag quantity default one, fifteen painted item icons and silhouette. Healing/mana potions and finite party arrows use existing action/readiness clocks. Schema 5 retains 1–4 compatibility; gear changes update stats and end Mage Armor when required.
-**Verification:** Debug/Release 27/27; affected suites rerun after refinements, ASan/UBSan, zero-allocation guard, 100,000 split/merge cycles, hidden GPU and 41 native/reduced/letterboxed captures. See [durable verification and handoff](slice11_verification.md), including test limitations and retained review images.
-**Review correction (2026-10-27):** Implemented the user's screenshot feedback: contextual actions with unavailable states, drag-only move/merge/split initiation, torso/ranged slot placement, centered captions and large split controls, right-aligned counts, I inventory/M map, and a painted backpack dock icon with an updated tooltip. No later-slice rules were added. Follow-up checks and replacement review images are recorded in the [correction handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
-**Approved Character tab extension (2026-10-27):** User accepted the image-generated mockup and authorized implementation. The fullscreen panel now shares Inventory / Character tabs and the character strip; portrait info opens Character, inventory controls open Inventory. Live read-only stats/resources/equipment replace the small inspector. XP displays progress but awards and advancement remain deferred. Focused Debug/Release 6/6, allocation and hidden GPU checks pass; 77 captures generated. See [design](character_sheet_design.md) and [verification](character_sheet_verification.md). The implementation was accepted with slice 11 on 2026-10-27.
+**Verification:** Debug/Release 27/27; affected suites rerun after refinements, ASan/UBSan, zero-allocation guard, 100,000 split/merge cycles, hidden GPU and 41 native/reduced/letterboxed captures. See [durable verification and handoff](verification/archive/slice11_verification.md), including test limitations and retained review images.
+**Review correction (2026-10-27):** Implemented the user's screenshot feedback: contextual actions with unavailable states, drag-only move/merge/split initiation, torso/ranged slot placement, centered captions and large split controls, right-aligned counts, I inventory/M map, and a painted backpack dock icon with an updated tooltip. No later-slice rules were added. Follow-up checks and replacement review images are recorded in the [correction handoff](verification/archive/slice11_verification.md#inventory-review-correction-2026-10-27).
+**Approved Character tab extension (2026-10-27):** User accepted the image-generated mockup and authorized implementation. The fullscreen panel now shares Inventory / Character tabs and the character strip; portrait info opens Character, inventory controls open Inventory. Live read-only stats/resources/equipment replace the small inspector. XP displays progress but awards and advancement remain deferred. Focused Debug/Release 6/6, allocation and hidden GPU checks pass; 77 captures generated. See [design](character_sheet_design.md) and [verification](verification/archive/character_sheet_verification.md). The implementation was accepted with slice 11 on 2026-10-27.
 **Acceptance:** Explicitly accepted by the user on 2026-10-27 after the inventory corrections and Character sheet implementation. The user requested documentation closure and a fresh context for slice 12. Interactive desktop review was not automated; recorded verification limits remain unchanged.
-**Historical handoff at slice 11 closeout:** Slice 12 was next eligible, Planned and unstarted at that checkpoint. It has since been accepted and closed; see the current checkpoint and slice 12 record below. Read [slice 11 handoff](slice11_verification.md#accepted-closeout-and-slice-12-handoff) and [Character sheet handoff](character_sheet_verification.md) before planning it. Preserve the accepted UI, authoritative inventory transactions and bounded allocation contracts. Define loot/rest ownership, safety, capacities and recovery rules in the slice 12 plan; ask about material ambiguities and obtain plan approval before coding. XP awards/level-up remain slice 13; save/resume remains slice 14.
+**Historical handoff at slice 11 closeout:** Slice 12 was next eligible, Planned and unstarted at that checkpoint. It has since been accepted and closed; see the current checkpoint and slice 12 record below. Read [slice 11 handoff](verification/archive/slice11_verification.md#accepted-closeout-and-slice-12-handoff) and [Character sheet handoff](verification/archive/character_sheet_verification.md) before planning it. Preserve the accepted UI, authoritative inventory transactions and bounded allocation contracts. Define loot/rest ownership, safety, capacities and recovery rules in the slice 12 plan; ask about material ambiguities and obtain plan approval before coding. XP awards/level-up remain slice 13; save/resume remains slice 14.
 
 ### Slice 12: Loot and recovery
 
-**Current review correction:** Implemented and verified: one-bag loot dialog with contained/aligned details, shared Inventory slots and portrait recipient selection; Take All now closes automatically; Inventory Drop places selected stacks in the current cell; a small generated top-bar Rest icon replaces the large dock and log widths are restored. [Current handoff](slice12_verification.md) and [design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up). Accepted by the user on 2026-10-27.
+**Current review correction:** Implemented and verified: one-bag loot dialog with contained/aligned details, shared Inventory slots and portrait recipient selection; Take All now closes automatically; Inventory Drop places selected stacks in the current cell; a small generated top-bar Rest icon replaces the large dock and log widths are restored. [Current handoff](verification/archive/slice12_verification.md) and [design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up). Accepted by the user on 2026-10-27.
 
 **Deliver:** Bounded loot ownership and collection, supplies/consumable acquisition,
 Hit Dice short rests, feature recovery, safe-location long rests, and camp supplies.
@@ -1340,9 +1340,9 @@ cannot duplicate items. Verify visible floor placement and reliable item picking
 **Approved plan:** User said “Implement the plan.” See the [loot/recovery design](loot_recovery_design.md) for behavior, ownership, capacities and verification.
 **Decisions:** Safe-only whole-stack pickup into the selected character, current/three-front-cell reach, one bag per cell and ten-slot dialog pages; usable gear, weighted gold and occasional potions; three fixed camp kits and no sanctuary in normal dungeon play. One/eight-hour short/long rest skips advance effects/cooldowns without moving NPCs. Stable allies can recover; dead allies cannot. Future hub/shops remain out of scope.
 **Visual checkpoint:** The user accepted [camp mockup v1](mockups/slice12/camp-screen-v1.png) on 2026-10-27 (“yes that looks very nice, continue”), before code and production animation work.
-**Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared bags with occlusion, paused grid collection and visible Rest button; recovery demo and hidden capture mode. See [verification and selected captures](slice12_verification.md).
+**Delivered:** Session-owned floor drops, staged pickup, schema-6 content and level metadata; safe Short/Long Rest transactions; native exclusive camp UI and four-frame bonfire playback; prepared bags with occlusion, paused grid collection and visible Rest button; recovery demo and hidden capture mode. See [verification and selected captures](verification/archive/slice12_verification.md).
 **Verification:** Corrected implementation: Debug 29/29 and Release 29/29; focused recovery/inventory/render ASan+UBSan 3/3; zero tracked frame C++ allocations; separate full-capacity loot publication/render stress, hidden GPU lifecycle, and 108 native/reduced/letterboxed captures pass. The user accepted the result; automated verification limits remain unchanged. Earlier baseline checks remain recorded separately in the handoff.
-**Next-agent handoff (updated 2026-10-29):** Slice 12 is accepted and closed. Slice 12.1 has since been [accepted and closed](slice121_verification.md#accepted-closeout-and-next-agent-handoff); 12.2 and 12.3 are now accepted and closed; 12.4 is now accepted and closed; slice 13 is next eligible for planning. The historical closeout predates this insertion. Read the [accepted closeout](slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
+**Next-agent handoff (updated 2026-10-29):** Slice 12 is accepted and closed. Slice 12.1 has since been [accepted and closed](verification/archive/slice121_verification.md#accepted-closeout-and-next-agent-handoff); 12.2 and 12.3 are now accepted and closed; 12.4 is now accepted and closed; slice 13 is next eligible for planning. The historical closeout predates this insertion. Read the [accepted closeout](verification/archive/slice12_verification.md#accepted-closeout-and-next-agent-handoff) before planning. Preserve accepted UI, checked loot/inventory transactions, generation-safe floor handles and allocation guarantees. This documentation closeout does not start slice 13.
 **Acceptance:** Explicitly accepted on 2026-10-27: “thats better, record the slice as accepted in the doc”. Acceptance covers the completed slice and all loot-bag, Drop, Take All and Rest-icon corrections.
 
 ### Character creation interlude: accepted flow and shared contracts
@@ -1508,11 +1508,11 @@ hardware checks. Preserve the existing fourteen-spell behavior.
 
 **Handoff:** Publish spell IDs, class membership, effect/casting interfaces, source
 adaptations, capacities and reusable selection metadata for 12.2. Stop for review.
-**Execution record:** Accepted and closed, 2026-10-29. Implemented the approved [design](expanded_spells_design.md): ten spells, ground targeting, conditions, temporary HP, one-shot buffs, Sanctuary, schema 7 and prepared art. Completed the [visual review corrections](spell_visual_review_design.md): level/Abilities tabs, status icons and duration tooltips, generated Grease pool, and required four-direction prone poses. [Verification/handoff](slice121_verification.md): Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations, capacity baking, hidden GPU checks and 470 captures. Portrait follow-up adds turn-based duration labels and a gold concentration emblem with spell/duration hover: focused Debug/Release 5/5, allocation/GPU checks and 482 captures pass. User acceptance is recorded below; 12.2 has since been accepted and closed.
+**Execution record:** Accepted and closed, 2026-10-29. Implemented the approved [design](expanded_spells_design.md): ten spells, ground targeting, conditions, temporary HP, one-shot buffs, Sanctuary, schema 7 and prepared art. Completed the [visual review corrections](spell_visual_review_design.md): level/Abilities tabs, status icons and duration tooltips, generated Grease pool, and required four-direction prone poses. [Verification/handoff](verification/archive/slice121_verification.md): Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations, capacity baking, hidden GPU checks and 470 captures. Portrait follow-up adds turn-based duration labels and a gold concentration emblem with spell/duration hover: focused Debug/Release 5/5, allocation/GPU checks and 482 captures pass. User acceptance is recorded below; 12.2 has since been accepted and closed.
 
 **Acceptance:** 2026-10-29 — the user said “nice work, record the slice as accepted”. This accepts the completed spell catalog and all visual/portrait corrections, including spell-level tabs, Grease artwork, static prone poses, status icons, turn-duration tooltips and the concentration emblem. Recorded verification limitations remain unchanged.
 
-**Historical next-agent handoff at 12.1 closeout:** Slice 12.1 is accepted and closed. Read its [accepted closeout](slice121_verification.md#accepted-closeout-and-next-agent-handoff) and the approved character-creation references, then inspect code and plan 12.2 in a fresh context. Implementation requires approval of that slice's plan. This closeout does not start 12.2.
+**Historical next-agent handoff at 12.1 closeout:** Slice 12.1 is accepted and closed. Read its [accepted closeout](verification/archive/slice121_verification.md#accepted-closeout-and-next-agent-handoff) and the approved character-creation references, then inspect code and plan 12.2 in a fresh context. Implementation requires approval of that slice's plan. This closeout does not start 12.2.
 
 ### Slice 12.2: Character builds, library storage and portraits
 
@@ -1591,9 +1591,9 @@ sanitizers; distinguish disk-operation allocations from steady-state frame work.
 API, library API, portrait manifest, explicit-party constructor, preset selections
 and verified spell-access migration. Supply a deterministic headless diagnostic
 or test scenario for inspection before the GUI lands. Stop for review.
-**Execution record:** **Accepted and closed**, 2026-10-29. [Implemented design](character_builds_design.md) and [verification/handoff](slice122_verification.md). Delivered strict builds, schema-8 grants/gear/portraits, version-1 atomic blueprint library, independent party/session constructors, three launch camp kits, twenty portrait masters and bounded prepared atlases. Full Debug/Release 34/34, focused sanitizers 5/5, zero tracked frame allocations, hidden GPU checks, 225 build/portrait captures and 482 spell captures pass. The user selected three kits, curated gear and a user-data library location.
+**Execution record:** **Accepted and closed**, 2026-10-29. [Implemented design](character_builds_design.md) and [verification/handoff](verification/archive/slice122_verification.md). Delivered strict builds, schema-8 grants/gear/portraits, version-1 atomic blueprint library, independent party/session constructors, three launch camp kits, twenty portrait masters and bounded prepared atlases. Full Debug/Release 34/34, focused sanitizers 5/5, zero tracked frame allocations, hidden GPU checks, 225 build/portrait captures and 482 spell captures pass. The user selected three kits, curated gear and a user-data library location.
 **Acceptance:** The user explicitly accepted slice 12.2 on 2026-10-29: “slice accepted, record it in the plan doc, so we can get started on the next slice”. Verification limitations remain as recorded.
-**Historical next-agent handoff at 12.2 closeout:** Slice 12.2 is accepted and closed. Slice 12.3 was next eligible for planning; it is now accepted and closed. Read the [durable API and ownership handoff](slice122_verification.md#next-agent-handoff), approved menu/library references and relevant code before proposing its plan. Obtain approval of that plan before implementation. Library CRUD and strict creation validation are already implemented; normal startup remains the dungeon route. This closeout does not start 12.3.
+**Historical next-agent handoff at 12.2 closeout:** Slice 12.2 is accepted and closed. Slice 12.3 was next eligible for planning; it is now accepted and closed. Read the [durable API and ownership handoff](verification/archive/slice122_verification.md#next-agent-handoff), approved menu/library references and relevant code before proposing its plan. Obtain approval of that plan before implementation. Library CRUD and strict creation validation are already implemented; normal startup remains the dungeon route. This closeout does not start 12.3.
 
 ### Slice 12.3: Main menu, character library and party launch
 
@@ -1661,7 +1661,7 @@ letterboxed aspect. CPU checks remain headless; separately verify GPU cleanup.
 formation representation, launch transaction, error UI, default-party shortcut,
 menu capture fixtures and the return-to-caller hook needed by 12.4. Stop for review.
 **Execution record:** Accepted and closed, 2026-10-29. Implemented the user-approved
-[menu/launch design](menu_launch_design.md). [Verification and handoff](slice123_verification.md):
+[menu/launch design](menu_launch_design.md). [Verification and handoff](verification/archive/slice123_verification.md):
 Debug/Release 35/35, focused sanitizers 3/3, allocation guard, hidden GPU lifecycle
 and 37 captures. Startup no longer loads a dungeon before party launch. Confirmed
 Main Menu and original-build/seed defeat restart follow the user's planning decisions.
@@ -1670,7 +1670,7 @@ focused search fields blink a caret. Focused Debug/Release 2/2, sanitizer 1/1,
 allocation guard and 49 hidden captures pass; see the same handoff.
 **Acceptance:** 2026-10-29 — the user said “slice accepted, record it in the doc”. Acceptance includes the completed menu/library/party launch and all drag-and-drop/search-caret review corrections. Recorded verification limitations remain unchanged.
 
-**Historical next-agent handoff at 12.3 closeout:** Slice 12.3 is accepted and closed. Slice 12.4 was next eligible for separate planning; its plan was subsequently approved and its implementation is now accepted and closed below. The [accepted closeout](slice123_verification.md#accepted-closeout) remains the predecessor contract.
+**Historical next-agent handoff at 12.3 closeout:** Slice 12.3 is accepted and closed. Slice 12.4 was next eligible for separate planning; its plan was subsequently approved and its implementation is now accepted and closed below. The [accepted closeout](verification/archive/slice123_verification.md#accepted-closeout) remains the predecessor contract.
 
 ### Slice 12.4: Complete creator and reusable selection flow
 
@@ -1768,7 +1768,7 @@ builds; slice 14 must save actual run state, not just refer back to blueprints.
 [detailed design](character_creator_design.md): complete creator, shared selection/review,
 checked library return, and staged Long Rest preparation. User selected preparation-only
 Long Rest at normal cost and highlight-only return after Save from the picker.
-[Verification and handoff](slice124_verification.md): Debug/Release 37/37, ASan/UBSan
+[Verification and handoff](verification/archive/slice124_verification.md): Debug/Release 37/37, ASan/UBSan
 4/4 with leak detection, zero tracked frame allocations, hidden GPU checks and
 187 application-owned captures. The capture script creates/saves/reloads all sixteen
 combinations and launches a created party. Interactive desktop use is unverified.
@@ -1782,7 +1782,7 @@ verification and limitations remain as documented.
 **Historical handoff at 12.4 closeout:** Slice 12.4 is accepted and closed. Slice 13
 was next eligible; arena slice 12.5 has since been inserted, implemented and accepted.
 Progression's later implementation is recorded below. At that handoff, the instruction was to read the
-[accepted closeout](slice124_verification.md#accepted-closeout-and-next-agent-handoff)
+[accepted closeout](verification/archive/slice124_verification.md#accepted-closeout-and-next-agent-handoff)
 and relevant code before proposing its plan. This documentation closeout does not
 start slice 13.
 
@@ -1818,7 +1818,7 @@ statistics/resources, and new spell behavior. User reviews the complete mileston
 “Implement the plan.” Delivered XP/atomic live advancement, shared new-choice/review
 flow, development grants, fixed subclass features, optional-action sequencing and
 eight second-level spells with prepared art. [Design](progression_design.md) and
-[verification/handoff](slice13_verification.md): Debug/Release 41/41, ASan/UBSan 8/8
+[verification/handoff](verification/archive/slice13_verification.md): Debug/Release 41/41, ASan/UBSan 8/8
 with leak detection, zero tracked allocations, maximum-capacity stress, hidden GPU
 checks and 69 initial captures. Subsequent development-flag and shared-picker review
 corrections, focused checks and refreshed captures are recorded in the handoff.
@@ -1827,7 +1827,7 @@ class-feature bar: “I accept the slice, record it in the documentation.” Thi
 slice 13 and milestone C. No additional Action Surge change was requested.
 The subsequent enemy status-icon occlusion correction was also accepted and closed
 on 2026-10-30: “yes that works, if this needs to be recorded as accepted do so”.
-[Accepted closeout and next-agent handoff](slice13_verification.md#accepted-closeout-and-next-agent-handoff).
+[Accepted closeout and next-agent handoff](verification/archive/slice13_verification.md#accepted-closeout-and-next-agent-handoff).
 At closeout, slice 14 became next eligible. The subsequent
 [automation insertion](automation_plan.md) places slices 13.1–13.3 first;
 13.1 and 13.2 are now Accepted as recorded below.
@@ -1837,16 +1837,16 @@ At closeout, slice 14 became next eligible. The subsequent
 
 Slice 13.1 is implemented and **Accepted and closed** (2026-10-30), following the user's
 “Implement the plan” instruction and subsequent “slice accepted, update the docs.” [Design](headless_design.md),
-[protocol/client guide](headless_protocol.md), [verification/handoff](slice131_verification.md).
+[protocol/client guide](headless_protocol.md), [verification/handoff](verification/archive/slice131_verification.md).
 Diagnostic and visual headless sessions, checked action coverage, bounded stepping,
 record/replay and graphics-free builds are delivered. Verification includes normal
 Debug/Release 48/48 and graphics-disabled Debug/Release 30/30. The recorded verification
 limitations remain unchanged. 13.2 is now implemented and Accepted; its
 [design](automated_players_design.md), [usage](../experiments/arena/README.md) and
-[verification](slice132_verification.md) record the delivered tools, explicit-only
+[verification](verification/archive/slice132_verification.md) record the delivered tools, explicit-only
 playtesting workflow and limits. The user accepted and closed 13.2 on 2026-10-30:
 “close up the slice”. 13.3 is now implemented, Accepted and closed; see its
-[design](mcp_design.md), [usage](mcp_usage.md) and [verification/handoff](slice133_verification.md).
+[design](mcp_design.md), [usage](mcp_usage.md) and [verification/handoff](verification/archive/slice133_verification.md).
 
 On 2026-10-30 the user requested recording the agreed three-slice direction before
 the next gameplay slice. The dedicated [automation plan](automation_plan.md)
@@ -1952,13 +1952,13 @@ choices belong in their execution/design records unless they change this roadmap
 | Date | Decision | Basis |
 | --- | --- | --- |
 | 2026-10-30 | Close this roadmap; retire 15/16 and milestone D, transfer unimplemented save/resume 14 to campaign PC06 after generation/travel. Preserve all accepted history. [Successor roadmap](procedural_campaign_plan.md). | User says existing polish is sufficient, static-dungeon improvements are obsolete, and requests a multi-slice procedural MVP plan before saving. |
-| 2026-10-30 | Accepted and closed 13.3 after capture-gallery review. [Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged; tooling use stays open-ended and all balance experiments remain opt-in. Slice 14 is next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the doc”. |
-| 2026-10-30 | Accepted and closed 13.2. [Closeout/handoff](slice132_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged. Use remains open-ended wherever relevant to project work; examples neither restrict its purpose nor add requirements. 13.3 is next eligible for separate planning; 14 stays after 13.3. | User accepted the executed checks as sufficient and instructed “close up the slice”; clarified examples must not restrict the tooling’s uses. |
-| 2026-10-30 | Implemented 13.2 and marked Ready for review. [Verification](slice132_verification.md). Three policies/party packages, bounded serial experiments, honest reports and reproducible traces. All balance playthroughs remain opt-in, outside routine tests; no gameplay tuning. 13.3/14 remain unstarted. | User approved the detailed plan with “implement the plan”. Implementation acceptance remains pending. |
+| 2026-10-30 | Accepted and closed 13.3 after capture-gallery review. [Closeout/handoff](verification/archive/slice133_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged; tooling use stays open-ended and all balance experiments remain opt-in. Slice 14 is next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the doc”. |
+| 2026-10-30 | Accepted and closed 13.2. [Closeout/handoff](verification/archive/slice132_verification.md#accepted-closeout-and-next-agent-handoff). Verification scope and limitations unchanged. Use remains open-ended wherever relevant to project work; examples neither restrict its purpose nor add requirements. 13.3 is next eligible for separate planning; 14 stays after 13.3. | User accepted the executed checks as sufficient and instructed “close up the slice”; clarified examples must not restrict the tooling’s uses. |
+| 2026-10-30 | Implemented 13.2 and marked Ready for review. [Verification](verification/archive/slice132_verification.md). Three policies/party packages, bounded serial experiments, honest reports and reproducible traces. All balance playthroughs remain opt-in, outside routine tests; no gameplay tuning. 13.3/14 remain unstarted. | User approved the detailed plan with “implement the plan”. Implementation acceptance remains pending. |
 | 2026-10-30 | Start 13.2 planning only. [Proposed design](automated_players_design.md). Balance experiments, even small matrices, are explicit playtesting tools outside default CTest/build/CI and unrelated-change verification. Short fixture-owned tooling checks remain separate. Compare a few sensible, competently built parties; no universal viability/win-rate target or weak-build sweep. 13.3 and 14 stay unstarted. | User requested a detailed 13.2 plan for review, rejected running balance playthroughs on every change, and clarified that deliberately weak/novelty parties need not win. |
-| 2026-10-30 | Accepted and closed slice 13.1. Verification scope/limitations unchanged. 13.2 becomes next eligible for separate planning; 13.2/13.3 remain Planned and unstarted. [Closeout/handoff](slice131_verification.md#accepted-closeout-and-next-agent-handoff). | User: “slice accepted, update the docs.” Requested a next-slice prompt for a fresh context. |
+| 2026-10-30 | Accepted and closed slice 13.1. Verification scope/limitations unchanged. 13.2 becomes next eligible for separate planning; 13.2/13.3 remain Planned and unstarted. [Closeout/handoff](verification/archive/slice131_verification.md#accepted-closeout-and-next-agent-handoff). | User: “slice accepted, update the docs.” Requested a next-slice prompt for a fresh context. |
 | 2026-10-30 | Insert tooling slices 13.1–13.3 before save/resume: headless reproducible arena play, automated players/balance experiments, then MCP play/investigation. Separate [plan](automation_plan.md); all Planned, detailed implementation plans pending. Milestone C stays Accepted. | User requested recording the three-slice direction in the demo plan before the next slice or in a dedicated plan. |
-| 2026-10-30 | Slice 13.1 implemented and Ready for review: headless arena protocol, shared metadata/visibility, bounded stepping, strict replay and scripted client. [Verification](slice131_verification.md). 13.2/13.3 remain Planned; no acceptance claimed. | User: “Implement the plan.” |
+| 2026-10-30 | Slice 13.1 implemented and Ready for review: headless arena protocol, shared metadata/visibility, bounded stepping, strict replay and scripted client. [Verification](verification/archive/slice131_verification.md). 13.2/13.3 remain Planned; no acceptance claimed. | User: “Implement the plan.” |
 | 2026-10-30 | Accepted and closed the enemy status-icon occlusion follow-up. No review remains pending; slice 14 stays unstarted. | User: “yes that works, if this needs to be recorded as accepted do so”. |
 | 2026-10-30 | Accepted and closed slice 13 and milestone C, including the development flag and spell-picker corrections. Existing Action Surge behavior accepted. Slice 14 becomes next eligible for separate planning and remains unstarted. | User: “I accept the slice, record it in the documentation.” |
 | 2026-10-25 | Slice 05 uses frontal single-cell contact, Dodge-style Defend, Wisdom Aid, conscious-target priority, immediate defeat and post-victory stabilization without HP recovery. | User's slice 05 planning selections. |
@@ -2020,7 +2020,7 @@ User accepted mechanics/functionality and approved [this UI plan](dungeon_ui_des
 Implementation accepted and closed with slice 05 and milestone A on 2026-10-25;
 no slice 06 work. The user said: “much better, this slice is accepted, close it in the document”.
 Seventeen Debug/Release suites, extended allocation guard, hidden GPU lifecycle
-check and final native/reduced captures passed. See [verification and review](dungeon_ui_verification.md). Hidden application-owned
+check and final native/reduced captures passed. See [verification and review](verification/archive/dungeon_ui_verification.md). Hidden application-owned
 captures are authorized; OS mouse/keyboard/focus automation remains prohibited.
 
 Review decision (2026-10-26): user approved front-focused combat, automatic facing,
@@ -2071,7 +2071,7 @@ User: “Implement the plan.” Status: **Accepted and closed**, 2026-10-29.
 
 Delivered the approved [design](arena_design.md): main-menu setup, default/saved
 party snapshots, monster quantities, seed, versioned portable scenarios, generated
-room, normal gameplay and Rematch/Edit Setup. [Verification/handoff](slice125_verification.md):
+room, normal gameplay and Rematch/Edit Setup. [Verification/handoff](verification/archive/slice125_verification.md):
 Debug/Release 38/38, ASan/UBSan 5/5 with leak detection, zero tracked frame allocations,
 256-actor stress, hidden GPU checks and 54 captures. The user accepted the slice on
 2026-10-29: “slice accepted, record it in the doc”. Verification results and their
@@ -2082,7 +2082,7 @@ checkpoint and slice 13 execution record.
 ## Slice 13.3 execution record
 
 2026-10-30: Implemented, **Accepted and closed**. User authorized with “Implement the plan.”
-[Design](mcp_design.md), [usage/configuration](mcp_usage.md), [verification/handoff](slice133_verification.md).
+[Design](mcp_design.md), [usage/configuration](mcp_usage.md), [verification/handoff](verification/archive/slice133_verification.md).
 Session play, bounded explicit jobs, honest results, strict reproduction/investigation
 and application-owned replay captures reuse the accepted systems. 19 fast contracts;
 focused headless Debug/Release 6/6 and graphics 7/7; sanitizer, SDK lifecycle/cancellation,
@@ -2090,5 +2090,5 @@ opt-in smoke/reproduction, hidden GPU checks and seven captures. Live Codex-host
 interactive desktop review remain unverified. No OS input/focus control; no automatic
 balance checks or gameplay changes. 13.1/13.2 remain closed; 14 remains unstarted.
 The user reviewed the capture gallery and accepted: “I accept the slice, record it in the doc”.
-[Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff).
+[Closeout/handoff](verification/archive/slice133_verification.md#accepted-closeout-and-next-agent-handoff).
 Slice 14 is next eligible for separate planning; do not start it automatically. No commit requested.

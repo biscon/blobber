@@ -5,7 +5,7 @@ accepted the slice: “slice accepted, close it so we can start 8.2”.
 Slice 8.2 remains Planned and is now next eligible for planning. The user selected **NPC profile C**
 (area filtering with half-size source derivatives) for **all current and future
 NPC appearances**, and **surface option A** (existing point sampling).
-[Verification and handoff](slice81_verification.md) records the measurements and
+[Verification and handoff](verification/archive/slice81_verification.md) records the measurements and
 screenshots. Both NPC and dungeon preparation now happen offline.
 
 ## Approved outcome and review checkpoint

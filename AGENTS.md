@@ -56,6 +56,32 @@ the task explicitly changes them.
   and outside the ordinary development loop. Report skipped or interrupted work
   honestly; do not rerun expensive work just to reproduce a passing count.
 
+## Agent artifact housekeeping
+
+- Every task owns and cleans its disposable output. Create a run with
+  `python3 tools/agent_artifacts.py create` and direct captures, traces, reports,
+  exports and experiments into that ignored `output/agent-runs/<run-id>/` directory.
+  Do not generate run output directly in `docs/`, the repository root or assets.
+- Before handing off, promote only selected review evidence to
+  `docs/screenshots/<feature>/`, replace superseded evidence and update its README.
+  Retain at most six images per feature, or twelve while awaiting user review.
+  A larger set requires a README explanation of the distinct cases it covers.
+  Preserve user acceptance status; evidence cleanup does not imply acceptance.
+- Put test commands, outcomes and material limitations in the existing relevant
+  design/handoff document. Do not create a new permanent report for every run.
+  Completed historical verification reports belong in the indexed
+  `docs/verification/archive/`; source artwork, prompts, references and required
+  tool/test inputs remain durable assets.
+- After closing runners and selecting evidence, preview cleanup with
+  `python3 tools/agent_artifacts.py clean RUN_DIRECTORY`, then run it with `--apply`.
+  Clean even after failed checks. If an unresolved failure needs diagnostics,
+  retain only selected files and document reproduction and a cleanup condition in
+  the relevant handoff. Never delete another active run, unrelated scratch data,
+  user saves, build caches or Git history as routine housekeeping.
+- Remove broken links and stale evidence-retention claims when pruning. Summarize
+  cleanup and any retained exception in the final response, without generating a
+  separate housekeeping report. Follow [the workflow](docs/verification_workflow.md#artifact-housekeeping).
+
 ## Testing
 
 - Aim for thorough, meaningful coverage of our behaviour and invariants: normal use, boundary cases, failure paths, resource lifetimes, and interactions between our systems. Add regression tests for bugs where they provide lasting value.

@@ -1,7 +1,7 @@
 # Headless protocol v1
 
 Slice 13.1 implements a local, synchronous JSON-lines transport to the real arena
-simulation. See [design](headless_design.md) and [verification](slice131_verification.md).
+simulation. See [design](headless_design.md) and [verification](verification/archive/slice131_verification.md).
 The [experiment tooling](../experiments/arena/README.md) and optional
 [local MCP adapter](mcp_usage.md) reuse this protocol.
 

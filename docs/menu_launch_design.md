@@ -66,7 +66,7 @@ omitted until 12.4. The future caller context consists of the originating screen
 active formation slot and retained MenuModel; saving must not auto-launch or replace
 an occupied slot.
 
-See [verification and next-agent handoff](slice123_verification.md).
+See [verification and next-agent handoff](verification/archive/slice123_verification.md).
 
 ## Review correction: direct formation drag and search focus
 

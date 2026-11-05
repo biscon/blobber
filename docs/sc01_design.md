@@ -5,7 +5,7 @@ The user approved the detailed conversation plan and requested implementation.
 SC01.1 remains accepted. This slice does not replace the campaign hub.
 
 Historical SC01 evidence: SC02 now replaces the development factory and shot names.
-See [SC02 handoff](sc02_verification.md) for current review commands.
+See [SC02 handoff](verification/archive/sc02_verification.md) for current review commands.
 
 ## Deliverable and ownership
 
@@ -103,7 +103,7 @@ Hidden GPU checks cover depth, CPU/GPU agreement and resources; production captu
 are a separate art check. One intensive job at a time, low priority, <=2 build
 workers, one test process; no routine benchmark or multi-configuration matrix.
 
-The [verification/handoff](sc01_verification.md) records commands, outcomes, skipped
+The [verification/handoff](verification/archive/sc01_verification.md) records commands, outcomes, skipped
 checks, captures, actual totals and limitations. This delivery stops at Ready for
 review; only the user accepts the finished visual checkpoint and authorizes later
 slices. Memory reference lines

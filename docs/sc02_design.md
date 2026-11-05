@@ -92,4 +92,4 @@ The exporter uses two material parts per model and two shared 4096² atlases. Bo
 closed-loop walking and selected turn/translation/strafe samples are captured by
 the review tool. A second full city view stages/cancels without replacing active
 state. Actual counts, memory, checks and visual limits are in the
-[verification and next-agent handoff](sc02_verification.md).
+[verification and next-agent handoff](verification/archive/sc02_verification.md).

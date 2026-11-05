@@ -122,7 +122,7 @@ health behavior for column-depth buffers. `automation::makeWorldVisual` uses the
 same CPU pipeline and NpcAnimator without raylib. CLI/client/replay selection and
 version identities follow the rollout above. No publication/save format changed.
 
-[Verification and handoff](r03_verification.md) records actual suites, sanitizers,
+[Verification and handoff](verification/archive/r03_verification.md) records actual suites, sanitizers,
 GPU parity/failure checks, capacity/allocation evidence, 403 identical Debug/Release
 captures, timing/memory reports and verification limitations unchanged. R03 is
 Accepted; R04 and normal-renderer cutover remain unstarted.

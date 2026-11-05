@@ -2,7 +2,7 @@
 
 Status: **Implemented, accepted and closed**, 2026-10-26. The user approved the
 implementation plan with “Implement the plan.” The design below is delivered;
-see [verification and handoff](slice82_verification.md). Slice 8.1 is accepted;
+see [verification and handoff](verification/archive/slice82_verification.md). Slice 8.1 is accepted;
 8.3 remains Planned. The user accepted the completed slice with “slice accepted,
 close it up”. Attack-consequence timing remains unchanged.
 
@@ -125,5 +125,5 @@ Generated fixture coverage lives in actors, prepared-assets and frame-allocation
 tests. No engine APIs, binary formats, AI rules or rendering algorithms changed.
 
 The verified bank sizes, visual review evidence and reproduction commands are in
-[slice82_verification.md](slice82_verification.md). Slice 8.2 is closed; 8.3 is
+[slice82_verification.md](verification/archive/slice82_verification.md). Slice 8.2 is closed; 8.3 is
 eligible for planning in a clean context and requires its own approved plan.

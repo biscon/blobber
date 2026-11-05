@@ -42,7 +42,7 @@ CPU regressions cover awareness before/at impact, misses, lethal hits, cancellat
 gone targets, staggered missiles, normal sight, pauses and coarse updates. Run full
 Debug/Release, focused sanitizers and allocation guards; retain review evidence.
 
-Actual execution results and retained captures: [verification](native_hud_verification.md).
+Actual execution results and retained captures: [verification](verification/archive/native_hud_verification.md).
 The atlas replaces the former 256×448 atlas (8,388,608 versus 458,752 bytes).
 Removing the 640×360 render target saves its 921,600-byte color attachment plus
 its depth storage. GPU driver allocations are outside engine allocation claims.
@@ -55,7 +55,7 @@ The initiative strip now anchors to the dungeon viewport’s right edge with a
 six-logical-unit inset (18 native pixels), retaining its existing top edge, bounded
 queue and portrait ordering. Its width follows the remaining queue, so the right
 edge remains fixed as turns advance. This clears the central monster/health-bar
-area. [B01 review evidence](b01_verification.md#user-review-adjustment--size-and-initiative-2026-10-31)
+area. [B01 review evidence](verification/archive/b01_verification.md#user-review-adjustment--size-and-initiative-2026-10-31)
 records the smaller skeleton metadata and fresh GPU captures. No per-frame storage,
 input regions, render targets or resource ownership changed.
 

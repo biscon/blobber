@@ -78,5 +78,6 @@ Desktop.ini
 /assets/**/temp/
 /assets/**/scratch/
 
-# Keep assets/originals, selected animation/sheets, runtime animation/frames,
-# manifests, prompts, and docs/screenshots trackable: they are project assets.
+# Keep source artwork, prompts, manifests and required tool inputs trackable.
+# docs/screenshots contains only curated evidence (6 images/feature; 12 pending
+# review), not raw run output. Create/clean output/agent-runs with agent_artifacts.py.

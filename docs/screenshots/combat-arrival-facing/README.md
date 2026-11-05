@@ -1,26 +1,14 @@
 # Face the party on arrival — 2026-11-04
 
-The existing hidden four-goblin positioning diagnostic was repeated after the
-arrival-facing correction. Both flankers now face the party as their movement
-finishes, before either starts its next attack. Travel-facing is preserved during
-the walk. The two native arrival frames were inspected:
+Curated on 2026-11-05 from existing evidence; no new capture or test run.
+Historical acceptance and verification limitations remain in the linked documentation.
 
-- [Left flanker arrived, before its first attack](flank-2-arrived.png)
-- [Right flanker arrived, before its first attack](flank-3-arrived.png)
+Superseded captures, raw logs, generated galleries and machine reports were removed.
 
-The other four PNGs retain the initial, walking and later engagement frames.
-Owned mechanics use no-damage/high-HP goblins and placeholder party identities,
-with production Underkeep/goblin artwork. Hidden-window, frontal attack, final
-four-body picking, GL error and GPU-resource release checks pass on RTX 3060/
-OpenGL 3.3. No campaign load, OS input or focus automation; interactive review
-remains user-owned.
-
-Reproduce in a new or empty output directory:
-
-```sh
-nice -n 15 ionice -c 3 cmake-build-release/blobber_world_integration_gpu_tests \
-  cmake-build-release/assets NEW_OUTPUT --combat-positioning-review
-```
-
-`manifest.json` records the executed runner and PNG SHA256 identities.
-See [the design and focused test results](../../combat_positioning.md#arrival-facing-follow-up--2026-11-04).
+- [Documentation: combat positioning](../../combat_positioning.md)
+- [all four engaged](all-four-engaged.png)
+- [flank 2 arrived](flank-2-arrived.png)
+- [flank 2 walking](flank-2-walking.png)
+- [flank 3 arrived](flank-3-arrived.png)
+- [flank 3 walking](flank-3-walking.png)
+- [initial two visible two flanking](initial-two-visible-two-flanking.png)

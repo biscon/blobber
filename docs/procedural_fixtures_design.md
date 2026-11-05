@@ -112,6 +112,6 @@ Capacity and malformed definition failures are explicit; no slot recycling or
 implicit runtime container growth is supported. Floor identity and mutation revision
 exhaustion fail; discovery revision saturates without wrapping.
 
-[Verification/handoff](pc02_verification.md) records executed checks, measured prepared
+[Verification/handoff](verification/archive/pc02_verification.md) records executed checks, measured prepared
 bytes, review artifacts and the interactive-review limitation. Future campaign state
 transfer, guardian gates and saved floor state remain separate reviewed slices.

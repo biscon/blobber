@@ -173,7 +173,7 @@ native HUD text, not text baked into the painting.
 **Mockup accepted 2026-10-27:** the user said “yes that looks very nice, continue”.
 The visual gate is satisfied; implementation and animation production are authorized.
 Implementation and runtime verification are complete; see the
-[verification and review handoff](slice12_verification.md). User acceptance of the
+[verification and review handoff](verification/archive/slice12_verification.md). User acceptance of the
 implementation is pending.
 
 ## Implemented data and rendering details

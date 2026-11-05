@@ -145,4 +145,4 @@ Final source/CMake audit: no SceneRenderer, FramePipeline, PreparedNpcs, old ban
 loaders/bakers, renderer selectors, R01 executable probe, standalone demo dispatch
 or public height showcase implementation remains. Negative option/replay tests and
 managed-output cleanup fixtures necessarily name retired interfaces. Historical
-designs and galleries are evidence only. See [verification](r06_verification.md).
+designs and galleries are evidence only. See [verification](verification/archive/r06_verification.md).

@@ -2,7 +2,7 @@
 
 2026-11-01. Diagnostic open-arena sample: three fixed seeds per party/recipe; all 36 completed as victories. Three observed downings, zero permanent deaths, zero incomplete burst metrics. Every figure below is observed evidence, not a win-rate or expedition guarantee.
 
-Balanced = Fighter/Cleric/Rogue/Wizard; no_wizard = Fighter/Cleric/Rogue/Rogue. Starting builds, spell choices and initial/final per-character resources are retained in each trial journal. All start with ordinary full resources and starting gear.
+Balanced = Fighter/Cleric/Rogue/Wizard; no_wizard = Fighter/Cleric/Rogue/Rogue. Starting builds, spell choices and initial/final per-character resources were recorded in trial journals; compact summaries and provenance remain. All start with ordinary full resources and starting gear.
 
 | Recipe / level / total XP | Party | Incoming damage, total | Gross mana spent | H / M potions used | Completed rounds | Simulation seconds |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Balanced = Fighter/Cleric/Rogue/Wizard; no_wizard = Fighter/Cleric/Rogue/Rogue. 
 
 Ranges cover all three completed trials; no failures were excluded. Damage is the resolved incoming total (including temporary HP and overkill), not net HP depletion. Mana is gross spending, so Arcane Recovery/potions can make it exceed the initial pool. Starting Mage Armor and its ordinary Arcane Recovery cost are included. Simulation duration includes preparation/approach/presentation and is not human exploration time.
 
-Per-character damage, maximum hit, six-second/round burst, exact healing events, sampled HP/downings, remaining resources and ability use are in each `trials.jsonl` and report. The six-second window is `(t−6000ms,t]`; sampled HP/downing counters are lower bounds.
+Per-character damage, maximum hit, six-second/round burst, exact healing events, sampled HP/downings, remaining resources and ability use were recorded in the original trial journals and reports; journals are now pruned. The six-second window is `(t−6000ms,t]`; sampled HP/downing counters are lower bounds.
 
 ## Candidate recommendations for PC07.2
 
@@ -42,8 +42,16 @@ XP divides among non-dead members: these recipes give 25, 18.75, 25, 50, 50 and 
 
 The policy is deliberately focused: paid damage/rescue, existing selected spells and contact-turn level-2 class features. Newly earned preparation slots stay empty. Bless and Shield of Faith are not selected by aggressive tactics; unsupported active spells fail preflight. The open arena and exact diagnostic enemy information advantage are explicit. Seed count three is too small for population confidence; no full expedition, depleted-entry or different approach geometry was sampled.
 
-The original retention policy keeps all defeats/failures and first/fastest/slowest victories per party. No defeats occurred. Two downing traces remain retained and were replayed; the no_wizard bugbear_support seed-8 middle-duration trace was not selected, but its scenario, decisions and metrics remain. No extra fight was run to regenerate it.
-
-`index.json` records compressed retained traces, their uncompressed SHA-256 values and the six strictly matched replays. Copy/decompress a trace into a new output path and use the matching runner/content identity recorded in `provenance.json`; strict replay intentionally rejects another build. The local study runner remains at `output/pc071/bin/blobber_headless` with all original output. Manifests/scenarios under `experiments/arena/pc071/` support fresh reproduction with a new build, which is a new experiment and is not silently run here.
+The original study selected first/fastest/slowest victories and downing traces;
+six selected replays matched at that checkpoint. Housekeeping on 2026-11-05 removed
+raw trial/decision journals, trace bodies and the local pinned runner under
+`output/pc071/`. Exact historical replay is no longer available. `index.json` and
+`replay-manifest.json` retain historical hashes and recorded replay outcomes, not
+available trace files. Per-recipe manifests, scenarios, summaries and provenance
+remain, including the manifest consumed by `tools/campaign_route_review.py`.
+[Calibration reports](../verification/archive/README.md#calibration-summaries) preserve
+measured conclusions and limitations. Manifests/scenarios under
+`experiments/arena/pc071/` support fresh reproduction with a current runner and a
+new disposable output directory, only when a new experiment is explicitly requested.
 
 All six batches completed; recorded batch wall time 6.824 s, summed trial wall time 5.851 s. No runtime/output limit was raised or reached. Output footprint at study/capture checkpoint: 96,821,410 bytes, below 3 GiB. One serial low-priority runner; no concurrent build/test/experiment.

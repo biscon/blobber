@@ -2,7 +2,7 @@
 
 Approved mockup: [Character v1](mockups/character-tab-v1.png). The user approved
 implementation on 2026-10-27. Status: implemented, accepted and closed with slice 11 on 2026-10-27.
-See [verification and screenshots](character_sheet_verification.md).
+See [verification and screenshots](verification/archive/character_sheet_verification.md).
 
 Replace the small character inspector with the existing paused fullscreen overlay.
 Inventory and Character are clickable tabs in the title band; both share the

@@ -29,14 +29,14 @@ to the currently implemented campaign.
 ### Calibration and pacing decision (2026-11-01)
 
 The user selected level 2 before the final guardian for this opening. PC07 is split:
-[PC07.1 preparation/calibration](pc071_verification.md) measures candidate encounters
+[PC07.1 preparation/calibration](verification/archive/pc071_verification.md) measures candidate encounters
 first and is now accepted; PC07.2 chooses population and checks generated routes
 after its own detailed plan review.
 PC07.2 is now Accepted and closed: the intended direct route supplies
 1,200 monster XP before the final guardian, with bypassable ordinary fights and
 finite optional reserves. Eight approved diagnostic routes won with 32 observed
 downings and no permanent deaths; this is limited route evidence, not campaign
-balance acceptance. See [verification](pc072_verification.md).
+balance acceptance. See [verification](verification/archive/pc072_verification.md).
 The bounded 36-trial arena study remains historical calibration evidence. This
 supersedes the earlier campaign pause and unresolved level-two/three target above.
 

@@ -368,6 +368,9 @@ endif()
 
 if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME agent_artifacts_tools COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/agent_artifacts_tests.py)
+    set_tests_properties(agent_artifacts_tools PROPERTIES TIMEOUT 20 LABELS "tooling")
     add_test(NAME headless_cli COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/headless_cli_tests.py $<TARGET_FILE:blobber_headless>)
     set_tests_properties(headless_cli PROPERTIES TIMEOUT 60)

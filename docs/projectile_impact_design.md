@@ -112,7 +112,7 @@ never infer arrival from a disappeared cosmetic. Respect the two clocks and appl
 round-based effects at the hybrid boundary defined by slice 08. No spell, effect,
 concentration, ammo or general VFX abstraction has been added in this slice.
 
-See [verification, captures and review recipe](slice83_verification.md).
+See [verification, captures and review recipe](verification/archive/slice83_verification.md).
 
 ### Review correction: center-cell spacing
 

@@ -106,7 +106,7 @@ views before requesting representative-tree acceptance.
 
 Implemented interfaces at the tree checkpoint: publication 7, appearance 4,
 campaign schema/simulation 9/12, generator/templates 9/7, visibility v15 and
-world fingerprint 4. See [verification/handoff](sc03_verification.md) for delivered
+world fingerprint 4. See [verification/handoff](verification/archive/sc03_verification.md) for delivered
 checks, resource totals, shorter-tree captures and the approval boundary.
 
 ## Implemented dressing and water — 2026-11-05
@@ -145,7 +145,7 @@ Cutout/water flags default false. Water is rejected on nonarchitecture/cutout pa
 or UVs outside the first 4×2 tile; shader offsets apply only to color. Noninteractive
 geometry-only views keep phase zero. Conservatively treat a visible chunk with a
 water range as animated, even when actual water pixels are occluded. Final content,
-resource totals, checks and limitations are in [verification](sc03_verification.md).
+resource totals, checks and limitations are in [verification](verification/archive/sc03_verification.md).
 The first tree approval is satisfied; the final SC03 acceptance is pending.
 
 ## User review corrections — 2026-11-05

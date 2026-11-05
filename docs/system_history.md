@@ -15,7 +15,7 @@ R05 **Accepted and closed** (2026-10-31):
 User approved the reviewed plan with “Implement the plan.” Shared quantized
 heights/traversal/sight, raised world presentation, outdoor hub/decor, checkpoint
 schema 2/2 and windowless fixture replay are implemented.
-[Verification](r05_verification.md) and [gallery](screenshots/r05/index.html) retain
+[Verification](verification/archive/r05_verification.md) and [gallery](screenshots/r05/README.md) retain
 focused final checks and limits. Legacy remains default until R06; generated floors
 and the hub walkable layout remain flat. The user explicitly accepted R05:
 “slice accepted, record it in the plan doc”. Verification and limitations remain
@@ -39,8 +39,8 @@ R04 **Accepted and closed; milestone R-B Accepted** (2026-10-31):
 [doors, effects and campaign integration](renderer_integration_design.md), approved
 by “Implement the plan.” Complete `--renderer world` campaign/arena, shared 300 ms
 opening barriers, procedural slabs/frames, depth-aware effects and GPU replay images
-are implemented. [Verification](r04_verification.md) and
-[gallery](screenshots/r04/index.html) record the initial graphics 65/65 and headless 46/46
+are implemented. [Verification](verification/archive/r04_verification.md) and
+[gallery](screenshots/r04/README.md) record the initial graphics 65/65 and headless 46/46
 Debug/Release suites, final affected/protocol checks, CPU sanitizers, hidden GPU
 parity/lifecycle/failure/allocation guards, 1,070-request legacy gameplay comparison
 and 612 identical initial Debug/Release door/spell captures. The review correction
@@ -56,7 +56,7 @@ R03 **Accepted and closed** (2026-10-31):
 transforms, CPU triangle/alpha depth/IDs, ground picking and native health/status
 clipping share one prepared snapshot. Windowless `--visibility world` is explicit
 and graphics-independent; normal gameplay/default visual mode stay legacy.
-[Verification/handoff](r03_verification.md) and [gallery](screenshots/r03/index.html):
+[Verification/handoff](verification/archive/r03_verification.md) and [gallery](screenshots/r03/README.md):
 graphics Debug/Release 64/64 each, headless 45/45 each, affected final checks,
 sanitizers, hidden GPU parity/rollback, allocation/upload and capacity guards pass.
 403 Debug/Release captures match exactly. Per-view scratch is 4.60 MiB; the CPU
@@ -69,8 +69,8 @@ R01 **Accepted and closed; milestone R-A Accepted** (2026-10-31):
 [visual and motion proof](renderer_probe_design.md), approved with “Implement the
 plan.” The isolated manual/hidden probe provides low-resolution GPU geometry,
 source-art billboards, three filtering profiles, legacy comparison and door/sky/
-decoration specimens. [Verification/handoff](r01_verification.md) and
-[review gallery](screenshots/r01/index.html): focused graphics 6/6 Debug/Release,
+decoration specimens. [Verification/handoff](verification/archive/r01_verification.md) and
+[review gallery](screenshots/r01/README.md): focused graphics 6/6 Debug/Release,
 headless 3/3 each, final CPU/GPU checks, CPU ASan/UBSan, zero tracked warmed C++
 allocations and fresh-process benchmark reports. User review (2026-10-31) selects
 supersampling (button 3) as default, retaining native filtered (button 2) as the
@@ -84,7 +84,7 @@ R02 **Accepted and closed** (2026-10-31):
 the reviewed plan with “Implement the plan.” Bounded 8×8 chunk/material meshes,
 prepared mip/alpha textures, shared camera math, shader/mesh handles, staged GPU
 views and a development-only Presenter path are implemented. Supersampling defaults
-on; off is native filtered. [Verification/handoff](r02_verification.md) and
+on; off is native filtered. [Verification/handoff](verification/archive/r02_verification.md) and
 [selected captures](screenshots/r02/README.md): graphics Debug/Release 62/62 each,
 headless 43/43 each, focused final checks, CPU sanitizers, hidden GPU lifecycle and
 rollback, zero tracked frame C++ allocations/uploads, near-capacity stress and
@@ -137,7 +137,7 @@ reviewed plan with “Implement the plan.” One manual slot, safe Save/Save and
 Menu, staged Continue independent of starting builds, exact campaign snapshots,
 checked content/schema/clock ownership and terminal markers are implemented.
 Headless/client/local MCP and byte-safe strict replay share the same authority.
-[Verification and handoff](pc06_verification.md) and [gallery](screenshots/pc06/index.html):
+[Verification and handoff](verification/archive/pc06_verification.md) and [gallery](screenshots/pc06/README.md):
 full headless Debug/Release 41/41 each; graphics 60/60 each; focused ASan/UBSan 3/3
 plus final 1/1, final protocol checks 3/3 in all four presets, zero tracked frame C++
 allocations and 55/60 owned restore/view allocation failure points pass. Fresh-process
@@ -161,7 +161,7 @@ Party supply/derived stats commit atomically with travel. A dedicated paused Tra
 panel preserves Inventory T. First stairs arrivals alone unlock entries; ordinary
 stairs remain free at zero kits. Existing persistent floors, clocks/effects,
 prepared banks and single-Party ownership remain authoritative.
-[Verification/handoff](pc05_verification.md) and [gallery](screenshots/pc05/index.html):
+[Verification/handoff](verification/archive/pc05_verification.md) and [gallery](screenshots/pc05/README.md):
 headless Debug/Release 39/39 each, graphics Debug/Release 58/58 each, focused
 ASan/UBSan 3/3 plus final campaign reruns, zero tracked frame C++ allocations,
 9/14 preparation failure points per travel kind, strict replay, CLI/client/local
@@ -180,8 +180,8 @@ share checked staged stairs in graphical/headless play. Floor-local snapshots,
 portable effects/deadline rebasing, fresh runtime identities, campaign terminal
 results and strict inactive-state replay integrity preserve the accepted systems.
 Prepared banks remain shared; no recall, disk saves, content tuning or balance
-experiments. [Verification/handoff](pc04_verification.md) and
-[capture gallery](screenshots/pc04/index.html). User approval: “Implement the plan.”
+experiments. [Verification/handoff](verification/archive/pc04_verification.md) and
+[capture gallery](screenshots/pc04/README.md). User approval: “Implement the plan.”
 Final headless Debug/Release checks pass 39/39 each; graphics 58/58 each;
 ASan/UBSan 3/3, zero tracked steady-frame C++ allocations, 9/14 preparation
 allocation-failure points, strict replay and hidden GPU/captures pass. Twelve
@@ -198,7 +198,7 @@ PC03 **Accepted and closed** (2026-10-30):
 User approved the detailed plan with “Implement the plan.” Easy placeholder
 encounters, designated guardian gate/reward, and safe stairs rooms; no balance
 experiments, travel or PC04 work. PC01/PC02 remain accepted.
-[Verification/handoff](pc03_verification.md) records headless Debug/Release 38/38,
+[Verification/handoff](verification/archive/pc03_verification.md) records headless Debug/Release 38/38,
 graphics Debug/Release 57/57, five focused sanitizer checks, zero tracked runtime
 allocations, strict guardian combat replay and hidden captures. Generator/templates
 are now 3/3; prepared format/renderer are 4/5. The user accepted PC03 after playing
@@ -208,7 +208,7 @@ through the accessible floor, defeating the guardian and collecting the loot
 PC02 **Accepted and closed** (2026-10-30):
 [doors, keys and discovered navigation](procedural_fixtures_design.md).
 User: “Implement the plan.” Shared effective geometry, checked permanent fixtures,
-facing-based discovery and isolated diagnostic reveal. [Verification/handoff](pc02_verification.md)
+facing-based discovery and isolated diagnostic reveal. [Verification/handoff](verification/archive/pc02_verification.md)
 records headless Debug/Release 37/37, graphics Debug/Release 56/56, focused sanitizer
 and allocation checks, strict replay and hidden captures. Generator/templates are
 2/2 and prepared format/renderer 4/4. The user accepted after testing the available
@@ -233,7 +233,7 @@ No respawns; finite optional encounters provide XP/resource fallback. Shops are 
 later milestone. The plan records ownership, clocks, transactional failures and
 validation. The user approved the [PC01 detailed design](procedural_generation_design.md) with
 “Implement the plan.” PC01 is **Accepted and closed** (2026-10-30); the user
-confirmed “slice accepted, record it in the doc”. PC02 is Accepted and closed above; PC03 and milestone P-A are Accepted; PC04–PC09 remain Planned. [PC01 verification/handoff](pc01_verification.md) records full
+confirmed “slice accepted, record it in the doc”. PC02 is Accepted and closed above; PC03 and milestone P-A are Accepted; PC04–PC09 remain Planned. [PC01 verification/handoff](verification/archive/pc01_verification.md) records full
 headless Debug/Release 35/35, graphics Debug/Release 53/53, focused sanitizers,
 zero tracked frame allocations, hidden GPU/capture checks and thirteen retained PNGs.
 New Game now enters a populated seeded 36×36 floor through the existing party picker.
@@ -251,7 +251,7 @@ Implemented, **Accepted and closed** (2026-10-30): [slice 13.3 local MCP adapter
 Optional official-SDK stdio tools reuse accepted sessions, experiments/reports and
 strict replay, with stale-safe handles, bounded jobs, cancellation and artifact access.
 An optional replay observer exports hidden application-owned current scene/HUD captures.
-[Installation/review guide](mcp_usage.md) and [verification/handoff](slice133_verification.md):
+[Installation/review guide](mcp_usage.md) and [verification/handoff](verification/archive/slice133_verification.md):
 19 fast adapter contracts, headless Debug/Release 6/6, graphics Debug/Release 7/7,
 focused sanitizer replay/capture checks, SDK lifecycle/cancellation integration,
 explicit opt-in smoke/rerun/replay, hidden GPU checks and seven retained captures.
@@ -267,7 +267,7 @@ selected trace retention. The client adds I/O deadlines and cancellation. Three
 sensible party packages and three policies support separate opt-in playtesting;
 **even small balance matrices stay outside routine tests**. No gameplay or rendering
 rules changed. [Usage](../experiments/arena/README.md) and
-[verification/handoff](slice132_verification.md): 27 fast tooling contracts, focused
+[verification/handoff](verification/archive/slice132_verification.md): 27 fast tooling contracts, focused
 Debug/Release 5/5, manual fixture integration, 18/216-trial comparisons, selected
 policy rerun/engine replay, CPU visual mode and measured Release workloads. The
 user accepted and closed the slice on 2026-10-30: “close up the slice”. It is general-purpose project tooling for agents to use wherever relevant.
@@ -278,7 +278,7 @@ A graphics-independent NPC metadata loader and bounded typed session host adapt 
 existing simulation to JSON-lines commands, fixed 10 ms stepping, player/diagnostic
 observations and strict replay. Optional prepared CPU picking shares visibility
 validation with the UI; graphics-disabled builds need no raylib or image assets.
-[Protocol/client guide](headless_protocol.md) and [verification/handoff](slice131_verification.md):
+[Protocol/client guide](headless_protocol.md) and [verification/handoff](verification/archive/slice131_verification.md):
 full Debug/Release 48/48, graphics-disabled Debug/Release 30/30, focused sanitizers,
 zero tracked allocations, 256-actor capacity, shipped-content record/replay in both
 modes without a display, and hidden GPU lifecycle checks. The user accepted slice 13.1
@@ -292,7 +292,7 @@ Session-owned exactly-once XP feeds checked live-party advancement through level
 spells. Bounded effects add Aid, Mirror reservations, spectral weapon positions and
 concentration-linked Web cells; optional activations preserve normal turn ownership.
 Schema 9 and prepared bundle/renderer revision 3 retain the accepted library, arena,
-1920×1080 and prepared-image contracts. [Verification and handoff](slice13_verification.md)
+1920×1080 and prepared-image contracts. [Verification and handoff](verification/archive/slice13_verification.md)
 records Debug/Release 41/41, focused sanitizer 8/8, zero tracked allocations,
 capacity/GPU checks and 69 initial captures. The user accepted slice 13 and milestone C
 on 2026-10-30. The automation interlude is now accepted; the remaining static-demo
@@ -305,7 +305,7 @@ See the handoff for focused verification, refreshed captures and the accepted cl
 Implemented, **accepted and closed** (2026-10-29): [slice 12.5 arena](arena_design.md).
 Main-menu setup, independent party/scenario snapshots, bounded portable file storage,
 generated safe-spawn room and Rematch/Edit Setup reuse normal gameplay and prepared
-rendering. [Verification and handoff](slice125_verification.md): Debug/Release 38/38,
+rendering. [Verification and handoff](verification/archive/slice125_verification.md): Debug/Release 38/38,
 focused ASan/UBSan 5/5, zero tracked frame allocations, capacity stress, hidden GPU
 checks and 54 captures. The user accepted slice 12.5 on 2026-10-29. Creature-size
 footprints remain deferred; the subsequent progression work is recorded above.
@@ -313,7 +313,7 @@ footprints remain deferred; the subsequent progression work is recorded above.
 Implemented, **accepted and closed** (2026-10-29): [slice 12.4 creator and reusable selection](character_creator_design.md).
 Fixed drafts and shared choice panels integrate creation, checked library saving
 and atomic Long Rest preparation. A bounded 16 MiB detail-art atlas reuses existing
-masters. [Verification and handoff](slice124_verification.md): Debug/Release 37/37,
+masters. [Verification and handoff](verification/archive/slice124_verification.md): Debug/Release 37/37,
 focused ASan/UBSan 4/4 with leak detection, zero tracked frame allocations, hidden
 GPU checks and 187 captures. The user accepted slice 12.4 on 2026-10-29 and retained
 the current 27-point buy, 8–15 base scores and fixed racial bonuses. Arena slice 12.5 was subsequently accepted; progression is recorded above.
@@ -322,7 +322,7 @@ Implemented, **accepted and closed** (2026-10-29): [slice 12.3 menu and launch](
 Normal startup loads catalog/library/UI only. Bounded library browsing, read-only
 review, confirmed deletion and a four-character picker precede transactional dungeon
 preparation. Runs own independent starting builds; defeat replays those builds and
-seed. Confirmed Main Menu teardown returns to the menu. [Verification/handoff](slice123_verification.md)
+seed. Confirmed Main Menu teardown returns to the menu. [Verification/handoff](verification/archive/slice123_verification.md)
 records Debug/Release 35/35, focused sanitizers, allocation/GPU checks and hidden
 captures. Review correction adds direct card-to-slot dragging, swaps, drop feedback and
 focused search carets; focused Debug/Release, sanitizer, allocation and hidden
@@ -335,7 +335,7 @@ gear reuse derivation; schema 8 authors explicit per-character class/domain/raci
 spell grants. A versioned 128-character starting-build library uses checked atomic
 POSIX transactions. Independent party/session construction adds three launch camp
 kits. Twenty stable portraits use offline padded QOI atlases (40 MiB), with no
-frame decode/resize. [Verification and handoff](slice122_verification.md): Debug and
+frame decode/resize. [Verification and handoff](verification/archive/slice122_verification.md): Debug and
 Release 34/34, focused sanitizers 5/5, allocation/GPU checks, 225 portrait/build
 captures and 482 spell captures. The user accepted slice 12.2 on 2026-10-29; 12.3 is accepted and closed above.
 
@@ -354,7 +354,7 @@ Grease floor banks and required four-direction static prone clips preserve offli
 image preparation and frame allocation guarantees. That checkpoint used bundle format 2; slice 13 advances it to format 3.
 The ten spell additions retain checked casts, bounded conditions/ground areas,
 temporary HP and turn-relative short effects. [Local SRD](references/README.md)
-is the source for future planning. [Verification and handoff](slice121_verification.md):
+is the source for future planning. [Verification and handoff](verification/archive/slice121_verification.md):
 Debug/Release 31/31, focused sanitizers 6/6, zero tracked frame allocations,
 capacity baking, hidden GPU checks and 470 captures pass. User acceptance on 2026-10-29 includes all visual and portrait
 follow-ups. Slice 12.2 is now accepted and closed, as recorded above.
@@ -382,14 +382,14 @@ capacity before staged Party removal; 256 generation-checked reusable player-dro
 slots complement the unchanged 2,112 death/authored reservations. Equipment-derived
 stats/effects reconcile after a drop. Fixed storage, per-pixel picking identities
 and modal input rules remain intact. See [design](loot_recovery_design.md#inventory-drop-and-top-bar-rest-follow-up)
-and [current verification](slice12_verification.md): Debug/Release 29/29, focused
+and [current verification](verification/archive/slice12_verification.md): Debug/Release 29/29, focused
 sanitizers 3/3, allocation/stress/hidden GPU checks and 108 hidden captures pass.
 The user accepted slice 12, including all review corrections, on 2026-10-27.
 This was the slice-12 checkpoint; the accepted 12.x interlude above now precedes slice 13.
 
 Implemented, **accepted and closed** (2026-10-27): slice 12
 [loot and recovery](loot_recovery_design.md), including the approved loot-bag review
-correction; [verification and handoff](slice12_verification.md). GameSession owns
+correction; [verification and handoff](verification/archive/slice12_verification.md). GameSession owns
 bounded corpse-independent loot and checked rest transactions; Party stages whole-
 stack acquisition and supply consumption. One prepared bag per nonempty cell opens
 a paused grid with contained/aligned details, shared Inventory slot painting, live
@@ -408,12 +408,12 @@ Implemented, **accepted and closed**: approved [tabbed inventory and character s
 replacing the portrait inspector while preserving the current inventory layout.
 The shared paused overlay uses fixed snapshots of live stats, equipment, resources,
 features and effects; XP remains read-only. Both entry routes and tab directions
-preserve character identity. [Verification and captures](character_sheet_verification.md)
+preserve character identity. [Verification and captures](verification/archive/character_sheet_verification.md)
 record focused Debug/Release, allocation and hidden GPU checks. The user accepted slice 11 and this extension on 2026-10-27.
 
-Implemented, **accepted and closed**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](slice11_verification.md#inventory-review-correction-2026-10-27).
+Implemented, **accepted and closed**: [slice 11 review correction](inventory_design.md#review-correction-simpler-inventory-controls-2026-10-27): contextual actions, drag-based organization, equipment placement, centered controls, right-aligned quantities, M/I shortcuts and a backpack dock icon. Availability uses bounded authoritative previews shared by buttons and shortcuts; no new gameplay rules. See the [updated handoff](verification/archive/slice11_verification.md#inventory-review-correction-2026-10-27).
 
-Implemented, **accepted and closed** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](slice11_verification.md).
+Implemented, **accepted and closed** (2026-10-27): slice 11 [inventory and equipment](inventory_design.md), with [verification and handoff](verification/archive/slice11_verification.md).
 Party owns bounded live stacks and separate gear, with atomic staged transactions,
 weight/stat/effect reconciliation and strict schema-5 content. Full-screen paused
 browsing supports drag, split, transfer and equipment controls. Potions and finite
@@ -439,10 +439,10 @@ pass, including 48 approach/render combinations, side/back fallback, travel and
 allocation checks. Hidden GPU checks and shipped-art captures also pass. Slice 10's
 acceptance remains recorded below; this correction does not start slice 11.
 
-Implemented correction, accepted by the user on 2026-10-27: [native-resolution HUD and impact alerts](native_hud_design.md), with [verification](native_hud_verification.md).
+Implemented correction, accepted by the user on 2026-10-27: [native-resolution HUD and impact alerts](native_hud_design.md), with [verification](verification/archive/native_hud_verification.md).
 
 Implemented, **accepted and closed** (2026-10-27): slice 10
-[spells and class identity](spells_design.md), with [verification and handoff](slice10_verification.md).
+[spells and class identity](spells_design.md), with [verification and handoff](verification/archive/slice10_verification.md).
 Fourteen curated spells use checked commands, fixed party payloads and the existing
 impact/effect clocks. Party owns mana/charges; Combat owns readiness and Sneak Attack;
 Effects owns concentration and Guiding deadlines. The paused spellbook resumes into
@@ -451,13 +451,13 @@ Schema 4 retains versions 1–3 compatibility. The user accepted slice 10, inclu
 all UI and impact-alert corrections. Slice 11 is tracked separately at the top of this overview. The approved [casting UI revision](spellcasting_ui_design.md)
 is implemented without changing spell mechanics: independent pending casts, compact picker,
 casting dock, direct recipient feedback and a shared authoritative area query. See
-[UI verification and captures](slice10_ui_verification.md). The completed review correction
+[UI verification and captures](verification/archive/slice10_ui_verification.md). The completed review correction
 stabilizes badges with projection-based anchors and adjusts HUD spacing; see the
 [review polish design](spellcasting_ui_design.md#review-polish-badge-stability-and-spacing-2026-10-27).
 
 Implemented, **accepted and closed** (2026-10-27): slice 09
 [effects and concentration](effects_design.md), with
-[verification and handoff](slice09_verification.md). GameSession owns 64 fixed
+[verification and handoff](verification/archive/slice09_verification.md). GameSession owns 64 fixed
 instances for Bless, Bane, Shield of Faith, Mage Armor and Hold Person. Effects
 share the hybrid gameplay clock, with real-time deadlines interleaved with attack
 impacts and full-round retries during turns. Concentration changes at damage impact;
@@ -467,7 +467,7 @@ player casting and mana arrive in slice 10 above. The user accepted slice 09 on 
 
 Implemented, **accepted and closed** (2026-10-26): slice 8.1
 [offline image preparation and memory](image_preparation_design.md), with
-[verification and handoff](slice81_verification.md). NPC and dungeon surface banks
+[verification and handoff](verification/archive/slice81_verification.md). NPC and dungeon surface banks
 are baked by an incremental build target and loaded without source image decoding
 or resizing at startup. Shared NPC profile C (alpha-aware area/half-size derivatives)
 applies to every current and future appearance. Walls/floors/ceilings retain point
@@ -476,7 +476,7 @@ tracked-loading limits supersede the historical 160 MiB startup pixel cap below.
 
 Implemented, **accepted and closed** (2026-10-26): slice 8.2
 [distinct goblin archer artwork and loadouts](goblin_archer_design.md), with
-[verification and handoff](slice82_verification.md). Appearance `goblin.archer`
+[verification and handoff](verification/archive/slice82_verification.md). Appearance `goblin.archer`
 provides 48 hooded bow/quiver poses across five four-direction clips and binds by
 name to the existing bow-only rules variant. The two hybrid-demo archers use it;
 regular `goblin` is melee-only. Both immutable prepared appearances share profile C,
@@ -486,7 +486,7 @@ bow masters remain intact. The user accepted the completed slice on 2026-10-26.
 
 Implemented, **accepted and closed** (2026-10-27): slice 8.3
 [projectiles and impact-time consequences](projectile_impact_design.md), with
-[verification and handoff](slice83_verification.md). Combat owns 260 pending
+[verification and handoff](verification/archive/slice83_verification.md). Combat owns 260 pending
 attacks; validation, costs and rolls occur at acceptance, while HP/life/occupancy,
 reactions and result feedback change at impact. Timestamped batches drain existing
 deadlines before movement/AI and phase handoff. Separate bounded cosmetics render
@@ -503,7 +503,7 @@ that interval toward the existing diagonal edge limit. It retains the continuous
 strafe blend and shared body/shadow/picking/projectile projection. Center pair
 separation in both rows/all headings, diagonal visibility, travel and allocations
 pass regression checks; hidden captures confirm the shipped-art result. See the
-[correction verification](slice83_verification.md#review-correction-center-cell-pair-spacing).
+[correction verification](verification/archive/slice83_verification.md#review-correction-center-cell-pair-spacing).
 
 Implemented and accepted (2026-10-26): [three-cell melee front](hybrid_encounter_design.md#three-cell-melee-front), shared diagonal contact/archer spacing, and front-band AI routing. Approved edge presentation shifts clipped diagonal NPCs inward with matching shadows/picking; camera/FOV and world occupancy remain unchanged.
 
@@ -521,7 +521,7 @@ cannot attack; fixed front-row protection replaces directional exposure. No
 maneuver/retreat command or party surprise penalty remains. Catalog schema 3 adds typed traits and
 a dedicated ranged slot while retaining schemas 1/2. Prepared bow clips keep the
 fixed 1920×1080 presentation and 160 MiB pixel cap. See
-[verification and handoff](slice08_verification.md). Slice 09 is now accepted and closed;
+[verification and handoff](verification/archive/slice08_verification.md). Slice 09 is now accepted and closed;
 slice 08 and milestone B are closed. Graphical subslices 8.1–8.3 are also
 accepted and closed; see the slice 09 checkpoint above.
 
@@ -529,13 +529,13 @@ Slice 07 [moving goblin AI](goblin_ai_design.md) remains accepted, including
 600 ms [visual travel](goblin_ai_design.md#review-correction-interpolated-walking)
 and attack-presentation holds. Slice 08 renames the shared controller to NpcAiController
 and supersedes the former frontal-only contact and frozen-roaming phase policy.
-[Slice 07 verification](slice07_verification.md) is its historical acceptance record.
+[Slice 07 verification](verification/archive/slice07_verification.md) is its historical acceptance record.
 The earlier slice descriptions below record their accepted scope; hybrid encounter
 rules above supersede their stationary-combat restrictions.
 
 Implemented and accepted by the user (2026-10-26): slice 06 [goblin hurt/death reactions](goblin_reactions_design.md).
 Four-direction prepared clips provide 300 ms hurt and 1200 ms death/corpse playback,
-with a 100 ms white overlay. See [verification and review](slice06_verification.md).
+with a 100 ms white overlay. See [verification and review](verification/archive/slice06_verification.md).
 Simulation releases occupancy when lethal damage is committed, now at impact;
 art never resolves damage or death. The historical UI-only delay in the
 [impact timing design](goblin_reactions_design.md#attack-impact-feedback) is
@@ -547,14 +547,14 @@ from current target exposure; see [melee design](melee_combat_design.md#front-sl
 Implemented and accepted by the user (2026-10-25):
 [dungeon-first UI revision](dungeon_ui_design.md) for slice 05.
 Combat and presentation are accepted; slice 05 and milestone A are closed. See
-[UI verification and captures](dungeon_ui_verification.md).
+[UI verification and captures](verification/archive/dungeon_ui_verification.md).
 
 Implemented and accepted by the user (2026-10-25), slice 05:
 [first melee combat](melee_combat_design.md).
 An immovable gameplay session owns party health, actors, movement, seeded RNG and
 stationary frontal encounters. Initiative, row protection on both sides, melee,
 Defend, Aid, death saves, victory and defeat now execute authoritative commands.
-See [slice 05 verification and review](slice05_verification.md). Interactive desktop
+See [slice 05 verification and review](verification/archive/slice05_verification.md). Interactive desktop
 review remains unverified; do not automate the user's mouse, keyboard or desktop.
 
 Implemented and accepted by the user (2026-10-25): slice 04
@@ -563,7 +563,7 @@ previews, visible-body targeting and a bounded log read the existing party/actor
 state. Slice 05 adds combat execution; the isolated demo retains preview-only semantics with the revised UI.
 Explicit UI demo
 scenarios keep sample mana/status values separate from authoritative party state.
-See [slice 04 verification](slice04_verification.md). The typography correction uses
+See [slice 04 verification](verification/archive/slice04_verification.md). The typography correction uses
 size-specific font atlases and native 1920×1080 text over the enlarged art,
 with rounded text positions. The HUD design records the live-animation correction:
 interactive demo clocks advance; capture clocks remain explicit, and automatic
@@ -598,7 +598,7 @@ Implemented and accepted by the user (2026-10-25):
 pure stat derivation and a bounded four-character owner. It initializes HP, Hit
 Dice, XP, and relative formation before world/image preparation. The party exposes
 const state, checked health operations and formation swaps locked during combat.
-Inventory transactions and mana remain deferred. See [slice 02 verification](slice02_verification.md).
+Inventory transactions and mana remain deferred. See [slice 02 verification](verification/archive/slice02_verification.md).
 
 NPC extension: [directional sprites and slow animation](npc_design.md) is implemented.
 It adds immutable level NPC placement data, JSON assets, and prepared alpha animation
@@ -612,7 +612,7 @@ The [NPC design](npc_design.md#rendering) also covers prepared, floor-projected
 contact shadows, blended beneath bodies and clipped against wall depth.
 
 Status: implemented. The foundation refactor preserves the established renderer,
-projection, movement, and art. See [verification](verification.md) for executed
+projection, movement, and art. See [verification](verification/archive/verification.md) for executed
 checks and limits.
 
 ## Boundaries and data flow
@@ -818,7 +818,7 @@ Debug/Release correctness and allocation suites, and compare deterministic hidde
 captures of walls, passages, rooms and goblins. Item interaction remains deferred.
 Both 19-suite builds, allocation checks and the hidden GPU lifecycle check pass;
 278 captures per projection completed. See the [framing verification and retained
-comparisons](verification.md#84-framing-experiment-2026-10-26).
+comparisons](verification/archive/verification.md#84-framing-experiment-2026-10-26).
 
 Prefer an installed compatible raylib 6.2 package, otherwise use the current
 hash-verified FetchContent fallback. nlohmann/json 3.12.0 likewise prefers the
@@ -868,7 +868,7 @@ Debug/Release presets stay CLion-compatible.
   produce the same deterministic captures, and compare them with the baseline.
   Capture/export allocations are intentionally excluded from the frame guarantee.
 - Build and run CTest in Debug and Release. Record executed checks and limitations
-  in [verification notes](verification.md).
+  in [verification notes](verification/archive/verification.md).
 
 Historical techniques and visual choices are documented in [research](research.md).
 
@@ -928,7 +928,7 @@ Status rows retain their existing non-overlap placement; casting/target UI remai
 an overlay. Generated-fixture depth, silhouette, wall, corpse and reset cases,
 clipping coverage and allocation guards cover the CPU contract. Hidden
 application-owned captures exercise sleeping rear enemies behind standing front
-enemies. See the [follow-up verification](slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30).
+enemies. See the [follow-up verification](verification/archive/slice13_verification.md#enemy-status-icon-occlusion-follow-up-2026-10-30).
 The user accepted this follow-up on 2026-10-30; it is closed alongside slice 13
 and milestone C. The subsequent automation interlude above makes slice 13.1 next
 eligible for separate planning; slice 14 remains unstarted.

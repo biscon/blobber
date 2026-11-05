@@ -1,5 +1,41 @@
 # System design
 
+## Agent artifacts and evidence
+
+Artifact housekeeping is implemented (2026-11-05). Agents own disposable
+output under ignored `output/agent-runs/<run-id>/`, created by
+`python3 tools/agent_artifacts.py create`. The helper's `clean RUN_DIRECTORY`
+previews removal; `--apply` removes only that marked run. It rejects symlinks,
+unmanaged paths and tracked content. No age-based sweep or background service
+owns other runs, build caches, artwork or saves.
+
+At task completion, promote selected evidence into `docs/screenshots/<feature>/`,
+update the existing design/handoff, and clean the run. Galleries retain at most six
+images, or twelve pending user review, unless their README explains distinct cases
+requiring an exception. Raw logs, traces and intermediate captures are disposable;
+unresolved failures may retain selected diagnostics with reproduction instructions
+and an explicit cleanup condition. Durable test conclusions remain in authored
+verification documents; completed historical reports live in
+`docs/verification/archive/`. Source artwork, prompts, references, test fixtures
+and calibration manifests consumed by tools are separate from run output.
+Browse [selected evidence](screenshots/README.md) and the
+[historical verification archive](verification/archive/README.md).
+
+The helper uses only the Python standard library and runs outside engine frame
+processing. Verification uses isolated temporary directories for dry-run, deletion,
+path/symlink rejection and tracked/neighbor protection; documentation checks replace
+gameplay builds for housekeeping changes. See the
+[verification workflow](verification_workflow.md#artifact-housekeeping) for commands.
+
+Housekeeping verification (2026-11-05): six isolated helper cases pass directly
+and through the `agent_artifacts_tools` CTest registration; seven route-tool checks
+pass with the retained calibration input. A synthetic Pillow fixture exercises
+the gallery helper's separate input/output paths, generated links and overwrite
+refusal. Local Markdown file links and gallery limits were checked. No gameplay
+build, rendering capture, desktop automation or benchmark was run for this change.
+
+## Current systems and review status
+
 Sanctuary inn **implemented and mechanically verified; awaiting user review (2026-11-05)**:
 [design](inn_interior_design.md) adds an authored fifth campaign location,
 facing-sensitive doorway travel, a furnished common room and decorative hearth,
@@ -28,7 +64,7 @@ as the default: .75 strength / .375 darkening cap, .30-cell radius and .01-cell 
 Focused AO checks pass; visual review is complete.
 
 Sanctuary SC04 is **Accepted and closed (2026-11-05)**: [design](sc04_design.md),
-[verification](sc04_verification.md) and [campaign captures](screenshots/sc04/README.md).
+[verification](verification/archive/sc04_verification.md) and [campaign captures](screenshots/sc04/README.md).
 Normal campaigns now use the accepted city. New Game starts in the square, recall
 arrives at sanctuary, and dungeon ascent returns facing into town. Named content
 anchors drive travel, protected landings, recovery and HUD prompts. City discovery
@@ -40,7 +76,7 @@ are complete and closed. The [entrance trim correction](sc04_design.md#entrance-
 recesses building-backed staircase terminal panels ahead of raised facade trim.
 
 Sanctuary SC03 is **Accepted (2026-11-05)**: [design](sc03_design.md),
-[verification](sc03_verification.md) and [captures](screenshots/sc03/README.md).
+[verification](verification/archive/sc03_verification.md) and [captures](screenshots/sc03/README.md).
 Bounded scenery placements and prepared cutout meshes support two trees, bushes,
 three planting beds and sparse ivy; two stalls, a fountain and three painted service
 signs complete the dressing. The shorter representative tree is accepted. Opaque
@@ -59,7 +95,7 @@ beside the upper window; see the SC03 mounting addendum. Milestone S-B is accept
 SC04 delivers the campaign cutover below; SC03 artwork remains accepted.
 
 Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
-and [verification/captures](sc02_verification.md). The 24×24 square-centered town
+and [verification/captures](verification/archive/sc02_verification.md). The 24×24 square-centered town
 has ten principal buildings, separate dungeon/gate landmarks, two street loops,
 and fixed named approaches/dressing reservations. Ten models and 91 placements
 reuse SC01 ownership/rendering; campaign cutover remains SC04. User review reports
@@ -75,9 +111,9 @@ guide an older, lightly overgrown town with occasional two-storey exterior shell
 Use simple prepared low-poly geometry and basic frustum culling; optimize observed
 issues at slice handoffs. Interiors/services are deferred and existing development
 saves require no migration. SC01 is split: [SC01.1 location-owned assets](sc011_design.md) is implemented with
-[verification and handoff](sc011_verification.md); SC01.2 architecture is implemented
+[verification and handoff](verification/archive/sc011_verification.md); SC01.2 architecture is implemented
 and accepted (2026-11-05); see the [architecture design](sc01_design.md) and
-[verification/captures](sc01_verification.md). Supersampling and texture fidelity remain unchanged;
+[verification/captures](verification/archive/sc01_verification.md). Supersampling and texture fidelity remain unchanged;
 512 MiB–1 GiB is a memory target, not a mandate to reduce quality.
 SC01.2 review follow-up corrects panel-divider contamination in the offline material
 exporter, with aligned 16-pixel atlas gutters and focused verification; see
@@ -220,7 +256,7 @@ Renderer roadmap **Accepted and closed** (2026-10-31): R01–R06 and milestones
 R-A/R-B/R-C are complete. The user accepted R06 with “slice accepted, close up the
 new renderer plan”. [Sole renderer cutover and retirement](renderer_cutover_design.md)
 documents the delivered ownership, interfaces and deletion inventory;
-[verification](r06_verification.md) retains executed checks and limitations unchanged.
+[verification](verification/archive/r06_verification.md) retains executed checks and limitations unchanged.
 [Historical design and acceptance records](system_history.md) preserve prior evidence
 without describing current defaults. The bestiary expansion is closed with B01–B05
 accepted; useful B06 scope transfers to campaign PC07. Campaign planning resumes
@@ -228,7 +264,7 @@ after P-B. [PC07.1 preparation and calibration](pc071_arena_calibration_design.m
 is Accepted and closed (2026-11-01); PC07.2 [population and route checks](pc072_population_design.md) is **Accepted and closed** (2026-11-01), including review corrections. Parent PC07
 is closed; PC08 is next for detailed planning only and P-C remains incomplete.
 
-Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
+Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](verification/archive/dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
 Current follow-up: [loot, guardian doors and uninterrupted encounter flow](dungeon_flow_polish.md)
 records the implemented visual/interaction polish, unsaved-run terminal fix, and
@@ -240,19 +276,19 @@ Each monster includes imagegen art in the goblins' style and their applicable
 animation set. Implement and review in the arena before campaign integration;
 all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) is
 **Accepted and closed** (2026-10-31): immutable damage profiles, typed impact resolution and full
-skeleton art are implemented in the arena. [Verification](b01_verification.md)
+skeleton art are implemented in the arena. [Verification](verification/archive/b01_verification.md)
 records checks, captures and acceptance. B02 bugbear and full-resolution sprite
-cropping are **Accepted and closed** (2026-10-31); [B02 verification](b02_verification.md) records
+cropping are **Accepted and closed** (2026-10-31); [B02 verification](verification/archive/b02_verification.md) records
 art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack Tactics](b03_giant_rat_design.md) is **Accepted and closed** (2026-10-31).
 [B04 zombie and atomic Undead Fortitude](b04_zombie_design.md) is **Accepted and closed**
 (2026-11-01): mechanics, full art, native portrait and normal arena integration are
 delivered. Reference v1 and the completed slice are accepted.
-[B04 verification/gallery](b04_verification.md) records the checks and limitations.
+[B04 verification/gallery](verification/archive/b04_verification.md) records the checks and limitations.
 [B05 goblin shaman and enemy spellcasting](b05_goblin_shaman_design.md) is
 **Accepted and closed** (2026-11-01). Tagged NPC Bless
 sources, fixed NPC resources, casting timelines, full 56-pose art and portrait are
 implemented. Reference v1 and the completed slice are accepted.
-[B05 verification/gallery](b05_verification.md) records checks and limitations.
+[B05 verification/gallery](verification/archive/b05_verification.md) records checks and limitations.
 B06 is superseded without implementation; reusable level preparation and targeted
 calibration now belong to [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
@@ -269,7 +305,7 @@ implements the accepted first half of PC07. Its measurements precede population
 selection in PC07.2. The target is level 2 before the final guardian under normal
 shared XP. The bounded 36-trial study completed: all victories, three downings, zero permanent
 deaths. [Costs and recommendations](pc071_calibration/README.md) and
-[verification](pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
+[verification](verification/archive/pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
 
 PC07.2 [variety and controls](pc072_variety_controls.md) are **Accepted and closed** (2026-11-01)
 under the approved review plan: generated room graphs, one starting kit,
@@ -292,7 +328,7 @@ bypassable. Existing Party, reward, travel and allocation ownership are unchange
 The original generator-5 [eight persistent routes](pc072_routes/README.md) all won: 32 observed downings,
 zero permanent deaths/recorded merges, level two before the final guardian and
 three field rests each. Both selected replays matched with hidden captures.
-[Verification and limitations](pc072_verification.md) retain frequent downings,
+[Verification and limitations](verification/archive/pc072_verification.md) retain frequent downings,
 costly reserve detours, diagnostic policy limits and historical balance limitations.
 
 Pause diagnostics follow-up (2026-11-01): Presenter owns a default-off F1 toggle
@@ -563,7 +599,7 @@ canonical restore and disk persistence (introduced in schema/simulation 4/7;
 current identities are 6/10). Additive protocol
 source tags, hover/log feedback, full production art and portrait reuse existing
 owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
-all budgets/count capacities remain fixed. [Verification](b05_verification.md)
+all budgets/count capacities remain fixed. [Verification](verification/archive/b05_verification.md)
 records evidence, limitations and completed-slice user acceptance.
 
 B04 implements the approved [zombie design](b04_zombie_design.md). Catalog schema 12
@@ -575,7 +611,7 @@ premature reward. Radiant/critical bypass; full adjusted damage sets the 64-bit 
 Existing impact order, accepted rolls and spell-hit granularity remain. Resolved
 event metadata, bounded log/one-HP feedback, production 48-pose art and native
 portrait use existing owners. Six-appearance publication is 260.95 MiB mip /
-46.60 MiB alpha within unchanged limits; [verification](b04_verification.md) records
+46.60 MiB alpha within unchanged limits; [verification](verification/archive/b04_verification.md) records
 focused CPU/GPU/replay evidence, limitations and completed-slice user acceptance.
 
 B03 mechanics follow the approved [giant rat design](b03_giant_rat_design.md).
@@ -586,7 +622,7 @@ incapacitated. Existing advantage cancellation and saved delayed rolls remain
 unchanged. Resolved attacks carry compact pack/mode context for bounded HUD logs
 and additive automation fields; no frame allocation, support cache or capacity
 increase. Rat production art (48 poses), native portrait and arena integration are delivered,
-with accepted reference v3. [Verification](b03_verification.md) records CPU/GPU
+with accepted reference v3. [Verification](verification/archive/b03_verification.md) records CPU/GPU
 checks, publication totals, strict arena captures, limitations and completed-slice acceptance.
 
 B02 implementation follows the approved [bugbear and sprite memory design](b02_bugbear_design.md).
@@ -613,8 +649,8 @@ publication follow the existing renderer pipeline. Body width stays <=.5 cells;
 all clip canvases may use the existing <=1-cell world publication bound without
 changing occupancy. A fixed HUD species discriminator selects its generated
 portrait in the existing UI atlas. Profiles and portraits add no frame allocations
-or resource owner. Historical B01 totals remain in its [handoff](b01_verification.md);
-current cropped publication totals are in [B02 verification](b02_verification.md).
+or resource owner. Historical B01 totals remain in its [handoff](verification/archive/b01_verification.md);
+current cropped publication totals are in [B02 verification](verification/archive/b02_verification.md).
 
 ## Interfaces and preservation
 
@@ -645,7 +681,7 @@ transport/replay and save smoke checks run without a window. GPU integration cov
 actual resource ownership, full-pixel CPU/GPU parity, hidden world/native UI drawing,
 staged rollback and cleanup separately. No desktop input automation. Full persistence
 and capacity/performance investigations are explicit; no repeated routine matrices.
-See [R06 verification](r06_verification.md) for executed checks and limitations.
+See [R06 verification](verification/archive/r06_verification.md) for executed checks and limitations.
 
 ## Source map and design index
 
@@ -663,7 +699,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
 [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 PC07.1 preparation and calibration are Accepted and closed;
-[verification/handoff](pc071_verification.md) records the bounded study and limits.
+[verification/handoff](verification/archive/pc071_verification.md) records the bounded study and limits.
 PC07.2 population, route checks and review corrections are Accepted and closed
 (2026-11-01), completing parent PC07. PC08 is next for separate detailed planning;
 P-C remains incomplete. See the [current handoff](procedural_campaign_plan.md#pc072-accepted-closeout-and-next-agent-handoff-2026-11-01-current).

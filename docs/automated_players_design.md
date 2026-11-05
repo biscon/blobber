@@ -3,7 +3,7 @@
 Status: **Implemented; Accepted and closed**, 2026-10-30. The user authorized
 implementation with “implement the plan” and accepted the result with “close up the
 slice”. Verification scope and limitations remain unchanged.
-[Verification/handoff](slice132_verification.md) and [usage](../experiments/arena/README.md)
+[Verification/handoff](verification/archive/slice132_verification.md) and [usage](../experiments/arena/README.md)
 record the delivered tools and executed checks. [Roadmap/checkpoint](dnd5e_demo_design.md#current-checkpoint) ·
 [Automation scope](automation_plan.md#slice-132-automated-players-and-balance-experiments) ·
 [Accepted headless contract](headless_protocol.md).
@@ -500,7 +500,7 @@ bounded retention are delivered. Routine CTest adds only `arena_experiment_tools
 outside CTest/default builds/CI. The requested separation is retained even for the
 smallest smoke matrix. No accepted 13.1 regression test was removed.
 
-[Verification](slice132_verification.md) records focused Debug/Release 5/5, fixture
+[Verification](verification/archive/slice132_verification.md) records focused Debug/Release 5/5, fixture
 win/loss/failure/cancellation/replay, an explicit 18-trial smoke and 216-trial
 exploratory comparison, visual CPU play/replay without a window, deterministic policy
 reruns, allocation stress and separate Release measurements. All final exploratory
@@ -509,5 +509,5 @@ seeds per configuration. Later-level tactics and the listed unsupported spells s
 explicit limitations. No worker pool was warranted by the measured initial workload.
 
 The user accepted and closed this slice on 2026-10-30.
-[Accepted closeout](slice132_verification.md#accepted-closeout-and-next-agent-handoff).
+[Accepted closeout](verification/archive/slice132_verification.md#accepted-closeout-and-next-agent-handoff).
 13.3 is next eligible for separate planning; 13.3 and 14 remain unstarted.

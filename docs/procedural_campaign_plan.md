@@ -15,7 +15,7 @@ level preparation and encounter calibration move into PC07 to inform dungeon
 population, progression and recovery. This direction supersedes the pause after
 P-B for planning. The user subsequently approved PC07.1 implementation and its
 bounded calibration study, and accepted the completed slice on 2026-11-01.
-[Delivery and evidence](pc071_verification.md) retain their recorded limitations. PC07.2 population integration and its review corrections are now Accepted and closed; see [verification](pc072_verification.md) and the current acceptance handoff below.
+[Delivery and evidence](verification/archive/pc071_verification.md) retain their recorded limitations. PC07.2 population integration and its review corrections are now Accepted and closed; see [verification](verification/archive/pc072_verification.md) and the current acceptance handoff below.
 
 This is the successor delivery roadmap to the [closed static-demo roadmap](dnd5e_demo_design.md).
 The [MVP specification](procedural_campaign_mvp.md) supplies the experience and
@@ -394,7 +394,7 @@ Verify the ordinary arena still launches through existing tooling.
 [Approved and implemented design](procedural_generation_design.md); user authorized
 implementation with “Implement the plan.” New Game now launches empty seeded floors;
 bounded generation/validation/fallback, diagnostic maps and strict replay are delivered.
-[Verification and handoff](pc01_verification.md): headless Debug/Release 35/35,
+[Verification and handoff](verification/archive/pc01_verification.md): headless Debug/Release 35/35,
 graphics Debug/Release 53/53, focused sanitizers and zero tracked frame allocations,
 hidden GPU/menu/arena checks, and thirteen retained review PNGs. No balance experiments
 or broad seed sweep. User accepted: “slice accepted, record it in the doc” (2026-10-30).
@@ -428,11 +428,11 @@ Show the discovered map and a separately labelled diagnostic map.
 Facing discovery, safe settled interaction and isolated full-map debug reveal confirmed.
 Shared geometry, permanent doors, party keys, prepared fixture art, discovery/maps,
 checked F/click/headless/MCP interaction and strict replay are implemented.
-[Verification/handoff](pc02_verification.md) records full headless Debug/Release
+[Verification/handoff](verification/archive/pc02_verification.md) records full headless Debug/Release
 37/37 and graphics Debug/Release 56/56, final focused 3/3 in each preset, focused
 ASan/UBSan 4/4, final threshold-prompt checks (headless 4/4, graphics 5/5 each;
 sanitizer 2/2), zero tracked runtime C++ allocations, hidden GPU/captures and
-[capture gallery](screenshots/pc02/index.html). One test-owned temporary lifetime
+[capture gallery](screenshots/pc02/README.md). One test-owned temporary lifetime
 bug was corrected following sanitizer detection. No balance experiments, broad
 seed sweep or OS input automation. The user subsequently tested the available
 gameplay and reported it working; this does not claim exhaustive interactive coverage.
@@ -474,10 +474,10 @@ encounters plus a 14-HP melee guardian and an archer guardian. Only their perman
 deaths open the separate gate and publish reserved supplies once. Normal doors,
 key dependencies, optional routes and protected arrival rooms are validated together.
 
-[Verification/handoff](pc03_verification.md): headless Debug/Release 38/38 each,
+[Verification/handoff](verification/archive/pc03_verification.md): headless Debug/Release 38/38 each,
 graphics Debug/Release 57/57 each, five targeted ASan/UBSan suites, zero tracked
 runtime C++ allocations, hidden GPU lifecycle, strict checked-combat replay and
-[21 retained captures](screenshots/pc03/index.html). Generator/templates 3/3;
+[21 retained captures](screenshots/pc03/README.md). Generator/templates 3/3;
 prepared format/renderer 4/5; protocol/scenario 1. Caption-only follow-up checks and
 limits are recorded in the handoff. No balance experiments, broad seed sweep,
 OS input automation or later-slice work. Stairs travel is still unavailable.
@@ -517,7 +517,7 @@ wipe with small owned fixtures; this is a lifecycle check, not a balance run.
 
 **Execution record:** **Accepted and closed**, 2026-10-30. User approved:
 “Implement the plan.” [Implemented design](procedural_campaign_travel_design.md),
-[verification/handoff](pc04_verification.md), [gallery](screenshots/pc04/index.html).
+[verification/handoff](verification/archive/pc04_verification.md), [gallery](screenshots/pc04/README.md).
 New Game starts in the authored hub; shared campaign ownership, three persistent
 floors, checked free stairs, portable effects/clocks and terminal Main Menu flow
 are delivered through graphical/headless/client/replay/MCP adapters. Final full
@@ -553,7 +553,7 @@ Compare kit counts, effect time and return distance. Demonstrate the zero-kit st
 
 **Execution record:** **Accepted and closed**, 2026-10-30.
 User approved: “Implement the plan.” [Implemented design](procedural_campaign_recall_design.md),
-[verification/handoff](pc05_verification.md), [14-image gallery](screenshots/pc05/index.html).
+[verification/handoff](verification/archive/pc05_verification.md), [14-image gallery](screenshots/pc05/README.md).
 Confirmed one-kit recall and free unlocked-entry return share atomic staged travel;
 first stairs arrivals alone unlock entries. Dedicated Travel panel preserves
 Inventory T; field rest/explicit sanctuary recovery and free walking remain intact.
@@ -598,7 +598,7 @@ Save + Save and Main Menu selected; a new run replaces the slot only on its firs
 confirmed successful save. Versioned checked snapshots, independent Party restore,
 atomic single-slot publication, staged Continue, bounded terminal denial and
 headless/client/local MCP/strict replay are implemented.
-[Verification and handoff](pc06_verification.md), [14-image gallery](screenshots/pc06/index.html):
+[Verification and handoff](verification/archive/pc06_verification.md), [14-image gallery](screenshots/pc06/README.md):
 full headless Debug/Release 41/41 each, graphics 60/60 each; focused ASan/UBSan 3/3
 plus final 1/1; final protocol follow-up 3/3 in all four presets, zero tracked frame
 C++ allocations and 55/60 restore/view allocation failure points pass. Cross-build
@@ -614,9 +614,9 @@ experiments, broad sweep, expedition experiment, commits or later-slice work.
 PC07.2 selects population. The user approved the [PC07.1 design](pc071_arena_calibration_design.md)
 with “Implement the plan”, including at most 36 bounded serial trials. Target level
 2 before the final guardian; normal shared XP; focused level 1–2 tactics.
-PC07.1 is **Accepted and closed** (2026-11-01); see [verification and evidence](pc071_verification.md).
+PC07.1 is **Accepted and closed** (2026-11-01); see [verification and evidence](verification/archive/pc071_verification.md).
 PC07.2 is **Accepted and closed** (2026-11-01), including its review corrections, under the approved [population design](pc072_population_design.md);
-[verification and route evidence](pc072_verification.md) record the delivered campaign population.
+[verification and route evidence](verification/archive/pc072_verification.md) record the delivered campaign population.
 
 **Scope transfer (2026-11-01):** Bestiary B06 is superseded without implementation.
 Its useful level preparation and encounter measurements belong here, driven by
@@ -698,7 +698,7 @@ was approved with “Implement the plan”; the user accepted the completed slic
 focused policy v2 and per-character burst/cost reporting are delivered. All 36
 bounded trials completed as victories, with three downings and zero permanent
 deaths; six retained traces strictly match. [Measured costs/recommendations](pc071_calibration/README.md),
-[verification/handoff](pc071_verification.md) and [captures](screenshots/pc071/index.html)
+[verification/handoff](verification/archive/pc071_verification.md) and [captures](screenshots/pc071/README.md)
 record checks and limitations, unchanged by acceptance. Campaign population/route
 checks remain PC07.2; no campaign balance is claimed. Parent PC07 and P-C remain
 incomplete.
@@ -860,8 +860,8 @@ experiments or graphics checks were run, and no commit was requested or created.
 ### PC01 accepted closeout and next-agent handoff (2026-10-30, historical)
 
 The user explicitly accepted: “slice accepted, record it in the doc”. PC01 is
-**Accepted and closed**. See [verification/handoff](pc01_verification.md) and
-[capture gallery](screenshots/pc01/index.html). Earlier roadmap-planning directions
+**Accepted and closed**. See [verification/handoff](verification/archive/pc01_verification.md) and
+[capture gallery](screenshots/pc01/README.md). Earlier roadmap-planning directions
 above are historical. Existing verification evidence and limitations are unchanged.
 
 PC02 — Doors, keys and discovered navigation — is next eligible for detailed planning
@@ -882,8 +882,8 @@ separate scenarios; no traversal is expected before PC04. The door visuals remai
 basic and are not treated as finished art. A renderer redesign needs its own scope.
 
 The checkpoint and PC02 execution record above supersede historical PC01 next-agent
-instructions. See the [handoff](pc02_verification.md), [design](procedural_fixtures_design.md)
-and [gallery](screenshots/pc02/index.html). PC01 remains Accepted and closed.
+instructions. See the [handoff](verification/archive/pc02_verification.md), [design](procedural_fixtures_design.md)
+and [gallery](screenshots/pc02/README.md). PC01 remains Accepted and closed.
 PC03–PC09 and milestones P-A/P-B/P-C remain Planned. PC03 is next eligible for detailed
 planning in a fresh context when requested: read AGENTS.md, the system overview,
 MVP spec, this checkpoint and the PC02 handoff, then inspect code and plan PC03 only
@@ -899,8 +899,8 @@ no builds, gameplay tests, captures, balance experiments or commits were made.
 
 PC03 is **Accepted and closed**; milestone **P-A is Accepted**. The user played
 through the accessible floor, defeated the guardian and collected the loot, then
-explicitly accepted the slice. See [verification and reproduction](pc03_verification.md),
-[implemented design](procedural_guardians_design.md) and [gallery](screenshots/pc03/index.html).
+explicitly accepted the slice. See [verification and reproduction](verification/archive/pc03_verification.md),
+[implemented design](procedural_guardians_design.md) and [gallery](screenshots/pc03/README.md).
 This checkpoint supersedes the historical PC02 handoff's instruction to plan PC03.
 
 PC04 — Persistent descent and fixed hub — is next eligible for detailed planning
@@ -923,8 +923,8 @@ balance experiments or commits were made during this closeout.
 PC04 is **Accepted and closed**. The user accepted on 2026-10-30:
 “slice accepted, record it in the plan doc”. Implementation was approved earlier
 with “Implement the plan.” The [implemented design](procedural_campaign_travel_design.md),
-[verification/review recipe](pc04_verification.md) and
-[12-image gallery](screenshots/pc04/index.html) describe delivery and limitations.
+[verification/review recipe](verification/archive/pc04_verification.md) and
+[12-image gallery](screenshots/pc04/README.md) describe delivery and limitations.
 This checkpoint supersedes the historical PC03 instruction to plan PC04.
 
 Normal New Game starts in the fixed hub; one Party travels through three persistent
@@ -959,8 +959,8 @@ PC05 is **Accepted and closed**. The user accepted on 2026-10-30:
 “slice accepted, record it in the plan doc”. Implementation was approved earlier with
 “Implement the plan” after selecting the dedicated Travel panel. See the
 [implemented design](procedural_campaign_recall_design.md),
-[verification and review recipe](pc05_verification.md) and
-[gallery](screenshots/pc05/index.html). This supersedes PC04's next-planning instruction.
+[verification and review recipe](verification/archive/pc05_verification.md) and
+[gallery](screenshots/pc05/README.md). This supersedes PC04's next-planning instruction.
 
 T/header Travel explicitly confirms one-kit recall; the hub entrance selects free
 unlocked floor entries. Inventory T retains transfer. Safe ordinary stairs stay
@@ -990,7 +990,7 @@ this closeout.
 
 PC06 is **Ready for review**, not Accepted. The user approved its reviewed plan
 with “Implement the plan.” The [implemented design](procedural_campaign_save_design.md),
-[verification/review recipe](pc06_verification.md) and [gallery](screenshots/pc06/index.html)
+[verification/review recipe](verification/archive/pc06_verification.md) and [gallery](screenshots/pc06/README.md)
 record delivery. The current checkpoint supersedes PC05's historical next-planning
 instruction. PC05/P-A stay accepted; PC07–PC09 and P-B remain Planned.
 
@@ -1016,7 +1016,7 @@ for its own review; balance experiments still require explicit opt-in.
 PC06 presentation review correction: unavailable Continue is hidden, confirmation
 panels are compact, and failed writes use plain language with Retry. Four focused
 Release checks pass; all 19 refreshed captures match a repeat, with 14 retained.
-See the [review correction verification](pc06_verification.md#pc06-presentation-review-correction-2026-10-30).
+See the [review correction verification](verification/archive/pc06_verification.md#pc06-presentation-review-correction-2026-10-30).
 Acceptance remains pending.
 
 
@@ -1028,7 +1028,7 @@ plan doc”. This includes the reviewed UI corrections: hidden unavailable Conti
 compact confirmations and plain save-write failure language. Accepted PC04–PC06
 complete milestone **P-B — Persistent expedition**. PC01–PC05/P-A stay closed.
 See the [implemented design](procedural_campaign_save_design.md),
-[verification/handoff](pc06_verification.md) and [gallery](screenshots/pc06/index.html).
+[verification/handoff](verification/archive/pc06_verification.md) and [gallery](screenshots/pc06/README.md).
 This record supersedes historical PC06 review-pending and next-planning notes.
 
 Campaign work is **paused after P-B** at the user's request: the
@@ -1074,8 +1074,8 @@ PC07.1 — Arena preparation and encounter calibration — is **Accepted and clo
 The user explicitly accepted: “slice accepted, record it in the plan doc”. Earlier
 implementation approval was “Implement the plan”, including the bounded study.
 Read the [implemented design](pc071_arena_calibration_design.md),
-[verification](pc071_verification.md), [measured table](pc071_calibration/README.md)
-and [gallery](screenshots/pc071/index.html). Existing results and limitations are
+[verification](verification/archive/pc071_verification.md), [measured table](pc071_calibration/README.md)
+and [gallery](screenshots/pc071/README.md). Existing results and limitations are
 unchanged: 36 victories, three observed downings, zero permanent deaths and six
 strictly matched retained replays. Acceptance supplies no additional interactive
 play-coverage details and does not establish campaign balance.
@@ -1106,8 +1106,8 @@ remains pending. PC08 and P-C do not advance automatically.
 
 **Stage:** Ready for review. User approval: “Implement the plan”, including the
 eight-case bounded study. [Design](pc072_population_design.md),
-[verification](pc072_verification.md), [costs and retained evidence](pc072_routes/README.md)
-and [gallery](screenshots/pc072/index.html) describe the final result. This supersedes
+[verification](verification/archive/pc072_verification.md), [costs and retained evidence](pc072_routes/README.md)
+and [gallery](screenshots/pc072/README.md) describe the final result. This supersedes
 PC07.1's next-planning instruction. PC07.1 and earlier accepted work stay closed.
 
 Three curated depth bands, finite caches/reserves, port isolation doors and
@@ -1148,7 +1148,7 @@ rerun. PC07.2 is Ready for review; only the user accepts PC07/P-C. PC08 stays un
 ### PC07.2 variety and controls handoff (2026-11-01, historical)
 
 User approved the plan with “Implement the plan.” [Design and verification](pc072_variety_controls.md)
-and [gallery](screenshots/pc072-variety/index.html) record the implemented changes:
+and [gallery](screenshots/pc072-variety/README.md) record the implemented changes:
 one starting camp kit total; sampled room graphs rather than two authored loops;
 fresh entropy for unseeded New Game, saved seed precedence for Continue and seed
 logging; named reusable-key logs; release activation with held/cancelled button
@@ -1190,7 +1190,7 @@ and alpha-aware presentation. Incompatible characters are skipped without blocki
 creation; incompatible campaigns disable Continue while New Game remains available.
 Generator/templates are 7/5, campaign schema/simulation 5/10 and visibility v7.
 
-Keep the recorded [population verification](pc072_verification.md), historical
+Keep the recorded [population verification](verification/archive/pc072_verification.md), historical
 [eight-route study](pc072_routes/README.md), [variety verification/gallery](pc072_variety_controls.md)
 and [compatibility/tab checks](library_compatibility_fix.md). The original routes
 used generator 5, three starting kits and older potion supplies. Acceptance does

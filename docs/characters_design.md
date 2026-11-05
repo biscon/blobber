@@ -143,7 +143,7 @@ Stop at Ready for review with a durable handoff; do not begin slice 03.
 - The rules-content `--validate FILE` diagnostic loads either schema and prints
   a complete party summary when a preset exists; absence is reported explicitly.
 
-[Slice 02 verification](slice02_verification.md) records executed checks and review
+[Slice 02 verification](verification/archive/slice02_verification.md) records executed checks and review
 steps. Later integration must introduce authoritative resource/equipment mutation
 operations before exposing mutable UI commands; it must not mutate cached stats
 or const snapshots. This slice has no mana or active spell list.

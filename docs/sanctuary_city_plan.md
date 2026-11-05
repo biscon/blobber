@@ -224,7 +224,7 @@ campaign cutover, not permission to leave intermediate formats inconsistent.
 SC01.1 implements the approved [location-owned asset design](sc011_design.md)
 and was accepted by the user on 2026-11-05. SC01.2 delivers the architectural
 foundation and residential corner below; the user accepted it on 2026-11-05 after
-the material seam correction. Its [handoff](sc01_verification.md) records the
+the material seam correction. Its [handoff](verification/archive/sc01_verification.md) records the
 delivered evidence and limitations. Supersampling remains on by default; 512 MiB–1 GiB is
 a memory target, not a quality-reduction mandate. No automatic continuation.
 
@@ -251,7 +251,7 @@ Acceptance:
   cover geometry/depth, visibility agreement and resource lifetimes. Check affected
   frame allocation invariants and existing dungeon callers.
 
-Delivered records: [design](sc01_design.md), [verification/handoff](sc01_verification.md)
+Delivered records: [design](sc01_design.md), [verification/handoff](verification/archive/sc01_verification.md)
 and [capture index](screenshots/sc01/README.md). A substantial foundation problem may warrant an explicit
 split; do not pass off a crude proof as the agreed finished visual checkpoint.
 
@@ -281,7 +281,7 @@ Acceptance:
 - Focused connectivity/placement tests and selected movement captures cover the
   full layout. Record actual asset/scene totals against declared budgets.
 
-Delivered records: [design](sc02_design.md), [verification/handoff](sc02_verification.md),
+Delivered records: [design](sc02_design.md), [verification/handoff](verification/archive/sc02_verification.md),
 and [layout/capture index](screenshots/sc02/README.md). Accepted by the user on 2026-11-05.
 
 ### SC03 — Vegetation, market, fountain and service signs
@@ -317,7 +317,7 @@ Acceptance:
   covers overlapping foliage, close door/sign views, stalls, fountain and turning.
   Record draw/asset totals and any observed performance issue for a scoped interlude.
 
-Current records: [implemented design](sc03_design.md), [verification/handoff](sc03_verification.md)
+Current records: [implemented design](sc03_design.md), [verification/handoff](verification/archive/sc03_verification.md)
 and [final captures/water preview](screenshots/sc03/README.md). The shorter tree is
 accepted. Complete dressing and eight-frame water are accepted.
 
@@ -347,7 +347,7 @@ Acceptance:
 - No ordinary game flow depends on development review switches; document the
   final user review recipe and remaining limitations before requesting acceptance.
 
-Delivered records: [design](sc04_design.md), [verification/handoff](sc04_verification.md)
+Delivered records: [design](sc04_design.md), [verification/handoff](verification/archive/sc04_verification.md)
 and [campaign capture gallery](screenshots/sc04/README.md). Accepted by the user on
 2026-11-05, including the entrance trim correction. SC04 completes milestone S-C
 and closes this roadmap.
@@ -395,7 +395,7 @@ placement, mesh cutouts, codecs/publication and focused CPU/GPU checks. The user
 liked the first screenshots and requested a shorter tree. The revision lowers
 height by 17.5% while preserving canopy width and walking clearance; eighteen
 matched still/movement captures are retained. Await tree approval before expanding
-foliage; SC03 remains in progress and unaccepted. See [handoff](sc03_verification.md).
+foliage; SC03 remains in progress and unaccepted. See [handoff](verification/archive/sc03_verification.md).
 
 2026-11-05: User approved the detailed SC03 conversation plan and requested
 implementation. Keep tankard/anvil/provisions symbols and stop for user approval
@@ -421,7 +421,7 @@ asset pipeline. This scope update does not start SC03 implementation.
 separate dungeon and closed gate landmarks, two loops, alley and SC03 reservations.
 Ten model assets/91 placements use two atlases at unchanged density. Focused CPU,
 export and hidden GPU checks pass; 63 selected frames and a top-down layout are
-retained. No renderer/schema/campaign change. See [handoff](sc02_verification.md).
+retained. No renderer/schema/campaign change. See [handoff](verification/archive/sc02_verification.md).
 
 2026-11-05: User selected a square-centered layout and modest gatehouse, approved
 the detailed SC02 plan, and requested implementation. See [SC02 design](sc02_design.md).
@@ -471,7 +471,7 @@ stays on; prioritize fidelity over strict adherence to the memory target.
 
 SC01–SC04 and milestones S-A–S-C are **Accepted**. This roadmap is **closed**
 as of 2026-11-05, including the SC04 entrance trim correction. Read the
-[SC04 design](sc04_design.md), [verification](sc04_verification.md) and
+[SC04 design](sc04_design.md), [verification](verification/archive/sc04_verification.md) and
 [campaign captures](screenshots/sc04/README.md). Normal New Game/Continue use the
 city without review flags. Square spawn is (11,8) north; recall is (9,6) north;
 dungeon return is (13,7) south. The north-facing downstairs fixture is at (13,6).
@@ -503,7 +503,7 @@ and (13,7), opening the inn frontage. Ivy stops below eaves, bushes meet dedicat
 earth, and the fountain has pale marble and six-sided animated water streams.
 City-only capped haze replaces the abrupt sky fade; dungeon fog remains unchanged.
 Focused CPU/GPU checks and hidden captures pass. SC03 returns to **Ready for review**;
-see [updated verification](sc03_verification.md) and [gallery](screenshots/sc03/README.md).
+see [updated verification](verification/archive/sc03_verification.md) and [gallery](screenshots/sc03/README.md).
 Final acceptance and SC04 remain pending.
 
 2026-11-05: Follow-up review fixes the visible 16-cell cutoff with a city-only
@@ -528,7 +528,7 @@ and exploration-based city discovery selected. See [design](sc04_design.md).
 distinct arrivals, sanctuary recovery, discovery, canonical restore and identity
 updates are implemented. Focused CPU, extended persistence and hidden GPU/capture
 checks pass, with the optional full-route timeout and advisory GPU-memory excess
-recorded in the [handoff](sc04_verification.md). No acceptance is implied.
+recorded in the [handoff](verification/archive/sc04_verification.md). No acceptance is implied.
 
 
 2026-11-05: SC04 entrance review correction hides the raised door-arch strips that

@@ -1,7 +1,7 @@
 # SC01.1 — Location-owned prepared assets
 
 Status: **Implemented; Accepted by the user** (2026-11-05).
-[Verification and handoff](sc011_verification.md); acceptance recorded 2026-11-05.
+[Verification and handoff](verification/archive/sc011_verification.md); acceptance recorded 2026-11-05.
 User approved the SC01 split and implementation. SC01.2 architecture remains
 eligible for separate detailed planning. No campaign hub replacement here.
 

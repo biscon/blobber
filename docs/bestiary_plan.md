@@ -233,7 +233,7 @@ visually readable and has no lingering ailment/recovery requirement.
 ### B04 — Zombie and Undead Fortitude
 
 **Accepted and closed (2026-11-01).** [Design](b04_zombie_design.md) ·
-[verification/gallery](b04_verification.md). Reference v1 and completed slice accepted.
+[verification/gallery](verification/archive/b04_verification.md). Reference v1 and completed slice accepted.
 
 Deliver the zombie and its full applicable art set, reusing B01's damage profile
 for poison immunity and the existing undead spell restrictions. Undead Fortitude
@@ -253,7 +253,7 @@ and no incorrect death/reward or save/restore transitions.
 ### B05 — Goblin shaman and enemy spellcasting
 
 **Accepted and closed (2026-11-01).** [Design](b05_goblin_shaman_design.md) ·
-[verification/gallery](b05_verification.md). Reference v1 and the completed slice
+[verification/gallery](verification/archive/b05_verification.md). Reference v1 and the completed slice
 accepted by the user; verification evidence and limitations remain recorded.
 
 Deliver a visibly distinct goblin caster, full art set and readable casting action.
@@ -376,7 +376,7 @@ poison/cleansing, corrosion and the mouther remain separate work.
 - **2026-10-31 B01 delivery:** Skeleton reference approved; complete 48-pose production
   art, native portrait and typed damage delivered in the normal arena. Focused
   Release CPU checks, hidden GPU integration and three strict production-asset
-  arena replays pass. [Handoff and evidence](b01_verification.md) retain exact
+  arena replays pass. [Handoff and evidence](verification/archive/b01_verification.md) retain exact
   results and limitations. **Ready for review**, awaiting user acceptance;
   B02 remains Planned and campaign work remains paused.
 
@@ -384,7 +384,7 @@ poison/cleansing, corrosion and the mouther remain separate work.
   doc, so we can get started on the next mob”. **B01 Accepted and closed**, including
   its full skeleton art/mechanics, 12.5% appearance reduction, right-aligned
   initiative and head-centered health bars. Existing verification evidence and
-  limitations remain recorded in the [handoff](b01_verification.md). **B02 — Bugbear
+  limitations remain recorded in the [handoff](verification/archive/b01_verification.md). **B02 — Bugbear
   is next eligible for detailed planning**, beginning with the approximately
   4.8 MiB remaining mip budget. B02 implementation is not started; B03–B06 remain
   Planned and campaign integration/PC07 stay paused.
@@ -397,14 +397,14 @@ poison/cleansing, corrosion and the mouther remain separate work.
   geometry reduce the four-appearance publication to 173.65 MiB mip textures /
   30.22 MiB alpha. No atlas or streaming system was added. Focused Release CPU,
   publication/build, hidden GPU and six strict production replay checks pass.
-  [Verification/gallery](b02_verification.md) records evidence and limitations.
+  [Verification/gallery](verification/archive/b02_verification.md) records evidence and limitations.
   **B02 Ready for review**, awaiting completed-slice user acceptance. B03 remains
   Planned; campaign integration and PC07 stay paused.
 
 - **2026-10-31 B02 acceptance:** User: “slice accepted, record it in the plan doc”.
   **B02 Accepted and closed**, including bugbear mechanics, full 48-pose art,
   initiative portrait, arena integration, transparent-margin cropping and revised
-  texture/GPU budgets. Existing [verification evidence and limitations](b02_verification.md)
+  texture/GPU budgets. Existing [verification evidence and limitations](verification/archive/b02_verification.md)
   remain recorded. **B03 — Giant rat and Pack Tactics** is next for detailed
   planning; implementation is unstarted. Campaign integration and PC07 stay paused.
 
@@ -417,14 +417,14 @@ poison/cleansing, corrosion and the mouther remain separate work.
   integration are delivered. Schema 11 / campaign simulation 5 preserve explicit
   incompatible-save rejection. Publication is 232.81 MiB mip / 41.32 MiB alpha,
   within unchanged budgets. Focused CPU, hidden GPU integration and five strict
-  production arena replays/captures pass. [Handoff/gallery](b03_verification.md)
+  production arena replays/captures pass. [Handoff/gallery](verification/archive/b03_verification.md)
   records exact checks and limitations. **B03 Ready for review**; reference v3 is
   accepted, completed-slice acceptance pending. B04/campaign/PC07 remain unstarted.
 
 - **2026-10-31 B03 acceptance:** User: “slice accepted, record it in the plan doc”.
   **B03 Accepted and closed**, including standard giant rat mechanics, Pack Tactics,
   quick bite, full 48-pose art, native portrait, arena integration and affected
-  automation/save identities. Existing [verification evidence and limitations](b03_verification.md)
+  automation/save identities. Existing [verification evidence and limitations](verification/archive/b03_verification.md)
   remain recorded. **B04 — Zombie and Undead Fortitude** is next for separate
   detailed planning; implementation is unstarted. Campaign integration/PC07 stay paused.
 
@@ -444,7 +444,7 @@ poison/cleansing, corrosion and the mouther remain separate work.
   Six-appearance publication is 260.95 MiB mip / 46.60 MiB alpha within unchanged
   budgets. Seventeen focused CPU checks, hidden GPU integration and four strict
   production arena traces/captures pass; later hurt/corpse captures also match.
-  [Verification/gallery](b04_verification.md) records exact checks and limitations.
+  [Verification/gallery](verification/archive/b04_verification.md) records exact checks and limitations.
   **B04 Ready for review**; reference v1 accepted, completed-slice acceptance pending.
   B05–B06 remain Planned; campaign integration/PC07 stay paused.
 
@@ -452,7 +452,7 @@ poison/cleansing, corrosion and the mouther remain separate work.
   **B04 Accepted and closed**, including zombie mechanics, atomic Undead Fortitude,
   full 48-pose production art, native portrait, normal arena integration and
   affected automation/save identities. Existing [verification evidence and
-  limitations](b04_verification.md) remain recorded. **B05 — Goblin shaman and
+  limitations](verification/archive/b04_verification.md) remain recorded. **B05 — Goblin shaman and
   enemy spellcasting** is next for separate detailed planning; implementation is
   unstarted. B06 remains Planned; campaign integration and PC07 stay paused.
 
@@ -466,7 +466,7 @@ poison/cleansing, corrosion and the mouther remain separate work.
   retain explicit incompatible-save rejection. Publication is 314.56 MiB mip /
   56.67 MiB alpha within unchanged limits. Focused CPU/allocation/persistence,
   hidden GPU and four strict arena traces/captures pass;
-  [verification/gallery](b05_verification.md) records exact checks and limitations.
+  [verification/gallery](verification/archive/b05_verification.md) records exact checks and limitations.
   **B05 Ready for review**; completed-slice acceptance pending. B06 and campaign/PC07
   remain unstarted.
 
@@ -474,7 +474,7 @@ poison/cleansing, corrosion and the mouther remain separate work.
   **B05 Accepted and closed**, including goblin shaman mechanics, tagged NPC
   Bless/concentration, mana persistence, casting timelines, full 56-pose production
   art, native portrait, normal arena integration and affected automation/save
-  identities. Existing [verification evidence and limitations](b05_verification.md)
+  identities. Existing [verification evidence and limitations](verification/archive/b05_verification.md)
   remain recorded. **B06 — Arena preparation and roster polish** is next for
   separate detailed planning; implementation is unstarted. Campaign integration
   and PC07 stay paused.

@@ -1,10 +1,10 @@
 # NPC sprites
 
 Slice 06 is implemented, awaiting user review: [hurt/death design](goblin_reactions_design.md)
-and [verification](slice06_verification.md). The foundation below incorporates its
+and [verification](verification/archive/slice06_verification.md). The foundation below incorporates its
 current contracts; historical slice 05 notes are marked separately.
 
-Status: implemented. See [verification notes](verification.md#npc-first-slice) for executed checks.
+Status: implemented. See [verification notes](verification/archive/verification.md#npc-first-slice) for executed checks.
 
 ## Ownership and data
 
@@ -107,7 +107,7 @@ verification.md for commands, results and platform limitations.
 
 ## Sprite animation
 
-Status: implemented and verified; see [verification](verification.md#npc-sprite-animation).
+Status: implemented and verified; see [verification](verification/archive/verification.md#npc-sprite-animation).
 
 The application owns a graphics-independent NPC animation player alongside
 the runtime actor world. Clips are Idle, Walk, Attack, Hurt and Death, with 1..4 frames and
@@ -240,8 +240,8 @@ is deferred until there is evidence it is useful.
 
 | Clip | Front | Back | Left | Right |
 | --- | --- | --- | --- | --- |
-| Idle | ![](screenshots/npc-animation/idle-front.gif) | ![](screenshots/npc-animation/idle-back.gif) | ![](screenshots/npc-animation/idle-left.gif) | ![](screenshots/npc-animation/idle-right.gif) |
-| Walk | ![](screenshots/npc-animation/walk-front.gif) | ![](screenshots/npc-animation/walk-back.gif) | ![](screenshots/npc-animation/walk-left.gif) | ![](screenshots/npc-animation/walk-right.gif) |
+| Idle | ![](screenshots/npc-animation/idle-front.gif) |  (historical artifact removed) |  (historical artifact removed) |  (historical artifact removed) |
+| Walk | ![](screenshots/npc-animation/walk-front.gif) |  (historical artifact removed) |  (historical artifact removed) |  (historical artifact removed) |
 | Attack | ![](screenshots/npc-animation/attack-front.gif) | Directional idle | Directional idle | Directional idle |
 
 Previews use the configured durations and nearest sampling. GIF transparency is
@@ -291,7 +291,7 @@ prepared pixel cap. Preparation rejects exhaustion; frame composition allocates
 nothing. Current goblin assets consume 126,647,440 bytes combined (120.78 MiB).
 No source images or new GPU textures are retained for runtime resampling. This
 trades some transient high-resolution detail for bounded storage; arrival restores
-the original stationary bank. See [verification](slice07_verification.md#review-correction-interpolated-walking).
+the original stationary bank. See [verification](verification/archive/slice07_verification.md#review-correction-interpolated-walking).
 
 ## Slice 08 front-row edge presentation
 

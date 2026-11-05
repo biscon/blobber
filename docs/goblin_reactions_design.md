@@ -98,7 +98,7 @@ and prompt/reference provenance are versioned in the asset directory.
 all legal movement transitions, corpse replacement and production combat outcomes.
 It logs source/prepared byte usage and uses the existing hidden capture window.
 Full `--capture` includes these cases too. Capture/export allocations remain
-outside the frame guarantee. See [verification and user review](slice06_verification.md).
+outside the frame guarantee. See [verification and user review](verification/archive/slice06_verification.md).
 
 ## Attack impact feedback
 

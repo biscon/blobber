@@ -82,7 +82,7 @@ Measured city/floor-one overlap: 455.72 MiB mip textures, 41.80 MiB alpha,
 budgets. No quality reduction or budget increase. Cancelling and returning restore
 the city-only residency; clearing releases all location textures/masks/models.
 
-[Verification/handoff](sc04_verification.md) records focused CPU/extended save,
+[Verification/handoff](verification/archive/sc04_verification.md) records focused CPU/extended save,
 allocation, hidden GPU and production capture evidence. The optional full scripted
 route reached its 30-second deadline in dungeon play; the changed city-entry route
 passes as a separate short check. No broad repeat or benchmark was run.

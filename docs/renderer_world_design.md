@@ -3,7 +3,7 @@
 Status: **Implemented; Ready for review** (2026-10-31).
 User approved the detailed plan with “Implement the plan.”
 Parent: [renderer roadmap](renderer_plan.md). R01 and R-A are accepted.
-[Verification and handoff](r02_verification.md); R02 acceptance pending.
+[Verification and handoff](verification/archive/r02_verification.md); R02 acceptance pending.
 
 ## Boundaries and appearance
 

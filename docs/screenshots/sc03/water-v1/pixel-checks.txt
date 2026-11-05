@@ -1,3 +1,0 @@
-Eight distinct captured water frames; paused frame exactly equals final active frame.
-Changed pixel bounds versus first frame: [(702, 231, 1320, 477), (702, 207, 1320, 477), (702, 207, 1320, 477), (738, 207, 1224, 477), (702, 210, 1320, 477), (702, 210, 1320, 477), (702, 210, 1320, 477)]
-GIF is a half-size nearest-neighbor preview; alternating 120/130ms durations preserve the one-second loop. Native PNGs remain authoritative.

@@ -1,7 +1,7 @@
 # R01: Visual and motion proof
 
 Status: **Accepted and closed; milestone R-A Accepted** (2026-10-31).
-[Verification and handoff](r01_verification.md); user acceptance recorded on 2026-10-31.
+[Verification and handoff](verification/archive/r01_verification.md); user acceptance recorded on 2026-10-31.
 User approved the detailed conversational plan with “Implement the plan.”
 Parent: [renderer roadmap](renderer_plan.md). No production cutover in this slice.
 

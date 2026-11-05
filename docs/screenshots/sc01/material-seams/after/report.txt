@@ -1,9 +1,0 @@
-SC01.2 residential corner; seed=5 supersampling=on native=1920x1080
-02-low-door cell=5,7 heading=NORTH camera=5.5,0.5,7.9 yaw=0 progress=1 draws=0
-08-side cell=10,12 heading=NORTH camera=10.5,0.5,12.9 yaw=0 progress=1 draws=12
-11-material-seams cell=3,8 heading=EAST camera=3.1,0.5,8.5 yaw=1.5708 progress=1 draws=12
-09-roofline-diagonal cell=2,13 heading=EAST camera=2.21716,0.5,13.7828 yaw=0.785398 progress=0.5 draws=12
-motion-6-2 cell=7,7 heading=NORTH camera=7.78284,0.5,7.78284 yaw=5.49779 progress=0.5 draws=8
-resident_textures=26 texture_bytes=138370116 alpha_bytes=6810256 model_bytes=215040 scene_cpu=415576 scene_gpu=415128 app_gpu=271277264 app_peak=287866064
-Driver allocations excluded. Peak includes temporary capture target.
-released_world_textures=0 released_models=0

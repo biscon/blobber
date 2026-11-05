@@ -124,5 +124,5 @@ active/staged scratch. Prepared banks are loaded once (273,874,998 bytes in the
 shipped capture) and borrowed by all views. Fault injection exercises every
 allocation in the owned headless/graphics preparation workload. Post-travel
 simulation, commands/HUD and prepared composition remain allocation guarded.
-See [verification and review](pc04_verification.md) for exact commands, results,
+See [verification and review](verification/archive/pc04_verification.md) for exact commands, results,
 retained trace/captures and unavailable interactive/live-host checks.

@@ -1,13 +1,13 @@
 # Arena automation: headless play and balance testing
 
 Status: **13.1 Accepted and closed** (2026-10-30); its [detailed design](headless_design.md)
-is implemented; [verification/handoff](slice131_verification.md) and the
+is implemented; [verification/handoff](verification/archive/slice131_verification.md) and the
 [protocol guide](headless_protocol.md) are available. The user accepted 13.1 on
 2026-10-30: “slice accepted, update the docs.” Slice 13.2 is **Accepted and closed**
 (2026-10-30), following approval of the [detailed plan](automated_players_design.md)
-and the user’s “close up the slice” instruction. [Verification/handoff](slice132_verification.md)
+and the user’s “close up the slice” instruction. [Verification/handoff](verification/archive/slice132_verification.md)
 records delivery and unchanged limitations. 13.3 is implemented, **Accepted and closed** (2026-10-30); [design](mcp_design.md), [usage](mcp_usage.md)
-and [verification/handoff](slice133_verification.md). The user accepted after reviewing the capture gallery. The static-demo roadmap is now closed; save/resume moves to [campaign PC06](procedural_campaign_plan.md#pc06-campaign-save-and-resume) after generation/travel.
+and [verification/handoff](verification/archive/slice133_verification.md). The user accepted after reviewing the capture gallery. The static-demo roadmap is now closed; save/resume moves to [campaign PC06](procedural_campaign_plan.md#pc06-campaign-save-and-resume) after generation/travel.
 
 ## Delivery order and tracking
 
@@ -50,7 +50,7 @@ window; they are not a general headless player interface.
 
 Read [system design](system_design.md), [arena design](arena_design.md),
 [hybrid encounter design](hybrid_encounter_design.md), and the
-[slice 13 handoff](slice13_verification.md) before detailed planning. Relevant code:
+[slice 13 handoff](verification/archive/slice13_verification.md) before detailed planning. Relevant code:
 `src/game/session.*`, `combat.*`, `command_types.hpp`, `commands.*`, `arena.*`,
 `src/app/gameplay.cpp`, `src/assets/npc_loader.*`, and `CMakeLists.txt`.
 
@@ -135,7 +135,7 @@ implementation with “Implement the plan.” Both diagnostic and prepared CPU v
 modes, filtered observations/explicit inspection, level-one scenario starts, checked
 commands, fixed-step advancement, strict recording/replay and a scripted client are
 delivered. [Design](headless_design.md), [protocol/client guide](headless_protocol.md),
-[verification/handoff](slice131_verification.md). The user accepted the slice with
+[verification/handoff](verification/archive/slice131_verification.md). The user accepted the slice with
 “slice accepted, update the docs.” Recorded verification results and limitations
 remain unchanged. At that closeout 13.2 became next eligible; its subsequent
 implementation record follows below. 13.3 remains unstarted.
@@ -185,7 +185,7 @@ limitations so strategy defects are not presented as game-balance evidence.
   outside ordinary tests/builds/CI and unrelated-change checks. The new routine
   check uses short owned contracts, with no game or autonomous fight. No weak-build
   sweep, universal party viability target or automatic balance tuning.
-- **Verification:** [Full record](slice132_verification.md): 27 tooling contracts;
+- **Verification:** [Full record](verification/archive/slice132_verification.md): 27 tooling contracts;
   focused graphics-disabled Debug/Release 5/5; manual owned-fixture win/loss,
   classification, cancellation, replay and rerun; 18/216-trial diagnostic comparisons;
   visual CPU run/replay; selected deterministic reruns; allocation stress and
@@ -225,14 +225,14 @@ unexecuted checks. Document installation, invocation, and a concrete review reci
 
 **Execution record:** Implemented, **Accepted and closed** (2026-10-30). Implementation authorized with “Implement the plan.”
 [Design](mcp_design.md), [installation/review guide](mcp_usage.md),
-[verification/handoff](slice133_verification.md). Session tools, bounded explicit jobs,
+[verification/handoff](verification/archive/slice133_verification.md). Session tools, bounded explicit jobs,
 reports/retained-trial investigation, strict replay and hidden scene/HUD captures.
 19 contracts; focused headless Debug/Release 6/6, graphics 7/7; sanitizer and SDK
 lifecycle/cancellation checks; explicit 18-trial smoke/reproduction and seven captures.
 Live Codex-host and interactive desktop review remain unverified. Prior slices stay
 closed; save/resume remains 14 and unstarted. The user reviewed the capture gallery
 and accepted: “I accept the slice, record it in the doc”.
-[Closeout/handoff](slice133_verification.md#accepted-closeout-and-next-agent-handoff).
+[Closeout/handoff](verification/archive/slice133_verification.md#accepted-closeout-and-next-agent-handoff).
 The subsequent [demo-roadmap closeout](dnd5e_demo_design.md#roadmap-closeout-2026-10-30) moves save/resume to campaign PC06; no commit requested.
 
 ## Extension policy and deferred work

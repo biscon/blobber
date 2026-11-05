@@ -127,6 +127,6 @@ when complete. Only the user accepts the slice; do not start B05 or campaign wor
 The approved mechanics, source ledger, schema 12 / simulation 6 identities, full
 48-pose production set, native portrait and normal arena binding are implemented.
 Reference v1 and the completed slice are accepted.
-[Verification/gallery](b04_verification.md) records exact tests, four strict arena
+[Verification/gallery](verification/archive/b04_verification.md) records exact tests, four strict arena
 traces, selected hidden captures, byte totals and limitations. No B05, campaign
 population/guardian or PC07 work is started. B05 is next for separate detailed planning.

@@ -13,13 +13,13 @@ The same pose as the reported view, captured with native HUD and supersampling O
 The vertical/horizontal plaster lines and straight paving-divider line are removed.
 Additional inspected views: [entrance](after/02-low-door.png),
 [side](after/08-side.png), [diagonal distance](after/09-roofline-diagonal.png), and
-[mid-turn corner](after/motion-6-2.png). Existing far clipping of the enclosing wall
+mid-turn corner (historical artifact removed). Existing far clipping of the enclosing wall
 remains visible in the distant diagonal shot.
 
-[Before report](before/report.txt) and [after report](after/report.txt) record poses
+Before report (historical artifact removed) and after report (historical artifact removed) record poses
 and resource totals. Application GPU storage is still 271,277,264 bytes, with a
 287,866,064-byte capture peak. Driver memory is excluded. World texture/model leases
-return to zero after view release. The retained [check output](checks.txt) records
+return to zero after view release. The retained check output (historical artifact removed) records
 the five owned exporter tests and successful export/publication totals.
 
 Reproduce the corrected views (graphics access required; hidden application-owned
@@ -31,4 +31,4 @@ nice -n 15 ionice -c 3 cmake-build-debug/blobber_review_sanctuary_city cmake-bui
 
 Use `11-material-seams` instead of `materials` for just the matching pose.
 The original captures remain preserved. No desktop input or focus automation was used.
-Full context and limitations: [verification/handoff](../../../sc01_verification.md).
+Full context and limitations: [verification/handoff](../../../verification/archive/sc01_verification.md).
