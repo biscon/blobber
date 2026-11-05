@@ -58,7 +58,7 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         if (!effects_.sees(c.character))
             return CommandReason::NotVisible;
         if (kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp) {
-            if (!exposed(c.character))
+            if (kind == SpellKind::InflictWounds && !exposed(c.character))
                 return CommandReason::RearBlocked;
             if (!inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
                 return CommandReason::OutOfRange;
@@ -72,9 +72,19 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         }
         if (kind == SpellKind::PoisonSpray && !inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
             return CommandReason::OutOfRange;
-        if (kind == SpellKind::AcidSplash && i &&
-            (!actors_.actor(c.enemies[0]) || !(a->npc.cell == actors_.actor(c.enemies[0])->npc.cell)))
-            return CommandReason::SameCellRequired;
+        if (kind == SpellKind::AcidSplash && i) {
+            const auto* first = actors_.actor(c.enemies[0]);
+            if (!first || first->life != ActorLife::Alive)
+                return CommandReason::InvalidTarget;
+            // Half-cell integer coordinates preserve actual neighbour distance across
+            // cell boundaries, including the existing four subcell positions.
+            const int dx = 2 * (a->npc.cell.x - first->npc.cell.x) + a->npc.subcell.x - first->npc.subcell.x;
+            const int dy = 2 * (a->npc.cell.y - first->npc.cell.y) + a->npc.subcell.y - first->npc.subcell.y;
+            if (dx * dx + dy * dy > 4)
+                return CommandReason::TargetsTooFar;
+            if (!lineOfSight(map_, first->npc.cell, a->npc.cell))
+                return CommandReason::Blocked;
+        }
 
     } else {
         const auto* ally = party_.character(c.allies[i]);

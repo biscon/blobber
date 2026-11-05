@@ -1,12 +1,19 @@
 # System design
 
-Spell effects SE03 **implemented; Ready for review (2026-11-05)**:
+Spell effects SE04 **implemented; Ready for review (2026-11-06)**:
+[Integration audit](se04_design.md) preserves the accepted visuals, audits all spell
+families and normal campaign lifecycle, and removes only redundant legacy paths.
+Removed the redundant generic spell renderer while retaining arrow glints. Three
+focused suites pass, including pause/Continue/travel checks. Accepted visuals and
+resources are unchanged; prior GPU evidence is reused. SE04/E-C await user acceptance.
+
+Spell effects SE03 **accepted and implemented (2026-11-06)**:
 [SE03 design](se03_design.md) adds support, condition, ground and summoned-effect
 presentation with selective quiet portrait cues. A bounded session journal carries resolved
 cosmetic events; fixed condition snapshots reconstruct sustained cues after restore.
 Gameplay/save contracts remain unchanged. Thirteen focused CPU suites and hidden GPU
 checks at both quality settings pass; [six-file review gallery](screenshots/spell-effects/se03/README.md).
-User acceptance is pending; SE04 remains Planned. The SE03 review correction lowers
+The user accepted SE03 and its review corrections, closing E-B; SE04 proceeds under its reduced scope. The SE03 review correction lowers
 NPC Bless to the feet anchor and adds bounded cosmetic Spiritual Weapon bobbing and
 attack lunge/return. Next-round Abilities controls pass focused UI tests and the spell
 description now points to them (see SE03 design).
@@ -28,6 +35,26 @@ with prepared animation, selective glow, bounded local light and creature afterm
 Combat timing/rules and prepared-image presentation remain unchanged. The user
 selected death-pose remnants and animated-door light occlusion. See the
 [four-slice roadmap](spell_effects_plan.md) and [motion/capture gallery](screenshots/spell-effects/README.md); the user accepted the slice, particularly its local lighting. SE01 acceptance remains unchanged by the SE02 extension.
+
+Spell targeting **corrected; Ready for review (2026-11-06)**:
+[spell design](spells_design.md#acid-splash-proximity-correction) replaces the same-cell
+restriction with subcell-aware distance, allowing equally close pairs across cell
+boundaries. Shared command validation and UI feedback use the same rule. Spiritual Weapon
+commands also gain immediate single-enemy clicking while retaining floor-only moves.
+Action Surge activates directly when chosen in Abilities.
+[Shocking Grasp correction](expanded_spells_design.md#rear-row-shocking-grasp) restores
+casting from either party row while retaining exposed enemy reach in the front cells.
+
+Enemy melee lunge **implemented; Ready for review (2026-11-06)**:
+[combat feedback design](combat_feedback_design.md#enemy-melee-lunge) adds a short,
+impact-timed forward offset to the existing prepared attack animation.
+Attack-direction correction: select directional artwork from the attack-start
+position throughout a triggered melee clip, so diagonal enemies keep their facing
+while the rendered body lunges across a viewing-sector boundary.
+Authoritative positions, attack timing and ranged/casting presentation remain unchanged. Seven
+focused CPU suites and six hidden production capture cases pass; see the
+[melee preview](screenshots/combat-feedback/README.md#enemy-melee-lunge) and
+[targeting evidence](screenshots/spell-targeting/README.md).
 
 Stone dungeon distance lighting **C / Early accepted and implemented (2026-11-05)**:
 [design](dungeon_lighting_design.md) defines three `underkeep`-only attenuation

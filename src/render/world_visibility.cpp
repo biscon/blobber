@@ -160,8 +160,15 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const Vec foot{npc.cell.x + .25f + npc.subcell.x * .5f + selection.offsetX,
                            in.animation ? selection.elevation : actorElevation(actor, in.geometry, in.now),
                            npc.cell.y + .25f + npc.subcell.y * .5f + selection.offsetY};
-            const float travelX = foot.x - (npc.cell.x + .25f + npc.subcell.x * .5f),
-                        travelZ = foot.z - (npc.cell.y + .25f + npc.subcell.y * .5f);
+            // A cosmetic melee lunge must not cross a directional-art sector.
+            // Combat holds facing/view through the attack; keep its starting anchor
+            // for art selection while geometry and picking follow the animated feet.
+            const auto facingPosition =
+                actor.life == ActorLife::Alive && actor.hasAttack && selection.clip == NpcAnimation::Attack
+                    ? actorPosition(actor, actor.attackTimeMs)
+                    : ActorPosition{foot.x, foot.z};
+            const float travelX = facingPosition.x - (npc.cell.x + .25f + npc.subcell.x * .5f),
+                        travelZ = facingPosition.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
             const unsigned side = unsigned(sideFor(npc.facing, center.x - .5f - npc.cell.x - travelX,
                                                    center.z - .5f - npc.cell.y - travelZ));
             unsigned clip = unsigned(in.animation ? selection.clip : npc.animation),

@@ -122,7 +122,7 @@ void CommandController::refreshMagic() noexcept {
                 id = {i};
         entry(id, rules::Feature::SpiritualWeapon, "Command Spiritual Weapon",
               "Free once per turn: move up to two clear floor steps and optionally attack an enemy in its "
-              "destination. Click a floor cell or an enemy, then confirm.",
+              "destination. Click an enemy to attack immediately, or click floor and confirm to move.",
               0);
     }
     if (session_.effects().spiritualWeapon(caster))
@@ -193,6 +193,7 @@ void CommandController::refreshMagic() noexcept {
         m.kind = rules::SpellKind::SpiritualWeapon;
         m.hostile = true;
         m.ground = true;
+        m.single = true;
         m.maximum = 1;
     }
     if (m.state == CastingState::Resolving)
@@ -397,6 +398,8 @@ void CommandController::chooseSpellbook(std::size_t index) noexcept {
     state_.hover = {};
     refreshMagic();
     updateAvailability();
+    if (entry.feature == rules::Feature::ActionSurge)
+        confirm();
 }
 bool CommandController::magicSingleTarget() const noexcept {
     return state_.magic.armed && state_.magic.single;
@@ -408,6 +411,12 @@ CommandReason CommandController::magicEligibility(ActorId id) const noexcept {
     if (!visible(id))
         return CommandReason::NotVisible;
     auto c = m.pending;
+    if (c.feature == rules::Feature::SpiritualWeapon) {
+        c.targetCount = 1;
+        c.enemies[0] = id;
+        c.aimedCell = actors_.actor(id)->npc.cell;
+        return session_.combat().validate(c, session_.movement().player);
+    }
     std::size_t index = 0;
     if (m.kind == rules::SpellKind::AcidSplash && c.targetCount && !sameActor(c.enemies[0], id))
         index = 1;
@@ -543,6 +552,8 @@ void CommandController::magicGround(std::optional<Cell> cell, bool select) noexc
     m.hoverCell = cell;
     if (select && cell) {
         m.pending.aimedCell = cell;
+        m.pending.target.reset();
+        m.pending.targetCount = 0;
         m.hoverCell.reset();
     }
     refreshMagic();
@@ -598,7 +609,7 @@ CommandReason CommandController::confirm() noexcept {
         return CommandReason::AttackPending;
     if (state_.magic.armed) {
         auto& m = state_.magic;
-        if (m.single) {
+        if (m.single && (!m.ground || m.pending.target)) {
             CommandReason eligibility = CommandReason::MissingTarget;
             if (m.hostile && m.pending.target)
                 eligibility = magicEligibility(*m.pending.target);

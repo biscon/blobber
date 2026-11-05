@@ -7,6 +7,55 @@
 using namespace blobber;
 using rules::SpellKind;
 namespace {
+void rearRowShockingGrasp() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog(1000, 1);
+    for (unsigned h = 0; h < 4; ++h) {
+        const Player pose{{6, 6}, Heading(h)};
+        const auto f = forward(pose.heading), r = right(pose.heading);
+        const Cell near{f.x < 0 ? 1 : 0, f.y < 0 ? 1 : 0};
+        const NpcWorld places(map, pose.cell, {"goblin"},
+                              {{{0}, pose.cell + f, near, Heading((h + 2) % 4)},
+                               {{0}, pose.cell + f, near + f, Heading((h + 2) % 4)},
+                               {{0}, pose.cell + f + r, near, Heading((h + 2) % 4)},
+                               {{0}, pose.cell + f + r * -1, near, Heading((h + 2) % 4)},
+                               {{0}, pose.cell + f * 2, near, Heading((h + 2) % 4)}});
+        GameSession s(map, catalog, places, 5, pose, false);
+        spellReady(s, 3);
+        check(s.party().snapshot().formation[3].index == 3 && s.effects().canAct(rules::CharacterId{1}),
+              "Wizard remains rear-right behind a conscious front ally");
+        auto c = spellCommand(s, SpellKind::ShockingGrasp);
+        c.targetCount = 1;
+        for (unsigned target : {0u, 2u, 3u}) {
+            c.enemies[0] = s.actors().id(target);
+            check(s.combat().validate(c, pose) == CommandReason::Ready,
+                  "Rear wizard can reach exposed subcells in each immediate front cell");
+        }
+        c.enemies[0] = s.actors().id(1);
+        check(s.combat().validate(c, pose) == CommandReason::FrontProtected,
+              "Shocking Grasp retains enemy front-subcell protection");
+        c.enemies[0] = s.actors().id(4);
+        check(s.combat().validate(c, pose) == CommandReason::OutOfRange,
+              "Rear-row permission does not extend Shocking Grasp beyond immediate front cells");
+        CommandController ui(s);
+        ui.refresh(allCombatTargets(s), false, false, true);
+        ui.selectCharacter(3);
+        ui.openSpellbook();
+        std::size_t index = 0;
+        while (index < ui.snapshot().magic.count &&
+               ui.snapshot().magic.entries[index].kind != SpellKind::ShockingGrasp)
+            ++index;
+        check(index < ui.snapshot().magic.count, "Rear wizard has Shocking Grasp in picker");
+        ui.chooseSpellbook(index);
+        UiInput click;
+        click.pointer = ArtPoint{float(hudLayout::viewport.x + 20), float(hudLayout::viewport.y + 20)};
+        click.pressed[std::size_t(UiKey::Click)] = true;
+        routeHudInput(ui, click, s.actors().id(0));
+        check(ui.snapshot().magic.state == CastingState::Resolving &&
+                  s.combat().attacks().attacks[NpcWorld::maxInstances + 3].spell == SpellKind::ShockingGrasp,
+              "Rear-row Shocking Grasp queues immediately on one enemy click");
+    }
+}
 struct EffectsFixture {
     Map map = hybridRoom();
     rules::Catalog catalog = spellCatalog();
@@ -40,11 +89,7 @@ void allCasts() {
         const bool close = r.area || kind == SpellKind::ShockingGrasp || kind == SpellKind::PoisonSpray;
         const auto places = spellPlacements(map, close ? 12 : 3, close);
         auto s = std::make_unique<GameSession>(map, catalog, places, 5, spellSpawn, false);
-        if (kind == SpellKind::ShockingGrasp) {
-            s->party().lockFormation(false);
-            s->party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
-            s->party().lockFormation(true);
-        }
+
         if (close)
             spellReady(*s, r.casting == rules::Casting::Wisdom ? 1 : 3);
         auto c = spellCommand(*s, kind);
@@ -458,6 +503,7 @@ int main(int argc, char**) {
             return 0;
         }
         allCasts();
+        rearRowShockingGrasp();
         fullAreaBudget();
         immunityRollbackAndAid();
         sanctuaryRetargetAndWake();

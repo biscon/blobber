@@ -44,6 +44,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                            {"shocking-grasp", rules::SpellKind::ShockingGrasp, 1, 1, true, false},
                            {"inflict-wounds", rules::SpellKind::InflictWounds, 1, 1, true, false},
                            {"acid-splash", rules::SpellKind::AcidSplash, 3, 2, true, false},
+                           {"acid-boundary", rules::SpellKind::AcidSplash, 3, 2, true, false},
                            {"poison-spray", rules::SpellKind::PoisonSpray, 1, 1, true, false},
                            {"thunderwave", rules::SpellKind::Thunderwave, 1, 1, true, false},
                            {"shatter", rules::SpellKind::Shatter, 3, 3, true, false},
@@ -78,6 +79,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         const auto& example = cases[exampleIndex];
         const bool weaponIncoming = std::string_view(example.name) == "portrait-weapon";
         const bool npcBless = std::string_view(example.name) == "npc-bless";
+        const bool acidBoundary = std::string_view(example.name) == "acid-boundary";
         const bool incoming =
             npcBless || weaponIncoming || std::string_view(example.name) == "portrait-damage";
         if (selected && std::string_view(selected) != example.name)
@@ -112,20 +114,21 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                                                                        definitions.types.end(), "goblin") -
                                                              definitions.types.begin())}
                                    : type,
-                 {6 + (example.spell != rules::SpellKind::AcidSplash && example.count > 1 ? i - 1 : 0),
+                 {acidBoundary
+                      ? 5 + i
+                      : 6 + (example.spell != rules::SpellKind::AcidSplash && example.count > 1 ? i - 1 : 0),
                   8 - example.range},
-                 {example.spell == rules::SpellKind::AcidSplash ? i : 0, weaponIncoming ? 0 : 1},
+                 {acidBoundary                                    ? 1 - i
+                  : example.spell == rules::SpellKind::AcidSplash ? i
+                                                                  : 0,
+                  weaponIncoming ? 0 : 1},
                  Heading::South});
         NpcWorld places(map, pose.cell, definitions.types, instances);
         const auto party = leveledSpellParty(catalog, example.spell);
         const unsigned seed = std::string_view(example.name) == "web-burn" ? 3 : 5;
         GameSession game(map, catalog, party, places, seed, pose, false, definitions.timings);
         prepareSpellParty(game.party(), example.spell);
-        if (example.spell == rules::SpellKind::ShockingGrasp) {
-            game.party().lockFormation(false);
-            game.party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
-            game.party().lockFormation(true);
-        }
+
         CommandController commands(game, definitions.timings);
         NpcAnimator animator(game.actors(), definitions.timings);
         GameView view(renderer);

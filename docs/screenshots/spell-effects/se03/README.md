@@ -1,6 +1,6 @@
 # SE03 — review evidence
 
-Status: **Ready for review (2026-11-05)**; user acceptance is pending.
+Status: **Accepted (2026-11-06)**, including the review corrections.
 See the [implemented design, checks and memory totals](../../../se03_design.md)
 and [roadmap](../../../spell_effects_plan.md). SE01–SE02 remain Accepted.
 
@@ -30,7 +30,7 @@ comparisons are reduced palette previews. PNGs preserve exact 1920×1080 output.
 Offsets refer to each capture's start; the idle case starts after attack feedback
 settles. Web ignition and NPC casting use existing resolution delays. Six files
 remain; the superseded persistent comparison and intermediate output were replaced
-or cleaned. No user acceptance is implied by this correction.
+or cleaned. The user subsequently accepted the slice and its corrections on 2026-11-06.
 
 ## Reproduce
 

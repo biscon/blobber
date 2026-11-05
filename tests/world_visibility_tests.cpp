@@ -14,6 +14,65 @@
 #include <iostream>
 using namespace blobber;
 namespace {
+void meleeAttackFacing() {
+    test::VisibilityFixture fixture;
+    const auto catalog = hybridCatalog(false);
+    const auto map = test::worldRoom(9, 9);
+    const auto scene = world_render::prepare(map);
+    {
+        auto publication = fixture.publication();
+        world_assets::CpuAssets assets(std::move(publication));
+        const auto lease = assets.acquire(world_assets::allAssets(assets.publication));
+        world_render::VisibilityPipeline pipeline(scene, assets);
+        for (unsigned h = 0; h < 4; ++h) {
+            MovementState movement;
+            movement.player = {{4, 4}, Heading(h)};
+            const auto f = forward(movement.player.heading), r = right(movement.player.heading);
+            const auto front = movement.player.cell + f;
+            const auto facing = Heading((h + 2) % 4);
+            NpcWorld places(map, movement.player.cell, {"goblin"},
+                            {{{0}, front + r * -1, {0, 0}, facing},
+                             {{0}, front, {0, 0}, facing},
+                             {{0}, front + r, {0, 0}, facing}});
+            ActorWorld actors(map, catalog, places);
+            NpcAnimator animator(actors, fixture.timings);
+            for (unsigned i = 0; i < 3; ++i)
+                actors.attack(actors.id(i), 1000);
+            const auto revision = actors.snapshot().revision;
+            // The fixture's impact is at 80ms and its attack finishes at 200ms.
+            for (unsigned elapsed : {0u, 40u, 80u, 140u, 199u, 200u}) {
+                animator.setTime(1000 + elapsed);
+                watching = true;
+                allocations = 0;
+                pipeline.update({map, movement, &actors, &animator.snapshot()});
+                watching = false;
+                check(allocations == 0, "Locked attack directions allocate no frame storage");
+                unsigned found = 0;
+                for (unsigned i = 0; i < pipeline.frame().count; ++i) {
+                    const auto& b = pipeline.frame().billboards[i];
+                    if (!b.alive || b.id >= 3)
+                        continue;
+                    ++found;
+                    const auto& selection = animator.snapshot().frames[b.id];
+                    const auto clip = selection.clip;
+                    const auto frame = selection.active;
+                    check(b.texture ==
+                              assets.publication.appearances[0].clips[unsigned(clip)].textures[0][frame],
+                          "Center and both diagonal enemies retain front art throughout melee and return");
+                    const auto position = actorPosition(*actors.actor(actors.id(b.id)), 1000);
+                    const float advance = (b.feet.x - position.x) * -f.x + (b.feet.z - position.y) * -f.y;
+                    if (elapsed == 80)
+                        check(std::abs(advance - .14f) < 1e-5f, "Locked artwork still lunges to impact");
+                    if (elapsed == 0 || elapsed == 200)
+                        check(std::abs(advance) < 1e-5f, "Locked artwork starts and returns at rest");
+                }
+                check(found == 3, "All three attacking bodies remain in the prepared view");
+                check(actors.snapshot().revision == revision,
+                      "Facing lock leaves authoritative actors unchanged");
+            }
+        }
+    }
+}
 void spritesAtDoorLeaves() {
     unsigned frontLeafSamples = 0;
     test::VisibilityFixture fixture;
@@ -279,6 +338,7 @@ void alphaAnchorsAndWalls() {
 } // namespace
 int main() {
     try {
+        meleeAttackFacing();
         test::movingVisibilityWork();
         test::creatureIntersectionMasks();
         test::creatureMaskExposure();

@@ -1,7 +1,9 @@
 #include "support/actor_fixtures.hpp"
+#include "support/allocations.hpp"
 #include "support/animation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include <cmath>
 #include <iostream>
 #include <limits>
 using namespace blobber;
@@ -10,6 +12,86 @@ namespace walking {
 const Map map({"#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######"});
 ActorWorld world(NpcAnimation animation, std::uint32_t phase = 0) {
     return testActors(map, {3, 5}, {"test"}, {{{0}, {3, 3}, {0, 0}, Heading::South, animation, phase}});
+}
+void meleeLunges() {
+    auto timings = reactionTimings();
+    timings[2] = {{{100, 100, 100, 100}}, 4};
+    timings[5] = timings[2];
+    for (unsigned facing = 0; facing < 4; ++facing) {
+        auto actors = world(NpcAnimation::Idle);
+        const auto id = actors.id(0);
+        actors.face(id, Heading(facing));
+        NpcAnimator animator(actors, {timings});
+        const auto original = actorPosition(*actors.actor(id), 1000);
+        actors.attack(id, 1000);
+        const auto revision = actors.snapshot().revision;
+        const auto direction = forward(Heading(facing));
+        float previous = 0;
+        for (unsigned ms = 0; ms <= 400; ms += 10) {
+            animator.setTime(1000 + ms);
+            const auto& f = animator.snapshot().frames[0];
+            const float distance = f.offsetX * direction.x + f.offsetY * direction.y;
+            check(distance >= 0 && distance <= .14001f &&
+                      std::abs(f.offsetX * direction.y - f.offsetY * direction.x) < .00001f,
+                  "Melee lunge stays bounded along each facing");
+            if (ms <= 200)
+                check(distance >= previous, "Lunge approaches impact without backwards motion");
+            else
+                check(distance <= previous, "Return settles toward the original position");
+            if (ms == 200)
+                check(std::abs(distance - .14f) < .00001f, "Peak matches authored impact exactly");
+            if (ms >= 320)
+                check(distance == 0, "Quick recoil ends before attack animation finishes");
+            previous = distance;
+        }
+        check(actors.snapshot().revision == revision &&
+                  actorPosition(*actors.actor(id), 1400).x == original.x &&
+                  actorPosition(*actors.actor(id), 1400).y == original.y,
+              "Cosmetic lunge never moves or mutates authoritative actors");
+        animator.setTime(1180);
+        const auto held = animator.snapshot().revision;
+        animator.setTime(1180);
+        check(animator.snapshot().revision == held, "Paused lunge is deterministic");
+        actors.cancelAttack(id);
+        animator.setTime(1180);
+        check(animator.snapshot().frames[0].offsetX == 0 && animator.snapshot().frames[0].offsetY == 0,
+              "Canceled melee drops its cosmetic displacement");
+        actors.attack(id, 2000, true);
+        animator.setTime(2200);
+        check(animator.snapshot().frames[0].offsetX == 0 && animator.snapshot().frames[0].offsetY == 0,
+              "Ranged attack/casting does not lunge");
+        actors.attack(id, 3000);
+        actors.damage(id, 1, 3100);
+        actors.suspendAttack(id, 3100, 300);
+        animator.setTime(3200);
+        check(animator.snapshot().frames[0].clip == NpcAnimation::Hurt &&
+                  animator.snapshot().frames[0].offsetX == 0 && animator.snapshot().frames[0].offsetY == 0,
+              "Hurt pose suppresses forward lunge");
+        animator.setTime(3500);
+        const auto resumed = animator.snapshot().frames[0];
+        check(std::abs(resumed.offsetX * direction.x + resumed.offsetY * direction.y - .14f) < .00001f,
+              "Resumed lunge peaks at the delayed attack impact");
+        actors.damage(id, 10000, 3500);
+        animator.setTime(3500);
+        check(animator.snapshot().frames[0].offsetX == 0 && animator.snapshot().frames[0].offsetY == 0,
+              "Death returns presentation to its authoritative corpse position");
+    }
+    auto actors = world(NpcAnimation::Idle);
+    actors.attack(actors.id(0), 0);
+    NpcAnimator shortClip(actors, {reactionTimings()});
+    shortClip.setTime(95);
+    check(std::abs(shortClip.snapshot().frames[0].offsetY - .14f) < .00001f,
+          "Short authored attack still peaks on its own impact");
+    shortClip.setTime(155);
+    check(shortClip.snapshot().frames[0].offsetY == 0, "Short recoil finishes within its clip");
+    allocations = 0;
+    watching = true;
+    for (unsigned ms = 0; ms < 400; ++ms)
+        shortClip.setTime(ms);
+    watching = false;
+    check(!allocations, "Lunge sampling does not allocate");
+    shortClip.setTime(std::numeric_limits<std::uint64_t>::max());
+    check(shortClip.snapshot().frames[0].offsetY == 0, "Large time jump cannot replay a lunge");
 }
 void timing() {
     const auto metadata = animatedTimings();
@@ -302,6 +384,7 @@ void clocks() {
 int main() {
     try {
         walking::timing();
+        walking::meleeLunges();
         walking::actualWalking();
         walking::travelTiming();
         walking::staggeredIdle();

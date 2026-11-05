@@ -28,6 +28,18 @@ std::uint32_t npcAttackImpact(const NpcClipTiming& clip) noexcept {
     return total;
 }
 namespace {
+float meleeLunge(const NpcClipTiming& clip, std::uint64_t elapsed) noexcept {
+    const auto impact = npcAttackImpact(clip), duration = npcClipDuration(clip);
+    if (!impact || elapsed >= duration)
+        return 0;
+    const auto approach = std::min(impact, 140u), recoil = std::min(duration - impact, 120u);
+    if (elapsed < impact - approach)
+        return 0;
+    const float weight = elapsed <= impact           ? float(elapsed - (impact - approach)) / approach
+                         : elapsed < impact + recoil ? 1.f - float(elapsed - impact) / recoil
+                                                     : 0.f;
+    return .14f * weight * weight;
+}
 std::uint8_t sample(const NpcClipTiming& clip, std::uint64_t time, std::uint32_t phase) noexcept {
     std::uint32_t total = 0;
     for (std::size_t i = 0; i < clip.count; ++i)
@@ -118,6 +130,12 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
             } else if (!hurtWins && attackCue && attackElapsed < npcClipDuration(attack)) {
                 next.clip = attackClip;
                 next.active = sample(attack, attackElapsed, 0);
+                if (actor.life == ActorLife::Alive && !actor.rangedAttack) {
+                    const auto direction = forward(npc.facing);
+                    const auto lunge = meleeLunge(attack, attackElapsed);
+                    next.offsetX += direction.x * lunge;
+                    next.offsetY += direction.y * lunge;
+                }
             } else if (actor.hasWalk && (!actor.hasAttack || actor.walkTimeMs > actor.attackTimeMs) &&
                        (!actor.hasDamage || actor.walkTimeMs > actor.damageTimeMs ||
                         (actor.life == ActorLife::Dead && !dying)) &&

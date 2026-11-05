@@ -15,7 +15,7 @@ concentrate. Existing fourteen spells retain behavior and class-wide availabilit
 | Spell | Target and consequence | Timing |
 | --- | --- | --- |
 | Ray of Frost | Six-cell visible ranged attack; 1d8 cold and slow on surviving hit | Existing flight; slow at impact |
-| Shocking Grasp | Exposed melee spell attack; 1d8 lightning; metal-body-armor advantage | 200 ms impact; reactions omitted |
+| Shocking Grasp | Either party row; exposed enemies in the three front cells; 1d8 lightning; metal-body-armor advantage | 200 ms impact; reactions omitted |
 | Poison Spray | Visible enemy in three-cell front, irrespective of row protection; Con save negates 1d12 poison | Immediate |
 | Sleep | Aimed six-cell range, 3×3 area, 5d8 current-HP budget, both sides | Immediate; 60 gameplay seconds or wake |
 | False Life | Self, 1d4+4 temporary HP; keep larger amount and refresh | Immediate; one hour |
@@ -128,3 +128,26 @@ with authoritative lifetime tooltips, enemy spell badges, prepared oily floor
 art, and a required static four-direction Prone clip shared by sleeping and
 knocked-down actors. These changes preserve the gameplay contracts above.
 See the [current handoff](verification/archive/slice121_verification.md) for verification and assets.
+
+
+## Rear-row Shocking Grasp
+
+Implemented; Ready for review (2026-11-06): the user reports the agreed rear-row wizard use
+was blocked again. The live validator grouped Shocking Grasp with Inflict Wounds
+under the caster-exposure check. Remove only Shocking Grasp's party-front-row gate;
+retain clear melee reach in the three cells immediately ahead and existing enemy
+front-subcell protection. Inflict Wounds retains its exposed-caster requirement.
+Preserve 200ms impact, melee spell attack, metal-armor advantage, damage, costs and
+saves. Spell UI text must describe either-row close reach instead of six-cell range.
+Regression tests use the actual rear-right wizard behind a conscious front ally,
+cover front/side-front targets, protected enemy subcells and distant cells, and
+confirm a click immediately queues the checked spell. Prior captures moved the
+wizard forward; a corrected production capture will keep the original rear row.
+
+
+Verification: `expanded_spells` passes, including routed clicks from the rear-right
+wizard in all four facings, conscious front-row ally, all three front cells, protected
+subcell rejection and distant-target rejection. General cast coverage and the
+production Shocking Grasp review no longer move the wizard into the front row.
+The production capture hits at 200ms for 1 lightning damage while the wizard remains
+rear-right. See [exact checks and retained evidence](spells_design.md#targeting-correction-verification--2026-11-06).

@@ -4,7 +4,7 @@ Status: **SE01 accepted by the user (2026-11-05)**; local lighting specifically 
 See [implementation and checks](../../se01_design.md) and the
 [spell-effects roadmap](../../spell_effects_plan.md).
 SE02 is Accepted; its [six-file gallery](se02/README.md) remains a reference.
-SE03 is Ready for review in its [six-file gallery](se03/README.md).
+SE03 is Accepted (2026-11-06); see its [six-file gallery](se03/README.md).
 
 These captures use production artwork and rules, ordinary accepted spell commands,
 seed 5, a legal spell-party preset, and application-owned hidden render targets.

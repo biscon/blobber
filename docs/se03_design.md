@@ -1,7 +1,7 @@
 # SE03 — Support, conditions and persistent effects
 
-Status: **Implemented; Ready for review (2026-11-05)**.
-SE03/E-B await explicit user acceptance; SE04 remains Planned.
+Status: **Accepted and implemented (2026-11-06)**.
+The user explicitly accepted SE03 and its review corrections, closing E-B. SE04 is now [Ready for review](se04_design.md).
 Parent: [spell effects roadmap](spell_effects_plan.md). SE01–SE02 remain Accepted.
 The user approved the detailed plan and selected selective quiet portrait cues.
 
@@ -202,7 +202,7 @@ or process memory. No claim is made that third-party internals never allocate.
 
 ## Handoff and artifact retention
 
-SE03 and E-B are Ready for review; only the user can accept them. SE01–SE02 acceptance
+SE03 and E-B are Accepted by the user (2026-11-06). SE01–SE02 acceptance
 is unchanged and SE04 was not started. Gameplay, RNG, costs, deadlines, save schemas,
 prepared-image presentation and discrete movement remain unchanged.
 
@@ -274,12 +274,13 @@ control was used; interactive feel remains for user review.
 The persistent GIF was replaced with corrected Bless, attack/return and idle panels,
 retaining the earlier Grease/Web/fire panels. The gallery remains six files. The
 owned run `20261105T224822Z-4e648c7d08e040da955926fdeb305b08` was cleaned after promotion;
-no diagnostics are retained. SE03 remains Ready for review and SE04 remains Planned.
+no diagnostics are retained. SE03 was subsequently accepted on 2026-11-06; SE04 remains Planned.
 
 Current game controls: the summon costs one normal action and 3 mana, immediately
 rolls a melee spell attack for 1d8 + Wisdom force damage, and lasts 60 gameplay
 seconds without concentration. On later cleric turns use Spellbook → Abilities →
-Command Spiritual Weapon, select an enemy or floor cell, then confirm. This allows
+Command Spiritual Weapon. As of the [2026-11-06 control correction](spells_design.md#single-enemy-command-activation),
+click an enemy to attack immediately, or select a floor cell and confirm to move. This allows
 up to two clear cardinal floor steps and an optional attack in the destination cell,
 once per round (once per six gameplay seconds outside turns), without more mana or
 normal-action cost. It does not take autonomous turns. The user confirmed that

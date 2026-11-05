@@ -275,12 +275,7 @@ void spellVisuals() {
     shot.impactMs = 200;
     shot.endMs = 320;
     shot.partyOrigin = spawn;
-    shot.spell = rules::SpellKind::ScorchingRay;
     shot.targetPosition = actorPosition(game.actors().snapshot().actors[0], 0);
-    attacks.spellExtras[6] = shot;
-    attacks.spellExtras[6].id.serial = 2;
-    attacks.spellExtras[7] = shot;
-    attacks.spellExtras[7].id.serial = 3;
     FrameInput input{game.geometry(),
                      game.movement(),
                      &game.actors(),
@@ -292,27 +287,17 @@ void spellVisuals() {
                      100};
     visibility.update(input);
     effects.update(input, visibility.frame());
-    check(effects.frame().count == 3, "Three simultaneous Scorching Rays retain three visible glyphs");
+    check(effects.frame().count == 1, "Ordinary arrow still has its flight artwork");
     auto center = [](const EffectPacket& p) {
         return Vec{(p.points[0].x + p.points[2].x) * .5f, (p.points[0].y + p.points[2].y) * .5f,
                    (p.points[0].z + p.points[2].z) * .5f};
     };
-    std::array<float, 3> xs{};
-    for (unsigned i = 0; i < 3; ++i) {
-        const auto& p = effects.frame().packets[i];
-        check(p.tint[0] == 1 && std::abs(p.tint[1] - 114.f / 255) < .0001f && p.tint[2] < .15f,
-              "Fire spells retain fiery tint instead of generic gold");
-        xs[i] = project(visibility.frame().camera, center(p)).x;
-    }
-    std::sort(xs.begin(), xs.end());
-    check(xs[1] - xs[0] > 5.9f && xs[2] - xs[1] > 5.9f,
-          "Rays assigned to one target remain visually distinct");
-    attacks.spellExtras = {};
     ++attacks.revision;
     shot.stage = AttackStage::Resolved;
     input.now = 200;
     effects.update(input, visibility.frame());
-    check(effects.frame().count == 1, "Hit effect exists at impact");
+    check(effects.frame().count == 1 && effects.frame().packets[0].texture == assets.named("effect/glint"),
+          "Ordinary arrow retains the shared glint impact");
     const auto impact = project(visibility.frame().camera, center(effects.frame().packets[0]));
     const auto& body = visibility.frame().billboards[0];
     check(impact.depth < body.depth && body.depth - impact.depth < .003f,
@@ -324,32 +309,31 @@ void spellVisuals() {
     input.now = 320;
     effects.update(input, visibility.frame());
     check(!effects.frame().count, "Impact disappears at its actual expiry");
-    shot.spell = rules::SpellKind::BurningHands;
-    shot.ranged = false;
-    shot.impactMs = shot.releaseMs = shot.startedMs = 400;
-    shot.endMs = 520;
-    ++attacks.revision;
-    input.now = 400;
-    effects.update(input, visibility.frame());
-    check(effects.frame().count == 1 && effects.frame().packets[0].tint[0] == 1,
-          "Burning Hands emits a fiery immediate impact pulse");
-    input.now = 519;
-    effects.update(input, visibility.frame());
-    check(effects.frame().count == 1, "Burning Hands pulse remains until its last millisecond");
-    input.now = 520;
-    effects.update(input, visibility.frame());
-    check(!effects.frame().count, "Burning Hands aftermath has no expired pulse");
-    shot.spell = rules::SpellKind::MagicMissile;
-    shot.ranged = true;
-    shot.stage = AttackStage::Flight;
-    shot.releaseMs = 0;
-    shot.impactMs = 200;
-    shot.darts = 3;
-    ++attacks.revision;
-    input.now = 100;
-    effects.update(input, visibility.frame());
-    check(effects.frame().count == 3 && effects.frame().packets[0].tint[2] == 1,
-          "A multi-dart record emits all blue Magic Missile glyphs");
+    // Attack snapshots still carry spell timing for gameplay and other consumers.
+    // They must not create a second generic spell, with or without journal inputs.
+    for (bool journals : {false, true}) {
+        input.spells = journals ? &game.combat().spellVisuals() : nullptr;
+        input.support = journals ? &game.supportVisuals() : nullptr;
+        for (unsigned kind = 0; kind < unsigned(rules::SpellKind::Count); ++kind)
+            for (bool incoming : {false, true}) {
+                shot.spell = rules::SpellKind(kind);
+                shot.incoming = incoming;
+                shot.stage = AttackStage::Flight;
+                shot.releaseMs = shot.startedMs = 0;
+                shot.impactMs = 200;
+                shot.endMs = 320;
+                ++shot.id.serial;
+                ++attacks.revision;
+                input.now = 100;
+                effects.update(input, visibility.frame());
+                check(!effects.frame().count, "Spell attacks cannot render a generic flight glyph");
+                shot.stage = AttackStage::Resolved;
+                ++attacks.revision;
+                input.now = 200;
+                effects.update(input, visibility.frame());
+                check(!effects.frame().count, "Spell attacks cannot render a duplicate generic contact");
+            }
+    }
     SpellArea area;
     area.ground.weapons[0] = {{4, 3}, true};
     area.ground.revision = 1;
@@ -358,7 +342,8 @@ void spellVisuals() {
     effects.update(input, visibility.frame());
     check(effects.frame().count == 1, "Persistent spiritual weapon is present without transient spells");
     for (const auto& p : effects.frame().packets[0].points)
-        check(p.y > .17f && p.y < .83f, "Spiritual Weapon clears both the floor and flat ceiling");
+        check(p.y >= .15f - 1e-5f && p.y <= .85f + 1e-5f,
+              "Spiritual Weapon's accepted bob clears both the floor and flat ceiling");
 }
 void captureBuilds() {
     const auto catalog = automation::test::catalog();

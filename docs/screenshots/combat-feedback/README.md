@@ -38,6 +38,36 @@ nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
 
 Use `scorching-ray` or `portrait-weapon` for the other cases, each in a new/empty
 output directory. The runner checks OpenGL errors and warmed presentation
-allocations. Four review files are retained here, plus two original concept boards
+allocations. Six review files are retained here (four accepted painted-feedback references and
+two new enemy-lunge references), plus two original concept boards
 in the linked gallery. Superseded iterations and temporary captures/logs were
 removed after promotion; original artwork and prompt remain durable inputs.
+
+
+## Enemy melee lunge
+
+Status: **Ready for review (2026-11-06)**. The earlier painted-feedback acceptance
+is unchanged. See the [design and focused checks](../../combat_feedback_design.md#enemy-melee-lunge).
+
+- [Four-creature motion comparison](enemy-melee.gif): goblin, giant rat, bugbear and
+  zombie lunges peak at their actual impact and snap back within 120ms.
+- [Goblin at impact, native resolution](enemy-melee-impact.png): actual 1920×1080
+  output for checking sprite registration, silhouette, floor and shadow.
+
+Twenty-one frames sample -160 through +240ms around each impact at 20ms intervals,
+followed by a 600ms hold. The four reduced world crops have review-only labels; the
+native PNG has no annotations. Production rules/art, seed 5 and ordinary Defend
+commands produce the real enemy attacks. All four rolls miss; movement is cosmetic
+and independent of hit outcome. Picking, unchanged grid/subcell positions, exactly
+one impact and warmed engine-owned allocation/GL checks pass. No OS input or focus
+control was used. Reproduce with an owned run:
+
+```sh
+nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
+  cmake-build-debug/assets RUN/melee --enemy-melee-review
+```
+
+The directory must be new or empty. Temporary captures and logs were cleaned.
+The six-file gallery plus two concept boards retain distinct accepted style references
+and the new multi-species motion/native-resolution comparison; concept retention
+does not imply acceptance of the new lunge. Interactive feel remains for user review.

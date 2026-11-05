@@ -28,7 +28,7 @@ racial numeric/training passives remain; other racial traits and skills are inac
 Ranged hostile targets require six-cell range, conservative LOS, party view and
 visible-body selection. Inflict Wounds uses ordinary exposed melee reach, without
 a weapon requirement. Allies use portraits. Bless/Bane choose 1–3 distinct targets;
-Acid Splash chooses 1–2 enemies in one cell. Magic Missile assigns three darts to
+Acid Splash chooses 1–2 nearby enemies (see the proximity correction below). Magic Missile assigns three darts to
 1–3 enemies; roll 1d4+1 once and multiply by assigned count per recipient.
 Burning Hands/Thunderwave affect every enemy in the three clear-sight front cells,
 including body-occluded/protected occupants. One damage roll, individual saves,
@@ -149,3 +149,102 @@ Areas scan at most 256 actor slots once, collect at most twelve occupied subslot
 and resolve in stable actor order. Multi-target sorting is over at most three
 handles. This keeps the implementation contiguous and predictable without a
 scheduler, per-projectile allocation, or new entity framework.
+
+
+## Acid Splash proximity correction
+
+Implemented; Ready for review (2026-11-06). The user observed equally close neighbours becoming unselectable
+across a cell boundary while the middle, same-cell pair remained selectable. Replace
+cell equality with squared Euclidean distance between authoritative cell + 2×2 subcell
+positions: in half-cell integer units, dx² + dy² <= 4 (one cell inclusive). Require the
+existing conservative line of sight between their cells so a splash cannot cross a
+wall/closed corner. Individual range/view, distinct recipients, saves and damage stay
+unchanged. This is an intentional targeting-rule correction, not a picking-buffer fix.
+
+`CombatController::spellRecipient` remains the one validator consumed by UI eligibility,
+keyboard/target dock and submit. Rename its separation reason to `TargetsTooFar` in
+the same enum slot; use `Blocked` for intervening geometry. Update displayed spell
+text via the existing UI description adapter, preserving catalog/save fingerprints,
+and show the proximity rule while aiming. No new saved state or allocations.
+
+Regression checks cover both click orders across a boundary, same-cell neighbours,
+exact one-cell reach, excessive separation, closed corners and UI/submit agreement.
+A focused spell suite and target-picker suite complement the melee presentation checks.
+
+
+## Single-enemy command activation
+
+Implemented; Ready for review (2026-11-06): Command Spiritual Weapon attacks immediately when one
+enemy is clicked, like Fire Bolt. It previously used a multi-recipient-style targeting
+state despite a one-target maximum. Mark its existing targeting model `single` while
+retaining `ground` for movement-only commands. The shared click route then executes
+one checked command. A floor selection clears any previous enemy and remains an
+explicit Enter/button-confirmed move; it must not accidentally attack a stale target.
+Enable the usual enemy target list/keyboard route for this dual targeting model and
+keep its displayed/button hit-test availability consistent. Validate weapon reach
+through the full feature validator when reporting enemy eligibility. All ordinary
+single-recipient spells already use the immediate click route; self/area spells still
+require their existing confirmation. Test routed mouse clicks, keyboard/floor moves,
+cooldown/double input and invalid targets without OS input automation.
+
+
+## Targeting correction verification — 2026-11-06
+
+Debug `blobber`, `blobber_spells_tests`, `blobber_targeting_tests`,
+`blobber_level_spells_tests`, `blobber_expanded_spells_tests` and the GPU review
+runner built at low priority with at most two workers; no compiler warnings.
+Focused tests passed 4/4 in 0.18s after the final control changes:
+
+```sh
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-debug --output-on-failure -j1 \
+  -R '^(spells|targeting|expanded_spells|level_spells)$'
+nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
+  cmake-build-debug/assets RUN/acid --se02-review acid-boundary
+nice -n 15 ionice -c 3 ./cmake-build-debug/blobber_world_integration_gpu_tests \
+  cmake-build-debug/assets RUN/grasp --se02-review shocking-grasp
+```
+
+Acid Splash tests select neighbours across a boundary in both orders through the
+real command UI and confirm both recipients receive saving throws. They cover
+same-cell pairs, the inclusive one-cell distance, excessive separation and a blocked
+corner where both targets are separately visible. Spiritual Weapon tests route
+actual in-process UI clicks before/after the cleric's normal action: one enemy click
+executes one attack, repeated input cannot execute again, and a floor click clears
+an earlier enemy selection and waits for Enter to move without attacking. Existing
+single-recipient spell tests continue to pass. Shocking Grasp has four-facing rear-row
+coverage with a conscious front ally, all three immediate front cells, protected
+subcells, distant targets and immediate click execution; details are in the
+[expanded spell design](expanded_spells_design.md#rear-row-shocking-grasp).
+
+Both hidden production cases pass with ordinary commands, production art/rules,
+seed 5, warmed zero engine-owned presentation allocations and GL checks. Acid
+Splash targets at (5,5)/(1,1) and (6,5)/(0,1) are half a cell apart across the boundary:
+one saves, the other takes 6 damage. Rear-right Lethiel hits with Shocking Grasp at
+its unchanged 200ms deadline for 1 damage. The previous review-only formation swap
+was removed. Per-case measured payloads remain 97 textures, 155,113,928 mip bytes,
+24,376,194 alpha bytes, 179,995,424 world GPU bytes and 307,891,052 application GPU
+bytes (324,479,852 capture peak). There are no added assets or resource pools.
+
+[Three evidence files](screenshots/spell-targeting/README.md) retain the paired motion
+and native stills. No OS input/focus automation was used; direct click tests are
+headless UI routing, and captures use in-process commands. These checks do not
+establish interactive feel or cross-device appearance. Save schemas, catalog bytes,
+damage rules and action timing are unchanged; Acid Splash pair proximity and
+Shocking Grasp caster-row permission are the explicitly requested targeting changes.
+The shared owned run was cleaned after promotion, with no retained diagnostic exceptions.
+
+
+## Immediate Action Surge
+
+Requested 2026-11-06: selecting Action Surge in Abilities immediately uses its
+checked self-only action, without showing a second confirmation panel. Reuse
+`chooseSpellbook`'s pending command and `confirm` path in the same call, preserving
+resource/turn validation, automatic-feature browsing and double-input protection.
+Other self abilities are unchanged. The user explicitly requested no screenshots
+for this small control change; verify the routed ability-menu click before/after
+a normal action and one-charge consumption with a focused CPU check.
+
+Verification: rebuilt `blobber` and `blobber_level_spells_tests`; the focused
+`ctest --test-dir cmake-build-debug --output-on-failure -j1 -R '^level_spells$'`
+passes (0.05s), including immediate menu activation before/after a normal action,
+single-use consumption and the granted action. No screenshots were made for this change.

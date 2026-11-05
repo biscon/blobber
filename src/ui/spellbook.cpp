@@ -128,15 +128,17 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         clipped(line, dx + 34, dy + 16, dw - 34, blue, UiTextStyle::Small);
         wrapped(*this, spellDescription(e.kind, e.description), dx, dy + 34, dw, 5, 10);
         const auto* rules = rules::spellRules(e.kind);
-        const char* targeting = automatic                           ? "No separate action or activation."
-                                : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)
-                                : rules && rules->ground            ? "Aim on floor / 1 action."
-                                : rules && rules->self              ? "Self / 1 action."
-                                : rules && rules->area              ? "Fixed area / 1 action."
-                                : rules && rules->hostile ? (e.kind == rules::SpellKind::InflictWounds
-                                                                 ? "Exposed melee / 1 action."
-                                                                 : "6 cells / clear sight / 1 action.")
-                                                          : "Ally portraits / 1 action.";
+        const char* targeting =
+            automatic                           ? "No separate action or activation."
+            : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)
+            : rules && rules->ground            ? "Aim on floor / 1 action."
+            : rules && rules->self              ? "Self / 1 action."
+            : rules && rules->area              ? "Fixed area / 1 action."
+            : rules && rules->hostile
+                ? (e.kind == rules::SpellKind::ShockingGrasp   ? "Either row / melee reach / 1 action."
+                   : e.kind == rules::SpellKind::InflictWounds ? "Exposed melee / 1 action."
+                                                               : "6 cells / clear sight / 1 action.")
+                : "Ally portraits / 1 action.";
         if (e.category == PickerEntryKind::Spell) {
             std::snprintf(line, sizeof(line), "%s %s / Attack %+d / DC %d",
                           e.source == rules::SpellSource::Racial   ? "Racial"
@@ -149,7 +151,8 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         const bool available = e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
         wrapped(*this,
                 automatic   ? "Applies automatically when its conditions are met."
-                : available ? "Click or Enter to choose."
+                : available ? (e.feature == rules::Feature::ActionSurge ? "Click or Enter to activate now."
+                                                                        : "Click or Enter to choose.")
                             : commandMessage(e.reason),
                 dx, dy + 111, dw, 2);
     }
@@ -192,16 +195,19 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     clipped(line, 53, 321, 229, hudInk::text, UiTextStyle::Small);
     const bool resolving = m.state == CastingState::Resolving;
     const bool enabled = !resolving && !h.suspended && !h.modal() && h.availability == CommandReason::Ready;
-    clipped(resolving  ? "Resolving..."
-            : m.single ? (m.hostile ? "Choose an enemy" : "Choose an ally")
-                       : m.targets.data(),
+    clipped(resolving              ? "Resolving..."
+            : m.single && m.ground ? "Choose an enemy or floor cell"
+            : m.single             ? (m.hostile ? "Choose an enemy" : "Choose an ally")
+                                   : m.targets.data(),
             53, 333, m.area ? 229 : 145, teal, UiTextStyle::Small);
     const char* hint =
-        m.feedback[0] ? m.feedback.data()
-        : m.single    ? "Click to cast / Esc: cancel"
-        : m.missiles  ? (m.assigned == 3 ? "Remove a dart to reassign it." : "Assign all 3 darts to cast.")
-        : m.ground    ? "Click floor to aim; arrows cycle; Enter casts."
-        : m.self      ? "Self / confirm to cast."
+        m.feedback[0]                            ? m.feedback.data()
+        : m.single && m.ground                   ? "Click enemy to attack; floor then Enter to move."
+        : m.single                               ? "Click to cast / Esc: cancel"
+        : m.kind == rules::SpellKind::AcidSplash ? "Choose up to 2 enemies within 1 cell of each other."
+        : m.missiles ? (m.assigned == 3 ? "Remove a dart to reassign it." : "Assign all 3 darts to cast.")
+        : m.ground   ? "Click floor to aim; arrows cycle; Enter casts."
+        : m.self     ? "Self / confirm to cast."
         : m.area
             ? (m.affectedCount ? "Fixed area ahead. Inspect, then Cast." : "No enemies in the affected area.")
         : c.action == PartyAction::Feature ? "Confirm to use this ability."
@@ -215,7 +221,7 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         hint = c.action == PartyAction::Feature ? "Waiting for the ability to finish."
                                                 : "Waiting for the cast to finish.";
     clipped(hint, 53, 347, 229, muted, UiTextStyle::Small);
-    const bool confirmEnabled = (enabled && !m.single) || h.targetPicker.canConfirm;
+    const bool confirmEnabled = (enabled && (!m.single || m.ground)) || h.targetPicker.canConfirm;
     box(hudLayout::spellCast, confirmEnabled ? bright : edge);
     if (confirmEnabled)
         fill({290, 312, 86, 15}, {65, 48, 18, 255});

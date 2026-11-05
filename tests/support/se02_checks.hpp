@@ -17,11 +17,6 @@ inline void se02Commands() {
         GameSession game(map, catalog, places, 5, spellSpawn, false);
         if (advanced)
             levelParty(game, 3, kind);
-        if (kind == rules::SpellKind::ShockingGrasp) {
-            game.party().lockFormation(false);
-            game.party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
-            game.party().lockFormation(true);
-        }
         const unsigned caster = rules::spellRules(kind)->casting == rules::Casting::Wisdom ? 1 : 3;
         if (close)
             spellReady(game, caster);

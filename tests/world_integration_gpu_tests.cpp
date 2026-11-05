@@ -14,6 +14,7 @@
 #include "support/creature_occlusion_review.hpp"
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
+#include "support/enemy_melee_review.hpp"
 #include "support/fixture_world.hpp"
 #include "support/interaction_prompt_review.hpp"
 #include "support/layout_review.hpp"
@@ -74,6 +75,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--enemy-melee-review") {
+            test::enemyMeleeReview(argv[1], argv[2]);
+            return 0;
+        }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se03-review") {
             test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr, false, 80, true);
             return 0;

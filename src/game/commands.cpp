@@ -31,8 +31,8 @@ const char* commandMessage(CommandReason reason) noexcept {
         return "Requires an unarmored ally.";
     case CommandReason::MustBeDying:
         return "Requires a dying ally.";
-    case CommandReason::SameCellRequired:
-        return "Choose enemies in the same cell.";
+    case CommandReason::TargetsTooFar:
+        return "Targets must be within 1 cell of each other.";
     case CommandReason::InsufficientMana:
         return "Not enough mana.";
     case CommandReason::NoCharges:
@@ -56,7 +56,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::OutOfRange:
         return "Target is out of range for this attack.";
     case CommandReason::Blocked:
-        return "That step is blocked.";
+        return "An obstacle blocks that action.";
     case CommandReason::Ready:
         return "Ready: spends this turn's action.";
     case CommandReason::Resolved:

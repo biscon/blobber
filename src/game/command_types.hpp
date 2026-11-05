@@ -43,7 +43,7 @@ enum class CommandReason : std::uint8_t {
     DeadAlly,
     Armored,
     MustBeDying,
-    SameCellRequired,
+    TargetsTooFar,
     FullHealth,
     FullMana,
     Unsafe,

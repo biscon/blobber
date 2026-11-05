@@ -2,6 +2,7 @@
 #include "game/commands.hpp"
 #include "support/check.hpp"
 #include "support/progression_fixtures.hpp"
+#include "ui/interaction.hpp"
 #include <iostream>
 using namespace blobber;
 using namespace blobber::rules;
@@ -90,59 +91,130 @@ void weaponNextTurnControls() {
     const auto map = hybridRoom();
     const auto catalog = creationCatalog(true);
     const auto places = spellPlacements(map, 4, true);
+    for (bool normalFirst : {false, true})
+        for (bool floorOnly : {false, true}) {
+            GameSession s(map, catalog, places, 7, spellSpawn, false);
+            levelParty(s, 3, SpellKind::SpiritualWeapon);
+            levelReady(s, 1);
+            const auto round = s.combat().snapshot().round;
+            auto cast = spellCommand(s, SpellKind::SpiritualWeapon);
+            cast.targetCount = 1;
+            cast.enemies[0] = s.actors().id(0);
+            check(s.submit(cast).reason == CommandReason::Resolved, "Cleric summons weapon on her turn");
+            s.update(1.1, false);
+            levelReady(s, 1);
+            check(s.combat().snapshot().round > round, "Follow-up reaches cleric's next round");
+            const auto mana = s.party().character({1})->mana;
+            if (normalFirst) {
+                auto defend = featureCommand(s, 1, Feature::None);
+                defend.action = PartyAction::Defend;
+                check(s.submit(defend).reason == CommandReason::Resolved,
+                      "Cleric spends normal action first");
+                s.update(1.1, false);
+            }
+            CommandController ui(s);
+            TargetSnapshot targets;
+            targets.world = s.actors().snapshot().world;
+            targets.revision = s.actors().snapshot().revision;
+            targets.ids[0] = s.actors().id(0);
+            targets.count = 1;
+            ui.refresh(targets, false, false, true);
+            ui.selectCharacter(1);
+            ui.openSpellbook();
+            ui.selectSpellbookTab(MagicHud::abilityTab);
+            const auto& book = ui.snapshot().magic;
+            std::size_t index = book.entries.size();
+            for (std::size_t i = 0; i < book.visibleCount; ++i)
+                if (book.entries[book.visible[i]].feature == Feature::SpiritualWeapon)
+                    index = book.visible[i];
+            check(index < book.count && book.entries[index].reason == CommandReason::MissingTarget,
+                  "Next-turn command is available under Abilities, before or after normal action");
+            ui.chooseSpellbook(index);
+            check(ui.magicSingleTarget() && ui.snapshot().targetPicker.available,
+                  "Weapon command uses immediate single-enemy targeting with the normal target list");
+            UiInput click;
+            click.pointer = ArtPoint{float(hudLayout::viewport.x + 20), float(hudLayout::viewport.y + 20)};
+            click.pressed[std::size_t(UiKey::Click)] = true;
+            const auto destination = s.effects().spiritualWeapon({1})->cell + Cell{1, 0};
+            if (floorOnly) {
+                ui.magicEnemy(
+                    s.actors().id(0)); // An earlier keyboard selection must not survive a floor click.
+                routeHudInput(ui, click, {}, true, {}, destination);
+                check(ui.snapshot().magic.armed && !ui.snapshot().magic.pending.target &&
+                          !ui.snapshot().magic.pending.targetCount &&
+                          ui.snapshot().magic.pending.aimedCell == destination,
+                      "Floor click clears old enemy and waits for movement confirmation");
+                UiInput confirm;
+                confirm.pressed[std::size_t(UiKey::Confirm)] = true;
+                routeHudInput(ui, confirm);
+                check(s.effects().spiritualWeapon({1})->cell == destination,
+                      "Keyboard confirms movement-only command");
+            } else {
+                routeHudInput(ui, click, s.actors().id(0), true, {}, s.effects().spiritualWeapon({1})->cell);
+                check(ui.snapshot().magic.state == CastingState::Resolving,
+                      "One enemy click immediately executes Spiritual Weapon, without another confirmation");
+                routeHudInput(ui, click, s.actors().id(0));
+                check(ui.confirm() != CommandReason::Resolved, "Double input cannot issue a second attack");
+            }
+            unsigned attacks = 0;
+            for (int n = 0; n < 12; ++n)
+                for (const auto& e : s.update(.1, false))
+                    attacks += e.event == CombatEvent::Attack && e.spell == SpellKind::SpiritualWeapon;
+            check(attacks == (floorOnly ? 0u : 1u) && s.party().character({1})->mana == mana,
+                  "Click attack or floor-only move resolves the intended action without extra mana");
+            if (!normalFirst) {
+                check(!s.combat().snapshot().spent[1], "Weapon command preserves normal action");
+                auto repeat = featureCommand(s, 1, Feature::SpiritualWeapon);
+                repeat.spell = cast.spell;
+                repeat.aimedCell = s.effects().spiritualWeapon({1})->cell;
+                check(s.submit(repeat).reason == CommandReason::Cooldown,
+                      "Weapon cannot be commanded twice in the same round");
+            }
+        }
+}
+void immediateActionSurge() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
     for (bool normalFirst : {false, true}) {
         GameSession s(map, catalog, places, 7, spellSpawn, false);
-        levelParty(s, 3, SpellKind::SpiritualWeapon);
-        levelReady(s, 1);
-        const auto round = s.combat().snapshot().round;
-        auto cast = spellCommand(s, SpellKind::SpiritualWeapon);
-        cast.targetCount = 1;
-        cast.enemies[0] = s.actors().id(0);
-        check(s.submit(cast).reason == CommandReason::Resolved, "Cleric summons weapon on her turn");
-        s.update(1.1, false);
-        levelReady(s, 1);
-        check(s.combat().snapshot().round > round, "Follow-up reaches cleric's next round");
-        const auto mana = s.party().character({1})->mana;
+        levelParty(s, 2);
+        levelReady(s, 0);
         if (normalFirst) {
-            auto defend = featureCommand(s, 1, Feature::None);
+            auto defend = featureCommand(s, 0, Feature::None);
             defend.action = PartyAction::Defend;
-            check(s.submit(defend).reason == CommandReason::Resolved, "Cleric spends normal action first");
+            check(s.submit(defend).reason == CommandReason::Resolved, "Fighter uses normal action first");
             s.update(1.1, false);
         }
         CommandController ui(s);
-        TargetSnapshot targets;
-        targets.world = s.actors().snapshot().world;
-        targets.revision = s.actors().snapshot().revision;
-        targets.ids[0] = s.actors().id(0);
-        targets.count = 1;
-        ui.refresh(targets, false, false, true);
-        ui.selectCharacter(1);
+        ui.refresh(allCombatTargets(s), false, false, true);
+        ui.selectCharacter(0);
         ui.openSpellbook();
         ui.selectSpellbookTab(MagicHud::abilityTab);
         const auto& book = ui.snapshot().magic;
-        std::size_t index = book.entries.size();
-        for (std::size_t i = 0; i < book.visibleCount; ++i)
-            if (book.entries[book.visible[i]].feature == Feature::SpiritualWeapon)
-                index = book.visible[i];
-        check(index < book.count && book.entries[index].reason == CommandReason::MissingTarget,
-              "Next-turn command is available under Abilities, before or after normal action");
+        std::size_t row = 0;
+        while (row < book.visibleCount && book.entries[book.visible[row]].feature != Feature::ActionSurge)
+            ++row;
+        check(row < book.visibleCount, "Action Surge is listed in Abilities");
+        const auto index = book.visible[row];
+        const auto rect = hudLayout::spellEntry(int(row - book.offset));
+        UiInput click;
+        click.pointer = ArtPoint{float(rect.x + 2), float(rect.y + 2)};
+        click.pressed[std::size_t(UiKey::Click)] = true;
+        routeHudInput(ui, click);
+        check(!s.party().character({0})->actionSurge && !ui.snapshot().magic.casting() &&
+                  !ui.snapshot().magic.open,
+              "One Abilities click spends Action Surge immediately without a confirmation panel");
         ui.chooseSpellbook(index);
-        ui.magicEnemy(s.actors().id(0));
-        check(ui.confirm() == CommandReason::Resolved, "Abilities target and confirm orders another attack");
-        unsigned attacks = 0;
-        for (int n = 0; n < 12; ++n)
-            for (const auto& e : s.update(.1, false))
-                attacks += e.event == CombatEvent::Attack && e.spell == SpellKind::SpiritualWeapon;
-        check(attacks == 1 && s.party().character({1})->mana == mana,
-              "Follow-up resolves exactly one attack without additional mana");
-        if (!normalFirst) {
-            check(!s.combat().snapshot().spent[1], "Weapon command preserves normal action");
-            auto repeat = featureCommand(s, 1, Feature::SpiritualWeapon);
-            repeat.spell = cast.spell;
-            repeat.aimedCell = s.effects().spiritualWeapon({1})->cell;
-            check(s.submit(repeat).reason == CommandReason::Cooldown,
-                  "Weapon cannot be commanded twice in the same round");
-        }
+        unsigned surges = 0;
+        for (const auto& event : s.events())
+            surges += event.event == CombatEvent::Recovery && event.feature == Feature::ActionSurge;
+        check(surges == 1, "Repeated selection cannot consume or grant Action Surge again");
+        s.update(1.1, false);
+        auto defend = featureCommand(s, 0, Feature::None);
+        defend.action = PartyAction::Defend;
+        check(s.submit(defend).reason == CommandReason::Resolved,
+              "Immediately selected surge grants its action");
     }
 }
 void aidAndMirror() {
@@ -513,6 +585,7 @@ int main(int argc, char**) {
         }
         spells();
         weaponNextTurnControls();
+        immediateActionSurge();
         aidAndMirror();
         effects();
         features();

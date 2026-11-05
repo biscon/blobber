@@ -237,6 +237,65 @@ std::unique_ptr<CampaignRun> copy(const rules::Catalog& c, const NpcDefinitions&
     check(encodeCampaign(c, d, {"fixture", 0}, *after) == text, "exact logical campaign round trip");
     return result;
 }
+void spellPresentationLifecycle() {
+    const auto c = catalog();
+    const auto d = definitions();
+    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    const auto emptyJournals = [](const GameSession& game) {
+        for (const auto& cue : game.supportVisuals().records)
+            check(!cue.id.serial, "Campaign entry never replays support application bursts");
+        for (const auto& cue : game.combat().spellVisuals().casts)
+            check(!cue.id.serial, "Campaign entry never replays spell casts");
+    };
+    emptyJournals(run.game());
+    CommandController hud(run.game());
+    hud.refresh({}, false, false, true);
+    EffectRequest ward;
+    ward.world = run.game().actors().snapshot().world;
+    ward.kind = EffectKind::ShieldOfFaith;
+    ward.caster = rules::CharacterId{1};
+    ward.targets[0] = rules::CharacterId{0};
+    ward.count = 1;
+    check(bool(run.game().applyEffect(ward)), "Campaign ward applies normally");
+    hud.record(run.game().events());
+    hud.refresh({}, false, false, true);
+    const auto now = run.game().timeMs();
+    const auto revision = run.game().supportVisuals().revision;
+    const auto presentation = hud.snapshot().portraitFeedback[0][0];
+    check(revision && presentation.kind != PortraitFeedbackKind::None,
+          "Live application creates visible portrait feedback before pause");
+    run.update(10, true);
+    hud.refresh({}, false, false, true);
+    check(run.game().timeMs() == now && run.game().supportVisuals().revision == revision &&
+              hud.snapshot().portraitFeedback[0][0].startedMs == presentation.startedMs &&
+              hud.snapshot().portraitFeedback[0][0].kind == presentation.kind,
+          "Pause preserves clock and application feedback without replay or expiry");
+    auto resumed = copy(c, d, run);
+    const auto retainedWard = [&](const GameSession& game) {
+        const auto state = game.effects().visualConditions();
+        check(state.world == game.actors().snapshot().world &&
+                  (state.party[0] & (1u << unsigned(EffectKind::ShieldOfFaith))),
+              "Sustained ward reconstructs with the destination world's identity");
+    };
+    emptyJournals(resumed->game());
+    retainedWard(resumed->game());
+    CommandController continuedHud(resumed->game());
+    continuedHud.refresh({}, false, false, true);
+    check(continuedHud.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::None,
+          "Continue retains status without replaying the old portrait flash");
+    run.update(.7, false);
+    hud.refresh({}, false, false, true);
+    check(hud.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::None,
+          "Resuming allows the application flash to expire normally");
+    retainedWard(run.game());
+    // Use the normal campaign doorway transaction, including a return to an old location.
+    enterInn(*resumed);
+    emptyJournals(resumed->game());
+    retainedWard(resumed->game());
+    leaveInn(*resumed);
+    emptyJournals(resumed->game());
+    retainedWard(resumed->game());
+}
 void chestRoundtrip() {
     const auto c = catalog(false, 50, 7);
     const auto d = definitions();
@@ -975,6 +1034,7 @@ int main(int argc, char** argv) {
             saveUi();
             applicationFlow();
             pausePolling();
+            spellPresentationLifecycle();
             std::cout << "campaign save smoke tests passed\n";
             return 0;
         }
@@ -987,6 +1047,7 @@ int main(int argc, char** argv) {
         progressionAndFloors();
         std::cerr << "chest containers\n";
         chestRoundtrip();
+        spellPresentationLifecycle();
         std::cerr << "effects\n";
         effects();
         std::cerr << "I/O failures\n";

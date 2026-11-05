@@ -24,32 +24,6 @@ Vec partyAnchor(const AttackVisual& shot, Player player, GeometryView geometry) 
             elevation(geometry.surface(player.cell).floor) + (shot.formationSlot < 2 ? .2f : .17f),
             player.cell.y + .5f + f.y * .1f + r.y * lane};
 }
-std::array<float, 4> spellTint(rules::SpellKind kind, float alpha) {
-    using rules::SpellKind;
-    switch (kind) {
-    case SpellKind::FireBolt:
-    case SpellKind::BurningHands:
-    case SpellKind::ScorchingRay:
-        return {1, 114.f / 255, 38.f / 255, alpha};
-    case SpellKind::PoisonSpray:
-    case SpellKind::AcidSplash:
-        return {118.f / 255, 242.f / 255, 60.f / 255, alpha};
-    case SpellKind::Sleep:
-    case SpellKind::ColorSpray:
-    case SpellKind::InflictWounds:
-    case SpellKind::Bane:
-        return {179.f / 255, 75.f / 255, 215.f / 255, alpha};
-    case SpellKind::RayOfFrost:
-    case SpellKind::ShockingGrasp:
-    case SpellKind::Thunderwave:
-    case SpellKind::MagicMissile:
-        return {110.f / 255, 174.f / 255, 1, alpha};
-    case SpellKind::Count:
-        return {1, 231.f / 255, 155.f / 255, alpha};
-    default:
-        return {1, 232.f / 255, 150.f / 255, alpha};
-    }
-}
 } // namespace
 Vec spiritualWeaponPosition(GeometryView geometry, Cell cell, std::uint64_t now) noexcept {
     const float phase = float((now / 40) % 60) * (6.28318530718f / 60.f);
@@ -217,11 +191,9 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             bodies[b.id] = &b;
     }
     for (const auto& shot : shots_) {
-        if ((in.spells && (elementalSpell(shot.spell) || shot.spell == rules::SpellKind::Sleep ||
-                           shot.spell == rules::SpellKind::ColorSpray)) ||
-            (in.support &&
-             (shot.spell == rules::SpellKind::Bless || shot.spell == rules::SpellKind::Bane ||
-              shot.spell == rules::SpellKind::HoldPerson || shot.spell == rules::SpellKind::SpiritualWeapon)))
+        // Spell/support players own all spell artwork. The shared glint remains
+        // an ordinary arrow impact, never an alternate spell renderer.
+        if (shot.spell != rules::SpellKind::Count)
             continue;
         const Billboard* body =
             in.actors && shot.enemy.world == in.actors->snapshot().world && shot.enemy.slot < bodies.size()
@@ -239,8 +211,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
         const Vec party =
             partyAnchor(shot, shot.incoming ? in.movement.player : shot.partyOrigin, in.geometry);
-        const bool npcBless = shot.incoming && shot.spell == rules::SpellKind::Bless;
-        const Vec from = shot.incoming ? enemy : party, to = npcBless ? enemy : shot.incoming ? party : enemy;
+        const Vec from = shot.incoming ? enemy : party, to = shot.incoming ? party : enemy;
         const bool ending = in.now >= shot.impactMs;
         if (ending && (!shot.hit || shot.targetGone))
             continue;
@@ -265,13 +236,9 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             size = (shot.ranged ? 12.f : 28.f) * depth(world.camera, to) / focal();
         } else if (std::abs(b.x - a.x) < 25 && std::abs(b.y - a.y) < 35)
             texture = shot.incoming ? 1 : 2;
-        if (shot.spell != rules::SpellKind::Count) {
-            texture = 4;
-            size = ending ? 28.f * depth(world.camera, to) / focal()
-                          : std::max(.182f, 7.f * depth(world.camera, point) / focal());
-        }
         const float fade = ending ? 1.f - float(in.now - shot.impactMs) / 120.f : 1.f;
-        const auto tint = texture == 4 ? spellTint(shot.spell, fade) : std::array<float, 4>{1, 1, 1, fade};
+        const auto tint = texture == 4 ? std::array<float, 4>{1, 231.f / 255, 155.f / 255, fade}
+                                       : std::array<float, 4>{1, 1, 1, fade};
         if (ending) {
             // The body owns depth at this exact attachment plane. Pull only the
             // cosmetic impact forward slightly, retaining ordinary wall/body tests.
@@ -282,8 +249,6 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         for (unsigned dart = 0; dart < copies; ++dart) {
             auto center = point;
             float offset = (int(dart) * 2 - int(copies) + 1) * 5.f;
-            if (shot.spell == rules::SpellKind::ScorchingRay)
-                offset += (int(shot.id.serial % 3) - 1) * 6.f;
             offset *= depth(world.camera, point) / focal();
             center.x += world.camera.right.x * offset;
             center.z += world.camera.right.z * offset;

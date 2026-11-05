@@ -33,7 +33,7 @@ void CommandController::refreshTargetPicker() noexcept {
     p.available =
         !state_.suspended && !state_.modal() && !state_.inventory.itemTargeting && !state_.campaignTerminal &&
         state_.combat.phase != CombatPhase::Victory && state_.combat.phase != CombatPhase::Defeat &&
-        (m.armed ? m.hostile && !m.area && !m.ground && !m.self
+        (m.armed ? m.hostile && !m.area && (!m.ground || m.single) && !m.self
                  : !m.casting() && (c.action == PartyAction::Melee || c.action == PartyAction::BackMelee ||
                                     c.action == PartyAction::Ranged));
     if (!p.available || !sameTargetContext(c, targetContext_)) {

@@ -183,7 +183,8 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
             t.add(hudLayout::spellBack, h.magic.state != CastingState::Resolving);
             t.add(hudLayout::spellCancel, h.magic.state != CastingState::Resolving);
             t.add(hudLayout::spellCast,
-                  (h.availability == CommandReason::Ready && !h.magic.single) || h.targetPicker.canConfirm);
+                  (h.availability == CommandReason::Ready && (!h.magic.single || h.magic.ground)) ||
+                      h.targetPicker.canConfirm);
             if (h.magic.kind == rules::SpellKind::LesserRestoration)
                 t.add(hudLayout::restorationChoice);
             for (unsigned i = 0; i < h.magic.pending.targetCount && !h.magic.hostile; ++i)

@@ -10,6 +10,78 @@
 using namespace blobber;
 using rules::SpellKind;
 namespace {
+void acidSplashProximity() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    const NpcWorld places(map, spellSpawn.cell, {"goblin"},
+                          {{{0}, {5, 4}, {1, 1}, Heading::South},
+                           {{0}, {6, 4}, {0, 1}, Heading::South},
+                           {{0}, {6, 4}, {1, 1}, Heading::South},
+                           {{0}, {7, 4}, {0, 1}, Heading::South}});
+    for (bool reverse : {false, true}) {
+        GameSession s(map, catalog, places, 5, spellSpawn, false);
+        auto c = spellCommand(s, SpellKind::AcidSplash);
+        c.targetCount = 2;
+        c.enemies[0] = s.actors().id(0);
+        c.enemies[1] = s.actors().id(2);
+        check(s.combat().validate(c, spellSpawn) == CommandReason::Ready,
+              "Acid Splash includes targets exactly one cell apart across a boundary");
+        c.enemies[1] = s.actors().id(3);
+        check(s.combat().validate(c, spellSpawn) == CommandReason::TargetsTooFar,
+              "Acid Splash rejects targets beyond the radius before casting");
+        c.enemies[0] = s.actors().id(1);
+        c.enemies[1] = s.actors().id(2);
+        check(s.combat().validate(c, spellSpawn) == CommandReason::Ready,
+              "Existing same-cell pair remains legal");
+        CommandController ui(s);
+        ui.refresh(allCombatTargets(s), false, false, true);
+        ui.selectCharacter(3);
+        ui.openSpellbook();
+        std::size_t index = 0;
+        while (index < ui.snapshot().magic.count &&
+               ui.snapshot().magic.entries[index].kind != SpellKind::AcidSplash)
+            ++index;
+        check(index < ui.snapshot().magic.count, "Acid Splash picker entry exists");
+        ui.chooseSpellbook(index);
+        ui.magicEnemy(s.actors().id(reverse ? 1 : 0));
+        if (!reverse) {
+            ui.magicEnemy(s.actors().id(3));
+            check(ui.snapshot().magic.pending.targetCount == 1 &&
+                      std::strstr(ui.snapshot().magic.feedback.data(), "within 1 cell"),
+                  "Rejected second target preserves selection and explains proximity");
+        }
+        check(ui.magicEligibility(s.actors().id(reverse ? 0 : 1)) == CommandReason::Ready,
+              "Cross-boundary neighbour is selectable in either order");
+        ui.magicEnemy(s.actors().id(reverse ? 0 : 1));
+        check(ui.snapshot().magic.pending.targetCount == 2 && ui.confirm() == CommandReason::Resolved,
+              "Cross-boundary two-target UI selection submits successfully in either order");
+        unsigned saves = 0;
+        for (const auto& event : s.events())
+            saves += event.event == CombatEvent::SpellSave && event.spell == SpellKind::AcidSplash;
+        check(saves == 2, "Both selected neighbours receive their own actual saving throw");
+    }
+    std::vector<std::string> rows(13, std::string(13, '.'));
+    rows.front() = rows.back() = std::string(13, '#');
+    for (auto& row : rows)
+        row.front() = row.back() = '#';
+    rows[4][5] = '#';
+    const Map corner(rows);
+    const NpcWorld aroundCorner(
+        corner, spellSpawn.cell, {"goblin"},
+        {{{0}, {5, 5}, {1, 0}, Heading::South}, {{0}, {6, 4}, {0, 1}, Heading::South}});
+    GameSession s(corner, catalog, aroundCorner, 5, spellSpawn, false);
+    auto c = spellCommand(s, SpellKind::AcidSplash);
+    c.targetCount = 1;
+    c.enemies[0] = s.actors().id(0);
+    check(s.combat().validate(c, spellSpawn) == CommandReason::Ready, "First corner target is visible");
+    c.enemies[0] = s.actors().id(1);
+    check(s.combat().validate(c, spellSpawn) == CommandReason::Ready, "Second corner target is visible");
+    c.targetCount = 2;
+    c.enemies[0] = s.actors().id(0);
+    c.enemies[1] = s.actors().id(1);
+    check(s.combat().validate(c, spellSpawn) == CommandReason::Blocked,
+          "Nearby targets cannot splash through a blocked corner even when individually visible");
+}
 void resourcesAndHealing() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog();
@@ -1048,6 +1120,7 @@ int main(int argc, char** argv) {
         impactAlerts();
         meleeAlertTiming();
         allDamageSpells();
+        acidSplashProximity();
         invalidAndPool();
         ui();
         classFeaturesUi();
