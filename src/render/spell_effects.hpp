@@ -32,6 +32,9 @@ class SpellEffectsPlayer {
     };
     void appendOffensive(const FrameInput&, const WorldFrame&, EffectFrame&, unsigned pass,
                          unsigned& particles) noexcept;
+    void appendSupport(const FrameInput&, const WorldFrame&, EffectFrame&, unsigned, unsigned&) noexcept;
+    ActorConditionVisualSnapshot conditions_{};
+    std::uint64_t supportRevision_ = UINT64_MAX, supportEpoch_ = UINT64_MAX, supportTick_ = UINT64_MAX;
     world_assets::EffectClips clips_;
     std::array<Cast, SpellVisualSnapshot::capacity> casts_{};
     std::array<Remnant, spellAftermathCapacity> remnants_{};

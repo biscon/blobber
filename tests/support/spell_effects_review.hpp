@@ -11,7 +11,8 @@
 #include <iostream>
 namespace blobber::test {
 inline void spellEffectsReview(const std::filesystem::path& assets, const std::filesystem::path& output,
-                               const char* selected = nullptr, bool se02 = false, unsigned frameStep = 60) {
+                               const char* selected = nullptr, bool se02 = false, unsigned frameStep = 60,
+                               bool se03 = false) {
     if (std::filesystem::exists(output) && !std::filesystem::is_empty(output))
         throw std::runtime_error("SE01 review output must be new or empty");
     std::filesystem::create_directories(output);
@@ -51,13 +52,33 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                            {"portrait-buff", rules::SpellKind::Bless, 3, 1, true, false},
                            {"portrait-damage", rules::SpellKind::SacredFlame, 1, 1, true, false},
                            {"portrait-weapon", rules::SpellKind::SacredFlame, 1, 1, true, false}};
-    const auto* cases = se02 ? offensive : foundation;
-    const unsigned caseCount = se02 ? unsigned(std::size(offensive)) : unsigned(std::size(foundation));
+    const Case support[]{{"stabilize", rules::SpellKind::SpareTheDying, 3, 1, true, false},
+                         {"cleanse", rules::SpellKind::LesserRestoration, 3, 1, true, false},
+                         {"aid", rules::SpellKind::Aid, 3, 1, true, false},
+                         {"mirror", rules::SpellKind::MirrorImage, 3, 1, true, false},
+                         {"faith", rules::SpellKind::ShieldOfFaith, 3, 1, true, false},
+                         {"sanctuary", rules::SpellKind::Sanctuary, 3, 1, true, true},
+                         {"sleep", rules::SpellKind::Sleep, 3, 3, true, false},
+                         {"prism", rules::SpellKind::ColorSpray, 1, 3, true, false},
+                         {"hold", rules::SpellKind::HoldPerson, 3, 1, true, false},
+                         {"bane", rules::SpellKind::Bane, 3, 3, true, false},
+                         {"grease", rules::SpellKind::Grease, 2, 1, true, false},
+                         {"web", rules::SpellKind::Web, 2, 1, true, false},
+                         {"web-burn", rules::SpellKind::Web, 2, 1, true, false},
+                         {"weapon", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
+                         {"weapon-move", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
+                         {"npc-bless", rules::SpellKind::Bless, 1, 3, true, false}};
+    const auto* cases = se03 ? support : se02 ? offensive : foundation;
+    const unsigned caseCount = se03   ? unsigned(std::size(support))
+                               : se02 ? unsigned(std::size(offensive))
+                                      : unsigned(std::size(foundation));
     std::ofstream report(output / "checks.txt");
     for (unsigned exampleIndex = 0; exampleIndex < caseCount; ++exampleIndex) {
         const auto& example = cases[exampleIndex];
         const bool weaponIncoming = std::string_view(example.name) == "portrait-weapon";
-        const bool incoming = weaponIncoming || std::string_view(example.name) == "portrait-damage";
+        const bool npcBless = std::string_view(example.name) == "npc-bless";
+        const bool incoming =
+            npcBless || weaponIncoming || std::string_view(example.name) == "portrait-damage";
         if (selected && std::string_view(selected) != example.name)
             continue;
         WorldDefinition definition;
@@ -76,24 +97,28 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                 rows[y][5] = rows[y][7] = '#';
         const Map map(rows, definition);
         const Player pose{{6, 8}, Heading::North};
-        const auto name = weaponIncoming                                    ? "goblin"
-                          : incoming                                        ? "goblin_shaman"
-                          : example.spell == rules::SpellKind::BurningHands ? "goblin"
-                                                                            : "bugbear";
+        const auto name = weaponIncoming                                            ? "goblin"
+                          : incoming                                                ? "goblin_shaman"
+                          : se03 || example.spell == rules::SpellKind::BurningHands ? "goblin"
+                                                                                    : "bugbear";
         const auto found = std::find(definitions.types.begin(), definitions.types.end(), name);
         check(found != definitions.types.end(), "Review species has production art");
         const NpcTypeId type{std::uint16_t(found - definitions.types.begin())};
         std::vector<NpcInstance> instances;
         for (int i = 0; i < example.count; ++i)
             instances.push_back(
-                {type,
+                {npcBless && i > 0 ? NpcTypeId{std::uint16_t(std::find(definitions.types.begin(),
+                                                                       definitions.types.end(), "goblin") -
+                                                             definitions.types.begin())}
+                                   : type,
                  {6 + (example.spell != rules::SpellKind::AcidSplash && example.count > 1 ? i - 1 : 0),
                   8 - example.range},
                  {example.spell == rules::SpellKind::AcidSplash ? i : 0, weaponIncoming ? 0 : 1},
                  Heading::South});
         NpcWorld places(map, pose.cell, definitions.types, instances);
         const auto party = leveledSpellParty(catalog, example.spell);
-        GameSession game(map, catalog, party, places, 5, pose, false, definitions.timings);
+        const unsigned seed = std::string_view(example.name) == "web-burn" ? 3 : 5;
+        GameSession game(map, catalog, party, places, seed, pose, false, definitions.timings);
         prepareSpellParty(game.party(), example.spell);
         if (example.spell == rules::SpellKind::ShockingGrasp) {
             game.party().lockFormation(false);
@@ -105,7 +130,9 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         GameView view(renderer);
         auto present = [&] {
             animator.setTime(game.timeMs(), &game.effects());
-            view.update(game, animator.snapshot(), {});
+            SpellArea visibleArea;
+            visibleArea.ground = game.effects().ground();
+            view.update(game, animator.snapshot(), visibleArea);
             commands.refresh(view.picking() ? view.picking()->targets() : TargetSnapshot{}, false, false,
                              true);
             view.present(presenter, game, map, false, true, &commands.snapshot());
@@ -130,17 +157,47 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                             report << "weapon outcome incoming=" << event.enemyAttack << " hit=" << event.hit
                                    << " damage=" << event.damage << " at=" << game.timeMs() << '\n';
                 for (const auto& event : events)
-                    if (event.event == CombatEvent::Attack && event.enemyAttack &&
+                    if (!npcBless && event.event == CombatEvent::Attack && event.enemyAttack &&
                         event.spell ==
                             (weaponIncoming ? rules::SpellKind::Count : rules::SpellKind::SacredFlame) &&
                         event.hit && event.damage > 0)
                         resolved = true;
+                if (npcBless)
+                    for (const auto& event : events)
+                        resolved |= event.event == CombatEvent::Effect &&
+                                    event.effect.kind == EffectKind::Bless &&
+                                    event.effect.notice == EffectNotice::Applied && event.effect.caster.npc;
                 commands.record(events);
             }
             check(resolved, "Production enemy attack resolves onto portrait");
         } else {
             auto command = spellCommand(game, example.spell);
-            if (example.spell == rules::SpellKind::Shatter)
+            if (se03) {
+                const auto& rule = *rules::spellRules(example.spell);
+                if (rule.ground)
+                    command.aimedCell = Cell{6, 8 - example.range};
+                if (!rule.area && !rule.self) {
+                    command.targetCount =
+                        example.spell == rules::SpellKind::Aid || example.spell == rules::SpellKind::Bane ? 3
+                                                                                                          : 1;
+                    command.allies = {{{0}, {1}, {2}}};
+                    for (unsigned i = 0; i < command.targetCount; ++i)
+                        command.enemies[i] = game.actors().id(i);
+                }
+                if (example.spell == rules::SpellKind::SpareTheDying)
+                    game.party().damage({0}, game.party().character({0})->hitPoints);
+                if (example.spell == rules::SpellKind::LesserRestoration) {
+                    EffectRequest effect;
+                    effect.world = game.actors().snapshot().world;
+                    effect.caster = rules::CharacterId{3};
+                    effect.kind = EffectKind::HoldPerson;
+                    effect.targets[0] = rules::CharacterId{0};
+                    effect.count = 1;
+                    effect.difficulty = 100;
+                    check(bool(game.applyEffect(effect)), "Cleanse review applies actual paralysis");
+                    command.restoreParalysis = true;
+                }
+            } else if (example.spell == rules::SpellKind::Shatter)
                 command.aimedCell = Cell{6, 8 - example.range};
             else if (example.spell == rules::SpellKind::CureWounds ||
                      example.spell == rules::SpellKind::Bless) {
@@ -167,21 +224,54 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         if (example.spell == rules::SpellKind::CureWounds)
             check(commands.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::Healing,
                   "Healing review consumes resolved events");
-        if (example.spell == rules::SpellKind::Bless)
+        if (example.spell == rules::SpellKind::Bless && !npcBless)
             for (unsigned i = 0; i < 3; ++i)
                 check(commands.snapshot().portraitFeedback[i][0].kind == PortraitFeedbackKind::Protection,
                       "Buff review affects each selected portrait");
-        if (incoming && !weaponIncoming) {
+        if (incoming && !weaponIncoming && !npcBless) {
             bool damagePulse = false;
             for (const auto& channels : commands.snapshot().portraitFeedback)
                 damagePulse |= channels[1].kind == PortraitFeedbackKind::Damage;
             check(damagePulse, "Enemy hit creates an actual damage pulse");
         }
+        if (std::string_view(example.name) == "web-burn") {
+            commands.record(game.update(6, false));
+            if (!realTime(game.combat().snapshot().phase))
+                spellReady(game, 3);
+            auto fire = spellCommand(game, rules::SpellKind::FireBolt);
+            fire.targetCount = 1;
+            fire.enemies[0] = game.actors().id(0);
+            check(game.submit(fire).reason == CommandReason::Resolved,
+                  "Web ignition uses ordinary Fire Bolt");
+            commands.record(game.events());
+            commands.record(game.update(.5, false));
+            bool burning = false;
+            for (const auto& patch : game.effects().ground().areas)
+                burning |= patch.active && patch.burnMs;
+            check(burning, "Fire Bolt ignites an actual Web patch");
+        }
+        if (std::string_view(example.name) == "weapon-move") {
+            commands.record(game.update(6, false));
+            if (game.combat().snapshot().phase == CombatPhase::Victory)
+                check(game.combat().continueExploring(),
+                      "Weapon review resumes ordinary exploration after victory");
+            if (!realTime(game.combat().snapshot().phase))
+                spellReady(game, 1);
+            auto move = featureCommand(game, 1, rules::Feature::SpiritualWeapon);
+            move.spell = catalog.findSpell("spiritual_weapon");
+            const auto* weapon = game.effects().spiritualWeapon({1});
+            check(weapon, "Movement review retains summoned weapon");
+            move.aimedCell = weapon->cell + right(pose.heading);
+            check(game.submit(move).reason == CommandReason::Resolved,
+                  "Weapon movement uses ordinary feature command");
+            commands.record(game.events());
+        }
         const auto start = game.timeMs();
         const auto& cue = game.combat().spellVisuals().casts[0];
         report << example.name << " cast=" << cue.id.serial;
         if (cue.id.serial)
-            report << " release=" << cue.releaseMs - start << " impact=" << cue.impactMs - start;
+            report << " release=" << std::int64_t(cue.releaseMs) - std::int64_t(start)
+                   << " impact=" << std::int64_t(cue.impactMs) - std::int64_t(start);
         for (unsigned i = 0; i < cue.count; ++i)
             report << " target=" << cue.targets[i].actor.slot << ":hit=" << cue.targets[i].hit
                    << ":damage=" << cue.targets[i].damage;

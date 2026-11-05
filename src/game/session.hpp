@@ -103,6 +103,7 @@ class GameSession {
     // All simulation operations invalidate the previous borrowed event batch.
     audio::Journal& audioEvents() noexcept { return audio_; }
     const CombatEvents& events() const noexcept { return events_; }
+    const SupportVisualSnapshot& supportVisuals() const noexcept { return support_.snapshot(); }
     EffectResult applyEffect(const EffectRequest&) noexcept;
     EffectResult removeEffect(EffectId) noexcept;
     EffectResult endConcentration(std::uint64_t world, rules::CharacterId) noexcept;
@@ -174,6 +175,7 @@ class GameSession {
     EffectController effects_;
     CombatController combat_;
     audio::Journal audio_;
+    SupportVisualJournal support_;
     std::array<std::uint64_t, NpcWorld::maxInstances> audioWalks_{};
     CombatEvents events_;
     bool enableAi_ = true, development_ = false;

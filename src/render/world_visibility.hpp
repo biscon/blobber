@@ -38,6 +38,7 @@ struct FrameInput {
     unsigned guardianDoor = UINT16_MAX;
     const SpellVisualSnapshot* spells = nullptr;
     const ActorConditionVisualSnapshot* conditions = nullptr;
+    const SupportVisualSnapshot* support = nullptr;
 };
 struct Billboard {
     Vec feet;

@@ -6,6 +6,7 @@
 #include "game/npc_ai.hpp"
 #include "game/npc_animation.hpp"
 #include "game/spell_visuals.hpp"
+#include "game/support_visuals.hpp"
 #include <cassert>
 #include <cstdlib>
 
@@ -80,6 +81,7 @@ struct CombatOutcome {
 };
 struct CombatEvents {
     audio::Journal* audioJournal = nullptr;
+    SupportVisualJournal* supportJournal = nullptr;
     static constexpr std::size_t capacity = 8192;
     // Allocate once at owner construction; never resize during simulation.
     std::vector<CombatOutcome> values = std::vector<CombatOutcome>(capacity);
@@ -96,6 +98,8 @@ struct CombatEvents {
         if (count >= capacity)
             std::abort(); // Internal bound violation must never drop consequences.
         values[count++] = out;
+        if (supportJournal)
+            supportJournal->combat(out);
         if (audioJournal)
             audioJournal->combat(out);
     }

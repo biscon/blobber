@@ -27,6 +27,22 @@ enum class EffectClipKind : std::uint8_t {
     Shatter,
     ArcaneParticles,
     AcidFlecks,
+    Boon,
+    Curse,
+    SleepMist,
+    PrismaticFan,
+    Restraint,
+    Faith,
+    Armor,
+    Sanctuary,
+    GreaseSpread,
+    WebUnfurl,
+    WebBurn,
+    WeaponSummon,
+    WeaponMove,
+    WeaponStrike,
+    Stabilize,
+    Cleanse,
     Count
 };
 constexpr unsigned effectClipCount = unsigned(EffectClipKind::Count);

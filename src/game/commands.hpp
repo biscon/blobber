@@ -63,6 +63,9 @@ struct PortraitFeedback {
     rules::DamageType element = rules::DamageType::Bludgeoning;
     std::uint64_t startedMs = 0;
     unsigned durationMs = 0;
+    rules::SpellKind support = rules::SpellKind::Count;
+    SupportPhase phase = SupportPhase::Apply;
+    unsigned duplicate = 0;
 };
 struct CombatFeedback {
     static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
@@ -170,6 +173,7 @@ struct HudSnapshot {
     std::size_t allyCount = 0;
     std::array<CombatFeedback, 16> feedback{};
     std::array<std::array<PortraitFeedback, 2>, rules::partySize> portraitFeedback{};
+    ActorConditionVisualSnapshot supportConditions{};
     std::uint64_t presentationMs = 0;
     MagicHud magic;
     InventoryHud inventory;
@@ -383,7 +387,7 @@ class CommandController {
     GameSession& session_;
     std::optional<LootId> hoveredLoot_;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
-    std::uint64_t feedbackEpoch_ = 0;
+    std::uint64_t feedbackEpoch_ = 0, supportSeen_ = 0, supportEpoch_ = UINT64_MAX;
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;

@@ -58,6 +58,8 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         throw std::invalid_argument("Foreign world spell snapshot");
     if (in.conditions && (!in.actors || in.conditions->world != in.actors->snapshot().world))
         throw std::invalid_argument("Foreign world condition snapshot");
+    if (in.support && (!in.actors || in.support->world != in.actors->snapshot().world))
+        throw std::invalid_argument("Foreign world support snapshot");
     const bool swipeChanged = swipes_.update(in, world);
     const bool spellChanged = spells_.update(in, world);
     const bool changed = shots_.update(in.attacks, in.now) || swipeChanged || spellChanged;
@@ -107,8 +109,6 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     for (const auto& patch : area.ground.areas)
         if (patch.active) {
             ground(patch.cell, patch.web ? 6 : 5, {1, 1, 1, 1}, .0015f);
-            if (patch.web && patch.burnMs)
-                ground(patch.cell, 9, {1, .412f, .118f, .255f}, .002f);
         }
     const auto color =
         area.kind == rules::SpellKind::Sleep         ? std::array<float, 4>{.545f, .49f, .87f, 1}
@@ -165,7 +165,11 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             bodies[b.id] = &b;
     }
     for (const auto& shot : shots_) {
-        if (in.spells && elementalSpell(shot.spell))
+        if ((in.spells && (elementalSpell(shot.spell) || shot.spell == rules::SpellKind::Sleep ||
+                           shot.spell == rules::SpellKind::ColorSpray)) ||
+            (in.support &&
+             (shot.spell == rules::SpellKind::Bless || shot.spell == rules::SpellKind::Bane ||
+              shot.spell == rules::SpellKind::HoldPerson || shot.spell == rules::SpellKind::SpiritualWeapon)))
             continue;
         const Billboard* body =
             in.actors && shot.enemy.world == in.actors->snapshot().world && shot.enemy.slot < bodies.size()

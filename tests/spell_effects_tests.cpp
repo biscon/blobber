@@ -3,6 +3,7 @@
 #include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/se02_checks.hpp"
+#include "support/se03_checks.hpp"
 #include "support/spell_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <fstream>
@@ -398,6 +399,9 @@ void publication() {
 } // namespace
 int main() {
     try {
+        test::se03Commands();
+        test::se03Lifecycle();
+        test::se03Playback();
         test::se02Commands();
         test::se02Journal();
         test::se02Portraits();
@@ -405,7 +409,7 @@ int main() {
         playback();
         lightBlockers();
         publication();
-        std::cout << "SE01/SE02 CPU checks passed; effect_pipeline_bytes=" << sizeof(EffectsPipeline)
+        std::cout << "SE01/SE02/SE03 CPU checks passed; effect_pipeline_bytes=" << sizeof(EffectsPipeline)
                   << " light_scratch_bytes=" << sizeof(SpellLightData)
                   << " journal_bytes=" << sizeof(SpellVisualJournal) << '\n';
     } catch (const std::exception& e) {

@@ -29,7 +29,8 @@ class GameView {
                                              game.timeMs(),
                                              game.guardianDoor(),
                                              &game.combat().spellVisuals(),
-                                             &conditions};
+                                             &conditions,
+                                             &game.supportVisuals()};
         const auto previous = image_.revision;
         if (!ready_) {
             map_.prepare(game.geometry().base(), rooms_);

@@ -22,11 +22,53 @@ bool fresh(std::uint64_t now, std::uint64_t start, unsigned ms) noexcept {
     return now >= start && now - start < ms;
 }
 } // namespace
-bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame&) noexcept {
+bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame& visibleWorld) noexcept {
     const auto world = in.actors ? in.actors->snapshot().world : 0;
     const auto epoch = in.spells ? in.spells->epoch : 0;
-    bool changed = world != world_ || epoch != epoch_;
-    if (changed) {
+    const bool reset = world != world_ || epoch != epoch_;
+    bool changed = reset;
+    const auto condition = in.conditions ? *in.conditions : ActorConditionVisualSnapshot{};
+    changed |= condition.actors != conditions_.actors;
+    conditions_ = condition;
+    const auto supportRevision = in.support ? in.support->revision : 0;
+    const auto supportEpoch = in.support ? in.support->epoch : 0;
+    changed |= supportRevision != supportRevision_ || supportEpoch != supportEpoch_;
+    supportRevision_ = supportRevision;
+    supportEpoch_ = supportEpoch;
+    bool supportActive = false, looping = false;
+    if (in.support)
+        for (const auto& cue : in.support->records) {
+            if (!cue.id.serial || !fresh(in.now, cue.occurredMs, supportDuration(cue.phase)))
+                continue;
+            if (cue.target.npc) {
+                for (unsigned i = 0; i < visibleWorld.count; ++i)
+                    supportActive |= visibleWorld.billboards[i].alive &&
+                                     visibleWorld.billboards[i].id == cue.target.enemy.slot;
+            } else if (cue.phase == SupportPhase::Placement || cue.spell == Kind::SpiritualWeapon) {
+                const Vec p{cue.cell.x + .5f, 0, cue.cell.y + .5f};
+                const auto d = distance(visibleWorld.camera, p);
+                supportActive |= d > nearPlane && d < visibleWorld.camera.farClip;
+            }
+        }
+    for (unsigned i = 0; i < visibleWorld.count; ++i) {
+        const auto& b = visibleWorld.billboards[i];
+        if (b.alive && b.id < condition.actors.size())
+            looping |= (condition.actors[b.id] & (1u << unsigned(EffectKind::Sleep))) != 0;
+    }
+    if (in.area)
+        for (const auto& a : in.area->ground.areas)
+            if (a.active && a.web && a.burnMs) {
+                const Vec p{a.cell.x + .5f, 0, a.cell.y + .5f};
+                const auto d = distance(visibleWorld.camera, p);
+                looping |= d > nearPlane && d < visibleWorld.camera.farClip &&
+                           std::abs((p.x - visibleWorld.camera.position.x) * visibleWorld.camera.right.x +
+                                    (p.z - visibleWorld.camera.position.z) * visibleWorld.camera.right.z) <
+                               d * (viewWidth * .5f / focal()) + 1;
+            }
+    const auto tick = supportActive ? in.now / 80 + 1 : looping ? in.now / 160 + 1 : 0;
+    changed |= tick != supportTick_;
+    supportTick_ = tick;
+    if (reset) {
         casts_ = {};
         remnants_ = {};
         slow_.reset();
@@ -126,9 +168,11 @@ bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame&) noexcep
              (in.now - c.cue.impactMs >= 1000 ||
               (c.cue.stage == AttackStage::Resolved &&
                in.now - c.cue.impactMs >=
-                   (c.cue.spell == Kind::BurningHands                                    ? 480u
-                    : (c.cue.spell == Kind::Thunderwave || c.cue.spell == Kind::Shatter) ? 640u
-                                                                                         : 0u))))) {
+                   (c.cue.spell == Kind::BurningHands ? 480u
+                    : (c.cue.spell == Kind::Thunderwave || c.cue.spell == Kind::Shatter ||
+                       c.cue.spell == Kind::Sleep || c.cue.spell == Kind::ColorSpray)
+                        ? 640u
+                        : 0u))))) {
             c = {};
             changed = true;
         } else
@@ -234,6 +278,8 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
     // Primary bodies first. Particles are a separate bounded second pass.
     unsigned particles = 0;
     for (unsigned pass = 0; pass < 2; ++pass) {
+        if (pass)
+            appendSupport(in, world, frame, pass, particles);
         auto particle = [&](Vec p, bool frost, std::uint64_t serial, unsigned index, float alpha,
                             float size) {
             if (particles == spellParticleCapacity) {
@@ -378,6 +424,8 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
                 }
         }
         appendOffensive(in, world, frame, pass, particles);
+        if (!pass)
+            appendSupport(in, world, frame, pass, particles);
     }
 }
 } // namespace blobber::world_render

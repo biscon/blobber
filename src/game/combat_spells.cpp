@@ -446,6 +446,14 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         } else if (kind == SpellKind::LesserRestoration) {
             effects_.restoreCondition(
                 c.allies[0], c.restoreParalysis ? EffectKind::HoldPerson : EffectKind::Blind, now, events);
+            if (events.supportJournal) {
+                SupportVisual cue;
+                cue.spell = kind;
+                cue.target = c.allies[0];
+                cue.source = c.character;
+                cue.occurredMs = now;
+                events.supportJournal->emit(cue);
+            }
         } else if (kind == SpellKind::FalseLife) {
             const auto amount = int(rng_.roll({1, 4, 4}).value.total);
             party_.grantTemporary(c.character, amount, state_.gameplayMs + 3600000);
@@ -457,6 +465,12 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             events.append(result);
         } else if (kind == SpellKind::Sleep || kind == SpellKind::ColorSpray) {
             auto affected = area(c, pose);
+            if (auto* visual = spellVisuals_.begin(kind, c.character, pose, now)) {
+                visual->cells = affected.cells;
+                visual->eligible = affected.eligible;
+                visual->includeOrigin = kind == SpellKind::ColorSpray;
+                visual->center = c.aimedCell.value_or(pose.cell + forward(pose.heading));
+            }
             const auto hp = [&](EffectTarget t) {
                 return t.npc ? actors_.actor(t.enemy)->hitPoints : party_.character(t.character)->hitPoints;
             };

@@ -56,6 +56,16 @@ void EffectController::resolveMirror(MirrorReservation r, bool canceled, std::ui
                 if (events.audioJournal)
                     events.audioJournal->emit({"mirror.shatter"});
                 e.duplicates &= ~r.duplicate;
+                if (events.supportJournal) {
+                    SupportVisual cue;
+                    cue.spell = rules::SpellKind::MirrorImage;
+                    cue.phase = SupportPhase::ImageLost;
+                    cue.target = e.targets[0];
+                    cue.effect = e.id;
+                    cue.duplicate = r.duplicate;
+                    cue.occurredMs = now;
+                    events.supportJournal->emit(cue);
+                }
             }
             if (!e.duplicates)
                 end(e, EffectEnd::Consumed, now, events);
@@ -92,6 +102,17 @@ bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial) 
         return false;
     for (auto& e : instances_)
         if (e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.character.index == id.index) {
+            if (events_ && events_->supportJournal) {
+                SupportVisual cue;
+                cue.spell = rules::SpellKind::SpiritualWeapon;
+                cue.phase = initial ? SupportPhase::Placement : SupportPhase::Move;
+                cue.from = e.cell;
+                cue.cell = to;
+                cue.effect = e.id;
+                cue.source = id;
+                cue.occurredMs = noticeMs_;
+                events_->supportJournal->emit(cue);
+            }
             e.cell = to;
             e.readyMs = gameplayMs_ + 6000;
             ground_.weapons[id.index] = {to, true};
@@ -152,6 +173,17 @@ bool EffectController::createWeb(const Cell* cells, std::size_t count, rules::Ch
                  result.id,
                  0};
             ++ground_.revision;
+            if (events.supportJournal) {
+                SupportVisual cue;
+                cue.spell = rules::SpellKind::Web;
+                cue.phase = SupportPhase::Placement;
+                cue.cell = a.cell;
+                cue.area = a.id;
+                cue.effect = a.effect;
+                cue.source = caster;
+                cue.occurredMs = now;
+                events.supportJournal->emit(cue);
+            }
         }
     if (groundDueMs_ <= gameplayMs_)
         groundDueMs_ = gameplayMs_ + 6000;

@@ -397,6 +397,19 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         world_assets::mapEffectSheet(clips, first, color, glow);
         first += 8;
     }
+    for (const auto* sheet : {"support", "ground"}) {
+        const auto loadEffect = [&](const char* layer) {
+            const auto path = std::string("effects/se03/") + sheet + "-" + layer + ".png";
+            const auto data = pixels(source / path, effectWidth, effectHeight);
+            if (effectWidth != 1024 || effectHeight != 1024)
+                throw std::runtime_error("Invalid SE03 effect atlas");
+            return writer.add(std::string("effect/se03/") + sheet + "-" + layer, effectWidth, effectHeight,
+                              true, data, 0, {}, false);
+        };
+        const auto color = loadEffect("body"), glow = loadEffect("emission");
+        world_assets::mapEffectSheet(clips, first, color, glow);
+        first += 8;
+    }
     writer.effects(clips);
     writer.finish(appearances, parsed.definitionFingerprint, packs, meshes);
     {

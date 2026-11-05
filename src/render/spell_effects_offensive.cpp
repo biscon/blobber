@@ -110,7 +110,7 @@ void SpellEffectsPlayer::appendOffensive(const FrameInput& in, const WorldFrame&
     frame.guidingTexture = clips_[unsigned(Clip::GuidingCoating)].body;
     frame.guidingUv = clips_[unsigned(Clip::GuidingCoating)].frames[2];
     for (unsigned i = 0; i < bodies.size(); ++i)
-        if (guiding_[i] && bodies[i] && bodies[i]->alive)
+        if (!pass && guiding_[i] && bodies[i] && bodies[i]->alive)
             frame.guiding[i] = .22f;
     auto bodyFor = [&](const SpellTargetVisual& target) -> const Billboard* {
         return target.actor.world == world_ && target.actor.slot < bodies.size() ? bodies[target.actor.slot]

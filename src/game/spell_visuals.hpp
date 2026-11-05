@@ -53,6 +53,9 @@ struct SpellVisualSnapshot {
 struct ActorConditionVisualSnapshot {
     std::uint64_t world = 0;
     std::bitset<NpcWorld::maxInstances> slow, guiding;
+    std::array<std::uint32_t, NpcWorld::maxInstances> actors{};
+    std::array<std::uint32_t, rules::partySize> party{};
+    std::array<std::uint8_t, rules::partySize> duplicates{};
 };
 // Session-owned, ephemeral journal. Cosmetic capacity never gates combat.
 class SpellVisualJournal {

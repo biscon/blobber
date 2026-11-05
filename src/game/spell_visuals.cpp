@@ -3,7 +3,9 @@
 namespace blobber {
 SpellCastVisual* SpellVisualJournal::begin(rules::SpellKind spell, rules::CharacterId caster, Player origin,
                                            std::uint64_t now) noexcept {
-    if (!elementalSpell(spell) || !snapshot_.world || next_ == UINT64_MAX)
+    if ((!elementalSpell(spell) && spell != rules::SpellKind::Sleep &&
+         spell != rules::SpellKind::ColorSpray) ||
+        !snapshot_.world || next_ == UINT64_MAX)
         return nullptr;
     SpellCastVisual* slot = nullptr;
     for (auto& c : snapshot_.casts) {

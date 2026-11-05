@@ -149,6 +149,17 @@ void EffectController::end(EffectInstance& e, EffectEnd why, std::uint64_t now,
     emit(e, EffectNotice::Ended, why, {}, {}, 0, now, events);
     e.active = false;
     if (e.kind == EffectKind::SpiritualWeapon) {
+        if (events.supportJournal && why != EffectEnd::Incapacitated && why != EffectEnd::InvalidTarget) {
+            SupportVisual cue;
+            cue.spell = rules::SpellKind::SpiritualWeapon;
+            cue.phase = SupportPhase::End;
+            cue.reason = why;
+            cue.cell = e.cell;
+            cue.effect = e.id;
+            cue.source = e.caster;
+            cue.occurredMs = now;
+            events.supportJournal->emit(cue);
+        }
         ground_.weapons[e.caster.character.index].active = false;
         ++ground_.revision;
     }

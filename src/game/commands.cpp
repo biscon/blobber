@@ -436,6 +436,12 @@ void CommandController::refreshFeedback(bool clear) noexcept {
     clear |= feedbackEpoch_ != epoch;
     feedbackEpoch_ = epoch;
     state_.presentationMs = session_.timeMs();
+    state_.supportConditions = session_.effects().visualConditions();
+    const auto& support = session_.supportVisuals();
+    if (supportEpoch_ != support.epoch) {
+        supportSeen_ = 0;
+        supportEpoch_ = support.epoch;
+    }
     if (clear) {
         state_.feedback = {};
         state_.portraitFeedback = {};
@@ -444,6 +450,42 @@ void CommandController::refreshFeedback(bool clear) noexcept {
     }
     const auto now = session_.timeMs();
     state_.presentationMs = now;
+    std::array<std::array<const SupportVisual*, 2>, rules::partySize> latest{};
+    auto seen = supportSeen_;
+    for (const auto& cue : support.records) {
+        if (!cue.id.serial || cue.id.world != actors_.snapshot().world || cue.id.serial <= supportSeen_)
+            continue;
+        seen = std::max(seen, cue.id.serial);
+        if (cue.target.npc || cue.target.character.index >= rules::partySize ||
+            cue.spell == rules::SpellKind::SpiritualWeapon || cue.phase == SupportPhase::Placement ||
+            now < cue.occurredMs || now - cue.occurredMs >= supportDuration(cue.phase))
+            continue;
+        const auto k = cue.spell;
+        const bool harmful = k == rules::SpellKind::Bane || k == rules::SpellKind::Sleep ||
+                             k == rules::SpellKind::ColorSpray || k == rules::SpellKind::HoldPerson ||
+                             k == rules::SpellKind::Web || k == rules::SpellKind::Grease ||
+                             k == rules::SpellKind::RayOfFrost;
+        auto& selected = latest[cue.target.character.index][harmful ? 1 : 0];
+        if (!selected || selected->id.serial < cue.id.serial)
+            selected = &cue;
+    }
+    supportSeen_ = seen;
+    for (unsigned i = 0; i < rules::partySize; ++i)
+        for (unsigned channel = 0; channel < 2; ++channel) {
+            const auto* cue = latest[i][channel];
+            if (!cue)
+                continue;
+            auto& f = state_.portraitFeedback[i][channel];
+            if (f.kind != PortraitFeedbackKind::None && f.startedMs > cue->occurredMs)
+                continue;
+            f = {channel ? PortraitFeedbackKind::Harmful : PortraitFeedbackKind::Protection,
+                 rules::DamageType::Bludgeoning,
+                 cue->occurredMs,
+                 supportDuration(cue->phase),
+                 cue->spell,
+                 cue->phase,
+                 cue->duplicate};
+        }
     for (auto& channels : state_.portraitFeedback)
         for (auto& entry : channels)
             if (entry.kind != PortraitFeedbackKind::None &&

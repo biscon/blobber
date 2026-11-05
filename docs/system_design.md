@@ -1,11 +1,19 @@
 # System design
 
+Spell effects SE03 **implemented; Ready for review (2026-11-05)**:
+[SE03 design](se03_design.md) adds support, condition, ground and summoned-effect
+presentation with selective quiet portrait cues. A bounded session journal carries resolved
+cosmetic events; fixed condition snapshots reconstruct sustained cues after restore.
+Gameplay/save contracts remain unchanged. Thirteen focused CPU suites and hidden GPU
+checks at both quality settings pass; [six-file review gallery](screenshots/spell-effects/se03/README.md).
+User acceptance is pending; SE04 remains Planned.
+
 Spell effects SE02 **accepted and implemented (2026-11-05)**:
 [SE02 design](se02_design.md) extends offensive spell identities and replaces party
 spell/healing/buff badges with prepared portrait animation and small readouts.
 Focused CPU and hidden GPU checks pass; [SE02 review gallery](screenshots/spell-effects/se02/README.md).
 Poison density/green and healing green were strengthened following user review.
-The user accepted the slice including these corrections; SE03 is next eligible and remains Planned.
+The user accepted SE02 including these corrections.
 World and ordinary weapon feedback option A is **accepted and implemented**:
 [painted feedback design](combat_feedback_design.md). Prepared blood/ink splashes
 appear instantly, with a brief damage-number tremor and fade-out; focused CPU and
@@ -714,7 +722,7 @@ Presenter accepts only world target/revision publications. Engine-owned frame wo
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
 Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
-without being modified; no migration. World publication is format 12, appearance 5,
+without being modified; no migration. World publication is format 13, appearance 5,
 visibility world-visibility-v17, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1

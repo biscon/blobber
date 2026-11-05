@@ -1,0 +1,245 @@
+#pragma once
+#include "render/world_effects.hpp"
+#include "support/se02_checks.hpp"
+#include "support/world_visibility_fixtures.hpp"
+namespace blobber::test {
+inline void se03Commands() {
+    using K = rules::SpellKind;
+    const auto map = hybridRoom();
+    for (auto kind :
+         {K::CureWounds, K::SpareTheDying, K::LesserRestoration, K::Aid, K::FalseLife, K::Bless, K::Bane,
+          K::Guidance, K::Resistance, K::ShieldOfFaith, K::MageArmor, K::Sanctuary, K::MirrorImage, K::Sleep,
+          K::ColorSpray, K::HoldPerson, K::Grease, K::Web, K::SpiritualWeapon}) {
+        const bool advanced = rules::spellRules(kind)->level == 2;
+        const auto catalog = advanced ? creationCatalog(true) : spellCatalog(1, 1, 1);
+        const bool close = kind == K::ColorSpray;
+        const auto places = spellPlacements(map, 3, close);
+        GameSession game(map, catalog, places, 5, spellSpawn, false);
+        if (advanced)
+            levelParty(game, 3, kind);
+        if (close)
+            spellReady(game, 3);
+        auto command = spellCommand(game, kind);
+        const auto& rule = *rules::spellRules(kind);
+        if (rule.ground)
+            command.aimedCell = close ? Cell{6, 7} : Cell{6, 4};
+        if (!rule.area && !rule.self) {
+            command.targetCount = kind == K::Aid || kind == K::Bless ? 3 : 1;
+            command.allies = {{{0}, {1}, {2}}};
+            command.enemies[0] = game.actors().id(0);
+        }
+        if (kind == K::MageArmor)
+            command.allies[0] = {3};
+        if (kind == K::CureWounds)
+            game.party().damage({0}, 3);
+        if (kind == K::SpareTheDying)
+            game.party().damage({0}, game.party().character({0})->hitPoints);
+        if (kind == K::LesserRestoration) {
+            EffectRequest r;
+            r.world = game.actors().snapshot().world;
+            r.caster = rules::CharacterId{3};
+            r.kind = EffectKind::HoldPerson;
+            r.targets[0] = rules::CharacterId{0};
+            r.count = 1;
+            r.difficulty = 100;
+            check(bool(game.applyEffect(r)), "Restore setup applies paralysis");
+            command.restoreParalysis = true;
+        }
+        const auto before = game.supportVisuals().revision;
+        CommandController hud(game);
+        hud.refresh({}, false, false, true);
+        allocations = 0;
+        watching = true;
+        const auto result = game.submit(command);
+        hud.record(game.events());
+        hud.refresh({}, false, false, true);
+        game.update(.3, false);
+        const auto state = game.effects().visualConditions();
+        watching = false;
+        check(!allocations, "SE03 command, journal, status snapshot and HUD allocate nothing");
+        check(result.reason == CommandReason::Resolved,
+              (std::string(rule.id) + ": " + commandMessage(result.reason)).c_str());
+        if (kind == K::CureWounds)
+            check(hud.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::Healing,
+                  "Accepted green healing path remains");
+        else if (kind == K::Sleep || kind == K::ColorSpray) {
+            const auto& cue = game.combat().spellVisuals().casts[0];
+            check(cue.id.serial && cue.spell == kind && cue.count == 0,
+                  "One support area release independent of recipient pulses");
+            check(std::count(cue.eligible.begin(), cue.eligible.end(), true) == (kind == K::Sleep ? 9 : 3),
+                  "Support release retains eligible empty cells");
+        } else
+            check(game.supportVisuals().revision > before,
+                  "Resolved support command publishes cosmetic facts");
+        if (kind == K::MirrorImage)
+            check(state.duplicates[3] == 7, "Snapshot exposes all actual duplicate bits");
+        if (kind == K::SpareTheDying)
+            check(hud.snapshot().portraitFeedback[0][0].support == kind, "Stabilization has its own pulse");
+        if (kind == K::SpiritualWeapon) {
+            game.update(6, false);
+            auto move = featureCommand(game, 1, rules::Feature::SpiritualWeapon);
+            move.spell = command.spell;
+            move.aimedCell = Cell{7, 4};
+            check(game.submit(move).reason == CommandReason::Resolved, "Weapon endpoint move accepted");
+            bool found = false;
+            for (const auto& cue : game.supportVisuals().records)
+                found |= cue.id.serial && cue.phase == SupportPhase::Move && cue.cell == Cell{7, 4} &&
+                         cue.from == Cell{6, 4};
+            check(found, "Weapon motion retains actual old and new cells");
+        }
+        if (game.combat().snapshot().phase != CombatPhase::Exploration)
+            continue;
+        auto save = std::make_unique<FloorState>();
+        game.exportFloor(*save);
+        const auto oldEpoch = game.supportVisuals().epoch;
+        try {
+            game.importFloor(*save);
+        } catch (const std::exception& e) {
+            throw std::runtime_error(std::string(rule.id) + " restore: " + e.what());
+        }
+        hud.refresh({}, false, false, true);
+        check(game.supportVisuals().epoch > oldEpoch && !game.supportVisuals().revision,
+              "Restore clears support bursts without adding save state");
+        check(game.effects().visualConditions().duplicates == state.duplicates,
+              "Restore reconstructs actual duplicate state");
+    }
+}
+inline void se03Lifecycle() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 2);
+    GameSession game(map, catalog, places, 5, spellSpawn, false);
+    levelParty(game, 3, rules::SpellKind::MirrorImage);
+    rules::DiceRng rng(5);
+    EffectController effects(game.party(), game.actors(), rng);
+    SupportVisualJournal journal;
+    journal.clear(game.actors().snapshot().world);
+    journal.bind(effects);
+    CombatEvents events;
+    events.supportJournal = &journal;
+    effects.bindEvents(events, 100);
+    EffectRequest r;
+    r.world = game.actors().snapshot().world;
+    r.caster = rules::CharacterId{3};
+    r.kind = EffectKind::MirrorImage;
+    r.targets[0] = rules::CharacterId{3};
+    r.count = 1;
+    const auto mirror = effects.apply(r, 100, events);
+    check(bool(mirror), "Mirror fixture applies");
+    effects.resolveMirror({mirror.id, 1, true}, true, 200, events);
+    check(effects.visualConditions().duplicates[3] == 7, "Canceled duplicate hit preserves image");
+    effects.resolveMirror({mirror.id, 1, true}, false, 300, events);
+    check(effects.visualConditions().duplicates[3] == 6, "Resolved loss removes only its actual image");
+    bool loss = false;
+    for (const auto& cue : journal.snapshot().records)
+        loss |= cue.phase == SupportPhase::ImageLost && cue.duplicate == 1 && cue.occurredMs == 300;
+    check(loss, "Partial duplicate loss emits one timed cosmetic event");
+    r.kind = EffectKind::Bless;
+    r.caster = rules::CharacterId{1};
+    r.count = 2;
+    r.targets[0] = game.actors().id(0);
+    r.targets[1] = game.actors().id(1);
+    const auto bless = effects.apply(r, 400, events);
+    check(bool(bless), "Multi-recipient boon applies");
+    effects.remove(bless.id, 500, events);
+    unsigned ends = 0;
+    for (const auto& cue : journal.snapshot().records)
+        ends += cue.phase == SupportPhase::End && cue.effect.serial == bless.id.serial && cue.target.npc;
+    check(ends == 2, "Whole-effect end retains each actual recipient before deactivation");
+    check(effects.visualConditions().actors[0] == 0, "Ended boon disappears from sustained snapshot");
+    for (unsigned i = 0; i < 140; ++i) {
+        SupportVisual cue;
+        cue.phase = SupportPhase::Placement;
+        cue.spell = rules::SpellKind::Web;
+        cue.occurredMs = 600;
+        journal.emit(cue);
+    }
+    check(journal.snapshot().dropped > 0, "Bounded cosmetic overwrite reports exhaustion");
+}
+inline void se03Playback() {
+    using namespace world_render;
+    VisibilityFixture fixture;
+    world_assets::CpuAssets assets(fixture.publication());
+    auto lease = assets.acquire(world_assets::allAssets(assets.publication));
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    const auto places = spellPlacements(map, 1, true);
+    ActorWorld actors(map, catalog, places);
+    MovementState movement;
+    movement.player = spellSpawn;
+    WorldFrame world;
+    world.camera = camera(movement, map);
+    world.revision = 1;
+    world.count = 1;
+    auto& body = world.billboards[0];
+    body.id = 0;
+    body.alive = true;
+    body.feet = {5.5f, 0, 7.5f};
+    body.width = .5f;
+    body.height = .7f;
+    body.depth = 1;
+    body.torso = {.5f, .45f};
+    SupportVisualJournal journal;
+    journal.clear(actors.snapshot().world);
+    SpellVisualJournal spells;
+    spells.clear(actors.snapshot().world);
+    ActorConditionVisualSnapshot conditions;
+    conditions.world = actors.snapshot().world;
+    conditions.actors[0] = 1u << unsigned(EffectKind::Bless);
+    SpellArea area;
+    FrameInput input{map, movement, &actors};
+    input.support = &journal.snapshot();
+    input.conditions = &conditions;
+    input.spells = &spells.snapshot();
+    input.area = &area;
+    input.now = 100;
+    EffectsPipeline pipeline(assets);
+    pipeline.update(input, world);
+    check(pipeline.frame().count == 1, "Quiet NPC boon has one restrained packet");
+    input.now = 200;
+    check(!pipeline.update(input, world), "Static boon reuses idle colour");
+    SupportVisual cue;
+    cue.spell = rules::SpellKind::Bless;
+    cue.target = actors.id(0);
+    cue.occurredMs = 200;
+    journal.emit(cue);
+    pipeline.update(input, world);
+    check(pipeline.frame().count == 2, "New application outranks quiet mark");
+    input.now = 840;
+    pipeline.update(input, world);
+    check(pipeline.frame().count == 1, "Application expires exactly");
+    conditions.actors[0] = (1u << unsigned(EffectKind::Sleep)) | (1u << unsigned(EffectKind::HoldPerson)) |
+                           (1u << unsigned(EffectKind::Bless));
+    conditions.slow[0] = conditions.guiding[0] = true;
+    pipeline.update(input, world);
+    check(pipeline.frame().count == 2 && !pipeline.frame().frost[0] && !pipeline.frame().guiding[0],
+          "Two disabling cues cap overlap and suppress quieter coatings");
+    auto& patch = area.ground.areas[0];
+    patch.active = patch.web = true;
+    patch.burnMs = 6000;
+    patch.cell = {6, 7};
+    area.ground.areas[1] = patch;
+    ++area.ground.revision;
+    pipeline.update(input, world);
+    check(pipeline.frame().lightCount == 1, "Co-located burning Web shares one light");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 24; ++i) {
+        input.now = 900 + i * 40;
+        pipeline.update(input, world);
+    }
+    watching = false;
+    check(!allocations, "Support overlap and Web playback allocate nothing");
+    conditions = {};
+    conditions.world = actors.snapshot().world;
+    area.ground = {};
+    ++area.ground.revision;
+    journal.clear(actors.snapshot().world);
+    input.now = 2500;
+    pipeline.update(input, world);
+    check(!pipeline.frame().count && !pipeline.frame().lightCount,
+          "Restore/removal clears support colour and light");
+    input.now = 2600;
+    check(!pipeline.update(input, world), "Idle caching resumes after support cleanup");
+}
+} // namespace blobber::test

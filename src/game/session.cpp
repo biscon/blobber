@@ -41,6 +41,9 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     audio_.enabled = false; // Headless simulation has no audio observer.
     events_.audioJournal = &audio_;
+    support_.clear(actors_.snapshot().world);
+    support_.bind(effects_);
+    events_.supportJournal = &support_;
     doors_.world = floor_.world();
     prepareObjective();
     ai_.bindEffects(&effects_);

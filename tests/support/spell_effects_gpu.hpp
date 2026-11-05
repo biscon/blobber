@@ -225,6 +225,50 @@ inline void spellEffectsGpuChecks() {
                 check(spellPixels(resources, renderer.image().target) == unlit,
                       "SE02 transient cleanup restores baseline");
             }
+            SupportVisualJournal support;
+            support.clear(game.actors().snapshot().world);
+            input.support = &support.snapshot();
+            SpellArea ground;
+            input.area = &ground;
+            conditions.actors[0] = 1u << unsigned(EffectKind::Sleep);
+            input.now = 5000;
+            renderer.render(input);
+            check(spellPixels(resources, renderer.image().target) != unlit,
+                  "SE03 sustained sleep reaches GPU");
+            const auto supportVisibility = renderer.visibility()->frame().revision;
+            input.now = 5160;
+            renderer.render(input);
+            check(renderer.visibility()->frame().revision == supportVisibility &&
+                      renderer.stats.aoEvaluations == 0,
+                  "Support animation preserves geometry and AO cache");
+            SupportVisual accent;
+            accent.spell = rules::SpellKind::Bane;
+            accent.target = game.actors().id(0);
+            accent.occurredMs = 5160;
+            support.emit(accent);
+            ground.ground.areas[0].active = ground.ground.areas[0].web = true;
+            ground.ground.areas[0].burnMs = 6000;
+            ground.ground.areas[0].cell = {6, 4};
+            ++ground.ground.revision;
+            allocations = 0;
+            watching = true;
+            renderer.render(input);
+            watching = false;
+            check(!allocations, "SE03 GPU support and burning Web submission allocates nothing");
+            renderer.diagnosticIds(ids.get());
+            check(spellPixels(resources, ids.get()) == originalIds,
+                  "SE03 support/ground never changes picking");
+            conditions.actors.fill(0);
+            ground.ground = {};
+            ++ground.ground.revision;
+            support.clear(game.actors().snapshot().world);
+            input.now = 6000;
+            renderer.render(input);
+            check(spellPixels(resources, renderer.image().target) == unlit,
+                  "SE03 removal restores exact baseline");
+            input.now = 6200;
+            renderer.render(input);
+            check(renderer.stats.cached, "SE03 cleanup resumes idle colour caching");
             const auto before = resources.counts();
             const auto image = renderer.image();
             resources.failAfter(0);

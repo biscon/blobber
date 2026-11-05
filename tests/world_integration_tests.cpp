@@ -153,7 +153,7 @@ void doorsAndEffects() {
     area.ground.areas[0].active = true;
     area.ground.areas[0].web = true;
     area.ground.areas[0].burnMs = 1;
-    area.ground.areas[0].cell = {3, 3};
+    area.ground.areas[0].cell = {4, 3};
     area.ground.weapons[0] = {{5, 3}, true};
     AttackVisualSnapshot attacks;
     attacks.world = game.actors().snapshot().world;
@@ -184,7 +184,19 @@ void doorsAndEffects() {
           "closed slab and three frame pieces prepared");
     const auto original = visibility.frame().doors[3];
     effects.update(in, visibility.frame());
-    check(effects.frame().count == 4, "ground, burn, weapon and projectile all present without targeting");
+    bool groundBody = false, burning = false, weapon = false, projectile = false;
+    for (unsigned i = 0; i < effects.frame().count; ++i) {
+        const auto& packet = effects.frame().packets[i];
+        groundBody |= packet.texture == assets.named("effect/web");
+        burning |= packet.texture ==
+                   assets.publication.effects[unsigned(world_assets::EffectClipKind::WebBurn)].body;
+        weapon |= packet.texture == assets.named("effect/weapon");
+        projectile |= packet.texture == assets.named("effect/arrow") ||
+                      packet.texture == assets.named("effect/tip") ||
+                      packet.texture == assets.named("effect/feathers");
+    }
+    check(groundBody && burning && weapon && projectile && effects.frame().lightCount == 1,
+          "Ground artwork, authored burning Web/light, weapon and projectile coexist without targeting");
     const auto revision = visibility.frame().revision;
     in.now = 120;
     check(!visibility.update(in) && effects.update(in, visibility.frame()),
