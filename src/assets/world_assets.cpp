@@ -58,6 +58,7 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
     if (p.guardianEmblem != UINT16_MAX)
         require(p.guardianEmblem < textures.size() && textures[p.guardianEmblem].clamp &&
                 !textures[p.guardianEmblem].material);
+    require(std::isfinite(p.viewDistance) && p.viewDistance >= 16 && p.viewDistance <= 40);
     for (float c : p.horizon)
         require(std::isfinite(c) && c >= 0 && c <= 1);
     for (float c : p.daylightFog)
@@ -336,6 +337,7 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"vine", p.vine},
                             {"sky", p.sky},
                             {"worldScale", p.worldScale},
+                            {"viewDistance", p.viewDistance},
                             {"horizon", p.horizon},
                             {"daylightFog", p.daylightFog}});
         packJson.back()["decorations"] = p.decorations;
@@ -499,6 +501,7 @@ Publication load(const std::filesystem::path& directory) {
                     model.parts.push_back(std::uint16_t(integer(part, meshCapacity - 1)));
                 pack.buildings.push_back(std::move(model));
             }
+            pack.viewDistance = v.at("viewDistance").get<float>();
             pack.worldScale = v.at("worldScale").get<float>();
             require(std::isfinite(pack.worldScale) && pack.worldScale > 0 && pack.worldScale <= 16);
             require(v.at("horizon").size() == 3);

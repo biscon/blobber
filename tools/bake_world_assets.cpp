@@ -70,6 +70,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         world_assets::Pack pack;
         pack.id = manifest.at("id");
         pack.worldScale = manifest.value("worldScale", 1.f);
+        pack.viewDistance = manifest.value("viewDistance", pack.viewDistance);
         pack.daylightFog = manifest.value("daylightFog", pack.daylightFog);
         pack.horizon = manifest.at("horizon").get<std::array<float, 3>>();
         const auto addPack = [&](const std::string& role, bool sprite, unsigned maximum, bool material) {

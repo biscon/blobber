@@ -513,3 +513,9 @@ City-only capped haze replaces the abrupt sky fade; dungeon fog remains unchange
 Focused CPU/GPU checks and hidden captures pass. SC03 returns to **Ready for review**;
 see [updated verification](sc03_verification.md) and [gallery](screenshots/sc03/README.md).
 Final acceptance and SC04 remain pending.
+
+2026-11-05: Follow-up review fixes the visible 16-cell cutoff with a city-only
+40-cell CPU/GPU view distance. Dungeons keep 16 cells and fog is unchanged.
+Restore subtly brighter carved fountain stone after the white-marble attempt.
+Focused CPU/GPU/CLI checks and six native captures pass; SC03 remains **Ready for
+review**. See the [latest capture gallery](screenshots/sc03/README.md).

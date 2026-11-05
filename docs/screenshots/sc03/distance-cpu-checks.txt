@@ -1,0 +1,15 @@
+Test project /home/bison/Projects/blobber/cmake-build-debug
+    Start  2: architecture
+1/5 Test  #2: architecture .....................   Passed    0.02 sec
+    Start  3: scenery
+2/5 Test  #3: scenery ..........................   Passed    0.06 sec
+    Start 68: world_cpu
+3/5 Test #68: world_cpu ........................   Passed    0.03 sec
+    Start 71: world_visibility
+4/5 Test #71: world_visibility .................   Passed    1.18 sec
+    Start 73: world_integration
+5/5 Test #73: world_integration ................   Passed    0.06 sec
+
+100% tests passed out of 5
+
+Total Test time (real) =   1.36 sec

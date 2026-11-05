@@ -4,7 +4,24 @@ Current SC03 uses the accepted shorter tree, a smaller eastern tree, planted bed
 bushes, selective ivy, two timber stalls, three service signs and an animated
 stone fountain. [Verification, resource totals and limitations](../../sc03_verification.md).
 
-## Screenshot corrections — current review
+## Far enclosure and fountain tone — latest
+
+The city view distance is now 40 cells; other packs retain 16. The fountain uses
+the original carved stone with a subtle brightness lift. City fog remains capped.
+
+| View | Capture |
+| --- | --- |
+| Whole northern enclosure from southern square | [Far view](distance-tone-v1/distance-south.png), [one step forward](distance-tone-v1/distance-step.png) |
+| Fountain stone close-up | [Current tone](distance-tone-v1/fountain-north-facing.png) |
+| Corner and diagonal | [Corner](distance-tone-v1/distance-corner.png), [half-turn](distance-tone-v1/distance-oblique.png) |
+| Square | [Current](distance-tone-v1/square.png) |
+| Resources and poses | [Report](distance-tone-v1/report.txt) |
+
+[CPU checks](distance-cpu-checks.txt), [CLI check](distance-cli-checks.txt),
+[hidden GPU checks](distance-gpu-checks.txt). All pass. Captures below predate this
+view-distance and stone-tone correction and remain available for comparison.
+
+## Earlier screenshot corrections
 
 | Correction | Capture |
 | --- | --- |

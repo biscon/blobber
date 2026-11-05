@@ -1,0 +1,7 @@
+Debug hidden-window environment GPU checks; exit 0. No desktop input or focus control.
+
+Height CPU/GPU edge differences: 0; allocations: 0
+Default/40-cell CPU-GPU clipping, distant actor and allocation checks passed
+Distant wall color and actor IDs agree with the selected 16/40-cell range.
+Existing atmosphere/dungeon pixel-isolation checks also pass.
+All test-owned GPU resources release before closing the context.

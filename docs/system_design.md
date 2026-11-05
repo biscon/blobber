@@ -6,13 +6,16 @@ Bounded scenery placements and prepared cutout meshes support two trees, bushes,
 three planting beds and sparse ivy; two stalls, a fountain and three painted service
 signs complete the dressing. The shorter representative tree is accepted. Opaque
 water uses eight prepared frames at 8 FPS, invalidating visible color only while
-preserving picking/geometry and the existing pause clock. Publication 9 carries
-cutout/water part flags and a validated pack-owned daylight fog profile; offline
+preserving picking/geometry and the existing pause clock. Publication 10 carries
+cutout/water part flags, daylight fog and view distance; offline
 variant bindings share published mesh IDs.
 Review corrections cover stall scale/location, entrance spacing, grounded planting,
-roof-contained ivy, soil/marble artwork, fixed volumetric water streams and a
+roof-contained ivy, soil artwork, fixed volumetric water streams and a
 gentle city-only haze capped at 22% (dungeon defaults unchanged); see
-the SC03 design addendum. Campaign cutover remains SC04.
+the SC03 design addendum. The city pack now uses a shared CPU/GPU 40-cell view distance and modestly
+brightened carved fountain stone; other packs retain 16 cells. See the
+SC03 far-enclosure addendum for bounded culling storage and verification.
+Campaign cutover remains SC04.
 
 Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
 and [verification/captures](sc02_verification.md). The 24×24 square-centered town
@@ -581,8 +584,8 @@ Presenter accepts only world target/revision publications. Engine-owned frame wo
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
 Campaign schema/simulation are 9/12 and generator/templates 9/7. Older saves reject
-without being modified; no migration. World publication is format 8, appearance 4,
-visibility world-visibility-v15, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
+without being modified; no migration. World publication is format 10, appearance 4,
+visibility world-visibility-v16, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

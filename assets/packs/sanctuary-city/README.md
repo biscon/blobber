@@ -14,11 +14,14 @@ stone fountain and tankard/anvil/provisions signs. Eight painted water phases
 advance at 8 FPS on fixed opaque geometry using the paused gameplay clock.
 Review corrections halve the stalls and move them to the square (8–9,15), shift
 the dungeon entrance one cell west, ground the bushes and clip ivy below eaves.
-The fountain uses pale marble and closed six-sided streams visible from every
-azimuth. Dedicated earth replaces tinted paving in the beds. Exact ImageGen
-prompts for both new materials are in `source/review-art.prompt.json`.
+The fountain uses modestly brightened carved stone and closed six-sided streams
+visible from every azimuth. Dedicated earth replaces tinted paving in the beds.
+The earlier white marble master and prompts remain in `source/` for comparison;
+the current fountain reuses the original architectural stone.
 `daylightFog: [4,12,0.22]` gives this pack a gradual, capped haze; other packs retain
 legacy defaults and dungeon lighting ignores the override.
+`viewDistance: 40` keeps the entire 24×24 enclosure inside CPU/GPU clipping.
+Other packs default to 16; extended candidate storage is bounded and reused.
 
 ## Regeneration
 
@@ -97,7 +100,8 @@ and resource/pose reports. Append an exact shot name, `materials`, `stills`, or
 translation/turn samples. `dressing` selects final scenery/sign views; `water`
 exports eight 125ms water samples and clock/color/picking revisions.
 `corrections` selects the user-reported issues; `fountain-orbit` exports eight
-cardinal/diagonal angles to check stream thickness. `layout` exports only the SVG and needs no graphics
+cardinal/diagonal angles to check stream thickness. `distance-tone` captures
+the south-to-north view, a forward step, the corner/diagonal and the toned fountain. `layout` exports only the SVG and needs no graphics
 context or asset loading. Output directories must be new. Hidden windows and
 in-process input are used; never automate desktop input or focus.
 

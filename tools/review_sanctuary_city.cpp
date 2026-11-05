@@ -11,7 +11,7 @@ int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
         throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT "
                                  "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water|"
-                                 "corrections|fountain-orbit]");
+                                 "corrections|fountain-orbit|distance-tone]");
     const std::string selected = argc == 4 ? argv[3] : "";
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
@@ -27,6 +27,10 @@ int main(int argc, char** argv) try {
     };
     const Pose poses[] = {{"fountain-close", {{11, 10}, Heading::South}},
                           {"fountain-west", {{9, 11}, Heading::East}},
+                          {"fountain-north-facing", {{10, 13}, Heading::North}},
+                          {"distance-south", {{12, 19}, Heading::North}},
+                          {"distance-step", {{12, 18}, Heading::North}},
+                          {"distance-corner", {{21, 21}, Heading::West}},
                           {"market-front", {{8, 14}, Heading::South}},
                           {"market-grain", {{9, 14}, Heading::South}},
                           {"east-garden", {{18, 20}, Heading::East}},
@@ -100,6 +104,8 @@ int main(int argc, char** argv) try {
                 name == "tree-east" || name == "fountain-close" || name == "fountain-west";
             if (!selected.empty() && name != selected && !(selected == "dressing" && dressingShot) &&
                 !(selected == "corrections" && correctionShot) &&
+                !(selected == "distance-tone" &&
+                  (name.rfind("distance-", 0) == 0 || name == "fountain-north-facing" || name == "square")) &&
                 !(selected == "fountain-orbit" && name.rfind("orbit-", 0) == 0) &&
                 !(selected == "water" && name.rfind("water-", 0) == 0) &&
                 !(selected == "materials" && materialShot) && !(selected == "stills" && !moving) &&
@@ -118,7 +124,8 @@ int main(int argc, char** argv) try {
             presenter.capture(output / (name + ".png"));
             const auto& m = game.movement();
             const auto camera = world_render::camera(m, game.geometry());
-            report << name << " cell=" << m.player.cell.x << ',' << m.player.cell.y
+            report << name << " far_clip=" << renderer.assets().pack("sanctuary-city").viewDistance
+                   << " cell=" << m.player.cell.x << ',' << m.player.cell.y
                    << " heading=" << headingName(m.player.heading) << " camera=" << camera.position.x << ','
                    << camera.position.y << ',' << camera.position.z << " yaw=" << camera.yaw
                    << " progress=" << m.transition.progress() << " draws=" << renderer.stats.draws << '\n';
@@ -126,6 +133,12 @@ int main(int argc, char** argv) try {
         for (const auto& pose : poses) {
             game.restorePose(pose.player, true);
             capture(pose.name);
+        }
+        if (selected == "distance-tone") {
+            game.restorePose({{21, 21}, Heading::North}, true);
+            game.move(Action::TurnLeft);
+            game.update(.08f, false);
+            capture("distance-oblique");
         }
         for (unsigned i = 0; i < city.doorCount; ++i) {
             game.restorePose(city.doors[i].approach, true);

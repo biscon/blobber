@@ -178,7 +178,7 @@ bool LeafQueries::hides(const Camera& camera, Vec ray, float depth,
         const auto relation = relations ? float(relations[i]) : q.xMode[3];
         if (relation == 1)
             continue;
-        float enter = nearPlane, leave = farPlane;
+        float enter = nearPlane, leave = camera.farClip;
         const float dx = camera.position.x - q.originHeight[0], dy = camera.position.y - q.originHeight[1],
                     dz = camera.position.z - q.originHeight[2];
         if (!slab(dx * q.xMode[0] + dz * q.xMode[2], ray.x * q.xMode[0] + ray.z * q.xMode[2], 0, 1, enter,

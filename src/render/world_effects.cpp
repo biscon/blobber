@@ -96,7 +96,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         p.tint = tint;
         p.texture = std::uint16_t(textures_[texture]);
         p.depth = depth(world.camera, center);
-        if (p.depth < nearPlane || p.depth > farPlane)
+        if (p.depth < nearPlane || p.depth > world.camera.farClip)
             return;
         constexpr float xs[]{-.5f, .5f, .5f, -.5f}, ys[]{-.5f, -.5f, .5f, .5f};
         for (unsigned i = 0; i < 4; ++i) {

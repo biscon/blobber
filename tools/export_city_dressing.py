@@ -181,14 +181,14 @@ for name, cloth_tile in (('market-produce',11),('market-grain',12)):
 h = model('fountain')
 def ring(radius, y, count=16):
     return [(0.5+radius*math.cos(i*2*math.pi/count),y,0.5+radius*math.sin(i*2*math.pi/count)) for i in range(count)]
-def profile(rings, tile=14):
+def profile(rings, tile=5):
     for (r0,y0),(r1,y1) in zip(rings,rings[1:]):
         aa,bb=ring(r0,y0),ring(r1,y1)
         for i in range(16):
             j=(i+1)%16
             pts=[aa[i],bb[i],bb[j],aa[j]]
             # Profile traverses upward outer wall then inward/downward inner wall.
-            h.face(pts,tile,shade=.92 if y1>y0 else .83)
+            h.face(pts,tile,shade=1.0 if y1>y0 else .92)
 profile([(.86,.01),(.86,.08),(.78,.10),(.78,.24),(.83,.25),(.83,.30),(.66,.30),(.66,.26),(.11,.26)])
 profile([(.17,.26),(.17,.33),(.11,.37),(.095,.67),(.30,.70),(.34,.79),(.25,.82),(.04,.82),(.04,.92),(.0,.96)])
 # Top-down opaque water discs; atlas first frame authored with 16px gutters.
@@ -342,6 +342,7 @@ for kind in ('bark','foliage'):
 
 manifest=json.loads((PACK/'pack.json').read_text())
 manifest['daylightFog']=[4,12,.22]
+manifest['viewDistance']=40
 base={b['id']:[p for p in b['parts'] if '/dressing-' not in p] for b in manifest['buildings']}
 base={name:parts for name,parts in base.items() if parts and name not in ('low-house-hip-ivy','tall-house-ivy','courtyard-garden')}
 for name in ('inn','smithy','provisioner'):

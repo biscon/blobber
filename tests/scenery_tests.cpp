@@ -44,6 +44,54 @@ int main() try {
         rejects([&] { world_assets::CpuAssets a(invalidWater); },
                 "Water UV outside first atlas frame rejects");
     }
+    check(publication.packs[0].viewDistance == 16, "Other packs retain the 16-cell clip distance");
+    {
+        test::ArchitectureFixture distant(false, false, {4, 12, .22f}, 40);
+        const auto extended = distant.publication();
+        check(extended.packs[0].viewDistance == 40, "Extended view distance survives publication");
+        for (float badDistance : {15.f, 41.f, std::numeric_limits<float>::infinity()}) {
+            auto invalid = extended;
+            invalid.packs[0].viewDistance = badDistance;
+            rejects([&] { world_assets::CpuAssets a(invalid); }, "Invalid view distance rejects");
+        }
+        world_assets::CpuAssets farAssets(extended);
+        const Map farMap(test::architectureRows(48, {40, 24}), test::architectureWorld(48, {40, 24}));
+        const auto scene = world_render::prepare(farMap, {}, {}, {}, &farAssets);
+        MovementState movement;
+        movement.player = {{7, 40}, Heading::East};
+        movement.transition = {{{7, 40}, Heading::North}, movement.player, Action::TurnRight, .08f, .16f};
+        const auto camera = world_render::camera(movement, farMap, scene.farClip);
+        world_render::DrawList draws;
+        world_render::cull(scene, camera, draws);
+        bool house = false;
+        for (unsigned i = 0; i < draws.count; ++i)
+            house |= scene.ranges[draws.ranges[i]].painted;
+        check(house, "Extended diagonal frustum includes architecture beyond old candidate radius");
+        check(draws.tested <= world_render::buildingCullChunks, "Extended candidate storage is bounded");
+        check(!world_render::sameCamera(camera, world_render::camera(movement, farMap)),
+              "Clip distance participates in camera cache identity");
+        world_render::VisibilityPipeline visibility(scene, farAssets);
+        movement.player = {{40, 4}, Heading::South};
+        movement.transition = {};
+        visibility.update({farMap, movement});
+        const auto& frame = visibility.frame();
+        const auto wall = world_render::project(frame.camera, {40.5f, .8f, 24.2f});
+        const auto pixel = std::size_t(int(wall.y)) * viewWidth + int(wall.x);
+        check(std::abs(frame.picking.opaqueDepth(pixel) - wall.depth) < .02f,
+              "CPU raster retains distant house beyond 16 cells");
+        movement.player = {{40, 4}, Heading::North};
+        const auto away = world_render::camera(movement, farMap, scene.farClip);
+        check(!world_render::visible(away, 39, -39, 2, 1, 0, 2),
+              "Geometry beyond extended far plane remains clipped");
+        allocations = 0;
+        watching = true;
+        for (unsigned i = 0; i < 4; ++i) {
+            movement.player.heading = Heading(i);
+            visibility.update({farMap, movement}, false);
+        }
+        watching = false;
+        check(!allocations, "Extended CPU visibility reuses prepared storage");
+    }
     world_assets::CpuAssets assets(publication);
     const auto definition = test::sceneryWorld();
     const auto rows = test::sceneryRows();

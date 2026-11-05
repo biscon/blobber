@@ -12,20 +12,23 @@ constexpr float pi = 3.14159265358979323846f, nearPlane = .025f, farPlane = 16;
 constexpr unsigned chunkSize = 8, materialCapacity = 32;
 // Far-frustum diagonal reach is ~21.54 cells; architecture adds up to four.
 // Round the candidate search up to a chunk multiple, including interpolated turns.
-constexpr unsigned buildingCullRadius = 32, buildingCullChunks = 81;
+constexpr unsigned buildingCullRadius = 32;
+// Extended 40-cell frustum diagonal + four-cell overhang fits a 64-cell radius.
+constexpr unsigned extendedCullRadius = 64, buildingCullChunks = 17 * 17;
 struct Vec {
     float x = 0, y = 0, z = 0;
 };
 struct Camera {
     Vec position, forward, right;
     float yaw = 0;
+    float farClip = farPlane;
 };
 struct ScreenPoint {
     float x, y, depth;
 };
 float focal() noexcept;
 Camera camera(const MovementState&) noexcept;
-Camera camera(const MovementState&, GeometryView) noexcept;
+Camera camera(const MovementState&, GeometryView, float farClip = farPlane) noexcept;
 float daylight(const MovementState&, GeometryView) noexcept;
 ScreenPoint project(const Camera&, Vec) noexcept;
 bool sameCamera(const Camera&, const Camera&) noexcept;
@@ -64,6 +67,7 @@ struct Scene {
     const Map* map = nullptr;
     bool outdoor = false;
     unsigned cullRadius = 24;
+    float farClip = farPlane;
     std::vector<Decal> decals;
     std::uint64_t identity = 0;
     int width = 0, height = 0, columns = 0, rows = 0;

@@ -13,13 +13,13 @@ Vec sub(Vec a, Vec b) {
 struct ClipVertex {
     float x, y, z, u, v;
 };
-float plane(const ClipVertex& p, unsigned face) {
+float plane(const ClipVertex& p, unsigned face, float farClip) {
     const float half = viewWidth * .5f / focal();
     switch (face) {
     case 0:
         return p.z - nearPlane;
     case 1:
-        return farPlane - p.z;
+        return farClip - p.z;
     case 2:
         return p.x + p.z * half;
     case 3:
@@ -57,7 +57,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
         unsigned n = 0;
         for (unsigned i = 0; i < count; ++i) {
             const auto p = a[i], q = a[(i + 1) % count];
-            const float dp = plane(p, face), dq = plane(q, face);
+            const float dp = plane(p, face, out.camera.farClip), dq = plane(q, face, out.camera.farClip);
             if (dp >= 0)
                 b[n++] = p;
             if ((dp >= 0) != (dq >= 0)) {

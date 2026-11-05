@@ -99,6 +99,55 @@ void checkPackFog(GpuResources& resources) {
     check(capture(false, false) == capture(true, false),
           "Pack daylight overrides leave dungeon pixels identical");
 }
+void checkViewDistance(GpuResources& resources) {
+    test::ArchitectureFixture fixture;
+    for (float distance : {16.f, 40.f}) {
+        auto publication = fixture.publication();
+        publication.packs[0].viewDistance = distance;
+        publication.packs[0].daylightFog = {4, 12, 0}; // Isolate clipping from atmosphere.
+        auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
+        const Map map(test::architectureRows(32, {7, 26}), test::architectureWorld(32, {7, 26}));
+        const auto catalog = creationCatalog(true);
+        const NpcWorld placements(map, {7, 5}, {"goblin"}, {{{0}, {8, 25}, {0, 0}, Heading::North}});
+        ActorWorld actors(map, catalog, placements);
+        std::vector<NpcTimings> timings(1);
+        timings[0][0] = {{{100, 0, 0, 0}}, 1};
+        NpcAnimator animator(actors, timings);
+        animator.setTime(0);
+        MovementState movement;
+        movement.player = {{7, 5}, Heading::South};
+        WorldRenderer renderer(resources, assets);
+        renderer.supersampling(false);
+        const world_render::FrameInput input{map, movement, &actors, &animator.snapshot()};
+        renderer.stage(input);
+        renderer.commit();
+        renderer.render(input);
+        const auto& frame = renderer.visibility()->frame();
+        check(frame.picking.exposed(0) == (distance == 40),
+              "Distant actor is drawn and picked only inside the selected clip range");
+        GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
+        compare(resources, renderer, ids.get());
+        OwnedImage image(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+        ImageFlipVertical(&image.value);
+        ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        const auto wall = world_render::project(frame.camera, {7.5f, .8f, 26.2f});
+        const auto pixel = std::size_t(int(wall.y)) * viewWidth + int(wall.x);
+        const auto red = static_cast<const unsigned char*>(image.value.data)[pixel * 4];
+        check(distance == 40 ? red < 200 : red == 255,
+              "GPU draws distant house instead of sky only with extended clip plane");
+        const auto transfers = resources.transfers();
+        allocations = 0;
+        watching = true;
+        for (unsigned i = 0; i < 4; ++i) {
+            movement.player.heading = Heading(i);
+            renderer.render(input);
+        }
+        watching = false;
+        check(!allocations && resources.transfers().uploads == transfers.uploads,
+              "Extended GPU views allocate and upload no frame storage");
+    }
+    std::cout << "Default/40-cell CPU-GPU clipping, distant actor and allocation checks passed\n";
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -189,6 +238,7 @@ int main(int argc, char** argv) {
                       << "; allocations: " << allocations << '\n';
         }
         checkPackFog(resources);
+        checkViewDistance(resources);
         const auto counts = resources.counts();
         check(counts.textures == 0 && counts.targets == 0 && counts.meshes == 0 && counts.shaders == 0,
               "Height resources released before context");

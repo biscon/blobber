@@ -200,3 +200,37 @@ Review outcome: all corrections are implemented and captured. Focused CPU tests,
 generated GPU atmosphere/architecture/foliage/water checks, eight fountain angles
 and the paused animation comparison pass. See the updated verification and gallery.
 SC03 is Ready for review; the accepted tree remains unchanged and SC04 is deferred.
+
+## Far enclosure and stone-tone correction — 2026-11-05
+
+Implemented for review: the previous 16-cell clip plane cut the
+24×24 town's enclosing wall and rear house geometry. Add a pack-owned `viewDistance`
+(default 16, validated finite 16–40) and set sanctuary-city to 40. Carry it through
+prepared Scene and Camera so GPU projection, chunk culling, software rasterization,
+billboards/effects, leaf occlusion and ground picking share the same limit.
+Camera cache equality includes the distance. Publication becomes 10 and visibility diagnostics become v16; gameplay,
+saves and fog stay unchanged. Other packs retain their existing 16-cell range.
+
+Candidate search for extended views is bounded to a 64-cell radius (40-cell far
+frustum diagonal plus 4-cell architecture overhang, rounded to chunks), at most
+17×17 candidate chunks. Increase reusable draw/candidate storage to that bound;
+default views retain their 24/32-cell candidate search. City still has only nine
+chunks. Increase bounded ground-ray traversal to 128 steps for extended diagonal
+rays. No frame allocations or geometry uploads are introduced.
+
+Restore the existing carved stone fountain material with face shading raised from
+0.92/0.83 to 1.0/0.92: a modest 9–11% brightness lift over the original fountain,
+rather than white marble. Keep water geometry and animation intact.
+
+Verify a generated distant wall/actor fixture beyond 16 cells in CPU and GPU,
+including diagonal candidate reach, clipping beyond 40, unchanged default range,
+allocation checks and production captures from the southern square and near the
+fountain. Keep hidden windows and in-process capture input only.
+
+Outcome: CPU distant-house depth and diagonal search regressions pass; GPU tests
+verify wall color, actor IDs and default/extended clipping together. Engine-owned
+frame allocations/uploads remain zero. Six inspected production captures retain
+the far enclosure and rear roofs; the southern pair checks adjacent positions.
+The default shader's fog is unchanged. Prepared draw-list capacity adds 104 KiB
+per renderer; city GPU residency and visibility scratch are unchanged. No benchmark
+was run. SC03 remains Ready for review.

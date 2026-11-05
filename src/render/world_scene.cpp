@@ -28,8 +28,9 @@ Camera camera(const MovementState& s) noexcept {
             r,
             yaw};
 }
-Camera camera(const MovementState& s, GeometryView g) noexcept {
+Camera camera(const MovementState& s, GeometryView g, float farClip) noexcept {
     auto c = camera(s);
+    c.farClip = farClip;
     const auto& t = s.transition;
     const auto a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
     const float p = t.active() ? t.progress() : 1, e = p * p * (3 - 2 * p);
@@ -51,7 +52,7 @@ ScreenPoint project(const Camera& c, Vec p) noexcept {
 }
 bool sameCamera(const Camera& a, const Camera& b) noexcept {
     return a.position.x == b.position.x && a.position.y == b.position.y && a.position.z == b.position.z &&
-           a.yaw == b.yaw;
+           a.yaw == b.yaw && a.farClip == b.farClip;
 }
 std::size_t Scene::bytes() const noexcept {
     return sizeof(*this) + vertices.capacity() * sizeof(Vertex) + indices.capacity() * 4 +
@@ -312,6 +313,9 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     if (!m.base().definition().buildings.empty() || !m.base().definition().scenery.empty())
         s.cullRadius = buildingCullRadius;
     const auto pack = assets ? assets->pack(m.base().definition().assetPack) : world_assets::Pack{};
+    s.farClip = pack.viewDistance;
+    if (s.farClip > farPlane)
+        s.cullRadius = extendedCullRadius;
     std::array<world_assets::StaticModelId, buildingCapacity + sceneryCapacity> buildings{};
     for (unsigned i = 0; i < m.base().definition().buildings.size(); ++i) {
         if (!assets)
@@ -499,7 +503,7 @@ bool visible(const Camera& c, int x, int z, int width, int height, float low, fl
                 const float up = y - c.position.y, half = depth * viewWidth * .5f / focal();
                 constexpr float eps = 1e-4f;
                 inside[0] |= depth >= nearPlane - eps;
-                inside[1] |= depth <= farPlane + eps;
+                inside[1] |= depth <= c.farClip + eps;
                 inside[2] |= side >= -half - eps;
                 inside[3] |= side <= half + eps;
                 inside[4] |= up <= depth * viewHeight * .34f / focal() + eps;

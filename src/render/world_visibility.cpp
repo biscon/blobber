@@ -92,7 +92,7 @@ bool VisibilityPipeline::update(const FrameInput& in, bool rasterMoving) {
     const auto* fixtures = in.geometry.fixtures();
     if (fixtures && fixtures->definition().count > fixtureCapacity)
         throw std::invalid_argument("Too many world fixtures");
-    const auto c = camera(in.movement, in.geometry);
+    const auto c = camera(in.movement, in.geometry, scene_.farClip);
     const std::array<std::uint64_t, 11> stamp{in.geometry.world(),
                                               in.geometry.revision(),
                                               fixtures ? fixtures->revision() : 0,
@@ -178,7 +178,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const auto texture = cl.textures[side][f];
             const auto anchor = assets_.publication.anchors[texture];
             const float depth = dot(sub(foot, out.camera.position), out.camera.forward);
-            if (depth < nearPlane || depth > farPlane)
+            if (depth < nearPlane || depth > out.camera.farClip)
                 continue;
             const Vec feet = foot;
             Billboard b{feet,
@@ -234,7 +234,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             Vec feet{stack.cell.x + .5f, elevation(in.geometry.surface(stack.cell).floor),
                      stack.cell.y + .5f};
             float depth = dot(sub(feet, out.camera.position), out.camera.forward);
-            if (depth < nearPlane || depth > farPlane)
+            if (depth < nearPlane || depth > out.camera.farClip)
                 continue;
             if (icons_[0] == UINT16_MAX)
                 throw std::invalid_argument("Missing prepared loot/bag");
@@ -280,7 +280,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             Vec feet{entry.cell.x + .5f, elevation(in.geometry.surface(entry.cell).floor),
                      entry.cell.y + .5f};
             const float depth = dot(sub(feet, out.camera.position), out.camera.forward);
-            if (depth < nearPlane || depth > farPlane)
+            if (depth < nearPlane || depth > out.camera.farClip)
                 continue;
             const float size = std::clamp(focal() * .25f / depth, 4.f, 64.f) * depth / focal();
             const auto p = project(out.camera, feet);
@@ -340,7 +340,7 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
     if (in.geometry.world() != stamp_[0] || in.geometry.revision() != stamp_[1] ||
         (in.doors ? in.doors->revision : 0) != stamp_[8])
         return {};
-    const auto c = camera(in.movement, in.geometry);
+    const auto c = camera(in.movement, in.geometry, scene_.farClip);
     if (!sameCamera(c, frame().camera))
         return {};
     const float lateral = (x + .5f - viewWidth * .5f) / focal(), vy = (viewHeight * .34f - y - .5f) / focal();
@@ -348,11 +348,11 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
         return {};
     const float vx = c.forward.x + c.right.x * lateral, vz = c.forward.z + c.right.z * lateral;
     float start = nearPlane;
-    for (unsigned visit = 0; visit < 64 && start < farPlane; ++visit) {
+    for (unsigned visit = 0; visit < 128 && start < c.farClip; ++visit) {
         const float probe = start + 1e-5f;
         const Cell cell{int(std::floor(c.position.x + vx * probe)),
                         int(std::floor(c.position.z + vz * probe))};
-        float end = farPlane;
+        float end = c.farClip;
         if (std::abs(vx) > 1e-8f)
             end = std::min(end, ((vx > 0 ? cell.x + 1 : cell.x) - c.position.x) / vx);
         if (std::abs(vz) > 1e-8f)
@@ -360,7 +360,7 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
         if (in.geometry.base().solid(cell))
             return {};
         const float d = (elevation(in.geometry.surface(cell).floor) - c.position.y) / vy;
-        if (d >= start - epsilon && d <= end + epsilon && d >= nearPlane && d <= farPlane) {
+        if (d >= start - epsilon && d <= end + epsilon && d >= nearPlane && d <= c.farClip) {
             if (d > frame().picking.opaqueDepth(std::size_t(y) * viewWidth + x) + epsilon)
                 return {};
             return spellCell(in.geometry, in.movement.player, cell) ? std::optional<Cell>{cell}
@@ -384,7 +384,7 @@ Attachment attachment(const Camera& c, const Billboard& b, NpcAttachment a) noex
     return {{b.feet.x + c.right.x * b.width * (a.x - b.anchorX), b.feet.y + b.height * (b.anchorY - a.y),
              b.feet.z + c.right.z * b.width * (a.x - b.anchorX)},
             b.depth,
-            b.depth >= nearPlane && b.depth <= farPlane};
+            b.depth >= nearPlane && b.depth <= c.farClip};
 }
 Scene billboardMesh() {
     Scene s;

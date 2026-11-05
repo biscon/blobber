@@ -39,13 +39,13 @@ constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
 uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
-uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;
+uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;uniform float farClip;
 bool slab(float at,float delta,float low,float high,inout float enter,inout float leave){
 if(abs(delta)<1e-6)return at>=low&&at<=high;
 float a=(low-at)/delta,b=(high-at)/delta;enter=max(enter,min(a,b));leave=min(leave,max(a,b));return leave-enter>1e-6;}
 bool leafHidden(){vec3 ray=(worldPosition-eye)/depth;
 for(int i=0;i<leafCount;++i){vec4 o=leafData[i*3],x=leafData[i*3+1],z=leafData[i*3+2];
-if(x.w==1.0)continue;vec3 d=eye-o.xyz;float enter=0.025,leave=16.0;
+if(x.w==1.0)continue;vec3 d=eye-o.xyz;float enter=0.025,leave=farClip;
 if(slab(dot(d,x.xyz),dot(ray,x.xyz),0,1,enter,leave)&&slab(d.y,ray.y,0,o.w,enter,leave)&&
 slab(dot(d,z.xyz),dot(ray,z.xyz),0,1,enter,leave)&&(x.w==2.0||enter<=depth+1e-5))return true;}return false;}
 
@@ -306,7 +306,8 @@ WorldImage WorldRenderer::render(const MovementState& state) {
 }
 WorldImage WorldRenderer::render(View& v, const MovementState& state, const world_render::WorldFrame* frame,
                                  TargetHandle ids, const world_render::EffectFrame* effects) {
-    const auto camera = v.cpu.map ? world_render::camera(state, *v.cpu.map) : world_render::camera(state);
+    const auto camera =
+        v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip) : world_render::camera(state);
     stats = {};
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
@@ -350,6 +351,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     if (billboard_) {
         const auto b = resources_.shader(billboard_.get());
         SetShaderValue(b, GetShaderLocation(b, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(b, GetShaderLocation(b, "farClip"), &camera.farClip, SHADER_UNIFORM_FLOAT);
         SetShaderValue(b, GetShaderLocation(b, "horizon"), v.pack.horizon.data(), SHADER_UNIFORM_VEC3);
         SetShaderValue(b, GetShaderLocation(b, "daylightFog"), v.pack.daylightFog.data(),
                        SHADER_UNIFORM_VEC3);
@@ -365,7 +367,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     const auto projection =
         MatrixFrustum(-half, half, -viewHeight * .66 * world_render::nearPlane / world_render::focal(),
                       viewHeight * .34 * world_render::nearPlane / world_render::focal(),
-                      world_render::nearPlane, world_render::farPlane);
+                      world_render::nearPlane, camera.farClip);
     rlSetMatrixProjection(projection);
     rlDrawRenderBatchActive();
     rlEnableShader(shader.id);
