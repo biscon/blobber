@@ -1,11 +1,12 @@
 # Environment ambient occlusion
 
-Status: implemented and mechanically verified (2026-11-05). Visual tuning awaits
-user review. [Comparison captures](screenshots/environment-ao/README.md).
+Status: **Accepted and closed (2026-11-05)**. The user approved keeping the stronger
+effect: .75 strength, .375 maximum darkening, .30-cell radius and .01-cell bias.
+[Accepted comparison captures](screenshots/environment-ao-stronger/README.md).
 
 Environment-only SSAO supplies restrained contact shading to world meshes and doors.
 It is on by default in city and dungeon; `--ambient-occlusion on|off` controls the
-trial. NPCs, all other billboards, decals, ground shadows, effects and sky neither
+effect. NPCs, all other billboards, decals, ground shadows, effects and sky neither
 contribute nor receive AO. Existing creature ground shadows/compositing remain.
 No save, publication, movement, presentation-size or persistent-settings changes.
 
@@ -19,8 +20,8 @@ the creature layer's deliberately leaf-free depth and applies shading before fog
 
 The helper reconstructs view positions with the inverse of the actual asymmetric
 projection and normals from the nearer depth neighbors. It uses 32 fixed hemisphere
-samples, fixed repeating rotation, a .30-cell radius, .01-cell bias, .60 strength
-and a .30 maximum darkening. A separable five-tap depth/normal-aware blur smooths
+samples, fixed repeating rotation, a .30-cell radius, .01-cell bias, .75 strength
+and a .375 maximum darkening. A separable five-tap depth/normal-aware blur smooths
 noise without crossing discontinuities. Background and offscreen samples add no
 occlusion. No temporal state or frame-varying noise. Both quality modes sample the
 same high-resolution AO field; normal supersampling resolve remains unchanged.
@@ -57,9 +58,32 @@ allocation/resource bounds. Use one build configuration, two workers and serial
 low-priority checks. Hidden application-owned captures compare dungeon corners,
 furniture/chests, doors/creatures and city architecture/fountain, including turns.
 No OS input automation, stress suite or unrequested benchmark. Hardware-unavailable
-checks are unverified; visual tuning remains provisional pending user review.
+checks must be reported as unverified; current visual tuning is user-accepted.
 
 ## Executed verification
+
+### Stronger shading acceptance (2026-11-05)
+
+The user liked the initial result and requested slightly darker contact shading.
+Increase strength and its darkening cap by 25% (.60 to .75 and .30 to .375), keeping
+radius, bias, samples, filtering and composition unchanged. This increases depth of
+shading without extending its reach. Preserve the initial capture set for comparison.
+Rebuild the game and capture tool; run only the focused AO GPU suite and matched
+production captures for this parameter-only revision. Adjust the existing bounded-
+factor assertions to allow the new minimum of 159/255 (8-bit quantization).
+
+The Debug game, capture tool and AO test target rebuilt successfully; the focused
+hidden AO GPU suite passed. Captured all eight matching poses in the
+[stronger-trial gallery](screenshots/environment-ao-stronger/README.md). AO-off images
+are pixel-identical to the initial set, and stronger-on differences are confined to
+the world viewport. Inspected fountain, corner and creature/door captures. No broader
+suite or benchmark was repeated for this constant-only adjustment. The user then
+reported that the stronger result turned out well and explicitly requested keeping
+the current strength. This tuning is accepted as the default; the initial captures
+are retained as historical comparison evidence. Acceptance recording changes only
+documentation; no implementation changes or repeat tests were needed.
+
+### Initial implementation
 
 Debug graphical build, 2026-11-05, NVIDIA RTX 3060 / OpenGL 3.3 (driver 615.78.08).
 One build job at a time, at most two workers; checks and captures ran serially at
@@ -89,10 +113,10 @@ low CPU/I/O priority. All graphical windows were hidden; no desktop input was us
   adds 13,536,000 bytes (12.91 MiB), within existing overall world budgets.
 
 No benchmark, stress suite or additional build configuration was run. Captures are
-static evidence, not interactive motion acceptance. Screen-edge/hidden-geometry
+static evidence; user visual acceptance is recorded above. Screen-edge/hidden-geometry
 limitations remain inherent to screen-space AO; the fixed pattern is visible in
 some AO-only diagnostics but subdued in composed artwork. All billboards (including
-non-creature scenery/decorations) remain outside AO in this prototype.
+non-creature scenery/decorations) remain outside AO in the accepted implementation.
 
 Reproduce captures with a new output directory:
 

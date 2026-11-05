@@ -1,5 +1,8 @@
 # Environment AO review
 
+Historical initial tuning. The user subsequently accepted the
+[stronger version](../environment-ao-stronger/README.md) as the default (2026-11-05).
+
 Default-on prototype, 2026-11-05. Each pair uses the same pose and simulation time.
 Normal presentation is 1920x1080; AO-only images are the 1000x564 scratch field
 (white means no darkening). No creature, billboard, ground-shadow, effect or UI

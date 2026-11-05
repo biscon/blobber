@@ -34,7 +34,7 @@ return len>1e-10?n/len:vec3(0,0,1);
 constexpr const char* evaluate = R"(
 uniform mat4 projection;
 uniform vec3 samples[32];
-const float radius=.30,bias=.01,strength=.60,maxDarkening=.30;
+const float radius=.30,bias=.01,strength=.75,maxDarkening=.375;
 void main(){
 vec2 uv=gl_FragCoord.xy/size;
 if(depthAt(uv)>=1.0){finalColor=vec4(1);return;}

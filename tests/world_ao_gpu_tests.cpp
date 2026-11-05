@@ -62,7 +62,7 @@ void environmentChecks(GpuResources& resources, const std::filesystem::path& out
     const auto ao = pixels(resources, renderer.ambientOcclusionTarget());
     unsigned shaded = 0;
     for (std::size_t i = 0; i < ao.size(); i += 4) {
-        check(ao[i] >= 178 && ao[i] == ao[i + 1] && ao[i] == ao[i + 2], "AO is bounded and neutral");
+        check(ao[i] >= 159 && ao[i] == ao[i + 1] && ao[i] == ao[i + 2], "AO is bounded and neutral");
         shaded += ao[i] < 249;
     }
     check(shaded > 1000, "Wall/floor junction produces contact shading");
@@ -204,7 +204,7 @@ void sceneryChecks(GpuResources& resources) {
     renderer.render(movement);
     const auto close = pixels(resources, renderer.ambientOcclusionTarget());
     for (std::size_t i = 0; i < close.size(); i += 4)
-        check(close[i] >= 178, "Near-plane/cutout boundary AO remains finite and bounded");
+        check(close[i] >= 159, "Near-plane/cutout boundary AO remains finite and bounded");
 }
 void fogChecks(GpuResources& resources) {
     test::ArchitectureFixture fixture;

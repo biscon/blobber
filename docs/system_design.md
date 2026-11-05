@@ -1,11 +1,13 @@
 # System design
 
-Environment AO (implemented and mechanically verified, 2026-11-05):
+Environment AO **Accepted and closed (2026-11-05)**:
 [design and verification](environment_ao_design.md) adds default-on environment-only
 contact shading with `--ambient-occlusion on|off`, excluding creatures and preserving
 fog, composition and prepared-image presentation. Three reusable targets add 12.91 MiB;
 focused CPU/hidden GPU checks pass. [On/off captures](screenshots/environment-ao/README.md)
-are ready for user visual review; tuning remains provisional.
+are retained. The user accepted the [stronger tuning](screenshots/environment-ao-stronger/README.md)
+as the default: .75 strength / .375 darkening cap, .30-cell radius and .01-cell bias.
+Focused AO checks pass; visual review is complete.
 
 Sanctuary SC04 is **Accepted and closed (2026-11-05)**: [design](sc04_design.md),
 [verification](sc04_verification.md) and [campaign captures](screenshots/sc04/README.md).
