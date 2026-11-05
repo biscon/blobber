@@ -283,6 +283,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             f.active = f.party = f.hit = f.healing = true;
             f.character = out.recipient;
             f.damage = out.damage;
+            f.portrait = out.spell == rules::SpellKind::FalseLife ? PortraitFeedbackKind::Protection
+                                                                  : PortraitFeedbackKind::Healing;
             f.startedMs = out.occurredMs;
             showFeedback(f);
         }
@@ -333,10 +335,15 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         if (e.notice == EffectNotice::Applied && !e.target.npc) {
             CombatFeedback f;
             f.active = f.party = f.hit = true;
-            f.healing = e.kind != EffectKind::Bane && e.kind != EffectKind::HoldPerson;
+            const bool positive = e.kind == EffectKind::Bless || e.kind == EffectKind::ShieldOfFaith ||
+                                  e.kind == EffectKind::MageArmor || e.kind == EffectKind::Guidance ||
+                                  e.kind == EffectKind::Resistance || e.kind == EffectKind::Sanctuary ||
+                                  e.kind == EffectKind::Aid || e.kind == EffectKind::MirrorImage ||
+                                  e.kind == EffectKind::SpiritualWeapon;
+            f.portrait = positive ? PortraitFeedbackKind::Protection : PortraitFeedbackKind::Harmful;
             f.character = e.target.character;
             f.startedMs = out.occurredMs;
-            f.text = effectName(e.kind);
+            f.text = ""; // Names remain in the log and status tooltips.
             showFeedback(f);
         }
         break;
@@ -372,6 +379,11 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
         next.text = out.hit ? "IMAGE LOST" : "IMAGE MISSED";
     if (out.fortitude.status == FortitudeStatus::Saved)
         next.text = "1 HP";
+    if (next.party && out.spell != rules::SpellKind::Count) {
+        next.portrait =
+            out.hit && out.damage > 0 ? PortraitFeedbackKind::Damage : PortraitFeedbackKind::Negated;
+        next.element = out.damageType;
+    }
     next.character = out.recipient;
     next.enemy = out.enemy;
     next.damage = out.damage;
@@ -390,6 +402,19 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     showFeedback(next);
 }
 void CommandController::showFeedback(const CombatFeedback& next) noexcept {
+    const auto now = session_.timeMs();
+    if (now < next.startedMs || now - next.startedMs >= CombatFeedback::durationMs)
+        return;
+    if (next.party && next.character.index < rules::partySize &&
+        next.portrait != PortraitFeedbackKind::None) {
+        const bool supportive = next.portrait == PortraitFeedbackKind::Healing ||
+                                next.portrait == PortraitFeedbackKind::Protection;
+        const unsigned duration = supportive                                       ? 640u
+                                  : next.portrait == PortraitFeedbackKind::Negated ? 240u
+                                                                                   : 400u;
+        state_.portraitFeedback[next.character.index][supportive ? 0 : 1] = {next.portrait, next.element,
+                                                                             next.startedMs, duration};
+    }
     auto* destination = &state_.feedback[0];
     for (auto& entry : state_.feedback) {
         if (entry.active && entry.party == next.party &&
@@ -402,16 +427,28 @@ void CommandController::showFeedback(const CombatFeedback& next) noexcept {
             destination = &entry;
     }
     *destination = next;
-    if (next.party && next.hit && next.damage > 0)
+    if (next.party && next.hit && !next.healing && next.portrait != PortraitFeedbackKind::Protection &&
+        next.damage > 0)
         hitUntil_[next.character.index] = next.startedMs + 150;
 }
 void CommandController::refreshFeedback(bool clear) noexcept {
+    const auto epoch = session_.combat().spellVisuals().epoch;
+    clear |= feedbackEpoch_ != epoch;
+    feedbackEpoch_ = epoch;
+    state_.presentationMs = session_.timeMs();
     if (clear) {
         state_.feedback = {};
+        state_.portraitFeedback = {};
         hitUntil_ = {};
         return;
     }
     const auto now = session_.timeMs();
+    state_.presentationMs = now;
+    for (auto& channels : state_.portraitFeedback)
+        for (auto& entry : channels)
+            if (entry.kind != PortraitFeedbackKind::None &&
+                (now < entry.startedMs || now - entry.startedMs >= entry.durationMs))
+                entry = {};
     for (auto& entry : state_.feedback)
         if (entry.active && now - entry.startedMs >= CombatFeedback::durationMs)
             entry.active = false;

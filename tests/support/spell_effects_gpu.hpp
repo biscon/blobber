@@ -173,10 +173,58 @@ inline void spellEffectsGpuChecks() {
             input.now = 2200;
             renderer.render(input);
             check(renderer.stats.cached, "Quiet frost is static");
+            conditions.guiding[0] = true;
+            renderer.render(input);
+            check(spellPixels(resources, renderer.image().target) != frost,
+                  "Guiding mark coexists with frost");
+            renderer.diagnosticIds(ids.get());
+            check(spellPixels(resources, ids.get()) == originalIds, "Guiding coating never changes picking");
+            input.now = 2250;
+            renderer.render(input);
+            check(renderer.stats.cached, "Quiet guiding and frost retain idle cache");
+            conditions.guiding.reset();
             conditions.slow.reset();
             renderer.render(input);
             check(spellPixels(resources, renderer.image().target) == unlit,
                   "Condition removal restores exact colour");
+            for (auto kind : {rules::SpellKind::Shatter, rules::SpellKind::Thunderwave,
+                              rules::SpellKind::AcidSplash, rules::SpellKind::SacredFlame,
+                              rules::SpellKind::InflictWounds, rules::SpellKind::ShockingGrasp}) {
+                journal.clear(game.actors().snapshot().world);
+                auto* cue = journal.begin(kind, {3}, spellSpawn, 2300);
+                cue->center = {6, 4};
+                cue->includeOrigin = false;
+                for (unsigned i = 0; i < 9; ++i) {
+                    cue->cells[i] = {5 + int(i % 3), 3 + int(i / 3)};
+                    cue->eligible[i] = i != 0;
+                }
+                if (kind == rules::SpellKind::Thunderwave) {
+                    cue->eligible.fill(false);
+                    for (unsigned i = 0; i < 3; ++i) {
+                        cue->cells[i] = {5 + int(i), 7};
+                        cue->eligible[i] = true;
+                    }
+                    cue->includeOrigin = true;
+                }
+                cue->count = 1;
+                cue->targets[0] = {game.actors().id(0), {6.5f, 4.5f}, 0, 4, true};
+                input.now = 2420;
+                allocations = 0;
+                watching = true;
+                renderer.render(input);
+                watching = false;
+                check(!allocations, "SE02 composition/upload is allocation free");
+                check(spellPixels(resources, renderer.image().target) != unlit,
+                      (std::string("SE02 authored effect reaches GPU: ") + rules::spellRules(kind)->id)
+                          .c_str());
+                renderer.diagnosticIds(ids.get());
+                check(spellPixels(resources, ids.get()) == originalIds,
+                      "SE02 effects preserve all picking pixels");
+                input.now = 4000;
+                renderer.render(input);
+                check(spellPixels(resources, renderer.image().target) == unlit,
+                      "SE02 transient cleanup restores baseline");
+            }
             const auto before = resources.counts();
             const auto image = renderer.image();
             resources.failAfter(0);

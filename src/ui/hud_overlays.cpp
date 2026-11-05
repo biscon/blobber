@@ -63,7 +63,7 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
 }
 namespace {
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
-    {
+    if (!feedback.party || feedback.portrait == PortraitFeedbackKind::None) {
         const Color color = feedback.immune    ? Color{100, 112, 126, 255}
                             : feedback.healing ? Color{35, 140, 95, 255}
                             : feedback.hit     ? Color{190, 24, 18, 255}
@@ -86,10 +86,15 @@ void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
                           static_cast<long long>(feedback.damage));
         else
             std::snprintf(label, sizeof(label), "MISS");
-        const auto width = p.fonts->width(label, UiTextStyle::Heading);
+        const auto style = feedback.party && feedback.portrait != PortraitFeedbackKind::None
+                               ? UiTextStyle::Small
+                               : UiTextStyle::Heading;
+        const auto width = p.fonts->width(label, style);
         p.text(label, r.x + (r.width - width) * .5f,
-               p.fonts->centeredY(label, float(r.y), float(r.height), UiTextStyle::Heading),
-               feedback.hit ? WHITE : BLACK, UiTextStyle::Heading);
+               p.fonts->centeredY(label, float(r.y), float(r.height), style),
+               (feedback.party && feedback.portrait != PortraitFeedbackKind::None) || feedback.hit ? WHITE
+                                                                                                   : BLACK,
+               style);
     }
 }
 } // namespace
@@ -167,8 +172,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                         p.line({left, top + 1}, {left + 1, top + 1}, color);
                 }
             }
-        if (h->hover.tooltipVisible && !h->magic.casting() && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
-            h->hover.enemy->slot < picking->targets().anchors.size()) {
+        if (h->hover.tooltipVisible && !h->magic.casting() && h->hover.kind == HoverKind::Enemy &&
+            h->hover.enemy && h->hover.enemy->slot < picking->targets().anchors.size()) {
             const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
             if (anchor.valid) {
                 const UiRect r{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),

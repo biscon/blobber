@@ -1,8 +1,9 @@
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
+#include "ui/portrait_feedback.hpp"
 namespace blobber {
 using namespace hudInk;
-void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) const {
+void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, const HudSnapshot* hud) const {
     const auto r = hudLayout::card(i), portrait = hudLayout::portrait(i);
     const auto accent = c.castCaster ? bright
                         : c.active   ? bright
@@ -17,6 +18,13 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     fill(portrait, background);
     picture(c.portrait, portrait,
             c.status == DisplayStatus::Dead || !c.castEligible ? Color{100, 100, 100, 255} : WHITE);
+    if (hud && art && c.id.index < rules::partySize)
+        for (const auto& feedback : hud->portraitFeedback[c.id.index]) {
+            const auto sample = portraitFeedbackSample(feedback, hud->presentationMs);
+            if (sample.active)
+                art->portraitEffect(sample.row, sample.frame, portrait,
+                                    {sample.tint[0], sample.tint[1], sample.tint[2], sample.tint[3]});
+        }
     border({portrait.x - 1, portrait.y - 1, portrait.width + 2, portrait.height + 2}, accent);
     if (c.castRecipient) {
         border({portrait.x, portrait.y, portrait.width, portrait.height}, teal);
@@ -158,7 +166,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             eligible |= h->allies[j].index == h->cards[i].id.index;
         p.card(h->cards[i], i, h->selection.action == PartyAction::Aid && eligible,
                (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
-                   (h->loot.open && h->loot.recipient.index == h->cards[i].id.index));
+                   (h->loot.open && h->loot.recipient.index == h->cards[i].id.index),
+               h);
     }
     if (h->campaign)
         p.picture(UiArt::travelIcon, hudLayout::travelButton,

@@ -46,7 +46,8 @@ constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
 uniform vec2 dungeonLighting;uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
-uniform vec4 effectUv;uniform int effectFootprint;uniform vec2 effectCells[3];uniform vec2 effectOrigin;
+uniform vec4 effectUv;uniform int effectFootprint;uniform vec2 effectCells[9];uniform vec2 effectOrigin;
+uniform sampler2D guidingAtlas;uniform float guidingStrength;uniform vec4 guidingUv;
 uniform sampler2D frostAtlas;uniform float frostStrength;uniform vec4 frostUv;uniform vec4 frostRegistration;
 uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;uniform float farClip;
 bool slab(float at,float delta,float low,float high,inout float enter,inout float leave){
@@ -62,8 +63,8 @@ void main(){
 float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
 if(kind==5||kind==6){if(leafHidden())discard;
-if(effectFootprint!=0){vec2 cell=floor(worldPosition.xz);bool inside=all(equal(cell,effectOrigin));
-for(int i=0;i<3;++i)if((effectFootprint&(1<<i))!=0&&all(equal(cell,effectCells[i])))inside=true;
+if(effectFootprint!=0){vec2 cell=floor(worldPosition.xz);bool inside=(effectFootprint&1024)!=0&&all(equal(cell,effectOrigin));
+for(int i=0;i<9;++i)if((effectFootprint&(1<<i))!=0&&all(equal(cell,effectCells[i])))inside=true;
 if(!inside)discard;}
 vec4 c=texture(texture0,effectUv.xy+uv*effectUv.zw)*idColor;
 if(kind==6){finalColor=vec4(c.rgb*idColor.a*(1.0-fog),0);return;}
@@ -78,6 +79,10 @@ vec4 c=texture(texture0,uv);
 if(kind==2){if(covered||c.a<=0.001)discard;}else{if(!covered)discard;}
 if(kind==4){finalColor=idColor;return;}
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
+if(guidingStrength>0.0){vec2 registered=frostRegistration.xy+uv*frostRegistration.zw;
+vec4 gold=texture(guidingAtlas,guidingUv.xy+clamp(registered,vec2(0),vec2(1))*guidingUv.zw);
+float strength=guidingStrength*(1.0-min(0.5,frostStrength));
+c.rgb=c.rgb*(1.0-gold.a*strength)+gold.rgb*c.a*strength;}
 if(frostStrength>0.0){vec2 registered=frostRegistration.xy+uv*frostRegistration.zw;
 vec4 ice=texture(frostAtlas,frostUv.xy+clamp(registered,vec2(0),vec2(1))*frostUv.zw);
 c.rgb=c.rgb*(1.0-ice.a*frostStrength)+ice.rgb*c.a*frostStrength;}
@@ -645,6 +650,7 @@ void WorldRenderer::drawBillboards(const View& v, const world_render::WorldFrame
     bindLights(v, shader, !ids);
     const float noFrost = 0;
     rlSetUniform(GetShaderLocation(shader, "frostStrength"), &noFrost, SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(GetShaderLocation(shader, "guidingStrength"), &noFrost, SHADER_UNIFORM_FLOAT, 1);
     const int noClips = 0;
     rlSetUniform(billboardLocations_[7], &noClips, SHADER_UNIFORM_INT, 1);
     rlSetUniform(billboardLocations_[9], &noClips, SHADER_UNIFORM_INT, 1);
@@ -769,6 +775,21 @@ void WorldRenderer::drawBillboards(const View& v, const world_render::WorldFrame
             rlEnableTexture(resources_.texture(v.textures[effects->frostTexture]).id);
             rlActiveTextureSlot(0);
         }
+        const float guiding = !ids && effects && body ? effects->guiding[b.id] : 0.f;
+        rlSetUniform(GetShaderLocation(shader, "guidingStrength"), &guiding, SHADER_UNIFORM_FLOAT, 1);
+        if (guiding > 0 && effects->guidingTexture != UINT16_MAX) {
+            const int unit = 5;
+            const float registration[]{b.crop.left, b.crop.top, b.crop.right - b.crop.left,
+                                       b.crop.bottom - b.crop.top};
+            rlSetUniform(GetShaderLocation(shader, "guidingAtlas"), &unit, SHADER_UNIFORM_INT, 1);
+            rlSetUniform(GetShaderLocation(shader, "guidingUv"), effects->guidingUv.data(),
+                         SHADER_UNIFORM_VEC4, 1);
+            rlSetUniform(GetShaderLocation(shader, "frostRegistration"), registration, SHADER_UNIFORM_VEC4,
+                         1);
+            rlActiveTextureSlot(5);
+            rlEnableTexture(resources_.texture(v.textures[effects->guidingTexture]).id);
+            rlActiveTextureSlot(0);
+        }
         // CPU picking and GPU drawing share the registered crop geometry.
         const auto q = world_render::corners(frame.camera, b);
         auto model = MatrixIdentity();
@@ -825,14 +846,17 @@ void WorldRenderer::drawEffects(const View& v, const world_render::EffectFrame& 
             additive = p.additive;
         }
         const int kind = p.additive ? 6 : 5, footprint = int(p.footprint);
-        const float cells[]{float(p.cells[0].x), float(p.cells[0].y), float(p.cells[1].x),
-                            float(p.cells[1].y), float(p.cells[2].x), float(p.cells[2].y)};
+        float cells[18];
+        for (unsigned j = 0; j < 9; ++j) {
+            cells[j * 2] = float(p.cells[j].x);
+            cells[j * 2 + 1] = float(p.cells[j].y);
+        }
         const float origin[]{float(p.origin.x), float(p.origin.y)};
         rlSetUniform(billboardLocations_[3], &kind, SHADER_UNIFORM_INT, 1);
         rlSetUniform(GetShaderLocation(shader, "effectUv"), p.uv.data(), SHADER_UNIFORM_VEC4, 1);
         rlSetUniform(GetShaderLocation(shader, "effectFootprint"), &footprint, SHADER_UNIFORM_INT, 1);
         if (footprint) {
-            rlSetUniform(GetShaderLocation(shader, "effectCells[0]"), cells, SHADER_UNIFORM_VEC2, 3);
+            rlSetUniform(GetShaderLocation(shader, "effectCells[0]"), cells, SHADER_UNIFORM_VEC2, 9);
             rlSetUniform(GetShaderLocation(shader, "effectOrigin"), origin, SHADER_UNIFORM_VEC2, 1);
         }
         const auto& a = p.points[0];
@@ -954,7 +978,8 @@ void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequiremen
                 SetTextureWrap(texture, t.clamp ? TEXTURE_WRAP_CLAMP : TEXTURE_WRAP_MIRROR_REPEAT);
                 rlTextureParameters(texture.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
                 rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
-                if (t.name == "effect/se01/body" || t.name == "effect/se01/emission") {
+                if (std::any_of(publication_.effects.begin(), publication_.effects.end(),
+                                [&](const auto& clip) { return clip.body == i || clip.emission == i; })) {
                     using Parameter = void (*)(unsigned, unsigned, float);
                     const auto parameter = reinterpret_cast<Parameter>(rlGetProcAddress("glTexParameterf"));
                     if (!parameter)

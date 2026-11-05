@@ -2,7 +2,8 @@
 
 Status: **SE01 accepted by the user (2026-11-05)**; local lighting specifically praised.
 See [implementation and checks](../../se01_design.md) and the
-[spell-effects roadmap](../../spell_effects_plan.md). SE02 remains Planned.
+[spell-effects roadmap](../../spell_effects_plan.md).
+SE02 is Ready for review in its [six-file gallery](se02/README.md).
 
 These captures use production artwork and rules, ordinary accepted spell commands,
 seed 5, a legal spell-party preset, and application-owned hidden render targets.
@@ -44,7 +45,9 @@ phase timing; nine full-resolution stills separately cover corridor light, attac
 fire, frost travel, sustained Slow, crowded/sparse cones, near/far scale and daylight.
 GIF previews cannot replace full-resolution checks, and reducing the stills would
 lose distinct comparison cases. Superseded iterations and intermediate frames were
-removed with the disposable run.
+removed with the disposable run. SE02 adds six grouped files in its own directory;
+the eighteen-file feature total retains these twelve accepted baseline cases plus
+the new offensive/portrait comparisons, without changing SE01 acceptance.
 
 ## Reproduce
 

@@ -28,6 +28,13 @@ CombatOutcome CombatController::spectralAttack(const PartyCommand& c, Player pos
 void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t now,
                                CombatEvents& events) noexcept {
     const auto affected = area(c, pose);
+    auto* visual = spellVisuals_.begin(rules::SpellKind::Shatter, c.character, pose, now);
+    if (visual) {
+        visual->cells = affected.cells;
+        visual->eligible = affected.eligible;
+        visual->includeOrigin = false;
+        visual->center = *c.aimedCell;
+    }
     const auto damage = rng_.roll({3, 8, 0}).value.total;
     const auto dc = party_.spellAccess(c.character, c.spell).difficulty;
     for (std::size_t i = 0; i < affected.recipientCount; ++i) {
@@ -57,6 +64,11 @@ void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t
         if (t.npc)
             alert(t.enemy, pose);
         applyDamage(out, now, events);
+        if (t.npc && visual && visual->count < visual->targets.size()) {
+            auto target = spellTarget(out, now);
+            target.saved = save.succeeded;
+            visual->targets[visual->count++] = target;
+        }
         if (t.npc)
             spellPulse(t.enemy, c.character, rules::SpellKind::Shatter, pose, now);
     }

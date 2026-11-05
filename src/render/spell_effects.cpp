@@ -16,7 +16,7 @@ float noise(std::uint64_t serial, unsigned i) noexcept {
     return float((x >> 16) & 65535) / 65535.f;
 }
 unsigned duration(Kind spell) noexcept {
-    return spell == Kind::RayOfFrost ? 640u : 800u;
+    return spell == Kind::FireBolt || spell == Kind::BurningHands ? 800u : 640u;
 }
 bool fresh(std::uint64_t now, std::uint64_t start, unsigned ms) noexcept {
     return now >= start && now - start < ms;
@@ -30,6 +30,7 @@ bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame&) noexcep
         casts_ = {};
         remnants_ = {};
         slow_.reset();
+        guiding_.reset();
         seen_ = 0;
         revision_ = UINT64_MAX;
         world_ = world;
@@ -72,29 +73,35 @@ bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame&) noexcep
             if (!slot)
                 continue;
             slot->cue = cue;
-            if (!slot->resolved && cue.stage == AttackStage::Resolved) {
-                slot->resolved = true;
-                for (unsigned i = 0; i < std::min<unsigned>(cue.count, cue.targets.size()); ++i) {
-                    const auto& t = cue.targets[i];
-                    if (!t.hit || t.gone || !fresh(in.now, cue.impactMs, duration(cue.spell)))
-                        continue;
-                    Remnant* r = nullptr;
-                    for (auto& candidate : remnants_)
-                        if (!candidate.id.serial ||
-                            !fresh(in.now, candidate.impactMs, duration(candidate.spell))) {
-                            r = &candidate;
-                            break;
-                        }
-                    if (!r) {
-                        r = &remnants_[0];
-                        for (auto& candidate : remnants_)
-                            if (candidate.impactMs < r->impactMs ||
-                                (candidate.impactMs == r->impactMs && candidate.id.serial < r->id.serial))
-                                r = &candidate;
-                        ++diagnostics_.remnants;
+            for (unsigned i = 0; i < std::min<unsigned>(cue.count, cue.targets.size()); ++i) {
+                const auto stage = cue.deliveryCount ? cue.deliveries[i].stage : cue.stage;
+                if ((slot->resolved & (1ull << i)) || stage != AttackStage::Resolved)
+                    continue;
+                slot->resolved |= 1ull << i;
+                const auto when = cue.deliveryCount ? cue.deliveries[i].impactMs : cue.impactMs;
+                const auto& t = cue.targets[i];
+                if (t.gone || !fresh(in.now, when, duration(cue.spell)))
+                    continue;
+                // SE01 misses never attach; SE02 can show a restrained dissipating contact.
+                if (!t.hit && (cue.spell == Kind::FireBolt || cue.spell == Kind::RayOfFrost ||
+                               cue.spell == Kind::BurningHands))
+                    continue;
+                Remnant* r = nullptr;
+                for (auto& candidate : remnants_)
+                    if (!candidate.id.serial ||
+                        !fresh(in.now, candidate.impactMs, duration(candidate.spell))) {
+                        r = &candidate;
+                        break;
                     }
-                    *r = {cue.id, t, cue.spell, cue.impactMs};
+                if (!r) {
+                    r = &remnants_[0];
+                    for (auto& candidate : remnants_)
+                        if (candidate.impactMs < r->impactMs ||
+                            (candidate.impactMs == r->impactMs && candidate.id.serial < r->id.serial))
+                            r = &candidate;
+                    ++diagnostics_.remnants;
                 }
+                *r = {cue.id, t, cue.spell, when};
             }
         }
         seen_ = seen;
@@ -105,6 +112,11 @@ bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame&) noexcep
                                                                       : std::bitset<NpcWorld::maxInstances>{};
     changed |= slow != slow_;
     slow_ = slow;
+    const auto guiding = in.conditions && in.conditions->world == world_
+                             ? in.conditions->guiding
+                             : std::bitset<NpcWorld::maxInstances>{};
+    changed |= guiding != guiding_;
+    guiding_ = guiding;
     bool active = false;
     for (auto& c : casts_) {
         if (!c.cue.id.serial)
@@ -113,7 +125,10 @@ bool SpellEffectsPlayer::update(const FrameInput& in, const WorldFrame&) noexcep
             (in.now >= c.cue.impactMs &&
              (in.now - c.cue.impactMs >= 1000 ||
               (c.cue.stage == AttackStage::Resolved &&
-               in.now - c.cue.impactMs >= (c.cue.spell == Kind::BurningHands ? 480u : 0u))))) {
+               in.now - c.cue.impactMs >=
+                   (c.cue.spell == Kind::BurningHands                                    ? 480u
+                    : (c.cue.spell == Kind::Thunderwave || c.cue.spell == Kind::Shatter) ? 640u
+                                                                                         : 0u))))) {
             c = {};
             changed = true;
         } else
@@ -191,8 +206,8 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
         if (cone) {
             p.cells = cone->cells;
             p.origin = cone->origin.cell;
-            p.footprint = 8;
-            for (unsigned i = 0; i < 3; ++i)
+            p.footprint = 512 | (cone->includeOrigin ? 1024 : 0);
+            for (unsigned i = 0; i < 9; ++i)
                 if (cone->eligible[i])
                     p.footprint |= 1u << i;
         }
@@ -232,6 +247,8 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
         for (const auto& record : casts_) {
             const auto& c = record.cue;
             if (!c.id.serial || in.now < c.releaseMs || c.stage == AttackStage::Canceled)
+                continue;
+            if (c.spell != Kind::FireBolt && c.spell != Kind::RayOfFrost && c.spell != Kind::BurningHands)
                 continue;
             const bool frost = c.spell == Kind::RayOfFrost;
             const auto f = forward(c.origin.heading), r = right(c.origin.heading);
@@ -316,6 +333,9 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
         for (const auto& rem : remnants_) {
             if (!rem.id.serial || !fresh(in.now, rem.impactMs, duration(rem.spell)))
                 continue;
+            if (rem.spell != Kind::FireBolt && rem.spell != Kind::RayOfFrost &&
+                rem.spell != Kind::BurningHands)
+                continue;
             bool visible = false;
             auto p = point(rem.target, visible);
             if (!visible)
@@ -357,6 +377,7 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
                     particle(q, frost, rem.id.serial, i, fade * .4f, .025f);
                 }
         }
+        appendOffensive(in, world, frame, pass, particles);
     }
 }
 } // namespace blobber::world_render

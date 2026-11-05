@@ -7,11 +7,13 @@ namespace blobber {
 ActorConditionVisualSnapshot EffectController::visualConditions() const noexcept {
     ActorConditionVisualSnapshot out;
     out.world = actors_.snapshot().world;
-    for (unsigned i = 0; i < actors_.snapshot().count; ++i)
+    for (unsigned i = 0; i < actors_.snapshot().count; ++i) {
+        out.guiding[i] = guiding(actors_.id(i));
         out.slow[i] =
             actors_.snapshot().actors[i].life == ActorLife::Alive &&
             conditions_[i + rules::partySize][unsigned(EffectKind::Slow) - unsigned(EffectKind::Sleep)]
                 .active;
+    }
     return out;
 }
 const char* effectName(EffectKind kind) noexcept {

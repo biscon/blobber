@@ -1,4 +1,5 @@
 #include "game/spell_visuals.hpp"
+#include <algorithm>
 namespace blobber {
 SpellCastVisual* SpellVisualJournal::begin(rules::SpellKind spell, rules::CharacterId caster, Player origin,
                                            std::uint64_t now) noexcept {
@@ -31,25 +32,51 @@ SpellCastVisual* SpellVisualJournal::begin(rules::SpellKind spell, rules::Charac
     ++snapshot_.revision;
     return slot;
 }
-void SpellVisualJournal::attack(const AttackVisual& v, SpellTargetVisual target) noexcept {
+void SpellVisualJournal::attack(const AttackVisual& v, SpellTargetVisual target,
+                                CombatAttackId parent) noexcept {
     if (v.incoming || !elementalSpell(v.spell))
         return;
-    if (auto* c = begin(v.spell, v.character, v.partyOrigin, v.releaseMs)) {
+    SpellCastVisual* c = nullptr;
+    if (parent.serial) {
+        for (auto& candidate : snapshot_.casts)
+            if (candidate.attack.world == parent.world && candidate.attack.serial == parent.serial)
+                c = &candidate;
+    } else
+        c = begin(v.spell, v.character, v.partyOrigin, v.releaseMs);
+    if (!c || c->deliveryCount == c->deliveries.size())
+        return;
+    if (!parent.serial) {
         c->attack = v.id;
-        c->stage = v.stage;
         c->formation = v.formationSlot;
-        c->impactMs = v.impactMs;
-        c->targets[0] = target;
-        c->count = 1;
     }
+    const auto i = c->deliveryCount++;
+    c->deliveries[i] = {v.id, v.stage, v.releaseMs, v.impactMs, std::max(1u, unsigned(v.darts))};
+    c->stage = v.stage;
+    c->impactMs = std::max(c->impactMs, v.impactMs);
+    c->targets[i] = target;
+    c->count = c->deliveryCount;
+    ++snapshot_.revision;
 }
 void SpellVisualJournal::resolve(CombatAttackId id, SpellTargetVisual target, std::uint64_t now,
                                  bool canceled) noexcept {
+    if (!id.serial)
+        return;
     for (auto& c : snapshot_.casts)
-        if (c.attack.world == id.world && c.attack.serial == id.serial && id.serial) {
-            c.stage = canceled ? AttackStage::Canceled : AttackStage::Resolved;
-            c.impactMs = now;
-            c.targets[0] = target;
+        for (unsigned i = 0; i < c.deliveryCount; ++i) {
+            auto& d = c.deliveries[i];
+            if (d.attack.world != id.world || d.attack.serial != id.serial)
+                continue;
+            d.stage = canceled ? AttackStage::Canceled : AttackStage::Resolved;
+            d.impactMs = now;
+            c.targets[i] = target;
+            c.stage = AttackStage::Resolved;
+            c.impactMs = 0;
+            for (unsigned j = 0; j < c.deliveryCount; ++j) {
+                c.impactMs = std::max(c.impactMs, c.deliveries[j].impactMs);
+                if (c.deliveries[j].stage == AttackStage::Flight ||
+                    c.deliveries[j].stage == AttackStage::Windup)
+                    c.stage = AttackStage::Flight;
+            }
             ++snapshot_.revision;
             return;
         }

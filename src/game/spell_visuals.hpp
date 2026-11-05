@@ -4,7 +4,12 @@
 namespace blobber {
 constexpr bool elementalSpell(rules::SpellKind k) noexcept {
     return k == rules::SpellKind::FireBolt || k == rules::SpellKind::RayOfFrost ||
-           k == rules::SpellKind::BurningHands;
+           k == rules::SpellKind::BurningHands || k == rules::SpellKind::MagicMissile ||
+           k == rules::SpellKind::ScorchingRay || k == rules::SpellKind::GuidingBolt ||
+           k == rules::SpellKind::SacredFlame || k == rules::SpellKind::ShockingGrasp ||
+           k == rules::SpellKind::InflictWounds || k == rules::SpellKind::AcidSplash ||
+           k == rules::SpellKind::PoisonSpray || k == rules::SpellKind::Thunderwave ||
+           k == rules::SpellKind::Shatter;
 }
 struct SpellCastVisualId {
     std::uint64_t world = 0, serial = 0;
@@ -16,6 +21,12 @@ struct SpellTargetVisual {
     std::int64_t damage = 0;
     bool hit = false, gone = false, died = false, saved = false;
 };
+struct SpellDeliveryVisual {
+    CombatAttackId attack{};
+    AttackStage stage = AttackStage::Empty;
+    std::uint64_t releaseMs = 0, impactMs = 0;
+    unsigned darts = 1;
+};
 struct SpellCastVisual {
     SpellCastVisualId id{};
     CombatAttackId attack{};
@@ -25,8 +36,12 @@ struct SpellCastVisual {
     std::uint8_t formation = 0;
     AttackStage stage = AttackStage::Empty;
     std::uint64_t releaseMs = 0, impactMs = 0;
-    std::array<Cell, 3> cells{};
-    std::array<bool, 3> eligible{};
+    std::array<Cell, 9> cells{};
+    std::array<bool, 9> eligible{};
+    bool includeOrigin = true;
+    Cell center{};
+    std::array<SpellDeliveryVisual, 3> deliveries{};
+    unsigned deliveryCount = 0;
     std::array<SpellTargetVisual, 36> targets{};
     unsigned count = 0;
 };
@@ -37,7 +52,7 @@ struct SpellVisualSnapshot {
 };
 struct ActorConditionVisualSnapshot {
     std::uint64_t world = 0;
-    std::bitset<NpcWorld::maxInstances> slow;
+    std::bitset<NpcWorld::maxInstances> slow, guiding;
 };
 // Session-owned, ephemeral journal. Cosmetic capacity never gates combat.
 class SpellVisualJournal {
@@ -51,7 +66,7 @@ class SpellVisualJournal {
         snapshot_.epoch = epoch;
     }
     SpellCastVisual* begin(rules::SpellKind, rules::CharacterId, Player, std::uint64_t) noexcept;
-    void attack(const AttackVisual&, SpellTargetVisual) noexcept;
+    void attack(const AttackVisual&, SpellTargetVisual, CombatAttackId parent = {}) noexcept;
     void resolve(CombatAttackId, SpellTargetVisual, std::uint64_t, bool canceled = false) noexcept;
     const SpellVisualSnapshot& snapshot() const noexcept { return snapshot_; }
 

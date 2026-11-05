@@ -10,7 +10,7 @@
 #include <iostream>
 namespace blobber::test {
 inline void spellEffectsReview(const std::filesystem::path& assets, const std::filesystem::path& output,
-                               const char* selected = nullptr) {
+                               const char* selected = nullptr, bool se02 = false) {
     if (std::filesystem::exists(output) && !std::filesystem::is_empty(output))
         throw std::runtime_error("SE01 review output must be new or empty");
     std::filesystem::create_directories(output);
@@ -27,15 +27,34 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         int range, count;
         bool motion, bright;
     };
-    const Case cases[]{{"fire-bolt", rules::SpellKind::FireBolt, 3, 1, true, false},
-                       {"ray-of-frost", rules::SpellKind::RayOfFrost, 2, 1, true, false},
-                       {"burning-hands", rules::SpellKind::BurningHands, 1, 3, true, false},
-                       {"fire-near", rules::SpellKind::FireBolt, 1, 1, false, false},
-                       {"frost-far", rules::SpellKind::RayOfFrost, 4, 1, false, false},
-                       {"cone-sparse", rules::SpellKind::BurningHands, 1, 1, false, false},
-                       {"fire-bright", rules::SpellKind::FireBolt, 2, 1, false, true}};
+    const Case foundation[]{{"fire-bolt", rules::SpellKind::FireBolt, 3, 1, true, false},
+                            {"ray-of-frost", rules::SpellKind::RayOfFrost, 2, 1, true, false},
+                            {"burning-hands", rules::SpellKind::BurningHands, 1, 3, true, false},
+                            {"fire-near", rules::SpellKind::FireBolt, 1, 1, false, false},
+                            {"frost-far", rules::SpellKind::RayOfFrost, 4, 1, false, false},
+                            {"cone-sparse", rules::SpellKind::BurningHands, 1, 1, false, false},
+                            {"fire-bright", rules::SpellKind::FireBolt, 2, 1, false, true}};
+    const Case offensive[]{{"magic-missile", rules::SpellKind::MagicMissile, 3, 3, true, false},
+                           {"missile-single", rules::SpellKind::MagicMissile, 3, 1, true, false},
+                           {"scorching-ray", rules::SpellKind::ScorchingRay, 3, 3, true, false},
+                           {"guiding-bolt", rules::SpellKind::GuidingBolt, 3, 1, true, false},
+                           {"sacred-flame", rules::SpellKind::SacredFlame, 3, 1, true, false},
+                           {"shocking-grasp", rules::SpellKind::ShockingGrasp, 1, 1, true, false},
+                           {"inflict-wounds", rules::SpellKind::InflictWounds, 1, 1, true, false},
+                           {"acid-splash", rules::SpellKind::AcidSplash, 3, 2, true, false},
+                           {"poison-spray", rules::SpellKind::PoisonSpray, 1, 1, true, false},
+                           {"thunderwave", rules::SpellKind::Thunderwave, 1, 1, true, false},
+                           {"shatter", rules::SpellKind::Shatter, 3, 3, true, false},
+                           {"radiant-bright", rules::SpellKind::GuidingBolt, 3, 1, true, true},
+                           {"portrait-healing", rules::SpellKind::CureWounds, 3, 1, true, false},
+                           {"portrait-buff", rules::SpellKind::Bless, 3, 1, true, false},
+                           {"portrait-damage", rules::SpellKind::SacredFlame, 1, 1, true, false}};
+    const auto* cases = se02 ? offensive : foundation;
+    const unsigned caseCount = se02 ? unsigned(std::size(offensive)) : unsigned(std::size(foundation));
     std::ofstream report(output / "checks.txt");
-    for (const auto& example : cases) {
+    for (unsigned exampleIndex = 0; exampleIndex < caseCount; ++exampleIndex) {
+        const auto& example = cases[exampleIndex];
+        const bool incoming = std::string_view(example.name) == "portrait-damage";
         if (selected && std::string_view(selected) != example.name)
             continue;
         WorldDefinition definition;
@@ -54,17 +73,29 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                 rows[y][5] = rows[y][7] = '#';
         const Map map(rows, definition);
         const Player pose{{6, 8}, Heading::North};
-        const auto name = example.spell == rules::SpellKind::BurningHands ? "goblin" : "bugbear";
+        const auto name = incoming                                          ? "goblin_shaman"
+                          : example.spell == rules::SpellKind::BurningHands ? "goblin"
+                                                                            : "bugbear";
         const auto found = std::find(definitions.types.begin(), definitions.types.end(), name);
         check(found != definitions.types.end(), "Review species has production art");
         const NpcTypeId type{std::uint16_t(found - definitions.types.begin())};
         std::vector<NpcInstance> instances;
         for (int i = 0; i < example.count; ++i)
             instances.push_back(
-                {type, {6 + (example.count > 1 ? i - 1 : 0), 8 - example.range}, {0, 1}, Heading::South});
+                {type,
+                 {6 + (example.spell != rules::SpellKind::AcidSplash && example.count > 1 ? i - 1 : 0),
+                  8 - example.range},
+                 {example.spell == rules::SpellKind::AcidSplash ? i : 0, 1},
+                 Heading::South});
         NpcWorld places(map, pose.cell, definitions.types, instances);
         const auto party = leveledSpellParty(catalog, example.spell);
         GameSession game(map, catalog, party, places, 5, pose, false, definitions.timings);
+        prepareSpellParty(game.party(), example.spell);
+        if (example.spell == rules::SpellKind::ShockingGrasp) {
+            game.party().lockFormation(false);
+            game.party().swapFormation(FormationSlot::FrontRight, FormationSlot::BackRight);
+            game.party().lockFormation(true);
+        }
         CommandController commands(game, definitions.timings);
         NpcAnimator animator(game.actors(), definitions.timings);
         GameView view(renderer);
@@ -75,22 +106,70 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                              true);
             view.present(presenter, game, map, false, true, &commands.snapshot());
         };
-        if (example.range == 1)
-            spellReady(game, 3);
+        if (example.range == 1 && !incoming)
+            spellReady(game, rules::spellRules(example.spell)->casting == rules::Casting::Wisdom ? 1 : 3);
         present();
-        auto command = spellCommand(game, example.spell);
-        if (example.spell != rules::SpellKind::BurningHands) {
-            command.targetCount = 1;
-            command.enemies[0] = game.actors().id(0);
+        if (incoming) {
+            bool resolved = false;
+            for (unsigned step = 0; step < 1500 && !resolved; ++step) {
+                if (game.combat().snapshot().awaitingAction)
+                    commands.record(game.submit(turnCommand(game)));
+                const auto& events = game.update(.02, false);
+                for (const auto& event : events)
+                    if (event.event == CombatEvent::Attack && event.enemyAttack &&
+                        event.spell == rules::SpellKind::SacredFlame && event.hit && event.damage > 0)
+                        resolved = true;
+                commands.record(events);
+            }
+            check(resolved, "Production enemy Sacred Flame resolves onto portrait");
+        } else {
+            auto command = spellCommand(game, example.spell);
+            if (example.spell == rules::SpellKind::Shatter)
+                command.aimedCell = Cell{6, 8 - example.range};
+            else if (example.spell == rules::SpellKind::CureWounds ||
+                     example.spell == rules::SpellKind::Bless) {
+                command.targetCount = example.spell == rules::SpellKind::Bless ? 3 : 1;
+                command.allies = {{{0}, {1}, {2}}};
+                if (example.spell == rules::SpellKind::CureWounds)
+                    game.party().damage({0}, 5);
+            } else if (example.spell != rules::SpellKind::BurningHands &&
+                       example.spell != rules::SpellKind::Thunderwave) {
+                const bool multiple = example.spell == rules::SpellKind::MagicMissile ||
+                                      example.spell == rules::SpellKind::ScorchingRay ||
+                                      example.spell == rules::SpellKind::AcidSplash;
+                command.targetCount = multiple ? example.count : 1;
+                for (unsigned i = 0; i < command.targetCount; ++i) {
+                    command.enemies[i] = game.actors().id(i);
+                    command.darts[i] = example.count == 1 ? 3 : 1;
+                }
+            }
+            const auto accepted = game.submit(command);
+            commands.record(game.events());
+            check(accepted.reason == CommandReason::Resolved,
+                  (std::string(example.name) + ": " + commandMessage(accepted.reason)).c_str());
         }
-        const auto accepted = game.submit(command);
-        commands.record(accepted);
-        check(accepted.reason == CommandReason::Resolved, "Review casts through ordinary spell command");
+        if (example.spell == rules::SpellKind::CureWounds)
+            check(commands.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::Healing,
+                  "Healing review consumes resolved events");
+        if (example.spell == rules::SpellKind::Bless)
+            for (unsigned i = 0; i < 3; ++i)
+                check(commands.snapshot().portraitFeedback[i][0].kind == PortraitFeedbackKind::Protection,
+                      "Buff review affects each selected portrait");
+        if (incoming) {
+            bool damagePulse = false;
+            for (const auto& channels : commands.snapshot().portraitFeedback)
+                damagePulse |= channels[1].kind == PortraitFeedbackKind::Damage;
+            check(damagePulse, "Enemy hit creates an actual damage pulse");
+        }
         const auto start = game.timeMs();
         const auto& cue = game.combat().spellVisuals().casts[0];
-        const auto impact = cue.impactMs - start;
-        report << example.name << " release=" << cue.releaseMs - start << " impact=" << impact
-               << " initialHit=" << cue.targets[0].hit << '\n';
+        report << example.name << " cast=" << cue.id.serial;
+        if (cue.id.serial)
+            report << " release=" << cue.releaseMs - start << " impact=" << cue.impactMs - start;
+        for (unsigned i = 0; i < cue.count; ++i)
+            report << " target=" << cue.targets[i].actor.slot << ":hit=" << cue.targets[i].hit
+                   << ":damage=" << cue.targets[i].damage;
+        report << '\n';
         if (example.motion)
             std::filesystem::create_directory(output / example.name);
         // Captures are deterministic application-owned targets, never OS screenshots/input.

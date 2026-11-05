@@ -25,12 +25,13 @@ class UiArt {
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
     void creator(unsigned index, UiRect destination, Color tint = WHITE) const;
+    void portraitEffect(unsigned row, unsigned frame, UiRect destination, Color tint) const;
     void camp(unsigned frame, UiRect destination, Color tint = WHITE) const;
     void mapMarker(MapMarker, Rectangle destination, Heading facing = Heading::North) const;
 
   private:
     GpuResources& resources_;
-    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_;
+    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_, portraitEffects_;
     std::array<Rectangle, 64> regions_{};
 };
 } // namespace blobber

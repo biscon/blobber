@@ -93,7 +93,7 @@ target_link_libraries(blobber_audio_io PUBLIC blobber_core PRIVATE nlohmann_json
 add_library(blobber_world_assets src/assets/world_assets.cpp src/assets/world_residency.cpp)
 target_link_libraries(blobber_world_assets PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_assets)
-add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/spell_effects.cpp src/render/spell_lights.cpp src/render/melee_swipe.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
+add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/spell_effects.cpp src/render/spell_effects_offensive.cpp src/render/spell_lights.cpp src/render/melee_swipe.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
 # Keep gameplay/orchestration unoptimized in Debug; only the numerical picking
 # kernels need optimized scalar loops. Symbols and Debug assertions are retained.
 option(BLOBBER_OPTIMIZE_DEBUG_RASTER "Optimize numerical visibility kernels in Debug" ON)
@@ -151,7 +151,8 @@ if(BLOBBER_BUILD_GRAPHICS)
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/*")
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/se02/portraits.png")
 
     set(BLOBBER_COPY_OUTPUTS)
     foreach(asset IN LISTS BLOBBER_COPY_INPUTS)

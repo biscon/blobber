@@ -117,7 +117,8 @@ class HudPainter {
              hudInk::red);
         border(r, hudInk::edge);
     }
-    void card(const HudCard& c, int i, bool aidTarget, bool inspected) const;
+    void card(const HudCard& c, int i, bool aidTarget, bool inspected,
+              const HudSnapshot* hud = nullptr) const;
     void viewportPrompt(const char* value) const {
         if (!fonts)
             return;

@@ -1,7 +1,7 @@
 # Spell effects: design and delivery roadmap
 
 Created: 2026-11-05. Last updated: 2026-11-05.
-Status: **SE01 Accepted; SE02–SE04 Planned.**
+Status: **SE01 Accepted; SE02 Ready for review; SE03–SE04 Planned.**
 
 Give spells distinct animated silhouettes, restrained glow, moving local light,
 and readable elemental impacts while preserving the game's textured pixel art.
@@ -17,10 +17,10 @@ asset foundation. This is a roadmap, not approval to implement all four slices.
 | --- | --- |
 | Agreed direction | Authored spell animation, procedural motion, selective additive glow, local illumination, and target aftermath within the existing aesthetic |
 | Proposed sequence | Four slices, SE01–SE04 |
-| Active slice | None — SE01 Accepted |
-| Awaiting review | None — user accepted SE01 and its local-light treatment |
-| Next eligible slice | SE02 — remaining offensive spells; prerequisite met |
-| Next action | Plan SE02 for review when requested; implementation is not yet approved |
+| Active slice | SE02 — Ready for review |
+| Awaiting review | SE02 — offensive identities and portrait feedback |
+| Next eligible slice | SE03 after explicit SE02 acceptance; remains Planned |
+| Next action | User review of [SE02 implementation](se02_design.md) and [motion/stills](screenshots/spell-effects/se02/README.md) |
 | Gameplay policy | Preserve damage, saves, targeting, costs, authoritative timing and existing conditions |
 | Rendering policy | Keep prepared assets, fixed 1920×1080 presentation, the current world renderer and discrete movement |
 | Blockers | None |
@@ -104,7 +104,10 @@ These are roadmap-level directions, not implemented interfaces. Read current cod
 again before each detailed design; historical design documents describe earlier
 renderers as well as the current system.
 
-### Existing behavior
+### Historical baseline before SE01
+
+This paragraph records the original starting point. The implemented SE01 and SE02
+interfaces and checks are described in their linked slice designs.
 
 `tools/bake_world_assets.cpp` generates a 64×64 cross/glint source texture.
 `src/render/world_effects.cpp` uses that glyph, tinted by spell, for travelling
@@ -190,7 +193,7 @@ static preparation or picking merely because a flame frame changed.
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | SE01 | Fire Bolt, Ray of Frost and Burning Hands with animation, glow, local light and target aftermath | Approved detailed plan | Accepted |
-| SE02 | Remaining offensive spells with distinct trajectories, contact and area impacts | SE01 Accepted | Planned |
+| SE02 | Remaining offensive spells and healing/buff/damage portrait animation | SE01 Accepted | Ready for review |
 | SE03 | Support, conditions and persistent ground/summoned effects | SE02 Accepted | Planned |
 | SE04 | Complete catalogue integration, visual consistency and delivery polish | SE03 Accepted | Planned |
 
@@ -391,20 +394,31 @@ evidence, deviations, limitations, acceptance state and the next eligible action
 | 2026-11-05 | User approved the SE01 detailed plan and requested implementation; death-pose remnants and animated-door light occlusion selected. |
 | 2026-11-05 | SE01 implemented and mechanically verified; delivered motion/stills Ready for review. User acceptance remains pending; SE02 remains Planned. |
 | 2026-11-05 | User explicitly accepted SE01: “those are some nice spell effects, the local lighting especially sells it :) slice accepted”. E-A is Accepted; SE02 is next eligible and remains Planned. |
+| 2026-11-05 | User approved the SE02 detailed plan and requested implementation, including green healing, blue buffs and elemental party-damage portrait animation with small readouts instead of named badges. |
+| 2026-11-05 | SE02 implemented; focused CPU and hidden GPU checks passed, production motion/stills delivered. Ready for review; acceptance pending. SE03 remains Planned. |
+| 2026-11-05 | User requested denser, greener Poison Spray and a more distinct green healing shimmer; both presentation adjustments implemented and recaptured. Other feedback was positive; SE02 remains Ready for review. |
 
 ## Current next-agent handoff
 
-SE01 is **Accepted** by the user (2026-11-05), with particular praise for the local
-lighting. Fire Bolt, Ray of Frost and Burning Hands use the
-new bounded presentation path through ordinary spell commands. See the
-[implemented design and verification](se01_design.md) and
-[selected motion/stills](screenshots/spell-effects/README.md). Death-pose remnants
-and animated-door occlusion follow the approved choices. Existing gameplay rejects
-an entirely empty Burning Hands cast; accepted cones fill all eligible cells,
-including empty ones. That gameplay rule was preserved.
+SE01 remains **Accepted** (2026-11-05), including its local-light treatment and
+[accepted reference gallery](screenshots/spell-effects/README.md).
 
-Delivered-slice acceptance is recorded; it does not add unexecuted verification.
-SE02 is next eligible. SE02–SE04 remain Planned; plan SE02 for review only when
-requested, and obtain detailed-plan approval before implementation. Verification,
-measured memory and limitations are recorded in the detailed design. Source artwork
-and preparation prompts remain under `assets/effects/se01/`.
+SE02 is **Ready for review**. The ten remaining offensive spells use prepared
+animation with independent multi-target deliveries, actual area footprints and
+quiet authoritative guiding marks. Party spell damage, healing and positive buffs
+use portrait pulses/shimmers and small numbers/outcome text; ordinary weapon and
+world-enemy badges are preserved. Names remain in logs/tooltips. See the
+[implemented design, exact checks and memory totals](se02_design.md),
+[selected motion/stills](screenshots/spell-effects/se02/README.md), and
+[source artwork/prompts](../assets/effects/se02/README.md).
+
+All 13 selected CPU suites and hidden GPU checks at both quality settings passed.
+Further focused tests covered the final playback and restore regressions. Six
+SE02 evidence files are retained; disposable run artifacts were cleaned. Interactive
+feel, cross-device appearance and production-scale performance remain unverified.
+No change to combat rules, save schemas or configured capacity ceilings.
+
+Await user review; corrections remain SE02. Only explicit acceptance enables SE03
+planning when requested. SE03–SE04 remain Planned; no implementation of them is
+implied. General support application feedback is already in SE02; spell-specific
+support and sustained-condition presentation remains SE03.

@@ -102,6 +102,12 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     creator_ = loadPreparedAtlas("creator.qoi", creatorAtlasSize);
     portraitSmall_ = loadPreparedAtlas("portraits-small.qoi", smallPortraitHeight);
     portraitLarge_ = loadPreparedAtlas("portraits-large.qoi", largePortraitHeight);
+    OwnedImage portraitEffects(preparedImage(directory.parent_path() / "effects/se02/portraits.png"));
+    if (!portraitEffects.value.data || portraitEffects.value.width != 1024 ||
+        portraitEffects.value.height != 512)
+        throw std::runtime_error("Missing or invalid portrait effects atlas");
+    portraitEffects_ = resources_.createTexture(portraitEffects.value);
+    SetTextureFilter(resources_.texture(portraitEffects_), TEXTURE_FILTER_BILINEAR);
     OwnedImage campImage(preparedImage(directory / "camp/bonfire-sheet.png"));
     OwnedImage lootImage(preparedImage(directory / "items/loot-sheet.png"));
     if (!campImage.value.data || !lootImage.value.data)
@@ -313,5 +319,13 @@ void UiArt::camp(unsigned frame, UiRect r, Color tint) const {
                         width * destination.width, height * destination.height},
                        {0, 0}, 0, tint);
     }
+}
+void UiArt::portraitEffect(unsigned row, unsigned frame, UiRect r, Color tint) const {
+    if (row >= 4 || frame >= 8)
+        return;
+    constexpr float scale = float(gameWidth) / artWidth;
+    DrawTexturePro(resources_.texture(portraitEffects_),
+                   {float(frame * 128 + 8), float(row * 128 + 8), 112, 112},
+                   {r.x * scale, r.y * scale, r.width * scale, r.height * scale}, {0, 0}, 0, tint);
 }
 } // namespace blobber

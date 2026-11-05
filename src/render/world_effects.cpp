@@ -87,6 +87,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     frame_.count = 0;
     frame_.lightCount = 0;
     frame_.frost.fill(0);
+    frame_.guiding.fill(0);
     frame_.swipes = swipes_.frame();
     ++frame_.revision;
     auto add = [&](EffectPacket p) {

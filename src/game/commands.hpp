@@ -1,5 +1,4 @@
 #pragma once
-#include "ui/screen_shake.hpp"
 #include "game/advancement_ui.hpp"
 #include "game/inventory_ui.hpp"
 #include "game/loot_ui.hpp"
@@ -8,6 +7,7 @@
 #include "game/save_ui.hpp"
 #include "game/session.hpp"
 #include "game/travel.hpp"
+#include "ui/screen_shake.hpp"
 #include <optional>
 
 namespace blobber {
@@ -57,12 +57,21 @@ struct HudHover {
     CommandReason reason = CommandReason::Unavailable;
     std::array<std::array<char, 96>, StatusSummary::capacity * 2 + 1> lines{};
 };
+enum class PortraitFeedbackKind : std::uint8_t { None, Healing, Protection, Damage, Harmful, Negated };
+struct PortraitFeedback {
+    PortraitFeedbackKind kind = PortraitFeedbackKind::None;
+    rules::DamageType element = rules::DamageType::Bludgeoning;
+    std::uint64_t startedMs = 0;
+    unsigned durationMs = 0;
+};
 struct CombatFeedback {
     static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
     bool active = false, party = false, hit = false, healing = false, immune = false;
     rules::CharacterId character;
     ActorId enemy;
     const char* text = nullptr;
+    PortraitFeedbackKind portrait = PortraitFeedbackKind::None;
+    rules::DamageType element = rules::DamageType::Bludgeoning;
     TargetAnchor anchor;
     std::int64_t damage = 0;
     std::uint64_t startedMs = 0;
@@ -160,6 +169,8 @@ struct HudSnapshot {
     std::array<rules::CharacterId, rules::partySize> allies{};
     std::size_t allyCount = 0;
     std::array<CombatFeedback, 16> feedback{};
+    std::array<std::array<PortraitFeedback, 2>, rules::partySize> portraitFeedback{};
+    std::uint64_t presentationMs = 0;
     MagicHud magic;
     InventoryHud inventory;
     CampHud camp;
@@ -372,6 +383,7 @@ class CommandController {
     GameSession& session_;
     std::optional<LootId> hoveredLoot_;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
+    std::uint64_t feedbackEpoch_ = 0;
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;

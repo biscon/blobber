@@ -22,7 +22,7 @@ class SpellEffectsPlayer {
   private:
     struct Cast {
         SpellCastVisual cue{};
-        bool resolved = false;
+        std::uint64_t resolved = 0;
     };
     struct Remnant {
         SpellCastVisualId id{};
@@ -30,10 +30,12 @@ class SpellEffectsPlayer {
         rules::SpellKind spell = rules::SpellKind::Count;
         std::uint64_t impactMs = 0;
     };
+    void appendOffensive(const FrameInput&, const WorldFrame&, EffectFrame&, unsigned pass,
+                         unsigned& particles) noexcept;
     world_assets::EffectClips clips_;
     std::array<Cast, SpellVisualSnapshot::capacity> casts_{};
     std::array<Remnant, spellAftermathCapacity> remnants_{};
-    std::bitset<NpcWorld::maxInstances> slow_;
+    std::bitset<NpcWorld::maxInstances> slow_, guiding_;
     std::uint64_t world_ = 0, epoch_ = 0, seen_ = 0, revision_ = UINT64_MAX, now_ = 0;
     bool active_ = false;
     SpellEffectDiagnostics diagnostics_{};

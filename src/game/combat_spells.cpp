@@ -539,15 +539,15 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                           [](ActorId a, ActorId b) { return a.slot < b.slot; });
             }
             SpellCastVisual* castVisual = nullptr;
-            if (kind == SpellKind::BurningHands) {
+            if (!delayed(kind) && elementalSpell(kind)) {
                 castVisual = spellVisuals_.begin(kind, c.character, pose, now);
                 const auto footprint = spellArea(actors_, pose);
-                if (castVisual) {
+                if (castVisual && r.area) {
                     std::copy_n(footprint.cells.begin(), 3, castVisual->cells.begin());
                     std::copy_n(footprint.eligible.begin(), 3, castVisual->eligible.begin());
                 }
                 for (unsigned i = 0; i < footprint.cells.size(); ++i)
-                    if (footprint.eligible[i])
+                    if (kind == SpellKind::BurningHands && footprint.eligible[i])
                         effects_.ignite(footprint.cells[i]);
             }
             const auto sharedDamage = r.attack ? 0 : rng_.roll(r.dice).value.total;
@@ -675,6 +675,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     v.endMs = v.impactMs + combatFeedbackDurationMs;
                     setAttackHold(NpcWorld::maxInstances + c.character.index, v.endMs);
                     payload.outcomes[i].attackId = v.id;
+                    spellVisuals_.attack(v, spellTarget(payload.outcomes[i], now), main.id);
                     auto released = payload.outcomes[i];
                     released.event = CombatEvent::ProjectileReleased;
                     released.damage = 0;

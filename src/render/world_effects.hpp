@@ -12,9 +12,9 @@ struct EffectPacket {
     bool ground = false;
     bool additive = false;
     std::array<float, 4> uv{0, 0, 1, 1};
-    std::array<Cell, 3> cells{};
+    std::array<Cell, 9> cells{};
     Cell origin{};
-    unsigned footprint = 0; // bit 3 enables cone clipping, low bits select eligible cells
+    unsigned footprint = 0; // bit 9 enables clipping, bit 10 includes origin; low nine bits select cells
 };
 // NPC attacks/pulses own one glyph; four party casters can each contribute two
 // additional Magic Missile glyphs beyond the retained record count.
@@ -26,6 +26,9 @@ struct EffectFrame {
     std::array<float, NpcWorld::maxInstances> frost{};
     std::uint16_t frostTexture = UINT16_MAX;
     std::array<float, 4> frostUv{};
+    std::array<float, NpcWorld::maxInstances> guiding{};
+    std::uint16_t guidingTexture = UINT16_MAX;
+    std::array<float, 4> guidingUv{};
 
     std::array<EffectPacket, effectCapacity> packets{};
     unsigned count = 0;

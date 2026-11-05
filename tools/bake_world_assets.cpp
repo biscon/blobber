@@ -382,7 +382,22 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         throw std::runtime_error("Invalid SE01 emission atlas");
     const auto emission =
         writer.add("effect/se01/emission", effectWidth, effectHeight, true, emissionPixels, 0, {}, false);
-    writer.effects(world_assets::atlasEffectClips(body, emission));
+    auto clips = world_assets::atlasEffectClips(body, emission);
+    unsigned first = 8;
+    for (const auto* sheet : {"arcane", "contact"}) {
+        const auto loadEffect = [&](const char* layer) {
+            const auto path = std::string("effects/se02/") + sheet + "-" + layer + ".png";
+            const auto data = pixels(source / path, effectWidth, effectHeight);
+            if (effectWidth != 1024 || effectHeight != 1024)
+                throw std::runtime_error("Invalid SE02 effect atlas");
+            return writer.add(std::string("effect/se02/") + sheet + "-" + layer, effectWidth, effectHeight,
+                              true, data, 0, {}, false);
+        };
+        const auto color = loadEffect("body"), glow = loadEffect("emission");
+        world_assets::mapEffectSheet(clips, first, color, glow);
+        first += 8;
+    }
+    writer.effects(clips);
     writer.finish(appearances, parsed.definitionFingerprint, packs, meshes);
     {
         std::ofstream provenance(output / "sources.json");

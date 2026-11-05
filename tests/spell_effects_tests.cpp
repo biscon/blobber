@@ -2,6 +2,7 @@
 #include "render/spell_lights.hpp"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
+#include "support/se02_checks.hpp"
 #include "support/spell_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <fstream>
@@ -128,7 +129,8 @@ void playback() {
           "Zero-recipient cue still draws eligible cone cells");
     for (unsigned i = 0; i < pipeline.frame().count; ++i)
         if (pipeline.frame().packets[i].footprint)
-            check(pipeline.frame().packets[i].footprint == 11, "Cone retains exact eligible mask");
+            check(pipeline.frame().packets[i].footprint == (512 | 1024 | 3),
+                  "Cone retains exact eligible mask");
     const auto revision = pipeline.frame().revision;
     check(!pipeline.update(in, world) && pipeline.frame().revision == revision,
           "Pause/repeated snapshot reuses colour");
@@ -243,6 +245,62 @@ void playback() {
     pipeline.update(in, world);
     check(!pipeline.frame().count && !pipeline.frame().lightCount,
           "Zero damage cannot leave damaging-looking flames after contact");
+
+    journal.clear(actors.snapshot().world);
+    pending.spell = rules::SpellKind::MagicMissile;
+    pending.id.serial = 2;
+    pending.releaseMs = 10000;
+    pending.impactMs = 10300;
+    pending.darts = 3;
+    target.hit = true;
+    target.damage = 4;
+    journal.attack(pending, target);
+    in.now = 10120;
+    pipeline.update(in, world);
+    const auto& force = assets.publication.effects[unsigned(world_assets::EffectClipKind::ForceFlight)];
+    unsigned darts = 0;
+    for (unsigned i = 0; i < pipeline.frame().count; ++i) {
+        const auto& p = pipeline.frame().packets[i];
+        darts += !p.additive && p.texture == force.body && p.uv[1] == force.frames[1][1];
+    }
+    check(darts == 3, "One target renders all three assigned force darts");
+
+    journal.clear(actors.snapshot().world);
+    pending.spell = rules::SpellKind::ScorchingRay;
+    pending.id.serial = 3;
+    pending.darts = 1;
+    journal.attack(pending, target);
+    auto extra = pending;
+    extra.id.serial = 4;
+    extra.impactMs = 10450;
+    auto miss = target;
+    miss.hit = false;
+    miss.damage = 0;
+    journal.attack(extra, miss, pending.id);
+    allocations = 0;
+    watching = true;
+    for (unsigned now = 10120; now <= 10900; now += 30) {
+        if (now == 10300)
+            journal.resolve(pending.id, target, now);
+        if (now == 10450)
+            journal.resolve(extra.id, miss, now);
+        in.now = now;
+        pipeline.update(in, world);
+    }
+    watching = false;
+    check(!allocations, "Independent ray flight, mixed contacts and trails allocate nothing on CPU");
+    in.now = 11200;
+    pipeline.update(in, world);
+    check(!pipeline.frame().count && !pipeline.frame().lightCount,
+          "Mixed same-target rays expire without replaying either outcome");
+    conditions.guiding[0] = true;
+    pipeline.update(in, world);
+    check(pipeline.frame().guiding[0] > 0, "Guiding snapshot restores quiet coating without a cast");
+    in.now = 11300;
+    check(!pipeline.update(in, world), "Guiding alone permits idle colour caching");
+    conditions.guiding.reset();
+    pipeline.update(in, world);
+    check(pipeline.frame().guiding[0] == 0, "Authoritative guiding removal clears coating");
 }
 void lightBlockers() {
     const Map map({"#######", "#.....#", "#.....#", "#..#..#", "#.....#", "#.....#", "#######"});
@@ -316,6 +374,22 @@ void publication() {
     }
     rejects([&] { world_assets::load(fixture.location.directory); },
             "Material texture cannot be an effect atlas");
+    invalid = json;
+    invalid["effects"].erase(invalid["effects"].end() - 1);
+    {
+        std::ofstream f(path);
+        f << invalid;
+    }
+    rejects([&] { world_assets::load(fixture.location.directory); },
+            "Incomplete offensive clip catalogue rejects publication");
+    invalid = json;
+    invalid["effects"][unsigned(world_assets::EffectClipKind::Electricity)]["frameMs"] = 0;
+    {
+        std::ofstream f(path);
+        f << invalid;
+    }
+    rejects([&] { world_assets::load(fixture.location.directory); },
+            "Invalid offensive clip timing rejects before playback");
     {
         std::ofstream f(path);
         f << json;
@@ -324,11 +398,14 @@ void publication() {
 } // namespace
 int main() {
     try {
+        test::se02Commands();
+        test::se02Journal();
+        test::se02Portraits();
         commands();
         playback();
         lightBlockers();
         publication();
-        std::cout << "SE01 CPU checks passed; effect_pipeline_bytes=" << sizeof(EffectsPipeline)
+        std::cout << "SE01/SE02 CPU checks passed; effect_pipeline_bytes=" << sizeof(EffectsPipeline)
                   << " light_scratch_bytes=" << sizeof(SpellLightData)
                   << " journal_bytes=" << sizeof(SpellVisualJournal) << '\n';
     } catch (const std::exception& e) {

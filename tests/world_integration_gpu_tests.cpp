@@ -74,11 +74,16 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se02-review") {
+            test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr, true);
+            return 0;
+        }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se01-review") {
             test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr);
             return 0;
         }
-        if (argc == 2 && std::string_view(argv[1]) == "--se01-check") {
+        if (argc == 2 &&
+            (std::string_view(argv[1]) == "--se01-check" || std::string_view(argv[1]) == "--se02-check")) {
             test::spellEffectsGpuChecks();
             return 0;
         }
