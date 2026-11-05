@@ -124,7 +124,7 @@ CampaignStatus CampaignRun::status() const noexcept {
     return CampaignStatus::Active;
 }
 const char* CampaignRun::name() const noexcept {
-    constexpr const char* names[]{"Sanctuary hub", "Dungeon floor 1", "Dungeon floor 2", "Dungeon floor 3",
+    constexpr const char* names[]{"Sanctuary", "Dungeon floor 1", "Dungeon floor 2", "Dungeon floor 3",
                                   "Sanctuary inn"};
     return names[location_];
 }
@@ -152,12 +152,12 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
     if (status() != CampaignStatus::Active || !game().runActive())
         return {false, false, "Campaign has ended."};
     if (r.revision != revision_ || revision_ == UINT64_MAX || r.world != game().actors().snapshot().world)
-        return {false, false, "Stale campaign travel request."};
+        return {false, false, "Travel changed. Choose your destination again."};
     const auto& g = game();
     if (r.kind == TravelKind::Doorway) {
         const auto& link = locations_[location_].doorway;
         if (!link || r.doorway.world != r.world || r.doorway.slot != 0)
-            return {false, false, "Stale or unavailable doorway."};
+            return {false, false, "That doorway is no longer available."};
         if (!(g.movement().player == link->approach))
             return {false, false, "Stand before the door and face it."};
         if (const auto* reason = g.travelSafety())
@@ -168,7 +168,7 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
         if (activeLocationId() == CampaignLocationId::Inn)
             return {false, false, "Leave the inn through its door."};
         if (!location_)
-            return {false, false, "Already in the sanctuary hub."};
+            return {false, false, "You are already in Sanctuary."};
         if (const auto* reason = g.travelSafety())
             return {false, false, reason};
         if (r.inventoryRevision != party_.inventory().revision())
@@ -178,19 +178,19 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
             party_.catalog().item(stack->item)->kind != rules::ItemKind::Supply ||
             party_.inventory().revision() == UINT64_MAX)
             return {false, false, "Recall requires one camp kit."};
-        return {true, false, "Recall to the sanctuary hub: one camp kit."};
+        return {true, false, "Return to Sanctuary: one camp kit."};
     }
     if (r.kind != TravelKind::Stairs && r.kind != TravelKind::Waypoint)
-        return {false, false, "Invalid travel kind."};
+        return {false, false, "Choose a destination first."};
     if (r.kind == TravelKind::Waypoint &&
         (location_ != 0 || r.depth < 1 || r.depth > 3 || !locations_[r.depth].visited))
-        return {false, false, "Return requires the hub entrance and an unlocked entry."};
+        return {false, false, "Use the dungeon entrance to return to a floor you have visited."};
     if (activeLocationId() == CampaignLocationId::Inn)
         return {false, false, "Leave the inn through its door."};
     const auto* f = g.fixtures().find(r.fixture.id);
     if (!f || !stairs(f->kind) || r.fixture.revision != g.fixtures().revision() ||
         (g.fixtures().definition().discovery && !g.fixtures().known(r.fixture.id.slot)))
-        return {false, false, "Stale or unknown stairs."};
+        return {false, false, "Those stairs are no longer available."};
     if (!fixtureReachable(*f, g.movement().player.cell, g.movement().player.heading) ||
         !g.geometry().reach(g.movement().player.cell, f->cell))
         return {false, false, "Move closer and face the stairs."};
@@ -202,7 +202,7 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
         if (location_ == 3)
             return {false, false, "No deeper floor."};
         if (location_ && !g.objective().completed)
-            return {false, false, "Defeat the designated guardians before descending."};
+            return {false, false, "Defeat the guardians before descending."};
         return {true, false,
                 location_ == 0   ? "Enter floor 1."
                 : location_ == 1 ? "Descend to floor 2."
@@ -211,7 +211,7 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
     if (!location_)
         return {false, false, "No upstairs here."};
     return {true, false,
-            location_ == 1   ? "Return to the sanctuary hub."
+            location_ == 1   ? "Return to Sanctuary."
             : location_ == 2 ? "Ascend to floor 1."
                              : "Ascend to floor 2."};
 }

@@ -12,7 +12,7 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
     case C::Cleric:
         return level == 2 ? "Life Domain / Preserve Life: distribute a pool of 10 healing among allies below "
                             "half maximum HP. Lowest HP percentage first. Uses your action; one charge per "
-                            "Short or Long Rest. Turn Undead is deferred."
+                            "Short or Long Rest."
                           : "Preserve Life pool increases to 15. Second-level spells unlock. Lesser "
                             "Restoration and Spiritual Weapon are always prepared by your Life Domain.";
     case C::Rogue:
@@ -20,16 +20,14 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
                    ? "Cunning Action: Defend automatically after your last normal action and advance "
                      "initiative. You may activate it earlier."
                    : "Thief / Fast Hands: use your Cunning Action allowance for a potion instead of Defend. "
-                     "Use a quick potion before your last normal action. Sneak Attack increases to 2d6. "
-                     "Expertise, locks, traps and climbing remain deferred.";
+                     "Use a quick potion before your last normal action. Sneak Attack increases to 2d6.";
     case C::Wizard:
         return level == 2 ? "Evocation / Sculpt Spells: Shatter protects your other three companions. You "
-                            "remain vulnerable to your own blast. Learn two spells. Spell copying and "
-                            "Evocation Savant remain deferred."
+                            "remain vulnerable to your own blast. Learn two spells."
                           : "Second-level spells unlock. Learn two spells. Arcane Recovery restores up to "
                             "four mana once per Long Rest.";
     default:
-        return "No supported progression.";
+        return "This class cannot level up.";
     }
 }
 bool AdvancementHud::applicable(AdvancementStep s) const noexcept {

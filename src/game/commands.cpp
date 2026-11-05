@@ -4,18 +4,13 @@
 #include "game/perception.hpp"
 #include "game/target_visibility.hpp"
 #include "ui/layout.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
 
 namespace blobber {
-void CommandController::reportCampaignSeed(std::uint32_t seed) noexcept {
-    char line[64];
-    std::snprintf(line, sizeof(line), "Campaign seed: %u.", seed);
-    appendLog(line);
-}
-
 const char* actionName(PartyAction action) noexcept {
     constexpr const char* names[]{"Melee", "Back-row melee", "Defend", "Ranged",
                                   "Spell", "Item",           "Aid",    "Ability"};
@@ -51,9 +46,9 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::FullMana:
         return "Mana is already full.";
     case CommandReason::Unsafe:
-        return "Recovery requires exploration without active threats.";
+        return "Wait until it is safe to recover.";
     case CommandReason::EffectCapacity:
-        return "No effect capacity available.";
+        return "Too many spells are active. Wait for one to end.";
     case CommandReason::AttackPending:
         return "This attack is still playing.";
     case CommandReason::Cooldown:
@@ -73,9 +68,9 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::StaleTurn:
         return "That turn has already ended.";
     case CommandReason::FrontProtected:
-        return "Front slot protects target.";
+        return "An enemy in front protects this target.";
     case CommandReason::RearBlocked:
-        return "Your front slot blocks melee.";
+        return "A companion in front blocks this melee attack.";
     case CommandReason::NoWeapon:
         return "No ready weapon for this action.";
     case CommandReason::InvalidAlly:
@@ -149,9 +144,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     const char* target = recipient ? recipient->build.name.c_str() : "?";
     char species[rules::Catalog::maxIdBytes + 1] = "Monster";
     if (const auto* enemy = actors_.actor(out.enemy)) {
-        std::snprintf(species, sizeof(species), "%s", actors_.catalog().monster(enemy->monster)->id.c_str());
-        if (species[0] >= 'a' && species[0] <= 'z')
-            species[0] = char(species[0] - 'a' + 'A');
+        std::snprintf(species, sizeof(species), "%s",
+                      monsterName(actors_.catalog().monster(enemy->monster)->id));
     }
     const char* pack = !out.enemyAttack || !out.packTactics ? ""
                        : out.attackRollMode == rules::RollMode::Advantage
@@ -444,7 +438,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             objectiveReported_ = true;
         }
         if (session_.objective().capacityFailure && !objectiveFailureReported_) {
-            state_.log.append("Objective could not commit: floor revision capacity exhausted.");
+            state_.log.append("The gate could not open. Save your progress and restart the game.");
             objectiveFailureReported_ = true;
         }
     }
@@ -457,37 +451,56 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";
     state_.fixturePrompt[0] = 0;
-    if (state_.campaignTerminal)
-        std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
-                      "This expedition has ended. Return to Main Menu.");
+    state_.lootHover[0] = 0;
     state_.floor = &session_.fixtures();
     state_.questKeys = session_.party().questKeys();
-    if (!state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
-        !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
+    if (!moving && !mapOpen && focused && interactionPromptsAvailable()) {
         const auto door = state_.campaign ? session_.campaign()->doorwayRequest() : TravelRequest{};
         const bool doorway =
             state_.campaign && door.kind == TravelKind::Doorway && door.doorway.slot != UINT16_MAX;
         if (doorway) {
             const auto check = session_.campaign()->previewTravel(door);
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F: %s", check.reason);
+            if (check)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s",
+                              session_.campaign()->activeLocationId() == CampaignLocationId::Inn
+                                  ? "Leave inn"
+                                  : "Enter inn");
         }
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
         if (!doorway && f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
-            std::snprintf(
-                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / %s - %s", fixtureName(*f),
-                state_.campaign && session_.campaign()->activeLocation() == 0 && result
-                    ? (session_.campaign()->location(2).visited || session_.campaign()->location(3).visited
-                           ? "Choose a floor entry."
-                           : "Enter dungeon floor 1.")
-                    : result.reason);
+            const char* action = nullptr;
+            if (result) {
+                switch (f->kind) {
+                case FixtureKind::Door:
+                    action = session_.fixtures().open(request.id.slot) ? "Close" : "Open";
+                    break;
+                case FixtureKind::Key:
+                    if (!session_.fixtures().completed(request.id.slot))
+                        action = "Take";
+                    break;
+                case FixtureKind::Upstairs:
+                    action = "Ascend";
+                    break;
+                case FixtureKind::Downstairs:
+                    action = state_.campaign && session_.campaign()->activeLocation() == 0 ? "Enter dungeon"
+                                                                                           : "Descend";
+                    break;
+                case FixtureKind::Endpoint:
+                case FixtureKind::GuardianGate:
+                    break; // No player action; an open gate is only passable scenery.
+                }
+            }
+            if (action)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s", action);
         } else if (const auto chest = doorway ? ContainerId{} : session_.nearbyContainer()) {
             const auto access = session_.containerAccess(chest);
             const auto* container = session_.loot().findContainer(chest);
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / Treasure chest - %s",
-                          access ? (container->opened ? "Inspect contents." : "Open chest.") : access.reason);
+            if (access && container)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s",
+                              container->opened ? "Inspect" : "Open");
         }
     }
     state_.development = session_.development();
@@ -541,6 +554,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                   : mapOpen ? CommandReason::MapOpen
                             : CommandReason::Ready;
     state_.suspended = suspension_ != CommandReason::Ready;
+    floorHover(state_.suspended ? std::nullopt : hoveredLoot_);
     TargetSnapshot normalized;
     if (targets.count <= targets.ids.size() && targets.candidateCount <= targets.candidates.size() &&
         targets.world == actors_.snapshot().world && targets.revision == actors_.snapshot().revision) {

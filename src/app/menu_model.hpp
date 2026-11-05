@@ -4,6 +4,8 @@
 #include "persistence/character_library.hpp"
 #include <optional>
 namespace blobber {
+// Display-safe library feedback; detailed storage errors go to diagnostics.
+const char* libraryFeedback(const LibraryResult&) noexcept;
 enum class MenuScreen { Main, Library, Detail, Picker, Loading, Arena, Scenarios };
 struct PartyChoice {
     SavedCharacterId saved{};

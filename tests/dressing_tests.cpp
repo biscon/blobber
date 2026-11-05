@@ -7,6 +7,7 @@
 #include "support/recovery_fixtures.hpp"
 #include <iostream>
 #include <memory>
+#include <string_view>
 using namespace blobber;
 namespace {
 void generated() {
@@ -86,6 +87,9 @@ void containers() {
     const auto world = game.loot().snapshot().world;
     const ContainerId chest{world, 0};
     const LootId first{world, std::uint16_t(NpcWorld::maxInstances * lootPerActor), 1};
+    CommandController promptUi(game);
+    check(std::string_view(promptUi.snapshot().fixturePrompt.data()) == "[F] Open",
+          "Closed accessible chest offers Open");
     check(map.canStep(pose.cell, {3, 4}) && map.canStep(pose.cell, {4, 5}) &&
               !game.geometry().npcAllowed({3, 4}),
           "Player can enter chest cell while NPCs cannot overlap it");
@@ -115,6 +119,9 @@ void containers() {
     check(bool(game.openContainer(chest)) && game.loot().snapshot().revision == revision,
           "Repeated open is idempotent");
     check(game.loot().findContainer(chest)->opened, "Open state retained");
+    promptUi.refresh({}, false, false, true);
+    check(std::string_view(promptUi.snapshot().fixturePrompt.data()) == "[F] Inspect",
+          "Opened chest offers Inspect");
     while (game.party().acquire({{3}, {4}, 1, game.party().inventory().revision()})) {
     }
     while (game.party().acquire({{3}, {10}, 1, game.party().inventory().revision()})) {
@@ -140,6 +147,8 @@ void containers() {
     check(game.loot().snapshot().stacks[NpcWorld::maxInstances * lootPerActor + 2].active,
           "Chest collection leaves loose loot intact");
     game.restorePose({{5, 5}, Heading::North}, false);
+    promptUi.refresh({}, false, false, true);
+    check(!promptUi.snapshot().interactionPrompt(), "Sealed chest offers no unavailable action");
     check(!game.openContainer({world, 1}) && !game.loot().findContainer({world, 1})->opened,
           "Sealed chest cannot open");
     auto saved = std::make_unique<FloorState>();

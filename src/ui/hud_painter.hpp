@@ -118,6 +118,15 @@ class HudPainter {
         border(r, hudInk::edge);
     }
     void card(const HudCard& c, int i, bool aidTarget, bool inspected) const;
+    void viewportPrompt(const char* value) const {
+        if (!fonts)
+            return;
+        constexpr auto style = UiTextStyle::Display;
+        const float x = viewX + (viewWidth - fonts->width(value, style)) * .5f;
+        const float y = fonts->bottomAlignedY(value, viewY + viewHeight - 24 / scale, style);
+        text(value, x + 2 / scale, y + 2 / scale, {8, 8, 8, 255}, style);
+        text(value, x, y, WHITE, style);
+    }
     void log(const HudSnapshot& h, bool expanded) const;
     void tooltip(const HudSnapshot& h) const;
     void characterSheet(const HudSnapshot& h) const;

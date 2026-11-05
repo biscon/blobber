@@ -182,6 +182,12 @@ struct HudSnapshot {
         return travel.open || advancement.open || loot.open || camp.open || inventory.open || logExpanded ||
                menuOpen || magic.open;
     }
+    const char* interactionPrompt() const noexcept {
+        if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
+            magic.casting() || magic.armed || inventory.itemTargeting)
+            return nullptr;
+        return lootHover[0] ? lootHover.data() : fixturePrompt[0] ? fixturePrompt.data() : nullptr;
+    }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
                                                          PartyAction::Ranged, PartyAction::Spell,
@@ -325,10 +331,10 @@ class CommandController {
         state_.camp.controls.buttons.cancel();
         state_.advancement.controls.buttons.cancel();
     }
-    void reportCampaignSeed(std::uint32_t) noexcept;
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    bool interactionPromptsAvailable() const noexcept;
     void refreshTargetPicker() noexcept;
     bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;
     PartyCommand targetContext_;
@@ -358,6 +364,7 @@ class CommandController {
     bool pointerKnown_ = false;
     float pointerX_ = 0, pointerY_ = 0;
     GameSession& session_;
+    std::optional<LootId> hoveredLoot_;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
     const Party& party_;
     const ActorWorld& actors_;

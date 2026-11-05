@@ -108,7 +108,7 @@ void campaign() {
     check(!hubUi.snapshot().fixturePrompt[0], "Idle campaign has no permanent location strip");
     entrance(run);
     hubUi.refresh({}, false, false, true);
-    check(std::string_view(hubUi.snapshot().fixturePrompt.data()).find("F /") != std::string_view::npos,
+    check(std::string_view(hubUi.snapshot().fixturePrompt.data()) == "[F] Enter dungeon",
           "Entrance exposes contextual stair prompt");
     auto* party = &run.party();
     const auto inventory = party->inventory().identity();
@@ -752,19 +752,19 @@ void recallSafetyAndRollback() {
     wind.turn = game.combat().snapshot().turn;
     check(game.submit(wind).reason == CommandReason::Resolved, "owned feature starts presentation");
     game.update(.7, false);
-    denied("settled safe exploration");
+    denied("Wait until it is safe to travel");
     game.update(.4, false);
     auto& phase = const_cast<CombatSnapshot&>(game.combat().snapshot()).phase;
     for (const auto state : {CombatPhase::Contact, CombatPhase::Turns, CombatPhase::Approach,
                              CombatPhase::Facing, CombatPhase::RoundEnd, CombatPhase::Victory}) {
         phase = state;
-        denied("settled safe exploration");
+        denied("Wait until it is safe to travel");
     }
     phase = CombatPhase::Exploration;
     CombatEvents events;
     auto& effects = const_cast<EffectController&>(game.effects());
     effects.createArea(game.movement().player.cell, {0}, 10, game.timeMs(), events);
-    denied("settled safe exploration");
+    denied("Wait until it is safe to travel");
     const_cast<GroundSnapshot&>(effects.ground()).areas[0].active = false;
     for (std::uint16_t i = 0; i < 4; ++i)
         effects.condition(rules::CharacterId{i}, EffectKind::Sleep, {0}, game.timeMs(), events);
@@ -781,7 +781,7 @@ void recallSafetyAndRollback() {
     local.targets[1] = game.actors().id(0);
     const auto concentration = game.applyEffect(local);
     check(bool(concentration), "mixed concentration fixture");
-    denied("concentration attached to local enemies");
+    denied("Dismiss spells affecting enemies");
     check(bool(game.removeEffect(concentration.id)), "explicit mixed concentration dismissal");
     // Seed a malformed hub record, then a real local landing hazard. Neither failure charges.
     auto& hub = *run.location(0).saved;
@@ -849,6 +849,16 @@ void travelUi() {
     check(bool(run.party().acquire({{0}, cat.findItem("camp_kit"), 1, run.party().inventory().revision()})),
           "recall UI fixture owns a kit for stale-panel consumption and another for commit");
     CommandController ui(run.game());
+    ui.refresh({}, false, false, true);
+    const auto entryPose = run.game().movement().player;
+    const auto up = stair(run.game(), FixtureKind::Upstairs);
+    const auto* upDefinition = run.game().fixtures().find(up.id);
+    run.game().restorePose({stairLanding(*upDefinition), upDefinition->facing}, false);
+    run.game().update(0, false);
+    ui.refresh({}, false, false, true);
+    check(std::string_view(ui.snapshot().fixturePrompt.data()) == "[F] Ascend",
+          "Usable dungeon exit offers short Ascend prompt");
+    run.game().restorePose(entryPose, false);
     ui.refresh({}, false, false, true);
     const auto supply = run.party().inventory().locate(run.party().campSupplies().supply);
     ui.openInventory(supply.character);

@@ -4,9 +4,19 @@
 #include "support/creation_fixtures.hpp"
 #include "ui/menu_layout.hpp"
 #include <iostream>
+#include <string_view>
 using namespace blobber;
 int main() {
     try {
+        LibraryResult failed;
+        failed.error = LibraryError::Io;
+        std::snprintf(failed.message.data(), failed.message.size(), "Internal fixture revision exhausted");
+        check(std::string_view(libraryFeedback(failed)) ==
+                  "Couldn't update your character library. Please try again.",
+              "Raw storage diagnostics never become library UI feedback");
+        failed.error = LibraryError::DurabilityUncertain;
+        check(std::string_view(libraryFeedback(failed)).find("before trying again") != std::string_view::npos,
+              "Uncertain writes retain readable retry guidance");
         const auto catalog = creationCatalog();
         LibrarySnapshot library;
         library.count = 128;

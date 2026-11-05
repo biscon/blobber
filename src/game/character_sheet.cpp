@@ -44,7 +44,7 @@ void CommandController::refreshCharacterSheet() noexcept {
         append(out.armor, "None");
     auto weapons = cls.weapons | race.weapons;
     if (weapons == rules::allWeaponTraining) {
-        append(out.weapons, "All supported weapons");
+        append(out.weapons, "All weapons");
         weapons = 0;
     } else if ((weapons & rules::simpleWeaponTraining) == rules::simpleWeaponTraining) {
         append(out.weapons, "Simple weapons");

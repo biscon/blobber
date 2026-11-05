@@ -90,4 +90,13 @@ float UiFonts::centeredY(const char* text, float top, float height, UiTextStyle 
 int UiFonts::lineHeight(UiTextStyle style) const {
     return static_cast<int>(std::ceil(font(style).baseSize / textScale)) + 2;
 }
+float UiFonts::bottomAlignedY(const char* text, float bottom, UiTextStyle style) const {
+    const auto& face = font(style);
+    float inkBottom = 0;
+    for (const auto* p = reinterpret_cast<const unsigned char*>(text); *p; ++p) {
+        const int i = GetGlyphIndex(face, *p);
+        inkBottom = std::max(inkBottom, face.glyphs[i].offsetY + face.recs[i].height);
+    }
+    return bottom - inkBottom / textScale;
+}
 } // namespace blobber

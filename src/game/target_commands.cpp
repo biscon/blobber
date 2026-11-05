@@ -1,6 +1,7 @@
 #include "game/commands.hpp"
 #include "game/perception.hpp"
 #include "ui/layout.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -50,9 +51,7 @@ void CommandController::refreshTargetPicker() noexcept {
         row.id = id;
         const auto& a = *actors_.actor(id);
         std::snprintf(row.name.data(), row.name.size(), "%s #%u",
-                      actors_.catalog().monster(a.monster)->id.c_str(), unsigned(id.slot) + 1);
-        row.name[0] = char(std::toupper(static_cast<unsigned char>(row.name[0])));
-        std::replace(row.name.begin(), row.name.end(), '.', ' ');
+                      monsterName(actors_.catalog().monster(a.monster)->id), unsigned(id.slot) + 1);
         row.reason = enemyEligibility(id);
         const auto direction = forward(session_.movement().player.heading);
         const bool rear =

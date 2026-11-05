@@ -7,11 +7,11 @@ inline Map hybridRoom() {
                 "#...........#", "#...........#", "#...........#", "#...........#", "#...........#",
                 "#...........#", "#...........#", "#############"});
 }
-inline rules::Catalog hybridCatalog(bool escape = true) {
+inline rules::Catalog hybridCatalog(bool escape = true, std::string monsterId = "goblin") {
     auto f = partyFixture();
     f.preset.characters[2].equipment.ranged = {2};
     rules::MonsterDefinition m;
-    m.id = "goblin";
+    m.id = std::move(monsterId);
     m.abilities = {8, 14, 10, 10, 8, 8};
     m.armorClass = 15;
     m.hitPoints = 1000;

@@ -9,27 +9,27 @@ const char* GameSession::saveSafety() const noexcept {
         return "Campaign has ended.";
     if (timeMs_ > maxCheckpointClock || combat_.snapshot().gameplayMs > maxCheckpointClock ||
         (campaign_ && campaign_->gameplayMs() > maxCheckpointClock))
-        return "Save clock capacity exhausted.";
+        return "This expedition can no longer be saved.";
     if (mutation_ == UINT64_MAX)
-        return "Session revision exhausted.";
+        return "Couldn't save. Restart the game to load your previous save.";
     if (movement_.pending_ || doorPending_ || actionBusy())
         return opening() ? "Wait until the door finishes moving." : "Wait until movement finishes.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
-        return "Saving requires settled safe exploration.";
+        return "Wait until it is safe to save.";
     return nullptr;
 }
 const char* GameSession::travelSafety() const noexcept {
     if (mutation_ == UINT64_MAX)
-        return "Session revision exhausted.";
+        return "Couldn't travel. Save your progress and restart the game.";
     if (movement_.pending_ || doorPending_ || actionBusy())
         return opening() ? "Wait until the door finishes moving." : "Wait until movement finishes.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
-        return "Travel requires settled safe exploration.";
+        return "Wait until it is safe to travel.";
     bool able = false;
     for (std::uint16_t i = 0; i < rules::partySize; ++i) {
         able |= effects_.canAct(rules::CharacterId{i});
         if (effects_.restrained_[i].area.serial)
-            return "Resolve the party's local restraint before travel.";
+            return "Free your companions before travelling.";
     }
     if (!able)
         return "An able conscious companion is required.";
@@ -39,14 +39,14 @@ const char* GameSession::travelSafety() const noexcept {
         if (e.kind == EffectKind::SpiritualWeapon)
             return "Dismiss Spiritual Weapon before travel.";
         if (e.kind == EffectKind::Web)
-            return "Dismiss local Web concentration before travel.";
+            return "Dismiss Web before travelling.";
         const bool concentration = e.kind == EffectKind::Bless || e.kind == EffectKind::Bane ||
                                    e.kind == EffectKind::ShieldOfFaith || e.kind == EffectKind::HoldPerson ||
                                    e.kind == EffectKind::Guidance || e.kind == EffectKind::Resistance;
         if (concentration)
             for (std::size_t i = 0; i < e.count; ++i)
                 if (e.targets[i].npc)
-                    return "Dismiss concentration attached to local enemies before travel.";
+                    return "Dismiss spells affecting enemies before travelling.";
     }
     return nullptr;
 }

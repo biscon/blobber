@@ -1,5 +1,6 @@
 #include "game/commands.hpp"
 #include "ui/layout.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -133,6 +134,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    floorHover({});
     closeTargetPicker();
     cancelPointerButtons();
     state_.advancement.open = false;
@@ -224,14 +226,12 @@ void CommandController::updateHover() noexcept {
         const auto& a = *actors_.actor(*h.enemy);
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s%s #%u",
                       session_.guardian(*h.enemy) ? "Guardian: " : "",
-                      actors_.catalog().monster(a.monster)->id.c_str(), unsigned(h.enemy->slot) + 1);
-        h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
+                      monsterName(actors_.catalog().monster(a.monster)->id), unsigned(h.enemy->slot) + 1);
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
         if (state_.magic.armed) {
             const auto& m = state_.magic;
             std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s",
-                          actors_.catalog().monster(a.monster)->id.c_str());
-            h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
+                          monsterName(actors_.catalog().monster(a.monster)->id));
             h.reason = magicEligibility(*h.enemy);
             unsigned darts = 0;
             bool selected = false;

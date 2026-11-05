@@ -8,17 +8,17 @@ const char* advancementMessage(AdvancementError e) noexcept {
     case AdvancementError::Stale:
         return "Your character changed. Reopen Level Up.";
     case AdvancementError::Unavailable:
-        return "Only conscious supported characters below level 3 can advance.";
+        return "This companion cannot level up. Companions must be conscious and below level 3.";
     case AdvancementError::Experience:
         return "Earn enough XP for the next level first.";
     case AdvancementError::Unsafe:
-        return "Level up during settled, safe exploration away from hazards.";
+        return "Wait until it is safe to level up.";
     case AdvancementError::Moving:
         return "Wait until movement finishes.";
     case AdvancementError::Choices:
         return "Complete the newly earned spell choices.";
     case AdvancementError::Capacity:
-        return "Progression revision capacity exhausted.";
+        return "Couldn't level up. Save your progress and restart the game.";
     }
     return "Advancement unavailable.";
 }

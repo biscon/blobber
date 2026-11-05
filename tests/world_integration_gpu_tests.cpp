@@ -15,6 +15,7 @@
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
 #include "support/fixture_world.hpp"
+#include "support/interaction_prompt_review.hpp"
 #include "support/layout_review.hpp"
 #include "support/map_review.hpp"
 #include "support/pc072_review.hpp"
@@ -68,6 +69,10 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--interaction-prompts-review") {
+            test::interactionPromptReview(argv[1], argv[2]);
+            return 0;
+        }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--map-review") {
             test::mapReview(argv[1], argv[2],
                             argc == 5 ? std::filesystem::path(argv[4]) : std::filesystem::path{});

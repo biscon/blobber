@@ -1,4 +1,5 @@
 #include "ui/hud_painter.hpp"
+#include "ui/player_text.hpp"
 #include "ui/spell_layout.hpp"
 namespace blobber {
 using namespace hudInk;
@@ -125,7 +126,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         else
             std::snprintf(line, sizeof(line), "Cantrip / %d mana", e.cost);
         clipped(line, dx + 34, dy + 16, dw - 34, blue, UiTextStyle::Small);
-        wrapped(*this, e.description, dx, dy + 34, dw, 5, 10);
+        wrapped(*this, spellDescription(e.kind, e.description), dx, dy + 34, dw, 5, 10);
         const auto* rules = rules::spellRules(e.kind);
         const char* targeting = automatic                           ? "No separate action or activation."
                                 : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)

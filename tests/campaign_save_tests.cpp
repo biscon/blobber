@@ -596,7 +596,7 @@ void pausePolling() {
     otherUi.saveMenu().replace = true;
     otherUi.saveMenu().intent = SaveIntent::Save;
     check(!overwrite.poll(other, otherUi) && disk.writes == concurrentWrites &&
-              std::string_view(otherUi.saveMenu().message.data()).find("changed") != std::string_view::npos,
+              std::string_view(otherUi.saveMenu().message.data()) == "Couldn't save. Please try again.",
           "confirmed overwrite retains its reviewed revision and rejects concurrent changes");
     check(store.inspect().runId == run.runId(), "failed stale overwrite preserves the valid saved owner");
 }

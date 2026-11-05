@@ -36,13 +36,15 @@ bool arenaAction(MenuView& v, int action, const Options& o, ArenaScenarioStore& 
             v.dungeonChoices = v.model.choices;
             v.model.beginArenaPicker(a.scenario, v.catalog);
         } else if (action == 4002 || action == 4003) {
-            if (const auto* error = a.error(v.catalog))
-                throw std::runtime_error(error);
+            if (const auto* error = a.error(v.catalog)) {
+                v.message(error);
+                return true;
+            }
             const auto saved =
                 store.save(a.scenario, action == 4002 && a.currentFile.file[0] ? &a.currentFile : nullptr);
             a.currentFile = saved.entry;
             v.message(saved.durable ? "Scenario saved."
-                                    : "Scenario saved, but durability could not be confirmed. Reload before "
+                                    : "Couldn't confirm the scenario was saved. Reload it before making "
                                       "further changes.");
         } else if (action == 4004 || action == 4009) {
             auto listing = store.list();
@@ -50,8 +52,10 @@ bool arenaAction(MenuView& v, int action, const Options& o, ArenaScenarioStore& 
             a.firstFile = 0;
             v.model.screen = MenuScreen::Scenarios;
         } else if (action == 4005) {
-            if (const auto* error = a.error(v.catalog))
-                throw std::runtime_error(error);
+            if (const auto* error = a.error(v.catalog)) {
+                v.message(error);
+                return true;
+            }
             const auto snapshot = a.scenario;
             v.model.screen = MenuScreen::Loading;
             presenter.presentMenu(drawMenu, &v);
@@ -104,7 +108,10 @@ bool arenaAction(MenuView& v, int action, const Options& o, ArenaScenarioStore& 
         if (v.model.screen == MenuScreen::Loading)
             v.model.screen = MenuScreen::Arena;
         a.pendingLoad = -1;
-        v.message(e.what());
+        std::fprintf(stderr, "Arena operation failed: %s\n", e.what());
+        v.message(action == 4002 || action == 4003 ? "Couldn't save this scenario. Please try again."
+                  : action == 4005 ? "Couldn't start the arena. Review your party and monsters."
+                                   : "Couldn't open this scenario. Choose another or try again.");
     }
     return true;
 }

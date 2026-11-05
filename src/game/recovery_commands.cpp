@@ -98,20 +98,22 @@ void CommandController::tickCamp(double seconds, bool focused) noexcept {
     if (h.elapsedMs >= 2300)
         h.open = false;
 }
+bool CommandController::interactionPromptsAvailable() const noexcept {
+    return session_.runActive() && !session_.actionBusy() && !state_.modal() && !state_.magic.casting() &&
+           !state_.magic.armed && !state_.inventory.itemTargeting &&
+           session_.combat().settledRecovery(session_.movement().player, session_.timeMs()) &&
+           !session_.effects().area(session_.movement().player.cell);
+}
 void CommandController::floorHover(std::optional<LootId> id) noexcept {
+    hoveredLoot_ = id;
     state_.lootHover[0] = 0;
-    if (!id)
+    if (!id || state_.suspended || !interactionPromptsAvailable())
         return;
     const auto* s = session_.loot().find(*id);
     if (!s)
         return;
-    const auto p = session_.lootAccess(*id);
-    const auto* c = party_.character(state_.selection.character);
-    unsigned count = 0;
-    for (const auto& stack : session_.loot().snapshot().stacks)
-        count += stack.active && stack.cell == s->cell;
-    std::snprintf(state_.lootHover.data(), state_.lootHover.size(), "Loot bag | %u stacks | %s | %s", count,
-                  c ? c->build.name.c_str() : "No recipient", p ? "Click to browse" : p.reason);
+    if (session_.lootAccess(*id))
+        std::snprintf(state_.lootHover.data(), state_.lootHover.size(), "[Click] Loot");
 }
 void CommandController::collectLoot(LootId id) noexcept {
     if (state_.modal() || state_.suspended)

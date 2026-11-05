@@ -299,11 +299,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             p.label("SETTINGS", {242, 286, 156, 24});
         }
     }
-    if (h->lootHover[0] && !h->modal()) {
-        p.fill({viewX + 3, viewY + viewHeight - 20, viewWidth - 6, 18}, {12, 18, 18, 235});
-        p.clipped(h->lootHover.data(), viewX + 7, viewY + viewHeight - 16, viewWidth - 14, gold,
-                  UiTextStyle::Small);
-    }
+    if (const auto* prompt = h->interactionPrompt())
+        p.viewportPrompt(prompt);
     if (h->loot.open) {
         p.fill(hudLayout::viewport, {0, 0, 0, 110});
         p.loot(*h);

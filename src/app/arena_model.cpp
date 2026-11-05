@@ -1,4 +1,5 @@
 #include "app/arena_setup.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -27,18 +28,21 @@ bool ArenaSetup::replaceParty(const StartingParty& selected) noexcept {
 }
 void ArenaSetup::filter(const rules::Catalog& c) noexcept {
     visibleCount = 0;
-    for (std::uint16_t i = 0; i < c.monsterCount(); ++i) {
-        const auto& id = c.monster({i})->id;
-        const auto n = std::strlen(search.data());
-        bool match = !n;
-        for (std::size_t p = 0; !match && p + n <= id.size(); ++p) {
+    const auto n = std::strlen(search.data());
+    const auto matches = [&](std::string_view name) {
+        for (std::size_t p = 0; p + n <= name.size(); ++p) {
             std::size_t j = 0;
-            while (j < n && std::tolower(static_cast<unsigned char>(id[p + j])) ==
+            while (j < n && std::tolower(static_cast<unsigned char>(name[p + j])) ==
                                 std::tolower(static_cast<unsigned char>(search[j])))
                 ++j;
-            match = j == n;
+            if (j == n)
+                return true;
         }
-        if (match)
+        return false;
+    };
+    for (std::uint16_t i = 0; i < c.monsterCount(); ++i) {
+        const auto& id = c.monster({i})->id;
+        if (matches(monsterName(id)) || matches(id))
             visible[visibleCount++] = i;
     }
     first = std::min(first, visibleCount > 5 ? visibleCount - 5 : 0);
@@ -62,7 +66,7 @@ const char* ArenaSetup::error(const rules::Catalog& c) noexcept {
         return error;
     for (std::size_t i = 0; i < scenario.count; ++i)
         if (!available[scenario.roster[i].monster.index])
-            return "A selected monster has no prepared appearance.";
+            return "A selected monster is unavailable. Choose another monster.";
     return nullptr;
 }
 } // namespace blobber

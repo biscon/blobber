@@ -35,14 +35,14 @@ LibraryResult CreatorFlow::save(CharacterLibrary& library, MenuModel& menu) {
                 break;
             }
     } else {
-        model.notify(result.message.data());
+        model.notify(libraryFeedback(result));
         if (result.error == LibraryError::Stale) {
             const auto loaded = library.load();
             if (loaded) {
                 revision = library.snapshot().revision;
                 model.notify("Library changed and was reloaded. Review your draft, then Save again.");
             } else
-                model.notify(loaded.message.data());
+                model.notify(libraryFeedback(loaded));
         } else if (result.error == LibraryError::RecoveryRequired || result.error == LibraryError::Io) {
             // Retry after a repair must explicitly reload the store. Never retry the write here.
             const auto loaded = library.load();

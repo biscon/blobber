@@ -107,8 +107,6 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                       launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
                       launch ? launch->arenaScenario : nullptr);
         auto& initial = *current;
-        if (campaign)
-            initial.commands.reportCampaignSeed(campaign->location(0).seed);
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
         initial.session.enableDevelopment(options.development);
@@ -290,15 +288,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                             replacement->frames.activate();
                             replacement->commands.travelMessage(
                                 request.kind == TravelKind::Recall
-                                    ? "Recalled to the sanctuary hub. One camp kit consumed. Rest separately."
-                                    : "Travel complete. No camp kit consumed.");
+                                    ? "Returned to Sanctuary. One camp kit used."
+                                    : "Arrived.");
                             current.swap(replacement);
                             replacement.reset(); // Source view dies before the source session in ticket.
                         } else {
                             current->commands.travelMessage("Travel changed; reopen Travel and try again.");
                         }
                     } catch (const std::exception& e) {
-                        current->commands.travelMessage(e.what());
+                        std::fprintf(stderr, "Travel failed: %s\n", e.what());
+                        current->commands.travelMessage(
+                            "Couldn't travel. Your party is still here. Try again.");
                     }
                     closing = travelLoading.closing();
                 }
@@ -327,7 +327,6 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 presenter.fade(0);
                 if (presenter.audio) {
                     presenter.audio->worldGain = 1;
-                    presenter.audio->play("travel");
                 }
                 inputArmed = false;
                 first = true;

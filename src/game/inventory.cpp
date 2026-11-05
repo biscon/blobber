@@ -36,7 +36,7 @@ const char* inventoryMessage(InventoryError e) noexcept {
     case InventoryError::Equipment:
         return "Incompatible equipment or missing armor training.";
     case InventoryError::Unsafe:
-        return "Equipment and transfers require safe exploration.";
+        return "Wait until it is safe to change equipment or move items.";
     case InventoryError::Moving:
         return "Wait until movement finishes.";
     case InventoryError::Unavailable:

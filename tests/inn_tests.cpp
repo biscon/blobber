@@ -26,7 +26,7 @@ int main() {
         check(!run.previewTravel(foreign), "Foreign doorway rejected");
         CommandController controls(run.game(), defs.timings);
         controls.refresh({}, false, false, true);
-        check(std::string_view(controls.snapshot().fixturePrompt.data()) == "F: Enter inn.",
+        check(std::string_view(controls.snapshot().fixturePrompt.data()) == "[F] Enter inn",
               "F entry prompt");
         controls.interactFixture();
         check(controls.snapshot().travelRequested &&
@@ -145,8 +145,7 @@ int main() {
             check(upgraded.map().surface(pose.cell).ceiling == 6 &&
                       upgraded.game().movement().player == pose && hasDropped(upgraded.game()),
                   "Previous inn layout loads at current height with pose and loot preserved");
-            check(!upgraded.map().movementBlocked({4, 6}) &&
-                      !upgraded.map().movementBlocked({8, 8}),
+            check(!upgraded.map().movementBlocked({4, 6}) && !upgraded.map().movementBlocked({8, 8}),
                   "Previous saves adopt smaller seating footprints");
         }
         {
@@ -189,7 +188,7 @@ int main() {
         {
             CommandController exitControls(restored.game(), defs.timings);
             exitControls.refresh({}, false, false, true);
-            check(std::string_view(exitControls.snapshot().fixturePrompt.data()) == "F: Leave inn.",
+            check(std::string_view(exitControls.snapshot().fixturePrompt.data()) == "[F] Leave inn",
                   "Exit keeps only its interaction prompt");
         }
         auto leaving = restored.prepareTravel(restored.doorwayRequest());

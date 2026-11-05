@@ -36,6 +36,17 @@ build, rendering capture, desktop automation or benchmark was run for this chang
 
 ## Current systems and review status
 
+Viewport interaction cleanup **implemented and mechanically verified; awaiting user review (2026-11-05)**: the
+[HUD revision](native_hud_design.md#viewport-interaction-prompts--2026-11-05)
+replaces bottom banners with actionable, shadowed white text and hides them outside
+safe Exploration. Player-facing messages use gameplay language; technical failures
+remain diagnostic output; creature names and descriptions hide development identifiers
+and notes without changing catalog fingerprints or saves. Focused CPU/allocation and
+hidden OpenGL checks pass; [four review captures](screenshots/interaction-prompts/README.md)
+cover city, dungeon, loot and active combat. The
+[audio follow-up](audio_design.md#travel-cue-removal--2026-11-05)
+removes the shared travel completion sound without changing transitions or music.
+
 Sanctuary inn **implemented and mechanically verified; awaiting user review (2026-11-05)**:
 [design](inn_interior_design.md) adds an authored fifth campaign location,
 facing-sensitive doorway travel, a furnished common room and decorative hearth,

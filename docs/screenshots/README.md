@@ -1,6 +1,8 @@
 # Selected review evidence
 
 Existing captures were curated on 2026-11-05; no new rendering checks were run.
+The [interaction prompt revision](interaction-prompts/README.md) subsequently adds
+four new hidden OpenGL captures with focused verification; user review is pending.
 Keep six images per feature, or twelve awaiting review, unless a gallery explains
 the distinct cases requiring an exception. Generate raw captures in disposable
 [agent runs](../verification_workflow.md#artifact-housekeeping).
@@ -32,6 +34,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 | [flow-polish](flow-polish/README.md) | 6 |
 | [ground-anchored-doors](ground-anchored-doors/README.md) | 6 |
 | [inn](inn/README.md) | 12 |
+| [interaction-prompts](interaction-prompts/README.md) | 4 |
 | [map-camera](map-camera/README.md) | 6 |
 | [map-icons-desktop](map-icons-desktop/README.md) | 6 |
 | [npc-animation](npc-animation/README.md) | 6 |

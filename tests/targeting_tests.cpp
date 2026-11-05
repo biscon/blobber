@@ -8,6 +8,22 @@
 #include <iostream>
 using namespace blobber;
 namespace {
+void playerNames() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false, "goblin.guardian.placeholder");
+    const Player pose{{3, 6}, Heading::North};
+    NpcWorld places(map, pose.cell, {"goblin.guardian.placeholder"}, {{{0}, {3, 3}, {0, 0}, Heading::South}});
+    GameSession game(map, catalog, places, 5, pose, false);
+    CommandController ui(game);
+    ui.refresh(allCombatTargets(game), false, false, true);
+    ui.hover(HoverKind::Enemy, 0, game.actors().id(0));
+    check(std::string_view(ui.snapshot().hover.lines[0].data()) == "Goblin Guardian #1",
+          "Enemy tooltip hides internal guardian placeholder identity");
+    ui.toggleTargetPicker();
+    check(ui.snapshot().targetPicker.count == 1 &&
+              std::string_view(ui.snapshot().targetPicker.rows[0].name.data()) == "Goblin Guardian #1",
+          "Target picker uses the same readable creature identity");
+}
 void key(CommandController& ui, UiKey k, bool shift = false) {
     UiInput input;
     input.pressed[unsigned(k)] = true;
@@ -318,6 +334,7 @@ void targeting() {
 } // namespace
 int main() {
     try {
+        playerNames();
         controls();
         targeting();
         std::cout << "Enemy targeting checks passed\n";

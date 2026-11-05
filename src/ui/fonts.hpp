@@ -16,6 +16,7 @@ class UiFonts {
     int lineHeight(UiTextStyle style) const;
     std::size_t gpuBytes() const noexcept;
     float centeredY(const char* text, float top, float height, UiTextStyle style) const;
+    float bottomAlignedY(const char* text, float bottom, UiTextStyle style) const;
 
   private:
     struct SizedFont {

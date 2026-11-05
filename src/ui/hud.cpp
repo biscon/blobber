@@ -181,9 +181,9 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             constexpr const char* labels[]{"FACING NORTH", "FACING EAST", "FACING SOUTH", "FACING WEST"};
             actor = labels[static_cast<unsigned>(*h->combat.facing)];
         } else if (h->combat.phase == CombatPhase::Approach)
-            actor = "RANGED APPROACH";
+            actor = "ENEMIES APPROACHING";
         else if (h->combat.phase == CombatPhase::Contact)
-            actor = "CONTACT / WAIT";
+            actor = "COMBAT BEGINS";
         else if (h->combat.phase == CombatPhase::RoundEnd)
             actor = "ROUND END";
         else if (h->combat.phase == CombatPhase::Victory)
@@ -193,7 +193,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         if (h->campaignTerminal)
             actor = h->campaignVictory ? "CAMPAIGN COMPLETE" : "DEFEAT";
         std::snprintf(line, sizeof(line), "%s%s", actor,
-                      h->combat.resolvingAction  ? "  /  RESOLVING"
+                      h->combat.resolvingAction  ? "  /  ACTING"
                       : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
                                                  : "");
         p.clipped(line, 12, 308, 284, gold, UiTextStyle::Display);
@@ -242,11 +242,6 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         std::snprintf(threats, sizeof(threats), "Threats %s%s", dirs,
                       h->combat.pendingCount ? " / arrivals" : "");
         p.text(threats, viewX + 6, viewY + 5, gold, UiTextStyle::Small);
-    }
-    if (h->fixturePrompt[0]) {
-        p.fill({viewX + 4, viewY + viewHeight - 17, viewWidth - 8, 15}, background);
-        p.clipped(h->fixturePrompt.data(), viewX + 8, viewY + viewHeight - 15, viewWidth - 16, gold,
-                  UiTextStyle::Small);
     }
     p.log(*h, false);
     (void)debug;

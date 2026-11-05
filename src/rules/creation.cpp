@@ -89,20 +89,20 @@ PortraitId defaultPortrait(std::string_view race) noexcept {
 const char* buildErrorMessage(BuildError e) noexcept {
     constexpr const char* messages[]{"Valid build",
                                      "Enter 1-64 printable characters",
-                                     "Choose a supported race",
-                                     "Choose a supported class",
+                                     "Choose a race",
+                                     "Choose a class",
                                      "Choose a portrait for this race",
                                      "Base scores must be 8-15",
                                      "Spend exactly 27 points",
-                                     "Use the supported class features",
+                                     "Choose features for your class",
                                      "Choose three distinct class cantrips",
                                      "Choose six wizard spellbook spells",
                                      "Choose legal prepared spells within your allowance",
                                      "Life domain grants Bless and Cure Wounds",
                                      "Choose one distinct Intelligence-based wizard cantrip for High Elf",
                                      "Choose valid starting equipment",
-                                     "Equipment or derived statistics are invalid",
-                                     "Required creation content is missing"};
+                                     "Check your equipment choices",
+                                     "Character creation is unavailable"};
     return unsigned(e) < std::size(messages) ? messages[unsigned(e)] : "Invalid build";
 }
 int pointCost(int score) noexcept {

@@ -1,5 +1,6 @@
 #include "game/commands.hpp"
 #include "support/check.hpp"
+#include "support/fixture_world.hpp"
 #include "support/progression_fixtures.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -78,6 +79,16 @@ int main() {
         const auto empty = spellPlacements(map, 0), places = spellPlacements(map, 3);
         GameSession progression(map, catalog, empty, 5, spellSpawn, false);
         CommandController ui(progression);
+        const auto promptCatalog = fixtureCatalog();
+        const auto promptMap = fixtureMap();
+        const NpcWorld promptEmpty(promptMap, {3, 3}, {"goblin"}, {});
+        RecoveryLevel promptRecovery;
+        promptRecovery.groundCount = 1;
+        promptRecovery.ground[0] = {{3, 3}, {12}, 1};
+        GameSession promptGame(promptMap, promptCatalog, promptEmpty, 5, {{3, 3}, Heading::East}, false, {},
+                               promptRecovery, fixtureDefinitions(false));
+        CommandController promptUi(promptGame);
+        const LootId promptLoot{promptGame.loot().snapshot().world, NpcWorld::maxInstances * lootPerActor};
         std::array<std::unique_ptr<GameSession>, 8> casts;
         for (unsigned i = 0; i < casts.size(); ++i) {
             casts[i] = std::make_unique<GameSession>(map, catalog, places, 5, spellSpawn, false);
@@ -91,6 +102,14 @@ int main() {
         effects.partyCell(spellSpawn.cell);
         bool okay = true;
         tracking = true;
+        for (unsigned frame = 0; frame < 32; ++frame) {
+            promptUi.refresh({}, false, false, true);
+            okay &= promptUi.snapshot().fixturePrompt[0] != 0;
+            promptUi.floorHover(promptLoot);
+            promptUi.refresh({}, false, false, true);
+            okay &= promptUi.snapshot().lootHover[0] != 0;
+            promptUi.floorHover({});
+        }
         progression.enableDevelopment(true);
         for (int level = 2; level <= 3; ++level) {
             okay &= progression.grantNextLevelExperience();

@@ -1,4 +1,5 @@
 #include "ui/menu_screen.hpp"
+#include "ui/player_text.hpp"
 #include <cstring>
 namespace blobber {
 namespace {
@@ -92,9 +93,10 @@ void drawArena(MenuView& v, const HudPainter& p, const UiArt& art) {
             const auto& entry = a.listing.entries[i];
             const int y = 82 + int(row) * 31;
             p.clipped(entry.name.data(), 26, y + 3, 310, entry.error[0] ? hudInk::muted : hudInk::gold);
-            p.clipped(entry.error[0] ? entry.error.data() : entry.file.data(), 26, y + 16, 460, hudInk::muted,
-                      UiTextStyle::Small);
-            v.button(p, {510, y, 105, 25}, entry.error[0] ? "Show error" : "Load", 4300 + int(i));
+            p.clipped(entry.error[0] ? "This scenario cannot be opened." : entry.file.data(), 26, y + 16, 460,
+                      hudInk::muted, UiTextStyle::Small);
+            v.button(p, {510, y, 105, 25}, entry.error[0] ? "Unavailable" : "Load", 4300 + int(i),
+                     !entry.error[0]);
         }
         if (!a.listing.count)
             p.text("No saved scenarios yet.", 26, 110, hudInk::muted);
@@ -148,7 +150,7 @@ void drawArena(MenuView& v, const HudPainter& p, const UiArt& art) {
             if (a.scenario.roster[n].monster.index == i)
                 quantity = a.scenario.roster[n].quantity;
         p.box({240, y, 375, 37}, quantity ? hudInk::teal : hudInk::edge);
-        p.clipped(monster.id.c_str(), 248, y + 5, 240, hudInk::gold, UiTextStyle::Heading);
+        p.clipped(monsterName(monster.id), 248, y + 5, 240, hudInk::gold, UiTextStyle::Heading);
         std::snprintf(text, sizeof(text), "HP %d   AC %d", monster.hitPoints, monster.armorClass);
         p.text(a.available[i] ? text : "Appearance unavailable", 248, y + 23, hudInk::muted,
                UiTextStyle::Small);

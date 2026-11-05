@@ -210,3 +210,16 @@ python3 tools/audio/generate.py --validate
 Use `nice -n 15 ionice -c 3` for lengthy commands and set
 `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` for authoring. Do not run intensive jobs
 concurrently. Device check exit 77 means unavailable hardware, not a pass.
+
+## Travel cue removal — 2026-11-05
+
+Status: implemented and mechanically verified. Removed the application's sole
+`play("travel")` call: the completion ding/air swell no longer plays after stairs,
+doorway, recall or waypoint transitions. World gain restoration, music persistence
+and fades remain intact. Bank entries/source samples remain authoring assets; no
+replacement cue or setting was added.
+
+Verification: the Debug game builds successfully, source search finds no remaining
+runtime playback caller for this cue, and focused campaign/inn/startup checks pass.
+No sound assets or mixer behavior changed. No listening session was performed;
+interactive listening acceptance remains user-owned.
