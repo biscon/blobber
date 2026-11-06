@@ -19,8 +19,8 @@ def main():
         if (args.output / name).exists():
             raise SystemExit('Choose an output without existing review artifacts')
     sheet = Image.new('RGB', (TILE_W * 2, TILE_H + 80), BACKGROUND)
-    manifest = dict(seed=0, generator=9, catalog=7, schema=7, simulation=11,
-                    visibility='world-visibility-v11', samples=[], captures=[])
+    manifest = dict(seed=0, generator=10, catalog=7, schema=10, simulation=14,
+                    visibility='world-visibility-v18', samples=[], captures=[])
     for col, depth in enumerate((1, 3)):
         report = json.loads(subprocess.check_output(
             [str(args.generator.resolve()), '--seed', '0', '--depth', str(depth), '--format', 'json'],
@@ -37,9 +37,6 @@ def main():
                 continue
             x, y = prop['cell']
             cells = [(x, y)]
-            if prop['kind'] == 'rack':
-                dx, dy = ((0, -1), (1, 0), (0, 1), (-1, 0))[prop['facing']]
-                cells.append((x + dx, y + dy))
             for cx, cy in cells:
                 draw.rectangle((bx + cx * CELL, by + cy * CELL, bx + (cx + 1) * CELL - 1,
                                 by + (cy + 1) * CELL - 1), fill='#a16e45', outline='#efbc72')
@@ -47,7 +44,7 @@ def main():
             draw.text((bx + x * CELL, by + y * CELL - 3), label, font=font(11), fill='#fff1b5')
         manifest['samples'].append(dict(depth=depth, profile=report['profile'],
                                         fingerprint=report['fingerprint'], report=name))
-    draw.text((20, TILE_H + 12), 'Brown cells block movement: C chest · X cage · R rack',
+    draw.text((20, TILE_H + 12), 'Brown cells block movement: X cage · R rack',
               font=font(16), fill=GOLD)
     draw.text((20, TILE_H + 40), 'E entrance · G guardians · O objective · B optional · yellow/orange doors',
               font=font(14), fill='#c8d6d3')

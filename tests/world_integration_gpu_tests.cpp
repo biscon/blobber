@@ -142,6 +142,10 @@ int main(int argc, char** argv) {
             test::underkeepReview(argv[1], argv[2], false, true);
             return 0;
         }
+        if (argc == 4 && std::string_view(argv[3]) == "--rack-size-review") {
+            test::underkeepReview(argv[1], argv[2], false, true, true);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--underkeep-review") {
             test::underkeepReview(argv[1], argv[2]);
             return 0;

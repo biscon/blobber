@@ -556,7 +556,7 @@ profile under the existing diagnostic-only admission. No new gameplay commands.
 floor review sample, both fallbacks and metric summaries. It requires Pillow and
 does not run combat, a broad sweep or a performance benchmark.
 
-## Underkeep containers (current follow-up)
+## Underkeep containers
 
 Generator/catalog 9/7, campaign schema/simulation 7/11 and visibility
 `world-visibility-v10` supersede the earlier examples' identities. Visibility v10
@@ -572,6 +572,15 @@ include a nullable `container` owner. Unopened contents remain hidden in visual
 mode. Diagnostic generation reports include dressing placements and occupied
 footprints. State digests/checkpoints retain opened/remaining content state.
 See [Underkeep dressing](underkeep_dressing_design.md) for ownership and compatibility.
+
+### Underkeep prop placement correction (2026-11-06)
+
+Generator/templates are now **10/7**, campaign schema/simulation remain **10/14**,
+and visibility is **world-visibility-v18**. Previous campaigns/scenarios reject
+without migration or rewriting their files. Blocking props require same-room
+clearance, a room-local bypass and collision-aware key/guardian progression.
+The rack has one collision cell and half-size prepared geometry. Existing wire
+commands/record shapes are unchanged; terrain/population seed streams remain 8/6.
 
 ## Enemy targeting follow-up
 

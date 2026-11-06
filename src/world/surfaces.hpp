@@ -57,7 +57,7 @@ struct Decoration {
     }
     bool blocks() const noexcept { return kind == DecorationKind::Cage || kind == DecorationKind::Rack; }
     // Physical reservations protect even walkable chest cells from other props/NPCs.
-    unsigned footprintCount() const noexcept { return kind == DecorationKind::Rack ? 2 : model() ? 1 : 0; }
+    unsigned footprintCount() const noexcept { return model() ? 1 : 0; }
     Cell footprint(unsigned i) const noexcept { return cell + forward(face) * int(i); }
     bool model() const noexcept { return kind >= DecorationKind::Cage; }
     bool floorCutout() const noexcept {

@@ -46,7 +46,14 @@ world_assets::Publication fixture(const std::filesystem::path& path) {
                          {{.3f, h, .2f, 0, 0, 1, 1, 0}},  {{-.3f, h, .2f, 0, 0, 1, 0, 0}}};
         meshes.push_back(mesh);
     }
-    pack.models = {0, 1, 0, 0};
+    world_assets::PropMesh rack;
+    rack.name = "rack";
+    rack.texture = pack.materials[3];
+    rack.vertices = {{{-.4f, 0, -.9f, -.91381155f, 0, .40613847f, 0, 0}},
+                     {{.4f, 0, .9f, -.91381155f, 0, .40613847f, 1, 0}},
+                     {{.4f, .8f, .9f, -.91381155f, 0, .40613847f, 1, 1}}};
+    meshes.push_back(rack);
+    pack.models = {0, 1, 0, 2};
     writer.finish({}, 0, {pack}, meshes);
     return world_assets::load(path);
 }
@@ -57,15 +64,51 @@ unsigned chestPixels(const world_render::WorldFrame& frame) {
             count += bool(frame.picking.pickContainer(x, y));
     return count;
 }
+void rackGeometry(const world_assets::CpuAssets& assets) {
+    const std::vector<std::string> rows{"#######", "#.....#", "#.....#", "#.....#",
+                                        "#.....#", "#.....#", "#######"};
+    for (unsigned h = 0; h < 4; ++h) {
+        WorldDefinition world;
+        world.assetPack = "underkeep";
+        world.surfaces.resize(49);
+        for (auto& s : world.surfaces) {
+            s.floor = 1;
+            s.ceiling = 5;
+        }
+        const auto heading = Heading(h);
+        world.decorations.push_back({{3, 3}, heading, DecorationKind::Rack});
+        const Map map(rows, world);
+        const auto scene = world_render::prepare(map, {}, {}, {}, &assets);
+        const auto f = forward(heading), r = right(heading);
+        unsigned count = 0;
+        for (const auto& range : scene.ranges)
+            if (range.painted)
+                for (unsigned i = range.first; i < range.first + range.count; ++i) {
+                    const auto& p = scene.vertices[scene.indices[i]].position;
+                    // Every transformed vertex must match a source vertex at half
+                    // scale, centered inside its single reserved cell on a raised floor.
+                    bool matched = false;
+                    for (const auto& v : assets.mesh(2).vertices)
+                        matched |= std::abs(p.x - (3.5f + .5f * (r.x * v[0] - f.x * v[2]))) < 1e-5f &&
+                                   std::abs(p.y - (.25f + .5f * v[1])) < 1e-5f &&
+                                   std::abs(p.z - (3.5f + .5f * (r.y * v[0] - f.y * v[2]))) < 1e-5f;
+                    check(matched && p.x > 3 && p.x < 4 && p.z > 3 && p.z < 4,
+                          "Half-size rack geometry stays inside its collision cell in every facing");
+                    ++count;
+                }
+        check(count == 6, "Rack geometry checked without terrain vertices");
+    }
+}
 } // namespace
 int main() {
     try {
         test::WorldFixture storage;
         auto publication = fixture(storage.directory);
-        check(publication.meshes.size() == 2 && publication.packs[0].models[1] == 1,
+        check(publication.meshes.size() == 3 && publication.packs[0].models[1] == 1,
               "Prepared mesh bindings round trip");
         world_assets::CpuAssets assets(publication);
         const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
+        rackGeometry(assets);
         WorldDefinition world;
         world.assetPack = "underkeep";
         Decoration chest{{4, 3}, Heading::North, DecorationKind::Chest, 0, .5f, 0, .76f, .36f, .58f};

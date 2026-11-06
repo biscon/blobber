@@ -216,7 +216,7 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                                    : d.kind == DecorationKind::Cage ? 2
                                                                     : 3;
             const unsigned last = d.kind == DecorationKind::Chest ? 2 : first + 1;
-            float wallward = d.kind == DecorationKind::Rack ? .5f : 0.f;
+            float wallward = 0.f;
             if (d.kind == DecorationKind::Chest) {
                 float back = 0;
                 for (unsigned variant = 0; variant < 2; ++variant) {
@@ -234,7 +234,8 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                 if (pack.models[model] >= assets->publication.meshes.size())
                     throw std::runtime_error("Missing prop mesh binding");
                 const auto& mesh = assets->mesh(pack.models[model]);
-                const float scale = d.kind == DecorationKind::Chest ? .5f : 1.f;
+                const float scale =
+                    d.kind == DecorationKind::Chest || d.kind == DecorationKind::Rack ? .5f : 1.f;
                 unsigned material = 0;
                 while (material < pack.materialCount && pack.materials[material] != mesh.texture)
                     ++material;

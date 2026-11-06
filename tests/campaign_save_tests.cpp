@@ -151,6 +151,21 @@ void environmentRoundtrip() {
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Previous schema/simulation 9/13 rejects explicitly");
+    bad = blobber::automation::Json::parse(text);
+    bad["generator"] = 9;
+    {
+        std::ofstream file(directory.path / "campaign.json");
+        file << bad.dump();
+    }
+    check(!store.inspect().active, "Campaign predating room-safe props is incompatible");
+    {
+        std::ifstream file(directory.path / "campaign.json");
+        const std::string bytes((std::istreambuf_iterator<char>(file)), {});
+        check(bytes == bad.dump(), "Rejecting old prop generation never rewrites the save");
+    }
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Generator 9 campaign rejects explicitly");
+    bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");

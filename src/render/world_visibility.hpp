@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v17";
+constexpr const char* visibilityVersion = "world-visibility-v18";
 // Rectangles in stored texture UVs, not logical canvas coordinates.
 struct BillboardClipRect {
     float left = 0, top = 0, right = 0, bottom = 0;

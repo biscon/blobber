@@ -3,6 +3,79 @@
 #include <array>
 #include <cstdlib>
 namespace blobber::generation {
+bool blockingPropFitsRoom(const FloorLayout& f, const Decoration& prop, const CellMask& reserved) noexcept {
+    if (f.width < 3 || f.height < 3 || f.width > 40 || f.height > 40 || f.roomCount > maxRooms ||
+        f.connectionCount > maxConnections || !prop.blocks() || !floorCell(f, prop.cell))
+        return false;
+    const auto room = regionAt(f, prop.cell);
+    if (room >= f.roomCount || room >= maxRooms || f.rooms[room].role == Role::Entrance ||
+        f.rooms[room].role == Role::Objective)
+        return false;
+    const auto index = [&](Cell c) { return unsigned(c.y * f.width + c.x); };
+    const auto contains = [&](Cell c) {
+        for (unsigned i = 0; i < prop.footprintCount(); ++i)
+            if (prop.footprint(i) == c)
+                return true;
+        return false;
+    };
+    for (unsigned i = 0; i < prop.footprintCount(); ++i) {
+        const auto c = prop.footprint(i);
+        if (!floorCell(f, c) || regionAt(f, c) != room || reserved[index(c)])
+            return false;
+    }
+    // A patch may touch the room perimeter: wall-backed furniture stays eligible.
+    bool supported = false;
+    for (int dy = -2; dy <= 0 && !supported; ++dy)
+        for (int dx = -2; dx <= 0 && !supported; ++dx) {
+            const auto origin = prop.cell + Cell{dx, dy};
+            bool clear = true;
+            for (unsigned i = 0; i < prop.footprintCount(); ++i) {
+                const auto c = prop.footprint(i);
+                clear &= c.x >= origin.x && c.x < origin.x + 3 && c.y >= origin.y && c.y < origin.y + 3;
+            }
+            for (int y = 0; y < 3 && clear; ++y)
+                for (int x = 0; x < 3 && clear; ++x) {
+                    const auto c = origin + Cell{x, y};
+                    clear = floorCell(f, c) && regionAt(f, c) == room && !reserved[index(c)];
+                }
+            supported = clear;
+        }
+    if (!supported)
+        return false;
+    const auto anchor = f.rooms[room].anchor;
+    if (!floorCell(f, anchor) || regionAt(f, anchor) != room || reserved[index(anchor)] || contains(anchor))
+        return false;
+    for (unsigned i = 0; i < f.connectionCount; ++i) {
+        const auto& e = f.connections[i];
+        if ((e.a == room && contains(e.socketA + forward(e.facingA) * -1)) ||
+            (e.b == room && contains(e.socketB + forward(e.facingB) * -1)))
+            return false;
+    }
+    CellMask seen{};
+    std::array<Cell, maxCells> queue{};
+    unsigned head = 0, tail = 0;
+    queue[tail++] = anchor;
+    seen[index(anchor)] = true;
+    while (head < tail) {
+        const auto c = queue[head++];
+        for (unsigned h = 0; h < 4; ++h) {
+            const auto n = c + forward(Heading(h));
+            if (floorCell(f, n) && regionAt(f, n) == room && !reserved[index(n)] && !contains(n) &&
+                !seen[index(n)]) {
+                seen[index(n)] = true;
+                queue[tail++] = n;
+            }
+        }
+    }
+    for (int y = 0; y < f.height; ++y)
+        for (int x = 0; x < f.width; ++x) {
+            const Cell c{x, y};
+            if (floorCell(f, c) && regionAt(f, c) == room && !reserved[index(c)] && !contains(c) &&
+                !seen[index(c)])
+                return false;
+        }
+    return true;
+}
 namespace {
 struct Candidate {
     Cell cell;
@@ -12,7 +85,7 @@ struct Candidate {
 struct Dressing {
     FloorLayout& f;
     WorldDefinition& world;
-    std::array<bool, maxCells> protectedCells{}, occupied{};
+    CellMask protectedCells{}, occupied{}, blocked{};
     std::uint64_t rng;
     unsigned next(unsigned n) {
         rng ^= rng >> 12;
@@ -54,12 +127,18 @@ struct Dressing {
             if (!free(c) || protectedCells[index(c)])
                 return false;
         }
-        for (unsigned i = 0; i < d.footprintCount(); ++i)
+        if (d.blocks() && !blockingPropFitsRoom(f, d, occupied))
+            return false;
+        for (unsigned i = 0; i < d.footprintCount(); ++i) {
             occupied[index(d.footprint(i))] = true;
-        const bool ok = connected();
+            blocked[index(d.footprint(i))] = d.blocks();
+        }
+        const bool ok = connected() && (!d.blocks() || !validateFixtures(f, &blocked));
         if (!ok)
-            for (unsigned i = 0; i < d.footprintCount(); ++i)
+            for (unsigned i = 0; i < d.footprintCount(); ++i) {
                 occupied[index(d.footprint(i))] = false;
+                blocked[index(d.footprint(i))] = false;
+            }
         return ok;
     }
     bool chest(unsigned id, Cell old, bool sealed) {
@@ -119,12 +198,17 @@ bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& 
     world.assetPack = "underkeep";
     world.decorations.clear();
     world.decorations.reserve(192);
-    Dressing d{f, world, {}, {}, seedFor(request, Domain::Dressing)};
+    Dressing d{f, world, {}, {}, {}, seedFor(request, Domain::Dressing)};
     // Preserve doors, passage lanes, stairs, anchors, actors and existing rewards.
     for (unsigned i = 0; i < f.pathCount; ++i)
         d.protect({int(f.paths[i] % f.width), int(f.paths[i] / f.width)});
     for (unsigned i = 0; i < f.roomCount; ++i)
         d.protect(f.rooms[i].anchor);
+    for (unsigned i = 0; i < f.connectionCount; ++i) {
+        const auto& e = f.connections[i];
+        d.protect(e.socketA + forward(e.facingA) * -1);
+        d.protect(e.socketB + forward(e.facingB) * -1);
+    }
     for (unsigned i = 0; i < f.fixtures.count; ++i) {
         const auto c = f.fixtures.entries[i].cell;
         d.protect(c);
@@ -276,6 +360,6 @@ bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& 
                         {c, Heading::North, DecorationKind::Blood, 0, .5f, .004f, .35f, .35f, .01f});
                 break;
             }
-    return d.connected();
+    return d.connected() && !validateFixtures(f, &d.blocked);
 }
 } // namespace blobber::generation

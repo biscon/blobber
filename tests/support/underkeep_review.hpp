@@ -10,7 +10,7 @@
 #include <iostream>
 namespace blobber::test {
 inline void underkeepReview(const std::filesystem::path& source, const std::filesystem::path& output,
-                            bool corrections = false, bool props = false) {
+                            bool corrections = false, bool props = false, bool rackOnly = false) {
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Review output must be new");
     const auto catalog = loadRules(source / "rules/catalog.json");
@@ -75,6 +75,8 @@ inline void underkeepReview(const std::filesystem::path& source, const std::file
                                                     "#.......#", "#.......#", "#.......#",
                                                     "#.......#", "#.......#", "#########"};
                 for (auto kind : {DecorationKind::Chest, DecorationKind::Cage, DecorationKind::Rack}) {
+                    if (rackOnly && kind != DecorationKind::Rack)
+                        continue;
                     WorldDefinition world;
                     world.assetPack = "underkeep";
                     Decoration prop{{4, 4}, Heading::North, kind, 0, .5f, 0, .76f, .36f, .58f};

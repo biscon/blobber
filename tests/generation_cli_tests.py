@@ -103,7 +103,7 @@ def main(generator, runner):
         for name in ('goblin', 'goblin.archer', 'skeleton', 'zombie', 'giant.rat', 'goblin_shaman', 'bugbear'):
             (root / f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name)))
         (root / 'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')]], instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=9,
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=10,
                      template_version=7, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
@@ -153,7 +153,13 @@ def main(generator, runner):
         def check_campaign(request):
             started = request('start', scenario=campaign)
             assert started['ok'] and started['data']['campaign']['location'] == 0
-            assert request('preview', action=dict(kind='interact', fixture=0))['data']['accepted']
+            # Walk from the current city square to the dungeon stair approach.
+            for direction in ('right', 'right', 'forward'):
+                moved = request('act', action=dict(kind='move', direction=direction))['data']
+                assert moved['accepted'], moved
+                request('advance', ticks=100, until_decision=False)
+            preview = request('preview', action=dict(kind='interact', fixture=0))['data']
+            assert preview['accepted'], preview
             entered = request('act', action=dict(kind='interact', fixture=0))['data']
             assert entered['accepted'] and entered['observation']['campaign']['location'] == 1
             up = next(f['fixture'] for f in entered['observation']['fixtures'] if f['kind'] == 2)
@@ -164,6 +170,10 @@ def main(generator, runner):
             returned = request('act', action=dict(kind='interact', fixture=up))['data']
             assert returned['accepted'] and returned['observation']['campaign']['location'] == 0
             assert returned['observation']['campaign']['visited_entries'] == [1]
+            # Upstairs arrival faces away from the city stair entrance.
+            for _ in range(2):
+                assert request('act', action=dict(kind='move', direction='turn_right'))['data']['accepted']
+                request('advance', ticks=17, until_decision=False)
             assert not request('act', action=dict(kind='waypoint', depth=2))['data']['accepted']
             back = request('act', action=dict(kind='waypoint', depth=1))['data']
             assert back['accepted'] and back['observation']['campaign']['location'] == 1
@@ -174,7 +184,13 @@ def main(generator, runner):
             recalled = request('act', action=dict(kind='recall'))['data']
             assert recalled['accepted'] and recalled['observation']['campaign']['location'] == 0
             assert recalled['observation']['campaign']['travel']['recall']['kits'] == kits - 1
-            assert request('act', action=dict(kind='waypoint', depth=1))['data']['accepted']
+            # Step back from Sanctuary's recessed door, then east to the stair landing.
+            for direction in ('back', 'right', 'right', 'right', 'right'):
+                moved = request('act', action=dict(kind='move', direction=direction))['data']
+                assert moved['accepted'], moved
+                request('advance', ticks=100, until_decision=False)
+            back = request('act', action=dict(kind='waypoint', depth=1))['data']
+            assert back['accepted'], back
         campaign_trace = root / 'campaign.jsonl'
         with Client(runner, root, record=campaign_trace) as client:
             check_campaign(client.request)

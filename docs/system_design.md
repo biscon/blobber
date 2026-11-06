@@ -1,5 +1,13 @@
 # System design
 
+Underkeep prop safety **implemented and mechanically verified; awaiting visual review (2026-11-06)**:
+[placement and rack correction](underkeep_dressing_design.md#room-clearance-and-rack-correction--2026-11-06)
+requires room-local clearance/connectivity and collision-aware progression checks.
+Eight focused Release suites and hidden rack-only OpenGL checks pass;
+[two review captures](screenshots/prop-placement/README.md) retain pending visual acceptance.
+The rack uses one collision cell and half-size prepared geometry. Generator 10/7
+requires a new campaign; established terrain/population seed streams stay 8/6.
+
 [Shared Settings](settings_design.md) adds a persistent borderless fullscreen
 checkbox to the main/pause Settings screen, using raylib window-mode handling
 while preserving fixed logical presentation. Interactive desktop review is pending.
@@ -766,7 +774,7 @@ uses prepared fixed storage; export and diagnostic readbacks are explicit bounda
 
 Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
 without being modified; no migration. World publication is format 13, appearance 5,
-visibility world-visibility-v17, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
+visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.

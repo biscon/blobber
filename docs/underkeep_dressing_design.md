@@ -41,6 +41,80 @@ have no interaction IDs. Chests use world-scoped typed container handles.
 
 ## Placement and bounds
 
+### Room clearance and rack correction — 2026-11-06
+
+Status: **Implemented and mechanically verified; awaiting user visual review**.
+This correction supersedes historical generator/footprint identities below.
+Global connectivity alone permits
+an obstruction where another corridor provides a detour. Bounding rectangles also
+do not establish actual room membership. Blocking furniture must occupy one
+eligible room (excluding entrance/objective), fit in a clear same-room 3×3 patch,
+and leave every remaining room cell connected to its protected anchor without
+leaving that room. Room-side passage entrances are protected explicitly.
+Existing chest reservations, fixture approaches, actors and corridor paths remain
+protected. Nonblocking surface dressing is unaffected.
+
+Preparation owns fixed-size reservation and collision masks: reservations include
+walkable chests, whereas progression uses only movement collision. Tentative
+blocking placements retain global connectivity and rerun the existing four-state
+key/guardian search with the collision mask; failed optional placements roll back.
+The final floor repeats progression validation before publication. Work is bounded
+by maxCells, four progression states and the existing 32 candidate attempts; no
+frame-time storage or processing is added. A narrow shared placement predicate
+allows tests to exercise small owned room shapes independently of full generation.
+
+The rack reserves only its anchor cell for both party/NPC movement. Its source
+mesh stays unchanged; preparation scales all three vertex coordinates by 0.5
+about its floor anchor, with drawing/occlusion/picking sharing the resulting mesh.
+The previous half-cell rack center offset is removed so the scaled rack fits its
+single collision cell. Cage and chest rendering is unchanged. Visibility identity
+advances for the changed prepared scene. Generator/templates become 10/7; ordinary
+terrain/population random streams remain 8/6. Old campaigns reject unchanged.
+
+Verification uses owned miniature rooms for clearance/membership, local detours,
+passage entrances, single-cell rack movement, and collision-aware key/guardian
+progression; deterministic normal/fallback generation covers both profiles and
+all depths. Prepared-mesh tests cover half-size rack geometry in all facings and
+floor anchoring. Focused Release generation/dressing/fixtures, automation/CLI,
+save compatibility and rendering checks precede hidden production capture review.
+No desktop input automation or benchmark is required.
+
+#### Verification for this correction
+
+Release application/headless/test builds succeeded with two workers. The eight
+focused suites pass: `dressing`, `fixtures`, `generation`, `generation_automation`,
+`generation_cli`, `campaign_save_smoke`, `campaign_save_cli`, `underkeep_render`.
+The initial pass took 3.67 seconds and exposed two fixture issues: the new owned
+rack triangle had an invalid normal (corrected), and the CLI campaign route still
+assumed the pre-city spawn/recall locations (updated to ordinary movement/turns).
+Only failed or subsequently changed suites were rerun: render 0.01 s, CLI 1.07 s,
+and dressing 0.08 s. The latter includes a geometric loop remaining connected
+through locked doors while two props prevent acquiring the key; progression
+validation rejects it. Old generator-9 saves reject without rewriting their bytes.
+
+```sh
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-release \
+  -R '^(dressing|underkeep_render|generation|fixtures|generation_automation|generation_cli|campaign_save_smoke|campaign_save_cli)$' \
+  -j1 --output-on-failure
+```
+
+Hidden rack-only production review passed on RTX 3060/OpenGL 3.3: ten views
+(cardinal, close and turn frames), draw errors, CPU/GPU interior IDs and return of
+GPU leases to the Presenter baseline. CPU prepared-mesh tests check all four rack
+facings on a raised floor, half-scale dimensions and one-cell bounds. The initial
+sandbox could not open X11; the authorized hidden run used desktop GL without OS
+input. One stale runner initially missed the new selector and failed an unrelated
+generic impact-color assertion; rebuilding the runner explicitly resolved selector
+admission. No full effects-GPU pass is claimed. Interactive acceptance is pending;
+no benchmark, full save traversal, sanitizer or additional build configuration ran.
+
+[Two selected rack views](screenshots/prop-placement/README.md) are retained; the
+other captures and all disposable logs/reports were cleaned from the owned agent
+run after recording results. Existing historical artwork comparisons remain
+historical, with their rack scale superseded by this correction.
+
+### Existing dressing policy
+
 Dressing uses an independent seeded domain after fixtures/population/rewards.
 Group details by context and leave bare stretches. Target 16–32 surface details,
 2–5 webs, 2–5 bone scatters; <=64 architectural additions and <=2 large furniture
@@ -155,7 +229,7 @@ existing texture/mipmap/alpha publication storage and its budgets.
 Scene preparation transforms models into the existing chunked mesh, retaining
 both chest variants with conditional ranges and container picking IDs. Opening
 selects ranges from a fixed snapshot, without reuploading/rebuilding geometry.
-Chunk horizontal bounds include two-cell furniture extending across a chunk edge.
+Chunk horizontal bounds conservatively account for furniture at chunk edges.
 The bounded draw list includes the additional prop/variant ranges. Painted ranges
 use authored UVs and shader mode 4, bypassing face-brightness modulation while
 retaining dimming/fog; terrain keeps the original shading. CPU/GPU picking use the
