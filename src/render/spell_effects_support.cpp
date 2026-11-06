@@ -136,8 +136,14 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                            : cue.phase == SupportPhase::Move || cue.phase == SupportPhase::End
                                ? C::WeaponMove
                                : C::WeaponStrike;
-                    emit(spiritualWeaponPosition(in.geometry, cue.cell, in.now), .72f, .72f, kind, animation,
-                         fade * .75f);
+                    const auto position =
+                        cue.phase == SupportPhase::End
+                            ? spiritualWeaponPosition(in, cue.cell)
+                            : spiritualWeaponPosition(
+                                  in, in.area->ground.weapons[cue.source.character.index].cell);
+                    if (!position)
+                        continue;
+                    emit(*position, .72f, .72f, kind, animation, fade * .75f);
                     if (cue.phase == SupportPhase::Move && !(cue.from == cue.cell))
                         emit(spiritualWeaponPosition(in.geometry, cue.from, in.now), .45f, .45f,
                              C::WeaponMove, animation, fade * .4f);

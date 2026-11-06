@@ -46,7 +46,10 @@ removed after promotion; original artwork and prompt remain durable inputs.
 
 ## Enemy melee lunge
 
-Status: **Ready for review (2026-11-06)**. The earlier painted-feedback acceptance
+These captures show the original 0.14-cell lunge. The 2026-11-06 doubled-distance
+uses 0.28 cell and is accepted; no replacement captures were made.
+
+Status: **Accepted (2026-11-06)**, including doubled distance and facing lock. The earlier painted-feedback acceptance
 is unchanged. See the [design and focused checks](../../combat_feedback_design.md#enemy-melee-lunge).
 
 - [Four-creature motion comparison](enemy-melee.gif): goblin, giant rat, bugbear and

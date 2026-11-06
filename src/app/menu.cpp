@@ -26,6 +26,7 @@ int runMenus(const Options& options) try {
     GpuResources resources;
     AudioRuntime audio;
     audio.prepare(options.assets, options.noAudio, options.settings);
+    setBorderlessFullscreen(audio.settings.borderlessFullscreen);
     Presenter presenter(resources, options.assets, &worker);
     presenter.audio = &audio;
     loading->attach(presenter);

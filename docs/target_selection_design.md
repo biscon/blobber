@@ -123,3 +123,27 @@ feel is left to the user. Builds used two workers, tests one process, at low
 CPU/I/O priority. No benchmark or broad configuration matrix was run. Disposable
 logs in run `20261105T164048Z-af4c87c526ce4a8e8cdac1f74ab09bd1` were previewed and
 cleaned; no new screenshots or retained diagnostics were needed.
+
+
+## Spell targeting inspection — 2026-11-06
+
+While choosing spell recipients, retain the normal delayed enemy health bar and
+show current/max HP in the spell hover tooltip alongside the existing spell name,
+eligibility and selection instructions. Keep the full enemy name/number. The
+existing fixed `HudHover` lines and health ratio remain owned by CommandController;
+remove only the renderer's casting exclusion on the health bar. No new storage,
+allocation, picking, target mutation or clock is introduced. Ordinary 250ms hover,
+visibility/depth gates and attack/resolution suppression remain in force.
+
+Verify routed pointer hover during single-target, multi-target, dart allocation and
+ground-area selection with a wounded enemy; hover must reveal health without
+changing selected recipients, assigned darts, aimed cell or resources. Existing
+HUD delay/attack-suppression tests cover the shared dwell behavior. Run focused
+`targeting` and `hud` checks and rebuild the application; no new screenshots.
+
+Verification: Debug application rebuilt; `targeting` (0.07s) and `hud` (0.02s)
+pass. The new regression routes actual hover input while targeting Fire Bolt,
+Acid Splash, Magic Missile and Sleep, checking the normal delay, enemy identity,
+25/100 HP, health ratio, spell instructions and unchanged pending targets/darts,
+ground choice and mana. Existing dwell/attack-suppression checks also pass.
+No new captures or interactive desktop verification; temporary output was cleaned.

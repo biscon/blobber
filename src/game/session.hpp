@@ -120,8 +120,10 @@ class GameSession {
     }
     void setAnimated(bool enabled) noexcept {
         if (!enabled && movement().transition.active() &&
-            !(movement().transition.from.cell == movement().transition.to.cell))
+            !(movement().transition.from.cell == movement().transition.to.cell)) {
+            effects_.followWeapons(movement().transition.from.cell, movement().transition.to.cell);
             audio_.emit({"party.step"});
+        }
         movement_.setAnimated(enabled);
         if (!enabled) {
             doors_.until.fill(0);

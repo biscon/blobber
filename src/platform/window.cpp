@@ -2,6 +2,13 @@
 #include "raylib.h"
 #include <stdexcept>
 namespace blobber {
+bool borderlessFullscreen() noexcept {
+    return IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+}
+void setBorderlessFullscreen(bool enabled) noexcept {
+    if (enabled != borderlessFullscreen())
+        ToggleBorderlessWindowed();
+}
 Window::Window(int width, int height, bool hidden, bool uncapped) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | (uncapped ? 0 : FLAG_VSYNC_HINT) | FLAG_WINDOW_HIGHDPI |
                    (hidden ? FLAG_WINDOW_HIDDEN : 0));

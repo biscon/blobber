@@ -261,8 +261,7 @@ void CommandController::updateHover() noexcept {
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
         if (state_.magic.armed) {
             const auto& m = state_.magic;
-            std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s",
-                          monsterName(actors_.catalog().monster(a.monster)->id));
+            std::snprintf(h.lines[4].data(), h.lines[4].size(), "HP %d/%d", a.hitPoints, a.maxHitPoints);
             h.reason = magicEligibility(*h.enemy);
             unsigned darts = 0;
             bool selected = false;

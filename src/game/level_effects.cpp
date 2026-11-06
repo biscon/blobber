@@ -2,6 +2,27 @@
 #include "game/perception.hpp"
 #include <algorithm>
 namespace blobber {
+Cell followingWeaponCell(GeometryView map, Cell weapon, Cell from, Cell to) noexcept {
+    if (from == to)
+        return weapon;
+    const auto destination = weapon + to + from * -1;
+    if (map.canStep(weapon, destination))
+        return destination;
+    return weapon == to && map.canStep(weapon, from) ? from : weapon;
+}
+void EffectController::followWeapons(Cell from, Cell to) noexcept {
+    if (from == to)
+        return;
+    for (auto& e : instances_)
+        if (e.active && e.kind == EffectKind::SpiritualWeapon && !e.caster.npc) {
+            const auto cell = followingWeaponCell(actors_.map(), e.cell, from, to);
+            if (cell == e.cell)
+                continue;
+            e.cell = cell;
+            ground_.weapons[e.caster.character.index] = {cell, true};
+            ++ground_.revision;
+        }
+}
 void EffectController::reconcileAid() noexcept {
     for (std::uint16_t i = 0; i < 4; ++i)
         party_.aidBonus({i}, has(rules::CharacterId{i}, EffectKind::Aid) ? 5 : 0);

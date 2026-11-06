@@ -94,11 +94,11 @@ boards and build caches remain. Local Markdown links and `git diff --check` pass
 
 ## Enemy melee lunge
 
-Status: **Implemented; Ready for review (2026-11-06)**. The previously
-accepted painted feedback remains accepted; this addition awaits its own review.
+Status: **Accepted and implemented (2026-11-06)**, including the doubled
+0.28-cell distance and attack-start orientation lock.
 
 The user requests enemies to lunge forward and snap back during melee attacks.
-`NpcAnimator` adds a bounded 0.14-cell offset along the actor's facing to its
+`NpcAnimator` adds a bounded 0.28-cell offset along the actor's facing to its
 existing presentation offsets only while a live, triggered melee attack clip wins
 pose selection. Approach over the last 140ms before `npcAttackImpact`, reaching
 maximum extension exactly on the existing impact frame; return over at most 120ms,
@@ -112,8 +112,9 @@ remaining attack timeline. Paused timestamps freeze exactly and large jumps requ
 no catch-up. No new mutable state, resources, allocations, gameplay displacement,
 collision/range changes, damage timing, RNG calls or save data. The visibility
 pipeline already consumes these offsets for billboards, depth, attachments, shadows,
-badges and picking, keeping the entire creature coherent. The displacement stays
-inside a subcell's quarter-cell margin on cardinal attacks.
+badges and picking, keeping the entire creature coherent. The doubled trial may
+visually cross a subcell boundary; authoritative occupancy remains unchanged and
+the attack-start facing anchor prevents directional-art switches.
 
 Review correction (2026-11-06): the outer diagonal enemies crossed the renderer's
 45-degree directional-art boundary during the lunge, selecting left/right artwork.
@@ -170,3 +171,23 @@ add two files to the accepted four-file feedback gallery, preserving its accepta
 No new textures, saved fields or per-actor storage were added. All disposable output
 in run `20261105T225947Z-91c533f59cf84d5bb15aac26844a8e72` was cleaned after promoting
 these and the targeting evidence. No diagnostics or runners remain open.
+
+
+### Doubled-distance trial — 2026-11-06
+
+The user requests twice the original melee lunge distance: 0.14 → 0.28 cell.
+Keep approach/return durations, easing, impact deadline, interruption behavior and
+orientation anchor unchanged. This is presentation-only; it does not change reach,
+occupancy or damage. A possible later 25% reduction would be 0.21 cell, but is not
+applied now. Existing captures show the earlier distance. Verify the existing
+animation and all-heading directional-art regression tests at the new amplitude;
+leave visual feel to the user's in-game review without new screenshots.
+
+Verification: Debug application and affected tests rebuilt. Focused
+`ctest --test-dir cmake-build-debug --output-on-failure -j1 -R '^(animation|world_visibility)$'`
+passed 2/2 in 1.30s, covering the doubled peak, return/interruptions, allocation
+bounds and stable artwork on both diagonals in all four headings. No new GPU or
+capture run. The user accepted this amplitude ("lets keep it at this value"); the spell-effects plan remains
+closed and accepted. Temporary build/test output was cleaned with no exceptions.
+
+The doubled-distance trial is accepted: retain 0.28 cell. No 25% reduction is planned.

@@ -62,7 +62,7 @@ void meleeAttackFacing() {
                     const auto position = actorPosition(*actors.actor(actors.id(b.id)), 1000);
                     const float advance = (b.feet.x - position.x) * -f.x + (b.feet.z - position.y) * -f.y;
                     if (elapsed == 80)
-                        check(std::abs(advance - .14f) < 1e-5f, "Locked artwork still lunges to impact");
+                        check(std::abs(advance - .28f) < 1e-5f, "Locked artwork still lunges to impact");
                     if (elapsed == 0 || elapsed == 200)
                         check(std::abs(advance) < 1e-5f, "Locked artwork starts and returns at rest");
                 }

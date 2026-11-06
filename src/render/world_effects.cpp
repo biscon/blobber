@@ -30,6 +30,22 @@ Vec spiritualWeaponPosition(GeometryView geometry, Cell cell, std::uint64_t now)
     return {cell.x + .5f, elevation(geometry.surface(cell).floor) + .5f + .025f * std::sin(phase),
             cell.y + .5f};
 }
+std::optional<Vec> spiritualWeaponPosition(const FrameInput& in, Cell cell) noexcept {
+    auto position = spiritualWeaponPosition(in.geometry, cell, in.now);
+    const auto& t = in.movement.transition;
+    if (t.active() && !(t.from.cell == t.to.cell)) {
+        const auto destination = followingWeaponCell(in.geometry, cell, t.from.cell, t.to.cell);
+        // A blocked follower retreats behind the party instead of passing through the camera.
+        if (cell == t.to.cell && destination == t.from.cell)
+            return {};
+        const auto target = spiritualWeaponPosition(in.geometry, destination, in.now);
+        const float p = t.progress(), e = p * p * (3 - 2 * p);
+        position = {position.x + (target.x - position.x) * e, position.y + (target.y - position.y) * e,
+                    position.z + (target.z - position.z) * e};
+    } else if (cell == in.movement.player.cell)
+        return {};
+    return position;
+}
 EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) : spells_(assets) {
     constexpr const char* names[]{"effect/arrow",   "effect/tip",    "effect/feathers", "effect/slash",
                                   "effect/glint",   "effect/grease", "effect/web",      "effect/weapon",
@@ -71,7 +87,10 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         const auto& weapon = area.ground.weapons[caster];
         if (!weapon.active)
             continue;
-        const auto p = spiritualWeaponPosition(in.geometry, weapon.cell, in.now);
+        const auto position = spiritualWeaponPosition(in, weapon.cell);
+        if (!position)
+            continue;
+        const auto p = *position;
         const auto d = depth(world.camera, p);
         const float side = (p.x - world.camera.position.x) * world.camera.right.x +
                            (p.z - world.camera.position.z) * world.camera.right.z;
@@ -163,7 +182,10 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         const auto& weapon = area.ground.weapons[caster];
         if (!weapon.active)
             continue;
-        auto p = spiritualWeaponPosition(in.geometry, weapon.cell, in.now);
+        const auto position = spiritualWeaponPosition(in, weapon.cell);
+        if (!position)
+            continue;
+        auto p = *position;
         float angle = 0;
         if (const auto* shot = weaponAttack(in, caster)) {
             const float t = in.now < shot->impactMs

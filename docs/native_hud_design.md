@@ -144,3 +144,27 @@ used. Driver/internal C allocations are outside the C++ allocation guard's claim
 Four selected PNGs are retained; raw baselines, superseded captures and run logs are
 disposable and cleaned after handoff preparation. No diagnostic retention exception
 is needed. Source artwork, prepared build caches and user saves remain intact.
+
+
+## Compact initiative strip — 2026-11-06
+
+User-requested layout correction: halve the strip's logical width and height
+(27 + 15 per queued participant, height 17), keep its existing six-unit right
+inset, and align its top directly to `viewY`. Halve portrait size to 12×12 logical
+units (36×36 native pixels). Retain native Small text and one-native-pixel borders
+for legibility, fitting round/actor-number/death-save labels into the compact
+layout. Queue ordering, active-turn emphasis and combat behavior are unchanged.
+This reuses the existing painter, portrait atlas and fixed bounded queue; no new
+resources, state or input regions. Build the application and run the focused HUD
+suite; leave in-game visual review to the user, without new screenshots.
+
+Round text uses the compact `RND` label and bounded width; enemy numbers and SAVE
+labels retain native Small text. Verification: normal Debug application rebuilt;
+`ctest --test-dir cmake-build-debug --output-on-failure -j1 -R '^hud$'` passed
+(0.03s), as did formatting/diff checks. No GPU capture or interactive review was
+performed. Temporary build/test output was cleaned with no retained exceptions.
+
+Initiative follow-up (2026-11-06): remove internal enemy slot numbers from portraits.
+Keep portrait order, current-turn border, round label and death-save indicator.
+Normal Debug application rebuilt and the focused HUD test passed (0.03s).
+No new captures; shared task output was cleaned.

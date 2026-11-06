@@ -175,6 +175,8 @@ struct SpectralWeapon {
     Cell cell{};
     bool active = false;
 };
+// Predict one party step without command costs or mutation; shared with presentation.
+Cell followingWeaponCell(GeometryView, Cell weapon, Cell partyFrom, Cell partyTo) noexcept;
 struct GroundSnapshot {
     std::array<SpectralWeapon, 4> weapons{};
     std::array<GroundArea, 16> areas{};
@@ -245,6 +247,7 @@ class EffectController {
     bool restoreCondition(rules::CharacterId, EffectKind, std::uint64_t, CombatEvents&) noexcept;
     const EffectInstance* spiritualWeapon(rules::CharacterId) const noexcept;
     bool moveWeapon(rules::CharacterId, Cell, bool initial = false) noexcept;
+    void followWeapons(Cell partyFrom, Cell partyTo) noexcept;
     bool weaponCanMove(rules::CharacterId, Cell) const noexcept;
     AreaId createArea(Cell, rules::CharacterId, int difficulty, std::uint64_t, CombatEvents&) noexcept;
     const GroundArea* area(Cell) const noexcept;

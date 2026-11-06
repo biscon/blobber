@@ -1,6 +1,6 @@
 # SE04 — Integration audit and safe cleanup
 
-Status: **Implemented; Ready for review (2026-11-06)**.
+Status: **Accepted and implemented (2026-11-06)**.
 The user approved this reduced scope after accepting SE03: keep the current visual
 treatment and check integration, lifecycle and safe cleanup only. No screenshots,
 art regeneration, retuning, benchmark or full configuration matrix is needed.
@@ -134,5 +134,5 @@ performance. The owned run `20261105T233935Z-2f22764bd0a54cc799a7fc6440b2ac4b`
 was cleaned after recording results; no diagnostics retained. Existing accepted
 SE01–SE03 evidence and working-tree changes were preserved.
 
-SE04 and milestone E-C are **Ready for review**. User acceptance is still required
-to close the roadmap; no further spell-effects slice is proposed.
+The user explicitly accepted SE04 and milestone E-C on 2026-11-06 and requested
+closure. The spell-effects roadmap is **Closed**, with SE01–SE04 and E-A–E-C Accepted.

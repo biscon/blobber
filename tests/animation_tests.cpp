@@ -31,7 +31,7 @@ void meleeLunges() {
             animator.setTime(1000 + ms);
             const auto& f = animator.snapshot().frames[0];
             const float distance = f.offsetX * direction.x + f.offsetY * direction.y;
-            check(distance >= 0 && distance <= .14001f &&
+            check(distance >= 0 && distance <= .28001f &&
                       std::abs(f.offsetX * direction.y - f.offsetY * direction.x) < .00001f,
                   "Melee lunge stays bounded along each facing");
             if (ms <= 200)
@@ -39,7 +39,7 @@ void meleeLunges() {
             else
                 check(distance <= previous, "Return settles toward the original position");
             if (ms == 200)
-                check(std::abs(distance - .14f) < .00001f, "Peak matches authored impact exactly");
+                check(std::abs(distance - .28f) < .00001f, "Peak matches authored impact exactly");
             if (ms >= 320)
                 check(distance == 0, "Quick recoil ends before attack animation finishes");
             previous = distance;
@@ -69,7 +69,7 @@ void meleeLunges() {
               "Hurt pose suppresses forward lunge");
         animator.setTime(3500);
         const auto resumed = animator.snapshot().frames[0];
-        check(std::abs(resumed.offsetX * direction.x + resumed.offsetY * direction.y - .14f) < .00001f,
+        check(std::abs(resumed.offsetX * direction.x + resumed.offsetY * direction.y - .28f) < .00001f,
               "Resumed lunge peaks at the delayed attack impact");
         actors.damage(id, 10000, 3500);
         animator.setTime(3500);
@@ -80,7 +80,7 @@ void meleeLunges() {
     actors.attack(actors.id(0), 0);
     NpcAnimator shortClip(actors, {reactionTimings()});
     shortClip.setTime(95);
-    check(std::abs(shortClip.snapshot().frames[0].offsetY - .14f) < .00001f,
+    check(std::abs(shortClip.snapshot().frames[0].offsetY - .28f) < .00001f,
           "Short authored attack still peaks on its own impact");
     shortClip.setTime(155);
     check(shortClip.snapshot().frames[0].offsetY == 0, "Short recoil finishes within its clip");

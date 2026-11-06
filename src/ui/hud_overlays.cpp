@@ -173,8 +173,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                         p.line({left, top + 1}, {left + 1, top + 1}, color);
                 }
             }
-        if (h->hover.tooltipVisible && !h->magic.casting() && h->hover.kind == HoverKind::Enemy &&
-            h->hover.enemy && h->hover.enemy->slot < picking->targets().anchors.size()) {
+        if (h->hover.tooltipVisible && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
+            h->hover.enemy->slot < picking->targets().anchors.size()) {
             const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
             if (anchor.valid) {
                 const UiRect r{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),
@@ -188,15 +188,15 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         }
     }
     if (!h->suspended && combat.phase == CombatPhase::Turns && combat.upcomingCount) {
-        const int width = 54 + int(combat.upcomingCount) * 30;
-        const UiRect r{viewX + viewWidth - width - 6, 24, width, 34};
+        const int width = 27 + int(combat.upcomingCount) * 15;
+        const UiRect r{viewX + viewWidth - width - 6, viewY, width, 17};
         p.overlayBox(r, edge);
         char line[32];
-        std::snprintf(line, sizeof(line), "ROUND %llu", static_cast<unsigned long long>(combat.round));
-        p.label(line, {r.x + 2, r.y + 8, 50, 16}, gold, UiTextStyle::Small);
+        std::snprintf(line, sizeof(line), "RND %llu", static_cast<unsigned long long>(combat.round));
+        p.clipped(line, r.x + 2, r.y + 5, 23, gold, UiTextStyle::Small);
         for (std::size_t i = 0; i < combat.upcomingCount; ++i) {
             const auto& participant = combat.upcoming[i];
-            const UiRect tile{r.x + 54 + int(i) * 30, r.y + 3, 26, 27};
+            const UiRect tile{r.x + 27 + int(i) * 15, r.y + 1, 13, 14};
             unsigned portrait =
                 participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Skeleton
                     ? UiArt::skeletonPortraitIcon
@@ -213,18 +213,13 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                 for (const auto& card : h->cards)
                     if (card.id.index == participant.character->index)
                         portrait = card.portrait;
-            p.picture(portrait, {tile.x + 1, tile.y + 1, 24, 24});
+            p.picture(portrait, {tile.x + 1, tile.y + 1, 12, 12});
             p.border(tile, i == 0 ? bright : edge);
             if (i == 0)
                 p.border({tile.x - 1, tile.y - 1, tile.width + 2, tile.height + 2}, gold);
-            if (participant.enemy) {
-                std::snprintf(line, sizeof(line), "%u", unsigned(participant.enemy->slot) + 1);
-                p.fill({tile.x + 17, tile.y + 17, 8, 9}, background);
-                p.text(line, tile.x + 18, tile.y + 17, gold, UiTextStyle::Small);
-            }
             if (participant.deathSave) {
-                p.fill({tile.x, tile.y + 17, 26, 10}, background);
-                p.text("SAVE", tile.x + 2, tile.y + 18, red, UiTextStyle::Small);
+                p.fill({tile.x, tile.y + 7, 13, 7}, background);
+                p.centered("SAVE", {tile.x, tile.y + 7, 13, 7}, red, UiTextStyle::Small);
             }
         }
     }

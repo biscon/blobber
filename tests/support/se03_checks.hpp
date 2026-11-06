@@ -252,6 +252,38 @@ inline void se03Playback() {
     pipeline.update(input, world);
     const auto baseline = pipeline.frame().packets[0];
     check(!pipeline.update(input, world), "Paused hover retains the same colour frame");
+    // Predict following from the same settled cells used by the command owner.
+    // The camera and weapon must advance together, not create a near-plane close-up.
+    movement.player.cell = {6, 7};
+    movement.transition = {spellSpawn, movement.player, Action::Forward, 0, .16f};
+    float initialDepth = 0;
+    for (float elapsed : {0.f, .04f, .08f, .12f}) {
+        movement.transition.elapsed = elapsed;
+        world.camera = camera(movement, map);
+        ++world.revision;
+        pipeline.update(input, world);
+        check(pipeline.frame().count == 1, "Following retains one weapon body through movement");
+        const auto depth = pipeline.frame().packets[0].depth;
+        if (!elapsed)
+            initialDepth = depth;
+        check(std::abs(depth - initialDepth) < .00001f,
+              "Weapon follows camera easing at constant relative depth");
+    }
+    movement.transition.elapsed = .16f;
+    area.ground.weapons[0].cell = {6, 6}; // Authoritative completion commits the same destination.
+    ++area.ground.revision;
+    world.camera = camera(movement, map);
+    ++world.revision;
+    pipeline.update(input, world);
+    check(std::abs(pipeline.frame().packets[0].depth - initialDepth) < .00001f,
+          "Settling the party step cannot pop or enlarge the weapon");
+    movement = {};
+    movement.player = spellSpawn;
+    area.ground.weapons[0].cell = {6, 7};
+    ++area.ground.revision;
+    world.camera = camera(movement, map);
+    ++world.revision;
+    pipeline.update(input, world);
     input.now = 2420;
     check(!pipeline.update(input, world), "Hover reuses colour within its 40ms sample");
     input.now = 3000;

@@ -1,6 +1,7 @@
 #include "app/audio_settings.hpp"
 #include "platform/audio.hpp"
 #include "platform/input.hpp"
+#include "platform/window.hpp"
 #include "ui/hud_painter.hpp"
 namespace blobber {
 namespace {
@@ -14,12 +15,13 @@ UiRect control(unsigned row, bool plus) {
     return {plus ? 440 : 365, 58 + int(row) * 31, 48, 25};
 }
 constexpr UiRect musicSlider{260, 218, 168, 22}, musicToggle{440, 218, 48, 25};
-constexpr UiRect defaults{145, 278, 160, 28}, back{335, 278, 160, 28};
+constexpr UiRect fullscreen{145, 260, 343, 20};
+constexpr UiRect defaults{145, 286, 160, 28}, back{335, 286, 160, 28};
 void drawSettings(void* context, const UiFonts& fonts, const UiArt& art) {
     const auto& v = *static_cast<SettingsView*>(context);
     HudPainter p(&fonts, &art);
     p.overlayBox({125, 20, 390, 320});
-    p.centered("SETTINGS / AUDIO", {140, 28, 360, 25}, hudInk::gold, UiTextStyle::Control);
+    p.centered("SETTINGS", {140, 28, 360, 25}, hudInk::gold, UiTextStyle::Control);
     const char* labels[]{"Master", "Effects", "Ambience", "UI", "Party footsteps"};
     for (unsigned i = 0; i < 5; ++i) {
         char value[24];
@@ -42,9 +44,15 @@ void drawSettings(void* context, const UiFonts& fonts, const UiArt& art) {
     p.text(value, 260, 246, hudInk::gold, UiTextStyle::Small);
     p.box(musicToggle, v.focus == 6 ? hudInk::teal : hudInk::edge);
     p.centered(v.audio.settings.musicEnabled ? "On" : "Off", musicToggle);
-    p.box(defaults, v.focus == 7 ? hudInk::teal : hudInk::edge);
+    p.box(fullscreen, v.focus == 7 ? hudInk::teal : hudInk::edge);
+    const UiRect checkbox{fullscreen.x + 4, fullscreen.y + 3, 14, 14};
+    p.border(checkbox, hudInk::gold);
+    if (borderlessFullscreen())
+        p.centered("X", checkbox, hudInk::gold, UiTextStyle::Small);
+    p.text("Borderless fullscreen", fullscreen.x + 24, fullscreen.y + 5);
+    p.box(defaults, v.focus == 8 ? hudInk::teal : hudInk::edge);
     p.centered("Reset defaults", defaults);
-    p.box(back, v.focus == 8 ? hudInk::teal : hudInk::edge);
+    p.box(back, v.focus == 9 ? hudInk::teal : hudInk::edge);
     p.centered("Back", back);
     p.text("Arrows adjust / Tab selects / Escape saves", 145, 320, hudInk::muted, UiTextStyle::Small);
     p.buttonFeedback(v.press.feedback);
@@ -92,15 +100,16 @@ void runAudioSettings(Presenter& presenter, GameSession* game) {
             targets.add(control(i, true));
         }
         targets.add(musicToggle);
+        targets.add(fullscreen);
         targets.add(defaults);
         targets.add(back);
         in = v.press.route(in, targets);
         if (in.has(UiKey::Cancel))
             done = true;
         if (in.has(UiKey::Down) || in.has(UiKey::Tab))
-            v.focus = (v.focus + 1) % 9;
+            v.focus = (v.focus + 1) % 10;
         if (in.has(UiKey::Up))
-            v.focus = (v.focus + 8) % 9;
+            v.focus = (v.focus + 9) % 10;
         int delta = in.has(UiKey::Right) ? 1 : in.has(UiKey::Left) ? -1 : 0;
         bool activate = in.has(UiKey::Confirm);
         if (in.has(UiKey::Click) && in.pointer) {
@@ -114,12 +123,16 @@ void runAudioSettings(Presenter& presenter, GameSession* game) {
                 v.focus = 6;
                 activate = true;
             }
-            if (defaults.contains(*in.pointer)) {
+            if (fullscreen.contains(*in.pointer)) {
                 v.focus = 7;
                 activate = true;
             }
-            if (back.contains(*in.pointer)) {
+            if (defaults.contains(*in.pointer)) {
                 v.focus = 8;
+                activate = true;
+            }
+            if (back.contains(*in.pointer)) {
+                v.focus = 9;
                 activate = true;
             }
         }
@@ -130,9 +143,20 @@ void runAudioSettings(Presenter& presenter, GameSession* game) {
             v.audio.settings.musicVolume = std::clamp(v.audio.settings.musicVolume + delta * .05f, 0.f, 1.f);
         if (v.focus == 6 && (activate || delta))
             v.audio.settings.musicEnabled = delta ? delta > 0 : !v.audio.settings.musicEnabled;
-        if (activate && v.focus == 7)
+        const bool modeBefore = borderlessFullscreen();
+        if (v.focus == 7 && (activate || delta))
+            setBorderlessFullscreen(delta ? delta > 0 : !modeBefore);
+        if (activate && v.focus == 8) {
             v.audio.settings = {};
-        if (activate && v.focus == 8)
+            setBorderlessFullscreen(false);
+        }
+        if (borderlessFullscreen() != modeBefore) {
+            v.press.cancel();
+            v.dragging = false;
+            armed = false;
+        }
+        v.audio.settings.borderlessFullscreen = borderlessFullscreen();
+        if (activate && v.focus == 9)
             done = true;
         v.audio.update(game, true, in.focused, GetFrameTime(), true, false);
         if (done)

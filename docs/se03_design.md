@@ -1,7 +1,7 @@
 # SE03 — Support, conditions and persistent effects
 
 Status: **Accepted and implemented (2026-11-06)**.
-The user explicitly accepted SE03 and its review corrections, closing E-B. SE04 is now [Ready for review](se04_design.md).
+The user explicitly accepted SE03 and its review corrections, closing E-B. SE04 is now [Accepted and the plan closed](se04_design.md).
 Parent: [spell effects roadmap](spell_effects_plan.md). SE01–SE02 remain Accepted.
 The user approved the detailed plan and selected selective quiet portrait cues.
 
@@ -285,3 +285,43 @@ up to two clear cardinal floor steps and an optional attack in the destination c
 once per round (once per six gameplay seconds outside turns), without more mana or
 normal-action cost. It does not take autonomous turns. The user confirmed that
 commanding it works; the description change improves discovery, not combat rules.
+
+
+## Spiritual Weapon follows party steps — 2026-11-06
+
+Review correction: after advancing into a defeated front rank, a world-fixed weapon
+could occupy the camera cell and fill the viewport. Active weapons now translate
+with successful party steps. `EffectController` commits the translated cell at
+movement completion (or immediately for unanimated steps), updating both effect
+and ground snapshots without consuming a command, changing cooldown/duration,
+spending mana or attacking. Turns and rejected steps do not move weapons.
+
+A shared pure destination query checks the weapon's corresponding geometry edge;
+NPC occupancy does not block the spectral weapon. If that edge is blocked, retain
+its cell. If the party would enter that cell, retreat the weapon to the party's
+vacated cell instead, using the legal traversed edge. No wall/closed-door crossing.
+The renderer predicts the same destination with camera smoothstep progress, so
+ordinary following keeps a stable relative distance throughout the move. A retreat
+through the camera is hidden for the transition; party-cell weapon art is likewise
+hidden rather than magnified. Existing bobbing and command attack/return remain.
+
+No new saved fields, mutable presentation history, journal events or allocations.
+Restore only restores the saved weapon location; it does not replay a party step.
+Disabling movement animation settles the weapon exactly once. Cover all headings,
+queued/unanimated/rejected movement, cooldown/mana preservation, obstruction and
+restore, plus stable rendered distance during a step. Focused level-spells,
+spell-effects and campaign-save smoke checks; no new screenshot gallery.
+
+Verification: Debug application and four affected test targets built without
+warnings at low CPU/I/O priority, with two workers. The focused command
+`ctest --test-dir cmake-build-debug --output-on-failure -j1 -R '^(level_spells|spell_effects|campaign_save_smoke|hud)$'`
+passed 4/4 in 21.84s. New checks cover all four headings, animated and immediate
+steps, queued steps, pause, animation disabling, rejected movement, walls/closed
+doors, unchanged mana/deadlines, saved followed cells, constant relative rendered
+depth and continuity at completion. Existing weapon command, bob, attack/return,
+expiry and allocation checks also pass. Formatting and diff checks pass.
+
+No new GPU capture or interactive review was performed; in-game feel remains for
+user review. No art/resource payload, save layout or capacity change. Run
+`20261106T001415Z-d22cbc20bc034da0ad2cd32690af476f` was cleaned with no diagnostics
+retained. The accepted spell-effects roadmap remains closed.

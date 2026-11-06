@@ -1,7 +1,7 @@
 # Spell effects: design and delivery roadmap
 
 Created: 2026-11-05. Last updated: 2026-11-06.
-Status: **SE01–SE03 Accepted; SE04 Ready for review.**
+Status: **Closed — SE01–SE04 and E-A–E-C Accepted (2026-11-06).**
 
 Give spells distinct animated silhouettes, restrained glow, moving local light,
 and readable elemental impacts while preserving the game's textured pixel art.
@@ -17,10 +17,10 @@ asset foundation. This is a roadmap, not approval to implement all four slices.
 | --- | --- |
 | Agreed direction | Authored spell animation, procedural motion, selective additive glow, local illumination, and target aftermath within the existing aesthetic |
 | Proposed sequence | Four slices, SE01–SE04 |
-| Active slice | SE04 — Ready for review |
-| Awaiting review | SE04 integration audit and cleanup; E-C |
-| Next eligible slice | None — final slice delivered |
-| Next action | User reviews the [SE04 audit and results](se04_design.md); no visual retuning |
+| Active slice | None — plan closed |
+| Awaiting review | None |
+| Next eligible slice | None — all slices accepted |
+| Next action | None — maintenance and separately requested changes only |
 | Gameplay policy | Preserve damage, saves, targeting, costs, authoritative timing and existing conditions |
 | Rendering policy | Keep prepared assets, fixed 1920×1080 presentation, the current world renderer and discrete movement |
 | Blockers | None |
@@ -195,13 +195,13 @@ static preparation or picking merely because a flame frame changed.
 | SE01 | Fire Bolt, Ray of Frost and Burning Hands with animation, glow, local light and target aftermath | Approved detailed plan | Accepted |
 | SE02 | Remaining offensive spells and healing/buff/damage portrait animation | SE01 Accepted | Accepted |
 | SE03 | Support, conditions and persistent ground/summoned effects | SE02 Accepted | Accepted |
-| SE04 | Catalogue integration audit and safe cleanup; preserve accepted visuals | SE03 Accepted | Ready for review |
+| SE04 | Catalogue integration audit and safe cleanup; preserve accepted visuals | SE03 Accepted | Accepted |
 
 | Milestone | Meaning | Status |
 | --- | --- | --- |
 | E-A | In-engine visual quality and technical foundation proven through SE01 | Accepted |
 | E-B | All current spell families have intentional treatment through SE03 | Accepted |
-| E-C | Normal campaign delivery and final integration audit accepted through SE04 | Ready for review |
+| E-C | Normal campaign delivery and final integration audit accepted through SE04 | Accepted |
 
 ### SE01 — Fire, frost and cone foundation
 
@@ -390,12 +390,10 @@ evidence, deviations, limitations, acceptance state and the next eligible action
 | 2026-11-05 | User approved the detailed SE03 plan and requested implementation, selecting quiet portrait cues for wards and disabling conditions. |
 | 2026-11-05 | SE03 implemented: all nineteen remaining spells, actual condition/duplicate state, ground and weapon accents. Thirteen focused CPU suites and both-quality hidden GPU checks pass; six review files delivered. SE03 and E-B are Ready for review, not Accepted; SE04 remains Planned. |
 | 2026-11-05 | SE03 review correction: lower NPC Bless to the feet midpoint; add Spiritual Weapon idle bob and attack lunge/return. User confirmed the existing command works; its Abilities route is now described in the spell picker and tested on later rounds. Focused CPU checks and three hidden capture cases pass; persistent gallery replaced. SE03 remains Ready for review. |
-
 | 2026-11-06 | User explicitly accepted the delivered SE03 slice: “awesome record the slice as accepted in the plan doc”. Acceptance includes the Bless/Spiritual Weapon review corrections and subsequent melee lunge/facing, targeting and ability-control fixes. SE03 and E-B are Accepted; SE04 is next eligible and remains Planned. |
-
 | 2026-11-06 | User approved narrowing SE04 to coverage/lifecycle/campaign integration and safe cleanup, preserving the accepted visuals. Proceed with that pass; omit general tuning and a new screenshot gallery. |
-
 | 2026-11-06 | SE04 reduced audit implemented: all 32 spell treatments accounted for, obsolete generic spell rendering removed while retaining arrow glints, campaign lifecycle regression added. Three focused suites pass; accepted visuals unchanged. SE04/E-C Ready for review; acceptance pending. |
+| 2026-11-06 | User explicitly accepted SE04: “nice slice 4 accepted, close the plan.” SE04/E-C are Accepted and the spell-effects plan is closed. A separately requested doubled enemy melee lunge is tracked in the combat-feedback design. |
 
 ## Current next-agent handoff
 
@@ -448,11 +446,13 @@ and the subsequent enemy lunge/facing, targeting and ability-control fixes. See
 [combat feedback](combat_feedback_design.md#enemy-melee-lunge) and
 [spell targeting](spells_design.md#acid-splash-proximity-correction).
 
-SE04 is **Ready for review** under the approved reduced scope. The
+SE04 is **Accepted (2026-11-06)** under the approved reduced scope. The
 [final audit and results](se04_design.md) account for all 32 spells, remove the
 redundant generic spell-glint path while retaining shared arrow art, and add
 pause/Continue/location-travel regression coverage. Three focused CPU suites pass;
 normal Debug application builds. Accepted appearance, artwork, budgets and shaders
 are unchanged. Prior GPU/resource evidence is reused; no new gallery or benchmark.
-Disposable output was cleaned. Explicit user acceptance closes SE04/E-C; there is
-no next spell-effects slice.
+Disposable output was cleaned. The user explicitly accepted SE04 and requested
+closure: all four slices and all three milestones are Accepted. The plan is closed.
+The separately requested stronger enemy melee lunge is a follow-up experiment,
+not a reopening of the spell-effects roadmap.

@@ -38,7 +38,7 @@ float meleeLunge(const NpcClipTiming& clip, std::uint64_t elapsed) noexcept {
     const float weight = elapsed <= impact           ? float(elapsed - (impact - approach)) / approach
                          : elapsed < impact + recoil ? 1.f - float(elapsed - impact) / recoil
                                                      : 0.f;
-    return .14f * weight * weight;
+    return .28f * weight * weight;
 }
 std::uint8_t sample(const NpcClipTiming& clip, std::uint64_t time, std::uint32_t phase) noexcept {
     std::uint32_t total = 0;

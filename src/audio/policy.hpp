@@ -78,6 +78,7 @@ inline unsigned chooseVoice(const std::array<Voice, 64>& voices, unsigned priori
     return victim;
 }
 struct Settings {
+    bool borderlessFullscreen = false; // Shared settings file; consumed by the window/UI, not audio.
     float musicVolume = .5f;
     bool musicEnabled = true;
     std::array<float, 5> values{{.7f, .8f, .35f, .5f, .45f}};

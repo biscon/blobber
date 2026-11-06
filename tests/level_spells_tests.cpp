@@ -87,6 +87,91 @@ void spells() {
         }
     }
 }
+void weaponFollowsMovement() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    for (unsigned h = 0; h < 4; ++h)
+        for (bool animated : {false, true}) {
+            const Player pose{{6, 6}, Heading(h)};
+            const auto f = forward(pose.heading);
+            NpcWorld places(map, pose.cell, {"goblin"}, {});
+            GameSession game(map, catalog, places, 5, pose, false);
+            game.setAnimated(animated);
+            EffectRequest request;
+            request.world = game.actors().snapshot().world;
+            request.kind = EffectKind::SpiritualWeapon;
+            request.caster = rules::CharacterId{1};
+            request.targets[0] = rules::CharacterId{1};
+            request.count = 1;
+            check(bool(game.applyEffect(request)), "Follower fixture summons a live weapon");
+            auto& effects = const_cast<EffectController&>(game.effects());
+            const auto start = pose.cell + f;
+            check(effects.moveWeapon({1}, start, true), "Follower fixture positions the weapon");
+            const auto ready = effects.spiritualWeapon({1})->readyMs;
+            const auto expires = effects.spiritualWeapon({1})->expiresMs;
+            const auto mana = game.party().character({1})->mana;
+            game.move(Action::Forward);
+            if (animated) {
+                check(effects.spiritualWeapon({1})->cell == start,
+                      "Animated step leaves authoritative weapon at source until completion");
+                game.update(.08, true);
+                check(effects.spiritualWeapon({1})->cell == start,
+                      "Paused movement cannot commit a following step");
+                game.move(Action::Forward); // Queue the next step at the first endpoint.
+                game.update(.16, false);
+                check(effects.spiritualWeapon({1})->cell == start + f,
+                      "Queued movement commits the first weapon step exactly once");
+                game.setAnimated(false);
+                check(effects.spiritualWeapon({1})->cell == start + f * 2,
+                      "Disabling animation settles the queued weapon step exactly once");
+                game.setAnimated(false);
+            }
+            const auto expected = start + f * (animated ? 2 : 1);
+            check(effects.spiritualWeapon({1})->cell == expected &&
+                      effects.ground().weapons[1].cell == expected,
+                  "Party advance moves authoritative and rendered weapon cells together");
+            check(effects.spiritualWeapon({1})->readyMs == ready &&
+                      effects.spiritualWeapon({1})->expiresMs == expires &&
+                      game.party().character({1})->mana == mana,
+                  "Following does not spend commands, mana or reset duration/cooldown");
+            game.move(Action::TurnRight);
+            check(effects.spiritualWeapon({1})->cell == expected, "Turning does not translate the weapon");
+            auto save = std::make_unique<FloorState>();
+            game.exportFloor(*save);
+            game.importFloor(*save);
+            check(game.effects().spiritualWeapon({1})->cell == expected,
+                  "Restore retains the followed weapon cell without applying another step");
+        }
+    const Map wall({"#######", "#.....#", "#..#..#", "#.....#", "#.....#", "#.....#", "#######"});
+    check(followingWeaponCell(wall, {3, 3}, {3, 4}, {3, 3}) == Cell{3, 4},
+          "Blocked follower retreats into the vacated party cell instead of the camera");
+    check(followingWeaponCell(wall, {3, 3}, {4, 4}, {4, 3}) == Cell{3, 3},
+          "Blocked remote follower stays put rather than crossing a wall");
+    FloorFixtures doors;
+    doors.count = 1;
+    doors.entries[0] = {{4, 2}, Heading::North, FixtureKind::Door};
+    FloorGeometry geometry(wall, doors);
+    check(followingWeaponCell(geometry.view(), {4, 3}, {3, 4}, {3, 3}) == Cell{4, 3},
+          "Following respects closed doors as well as walls");
+    NpcWorld empty(wall, {3, 3}, {"goblin"}, {});
+    GameSession blocked(wall, catalog, empty, 5, {{3, 3}, Heading::North}, false);
+    blocked.setAnimated(false);
+    EffectRequest request;
+    request.world = blocked.actors().snapshot().world;
+    request.kind = EffectKind::SpiritualWeapon;
+    request.caster = rules::CharacterId{1};
+    request.targets[0] = rules::CharacterId{1};
+    request.count = 1;
+    check(bool(blocked.applyEffect(request)), "Blocked-step fixture summons a weapon");
+    auto& effects = const_cast<EffectController&>(blocked.effects());
+    check(effects.moveWeapon({1}, {4, 3}, true), "Blocked-step fixture positions the weapon");
+    const auto revision = effects.ground().revision;
+    blocked.move(Action::Forward);
+    blocked.update(.16, false);
+    check(blocked.movement().player.cell == Cell{3, 3} && effects.spiritualWeapon({1})->cell == Cell{4, 3} &&
+              effects.ground().revision == revision,
+          "Rejected party movement cannot move or invalidate the weapon");
+}
 void weaponNextTurnControls() {
     const auto map = hybridRoom();
     const auto catalog = creationCatalog(true);
@@ -585,6 +670,7 @@ int main(int argc, char**) {
         }
         spells();
         weaponNextTurnControls();
+        weaponFollowsMovement();
         immediateActionSurge();
         aidAndMirror();
         effects();

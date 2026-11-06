@@ -1,11 +1,15 @@
 # System design
 
-Spell effects SE04 **implemented; Ready for review (2026-11-06)**:
+[Shared Settings](settings_design.md) adds a persistent borderless fullscreen
+checkbox to the main/pause Settings screen, using raylib window-mode handling
+while preserving fixed logical presentation. Interactive desktop review is pending.
+
+Spell effects SE04 **accepted and implemented; plan closed (2026-11-06)**:
 [Integration audit](se04_design.md) preserves the accepted visuals, audits all spell
 families and normal campaign lifecycle, and removes only redundant legacy paths.
 Removed the redundant generic spell renderer while retaining arrow glints. Three
 focused suites pass, including pause/Continue/travel checks. Accepted visuals and
-resources are unchanged; prior GPU evidence is reused. SE04/E-C await user acceptance.
+resources are unchanged; prior GPU evidence is reused. SE04/E-C are accepted; the spell-effects roadmap is closed.
 
 Spell effects SE03 **accepted and implemented (2026-11-06)**:
 [SE03 design](se03_design.md) adds support, condition, ground and summoned-effect
@@ -13,10 +17,13 @@ presentation with selective quiet portrait cues. A bounded session journal carri
 cosmetic events; fixed condition snapshots reconstruct sustained cues after restore.
 Gameplay/save contracts remain unchanged. Thirteen focused CPU suites and hidden GPU
 checks at both quality settings pass; [six-file review gallery](screenshots/spell-effects/se03/README.md).
-The user accepted SE03 and its review corrections, closing E-B; SE04 proceeds under its reduced scope. The SE03 review correction lowers
+The user accepted SE03 and its review corrections, closing E-B; SE04 is also accepted and the plan is closed. The SE03 review correction lowers
 NPC Bless to the feet anchor and adds bounded cosmetic Spiritual Weapon bobbing and
 attack lunge/return. Next-round Abilities controls pass focused UI tests and the spell
-description now points to them (see SE03 design).
+description now points to them (see SE03 design). A
+[party-step correction](se03_design.md#spiritual-weapon-follows-party-steps--2026-11-06)
+keeps active weapons travelling with the party, with shared collision-aware
+destination prediction and smooth presentation; command cooldowns are unchanged.
 
 Spell effects SE02 **accepted and implemented (2026-11-05)**:
 [SE02 design](se02_design.md) extends offensive spell identities and replaces party
@@ -42,12 +49,16 @@ restriction with subcell-aware distance, allowing equally close pairs across cel
 boundaries. Shared command validation and UI feedback use the same rule. Spiritual Weapon
 commands also gain immediate single-enemy clicking while retaining floor-only moves.
 Action Surge activates directly when chosen in Abilities.
+[Targeting hover correction](target_selection_design.md#spell-targeting-inspection--2026-11-06)
+keeps enemy health bars and HP details available while choosing spell recipients.
 [Shocking Grasp correction](expanded_spells_design.md#rear-row-shocking-grasp) restores
 casting from either party row while retaining exposed enemy reach in the front cells.
 
-Enemy melee lunge **implemented; Ready for review (2026-11-06)**:
+Enemy melee lunge **accepted and implemented (2026-11-06)**:
 [combat feedback design](combat_feedback_design.md#enemy-melee-lunge) adds a short,
-impact-timed forward offset to the existing prepared attack animation.
+impact-timed forward offset to the existing prepared attack animation. The user
+accepted the doubled distance (0.28 cell), preserving timing and the attack-start
+facing anchor.
 Attack-direction correction: select directional artwork from the attack-start
 position throughout a triggered melee clip, so diagonal enemies keep their facing
 while the rendered body lunges across a viewing-sector boundary.
@@ -383,7 +394,9 @@ implemented. Reference v1 and the completed slice are accepted.
 B06 is superseded without implementation; reusable level preparation and targeted
 calibration now belong to [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
-right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
+right inset. The [compact initiative follow-up](native_hud_design.md#compact-initiative-strip--2026-11-06)
+halves its footprint and aligns its top to the viewport, retaining native text.
+The earlier adjustment uniformly reduced skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
 metadata/layout only, using the existing prepared-image pipeline. Health bars use the
 projected body-axis anchor horizontally rather than the visible silhouette’s
