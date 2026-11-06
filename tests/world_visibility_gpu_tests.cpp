@@ -247,6 +247,21 @@ int main() {
             renderer.render(input);
             check(renderer.stats.cached && renderer.stats.draws == 0,
                   "Unchanged interactive world caches all GPU draws");
+            const auto normalCamera = world_render::camera(input.movement, input.geometry);
+            for (float weight : {0.f, .5f, 1.f}) {
+                auto dialogueCamera = normalCamera;
+                dialogueCamera.position.z -= weight * .45f;
+                dialogueCamera.horizon -= weight * .2f;
+                input.cameraOverride = dialogueCamera;
+                renderer.render(input);
+                check(world_render::sameCamera(renderer.visibility()->frame().camera, dialogueCamera),
+                      "GPU visibility consumes shared dialogue camera");
+                differences += compare(resources, renderer, ids.get());
+            }
+            input.cameraOverride.reset();
+            renderer.render(input);
+            check(world_render::sameCamera(renderer.visibility()->frame().camera, normalCamera),
+                  "Dialogue camera restores original projection");
             actors.face(actors.id(0), Heading::North);
             animation.actorRevision = actors.snapshot().revision;
             animation.frames[0].clip = NpcAnimation::Hurt;

@@ -1,5 +1,6 @@
 #include "ui/button_targets.hpp"
 #include "ui/camp_layout.hpp"
+#include "ui/dialogue_layout.hpp"
 #include "ui/inventory_layout.hpp"
 #include "ui/loot_layout.hpp"
 #include "ui/save_layout.hpp"
@@ -20,6 +21,23 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         for (int i = 0; i < 4; ++i)
             t.add(hudLayout::card(i));
     };
+    if (h.dialogue.open) {
+        panel(15);
+        t.context[4] = h.dialogue.revision;
+        t.context[5] = h.dialogue.offset;
+        t.context[6] = unsigned(h.dialogue.introduction) + 2u * unsigned(h.dialogue.revealing);
+        t.context[7] = h.dialogue.leaving;
+        if (!h.dialogue.leaving) {
+            for (unsigned i = 0; i < h.dialogue.count; ++i)
+                t.add(dialogueLayout::row(i));
+            if (h.dialogue.introduction)
+                t.add(dialogueLayout::skip);
+            t.add(dialogueLayout::previous, h.dialogue.offset > 0);
+            t.add(dialogueLayout::next, h.dialogue.offset + h.dialogue.count < h.dialogue.totalTopics);
+            t.add(dialogueLayout::response);
+        }
+        return t;
+    }
     if (h.targetPicker.open && h.targetPicker.available && !h.modal()) {
         panel(14);
         t.context[4] = h.targetPicker.revision;

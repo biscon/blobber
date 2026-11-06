@@ -16,7 +16,8 @@ class GameView {
         else if (active_ && world_.visibility() == active_)
             world_.clear();
     }
-    bool update(const GameSession& game, const NpcAnimationSnapshot& animation, const SpellArea& area) {
+    bool update(const GameSession& game, const NpcAnimationSnapshot& animation, const SpellArea& area,
+                std::optional<world_render::Camera> camera = {}, bool cameraMoving = false) {
         const auto conditions = game.effects().visualConditions();
         const world_render::FrameInput input{game.geometry(),
                                              game.movement(),
@@ -30,7 +31,9 @@ class GameView {
                                              game.guardianDoor(),
                                              &game.combat().spellVisuals(),
                                              &conditions,
-                                             &game.supportVisuals()};
+                                             &game.supportVisuals(),
+                                             camera,
+                                             cameraMoving};
         const auto previous = image_.revision;
         if (!ready_) {
             map_.prepare(game.geometry().base(), rooms_);

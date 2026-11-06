@@ -1,5 +1,6 @@
 #include "assets/npc_metadata.hpp"
 #include "assets/fingerprint.hpp"
+#include "game/dialogue.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -271,6 +272,7 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
             if (role != "hostile" && role != "resident")
                 throw std::runtime_error("Invalid NPC role: " + role);
             instances.back().role = role == "resident" ? NpcRole::Resident : NpcRole::Hostile;
+            instances.back().residentId = dialogueKey(placement.value("resident_id", std::string{}));
             if (instances.back().role != definitionRole)
                 throw std::runtime_error("NPC placement role differs from its appearance definition");
             if (placement.contains("ai")) {

@@ -19,6 +19,8 @@ Options parseOptions(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc)
             result.assets = argv[++i];
+        else if (arg == "--dialogue-dir" && i + 1 < argc)
+            result.dialogueDir = std::filesystem::absolute(argv[++i]);
         else if (arg == "--sanctuary-city-review")
             result.sanctuaryCityReview = true;
         else if (arg == "--no-audio")

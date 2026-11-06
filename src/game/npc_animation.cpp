@@ -79,7 +79,8 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
     snapshot_.world = world.snapshot().world;
     setTime(0);
 }
-void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effects) noexcept {
+void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effects,
+                          std::optional<ActorId> speaker, std::uint64_t speakerMs) noexcept {
     bool changed = false;
     for (std::size_t i = 0; i < snapshot_.count; ++i) {
         const auto& actor = world_.snapshot().actors[i];
@@ -150,12 +151,19 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
                 // A resident without optional talk art remains safely idle.
                 if (!timings[static_cast<std::size_t>(next.clip)].count)
                     next.clip = NpcAnimation::Idle;
-                next.active = sample(timings[static_cast<std::size_t>(next.clip)], time, phase);
+                const auto sampleTime =
+                    speaker && speaker->world == world_.snapshot().world && speaker->slot == i ? speakerMs
+                                                                                               : time;
+                next.active = sample(timings[static_cast<std::size_t>(next.clip)], sampleTime, phase);
             }
             // Attack and talk can expose a directional idle fallback. Keep legacy
             // idle snapshots stable; reaction/corpse holds need no idle invalidation.
             if (next.clip <= NpcAnimation::Attack || directionalIdleFallback(next.clip))
-                next.idle = sample(timings[0], time, idlePhases_[i]);
+                next.idle = sample(timings[0],
+                                   speaker && speaker->world == world_.snapshot().world && speaker->slot == i
+                                       ? speakerMs
+                                       : time,
+                                   idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||

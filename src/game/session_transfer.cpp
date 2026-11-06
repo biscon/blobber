@@ -5,6 +5,8 @@
 #include <stdexcept>
 namespace blobber {
 const char* GameSession::saveSafety() const noexcept {
+    if (conversation_)
+        return "Finish the conversation before saving.";
     if (!runActive())
         return "Campaign has ended.";
     if (timeMs_ > maxCheckpointClock || combat_.snapshot().gameplayMs > maxCheckpointClock ||
@@ -19,6 +21,8 @@ const char* GameSession::saveSafety() const noexcept {
     return nullptr;
 }
 const char* GameSession::travelSafety() const noexcept {
+    if (conversation_)
+        return "Finish the conversation before travelling.";
     if (mutation_ == UINT64_MAX)
         return "Couldn't travel. Save your progress and restart the game.";
     if (movement_.pending_ || doorPending_ || actionBusy())
@@ -169,7 +173,7 @@ void GameSession::importFloor(const FloorState& s) {
         const auto& a = s.actors.actors[i];
         const auto& initial = actors_.state_.actors[i];
         if (a.monster.index != actors_.state_.actors[i].monster.index || a.npc.role != initial.npc.role ||
-            a.npc.type.index != initial.npc.type.index ||
+            a.npc.residentId != initial.npc.residentId || a.npc.type.index != initial.npc.type.index ||
             a.maxHitPoints != actors_.state_.actors[i].maxHitPoints ||
             unsigned(a.life) > unsigned(ActorLife::Removed) || !validCell(a.npc.cell) ||
             unsigned(a.npc.facing) > 3 || unsigned(a.npc.animation) >= npcAnimationCount ||

@@ -1,4 +1,5 @@
 #pragma once
+#include "game/dialogue.hpp"
 #include "game/session.hpp"
 #include "game/travel.hpp"
 #include "generation/population.hpp"
@@ -40,6 +41,7 @@ struct CampaignLocationState {
     std::uint32_t seed = 0;
 };
 struct CampaignCheckpoint {
+    DialogueHistory dialogue;
     Party::Saved party;
     std::array<CampaignLocationState, campaignLocationCount> locations;
     Navigation::Saved navigation;
@@ -86,6 +88,7 @@ class CampaignRun {
     CampaignRun& operator=(const CampaignRun&) = delete;
     GameSession& game() noexcept { return *active_; }
     const GameSession& game() const noexcept { return *active_; }
+    DialogueHistory& dialogue() noexcept { return dialogue_; }
     Party& party() noexcept { return party_; }
     const CampaignLocation& location(unsigned i) const { return locations_.at(i); }
     const Map& map() const noexcept { return locations_[location_].map(); }
@@ -110,6 +113,7 @@ class CampaignRun {
     std::size_t snapshotBytes() const noexcept { return campaignLocationCount * sizeof(FloorState); }
 
   private:
+    DialogueHistory dialogue_;
     std::string runId_;
     Party party_;
     std::array<CampaignLocation, campaignLocationCount> locations_;

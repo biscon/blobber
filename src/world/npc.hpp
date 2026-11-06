@@ -39,6 +39,7 @@ struct NpcInstance {
     // Optional rules variant sharing this appearance; local to the session catalog.
     std::optional<rules::MonsterId> monster{};
     NpcRole role = NpcRole::Hostile;
+    std::uint64_t residentId = 0; // Stable per-character identity; never an appearance/actor slot.
 };
 // Immutable level-lifetime indices: no removal, recycling or runtime spawning.
 class NpcWorld {

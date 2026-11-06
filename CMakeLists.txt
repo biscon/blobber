@@ -76,11 +76,11 @@ find_package(Threads REQUIRED)
 add_library(blobber_core src/game/inn_interior.cpp src/world/sanctuary_city.cpp src/audio/music.cpp src/audio/events.cpp src/audio/policy.cpp src/world/surfaces.cpp src/game/sanctuary_hub.cpp src/render/attack_visuals.cpp src/game/checkpoint_validation.cpp src/game/save_commands.cpp src/game/campaign_checkpoint.cpp src/game/party_checkpoint.cpp src/game/navigation_checkpoint.cpp src/game/travel_commands.cpp src/game/floor_digest.cpp src/game/session_transfer.cpp src/game/campaign.cpp src/game/session_objective.cpp src/generation/population.cpp src/generation/encounters.cpp src/world/fixtures.cpp src/game/session_fixtures.cpp src/generation/diagnostic_view.cpp src/game/starting_party.cpp src/generation/generator.cpp src/generation/stone_layout.cpp src/generation/fallback.cpp src/generation/metrics.cpp src/generation/fixtures.cpp src/generation/geometry.cpp
     src/generation/dressing.cpp src/generation/validation.cpp src/game/selection_controls.cpp src/game/level_spells.cpp src/game/level_effects.cpp src/game/combat_progression.cpp src/game/advancement_commands.cpp src/game/party_progression.cpp src/game/session_progression.cpp src/game/arena.cpp src/game/preparation_commands.cpp src/game/creator.cpp src/game/loot_commands.cpp src/game/recovery_commands.cpp src/game/loot.cpp src/game/recovery.cpp src/game/session_recovery.cpp src/game/character_sheet.cpp src/game/inventory_commands.cpp src/ui/inventory_interaction.cpp src/game/inventory.cpp src/game/combat_items.cpp src/world/map.cpp src/world/npc.cpp src/game/movement.cpp src/game/npc_animation.cpp src/game/party.cpp src/game/actors.cpp src/game/target_commands.cpp src/game/spell_commands.cpp src/game/commands.cpp src/game/hud_state.cpp src/game/conditions.cpp src/game/status_summary.cpp src/game/spell_areas.cpp src/game/effects.cpp src/game/enemy_effects.cpp src/game/enemy_spells.cpp src/game/combat.cpp src/game/combat_spells.cpp src/game/spell_visuals.cpp src/game/support_visuals.cpp src/game/combat_actions.cpp src/game/combat_impacts.cpp src/game/damage_resolution.cpp src/game/combat_loop.cpp src/game/session.cpp src/game/navigation.cpp src/game/approach_slots.cpp src/game/npc_ai.cpp src/game/perception.cpp src/ui/interaction.cpp src/ui/button_targets.cpp src/input/key_repeat.cpp)
 target_include_directories(blobber_core PUBLIC src)
-target_sources(blobber_core PRIVATE src/ui/map_model.cpp src/ui/screen_shake.cpp)
+target_sources(blobber_core PRIVATE src/game/dialogue.cpp src/game/dialogue_commands.cpp src/ui/map_model.cpp src/ui/screen_shake.cpp)
 target_link_libraries(blobber_core PUBLIC blobber_rules Threads::Threads)
 # Level recovery loading validates world cells and exposes core recovery data.
 target_link_libraries(blobber_rules_io PUBLIC blobber_core)
-add_library(blobber_npc_io src/assets/npc_metadata.cpp)
+add_library(blobber_npc_io src/assets/npc_metadata.cpp src/assets/dialogue.cpp)
 target_link_libraries(blobber_npc_io PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_npc_io)
 foreach(target blobber_rules blobber_rules_io blobber_core)
@@ -93,7 +93,7 @@ target_link_libraries(blobber_audio_io PUBLIC blobber_core PRIVATE nlohmann_json
 add_library(blobber_world_assets src/assets/world_assets.cpp src/assets/world_residency.cpp)
 target_link_libraries(blobber_world_assets PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
 blobber_warnings(blobber_world_assets)
-add_library(blobber_world_cpu src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/spell_effects.cpp src/render/spell_effects_offensive.cpp src/render/spell_effects_support.cpp src/render/spell_lights.cpp src/render/melee_swipe.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
+add_library(blobber_world_cpu src/render/dialogue_camera.cpp src/render/world_stairs.cpp src/render/world_doors.cpp src/render/world_effects.cpp src/render/spell_effects.cpp src/render/spell_effects_offensive.cpp src/render/spell_effects_support.cpp src/render/spell_lights.cpp src/render/melee_swipe.cpp src/render/world_scene.cpp src/render/world_visibility.cpp src/render/world_raster.cpp src/render/world_billboard_clip.cpp)
 # Keep gameplay/orchestration unoptimized in Debug; only the numerical picking
 # kernels need optimized scalar loops. Symbols and Debug assertions are retained.
 option(BLOBBER_OPTIMIZE_DEBUG_RASTER "Optimize numerical visibility kernels in Debug" ON)
@@ -118,7 +118,7 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_library(blobber_platform
         src/platform/audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
         src/platform/gpu_resources.cpp src/platform/environment_ao.cpp src/platform/world_geometry_draw.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
-        src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
+        src/ui/dialogue_screen.cpp src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu blobber_audio_io blobber_assets_io raylib)
     target_sources(blobber_platform PRIVATE src/ui/map_screen.cpp)
     add_library(blobber_application src/app/city_review.cpp src/app/audio_settings.cpp src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
@@ -146,6 +146,7 @@ if(BLOBBER_BUILD_GRAPHICS)
     endif()
     file(GLOB_RECURSE BLOBBER_COPY_INPUTS CONFIGURE_DEPENDS LIST_DIRECTORIES false
         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/dialogue/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/*"
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules/*"
@@ -223,7 +224,7 @@ if(BUILD_TESTING)
     add_test(NAME options COMMAND blobber_options_tests)
     add_test(NAME development_cli COMMAND blobber --development --help)
     endif()
-    foreach(suite residents screen_shake combat_positioning targeting dressing buttons shaman zombie giant_rat bugbear damage animation progression_allocations level_spells progression portraits creation library visual_review expanded_spells recovery  inventory spells effects  impact  image_preparation hybrid ai health combat hud commands  actors  core       rules rules_content party party_content)
+    foreach(suite dialogue residents screen_shake combat_positioning targeting dressing buttons shaman zombie giant_rat bugbear damage animation progression_allocations level_spells progression portraits creation library visual_review expanded_spells recovery  inventory spells effects  impact  image_preparation hybrid ai health combat hud commands  actors  core       rules rules_content party party_content)
         if(NOT BLOBBER_BUILD_GRAPHICS AND suite MATCHES "^(portraits|image_preparation)$")
             continue()
         endif()
@@ -235,6 +236,8 @@ if(BUILD_TESTING)
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules)
         elseif(suite STREQUAL "rules_content" OR suite STREQUAL "party_content" OR suite STREQUAL "creation" OR suite STREQUAL "library")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_rules_io blobber_core nlohmann_json::nlohmann_json)
+        elseif(suite STREQUAL "dialogue")
+            target_link_libraries(blobber_${suite}_tests PRIVATE blobber_world_cpu blobber_npc_io nlohmann_json::nlohmann_json)
         elseif(suite STREQUAL "visual_review" OR suite STREQUAL "targeting" OR suite STREQUAL "residents")
             target_link_libraries(blobber_${suite}_tests PRIVATE blobber_world_cpu)
         else()

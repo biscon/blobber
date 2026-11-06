@@ -12,5 +12,6 @@ UiInput routeHudButtons(CommandController&, const UiInput&, bool acceptPress = t
 void routeHudInput(CommandController& commands, const UiInput& input, std::optional<ActorId> viewportHit = {},
                    bool allowConfirm = true, std::optional<LootId> lootHit = {},
                    std::optional<Cell> groundHit = {}, std::optional<FixtureId> fixtureHit = {},
-                   std::optional<ContainerId> containerHit = {}, bool worldImageMoving = false) noexcept;
+                   std::optional<ContainerId> containerHit = {}, bool worldImageMoving = false,
+                   std::optional<ActorId> residentHit = {}) noexcept;
 } // namespace blobber

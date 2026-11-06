@@ -188,7 +188,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     };
     headerText("STONE & SHADOW", 12, gold, UiTextStyle::Display);
     char line[96];
-    std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .", headingName(state.player.heading));
+    std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .",
+                  h && h->dialogue.open ? "CONVERSATION" : headingName(state.player.heading));
     headerText(line, 245, gold, UiTextStyle::Small);
     {
         const auto depth = h && h->floor ? h->floor->definition().depth : 1;
@@ -201,7 +202,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     }
     p.gear(hudLayout::gear);
     p.border({viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2}, edge);
-    p.box(hudLayout::actions);
+    if (!h || !h->dialogue.open)
+        p.box(hudLayout::actions);
     if (!h)
         return;
     for (int i = 0; i < 4; ++i) {
@@ -212,6 +214,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
                    (h->loot.open && h->loot.recipient.index == h->cards[i].id.index),
                h);
+    }
+    if (h->dialogue.open) {
+        p.dialogue(h->dialogue);
+        return;
     }
     if (h->campaign)
         p.picture(UiArt::travelIcon, hudLayout::travelButton,

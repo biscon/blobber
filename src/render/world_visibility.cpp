@@ -93,7 +93,7 @@ bool VisibilityPipeline::update(const FrameInput& in, bool rasterMoving) {
     const auto* fixtures = in.geometry.fixtures();
     if (fixtures && fixtures->definition().count > fixtureCapacity)
         throw std::invalid_argument("Too many world fixtures");
-    const auto c = camera(in.movement, in.geometry, scene_.farClip);
+    const auto c = in.cameraOverride.value_or(camera(in.movement, in.geometry, scene_.farClip));
     const std::array<std::uint64_t, 11> stamp{in.geometry.world(),
                                               in.geometry.revision(),
                                               fixtures ? fixtures->revision() : 0,
@@ -106,7 +106,8 @@ bool VisibilityPipeline::update(const FrameInput& in, bool rasterMoving) {
                                               in.doors && in.doors->active() ? in.doors->now : 0,
                                               in.guardianDoor};
     if (ready_ && stamp == stamp_ && sameCamera(c, frame().camera) &&
-        frame().moving == (in.movement.transition.active() || (in.doors && in.doors->active())) &&
+        frame().moving ==
+            (in.cameraMoving || in.movement.transition.active() || (in.doors && in.doors->active())) &&
         (!rasterMoving || !frame().moving || frame().rasterized))
         return false;
     auto& out = frames_[1 - current_];
@@ -115,7 +116,7 @@ bool VisibilityPipeline::update(const FrameInput& in, bool rasterMoving) {
     out.visibleContainers = {};
     out.count = out.proxyCount = 0;
     out.camera = c;
-    out.moving = in.movement.transition.active() || (in.doors && in.doors->active());
+    out.moving = in.cameraMoving || in.movement.transition.active() || (in.doors && in.doors->active());
     out.rasterized = !out.moving || rasterMoving;
     const bool opaqueChanged = !ready_ || !frame().rasterized || !sameCamera(c, frame().camera) ||
                                stamp[0] != stamp_[0] || stamp[1] != stamp_[1] || stamp[2] != stamp_[2] ||
@@ -138,7 +139,9 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             out.containerOpened[i] = in.loot->containers[i].opened;
     out.crestTexture = pack_.crest;
     out.vineTexture = pack_.vine;
-    const auto center = playerCenter(in.movement);
+    const auto center = in.cameraOverride
+                            ? Vec{out.camera.position.x, out.camera.position.y, out.camera.position.z}
+                            : playerCenter(in.movement);
     out.doorCount = doorBoxes(in.geometry, in.doors, out.doors, pack_.door, pack_.lockedDoor,
                               pack_.materialCount ? pack_.materials[0] : 0, pack_.doorEdge,
                               pack_.guardianEmblem, in.guardianDoor);
@@ -329,7 +332,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         const float lateral = (x + .5f - viewWidth * .5f) / focal();
         if (frame.leaves.hides(frame.camera,
                                {frame.camera.forward.x + frame.camera.right.x * lateral,
-                                (viewHeight * viewHorizon - y - .5f) / focal(),
+                                (viewHeight * frame.camera.horizon - y - .5f) / focal(),
                                 frame.camera.forward.z + frame.camera.right.z * lateral},
                                depth, frame.bodyLeafRelations[owner].data()))
             return false;
@@ -351,11 +354,11 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
     if (in.geometry.world() != stamp_[0] || in.geometry.revision() != stamp_[1] ||
         (in.doors ? in.doors->revision : 0) != stamp_[8])
         return {};
-    const auto c = camera(in.movement, in.geometry, scene_.farClip);
+    const auto c = in.cameraOverride.value_or(camera(in.movement, in.geometry, scene_.farClip));
     if (!sameCamera(c, frame().camera))
         return {};
     const float lateral = (x + .5f - viewWidth * .5f) / focal(),
-                vy = (viewHeight * viewHorizon - y - .5f) / focal();
+                vy = (viewHeight * frame().camera.horizon - y - .5f) / focal();
     if (vy >= 0)
         return {};
     const float vx = c.forward.x + c.right.x * lateral, vz = c.forward.z + c.right.z * lateral;

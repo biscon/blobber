@@ -14,7 +14,7 @@ Vec sub(Vec a, Vec b) {
 struct ClipVertex {
     float x, y, z, u, v;
 };
-float plane(const ClipVertex& p, unsigned face, float farClip) {
+float plane(const ClipVertex& p, unsigned face, float farClip, float horizon) {
     const float half = viewWidth * .5f / focal();
     switch (face) {
     case 0:
@@ -26,9 +26,9 @@ float plane(const ClipVertex& p, unsigned face, float farClip) {
     case 3:
         return p.z * half - p.x;
     case 4:
-        return p.z * viewHeight * viewHorizon / focal() - p.y;
+        return p.z * viewHeight * horizon / focal() - p.y;
     default:
-        return p.y + p.z * viewHeight * (1 - viewHorizon) / focal();
+        return p.y + p.z * viewHeight * (1 - horizon) / focal();
     }
 }
 float edge(float ax, float ay, float bx, float by, float x, float y) {
@@ -58,7 +58,8 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
         unsigned n = 0;
         for (unsigned i = 0; i < count; ++i) {
             const auto p = a[i], q = a[(i + 1) % count];
-            const float dp = plane(p, face, out.camera.farClip), dq = plane(q, face, out.camera.farClip);
+            const float dp = plane(p, face, out.camera.farClip, out.camera.horizon),
+                        dq = plane(q, face, out.camera.farClip, out.camera.horizon);
             if (dp >= 0)
                 b[n++] = p;
             if ((dp >= 0) != (dq >= 0)) {
@@ -76,7 +77,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
         for (unsigned i = 0; i < 3; ++i) {
             iz[i] = 1 / t[i].z;
             x[i] = viewWidth * .5f + focal() * t[i].x * iz[i];
-            y[i] = viewHeight * viewHorizon - focal() * t[i].y * iz[i];
+            y[i] = viewHeight * out.camera.horizon - focal() * t[i].y * iz[i];
         }
         float area = edge(x[0], y[0], x[1], y[1], x[2], y[2]);
         if (std::abs(area) < 1e-10f)
@@ -111,7 +112,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                 if (leaves) {
                     const float lateral = (px + .5f - viewWidth * .5f) / focal();
                     const Vec ray{out.camera.forward.x + out.camera.right.x * lateral,
-                                  (viewHeight * viewHorizon - py - .5f) / focal(),
+                                  (viewHeight * out.camera.horizon - py - .5f) / focal(),
                                   out.camera.forward.z + out.camera.right.z * lateral};
                     if (leaves->hides(out.camera, ray, z))
                         continue;

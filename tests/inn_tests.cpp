@@ -128,6 +128,10 @@ int main() {
             return false;
         };
         const auto pose = run.game().movement().player;
+        run.dialogue().get(dialogueKey("sanctuary.innkeeper"), true)->introduced = true;
+        check(run.dialogue().complete(dialogueKey("sanctuary.innkeeper"), dialogueKey("dungeon"),
+                                      dialogueKey("heard_dungeon_advice")),
+              "Dialogue history records fact before save");
         auto saved = run.checkpoint();
         const auto bytes = encodeCampaign(cat, defs, {"fixture", 0}, *saved);
         saved = decodeCampaign(cat, defs, {"fixture", 0}, bytes);
@@ -136,6 +140,12 @@ int main() {
                   restored.game().movement().player == pose,
               "Continue restores inn and pose");
         check(hasDropped(restored.game()), "Inn dropped items survive disk roundtrip");
+        check(restored.dialogue().get(dialogueKey("sanctuary.innkeeper")) &&
+                  restored.dialogue().get(dialogueKey("sanctuary.innkeeper"))->introduced &&
+                  restored.dialogue()
+                      .get(dialogueKey("sanctuary.innkeeper"))
+                      ->knows(dialogueKey("heard_dungeon_advice")),
+              "Dialogue introductions/facts survive save Continue");
         check(restored.game().actors().snapshot().count == 1 &&
                   !restored.game().actors().snapshot().actors[0].hostile() &&
                   restored.game().actors().snapshot().actors[0].npc.cell == Cell{6, 3},
@@ -233,6 +243,8 @@ int main() {
               "Outdoor sanctuary cannot grant free long rest with zero kits");
         enterInn(restored);
         check(hasDropped(restored.game()), "Inn dropped items survive inactive travel snapshot");
+        check(restored.dialogue().get(dialogueKey("sanctuary.innkeeper"))->introduced,
+              "Dialogue history survives location travel");
         // Exercise the public wire action and transition events through real movement.
         Client client(cat, defs);
         auto scenario = generatedScenario(cat);

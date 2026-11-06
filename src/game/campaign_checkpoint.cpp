@@ -86,6 +86,7 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     if (const auto* error = saveSafety())
         throw std::invalid_argument(error);
     auto out = std::make_unique<CampaignCheckpoint>();
+    out->dialogue = dialogue_;
     out->party = party_.checkpoint();
     out->pose = game().movement().player;
     out->animated = game().movement().animated;
@@ -133,8 +134,9 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
 }
 CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
                          const std::vector<NpcTimings>& timings)
-    : runId_(s.runId), party_(catalog, s.party), timings_(timings), location_(s.activeLocation),
-      revision_(s.revision), elapsed_(s.gameplayMs) {
+    : dialogue_(s.dialogue), runId_(s.runId), party_(catalog, s.party), timings_(timings),
+      location_(s.activeLocation), revision_(s.revision), elapsed_(s.gameplayMs) {
+    dialogue_.validate();
     if (runId_.size() != 32 || runId_.find_first_not_of("0123456789abcdef") != std::string::npos ||
         location_ >= campaignLocationCount || elapsed_ > maxCheckpointClock || !revision_ ||
         revision_ == UINT64_MAX || !s.locations[0].visited || !s.locations[location_].visited ||

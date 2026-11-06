@@ -60,6 +60,12 @@ int main() {
             char* retired[]{program, const_cast<char*>(option)};
             rejects([&] { parseOptions(2, retired); }, "Removed selectors and demos reject");
         }
+        char dialogue[] = "--dialogue-dir", directory[] = "editable-dialogue";
+        char* authoring[]{program, dialogue, directory};
+        check(parseOptions(3, authoring).dialogueDir == std::filesystem::absolute(directory),
+              "Dialogue authoring directory is independent of artwork assets");
+        char* missingDialogue[]{program, dialogue};
+        rejects([&] { parseOptions(2, missingDialogue); }, "Missing dialogue directory rejects");
         std::cout << "Command-line option checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

@@ -23,6 +23,7 @@ class Presenter {
     void presentCached(float fade, const char* status = nullptr);
     void presentSaving(); // Cached composite only; no live simulation/UI readers.
     void fade(float alpha) noexcept { fade_ = std::clamp(alpha, 0.f, 1.f); }
+    const UiFonts& fonts() const noexcept { return fonts_; }
     GpuResources& resources() noexcept { return resources_; }
     void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
                       const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,

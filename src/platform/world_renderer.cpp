@@ -367,8 +367,9 @@ WorldImage WorldRenderer::render(const MovementState& state) {
 }
 WorldImage WorldRenderer::render(View& v, const MovementState& state, const world_render::WorldFrame* frame,
                                  TargetHandle ids, const world_render::EffectFrame* effects) {
-    const auto camera =
-        v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip) : world_render::camera(state);
+    const auto camera = frame       ? frame->camera
+                        : v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip)
+                                    : world_render::camera(state);
     stats = {};
     if (v.effects)
         stats.effectDrops = v.effects->diagnostics();
@@ -396,7 +397,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         {0, 1, 0},
         60,
         CAMERA_PERSPECTIVE};
-    const auto projection = worldProjection(camera.farClip);
+    const auto projection = worldProjection(camera.farClip, camera.horizon);
     const int depthLocation = GetShaderLocation(shader, "depthOnly");
     if (!ids && ambientOcclusion_ &&
         (aoOwner_ != &v || !world_render::sameCamera(camera, aoCamera_) ||
@@ -453,8 +454,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         SetShaderValue(sky, GetShaderLocation(sky, "viewport"), viewport, SHADER_UNIFORM_VEC2);
         SetShaderValue(sky, GetShaderLocation(sky, "forward"), &camera.forward, SHADER_UNIFORM_VEC3);
         SetShaderValue(sky, GetShaderLocation(sky, "right"), &camera.right, SHADER_UNIFORM_VEC3);
-        SetShaderValue(sky, GetShaderLocation(sky, "viewHorizon"), &world_render::viewHorizon,
-                       SHADER_UNIFORM_FLOAT);
+        SetShaderValue(sky, GetShaderLocation(sky, "viewHorizon"), &camera.horizon, SHADER_UNIFORM_FLOAT);
         const auto skyTexture = resources_.texture(v.textures[v.pack.sky]);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_REPEAT);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_T, RL_TEXTURE_WRAP_CLAMP);

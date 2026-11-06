@@ -551,9 +551,16 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                                   ? "Leave inn"
                                   : "Enter inn");
         }
+        if (!doorway && nearbyResident()) {
+            const auto* a = actors_.actor(*nearbyResident());
+            const auto* c = a && dialogueCatalog_ ? dialogueCatalog_->find(a->npc.residentId) : nullptr;
+            if (c)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] Talk to %s",
+                              c->name.c_str());
+        }
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
-        if (!doorway && f &&
+        if (!doorway && !nearbyResident() && f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
             const char* action = nullptr;
@@ -580,7 +587,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             }
             if (action)
                 std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s", action);
-        } else if (const auto chest = doorway ? ContainerId{} : session_.nearbyContainer()) {
+        } else if (const auto chest =
+                       doorway || nearbyResident() ? ContainerId{} : session_.nearbyContainer()) {
             const auto access = session_.containerAccess(chest);
             const auto* container = session_.loot().findContainer(chest);
             if (access && container)

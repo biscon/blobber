@@ -60,6 +60,7 @@ void GameSession::detectContact(bool settlingEndpoint) noexcept {
         clearPending();
 }
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
+    paused = paused || bool(conversation_);
     if (campaign_ && campaign_->status() != CampaignStatus::Active) {
         events_.clear();
         return events_;
@@ -163,6 +164,8 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
+    if (conversation_)
+        return;
     if (!runActive())
         return;
     if (opening()) {
@@ -193,7 +196,7 @@ void GameSession::move(Action action, bool fresh) noexcept {
     discover();
 }
 InventoryError GameSession::inventoryAccess(const InventoryRequest& request) const noexcept {
-    if (!runActive())
+    if (conversation_ || !runActive())
         return InventoryError::Unavailable;
     if (actionBusy())
         return InventoryError::Moving;
@@ -235,7 +238,7 @@ InventoryResult GameSession::inventoryChange(const InventoryRequest& request) no
     return result;
 }
 CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
-    if (!runActive()) {
+    if (conversation_ || !runActive()) {
         CombatOutcome out;
         out.reason = CommandReason::Unavailable;
         return out;

@@ -39,6 +39,9 @@ class GameSession {
     void importFloor(const FloorState&); // Preparation only; rejects invalid values.
     CampaignRun* campaign() const noexcept { return campaign_; }
     void restorePose(Player, bool animated); // Preparation only.
+    bool beginConversation(ActorId) noexcept;
+    void endConversation() noexcept;
+    bool inConversation() const noexcept { return bool(conversation_); }
     const char* saveSafety() const noexcept;
     Navigation::Saved navigationCheckpoint() const { return ai_.navigation_.checkpoint(); }
     void restoreNavigation(const Navigation::Saved& s) { ai_.navigation_.restore(s); }
@@ -155,6 +158,7 @@ class GameSession {
   private:
     void validateContainers(const FloorState&) const;
     friend class CampaignRun;
+    std::optional<ActorId> conversation_;
     CampaignRun* campaign_ = nullptr;
     std::uint64_t mutation_ = 0;
     FloorGeometry floor_;

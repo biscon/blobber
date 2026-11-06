@@ -3,7 +3,8 @@
 Status: implemented and mechanically verified; awaiting runtime visual review (2026-11-06).
 The user approved
 [reference v1](../assets/npcs/innkeeper/reference/turnaround-v1.png) and authorized
-implementation. Dialogue, trading and the rest of the economy are deferred.
+implementation. [Dialogue](dialogue_design.md) is now implemented as a separate
+first slice; trading and the rest of the economy remain deferred.
 
 ## Responsibilities and ownership
 
@@ -14,7 +15,8 @@ Residents are stationary, peaceful, persistent actors without monster rules,
 combat HP, attacks, loot or rewards. Their invalid MonsterId and zero HP are
 intentional, not fabricated monster content. Role belongs to placement data and
 is copied into floor-owned runtime actors and snapshots. No factions, shops,
-dialogue state or generic service framework are introduced.
+dialogue state or generic service framework were introduced in the resident-only
+slice. Dialogue state is now supplied by the separate extension.
 The actor owner copies at most 32 bounded appearance IDs during preparation, so
 the resident identity can be read without borrowing strings from temporary placement
 objects. Contact checks scan the existing contiguous active actor range to exclude
@@ -44,9 +46,10 @@ Small generated test catalogs explicitly own their resident appearance/type data
 `Talk` is appended to `NpcAnimation`, retaining existing numeric clip values. Talk
 requires front art only; side/rear views use their directional idle timeline,
 sharing the existing attack fallback contract. A small checked resident-talk
-presentation setter lets future dialogue start/stop the prepared loop; normal
-gameplay leaves the innkeeper idling. No talk command, interaction prompt or UI
-is exposed in this slice. Optional missing talk artwork safely renders idle,
+presentation setter lets dialogue start/stop the prepared loop; the resident-only
+slice left the innkeeper idling. No talk command, interaction prompt or UI
+was exposed in the resident-only slice; the [dialogue extension](dialogue_design.md)
+now provides them. Optional missing talk artwork safely renders idle,
 including when the animator is reconstructed while Talk is selected.
 
 Four two-pose idle masters and one four-pose front talk master were generated from the
@@ -64,7 +67,9 @@ placements; reject forged resident combat state or changed canonical innkeeper
 position/facing. Advance campaign schema/simulation and appearance publication
 revision for the added field/clip. Old saves reject explicitly rather than being
 silently reinterpreted; new assets also change the NPC content fingerprint.
-The implemented campaign schema/simulation are **11/15**, appearance revision is
+The resident slice used campaign schema/simulation **11/15**; the subsequent
+[dialogue slice](dialogue_design.md) uses **12/16** and requires a new campaign.
+Appearance revision is
 **6**, and world publication format remains 13. Automation observations add a
 separate `residents` array with identity, pose, idle/talk and `targetable: false`;
 residents never enter `enemies` or offensive target lists.

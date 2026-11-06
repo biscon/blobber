@@ -148,7 +148,7 @@ bool GameSession::atSanctuary() const noexcept {
     return false;
 }
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
-    if (!runActive()) {
+    if (conversation_ || !runActive()) {
         RestPreview out;
         out.error = RestError::Unsafe;
         return out;

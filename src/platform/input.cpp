@@ -26,6 +26,8 @@ InputSample Input::poll(float seconds) {
     std::array<bool, uiKeyCount> uiDown{};
     for (std::size_t i = 0; i < uiKeys.size(); ++i)
         uiDown[i] = IsKeyDown(uiKeys[i]);
+    uiDown[static_cast<std::size_t>(UiKey::Seven)] = IsKeyDown(KEY_SEVEN);
+    uiDown[static_cast<std::size_t>(UiKey::DialogueAdvance)] = IsKeyDown(KEY_SPACE);
     uiDown[static_cast<std::size_t>(UiKey::Cancel)] |= IsKeyDown(KEY_BACKSPACE);
     uiDown[static_cast<std::size_t>(UiKey::Click)] = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     uiDown[static_cast<std::size_t>(UiKey::RightClick)] = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);

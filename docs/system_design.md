@@ -1,17 +1,35 @@
 # System design
 
+[Friendly NPC dialogue](dialogue_design.md) **implemented and mechanically verified;
+awaiting runtime visual/interactive review (2026-11-06)**: editable JSON,
+per-character introduction/fact history, gradual text/Talk, fixed-viewport overlay
+and shared 700 ms conversation camera, based on the approved mockup.
+Eleven focused Release CPU suites, the extended campaign save check and hidden
+CPU/GPU parity pass; [six runtime captures](screenshots/dialogue/README.md).
+Schema/simulation are **12/16** and require a new campaign, as authorized.
+Trading, quests and procedural rumours remain later work.
+The user accepted the interface and fluid transition; an [eye-level correction](dialogue_design.md#eye-level-review-correction--2026-11-06)
+removes the rejected counter-height framing in favor of generic NPC-height framing.
+The new framing awaits review; this correction preserves current saves.
+
 Innkeeper **implemented and mechanically verified; awaiting runtime visual review (2026-11-06)**:
 [Resident design](innkeeper_design.md) adds one stationary, peaceful innkeeper
 behind the bar with approved artwork, four-view idle and front-only talk.
 Twelve focused Release CPU suites and hidden OpenGL checks pass;
 [six review captures](screenshots/innkeeper/README.md). Campaign schema/simulation
-are 11/15; previous saves reject without migration. Dialogue and trading remain deferred.
+were 11/15 at the resident slice; dialogue now advances them to 12/16.
+Trading remains deferred.
 The user rejected the initial runtime scale impression and side orientations.
 The [review correction](innkeeper_design.md#runtime-review-correction--2026-11-06)
 reduces only the counter/rear shelves by 15%, corrects the NPC side-art assignment
 and verifies the closest counter-facing subcell. Focused inn and hidden production
-checks pass; the corrected presentation awaits re-review. Current campaigns remain
-compatible, and character-reference approval is unchanged.
+checks pass; the corrected presentation awaits re-review. That cosmetic correction
+preserved compatibility; the subsequent dialogue slice requires a new campaign.
+Character-reference approval is unchanged.
+
+[Friendly NPC dialogue mockup](mockups/dialogue-v1/README.md) **presentation direction
+approved (2026-11-06)**. The implemented UI uses the agreed fixed-viewport overlay
+and smooth camera approach; runtime acceptance is separate from mockup approval.
 
 Camera framing B **accepted and implemented (2026-11-06)**:
 [projection comparison](renderer_world_design.md#camera-framing-trial--2026-11-06)

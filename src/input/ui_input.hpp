@@ -29,6 +29,8 @@ enum class UiKey : std::size_t {
     Rest,
     Interact,
     Travel,
+    Seven,
+    DialogueAdvance,
     Count
 };
 constexpr auto uiKeyCount = static_cast<std::size_t>(UiKey::Count);

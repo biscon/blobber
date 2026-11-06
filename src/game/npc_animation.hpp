@@ -32,7 +32,8 @@ class NpcAnimator {
     NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings);
     NpcAnimator(ActorWorld&&, const std::vector<NpcTimings>&) = delete;
     NpcAnimator(const ActorWorld&&, const std::vector<NpcTimings>&) = delete;
-    void setTime(std::uint64_t elapsedMs, const EffectController* effects = nullptr) noexcept;
+    void setTime(std::uint64_t elapsedMs, const EffectController* effects = nullptr,
+                 std::optional<ActorId> speaker = {}, std::uint64_t speakerMs = 0) noexcept;
     const NpcAnimationSnapshot& snapshot() const noexcept { return snapshot_; }
 
   private:

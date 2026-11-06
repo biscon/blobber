@@ -2,6 +2,7 @@
 #include "assets/world_assets.hpp"
 #include "game/movement.hpp"
 #include "render/layout.hpp"
+#include "render/world_projection_parameters.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -22,6 +23,7 @@ struct Camera {
     Vec position, forward, right;
     float yaw = 0;
     float farClip = farPlane;
+    float horizon = viewHorizon;
 };
 struct ScreenPoint {
     float x, y, depth;

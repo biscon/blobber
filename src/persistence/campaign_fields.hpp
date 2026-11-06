@@ -133,6 +133,7 @@ template <class A> void visit(A& a, NpcInstance& v) {
     a("ai", v.ai);
     a("monster", v.monster);
     a("role", v.role);
+    a("residentId", v.residentId);
 }
 template <class A> void visit(A& a, ActorState& v) {
     a("npc", v.npc);
@@ -612,7 +613,20 @@ template <class A> void visit(A& a, CampaignLocationState& v) {
     a("exit", v.exit);
     a("seed", v.seed);
 }
+template <class A> void visit(A& a, DialogueHistoryRecord& v) {
+    a("id", v.id);
+    a("introduced", v.introduced);
+    a("completed", v.completed);
+    a("facts", v.facts);
+    a("completedCount", v.completedCount);
+    a("factCount", v.factCount);
+}
+template <class A> void visit(A& a, DialogueHistory& v) {
+    a("records", v.records);
+    a("count", v.count);
+}
 template <class A> void visit(A& a, CampaignCheckpoint& v) {
+    a("dialogue", v.dialogue);
     a("party", v.party);
     a("locations", v.locations);
     a("navigation", v.navigation);

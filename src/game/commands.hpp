@@ -1,5 +1,6 @@
 #pragma once
 #include "game/advancement_ui.hpp"
+#include "game/dialogue.hpp"
 #include "game/inventory_ui.hpp"
 #include "game/loot_ui.hpp"
 #include "game/npc_animation.hpp"
@@ -154,6 +155,7 @@ struct EnemyTargetPicker {
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
+    DialogueHud dialogue;
     WorldViewTransform worldTransform;
     ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
@@ -197,8 +199,8 @@ struct HudSnapshot {
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
     bool modal() const noexcept {
-        return travel.open || advancement.open || loot.open || camp.open || inventory.open || logExpanded ||
-               menuOpen || magic.open;
+        return dialogue.open || travel.open || advancement.open || loot.open || camp.open || inventory.open ||
+               logExpanded || menuOpen || magic.open;
     }
     const char* interactionPrompt() const noexcept {
         if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
@@ -215,6 +217,17 @@ inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, Par
 class CommandController {
   public:
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
+    ~CommandController();
+    void bindDialogue(const DialogueCatalog*, DialogueHistory*) noexcept;
+    void residentVisibility(const TargetSnapshot&) noexcept;
+    CampaignRun* sessionCampaign() const noexcept { return session_.campaign(); }
+    std::optional<ActorId> nearbyResident() const noexcept;
+    bool startDialogue(std::optional<ActorId> = {}) noexcept;
+    void tickDialogue(double, bool focused) noexcept;
+    void routeDialogue(const UiInput&) noexcept;
+    void finishDialogue() noexcept;
+    std::optional<ActorId> dialogueSpeaker() const noexcept { return speaker_; }
+    const DialoguePlayer& dialoguePlayer() const noexcept { return dialogue_; }
     CommandController(GameSession&&) = delete;
     void openInventory(std::optional<rules::CharacterId> = {},
                        CharacterPage = CharacterPage::Inventory) noexcept;
@@ -352,6 +365,11 @@ class CommandController {
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    void syncDialogueSpeech() noexcept;
+    const DialogueCatalog* dialogueCatalog_ = nullptr;
+    DialoguePlayer dialogue_;
+    std::optional<ActorId> speaker_;
+    TargetSnapshot residents_;
     bool interactionPromptsAvailable() const noexcept;
     void refreshTargetPicker() noexcept;
     bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;

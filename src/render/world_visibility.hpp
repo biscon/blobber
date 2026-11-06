@@ -39,6 +39,8 @@ struct FrameInput {
     const SpellVisualSnapshot* spells = nullptr;
     const ActorConditionVisualSnapshot* conditions = nullptr;
     const SupportVisualSnapshot* support = nullptr;
+    std::optional<Camera> cameraOverride = {};
+    bool cameraMoving = false;
 };
 struct Billboard {
     Vec feet;

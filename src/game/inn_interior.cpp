@@ -1,5 +1,6 @@
 #include "game/inn_interior.hpp"
 #include "game/campaign.hpp"
+#include "game/dialogue.hpp"
 #include <algorithm>
 #include <stdexcept>
 namespace blobber {
@@ -9,6 +10,7 @@ NpcInstance innkeeperPlacement(const std::vector<std::string>& types) {
         throw std::invalid_argument("Campaign requires the innkeeper appearance");
     NpcInstance npc{{std::uint16_t(type - types.begin())}, {6, 3}, {1, 1}, Heading::South};
     npc.role = NpcRole::Resident;
+    npc.residentId = dialogueKey("sanctuary.innkeeper");
     return npc;
 }
 SanctuaryHub innInterior() {
@@ -70,7 +72,8 @@ void validateInnInterior(const Map& map, const CampaignLocationState& state) {
         throw std::invalid_argument("Inn requires exactly one innkeeper");
     const auto& npc = state.placements[0];
     if (npc.type.index != resident.type.index || npc.role != NpcRole::Resident ||
-        !(npc.cell == resident.cell) || !(npc.subcell == resident.subcell) || npc.facing != resident.facing ||
+        npc.residentId != resident.residentId || !(npc.cell == resident.cell) ||
+        !(npc.subcell == resident.subcell) || npc.facing != resident.facing ||
         npc.animation != NpcAnimation::Idle || npc.phaseMs || npc.monster ||
         npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount)
         throw std::invalid_argument("Unsupported innkeeper placement");

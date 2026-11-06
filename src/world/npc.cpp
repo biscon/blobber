@@ -55,6 +55,13 @@ NpcWorld::NpcWorld(const Map& map, Cell spawn, std::vector<std::string> types,
             ((npc.animation != NpcAnimation::Idle && npc.animation != NpcAnimation::Talk) || npc.monster ||
              npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount))
             throw std::runtime_error("Residents require stationary idle/talk without monster rules");
+        if (npc.residentId) {
+            if (npc.role != NpcRole::Resident)
+                throw std::runtime_error("Hostile NPC has resident identity");
+            for (const auto& other : instances_)
+                if (&other != &npc && other.residentId == npc.residentId)
+                    throw std::runtime_error("Duplicate resident identity");
+        }
         if (npc.role == NpcRole::Hostile && npc.animation == NpcAnimation::Talk)
             throw std::runtime_error("Talk is a resident animation");
         if (map.solid(npc.cell) || npc.cell == spawn)
