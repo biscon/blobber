@@ -176,7 +176,10 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
                                         : isSpeaker && !override                      ? speakerMs
                                         : next.clip == NpcAnimation::Idle             ? idleTime
                                                                                       : time;
-                next.active = sample(timings[static_cast<std::size_t>(next.clip)], sampleTime, phase);
+                const auto& clip = timings[static_cast<std::size_t>(next.clip)];
+                next.active = next.clip == NpcAnimation::PullDocument && sampleTime >= npcClipDuration(clip)
+                                  ? clip.count - 1
+                                  : sample(clip, sampleTime, phase);
             }
             // Attack and talk can expose a directional idle fallback. Keep legacy
             // idle snapshots stable; reaction/corpse holds need no idle invalidation.

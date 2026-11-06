@@ -250,6 +250,47 @@
           }
         ]
       }
+    },
+    "explosive_rage": {
+      "durations_ms": [
+        120,
+        100,
+        120,
+        160
+      ],
+      "width": 0.986842105263158,
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/explosive_rage-front-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/explosive_rage-front-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/explosive_rage-front-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/explosive_rage-front-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ]
+      }
     }
   }
 }

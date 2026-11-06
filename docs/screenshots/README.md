@@ -105,3 +105,5 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 | [underkeep-corrections](underkeep-corrections/README.md) | 6 |
 | [underkeep-props](underkeep-props/README.md) | 6 |
 | [variable-layouts](variable-layouts/README.md) | 6 |
+
+- [OnlyScrolls portrait briefing](onlyscrolls/README.md): six hidden production captures; new artwork and timing await user review.

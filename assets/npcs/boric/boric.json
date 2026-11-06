@@ -291,6 +291,47 @@
           }
         ]
       }
+    },
+    "pull_document": {
+      "durations_ms": [
+        150,
+        150,
+        150,
+        150
+      ],
+      "width": 0.986842105263158,
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/pull_document-front-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/pull_document-front-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/pull_document-front-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/pull_document-front-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ]
+      }
     }
   }
 }

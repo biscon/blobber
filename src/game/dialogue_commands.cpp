@@ -143,8 +143,7 @@ void CommandController::syncDialogueSpeech() noexcept {
         return;
     dialogueAnimation_.actor = speaker_;
     dialogueAnimation_.clip = beat->animation.value_or(NpcAnimation::Talk);
-    if (!dialogue_.revealing() &&
-        (dialogueAnimation_.clip == NpcAnimation::Talk || dialogueAnimation_.clip == NpcAnimation::Laugh))
+    if (!dialogue_.revealing() && dialogueReaction(dialogueAnimation_.clip))
         dialogueAnimation_.clip = NpcAnimation::Idle;
     dialogueAnimation_.elapsedMs = dialogue_.beatElapsedMs();
 }

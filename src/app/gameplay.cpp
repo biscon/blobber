@@ -99,7 +99,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         const rules::PresetParty* starting, const GameplayLaunch* launch) {
     auto dialogueCatalog = prepareCpu([&] {
         return loadDialogue(options.dialogueDir.empty() ? options.assets / "dialogue" : options.dialogueDir,
-                            options.assets / "audio");
+                            options.assets / "audio", options.assets / "ui");
     });
     prepareDialogueLayout(
         dialogueCatalog,
@@ -107,12 +107,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             return static_cast<const UiFonts*>(context)->width(text, UiTextStyle::Label);
         },
         const_cast<UiFonts*>(&presenter.fonts()));
-    if (presenter.audio)
-        presenter.audio->prepareDialogue(dialogueCatalog.audioFiles);
     DialogueHistory standaloneDialogue;
     struct AudioLeave {
         AudioRuntime* audio;
+        Presenter& presenter;
         ~AudioLeave() {
+            presenter.clearDialogue();
             if (audio) {
                 audio->clearDialogue();
                 audio->persistMusic();
@@ -120,7 +120,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 audio->worldGain = 1;
             }
         }
-    } audioLeave{presenter.audio};
+    } audioLeave{presenter.audio, presenter};
+    presenter.prepareDialogue(dialogueCatalog.overlayFiles);
+    if (presenter.audio)
+        presenter.audio->prepareDialogue(dialogueCatalog.audioFiles);
     const Player spawn = launch ? launch->spawn : Player{};
     auto* campaign = launch ? launch->campaign : nullptr;
     const auto idle = gameplayPlacements(map, placements, spawn.cell, campaign);

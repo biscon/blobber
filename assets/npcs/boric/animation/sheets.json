@@ -218,5 +218,29 @@
     "anchor_x": 400,
     "anchor_y": 584,
     "split_y": 656
+  },
+  {
+    "name": "pull_document-front",
+    "columns": 2,
+    "rows": 2,
+    "split_x": 543,
+    "scale": 0.7331378299120235,
+    "pivot_x": [
+      289.5,
+      238.5,
+      300.0,
+      236.0
+    ],
+    "ground_y": [
+      689,
+      688,
+      687,
+      688
+    ],
+    "canvas_width": 800,
+    "canvas_height": 608,
+    "anchor_x": 400,
+    "anchor_y": 584,
+    "split_y": 724
   }
 ]

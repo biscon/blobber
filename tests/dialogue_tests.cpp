@@ -701,6 +701,285 @@ topics:
     check(loadDialogue(d.path).characters[0].greeting.beats[0].text == "Hello there.\nA second line.\n",
           "YAML literal blocks retain newlines");
 }
+void overlays() {
+    Directory d;
+    auto j = source();
+    j["introduction"]["beats"][0]["overlay_asset"] = "dialogue/portrait.png";
+    j["topics"][1]["responses"][0]["beats"] = Json::array(
+        {{{"speaker", "host"},
+          {"text", "One two three four five six seven eight nine ten."},
+          {"overlay_asset", "dialogue/portrait.png"},
+          {"animation", "pull_document"}},
+         {{"speaker", "host"}, {"text", "Still here."}},
+         {{"speaker", "host"}, {"text", "Another picture."}, {"overlay_asset", "dialogue/other.png"}},
+         {{"speaker", "host"},
+          {"text", "Enough!"},
+          {"clear_overlay", true},
+          {"animation", "explosive_rage"}}});
+    d.write(j);
+    const auto ui = d.path / "custom-ui";
+    auto c = loadDialogue(d.path, {}, ui);
+    check(c.overlayFiles.size() == 2 &&
+              c.overlayFiles[0] == std::filesystem::weakly_canonical(ui / "dialogue/portrait.png").string(),
+          "Overlay references deduplicate against explicit UI root");
+    check(loadDialogue(d.path).overlayFiles[0] ==
+              std::filesystem::weakly_canonical(d.path.parent_path() / "ui/dialogue/portrait.png").string(),
+          "Overlay root defaults to sibling UI directory");
+    prepareDialogueLayout(c, measure, nullptr, 40, 2);
+    DialoguePlayer p;
+    DialogueHistory history;
+    DialogueHud h;
+    p.bind(&c, &history);
+    p.start(c.characters[0].id);
+    p.snapshot(h);
+    check(!h.overlay, "Overlay stays hidden before first visible glyph");
+    p.tick(.15, true);
+    p.snapshot(h);
+    check(!h.overlay, "Fade boundary does not trigger overlay early");
+    p.tick(.001, true);
+    p.snapshot(h);
+    check(h.overlay.index == 0, "First visible glyph applies overlay");
+    p.skipIntroduction();
+    p.snapshot(h);
+    check(!h.overlay, "Skipping clears overlay");
+    p.choose(1);
+    p.snapshot(h);
+    check(h.overlay.index == 0, "Topic shows prepared overlay immediately");
+    const auto serial = p.beatSerial();
+    allocations = 0;
+    watching = true;
+    p.tick(1, false);
+    p.snapshot(h);
+    check(h.overlay.index == 0 && p.beatSerial() == serial, "Focus loss preserves beat and overlay");
+    while (p.beatSerial() == serial) {
+        p.advance();
+        p.snapshot(h);
+        check(h.overlay.index == 0, "Page completion and uncued beat preserve overlay");
+    }
+    while (p.beat()->text == "Still here.")
+        p.advance();
+    p.snapshot(h);
+    check(h.overlay.index == 1, "A new overlay replaces the previous picture");
+    while (p.beat()->text == "Another picture.")
+        p.advance();
+    p.snapshot(h);
+    check(!h.overlay, "Explicit clear applies with reaction line");
+    p.choose(1);
+    p.choose(2);
+    p.snapshot(h);
+    check(!h.overlay, "Choosing unrelated topic clears previous overlay");
+    p.choose(1);
+    p.leave();
+    p.snapshot(h);
+    check(!h.overlay, "Exit clears overlay before camera return");
+    p.close();
+    p.start(c.characters[0].id);
+    p.tick(.2, true);
+    p.choose(1);
+    p.bind(&c, &history);
+    p.snapshot(h);
+    check(!h.open && !h.overlay, "Rebind clears overlay and conversation");
+    watching = false;
+    check(allocations == 0, "Overlay playback/state transitions allocate nothing");
+    for (unsigned fault = 0; fault < 6; ++fault) {
+        auto bad = j;
+        auto& b = bad["introduction"]["beats"][0];
+        if (fault == 0)
+            b["clear_overlay"] = true;
+        if (fault == 1)
+            b["overlay_asset"] = "../outside.png";
+        if (fault == 2)
+            b["overlay_asset"] = "/absolute.png";
+        if (fault == 3)
+            b["overlay_asset"] = Json::array({"bad"});
+        if (fault == 4) {
+            b.erase("overlay_asset");
+            b["clear_overlay"] = "perhaps";
+        }
+        if (fault == 5) {
+            auto& beats = bad["introduction"]["beats"];
+            beats = Json::array();
+            for (unsigned i = 0; i <= dialogueOverlayCapacity; ++i)
+                beats.push_back({{"speaker", "host"},
+                                 {"text", "Picture."},
+                                 {"overlay_asset", std::to_string(i) + ".png"}});
+        }
+        d.write(bad);
+        rejects([&] { loadDialogue(d.path, {}, ui); }, "Invalid overlay cue/path/capacity rejects");
+    }
+    std::filesystem::create_directories(ui);
+    std::filesystem::create_directory_symlink(d.path, ui / "escape");
+    j["introduction"]["beats"][0]["overlay_asset"] = "escape/out.png";
+    d.write(j);
+    rejects([&] { loadDialogue(d.path, {}, ui); }, "Overlay symlink escape rejects");
+}
+void delayedOverlays() {
+    Directory d;
+    auto j = source();
+    auto& b = j["topics"][1]["responses"][0]["beats"][0];
+    b["text"] = "One two three four five six seven eight nine ten eleven twelve.";
+    b["overlay_asset"] = "dialogue/picture.png";
+    b["overlay_delay_ms"] = 600;
+    b["overlay_dismiss_on_advance"] = true;
+    d.write(j);
+    auto c = loadDialogue(d.path);
+    prepareDialogueLayout(c, measure, nullptr, 40, 2);
+    c.charactersPerSecond = 1;
+    const auto& cue = c.characters[0].topics[1].responses[0].beats[0];
+    check(cue.overlayDelayMs == 600 && cue.overlayDismissOnAdvance,
+          "YAML retains generic overlay delay and dismissal policy");
+    DialoguePlayer p;
+    DialogueHistory history;
+    DialogueHud h;
+    p.bind(&c, &history);
+    p.start(c.characters[0].id);
+    p.tick(.7, true);
+    const auto visible = [&] {
+        p.snapshot(h);
+        return bool(h.overlay);
+    };
+    p.choose(1);
+    allocations = 0;
+    watching = true;
+    check(!visible(), "Delayed overlay is hidden when beat begins");
+    p.tick(.599, true);
+    check(!visible(), "Overlay stays hidden through the animation delay");
+    const auto clock = p.clockMs();
+    p.tick(1, false);
+    check(!visible() && p.clockMs() == clock, "Unfocused time cannot finish overlay delay");
+    p.tick(.001, true);
+    check(visible(), "Overlay appears at the authored delay boundary");
+    p.advance();
+    check(!visible() && !p.revealing() && h.page == 1,
+          "First advance dismisses overlay and still completes current text");
+    p.tick(1, true);
+    check(!visible(), "Dismissed overlay cannot reappear later in the same beat");
+    p.advance();
+    p.tick(1, true);
+    check(!visible() && h.page == 2, "Page continuation cannot re-trigger dismissed overlay");
+    p.choose(1);
+    p.tick(.2, true);
+    p.advance();
+    p.tick(1, true);
+    check(!visible(), "Early Next cancels a pending overlay instead of showing it late");
+    const auto serial = p.beatSerial();
+    while (p.beatSerial() == serial)
+        p.advance();
+    p.tick(1, true);
+    check(!visible(), "Following uncued beat never restores dismissed overlay");
+    p.choose(1);
+    p.tick(.6, true);
+    check(visible(), "Replaying the response schedules the image afresh");
+    p.choose(2);
+    p.tick(1, true);
+    check(!visible(), "Topic replacement cancels delayed cue");
+    p.choose(1);
+    p.leave();
+    p.tick(1, true);
+    check(!visible(), "Exit cancels pending cue");
+    watching = false;
+    check(!allocations, "Delayed overlay playback and cancellation allocate nothing");
+    // Natural reveal completion must not dismiss the picture; the next input does.
+    c.charactersPerSecond = 1000;
+    p.start(c.characters[0].id);
+    p.tick(.7, true);
+    p.choose(1);
+    p.tick(.6, true);
+    check(visible() && !p.revealing(), "Natural completion preserves the picture until Next");
+    p.advance();
+    check(!visible() && h.page == 2, "Next dismisses while retaining normal page advance");
+    for (unsigned fault = 0; fault < 6; ++fault) {
+        auto bad = j;
+        auto& beat = bad["topics"][1]["responses"][0]["beats"][0];
+        if (fault == 0)
+            beat["overlay_delay_ms"] = -1;
+        if (fault == 1)
+            beat["overlay_delay_ms"] = 60001;
+        if (fault == 2)
+            beat["overlay_delay_ms"] = 1.5;
+        if (fault == 3)
+            beat["overlay_dismiss_on_advance"] = "sometimes";
+        if (fault == 4)
+            beat.erase("overlay_asset");
+        if (fault == 5) {
+            beat.erase("overlay_asset");
+            beat.erase("overlay_delay_ms");
+        }
+        d.write(bad);
+        rejects([&] { loadDialogue(d.path); }, "Malformed or unattached overlay timing rejects");
+    }
+}
+void authoredReactions() {
+    const auto map = test::worldRoom(9, 9);
+    const auto rules = spellCatalog();
+    const Player pose{{4, 5}, Heading::North};
+    const NpcWorld world(map, pose.cell, {"goblin"}, {resident()});
+    NpcTimings timings{};
+    timings[0] = {{{100, 100, 0, 0}}, 2};
+    timings[unsigned(NpcAnimation::PullDocument)] = {{{150, 150, 150, 150}}, 4};
+    timings[unsigned(NpcAnimation::ExplosiveRage)] = {{{120, 100, 120, 160}}, 4};
+    GameSession game(map, rules, world, 5, pose, false, {timings});
+    CommandController controls(game, {timings});
+    NpcAnimator animator(game.actors(), {timings});
+    auto c = catalog();
+    auto& response = c.characters[0].topics[1].responses[0];
+    response.beats.resize(1);
+    response.beats[0].text = "One two three four five six seven eight nine ten eleven twelve.";
+    prepareDialogueLayout(c, measure, nullptr, 40, 2);
+    DialogueHistory history;
+    controls.bindDialogue(&c, &history);
+    TargetSnapshot visible{};
+    visible.world = game.actors().snapshot().world;
+    visible.revision = game.actors().snapshot().revision;
+    visible.count = 1;
+    visible.ids[0] = game.actors().id(0);
+    controls.residentVisibility(visible);
+    check(controls.startDialogue(visible.ids[0]), "Reaction test starts conversation");
+    controls.tickDialogue(.7, true);
+    UiInput topic, next;
+    topic.pressed[unsigned(UiKey::Two)] = true;
+    next.pressed[unsigned(UiKey::DialogueAdvance)] = true;
+    const auto sample = [&] {
+        animator.setTime(0, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs(),
+                         &controls.dialogueAnimation());
+    };
+    for (auto clip : {NpcAnimation::PullDocument, NpcAnimation::ExplosiveRage}) {
+        response.beats[0].animation = clip;
+        routeHudInput(controls, topic);
+        sample();
+        check(animator.snapshot().frames[0].clip == clip, "Authored clip starts with line");
+        controls.tickDialogue(.16, true);
+        sample();
+        check(animator.snapshot().frames[0].active == 1, "Authored clip crosses frame boundary");
+        routeHudInput(controls, next);
+        sample();
+        check(animator.snapshot().frames[0].clip == NpcAnimation::Idle, "Click reveal ends authored clip");
+        controls.tickDialogue(.7, true);
+        routeHudInput(controls, next); // next page, same beat clock
+        sample();
+        check(animator.snapshot().frames[0].clip == clip && animator.snapshot().frames[0].active == 3,
+              "Pagination resumes reaction clock and document stays on last frame");
+        controls.tickDialogue(1, true);
+        sample();
+        check(animator.snapshot().frames[0].clip == NpcAnimation::Idle, "Natural reveal ends authored clip");
+    }
+    for (auto clip : {NpcAnimation::PullDocument, NpcAnimation::ExplosiveRage}) {
+        NpcDialogueOverride override{game.actors().id(0), clip, 0};
+        for (auto ms : {0u, 149u, 150u, 599u, 600u, 1000u, 60000u}) {
+            override.elapsedMs = ms;
+            animator.setTime(0, nullptr, override.actor, ms, &override);
+            const auto f = animator.snapshot().frames[0];
+            if (clip == NpcAnimation::PullDocument)
+                check(f.active == std::min(ms / 150, 3u), "Document plays once and holds at long times");
+            else if (ms == 1000 || ms == 60000)
+                check(f.active == 0, "Rage loops at 500 ms");
+        }
+    }
+    check(game.actors().snapshot().actors[0].npc.animation == NpcAnimation::Idle,
+          "Authored reactions do not mutate authoritative actor state");
+    controls.finishDialogue();
+}
+
 void inputEdges() {
     auto c = catalog();
     DialogueHistory history;
@@ -733,6 +1012,9 @@ void inputEdges() {
 } // namespace
 int main() {
     try {
+        overlays();
+        delayedOverlays();
+        authoredReactions();
         parser();
         flow();
         integration();

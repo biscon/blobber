@@ -47,3 +47,36 @@ Limits: 1 MiB total scripts, 64 hosts, 8 cast members/host, 16 topics/host,
 
 `../audio/dialogue/` contains provisional synthetic character reactions, not final voice
 performances. Source/provenance is retained alongside the clips for replacement.
+
+## Persistent pictures
+
+A beat may show `overlay_asset: dialogue/onlyscrolls_overlay.png` or use
+`clear_overlay: true` (never both). Paths are relative to the shared `assets/ui`
+root, including when the script directory is overridden. By default pictures appear with
+the first visible text, persist across following beats/pages, and clear on a new
+response, skip or exit. The portrait is centered above the dialogue controls.
+`overlay_delay_ms` delays the show relative to the beat start (0..60000; default 0).
+`overlay_dismiss_on_advance: true` dismisses it on the first Next/reveal input;
+an input before the delay cancels the pending show. The same input still reveals
+text or advances a page normally. Neither pagination nor subsequent uncued beats
+restore a dismissed image. The default is false; natural text completion alone
+does not dismiss pictures. Both options require `overlay_asset`. PNGs are prepared before play: up to 16 unique
+images, at most 2048 pixels per axis and 32 MiB decoded RGBA combined.
+
+`pull_document` and `explosive_rage` require matching resident artwork. Document
+pull plays once and holds its last frame; rage loops. Both return to Idle when
+text reveal finishes or is completed by a click, like Talk/Laugh. Their beat clock
+continues across page pauses, so the document is not pulled out again per page.
+
+The Gwendolyn document beat uses these reusable cues so the camera pan and full
+600 ms document-pull clip remain visible before the close-up:
+
+```yaml
+animation: pull_document
+overlay_asset: dialogue/onlyscrolls_overlay.png
+overlay_delay_ms: 600
+overlay_dismiss_on_advance: true
+```
+
+Timing belongs to the script: adjust the delay if the authored animation or pan
+duration changes. The engine does not recognize conversation or character names.

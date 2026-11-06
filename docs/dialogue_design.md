@@ -374,3 +374,153 @@ All three WAVs are byte-identical after relocation and match their packaged
 explicit script-directory override; old packaged sound copies are retired.
 No desktop input/focus automation was used. Build/test/capture logs and temporary
 images are cleaned after selecting evidence; no retained diagnostic exception.
+
+
+## OnlyScrolls portrait briefing
+
+Status: implemented and mechanically verified; artwork/timing acceptance pending,
+2026-11-06. User selected centered
+close-up, two dedicated sprite clips and a new campaign rather than save migration.
+
+The Gwendolyn topic becomes the supplied five-beat Mayor/Boric/Balin/Boric/Mayor
+scene. Pans are 200/300/200/200 ms; placeholder sound references stay relative to
+assets/audio. Existing topic identity/history remains; no quest state is introduced.
+
+DialogueBeat adds a typed optional overlay index and clear flag. Catalog-owned
+canonical paths are deduplicated, bounded to 16, resolved against the shared UI
+root (explicit in gameplay; sibling ui by default). YAML overlay_asset and
+clear_overlay are mutually exclusive. Absolute/escaping paths and invalid types
+reject. DialoguePlayer owns the persistent index and applies cues once, with
+optional YAML delay and Next-dismissal policy (see the timing correction below).
+Default cues apply at the first visible glyph and persist across pages/beats.
+Response replacement, skip, leave, close and rebind always clear the image. HUD
+publishes an index only.
+
+UiArt owns up to 16 GpuLease textures prepared before gameplay, with 2048-pixel
+per-axis and 32 MiB total decoded RGBA bounds. Failed preparation releases acquired
+textures and reports the asset. Presenter forwards preparation/clear boundaries;
+gameplay scope teardown clears the set. Rendering fits one transparent image into
+a centered 1020x570 native-pixel box above dialogue panels, without intercepting
+input. No per-frame parsing, decoding, resource acquisition or allocation.
+
+Append PullDocument and ExplosiveRage enum values; preserve existing numbers.
+Resident/front-only validation and directional Idle fallback include both. Boric's
+four 150 ms frames play once then hold; Mayor's 120/100/120/160 ms rage loops. Both
+are cosmetic overrides, end on reveal completion/skip or replacement/exit, and
+use beat time so pagination cannot restart the document pull. Update appearance
+publication revision and republish. NPC-definition fingerprints intentionally make
+old campaigns incompatible; do not remove saves or weaken compatibility checks.
+
+Use built-in imagegen and the sole approved character sheets. Parchment matches
+Gwendolyn v3 (adult 25), face/hair/costume, bored turkey-leg pose, worn paper and
+raven-letter stamp, with real transparency. Production asset belongs under
+assets/ui/dialogue; source prompts and animation masters remain durable assets.
+
+Verification: owned parser/path/capacity/state fixtures, page/reveal/focus and
+clip-boundary tests, allocation guards; UI decode/resource-failure/teardown checks;
+focused Release dialogue/animation/resident/UI/save checks; hidden production
+captures of five beats and restored exploration, with frozen simulation, camera
+timing and resource checks. At most two low-priority build workers and one heavy
+job; no OS desktop input. Keep at most six review captures and clean the owned run.
+
+### OnlyScrolls verification — 2026-11-06
+
+Implemented the design above. PNG IHDR dimensions and encoded-size limits are
+checked before decoding. Texture replacement is transactional: staged leases
+roll back on failure and leave the previous prepared set intact. `UiArt` owns the
+leases and `Presenter` forwards preparation/clear; gameplay establishes its scope
+guard before either overlay or audio preparation. Existing scripts remain valid.
+Both new clip values append to the enum (9/10), and publication appearance revision
+is now 8. Existing numeric animation values and save schema/simulation 12/17 stay
+unchanged; the intentional NPC-content fingerprint change requires a new campaign.
+
+All three assets were generated using built-in imagegen and approved reference
+sheets, with exact prompts retained beside masters. Decoded dimensions/alpha:
+parchment 1536×1024 RGBA (0–254), Boric 1086×1448 (0–255), Mayor 1199×1312
+(0–255). Registration retains all previous definitions and adds only the new
+front poses. Publication succeeds with 525 textures; nearest-sampling extraction
+validates canvas bounds. No procedural substitute artwork was used.
+
+Commands and results (one job at a time; two low-priority build workers):
+
+- `nice -n 15 ionice -c 3 cmake --build --preset release --target blobber blobber_dialogue_tests blobber_residents_tests blobber_gpu_smoke blobber_review_sanctuary_city blobber_campaign_save_tests -j2`
+  (targets built in focused batches): pass, no compiler warnings.
+- `ctest --preset release -R '^(dialogue|animation|residents|campaign_save_smoke)$'`:
+  all four pass in 1.70 s. Coverage includes owned YAML/path/symlink/capacity
+  fixtures, reveal/focus/page/response/exit transitions, both authored clips,
+  directional Idle fallback/picking, allocation guards, and save compatibility.
+  Multi-type visibility fixtures avoid creating unused new reactions for every
+  appearance, retaining their bounded workload.
+- `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 ionice -c 3 cmake-build-release/blobber_gpu_smoke`:
+  passes in a hidden OpenGL window. Owned PNGs verify alpha/aspect fit, invalid
+  IDs/files/headers, dimension/count/decoded-byte limits, injected acquisition
+  failure rollback, no draw-time uploads and idempotent lease release. The old
+  smoke fixture lacked current effect atlases and assumed obsolete 8/512 target/
+  texture capacities; corrected owned fixtures and shared capacity constants.
+- `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 ionice -c 3 cmake-build-release/blobber_review_sanctuary_city cmake-build-release/assets RUN/capture dialogue-beats`:
+  passes in a hidden window using only application-owned input. Five sequential
+  beats, 200/300/200/200 ms pans, document final-frame hold, natural/click Idle
+  resets, immediate rage/overlay clear, replay, unrelated-topic replacement, exit,
+  frozen game time and scene/overlay lease release pass.
+- Six production captures visually inspected and retained in the
+  [OnlyScrolls gallery](screenshots/onlyscrolls/README.md). Transparent edges,
+  complete portrait, readable text, unobstructed controls and rage are visible.
+  The centered close-up intentionally occludes most of the guard.
+- `git diff --check` passes. Production source/package PNGs and script match.
+
+No OS input/focus automation, broad configuration matrix, benchmark or unrelated
+full save suite. Unchanged audio transport and camera projection coverage is
+reused; physical listening, interactive comedic timing and derived-art acceptance
+remain with the user. User saves were not opened or removed. Selected source
+artwork/prompts and six review images are durable; task logs and scratch output
+are cleaned with the artifact helper, with no retained diagnostic exceptions.
+
+
+### Overlay timing correction
+
+Implemented and mechanically verified; interactive review pending. User rejects the close-up covering the camera pan
+and document-pull animation, and persisting through the guards' remaining lines.
+The correction must be authored in YAML, without conversation-specific C++ code.
+
+Add optional overlay_delay_ms (integer 0..60000, default 0) and
+overlay_dismiss_on_advance (boolean, default false); both require overlay_asset.
+DialoguePlayer uses its focus-aware beat clock for the delay and a small boolean
+to remember the active overlay's dismissal policy. The first advance input clears
+the image (or cancels its pending show), while retaining normal text-reveal/page
+advance behavior. Cancellation lasts for the authored beat, including subsequent
+pages; new responses reset it. Existing uncued/persistent overlays keep defaults.
+No renderer changes, per-frame allocation, animation-name checks or conversation
+IDs are introduced.
+
+The Boric document beat declares overlay_delay_ms: 600 (four 150 ms frames, longer
+than its 200 ms pan) and overlay_dismiss_on_advance: true. Other guard beats do
+not show the picture again. Timing is explicit content, not inferred from actor
+identity. Verify generic delay boundaries/focus/cancellation/pagination/replay and
+parser errors in dialogue tests; refresh six hidden production captures showing
+the unobstructed pull, delayed close-up and subsequent guard conversation. Reuse
+unchanged rendering/resource tests and clean the owned artifact run.
+
+Verification of the timing correction: Release game, dialogue tests and hidden
+review runner build without compiler warnings (`cmake --build --preset release
+--target blobber blobber_dialogue_tests blobber_review_sanctuary_city -j2`, nice 15 /
+ionice idle). `ctest --preset release -R '^dialogue$'` passes in 0.06 s. Owned
+fixtures cover delay boundaries, paused focus clock, first-Next reveal/advance,
+early cancellation, page continuation, subsequent beats, replay, natural text
+completion, response replacement/exit, malformed YAML options and allocations.
+Existing default immediate/persistent overlay coverage still passes.
+
+The hidden `blobber_review_sanctuary_city ... dialogue-beats` run passes with
+bounded OpenMP/OpenBLAS threads. Production checks see no overlay during the
+200 ms pan or at 599 ms, then see it at 600 ms. First Next hides it without
+changing beat serial, and both following guard beats stay unobstructed. Replay
+respects the delay; early Next cancels pending show. Simulation stays frozen and
+overlay/scene leases release. Six replacement images in the existing gallery
+include the visible hold-out pose, delayed close-up, dismissal and unobstructed
+Balin line; these changed views were visually inspected. The existing gallery
+README records rejected prior timing and preserves pending artwork acceptance.
+
+No new artwork, renderer/resource changes or save-format/content-fingerprint
+changes in this correction. Unchanged GPU lifecycle, audio and broader suites
+were not rerun. Source/package mayor YAML match; diff whitespace checks pass.
+All task scratch and logs are cleaned after promoting six images; no diagnostic
+exception retained.

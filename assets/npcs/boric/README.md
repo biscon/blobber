@@ -18,3 +18,8 @@ build tree. Source sheets, exact prompts and registration remain durable inputs.
 
 See [Sanctuary resident design](../../../docs/sanctuary_residents_design.md)
 for placement, dialogue, compatibility, verification and remaining review status.
+
+OnlyScrolls follow-up: four front `pull_document` poses are registered from the
+approved v2 identity. The clip plays once (150 ms per frame), holds the final pose
+while text reveals, and resets to Idle on completion. Other views use directional
+Idle. New clip artwork awaits review; previously approved clips are unchanged.

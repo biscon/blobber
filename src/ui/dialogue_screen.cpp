@@ -13,6 +13,8 @@ void HudPainter::dialogue(const DialogueHud& h) const {
         fill(r, ink(hudInk::panel));
         border(r, ink(gold));
     };
+    if (art)
+        art->dialogueOverlay(h.overlay, dialogueLayout::overlay, ink(WHITE));
     panel(dialogueLayout::response);
     panel(dialogueLayout::topics);
     text(h.name, 12, 229, ink(gold), UiTextStyle::Display);

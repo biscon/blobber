@@ -1,0 +1,7 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production 2D game UI asset. Use the supplied approved reference sheet only for Gwendolyn's identity, face shape, voluminous blonde hair, gold jewelry, brown leather and gold-trimmed chainmail costume and adult proportions. She is an adult woman aged 25. Create one isolated unrolled medieval fantasy parchment scroll, broad landscape composition. The parchment is heavily handled, tattered, severely crinkled and crumpled at the edges with moisture distortion, dark handling stains and dry dirty smudges on the corners. Centered on the parchment is a flat hand-drawn ink and colored-pencil illustration of this same adult woman wearing the same opaque costume, with an overtly bored deadpan eye roll as she eats a turkey leg. Show her full costume, keep head and boots inside the parchment. In the top-right corner a clearly legible black ink stamp depicts a raven carrying a letter, with a small crown seal detail. 1990s retro PC RPG style, dark drawn outlines and colored-pencil shading on warm old paper. Flat front-on document, no perspective tilt. No scene, hands, extra people, captions, text or watermark. Genuine transparent alpha outside the entire scroll, no white rectangle or checkerboard. Non-explicit comic portrait.",
+  "transparent_background": true,
+  "reference": "docs/mockups/gwendolyn-v1/turnaround-v3.png",
+  "status": "Derived artwork, awaiting user review"
+}

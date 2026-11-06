@@ -1,0 +1,7 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "Use case: identity-preserve. Production NPC sprite animation sheet. Use approved Mayor reference: same very heavyset balding older adult man, tiny crooked crown, gray side hair, ornate burgundy and purple gold-embroidered robe, gold chain medallion, frilled collar, brown boots. Preserve exact reference detailed painted fantasy RPG style, face, costume and proportions. FOUR full-body FRONT-FACING animation frames in evenly spaced 2 by 2 grid. EXPLOSIVE RAGE cycle: frame1 flushed red face, furrowed brows, clenched fists at sides, shouting; frame2 mouth wide open bellowing, shoulders lifted, fists lifted at waist; frame3 one fist emphatically up near chest, the other pointing accusingly out to side, forehead veins prominent; frame4 both fists lowered halfway, furious teeth-gritted recoil suitable to loop into frame1. Exaggerated comic anger, no weapons or violence. All feet planted, same camera angle, same character size and registered boot baseline per cell. No extra objects or text. Generous transparent gutters and outer margins, entire crown, hands, robe, boots fully inside each cell. No ground shadow. Genuine transparent alpha background. Four distinct authored poses, not a turnaround, do not change facing.",
+  "transparent_background": true,
+  "reference": "docs/mockups/mayor-v1/turnaround-v2.png",
+  "status": "Derived artwork, awaiting user review"
+}

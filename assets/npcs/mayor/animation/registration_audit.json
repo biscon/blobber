@@ -443,5 +443,62 @@
       "anchor_y": 584,
       "split_y": 661
     }
+  },
+  "explosive_rage-front": {
+    "source_size": [
+      1199,
+      1312
+    ],
+    "alpha_bounds": [
+      [
+        106,
+        4,
+        473,
+        637
+      ],
+      [
+        78,
+        2,
+        479,
+        637
+      ],
+      [
+        73,
+        4,
+        569,
+        643
+      ],
+      [
+        88,
+        8,
+        489,
+        644
+      ]
+    ],
+    "target_max_height": 464,
+    "registration": {
+      "name": "explosive_rage-front",
+      "columns": 2,
+      "rows": 2,
+      "split_x": 599,
+      "scale": 0.7261345852895149,
+      "pivot_x": [
+        290.0,
+        279.5,
+        282.75,
+        289.5
+      ],
+      "ground_y": [
+        637,
+        637,
+        643,
+        644
+      ],
+      "canvas_width": 800,
+      "canvas_height": 608,
+      "anchor_x": 400,
+      "anchor_y": 584,
+      "split_y": 656
+    }
   }
 }

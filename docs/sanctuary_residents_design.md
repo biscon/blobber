@@ -143,3 +143,12 @@ time stayed frozen, and released scene texture/alpha leases. Both inspected guar
 captures are retained alongside the six accepted appearance cases while correction
 review is pending. No desktop input automation was used. Disposable run output
 was cleaned; interactive review of this correction remains with the user.
+
+
+OnlyScrolls follow-up (2026-11-06): [portrait briefing](dialogue_design.md#onlyscrolls-portrait-briefing)
+adds front-only PullDocument (Boric) and ExplosiveRage (Mayor), enum values 9/10,
+with directional Idle fallback. Both are reveal-lifetime cosmetic overrides;
+document pull holds its last frame instead of looping. Publication appearance
+revision is 8, texture capacities remain sufficient, and changed NPC definitions
+require a new campaign through the existing content fingerprint. Previously
+approved appearances/clips remain unchanged; new derived artwork awaits review.

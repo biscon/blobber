@@ -12,15 +12,18 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 DURATIONS = {"idle": [1800, 140], "walk": [150] * 4,
-             "talk": [180, 160, 180, 220], "laugh": [160, 120, 160, 240]}
+             "talk": [180, 160, 180, 220], "laugh": [160, 120, 160, 240],
+             "pull_document": [150] * 4, "explosive_rage": [120, 100, 120, 160]}
 
 
 def register(name, body_height):
     root = ROOT / "assets/npcs" / name
     entries, audit, animations = [], {}, {}
-    for clip in ("idle", "walk", "talk", *(("laugh",) if name != "mayor" else ())):
+    for clip in ("idle", "walk", "talk", *(("laugh",) if name != "mayor" else ()),
+                 *(("pull_document",) if name == "boric" else ()),
+                 *(("explosive_rage",) if name == "mayor" else ())):
         views = {}
-        for side in (("front",) if clip in ("talk", "laugh") else ("front", "back", "left", "right")):
+        for side in (("front",) if clip not in ("idle", "walk") else ("front", "back", "left", "right")):
             key = f"{clip}-{side}"
             with Image.open(root / "animation/sheets" / (key + ".png")) as image:
                 assert image.mode == "RGBA", key

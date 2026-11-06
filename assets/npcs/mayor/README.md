@@ -18,3 +18,8 @@ build tree. Source sheets, exact prompts and registration remain durable inputs.
 
 See [Sanctuary resident design](../../../docs/sanctuary_residents_design.md)
 for placement, dialogue, compatibility, verification and remaining review status.
+
+OnlyScrolls follow-up: four front `explosive_rage` poses are registered from the
+approved v2 identity (120/100/120/160 ms). The reaction loops only while text
+reveals, then returns to Idle. Other views use directional Idle. New clip artwork
+awaits review; previously approved clips are unchanged.

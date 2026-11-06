@@ -24,11 +24,19 @@ struct DialogueParticipant : DialogueFraming {
     std::string alias, name;
     std::uint32_t textColor = 0xdcd8c7ff;
 };
+inline constexpr unsigned dialogueOverlayCapacity = 16;
+struct DialogueOverlayId {
+    unsigned index = dialogueOverlayCapacity;
+    explicit operator bool() const noexcept { return index < dialogueOverlayCapacity; }
+};
 struct DialogueBeat {
     std::string text;
     unsigned speaker = 0, target = 0;
     std::optional<unsigned> durationMs;
     std::optional<NpcAnimation> animation;
+    DialogueOverlayId overlay;
+    bool clearOverlay = false, overlayDismissOnAdvance = false;
+    unsigned overlayDelayMs = 0;
     unsigned audio = 64; // Catalog audio index; 64 means silence.
 };
 struct DialogueResponse {
@@ -53,7 +61,8 @@ struct DialogueCharacter : DialogueFraming {
 };
 struct DialogueCatalog {
     std::vector<DialogueCharacter> characters;
-    std::vector<std::string> audioFiles; // Canonical paths resolved during loading.
+    std::vector<std::string> overlayFiles; // Canonical UI paths; prepared outside playback.
+    std::vector<std::string> audioFiles;   // Canonical paths resolved during loading.
     unsigned transitionMs = 700, fadeMs = 150, charactersPerSecond = 45;
     const DialogueCharacter* find(DialogueKey id) const noexcept;
 };
@@ -77,6 +86,7 @@ struct DialogueHistory {
 };
 enum class DialoguePhase : std::uint8_t { Closed, Entering, Open, Leaving };
 struct DialogueHud {
+    DialogueOverlayId overlay;
     bool open = false, leaving = false, introduction = false, revealing = false;
     const char* name = "";
     std::uint32_t textColor = 0xdcd8c7ff;
@@ -121,6 +131,7 @@ class DialoguePlayer {
     void completed() noexcept;
     bool admissible(const DialogueCharacter&, const DialogueResponse&) const noexcept;
     void beginBeat() noexcept;
+    void applyOverlay() noexcept;
     const DialogueCatalog* catalog_ = nullptr;
     DialogueHistory* history_ = nullptr;
     const DialogueCharacter* character_ = nullptr;
@@ -130,7 +141,9 @@ class DialoguePlayer {
     unsigned page_ = 0, cursor_ = 0, offset_ = 0;
     double clockMs_ = 0, transition_ = 0, revealed_ = 0;
     float exitFrom_ = 0;
-    bool introduction_ = false, awarded_ = false;
+    bool introduction_ = false, awarded_ = false, overlayApplied_ = false;
+    DialogueOverlayId overlay_;
+    bool overlayDismissOnAdvance_ = false;
     std::uint64_t revision_ = 0, beatSerial_ = 0;
     double beatStartMs_ = 0;
     DialogueAdmission admission_ = nullptr;

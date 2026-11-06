@@ -248,7 +248,8 @@ void mixedPopulation() {
 void preparedResidentClips() {
     const auto map = test::worldRoom(9, 9);
     const auto catalog = spellCatalog();
-    for (const auto clip : {NpcAnimation::Walk, NpcAnimation::Laugh}) {
+    for (const auto clip :
+         {NpcAnimation::Walk, NpcAnimation::Laugh, NpcAnimation::PullDocument, NpcAnimation::ExplosiveRage}) {
         auto npc = resident();
         npc.animation = clip;
         NpcWorld places(map, {4, 6}, {"resident"}, {npc});
@@ -259,10 +260,14 @@ void preparedResidentClips() {
         const auto feet = actorPosition(*actors.actor(actors.id(0)), 0);
         for (const auto time : {0u, 159u, 160u, 279u, 280u, 439u, 440u, 679u, 680u}) {
             animation.setTime(time);
-            const unsigned expected = time < 160 ? 0 : time < 280 ? 1 : time < 440 ? 2 : time < 680 ? 3 : 0;
+            const unsigned expected = time < 160                                         ? 0
+                                      : time < 280                                       ? 1
+                                      : time < 440                                       ? 2
+                                      : time < 680 || clip == NpcAnimation::PullDocument ? 3
+                                                                                         : 0;
             check(animation.snapshot().frames[0].clip == clip &&
                       animation.snapshot().frames[0].active == expected,
-                  "Prepared resident Walk/Laugh obey boundaries and loop");
+                  "Prepared resident clips obey boundaries, including one-shot hold");
             const auto now = actorPosition(*actors.actor(actors.id(0)), time);
             check(now.x == feet.x && now.y == feet.y && !actors.actor(actors.id(0))->hasTravel,
                   "Diagnostic clip selection does not move the resident");
@@ -272,7 +277,7 @@ void preparedResidentClips() {
         for (unsigned time = 0; time < 1000; ++time)
             animation.setTime(time);
         watching = false;
-        check(!allocations, "Resident Walk/Laugh sampling is allocation free");
+        check(!allocations, "Resident clip sampling is allocation free");
         timings[unsigned(clip)] = {};
         bool rejected = false;
         try {
@@ -280,7 +285,7 @@ void preparedResidentClips() {
         } catch (const std::exception&) {
             rejected = true;
         }
-        check(rejected, "Absent explicitly selected Walk/Laugh rejects");
+        check(rejected, "Absent explicitly selected reaction rejects");
     }
 }
 void renderedTalkAndPicking(NpcAnimation selected) {
@@ -345,6 +350,8 @@ int main() {
         mixedPopulation();
         renderedTalkAndPicking(NpcAnimation::Talk);
         renderedTalkAndPicking(NpcAnimation::Laugh);
+        renderedTalkAndPicking(NpcAnimation::PullDocument);
+        renderedTalkAndPicking(NpcAnimation::ExplosiveRage);
         std::cout << "Peaceful resident checks passed\n";
     } catch (const std::exception& e) {
         watching = false;

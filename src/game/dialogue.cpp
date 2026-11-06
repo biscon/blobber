@@ -172,6 +172,8 @@ bool DialoguePlayer::start(DialogueKey key) noexcept {
 void DialoguePlayer::response(const DialogueResponse* value, DialogueKey topic, bool intro) noexcept {
     ++revision_;
     response_ = value;
+    overlay_ = {};
+    overlayDismissOnAdvance_ = false;
     topic_ = topic;
     introduction_ = intro;
     page_ = 0;
@@ -190,9 +192,26 @@ const DialogueBeat* DialoguePlayer::beat() const noexcept {
 }
 void DialoguePlayer::beginBeat() noexcept {
     ++beatSerial_;
+    overlayApplied_ = false;
     beatStartMs_ = std::max(clockMs_, double(catalog_ ? catalog_->fadeMs : 0));
     if (beat() && clockMs_ >= beatStartMs_)
         revealed_ = 1;
+    applyOverlay();
+}
+void DialoguePlayer::applyOverlay() noexcept {
+    if (overlayApplied_ || !cuesReady())
+        return;
+    const auto& b = *beat();
+    if (b.overlay && beatElapsedMs() < b.overlayDelayMs)
+        return;
+    if (b.clearOverlay) {
+        overlay_ = {};
+        overlayDismissOnAdvance_ = false;
+    } else if (b.overlay) {
+        overlay_ = b.overlay;
+        overlayDismissOnAdvance_ = b.overlayDismissOnAdvance;
+    }
+    overlayApplied_ = true;
 }
 bool DialoguePlayer::cuesReady() const noexcept {
     return active() && !leaving() && beat() && clockMs_ >= beatStartMs_ &&
@@ -241,13 +260,20 @@ void DialoguePlayer::tick(double seconds, bool focused) noexcept {
         revealed_ = std::min(double(response_->pages[page_].size()),
                              revealed_ + revealMs * catalog_->charactersPerSecond / 1000);
     }
+    applyOverlay();
     completed();
 }
 void DialoguePlayer::advance() noexcept {
     if (!active() || leaving() || !response_)
         return;
+    if (overlayDismissOnAdvance_ || (beat() && beat()->overlay && beat()->overlayDismissOnAdvance)) {
+        overlay_ = {};
+        overlayDismissOnAdvance_ = false;
+        overlayApplied_ = true; // Also cancel a delayed show, including on later pages of this beat.
+    }
     if (revealing()) {
         revealed_ = double(response_->pages[page_].size());
+        applyOverlay();
         completed();
     } else if (page_ + 1 < response_->pages.size()) {
         const auto* previousBeat = beat();
@@ -309,12 +335,17 @@ void DialoguePlayer::skipIntroduction() noexcept {
 }
 void DialoguePlayer::leave() noexcept {
     if (active() && !leaving()) {
+        overlay_ = {};
+        overlayDismissOnAdvance_ = false;
         exitFrom_ = weight();
         phase_ = DialoguePhase::Leaving;
         transition_ = 0;
     }
 }
 void DialoguePlayer::close() noexcept {
+    overlay_ = {};
+    overlayDismissOnAdvance_ = false;
+    overlayApplied_ = false;
     phase_ = DialoguePhase::Closed;
     character_ = nullptr;
     response_ = nullptr;
@@ -323,6 +354,7 @@ void DialoguePlayer::snapshot(DialogueHud& out) const noexcept {
     out = {};
     if (!active())
         return;
+    out.overlay = overlay_;
     out.revision = revision_;
     out.open = true;
     out.leaving = leaving();

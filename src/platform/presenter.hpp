@@ -30,6 +30,8 @@ class Presenter {
                       bool debug = false, const generation::DiagnosticView* diagnostic = nullptr,
                       bool reveal = false, const MapOverlayModel* mapModel = nullptr);
     const WorldViewTransform& displayedWorldTransform() const noexcept { return displayedWorld_; }
+    void prepareDialogue(const std::vector<std::string>& files) { uiArt_.prepareDialogue(files); }
+    void clearDialogue() noexcept { uiArt_.clearDialogue(); }
     void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
     void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
     // Diagnostic operation: readback and export may allocate; never used during normal play.

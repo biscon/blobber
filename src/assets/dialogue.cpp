@@ -86,29 +86,31 @@ unsigned participant(const Node& n, const DialogueCharacter& c) {
             return i;
     throw std::runtime_error("Unknown participant: " + alias);
 }
-unsigned sound(const Node& n, const std::filesystem::path& directory, DialogueCatalog& out) {
+unsigned asset(const Node& n, const std::filesystem::path& directory, std::vector<std::string>& files,
+               unsigned capacity) {
     const auto name = text(n, 240);
     const std::filesystem::path relative(name);
     if (relative.is_absolute() || relative.has_root_name())
-        throw std::runtime_error("Audio path must be relative");
+        throw std::runtime_error("Asset path must be relative");
     const auto root = std::filesystem::weakly_canonical(directory);
     const auto path = std::filesystem::weakly_canonical(root / relative);
     auto r = root.begin(), p = path.begin();
     for (; r != root.end() && p != path.end() && *r == *p; ++r, ++p) {
     }
     if (r != root.end() || p == path.end())
-        throw std::runtime_error("Audio path escapes audio directory");
+        throw std::runtime_error("Asset path escapes its directory");
     const auto resolved = path.string();
-    auto found = std::find(out.audioFiles.begin(), out.audioFiles.end(), resolved);
-    if (found != out.audioFiles.end())
-        return unsigned(found - out.audioFiles.begin());
-    if (out.audioFiles.size() == 64)
-        throw std::runtime_error("Dialogue exceeds 64 audio files");
-    out.audioFiles.push_back(resolved);
-    return unsigned(out.audioFiles.size() - 1);
+    auto found = std::find(files.begin(), files.end(), resolved);
+    if (found != files.end())
+        return unsigned(found - files.begin());
+    if (files.size() == capacity)
+        throw std::runtime_error("Dialogue asset capacity exceeded");
+    files.push_back(resolved);
+    return unsigned(files.size() - 1);
 }
 DialogueResponse response(const Node& n, const std::set<DialogueKey>& facts, const DialogueCharacter& c,
-                          const std::filesystem::path& directory, DialogueCatalog& out) {
+                          const std::filesystem::path& directory, const std::filesystem::path& uiRoot,
+                          DialogueCatalog& out) {
     fields(n, {"beats", "when_fact", "set_fact"});
     DialogueResponse r;
     if (n["when_fact"])
@@ -122,7 +124,8 @@ DialogueResponse response(const Node& n, const std::set<DialogueKey>& facts, con
     sequence(beats, 1, 32, "beats");
     for (const auto& b : beats) {
         try {
-            fields(b, {"speaker", "text", "camera", "animation", "audio"});
+            fields(b, {"speaker", "text", "camera", "animation", "audio", "overlay_asset", "clear_overlay",
+                       "overlay_delay_ms", "overlay_dismiss_on_advance"});
             DialogueBeat beat;
             beat.speaker = participant(b["speaker"], c);
             beat.target = beat.speaker;
@@ -145,11 +148,36 @@ DialogueResponse response(const Node& n, const std::set<DialogueKey>& facts, con
                     beat.animation = NpcAnimation::Walk;
                 else if (clip == "laugh")
                     beat.animation = NpcAnimation::Laugh;
+                else if (clip == "pull_document")
+                    beat.animation = NpcAnimation::PullDocument;
+                else if (clip == "explosive_rage")
+                    beat.animation = NpcAnimation::ExplosiveRage;
                 else
                     throw std::runtime_error("Unknown dialogue animation: " + clip);
             }
             if (b["audio"])
-                beat.audio = sound(b["audio"], directory, out);
+                beat.audio = asset(b["audio"], directory, out.audioFiles, 64);
+            if (b["overlay_asset"] && b["clear_overlay"])
+                throw std::runtime_error("overlay_asset and clear_overlay are mutually exclusive");
+            if (b["overlay_asset"])
+                beat.overlay.index =
+                    asset(b["overlay_asset"], uiRoot, out.overlayFiles, dialogueOverlayCapacity);
+            if ((b["overlay_delay_ms"] || b["overlay_dismiss_on_advance"]) && !b["overlay_asset"])
+                throw std::runtime_error("Overlay timing/dismissal requires overlay_asset");
+            if (b["overlay_delay_ms"])
+                beat.overlayDelayMs = integer(b["overlay_delay_ms"], 0, 60000);
+            if (b["overlay_dismiss_on_advance"]) {
+                const auto value = text(b["overlay_dismiss_on_advance"], 5);
+                if (value != "true" && value != "false")
+                    throw std::runtime_error("overlay_dismiss_on_advance requires true or false");
+                beat.overlayDismissOnAdvance = value == "true";
+            }
+            if (b["clear_overlay"]) {
+                const auto value = text(b["clear_overlay"], 5);
+                if (value != "true" && value != "false")
+                    throw std::runtime_error("clear_overlay requires true or false");
+                beat.clearOverlay = value == "true";
+            }
             r.pageBeats.push_back(unsigned(r.beats.size()));
             r.pages.push_back(beat.text);
             r.beats.push_back(std::move(beat));
@@ -162,7 +190,9 @@ DialogueResponse response(const Node& n, const std::set<DialogueKey>& facts, con
 }
 } // namespace
 DialogueCatalog loadDialogue(const std::filesystem::path& directory,
-                             const std::filesystem::path& audioDirectory) {
+                             const std::filesystem::path& audioDirectory,
+                             const std::filesystem::path& uiDirectory) {
+    const auto uiRoot = uiDirectory.empty() ? directory.parent_path() / "ui" : uiDirectory;
     const auto audioRoot = audioDirectory.empty() ? directory.parent_path() / "audio" : audioDirectory;
     std::vector<std::filesystem::path> paths;
     std::uintmax_t bytes = 0;
@@ -252,9 +282,9 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
                     key(f, &facts);
             }
             location = "greeting";
-            c.greeting = response(n["greeting"], facts, c, audioRoot, out);
+            c.greeting = response(n["greeting"], facts, c, audioRoot, uiRoot, out);
             location = "introduction";
-            c.introduction = response(n["introduction"], facts, c, audioRoot, out);
+            c.introduction = response(n["introduction"], facts, c, audioRoot, uiRoot, out);
             if (c.greeting.whenFact || c.greeting.setFact || c.introduction.whenFact ||
                 c.introduction.setFact)
                 throw std::runtime_error("Greeting/introduction cannot have fact conditions/effects");
@@ -273,7 +303,7 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
                     sequence(t["responses"], 1, 2, "responses");
                     unsigned defaults = 0;
                     for (const auto& r : t["responses"]) {
-                        topic.responses.push_back(response(r, facts, c, audioRoot, out));
+                        topic.responses.push_back(response(r, facts, c, audioRoot, uiRoot, out));
                         defaults += !topic.responses.back().whenFact;
                     }
                     if (defaults != 1)

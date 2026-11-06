@@ -7,6 +7,7 @@
 #include "ui/hud_painter.hpp"
 #include "ui/map_model.hpp"
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <string_view>
 using namespace blobber;
@@ -139,13 +140,80 @@ void nativeUi() {
         check(ExportImage(icons.value, (fixture.path / "map/markers-v1.png").string().c_str()),
               "Export owned map marker fixture");
     }
+    for (const auto& spec :
+         {std::make_pair("se02/portraits.png", std::pair<int, int>{1024, 512}),
+          std::make_pair("se03/portraits.png", std::pair<int, int>{1024, 1024}),
+          std::make_pair("combat-feedback/backdrops.png", std::pair<int, int>{768, 128})}) {
+        const auto path = fixture.path.parent_path() / "effects" / spec.first;
+        std::filesystem::create_directories(path.parent_path());
+        OwnedImage atlas(GenImageColor(spec.second.first, spec.second.second, WHITE));
+        check(ExportImage(atlas.value, path.string().c_str()), "Export owned effect atlas fixture");
+    }
     GpuResources resources;
-    const UiArt art(resources, fixture.path);
+    UiArt art(resources, fixture.path);
     OwnedImage extra(GenImageColor(2, 2, WHITE));
     const auto viewport = resources.createTexture(extra.value), menu = resources.createTexture(extra.value);
     check(bool(viewport) && bool(menu), "Prepared UI artwork plus viewport and menu fit the registry");
+    const auto overlayFile = (fixture.path / "overlay.png").string();
+    OwnedImage overlayImage(GenImageColor(8, 4, BLANK));
+    ImageDrawRectangle(&overlayImage.value, 2, 0, 4, 4, GREEN);
+    check(ExportImage(overlayImage.value, overlayFile.c_str()), "Export owned overlay fixture");
+    const auto baseline = resources.counts();
+    art.prepareDialogue({overlayFile});
+    check(resources.counts().textures == baseline.textures + 1, "Overlay acquires one texture");
+    resources.failAfter(1);
+    rejects([&] { art.prepareDialogue({overlayFile, overlayFile}); }, "Staged overlay GPU failure rejects");
+    resources.failAfter(-1);
+    check(resources.counts().textures == baseline.textures + 1 &&
+              resources.counts().bytes == baseline.bytes + 8 * 4 * 4,
+          "Failed replacement rolls back new leases and preserves old set");
+    rejects([&] { art.prepareDialogue({overlayFile + ".missing"}); }, "Missing overlay rejects");
+    rejects([&] { art.prepareDialogue(std::vector<std::string>(17, overlayFile)); },
+            "Overlay texture capacity rejects");
+    const auto corrupt = (fixture.path / "corrupt.png").string();
+    std::filesystem::copy_file(overlayFile, corrupt);
+    { // Keep a valid signature but make IHDR width 65536; reject before decoding.
+        std::fstream file(corrupt, std::ios::in | std::ios::out | std::ios::binary);
+        const char wide[]{0, 1, 0, 0};
+        file.seekp(16);
+        file.write(wide, 4);
+    }
+    rejects([&] { art.prepareDialogue({corrupt}); }, "Oversized PNG header rejects before decode");
+    {
+        std::ofstream file(corrupt, std::ios::binary);
+        file << "not a PNG";
+    }
+    rejects([&] { art.prepareDialogue({corrupt}); }, "Corrupt PNG rejects");
+    const auto large = (fixture.path / "large.png").string();
+    {
+        OwnedImage budget(GenImageColor(2048, 2048, GREEN));
+        check(ExportImage(budget.value, large.c_str()), "Export owned budget fixture");
+    }
+    rejects([&] { art.prepareDialogue({large, large, overlayFile}); }, "Decoded overlay byte budget rejects");
+    check(resources.counts().textures == baseline.textures + 1, "Budget failure releases staged textures");
     const HudPainter painter(nullptr, &art);
     const auto target = resources.createTarget(400, 400);
+    const auto transfers = resources.transfers().uploads;
+    BeginTextureMode(resources.target(target));
+    ClearBackground(MAGENTA);
+    art.dialogueOverlay({0}, {0, 0, 40, 40});
+    art.dialogueOverlay({}, {0, 0, 40, 40}); // invalid ID is harmless
+    EndTextureMode();
+    {
+        OwnedImage pixels(LoadImageFromTexture(resources.target(target).texture));
+        ImageFlipVertical(&pixels.value);
+        const auto letterbox = GetImageColor(pixels.value, 60, 10);
+        const auto transparent = GetImageColor(pixels.value, 5, 60);
+        const auto center = GetImageColor(pixels.value, 60, 60);
+        check(letterbox.r > 240 && letterbox.b > 240 && transparent.r > 240 && transparent.b > 240,
+              "Overlay aspect fit and transparent margins preserve the scene");
+        check(center.g > 200 && center.r < 50, "Prepared overlay draws at native UI scale");
+    }
+    check(resources.transfers().uploads == transfers, "Overlay drawing never uploads textures");
+    art.clearDialogue();
+    art.clearDialogue();
+    check(resources.counts().textures == baseline.textures, "Overlay teardown is complete and idempotent");
+
     BeginTextureMode(resources.target(target));
     ClearBackground(MAGENTA);
     painter.picture(5, {0, 0, 36, 36});
@@ -227,10 +295,10 @@ int main() {
         check(resources.destroy(target), "Target released");
         resources.createTarget(32, 32);
         rejects([&] { resources.target(target); }, "Stale GPU target rejected after reuse");
-        for (int i = 0; i < 7; ++i)
+        for (unsigned i = 1; i < gpuTargetCapacity; ++i)
             resources.createTarget(32, 32);
         rejects([&] { resources.createTarget(32, 32); }, "Target capacity fails before allocation");
-        for (int i = 0; i < 511; ++i)
+        for (unsigned i = 1; i < gpuTextureCapacity; ++i)
             resources.createTexture(image.value);
         rejects([&] { resources.createTexture(image.value); }, "Texture capacity fails before allocation");
         BeginDrawing();

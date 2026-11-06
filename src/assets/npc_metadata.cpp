@@ -70,8 +70,9 @@ Heading heading(const std::string& name) {
     throw std::runtime_error("Invalid NPC facing: " + name);
 }
 NpcAnimation animationName(const std::string& name) {
-    const std::array<const char*, npcAnimationCount> names{
-        "idle", "walk", "attack", "hurt", "death", "ranged_attack", "prone", "talk", "laugh"};
+    const std::array<const char*, npcAnimationCount> names{"idle",  "walk",          "attack",        "hurt",
+                                                           "death", "ranged_attack", "prone",         "talk",
+                                                           "laugh", "pull_document", "explosive_rage"};
     for (std::size_t i = 0; i < names.size(); ++i)
         if (name == names[i])
             return static_cast<NpcAnimation>(i);
@@ -233,10 +234,10 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
                 validateNpcTimings(npcTimings(appearance));
                 if (appearance.role == NpcRole::Resident)
                     for (std::size_t i = 1; i < npcAnimationCount; ++i)
-                        if (i != std::size_t(NpcAnimation::Talk) && i != std::size_t(NpcAnimation::Walk) &&
-                            i != std::size_t(NpcAnimation::Laugh) && appearance.animations[i].timing.count)
+                        if (!dialogueReaction(static_cast<NpcAnimation>(i)) &&
+                            i != std::size_t(NpcAnimation::Walk) && appearance.animations[i].timing.count)
                             throw std::runtime_error(
-                                "Resident artwork supports only idle, walk, talk and laugh");
+                                "Resident artwork supports only idle, walk and dialogue reactions");
                 for (std::size_t i = 0; i < npcAnimationCount; ++i) {
                     const auto& clip = appearance.animations[i];
                     // Clip canvases include weapons/limbs/padding, not occupancy. The shared

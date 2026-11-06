@@ -35,10 +35,46 @@ topics:
 - id: gwendolyn
   label: Gwendolyn
   responses:
-  - beats:
-    - speaker: mayor
-      text: |
-        My daughter! Beautiful, headstrong, and quite capable of telling me when I am being unreasonable. Which she does far too often. Bring her home safely. That is all I ask.
+    - beats:
+      - speaker: mayor
+        text: |
+          Muck-rakers! Ye must recognize Gwendolyn upon thy sight! Watchmen! Produce the official royal tapestry from the town archives post-haste, that these sell-swords mayest know whom they seek!
+        animation: talk
+      - speaker: boric
+        text: |
+          Verily, sire... heh, heh... lookest thou upon this scroll. I holdeth a most wondrous rendering of the maiden right here within my breastplate. 'Tis the freshest parchment in all the realm.
+        camera:
+          target: boric
+          duration_ms: 300
+        animation: pull_document
+        audio: dialogue/boric-chuckle.wav
+        overlay_asset: dialogue/onlyscrolls_overlay.png
+        overlay_delay_ms: 700 # Let the four 150 ms document-pull frames finish first.
+        overlay_dismiss_on_advance: true
+      - speaker: balin
+        text: |
+          Hark! Eh-heh-heh. Gaze thy eyes upon the density of this canvas, knave. The premium tier of OnlyScrolls is delivered via swift, majestic ravens rather than the common, peasant pigeon. I didst spendeth three whole hours self-abusing mine own rod in the barracks yesternight whilst gazing upon it. Triumphant.
+        camera:
+          target: balin
+          duration_ms: 400
+        animation: laugh
+        audio: dialogue/balin-chuckle.wav
+      - speaker: boric
+        text: |
+          Aye, heh, heh. Yet the vellum groweth exceedingly rigid, sire. Methinks it suffereth from... exposure to the damp humors of the dungeon air. Heh.
+        camera:
+          target: boric
+          duration_ms: 400
+        animation: talk
+      - speaker: mayor
+        text: |
+          THAT IS NO REGISTRY OF THE CROWN! 'TIS A PROFLIGATE SUBSCRIPTION SCROLL FROM THE RAVEN-FEEDERS! AND FOR WHAT REASON ART THE CORNERS CRUSTED AND BOUND TOGETHER?!
+        camera:
+          target: mayor
+          duration_ms: 200
+        animation: explosive_rage
+        audio: dialogue/mayor-groan.wav
+        clear_overlay: true
 - id: kidnapping
   label: The kidnapping
   responses:

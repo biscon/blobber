@@ -27,6 +27,10 @@ struct VisibilityFixture {
             a.width = .5f;
             a.height = .7f;
             for (unsigned clip = 0; clip < npcAnimationCount; ++clip) {
+                // Only the generic first appearance needs the new dialogue reactions.
+                // Keep multi-type fixtures within their existing bounded texture workload.
+                if (clip >= unsigned(NpcAnimation::PullDocument) && type != 0)
+                    continue;
                 if (type % 11 >= 7 && clip != unsigned(NpcAnimation::Idle) &&
                     clip != unsigned(NpcAnimation::Talk))
                     continue;

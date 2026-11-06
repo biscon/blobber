@@ -133,7 +133,7 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_library(blobber_platform
         src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
         src/platform/gpu_resources.cpp src/platform/environment_ao.cpp src/platform/world_geometry_draw.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
-        src/ui/dialogue_screen.cpp src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
+        src/ui/dialogue_art.cpp src/ui/dialogue_screen.cpp src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu blobber_audio_io blobber_assets_io raylib)
     target_sources(blobber_platform PRIVATE src/ui/map_screen.cpp)
     add_library(blobber_application src/app/city_review.cpp src/app/audio_settings.cpp src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
