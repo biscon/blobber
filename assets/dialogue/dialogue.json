@@ -34,6 +34,78 @@
         ] },
         { "id": "farewell", "label": "Farewell", "kind": "farewell" }
       ]
+    },
+    {
+      "id": "sanctuary.mayor",
+      "name": "Mayor",
+      "facts": [],
+      "greeting": {
+        "pages": [
+          "Have you heard anything of Gwendolyn? Then tell me!"
+        ]
+      },
+      "introduction": {
+        "pages": [
+          "You there! Adventurers! My daughter Gwendolyn was kidnapped last night. Monsters came up from the dungeon beneath Sanctuary and carried her away!",
+          "My beautiful daughter, dragged into that wretched place! Find her and bring her home safely. Boric and Balin are assisting me with the investigation. Their principal contribution so far has been standing there."
+        ]
+      },
+      "topics": [
+        {
+          "id": "about",
+          "label": "What happened?",
+          "kind": "introduction"
+        },
+        {
+          "id": "gwendolyn",
+          "label": "Gwendolyn",
+          "responses": [
+            {
+              "pages": [
+                "My daughter! Beautiful, headstrong, and quite capable of telling me when I am being unreasonable. Which she does far too often. Bring her home safely. That is all I ask."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "kidnapping",
+          "label": "The kidnapping",
+          "responses": [
+            {
+              "pages": [
+                "It happened during the night. Monsters from below took her before we could stop them. I need people who can go after her, not another explanation of why nobody noticed!"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dungeon",
+          "label": "The dungeon",
+          "responses": [
+            {
+              "pages": [
+                "They took her into the dungeon beneath our town. I do not know how far down. Find her, and do not let your courage outrun your sense. She needs rescuers who can make it back."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "guards",
+          "label": "Your guards",
+          "responses": [
+            {
+              "pages": [
+                "Boric and Balin. Loyal lads. Very loyal. I would praise their powers of observation, but I am still waiting to observe them. For now, they are under strict orders to remain here."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "farewell",
+          "label": "Farewell",
+          "kind": "farewell"
+        }
+      ]
     }
   ]
 }

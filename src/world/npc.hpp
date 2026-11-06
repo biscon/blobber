@@ -16,10 +16,10 @@ inline std::string_view monsterAppearance(std::string_view id) noexcept {
 struct NpcTypeId {
     std::uint16_t index = 0;
 };
-enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack, Prone, Talk };
-constexpr std::size_t npcAnimationCount = 8;
+enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack, Prone, Talk, Laugh };
+constexpr std::size_t npcAnimationCount = 9;
 constexpr bool directionalIdleFallback(NpcAnimation clip) noexcept {
-    return clip == NpcAnimation::Attack || clip == NpcAnimation::Talk;
+    return clip == NpcAnimation::Attack || clip == NpcAnimation::Talk || clip == NpcAnimation::Laugh;
 }
 enum class NpcRole : std::uint8_t { Hostile, Resident };
 enum class NpcRoutine : std::uint8_t { Guard, Patrol, Wander };

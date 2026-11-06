@@ -40,6 +40,9 @@ class NpcAnimator {
     const ActorWorld& world_;
     std::array<NpcTimings, NpcWorld::maxTypes> timings_{};
     std::array<std::uint32_t, NpcWorld::maxInstances> idlePhases_{};
+    // View-owned cosmetic time: keep resident idle phases continuous across dialogue.
+    std::uint64_t residentDialogueMs_ = 0, lastDialogueMs_ = 0;
+    bool dialogueActive_ = false;
     NpcAnimationSnapshot snapshot_;
 };
 } // namespace blobber

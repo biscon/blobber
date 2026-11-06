@@ -1,12 +1,32 @@
 # System design
 
+[Sanctuary mayor and guards](sanctuary_residents_design.md): implemented and
+mechanically verified; runtime appearance approved. The dialogue idle correction
+passes focused CPU and hidden render checks. Stationary residents, mayor
+dialogue, prepared Idle/Walk/Talk and guard Laugh; requires a new campaign
+(schema/simulation 12/17). [Review captures](screenshots/sanctuary-residents/README.md).
+The user approved the residents' appearance. A dialogue presentation correction
+keeps nearby residents idling while simulation is paused; see the resident design.
+Dialogue ambience correction, implemented and verified: separate the ambient-stream pause from gameplay
+audio so conversations preserve continuous background sound. Other pause causes
+retain their current behavior; details in [audio design](audio_design.md#dialogue-ambience).
+
+[Mayor](mockups/mayor-v1/README.md), [Boric](mockups/boric-v1/README.md) and
+[Balin](mockups/balin-v1/README.md) **v2 concepts approved (2026-11-06)**.
+[Gwendolyn](mockups/gwendolyn-v1/README.md) **v3 concept approved (2026-11-06)**.
+Each character folder retains only its approved sheet and generation prompt;
+superseded versions were deleted at the user's request. Use those approved sheets
+for future work. These concept folders follow the innkeeper mockup format;
+production mayor/guard assets live separately under `assets/npcs/`.
+
 [Friendly NPC dialogue](dialogue_design.md) **implemented and mechanically verified;
 awaiting runtime visual/interactive review (2026-11-06)**: editable JSON,
 per-character introduction/fact history, gradual text/Talk, fixed-viewport overlay
 and shared 700 ms conversation camera, based on the approved mockup.
 Eleven focused Release CPU suites, the extended campaign save check and hidden
 CPU/GPU parity pass; [six runtime captures](screenshots/dialogue/README.md).
-Schema/simulation are **12/16** and require a new campaign, as authorized.
+Dialogue introduced schema/simulation **12/16**; Sanctuary residents now advance
+compatibility to **12/17**, requiring a new campaign as authorized.
 Trading, quests and procedural rumours remain later work.
 The user accepted the interface and fluid transition; an [eye-level correction](dialogue_design.md#eye-level-review-correction--2026-11-06)
 removes the rejected counter-height framing in favor of generic NPC-height framing.
@@ -17,7 +37,8 @@ Innkeeper **implemented and mechanically verified; awaiting runtime visual revie
 behind the bar with approved artwork, four-view idle and front-only talk.
 Twelve focused Release CPU suites and hidden OpenGL checks pass;
 [six review captures](screenshots/innkeeper/README.md). Campaign schema/simulation
-were 11/15 at the resident slice; dialogue now advances them to 12/16.
+were 11/15 at the resident slice; dialogue advanced them to 12/16, and the mayor
+and guards now require 12/17.
 Trading remains deferred.
 The user rejected the initial runtime scale impression and side orientations.
 The [review correction](innkeeper_design.md#runtime-review-correction--2026-11-06)

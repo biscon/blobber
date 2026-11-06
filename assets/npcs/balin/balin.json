@@ -1,0 +1,296 @@
+{
+  "id": "balin",
+  "role": "resident",
+  "source_sheets": "animation/sheets.json",
+  "width": 0.45,
+  "height": 0.75,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        1800,
+        140
+      ],
+      "width": 0.986842105263158,
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/idle-front-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/idle-front-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "animation/frames/idle-back-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/idle-back-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "animation/frames/idle-left-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/idle-left-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "animation/frames/idle-right-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/idle-right-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ]
+      }
+    },
+    "walk": {
+      "durations_ms": [
+        150,
+        150,
+        150,
+        150
+      ],
+      "width": 0.986842105263158,
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/walk-front-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-front-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-front-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-front-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "animation/frames/walk-back-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-back-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-back-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-back-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "animation/frames/walk-left-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-left-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-left-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-left-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "animation/frames/walk-right-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-right-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-right-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/walk-right-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ]
+      }
+    },
+    "talk": {
+      "durations_ms": [
+        180,
+        160,
+        180,
+        220
+      ],
+      "width": 0.986842105263158,
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/talk-front-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/talk-front-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/talk-front-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/talk-front-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ]
+      }
+    },
+    "laugh": {
+      "durations_ms": [
+        160,
+        120,
+        160,
+        240
+      ],
+      "width": 0.986842105263158,
+      "views": {
+        "front": [
+          {
+            "image": "animation/frames/laugh-front-0.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/laugh-front-1.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/laugh-front-2.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          },
+          {
+            "image": "animation/frames/laugh-front-3.png",
+            "anchor": [
+              0.5,
+              0.9605263157894737
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

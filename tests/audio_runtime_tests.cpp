@@ -241,6 +241,45 @@ int main() {
     NpcWorld places(map, {5, 8}, {}, {});
     GameSession session(map, catalog, places, 5, {{5, 8}, Heading::North}, false);
     runtime.update(&session, false, true, .01f);
+    const auto ambient = fake::lastMusic;
+    const auto ambientStarts = fake::musicPlays;
+    const auto ambientVolume = fake::musicBuffers[ambient].volume;
+    auto ambientPosition = fake::musicBuffers[ambient].position;
+    runtime.play("test");
+    const auto effect = fake::lastPlayed;
+    runtime.update(&session, true, true, .01f, false, false, false);
+    check(fake::musicBuffers[ambient].position > ambientPosition && !fake::musicBuffers[ambient].paused &&
+              fake::musicPlays == ambientStarts && fake::musicBuffers[ambient].volume == ambientVolume,
+          "Dialogue keeps ambience advancing at unchanged volume without restarting");
+    check(fake::buffers[effect].paused && runtime.play("test").slot == 64,
+          "Ambience override does not resume or admit gameplay effects");
+    ambientPosition = fake::musicBuffers[ambient].position;
+    runtime.update(&session, true, false, .01f, false, false, false);
+    check(fake::musicBuffers[ambient].paused && fake::musicBuffers[ambient].position == ambientPosition,
+          "Focus loss overrides dialogue ambience playback");
+    runtime.update(&session, true, true, .01f, false, false, false);
+    check(!fake::musicBuffers[ambient].paused && fake::musicBuffers[ambient].position > ambientPosition,
+          "Refocusing resumes the same ambient stream during dialogue");
+    ambientPosition = fake::musicBuffers[ambient].position;
+    runtime.update(&session, true, true, .01f, true, false, true);
+    check(fake::musicBuffers[ambient].paused && fake::musicBuffers[ambient].position == ambientPosition,
+          "Another pause cause takes precedence over dialogue ambience");
+    runtime.update(&session, true, true, .01f);
+    check(fake::musicBuffers[ambient].paused && fake::musicBuffers[ambient].position == ambientPosition,
+          "Existing menu/settings callers retain default ambient pause");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 100; ++i)
+        runtime.update(&session, true, true, .01f, false, false, false);
+    watching = false;
+    check(!allocations && fake::musicBuffers[ambient].position > ambientPosition,
+          "Warmed dialogue ambience servicing advances without engine allocations");
+    ambientPosition = fake::musicBuffers[ambient].position;
+    runtime.update(&session, false, true, .01f);
+    check(fake::musicBuffers[ambient].position > ambientPosition &&
+              fake::musicBuffers[ambient].volume == ambientVolume && fake::musicPlays == ambientStarts &&
+              !fake::buffers[effect].paused,
+          "Dialogue exit continues ambience and resumes gameplay effects without a restart");
     session.audioEvents().emit({"test"});
     const auto old = fake::plays;
     runtime.update(&session, false, true, .01f);

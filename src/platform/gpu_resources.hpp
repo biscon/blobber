@@ -4,6 +4,7 @@
 #include "render/world_scene.hpp"
 #include <utility>
 namespace blobber {
+inline constexpr unsigned gpuTextureCapacity = 704; // 640 world entries plus UI/preparation headroom.
 struct TextureTag;
 struct TargetTag;
 struct MeshTag;
@@ -63,7 +64,7 @@ class GpuResources {
 
   private:
     void checkpoint();
-    ResourcePool<Texture2D, TextureTag, 512> textures_;
+    ResourcePool<Texture2D, TextureTag, gpuTextureCapacity> textures_;
     ResourcePool<RenderTexture2D, TargetTag, 12> targets_;
     ResourcePool<GpuMesh, MeshTag, 8> meshes_;
     ResourcePool<Shader, ShaderTag, 8> shaders_;

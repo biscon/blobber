@@ -13,6 +13,36 @@ int main() {
         const auto cat = catalog();
         const auto defs = definitions();
         CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        check(run.game().actors().snapshot().count == 3, "City owns exactly three residents");
+        const char* residents[]{"sanctuary.mayor", "sanctuary.boric", "sanctuary.balin"};
+        const Cell cells[]{{9, 8}, {8, 8}, {8, 9}};
+        for (unsigned i = 0; i < 3; ++i) {
+            const auto& actor = run.game().actors().snapshot().actors[i];
+            check(!actor.hostile() && actor.npc.residentId == dialogueKey(residents[i]) &&
+                      actor.npc.cell == cells[i] && actor.npc.facing == Heading::East,
+                  "City formation has stable peaceful identities and facing");
+        }
+        // Reach every doorway with the real resident occupancy installed.
+        const auto city = sanctuaryCity();
+        for (unsigned i = 0; i < city.doorCount; ++i)
+            if (std::string_view(city.doors[i].name) != "dungeon")
+                walk(run.game(), city.doors[i].approach.cell);
+        walk(run.game(), city.spawn.cell);
+        face(run.game(), city.spawn.heading);
+        for (unsigned fault = 0; fault < 4; ++fault) {
+            auto bad = run.checkpoint();
+            auto& residents = bad->locations[0].placements;
+            if (fault == 0)
+                residents.pop_back();
+            if (fault == 1)
+                residents[0].cell = {10, 8};
+            if (fault == 2)
+                residents[1].residentId = residents[0].residentId;
+            if (fault == 3)
+                residents[2].animation = NpcAnimation::Laugh;
+            rejects([&] { CampaignRun invalid(cat, std::move(*bad), defs.timings); },
+                    "Canonical city residents reject missing, moved, duplicate or non-idle data");
+        }
         const auto approach = sanctuaryCity().doorway("inn").approach;
         check(!run.previewTravel(run.doorwayRequest()), "No remote inn entry");
         walk(run.game(), approach.cell);

@@ -187,14 +187,16 @@ Json encodeObservation(const Observation& o) {
         const auto& a = actors.actors[i];
         if (!a.hostile()) {
             if (o.diagnostic || o.targets.anchors[i].valid)
-                j["residents"].push_back(
-                    {{"actor", i},
-                     {"type", std::string(g.actors().appearanceId(a.npc.type))},
-                     {"position", xy(a.npc.cell)},
-                     {"subcell", xy(a.npc.subcell)},
-                     {"heading", unsigned(a.npc.facing)},
-                     {"animation", a.npc.animation == NpcAnimation::Talk ? "talk" : "idle"},
-                     {"targetable", false}});
+                j["residents"].push_back({{"actor", i},
+                                          {"type", std::string(g.actors().appearanceId(a.npc.type))},
+                                          {"position", xy(a.npc.cell)},
+                                          {"subcell", xy(a.npc.subcell)},
+                                          {"heading", unsigned(a.npc.facing)},
+                                          {"animation", a.npc.animation == NpcAnimation::Talk    ? "talk"
+                                                        : a.npc.animation == NpcAnimation::Laugh ? "laugh"
+                                                        : a.npc.animation == NpcAnimation::Walk  ? "walk"
+                                                                                                 : "idle"},
+                                          {"targetable", false}});
             continue;
         }
         if (!o.diagnostic && !o.visible[i])

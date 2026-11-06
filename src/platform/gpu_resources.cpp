@@ -51,7 +51,7 @@ void GpuResources::finishPreparation() {
 TextureHandle GpuResources::createTexture(const Image& image) {
     preparationPoint("Loading artwork");
     if (!textures_.available())
-        throw std::runtime_error("Texture capacity exhausted (512)");
+        throw std::runtime_error("Texture capacity exhausted (704)");
     if (!image.data || image.width <= 0 || image.height <= 0 || image.width > 8192 || image.height > 8192 ||
         image.mipmaps <= 0)
         throw std::invalid_argument("Invalid texture image");

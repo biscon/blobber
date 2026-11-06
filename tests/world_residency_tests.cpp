@@ -86,7 +86,7 @@ int main() {
                   smallAssets.residency().meshBytes == assets.residency().meshBytes &&
                   smallAssets.residency().textures == assets.residency().textures,
               "Unused catalog growth does not grow resident payloads");
-        test::ResidencyFixture capacity(480);
+        test::ResidencyFixture capacity(world_assets::textureCapacity);
         world_assets::CpuAssets capacityAssets(capacity.publication());
         rejects([&] { capacityAssets.acquire(world_assets::allAssets(capacityAssets.publication)); },
                 "Installed catalog can exceed resident capacity; oversized acquisition rejects");

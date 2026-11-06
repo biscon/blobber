@@ -3,6 +3,7 @@
 #include "audio/events.hpp"
 #include "game/session.hpp"
 #include "platform/combat_music.hpp"
+#include <optional>
 #include <raylib.h>
 namespace blobber {
 class AudioRuntime {
@@ -14,7 +15,7 @@ class AudioRuntime {
     void prepare(const std::filesystem::path&, bool disabled = false,
                  const std::filesystem::path& settings = {});
     void update(GameSession*, bool paused, bool focused, float dt, bool musicPaused = true,
-                bool bannerVisible = true);
+                bool bannerVisible = true, std::optional<bool> ambiencePaused = {});
     audio::Handle play(const char*, float x = 0, float z = 0, bool positional = false, bool interface = false,
                        unsigned priority = 0);
     bool stop(audio::Handle) noexcept;
@@ -56,7 +57,7 @@ class AudioRuntime {
     audio::Bank bank_;
     std::filesystem::path root_, settingsPath_;
     std::string warning_;
-    bool ready_ = false, worldPaused_ = false, focused_ = true;
+    bool ready_ = false, worldPaused_ = false, ambiencePaused_ = false, focused_ = true;
     bool limiterAttached_ = false;
     std::uint64_t owner_ = 0, sequence_ = 0, world_ = 0;
     float x_ = 0, z_ = 0, rx_ = 1, rz_ = 0;

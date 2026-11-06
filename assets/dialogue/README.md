@@ -80,4 +80,6 @@ advances on a separate press. Skip introduction skips the whole introduction.
 Escape or Farewell leaves. Returning greetings never block access to topics.
 
 Dialogue history is saved with the campaign. This feature requires a new
-campaign (schema/simulation 12/16); subsequent prose edits do not require one.
+campaign (currently schema/simulation 12/17 with the Sanctuary mayor and guards);
+subsequent prose edits do not require one. The mayor has his own introduction and
+topics; Boric and Balin intentionally have no dialogue entry yet.

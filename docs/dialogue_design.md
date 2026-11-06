@@ -37,8 +37,13 @@ Frontal exposed residents within 2 cells can be spoken to with F or friendly
 body picking, separate from offensive picking. Doorway F actions have precedence,
 then talk, then other fixtures. Commands revalidate world, role, pose, visibility
 and settled exploration. Queued movement/targeting is cleared. Conversation
-freezes simulation while a focus-aware presentation clock advances only the
-speaker's idle/talk, text and camera; other actor timelines stay frozen.
+freezes simulation while a focus-aware presentation clock advances the speaker's
+idle/talk, other residents' idle loops, text and camera. Hostile actor timelines
+stay frozen. Resident idle sampling retains elapsed dialogue time after closing
+to preserve phase continuity (see the Sanctuary resident design).
+Ambient streams also continue at the configured volume during dialogue, including
+entry/exit and pauses between pages. Other pause causes and focus loss still pause
+ambience; gameplay effects remain frozen. See the audio design's dialogue correction.
 First entry automatically reveals the introduction; later entries reveal a short
 greeting with topics immediately available. Reveal defaults to 45 characters/s.
 Click response/Space completes reveal, next press advances; final page remains.

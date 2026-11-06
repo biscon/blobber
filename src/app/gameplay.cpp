@@ -388,10 +388,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 return launch && launch->arena ? PlayOutcome::ArenaSetup : PlayOutcome::MainMenu;
             if (view.commands.snapshot().quitRequested)
                 return PlayOutcome::Quit;
-            if (presenter.audio)
+            if (presenter.audio) {
+                const auto& hud = view.commands.snapshot();
+                // Dialogue pauses gameplay, but keeps its ambient bed continuous even
+                // on entry/exit frames. Every other pause reason still takes precedence.
+                std::optional<bool> ambiencePaused;
+                if (dialogueWasOpen || hud.dialogue.open)
+                    ambiencePaused = campWasOpen || debug || hud.modal(false);
                 presenter.audio->update(&view.session, paused || view.commands.snapshot().modal(),
                                         sample.ui.focused, dt, view.commands.snapshot().menuOpen || debug,
-                                        !view.commands.snapshot().modal() && !debug);
+                                        !view.commands.snapshot().modal() && !debug, ambiencePaused);
+            }
             if (view.commands.saveMenu().settingsRequested) {
                 view.commands.saveMenu().settingsRequested = false;
                 runAudioSettings(presenter, &view.session);

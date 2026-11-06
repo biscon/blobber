@@ -125,6 +125,28 @@ int main() {
         auto badRole = peaceful;
         badRole["instances"][0]["role"] = "friend-ish";
         rejects([&] { placed(badRole); }, "Unknown resident role rejects");
+        auto animatedResident = talk;
+        animatedResident["animations"]["walk"] = definition["animations"]["idle"];
+        animatedResident["animations"]["laugh"] = talk["animations"]["talk"];
+        save(animatedResident);
+        for (const auto* clip : {"walk", "laugh"}) {
+            auto preview = peaceful;
+            preview["instances"][0]["animation"] = clip;
+            check(placed(preview).world.instances().size() == 1,
+                  "Resident Walk and front-only Laugh can be prepared without movement");
+        }
+        auto invalidResident = animatedResident;
+        invalidResident["animations"]["attack"] = definition["animations"]["idle"];
+        save(invalidResident);
+        rejects([&] { placed(peaceful); }, "Residents still reject combat clips");
+        invalidResident = animatedResident;
+        invalidResident["animations"]["walk"]["views"].erase("left");
+        save(invalidResident);
+        rejects([&] { placed(peaceful); }, "Walk requires every cardinal view");
+        invalidResident = animatedResident;
+        invalidResident["animations"]["laugh"]["views"].erase("front");
+        save(invalidResident);
+        rejects([&] { placed(peaceful); }, "Laugh requires front art");
         talk["animations"]["talk"]["views"].erase("front");
         save(talk);
         rejects([&] { placed(peaceful); }, "Talk requires its front-facing artwork");

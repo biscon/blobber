@@ -21,12 +21,13 @@ struct VisibilityFixture {
         for (unsigned type = 0; type < types; ++type) {
             world_assets::Appearance a;
             constexpr const char* names[]{"goblin",    "goblin.archer", "skeleton", "zombie",
-                                          "giant.rat", "goblin_shaman", "bugbear",  "innkeeper"};
-            a.id = names[type % 8];
+                                          "giant.rat", "goblin_shaman", "bugbear",  "innkeeper",
+                                          "mayor",     "boric",         "balin"};
+            a.id = names[type % 11];
             a.width = .5f;
             a.height = .7f;
             for (unsigned clip = 0; clip < npcAnimationCount; ++clip) {
-                if (a.id == "innkeeper" && clip != unsigned(NpcAnimation::Idle) &&
+                if (type % 11 >= 7 && clip != unsigned(NpcAnimation::Idle) &&
                     clip != unsigned(NpcAnimation::Talk))
                     continue;
                 auto& c = a.clips[clip];
@@ -34,7 +35,7 @@ struct VisibilityFixture {
                     clip == 6 ? NpcClipTiming{{{200, 0, 0, 0}}, 1} : NpcClipTiming{{{80, 120, 0, 0}}, 2};
                 c.width = clip == 4 ? .9f : 0;
                 for (unsigned side = 0; side < 4; ++side) {
-                    if (a.id == "innkeeper" && clip == unsigned(NpcAnimation::Talk) && side != 0)
+                    if (type % 11 >= 7 && clip == unsigned(NpcAnimation::Talk) && side != 0)
                         continue;
                     for (unsigned frame = 0; frame < c.timing.count; ++frame) {
                         auto rgba = pixels;

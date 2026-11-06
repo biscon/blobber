@@ -198,9 +198,9 @@ struct HudSnapshot {
     bool arena = false, arenaComplete = false, retryConfirmation = false, retryRequested = false;
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
-    bool modal() const noexcept {
-        return dialogue.open || travel.open || advancement.open || loot.open || camp.open || inventory.open ||
-               logExpanded || menuOpen || magic.open;
+    bool modal(bool includeDialogue = true) const noexcept {
+        return (includeDialogue && dialogue.open) || travel.open || advancement.open || loot.open ||
+               camp.open || inventory.open || logExpanded || menuOpen || magic.open;
     }
     const char* interactionPrompt() const noexcept {
         if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||

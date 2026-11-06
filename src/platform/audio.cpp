@@ -258,7 +258,7 @@ void AudioRuntime::detach() noexcept {
     world_ = 0;
 }
 void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt, bool musicPaused,
-                          bool bannerVisible) {
+                          bool bannerVisible, std::optional<bool> ambiencePaused) {
     dt = std::isfinite(dt) ? std::clamp(dt, 0.f, .1f) : 0;
     const auto world = game ? game->actors().snapshot().world : 0;
     if (world != world_) {
@@ -279,6 +279,7 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
     }
     session_ = game;
     worldPaused_ = paused;
+    ambiencePaused_ = ambiencePaused.value_or(paused);
     focused_ = focused;
     if (game) {
         const auto camera = world_render::camera(game->movement());
@@ -433,7 +434,7 @@ void AudioRuntime::streamUpdate(float dt) {
             s.active = true;
             s.paused = false;
         }
-        const bool pause = worldPaused_ || !focused_;
+        const bool pause = (i < 2 ? ambiencePaused_ : worldPaused_) || !focused_;
         if (pause != s.paused) {
             if (pause)
                 PauseMusicStream(s.music);

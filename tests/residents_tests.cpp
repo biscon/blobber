@@ -43,6 +43,68 @@ rules::Catalog residentCatalog() {
     }
     return {attacks, monsters, races, classes, items, *base.preset(), spells};
 }
+void dialogueBystanders() {
+    const auto map = test::worldRoom(9, 9);
+    const auto catalog = residentCatalog();
+    const Player pose{{4, 5}, Heading::North};
+    auto host = resident();
+    host.residentId = 1;
+    NpcInstance hostile{{0}, {1, 1}, {0, 0}, Heading::South};
+    const NpcWorld places(map, pose.cell, {"goblin"}, {host, resident({3, 3}), resident({5, 3}), hostile});
+    GameSession game(map, catalog, places, 5, pose, false, {residentTimings()});
+    NpcAnimator animation(game.actors(), {residentTimings()});
+    NpcAnimator reference(game.actors(), {residentTimings()});
+    game.update(.037, false);
+    const auto time = game.timeMs();
+    animation.setTime(time);
+    const auto frozen = animation.snapshot().frames[3].active;
+    const auto id = game.actors().id(0);
+    check(game.beginConversation(id), "Bystander fixture starts conversation");
+    game.actors().talk(id, true);
+    bool changed[2]{};
+    const auto initial = animation.snapshot();
+    allocations = 0;
+    watching = true;
+    for (unsigned ms = 0; ms <= 310; ms += 10) {
+        game.update(.01, false);
+        animation.setTime(time, nullptr, id, ms);
+        reference.setTime(time + ms);
+        for (unsigned i = 1; i <= 2; ++i) {
+            const auto& frame = animation.snapshot().frames[i];
+            check(frame.clip == NpcAnimation::Idle && frame.active == reference.snapshot().frames[i].active &&
+                      frame.idle == reference.snapshot().frames[i].idle,
+                  "Both bystanders continue their existing idle phases during speech");
+            changed[i - 1] |= frame.active != initial.frames[i].active;
+        }
+        check(animation.snapshot().frames[3].active == frozen && game.timeMs() == time,
+              "Dialogue cosmetic time does not advance hostile actors or simulation");
+        const auto revision = animation.snapshot().revision;
+        animation.setTime(time, nullptr, id, ms);
+        check(animation.snapshot().revision == revision,
+              "Repeated or unfocused dialogue clock leaves resident frames unchanged");
+    }
+    watching = false;
+    check(!allocations && changed[0] && changed[1], "Both guards animate without frame allocations");
+    game.endConversation();
+    animation.setTime(time, nullptr, {}, 320); // Final exit tick, after the speaker was cleared.
+    reference.setTime(time + 320);
+    for (unsigned i = 1; i <= 2; ++i)
+        check(animation.snapshot().frames[i].active == reference.snapshot().frames[i].active,
+              "Leaving dialogue retains elapsed idle time including its final tick");
+    game.update(.03, false);
+    animation.setTime(game.timeMs());
+    reference.setTime(game.timeMs() + 320);
+    check(animation.snapshot().frames[1].active == reference.snapshot().frames[1].active,
+          "Exploration resumes without resetting a guard's idle phase");
+    check(game.beginConversation(id), "Second conversation starts");
+    for (unsigned ms : {0u, 45u, 120u}) {
+        animation.setTime(game.timeMs(), nullptr, id, ms);
+        reference.setTime(game.timeMs() + 320 + ms);
+        for (unsigned i = 1; i <= 2; ++i)
+            check(animation.snapshot().frames[i].active == reference.snapshot().frames[i].active,
+                  "New conversation clock preserves earlier cosmetic elapsed time");
+    }
+}
 void peacefulActors() {
     const auto map = test::worldRoom(9, 9);
     const auto catalog = residentCatalog();
@@ -58,6 +120,8 @@ void peacefulActors() {
               actors.appearanceId(actor.npc.type) == "resident",
           "Resident has an owned appearance identity without monster rules or fabricated HP");
     check(actors.occupied({4, 4}), "Resident blocks walking through his body");
+    check(game.arrivalSafety({4, 5}).safe && !game.arrivalSafety({4, 4}).safe,
+          "Nearby peaceful resident does not threaten arrival but still occupies its own cell");
     const auto revision = actors.snapshot().revision;
     check(actors.move(id, {3, 4}, {0, 0}, pose.cell).error == ActorError::NotCombatant &&
               actors.walk(id, {3, 4}, {0, 0}, pose.cell, 0).error == ActorError::NotCombatant &&
@@ -181,28 +245,67 @@ void mixedPopulation() {
     check(game.actors().damage(game.actors().id(1), 1, 0).changed,
           "Hostile actors retain their ordinary damage behavior");
 }
-void renderedTalkAndPicking() {
+void preparedResidentClips() {
+    const auto map = test::worldRoom(9, 9);
+    const auto catalog = spellCatalog();
+    for (const auto clip : {NpcAnimation::Walk, NpcAnimation::Laugh}) {
+        auto npc = resident();
+        npc.animation = clip;
+        NpcWorld places(map, {4, 6}, {"resident"}, {npc});
+        ActorWorld actors(map, catalog, places);
+        auto timings = residentTimings();
+        timings[unsigned(clip)] = {{{160, 120, 160, 240}}, 4};
+        NpcAnimator animation(actors, {timings});
+        const auto feet = actorPosition(*actors.actor(actors.id(0)), 0);
+        for (const auto time : {0u, 159u, 160u, 279u, 280u, 439u, 440u, 679u, 680u}) {
+            animation.setTime(time);
+            const unsigned expected = time < 160 ? 0 : time < 280 ? 1 : time < 440 ? 2 : time < 680 ? 3 : 0;
+            check(animation.snapshot().frames[0].clip == clip &&
+                      animation.snapshot().frames[0].active == expected,
+                  "Prepared resident Walk/Laugh obey boundaries and loop");
+            const auto now = actorPosition(*actors.actor(actors.id(0)), time);
+            check(now.x == feet.x && now.y == feet.y && !actors.actor(actors.id(0))->hasTravel,
+                  "Diagnostic clip selection does not move the resident");
+        }
+        allocations = 0;
+        watching = true;
+        for (unsigned time = 0; time < 1000; ++time)
+            animation.setTime(time);
+        watching = false;
+        check(!allocations, "Resident Walk/Laugh sampling is allocation free");
+        timings[unsigned(clip)] = {};
+        bool rejected = false;
+        try {
+            NpcAnimator missing(actors, {timings});
+        } catch (const std::exception&) {
+            rejected = true;
+        }
+        check(rejected, "Absent explicitly selected Walk/Laugh rejects");
+    }
+}
+void renderedTalkAndPicking(NpcAnimation selected) {
     test::VisibilityFixture fixture;
     auto publication = fixture.publication();
     auto& appearance = publication.appearances[0];
     appearance.id = "resident";
     for (unsigned i = 1; i < npcAnimationCount; ++i)
-        if (i != unsigned(NpcAnimation::Talk))
+        if (i != unsigned(selected))
             appearance.clips[i] = {};
     for (unsigned side = 1; side < 4; ++side)
-        appearance.clips[unsigned(NpcAnimation::Talk)].textures[side].fill(UINT16_MAX);
+        appearance.clips[unsigned(selected)].textures[side].fill(UINT16_MAX);
     world_assets::CpuAssets assets(std::move(publication));
     const auto lease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto map = test::worldRoom(9, 9);
     const auto scene = world_render::prepare(map);
     const auto catalog = spellCatalog();
-    const NpcWorld places(map, {4, 6}, {"resident"}, {resident()});
+    auto npc = resident();
+    npc.animation = selected;
+    const NpcWorld places(map, {4, 6}, {"resident"}, {npc});
     ActorWorld actors(map, catalog, places);
     NpcTimings timings{};
     for (unsigned clip = 0; clip < npcAnimationCount; ++clip)
         timings[clip] = assets.publication.appearances[0].clips[clip].timing;
     NpcAnimator animator(actors, {timings});
-    actors.talk(actors.id(0), true);
     animator.setTime(100);
     world_render::VisibilityPipeline pipeline(scene, assets);
     const Player views[]{
@@ -218,7 +321,7 @@ void renderedTalkAndPicking() {
             if (b.id != 0 || !b.alive)
                 continue;
             found = true;
-            const auto clip = view == 0 ? NpcAnimation::Talk : NpcAnimation::Idle;
+            const auto clip = view == 0 ? selected : NpcAnimation::Idle;
             check(b.texture ==
                       assets.publication.appearances[0].clips[unsigned(clip)].textures[sides[view]][1],
                   "Front uses talking art; all other directions use the current directional idle frame");
@@ -236,9 +339,12 @@ void renderedTalkAndPicking() {
 } // namespace
 int main() {
     try {
+        dialogueBystanders();
+        preparedResidentClips();
         peacefulActors();
         mixedPopulation();
-        renderedTalkAndPicking();
+        renderedTalkAndPicking(NpcAnimation::Talk);
+        renderedTalkAndPicking(NpcAnimation::Laugh);
         std::cout << "Peaceful resident checks passed\n";
     } catch (const std::exception& e) {
         watching = false;

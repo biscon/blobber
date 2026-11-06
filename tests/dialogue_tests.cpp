@@ -224,6 +224,14 @@ void integration() {
     controls.refresh(picking->targets(), false, false, true);
     check(controls.nearbyResident() && controls.startDialogue(),
           "Frontal visible resident admits conversation");
+    check(controls.snapshot().modal() && !controls.snapshot().modal(false),
+          "Dialogue pauses gameplay while allowing a separate ambient pause policy");
+    auto overlapping = controls.snapshot();
+    overlapping.menuOpen = true;
+    check(overlapping.modal(false), "An explicit menu still pauses ambience over dialogue");
+    overlapping.menuOpen = false;
+    overlapping.inventory.open = true;
+    check(overlapping.modal(false), "Other gameplay overlays still pause ambience over dialogue");
     const auto position = game.movement().player;
     const auto time = game.timeMs();
     game.update(.5, false);
@@ -351,6 +359,14 @@ void integration() {
     check(std::abs(automaticCamera.position.y - .45f * .92f) < .001f,
           "Default eye line adapts to a shorter NPC without furniture assumptions");
     otherControls.finishDialogue();
+    // Same visible resident, but no dialogue entry: no state or error-message side effects.
+    c.characters.pop_back();
+    otherControls.residentVisibility(otherVisibility.picking()->residents());
+    const auto revision = otherGame.actors().snapshot().revision;
+    check(!otherControls.startDialogue(otherGame.actors().id(0)) &&
+              !otherControls.dialoguePlayer().active() &&
+              otherGame.actors().snapshot().revision == revision && !otherGame.saveSafety(),
+          "Visible guard without catalog entry stays inert and save-safe");
 }
 void inputEdges() {
     auto c = catalog();

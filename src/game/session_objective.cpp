@@ -93,8 +93,9 @@ LandingSafety GameSession::arrivalSafety(Cell c) const noexcept {
         return {false, "An able companion is required."};
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        if (a.life == ActorLife::Alive && (combatAdjacent(map_, a.npc.cell, c) ||
-                                           (inBowRange(a.npc.cell, c) && lineOfSight(map_, a.npc.cell, c))))
+        if (a.hostile() && a.life == ActorLife::Alive &&
+            (combatAdjacent(map_, a.npc.cell, c) ||
+             (inBowRange(a.npc.cell, c) && lineOfSight(map_, a.npc.cell, c))))
             return {false, "Landing is threatened."};
     }
     return {true, "Landing is safe."};

@@ -41,7 +41,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     hub.exit = definition.exit;
     hub.fixtures = definition.fixtures;
     hub.recovery = definition.recovery;
-    hub.placements = NpcWorld(hub.map(), hub.entry.cell, types, {});
+    hub.placements = NpcWorld(hub.map(), hub.entry.cell, types, sanctuaryResidents(types));
     hub.seed = seed;
     hub.visited = true;
     for (unsigned depth = 1; depth <= 3; ++depth) {

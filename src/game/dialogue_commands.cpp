@@ -78,7 +78,8 @@ bool CommandController::startDialogue(std::optional<ActorId> requested) noexcept
         for (unsigned i = 0; i < residents_.count && i < residents_.ids.size(); ++i)
             visible |= sameActor(*id, residents_.ids[i]);
     const auto* a = actors_.actor(*id);
-    if (!visible || !a || !session_.beginConversation(*id))
+    if (!visible || !a || !dialogueCatalog_ || !dialogueCatalog_->find(a->npc.residentId) ||
+        !session_.beginConversation(*id))
         return false;
     if (!dialogue_.start(a->npc.residentId)) {
         state_.log.append("Can't talk right now.");

@@ -957,7 +957,8 @@ void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequiremen
             ++extraCount;
         }
     }
-    if (count > world_assets::textureCapacity || resources_.counts().textures + extraCount > 512 ||
+    if (count > world_assets::textureCapacity ||
+        resources_.counts().textures + extraCount > gpuTextureCapacity ||
         unionBytes > world_assets::textureBudget ||
         gpuBytes() + extra + v.cpu.meshBytes() + viewWidth * viewHeight * 8 > world_assets::worldGpuBudget)
         throw std::runtime_error("Resident world active/staged GPU capacity exceeded");

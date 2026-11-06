@@ -7,7 +7,10 @@
     "giant-rat/giant-rat.json",
     "zombie/zombie.json",
     "goblin-shaman/goblin-shaman.json",
-    "innkeeper/innkeeper.json"
+    "innkeeper/innkeeper.json",
+    "mayor/mayor.json",
+    "boric/boric.json",
+    "balin/balin.json"
   ],
   "instances": [
     {
