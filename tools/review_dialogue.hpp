@@ -1,5 +1,6 @@
 #pragma once
 #include "review_residents.hpp"
+#include "ui/dialogue_preparation.hpp"
 
 // Production integration/capture using application-owned input and a hidden window.
 inline void reviewDialogueBeats(const std::filesystem::path& root, const std::filesystem::path& output) {
@@ -16,10 +17,7 @@ inline void reviewDialogueBeats(const std::filesystem::path& root, const std::fi
     auto view = std::make_unique<GameView>(renderer);
     auto& game = run.game();
     auto catalog = loadDialogue(root / "dialogue");
-    prepareDialogueLayout(
-        catalog,
-        [](const char* t, void* p) { return static_cast<const UiFonts*>(p)->width(t, UiTextStyle::Label); },
-        const_cast<UiFonts*>(&presenter.fonts()));
+    prepareDialogueUi(catalog, presenter.fonts());
     const auto beforeOverlays = resources.counts();
     presenter.prepareDialogue(catalog.overlayFiles);
     if (resources.counts().textures != beforeOverlays.textures + catalog.overlayFiles.size())
@@ -83,6 +81,8 @@ inline void reviewDialogueBeats(const std::filesystem::path& root, const std::fi
         throw std::runtime_error("Mayor admission failed");
     refresh();
     tick(.7);
+    input(UiKey::DialogueAdvance);
+    capture("panel-introduction");
     input(UiKey::Two);
     const auto advanceBeat = [&] {
         const auto serial = commands.dialoguePlayer().beatSerial();
@@ -97,25 +97,45 @@ inline void reviewDialogueBeats(const std::filesystem::path& root, const std::fi
     input(UiKey::DialogueAdvance);
 
     advanceBeat();
-    tick(.1);
+    const auto panMs = [&] {
+        return std::max(dialogueMinimumPanMs,
+                        commands.dialoguePlayer().beat()->durationMs.value_or(dialogueMinimumPanMs));
+    };
+    const auto delay = commands.dialoguePlayer().beat()->overlayDelayMs;
+    const auto documentPan = panMs();
+    const auto& pull = definitions.timings[game.actors().actor(game.actors().id(1))->npc.type.index]
+                                          [unsigned(NpcAnimation::PullDocument)];
+    const auto hold = std::max(documentPan, npcClipDuration(pull) - pull.durationMs[pull.count - 1]);
+    if (delay <= hold)
+        throw std::runtime_error("Script delay leaves no unobstructed hold pose");
+    tick((documentPan - 1) / 1000.);
     if (!camera.moving() || overlay())
         throw std::runtime_error("Boric pan/overlay timing failed");
-    tick(.1);
+    tick(.001);
     if (camera.moving() || animator.snapshot().frames[1].clip != NpcAnimation::PullDocument)
-        throw std::runtime_error("Boric document cue or 200 ms pan failed");
+        throw std::runtime_error("Boric document cue or authored pan endpoint failed");
+    tick((hold - documentPan) / 1000.);
     if (overlay())
         throw std::runtime_error("Scroll covered the document pull");
-    tick(.25);
     capture("01-boric-holds-document");
-    tick(.149);
+    tick((delay - hold - 1) / 1000.);
     if (overlay())
-        throw std::runtime_error("Scroll appeared before the full 600 ms clip");
+        throw std::runtime_error("Scroll appeared before authored delay");
     tick(.001);
     if (!overlay() || animator.snapshot().frames[1].active != 3)
         throw std::runtime_error("Document pull did not hold final frame");
     capture("02-boric-scroll");
     const auto documentSerial = commands.dialoguePlayer().beatSerial();
-    input(UiKey::DialogueAdvance);
+    UiInput click;
+    click.pressed[unsigned(UiKey::Click)] = true;
+    click.pointer = ArtPoint{20, 265};
+    routeHudInput(commands, click);
+    refresh();
+    if (!overlay() || !commands.snapshot().dialogue.revealing)
+        throw std::runtime_error("Speech body click still advances dialogue");
+    click.pointer = ArtPoint{240, 345};
+    routeHudInput(commands, click);
+    refresh();
     if (overlay() || commands.dialoguePlayer().beatSerial() != documentSerial)
         throw std::runtime_error("First Next failed to dismiss while revealing the current line");
     capture("03-boric-dismissed");
@@ -123,18 +143,19 @@ inline void reviewDialogueBeats(const std::filesystem::path& root, const std::fi
     if (overlay())
         throw std::runtime_error("Dismissed scroll reappeared");
     advanceBeat();
-    tick(.2);
+    const auto balinPan = panMs();
+    tick((balinPan - 1) / 1000.);
     if (!camera.moving() || overlay() || animator.snapshot().frames[1].clip != NpcAnimation::Idle)
         throw std::runtime_error("Balin pan or outgoing guard reset failed");
-    tick(.1);
+    tick(.001);
     if (camera.moving() || animator.snapshot().frames[2].clip != NpcAnimation::Laugh)
-        throw std::runtime_error("Balin Laugh or 300 ms pan failed");
+        throw std::runtime_error("Balin Laugh or authored pan endpoint failed");
     input(UiKey::DialogueAdvance);
     capture("04-balin-unobstructed");
     if (overlay() || animator.snapshot().frames[2].clip != NpcAnimation::Idle)
         throw std::runtime_error("Balin completion changed overlay or failed idle reset");
     advanceBeat();
-    tick(.2);
+    tick(panMs() / 1000.);
     input(UiKey::DialogueAdvance);
     if (overlay() || animator.snapshot().frames[1].clip != NpcAnimation::Idle)
         throw std::runtime_error("Boric completion changed overlay or failed idle reset");
@@ -148,21 +169,24 @@ inline void reviewDialogueBeats(const std::filesystem::path& root, const std::fi
     if (camera.moving())
         throw std::runtime_error("Rage pan did not end at 200 ms");
     tick(1);
-    tick(1);
+    tick(.5);
     capture("05-mayor-rage");
     for (unsigned i = 0; i < 10 && commands.snapshot().dialogue.revealing; ++i)
         tick(1);
     if (animator.snapshot().frames[0].clip != NpcAnimation::Idle)
         throw std::runtime_error("Rage persisted after natural text reveal");
+    capture("panel-final-page");
     // Replay then abandon while the document is visible.
     input(UiKey::Two);
     advanceBeat();
     if (overlay())
         throw std::runtime_error("Replay skipped overlay delay");
-    tick(.6);
+    tick(commands.dialoguePlayer().beat()->overlayDelayMs / 1000.);
     if (!overlay())
         throw std::runtime_error("Replay did not show scroll after delay");
     input(UiKey::Three);
+    input(UiKey::DialogueAdvance);
+    capture("panel-single-page");
     if (overlay())
         throw std::runtime_error("Topic replacement retained scroll");
     input(UiKey::Two);

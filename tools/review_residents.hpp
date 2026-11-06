@@ -8,6 +8,7 @@
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "render/dialogue_camera.hpp"
+#include "ui/dialogue_preparation.hpp"
 #include "ui/interaction.hpp"
 #include "world/sanctuary_city.hpp"
 #include <fstream>
@@ -30,10 +31,7 @@ inline void reviewResidents(const std::filesystem::path& root, const std::filesy
     auto& game = run.game();
     NpcAnimator animation(game.actors(), definitions.timings);
     auto dialogue = loadDialogue(root / "dialogue");
-    prepareDialogueLayout(
-        dialogue,
-        [](const char* t, void* p) { return static_cast<const UiFonts*>(p)->width(t, UiTextStyle::Label); },
-        const_cast<UiFonts*>(&presenter.fonts()));
+    prepareDialogueUi(dialogue, presenter.fonts());
     CommandController commands(game, definitions.timings);
     commands.bindDialogue(&dialogue, &run.dialogue());
     auto shot = [&](const std::string& name, std::optional<world_render::Camera> camera = {}) {

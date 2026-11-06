@@ -37,9 +37,12 @@ adding interruptions does not invalidate campaign history. Greeting/introduction
 cannot set facts. The guards topic demonstrates a repeat-visit running gag.
 
 Optional file-level `presentation` supplies `transition_ms` (700), `fade_ms` (150)
-and `characters_per_second` (45). `transition_ms` must be at least 200. These are catalog-wide settings; declarations in
-multiple files must agree. Text reveals gradually; click/Space reveals the rest,
-then advances. Esc leaves. Topic clicks can interrupt any response.
+and `characters_per_second` (59). `transition_ms` must be at least 200. These are catalog-wide settings; declarations in
+multiple files must agree. Text reveals gradually; Next/Space reveals the rest,
+then advances. The Next button appears on multipage responses and disables after
+the final page is fully revealed. Clicking the speech panel does nothing. Space
+also reveals single-page responses. Esc leaves; topic clicks can interrupt any
+response, including the introduction.
 
 Limits: 1 MiB total scripts, 64 hosts, 8 cast members/host, 16 topics/host,
 64 facts/host, 32 beats/response, 1024 bytes/beat, 64 prepared pages/response and

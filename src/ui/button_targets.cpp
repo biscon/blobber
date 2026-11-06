@@ -30,11 +30,10 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         if (!h.dialogue.leaving) {
             for (unsigned i = 0; i < h.dialogue.count; ++i)
                 t.add(dialogueLayout::row(i));
-            if (h.dialogue.introduction)
-                t.add(dialogueLayout::skip);
+            if (h.dialogue.pages > 1)
+                t.add(dialogueLayout::advance, dialogueLayout::advanceEnabled(h.dialogue));
             t.add(dialogueLayout::previous, h.dialogue.offset > 0);
             t.add(dialogueLayout::next, h.dialogue.offset + h.dialogue.count < h.dialogue.totalTopics);
-            t.add(dialogueLayout::response);
         }
         return t;
     }

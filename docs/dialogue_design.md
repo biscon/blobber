@@ -524,3 +524,51 @@ changes in this correction. Unchanged GPU lifecycle, audio and broader suites
 were not rerun. Source/package mayor YAML match; diff whitespace checks pass.
 All task scratch and logs are cleaned after promoting six images; no diagnostic
 exception retained.
+
+
+### Dialogue panel cleanup
+
+Implemented and mechanically verified (2026-11-06); user review pending. Remove First meeting/Conversation subtitle and the
+Click/Space help; move speech up to art y=241 and page count to x=12. Add a
+dialogue-only 28 px regular font atlas (previous speech used 24 px Label), with
+matching preparation metrics shared by gameplay and capture callers. Fit pages
+to body {12,241,286,90} using the font's conservative line height; no frame-time
+layout or allocations. Other UI typography stays unchanged. Increase default
+reveal from 45 to 59 characters/sec (31%); authored speed overrides remain valid.
+
+Replace Skip Introduction at {226,339,77,13} with Next on multipage responses,
+including introductions. Enable it while revealing or another page remains; keep
+it visible but disabled on a fully revealed final page. Remove the response panel
+from mouse targets and route clicks only through Next. Space retains existing
+reveal-first/advance-second behavior for all responses. Next uses the same action,
+including YAML overlay dismissal, and topic selection still interrupts immediately.
+The existing internal skip API need not change. Shared layout predicate keeps
+painting, hit targets and command admission consistent.
+
+Verify focused dialogue/button tests for panel no-op, Next reveal/advance/final
+disabled/single-page absence, topic switching and Space edges. Build Release at
+two low-priority workers; hidden production captures check font/wrapping, clean
+spacing, left page label and Next. Reuse unchanged renderer, resource and audio
+checks. Preserve review acceptance history and clean task output.
+
+Verification: Release game, dialogue/button tests and sanctuary review runner built
+with two low-priority workers, without warnings. `ctest --preset release -R
+'^(dialogue|buttons)$'` passes both suites in 0.06 s. Input regressions cover panel
+click no-op, Next reveal/advance/final disable, single-page absence, topic changes
+and retained Space behavior. Shared font preparation and painting use the same
+28 px metrics; the additional owned font atlas is included in GPU byte accounting.
+
+The hidden `blobber_review_sanctuary_city ... dialogue-beats` scenario passes,
+including real font loading, text wrapping, delayed overlay/Next dismissal, idle
+reset, camera forwarding and resource release. Three selected panel captures show
+the introduction, completed final page and single-page response; six OnlyScrolls
+captures replace the prior gallery's older panel presentation. Visual inspection
+found clean spacing and no text clipping. Interactive feel remains unverified.
+
+User-authored YAML dialogue and timing edits were preserved. The first capture
+attempt found stale timing expectations in the review runner; it now reads the
+authored guard pans/overlay delay and the prepared document clip duration. The
+successful run uses the current 700 ms overlay delay and 300/400 ms guard pans.
+Source/package YAML match and diff whitespace checks pass. Unchanged audio, GPU
+lifecycle suites and broader configuration matrix were not rerun. Disposable
+captures and logs were cleaned after evidence promotion; no diagnostics retained.

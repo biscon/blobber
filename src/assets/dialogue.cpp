@@ -232,8 +232,8 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
                 const unsigned transition =
                     p["transition_ms"] ? integer(p["transition_ms"], dialogueMinimumPanMs, 2000) : 700;
                 const unsigned fade = p["fade_ms"] ? integer(p["fade_ms"], 1, transition) : 150;
-                const unsigned cps =
-                    p["characters_per_second"] ? integer(p["characters_per_second"], 1, 240) : 45;
+                const unsigned cps = p["characters_per_second"] ? integer(p["characters_per_second"], 1, 240)
+                                                                : dialogueDefaultCharactersPerSecond;
                 if (fade > transition ||
                     (presentationSeen && (out.transitionMs != transition || out.fadeMs != fade ||
                                           out.charactersPerSecond != cps)))

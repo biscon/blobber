@@ -11,6 +11,7 @@
 #include "platform/game_view.hpp"
 #include "platform/input.hpp"
 #include "render/dialogue_camera.hpp"
+#include "ui/dialogue_preparation.hpp"
 #include "ui/interaction.hpp"
 #include <algorithm>
 #include <iostream>
@@ -101,12 +102,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         return loadDialogue(options.dialogueDir.empty() ? options.assets / "dialogue" : options.dialogueDir,
                             options.assets / "audio", options.assets / "ui");
     });
-    prepareDialogueLayout(
-        dialogueCatalog,
-        [](const char* text, void* context) {
-            return static_cast<const UiFonts*>(context)->width(text, UiTextStyle::Label);
-        },
-        const_cast<UiFonts*>(&presenter.fonts()));
+    prepareDialogueUi(dialogueCatalog, presenter.fonts());
     DialogueHistory standaloneDialogue;
     struct AudioLeave {
         AudioRuntime* audio;

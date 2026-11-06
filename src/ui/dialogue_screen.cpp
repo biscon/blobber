@@ -18,24 +18,20 @@ void HudPainter::dialogue(const DialogueHud& h) const {
     panel(dialogueLayout::response);
     panel(dialogueLayout::topics);
     text(h.name, 12, 229, ink(gold), UiTextStyle::Display);
-    text(h.introduction ? "First meeting" : "Conversation", 12, 240, ink(muted), UiTextStyle::Small);
-    text(h.text.data(), 12, 252,
+    text(h.text.data(), dialogueLayout::body.x, dialogueLayout::body.y,
          ink(Color{static_cast<unsigned char>(h.textColor >> 24),
                    static_cast<unsigned char>(h.textColor >> 16),
                    static_cast<unsigned char>(h.textColor >> 8), 255}),
-         UiTextStyle::Label);
-    text(h.revealing        ? "Click / Space: reveal"
-         : h.page < h.pages ? "Click / Space: continue"
-                            : "Choose a topic",
-         12, 343, ink(muted), UiTextStyle::Small);
+         UiTextStyle::Dialogue);
     char page[24];
     if (h.pages) {
         std::snprintf(page, sizeof(page), "%u / %u", h.page, h.pages);
-        text(page, 190, 343, ink(gold), UiTextStyle::Small);
+        text(page, 12, 343, ink(gold), UiTextStyle::Small);
     }
-    if (h.introduction && !h.leaving) {
-        border(dialogueLayout::skip, ink(gold));
-        centered("Skip introduction", dialogueLayout::skip, ink(gold), UiTextStyle::Small);
+    if (h.pages > 1 && !h.leaving) {
+        const auto color = ink(dialogueLayout::advanceEnabled(h) ? gold : muted);
+        border(dialogueLayout::advance, color);
+        centered("Next", dialogueLayout::advance, color, UiTextStyle::Small);
     }
     text("ASK ABOUT", 320, 229, ink(gold), UiTextStyle::Display);
     for (unsigned i = 0; i < h.count; ++i) {

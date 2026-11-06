@@ -10,6 +10,7 @@
 namespace blobber {
 using DialogueKey = std::uint64_t;
 inline constexpr unsigned dialogueMinimumPanMs = 200;
+inline constexpr unsigned dialogueDefaultCharactersPerSecond = 59;
 constexpr DialogueKey dialogueKey(std::string_view value) noexcept {
     DialogueKey h = 14695981039346656037ull;
     for (const auto c : value)
@@ -63,7 +64,7 @@ struct DialogueCatalog {
     std::vector<DialogueCharacter> characters;
     std::vector<std::string> overlayFiles; // Canonical UI paths; prepared outside playback.
     std::vector<std::string> audioFiles;   // Canonical paths resolved during loading.
-    unsigned transitionMs = 700, fadeMs = 150, charactersPerSecond = 45;
+    unsigned transitionMs = 700, fadeMs = 150, charactersPerSecond = dialogueDefaultCharactersPerSecond;
     const DialogueCharacter* find(DialogueKey id) const noexcept;
 };
 // Preparation-only. Actual UI metrics are injected; headless fixtures own theirs.

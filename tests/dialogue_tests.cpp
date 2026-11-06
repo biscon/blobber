@@ -116,7 +116,8 @@ void flow() {
           "First visible character and speech cues start together after fade");
     player.tick(.099, true);
     player.snapshot(h);
-    check(std::strlen(h.text.data()) == 5 && h.revealing, "Gradual reveal uses own clock");
+    check(std::strlen(h.text.data()) == 6 && h.revealing,
+          "Default reveal is about 30 percent faster and uses its own clock");
     const auto clock = player.clockMs();
     player.tick(1, false);
     check(player.clockMs() == clock, "Focus loss freezes dialogue presentation");
@@ -261,12 +262,39 @@ void integration() {
                      &controls.dialogueAnimation());
     check(animator.snapshot().revision != before,
           "Speaker animates on presentation clock while game time frozen");
+    UiInput click;
+    click.pressed[unsigned(UiKey::Click)] = true;
+    click.pointer = ArtPoint{20, 265};
+    const auto textBeforeClick = controls.snapshot().dialogue.text;
+    routeHudInput(controls, click);
+    check(controls.snapshot().dialogue.text == textBeforeClick && controls.snapshot().dialogue.revealing,
+          "Clicking speech body cannot reveal or advance");
     UiInput space;
     space.pressed[unsigned(UiKey::DialogueAdvance)] = true;
     routeHudInput(controls, space);
     check(game.actors().actor(game.actors().id(0))->npc.animation == NpcAnimation::Idle &&
               !controls.snapshot().dialogue.revealing,
           "Skip reveal immediately returns speaker to Idle");
+    click.pointer = ArtPoint{240, 345};
+    routeHudInput(controls, click);
+    check(controls.snapshot().dialogue.page == 2 && controls.snapshot().dialogue.revealing,
+          "Next button advances introduction instead of skipping it");
+    routeHudInput(controls, click);
+    check(!controls.snapshot().dialogue.revealing &&
+              !dialogueLayout::advanceEnabled(controls.snapshot().dialogue),
+          "Next reveals final page and then disables");
+    const auto finalSerial = controls.dialoguePlayer().beatSerial();
+    routeHudInput(controls, click);
+    check(controls.dialoguePlayer().beatSerial() == finalSerial, "Disabled Next does nothing");
+    UiInput topic;
+    topic.pressed[unsigned(UiKey::Three)] = true;
+    routeHudInput(controls, topic);
+    check(controls.snapshot().dialogue.pages == 1 && controls.snapshot().dialogue.revealing,
+          "Topic selector replaces introduction without Skip button");
+    routeHudInput(controls, click);
+    check(controls.snapshot().dialogue.revealing, "Absent Next cannot reveal a single-page topic");
+    routeHudInput(controls, space);
+    check(!controls.snapshot().dialogue.revealing, "Space still reveals single-page topics");
     const auto base = world_render::camera(game.movement(), game.geometry());
     const auto close = world_render::dialogueCamera(
         scene, assets, game.geometry(), base, *game.actors().actor(game.actors().id(0)), c.characters[0]);
@@ -993,7 +1021,19 @@ void inputEdges() {
     ButtonPress buttons;
     UiInputEdges edges;
     std::array<bool, uiKeyCount> down{};
-    const ArtPoint at{20, 265};
+    const ArtPoint at{240, 345};
+    const auto targetAt = [](const ButtonTargets& targets, ArtPoint point) -> const ButtonTarget* {
+        for (unsigned i = 0; i < targets.count; ++i)
+            if (targets.entries[i].rect.contains(point))
+                return &targets.entries[i];
+        return nullptr;
+    };
+    check(!targetAt(hudButtonTargets(hud), {20, 265}), "Speech body is not a button target");
+    const auto targets = hudButtonTargets(hud);
+    check(targetAt(targets, at) && targetAt(targets, at)->enabled, "Multipage introduction has enabled Next");
+    hud.dialogue.pages = 1;
+    check(!targetAt(hudButtonTargets(hud), at), "Single-page response has no Next target");
+    hud.dialogue = h;
     buttons.route(edges.sample(down, true, at), hudButtonTargets(hud));
     down[unsigned(UiKey::Click)] = true;
     auto event = buttons.route(edges.sample(down, true, at), hudButtonTargets(hud));

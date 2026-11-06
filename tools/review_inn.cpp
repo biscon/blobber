@@ -6,6 +6,7 @@
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "render/dialogue_camera.hpp"
+#include "ui/dialogue_preparation.hpp"
 #include "ui/interaction.hpp"
 #include "world/sanctuary_city.hpp"
 #include <fstream>
@@ -91,12 +92,7 @@ int main(int argc, char** argv) try {
     if (argc == 4) {
         if (std::string_view(argv[3]) == "dialogue") {
             auto dialogue = loadDialogue(root / "dialogue");
-            prepareDialogueLayout(
-                dialogue,
-                [](const char* t, void* p) {
-                    return static_cast<const UiFonts*>(p)->width(t, UiTextStyle::Label);
-                },
-                const_cast<UiFonts*>(&presenter.fonts()));
+            prepareDialogueUi(dialogue, presenter.fonts());
             auto& game = run->game();
             game.restorePose({{6, 5}, Heading::North}, false);
             update();

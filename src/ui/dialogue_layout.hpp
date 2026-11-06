@@ -1,10 +1,14 @@
 #pragma once
+#include "game/dialogue.hpp"
 #include "ui/layout.hpp"
 namespace blobber::dialogueLayout {
 constexpr UiRect overlay{84, 26, 340, 190}; // Centered above the text, native 1020 x 570.
 constexpr UiRect response{4, 224, 306, 134}, topics{314, 224, 190, 134};
-constexpr UiRect body{12, 247, 286, 81}, skip{226, 339, 77, 13};
+constexpr UiRect body{12, 241, 286, 90}, advance{226, 339, 77, 13};
 constexpr UiRect previous{320, 345, 18, 10}, next{479, 345, 18, 10};
+inline bool advanceEnabled(const DialogueHud& h) noexcept {
+    return !h.leaving && h.pages > 1 && (h.revealing || h.page < h.pages);
+}
 constexpr UiRect row(unsigned i) {
     return {320, 243 + int(i) * 14, 178, 13};
 }

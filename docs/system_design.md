@@ -1,5 +1,7 @@
 # System design
 
+[Dialogue panel cleanup](dialogue_design.md#dialogue-panel-cleanup): implemented and mechanically verified; larger speech, faster reveal and explicit Next controls. Focused tests and hidden captures pass; [visual review pending](screenshots/dialogue-panel/README.md).
+
 [OnlyScrolls overlay timing correction](dialogue_design.md#overlay-timing-correction): implemented and mechanically verified; YAML controls delayed show after the document pull and first-Next dismissal. Focused tests and refreshed hidden captures pass; interactive review pending.
 
 [OnlyScrolls portrait briefing](dialogue_design.md#onlyscrolls-portrait-briefing) **implemented and mechanically verified; artwork/timing review pending (2026-11-06)**: persistent prepared dialogue overlays, centered Gwendolyn parchment, Boric document pull and Mayor rage. Focused CPU, GPU lifecycle and hidden production checks pass; new campaign required by the changed NPC-content fingerprint. [Six review captures](screenshots/onlyscrolls/README.md).

@@ -182,8 +182,6 @@ void CommandController::routeDialogue(const UiInput& input) noexcept {
     const bool click = input.has(UiKey::Click);
     if (input.has(UiKey::Cancel))
         dialogue_.leave();
-    else if (click && inside(dialogueLayout::skip) && state_.dialogue.introduction)
-        dialogue_.skipIntroduction();
     else {
         bool chosen = false;
         constexpr UiKey numbers[]{UiKey::One,  UiKey::Two, UiKey::Three, UiKey::Four,
@@ -201,7 +199,8 @@ void CommandController::routeDialogue(const UiInput& input) noexcept {
                 dialogue_.select(1);
             else if (input.has(UiKey::Confirm))
                 dialogue_.choose(dialogue_.cursor());
-            else if (input.has(UiKey::DialogueAdvance) || (click && inside(dialogueLayout::response)))
+            else if (input.has(UiKey::DialogueAdvance) || (click && inside(dialogueLayout::advance) &&
+                                                           dialogueLayout::advanceEnabled(state_.dialogue)))
                 dialogue_.advance();
             else if (input.has(UiKey::PreviousPage) || (click && inside(dialogueLayout::previous)))
                 dialogue_.scroll(-7);
