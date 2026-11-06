@@ -304,9 +304,10 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     const Map dummy({"###", "#.#", "###"});
     const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
     for (const auto& definition : parsed.definitions)
-        if (definition.animations[unsigned(NpcAnimation::Prone)].timing.count != 1)
+        if (definition.role == NpcRole::Hostile &&
+            definition.animations[unsigned(NpcAnimation::Prone)].timing.count != 1)
             throw std::runtime_error(
-                "Every gameplay NPC appearance requires a single-frame four-direction prone clip");
+                "Every hostile NPC appearance requires a single-frame four-direction prone clip");
     const auto level = read(source / "npcs/level.json");
     const auto scratch = output / "source-frames.tmp";
     fs::remove_all(scratch);

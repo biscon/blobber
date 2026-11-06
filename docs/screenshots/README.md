@@ -20,6 +20,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [Innkeeper](innkeeper/README.md) | 6 |
 | [Prop placement and rack size](prop-placement/README.md) | 2 |
 | [spell-effects](spell-effects/README.md) | 12 |
 | [SE02 spell effects](spell-effects/se02/README.md) | 6 |

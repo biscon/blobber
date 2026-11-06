@@ -635,7 +635,7 @@ Publication load(const std::filesystem::path& directory) {
                     require(clip.timing.durationMs[f] > 0 && clip.timing.durationMs[f] <= 60000 &&
                             clip.textures[0][f] != UINT16_MAX);
                 for (unsigned side = 0; side < 4; ++side) {
-                    const bool optional = c == unsigned(NpcAnimation::Attack) && side != 0;
+                    const bool optional = directionalIdleFallback(NpcAnimation(c)) && side != 0;
                     for (unsigned frame = 0; frame < count; ++frame)
                         require(optional || clip.textures[side][frame] != UINT16_MAX);
                 }
@@ -752,7 +752,7 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
         validateNpcTimings(timings);
         for (unsigned c = 0; c < npcAnimationCount; ++c)
             for (unsigned side = 0; side < 4; ++side)
-                if (c != unsigned(NpcAnimation::Attack) || side == 0)
+                if (!directionalIdleFallback(NpcAnimation(c)) || side == 0)
                     for (unsigned f = 0; f < timings[c].count; ++f)
                         require(appearance.clips[c].textures[side][f] != UINT16_MAX);
     }

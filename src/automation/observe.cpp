@@ -63,6 +63,7 @@ Json encodeObservation(const Observation& o) {
               {"moving", movement.transition.active()},
               {"party", Json::array()},
               {"enemies", Json::array()},
+              {"residents", Json::array()},
               {"loot", Json::array()},
               {"targets", Json::array()},
               {"active_character", nullptr}};
@@ -183,9 +184,21 @@ Json encodeObservation(const Observation& o) {
         j["targets"].push_back(o.targets.candidates[i].slot);
     const auto& actors = g.actors().snapshot();
     for (std::size_t i = 0; i < actors.count; ++i) {
+        const auto& a = actors.actors[i];
+        if (!a.hostile()) {
+            if (o.diagnostic || o.targets.anchors[i].valid)
+                j["residents"].push_back(
+                    {{"actor", i},
+                     {"type", std::string(g.actors().appearanceId(a.npc.type))},
+                     {"position", xy(a.npc.cell)},
+                     {"subcell", xy(a.npc.subcell)},
+                     {"heading", unsigned(a.npc.facing)},
+                     {"animation", a.npc.animation == NpcAnimation::Talk ? "talk" : "idle"},
+                     {"targetable", false}});
+            continue;
+        }
         if (!o.diagnostic && !o.visible[i])
             continue;
-        const auto& a = actors.actors[i];
         Json e = {{"actor", i},
                   {"type", cat.monster(a.monster)->id},
                   {"position", xy(a.npc.cell)},

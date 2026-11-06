@@ -46,10 +46,17 @@ NpcWorld::NpcWorld(const Map& map, Cell spawn, std::vector<std::string> types,
             }
     }
     for (const auto& npc : instances_) {
-        if (npc.type.index >= types_.size() || npc.animation > NpcAnimation::Attack ||
-            static_cast<unsigned>(npc.facing) >= 4 || npc.subcell.x < 0 || npc.subcell.x > 1 ||
-            npc.subcell.y < 0 || npc.subcell.y > 1)
+        if (npc.type.index >= types_.size() ||
+            (npc.animation > NpcAnimation::Attack && npc.animation != NpcAnimation::Talk) ||
+            npc.role > NpcRole::Resident || static_cast<unsigned>(npc.facing) >= 4 || npc.subcell.x < 0 ||
+            npc.subcell.x > 1 || npc.subcell.y < 0 || npc.subcell.y > 1)
             throw std::runtime_error("Invalid NPC type, facing or subcell");
+        if (npc.role == NpcRole::Resident &&
+            ((npc.animation != NpcAnimation::Idle && npc.animation != NpcAnimation::Talk) || npc.monster ||
+             npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount))
+            throw std::runtime_error("Residents require stationary idle/talk without monster rules");
+        if (npc.role == NpcRole::Hostile && npc.animation == NpcAnimation::Talk)
+            throw std::runtime_error("Talk is a resident animation");
         if (map.solid(npc.cell) || npc.cell == spawn)
             throw std::runtime_error("NPC placement overlaps wall, boundary or player spawn");
         if (npc.ai.routine > NpcRoutine::Wander || npc.ai.waypointCount > npc.ai.waypoints.size() ||

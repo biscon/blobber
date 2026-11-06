@@ -132,6 +132,7 @@ template <class A> void visit(A& a, NpcInstance& v) {
     a("phaseMs", v.phaseMs);
     a("ai", v.ai);
     a("monster", v.monster);
+    a("role", v.role);
 }
 template <class A> void visit(A& a, ActorState& v) {
     a("npc", v.npc);

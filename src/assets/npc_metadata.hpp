@@ -9,8 +9,7 @@ struct NpcBodyBounds {
     float left = 0, top = 0, right = 1, bottom = 1;
 };
 inline bool validBodyBounds(NpcBodyBounds b) noexcept {
-    return b.left >= 0 && b.top >= 0 && b.right <= 1 && b.bottom <= 1 &&
-           b.left < b.right && b.top < b.bottom;
+    return b.left >= 0 && b.top >= 0 && b.right <= 1 && b.bottom <= 1 && b.left < b.right && b.top < b.bottom;
 }
 struct NpcAttachments {
     std::array<NpcAttachment, 4> release{}, torso{};
@@ -26,6 +25,7 @@ struct NpcClipDefinition {
     std::array<std::vector<NpcImageReference>, 4> views;
 };
 struct NpcDefinition {
+    NpcRole role = NpcRole::Hostile;
     NpcAttachments attachments;
     float width = .45f, height = .65f;
     std::array<NpcImageReference, 4> views;

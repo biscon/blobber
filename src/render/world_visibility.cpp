@@ -176,7 +176,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                      f = in.animation ? selection.active : 0;
             if (clip >= npcAnimationCount || !a.clips[clip].timing.count)
                 throw std::invalid_argument("Absent world animation clip");
-            if (a.clips[clip].textures[side][0] == UINT16_MAX && clip == unsigned(NpcAnimation::Attack)) {
+            if (a.clips[clip].textures[side][0] == UINT16_MAX &&
+                directionalIdleFallback(NpcAnimation(clip))) {
                 clip = 0;
                 f = selection.idle;
             }

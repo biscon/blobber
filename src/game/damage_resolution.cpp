@@ -16,6 +16,10 @@ NpcDamageResult damageNpc(ActorWorld& actors, EffectController& effects, ActorId
         out.actor.error = ActorError::NotAlive;
         return out;
     }
+    if (!target->hostile()) {
+        out.actor.error = ActorError::NotCombatant;
+        return out;
+    }
     if (amount < 0) {
         out.actor.error = ActorError::InvalidDamage;
         return out;

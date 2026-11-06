@@ -1,5 +1,9 @@
 # NPC sprites
 
+The [Sanctuary innkeeper design](innkeeper_design.md) extends this foundation with
+an explicit peaceful resident role and front-only Talk clip (2026-11-06). The
+historical monster-only assumptions below are superseded by that design where noted.
+
 Slice 06 is implemented, awaiting user review: [hurt/death design](goblin_reactions_design.md)
 and [verification](verification/archive/slice06_verification.md). The foundation below incorporates its
 current contracts; historical slice 05 notes are marked separately.

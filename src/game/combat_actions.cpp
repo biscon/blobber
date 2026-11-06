@@ -70,7 +70,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
     if (!c.target)
         return CommandReason::MissingTarget;
     const auto* a = actors_.actor(*c.target);
-    if (!a || a->life != ActorLife::Alive)
+    if (!a || !a->hostile() || a->life != ActorLife::Alive)
         return CommandReason::InvalidTarget;
     if (ranged) {
         if (!inBowRange(pose.cell, a->npc.cell))
@@ -121,7 +121,7 @@ void CombatController::alert(ActorId target, Player pose) noexcept {
     }
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& other = actors_.snapshot().actors[i];
-        if (other.life != ActorLife::Alive)
+        if (!other.hostile() || other.life != ActorLife::Alive)
             continue;
         for (std::size_t j = 0; j < count; ++j)
             if (other.npc.cell == cells[j].cell) {
@@ -228,7 +228,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
 }
 bool CombatController::packSupported(ActorId id, Cell partyCell) const noexcept {
     const auto* attacker = actors_.actor(id);
-    if (!attacker || attacker->life != ActorLife::Alive ||
+    if (!attacker || !attacker->hostile() || attacker->life != ActorLife::Alive ||
         !rules::hasTrait(actors_.catalog().monster(attacker->monster)->traits, rules::Trait::PackTactics))
         return false;
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
@@ -317,7 +317,7 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
     CombatOutcome out;
     out.enemy = id;
     const auto* a = actors_.actor(id);
-    if (!a || a->life != ActorLife::Alive)
+    if (!a || !a->hostile() || a->life != ActorLife::Alive)
         return out;
     if (currentEvents_ && effects_.stand(id, now, *currentEvents_)) {
         out.event = CombatEvent::Spent;

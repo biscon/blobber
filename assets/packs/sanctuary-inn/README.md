@@ -7,8 +7,11 @@ bar, shelves with pottery, ale barrels, plants, hearth and decorative upstairs s
 The room has an 8×8-cell floor enclosed by modeled walls and an outer solid pad.
 Each table/chair assembly is centered on one cell and blocks only that cell.
 Its horizontal bounds are ±.351 by ±.481 cells, retaining neighbour camera clearance.
-Furniture is authored against the fixed .5-cell eye height: the counter is .3465
-cells high, tables .2516 and chair seats .1471. Loose props are narrower; the
+Furniture is authored against the fixed .5-cell eye height: the counter is .294525
+cells high, tables .2516 and chair seats .1471. The 2026-11-06 innkeeper review
+reduces only the counter and rear shelving uniformly by 15%, preserving the
+resident's size and all other model geometry. Rear shelves reach .703588 cells.
+Loose props are narrower; the
 doorway, wall trim and stair risers follow the same adult proportions. Geometry
 is resized before metric UV packing; the export report retains final mesh bounds.
 The ceiling is 1.5 cells high. Inn floor/ceiling boards use sampled plank interiors

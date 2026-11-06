@@ -16,8 +16,12 @@ inline std::string_view monsterAppearance(std::string_view id) noexcept {
 struct NpcTypeId {
     std::uint16_t index = 0;
 };
-enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack, Prone };
-constexpr std::size_t npcAnimationCount = 7;
+enum class NpcAnimation : std::uint8_t { Idle, Walk, Attack, Hurt, Death, RangedAttack, Prone, Talk };
+constexpr std::size_t npcAnimationCount = 8;
+constexpr bool directionalIdleFallback(NpcAnimation clip) noexcept {
+    return clip == NpcAnimation::Attack || clip == NpcAnimation::Talk;
+}
+enum class NpcRole : std::uint8_t { Hostile, Resident };
 enum class NpcRoutine : std::uint8_t { Guard, Patrol, Wander };
 struct NpcAiConfig {
     NpcRoutine routine = NpcRoutine::Guard;
@@ -34,6 +38,7 @@ struct NpcInstance {
     NpcAiConfig ai{};
     // Optional rules variant sharing this appearance; local to the session catalog.
     std::optional<rules::MonsterId> monster{};
+    NpcRole role = NpcRole::Hostile;
 };
 // Immutable level-lifetime indices: no removal, recycling or runtime spawning.
 class NpcWorld {

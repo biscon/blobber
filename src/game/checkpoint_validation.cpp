@@ -38,7 +38,9 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
     const auto cell = [&](Cell p) {
         return p.x >= 0 && p.y >= 0 && p.x < map_.width() && p.y < map_.height();
     };
-    const auto actor = [&](ActorId id) { return id.slot < s.actors.count; };
+    const auto actor = [&](ActorId id) {
+        return id.slot < s.actors.count && s.actors.actors[id.slot].hostile();
+    };
     const auto& c = s.combat.state;
     if (s.timeMs > maxCheckpointClock || s.effects.gameplayMs > maxCheckpointClock ||
         s.ai.state.timeMs > maxCheckpointClock)
@@ -89,9 +91,9 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
             reject("combat state");
     }
     for (std::size_t i = 0; i < NpcWorld::maxInstances; ++i) {
-        const bool caster =
-            i < s.actors.count && actors_.catalog().monster(s.actors.actors[i].monster)->spellcasting ==
-                                      rules::EnemyCasting::AcolyteSupport;
+        const auto* definition =
+            i < s.actors.count ? actors_.catalog().monster(s.actors.actors[i].monster) : nullptr;
+        const bool caster = definition && definition->spellcasting == rules::EnemyCasting::AcolyteSupport;
         if (s.combat.enemyTarget[i] >= rules::partySize || s.combat.enemyMana[i] > (caster ? 6 : 0) ||
             (!caster && s.combat.enemyTarget[i]))
             reject("NPC casting resources");
@@ -145,6 +147,7 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         if (e.count == 0 || e.count > 3 ||
             (e.caster.npc ? !actor(e.caster.enemy) || e.kind != EffectKind::Bless ||
                                 s.actors.actors[e.caster.enemy.slot].life != ActorLife::Alive ||
+                                !actors_.catalog().monster(s.actors.actors[e.caster.enemy.slot].monster) ||
                                 actors_.catalog()
                                         .monster(s.actors.actors[e.caster.enemy.slot].monster)
                                         ->spellcasting != rules::EnemyCasting::AcolyteSupport

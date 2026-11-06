@@ -70,7 +70,7 @@ Heading heading(const std::string& name) {
 }
 NpcAnimation animationName(const std::string& name) {
     const std::array<const char*, npcAnimationCount> names{"idle",  "walk",          "attack", "hurt",
-                                                           "death", "ranged_attack", "prone"};
+                                                           "death", "ranged_attack", "prone",  "talk"};
     for (std::size_t i = 0; i < names.size(); ++i)
         if (name == names[i])
             return static_cast<NpcAnimation>(i);
@@ -133,7 +133,7 @@ void loadAnimations(const Json& definition, const std::filesystem::path& parent,
                 throw std::runtime_error("Unknown NPC animation direction: " + view.key());
         for (std::size_t side = 0; side < sides.size(); ++side) {
             if (!views.contains(sides[side])) {
-                if (it.key() == "attack" && side != 0)
+                if (directionalIdleFallback(animationName(it.key())) && side != 0)
                     continue;
                 throw std::runtime_error("NPC clip missing required direction");
             }
@@ -178,6 +178,10 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
                     throw std::runtime_error("Empty, oversized or duplicate NPC type ID: " + id);
                 types.push_back(id);
                 NpcDefinition appearance;
+                const auto role = definition.value("role", std::string("hostile"));
+                if (role != "hostile" && role != "resident")
+                    throw std::runtime_error("Invalid NPC definition role: " + role);
+                appearance.role = role == "resident" ? NpcRole::Resident : NpcRole::Hostile;
                 const auto sampling = definition.value("sampling", std::string("nearest"));
                 if (sampling != "nearest" && sampling != "area")
                     throw std::runtime_error("NPC sampling must be nearest or area");
@@ -226,6 +230,10 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
                     appearance.height > 1)
                     throw std::runtime_error("Invalid NPC dimensions");
                 validateNpcTimings(npcTimings(appearance));
+                if (appearance.role == NpcRole::Resident)
+                    for (std::size_t i = 1; i < npcAnimationCount; ++i)
+                        if (i != std::size_t(NpcAnimation::Talk) && appearance.animations[i].timing.count)
+                            throw std::runtime_error("Resident artwork supports only idle and talk");
                 for (std::size_t i = 0; i < npcAnimationCount; ++i) {
                     const auto& clip = appearance.animations[i];
                     // Clip canvases include weapons/limbs/padding, not occupancy. The shared
@@ -257,6 +265,14 @@ ParsedNpcs parseNpcMetadata(const std::filesystem::path& file, const Map& map, C
                                  heading(placement.at("facing").get<std::string>()),
                                  animation,
                                  static_cast<std::uint32_t>(phase)});
+            const auto definitionRole = appearances[it - types.begin()].role;
+            const auto role = placement.value(
+                "role", std::string(definitionRole == NpcRole::Resident ? "resident" : "hostile"));
+            if (role != "hostile" && role != "resident")
+                throw std::runtime_error("Invalid NPC role: " + role);
+            instances.back().role = role == "resident" ? NpcRole::Resident : NpcRole::Hostile;
+            if (instances.back().role != definitionRole)
+                throw std::runtime_error("NPC placement role differs from its appearance definition");
             if (placement.contains("ai")) {
                 const auto& ai = placement.at("ai");
                 if (!ai.is_object())

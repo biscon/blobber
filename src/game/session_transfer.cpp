@@ -133,9 +133,9 @@ void GameSession::importFloor(const FloorState& s) {
         s.remainderMs < 0 || s.remainderMs >= 1 || !std::isfinite(s.remainderMs))
         reject();
     for (std::size_t i = 0; i < NpcWorld::maxInstances; ++i) {
-        const bool caster =
-            i < s.actors.count && actors_.catalog().monster(actors_.state_.actors[i].monster)->spellcasting ==
-                                      rules::EnemyCasting::AcolyteSupport;
+        const bool caster = i < s.actors.count && actors_.state_.actors[i].hostile() &&
+                            actors_.catalog().monster(actors_.state_.actors[i].monster)->spellcasting ==
+                                rules::EnemyCasting::AcolyteSupport;
         if (s.combat.enemyMana[i] > (caster ? 6 : 0) || s.combat.enemyTarget[i] >= rules::partySize ||
             (!caster && s.combat.enemyTarget[i]))
             reject();
@@ -148,6 +148,7 @@ void GameSession::importFloor(const FloorState& s) {
         const auto slot = e.caster.enemy.slot;
         if (slot >= s.actors.count || e.kind != EffectKind::Bless || e.caster.enemy.world ||
             e.caster.character.index != UINT16_MAX || s.actors.actors[slot].life != ActorLife::Alive ||
+            !actors_.state_.actors[slot].hostile() ||
             actors_.catalog().monster(actors_.state_.actors[slot].monster)->spellcasting !=
                 rules::EnemyCasting::AcolyteSupport)
             reject();
@@ -166,13 +167,26 @@ void GameSession::importFloor(const FloorState& s) {
     std::fill(actors_.occupancy_.begin(), actors_.occupancy_.end(), 0);
     for (std::size_t i = 0; i < s.actors.count; ++i) {
         const auto& a = s.actors.actors[i];
-        if (a.monster.index != actors_.state_.actors[i].monster.index ||
+        const auto& initial = actors_.state_.actors[i];
+        if (a.monster.index != actors_.state_.actors[i].monster.index || a.npc.role != initial.npc.role ||
+            a.npc.type.index != initial.npc.type.index ||
             a.maxHitPoints != actors_.state_.actors[i].maxHitPoints ||
             unsigned(a.life) > unsigned(ActorLife::Removed) || !validCell(a.npc.cell) ||
             unsigned(a.npc.facing) > 3 || unsigned(a.npc.animation) >= npcAnimationCount ||
             a.npc.type.index >= s.actors.typeCount || a.npc.subcell.x < 0 || a.npc.subcell.x > 1 ||
             a.npc.subcell.y < 0 || a.npc.subcell.y > 1 || a.hitPoints < 0 || a.hitPoints > a.maxHitPoints ||
-            (a.life == ActorLife::Alive && (!a.hitPoints || a.hasDeath)))
+            (a.life == ActorLife::Alive && ((a.hostile() && !a.hitPoints) || a.hasDeath)))
+            reject();
+        if (!a.hostile() &&
+            (a.life != ActorLife::Alive || a.hitPoints || a.maxHitPoints || a.npc.monster ||
+             !(a.npc.cell == initial.npc.cell) || !(a.npc.subcell == initial.npc.subcell) ||
+             a.npc.facing != initial.npc.facing || a.npc.phaseMs != initial.npc.phaseMs ||
+             (a.npc.animation != NpcAnimation::Idle && a.npc.animation != NpcAnimation::Talk) ||
+             a.npc.ai.routine != NpcRoutine::Guard || a.npc.ai.waypointCount || a.hasWalk || a.hasTravel ||
+             a.hasAttack || a.hasDamage || a.hasDeath || a.resumableAttack || s.creditedDeaths[i] ||
+             s.loot.deaths[i] || s.combat.known[i] || s.combat.episodeActors[i] || s.combat.enemyReady[i] ||
+             s.combat.enemyBusy[i] || s.ai.prepared[i] ||
+             s.ai.state.actors[i].awareness != Awareness::Routine))
             reject();
         if (a.life == ActorLife::Alive) {
             if (map_.base().npcBlocked(a.npc.cell) ||
@@ -192,6 +206,9 @@ void GameSession::importFloor(const FloorState& s) {
             mask |= bit;
         }
         const auto& ai = s.ai.state.actors[i];
+        if (!a.hostile() && (!(ai.home == initial.npc.cell) || ai.homeFacing != initial.npc.facing ||
+                             ai.config.routine != NpcRoutine::Guard || ai.config.waypointCount))
+            reject();
         if (unsigned(ai.awareness) > unsigned(Awareness::Returning) ||
             unsigned(ai.config.routine) > unsigned(NpcRoutine::Wander) || ai.config.waypointCount > 8 ||
             unsigned(ai.homeFacing) > 3 || !validCell(ai.home) ||
@@ -228,14 +245,16 @@ void GameSession::importFloor(const FloorState& s) {
             (e.kind >= EffectKind::Sleep && e.kind <= EffectKind::Knockdown))
             reject();
         for (std::size_t i = 0; i < e.count; ++i)
-            if (e.targets[i].npc ? e.targets[i].enemy.slot >= s.actors.count
+            if (e.targets[i].npc ? e.targets[i].enemy.slot >= s.actors.count ||
+                                       !s.actors.actors[e.targets[i].enemy.slot].hostile()
                                  : !party_.character(e.targets[i].character))
                 reject();
     }
     for (std::size_t row = 0; row < s.effects.conditions.size(); ++row)
         for (const auto& condition : s.effects.conditions[row])
             if (condition.active &&
-                (!party_.character(condition.caster) || (row >= rules::partySize + s.actors.count)))
+                (!party_.character(condition.caster) || (row >= rules::partySize + s.actors.count) ||
+                 (row >= rules::partySize && !s.actors.actors[row - rules::partySize].hostile())))
                 reject();
     for (const auto& area : s.effects.ground.areas) {
         if (!area.active)

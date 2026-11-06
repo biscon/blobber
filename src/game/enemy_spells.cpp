@@ -5,7 +5,8 @@
 namespace blobber {
 bool CombatController::enemyCaster(ActorId id) const noexcept {
     const auto* a = actors_.actor(id);
-    return a && actors_.catalog().monster(a->monster)->spellcasting == rules::EnemyCasting::AcolyteSupport;
+    return a && a->hostile() &&
+           actors_.catalog().monster(a->monster)->spellcasting == rules::EnemyCasting::AcolyteSupport;
 }
 bool CombatController::enemySpellGeometry(ActorId id) const noexcept {
     const auto* a = actors_.actor(id);

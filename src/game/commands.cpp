@@ -121,6 +121,8 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         validateNpcTimings(timing);
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
+        if (!a.hostile())
+            continue;
         const auto& species = actors_.catalog().monster(a.monster)->id;
         state_.enemyPortraits[i] = species == "skeleton"        ? EnemyPortrait::Skeleton
                                    : species == "bugbear"       ? EnemyPortrait::Bugbear
@@ -648,7 +650,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         std::array<bool, NpcWorld::maxInstances> included{};
         for (std::size_t i = 0; i < targets.count; ++i) {
             const auto* a = actors_.actor(targets.ids[i]);
-            if (a && a->life == ActorLife::Alive)
+            if (a && a->hostile() && a->life == ActorLife::Alive)
                 included[targets.ids[i].slot] = true;
         }
         for (std::size_t i = 0; i < included.size(); ++i)
@@ -661,7 +663,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         std::array<bool, NpcWorld::maxInstances> included{};
         const auto add = [&](ActorId id) {
             const auto* a = actors_.actor(id);
-            if (a && a->life == ActorLife::Alive)
+            if (a && a->hostile() && a->life == ActorLife::Alive)
                 included[id.slot] = true;
         };
         for (std::size_t i = 0; i < normalized.count; ++i)

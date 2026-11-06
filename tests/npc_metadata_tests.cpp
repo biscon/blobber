@@ -39,7 +39,8 @@ int main() {
         check(cosmetic.definitionFingerprint == loaded.definitionFingerprint &&
                   cosmetic.attachments[0].bodyBounds[0].left == .2f,
               "Cosmetic bounds load without invalidating existing saves");
-        for (const auto& box : {Json{.8,.1,.2,.95}, Json{-.1,0,1,1}, Json{0,0,1,1.1}, Json{0,0,1}}) {
+        for (const auto& box :
+             {Json{.8, .1, .2, .95}, Json{-.1, 0, 1, 1}, Json{0, 0, 1, 1.1}, Json{0, 0, 1}}) {
             auto bad = bounded;
             bad["attachments"]["body_bounds"]["front"] = box;
             save(bad);
@@ -101,6 +102,33 @@ int main() {
             return loadNpcMetadata(dir.path / "level.json", map, {1, 1});
         };
         check(placed(level).world.occupied({2, 2}), "metadata placement retains occupancy without images");
+        auto talk = definition;
+        talk["role"] = "resident";
+        talk["animations"]["talk"] = {{"durations_ms", {80, 100}},
+                                      {"views", {{"front", {"talk0.png", "talk1.png"}}}}};
+        save(talk);
+        auto peaceful = level;
+        peaceful["instances"][0]["role"] = "resident";
+        peaceful["instances"][0]["animation"] = "talk";
+        const auto residentMetadata = placed(peaceful);
+        check(residentMetadata.world.instances()[0].role == NpcRole::Resident &&
+                  residentMetadata.timings[0][unsigned(NpcAnimation::Talk)].count == 2,
+              "Metadata accepts a resident with front-only talk and four-direction idle");
+        auto inherited = peaceful;
+        inherited["instances"][0].erase("role");
+        check(placed(inherited).world.instances()[0].role == NpcRole::Resident,
+              "JSON placements inherit the appearance's resident role");
+        auto mismatched = peaceful;
+        mismatched["instances"][0]["role"] = "hostile";
+        mismatched["instances"][0]["animation"] = "idle";
+        rejects([&] { placed(mismatched); }, "Hostile override cannot reinterpret resident artwork");
+        auto badRole = peaceful;
+        badRole["instances"][0]["role"] = "friend-ish";
+        rejects([&] { placed(badRole); }, "Unknown resident role rejects");
+        talk["animations"]["talk"]["views"].erase("front");
+        save(talk);
+        rejects([&] { placed(peaceful); }, "Talk requires its front-facing artwork");
+        save(definition);
         for (unsigned fault = 0; fault < 5; ++fault) {
             auto bad = level;
             if (fault == 0)

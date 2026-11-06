@@ -21,16 +21,21 @@ struct VisibilityFixture {
         for (unsigned type = 0; type < types; ++type) {
             world_assets::Appearance a;
             constexpr const char* names[]{"goblin",    "goblin.archer", "skeleton", "zombie",
-                                          "giant.rat", "goblin_shaman", "bugbear"};
-            a.id = names[type % 7];
+                                          "giant.rat", "goblin_shaman", "bugbear",  "innkeeper"};
+            a.id = names[type % 8];
             a.width = .5f;
             a.height = .7f;
             for (unsigned clip = 0; clip < npcAnimationCount; ++clip) {
+                if (a.id == "innkeeper" && clip != unsigned(NpcAnimation::Idle) &&
+                    clip != unsigned(NpcAnimation::Talk))
+                    continue;
                 auto& c = a.clips[clip];
                 c.timing =
                     clip == 6 ? NpcClipTiming{{{200, 0, 0, 0}}, 1} : NpcClipTiming{{{80, 120, 0, 0}}, 2};
                 c.width = clip == 4 ? .9f : 0;
-                for (unsigned side = 0; side < 4; ++side)
+                for (unsigned side = 0; side < 4; ++side) {
+                    if (a.id == "innkeeper" && clip == unsigned(NpcAnimation::Talk) && side != 0)
+                        continue;
                     for (unsigned frame = 0; frame < c.timing.count; ++frame) {
                         auto rgba = pixels;
                         for (unsigned y = 0; y < 12; ++y)
@@ -56,6 +61,7 @@ struct VisibilityFixture {
                             writer.add(name, width, height, true, padded, 0,
                                        {clip == 3 && side == 1 && frame == 1 ? .25f : .5f, 1}, true, crop));
                     }
+                }
             }
             a.attachments.release[0] = {.2f, .35f};
             NpcTimings timing{};

@@ -1,5 +1,9 @@
 # Sanctuary inn
 
+The [innkeeper extension](innkeeper_design.md) adds the first peaceful resident
+behind the existing bar (2026-11-06), superseding NPC deferral and schema versions
+in the original interior delivery notes below. Dialogue and commerce remain deferred.
+
 Status: implemented and mechanically verified; awaiting user review (2026-11-05).
 
 ## Content and behavior
@@ -135,3 +139,22 @@ layout before rebuilding the current inn. The smaller reservations only free cel
 existing poses and dropped items remain valid. Reject mixed table footprints.
 Verify blocked centers, traversable surrounding cells, old-save restoration and
 mesh bounds, then inspect hidden captures from all four adjacent directions.
+
+## Counter and rear shelving review correction (2026-11-06)
+
+The user confirmed that the tables, chairs and fireplace looked correct and
+requested slightly smaller counter/rear shelves relative to the innkeeper.
+Apply a uniform .85 scale to only those two models, around their existing floor
+and wall pivots, before metric UV packing. The countertop moves from .3465 to
+.294525 cells (about .94 m at the existing eye-height convention); shelf height
+moves from .82775 to .703588 cells (about 2.25 m). The innkeeper's size and
+nearest southern subcell remain unchanged. Map anchors and collision reservations
+also remain unchanged, so this correction preserves current campaign compatibility.
+
+The exporter regenerated the packed Blender/GLB, runtime mesh parts and atlas.
+All seven other models have identical vertex positions/normals to the preceding
+export, including the tables/chairs and hearth; UV coordinates move with atlas
+repacking while retaining metric texel density. Focused inn CPU validation passes;
+hidden production captures verify the new proportions and corrected NPC side art.
+The [innkeeper review record](innkeeper_design.md#runtime-review-correction--2026-11-06)
+and [six selected images](screenshots/innkeeper/README.md) retain pending acceptance.

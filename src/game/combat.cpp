@@ -28,6 +28,8 @@ CombatController::CombatController(GeometryView map, Party& party, ActorWorld& a
     visuals_.world = state_.world;
     spellVisuals_.clear(state_.world);
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
+        if (!actors.snapshot().actors[i].hostile())
+            continue;
         const auto& m = *actors.catalog().monster(actors.snapshot().actors[i].monster);
         enemyMana_[i] = m.spellcasting == rules::EnemyCasting::AcolyteSupport ? 6 : 0;
         for (std::size_t j = 0; j < m.attackCount; ++j) {
@@ -42,18 +44,18 @@ bool CombatController::member(ActorId id) const noexcept {
     return actors_.actor(id) && id.slot < members_.size() && members_[id.slot];
 }
 bool CombatController::adjacent(Cell party) const noexcept {
-    for (int y = -1; y <= 1; ++y)
-        for (int x = -1; x <= 1; ++x) {
-            const auto cell = party + Cell{x, y};
-            if (actors_.occupied(cell) && combatAdjacent(map_, party, cell))
-                return true;
-        }
+    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
+        const auto& a = actors_.snapshot().actors[i];
+        if (a.hostile() && a.life == ActorLife::Alive && combatAdjacent(map_, party, a.npc.cell))
+            return true;
+    }
     return false;
 }
 bool CombatController::occupiedFront(Player pose) const noexcept {
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        if (a.life == ActorLife::Alive && inMeleeFront(map_, pose.cell, pose.heading, a.npc.cell) &&
+        if (a.hostile() && a.life == ActorLife::Alive &&
+            inMeleeFront(map_, pose.cell, pose.heading, a.npc.cell) &&
             inPartyViewport(pose.cell, pose.heading, a.npc.cell, a.npc.subcell) &&
             exposed(actors_.id(i), pose.heading))
             return true;
@@ -85,7 +87,7 @@ bool CombatController::exposed(rules::CharacterId id) const noexcept {
 }
 bool CombatController::frontal(ActorId id) const noexcept {
     const auto* a = actors_.actor(id);
-    return a && a->life == ActorLife::Alive &&
+    return a && a->hostile() && a->life == ActorLife::Alive &&
            inPartyView(map_, origin_.cell, origin_.heading, a->npc.cell, a->npc.subcell);
 }
 bool CombatController::presentationBusy(std::uint64_t now) const noexcept {
@@ -132,7 +134,7 @@ bool CombatController::exposed(ActorId id) const noexcept {
 }
 bool CombatController::exposed(ActorId id, Heading approach) const noexcept {
     const auto* a = actors_.actor(id);
-    if (!a || a->life != ActorLife::Alive)
+    if (!a || !a->hostile() || a->life != ActorLife::Alive)
         return false;
     if (near(*a, approach))
         return true;
@@ -146,7 +148,8 @@ bool CombatController::exposed(ActorId id, Heading approach) const noexcept {
 }
 std::optional<Cell> CombatController::meleeSlot(ActorId id, std::uint8_t occupied) const noexcept {
     const auto* a = actors_.actor(id);
-    if (!a || a->life != ActorLife::Alive || !inMeleeFront(map_, origin_.cell, origin_.heading, a->npc.cell))
+    if (!a || !a->hostile() || a->life != ActorLife::Alive ||
+        !inMeleeFront(map_, origin_.cell, origin_.heading, a->npc.cell))
         return {};
     const auto approach = origin_.heading;
     if (near(*a, approach))
@@ -197,7 +200,7 @@ void CombatController::observe(Player pose) noexcept {
     state_.pendingCount = 0;
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        if (a.life != ActorLife::Alive)
+        if (!a.hostile() || a.life != ActorLife::Alive)
             continue;
         const bool sees = inPartyView(map_, pose.cell, pose.heading, a.npc.cell, a.npc.subcell);
         if (sees) {
@@ -216,6 +219,10 @@ std::array<bool, NpcWorld::maxInstances> CombatController::movementLocks(std::ui
     std::array<bool, NpcWorld::maxInstances> result{};
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
+        if (!a.hostile()) {
+            result[i] = true;
+            continue;
+        }
         const bool wounded =
             rules::hasTrait(actors_.catalog().monster(a.monster)->traits, rules::Trait::NimbleEscape) &&
             a.hitPoints * 2 <= a.maxHitPoints && ai_.aware(actors_.id(i)) &&
@@ -229,7 +236,7 @@ std::array<bool, NpcWorld::maxInstances> CombatController::movementLocks(std::ui
 void CombatController::enroll(Player pose, bool opening) noexcept {
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        if (a.life != ActorLife::Alive || members_[i] ||
+        if (!a.hostile() || a.life != ActorLife::Alive || members_[i] ||
             (!ai_.aware(actors_.id(i)) && !combatAdjacent(map_, a.npc.cell, pose.cell)))
             continue;
         if (state_.enemyCount >= state_.enemies.size())
@@ -247,7 +254,7 @@ bool CombatController::contact(Player pose, std::uint64_t now) noexcept {
     bool arrived = false;
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        arrived |= a.life == ActorLife::Alive && !actorWalking(a, now) &&
+        arrived |= a.hostile() && a.life == ActorLife::Alive && !actorWalking(a, now) &&
                    combatAdjacent(map_, pose.cell, a.npc.cell);
     }
     if (!arrived)
@@ -268,7 +275,7 @@ bool CombatController::contact(Player pose, std::uint64_t now) noexcept {
 void CombatController::addGroups() noexcept {
     for (std::size_t i = 0; i < state_.enemyCount; ++i) {
         const auto* a = actors_.actor(state_.enemies[i]);
-        if (!a || a->life != ActorLife::Alive)
+        if (!a || !a->hostile() || a->life != ActorLife::Alive)
             continue;
         bool found = false;
         for (std::size_t j = 0; j < groupCount_; ++j)
@@ -346,7 +353,8 @@ void CombatController::selectTurn() noexcept {
             for (; enemyCursor_ < state_.enemyCount; ++enemyCursor_) {
                 const auto id = state_.enemies[enemyCursor_];
                 const auto* a = actors_.actor(id);
-                if (a && a->life == ActorLife::Alive && a->monster.index == groups_[e.index].index) {
+                if (a && a->hostile() && a->life == ActorLife::Alive &&
+                    a->monster.index == groups_[e.index].index) {
                     state_.activeEnemy = id;
                     ++state_.turn;
                     return;
@@ -412,7 +420,7 @@ bool CombatController::finish(std::uint64_t now) noexcept {
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto id = actors_.id(i);
         const auto* a = actors_.actor(id);
-        if (!a || a->life != ActorLife::Alive)
+        if (!a || !a->hostile() || a->life != ActorLife::Alive)
             continue;
         const bool active = ai_.aware(id) || combatAdjacent(map_, a->npc.cell, origin_.cell);
         if (members_[i] || active) {
@@ -467,7 +475,7 @@ void CombatController::previewTurns(CombatSnapshot& dst) const noexcept {
                  i < state_.enemyCount && dst.upcomingCount < dst.upcoming.size(); ++i) {
                 const auto id = state_.enemies[i];
                 const auto* a = actors_.actor(id);
-                if (!a || a->life != ActorLife::Alive || !known_[id.slot] ||
+                if (!a || !a->hostile() || a->life != ActorLife::Alive || !known_[id.slot] ||
                     a->monster.index != groups_[e.index].index)
                     continue;
                 dst.upcoming[dst.upcomingCount++] = {{}, id, false};

@@ -34,6 +34,8 @@ template <class T> constexpr unsigned enumMaximum() {
         return npcAnimationCount - 1;
     else if constexpr (std::is_same_v<T, NpcRoutine>)
         return unsigned(NpcRoutine::Wander);
+    else if constexpr (std::is_same_v<T, NpcRole>)
+        return unsigned(NpcRole::Resident);
     else if constexpr (std::is_same_v<T, ActorLife>)
         return unsigned(ActorLife::Removed);
     else if constexpr (std::is_same_v<T, Awareness>)
@@ -357,7 +359,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 10 || j.at("simulation") != 14 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 11 || j.at("simulation") != 15 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -374,8 +376,8 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 10},
-              {"simulation", 14},
+    Json j = {{"schema", 11},
+              {"simulation", 15},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

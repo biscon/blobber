@@ -68,6 +68,12 @@ int main() {
         check(!run.previewTravel(request), "Old city request rejected after entry");
         check(!run.previewTravel(run.recallRequest()), "No paid recall from inn");
         check(!run.previewTravel(run.waypointRequest(1)), "No dungeon shortcut from inn");
+        check(run.game().actors().snapshot().count == 1 &&
+                  !run.game().actors().snapshot().actors[0].hostile() &&
+                  run.game().actors().snapshot().actors[0].npc.cell == Cell{6, 3} &&
+                  run.game().actors().snapshot().actors[0].npc.subcell == Cell{1, 1} &&
+                  run.game().actors().snapshot().actors[0].npc.facing == Heading::South,
+              "One peaceful innkeeper occupies the southern half-subcell nearest the counter");
         {
             CommandController innControls(run.game(), defs.timings);
             innControls.refresh({}, false, false, true);
@@ -89,7 +95,7 @@ int main() {
             }
         for (int y = 1; y < map.height() - 1; ++y)
             for (int x = 1; x < map.width() - 1; ++x)
-                if (!map.movementBlocked({x, y})) {
+                if (!map.movementBlocked({x, y}) && !run.game().actors().occupied({x, y})) {
                     walk(run.game(), {x, y});
                     check(run.game().atSanctuary(), "Every reachable inn cell grants free rest");
                 }
@@ -130,6 +136,28 @@ int main() {
                   restored.game().movement().player == pose,
               "Continue restores inn and pose");
         check(hasDropped(restored.game()), "Inn dropped items survive disk roundtrip");
+        check(restored.game().actors().snapshot().count == 1 &&
+                  !restored.game().actors().snapshot().actors[0].hostile() &&
+                  restored.game().actors().snapshot().actors[0].npc.cell == Cell{6, 3},
+              "Continue preserves the peaceful innkeeper's canonical placement");
+        for (unsigned fault = 0; fault < 6; ++fault) {
+            auto bad = restored.checkpoint();
+            auto& actor = bad->locations[4].state->actors.actors[0];
+            if (fault == 0)
+                actor.npc.role = NpcRole::Hostile;
+            if (fault == 1)
+                actor.npc.cell = {5, 3};
+            if (fault == 2)
+                actor.hitPoints = 1;
+            if (fault == 3)
+                actor.hasAttack = true;
+            if (fault == 4)
+                bad->locations[4].state->creditedDeaths[0] = true;
+            if (fault == 5)
+                bad->locations[4].placements.clear();
+            rejects([&] { CampaignRun invalid(cat, std::move(*bad), defs.timings); },
+                    "Forged resident role, body, combat state or authored placement rejects");
+        }
         for (const auto oldCeiling : {6, 8}) {
             auto previous = restored.checkpoint();
             auto& inn = previous->locations[4];
@@ -226,6 +254,12 @@ int main() {
         check(client.protocol.state().at("campaign").at("travel").at("doorway").at("ready"),
               "Wire doorway descriptor reflects facing");
         check(client.act({{"kind", "doorway"}}).at("data").at("accepted"), "Wire inn entry");
+        check(client.protocol.state().at("residents").size() == 1 &&
+                  client.protocol.state().at("residents")[0].at("type") == "innkeeper" &&
+                  !client.protocol.state().at("residents")[0].at("targetable").get<bool>() &&
+                  client.protocol.state().at("enemies").empty() &&
+                  client.protocol.state().at("targets").empty(),
+              "Wire observation reports peaceful resident separately from enemies and targets");
         const auto observation = client.protocol.state().at("campaign");
         check(observation.at("location") == 4 && observation.at("depth") == 0 &&
                   observation.at("locations").size() == campaignLocationCount,

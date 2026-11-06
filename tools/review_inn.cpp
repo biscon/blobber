@@ -10,7 +10,7 @@
 using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
-        throw std::runtime_error("Usage: blobber_review_inn ASSETS NEW_OUTPUT [details]");
+        throw std::runtime_error("Usage: blobber_review_inn ASSETS NEW_OUTPUT [details|innkeeper]");
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
@@ -55,6 +55,13 @@ int main(int argc, char** argv) try {
         report << name << " location=" << run->name() << " cell=" << p.cell.x << ',' << p.cell.y
                << " heading=" << headingName(p.heading) << " clock=" << game.timeMs()
                << " prompt=" << commands.snapshot().fixturePrompt.data() << '\n';
+        if (game.actors().snapshot().count == 1 && !game.actors().snapshot().actors[0].hostile()) {
+            const auto& npc = game.actors().snapshot().actors[0].npc;
+            const auto feet = actorPosition(game.actors().snapshot().actors[0], game.timeMs());
+            report << "resident cell=" << npc.cell.x << ',' << npc.cell.y << " subcell=" << npc.subcell.x
+                   << ',' << npc.subcell.y << " feet=" << feet.x << ',' << feet.y
+                   << " facing=" << headingName(npc.facing) << '\n';
+        }
     };
     auto travel = [&](bool cancel) {
         auto ticket = run->prepareTravel(run->doorwayRequest());
@@ -79,6 +86,30 @@ int main(int argc, char** argv) try {
     capture("entry");
     memory("inn-only");
     if (argc == 4) {
+        if (std::string_view(argv[3]) == "innkeeper") {
+            auto& game = run->game();
+            game.restorePose({{6, 5}, Heading::North}, false);
+            capture("innkeeper-front");
+            if (!view->picking() || view->picking()->targets().count ||
+                view->picking()->targets().candidateCount ||
+                game.combat().snapshot().phase != CombatPhase::Exploration)
+                throw std::runtime_error("Innkeeper must remain outside offensive picking and combat");
+            game.restorePose({{5, 3}, Heading::East}, false);
+            capture("innkeeper-right");
+            game.restorePose({{7, 3}, Heading::West}, false);
+            capture("innkeeper-left");
+            game.restorePose({{6, 5}, Heading::North}, false);
+            if (!game.actors().talk(game.actors().id(0), true))
+                throw std::runtime_error("Resident talk preview rejected");
+            game.update(.18, false);
+            capture("innkeeper-talk-1");
+            game.update(.16, false);
+            capture("innkeeper-talk-2");
+            game.actors().talk(game.actors().id(0), false);
+            view.reset();
+            memory("released");
+            return 0;
+        }
         if (std::string_view(argv[3]) != "details")
             throw std::runtime_error("Unknown capture selection");
         run->game().restorePose({{3, 9}, Heading::West}, false);
@@ -93,11 +124,10 @@ int main(int argc, char** argv) try {
         {"common-room", {{5, 8}, Heading::North}}, {"bar", {{6, 5}, Heading::North}},
         {"hearth", {{4, 4}, Heading::West}},       {"seating", {{5, 6}, Heading::West}},
         {"stairs", {{7, 5}, Heading::East}},       {"plants-exit", {{5, 7}, Heading::South}},
-        {"staff-aisle", {{4, 3}, Heading::East}},
-        {"plant-close", {{3, 9}, Heading::West}},  {"ale-barrels", {{8, 3}, Heading::North}},
-        {"south-wall", {{5, 5}, Heading::South}},
+        {"staff-aisle", {{4, 3}, Heading::East}},  {"plant-close", {{3, 9}, Heading::West}},
+        {"ale-barrels", {{8, 3}, Heading::North}}, {"south-wall", {{5, 5}, Heading::South}},
         {"table-north", {{3, 5}, Heading::South}}, {"table-south", {{3, 7}, Heading::North}},
-        {"table-west", {{2, 6}, Heading::East}}, {"table-east", {{4, 6}, Heading::West}},
+        {"table-west", {{2, 6}, Heading::East}},   {"table-east", {{4, 6}, Heading::West}},
     };
     for (const auto& shot : shots) {
         run->game().restorePose(shot.second, false);

@@ -63,7 +63,8 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
     }
     for (std::size_t i = 0; i < world.snapshot().count; ++i) {
         const auto& npc = world.snapshot().actors[i].npc;
-        if (!timings_[npc.type.index][static_cast<std::size_t>(npc.animation)].count)
+        if (!timings_[npc.type.index][static_cast<std::size_t>(npc.animation)].count &&
+            !(npc.role == NpcRole::Resident && npc.animation == NpcAnimation::Talk))
             throw std::runtime_error("NPC placement selects an absent animation");
         std::uint32_t cycle = 0;
         const auto& idle = timings_[npc.type.index][0];
@@ -146,11 +147,14 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
                                      (time - actor.walkTimeMs) * npcWalkDurationMs / actor.walkDurationMs, 0);
             } else {
                 const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
-                next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
+                // A resident without optional talk art remains safely idle.
+                if (!timings[static_cast<std::size_t>(next.clip)].count)
+                    next.clip = NpcAnimation::Idle;
+                next.active = sample(timings[static_cast<std::size_t>(next.clip)], time, phase);
             }
-            // Only an attack can expose a directional idle fallback. Keep legacy
+            // Attack and talk can expose a directional idle fallback. Keep legacy
             // idle snapshots stable; reaction/corpse holds need no idle invalidation.
-            if (next.clip <= NpcAnimation::Attack)
+            if (next.clip <= NpcAnimation::Attack || directionalIdleFallback(next.clip))
                 next.idle = sample(timings[0], time, idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];

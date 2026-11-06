@@ -33,6 +33,7 @@ struct ActorState {
     bool hasTravel = false;
     ActorPosition walkFrom;
     float walkFromElevation = 0;
+    bool hostile() const noexcept { return npc.role == NpcRole::Hostile; }
 };
 ActorPosition actorPosition(const ActorState& actor, std::uint64_t timeMs) noexcept;
 float actorElevation(const ActorState&, GeometryView, std::uint64_t) noexcept;
@@ -51,7 +52,8 @@ enum class ActorError {
     PartyCell,
     InvalidFacing,
     InvalidDamage,
-    InvalidTime
+    InvalidTime,
+    NotCombatant
 };
 struct ActorResult {
     ActorError error = ActorError::None;
@@ -79,6 +81,8 @@ class ActorWorld {
     ActorResult walk(ActorId id, Cell cell, Cell subcell, Cell partyCell, std::uint64_t timeMs,
                      std::uint64_t durationMs = npcWalkDurationMs) noexcept;
     ActorResult face(ActorId id, Heading facing) noexcept;
+    // Presentation-only loop selection for residents; no dialogue is started here.
+    ActorResult talk(ActorId id, bool talking) noexcept;
     ActorResult attack(ActorId id, std::uint64_t timeMs, bool ranged = false) noexcept;
     ActorResult suspendAttack(ActorId, std::uint64_t when, std::uint64_t duration) noexcept;
     ActorResult cancelAttack(ActorId) noexcept;
@@ -87,12 +91,16 @@ class ActorWorld {
     ActorResult remove(ActorId id) noexcept;
     GeometryView map() const noexcept { return map_; }
     const rules::Catalog& catalog() const noexcept { return catalog_; }
+    std::string_view appearanceId(NpcTypeId id) const noexcept {
+        return id.index < types_.size() ? std::string_view(types_[id.index]) : std::string_view{};
+    }
 
   private:
     friend class GameSession;
     friend class CampaignRun;
     GeometryView map_;
     const rules::Catalog& catalog_;
+    std::vector<std::string> types_;
     ActorSnapshot state_;
     std::vector<std::uint8_t> occupancy_;
     std::uint8_t& mask(Cell cell) noexcept;

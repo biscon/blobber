@@ -73,7 +73,8 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     inn.exit = innDefinition.exit;
     inn.fixtures = innDefinition.fixtures;
     inn.recovery = innDefinition.recovery;
-    inn.placements.emplace(inn.map(), inn.entry.cell, types, std::vector<NpcInstance>{});
+    inn.placements.emplace(inn.map(), inn.entry.cell, types,
+                           std::vector<NpcInstance>{innkeeperPlacement(types)});
     inn.seed = seed;
     configureDoorways();
     active_ = prepare(0, spawn);

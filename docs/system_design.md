@@ -1,5 +1,18 @@
 # System design
 
+Innkeeper **implemented and mechanically verified; awaiting runtime visual review (2026-11-06)**:
+[Resident design](innkeeper_design.md) adds one stationary, peaceful innkeeper
+behind the bar with approved artwork, four-view idle and front-only talk.
+Twelve focused Release CPU suites and hidden OpenGL checks pass;
+[six review captures](screenshots/innkeeper/README.md). Campaign schema/simulation
+are 11/15; previous saves reject without migration. Dialogue and trading remain deferred.
+The user rejected the initial runtime scale impression and side orientations.
+The [review correction](innkeeper_design.md#runtime-review-correction--2026-11-06)
+reduces only the counter/rear shelves by 15%, corrects the NPC side-art assignment
+and verifies the closest counter-facing subcell. Focused inn and hidden production
+checks pass; the corrected presentation awaits re-review. Current campaigns remain
+compatible, and character-reference approval is unchanged.
+
 Camera framing B **accepted and implemented (2026-11-06)**:
 [projection comparison](renderer_world_design.md#camera-framing-trial--2026-11-06)
 sets the horizon to 40% (about 5.8° down at screen centre), retaining .4-cell
