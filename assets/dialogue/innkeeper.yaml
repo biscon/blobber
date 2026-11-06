@@ -1,0 +1,71 @@
+# Edit each response as a linear screenplay. See README.md for defaults.
+version: 2
+primary: innkeeper
+participants:
+  innkeeper:
+    resident: sanctuary.innkeeper
+    name: Innkeeper
+facts:
+- heard_dungeon_advice
+greeting:
+  beats:
+  - speaker: innkeeper
+    text: |
+      Good to see you again. What can I do for you?
+introduction:
+  beats:
+  - speaker: innkeeper
+    text: |
+      New faces! Come in and warm yourselves.
+
+      I keep the inn, and an ear to the talk that passes through it. If you're heading below, ask before you go. A little advice costs less than a funeral.
+  - speaker: innkeeper
+    text: |
+      Some come here to celebrate a discovery. Others just need a quiet seat and someone to listen. There's room for both.
+
+      Now, what can I do for you?
+topics:
+- id: about
+  label: About yourself
+  kind: introduction
+- id: inn
+  label: The inn
+  responses:
+  - beats:
+    - speaker: innkeeper
+      text: |
+        A roof, a fire, and a place to catch your breath. That's what I try to offer. Stay as long as you need; the dungeon will still be there when you're ready.
+- id: town
+  label: The town
+  responses:
+  - beats:
+    - speaker: innkeeper
+      text: |
+        Sanctuary earns its name by keeping ordinary things going. Fires need tending and people need feeding, however much trouble there is beneath our feet.
+- id: dungeon
+  label: The dungeon
+  responses:
+  - set_fact: heard_dungeon_advice
+    beats:
+    - speaker: innkeeper
+      text: |
+        Know when to turn back. A full pack is no use to someone who never reaches the stairs.
+
+        And mind your companions. The one who looks steady may be the one too proud to ask for a rest.
+- id: rumours
+  label: Rumours
+  responses:
+  - beats:
+    - speaker: innkeeper
+      text: |
+        I've heard plenty of grand claims over a mug. Before we get to those, ask me about the dungeon. Sensible advice is a better place to start.
+  - when_fact: heard_dungeon_advice
+    beats:
+    - speaker: innkeeper
+      text: |
+        Since you're willing to listen to advice, here's another piece: don't let someone else's tale choose your risks for you.
+
+        A story grows every time it's told. The stairs don't get any closer.
+- id: farewell
+  label: Farewell
+  kind: farewell

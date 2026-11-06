@@ -29,6 +29,21 @@ float hit(Vec origin, Vec travel, Vec a, Vec b, Vec c) {
     const float distance = dot(e2, q) / determinant;
     return distance > .0001f && distance < 1 ? distance : 1;
 }
+float pathLimit(const Scene& scene, Vec source, Vec destination) {
+    const auto travel = sub(destination, source);
+    const float length = std::sqrt(dot(travel, travel));
+    float limit = 1;
+    const std::array<Vec, 5> offsets{
+        {{0, 0, 0}, {.035f, .035f, 0}, {-.035f, .035f, 0}, {0, -.035f, .035f}, {0, -.035f, -.035f}}};
+    for (const auto offset : offsets) {
+        const Vec origin{source.x + offset.x, source.y + offset.y, source.z + offset.z};
+        for (std::size_t i = 0; i + 2 < scene.indices.size(); i += 3)
+            limit = std::min(limit, hit(origin, travel, scene.vertices[scene.indices[i]].position,
+                                        scene.vertices[scene.indices[i + 1]].position,
+                                        scene.vertices[scene.indices[i + 2]].position));
+    }
+    return limit < 1 && length > 0 ? std::max(0.f, limit - .05f / length) : 1;
+}
 } // namespace
 Camera interpolateCamera(const Camera& source, const Camera& target, float weight) noexcept {
     if (weight <= 0)
@@ -47,7 +62,7 @@ Camera interpolateCamera(const Camera& source, const Camera& target, float weigh
     return out;
 }
 Camera dialogueCamera(const Scene& scene, const world_assets::CpuAssets& assets, GeometryView geometry,
-                      const Camera& source, const ActorState& actor, const DialogueCharacter& character) {
+                      const Camera& source, const ActorState& actor, const DialogueFraming& character) {
     const auto& npc = actor.npc;
     const float base = elevation(geometry.surface(npc.cell).floor);
     const auto direction = forward(npc.facing);
@@ -67,22 +82,8 @@ Camera dialogueCamera(const Scene& scene, const world_assets::CpuAssets& assets,
     target.position = {feet.x + direction.x * character.distance, eye,
                        feet.z + direction.y * character.distance};
     const auto travel = sub(target.position, source.position);
-    const float length = std::sqrt(dot(travel, travel));
-    float limit = 1;
-    // Five bounded segment queries protect the eye and near-plane corners. A
-    // conservative cutout test is acceptable here: stop short instead of clipping.
-    const std::array<Vec, 5> offsets{
-        {{0, 0, 0}, {.035f, .035f, 0}, {-.035f, .035f, 0}, {0, -.035f, .035f}, {0, -.035f, -.035f}}};
-    for (const auto offset : offsets) {
-        const Vec origin{source.position.x + offset.x, source.position.y + offset.y,
-                         source.position.z + offset.z};
-        for (std::size_t i = 0; i + 2 < scene.indices.size(); i += 3)
-            limit = std::min(limit, hit(origin, travel, scene.vertices[scene.indices[i]].position,
-                                        scene.vertices[scene.indices[i + 1]].position,
-                                        scene.vertices[scene.indices[i + 2]].position));
-    }
-    if (limit < 1 && length > 0) {
-        limit = std::max(0.f, limit - .05f / length);
+    const float limit = pathLimit(scene, source.position, target.position);
+    if (limit < 1) {
         target.position = {source.position.x + travel.x * limit, source.position.y + travel.y * limit,
                            source.position.z + travel.z * limit};
     }
@@ -92,5 +93,64 @@ Camera dialogueCamera(const Scene& scene, const world_assets::CpuAssets& assets,
     const float depth = std::max(.1f, dot(sub(feet, target.position), target.forward));
     target.horizon = std::clamp((14 + focal() * (top - target.position.y) / depth) / viewHeight, .05f, .6f);
     return target;
+}
+void DialogueCameraController::sample(std::uint64_t clock) noexcept {
+    elapsedMs_ = clock >= startMs_ ? clock - startMs_ : 0;
+    const float t = durationMs_ ? std::min(1.f, float(elapsedMs_) / durationMs_) : 1;
+    current_ = interpolateCamera(from_, to_, t * t * (3 - 2 * t));
+}
+void DialogueCameraController::transition(const Scene& scene, const Camera& destination, unsigned duration,
+                                          std::uint64_t clock) {
+    from_ = current_;
+    to_ = destination;
+    startMs_ = clock;
+    // Both endpoints come from conservative framing. An obstructed connecting
+    // segment is a cut, never a traversal through the obstacle.
+    durationMs_ =
+        pathLimit(scene, from_.position, to_.position) < 1 ? 0 : std::max(dialogueMinimumPanMs, duration);
+    sample(clock);
+}
+std::optional<Camera> DialogueCameraController::update(const Scene& scene,
+                                                       const world_assets::CpuAssets& assets,
+                                                       GeometryView geometry, const Camera& exploration,
+                                                       const ActorState* primary, const ActorState* target,
+                                                       const DialoguePlayer& player) {
+    if (!player.active() || !primary || !player.character()) {
+        active_ = false;
+        return {};
+    }
+    const auto clock = player.clockMs();
+    const auto& character = *player.character();
+    if (!active_) {
+        active_ = true;
+        leaving_ = false;
+        exploration_ = current_ = exploration;
+        primary_ = dialogueCamera(scene, assets, geometry, exploration_, *primary, character);
+        target_ = character.primary;
+        serial_ = 0;
+        transition(scene, primary_, player.transitionMs(), 0);
+    }
+    sample(clock);
+    if (player.leaving()) {
+        if (!leaving_) {
+            leaving_ = true;
+            transition(scene, exploration_, player.transitionMs(), clock);
+        }
+    } else if (player.cuesReady() && serial_ != player.beatSerial()) {
+        serial_ = player.beatSerial();
+        const auto& beat = *player.beat();
+        if (target && (target_ != beat.target || beat.durationMs)) {
+            const auto destination = beat.target == character.primary
+                                         ? primary_
+                                         : dialogueCamera(scene, assets, geometry, exploration_, *target,
+                                                          character.participants[beat.target]);
+            transition(scene, destination, beat.durationMs.value_or(dialogueMinimumPanMs), clock);
+            target_ = beat.target;
+        }
+    } else if (!player.beat() && target_ != character.primary) {
+        transition(scene, primary_, dialogueMinimumPanMs, clock);
+        target_ = character.primary;
+    }
+    return current_;
 }
 } // namespace blobber::world_render

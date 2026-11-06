@@ -16,7 +16,7 @@ namespace {
 using Json = nlohmann::json;
 Json source() {
     return Json::parse(
-        R"({"version":1,"characters":[{"id":"fixture.host","name":"Host","facts":["advice"],"greeting":{"pages":["Welcome back."]},"introduction":{"pages":["Welcome to the inn.","Ask me anything."]},"topics":[{"id":"about","label":"About yourself","kind":"introduction"},{"id":"advice","label":"Advice","responses":[{"pages":["Keep your friends close.","Know when to turn back."],"set_fact":"advice"}]},{"id":"rumours","label":"Rumours","responses":[{"pages":["Ask about advice first."]},{"when_fact":"advice","pages":["Here is another piece of advice."]}]},{"id":"farewell","label":"Farewell","kind":"farewell"}]}]})");
+        R"({"version": 2, "primary": "host", "participants": {"host": {"resident": "fixture.host", "name": "Host"}}, "facts": ["advice"], "greeting": {"beats": [{"speaker": "host", "text": "Welcome back."}]}, "introduction": {"beats": [{"speaker": "host", "text": "Welcome to the inn."}, {"speaker": "host", "text": "Ask me anything."}]}, "topics": [{"id": "about", "label": "About yourself", "kind": "introduction"}, {"id": "advice", "label": "Advice", "responses": [{"set_fact": "advice", "beats": [{"speaker": "host", "text": "Keep your friends close."}, {"speaker": "host", "text": "Know when to turn back."}]}]}, {"id": "rumours", "label": "Rumours", "responses": [{"beats": [{"speaker": "host", "text": "Ask about advice first."}]}, {"when_fact": "advice", "beats": [{"speaker": "host", "text": "Here is another piece of advice."}]}]}, {"id": "farewell", "label": "Farewell", "kind": "farewell"}]})");
 }
 struct Directory {
     std::filesystem::path path =
@@ -27,7 +27,7 @@ struct Directory {
         std::error_code error;
         std::filesystem::remove_all(path, error);
     }
-    void write(const Json& j) { std::ofstream(path / "dialogue.json") << j.dump(2); }
+    void write(const Json& j) { std::ofstream(path / "dialogue.yaml") << j.dump(2); }
 };
 float measure(const char* text, void*) {
     return float(std::strlen(text) * 4);
@@ -46,30 +46,30 @@ void parser() {
     auto c = loadDialogue(d.path);
     check(c.characters[0].eyeHeight == 0, "Omitted eye height selects automatic framing");
     check(c.characters.size() == 1 && c.find(dialogueKey("fixture.host")),
-          "Readable JSON loads stable identity");
+          "Readable YAML loads stable identity");
     auto distanceOnly = j;
-    distanceOnly["characters"][0]["camera"] = {{"distance", .7}};
+    distanceOnly["participants"]["host"]["camera"] = {{"distance", .7}};
     d.write(distanceOnly);
     check(loadDialogue(d.path).characters[0].eyeHeight == 0,
           "Distance adjustment retains automatic eye line");
     for (unsigned fault = 0; fault < 11; ++fault) {
         auto bad = j;
         if (fault == 0)
-            bad["characters"].push_back(bad["characters"][0]);
+            bad["participants"]["duplicate"] = bad["participants"]["host"];
         if (fault == 1)
-            bad["characters"][0]["topics"][1]["responses"][0]["set_fact"] = "missing";
+            bad["topics"][1]["responses"][0]["set_fact"] = "missing";
         if (fault == 2)
-            bad["characters"][0]["greeting"]["pages"][0] = std::string(1025, 'a');
+            bad["greeting"]["beats"][0]["text"] = std::string(1025, 'a');
         if (fault == 3)
-            bad["characters"][0]["topics"][1]["responses"][0]["when_fact"] = "advice";
+            bad["topics"][1]["responses"][0]["when_fact"] = "advice";
         if (fault == 4)
-            bad["characters"][0]["camera"] = {{"distance", 0}};
+            bad["participants"]["host"]["camera"] = {{"distance", 0}};
         if (fault == 5)
-            bad["characters"][0]["greeting"]["pages"][0] = "Curly \u2019";
+            bad["greeting"]["beats"][0]["text"] = "Curly \u2019";
         if (fault == 6)
-            bad["characters"][0]["topics"][0]["kind"] = "trade";
+            bad["topics"][0]["kind"] = "trade";
         if (fault == 7)
-            bad["characters"][0]["greeeting"] = bad["characters"][0]["greeting"];
+            bad["greeeting"] = bad["greeting"];
         if (fault == 8)
             bad["presentation"] = {{"transition_ms", 700.5}};
         if (fault == 9)
@@ -81,13 +81,13 @@ void parser() {
         try {
             loadDialogue(d.path);
         } catch (const std::exception& e) {
-            rejected = std::string(e.what()).find("dialogue.json") != std::string::npos;
+            rejected = std::string(e.what()).find("dialogue.yaml") != std::string::npos;
         }
         check(rejected, "Malformed dialogue rejects with filename");
     }
-    std::ofstream(d.path / "dialogue.json") << "{\"version\":1,\"version\":1}";
-    rejects([&] { loadDialogue(d.path); }, "Duplicate JSON keys reject");
-    c.characters[0].greeting.pages = {"one two three four five six seven eight nine ten eleven twelve"};
+    std::ofstream(d.path / "dialogue.yaml") << "{\"version\":1,\"version\":1}";
+    rejects([&] { loadDialogue(d.path); }, "Duplicate YAML keys reject");
+    c.characters[0].greeting.beats[0].text = "one two three four five six seven eight nine ten eleven twelve";
     prepareDialogueLayout(c, measure, nullptr, 40, 2);
     check(c.characters[0].greeting.pages.size() > 1,
           "Long authored pages paginate with metrics, not clipping");
@@ -97,6 +97,7 @@ void flow() {
     auto second = c.characters[0];
     second.id = dialogueKey("fixture.other");
     second.key = "fixture.other";
+    second.participants[second.primary].id = second.id;
     c.characters.push_back(second);
     DialogueHistory history;
     DialoguePlayer player;
@@ -109,9 +110,13 @@ void flow() {
     player.tick(.15, true);
     player.snapshot(h);
     check(h.text[0] == 0, "Greeting starts after panel fade");
-    player.tick(.1, true);
+    player.tick(.001, true);
     player.snapshot(h);
-    check(std::strlen(h.text.data()) == 4 && h.revealing, "Gradual reveal uses own clock");
+    check(std::strlen(h.text.data()) == 1 && player.cuesReady(),
+          "First visible character and speech cues start together after fade");
+    player.tick(.099, true);
+    player.snapshot(h);
+    check(std::strlen(h.text.data()) == 5 && h.revealing, "Gradual reveal uses own clock");
     const auto clock = player.clockMs();
     player.tick(1, false);
     check(player.clockMs() == clock, "Focus loss freezes dialogue presentation");
@@ -120,7 +125,7 @@ void flow() {
     check(!h.revealing && h.page == 1, "One press reveals but does not advance");
     player.advance();
     player.snapshot(h);
-    check(h.revealing && h.page == 2 && h.text[0] == 0, "Next press advances exactly one page");
+    check(h.revealing && h.page == 2 && h.text[0] != 0, "Next press advances exactly one page");
     player.choose(1);
     player.advance();
     player.choose(2);
@@ -150,6 +155,9 @@ void flow() {
     player.close();
     check(player.start(c.characters[0].id), "Return opens");
     player.advance();
+    player.snapshot(h);
+    check(h.text[0] == 0 && !player.cuesReady(), "Early reveal waits for panel fade and its sound cue");
+    player.tick(.15, true);
     player.snapshot(h);
     check(!h.introduction && std::string_view(h.text.data()) == "Welcome back.",
           "Return uses short greeting");
@@ -242,12 +250,15 @@ void integration() {
           "Conversation rejects direct combat submission");
     check(game.saveSafety() && game.travelSafety(), "Active conversation rejects saving/travel");
     controls.tickDialogue(.3, true);
-    check(game.actors().actor(game.actors().id(0))->npc.animation == NpcAnimation::Talk,
-          "Revealing greeting drives Talk");
-    animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs());
+    check(controls.dialogueAnimation().clip == NpcAnimation::Talk &&
+              game.actors().actor(game.actors().id(0))->npc.animation == NpcAnimation::Idle,
+          "Revealing drives a presentation-only Talk override");
+    animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs(),
+                     &controls.dialogueAnimation());
     const auto before = animator.snapshot().revision;
     controls.tickDialogue(.13, true);
-    animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs());
+    animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs(),
+                     &controls.dialogueAnimation());
     check(animator.snapshot().revision != before,
           "Speaker animates on presentation clock while game time frozen");
     UiInput space;
@@ -269,7 +280,8 @@ void integration() {
     const auto mid = world_render::interpolateCamera(base, close, .5f);
     check(mid.position.z < base.position.z && mid.position.z > close.position.z,
           "Camera interpolates toward resident");
-    animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs());
+    animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs(),
+                     &controls.dialogueAnimation());
     input.cameraOverride = mid;
     input.cameraMoving = true;
     check(visibility.update(input, false) && !visibility.picking(),
@@ -282,7 +294,8 @@ void integration() {
     watching = true;
     for (unsigned i = 0; i < 10; ++i) {
         controls.tickDialogue(.01, true);
-        animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs());
+        animator.setTime(time, nullptr, controls.dialogueSpeaker(), controls.dialoguePlayer().clockMs(),
+                         &controls.dialogueAnimation());
         input.cameraOverride = world_render::interpolateCamera(base, close, float(i) / 10);
         visibility.update(input);
     }
@@ -322,6 +335,7 @@ void integration() {
     auto character = c.characters[0];
     character.id = dialogueKey("fixture.other");
     character.key = "fixture.other";
+    character.participants[character.primary].id = character.id;
     character.eyeHeight = .35f;
     character.distance = .75f;
     c.characters.push_back(character);
@@ -368,6 +382,325 @@ void integration() {
               otherGame.actors().snapshot().revision == revision && !otherGame.saveSafety(),
           "Visible guard without catalog entry stays inert and save-safe");
 }
+void multiNpc() {
+    Directory directory;
+    auto sourceFile = source();
+    sourceFile["participants"]["guard"] = {
+        {"resident", "fixture.guard"}, {"name", "Guard"}, {"text_color", "#9FD6D3"}};
+    auto& beats = sourceFile["topics"][1]["responses"][0]["beats"];
+    beats = Json::array({{{"speaker", "host"}, {"text", "A report."}, {"animation", "talk"}},
+                         {{"speaker", "guard"},
+                          {"text", "One two three four five six seven eight nine ten eleven twelve."},
+                          {"animation", "laugh"},
+                          {"audio", "laugh.wav"}},
+                         {{"speaker", "host"}, {"text", "Enough!"}, {"animation", "talk"}}});
+    directory.write(sourceFile);
+    auto c = loadDialogue(directory.path);
+    prepareDialogueLayout(c, measure, nullptr, 40, 2);
+    auto& character = c.characters[0];
+    const auto& response = character.topics[1].responses[0];
+    check(response.pages.size() > response.beats.size(), "Long beat wraps into multiple display pages");
+    check(c.audioFiles.size() == 1, "File reference resolved once during preparation even if missing");
+    test::VisibilityFixture fixture(1, 0, false, true);
+    world_assets::CpuAssets assets(fixture.publication());
+    const auto lease = assets.acquire(world_assets::allAssets(assets.publication));
+    const auto map = test::worldRoom(9, 9);
+    const auto rules = spellCatalog();
+    const Player pose{{4, 5}, Heading::North};
+    auto guard = resident();
+    guard.cell = {3, 3};
+    guard.residentId = dialogueKey("fixture.guard");
+    const NpcWorld world(map, pose.cell, {"goblin"}, {resident(), guard});
+    GameSession game(map, rules, world, 5, pose, false, fixture.timings);
+    const auto scene = world_render::prepare(game.geometry(), {}, {}, {}, &assets);
+    NpcAnimator animator(game.actors(), fixture.timings);
+    world_render::VisibilityPipeline visibility(scene, assets);
+    visibility.update({game.geometry(), game.movement(), &game.actors(), &animator.snapshot()});
+    CommandController controls(game, fixture.timings);
+    DialogueHistory history;
+    controls.bindDialogue(&c, &history);
+    controls.residentVisibility(visibility.picking()->residents());
+    check(controls.startDialogue(game.actors().id(0)), "Host admits multi-NPC conversation");
+    world_render::DialogueCameraController camera;
+    const auto exploration = world_render::camera(game.movement(), game.geometry());
+    const auto sample = [&] {
+        const auto& player = controls.dialoguePlayer();
+        const auto primary = controls.dialogueActor(character.primary);
+        const auto target = controls.dialogueActor(player.beat() ? player.beat()->target : character.primary);
+        animator.setTime(game.timeMs(), nullptr, controls.dialogueSpeaker(), player.clockMs(),
+                         &controls.dialogueAnimation());
+        return camera.update(scene, assets, game.geometry(), exploration,
+                             primary ? game.actors().actor(*primary) : nullptr,
+                             target ? game.actors().actor(*target) : nullptr, player);
+    };
+    check(world_render::sameCamera(*sample(), exploration), "Entry starts at exact exploration camera");
+    controls.tickDialogue(.7, true);
+    const auto primaryCamera = *sample();
+    check(!camera.moving(), "700 ms entry settles");
+    UiInput topic;
+    topic.pressed[unsigned(UiKey::Two)] = true;
+    UiInput next;
+    next.pressed[unsigned(UiKey::DialogueAdvance)] = true;
+    routeHudInput(controls, topic);
+    routeHudInput(controls, next); // reveal host
+    check(controls.dialogueAnimation().clip == NpcAnimation::Idle,
+          "Click-to-complete ends explicit Talk before advancing the beat");
+    routeHudInput(controls, next); // guard
+    sample();
+    const auto serial = controls.dialoguePlayer().beatSerial();
+    check(std::string_view(controls.snapshot().dialogue.name) == "Guard" &&
+              controls.snapshot().dialogue.textColor == 0x9fd6d3ff,
+          "Beat changes speaker label and color while retaining host topics");
+    check(controls.dialogueAnimation().clip == NpcAnimation::Laugh &&
+              animator.snapshot().frames[0].clip == NpcAnimation::Idle &&
+              animator.snapshot().frames[1].clip == NpcAnimation::Laugh,
+          "Guard reaction begins and outgoing speaker returns to idle");
+    controls.tickDialogue(.1, true);
+    const auto midway = *sample();
+    check(camera.moving() && !world_render::sameCamera(midway, primaryCamera),
+          "Whip-pan is moving at 100 ms");
+    controls.tickDialogue(.1, true);
+    const auto guardCamera = *sample();
+    check(!camera.moving() && !world_render::sameCamera(guardCamera, primaryCamera),
+          "Whip-pan settles at 200 ms");
+    const auto frozenClock = controls.dialoguePlayer().clockMs();
+    controls.tickDialogue(.5, false);
+    check(controls.dialoguePlayer().clockMs() == frozenClock &&
+              world_render::sameCamera(*sample(), guardCamera),
+          "Focus loss freezes the dialogue camera and reactions");
+    controls.tickDialogue(1, true);
+    sample();
+    check(!controls.dialoguePlayer().revealing() && animator.snapshot().frames[1].clip == NpcAnimation::Idle,
+          "Natural reveal completion ends explicit Laugh while its text stays displayed");
+    while (controls.dialoguePlayer().beat()->speaker != character.primary) {
+        routeHudInput(controls, next);
+        if (controls.dialoguePlayer().beat()->speaker != character.primary) {
+            sample();
+            const auto expected =
+                controls.dialoguePlayer().revealing() ? NpcAnimation::Laugh : NpcAnimation::Idle;
+            check(controls.dialoguePlayer().beatSerial() == serial &&
+                      controls.dialogueAnimation().clip == expected &&
+                      animator.snapshot().frames[1].clip == expected,
+                  "Wrapped pages reveal with Laugh, pause in Idle and keep cue identity");
+        }
+    }
+    sample();
+    check(animator.snapshot().frames[1].clip == NpcAnimation::Idle &&
+              controls.dialoguePlayer().beatSerial() != serial,
+          "Next authored beat resets guard and advances cue identity");
+    controls.tickDialogue(.1, true);
+    sample();
+    check(camera.moving(), "Return is still moving at 100 ms");
+    controls.tickDialogue(.1, true);
+    check(world_render::sameCamera(*sample(), primaryCamera) && !camera.moving(),
+          "Return restores primary at 200 ms");
+    check(!controls.dialoguePlayer().revealing() && controls.dialogueAnimation().clip == NpcAnimation::Idle,
+          "Natural reveal completion ends explicit Talk on the final beat");
+    routeHudInput(controls, next);
+    check(history.get(character.id)->knows(dialogueKey("advice")) && !history.get(guard.residentId),
+          "Final beat awards only host history");
+    check(game.actors().snapshot().actors[0].npc.animation == NpcAnimation::Idle &&
+              game.actors().snapshot().actors[1].npc.animation == NpcAnimation::Idle && game.timeMs() == 0,
+          "Presentation never mutates authoritative animation or simulation time");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 10; ++i) {
+        routeHudInput(controls, topic);
+        routeHudInput(controls, next);
+        routeHudInput(controls, next);
+        controls.tickDialogue(.02, true);
+        sample();
+    }
+    watching = false;
+    check(!allocations,
+          "Warmed beat changes, participant binding, camera and animation allocate no C++ memory");
+    // Retarget an unfinished whip-pan and then leave from an unfinished return.
+    const auto beforeRetarget = *sample();
+    routeHudInput(controls, topic);
+    check(world_render::sameCamera(*sample(), beforeRetarget), "Retarget begins at the displayed camera");
+    controls.tickDialogue(.04, true);
+    sample();
+    UiInput cancel;
+    cancel.pressed[unsigned(UiKey::Cancel)] = true;
+    routeHudInput(controls, cancel);
+    sample();
+    check(!controls.dialogueAnimation().actor, "Exit immediately clears all reaction overrides");
+    controls.tickDialogue(.35, true);
+    sample();
+    controls.tickDialogue(.35, true);
+    check(!sample() && !game.inConversation(), "Exit releases camera and session state");
+    // Short authored pans are clamped; longer pans and independent targets remain available.
+    controls.residentVisibility(visibility.picking()->residents());
+    check(controls.startDialogue(game.actors().id(0)), "Reopen for explicit camera cues");
+    sample();
+    controls.tickDialogue(.7, true);
+    sample();
+    auto& scripted = character.topics[1].responses[0].beats;
+    scripted[1].durationMs = 0;
+    routeHudInput(controls, topic);
+    routeHudInput(controls, next);
+    routeHudInput(controls, next);
+    check(world_render::sameCamera(*sample(), primaryCamera) && camera.moving(),
+          "Zero authored duration starts a pan instead of a cut");
+    controls.tickDialogue(.1, true);
+    sample();
+    check(camera.moving(), "Short authored duration cannot finish before 200 ms");
+    controls.tickDialogue(.1, true);
+    check(world_render::sameCamera(*sample(), guardCamera) && !camera.moving(),
+          "Short authored duration reaches its target at the 200 ms minimum");
+    routeHudInput(controls, topic);
+    sample();
+    controls.tickDialogue(.2, true);
+    sample();
+    scripted[1].durationMs = 400;
+    routeHudInput(controls, next);
+    routeHudInput(controls, next);
+    sample();
+    controls.tickDialogue(.2, true);
+    sample();
+    check(camera.moving(), "Authored slower pan is not shortened to the minimum");
+    controls.tickDialogue(.2, true);
+    check(world_render::sameCamera(*sample(), guardCamera) && !camera.moving(),
+          "400 ms authored pan settles on time");
+    routeHudInput(controls, topic);
+    sample();
+    controls.tickDialogue(.2, true);
+    sample();
+    scripted[1].target = character.primary;
+    routeHudInput(controls, next);
+    routeHudInput(controls, next);
+    check(world_render::sameCamera(*sample(), primaryCamera) &&
+              std::string_view(controls.snapshot().dialogue.name) == "Guard",
+          "Camera can hold host while a different participant speaks");
+    scripted[1].target = scripted[1].speaker;
+    scripted[1].durationMs.reset();
+    controls.finishDialogue();
+    sample();
+    // A thin obstacle intersects close-up-to-close-up travel, but not either
+    // exploration-to-close-up segment. Safe endpoints remain valid; motion cuts.
+    auto obstructed = scene;
+    const auto vi = unsigned(obstructed.vertices.size());
+    const float x = (primaryCamera.position.x + guardCamera.position.x) / 2;
+    const float z = primaryCamera.position.z;
+    obstructed.vertices.push_back({{x, 0, z - .15f}, {}, 0, 0, 1});
+    obstructed.vertices.push_back({{x, 2, z - .15f}, {}, 0, 0, 1});
+    obstructed.vertices.push_back({{x, 2, z + .15f}, {}, 0, 0, 1});
+    obstructed.vertices.push_back({{x, 0, z + .15f}, {}, 0, 0, 1});
+    obstructed.indices.insert(obstructed.indices.end(), {vi, vi + 1, vi + 2, vi, vi + 2, vi + 3});
+    world_render::DialogueCameraController blockedCamera;
+    controls.residentVisibility(visibility.picking()->residents());
+    check(controls.startDialogue(game.actors().id(0)), "Reopen obstruction fixture");
+    const auto blockedSample = [&] {
+        const auto& player = controls.dialoguePlayer();
+        const auto target = controls.dialogueActor(player.beat()->target);
+        return blockedCamera.update(obstructed, assets, game.geometry(), exploration,
+                                    game.actors().actor(game.actors().id(0)), game.actors().actor(*target),
+                                    player);
+    };
+    blockedSample();
+    controls.tickDialogue(.7, true);
+    blockedSample();
+    routeHudInput(controls, topic);
+    routeHudInput(controls, next);
+    routeHudInput(controls, next);
+    check(world_render::sameCamera(*blockedSample(), guardCamera) && !blockedCamera.moving(),
+          "Obstructed translation cuts between safe endpoints instead of crossing geometry");
+    controls.finishDialogue();
+    sample();
+    // An unavailable required participant rejects before replacing current text/history.
+    character.participants[response.beats[1].speaker].id = dialogueKey("fixture.absent");
+    controls.residentVisibility(visibility.picking()->residents());
+    check(controls.startDialogue(game.actors().id(0)), "Primary-only greeting survives missing guard");
+    const auto oldSerial = controls.dialoguePlayer().beatSerial();
+    routeHudInput(controls, topic);
+    check(controls.dialoguePlayer().beatSerial() == oldSerial, "Unavailable response rejects atomically");
+    character.participants[response.beats[1].speaker].id = guard.residentId;
+    routeHudInput(controls, topic);
+    character.participants[response.beats[1].speaker].id = dialogueKey("fixture.absent");
+    controls.tickDialogue(.01, true);
+    check(!controls.dialoguePlayer().active() && !game.inConversation(),
+          "Invalidated required participant tears down safely");
+    character.participants[response.beats[1].speaker].id = guard.residentId;
+    auto absentClips = fixture.timings;
+    absentClips[0][unsigned(NpcAnimation::Laugh)] = {};
+    absentClips[0][unsigned(NpcAnimation::Talk)] = {};
+    CommandController limited(game, absentClips);
+    limited.bindDialogue(&c, &history);
+    limited.residentVisibility(visibility.picking()->residents());
+    check(limited.startDialogue(game.actors().id(0)), "Missing optional Talk still admits greeting");
+    limited.tickDialogue(.3, true);
+    NpcAnimator fallback(game.actors(), absentClips);
+    fallback.setTime(0, nullptr, limited.dialogueSpeaker(), limited.dialoguePlayer().clockMs(),
+                     &limited.dialogueAnimation());
+    check(fallback.snapshot().frames[0].clip == NpcAnimation::Idle, "Missing default Talk uses natural Idle");
+    const auto beforeMissingClip = limited.dialoguePlayer().beatSerial();
+    routeHudInput(limited, topic);
+    check(limited.dialoguePlayer().beatSerial() == beforeMissingClip,
+          "Explicit unavailable Laugh rejects the response without changing the greeting");
+    limited.finishDialogue();
+}
+void yamlBeats() {
+    Directory d;
+    auto good = source();
+    for (unsigned fault = 0; fault < 9; ++fault) {
+        auto bad = good;
+        auto& beat = bad["greeting"]["beats"][0];
+        if (fault == 0)
+            beat["speaker"] = "nobody";
+        if (fault == 1)
+            beat["camera"] = {{"target", "nobody"}};
+        if (fault == 2)
+            beat["camera"] = {{"duration_ms", -1}};
+        if (fault == 3)
+            beat["animation"] = "angry";
+        if (fault == 4)
+            beat["audio"] = "../outside.wav";
+        if (fault == 5)
+            bad["participants"]["host"]["text_color"] = "#12345X";
+        if (fault == 6)
+            bad["greeting"]["beats"] = Json::array();
+        if (fault == 7)
+            for (unsigned i = 0; i < 32; ++i)
+                bad["greeting"]["beats"].push_back(good["greeting"]["beats"][0]);
+        if (fault == 8)
+            beat["camera"] = {{"duration_ms", 1.5}};
+        d.write(bad);
+        rejects([&] { loadDialogue(d.path); }, "Invalid beat reference/capacity/path rejects during loading");
+    }
+    auto valid = good;
+    valid["greeting"]["beats"][0]["camera"] = {{"duration_ms", 0}};
+    d.write(valid);
+    const auto c = loadDialogue(d.path);
+    check(c.characters[0].greeting.beats[0].durationMs == 0,
+          "Short duration remains author data; playback enforces the minimum");
+    valid["greeting"]["beats"][0]["audio"] = "dialogue/voice.wav";
+    d.write(valid);
+    const auto sharedAudio = d.path / "shared-audio";
+    check(loadDialogue(d.path, sharedAudio).audioFiles[0] ==
+              std::filesystem::weakly_canonical(sharedAudio / "dialogue/voice.wav").string(),
+          "Script override resolves audio against the explicit shared audio root");
+    check(loadDialogue(d.path).audioFiles[0] ==
+              std::filesystem::weakly_canonical(d.path.parent_path() / "audio/dialogue/voice.wav").string(),
+          "Default dialogue loader uses sibling assets/audio directory");
+    // A literal YAML file proves multiline speech and comments, independently of JSON-as-YAML fixtures.
+    std::ofstream(d.path / "dialogue.yaml") << R"(version: 2
+primary: host
+participants:
+  host: {resident: fixture.host, name: Host}
+greeting:
+  beats:
+    - speaker: host
+      text: |
+        Hello there.
+        A second line.
+introduction:
+  beats: [{speaker: host, text: Welcome.}] # content-author comment
+topics:
+  - {id: farewell, label: Farewell, kind: farewell}
+)";
+    check(loadDialogue(d.path).characters[0].greeting.beats[0].text == "Hello there.\nA second line.\n",
+          "YAML literal blocks retain newlines");
+}
 void inputEdges() {
     auto c = catalog();
     DialogueHistory history;
@@ -404,6 +737,8 @@ int main() {
         flow();
         integration();
         inputEdges();
+        yamlBeats();
+        multiNpc();
         std::cout
             << "Dialogue content, history, interaction, animation, camera and allocation checks passed\n";
         return 0;

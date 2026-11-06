@@ -1,5 +1,7 @@
 # Sanctuary mayor and guards
 
+Dialogue follow-up (2026-11-06): [multi-NPC event beats](dialogue_design.md#multi-npc-event-beats) now implement scripted guard interruptions and Talk/Laugh reactions using these existing assets. The historical deferrals below describe the original resident delivery. Placement/save compatibility and approved artwork are unchanged.
+
 Status: implemented and mechanically verified; the user approved the runtime
 appearance (2026-11-06), requesting that guards keep idling during dialogue.
 

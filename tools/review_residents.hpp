@@ -38,7 +38,7 @@ inline void reviewResidents(const std::filesystem::path& root, const std::filesy
     commands.bindDialogue(&dialogue, &run.dialogue());
     auto shot = [&](const std::string& name, std::optional<world_render::Camera> camera = {}) {
         animation.setTime(game.timeMs(), &game.effects(), commands.dialogueSpeaker(),
-                          commands.dialoguePlayer().clockMs());
+                          commands.dialoguePlayer().clockMs(), &commands.dialogueAnimation());
         view->update(game, animation.snapshot(), {}, camera);
         view->activate();
         commands.residentVisibility(view->picking()->residents());
@@ -78,7 +78,7 @@ inline void reviewResidents(const std::filesystem::path& root, const std::filesy
             commands.tickDialogue(.02, true);
             game.update(.02, false);
             animation.setTime(game.timeMs(), &game.effects(), commands.dialogueSpeaker(),
-                              commands.dialoguePlayer().clockMs());
+                              commands.dialoguePlayer().clockMs(), &commands.dialogueAnimation());
             view->update(game, animation.snapshot(), {}, target);
             for (unsigned i = 1; i < 3; ++i) {
                 const auto& frame = animation.snapshot().frames[i];

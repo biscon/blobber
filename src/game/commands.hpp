@@ -227,6 +227,8 @@ class CommandController {
     void routeDialogue(const UiInput&) noexcept;
     void finishDialogue() noexcept;
     std::optional<ActorId> dialogueSpeaker() const noexcept { return speaker_; }
+    const NpcDialogueOverride& dialogueAnimation() const noexcept { return dialogueAnimation_; }
+    std::optional<ActorId> dialogueActor(unsigned participant) const noexcept;
     const DialoguePlayer& dialoguePlayer() const noexcept { return dialogue_; }
     CommandController(GameSession&&) = delete;
     void openInventory(std::optional<rules::CharacterId> = {},
@@ -366,6 +368,9 @@ class CommandController {
 
   private:
     void syncDialogueSpeech() noexcept;
+    bool admitDialogueResponse(const DialogueCharacter&, const DialogueResponse&) const noexcept;
+    std::array<NpcTimings, NpcWorld::maxTypes> dialogueTimings_{};
+    NpcDialogueOverride dialogueAnimation_;
     const DialogueCatalog* dialogueCatalog_ = nullptr;
     DialoguePlayer dialogue_;
     std::optional<ActorId> speaker_;

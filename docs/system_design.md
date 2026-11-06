@@ -1,5 +1,7 @@
 # System design
 
+[Multi-NPC dialogue](dialogue_design.md#multi-npc-event-beats) **implemented and mechanically verified; timing/listening review pending (2026-11-06)**: per-host YAML timelines, independently authored speaker/camera/reaction/audio beats, 200 ms minimum/default pans; Talk/Laugh end with text reveal. Reaction files live under `assets/audio/dialogue`. The reveal/pan/audio-location correction passes focused CPU and hidden production checks; interactive review remains pending. Existing campaign history and resident placement remain compatible. [Six review captures](screenshots/multi-npc-dialogue/README.md).
+
 [Sanctuary mayor and guards](sanctuary_residents_design.md): implemented and
 mechanically verified; runtime appearance approved. The dialogue idle correction
 passes focused CPU and hidden render checks. Stationary residents, mayor
@@ -20,7 +22,7 @@ for future work. These concept folders follow the innkeeper mockup format;
 production mayor/guard assets live separately under `assets/npcs/`.
 
 [Friendly NPC dialogue](dialogue_design.md) **implemented and mechanically verified;
-awaiting runtime visual/interactive review (2026-11-06)**: editable JSON,
+awaiting runtime visual/interactive review (2026-11-06)**: the original JSON delivery is now superseded by YAML event beats above;
 per-character introduction/fact history, gradual text/Talk, fixed-viewport overlay
 and shared 700 ms conversation camera, based on the approved mockup.
 Eleven focused Release CPU suites, the extended campaign save check and hidden

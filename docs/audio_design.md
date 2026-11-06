@@ -103,6 +103,19 @@ The existing source fallback has raudio enabled; an installed 6.2 package must p
 an audio API compile/link probe before its imported target is promoted for use.
 Neither engine raylib patch is imported.
 
+### Dialogue beat reactions
+
+Implemented and mechanically verified (2026-11-06). [Multi-NPC dialogue](dialogue_design.md#multi-npc-event-beats)
+adds preloaded reaction files under the shared audio root, one active dialogue voice, exactly-once
+beat dispatch and its own pause domain. This voice uses Effects gain and continues
+while gameplay is frozen; focus loss and other modals pause it. Beat replacement,
+exit and world replacement stop it. Up to 64 source/alias pairs share the existing
+512-source/64 MiB PCM ceilings; the one dialogue voice is separate from the 64
+ordinary slots. `prepareDialogue`/`clearDialogue` are explicit resource boundaries.
+Mock runtime tests cover synchronization/dedup, failure paths, pause, ownership and
+allocation invariants. Three original synthetic placeholders and their Csound
+source are under `assets/audio/dialogue/`; listening approval remains pending.
+
 ### Dialogue ambience
 
 Implemented and mechanically verified (2026-11-06): `AudioRuntime::update` accepts an optional

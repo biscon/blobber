@@ -35,7 +35,7 @@ struct PlayView {
     std::unique_ptr<GameSession> ownedSession;
     GameSession& session;
     WorldRenderer& renderer;
-    std::optional<world_render::Camera> cameraStart, cameraEnd;
+    world_render::DialogueCameraController dialogueCamera;
     NpcAnimator animator;
     GameView frames;
     CommandController commands;
@@ -63,26 +63,22 @@ struct PlayView {
     }
     bool refresh(bool debug = false, bool focused = true) {
         animator.setTime(session.timeMs(), &session.effects(), commands.dialogueSpeaker(),
-                         commands.dialoguePlayer().clockMs());
-        std::optional<world_render::Camera> override;
+                         commands.dialoguePlayer().clockMs(), &commands.dialogueAnimation());
         const auto& player = commands.dialoguePlayer();
-        if (player.active()) {
-            if (!cameraStart && renderer.scene() && commands.dialogueSpeaker()) {
-                const auto* actor = session.actors().actor(*commands.dialogueSpeaker());
-                cameraStart = world_render::camera(session.movement(), session.geometry());
-                cameraEnd =
-                    world_render::dialogueCamera(*renderer.scene(), renderer.assets(), session.geometry(),
-                                                 *cameraStart, *actor, *player.character());
-            }
-            if (cameraStart && cameraEnd)
-                override = world_render::interpolateCamera(*cameraStart, *cameraEnd, player.weight());
-        } else {
-            cameraStart.reset();
-            cameraEnd.reset();
-        }
+        const auto* character = player.character();
+        const auto primaryId =
+            character ? commands.dialogueActor(character->primary) : std::optional<ActorId>{};
+        const auto targetId = player.beat() ? commands.dialogueActor(player.beat()->target) : primaryId;
+        const auto override =
+            renderer.scene()
+                ? dialogueCamera.update(*renderer.scene(), renderer.assets(), session.geometry(),
+                                        world_render::camera(session.movement(), session.geometry()),
+                                        primaryId ? session.actors().actor(*primaryId) : nullptr,
+                                        targetId ? session.actors().actor(*targetId) : nullptr, player)
+                : std::optional<world_render::Camera>{};
         const auto area = debug ? SpellArea{} : commands.floorPreview();
-        const bool changed = frames.update(session, animator.snapshot(), area, override,
-                                           player.active() && (player.leaving() || player.weight() < 1));
+        const bool changed =
+            frames.update(session, animator.snapshot(), area, override, dialogueCamera.moving());
         const auto* picking = frames.picking();
         commands.residentVisibility(picking ? picking->residents() : TargetSnapshot{});
         commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
@@ -91,7 +87,7 @@ struct PlayView {
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
             return frames.update(session, animator.snapshot(), currentArea, override,
-                                 player.active() && (player.leaving() || player.weight() < 1)) ||
+                                 dialogueCamera.moving()) ||
                    changed;
         return changed;
     }
@@ -102,7 +98,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         WorldRenderer& world, const RecoveryLevel& recovery,
                         const rules::PresetParty* starting, const GameplayLaunch* launch) {
     auto dialogueCatalog = prepareCpu([&] {
-        return loadDialogue(options.dialogueDir.empty() ? options.assets / "dialogue" : options.dialogueDir);
+        return loadDialogue(options.dialogueDir.empty() ? options.assets / "dialogue" : options.dialogueDir,
+                            options.assets / "audio");
     });
     prepareDialogueLayout(
         dialogueCatalog,
@@ -110,11 +107,14 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             return static_cast<const UiFonts*>(context)->width(text, UiTextStyle::Label);
         },
         const_cast<UiFonts*>(&presenter.fonts()));
+    if (presenter.audio)
+        presenter.audio->prepareDialogue(dialogueCatalog.audioFiles);
     DialogueHistory standaloneDialogue;
     struct AudioLeave {
         AudioRuntime* audio;
         ~AudioLeave() {
             if (audio) {
+                audio->clearDialogue();
                 audio->persistMusic();
                 audio->detach();
                 audio->worldGain = 1;
@@ -397,7 +397,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     ambiencePaused = campWasOpen || debug || hud.modal(false);
                 presenter.audio->update(&view.session, paused || view.commands.snapshot().modal(),
                                         sample.ui.focused, dt, view.commands.snapshot().menuOpen || debug,
-                                        !view.commands.snapshot().modal() && !debug, ambiencePaused);
+                                        !view.commands.snapshot().modal() && !debug, ambiencePaused,
+                                        campWasOpen || debug || hud.modal(false));
+                const auto& dialogue = view.commands.dialoguePlayer();
+                presenter.audio->presentDialogue(dialogue.beatSerial(),
+                                                 dialogue.beat() ? dialogue.beat()->audio : 64,
+                                                 dialogue.cuesReady());
             }
             if (view.commands.saveMenu().settingsRequested) {
                 view.commands.saveMenu().settingsRequested = false;

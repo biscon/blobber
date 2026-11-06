@@ -2,6 +2,7 @@
 #include "assets/rules_loader.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
+#include "review_dialogue.hpp"
 #include "review_residents.hpp"
 #include "sanctuary_city_layout.hpp"
 #include "world/sanctuary_city.hpp"
@@ -18,6 +19,10 @@ int main(int argc, char** argv) try {
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
+    if (selected == "dialogue-beats") {
+        reviewDialogueBeats(root, output);
+        return 0;
+    }
     if (selected == "residents" || selected == "residents-idle") {
         reviewResidents(root, output, selected == "residents-idle");
         return 0;

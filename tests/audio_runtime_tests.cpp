@@ -196,10 +196,13 @@ int main() {
     AudioRuntime runtime;
     runtime.prepare(dir, true, dir / "settings.json");
     check(!runtime.ready(), "Disabled never opens device");
+    runtime.prepareDialogue({(dir / "audio/sample.wav").string()});
+    check(fake::plays == 0, "Disabled dialogue preparation opens no device or voice");
     check(!fake::processor, "Disabled mode has no processor");
     fake::fail = true;
     runtime.prepare(dir, false, dir / "settings.json");
     check(!runtime.ready(), "Missing device nonfatal");
+    runtime.prepareDialogue({(dir / "audio/sample.wav").string()});
     check(!fake::processor, "Missing device has no processor");
     fake::fail = false;
     runtime.prepare(dir, false, dir / "settings.json");
@@ -280,6 +283,47 @@ int main() {
               fake::musicBuffers[ambient].volume == ambientVolume && fake::musicPlays == ambientStarts &&
               !fake::buffers[effect].paused,
           "Dialogue exit continues ambience and resumes gameplay effects without a restart");
+    runtime.prepareDialogue({(dir / "audio/sample.wav").string(), (dir / "missing.wav").string()});
+    runtime.update(&session, true, true, .01f, false, false, false, false);
+    const auto beforeDialogue = fake::plays;
+    runtime.presentDialogue(1, 0, true);
+    const auto reaction = fake::lastPlayed;
+    check(fake::plays == beforeDialogue + 1 && !fake::buffers[reaction].paused,
+          "Dialogue sound starts while gameplay effects stay paused");
+    runtime.presentDialogue(1, 0, true);
+    check(fake::plays == beforeDialogue + 1, "Repeated beat snapshot never replays audio");
+    runtime.update(&session, true, false, .01f, false, false, false, false);
+    check(fake::buffers[reaction].paused, "Focus loss pauses current dialogue voice");
+    runtime.update(&session, true, true, .01f, false, false, false, false);
+    check(!fake::buffers[reaction].paused && fake::plays == beforeDialogue + 1,
+          "Refocus resumes reaction without restarting it");
+    runtime.update(&session, true, true, .01f);
+    check(fake::buffers[reaction].paused, "Other modal callers suspend dialogue sound by default");
+    runtime.update(&session, true, true, .01f, false, false, false, false);
+    runtime.presentDialogue(2, 64, true);
+    check(!fake::buffers[reaction].playing && fake::plays == beforeDialogue + 1,
+          "Silent next beat stops the outgoing reaction");
+    runtime.presentDialogue(3, 1, true);
+    check(fake::plays == beforeDialogue + 1, "Missing reaction sample degrades to silence");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 4; i < 104; ++i) {
+        runtime.update(&session, true, true, .01f, false, false, false, false);
+        runtime.presentDialogue(i, 0, true);
+        runtime.presentDialogue(i, 0, true);
+    }
+    watching = false;
+    check(!allocations && fake::plays == beforeDialogue + 101,
+          "Exactly-once beat audio and pause servicing allocate no C++ memory");
+    const auto lastReaction = fake::lastPlayed;
+    runtime.presentDialogue(104, 64, false);
+    check(!fake::buffers[lastReaction].playing, "Dialogue exit stops voice immediately");
+    runtime.presentDialogue(105, 0, true);
+    runtime.detach();
+    check(!fake::buffers[lastReaction].playing, "World detach stops dialogue voice");
+    runtime.clearDialogue();
+    check(!fake::buffers[lastReaction].live, "Dialogue aliases and sources release at preparation boundary");
+    runtime.update(&session, false, true, .01f);
     session.audioEvents().emit({"test"});
     const auto old = fake::plays;
     runtime.update(&session, false, true, .01f);
@@ -305,6 +349,11 @@ int main() {
     fake::aliasFail = true;
     runtime.prepare(dir, false, dir / "settings.json");
     check(runtime.play("test").slot == 64, "Alias failure degrades safely");
+    runtime.prepareDialogue({(dir / "audio/sample.wav").string()});
+    runtime.update(nullptr, true, true, .01f, true, false, {}, false);
+    const auto aliasFailurePlays = fake::plays;
+    runtime.presentDialogue(1, 0, true);
+    check(fake::plays == aliasFailurePlays, "Dialogue alias failure degrades safely and frees its source");
     runtime.shutdown();
     fake::aliasFail = false;
     std::filesystem::create_directories(dir / "audio/music");

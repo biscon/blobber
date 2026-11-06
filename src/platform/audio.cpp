@@ -104,6 +104,7 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
             p.samples[j] = n;
         }
     }
+    residentBytes_ = bytes;
     for (unsigned i = 0; i < streams_.size(); ++i) {
         auto& s = streams_[i];
         s.cue = cue(i < 2 ? "ambience" : i < 6 ? "web.loop" : "spiritual.loop");
@@ -243,6 +244,8 @@ audio::Handle AudioRuntime::play(const char* id, float x, float z, bool position
     return {slot, v.generation, owner_};
 }
 void AudioRuntime::detach() noexcept {
+    stopDialogue();
+    dialogueSerial_ = 0;
     music_.detach();
     for (unsigned i = 0; i < 64; ++i)
         if (voices_[i].active && !voices_[i].interface)
@@ -258,7 +261,7 @@ void AudioRuntime::detach() noexcept {
     world_ = 0;
 }
 void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt, bool musicPaused,
-                          bool bannerVisible, std::optional<bool> ambiencePaused) {
+                          bool bannerVisible, std::optional<bool> ambiencePaused, bool dialoguePaused) {
     dt = std::isfinite(dt) ? std::clamp(dt, 0.f, .1f) : 0;
     const auto world = game ? game->actors().snapshot().world : 0;
     if (world != world_) {
@@ -281,6 +284,19 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
     worldPaused_ = paused;
     ambiencePaused_ = ambiencePaused.value_or(paused);
     focused_ = focused;
+    dialoguePaused_ = dialoguePaused;
+    if (dialogueSound_ < dialogueSounds_.size()) {
+        auto sound = dialogueSounds_[dialogueSound_].voice;
+        const bool suspend = !focused || dialoguePaused;
+        if (suspend != dialogueVoicePaused_) {
+            if (suspend)
+                PauseSound(sound);
+            else
+                ResumeSound(sound);
+            dialogueVoicePaused_ = suspend;
+        }
+        SetSoundVolume(sound, gain(1, true));
+    }
     if (game) {
         const auto camera = world_render::camera(game->movement());
         x_ = camera.position.x;
@@ -473,6 +489,7 @@ void AudioRuntime::shutdown() noexcept {
         } catch (...) {
         }
         detach();
+        clearDialogue();
         for (unsigned i = 0; i < 64; ++i)
             if (voices_[i].active)
                 release(i);
@@ -491,6 +508,7 @@ void AudioRuntime::shutdown() noexcept {
         }
         CloseAudioDevice();
     }
+    residentBytes_ = 0;
     ready_ = false;
     streams_ = {};
     samples_.clear();

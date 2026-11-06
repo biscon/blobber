@@ -1,85 +1,49 @@
-# Editing friendly NPC dialogue
+# Dialogue scripts
 
-Edit [dialogue.json](dialogue.json) in a text editor. Text is ordinary JSON, not
-code. Restart the game to reload it. There is no live reload or scripting language.
+Edit `mayor.yaml` or `innkeeper.yaml`, then restart the game. Each host file
+contains its cast and complete conversation. `--dialogue-dir DIRECTORY` selects
+an alternative directory of `.yaml`/`.yml` scripts; legacy JSON is no longer read.
+Use printable ASCII for game text. YAML comments and `|` multiline blocks are
+supported. Participant names are UI labels; `resident` is the existing stable NPC
+identity. A guard listed in a cast does not gain a separate conversation prompt.
 
-For development, launch with this source directory so no build/copy is needed:
+Each response has an ordered `beats` list. Every beat requires `speaker` (a cast
+alias) and `text`. Optional fields:
 
-```sh
-./cmake-build-release/blobber --dialogue-dir "$PWD/assets/dialogue"
-```
+- `camera: {target: boric, duration_ms: 200}` changes target or transition duration.
+  Target defaults to the speaker. Changed targets and returns both take 200 ms;
+  unchanged targets hold. Shorter authored durations (including zero) are clamped
+  to 200 ms. Obstructed camera paths still use a safety cut.
+- `animation: laugh` explicitly loops an existing `idle`, `talk`, `walk` or `laugh`
+  clip. Talk and Laugh run only while text is revealing, then return to natural
+  Idle, including click-to-complete. Wrapped pages pause in Idle and resume the
+  clip while revealing the next page. Walk holds until the next beat without
+  moving the actor. Missing explicit clips make the response unavailable;
+  missing default Talk art uses Idle.
+- `audio: dialogue/boric-chuckle.wav` starts one prepared sound at beat entry.
+  Paths are relative to the game's `assets/audio` directory and must stay inside
+  it, including when scripts are loaded with `--dialogue-dir`. Missing
+  files produce a warning and silence. Omitted audio is silent. Next beat stops
+  the previous sound. No sound restarts when a long beat wraps onto another page.
 
-The same option can be added to the CLion run configuration. Without it the game
-reads `assets/dialogue/dialogue.json` beside its executable. That packaged copy is
-refreshed by the normal build; you can also edit that copy and restart directly.
-Art and prepared world assets are unaffected by dialogue changes.
+Participant `text_color: '#9FD6D3'` changes speech color. Optional participant
+`camera: {distance: 0.6, eye_height: 0.55}` overrides automatic eye-level framing.
+Omit eye height to adapt to the character's prepared artwork.
 
-## Character fields
+Topics, `when_fact` and `set_fact` retain the existing host-owned history contract.
+A topic needs one unconditional response and may have one fact-conditioned variant.
+Its fact is recorded when the last page finishes revealing. Rewriting dialogue or
+adding interruptions does not invalidate campaign history. Greeting/introduction
+cannot set facts. The guards topic demonstrates a repeat-visit running gag.
 
-- `id`: stable character identity, e.g. `sanctuary.innkeeper`. Keep it unchanged
-  when revising prose: it identifies saved introductions and facts. Appearance
-  sharing does not share history. Bind future resident placements with
-  `resident_id` using this same string; the authored inn binds its keeper in C++.
-- `name`: the heading shown in the conversation panel.
-- `greeting`: a short return response, automatically revealed after the first visit.
-- `introduction`: the first-meeting response; it plays automatically once and can
-  be replayed by a topic with `kind: "introduction"`.
-- `facts`: the names of the character's supported facts.
-- `topics`: ordered menu entries. Each has an `id` and `label`. IDs use lowercase
-  letters, digits, `.`, `_` and `-`; keep them stable across text edits.
-- `camera`: optional `distance` and `eye_height`, in cells. Distance defaults
-  to 0.6. Omit `eye_height` to meet the NPC at an approximate eye line, 92% of
-  its visible standing height above the floor. Set a positive height explicitly
-  for unusual artwork. The innkeeper uses the generic defaults. Furniture is
-  not a framing target; the engine still stops the camera before world geometry.
+Optional file-level `presentation` supplies `transition_ms` (700), `fade_ms` (150)
+and `characters_per_second` (45). `transition_ms` must be at least 200. These are catalog-wide settings; declarations in
+multiple files must agree. Text reveals gradually; click/Space reveals the rest,
+then advances. Esc leaves. Topic clicks can interrupt any response.
 
-Normal topics omit `kind` or use `"response"`. They have `responses`: exactly one
-unconditional response, plus optionally one response with `when_fact`. The
-conditional response wins once that fact is learned. A response's `set_fact`
-records a fact when its final page becomes fully visible, including instant
-reveal. Interrupting before that point records nothing. Facts are local to the
-character. Names referenced by conditions/effects must appear in `facts`.
+Limits: 1 MiB total scripts, 64 hosts, 8 cast members/host, 16 topics/host,
+64 facts/host, 32 beats/response, 1024 bytes/beat, 64 prepared pages/response and
+64 distinct sound files. Errors identify the file, response and beat/line.
 
-```json
-{
-  "id": "rumours",
-  "label": "Rumours",
-  "responses": [
-    { "pages": ["Ask me about the dungeon first."] },
-    { "when_fact": "heard_dungeon_advice", "pages": ["Here is another tip."] }
-  ]
-}
-```
-
-`kind: "farewell"` closes the conversation immediately. Special introduction and
-farewell topics have no `responses`. Trade is deliberately absent until trading
-exists. The first slice has no quest, currency or item effects.
-
-## Writing pages
-
-Every response has `pages`, an array of strings. Use `\n\n` inside a string for a
-paragraph break. Explicit pages are respected; long ones are wrapped and split
-again using the actual UI font. Text stays in place as it reveals. Use normal
-ASCII quotes/apostrophes; the existing fonts' printable ASCII contract applies,
-and unsupported characters fail loading with an error instead of displaying
-broken glyphs. Example wording is editable game content, not fixed lore.
-
-Limits: 1 MiB per catalog, 64 characters, 16 topics and 64 facts per character,
-8 authored pages per response, and 1,024 bytes per authored page. Long words that
-cannot fit the response width are rejected. There are at most 64 laid-out pages
-per response. Unknown fields, duplicate IDs/keys and unresolved facts fail loading.
-
-## Presentation settings and controls
-
-The top-level `presentation` sets `transition_ms` (default 700), `fade_ms` (150),
-and `characters_per_second` (45). The camera keeps the world viewport unchanged.
-Topics are immediately usable during speech. Click a topic or use its visible
-number; Up/Down and Enter also select. Scroll or Page Up/Page Down reveals topics
-beyond the seven visible rows. Click the response or Space reveals a page, then
-advances on a separate press. Skip introduction skips the whole introduction.
-Escape or Farewell leaves. Returning greetings never block access to topics.
-
-Dialogue history is saved with the campaign. This feature requires a new
-campaign (currently schema/simulation 12/17 with the Sanctuary mayor and guards);
-subsequent prose edits do not require one. The mayor has his own introduction and
-topics; Boric and Balin intentionally have no dialogue entry yet.
+`../audio/dialogue/` contains provisional synthetic character reactions, not final voice
+performances. Source/provenance is retained alongside the clips for replacement.

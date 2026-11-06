@@ -1,0 +1,109 @@
+# Edit each response as a linear screenplay. See README.md for defaults.
+version: 2
+primary: mayor
+participants:
+  mayor:
+    resident: sanctuary.mayor
+    name: Mayor
+  boric:
+    resident: sanctuary.boric
+    name: Boric
+    text_color: '#9FD6D3'
+  balin:
+    resident: sanctuary.balin
+    name: Balin
+    text_color: '#C7B6E8'
+facts:
+- heard_guards_lunch
+greeting:
+  beats:
+  - speaker: mayor
+    text: |
+      Have you heard anything of Gwendolyn? Then tell me!
+introduction:
+  beats:
+  - speaker: mayor
+    text: |
+      You there! Adventurers! My daughter Gwendolyn was kidnapped last night. Monsters came up from the dungeon beneath Sanctuary and carried her away!
+  - speaker: mayor
+    text: |
+      My beautiful daughter, dragged into that wretched place! Find her and bring her home safely. Boric and Balin are assisting me with the investigation. Their principal contribution so far has been standing there.
+topics:
+- id: about
+  label: What happened?
+  kind: introduction
+- id: gwendolyn
+  label: Gwendolyn
+  responses:
+  - beats:
+    - speaker: mayor
+      text: |
+        My daughter! Beautiful, headstrong, and quite capable of telling me when I am being unreasonable. Which she does far too often. Bring her home safely. That is all I ask.
+- id: kidnapping
+  label: The kidnapping
+  responses:
+  - beats:
+    - speaker: mayor
+      text: |
+        It happened during the night. Monsters from below took her before we could stop them. I need people who can go after her, not another explanation of why nobody noticed!
+- id: dungeon
+  label: The dungeon
+  responses:
+  - beats:
+    - speaker: mayor
+      text: |
+        They took her into the dungeon beneath our town. I do not know how far down. Find her, and do not let your courage outrun your sense. She needs rescuers who can make it back.
+- id: guards
+  label: Your guards
+  responses:
+  - set_fact: heard_guards_lunch
+    beats:
+    - speaker: mayor
+      text: |
+        Boric and Balin have been investigating all morning. I await their report.
+      animation: talk
+    - speaker: boric
+      text: |
+        We investigated lunch twice.
+      camera:
+        target: boric
+        duration_ms: 200
+      animation: laugh
+      audio: dialogue/boric-chuckle.wav
+    - speaker: mayor
+      text: |
+        My daughter is missing. The sandwiches are not suspects!
+      animation: talk
+    - speaker: balin
+      text: |
+        Not any more, sir. We eliminated them.
+      animation: laugh
+      audio: dialogue/balin-chuckle.wav
+    - speaker: mayor
+      text: |
+        Their dedication to the wrong task is extraordinary. Please find Gwendolyn.
+      animation: talk
+      audio: dialogue/mayor-groan.wav
+  - when_fact: heard_guards_lunch
+    beats:
+    - speaker: mayor
+      text: |
+        I have forbidden further investigations of lunch.
+    - speaker: boric
+      text: |
+        Good news, sir. We have a lead on supper.
+      animation: laugh
+      audio: dialogue/boric-chuckle.wav
+    - speaker: balin
+      text: |
+        A very promising stew.
+      animation: laugh
+      audio: dialogue/balin-chuckle.wav
+    - speaker: mayor
+      text: |
+        Do you see what I have to work with? Find my daughter.
+      animation: talk
+      audio: dialogue/mayor-groan.wav
+- id: farewell
+  label: Farewell
+  kind: farewell

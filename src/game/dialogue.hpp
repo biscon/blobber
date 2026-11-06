@@ -1,21 +1,41 @@
 #pragma once
+#include "world/npc.hpp"
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace blobber {
 using DialogueKey = std::uint64_t;
+inline constexpr unsigned dialogueMinimumPanMs = 200;
 constexpr DialogueKey dialogueKey(std::string_view value) noexcept {
     DialogueKey h = 14695981039346656037ull;
     for (const auto c : value)
         h = (h ^ static_cast<unsigned char>(c)) * 1099511628211ull;
     return value.empty() ? 0 : h;
 }
+struct DialogueFraming {
+    float distance = .6f, eyeHeight = 0;
+};
+struct DialogueParticipant : DialogueFraming {
+    DialogueKey id = 0;
+    std::string alias, name;
+    std::uint32_t textColor = 0xdcd8c7ff;
+};
+struct DialogueBeat {
+    std::string text;
+    unsigned speaker = 0, target = 0;
+    std::optional<unsigned> durationMs;
+    std::optional<NpcAnimation> animation;
+    unsigned audio = 64; // Catalog audio index; 64 means silence.
+};
 struct DialogueResponse {
     DialogueKey whenFact = 0, setFact = 0;
-    std::vector<std::string> pages;
+    std::vector<DialogueBeat> beats;
+    std::vector<std::string> pages; // Prepared display pages, never authored events.
+    std::vector<unsigned> pageBeats;
 };
 struct DialogueTopic {
     DialogueKey id = 0;
@@ -23,16 +43,17 @@ struct DialogueTopic {
     std::vector<DialogueResponse> responses;
     bool introduction = false, farewell = false;
 };
-struct DialogueCharacter {
+struct DialogueCharacter : DialogueFraming {
     DialogueKey id = 0;
     std::string key, name;
     DialogueResponse greeting, introduction;
     std::vector<DialogueTopic> topics;
-    float distance = .6f;
-    float eyeHeight = 0; // Zero selects the visible standing body's eye line.
+    std::vector<DialogueParticipant> participants;
+    unsigned primary = 0;
 };
 struct DialogueCatalog {
     std::vector<DialogueCharacter> characters;
+    std::vector<std::string> audioFiles; // Canonical paths resolved during loading.
     unsigned transitionMs = 700, fadeMs = 150, charactersPerSecond = 45;
     const DialogueCharacter* find(DialogueKey id) const noexcept;
 };
@@ -58,6 +79,7 @@ enum class DialoguePhase : std::uint8_t { Closed, Entering, Open, Leaving };
 struct DialogueHud {
     bool open = false, leaving = false, introduction = false, revealing = false;
     const char* name = "";
+    std::uint32_t textColor = 0xdcd8c7ff;
     std::array<char, 1025> text{};
     std::array<const char*, 7> topics{};
     std::array<bool, 7> read{};
@@ -65,9 +87,11 @@ struct DialogueHud {
     std::uint64_t revision = 0;
     float alpha = 0, cameraWeight = 0;
 };
+using DialogueAdmission = bool (*)(const DialogueCharacter&, const DialogueResponse&, void*) noexcept;
 class DialoguePlayer {
   public:
-    void bind(const DialogueCatalog* catalog, DialogueHistory* history) noexcept;
+    void bind(const DialogueCatalog* catalog, DialogueHistory* history, DialogueAdmission admission = nullptr,
+              void* context = nullptr) noexcept;
     bool start(DialogueKey) noexcept;
     void tick(double seconds, bool focused) noexcept;
     void advance() noexcept;
@@ -83,12 +107,20 @@ class DialoguePlayer {
     float weight() const noexcept;
     std::uint64_t clockMs() const noexcept { return std::uint64_t(clockMs_); }
     const DialogueCharacter* character() const noexcept { return character_; }
+    const DialogueBeat* beat() const noexcept;
+    const DialogueResponse* currentResponse() const noexcept { return response_; }
+    std::uint64_t beatSerial() const noexcept { return beatSerial_; }
+    std::uint64_t beatElapsedMs() const noexcept;
+    bool cuesReady() const noexcept;
+    unsigned transitionMs() const noexcept { return catalog_ ? catalog_->transitionMs : 700; }
     unsigned cursor() const noexcept { return cursor_ - offset_; }
     void snapshot(DialogueHud&) const noexcept;
 
   private:
     void response(const DialogueResponse*, DialogueKey topic = 0, bool intro = false) noexcept;
     void completed() noexcept;
+    bool admissible(const DialogueCharacter&, const DialogueResponse&) const noexcept;
+    void beginBeat() noexcept;
     const DialogueCatalog* catalog_ = nullptr;
     DialogueHistory* history_ = nullptr;
     const DialogueCharacter* character_ = nullptr;
@@ -99,6 +131,9 @@ class DialoguePlayer {
     double clockMs_ = 0, transition_ = 0, revealed_ = 0;
     float exitFrom_ = 0;
     bool introduction_ = false, awarded_ = false;
-    std::uint64_t revision_ = 0;
+    std::uint64_t revision_ = 0, beatSerial_ = 0;
+    double beatStartMs_ = 0;
+    DialogueAdmission admission_ = nullptr;
+    void* admissionContext_ = nullptr;
 };
 } // namespace blobber

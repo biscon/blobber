@@ -120,7 +120,7 @@ int main(int argc, char** argv) try {
             auto shot = [&](const char* name) {
                 const auto& player = commands.dialoguePlayer();
                 animation.setTime(game.timeMs(), &game.effects(), commands.dialogueSpeaker(),
-                                  player.clockMs());
+                                  player.clockMs(), &commands.dialogueAnimation());
                 const auto camera =
                     player.active() ? std::optional<world_render::Camera>(
                                           world_render::interpolateCamera(original, target, player.weight()))

@@ -60,6 +60,21 @@ if(NOT TARGET nlohmann_json::nlohmann_json)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
+option(BLOBBER_USE_SYSTEM_YAML "Prefer a compatible installed yaml-cpp package" ON)
+if(BLOBBER_USE_SYSTEM_YAML)
+    find_package(yaml-cpp 0.8 CONFIG QUIET)
+endif()
+if(NOT TARGET yaml-cpp::yaml-cpp)
+    include(FetchContent)
+    set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(YAML_CPP_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(yaml-cpp
+        GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+        GIT_TAG f7320141120f720aecc4c32be25586e7da9eb978)
+    FetchContent_MakeAvailable(yaml-cpp)
+endif()
+
 function(blobber_warnings target)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /permissive-)
@@ -81,7 +96,7 @@ target_link_libraries(blobber_core PUBLIC blobber_rules Threads::Threads)
 # Level recovery loading validates world cells and exposes core recovery data.
 target_link_libraries(blobber_rules_io PUBLIC blobber_core)
 add_library(blobber_npc_io src/assets/npc_metadata.cpp src/assets/dialogue.cpp)
-target_link_libraries(blobber_npc_io PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(blobber_npc_io PUBLIC blobber_core PRIVATE nlohmann_json::nlohmann_json yaml-cpp::yaml-cpp)
 blobber_warnings(blobber_npc_io)
 foreach(target blobber_rules blobber_rules_io blobber_core)
     blobber_warnings(${target})
@@ -116,7 +131,7 @@ if(BLOBBER_BUILD_GRAPHICS)
         src/assets/npc_sheet.cpp src/render/image_sampling.cpp)
     target_link_libraries(blobber_assets_io PUBLIC blobber_core blobber_npc_io raylib PRIVATE nlohmann_json::nlohmann_json)
     add_library(blobber_platform
-        src/platform/audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
+        src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
         src/platform/gpu_resources.cpp src/platform/environment_ao.cpp src/platform/world_geometry_draw.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
         src/ui/dialogue_screen.cpp src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu blobber_audio_io blobber_assets_io raylib)
@@ -655,7 +670,7 @@ if(BUILD_TESTING)
 endif()
 if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
     # Fake raylib functions exercise our runtime without opening a device or window.
-    add_executable(blobber_audio_runtime_tests tests/audio_runtime_tests.cpp src/platform/audio.cpp src/platform/combat_music.cpp)
+    add_executable(blobber_audio_runtime_tests tests/audio_runtime_tests.cpp src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/combat_music.cpp)
     target_include_directories(blobber_audio_runtime_tests PRIVATE tests)
     target_link_libraries(blobber_audio_runtime_tests PRIVATE blobber_audio_io blobber_world_cpu raylib)
     blobber_warnings(blobber_audio_runtime_tests)

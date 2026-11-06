@@ -15,7 +15,11 @@ class AudioRuntime {
     void prepare(const std::filesystem::path&, bool disabled = false,
                  const std::filesystem::path& settings = {});
     void update(GameSession*, bool paused, bool focused, float dt, bool musicPaused = true,
-                bool bannerVisible = true, std::optional<bool> ambiencePaused = {});
+                bool bannerVisible = true, std::optional<bool> ambiencePaused = {},
+                bool dialoguePaused = true);
+    void prepareDialogue(const std::vector<std::string>& files);
+    void clearDialogue() noexcept;
+    void presentDialogue(std::uint64_t serial, unsigned sound, bool active) noexcept;
     audio::Handle play(const char*, float x = 0, float z = 0, bool positional = false, bool interface = false,
                        unsigned priority = 0);
     bool stop(audio::Handle) noexcept;
@@ -31,6 +35,15 @@ class AudioRuntime {
 
   private:
     CombatMusic music_;
+    struct DialogueSound {
+        Sound source{}, voice{};
+        bool valid = false;
+    };
+    std::array<DialogueSound, 64> dialogueSounds_{};
+    unsigned dialogueSound_ = 64;
+    std::uint64_t dialogueSerial_ = 0, residentBytes_ = 0;
+    bool dialoguePaused_ = true, dialogueVoicePaused_ = false;
+    void stopDialogue() noexcept;
     struct Sample {
         Sound source{};
         std::array<Sound, 8> voices{};

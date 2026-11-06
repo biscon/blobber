@@ -39,7 +39,12 @@ CommandController::~CommandController() {
 void CommandController::bindDialogue(const DialogueCatalog* catalog, DialogueHistory* history) noexcept {
     finishDialogue();
     dialogueCatalog_ = catalog;
-    dialogue_.bind(catalog, history);
+    dialogue_.bind(
+        catalog, history,
+        [](const DialogueCharacter& c, const DialogueResponse& r, void* context) noexcept {
+            return static_cast<CommandController*>(context)->admitDialogueResponse(c, r);
+        },
+        this);
 }
 void CommandController::residentVisibility(const TargetSnapshot& snapshot) noexcept {
     residents_ = snapshot;
@@ -95,16 +100,60 @@ bool CommandController::startDialogue(std::optional<ActorId> requested) noexcept
     syncDialogueSpeech();
     return true;
 }
+namespace {
+std::optional<ActorId> findParticipant(const ActorWorld& world, DialogueKey id) noexcept {
+    for (unsigned i = 0; i < world.snapshot().count; ++i) {
+        const auto& a = world.snapshot().actors[i];
+        if (a.npc.residentId == id && a.npc.role == NpcRole::Resident && a.life == ActorLife::Alive)
+            return world.id(i);
+    }
+    return {};
+}
+} // namespace
+std::optional<ActorId> CommandController::dialogueActor(unsigned index) const noexcept {
+    const auto* c = dialogue_.character();
+    if (!c || index >= c->participants.size())
+        return {};
+    return findParticipant(actors_, c->participants[index].id);
+}
+bool CommandController::admitDialogueResponse(const DialogueCharacter& c,
+                                              const DialogueResponse& r) const noexcept {
+    for (const auto& beat : r.beats) {
+        if (beat.speaker >= c.participants.size() || beat.target >= c.participants.size())
+            return false;
+        const auto id = findParticipant(actors_, c.participants[beat.speaker].id);
+        if (!id || !findParticipant(actors_, c.participants[beat.target].id))
+            return false;
+        const auto* actor = actors_.actor(*id);
+        if (beat.animation && !dialogueTimings_[actor->npc.type.index][unsigned(*beat.animation)].count)
+            return false;
+    }
+    return true;
+}
 void CommandController::syncDialogueSpeech() noexcept {
-    if (speaker_)
-        session_.actors().talk(*speaker_, dialogue_.revealing() &&
-                                              dialogue_.clockMs() >=
-                                                  (dialogueCatalog_ ? dialogueCatalog_->fadeMs : 150));
+    dialogueAnimation_ = {};
+    const auto* c = dialogue_.character();
+    if (!c) {
+        speaker_.reset();
+        return;
+    }
+    const auto* beat = dialogue_.beat();
+    speaker_ = dialogueActor(beat ? beat->speaker : c->primary);
+    if (!beat || !dialogue_.cuesReady())
+        return;
+    dialogueAnimation_.actor = speaker_;
+    dialogueAnimation_.clip = beat->animation.value_or(NpcAnimation::Talk);
+    if (!dialogue_.revealing() &&
+        (dialogueAnimation_.clip == NpcAnimation::Talk || dialogueAnimation_.clip == NpcAnimation::Laugh))
+        dialogueAnimation_.clip = NpcAnimation::Idle;
+    dialogueAnimation_.elapsedMs = dialogue_.beatElapsedMs();
 }
 void CommandController::tickDialogue(double seconds, bool focused) noexcept {
     if (!dialogue_.active())
         return;
-    if (!speaker_ || !actors_.actor(*speaker_)) {
+    const auto* c = dialogue_.character();
+    if (!c || !findParticipant(actors_, c->id) ||
+        (dialogue_.currentResponse() && !admitDialogueResponse(*c, *dialogue_.currentResponse()))) {
         finishDialogue();
         return;
     }
@@ -117,9 +166,12 @@ void CommandController::tickDialogue(double seconds, bool focused) noexcept {
     dialogue_.snapshot(state_.dialogue);
 }
 void CommandController::finishDialogue() noexcept {
-    if (speaker_)
+    // An inactive controller may outlive its old session after a travel handoff.
+    // Do not inspect the borrowed session unless this controller owns dialogue.
+    if (speaker_ || dialogue_.active())
         session_.endConversation();
     speaker_.reset();
+    dialogueAnimation_ = {};
     dialogue_.close();
     state_.dialogue = {};
     cancelPointerButtons();

@@ -119,6 +119,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         throw std::invalid_argument("HUD animation/world type counts differ");
     for (const auto& timing : timings)
         validateNpcTimings(timing);
+    std::copy(timings.begin(), timings.end(), dialogueTimings_.begin());
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
         if (!a.hostile())

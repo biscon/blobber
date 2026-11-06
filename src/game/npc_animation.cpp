@@ -80,7 +80,8 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
     setTime(0);
 }
 void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effects,
-                          std::optional<ActorId> speaker, std::uint64_t speakerMs) noexcept {
+                          std::optional<ActorId> speaker, std::uint64_t speakerMs,
+                          const NpcDialogueOverride* override) noexcept {
     const auto* speaking = speaker ? world_.actor(*speaker) : nullptr;
     const bool dialogue = speaking && speaking->npc.role == NpcRole::Resident;
     if (dialogue || dialogueActive_) {
@@ -116,6 +117,10 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
         next.offsetX = position.x - (npc.cell.x + .25f + npc.subcell.x * .5f);
         next.offsetY = position.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
         next.clip = npc.animation;
+        const bool overridden = override && override->actor && world_.actor(*override->actor) &&
+                                override->actor->slot == i && npc.role == NpcRole::Resident;
+        if (overridden)
+            next.clip = override->clip;
         if (visible) {
             const auto attackClip = actor.rangedAttack ? NpcAnimation::RangedAttack : NpcAnimation::Attack;
             const auto& attack = timings[static_cast<std::size_t>(attackClip)];
@@ -161,19 +166,22 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
                 next.active = sample(timings[static_cast<std::size_t>(NpcAnimation::Walk)],
                                      (time - actor.walkTimeMs) * npcWalkDurationMs / actor.walkDurationMs, 0);
             } else {
-                const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
+                const auto phase = next.clip == NpcAnimation::Idle ? idlePhases_[i]
+                                   : overridden                    ? 0
+                                                                   : npc.phaseMs;
                 // A resident without optional talk art remains safely idle.
                 if (!timings[static_cast<std::size_t>(next.clip)].count)
                     next.clip = NpcAnimation::Idle;
-                const auto sampleTime = isSpeaker                         ? speakerMs
-                                        : next.clip == NpcAnimation::Idle ? idleTime
-                                                                          : time;
+                const auto sampleTime = overridden && next.clip != NpcAnimation::Idle ? override->elapsedMs
+                                        : isSpeaker && !override                      ? speakerMs
+                                        : next.clip == NpcAnimation::Idle             ? idleTime
+                                                                                      : time;
                 next.active = sample(timings[static_cast<std::size_t>(next.clip)], sampleTime, phase);
             }
             // Attack and talk can expose a directional idle fallback. Keep legacy
             // idle snapshots stable; reaction/corpse holds need no idle invalidation.
             if (next.clip <= NpcAnimation::Attack || directionalIdleFallback(next.clip))
-                next.idle = sample(timings[0], isSpeaker ? speakerMs : idleTime, idlePhases_[i]);
+                next.idle = sample(timings[0], isSpeaker && !override ? speakerMs : idleTime, idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||

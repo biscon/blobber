@@ -17,7 +17,11 @@ void HudPainter::dialogue(const DialogueHud& h) const {
     panel(dialogueLayout::topics);
     text(h.name, 12, 229, ink(gold), UiTextStyle::Display);
     text(h.introduction ? "First meeting" : "Conversation", 12, 240, ink(muted), UiTextStyle::Small);
-    text(h.text.data(), 12, 252, ink(hudInk::text), UiTextStyle::Label);
+    text(h.text.data(), 12, 252,
+         ink(Color{static_cast<unsigned char>(h.textColor >> 24),
+                   static_cast<unsigned char>(h.textColor >> 16),
+                   static_cast<unsigned char>(h.textColor >> 8), 255}),
+         UiTextStyle::Label);
     text(h.revealing        ? "Click / Space: reveal"
          : h.page < h.pages ? "Click / Space: continue"
                             : "Choose a topic",

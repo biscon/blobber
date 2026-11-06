@@ -112,3 +112,10 @@ Audio preferences use `$XDG_CONFIG_HOME/blobber/settings.json`, or
 The separate [combat music playlist](music/README.md) contains the 21 supplied Nick Panek tracks.
 It has its own volume/toggle, persistent shuffle and animated title announcement.
 Music files and metadata are independent of synth regeneration and replacement cues.
+
+## Dialogue reactions
+
+[dialogue/](dialogue/README.md) owns the provisional mayor/guard reaction WAVs
+and their synthesis source. YAML conversation beats reference them as
+`audio: dialogue/boric-chuckle.wav`, relative to this shared audio directory.
+They are prepared by the dialogue audio runtime and use the Effects volume.

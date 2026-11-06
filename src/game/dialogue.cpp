@@ -17,12 +17,15 @@ bool contains(const std::array<DialogueKey, 64>& values, unsigned count, Dialogu
 }
 void layout(DialogueResponse& response, DialogueMeasure measure, void* context, float width, unsigned rows) {
     std::vector<std::string> pages;
-    for (const auto& original : response.pages) {
+    std::vector<unsigned> pageBeats;
+    for (unsigned bi = 0; bi < response.beats.size(); ++bi) {
+        const auto& original = response.beats[bi].text;
         std::string page, line;
         unsigned lines = 0;
         auto emit = [&] {
             if (lines == rows) {
                 pages.push_back(std::move(page));
+                pageBeats.push_back(bi);
                 page.clear();
                 lines = 0;
             }
@@ -58,8 +61,10 @@ void layout(DialogueResponse& response, DialogueMeasure measure, void* context, 
         }
         if (!line.empty() || !lines)
             emit();
-        if (!page.empty())
+        if (!page.empty()) {
             pages.push_back(std::move(page));
+            pageBeats.push_back(bi);
+        }
     }
     if (pages.empty() || pages.size() > 64)
         throw std::runtime_error("Dialogue exceeds 64 laid-out pages");
@@ -67,6 +72,7 @@ void layout(DialogueResponse& response, DialogueMeasure measure, void* context, 
         if (p.size() > 1024)
             throw std::runtime_error("Dialogue laid-out page exceeds capacity");
     response.pages = std::move(pages);
+    response.pageBeats = std::move(pageBeats);
 }
 } // namespace
 void prepareDialogueLayout(DialogueCatalog& catalog, DialogueMeasure measure, void* context, float width,
@@ -134,10 +140,13 @@ void DialogueHistory::validate() const {
         validateKeys(r.facts, r.factCount);
     }
 }
-void DialoguePlayer::bind(const DialogueCatalog* catalog, DialogueHistory* history) noexcept {
+void DialoguePlayer::bind(const DialogueCatalog* catalog, DialogueHistory* history,
+                          DialogueAdmission admission, void* context) noexcept {
     close();
     catalog_ = catalog;
     history_ = history;
+    admission_ = admission;
+    admissionContext_ = context;
 }
 bool DialoguePlayer::start(DialogueKey key) noexcept {
     if (active() || !catalog_ || !history_)
@@ -145,10 +154,13 @@ bool DialoguePlayer::start(DialogueKey key) noexcept {
     const auto* c = catalog_->find(key);
     if (!c || c->introduction.pages.empty() || c->greeting.pages.empty() || c->topics.empty())
         return false;
+    const auto* previous = history_->get(key);
+    const bool first = !previous || !previous->introduced;
+    if (!admissible(*c, first ? c->introduction : c->greeting))
+        return false;
     auto* h = history_->get(key, true);
     if (!h)
         return false;
-    const bool first = !h->introduced;
     h->introduced = true;
     character_ = c;
     phase_ = DialoguePhase::Entering;
@@ -165,6 +177,29 @@ void DialoguePlayer::response(const DialogueResponse* value, DialogueKey topic, 
     page_ = 0;
     revealed_ = 0;
     awarded_ = false;
+    beginBeat();
+}
+bool DialoguePlayer::admissible(const DialogueCharacter& c, const DialogueResponse& r) const noexcept {
+    return !admission_ || admission_(c, r, admissionContext_);
+}
+const DialogueBeat* DialoguePlayer::beat() const noexcept {
+    if (!response_ || page_ >= response_->pageBeats.size())
+        return nullptr;
+    const auto index = response_->pageBeats[page_];
+    return index < response_->beats.size() ? &response_->beats[index] : nullptr;
+}
+void DialoguePlayer::beginBeat() noexcept {
+    ++beatSerial_;
+    beatStartMs_ = std::max(clockMs_, double(catalog_ ? catalog_->fadeMs : 0));
+    if (beat() && clockMs_ >= beatStartMs_)
+        revealed_ = 1;
+}
+bool DialoguePlayer::cuesReady() const noexcept {
+    return active() && !leaving() && beat() && clockMs_ >= beatStartMs_ &&
+           (clockMs_ > beatStartMs_ || revealed_ >= 1);
+}
+std::uint64_t DialoguePlayer::beatElapsedMs() const noexcept {
+    return std::uint64_t(std::max(0., clockMs_ - beatStartMs_));
 }
 bool DialoguePlayer::revealing() const noexcept {
     return active() && !leaving() && response_ && page_ < response_->pages.size() &&
@@ -180,7 +215,7 @@ float DialoguePlayer::weight() const noexcept {
     return leaving() ? exitFrom_ * (1 - eased) : eased;
 }
 void DialoguePlayer::completed() noexcept {
-    if (!awarded_ && response_ && page_ + 1 == response_->pages.size() && !revealing()) {
+    if (!awarded_ && response_ && cuesReady() && page_ + 1 == response_->pages.size() && !revealing()) {
         awarded_ = history_->complete(character_->id, topic_, response_->setFact);
     }
 }
@@ -200,9 +235,12 @@ void DialoguePlayer::tick(double seconds, bool focused) noexcept {
         phase_ = DialoguePhase::Open;
     const double revealMs =
         std::max(0., clockMs_ - catalog_->fadeMs) - std::max(0., previousClock - catalog_->fadeMs);
-    if (revealing())
+    if (revealing() && revealMs > 0) {
+        if (previousClock <= catalog_->fadeMs && revealed_ == 0)
+            revealed_ = 1; // First glyph and cues share the first visible update.
         revealed_ = std::min(double(response_->pages[page_].size()),
                              revealed_ + revealMs * catalog_->charactersPerSecond / 1000);
+    }
     completed();
 }
 void DialoguePlayer::advance() noexcept {
@@ -212,9 +250,12 @@ void DialoguePlayer::advance() noexcept {
         revealed_ = double(response_->pages[page_].size());
         completed();
     } else if (page_ + 1 < response_->pages.size()) {
+        const auto* previousBeat = beat();
         ++page_;
-        ++revision_;
         revealed_ = 0;
+        if (beat() != previousBeat)
+            beginBeat();
+        ++revision_;
     }
 }
 void DialoguePlayer::choose(unsigned row) noexcept {
@@ -227,7 +268,8 @@ void DialoguePlayer::choose(unsigned row) noexcept {
         return;
     }
     if (t.introduction) {
-        response(&character_->introduction, t.id, true);
+        if (admissible(*character_, character_->introduction))
+            response(&character_->introduction, t.id, true);
         return;
     }
     const auto* h = history_->get(character_->id);
@@ -240,7 +282,8 @@ void DialoguePlayer::choose(unsigned row) noexcept {
             selected = &r;
             break;
         }
-    response(selected, t.id);
+    if (selected && admissible(*character_, *selected))
+        response(selected, t.id);
 }
 void DialoguePlayer::select(int delta) noexcept {
     if (!active() || leaving() || character_->topics.empty())
@@ -286,6 +329,11 @@ void DialoguePlayer::snapshot(DialogueHud& out) const noexcept {
     out.introduction = introduction_;
     out.revealing = revealing();
     out.name = character_->name.c_str();
+    if (const auto* b = beat()) {
+        const auto& speaker = character_->participants[b->speaker];
+        out.name = speaker.name.c_str();
+        out.textColor = speaker.textColor;
+    }
     out.alpha = leaving() ? std::max(0.f, 1 - float(transition_ / catalog_->fadeMs))
                           : std::min(1.f, float(clockMs_ / catalog_->fadeMs));
     out.cameraWeight = weight();
@@ -303,7 +351,7 @@ void DialoguePlayer::snapshot(DialogueHud& out) const noexcept {
         out.page = page_ + 1;
         out.pages = unsigned(response_->pages.size());
         const auto& p = response_->pages[page_];
-        const auto count = std::min(std::size_t(revealed_), p.size());
+        const auto count = clockMs_ < catalog_->fadeMs ? 0 : std::min(std::size_t(revealed_), p.size());
         std::memcpy(out.text.data(), p.data(), std::min(count, out.text.size() - 1));
     }
 }
