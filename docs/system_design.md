@@ -1,5 +1,12 @@
 # System design
 
+Camera framing B **accepted and implemented (2026-11-06)**:
+[projection comparison](renderer_world_design.md#camera-framing-trial--2026-11-06)
+sets the horizon to 40% (about 5.8° down at screen centre), retaining .4-cell
+pullback. The user selected B after comparing 34/40/45%. Three focused CPU suites,
+projection checks and hidden CPU/GPU visibility checks pass;
+[accepted B and original reference](screenshots/camera-framing/index.html).
+
 Underkeep prop safety **implemented and mechanically verified; awaiting visual review (2026-11-06)**:
 [placement and rack correction](underkeep_dressing_design.md#room-clearance-and-rack-correction--2026-11-06)
 requires room-local clearance/connectivity and collision-aware progression checks.

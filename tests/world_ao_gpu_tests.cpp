@@ -22,6 +22,17 @@ void projectionChecks() {
                     const Vector4 p{x * distance, y * distance, -distance, 1};
                     auto clip = QuaternionTransform(p, projection);
                     clip = Vector4Scale(clip, 1 / clip.w);
+                    for (unsigned heading = 0; heading < 4; ++heading) {
+                        MovementState movement;
+                        movement.player = {{0, 0}, Heading(heading)};
+                        const auto c = world_render::camera(movement);
+                        const auto cpu = world_render::project(
+                            c, {c.position.x + c.right.x * p.x + c.forward.x * distance, c.position.y + p.y,
+                                c.position.z + c.right.z * p.x + c.forward.z * distance});
+                        check(std::abs(cpu.x - (clip.x * .5f + .5f) * viewWidth) < .003f &&
+                                  std::abs(cpu.y - (.5f - clip.y * .5f) * viewHeight) < .003f,
+                              "CPU picking projection matches GPU frustum across headings and depths");
+                    }
                     auto restored = QuaternionTransform(clip, inverse);
                     restored = Vector4Scale(restored, 1 / restored.w);
                     check(std::abs(restored.x - p.x) < .0002f * distance &&
@@ -30,7 +41,7 @@ void projectionChecks() {
                           "Actual asymmetric projection reconstructs positions across near/far ranges");
                 }
         const auto horizon = QuaternionTransform({0, 0, -1, 1}, projection);
-        check(std::abs((horizon.y / horizon.w * .5f + .5f) - .66f) < .00001f,
+        check(std::abs((horizon.y / horizon.w * .5f + .5f) - .60f) < .00001f,
               "Reconstruction uses offset horizon, not a centered perspective approximation");
     }
 }

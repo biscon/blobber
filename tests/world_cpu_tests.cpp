@@ -47,8 +47,12 @@ int main() {
             state.player.heading = Heading(heading);
             const auto c = camera(state);
             const auto p = project(c, {c.position.x + c.forward.x * 2, .5f, c.position.z + c.forward.z * 2});
-            check(std::abs(p.x - 250) < .001f && std::abs(p.y - 282 * .34f) < .001f,
+            check(std::abs(p.x - 250) < .001f && std::abs(p.y - 282 * .40f) < .001f,
                   "Independent centre/horizon projection");
+            const float setback = (state.player.cell.x + .5f - c.position.x) * c.forward.x +
+                                  (state.player.cell.y + .5f - c.position.z) * c.forward.z;
+            check(std::abs(setback - .4f) < .00001f && c.position.y == .5f && c.forward.y == 0,
+                  "Relaxed framing preserves cell setback, eye height and upright camera");
         }
         DrawList list;
         std::vector<MovementState> samples;

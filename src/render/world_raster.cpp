@@ -1,3 +1,4 @@
+#include "render/world_projection_parameters.hpp"
 #include "render/world_visibility.hpp"
 #include <algorithm>
 #include <cmath>
@@ -25,9 +26,9 @@ float plane(const ClipVertex& p, unsigned face, float farClip) {
     case 3:
         return p.z * half - p.x;
     case 4:
-        return p.z * viewHeight * .34f / focal() - p.y;
+        return p.z * viewHeight * viewHorizon / focal() - p.y;
     default:
-        return p.y + p.z * viewHeight * .66f / focal();
+        return p.y + p.z * viewHeight * (1 - viewHorizon) / focal();
     }
 }
 float edge(float ax, float ay, float bx, float by, float x, float y) {
@@ -75,7 +76,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
         for (unsigned i = 0; i < 3; ++i) {
             iz[i] = 1 / t[i].z;
             x[i] = viewWidth * .5f + focal() * t[i].x * iz[i];
-            y[i] = viewHeight * .34f - focal() * t[i].y * iz[i];
+            y[i] = viewHeight * viewHorizon - focal() * t[i].y * iz[i];
         }
         float area = edge(x[0], y[0], x[1], y[1], x[2], y[2]);
         if (std::abs(area) < 1e-10f)
@@ -110,7 +111,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                 if (leaves) {
                     const float lateral = (px + .5f - viewWidth * .5f) / focal();
                     const Vec ray{out.camera.forward.x + out.camera.right.x * lateral,
-                                  (viewHeight * .34f - py - .5f) / focal(),
+                                  (viewHeight * viewHorizon - py - .5f) / focal(),
                                   out.camera.forward.z + out.camera.right.z * lateral};
                     if (leaves->hides(out.camera, ray, z))
                         continue;

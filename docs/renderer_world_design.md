@@ -18,10 +18,63 @@ Preserve 500×282 at logical (4,18), 640×360 layout and 1920×1080 presentation
 Supersampling defaults on: 1000×564, explicit four-sample box resolve to 500×282,
 nearest enlargement. Off means native filtered, never raw nearest. Both use nearest
 magnification, nearest-texel/interpolated-mip minification and supported world
-anisotropy up to 4×. Keep 84° horizontal FOV, horizon 34%, eye .5, setback .4,
-near/far .025/16. Camera smoothstep translation/shortest-quarter-turn yaw derives
+anisotropy up to 4×. The original projection uses 84° horizontal FOV, horizon 34%,
+eye .5, setback .4 and near/far .025/16; the accepted framing below changes the horizon
+to 40%. Camera smoothstep translation/shortest-quarter-turn yaw derives
 from authoritative MovementState without changing gameplay clocks or movement.
 Retain R01 face factors, linear camera-depth attenuation and blue-grey fog.
+
+## Camera framing trial — 2026-11-06
+
+**B accepted and implemented (2026-11-06).** The user preferred the in-game 40%
+horizon after comparing 34/40/45%; continue with 40% as the default. The original
+34% horizon is retained as the previous gold-standard reference. The 45% option
+was evaluated as a further relaxation.
+These put the viewport-centre ray approximately 9.23°, 5.80° and 2.91° below
+horizontal. Eye height .5, setback .4, horizontal FOV 84°, movement and fixed
+presentation remain unchanged. This changes the asymmetric frustum, not pitch.
+
+A small render-only `world_projection_parameters.hpp` owns the compile-time
+`viewHorizon` fraction measured from the viewport top. CPU projection, frustum
+culling/clipping, picking rays, GPU projection and sky reconstruction all consume
+it. There is no new per-frame state, allocation, save field or settings UI. Revert
+by setting this single value to `.34f` and rebuilding. The sky receives the same
+value as a shader uniform, avoiding a separate hard-coded horizon.
+
+An explicit hidden review tool uses production rendering/HUD and deterministic
+poses in a generated Underkeep intersection, Sanctuary city and the inn. Capture
+each compile-time variant at the same pose and clock, then leave the game built
+with 40%. After acceptance, retain six full-resolution screenshots in the local
+HTML gallery: accepted B and the original reference in all three environments.
+The three unselected 45% images are pruned. No OS input or window focus changes.
+
+Verification completed in Debug, using at most two build workers and one test
+process. Selected checks cover the changed projection and its picking/culling
+callers; no benchmark, stress test or second configuration was run:
+
+- `ctest --test-dir cmake-build-debug -R '^(world_cpu|world_visibility|world_environment)$' -j 1 --output-on-failure`:
+  CPU/culling and environment passed initially. Visibility exposed an old `.34f`
+  in its independent screen-to-height check; after correcting it to `.40f`,
+  reran only `-R '^world_visibility$'` and passed (1.30 s).
+- `cmake-build-debug/blobber_world_ao_gpu_tests --cpu-only`: passed the inverse
+  asymmetric projection checks and added CPU/GPU projection agreement across four
+  headings, near/distant points and both 16/40-cell far planes.
+- `cmake-build-debug/blobber_world_visibility_gpu_tests`: passed hidden OpenGL
+  billboard picking parity, clipping, both quality settings and resource lifecycle;
+  reported zero boundary pixel differences.
+- `blobber_review_camera_framing`: captured all three scenes for each horizon with
+  no GL error or retained world assets. Metadata confirms identical poses, clocks
+  and dungeon fingerprints. Images are 1920×1080; side/bottom HUD pixels match
+  exactly across variants, while all world images differ. Selected captures were
+  visually inspected. [Accepted gallery and reproduction](screenshots/camera-framing/README.md)
+  preserve B and the original reference; the user accepted B on 2026-11-06.
+- Gallery JavaScript passes `node --check`; `git diff --check` passes.
+
+The Debug game is rebuilt at `.40f`, matching the user's accepted choice. No saves
+or desktop input were touched. Disposable captures/logs were cleaned after promotion;
+acceptance cleanup retains six images and removes the three 45% alternatives.
+Only documentation, gallery labels/retention and the header comment changed on
+acceptance; the runtime value stays `.40f`, so builds and gameplay tests were not rerun.
 
 ## Modules, data and interfaces
 

@@ -198,7 +198,7 @@ inline void creatureMaskExposure() {
             if (picking.slot(x, y) == 0) {
                 const float height =
                     pipeline->frame().camera.position.y +
-                    (viewHeight * .34f - y - .5f) * picking.depth(y * viewWidth + x) / world_render::focal();
+                    (viewHeight * .40f - y - .5f) * picking.depth(y * viewWidth + x) / world_render::focal();
                 check(height >= 1.f - 1e-5f,
                       "Only body samples above the closed leaf survive its intersection mask");
             }

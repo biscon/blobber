@@ -1,5 +1,6 @@
 #include "render/world_visibility.hpp"
 #include "game/combat.hpp"
+#include "render/world_projection_parameters.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -327,7 +328,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         const float lateral = (x + .5f - viewWidth * .5f) / focal();
         if (frame.leaves.hides(frame.camera,
                                {frame.camera.forward.x + frame.camera.right.x * lateral,
-                                (viewHeight * .34f - y - .5f) / focal(),
+                                (viewHeight * viewHorizon - y - .5f) / focal(),
                                 frame.camera.forward.z + frame.camera.right.z * lateral},
                                depth, frame.bodyLeafRelations[owner].data()))
             return false;
@@ -352,7 +353,8 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
     const auto c = camera(in.movement, in.geometry, scene_.farClip);
     if (!sameCamera(c, frame().camera))
         return {};
-    const float lateral = (x + .5f - viewWidth * .5f) / focal(), vy = (viewHeight * .34f - y - .5f) / focal();
+    const float lateral = (x + .5f - viewWidth * .5f) / focal(),
+                vy = (viewHeight * viewHorizon - y - .5f) / focal();
     if (vy >= 0)
         return {};
     const float vx = c.forward.x + c.right.x * lateral, vz = c.forward.z + c.right.z * lateral;

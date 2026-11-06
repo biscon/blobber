@@ -1,6 +1,7 @@
 #include "render/world_scene.hpp"
 #include "core/preparation.hpp"
 #include "render/picking.hpp"
+#include "render/world_projection_parameters.hpp"
 #include "render/world_stairs.hpp"
 #include "world/view.hpp"
 #include <algorithm>
@@ -48,7 +49,7 @@ ScreenPoint project(const Camera& c, Vec p) noexcept {
     const float dx = p.x - c.position.x, dz = p.z - c.position.z;
     const float d = dx * c.forward.x + dz * c.forward.z;
     return {viewWidth * .5f + focal() * (dx * c.right.x + dz * c.right.z) / d,
-            viewHeight * .34f - focal() * (p.y - c.position.y) / d, d};
+            viewHeight * viewHorizon - focal() * (p.y - c.position.y) / d, d};
 }
 bool sameCamera(const Camera& a, const Camera& b) noexcept {
     return a.position.x == b.position.x && a.position.y == b.position.y && a.position.z == b.position.z &&
@@ -507,8 +508,8 @@ bool visible(const Camera& c, int x, int z, int width, int height, float low, fl
                 inside[1] |= depth <= c.farClip + eps;
                 inside[2] |= side >= -half - eps;
                 inside[3] |= side <= half + eps;
-                inside[4] |= up <= depth * viewHeight * .34f / focal() + eps;
-                inside[5] |= up >= -depth * viewHeight * .66f / focal() - eps;
+                inside[4] |= up <= depth * viewHeight * viewHorizon / focal() + eps;
+                inside[5] |= up >= -depth * viewHeight * (1 - viewHorizon) / focal() - eps;
             }
     return std::all_of(inside.begin(), inside.end(), [](bool v) { return v; });
 }

@@ -91,9 +91,9 @@ finalColor=vec4(flash!=0?vec3(c.a):c.rgb*(vec3(light)+lit)*(1.0-fog)+mix(vec3(15
 finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);
 })";
 constexpr const char* skyFragment = R"(#version 330
-out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;uniform sampler2D panorama;
+out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;uniform sampler2D panorama;uniform float viewHorizon;
 void main(){vec2 p=gl_FragCoord.xy/viewport;float f=250.0/tan(radians(42.0));
-vec3 ray=normalize(forward+right*((p.x-0.5)*500.0/f)+vec3(0,(p.y-0.66)*282.0/f,0));
+vec3 ray=normalize(forward+right*((p.x-0.5)*500.0/f)+vec3(0,(p.y-(1.0-viewHorizon))*282.0/f,0));
 vec2 st=vec2(fract(atan(ray.x,-ray.z)/6.28318530718+0.5),acos(clamp(ray.y,-1.0,1.0))/3.14159265359);
 finalColor=vec4(texture(panorama,st).rgb,1);})";
 constexpr const char* resolveFragment = R"(#version 330
@@ -453,6 +453,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         SetShaderValue(sky, GetShaderLocation(sky, "viewport"), viewport, SHADER_UNIFORM_VEC2);
         SetShaderValue(sky, GetShaderLocation(sky, "forward"), &camera.forward, SHADER_UNIFORM_VEC3);
         SetShaderValue(sky, GetShaderLocation(sky, "right"), &camera.right, SHADER_UNIFORM_VEC3);
+        SetShaderValue(sky, GetShaderLocation(sky, "viewHorizon"), &world_render::viewHorizon,
+                       SHADER_UNIFORM_FLOAT);
         const auto skyTexture = resources_.texture(v.textures[v.pack.sky]);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_REPEAT);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_T, RL_TEXTURE_WRAP_CLAMP);
