@@ -17,17 +17,34 @@ facts:
 - heard_guards_lunch
 greeting:
   beats:
-  - speaker: mayor
-    text: |
-      Have you heard anything of Gwendolyn? Then tell me!
+    - speaker: mayor
+      text: |
+        Hast thou uncovered tidings of fair Gwendolyn? Then speaketh post-haste, I command thee!
+      animation: talk
 introduction:
   beats:
-  - speaker: mayor
-    text: |
-      You there! Adventurers! My daughter Gwendolyn was kidnapped last night. Monsters came up from the dungeon beneath Sanctuary and carried her away!
-  - speaker: mayor
-    text: |
-      My beautiful daughter, dragged into that wretched place! Find her and bring her home safely. Boric and Balin are assisting me with the investigation. Their principal contribution so far has been standing there.
+    - speaker: mayor
+      text: |
+        Hold, ye travelers! Adventurers of fortune! Mine own daughter Gwendolyn was foully abducted yesternight. Vile fiends didst ascend from the dark dungeons beneath Sanctuary and carried her away into the abyss!
+      animation: talk
+    - speaker: mayor
+      text: |
+        My beautiful flesh and blood, dragged into that most wretched, damp hollow! Find her, I beseech thee, and return her safely to the surface. Boric and Balin are meant to be assisting mine office with this investigation. Yet their principal contribution to the crown thus far hath been merely standing there like static pillars of meat.
+      animation: talk
+    - speaker: boric
+      text: |
+        Uhhh.. heh hehe.
+      camera:
+        target: boric
+        duration_ms: 400
+      audio: dialogue/boric-chuckle.wav
+    - speaker: mayor
+      text: |
+        Thou must find her post-haste!!.
+      animation: talk
+      camera:
+        target: mayor
+        duration_ms: 300
 topics:
 - id: about
   label: What happened?
@@ -53,7 +70,7 @@ topics:
         overlay_dismiss_on_advance: true
       - speaker: balin
         text: |
-          Hark! Eh-heh-heh. Gaze thy eyes upon the density of this canvas, knave. The premium tier of OnlyScrolls is delivered via swift, majestic ravens rather than the common, peasant pigeon. I didst spendeth three whole hours self-abusing mine own rod in the barracks yesternight whilst gazing upon it. Triumphant.
+          Hark! Eh-heh-heh. Thou didst say 'breast'... eh-heh. Gaze thy eyes upon the sheer density of this canvas, knave! The premium tier of OnlyScrolls is delivered via swift, majestic ravens rather than the common, peasant pigeon. I didst spendeth three whole hours self-abusing mine own rod in the barracks yesternight whilst gazing upon it. Triumphant.
         camera:
           target: balin
           duration_ms: 400
@@ -78,68 +95,105 @@ topics:
 - id: kidnapping
   label: The kidnapping
   responses:
-  - beats:
-    - speaker: mayor
-      text: |
-        It happened during the night. Monsters from below took her before we could stop them. I need people who can go after her, not another explanation of why nobody noticed!
+    - beats:
+        - speaker: mayor
+          text: |
+            The foul deed didst transpire during the dead of night! Vile abominations from the abyss didst seize her before any soul couldst raise a blade to halt their escape. I require sturdy sell-swords who possesseth the spine to descend after her -- not another lengthy parchment explaining why mine own watchmen noticed absolutely naught!
+          animation: talk
+          audio: dialogue/mayor-groan.wav
 - id: dungeon
   label: The dungeon
   responses:
-  - beats:
-    - speaker: mayor
-      text: |
-        They took her into the dungeon beneath our town. I do not know how far down. Find her, and do not let your courage outrun your sense. She needs rescuers who can make it back.
+    - beats:
+      - speaker: mayor
+        text: |
+          They dragged her into the dark abyss beneath our town! I knowest not how many tiers down she abideth. Ye shall encounter endless, damp mineshafts plunging into the void!
+        animation: talk
+      - speaker: boric
+        text: |
+          Hark! Heh, heh. Thou didst say 'shafts'... eh-heh-heh.
+        camera:
+          target: boric
+          duration_ms: 300  # Snappy comedic whip-pan
+        animation: laugh
+        audio: dialogue/boric-chuckle.wav
+      - speaker: balin
+        text: |
+          Aye, heh, heh. Plunging deep into the dark hole... eh-heh. Tremendous.
+        camera:
+          target: balin
+          duration_ms: 400
+        animation: laugh
+        audio: dialogue/balin-chuckle.wav
+      - speaker: mayor
+        text: |
+          SILENCE, YE BLITHERING KNAVES! Find my flesh and blood, and let not thy courage outrun thy sense. She requireth rescuers who canst actually returnest alive!
+        camera:
+          target: mayor
+          duration_ms: 200  # Furious rage snap-back
+        animation: explosive_rage
+        audio: dialogue/mayor-groan.wav
 - id: guards
   label: Your guards
   responses:
-  - set_fact: heard_guards_lunch
-    beats:
-    - speaker: mayor
-      text: |
-        Boric and Balin have been investigating all morning. I await their report.
-      animation: talk
-    - speaker: boric
-      text: |
-        We investigated lunch twice.
-      camera:
-        target: boric
-        duration_ms: 200
-      animation: laugh
-      audio: dialogue/boric-chuckle.wav
-    - speaker: mayor
-      text: |
-        My daughter is missing. The sandwiches are not suspects!
-      animation: talk
-    - speaker: balin
-      text: |
-        Not any more, sir. We eliminated them.
-      animation: laugh
-      audio: dialogue/balin-chuckle.wav
-    - speaker: mayor
-      text: |
-        Their dedication to the wrong task is extraordinary. Please find Gwendolyn.
-      animation: talk
-      audio: dialogue/mayor-groan.wav
-  - when_fact: heard_guards_lunch
-    beats:
-    - speaker: mayor
-      text: |
-        I have forbidden further investigations of lunch.
-    - speaker: boric
-      text: |
-        Good news, sir. We have a lead on supper.
-      animation: laugh
-      audio: dialogue/boric-chuckle.wav
-    - speaker: balin
-      text: |
-        A very promising stew.
-      animation: laugh
-      audio: dialogue/balin-chuckle.wav
-    - speaker: mayor
-      text: |
-        Do you see what I have to work with? Find my daughter.
-      animation: talk
-      audio: dialogue/mayor-groan.wav
+    - set_fact: heard_guards_lunch
+      beats:
+        - speaker: mayor
+          text: |
+            Boric and Balin have been diligently investigating since the first light of dawn. Verily, I await their official report with bated breath.
+          animation: talk
+        - speaker: boric
+          text: |
+            Hark, sire! Heh, heh. We didst thoroughly investigate the midday feast... twice, in fact.
+          camera:
+            target: boric
+            duration_ms: 200
+          animation: laugh
+          audio: dialogue/boric-chuckle.wav
+        - speaker: mayor
+          text: |
+            Mine own flesh and blood is missing! The tavern sandwiches art not suspects in this treason!
+          animation: talk
+        - speaker: balin
+          text: |
+            Not any longer, your grace. Eh-heh. We didst completely eliminate them from the realm. Triumphant.
+          camera:
+            target: balin
+            duration_ms: 400
+          animation: laugh
+          audio: dialogue/balin-chuckle.wav
+        - speaker: mayor
+          text: |
+            Their unyielding dedication to the entirely wrong endeavor is truly extraordinary. I beseech thee, go forth and find Gwendolyn.
+          animation: talk
+          audio: dialogue/mayor-groan.wav
+    - when_fact: heard_guards_lunch
+      beats:
+        - speaker: mayor
+          text: |
+            Henceforth, I have strictly forbidden further investigations concerning the midday feast!
+          animation: talk
+        - speaker: boric
+          text: |
+            Joyous tidings, sire! Heh, heh. We have uncovered a most promising lead regarding supper.
+          camera:
+            target: boric
+            duration_ms: 200
+          animation: laugh
+          audio: dialogue/boric-chuckle.wav
+        - speaker: balin
+          text: |
+            Aye, eh-heh. A highly suspicious, robustly seasoned stew abideth in the kitchen.
+          camera:
+            target: balin
+            duration_ms: 400
+          animation: laugh
+          audio: dialogue/balin-chuckle.wav
+        - speaker: mayor
+          text: |
+            Dost thou witness the utter baseline human material I am forced to endure? Find my daughter!
+          animation: talk
+          audio: dialogue/mayor-groan.wav
 - id: farewell
   label: Farewell
   kind: farewell

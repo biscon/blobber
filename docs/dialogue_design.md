@@ -572,3 +572,34 @@ successful run uses the current 700 ms overlay delay and 300/400 ms guard pans.
 Source/package YAML match and diff whitespace checks pass. Unchanged audio, GPU
 lifecycle suites and broader configuration matrix were not rerun. Disposable
 captures and logs were cleaned after evidence promotion; no diagnostics retained.
+
+### Parchment verse artwork edit
+
+Implemented and visually checked (2026-11-06), pending user review: replaced the existing prepared overlay PNG with an
+imagegen edit adding the user's four-line verse in readable handwritten ink in
+the empty parchment area left of Gwendolyn. Preserve portrait identity, costume,
+pose, raven stamp, parchment silhouette and transparent alpha. Keep the existing
+asset path, YAML cues and renderer; this is a content-only change within the
+existing prepared-overlay design. Retain the exact edit prompt with provenance.
+Verify spelling visually and PNG dimensions/alpha, then update the packaged asset
+and selected in-game evidence if the hidden capture runner is available.
+
+Verification: built-in imagegen edit inspected for verbatim wording, readable
+calligraphy, portrait/stamp continuity and clean alpha. The PNG remains
+1536×1024 RGBA, with transparent exterior pixels, within the existing limits.
+`cmake --build --preset release --target blobber_assets -j2` passes at low priority;
+source and packaged PNGs match. The existing hidden production `dialogue-beats`
+scenario passes, including overlay delay/dismissal and resource release. Its scroll
+close-up was visually inspected at 1920×1080 and replaces the matching gallery
+image (still six images). No code changed; CPU suites were not rerun for this
+artwork-only edit. Disposable capture/log output cleaned after promotion; original
+generated output remains at the image tool's managed location.
+
+### Authored punctuation repair (2026-11-07)
+
+Replaced the single Unicode em dash in the Mayor kidnapping speech with ASCII
+` -- ` to satisfy the existing printable-ASCII dialogue contract. Wording and
+other authored edits are preserved. Both current dialogue YAML files parse and
+pass a printable-ASCII scan. The Debug `blobber_assets` target succeeds at two
+low-priority workers; packaged mayor YAML matches source. No engine changes or
+interactive Continue check; this is a content-only repair. Owned build log cleaned.

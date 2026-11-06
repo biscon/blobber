@@ -13,6 +13,8 @@ scripted inputs without desktop input/focus automation.
 1. [Boric holds up the document](01-boric-holds-document.png): at 450 ms, the pan
    has settled and the hold-up animation is unobstructed.
 2. [Scroll close-up](02-boric-scroll.png): shows at 700 ms, after all four frames.
+   Refreshed for the handwritten verse edit; spelling and readability checked at
+   the game display size. Verse artwork remains pending user review.
 3. [First Next dismisses](03-boric-dismissed.png): same beat, revealed text and
    idle guard; close-up gone immediately.
 4. [Balin unobstructed](04-balin-unobstructed.png): portrait stays hidden through

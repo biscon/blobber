@@ -4,6 +4,9 @@
 briefing. Generated with built-in imagegen using the sole approved
 [Gwendolyn v3 sheet](../../../docs/mockups/gwendolyn-v1/README.md), depicting the
 adult character aged 25. The exact descriptive prompt is retained alongside it.
+A subsequent built-in imagegen edit adds the user-supplied verse in readable
+handwritten ink to the left of the portrait; its [exact edit prompt](onlyscrolls_overlay.verse.prompt.json)
+is retained separately from the original generation prompt.
 The PNG has genuine transparent alpha; its worn parchment, turkey leg and raven
 stamp are authored artwork, not runtime procedural graphics.
 
