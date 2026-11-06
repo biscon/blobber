@@ -3,13 +3,16 @@
 namespace blobber::test {
 // Test adapter calls the same world pipelines as graphical GameView, without a context.
 struct CpuView {
+    world_assets::AssetLease lease;
     world_render::Scene scene;
     world_render::VisibilityPipeline visibility;
     world_render::EffectsPipeline effects;
     NpcAnimator animator;
     CpuView(const GameSession& game, const world_assets::CpuAssets& assets,
             const std::vector<NpcTimings>& timings)
-        : scene(world_render::prepare(game.geometry(), {}, {}, {}, &assets)), visibility(scene, assets),
+        : lease(assets.acquire(assets.requirements(game.geometry().base().definition().assetPack,
+                                                   &game.actors().snapshot(), true))),
+          scene(world_render::prepare(game.geometry(), {}, {}, {}, &assets)), visibility(scene, assets),
           effects(assets), animator(game.actors(), timings) {}
     void update(const GameSession& game, const SpellArea* preview = nullptr) {
         animator.setTime(game.timeMs(), &game.effects());

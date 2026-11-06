@@ -26,6 +26,7 @@ CombatController::CombatController(GeometryView map, Party& party, ActorWorld& a
     }
     state_.world = actors.snapshot().world;
     visuals_.world = state_.world;
+    spellVisuals_.clear(state_.world);
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto& m = *actors.catalog().monster(actors.snapshot().actors[i].monster);
         enemyMana_[i] = m.spellcasting == rules::EnemyCasting::AcolyteSupport ? 6 : 0;

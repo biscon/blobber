@@ -1,7 +1,7 @@
 #include "app/result_flow.hpp"
 #include "game/campaign.hpp"
 #include "game/commands.hpp"
-#include "support/automation_fixtures.hpp"
+#include "support/campaign_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/travel_layout.hpp"
 #include <iostream>
@@ -10,101 +10,106 @@ using namespace blobber;
 using namespace blobber::automation;
 using namespace blobber::automation::test;
 namespace {
-FixtureRequest stair(const GameSession& g, FixtureKind kind) {
-    for (unsigned i = 0; i < g.fixtures().definition().count; ++i)
-        if (g.fixtures().definition().entries[i].kind == kind)
-            return {g.fixtures().id(i), g.fixtures().revision()};
-    throw std::runtime_error("Missing fixture");
-}
-void face(GameSession& g, Heading h) {
-    while (g.movement().player.heading != h)
-        g.move(Action::TurnRight);
-}
-void walk(GameSession& g, Cell to) {
-    g.setAnimated(false);
-    const auto& map = g.geometry().base();
-    const auto n = std::size_t(map.width() * map.height());
-    std::vector<int> parent(n, -1);
-    auto index = [&](Cell c) { return c.y * map.width() + c.x; };
-    auto cell = [&](int i) { return Cell{i % map.width(), i / map.width()}; };
-    std::queue<Cell> q;
-    const auto start = g.movement().player.cell;
-    parent[index(start)] = index(start);
-    q.push(start);
-    while (!q.empty()) {
-        const auto c = q.front();
-        q.pop();
-        for (unsigned d = 0; d < 4; ++d) {
-            const auto next = c + forward(Heading(d));
-            if (map.solid(next) || parent[index(next)] >= 0)
-                continue;
-            const auto f = g.fixtures().at(next);
-            if (f >= 0 && stairFixture(g.fixtures().definition().entries[unsigned(f)].kind))
-                continue;
-            if (f >= 0 && g.fixtures().definition().entries[unsigned(f)].kind == FixtureKind::GuardianGate &&
-                !g.objective().completed)
-                continue;
-            parent[index(next)] = index(c);
-            q.push(next);
+using namespace blobber::campaign_test;
+void cityCampaign() {
+    const auto cat = catalog();
+    const auto defs = definitions();
+    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    check(run.game().movement().player == Player{{11, 8}, Heading::North} &&
+              run.map().definition().assetPack == "sanctuary-city",
+          "New Game uses square arrival");
+    check(!run.game().atSanctuary() && !run.game().fixtures().discovered({12, 20}),
+          "Square is not free rest and distant gate is initially unexplored");
+    check(!run.previewTravel(run.request(stair(run.game(), FixtureKind::Downstairs))),
+          "Square does not offer remote stair travel");
+    const auto inventory = run.party().inventory().identity();
+    run.party().damage({0}, 1);
+    const auto hp = run.party().character({0})->hitPoints;
+    walk(run.game(), {12, 20});
+    face(run.game(), Heading::South);
+    check(run.game().fixtures().discovered({12, 20}) && !run.game().geometry().canStep({12, 20}, {12, 21}) &&
+              !run.game().fixtures().find(run.game().nearbyFixture().id),
+          "Explored city gate stays closed without an action");
+    const auto gatePose = run.game().movement().player;
+    auto checkpoint = run.checkpoint();
+    const auto discovered = checkpoint->locations[0].state->fixtures.discovered;
+    CampaignRun restored(cat, std::move(*checkpoint), defs.timings);
+    check(restored.game().movement().player == gatePose &&
+              restored.checkpoint()->locations[0].state->fixtures.discovered == discovered,
+          "City pose and partial exploration survive checkpoint restore");
+    // Immutable city data must not become an arbitrary user-defined hub, even with a new checksum.
+    for (unsigned mutation = 0; mutation < 5; ++mutation) {
+        auto bad = run.checkpoint();
+        auto& hub = bad->locations[0];
+        if (mutation == 0)
+            hub.entry.heading = Heading::West;
+        if (mutation == 1)
+            hub.fixtures.landings[1] = hub.entry.cell;
+        if (mutation == 2)
+            hub.fixtures.discovery = false;
+        if (mutation == 3)
+            hub.rows[20][12] = '#';
+        if (mutation == 4) {
+            hub.world.scenery[0].model = "different-tree";
+            hub.worldFingerprint = hub.world.fingerprint();
         }
+        bool rejected = false;
+        try {
+            CampaignRun invalid(cat, std::move(*bad), defs.timings);
+        } catch (const std::invalid_argument&) {
+            rejected = true;
+        }
+        check(rejected, "Changed canonical hub definition rejects");
     }
-    check(parent[index(to)] >= 0, "fixture path exists");
-    std::vector<Cell> path;
-    for (auto c = to; !(c == start); c = cell(parent[index(c)]))
-        path.push_back(c);
-    for (auto i = path.rbegin(); i != path.rend(); ++i) {
-        const auto here = g.movement().player.cell;
-        const auto delta = *i + here * -1;
-        Heading h = delta.x > 0   ? Heading::East
-                    : delta.x < 0 ? Heading::West
-                    : delta.y > 0 ? Heading::South
-                                  : Heading::North;
-        face(g, h);
-        auto fixture = g.fixtures().at(*i);
-        if (fixture >= 0 && g.fixtures().definition().entries[unsigned(fixture)].kind == FixtureKind::Door &&
-            !g.fixtures().open(unsigned(fixture)))
-            check(g.interact({g.fixtures().id(unsigned(fixture)), g.fixtures().revision()}).accepted,
-                  "open traversed door");
-        g.move(Action::Forward);
-        check(g.movement().player.cell == *i, "checked fixture movement");
+    travel(run, FixtureKind::Downstairs);
+    auto& saved = *run.location(0).saved;
+    auto& hazard = saved.effects.ground.areas[0];
+    hazard.active = true;
+    hazard.cell = run.location(0).exit.cell;
+    hazard.id.serial = saved.effects.nextArea++;
+    hazard.untilMs = 60000;
+    hazard.caster = rules::CharacterId{0};
+    const auto upstairs = stair(run.game(), FixtureKind::Upstairs);
+    face(run.game(), run.game().fixtures().find(upstairs.id)->facing);
+    bool rejected = false;
+    try {
+        (void)run.prepareTravel(run.request(upstairs));
+    } catch (const std::invalid_argument&) {
+        rejected = true;
     }
-}
-void kill(GameSession& g) {
-    for (std::size_t i = 0; i < g.actors().snapshot().count; ++i)
-        g.actors().damage(g.actors().id(i), 100000, g.timeMs());
-    g.update(0, false);
-}
-void travel(CampaignRun& run, FixtureKind kind) {
-    auto& g = run.game();
-    auto r = stair(g, kind);
-    const auto f = *g.fixtures().find(r.id);
-    walk(g, stairLanding(f));
-    face(g, f.facing);
-    r = stair(g, kind);
-    auto ticket = run.prepareTravel(run.request(r));
-    check(run.commitTravel(ticket), "checked travel commits");
+    check(rejected && run.activeLocation() == 1, "Dungeon return checks its own landing hazard");
+    hazard.active = false;
+    travel(run, FixtureKind::Upstairs);
+    check(run.game().movement().player == Player{{13, 7}, Heading::South} &&
+              run.party().character({0})->hitPoints == hp &&
+              run.party().inventory().identity() == inventory && run.game().fixtures().discovered({12, 20}),
+          "Dungeon return faces town, preserves identity/discovery and does not rest");
+    travel(run, FixtureKind::Downstairs);
+    const auto kits = run.party().campSupplies().kits;
+    auto recall = run.prepareTravel(run.recallRequest());
+    check(run.commitTravel(recall) && !run.commitTravel(recall) &&
+              run.game().movement().player == Player{{9, 6}, Heading::North} && !run.game().atSanctuary() &&
+              run.party().campSupplies().kits == kits - 1 && run.party().character({0})->hitPoints == hp,
+          "Recall arrives at sanctuary and charges once without resting");
+    check(!run.previewTravel(run.waypointRequest(1)), "Recall does not enable remote waypoint travel");
 }
 void campaign() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    entrance(run);
     check(run.activeLocation() == 0 && run.status() == CampaignStatus::Active, "campaign starts in hub");
+    walk(run.game(), run.location(0).entry.cell);
     CommandController hubUi(run.game(), defs.timings);
     hubUi.refresh({}, false, false, true);
-    check(hubUi.snapshot().campaign &&
-              std::string_view(hubUi.snapshot().fixturePrompt.data()).find("R: rest") !=
-                  std::string_view::npos,
-          "hub exposes sanctuary recovery alongside stair interaction");
-    run.game().setAnimated(false);
-    run.game().move(Action::TurnLeft);
-    run.game().move(Action::Forward);
+    check(!hubUi.snapshot().fixturePrompt[0], "Sanctuary arrival no longer exposes free recovery");
+    walk(run.game(), {11, 8});
     hubUi.refresh({}, false, false, true);
     check(!hubUi.snapshot().fixturePrompt[0], "Idle campaign has no permanent location strip");
-    run.game().move(Action::Back);
-    run.game().move(Action::TurnRight);
+    entrance(run);
     hubUi.refresh({}, false, false, true);
-    check(std::string_view(hubUi.snapshot().fixturePrompt.data()).find("F /") != std::string_view::npos,
-          "Contextual stair prompt returns after leaving idle exploration");
+    check(std::string_view(hubUi.snapshot().fixturePrompt.data()) == "[F] Enter dungeon",
+          "Entrance exposes contextual stair prompt");
     auto* party = &run.party();
     const auto inventory = party->inventory().identity();
     const auto initialHp = party->character({0})->hitPoints;
@@ -200,7 +205,9 @@ void transferFailuresAndEffects() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 8);
+    entrance(run);
     auto enter = [&] {
+        entrance(run);
         auto t = run.prepareTravel(run.request(run.game().nearbyFixture()));
         check(run.commitTravel(t), "fixture enters adjacent floor");
     };
@@ -269,6 +276,7 @@ void transferFailuresAndEffects() {
     check(run.game().combat().snapshot().cooldownMs[3] == cooldown &&
               run.party().character({2})->temporaryHitPoints == 7,
           "action cooldown and temporary HP follow the party without reset");
+    enterInn(run);
     run.party().damage({0}, 1);
     RestRequest rest;
     rest.kind = RestKind::Long;
@@ -276,7 +284,7 @@ void transferFailuresAndEffects() {
     rest.token = run.game().restToken();
     const auto hp = run.party().character({0})->hitPoints;
     const auto clock = run.gameplayMs();
-    check(bool(run.game().rest(rest)), "hub explicit sanctuary long rest");
+    check(bool(run.game().rest(rest)), "inn explicit free long rest");
     check(run.party().character({0})->hitPoints > hp && run.gameplayMs() == clock + 28800000,
           "rest advances campaign time exactly once");
     check(!run.game().effects().has(rules::CharacterId{0}, EffectKind::Bless) &&
@@ -285,6 +293,7 @@ void transferFailuresAndEffects() {
     check(run.party().character({2})->temporaryHitPoints == 0 &&
               run.game().combat().snapshot().cooldownMs[3] == 0,
           "rest expires temporary HP and readiness deadlines once on campaign time");
+    leaveInn(run);
     enter();
     auto after = std::make_unique<FloorState>();
     run.game().exportFloor(*after);
@@ -304,6 +313,7 @@ void transferFailuresAndEffects() {
     check(a.str() == b.str(), "combat RNG restored without draws");
     // Malformed destination and threatened landing both fail without changing current run.
     travel(run, FixtureKind::Upstairs);
+    entrance(run);
     auto& saved = *run.location(1).saved;
     const auto count = saved.actors.count;
     saved.actors.count = 257;
@@ -334,6 +344,7 @@ void inventoryAndLifecycle() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    entrance(run);
     auto* owner = &run.party();
     const auto id = owner->inventory().identity();
     owner->awardExperience(1200);
@@ -351,7 +362,7 @@ void inventoryAndLifecycle() {
             if (item && cat.item(item->item)->kind == rules::ItemKind::Supply)
                 check(owner->consumeItem(h, item->quantity), "consume owned finite camp supplies");
         }
-    walk(run.game(), {4, 5});
+    walk(run.game(), {12, 8});
     ItemHandle dropped;
     for (std::uint16_t b = 0; b < bagCells; ++b) {
         const auto h = owner->inventory().at({{0}, b});
@@ -371,13 +382,13 @@ void inventoryAndLifecycle() {
                        run.game().loot().snapshot().stacks[i].generation};
             break;
         }
-    walk(run.game(), {4, 4});
-    face(run.game(), Heading::East);
+    entrance(run);
     travel(run, FixtureKind::Downstairs);
     check(owner->inventory().identity() == id && owner->character({0})->build.level == level,
           "advancement and inventory survive descent");
     travel(run, FixtureKind::Upstairs);
     check(!run.game().lootAccess(oldLoot), "old floor loot handle rejects after revisit");
+    walk(run.game(), {12, 8});
     face(run.game(), Heading::South);
     auto restored = oldLoot;
     restored.world = run.game().loot().snapshot().world;
@@ -420,6 +431,7 @@ void allPortableEffects() {
           EffectKind::HoldPerson, EffectKind::Guidance, EffectKind::Resistance, EffectKind::Sanctuary,
           EffectKind::Aid, EffectKind::MirrorImage}) {
         CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        entrance(run);
         EffectRequest e;
         e.kind = kind;
         e.world = run.game().actors().snapshot().world;
@@ -440,6 +452,8 @@ void allPortableEffects() {
                   restored.entries[0].remainingMs == status.entries[0].remainingMs,
               "transfer preserves effect duration");
         for (unsigned transition = 0; transition < 2; ++transition) {
+            if (transition == 1)
+                entrance(run);
             const auto r = transition == 0 ? run.recallRequest() : run.waypointRequest(1);
             auto next = run.prepareTravel(r);
             check(run.commitTravel(next) && run.game().effects().has(target, kind),
@@ -452,6 +466,7 @@ void allPortableEffects() {
     }
     for (const auto kind : {EffectKind::Sleep, EffectKind::Blind, EffectKind::Slow, EffectKind::Knockdown}) {
         CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        entrance(run);
         CombatEvents notices;
         const_cast<EffectController&>(run.game().effects())
             .condition(rules::CharacterId{1}, kind, {0}, 0, notices);
@@ -459,12 +474,15 @@ void allPortableEffects() {
         check(run.commitTravel(ticket) && run.game().effects().has(rules::CharacterId{1}, kind),
               "party condition transfers");
         for (unsigned transition = 0; transition < 2; ++transition) {
+            if (transition == 1)
+                entrance(run);
             auto next = run.prepareTravel(transition == 0 ? run.recallRequest() : run.waypointRequest(1));
             check(run.commitTravel(next) && run.game().effects().has(rules::CharacterId{1}, kind),
                   "party conditions survive recall and waypoint return");
         }
     }
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    entrance(run);
     auto initial = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(initial), "capacity fixture enters floor");
     EffectRequest e;
@@ -489,6 +507,7 @@ void allPortableEffects() {
     e.targets[0] = run.game().actors().id(0);
     check(bool(run.game().applyEffect(e)), "one floor-local slot occupied");
     travel(run, FixtureKind::Upstairs);
+    entrance(run);
     e.world = run.game().actors().snapshot().world;
     e.kind = EffectKind::MageArmor;
     e.targets[0] = rules::CharacterId{3};
@@ -516,6 +535,7 @@ void recallAndWaypoints() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    entrance(run);
     auto& party = run.party();
     const auto identity = party.inventory().identity();
     auto source = std::make_unique<FloorState>();
@@ -637,7 +657,7 @@ void recallAndWaypoints() {
         run.game().setAnimated(false);
         run.game().move(Action::TurnLeft);
         rejects(run.waypointRequest(depth));
-        face(run.game(), Heading::East);
+        entrance(run);
         auto back = run.prepareTravel(run.waypointRequest(depth));
         check(run.commitTravel(back) && run.game().movement().player == run.location(depth).entry &&
                   party.campSupplies().kits == kits - 1 && party.character({0})->experience == xp,
@@ -671,6 +691,7 @@ void recallAndWaypoints() {
     travel(run, FixtureKind::Upstairs);
     travel(run, FixtureKind::Upstairs);
     check(run.activeLocation() == 0 && !party.campSupplies().kits, "zero-kit walking remains free");
+    enterInn(run);
     party.damage({0}, 1);
     RestRequest rest;
     rest.kind = RestKind::Long;
@@ -678,7 +699,9 @@ void recallAndWaypoints() {
     rest.token = run.game().restToken();
     const auto clock = run.gameplayMs();
     check(bool(run.game().rest(rest)) && !party.campSupplies().kits && run.gameplayMs() == clock + 28800000,
-          "explicit sanctuary rest restores without kit refill");
+          "explicit inn rest restores without kit refill");
+    leaveInn(run);
+    entrance(run);
     CommandController selector(run.game());
     selector.refresh({}, false, false, true);
     selector.openTravel();
@@ -712,6 +735,7 @@ void recallSafetyAndRollback() {
     const auto cat = catalog();
     const auto defs = definitions();
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    entrance(run);
     travel(run, FixtureKind::Downstairs);
     auto& game = run.game();
     const auto denied = [&](const char* reason) {
@@ -728,19 +752,19 @@ void recallSafetyAndRollback() {
     wind.turn = game.combat().snapshot().turn;
     check(game.submit(wind).reason == CommandReason::Resolved, "owned feature starts presentation");
     game.update(.7, false);
-    denied("settled safe exploration");
+    denied("Wait until it is safe to travel");
     game.update(.4, false);
     auto& phase = const_cast<CombatSnapshot&>(game.combat().snapshot()).phase;
     for (const auto state : {CombatPhase::Contact, CombatPhase::Turns, CombatPhase::Approach,
                              CombatPhase::Facing, CombatPhase::RoundEnd, CombatPhase::Victory}) {
         phase = state;
-        denied("settled safe exploration");
+        denied("Wait until it is safe to travel");
     }
     phase = CombatPhase::Exploration;
     CombatEvents events;
     auto& effects = const_cast<EffectController&>(game.effects());
     effects.createArea(game.movement().player.cell, {0}, 10, game.timeMs(), events);
-    denied("settled safe exploration");
+    denied("Wait until it is safe to travel");
     const_cast<GroundSnapshot&>(effects.ground()).areas[0].active = false;
     for (std::uint16_t i = 0; i < 4; ++i)
         effects.condition(rules::CharacterId{i}, EffectKind::Sleep, {0}, game.timeMs(), events);
@@ -757,7 +781,7 @@ void recallSafetyAndRollback() {
     local.targets[1] = game.actors().id(0);
     const auto concentration = game.applyEffect(local);
     check(bool(concentration), "mixed concentration fixture");
-    denied("concentration attached to local enemies");
+    denied("Dismiss spells affecting enemies");
     check(bool(game.removeEffect(concentration.id)), "explicit mixed concentration dismissal");
     // Seed a malformed hub record, then a real local landing hazard. Neither failure charges.
     auto& hub = *run.location(0).saved;
@@ -802,6 +826,7 @@ void travelUi() {
     const auto cat = catalog();
     const auto defs = definitions();
     CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    entrance(run);
     UiInput open, confirm, cancel;
     open.pressed[std::size_t(UiKey::Travel)] = true;
     open.pressed[std::size_t(UiKey::TransferItem)] = true;
@@ -824,6 +849,16 @@ void travelUi() {
     check(bool(run.party().acquire({{0}, cat.findItem("camp_kit"), 1, run.party().inventory().revision()})),
           "recall UI fixture owns a kit for stale-panel consumption and another for commit");
     CommandController ui(run.game());
+    ui.refresh({}, false, false, true);
+    const auto entryPose = run.game().movement().player;
+    const auto up = stair(run.game(), FixtureKind::Upstairs);
+    const auto* upDefinition = run.game().fixtures().find(up.id);
+    run.game().restorePose({stairLanding(*upDefinition), upDefinition->facing}, false);
+    run.game().update(0, false);
+    ui.refresh({}, false, false, true);
+    check(std::string_view(ui.snapshot().fixturePrompt.data()) == "[F] Ascend",
+          "Usable dungeon exit offers short Ascend prompt");
+    run.game().restorePose(entryPose, false);
     ui.refresh({}, false, false, true);
     const auto supply = run.party().inventory().locate(run.party().campSupplies().supply);
     ui.openInventory(supply.character);
@@ -861,6 +896,7 @@ void travelUi() {
     check(ui.snapshot().travelRequested && !ui.snapshot().modal(), "click confirms recall intent");
     auto ticket = run.prepareTravel(*ui.snapshot().travelRequested);
     check(run.commitTravel(ticket), "UI recall commits");
+    entrance(run);
     CommandController returned(run.game());
     returned.refresh({}, false, false, true);
     returned.interactFixture();
@@ -899,6 +935,7 @@ void adapters(const std::filesystem::path& retain) {
     client.trace = &trace;
     const auto start = client.request("start", {{"scenario", campaignScenario(cat)}});
     check(start.at("ok") && start.at("data").at("scenario_kind") == "campaign", "campaign protocol launch");
+    entrance(client);
     const auto preview = client.request("preview", {{"action", {{"kind", "interact"}, {"fixture", 0}}}});
     check(preview.at("ok") && preview.at("data").at("accepted"), "wire stair preview");
     check(client.act({{"kind", "interact"}, {"fixture", 0}}).at("data").at("accepted"), "wire stair travel");
@@ -912,6 +949,7 @@ void adapters(const std::filesystem::path& retain) {
     check(!client.act({{"kind", "recall"}}).at("data").at("accepted").get<bool>() &&
               client.protocol.session()->game().party().campSupplies().kits == kitCount - 1,
           "repeated wire recall at hub does not charge again");
+    entrance(client);
     check(client.act({{"kind", "waypoint"}, {"depth", 1}}).at("data").at("accepted"), "wire entry return");
     auto upstairs = stair(client.protocol.session()->game(), FixtureKind::Upstairs);
     const auto stairFacing = client.protocol.session()->game().fixtures().find(upstairs.id)->facing;
@@ -994,6 +1032,7 @@ void adapters(const std::filesystem::path& retain) {
     Client failure(cat, defs, Mode::Visual, factory, &calls);
     check(failure.request("start", {{"scenario", campaignScenario(cat)}}).at("ok"),
           "view failure fixture starts");
+    entrance(failure);
     const auto original = failure.protocol.state();
     const auto failed = failure.act({{"kind", "interact"}, {"fixture", 0}});
     check(failed.at("ok") && !failed.at("data").at("accepted") &&
@@ -1003,6 +1042,7 @@ void adapters(const std::filesystem::path& retain) {
     Client recallFailure(cat, defs, Mode::Visual, factory, &recallCalls);
     check(recallFailure.request("start", {{"scenario", campaignScenario(cat)}}).at("ok"),
           "recall view failure fixture starts");
+    entrance(recallFailure);
     check(recallFailure.act({{"kind", "interact"}, {"fixture", 0}}).at("data").at("accepted"),
           "recall failure fixture enters floor");
     const auto recallBefore = recallFailure.protocol.state();
@@ -1027,12 +1067,20 @@ int main(int argc, char** argv) {
         }
         const std::filesystem::path retain =
             argc == 3 && std::string_view(argv[1]) == "--retain" ? argv[2] : "";
+        cityCampaign();
+        std::cout << "campaign\n";
         campaign();
+        std::cout << "transferFailuresAndEffects\n";
         transferFailuresAndEffects();
+        std::cout << "inventoryAndLifecycle\n";
         inventoryAndLifecycle();
+        std::cout << "allPortableEffects\n";
         allPortableEffects();
+        std::cout << "recallAndWaypoints\n";
         recallAndWaypoints();
+        std::cout << "recallSafetyAndRollback\n";
         recallSafetyAndRollback();
+        std::cout << "travelUi\n";
         travelUi();
         adapters(retain);
         std::cout << "campaign checks passed\n";

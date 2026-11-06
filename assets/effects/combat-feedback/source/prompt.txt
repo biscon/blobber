@@ -1,0 +1,9 @@
+Use case: precise-object-edit / production UI sprite extraction.
+Input image is the approved A — PAINTED SPLASH concept. Extract/recreate ONLY its THREE text-free backing shapes as a production transparent sprite sheet.
+ONE HORIZONTAL ROW, EXACTLY THREE EQUAL CELLS, left to right:
+1) DAMAGE: the rich dark crimson painted BLOOD PUDDLE / rounded splash from behind "12", with rounded irregular pooling lobes, a few separate small droplets, subtle wet highlights, deeper maroon edges and a dark enough uncluttered center for ivory digits.
+2) OUTCOME: the charcoal-black painted ink blot behind "SAVED"/"MISS", with rounded pooling lobes, small ink droplets, lightly mottled painted texture, dense dark center.
+3) IMMUNE: the slate blue-grey ink blot behind "IMMUNE", otherwise same rounded family.
+Remove ALL letters, numbers, labels, frames, mockup layout, game screenshot and scenery. Only three independent painted splash sprites on TRUE TRANSPARENT BACKGROUND.
+Each splash horizontally oval, roughly twice as wide as tall; fully contained within central 80% of its cell, with generous empty gutters. Similar apparent size and centered alignment. A few droplets must be small and close to the main puddle, not large beads. Crisp textured painted pixel-art edges matching the game, not photoreal liquid. No pointed starburst spikes, no jagged radial explosion, no puffy smoke, no halo, no broad background haze. Keep the chosen visual identity faithfully.
+Suggested canvas 1536x512, one row of three 512-square cells. Transparent exterior and transparent gaps between droplets. Do NOT bake text into the artwork.

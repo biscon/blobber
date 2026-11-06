@@ -19,7 +19,7 @@ struct GpuMesh {
 };
 struct GpuCounts {
     unsigned textures = 0, targets = 0, meshes = 0, shaders = 0;
-    std::size_t bytes = 0;
+    std::size_t bytes = 0, externalBytes = 0, peakBytes = 0;
 };
 struct GpuTransfers {
     std::uint64_t uploads = 0, bytes = 0;
@@ -28,6 +28,7 @@ class GpuResources {
   public:
     ~GpuResources();
     TextureHandle createTexture(const Image& image);
+    void updateTexture(TextureHandle, const void* pixels, std::size_t bytes);
     TargetHandle createTarget(int width, int height, bool sampleDepth = false);
     void copyDepth(TargetHandle source, TargetHandle destination);
     MeshHandle createMesh(const world_render::Scene&);
@@ -44,18 +45,45 @@ class GpuResources {
     void finishPreparation(); // Validate the completed staged draw before publication.
     GpuTransfers transfers() const noexcept { return transfers_; }
     GpuCounts counts() const noexcept { return counts_; }
+    void addExternalBytes(std::size_t n) noexcept {
+        counts_.externalBytes += n;
+        counts_.bytes += n;
+        recordPeak();
+    }
+    void recordPeak() noexcept {
+        if (counts_.bytes > counts_.peakBytes)
+            counts_.peakBytes = counts_.bytes;
+    }
+    void removeExternalBytes(std::size_t n) noexcept {
+        counts_.externalBytes -= n;
+        counts_.bytes -= n;
+    }
     // Diagnostic preparation injection only. Negative disables; zero fails next acquisition.
     void failAfter(int acquisitions) noexcept { failAfter_ = acquisitions; }
 
   private:
     void checkpoint();
     ResourcePool<Texture2D, TextureTag, 512> textures_;
-    ResourcePool<RenderTexture2D, TargetTag, 8> targets_;
+    ResourcePool<RenderTexture2D, TargetTag, 12> targets_;
     ResourcePool<GpuMesh, MeshTag, 8> meshes_;
     ResourcePool<Shader, ShaderTag, 8> shaders_;
     GpuCounts counts_{};
     GpuTransfers transfers_{};
     int failAfter_ = -1;
+};
+// Tracks separately owned GPU allocations (currently font atlases) in application totals.
+class GpuExternalLease {
+  public:
+    GpuExternalLease(GpuResources& resources, std::size_t bytes) : resources_(resources), bytes_(bytes) {
+        resources_.addExternalBytes(bytes_);
+    }
+    ~GpuExternalLease() { resources_.removeExternalBytes(bytes_); }
+    GpuExternalLease(const GpuExternalLease&) = delete;
+    GpuExternalLease& operator=(const GpuExternalLease&) = delete;
+
+  private:
+    GpuResources& resources_;
+    std::size_t bytes_;
 };
 // A bounded registry owns descriptors; leases release the designated resource early.
 template <class H> class GpuLease {

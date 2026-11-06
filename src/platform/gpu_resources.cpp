@@ -65,14 +65,23 @@ TextureHandle GpuResources::createTexture(const Image& image) {
     SetTextureFilter(t, TEXTURE_FILTER_POINT);
     ++counts_.textures;
     counts_.bytes += textureBytes(t);
+    recordPeak();
     ++transfers_.uploads;
     transfers_.bytes += textureBytes(t);
     return textures_.insert(t);
 }
+void GpuResources::updateTexture(TextureHandle handle, const void* pixels, std::size_t bytes) {
+    const auto& t = texture(handle);
+    if (!pixels || t.mipmaps != 1 || bytes != std::size_t(GetPixelDataSize(t.width, t.height, t.format)))
+        throw std::invalid_argument("Invalid fixed texture update");
+    UpdateTexture(t, pixels);
+    ++transfers_.uploads;
+    transfers_.bytes += bytes;
+}
 TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
     preparationPoint("Preparing presentation");
     if (!targets_.available())
-        throw std::runtime_error("Render target capacity exhausted (8)");
+        throw std::runtime_error("Render target capacity exhausted (12)");
     if (w <= 0 || h <= 0 || w > 8192 || h > 8192)
         throw std::invalid_argument("Invalid render target dimensions");
     checkpoint();
@@ -101,6 +110,7 @@ TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
     SetTextureFilter(t.texture, TEXTURE_FILTER_POINT);
     ++counts_.targets;
     counts_.bytes += targetBytes(t);
+    recordPeak();
     return targets_.insert(t);
 }
 void GpuResources::copyDepth(TargetHandle source, TargetHandle destination) {
@@ -174,6 +184,7 @@ MeshHandle GpuResources::createMesh(const world_render::Scene& s) {
     }
     ++counts_.meshes;
     counts_.bytes += m.bytes;
+    recordPeak();
     ++transfers_.uploads;
     transfers_.bytes += m.bytes;
     return meshes_.insert(m);

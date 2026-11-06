@@ -46,26 +46,69 @@ void environmentRoundtrip() {
     const auto d = definitions();
     CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
     auto state = run.checkpoint();
-    auto& world = state->locations[0].world;
-    world.surfaces[2 * 9 + 3].floor = 1;
-    world.surfaces[2 * 9 + 3].ceiling = noCeiling;
-    state->locations[0].worldFingerprint = world.fingerprint();
+    auto& world = state->locations[1].world;
+    const auto fixtureCell = state->locations[1].entry.cell;
+    const auto index = std::size_t(fixtureCell.y * state->locations[1].rows[0].size() + fixtureCell.x);
+    // Preserve level stair surfaces while round-tripping an authored scenery base elsewhere.
+    Cell sceneryCell{};
+    bool found = false;
+    const auto& map = run.location(1).map();
+    for (int y = 2; y + 2 < map.height() && !found; ++y)
+        for (int x = 2; x + 2 < map.width() && !found; ++x) {
+            const Cell c{x, y};
+            if (!map.solid(c) && !map.movementBlocked(c) &&
+                !state->locations[1].fixtures.npcExcluded[std::size_t(y * map.width() + x)]) {
+                bool occupied = false;
+                for (const auto& npc : state->locations[1].placements)
+                    occupied |= npc.cell == c;
+                for (unsigned f = 0; f < state->locations[1].fixtures.count; ++f)
+                    occupied |= state->locations[1].fixtures.entries[f].cell == c;
+                for (std::size_t g = 0; g < state->locations[1].recovery.groundCount; ++g)
+                    occupied |= state->locations[1].recovery.ground[g].cell == c;
+                // Use a side cell with at least three exits to avoid disconnecting corridors.
+                unsigned exits = 0;
+                for (unsigned h = 0; h < 4; ++h)
+                    exits += map.canStep(c, c + forward(Heading(h)));
+                if (!occupied && exits >= 3) {
+                    sceneryCell = c;
+                    found = true;
+                }
+            }
+        }
+    check(found, "Owned scenery fixture has an unoccupied open cell");
+    world.surfaces[index].ceiling = noCeiling;
+    world.scenery.push_back({"owned-tree", sceneryCell, {0, 0}, Heading::East, 1, 1});
+    // Own a one-cell static shell on an existing generated wall, away from dressing.
+    auto& architecture = state->locations[1];
+    bool placed = false;
+    for (unsigned y = 2; y + 2 < architecture.rows.size() && !placed; ++y)
+        for (unsigned x = 2; x + 2 < architecture.rows[y].size() && !placed; ++x) {
+            const Cell cell{int(x), int(y)};
+            if (architecture.rows[y][x] != '#')
+                continue;
+            bool conflict = false;
+            for (const auto& decoration : architecture.world.decorations)
+                conflict |= decoration.cell == cell || decoration.cell + forward(decoration.face) == cell;
+            if (conflict)
+                continue;
+            architecture.world.buildings.push_back({"owned-house", cell, {0, 0}, Heading::West, 1, 1});
+            placed = true;
+        }
+    check(placed, "Owned save fixture has a wall for static architecture");
+    architecture.worldFingerprint = architecture.world.fingerprint();
+    architecture.layout.dressingFingerprint = architecture.worldFingerprint;
+    architecture.fingerprint = generation::fingerprint(architecture.layout);
     const auto fingerprint = world.fingerprint();
     const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
     auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
-    CampaignRun loaded(c, std::move(*decoded), d.timings);
-    check(loaded.map().definition().fingerprint() == fingerprint,
-          "Nonflat world and decorations survive Continue");
-    auto travel = loaded.prepareTravel(loaded.request(loaded.game().nearbyFixture()));
-    check(loaded.commitTravel(travel), "Travel from height-bearing hub");
-    check(loaded.location(0).map().definition().fingerprint() == fingerprint,
-          "Inactive location retains environment");
-    auto away = loaded.checkpoint();
-    const auto text2 = encodeCampaign(c, d, {"fixture", 0}, *away);
-    auto back = decodeCampaign(c, d, {"fixture", 0}, text2);
-    CampaignRun resumed(c, std::move(*back), d.timings);
-    check(resumed.location(0).map().definition().fingerprint() == fingerprint,
-          "Inactive environment survives disk roundtrip");
+    const auto& restoredWorld = decoded->locations[1].world;
+    check(restoredWorld.fingerprint() == fingerprint && restoredWorld.buildings.size() == 1 &&
+              restoredWorld.buildings[0].model == "owned-house" &&
+              restoredWorld.buildings[0].facing == Heading::West,
+          "Owned world geometry and architecture survive campaign codec roundtrip");
+    check(restoredWorld.scenery.size() == 1 && restoredWorld.scenery[0].model == "owned-tree" &&
+              restoredWorld.scenery[0].facing == Heading::East,
+          "Scenery identity, orientation and physical base survive campaign codec roundtrip");
     auto bad = blobber::automation::Json::parse(text);
     bad["campaign"]["locations"][0]["world"]["surfaces"][20]["floor"] = 99;
     rejects(
@@ -75,7 +118,26 @@ void environmentRoundtrip() {
         },
         "Malformed surface retains prior session");
     bad = blobber::automation::Json::parse(text);
-    bad["simulation"] = 6;
+    bad["schema"] = 7;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
+    bad["schema"] = 10;
+    bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
+    for (unsigned i = 0; i <= buildingCapacity; ++i)
+        bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Placement decode capacity rejects before resizing");
+    bad = blobber::automation::Json::parse(text);
+    bad["campaign"]["locations"][0]["world"]["scenery"] = blobber::automation::Json::array();
+    for (unsigned i = 0; i <= sceneryCapacity; ++i)
+        bad["campaign"]["locations"][0]["world"]["scenery"].push_back(blobber::automation::Json::object());
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Scenery decode capacity rejects before resizing");
+    bad = blobber::automation::Json::parse(text);
+    bad["schema"] = 8;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-scenery saves reject clearly");
+    bad = blobber::automation::Json::parse(text);
+    bad["schema"] = 9;
+    bad["simulation"] = 13;
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
     {
@@ -83,12 +145,27 @@ void environmentRoundtrip() {
         file << bad.dump();
     }
     CampaignStore store(c, d, {"fixture", 0}, disk);
-    check(!store.inspect().active, "Pre-B05 simulation is incompatible");
+    check(!store.inspect().active, "Pre-inn campaign is incompatible");
     std::ifstream unchanged(directory.path / "campaign.json");
     const std::string original((std::istreambuf_iterator<char>(unchanged)), {});
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
-            "Previous simulation 6 rejects explicitly");
+            "Previous schema/simulation 9/13 rejects explicitly");
+    bad = blobber::automation::Json::parse(text);
+    bad["generator"] = 9;
+    {
+        std::ofstream file(directory.path / "campaign.json");
+        file << bad.dump();
+    }
+    check(!store.inspect().active, "Campaign predating room-safe props is incompatible");
+    {
+        std::ifstream file(directory.path / "campaign.json");
+        const std::string bytes((std::istreambuf_iterator<char>(file)), {});
+        check(bytes == bad.dump(), "Rejecting old prop generation never rewrites the save");
+    }
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Generator 9 campaign rejects explicitly");
+    bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");
@@ -97,6 +174,8 @@ void roundtrip() {
     const auto c = catalog();
     const auto d = definitions();
     CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    walk(run.game(), {12, 20});
+    face(run.game(), Heading::South);
     const CampaignContent content{"owned-fixture", 0};
     auto before = run.checkpoint();
     const auto text = encodeCampaign(c, d, content, *before);
@@ -106,6 +185,7 @@ void roundtrip() {
     check(encodeCampaign(c, d, content, *after) == text, "hub exact canonical round trip");
     check(loaded.party().inventory().identity() != run.party().inventory().identity(),
           "fresh inventory epoch");
+    entrance(run);
     auto travel = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(travel), "enter dungeon");
     run.party().damage({0}, 2);
@@ -171,6 +251,65 @@ std::unique_ptr<CampaignRun> copy(const rules::Catalog& c, const NpcDefinitions&
     auto after = result->checkpoint();
     check(encodeCampaign(c, d, {"fixture", 0}, *after) == text, "exact logical campaign round trip");
     return result;
+}
+void spellPresentationLifecycle() {
+    const auto c = catalog();
+    const auto d = definitions();
+    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    const auto emptyJournals = [](const GameSession& game) {
+        for (const auto& cue : game.supportVisuals().records)
+            check(!cue.id.serial, "Campaign entry never replays support application bursts");
+        for (const auto& cue : game.combat().spellVisuals().casts)
+            check(!cue.id.serial, "Campaign entry never replays spell casts");
+    };
+    emptyJournals(run.game());
+    CommandController hud(run.game());
+    hud.refresh({}, false, false, true);
+    EffectRequest ward;
+    ward.world = run.game().actors().snapshot().world;
+    ward.kind = EffectKind::ShieldOfFaith;
+    ward.caster = rules::CharacterId{1};
+    ward.targets[0] = rules::CharacterId{0};
+    ward.count = 1;
+    check(bool(run.game().applyEffect(ward)), "Campaign ward applies normally");
+    hud.record(run.game().events());
+    hud.refresh({}, false, false, true);
+    const auto now = run.game().timeMs();
+    const auto revision = run.game().supportVisuals().revision;
+    const auto presentation = hud.snapshot().portraitFeedback[0][0];
+    check(revision && presentation.kind != PortraitFeedbackKind::None,
+          "Live application creates visible portrait feedback before pause");
+    run.update(10, true);
+    hud.refresh({}, false, false, true);
+    check(run.game().timeMs() == now && run.game().supportVisuals().revision == revision &&
+              hud.snapshot().portraitFeedback[0][0].startedMs == presentation.startedMs &&
+              hud.snapshot().portraitFeedback[0][0].kind == presentation.kind,
+          "Pause preserves clock and application feedback without replay or expiry");
+    auto resumed = copy(c, d, run);
+    const auto retainedWard = [&](const GameSession& game) {
+        const auto state = game.effects().visualConditions();
+        check(state.world == game.actors().snapshot().world &&
+                  (state.party[0] & (1u << unsigned(EffectKind::ShieldOfFaith))),
+              "Sustained ward reconstructs with the destination world's identity");
+    };
+    emptyJournals(resumed->game());
+    retainedWard(resumed->game());
+    CommandController continuedHud(resumed->game());
+    continuedHud.refresh({}, false, false, true);
+    check(continuedHud.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::None,
+          "Continue retains status without replaying the old portrait flash");
+    run.update(.7, false);
+    hud.refresh({}, false, false, true);
+    check(hud.snapshot().portraitFeedback[0][0].kind == PortraitFeedbackKind::None,
+          "Resuming allows the application flash to expire normally");
+    retainedWard(run.game());
+    // Use the normal campaign doorway transaction, including a return to an old location.
+    enterInn(*resumed);
+    emptyJournals(resumed->game());
+    retainedWard(resumed->game());
+    leaveInn(*resumed);
+    emptyJournals(resumed->game());
+    retainedWard(resumed->game());
 }
 void chestRoundtrip() {
     const auto c = catalog(false, 50, 7);
@@ -249,6 +388,7 @@ void progressionAndFloors() {
     check(run->commitTravel(recall), "paid recall from third floor");
     run = copy(c, d, *run);
     check(run->party().campSupplies().kits == kits - 1, "recall charge persists");
+    entrance(*run);
     auto waypoint = run->prepareTravel(run->waypointRequest(2));
     check(run->commitTravel(waypoint), "restored unlocked entry return");
     run = copy(c, d, *run);
@@ -276,7 +416,8 @@ void effects() {
         e.targets[0] = target;
         check(bool(run.game().applyEffect(e)), "persistent effect fixture applies");
         if (kind == EffectKind::SpiritualWeapon)
-            check(const_cast<EffectController&>(run.game().effects()).moveWeapon({0}, {4, 4}, true),
+            check(const_cast<EffectController&>(run.game().effects())
+                      .moveWeapon({0}, run.game().movement().player.cell, true),
                   "place fixture spectral weapon");
         auto restored = copy(c, d, run);
         check(restored->game().effects().has(target, kind), "persistent instance retained");
@@ -529,7 +670,7 @@ void pausePolling() {
     otherUi.saveMenu().replace = true;
     otherUi.saveMenu().intent = SaveIntent::Save;
     check(!overwrite.poll(other, otherUi) && disk.writes == concurrentWrites &&
-              std::string_view(otherUi.saveMenu().message.data()).find("changed") != std::string_view::npos,
+              std::string_view(otherUi.saveMenu().message.data()) == "Couldn't save. Please try again.",
           "confirmed overwrite retains its reviewed revision and rejects concurrent changes");
     check(store.inspect().runId == run.runId(), "failed stale overwrite preserves the valid saved owner");
 }
@@ -754,13 +895,15 @@ void groundAndInactive() {
     check(bool(run->game().endConcentration(run->game().actors().snapshot().world, {2})),
           "local Web explicitly dismissed before departure");
     travel(*run, FixtureKind::Upstairs);
+    enterInn(*run);
     RestRequest rest;
     rest.kind = RestKind::Long;
     rest.world = run->game().actors().snapshot().world;
     rest.token = run->game().restToken();
     run->party().damage({0}, 1);
-    check(bool(run->game().rest(rest)), "hub rest advances only portable campaign effects");
+    check(bool(run->game().rest(rest)), "inn rest advances only portable campaign effects");
     run = copy(c, d, *run);
+    leaveInn(*run);
     travel(*run, FixtureKind::Downstairs);
     check(run->game().effects().area(grease) && run->game().effects().guiding(run->game().actors().id(0)) &&
               run->game().effects().has(run->game().actors().id(0), EffectKind::Sleep) &&
@@ -906,6 +1049,7 @@ int main(int argc, char** argv) {
             saveUi();
             applicationFlow();
             pausePolling();
+            spellPresentationLifecycle();
             std::cout << "campaign save smoke tests passed\n";
             return 0;
         }
@@ -918,6 +1062,7 @@ int main(int argc, char** argv) {
         progressionAndFloors();
         std::cerr << "chest containers\n";
         chestRoundtrip();
+        spellPresentationLifecycle();
         std::cerr << "effects\n";
         effects();
         std::cerr << "I/O failures\n";

@@ -5,6 +5,7 @@
 #include "support/spell_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include <iostream>
+#include <string_view>
 using namespace blobber;
 namespace {
 void interactions() {
@@ -177,30 +178,117 @@ void safetyAndUi() {
     g.move(Action::Forward);
     CommandController commands(g);
     commands.refresh({}, false, false, true);
-    check(commands.snapshot().fixturePrompt[0], "Nearby fixture has contextual prompt");
+    check(std::string_view(commands.snapshot().fixturePrompt.data()) == "[F] Open",
+          "Nearby usable door offers only its action");
     UiInput input;
     input.pressed[std::size_t(UiKey::Interact)] = true;
     commands.refresh({}, false, true, true);
+    check(!commands.snapshot().interactionPrompt(), "Map hides interaction prompts");
     routeHudInput(commands, input);
     check(g.geometry().solid({4, 3}), "Map modal blocks fixture input");
     commands.refresh({}, false, false, false);
+    check(!commands.snapshot().interactionPrompt(), "Focus loss hides interaction prompts");
     routeHudInput(commands, input);
     check(g.geometry().solid({4, 3}), "Unfocused fixture input rejected");
     commands.refresh({}, false, false, true);
     routeHudInput(commands, input);
     check(!g.geometry().solid({4, 3}), "F routes through checked interaction");
+    commands.refresh({}, false, false, true);
+    check(std::string_view(commands.snapshot().fixturePrompt.data()) == "[F] Close",
+          "Open door offers Close");
+    commands.toggleMenu();
+    check(!commands.snapshot().interactionPrompt(), "Opening a modal immediately hides existing prompt");
+    commands.closeOverlay();
+    g.setAnimated(true);
+    g.interact(g.nearbyFixture());
+    commands.refresh({}, false, false, true);
+    check(!commands.snapshot().interactionPrompt(), "Door animation hides prompts even without moving flag");
+    g.update(.4, false);
+    commands.refresh({}, false, false, true);
+    check(commands.snapshot().interactionPrompt(), "Prompt returns after door animation finishes");
+    g.move(Action::Back);
+    commands.refresh({}, false, false, true);
+    check(!commands.snapshot().interactionPrompt(), "Live movement hides prompts even without moving flag");
     auto incapacitated =
         std::make_unique<GameSession>(map, cat, empty, 5, Player{{3, 3}, Heading::East}, false,
                                       std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions(false));
     for (unsigned i = 0; i < 4; ++i)
         incapacitated->party().damage({std::uint16_t(i)}, 100000);
     check(!incapacitated->interact(fixtureRequest(*incapacitated, 0)), "No able companion cannot open door");
+    CommandController unableUi(*incapacitated);
+    check(!unableUi.snapshot().interactionPrompt(), "Unavailable action has no prompt");
     NpcWorld enemy(map, {3, 3}, {"goblin"}, {{{0}, {2, 3}, {0, 0}, Heading::East}});
     auto combat =
         std::make_unique<GameSession>(map, cat, enemy, 5, Player{{3, 3}, Heading::East}, true,
                                       std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions(false));
     check(!combat->interact(fixtureRequest(*combat, 0)) && combat->geometry().solid({4, 3}),
           "Contact/combat cannot open door");
+    CommandController combatUi(*combat);
+    check(!combatUi.snapshot().fixturePrompt[0], "Live combat hides nearby door prompt");
+    combatUi.interactFixture();
+    check(std::string_view(combatUi.snapshot().log.newest(0)) == "Wait until it is safe to interact.",
+          "Explicit combat attempt explains restriction without engine terminology");
+}
+void promptTransitionsAndLoot() {
+    const auto cat = fixtureCatalog();
+    const auto map = fixtureMap();
+    NpcWorld empty(map, {3, 3}, {"goblin"}, {});
+    RecoveryLevel recovery;
+    recovery.groundCount = 1;
+    recovery.ground[0] = {{3, 3}, {12}, 1};
+    GameSession game(map, cat, empty, 5, {{3, 3}, Heading::East}, false, {}, recovery, fixtureDefinitions());
+    game.setAnimated(false);
+    CommandController ui(game);
+    check(!ui.snapshot().interactionPrompt(), "Locked door has no prompt");
+    ui.interactFixture();
+    check(std::string_view(ui.snapshot().log.newest(0)) == "Requires the Bronze seal key.",
+          "Hidden locked action still explains the required key on attempt");
+    game.restorePose({{2, 2}, Heading::North}, false);
+    game.update(0, false);
+    ui.refresh({}, false, false, true);
+    check(std::string_view(ui.snapshot().fixturePrompt.data()) == "[F] Take", "Key offers Take");
+    ui.interactFixture();
+    ui.refresh({}, false, false, true);
+    check(!ui.snapshot().interactionPrompt(), "Collected key has no action prompt");
+    game.restorePose({{3, 3}, Heading::East}, false);
+    ui.refresh({}, false, false, true);
+    const LootId loot{game.loot().snapshot().world, NpcWorld::maxInstances * lootPerActor};
+    ui.floorHover(loot);
+    check(std::string_view(ui.snapshot().interactionPrompt()) == "[Click] Loot",
+          "Usable hovered loot takes priority over faced door");
+    ui.refresh({}, false, false, true);
+    check(std::string_view(ui.snapshot().interactionPrompt()) == "[Click] Loot",
+          "Final frame refresh preserves and revalidates hovered loot");
+    auto& combat = const_cast<CombatSnapshot&>(game.combat().snapshot());
+    for (const auto phase :
+         {CombatPhase::Contact, CombatPhase::Turns, CombatPhase::Approach, CombatPhase::Facing,
+          CombatPhase::RoundEnd, CombatPhase::Victory, CombatPhase::Defeat}) {
+        combat.phase = phase; // Existing HUD still describes Exploration here.
+        ui.refresh({}, false, false, true);
+        ui.floorHover(loot);
+        check(!ui.snapshot().fixturePrompt[0] && !ui.snapshot().lootHover[0] &&
+                  !ui.snapshot().interactionPrompt(),
+              "Every live non-exploration phase suppresses both prompt sources");
+    }
+    combat.phase = CombatPhase::Exploration;
+    ui.refresh({}, false, false, true);
+    ui.floorHover({});
+    check(std::string_view(ui.snapshot().interactionPrompt()) == "[F] Open",
+          "Door prompt returns on safe Exploration");
+    auto stale = std::make_unique<HudSnapshot>(ui.snapshot());
+    stale->combat.phase = CombatPhase::Turns;
+    check(!stale->interactionPrompt(), "Presentation rejects a buffered prompt during combat");
+    stale->combat.phase = CombatPhase::Exploration;
+    stale->magic.armed = true;
+    check(!stale->interactionPrompt(), "Spell targeting hides an existing prompt immediately");
+    stale->magic.armed = false;
+    stale->inventory.itemTargeting = true;
+    check(!stale->interactionPrompt(), "Item targeting hides an existing prompt immediately");
+    ui.openInventory();
+    check(!ui.snapshot().interactionPrompt(), "Inventory hides prompts immediately");
+    ui.closeOverlay();
+    ui.floorHover(LootId{loot.world, loot.slot, 2});
+    check(!ui.snapshot().lootHover[0], "Recycled loot identity cannot offer an action");
 }
 void incrementalAndThreats() {
     auto cat = fixtureCatalog();
@@ -261,6 +349,8 @@ void hazardAndQueuedDiscovery() {
     g->update(1, false);
     check(g->effects().area({3, 3}) && !g->interact(fixtureRequest(*g, 0)),
           "Settled party-cell hazard still rejects fixture operation");
+    CommandController hazardUi(*g);
+    check(!hazardUi.snapshot().interactionPrompt(), "Local hazard hides an otherwise reachable door");
     const Map open(
         {"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#########"});
     FloorFixtures discovered;
@@ -302,6 +392,7 @@ int main() {
         keyedLogs();
         geometry();
         safetyAndUi();
+        promptTransitionsAndLoot();
         incrementalAndThreats();
         hazardAndQueuedDiscovery();
         generationContracts();

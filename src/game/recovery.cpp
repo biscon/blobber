@@ -9,7 +9,7 @@ const char* restMessage(RestError e) noexcept {
     case RestError::Stale:
         return "Rest request expired; open camp again.";
     case RestError::Unsafe:
-        return "Rest requires safe exploration and settled attacks.";
+        return "Wait until it is safe to rest.";
     case RestError::Moving:
         return "Wait until movement finishes.";
     case RestError::Dying:
@@ -25,9 +25,9 @@ const char* restMessage(RestError e) noexcept {
     case RestError::InvalidPreparation:
         return "Choose legal prepared spells for living casters.";
     case RestError::PreparationFull:
-        return "Preparation revision capacity exhausted.";
+        return "Couldn't prepare spells. Save your progress and restart the game.";
     case RestError::ClockFull:
-        return "Rest time capacity exhausted.";
+        return "Couldn't rest. Save your progress and restart the game.";
     }
     return "Rest unavailable.";
 }

@@ -58,7 +58,7 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         if (!effects_.sees(c.character))
             return CommandReason::NotVisible;
         if (kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp) {
-            if (!exposed(c.character))
+            if (kind == SpellKind::InflictWounds && !exposed(c.character))
                 return CommandReason::RearBlocked;
             if (!inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
                 return CommandReason::OutOfRange;
@@ -72,9 +72,19 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         }
         if (kind == SpellKind::PoisonSpray && !inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
             return CommandReason::OutOfRange;
-        if (kind == SpellKind::AcidSplash && i &&
-            (!actors_.actor(c.enemies[0]) || !(a->npc.cell == actors_.actor(c.enemies[0])->npc.cell)))
-            return CommandReason::SameCellRequired;
+        if (kind == SpellKind::AcidSplash && i) {
+            const auto* first = actors_.actor(c.enemies[0]);
+            if (!first || first->life != ActorLife::Alive)
+                return CommandReason::InvalidTarget;
+            // Half-cell integer coordinates preserve actual neighbour distance across
+            // cell boundaries, including the existing four subcell positions.
+            const int dx = 2 * (a->npc.cell.x - first->npc.cell.x) + a->npc.subcell.x - first->npc.subcell.x;
+            const int dy = 2 * (a->npc.cell.y - first->npc.cell.y) + a->npc.subcell.y - first->npc.subcell.y;
+            if (dx * dx + dy * dy > 4)
+                return CommandReason::TargetsTooFar;
+            if (!lineOfSight(map_, first->npc.cell, a->npc.cell))
+                return CommandReason::Blocked;
+        }
 
     } else {
         const auto* ally = party_.character(c.allies[i]);
@@ -446,6 +456,14 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         } else if (kind == SpellKind::LesserRestoration) {
             effects_.restoreCondition(
                 c.allies[0], c.restoreParalysis ? EffectKind::HoldPerson : EffectKind::Blind, now, events);
+            if (events.supportJournal) {
+                SupportVisual cue;
+                cue.spell = kind;
+                cue.target = c.allies[0];
+                cue.source = c.character;
+                cue.occurredMs = now;
+                events.supportJournal->emit(cue);
+            }
         } else if (kind == SpellKind::FalseLife) {
             const auto amount = int(rng_.roll({1, 4, 4}).value.total);
             party_.grantTemporary(c.character, amount, state_.gameplayMs + 3600000);
@@ -457,6 +475,12 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             events.append(result);
         } else if (kind == SpellKind::Sleep || kind == SpellKind::ColorSpray) {
             auto affected = area(c, pose);
+            if (auto* visual = spellVisuals_.begin(kind, c.character, pose, now)) {
+                visual->cells = affected.cells;
+                visual->eligible = affected.eligible;
+                visual->includeOrigin = kind == SpellKind::ColorSpray;
+                visual->center = c.aimedCell.value_or(pose.cell + forward(pose.heading));
+            }
             const auto hp = [&](EffectTarget t) {
                 return t.npc ? actors_.actor(t.enemy)->hitPoints : party_.character(t.character)->hitPoints;
             };
@@ -538,10 +562,16 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 std::sort(targets.begin(), targets.begin() + count,
                           [](ActorId a, ActorId b) { return a.slot < b.slot; });
             }
-            if (kind == SpellKind::BurningHands) {
+            SpellCastVisual* castVisual = nullptr;
+            if (!delayed(kind) && elementalSpell(kind)) {
+                castVisual = spellVisuals_.begin(kind, c.character, pose, now);
                 const auto footprint = spellArea(actors_, pose);
+                if (castVisual && r.area) {
+                    std::copy_n(footprint.cells.begin(), 3, castVisual->cells.begin());
+                    std::copy_n(footprint.eligible.begin(), 3, castVisual->eligible.begin());
+                }
                 for (unsigned i = 0; i < footprint.cells.size(); ++i)
-                    if (footprint.eligible[i])
+                    if (kind == SpellKind::BurningHands && footprint.eligible[i])
                         effects_.ignite(footprint.cells[i]);
             }
             const auto sharedDamage = r.attack ? 0 : rng_.roll(r.dice).value.total;
@@ -552,6 +582,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 const auto id = targets[i];
                 const auto* a = actors_.actor(id);
                 auto result = out;
+                bool visualSaved = false;
                 result.event = CombatEvent::Attack;
                 result.damageType = r.damage;
                 result.enemy = id;
@@ -607,6 +638,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     events.append(notice);
                     result.hit = !save.succeeded || r.area;
                     result.damage = save.succeeded ? (r.area ? sharedDamage / 2 : 0) : sharedDamage;
+                    visualSaved = save.succeeded;
                     push[i] = kind == SpellKind::Thunderwave && !save.succeeded;
                 }
                 if (delayed(kind))
@@ -614,6 +646,11 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 else {
                     alert(id, pose);
                     applyDamage(result, now, events);
+                    if (castVisual && castVisual->count < castVisual->targets.size()) {
+                        auto target = spellTarget(result, now);
+                        target.saved = visualSaved;
+                        castVisual->targets[castVisual->count++] = target;
+                    }
                     spellPulse(id, c.character, kind, pose, now);
                 }
             }
@@ -662,6 +699,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     v.endMs = v.impactMs + combatFeedbackDurationMs;
                     setAttackHold(NpcWorld::maxInstances + c.character.index, v.endMs);
                     payload.outcomes[i].attackId = v.id;
+                    spellVisuals_.attack(v, spellTarget(payload.outcomes[i], now), main.id);
                     auto released = payload.outcomes[i];
                     released.event = CombatEvent::ProjectileReleased;
                     released.damage = 0;

@@ -113,7 +113,7 @@ specimens and gives Lesser Restoration a real affected recipient. Historical foc
 capture recipes beyond doors/spells/projectiles/menu/arena/save stay legacy and
 reject world selection explicitly; world replay covers arbitrary recorded boundaries.
 
-[Verification/handoff](r04_verification.md) and [gallery](screenshots/r04/index.html)
+[Verification/handoff](verification/archive/r04_verification.md) and [gallery](screenshots/r04/README.md)
 record actual tests, resource/failure guards, strict expedition parity, captures,
 versions and limitations. R04/R-B await user acceptance; R05 is not started.
 
@@ -145,4 +145,4 @@ The correction is implemented. CPU timing/palette/multi-glyph/clearance regressi
 existing wall occlusion pass. Release captures now include actual 117/234/294/354 ms
 Scorching Ray phases and 0–120 ms Burning Hands pulses. Updated images and sampled
 real-time previews are in the gallery. No new spell artwork or cone system was added.
-See the [correction verification](r04_verification.md#spell-baseline-review-correction).
+See the [correction verification](verification/archive/r04_verification.md#spell-baseline-review-correction).

@@ -1,12 +1,14 @@
 # R05 review captures
 
-Open [the gallery](index.html). Retained application-owned Release images cover
-quarter-cell motion, a rejected ledge/clearance, raised doors and actors, the covered
-walkway/outdoor hub, wall motifs and two procedural props. Both quality modes were
-exported; selected native-filtered images and supersampled motion are retained.
-[Frame manifest](frames.csv) records actual session time and transition progress.
+Curated on 2026-11-05 from existing evidence; no new capture or test run.
+Historical acceptance and verification limitations remain in the linked documentation.
 
-These captures were produced before the final material-reference guard, flat-map
-lookup optimization and verification-workflow edits; those do not alter these
-settled images or the actor-free step/courtyard sequences. No repeat full capture
-matrix was run. No human interactive review or cross-device equivalence is claimed.
+Superseded captures, raw logs, generated galleries and machine reports were removed.
+
+- [Documentation: r05 verification](../../verification/archive/r05_verification.md)
+- [ss hub covered](ss-hub-covered.png)
+- [ss raised door open](ss-raised-door-open.png)
+- [ss step start logical](ss-step-start-logical.png)
+- [ss step 8 logical](ss-step-8-logical.png)
+- [ss raised actor logical](ss-raised-actor-logical.png)
+- [ss wall art logical](ss-wall-art-logical.png)

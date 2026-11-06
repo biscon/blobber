@@ -1,5 +1,241 @@
 # System design
 
+Camera framing B **accepted and implemented (2026-11-06)**:
+[projection comparison](renderer_world_design.md#camera-framing-trial--2026-11-06)
+sets the horizon to 40% (about 5.8° down at screen centre), retaining .4-cell
+pullback. The user selected B after comparing 34/40/45%. Three focused CPU suites,
+projection checks and hidden CPU/GPU visibility checks pass;
+[accepted B and original reference](screenshots/camera-framing/index.html).
+
+Underkeep prop safety **implemented and mechanically verified; awaiting visual review (2026-11-06)**:
+[placement and rack correction](underkeep_dressing_design.md#room-clearance-and-rack-correction--2026-11-06)
+requires room-local clearance/connectivity and collision-aware progression checks.
+Eight focused Release suites and hidden rack-only OpenGL checks pass;
+[two review captures](screenshots/prop-placement/README.md) retain pending visual acceptance.
+The rack uses one collision cell and half-size prepared geometry. Generator 10/7
+requires a new campaign; established terrain/population seed streams stay 8/6.
+
+[Shared Settings](settings_design.md) adds a persistent borderless fullscreen
+checkbox to the main/pause Settings screen, using raylib window-mode handling
+while preserving fixed logical presentation. Interactive desktop review is pending.
+
+Spell effects SE04 **accepted and implemented; plan closed (2026-11-06)**:
+[Integration audit](se04_design.md) preserves the accepted visuals, audits all spell
+families and normal campaign lifecycle, and removes only redundant legacy paths.
+Removed the redundant generic spell renderer while retaining arrow glints. Three
+focused suites pass, including pause/Continue/travel checks. Accepted visuals and
+resources are unchanged; prior GPU evidence is reused. SE04/E-C are accepted; the spell-effects roadmap is closed.
+
+Spell effects SE03 **accepted and implemented (2026-11-06)**:
+[SE03 design](se03_design.md) adds support, condition, ground and summoned-effect
+presentation with selective quiet portrait cues. A bounded session journal carries resolved
+cosmetic events; fixed condition snapshots reconstruct sustained cues after restore.
+Gameplay/save contracts remain unchanged. Thirteen focused CPU suites and hidden GPU
+checks at both quality settings pass; [six-file review gallery](screenshots/spell-effects/se03/README.md).
+The user accepted SE03 and its review corrections, closing E-B; SE04 is also accepted and the plan is closed. The SE03 review correction lowers
+NPC Bless to the feet anchor and adds bounded cosmetic Spiritual Weapon bobbing and
+attack lunge/return. Next-round Abilities controls pass focused UI tests and the spell
+description now points to them (see SE03 design). A
+[party-step correction](se03_design.md#spiritual-weapon-follows-party-steps--2026-11-06)
+keeps active weapons travelling with the party, with shared collision-aware
+destination prediction and smooth presentation; command cooldowns are unchanged.
+
+Spell effects SE02 **accepted and implemented (2026-11-05)**:
+[SE02 design](se02_design.md) extends offensive spell identities and replaces party
+spell/healing/buff badges with prepared portrait animation and small readouts.
+Focused CPU and hidden GPU checks pass; [SE02 review gallery](screenshots/spell-effects/se02/README.md).
+Poison density/green and healing green were strengthened following user review.
+The user accepted SE02 including these corrections.
+World and ordinary weapon feedback option A is **accepted and implemented**:
+[painted feedback design](combat_feedback_design.md). Prepared blood/ink splashes
+appear instantly, with a brief damage-number tremor and fade-out; focused CPU and
+hidden OpenGL checks pass. See the [animation previews](screenshots/combat-feedback/README.md).
+
+Spell effects SE01 **accepted and implemented (2026-11-05)**:
+[SE01 design](se01_design.md) implements Fire Bolt, Ray of Frost and Burning Hands
+with prepared animation, selective glow, bounded local light and creature aftermath.
+Combat timing/rules and prepared-image presentation remain unchanged. The user
+selected death-pose remnants and animated-door light occlusion. See the
+[four-slice roadmap](spell_effects_plan.md) and [motion/capture gallery](screenshots/spell-effects/README.md); the user accepted the slice, particularly its local lighting. SE01 acceptance remains unchanged by the SE02 extension.
+
+Spell targeting **corrected; Ready for review (2026-11-06)**:
+[spell design](spells_design.md#acid-splash-proximity-correction) replaces the same-cell
+restriction with subcell-aware distance, allowing equally close pairs across cell
+boundaries. Shared command validation and UI feedback use the same rule. Spiritual Weapon
+commands also gain immediate single-enemy clicking while retaining floor-only moves.
+Action Surge activates directly when chosen in Abilities.
+[Targeting hover correction](target_selection_design.md#spell-targeting-inspection--2026-11-06)
+keeps enemy health bars and HP details available while choosing spell recipients.
+[Shocking Grasp correction](expanded_spells_design.md#rear-row-shocking-grasp) restores
+casting from either party row while retaining exposed enemy reach in the front cells.
+
+Enemy melee lunge **accepted and implemented (2026-11-06)**:
+[combat feedback design](combat_feedback_design.md#enemy-melee-lunge) adds a short,
+impact-timed forward offset to the existing prepared attack animation. The user
+accepted the doubled distance (0.28 cell), preserving timing and the attack-start
+facing anchor.
+Attack-direction correction: select directional artwork from the attack-start
+position throughout a triggered melee clip, so diagonal enemies keep their facing
+while the rendered body lunges across a viewing-sector boundary.
+Authoritative positions, attack timing and ranged/casting presentation remain unchanged. Seven
+focused CPU suites and six hidden production capture cases pass; see the
+[melee preview](screenshots/combat-feedback/README.md#enemy-melee-lunge) and
+[targeting evidence](screenshots/spell-targeting/README.md).
+
+Stone dungeon distance lighting **C / Early accepted and implemented (2026-11-05)**:
+[design](dungeon_lighting_design.md) defines three `underkeep`-only attenuation
+presets and [matched comparison captures](screenshots/dungeon-lighting/README.md).
+Focused CPU and hidden GPU checks pass; production city/inn images are identical
+across presets. The selected C preset is the stone-dungeon default;
+fog, AO and other biomes are unchanged.
+
+Configurable world-window screenshake **implemented and mechanically verified; awaiting user review (2026-11-05)**:
+[design](screenshake_design.md) adds bounded cosmetic impact impulses and a clipped
+prepared-image transform, with stationary HUD and inverse-mapped world picking.
+World rendering, movement and save formats remain unchanged. Eight focused CPU suites
+and hidden OpenGL checks at both quality settings pass; [six preset previews](screenshots/screenshake/README.md)
+retain pending timing/feel acceptance.
+
+Procedural party melee swipe **implemented and mechanically verified; awaiting user review (2026-11-05)**:
+[design and verification](melee_swipe_design.md) adds a bounded screen-space ribbon
+around the unchanged authoritative impact deadline, using prepared body-only bounds.
+Focused CPU/allocation and hidden OpenGL checks pass; [six review captures](screenshots/melee-swipe/README.md)
+show the revised thicker, broader crescent with translucent edges after the user rejected
+the first thin treatment. The user accepted the shape; the display
+time is now tuned to 185 ms for trial (application rebuild only; tests not rerun). [Creature tooltips](target_selection_design.md#delayed-creature-hover--2026-11-05-implemented)
+now wait 250 ms and hide during party/hovered-creature attack presentation. Focused
+HUD/targeting/swipe and hidden GPU checks pass. Save compatibility and existing impact feedback remain unchanged.
+
+## Agent artifacts and evidence
+
+Artifact housekeeping is implemented (2026-11-05). Agents own disposable
+output under ignored `output/agent-runs/<run-id>/`, created by
+`python3 tools/agent_artifacts.py create`. The helper's `clean RUN_DIRECTORY`
+previews removal; `--apply` removes only that marked run. It rejects symlinks,
+unmanaged paths and tracked content. No age-based sweep or background service
+owns other runs, build caches, artwork or saves.
+
+At task completion, promote selected evidence into `docs/screenshots/<feature>/`,
+update the existing design/handoff, and clean the run. Galleries retain at most six
+images, or twelve pending user review, unless their README explains distinct cases
+requiring an exception. Raw logs, traces and intermediate captures are disposable;
+unresolved failures may retain selected diagnostics with reproduction instructions
+and an explicit cleanup condition. Durable test conclusions remain in authored
+verification documents; completed historical reports live in
+`docs/verification/archive/`. Source artwork, prompts, references, test fixtures
+and calibration manifests consumed by tools are separate from run output.
+Browse [selected evidence](screenshots/README.md) and the
+[historical verification archive](verification/archive/README.md).
+
+The helper uses only the Python standard library and runs outside engine frame
+processing. Verification uses isolated temporary directories for dry-run, deletion,
+path/symlink rejection and tracked/neighbor protection; documentation checks replace
+gameplay builds for housekeeping changes. See the
+[verification workflow](verification_workflow.md#artifact-housekeeping) for commands.
+
+Housekeeping verification (2026-11-05): six isolated helper cases pass directly
+and through the `agent_artifacts_tools` CTest registration; seven route-tool checks
+pass with the retained calibration input. A synthetic Pillow fixture exercises
+the gallery helper's separate input/output paths, generated links and overwrite
+refusal. Local Markdown file links and gallery limits were checked. No gameplay
+build, rendering capture, desktop automation or benchmark was run for this change.
+
+## Current systems and review status
+
+Viewport interaction cleanup **implemented and mechanically verified; awaiting user review (2026-11-05)**: the
+[HUD revision](native_hud_design.md#viewport-interaction-prompts--2026-11-05)
+replaces bottom banners with actionable, shadowed white text and hides them outside
+safe Exploration. Player-facing messages use gameplay language; technical failures
+remain diagnostic output; creature names and descriptions hide development identifiers
+and notes without changing catalog fingerprints or saves. Focused CPU/allocation and
+hidden OpenGL checks pass; [four review captures](screenshots/interaction-prompts/README.md)
+cover city, dungeon, loot and active combat. The
+[audio follow-up](audio_design.md#travel-cue-removal--2026-11-05)
+removes the shared travel completion sound without changing transitions or music.
+
+Sanctuary inn **implemented and mechanically verified; awaiting user review (2026-11-05)**:
+[design](inn_interior_design.md) adds an authored fifth campaign location,
+facing-sensitive doorway travel, a furnished common room and decorative hearth,
+and moves free long rest from the city sanctuary cell to the entire inn.
+Campaign schema/simulation are 10/14; older saves reject without migration.
+[Verification](inn_interior_verification.md) records focused CPU/extended-save checks,
+hidden OpenGL captures and 348.09 MiB city–inn texture overlap within existing limits.
+[Capture gallery](screenshots/inn/README.md); interactive acceptance remains user-owned.
+The [human-scale correction](inn_interior_design.md#human-scale-correction-2026-11-05)
+reduces oversized furnishings against the fixed eye height through offline meshes;
+map data and saves remain compatible. The subsequent
+[ceiling/wood/UI correction](inn_interior_design.md#ceiling-wood-joints-and-rest-affordance-2026-11-05)
+lowers the ceiling with bounded compatibility for existing inn saves, cleans up
+duplicate wood joints and removes the free-rest fixture prompt.
+[Single-cell seating groups](inn_interior_design.md#single-cell-seating-groups-2026-11-05)
+center each table/chair assembly on one cell and free the surrounding cells,
+with compatibility for the previous inn layouts.
+
+Environment AO **Accepted and closed (2026-11-05)**:
+[design and verification](environment_ao_design.md) adds default-on environment-only
+contact shading with `--ambient-occlusion on|off`, excluding creatures and preserving
+fog, composition and prepared-image presentation. Three reusable targets add 12.91 MiB;
+focused CPU/hidden GPU checks pass. [On/off captures](screenshots/environment-ao/README.md)
+are retained. The user accepted the [stronger tuning](screenshots/environment-ao-stronger/README.md)
+as the default: .75 strength / .375 darkening cap, .30-cell radius and .01-cell bias.
+Focused AO checks pass; visual review is complete.
+
+Sanctuary SC04 is **Accepted and closed (2026-11-05)**: [design](sc04_design.md),
+[verification](verification/archive/sc04_verification.md) and [campaign captures](screenshots/sc04/README.md).
+Normal campaigns now use the accepted city. New Game starts in the square, recall
+arrives at sanctuary, and dungeon ascent returns facing into town. Named content
+anchors drive travel, protected landings, recovery and HUD prompts. City discovery
+and pose survive Continue; restore checks the canonical immutable city definition.
+Schema/simulation are 9/13, without migration. Existing prepared view staging,
+resource ceilings and accepted artwork remain. Acceptance includes the entrance
+trim correction; milestone S-C and the [Sanctuary city roadmap](sanctuary_city_plan.md)
+are complete and closed. The [entrance trim correction](sc04_design.md#entrance-trim-review-correction-2026-11-05)
+recesses building-backed staircase terminal panels ahead of raised facade trim.
+
+Sanctuary SC03 is **Accepted (2026-11-05)**: [design](sc03_design.md),
+[verification](verification/archive/sc03_verification.md) and [captures](screenshots/sc03/README.md).
+Bounded scenery placements and prepared cutout meshes support two trees, bushes,
+three planting beds and sparse ivy; two stalls, a fountain and three painted service
+signs complete the dressing. The shorter representative tree is accepted. Opaque
+water uses eight prepared frames at 8 FPS, invalidating visible color only while
+preserving picking/geometry and the existing pause clock. Publication 10 carries
+cutout/water part flags, daylight fog and view distance; offline
+variant bindings share published mesh IDs.
+Review corrections cover stall scale/location, entrance spacing, grounded planting,
+roof-contained ivy, soil artwork, fixed volumetric water streams and a
+gentle city-only haze capped at 22% (dungeon defaults unchanged); see
+the SC03 design addendum. The city pack now uses a shared CPU/GPU 40-cell view distance and modestly
+brightened carved fountain stone; other packs retain 16 cells. See the
+SC03 far-enclosure addendum for bounded culling storage and verification.
+The inn sign review correction moves its bracket onto the solid facade strip
+beside the upper window; see the SC03 mounting addendum. Milestone S-B is accepted.
+SC04 delivers the campaign cutover below; SC03 artwork remains accepted.
+
+Sanctuary SC02 is implemented and accepted (2026-11-05): [full town design](sc02_design.md)
+and [verification/captures](verification/archive/sc02_verification.md). The 24×24 square-centered town
+has ten principal buildings, separate dungeon/gate landmarks, two street loops,
+and fixed named approaches/dressing reservations. Ten models and 91 placements
+reuse SC01 ownership/rendering; campaign cutover remains SC04. User review reports
+about 3,500 FPS uncapped; retain existing chunk/frustum culling without advanced
+occlusion or additional spatial subdivision. SC03 adds distinct painted signs for the inn, smithy and provisioner, using
+prepared artwork and static meshes.
+
+Sanctuary city (SC01.1 implemented and accepted, 2026-11-05):
+[four-slice roadmap](sanctuary_city_plan.md) stages an in-engine architectural
+street corner, full town layout, vegetation/market/fountain, and campaign hub
+replacement. Retained [visual references](mockups/sanctuary-city-v1/README.md)
+guide an older, lightly overgrown town with occasional two-storey exterior shells.
+Use simple prepared low-poly geometry and basic frustum culling; optimize observed
+issues at slice handoffs. Interiors/services are deferred and existing development
+saves require no migration. SC01 is split: [SC01.1 location-owned assets](sc011_design.md) is implemented with
+[verification and handoff](verification/archive/sc011_verification.md); SC01.2 architecture is implemented
+and accepted (2026-11-05); see the [architecture design](sc01_design.md) and
+[verification/captures](verification/archive/sc01_verification.md). Supersampling and texture fidelity remain unchanged;
+512 MiB–1 GiB is a memory target, not a mandate to reduce quality.
+SC01.2 review follow-up corrects panel-divider contamination in the offline material
+exporter, with aligned 16-pixel atlas gutters and focused verification; see
+[before/after evidence](screenshots/sc01/material-seams/README.md).
+
 Movement-frame performance (implemented and mechanically verified, 2026-11-04):
 [skip unavailable picking and reuse visibility work](movement_frame_work.md) removes
 moving software rasterization and empty HUD outline scans, caches owner/leaf relations,
@@ -137,7 +373,7 @@ Renderer roadmap **Accepted and closed** (2026-10-31): R01–R06 and milestones
 R-A/R-B/R-C are complete. The user accepted R06 with “slice accepted, close up the
 new renderer plan”. [Sole renderer cutover and retirement](renderer_cutover_design.md)
 documents the delivered ownership, interfaces and deletion inventory;
-[verification](r06_verification.md) retains executed checks and limitations unchanged.
+[verification](verification/archive/r06_verification.md) retains executed checks and limitations unchanged.
 [Historical design and acceptance records](system_history.md) preserve prior evidence
 without describing current defaults. The bestiary expansion is closed with B01–B05
 accepted; useful B06 scope transfers to campaign PC07. Campaign planning resumes
@@ -145,7 +381,7 @@ after P-B. [PC07.1 preparation and calibration](pc071_arena_calibration_design.m
 is Accepted and closed (2026-11-01); PC07.2 [population and route checks](pc072_population_design.md) is **Accepted and closed** (2026-11-01), including review corrections. Parent PC07
 is closed; PC08 is next for detailed planning only and P-C remains incomplete.
 
-Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
+Current revision: [dungeon art, stairwells, reusable doors and responsive loading](dungeon_art_loading_design.md) implements the separately approved follow-up. [Verification and captures](verification/archive/dungeon_art_loading_verification.md) record its delivered checks and limitations. It does not reopen the closed renderer/campaign roadmaps.
 
 Current follow-up: [loot, guardian doors and uninterrupted encounter flow](dungeon_flow_polish.md)
 records the implemented visual/interaction polish, unsaved-run terminal fix, and
@@ -157,23 +393,25 @@ Each monster includes imagegen art in the goblins' style and their applicable
 animation set. Implement and review in the arena before campaign integration;
 all actors retain one-subcell footprints. [B01 design](b01_skeleton_design.md) is
 **Accepted and closed** (2026-10-31): immutable damage profiles, typed impact resolution and full
-skeleton art are implemented in the arena. [Verification](b01_verification.md)
+skeleton art are implemented in the arena. [Verification](verification/archive/b01_verification.md)
 records checks, captures and acceptance. B02 bugbear and full-resolution sprite
-cropping are **Accepted and closed** (2026-10-31); [B02 verification](b02_verification.md) records
+cropping are **Accepted and closed** (2026-10-31); [B02 verification](verification/archive/b02_verification.md) records
 art, memory totals, CPU/GPU checks and arena captures. [B03 giant rat and Pack Tactics](b03_giant_rat_design.md) is **Accepted and closed** (2026-10-31).
 [B04 zombie and atomic Undead Fortitude](b04_zombie_design.md) is **Accepted and closed**
 (2026-11-01): mechanics, full art, native portrait and normal arena integration are
 delivered. Reference v1 and the completed slice are accepted.
-[B04 verification/gallery](b04_verification.md) records the checks and limitations.
+[B04 verification/gallery](verification/archive/b04_verification.md) records the checks and limitations.
 [B05 goblin shaman and enemy spellcasting](b05_goblin_shaman_design.md) is
 **Accepted and closed** (2026-11-01). Tagged NPC Bless
 sources, fixed NPC resources, casting timelines, full 56-pose art and portrait are
 implemented. Reference v1 and the completed slice are accepted.
-[B05 verification/gallery](b05_verification.md) records checks and limitations.
+[B05 verification/gallery](verification/archive/b05_verification.md) records checks and limitations.
 B06 is superseded without implementation; reusable level preparation and targeted
 calibration now belong to [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 B01 review adjustment: anchor the variable-width initiative strip to the viewport’s
-right inset, and uniformly reduce skeleton appearance dimensions by 12.5% while
+right inset. The [compact initiative follow-up](native_hud_design.md#compact-initiative-strip--2026-11-06)
+halves its footprint and aligns its top to the viewport, retaining native text.
+The earlier adjustment uniformly reduced skeleton appearance dimensions by 12.5% while
 retaining source art, pixel canvases and ground anchors. This is presentation
 metadata/layout only, using the existing prepared-image pipeline. Health bars use the
 projected body-axis anchor horizontally rather than the visible silhouette’s
@@ -186,7 +424,7 @@ implements the accepted first half of PC07. Its measurements precede population
 selection in PC07.2. The target is level 2 before the final guardian under normal
 shared XP. The bounded 36-trial study completed: all victories, three downings, zero permanent
 deaths. [Costs and recommendations](pc071_calibration/README.md) and
-[verification](pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
+[verification](verification/archive/pc071_verification.md) precede campaign population and route checks. General expedition agents remain PC08.
 
 PC07.2 [variety and controls](pc072_variety_controls.md) are **Accepted and closed** (2026-11-01)
 under the approved review plan: generated room graphs, one starting kit,
@@ -209,7 +447,7 @@ bypassable. Existing Party, reward, travel and allocation ownership are unchange
 The original generator-5 [eight persistent routes](pc072_routes/README.md) all won: 32 observed downings,
 zero permanent deaths/recorded merges, level two before the final guardian and
 three field rests each. Both selected replays matched with hidden captures.
-[Verification and limitations](pc072_verification.md) retain frequent downings,
+[Verification and limitations](verification/archive/pc072_verification.md) retain frequent downings,
 costly reserve detours, diagnostic policy limits and historical balance limitations.
 
 Pause diagnostics follow-up (2026-11-01): Presenter owns a default-off F1 toggle
@@ -307,9 +545,10 @@ Implemented follow-up: [variable stone layouts](procedural_layout_design.md) rep
   prepared prop meshes, an optional reusable guardian-door emblem, and world UV scale.
   Texture purpose is independent of sprite alpha/sampling; panoramas do not occupy
   terrain palette slots. Publication identity hashes canonical metadata including the
-  checked payload checksum, so binding-only edits invalidate replay too. Runtime validates publication
-  fingerprints and definitions before creating immutable shared CPU assets and GPU
-  texture leases. Native portrait/creator atlases have independent retained bakers.
+  checked payload checksum, so binding-only edits invalidate replay too. Runtime validates bounded catalog metadata and definitions, then verifies
+  selected payload checksums when acquired. CPU masks/models and GPU textures are
+  leased by active/staged location requirements; unused packs/types stay on disk.
+  The offline baker verifies every payload. Native portrait/creator atlases have independent retained bakers.
 - **World rendering:** bounded static chunk/material meshes plus per-view CPU
   visibility and effects consume the same camera, actor animation, loot, doors and
   surface snapshots as GPU drawing. Prepared one-cell stairwells contain eight steps,
@@ -380,7 +619,7 @@ cells, reject occupied or moving-through thresholds, preserve acquired keys and 
 a 300ms motion barrier. Guardian gates remain automatic. Discovery, navigation and
 picking invalidate on both opening and closing; settled state survives save/travel.
 
-Maps own contiguous cell bytes. CampaignRun retains four stable locations and the
+Maps own contiguous cell bytes. CampaignRun retains five stable locations and the
 travelling Party; the application owns shared prepared rendering. One active
 session borrows its location/Party, with value snapshots for inactive locations.
 Travel stages replacement simulation/view owners at an explicit preparation
@@ -396,13 +635,31 @@ fixed result values without allocation. Lethal impact unblocks immediately; anim
 plays a 1200 ms goblin death/corpse clip, overlaying white for its first 100 ms,
 then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash.
 
-WorldRenderer retains immutable shared textures/alpha data and at most active and
-staged views. Each view owns bounded static scene geometry, visibility scratch,
-effects and GPU mesh/target leases. World asset budgets are 512 MiB mip textures
+WorldRenderer retains immutable catalog metadata and at most active and staged
+views. View-owned leases share current texture/alpha/model payloads and release
+source-only assets on commit, destination-only assets on cancel. Each view owns bounded static scene geometry, visibility scratch,
+effects and GPU mesh/target leases. Resident world safety ceilings are 512 MiB mip textures
 and 64 MiB alpha masks; scene limits are 64 MiB CPU/40 MiB GPU, view scratch 8 MiB,
 and tracked world ceilings are 352 MiB CPU / 608 MiB GPU. Preparation rejects capacity or
 allocation failures without replacing the playable view. These are preparation
 boundaries, not frame-time growth policies.
+
+Static architecture uses up to 128 world-owned placements and a separate pack-local
+catalog of up to 32 named multipart models. Validated level solid footprints retain
+movement/sight blocking while a derived ownership mask suppresses generated backing
+walls. Prepared painted geometry lives in the anchor chunk; its bounds include roofs
+and overhangs. Building scenes search 32 cells/81 candidate chunks for diagonal
+far-frustum coverage; ordinary scenes retain 24/49. Fixed draw storage covers both.
+Frames borrow prepared geometry and resolve no model names. Furniture's four slots
+and tighter mesh profile remain intact. The standalone full-town city factory owns bounded named doorway/anchor and
+future dressing metadata, validating connected routes with future bases blocked.
+SC04 makes this factory the production campaign Sanctuary; review tooling shares it. SC03 adds up to 32 separate
+scenery placements: open-terrain movement/NPC bases without solid-cell LOS or
+generated-wall replacement. Named mesh cutouts share prepared alpha/mips and
+CPU/GPU alpha rejection; view-owned geometry includes canopy bounds. No new
+visibility subdivision or frame-time resource work. SC02 uses two shared
+4096² atlases with existing multipart publication; no renderer or schema change. See [SC01.2](sc01_design.md) for
+ownership, capacities, exports and focused verification.
 
 Party stores four character identities/resources and owns one fixed 208-stack
 inventory: four 48-cell bags plus four equipment positions per character. Startup
@@ -424,8 +681,8 @@ party-local; startup owned-item indices are character-local; catalog IDs remain
 catalog-local. See [inventory design](inventory_design.md) for schema 5, live item
 commands, safety, UI storage and tests.
 
-R02 expands the application-owned GPU registry to 512 standalone textures, eight
-render targets, eight static meshes and eight shaders. Presenter borrows the registry;
+The application-owned GPU registry holds 512 standalone textures, twelve
+render targets (expanded for environment AO), eight static meshes and eight shaders. Presenter borrows the registry;
 world scene/resource leases release resources at explicit preparation boundaries.
 The new path additionally enforces texture/mesh/scene byte budgets in the
 [R02 design](renderer_world_design.md). Normal gameplay always uses the world renderer. Supersampling defaults on;
@@ -461,7 +718,7 @@ canonical restore and disk persistence (introduced in schema/simulation 4/7;
 current identities are 6/10). Additive protocol
 source tags, hover/log feedback, full production art and portrait reuse existing
 owners. Seven appearances /375 textures total 314.56 MiB mip and 56.67 MiB alpha;
-all budgets/count capacities remain fixed. [Verification](b05_verification.md)
+all budgets/count capacities remain fixed. [Verification](verification/archive/b05_verification.md)
 records evidence, limitations and completed-slice user acceptance.
 
 B04 implements the approved [zombie design](b04_zombie_design.md). Catalog schema 12
@@ -473,7 +730,7 @@ premature reward. Radiant/critical bypass; full adjusted damage sets the 64-bit 
 Existing impact order, accepted rolls and spell-hit granularity remain. Resolved
 event metadata, bounded log/one-HP feedback, production 48-pose art and native
 portrait use existing owners. Six-appearance publication is 260.95 MiB mip /
-46.60 MiB alpha within unchanged limits; [verification](b04_verification.md) records
+46.60 MiB alpha within unchanged limits; [verification](verification/archive/b04_verification.md) records
 focused CPU/GPU/replay evidence, limitations and completed-slice user acceptance.
 
 B03 mechanics follow the approved [giant rat design](b03_giant_rat_design.md).
@@ -484,7 +741,7 @@ incapacitated. Existing advantage cancellation and saved delayed rolls remain
 unchanged. Resolved attacks carry compact pack/mode context for bounded HUD logs
 and additive automation fields; no frame allocation, support cache or capacity
 increase. Rat production art (48 poses), native portrait and arena integration are delivered,
-with accepted reference v3. [Verification](b03_verification.md) records CPU/GPU
+with accepted reference v3. [Verification](verification/archive/b03_verification.md) records CPU/GPU
 checks, publication totals, strict arena captures, limitations and completed-slice acceptance.
 
 B02 implementation follows the approved [bugbear and sprite memory design](b02_bugbear_design.md).
@@ -511,8 +768,8 @@ publication follow the existing renderer pipeline. Body width stays <=.5 cells;
 all clip canvases may use the existing <=1-cell world publication bound without
 changing occupancy. A fixed HUD species discriminator selects its generated
 portrait in the existing UI atlas. Profiles and portraits add no frame allocations
-or resource owner. Historical B01 totals remain in its [handoff](b01_verification.md);
-current cropped publication totals are in [B02 verification](b02_verification.md).
+or resource owner. Historical B01 totals remain in its [handoff](verification/archive/b01_verification.md);
+current cropped publication totals are in [B02 verification](verification/archive/b02_verification.md).
 
 ## Interfaces and preservation
 
@@ -522,9 +779,9 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 6/10 and generator/templates 8/6. Older saves reject
-without being modified; no migration. World publication is format 3, appearance 4,
-visibility world-visibility-v7 and terrain-rules-v2. Door scheduling identity is
+Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
+without being modified; no migration. World publication is format 13, appearance 5,
+visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay
 checks identities rather than translating retired renderer recordings. Protocol v1
 remains; renderer/visibility selectors and renderer_fixture scenario are removed.
@@ -543,7 +800,7 @@ transport/replay and save smoke checks run without a window. GPU integration cov
 actual resource ownership, full-pixel CPU/GPU parity, hidden world/native UI drawing,
 staged rollback and cleanup separately. No desktop input automation. Full persistence
 and capacity/performance investigations are explicit; no repeated routine matrices.
-See [R06 verification](r06_verification.md) for executed checks and limitations.
+See [R06 verification](verification/archive/r06_verification.md) for executed checks and limitations.
 
 ## Source map and design index
 
@@ -561,7 +818,7 @@ See [R06 verification](r06_verification.md) for executed checks and limitations.
 The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
 [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).
 PC07.1 preparation and calibration are Accepted and closed;
-[verification/handoff](pc071_verification.md) records the bounded study and limits.
+[verification/handoff](verification/archive/pc071_verification.md) records the bounded study and limits.
 PC07.2 population, route checks and review corrections are Accepted and closed
 (2026-11-01), completing parent PC07. PC08 is next for separate detailed planning;
 P-C remains incomplete. See the [current handoff](procedural_campaign_plan.md#pc072-accepted-closeout-and-next-agent-handoff-2026-11-01-current).

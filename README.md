@@ -176,9 +176,15 @@ Replay image export remains available in graphics builds using `--replay FILE`,
 `--capture-dir NEW_DIRECTORY` and 1–8 `--capture-operation N` arguments. It creates
 its own hidden GPU context and exports the current scene/HUD without advancing time.
 It never captures other windows or injects OS input. Strict replay rejects old
-renderer recordings. Review evidence: [R06 verification](docs/r06_verification.md).
+renderer recordings. Review evidence: [R06 verification](docs/verification/archive/r06_verification.md).
 
-Keep disposable captures/experiments in ignored `captures/`, `scratch/` or a suitably
-sized temporary directory. Selected source art, prompts, animation sheets and curated
-historical screenshots remain versioned. The source texture normalization and NPC
-sheet tools remain explicit authoring tools, independent of runtime rendering.
+Create disposable review output with `python3 tools/agent_artifacts.py create`.
+Use the printed run directory, promote only selected evidence into the feature
+gallery, and preview the run with `python3 tools/agent_artifacts.py clean RUN_DIRECTORY`.
+Add `--apply` to delete it. Galleries retain six images, or twelve awaiting review;
+exceptions require a documented review case. See the [artifact workflow](docs/verification_workflow.md#artifact-housekeeping)
+and [historical verification index](docs/verification/archive/README.md).
+Browse retained images in the [selected evidence index](docs/screenshots/README.md).
+Selected source art, prompts and animation sheets remain versioned. The source
+texture normalization and NPC sheet tools remain explicit authoring tools,
+independent of runtime rendering.

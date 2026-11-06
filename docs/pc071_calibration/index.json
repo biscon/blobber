@@ -4,19 +4,23 @@
     "retained_traces": [
       {
         "file": "goblin_pair/traces/354f462f2e364183d6e20d0c.jsonl.gz",
-        "sha256": "73d1f201700ab829d7ed85db1a9509835ce29cde93f0e4cde718417007a9ddc2"
+        "sha256": "73d1f201700ab829d7ed85db1a9509835ce29cde93f0e4cde718417007a9ddc2",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "goblin_pair/traces/a229e2c83b6618f55121e267.jsonl.gz",
-        "sha256": "512a0ab4b452b1b641d6eb1f96f934f5ce7d5c26429881970e9945331fc832ad"
+        "sha256": "512a0ab4b452b1b641d6eb1f96f934f5ce7d5c26429881970e9945331fc832ad",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "goblin_pair/traces/c23b45835bc24bb28d1de210.jsonl.gz",
-        "sha256": "bf86edaf8215598c978294393c2c9badc0178c33d0746777bb7633ec7c7275a5"
+        "sha256": "bf86edaf8215598c978294393c2c9badc0178c33d0746777bb7633ec7c7275a5",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "goblin_pair/traces/e49c1c3cbcb2ea581342e8b8.jsonl.gz",
-        "sha256": "a229a26aec9f010f96678798782f99f2c8aa5d1fec91cd7a10b980ecc6bc8388"
+        "sha256": "a229a26aec9f010f96678798782f99f2c8aa5d1fec91cd7a10b980ecc6bc8388",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       }
     ],
     "verified_replay": {
@@ -26,31 +30,38 @@
       "seed": 12,
       "trace": "output/pc071/goblin_pair/traces/c23b45835bc24bb28d1de210.jsonl",
       "returncode": 0,
-      "result": "{\"replay\":\"matched\"}\n"
-    }
+      "result": "{\"replay\":\"matched\"}\n",
+      "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
+    },
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "rat_pack",
     "retained_traces": [
       {
         "file": "rat_pack/traces/1a8850d7e5748f3acd8b62e1.jsonl.gz",
-        "sha256": "f09a5a83a09796d3291686aa1c35000e9c61a607ba486a9d7544f7c466ca92a6"
+        "sha256": "f09a5a83a09796d3291686aa1c35000e9c61a607ba486a9d7544f7c466ca92a6",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "rat_pack/traces/2b3f181e53bc2fc8d2723d2c.jsonl.gz",
-        "sha256": "697ea478ffe54f0df04e8cdb26875f17e2738ca9146495ad3d78d6381617ec61"
+        "sha256": "697ea478ffe54f0df04e8cdb26875f17e2738ca9146495ad3d78d6381617ec61",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "rat_pack/traces/318357ee635b78aa2325fd9e.jsonl.gz",
-        "sha256": "be8d77dc82490e244bbe4c966f281546af8c07f316d732336d15a52676cbb25a"
+        "sha256": "be8d77dc82490e244bbe4c966f281546af8c07f316d732336d15a52676cbb25a",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "rat_pack/traces/85864fd2a88bbadfbb0b1032.jsonl.gz",
-        "sha256": "398e122521f9b46cb0fadadf514fa5fd9f28864738ecbd9fd5014063da8ce304"
+        "sha256": "398e122521f9b46cb0fadadf514fa5fd9f28864738ecbd9fd5014063da8ce304",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "rat_pack/traces/96ea881c3d428f6963fa12ea.jsonl.gz",
-        "sha256": "cee8dc339753fa9d213d6141e700d374bb6a155d1a9c1a929bb54346919b563b"
+        "sha256": "cee8dc339753fa9d213d6141e700d374bb6a155d1a9c1a929bb54346919b563b",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       }
     ],
     "verified_replay": {
@@ -60,31 +71,38 @@
       "seed": 12,
       "trace": "output/pc071/rat_pack/traces/85864fd2a88bbadfbb0b1032.jsonl",
       "returncode": 0,
-      "result": "{\"replay\":\"matched\"}\n"
-    }
+      "result": "{\"replay\":\"matched\"}\n",
+      "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
+    },
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "undead_pair",
     "retained_traces": [
       {
         "file": "undead_pair/traces/074e06f956467a9c8cca9af0.jsonl.gz",
-        "sha256": "e50442429c9377ceef18ba3236cd792d8e918af2b229f14c3fed9e553a709ae3"
+        "sha256": "e50442429c9377ceef18ba3236cd792d8e918af2b229f14c3fed9e553a709ae3",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "undead_pair/traces/6320e5f08b8410e1760ba369.jsonl.gz",
-        "sha256": "2ae4bfe5739604e69fe0b11b277ba347ad3d80258a2a9c5508c3cbe9cbb45268"
+        "sha256": "2ae4bfe5739604e69fe0b11b277ba347ad3d80258a2a9c5508c3cbe9cbb45268",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "undead_pair/traces/72f20b77a6f0e77a49b2de05.jsonl.gz",
-        "sha256": "d65401d0484bcbfaaac528ac0e847b97c7b6edee9a3e2cebfd7f2dff957e8d9e"
+        "sha256": "d65401d0484bcbfaaac528ac0e847b97c7b6edee9a3e2cebfd7f2dff957e8d9e",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "undead_pair/traces/b75bc33f838a26bb6cf6a830.jsonl.gz",
-        "sha256": "a9bdd7f5f9842a2949ee674ebf78e72911a2360f0069e396d671f5cd26a9591d"
+        "sha256": "a9bdd7f5f9842a2949ee674ebf78e72911a2360f0069e396d671f5cd26a9591d",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "undead_pair/traces/fccd7bbeb6121d1d4821fa09.jsonl.gz",
-        "sha256": "8b23caf9a30c4e315e9a4bdacb018ac00fe310cf7a085f318d76107afdd02200"
+        "sha256": "8b23caf9a30c4e315e9a4bdacb018ac00fe310cf7a085f318d76107afdd02200",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       }
     ],
     "verified_replay": {
@@ -94,27 +112,33 @@
       "seed": 12,
       "trace": "output/pc071/undead_pair/traces/6320e5f08b8410e1760ba369.jsonl",
       "returncode": 0,
-      "result": "{\"replay\":\"matched\"}\n"
-    }
+      "result": "{\"replay\":\"matched\"}\n",
+      "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
+    },
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "bugbear_solo",
     "retained_traces": [
       {
         "file": "bugbear_solo/traces/280372f1fc968d21bb71862b.jsonl.gz",
-        "sha256": "362576213813337de72d295083044589362626cc422c69511000721f5b73b7ab"
+        "sha256": "362576213813337de72d295083044589362626cc422c69511000721f5b73b7ab",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "bugbear_solo/traces/6fb8ece0bf702a8132e709c0.jsonl.gz",
-        "sha256": "67588cb6086a4cbaace0d32eaa2b7db68b12bc10f1bfe99dcb1a24fde28966af"
+        "sha256": "67588cb6086a4cbaace0d32eaa2b7db68b12bc10f1bfe99dcb1a24fde28966af",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "bugbear_solo/traces/b381c47c1d601afc8b72a76d.jsonl.gz",
-        "sha256": "af57b9352e32e6f2a7d2d27143b051ccbe541583559c17b3b7213d241b6370d6"
+        "sha256": "af57b9352e32e6f2a7d2d27143b051ccbe541583559c17b3b7213d241b6370d6",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "bugbear_solo/traces/c88b1ec4f0325cc6ee23a6e0.jsonl.gz",
-        "sha256": "c6788cce8e064b1b6aa816645b6da6a2d63730bd4b26a4d320789c8eabc497d7"
+        "sha256": "c6788cce8e064b1b6aa816645b6da6a2d63730bd4b26a4d320789c8eabc497d7",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       }
     ],
     "verified_replay": {
@@ -124,27 +148,33 @@
       "seed": 12,
       "trace": "output/pc071/bugbear_solo/traces/6fb8ece0bf702a8132e709c0.jsonl",
       "returncode": 0,
-      "result": "{\"replay\":\"matched\"}\n"
-    }
+      "result": "{\"replay\":\"matched\"}\n",
+      "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
+    },
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "goblin_support",
     "retained_traces": [
       {
         "file": "goblin_support/traces/4147e88fade5c37b5334733e.jsonl.gz",
-        "sha256": "fb1ec08d55ccf88eaf2bdec309c1f6b70cdf64489bc1c45dd2f8b8ed421da789"
+        "sha256": "fb1ec08d55ccf88eaf2bdec309c1f6b70cdf64489bc1c45dd2f8b8ed421da789",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "goblin_support/traces/9fc0ed650e1ebcf3772cca32.jsonl.gz",
-        "sha256": "fd10c0aed2087b2e758bc8390ae1e6d79b24a702b377d3fe9315b638daaf1f65"
+        "sha256": "fd10c0aed2087b2e758bc8390ae1e6d79b24a702b377d3fe9315b638daaf1f65",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "goblin_support/traces/f4f5c56b77e4972c3381665d.jsonl.gz",
-        "sha256": "6e0b75d003571faee5fa2d01514b89dba1b417853a0b345fb9f1552712dd0aa2"
+        "sha256": "6e0b75d003571faee5fa2d01514b89dba1b417853a0b345fb9f1552712dd0aa2",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "goblin_support/traces/f630a568c8081573fbd776b4.jsonl.gz",
-        "sha256": "71669fdf2b2b694537ac396000375cd19cc69b9a1639c9f52d7c89af0a88c028"
+        "sha256": "71669fdf2b2b694537ac396000375cd19cc69b9a1639c9f52d7c89af0a88c028",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       }
     ],
     "verified_replay": {
@@ -154,27 +184,33 @@
       "seed": 8,
       "trace": "output/pc071/goblin_support/traces/9fc0ed650e1ebcf3772cca32.jsonl",
       "returncode": 0,
-      "result": "{\"replay\":\"matched\"}\n"
-    }
+      "result": "{\"replay\":\"matched\"}\n",
+      "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
+    },
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "bugbear_support",
     "retained_traces": [
       {
         "file": "bugbear_support/traces/1eeec615daa92bb68aa4ceb2.jsonl.gz",
-        "sha256": "b236a32118b878209edcc17b3e0d170cba63772056d8481b59c66ed029fca807"
+        "sha256": "b236a32118b878209edcc17b3e0d170cba63772056d8481b59c66ed029fca807",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "bugbear_support/traces/3bbeb6e23c968e2b95d60aa8.jsonl.gz",
-        "sha256": "25d0552463c21fb13400d9bda4a6b8fdd4494d6fcc1009e15f963c714055b0bf"
+        "sha256": "25d0552463c21fb13400d9bda4a6b8fdd4494d6fcc1009e15f963c714055b0bf",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "bugbear_support/traces/5d9ccc85ef7643cae54d758d.jsonl.gz",
-        "sha256": "86c0b76323247d9975b0a82a0a3051b28c67aaacc493b81b5c0e5492a0f92769"
+        "sha256": "86c0b76323247d9975b0a82a0a3051b28c67aaacc493b81b5c0e5492a0f92769",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       },
       {
         "file": "bugbear_support/traces/722a8b9f2221c35e5193383a.jsonl.gz",
-        "sha256": "31193266631dae6f4d4aa5f2c83e7be3d72d401ce8347c3a0c2308e821cc5e2b"
+        "sha256": "31193266631dae6f4d4aa5f2c83e7be3d72d401ce8347c3a0c2308e821cc5e2b",
+        "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
       }
     ],
     "verified_replay": {
@@ -184,7 +220,9 @@
       "seed": 8,
       "trace": "output/pc071/bugbear_support/traces/1eeec615daa92bb68aa4ceb2.jsonl",
       "returncode": 0,
-      "result": "{\"replay\":\"matched\"}\n"
-    }
+      "result": "{\"replay\":\"matched\"}\n",
+      "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
+    },
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   }
 ]

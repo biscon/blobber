@@ -2,7 +2,7 @@
 
 Current presentation: the implemented [dungeon-first UI revision](dungeon_ui_design.md)
 supersedes the original sidebar, bottom portraits, target list, confirmation button
-and hotkeys described below. See its [current verification and controls](dungeon_ui_verification.md).
+and hotkeys described below. See its [current verification and controls](verification/archive/dungeon_ui_verification.md).
 The remainder preserves the accepted slice 04 design and historical corrections.
 
 Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 adds production combat routing, Aid/ally targets, turn/status/outcome display and confirmation gating. The const-owner constructor and --ui-demo preserve the slice 04 preview contract. The remainder records this subsystem’s original slice boundary.
@@ -112,7 +112,7 @@ unstarted and is now eligible for its own planning session.
 The user-approved scope is unchanged. The expandable log is a readability detail
 within the bounded log requirement. No new catalog schema, rules source data,
 combat controller, session clock or production RNG was introduced.
-See [verification and review](slice04_verification.md). Slice 05 is not started.
+See [verification and review](verification/archive/slice04_verification.md). Slice 05 is not started.
 
 
 ## Typography review correction (2026-10-25)
@@ -187,7 +187,7 @@ arithmetic remains overflow-safe for uint64 timestamps. Regression tests cover
 distinct transition times, deterministic world reconstruction, explicit phases,
 mutation stability, idle fallback and frozen death poses. All 14 Debug/Release
 suites pass, including allocation tests. Inspected live desktop frames and
-fixed-time captures; see [verification](slice04_verification.md#live-demo-animation-review-correction).
+fixed-time captures; see [verification](verification/archive/slice04_verification.md#live-demo-animation-review-correction).
 
 
 ### Idle-only UI demo follow-up

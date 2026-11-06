@@ -34,11 +34,27 @@ int main() {
         char* fast[]{program, uncapped, help};
         check(parseOptions(3, fast).uncapped && parseOptions(3, fast).help,
               "Uncapped launch does not consume the following option");
+        char city[] = "--sanctuary-city-review", save[] = "--campaign-save", path[] = "unused.json";
+        char* review[]{program, city, help};
+        check(parseOptions(3, review).sanctuaryCityReview && parseOptions(3, review).help,
+              "City review launch is explicit and preserves help");
+        char* conflicting[]{program, city, save, path};
+        rejects([&] { parseOptions(4, conflicting); }, "Review cannot consume a campaign save");
         char quality[] = "--supersampling", off[] = "off", bad[] = "nearest";
         char* lower[]{program, quality, off};
         check(!parseOptions(3, lower).supersampling, "Off selects native filtered quality for normal game");
         char* raw[]{program, quality, bad};
         rejects([&] { parseOptions(3, raw); }, "Raw nearest is not a production quality option");
+        check(parseOptions(1, normal).ambientOcclusion, "AO defaults on");
+        char ao[] = "--ambient-occlusion", on[] = "on";
+        char* aoOff[]{program, ao, off};
+        char* aoOn[]{program, ao, on};
+        char* aoBad[]{program, ao, bad};
+        char* aoMissing[]{program, ao};
+        check(!parseOptions(3, aoOff).ambientOcclusion && parseOptions(3, aoOn).ambientOcclusion,
+              "AO can be explicitly enabled or disabled");
+        rejects([&] { parseOptions(3, aoBad); }, "Invalid AO value rejects");
+        rejects([&] { parseOptions(2, aoMissing); }, "Missing AO value rejects");
         for (const char* option : {"--renderer", "--world-preview", "--combat-demo", "--ui-demo", "--capture",
                                    "--capture-menu", "--renderer-fixture"}) {
             char* retired[]{program, const_cast<char*>(option)};

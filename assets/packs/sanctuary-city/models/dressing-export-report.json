@@ -1,0 +1,73 @@
+{
+  "models": [
+    {
+      "model": "courtyard-garden",
+      "parts": 4,
+      "triangles": 766
+    },
+    {
+      "model": "lane-garden",
+      "parts": 2,
+      "triangles": 132
+    },
+    {
+      "model": "east-garden",
+      "parts": 4,
+      "triangles": 742
+    },
+    {
+      "model": "market-produce",
+      "parts": 1,
+      "triangles": 216
+    },
+    {
+      "model": "market-grain",
+      "parts": 1,
+      "triangles": 216
+    },
+    {
+      "model": "fountain",
+      "parts": 2,
+      "triangles": 732
+    },
+    {
+      "model": "inn",
+      "parts": 3,
+      "triangles": 1533
+    },
+    {
+      "model": "smithy",
+      "parts": 3,
+      "triangles": 909
+    },
+    {
+      "model": "provisioner",
+      "parts": 3,
+      "triangles": 897
+    },
+    {
+      "model": "low-house-hip-ivy",
+      "parts": 3,
+      "triangles": 825
+    },
+    {
+      "model": "tall-house-ivy",
+      "parts": 3,
+      "triangles": 1427
+    }
+  ],
+  "opaque_atlas": 2048,
+  "cutout_atlas": 1024,
+  "water_atlas": [
+    2048,
+    1024
+  ],
+  "water_frames": 8,
+  "fps": 8,
+  "texels_per_cell": 256,
+  "gutter": 16,
+  "stall_scale": 0.5,
+  "stream_sides": 6,
+  "bush_top": 0.344,
+  "ivy_eaves_clearance": 0.04
+}

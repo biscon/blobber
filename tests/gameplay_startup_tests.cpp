@@ -9,6 +9,7 @@ void restoredCampaignAtOriginalSpawn() {
     const auto definitions = automation::test::definitions();
     const CampaignContent content{"owned-startup", 0};
     CampaignRun original(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    campaign_test::entrance(original);
     auto travel = original.prepareTravel(original.request(original.game().nearbyFixture()));
     check(original.commitTravel(travel), "Startup fixture enters dungeon");
     auto& game = original.game();

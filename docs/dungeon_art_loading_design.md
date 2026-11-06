@@ -109,5 +109,5 @@ The CPU-only `blobber_world_assets` target is separate from scene geometry. The
 offline baker links that asset target, so changing stair/scene meshes does not
 rebuild NPC art or republish unchanged textures.
 
-[Verification, captures and limitations](dungeon_art_loading_verification.md) record
+[Verification, captures and limitations](verification/archive/dungeon_art_loading_verification.md) record
 the executed checks and retained artwork.

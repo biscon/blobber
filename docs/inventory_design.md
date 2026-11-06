@@ -2,7 +2,7 @@
 
 Status: implemented, **accepted and closed** by the user on 2026-10-27, including UI corrections and the Character tab.
 The user approved the planning conversation with “Implement the plan.” See
-[verification and handoff](slice11_verification.md). Slice 12 is next eligible for
+[verification and handoff](verification/archive/slice11_verification.md). Slice 12 is next eligible for
 planning and remains unstarted.
 
 ## Approved behavior

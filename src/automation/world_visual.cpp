@@ -5,7 +5,9 @@ namespace {
 class WorldVisual final : public Visibility {
   public:
     WorldVisual(WorldVisualContext& c, const Map& map, const GameSession& game)
-        : scene_(world_render::prepare(game.geometry(), {}, {}, {}, &c.assets)), pipeline_(scene_, c.assets),
+        : lease_(c.assets.acquire(
+              c.assets.requirements(map.definition().assetPack, &game.actors().snapshot(), true))),
+          scene_(world_render::prepare(game.geometry(), {}, {}, {}, &c.assets)), pipeline_(scene_, c.assets),
           animator_(game.actors(), c.timings) {
         sample(map, game);
     }
@@ -22,6 +24,7 @@ class WorldVisual final : public Visibility {
     bool lootVisible(LootId id) const noexcept override { return pipeline_.lootVisible(id); }
 
   private:
+    world_assets::AssetLease lease_;
     world_render::Scene scene_;
     world_render::VisibilityPipeline pipeline_;
     NpcAnimator animator_;

@@ -6,7 +6,7 @@
 #include "rlgl.h"
 #include "support/allocations.hpp"
 #include "support/arena_preparation_review.hpp"
-#include "support/automation_fixtures.hpp"
+#include "support/campaign_fixtures.hpp"
 #include "support/campaign_startup_review.hpp"
 #include "support/check.hpp"
 #include "support/combat_entry_review.hpp"
@@ -14,10 +14,17 @@
 #include "support/creature_occlusion_review.hpp"
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
+#include "support/enemy_melee_review.hpp"
 #include "support/fixture_world.hpp"
+#include "support/interaction_prompt_review.hpp"
 #include "support/layout_review.hpp"
 #include "support/map_review.hpp"
+#include "support/melee_swipe_review.hpp"
 #include "support/pc072_review.hpp"
+#include "support/screen_shake_gpu.hpp"
+#include "support/screen_shake_review.hpp"
+#include "support/spell_effects_gpu.hpp"
+#include "support/spell_effects_review.hpp"
 #include "support/underkeep_review.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/menu_screen.hpp"
@@ -68,6 +75,44 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--enemy-melee-review") {
+            test::enemyMeleeReview(argv[1], argv[2]);
+            return 0;
+        }
+        if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se03-review") {
+            test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr, false, 80, true);
+            return 0;
+        }
+        if (argc == 5 && std::string_view(argv[3]) == "--feedback-review") {
+            test::spellEffectsReview(argv[1], argv[2], argv[4], true, 20);
+            return 0;
+        }
+        if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se02-review") {
+            test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr, true);
+            return 0;
+        }
+        if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se01-review") {
+            test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr);
+            return 0;
+        }
+        if (argc == 2 &&
+            (std::string_view(argv[1]) == "--se01-check" || std::string_view(argv[1]) == "--se02-check" ||
+             std::string_view(argv[1]) == "--se03-check")) {
+            test::spellEffectsGpuChecks();
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--screen-shake-review") {
+            test::screenShakeReview(argv[1], argv[2]);
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--melee-swipe-review") {
+            test::meleeSwipeReview(argv[1], argv[2]);
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--interaction-prompts-review") {
+            test::interactionPromptReview(argv[1], argv[2]);
+            return 0;
+        }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--map-review") {
             test::mapReview(argv[1], argv[2],
                             argc == 5 ? std::filesystem::path(argv[4]) : std::filesystem::path{});
@@ -95,6 +140,10 @@ int main(int argc, char** argv) {
         }
         if (argc == 4 && std::string_view(argv[3]) == "--underkeep-props-review") {
             test::underkeepReview(argv[1], argv[2], false, true);
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--rack-size-review") {
+            test::underkeepReview(argv[1], argv[2], false, true, true);
             return 0;
         }
         if (argc == 4 && std::string_view(argv[3]) == "--underkeep-review") {
@@ -302,14 +351,111 @@ int main(int argc, char** argv) {
                       "Expiry restores color without changing visibility or IDs");
                 renderer.clear();
             }
+            // Owned fixture: swipe appears in final art pixels at either quality setting.
+            for (bool quality : {false, true}) {
+                const auto map = test::worldRoom(9, 9);
+                const Player spawn{{4, 5}, Heading::North};
+                NpcWorld npcs(map, spawn.cell, definitions.types, {{{0}, {4, 4}, {0, 1}, Heading::South}});
+                GameSession game(map, catalog, npcs, 5, spawn, false, fixture.timings);
+                NpcAnimator animator(game.actors(), fixture.timings);
+                animator.setTime(0);
+                AttackVisualSnapshot attacks;
+                attacks.world = game.actors().snapshot().world;
+                attacks.revision = 1;
+                auto& slash = attacks.attacks[NpcWorld::maxInstances];
+                slash.id = {attacks.world, 1};
+                slash.enemy = game.actors().id(0);
+                slash.character = {0};
+                slash.hit = true;
+                slash.stage = AttackStage::Windup;
+                slash.impactMs = 200;
+                world_render::FrameInput input{map,     game.movement(), &game.actors(), &animator.snapshot(),
+                                               nullptr, nullptr,         &attacks};
+                renderer.supersampling(quality);
+                renderer.stage(input);
+                renderer.commit();
+                test::screenShakeGpu(resources, renderer, input);
+                const auto visibilityRevision = renderer.visibility()->frame().revision;
+                std::vector<Color> swipeBase(viewWidth * viewHeight);
+                unsigned featherPixels = 0;
+                auto ivory = [&] {
+                    renderer.render(input);
+                    OwnedImage image(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+                    ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+                    const auto* pixels = static_cast<const Color*>(image.value.data);
+                    unsigned count = 0;
+                    featherPixels = 0;
+                    for (int i = 0; i < viewWidth * viewHeight; ++i) {
+                        count += pixels[i].r == 245 && pixels[i].g == 240 && pixels[i].b == 220;
+                        if (input.now == 0)
+                            swipeBase[i] = pixels[i];
+                        const auto before = swipeBase[i], after = pixels[i];
+                        if (245 - int(before.r) > 20) {
+                            const float alpha = float(int(after.r) - before.r) / (245 - int(before.r));
+                            if (alpha > .05f && alpha < .95f &&
+                                std::abs(after.g - (before.g + alpha * (240 - int(before.g)))) < 2 &&
+                                std::abs(after.b - (before.b + alpha * (220 - int(before.b)))) < 2)
+                                ++featherPixels;
+                        }
+                    }
+                    return count;
+                };
+                check(ivory() == 0, "No premature swipe pixels");
+                input.now = 185;
+                check(ivory() > 8, "Opaque ivory swipe rendered at peak in both quality modes");
+                check(featherPixels > 8, "Swipe edges blend translucently with the actual background");
+                allocations = 0;
+                watching = true;
+                for (unsigned now = 186; now < 340; ++now) {
+                    input.now = now;
+                    renderer.render(input);
+                }
+                watching = false;
+                check(allocations == 0, "GPU swipe frame processing allocates no engine C++ storage");
+                input.now = 340;
+                check(ivory() == 0 && renderer.visibility()->frame().revision == visibilityRevision,
+                      "Swipe expires without changing picking");
+                slash.id.serial = 2;
+                slash.impactMs = 500;
+                ++attacks.revision;
+                input.now = 350;
+                renderer.render(input);
+                input.now = 485;
+                check(ivory() > 8, "Mirrored swipe triangles remain visible with backface culling");
+                check(resources.target(renderer.image().target).texture.width == viewWidth &&
+                          resources.target(renderer.image().target).texture.height == viewHeight,
+                      "Swipe draw target is exactly the clipped dungeon art viewport");
+                renderer.clear();
+            }
             auto campaign = std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types,
                                                           fixture.timings, 5);
+            campaign_test::entrance(*campaign);
             auto current = std::make_unique<GameView>(renderer);
             NpcAnimator animator(campaign->game().actors(), fixture.timings);
             animator.setTime(0);
             SpellArea area;
             current->update(campaign->game(), animator.snapshot(), area);
             current->activate();
+            differences += compare(resources, renderer, ids.get());
+            CommandController cityHud(campaign->game());
+            MapOverlayModel cityMap;
+            cityMap.prepare(campaign->map());
+            cityMap.refresh(&campaign->game().fixtures());
+            cityHud.refresh(current->picking()->targets(), false, false, true);
+            const auto cityTransfers = resources.transfers();
+            allocations = 0;
+            watching = true;
+            for (unsigned frame = 0; frame < 8; ++frame) {
+                campaign->game().move(frame % 2 ? Action::Right : Action::Left);
+                campaign->update(0, false);
+                animator.setTime(campaign->game().timeMs());
+                current->update(campaign->game(), animator.snapshot(), area);
+                cityMap.refresh(&campaign->game().fixtures());
+                cityHud.refresh(current->picking()->targets(), false, true, true);
+            }
+            watching = false;
+            check(!allocations && resources.transfers().uploads == cityTransfers.uploads,
+                  "Prepared city movement, HUD and discovery map allocate/upload nothing");
             const auto prior = renderer.image();
             const auto* pick = renderer.picking();
             auto ticket = campaign->prepareTravel(campaign->request(campaign->game().nearbyFixture()));

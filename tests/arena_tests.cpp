@@ -33,7 +33,7 @@ struct Temp {
         std::filesystem::remove_all(path, e);
     }
 };
-rules::Catalog catalog() {
+rules::Catalog catalog(std::string secondId = "second") {
     auto c = creationCatalog();
     std::vector<rules::RaceDefinition> races;
     std::vector<rules::ClassDefinition> classes;
@@ -51,7 +51,7 @@ rules::Catalog catalog() {
     for (std::uint16_t i = 0; i < c.spellCount(); ++i)
         spells.push_back(*c.spell({i}));
     auto second = *c.monster({0});
-    second.id = "second";
+    second.id = std::move(secondId);
     return {{*c.attack({0})}, {*c.monster({0}), second}, races, classes, items, *c.preset(), spells,
             creation};
 }
@@ -373,6 +373,11 @@ void picker(const rules::Catalog& c) {
     std::snprintf(setup.search.data(), 65, "SECOND");
     setup.filter(c);
     check(setup.visibleCount == 1, "case-insensitive filter");
+    const auto friendly = catalog("goblin.archer");
+    std::snprintf(setup.search.data(), 65, "GOBLIN ARCHER");
+    setup.filter(friendly);
+    check(setup.visibleCount == 1 && setup.visible[0] == 1,
+          "Arena search accepts readable names without internal punctuation");
     std::snprintf(setup.seedText.data(), 65, "4294967296");
     check(!setup.readSeed(), "invalid seed input");
     s.roster[0].quantity = 256;

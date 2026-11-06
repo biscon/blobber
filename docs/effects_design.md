@@ -152,4 +152,4 @@ No NPC-caster mechanism was added solely to manufacture that test. Actual spell
 casting, upcasting, rest-time advancement, equipment transactions and persistence
 remain later slices. No interactive or graphical review is claimed for this slice.
 
-See [verification and handoff](slice09_verification.md) and the retained [headless trace](slice09_trace.txt).
+See [verification and handoff](verification/archive/slice09_verification.md) and the retained [headless trace](slice09_trace.txt).

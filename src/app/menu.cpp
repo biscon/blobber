@@ -26,6 +26,7 @@ int runMenus(const Options& options) try {
     GpuResources resources;
     AudioRuntime audio;
     audio.prepare(options.assets, options.noAudio, options.settings);
+    setBorderlessFullscreen(audio.settings.borderlessFullscreen);
     Presenter presenter(resources, options.assets, &worker);
     presenter.audio = &audio;
     loading->attach(presenter);
@@ -47,15 +48,20 @@ int runMenus(const Options& options) try {
             return saves.inspect();
         });
         v.canContinue = slot.active;
+        if (!slot.error.empty())
+            std::fprintf(stderr, "Continue unavailable: %s\n", slot.error.c_str());
         std::snprintf(v.continueSummary.data(), v.continueSummary.size(), "%s",
-                      slot.active ? (slot.location + " | " + slot.partySummary).c_str() : slot.error.c_str());
+                      slot.active     ? (slot.location + " | " + slot.partySummary).c_str()
+                      : slot.terminal ? "This expedition has ended."
+                      : slot.exists   ? "This save cannot be opened. You can start a new expedition."
+                                      : "No saved expedition.");
     };
     refreshContinue();
     ArenaScenarioStore scenarioStore(catalog, characterLibraryPath().parent_path() / "scenarios");
     auto reload = [&] {
         const auto r = library.initialize();
         v.usable = bool(r);
-        v.message(r ? "" : r.message.data());
+        v.message(libraryFeedback(r));
         v.model.filter(library.snapshot());
     };
     prepareCpu([&] {
@@ -102,7 +108,7 @@ int runMenus(const Options& options) try {
                 const auto result = v.creation.save(library, m);
                 if (result.committed) {
                     v.usable = bool(result);
-                    v.message(result ? "Character saved." : result.message.data());
+                    v.message(result ? "Character saved." : libraryFeedback(result));
                     suppress = true;
                 }
             }
@@ -228,7 +234,8 @@ int runMenus(const Options& options) try {
                     return 0;
                 v.message("");
             } catch (const std::exception& e) {
-                v.message(e.what());
+                std::fprintf(stderr, "Continue failed: %s\n", e.what());
+                v.message("Couldn't open this save. Your saved expedition has been kept.");
             }
             m.screen = MenuScreen::Main;
             refreshContinue();
@@ -300,7 +307,7 @@ int runMenus(const Options& options) try {
             m.deletion.reset();
         else if (action == 41 && m.deletion) {
             auto r = library.erase(m.deletion->id, m.deletionRevision);
-            v.message(r ? "" : r.message.data());
+            v.message(libraryFeedback(r));
             if (r.committed) {
                 m.deletion.reset();
                 v.usable = bool(r);
@@ -358,7 +365,8 @@ int runMenus(const Options& options) try {
                 refreshContinue();
             } catch (const std::exception& e) {
                 m.screen = MenuScreen::Picker;
-                v.message(e.what());
+                std::fprintf(stderr, "Party launch failed: %s\n", e.what());
+                v.message("Couldn't start the expedition. Review your party and try again.");
             }
         }
         if (action != 5)

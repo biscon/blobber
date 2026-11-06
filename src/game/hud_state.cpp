@@ -1,5 +1,6 @@
 #include "game/commands.hpp"
 #include "ui/layout.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -133,6 +134,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    floorHover({});
     closeTargetPicker();
     cancelPointerButtons();
     state_.advancement.open = false;
@@ -156,6 +158,8 @@ void CommandController::closeOverlay() noexcept {
 }
 void CommandController::hover(HoverKind kind, int index, std::optional<ActorId> enemy, float x,
                               float y) noexcept {
+    if (kind != HoverKind::Enemy || !enemy || !tooltipEnemy_ || !sameActor(*enemy, *tooltipEnemy_))
+        tooltipEnemy_.reset();
     state_.hover = {};
     state_.hover.kind = kind;
     state_.hover.index = index;
@@ -164,12 +168,39 @@ void CommandController::hover(HoverKind kind, int index, std::optional<ActorId> 
     state_.hover.y = y;
     updateHover();
 }
+void CommandController::updateEnemyTooltip(ActorId id) noexcept {
+    const auto now = session_.timeMs();
+    const auto& attacks = session_.combat().attacks().attacks;
+    const auto busy = [&](const AttackVisual& a) {
+        return a.stage != AttackStage::Empty && a.stage != AttackStage::Canceled && now < a.endMs;
+    };
+    const auto* actor = actors_.actor(id);
+    bool blocked = !actor || actor->life != ActorLife::Alive || actorWalking(*actor, now) ||
+                   (actor->hasDamage && now - actor->damageTimeMs < npcHitFlashMs);
+    if (id.slot < NpcWorld::maxInstances)
+        blocked |= busy(attacks[id.slot]);
+    for (unsigned i = 0; i < rules::partySize; ++i)
+        blocked |= busy(attacks[NpcWorld::maxInstances + i]);
+    if (blocked) {
+        tooltipEnemy_.reset();
+        return;
+    }
+    if (!tooltipEnemy_ || !sameActor(*tooltipEnemy_, id)) {
+        tooltipEnemy_ = id;
+        tooltipSinceMs_ = now;
+    }
+    state_.hover.tooltipVisible = now >= tooltipSinceMs_ && now - tooltipSinceMs_ >= 250;
+}
 void CommandController::updateHover() noexcept {
     auto& h = state_.hover;
+    h.tooltipVisible = h.kind != HoverKind::Enemy;
+    if (h.kind != HoverKind::Enemy)
+        tooltipEnemy_.reset();
     h.lines = {};
     if ((state_.modal() &&
          !(state_.magic.open && (h.kind == HoverKind::Status || h.kind == HoverKind::Concentration))) ||
         state_.suspended) {
+        tooltipEnemy_.reset();
         h.kind = HoverKind::None;
         return;
     }
@@ -218,20 +249,19 @@ void CommandController::updateHover() noexcept {
         std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s", state_.restReason);
     } else if (h.kind == HoverKind::Enemy) {
         if (!h.enemy || !visible(*h.enemy)) {
+            tooltipEnemy_.reset();
             h.kind = HoverKind::None;
             return;
         }
+        updateEnemyTooltip(*h.enemy);
         const auto& a = *actors_.actor(*h.enemy);
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s%s #%u",
                       session_.guardian(*h.enemy) ? "Guardian: " : "",
-                      actors_.catalog().monster(a.monster)->id.c_str(), unsigned(h.enemy->slot) + 1);
-        h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
+                      monsterName(actors_.catalog().monster(a.monster)->id), unsigned(h.enemy->slot) + 1);
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
         if (state_.magic.armed) {
             const auto& m = state_.magic;
-            std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s",
-                          actors_.catalog().monster(a.monster)->id.c_str());
-            h.lines[0][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(h.lines[0][0])));
+            std::snprintf(h.lines[4].data(), h.lines[4].size(), "HP %d/%d", a.hitPoints, a.maxHitPoints);
             h.reason = magicEligibility(*h.enemy);
             unsigned darts = 0;
             bool selected = false;

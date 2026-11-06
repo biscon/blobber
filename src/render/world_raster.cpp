@@ -1,3 +1,4 @@
+#include "render/world_projection_parameters.hpp"
 #include "render/world_visibility.hpp"
 #include <algorithm>
 #include <cmath>
@@ -13,21 +14,21 @@ Vec sub(Vec a, Vec b) {
 struct ClipVertex {
     float x, y, z, u, v;
 };
-float plane(const ClipVertex& p, unsigned face) {
+float plane(const ClipVertex& p, unsigned face, float farClip) {
     const float half = viewWidth * .5f / focal();
     switch (face) {
     case 0:
         return p.z - nearPlane;
     case 1:
-        return farPlane - p.z;
+        return farClip - p.z;
     case 2:
         return p.x + p.z * half;
     case 3:
         return p.z * half - p.x;
     case 4:
-        return p.z * viewHeight * .34f / focal() - p.y;
+        return p.z * viewHeight * viewHorizon / focal() - p.y;
     default:
-        return p.y + p.z * viewHeight * .66f / focal();
+        return p.y + p.z * viewHeight * (1 - viewHorizon) / focal();
     }
 }
 float edge(float ax, float ay, float bx, float by, float x, float y) {
@@ -40,6 +41,12 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
               const world_assets::CpuAssets* assets = nullptr, unsigned texture = 0, unsigned threshold = 1,
               bool cutoutOpaque = false, const BillboardClips* clips = nullptr,
               const LeafQueries* leaves = nullptr) {
+    const unsigned char* mask = nullptr;
+    if (assets) {
+        if (texture >= assets->masks.size() || assets->masks[texture].empty())
+            throw std::logic_error("World alpha mask was not acquired at preparation");
+        mask = assets->masks[texture].data();
+    }
     std::array<ClipVertex, 16> a{}, b{};
     unsigned count = 3;
     for (unsigned i = 0; i < 3; ++i) {
@@ -51,7 +58,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
         unsigned n = 0;
         for (unsigned i = 0; i < count; ++i) {
             const auto p = a[i], q = a[(i + 1) % count];
-            const float dp = plane(p, face), dq = plane(q, face);
+            const float dp = plane(p, face, out.camera.farClip), dq = plane(q, face, out.camera.farClip);
             if (dp >= 0)
                 b[n++] = p;
             if ((dp >= 0) != (dq >= 0)) {
@@ -69,7 +76,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
         for (unsigned i = 0; i < 3; ++i) {
             iz[i] = 1 / t[i].z;
             x[i] = viewWidth * .5f + focal() * t[i].x * iz[i];
-            y[i] = viewHeight * .34f - focal() * t[i].y * iz[i];
+            y[i] = viewHeight * viewHorizon - focal() * t[i].y * iz[i];
         }
         float area = edge(x[0], y[0], x[1], y[1], x[2], y[2]);
         if (std::abs(area) < 1e-10f)
@@ -104,7 +111,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                 if (leaves) {
                     const float lateral = (px + .5f - viewWidth * .5f) / focal();
                     const Vec ray{out.camera.forward.x + out.camera.right.x * lateral,
-                                  (viewHeight * .34f - py - .5f) / focal(),
+                                  (viewHeight * viewHorizon - py - .5f) / focal(),
                                   out.camera.forward.z + out.camera.right.z * lateral};
                     if (leaves->hides(out.camera, ray, z))
                         continue;
@@ -130,7 +137,7 @@ void triangle(WorldFrame& out, const std::array<Vertex, 3>& vertices, std::uint1
                         unsigned(std::clamp(int(std::floor(u * tex.width)), 0, int(tex.width) - 1));
                     const unsigned sy =
                         unsigned(std::clamp(int(std::floor(v * tex.height)), 0, int(tex.height) - 1));
-                    if (assets->masks[texture][std::size_t(sy) * tex.width + sx] < threshold)
+                    if (mask[std::size_t(sy) * tex.width + sx] < threshold)
                         continue;
                     if (candidate)
                         out.picking.expose(id);
@@ -179,7 +186,11 @@ void VisibilityPipeline::raster(WorldFrame& out, bool rebuildOpaque) {
                                               scene_.vertices[scene_.indices[i + 2]]};
                 if (dot(v[0].normal, sub(out.camera.position, v[0].position)) <= 0)
                     continue;
-                triangle(out, v, range.id);
+                if (range.cutout)
+                    triangle(out, v, range.id, &assets_, pack_.materials[range.material],
+                             world_assets::meshAlphaThreshold, true);
+                else
+                    triangle(out, v, range.id);
             }
         }
         for (const auto& decal : scene_.decals) {

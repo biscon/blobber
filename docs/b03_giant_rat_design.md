@@ -109,4 +109,4 @@ The approved design is implemented, including full art, native portrait, normal
 arena selection, schema/trait/combat/feedback changes and simulation identity 5.
 The rat reference and completed slice are accepted. Exact
 checks, byte totals, five strict review traces, captures and limitations are in
-[b03_verification.md](b03_verification.md). B04 is next for separate detailed planning; no B04 implementation or campaign work is started.
+[b03_verification.md](verification/archive/b03_verification.md). B04 is next for separate detailed planning; no B04 implementation or campaign work is started.

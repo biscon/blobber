@@ -294,6 +294,12 @@ struct Archive {
                 } else {
                     if (j.size() > generation::maxCells)
                         invalid("Vector capacity exceeded");
+                    if constexpr (std::is_same_v<typename T::value_type, BuildingPlacement>)
+                        if (j.size() > buildingCapacity)
+                            invalid("Building placement capacity exceeded");
+                    if constexpr (std::is_same_v<typename T::value_type, SceneryPlacement>)
+                        if (j.size() > sceneryCapacity)
+                            invalid("Scenery placement capacity exceeded");
                     v.resize(j.size());
                 }
                 for (std::size_t i = 0; i < v.size(); ++i)
@@ -351,7 +357,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 7 || j.at("simulation") != 11 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 10 || j.at("simulation") != 14 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -368,8 +374,8 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 7},
-              {"simulation", 11},
+    Json j = {{"schema", 10},
+              {"simulation", 14},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

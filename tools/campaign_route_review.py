@@ -294,14 +294,22 @@ class Route:
     def stairs(self, kind):
         fixture = next(f for f in self.state["fixtures"] if f["kind"] == kind)
         dx, dy = DIRECTIONS[fixture["heading"]] if "heading" in fixture else (0, 0)
-        # Observation fixtures do not expose facing; generation does. Hub is authored east.
+        # Observation fixtures do not expose facing; generation does. Hub is authored north.
         if self.state["campaign"]["location"] == 0:
-            heading = 1
+            heading = 0
         else:
             heading = next(f["heading"] for f in self.state["generation"]["fixtures"] if f["id"] == fixture["fixture"])
         dx, dy = DIRECTIONS[heading]
         landing = fixture["position"][0]-dx, fixture["position"][1]-dy
-        if self.state["campaign"]["location"] != 0:
+        if self.state["campaign"]["location"] == 0:
+            # Named stair observation determines the target; traverse the clear square row.
+            for axis in (1, 0):
+                while self.state["position"][axis] != landing[axis]:
+                    positive = self.state["position"][axis] < landing[axis]
+                    self.face((2 if positive else 0) if axis == 1 else (1 if positive else 3))
+                    self.act(dict(kind="move", direction="forward"))
+                    self.settle()
+        else:
             self.goto(landing)
         self.face(heading)
         self.act(dict(kind="interact", fixture=fixture["fixture"]))
@@ -417,7 +425,7 @@ def main():
                 name = f"{package['id']}-{seed}-{'reserve' if reserve else 'direct'}"
                 directory = args.output/name
                 directory.mkdir()
-                scenario = dict(kind="campaign", schema_version=1, generator_version=9, template_version=7,
+                scenario = dict(kind="campaign", schema_version=1, generator_version=10, template_version=7,
                                 seed=seed, party=package["scenario"]["party"])
                 (directory/"scenario.json").write_text(json.dumps(scenario, indent=2)+"\n")
                 route = Route(args.runner, args.assets, directory, scenario, reserve, deadline)

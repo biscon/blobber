@@ -138,7 +138,7 @@ their contents as discovered knowledge. See [protocol](headless_protocol.md#pc06
 and [MCP usage](mcp_usage.md#pc06-campaign-save-and-resume).
 
 Measured verification and review evidence are recorded in
-[the PC06 handoff](pc06_verification.md). No balance experiments or later slices
+[the PC06 handoff](verification/archive/pc06_verification.md). No balance experiments or later slices
 are included.
 
 
@@ -216,3 +216,15 @@ The original save SHA256 remained
 continued game and readable error panel. No OS input/focus automation or original
 save writes were used. Logs are `~/.cache/campaign-startup-{build,regression-build,
 debug-build,gpu}.log`. `git diff --check` passed.
+
+
+## SC04 authored hub validation (2026-11-05)
+
+The production hub is the canonical Sanctuary city. Schema remains 9 and simulation
+advances to 13. Hub `entry` is recall at sanctuary; `exit` is upstairs return at the
+dungeon landing. New Game uses a separate authored square spawn, while Continue
+uses the saved pose. Existing landing slots 0/1 validate recall/return respectively.
+World fingerprint, terrain, arrival records, fixtures, recovery and protected mask
+must match the canonical builder. Mutable discovery, loot and floor state retain
+existing codecs. Generic world codec fixtures no longer mutate the canonical hub.
+Unsupported saves are left untouched; no migration. See [SC04 design](sc04_design.md).

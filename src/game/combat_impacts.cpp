@@ -4,6 +4,20 @@
 #include <limits>
 
 namespace blobber {
+SpellTargetVisual CombatController::spellTarget(const CombatOutcome& out, std::uint64_t now) const noexcept {
+    SpellTargetVisual t;
+    t.actor = out.enemy;
+    if (const auto* a = actors_.actor(out.enemy)) {
+        t.position = actorPosition(*a, now);
+        t.floor = actorElevation(*a, map_, now);
+    }
+    t.hit = out.hit;
+    t.gone = out.targetGone;
+    t.died = out.died;
+    t.saved = out.saveSucceeded;
+    t.damage = out.damage;
+    return t;
+}
 std::uint32_t arrowFlightMs(Cell from, Cell to) noexcept {
     const double x = double(from.x) - to.x, y = double(from.y) - to.y;
     return static_cast<std::uint32_t>(
@@ -92,6 +106,7 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     }
     setAttackHold(slot, std::max(p.clipEndMs, v.impactMs + combatFeedbackDurationMs));
     ++visuals_.revision;
+    spellVisuals_.attack(v, spellTarget(out, now));
     out.event = CombatEvent::AttackStarted;
     out.impactMs = windup;
     out.hit = out.critical = out.died = false;
@@ -147,6 +162,7 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
     if (v.incoming)
         actors_.cancelAttack(v.enemy);
     drainedThisUpdate_ = true;
+    spellVisuals_.resolve(v.id, {}, when, true);
     ++visuals_.revision;
 }
 void CombatController::reconcileEffects(std::uint64_t now, CombatEvents& events) noexcept {
@@ -318,6 +334,7 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             if (out.hit && out.damage > 0)
                 setAttackHold(owner, earliest + (out.died ? timing.death : timing.hurt));
         }
+        spellVisuals_.resolve(v.id, spellTarget(out, earliest), earliest);
         v.stage = AttackStage::Resolved;
         v.targetGone = out.targetGone;
         drainedThisUpdate_ = true;

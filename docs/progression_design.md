@@ -4,7 +4,7 @@ Status: implemented, **accepted and closed** (2026-10-30), including milestone C
 and the review corrections below. Implementation was authorized by “Implement the
 plan.” Acceptance: “I accept the slice, record it in the documentation.”
 Slice 14 save/resume remains Planned and unstarted; see the
-[accepted closeout](slice13_verification.md#accepted-closeout-and-next-agent-handoff).
+[accepted closeout](verification/archive/slice13_verification.md#accepted-closeout-and-next-agent-handoff).
 
 ## Ownership and progression
 
@@ -159,7 +159,7 @@ concentration interactions, Aid with equipment/rest/advancement, overlapping Mir
 impacts, Web movement/fire/escape and sculpted friendly fire. Captures exercise
 creation → launch → XP → advancement → combat/rest and arena rematch. No OS input,
 focus or desktop automation. Interactive review belongs to the user; report skipped
-checks explicitly. Verification results and review limitations are recorded in the [handoff](slice13_verification.md).
+checks explicitly. Verification results and review limitations are recorded in the [handoff](verification/archive/slice13_verification.md).
 Slice 13 and milestone C are accepted and closed (2026-10-30).
 
 ## Slice 13 review: spell selection clarity (implemented, 2026-10-30)
@@ -186,7 +186,7 @@ baseline, then inspect hidden native/reduced/letterboxed captures of both empty
 and selected Cleric/Wizard states and shared creation/rest screens.
 
 Review verification: focused Debug/Release checks, sanitizer checks and refreshed
-hidden captures are recorded in the [handoff](slice13_verification.md). These
+hidden captures are recorded in the [handoff](verification/archive/slice13_verification.md). These
 corrections were accepted with slice 13 on 2026-10-30.
 
 Selection-indicator review correction (2026-10-30): remove inspected/focused card

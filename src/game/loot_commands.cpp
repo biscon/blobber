@@ -7,6 +7,18 @@ void CommandController::interactFixture(std::optional<FixtureId> id) noexcept {
     if (state_.modal() || state_.suspended || state_.magic.casting() || state_.magic.armed ||
         state_.inventory.itemTargeting)
         return;
+    if (!id && session_.campaign()) {
+        const auto door = session_.campaign()->doorwayRequest();
+        if (door.doorway.slot != UINT16_MAX) {
+            const auto result = session_.campaign()->previewTravel(door);
+            if (result) {
+                session_.clearPending();
+                state_.travelRequested = door;
+            }
+            state_.log.append(result.reason);
+            return;
+        }
+    }
     auto request = session_.nearbyFixture();
     if (id)
         request = {*id, session_.fixtures().revision()};

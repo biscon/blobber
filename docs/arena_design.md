@@ -91,7 +91,7 @@ explicit spawn/seed/AI/destination policy through GameplayLaunch. `runGameplay`
 returns a typed PlayOutcome and reconstructs from the original launch data for retry.
 No additional GPU textures or changes to preparation budgets are needed.
 
-See [verification, limitations and review recipe](slice125_verification.md).
+See [verification, limitations and review recipe](verification/archive/slice125_verification.md).
 
 ## PC07.1 preparation extension (2026-11-01)
 

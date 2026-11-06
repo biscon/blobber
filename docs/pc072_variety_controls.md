@@ -148,7 +148,7 @@ visually inspected. A first capture attempt correctly rejected the disabled
 exploration Defend button; the helper was corrected to use the enabled Bag control.
 Later item-context/close-overlay safety edits passed the final CPU checks and both
 application builds; painting was unchanged, so the GPU capture workload was not repeated.
-See the [retained gallery](screenshots/pc072-variety/index.html). Local build/test
+See the [retained gallery](screenshots/pc072-variety/README.md). Local build/test
 logs are under `output/pc072-variety/`. `git diff --check` passes.
 
 Human interaction/feel is left for user review. No OS input/focus automation,

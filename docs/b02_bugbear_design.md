@@ -94,5 +94,5 @@ finish Ready for review, await user acceptance; do not begin B03/campaign work.
 The approved design is implemented. All 48 poses, arena binding, initiative art,
 crop metadata/shared geometry and revised memory ceilings are delivered. Focused
 CPU/publication and hidden GPU checks pass; production traces/captures are retained
-in [verification](b02_verification.md). The reference and completed slice are accepted. B03 is next for separate detailed
+in [verification](verification/archive/b02_verification.md). The reference and completed slice are accepted. B03 is next for separate detailed
 planning; no B03 implementation or campaign integration is started.

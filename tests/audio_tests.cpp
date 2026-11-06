@@ -174,9 +174,23 @@ int main() {
     std::filesystem::create_directories(tmp);
     audio::Settings settings;
     settings.values[4] = 0;
+    settings.borderlessFullscreen = true;
     std::string warning;
     check(audio::saveSettings(tmp / "settings.json", settings, warning), "Save settings");
     check(audio::loadSettings(tmp / "settings.json", warning).values[4] == 0, "Footstep off roundtrip");
+    check(audio::loadSettings(tmp / "settings.json", warning).borderlessFullscreen,
+          "Borderless preference survives a settings roundtrip");
+    settings.borderlessFullscreen = false;
+    check(audio::saveSettings(tmp / "settings.json", settings, warning) &&
+              !audio::loadSettings(tmp / "settings.json", warning).borderlessFullscreen,
+          "Returning to windowed mode persists");
+    {
+        std::ofstream f(tmp / "settings.json");
+        f << R"({"version":2,"audio":[0.4,0.8,0.35,0.5,0.45],"music_enabled":false})";
+    }
+    const auto legacy = audio::loadSettings(tmp / "settings.json", warning);
+    check(!legacy.borderlessFullscreen && legacy.values[0] == .4f && !legacy.musicEnabled,
+          "Older settings keep audio preferences and default to windowed mode");
     {
         std::ofstream f(tmp / "settings.json");
         f << "invalid";

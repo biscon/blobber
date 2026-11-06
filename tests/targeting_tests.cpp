@@ -8,6 +8,22 @@
 #include <iostream>
 using namespace blobber;
 namespace {
+void playerNames() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false, "goblin.guardian.placeholder");
+    const Player pose{{3, 6}, Heading::North};
+    NpcWorld places(map, pose.cell, {"goblin.guardian.placeholder"}, {{{0}, {3, 3}, {0, 0}, Heading::South}});
+    GameSession game(map, catalog, places, 5, pose, false);
+    CommandController ui(game);
+    ui.refresh(allCombatTargets(game), false, false, true);
+    ui.hover(HoverKind::Enemy, 0, game.actors().id(0));
+    check(std::string_view(ui.snapshot().hover.lines[0].data()) == "Goblin Guardian #1",
+          "Enemy tooltip hides internal guardian placeholder identity");
+    ui.toggleTargetPicker();
+    check(ui.snapshot().targetPicker.count == 1 &&
+              std::string_view(ui.snapshot().targetPicker.rows[0].name.data()) == "Goblin Guardian #1",
+          "Target picker uses the same readable creature identity");
+}
 void key(CommandController& ui, UiKey k, bool shift = false) {
     UiInput input;
     input.pressed[unsigned(k)] = true;
@@ -23,6 +39,52 @@ void choose(CommandController& ui, rules::SpellKind kind) {
             return;
         }
     throw std::runtime_error("Missing owned spell fixture");
+}
+void spellHoverHealth() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog(100);
+    const auto places = spellPlacements(map, 2);
+    GameSession game(map, catalog, places, 5, spellSpawn, false);
+    const auto enemy = game.actors().id(0);
+    game.actors().damage(enemy, 75, 0);
+    game.update(.11, false); // Let the ordinary damage flash finish before inspecting.
+    CommandController ui(game);
+    const auto refresh = [&] { ui.refresh(allCombatTargets(game), false, false, true); };
+    refresh();
+    for (auto spell : {rules::SpellKind::FireBolt, rules::SpellKind::AcidSplash,
+                       rules::SpellKind::MagicMissile, rules::SpellKind::Sleep}) {
+        choose(ui, spell);
+        if (!ui.snapshot().magic.single && !ui.snapshot().magic.area)
+            ui.magicEnemy(game.actors().id(1));
+        if (ui.snapshot().magic.ground)
+            ui.magicGround(Cell{6, 4}, true);
+        const auto pending = ui.snapshot().magic.pending;
+        const auto assigned = ui.snapshot().magic.assigned;
+        const auto mana = game.party().character({3})->mana;
+        UiInput hover;
+        hover.pointer = ArtPoint{210, 140};
+        ui.pointerMoved(0, 0);
+        routeHudInput(ui, hover, enemy, true, {}, Cell{6, 4});
+        check(ui.snapshot().hover.kind == HoverKind::Enemy && !ui.snapshot().hover.tooltipVisible,
+              "Spell aiming starts the normal read-only enemy hover delay");
+        game.update(.25, false);
+        refresh();
+        routeHudInput(ui, hover, enemy, true, {}, Cell{6, 4});
+        const auto& h = ui.snapshot();
+        check(h.magic.casting() && h.hover.tooltipVisible && h.hover.health == .25f &&
+                  std::strcmp(h.hover.lines[4].data(), "HP 25/100") == 0 &&
+                  std::strstr(h.hover.lines[0].data(), "#1") && h.hover.lines[2][0],
+              "Casting hover retains enemy identity, health and spell instructions");
+        check(h.magic.pending.targetCount == pending.targetCount &&
+                  h.magic.pending.aimedCell == pending.aimedCell && h.magic.assigned == assigned &&
+                  game.party().character({3})->mana == mana,
+              "Inspecting a wounded enemy preserves recipients, darts, ground choice and mana");
+        for (std::size_t i = 0; i < pending.targetCount; ++i)
+            check(sameActor(h.magic.pending.enemies[i], pending.enemies[i]),
+                  "Hover never changes selected enemy identities");
+        ui.cancel();
+        ui.hover(HoverKind::None);
+    }
 }
 void controls() {
     const auto map = test::worldRoom(9, 9);
@@ -95,6 +157,7 @@ void targeting() {
     publication.appearances[0].width = .5f;
     publication.appearances[0].height = .9f;
     world_assets::CpuAssets assets(std::move(publication));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     // Solid owned silhouettes make total occlusion deterministic.
     for (auto& mask : assets.masks)
         std::fill(mask.begin(), mask.end(), 255);
@@ -317,6 +380,8 @@ void targeting() {
 } // namespace
 int main() {
     try {
+        playerNames();
+        spellHoverHealth();
         controls();
         targeting();
         std::cout << "Enemy targeting checks passed\n";

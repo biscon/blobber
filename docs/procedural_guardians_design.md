@@ -124,7 +124,7 @@ Measured retained definition plus map payload is 5,264 bytes at 36×36 (5,568 at
 tracked runtime allocations remain zero in the exercised paths. Prepared launch
 accounting remains 273,874,998 bytes; all imagery is reused.
 
-[Verification and next-agent handoff](pc03_verification.md) records exact checks,
+[Verification and next-agent handoff](verification/archive/pc03_verification.md) records exact checks,
 resolved failures, the diagnostic capture gallery, strict owned-fixture combat trace
 and review limits. PC03 is Accepted and closed; milestone P-A is Accepted. PC04 has
 not started and is next eligible for detailed planning only.

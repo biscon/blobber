@@ -1,6 +1,8 @@
 template <class A> void visit(A&, CellSurface&);
 template <class A> void visit(A&, Decoration&);
 template <class A> void visit(A&, WorldDefinition&);
+template <class A> void visit(A&, AmbientFire&);
+template <class A> void visit(A&, SceneryPlacement&);
 template <class A> void visit(A& a, NpcAiConfig& v) {
     a("routine", v.routine);
     a("waypoints", v.waypoints);
@@ -81,10 +83,34 @@ template <class A> void visit(A& a, Decoration& v) {
     a("height", v.height);
     a("depth", v.depth);
 }
+template <class A> void visit(A& a, BuildingPlacement& v) {
+    a("model", v.model);
+    a("anchor", v.anchor);
+    a("footprint", v.footprint);
+    a("facing", v.facing);
+    a("width", v.width);
+    a("depth", v.depth);
+}
+template <class A> void visit(A& a, AmbientFire& v) {
+    a("x", v.x);
+    a("y", v.y);
+    a("z", v.z);
+}
 template <class A> void visit(A& a, WorldDefinition& v) {
+    a("hearth", v.hearth);
     a("assetPack", v.assetPack);
     a("surfaces", v.surfaces);
     a("decorations", v.decorations);
+    a("buildings", v.buildings);
+    a("scenery", v.scenery);
+}
+template <class A> void visit(A& a, SceneryPlacement& v) {
+    a("model", v.model);
+    a("anchor", v.anchor);
+    a("footprint", v.footprint);
+    a("facing", v.facing);
+    a("width", v.width);
+    a("depth", v.depth);
 }
 template <class A> void visit(A& a, Cell& v) {
     a("x", v.x);
@@ -403,6 +429,7 @@ template <class A> void visit(A& a, GroundPlacement& v) {
     a("quantity", v.quantity);
 }
 template <class A> void visit(A& a, RecoveryLevel& v) {
+    a("freeRestEverywhere", v.freeRestEverywhere);
     a("sanctuaries", v.sanctuaries);
     a("sanctuaryCount", v.sanctuaryCount);
     a("ground", v.ground);

@@ -47,8 +47,12 @@ int main() {
             state.player.heading = Heading(heading);
             const auto c = camera(state);
             const auto p = project(c, {c.position.x + c.forward.x * 2, .5f, c.position.z + c.forward.z * 2});
-            check(std::abs(p.x - 250) < .001f && std::abs(p.y - 282 * .34f) < .001f,
+            check(std::abs(p.x - 250) < .001f && std::abs(p.y - 282 * .40f) < .001f,
                   "Independent centre/horizon projection");
+            const float setback = (state.player.cell.x + .5f - c.position.x) * c.forward.x +
+                                  (state.player.cell.y + .5f - c.position.z) * c.forward.z;
+            check(std::abs(setback - .4f) < .00001f && c.position.y == .5f && c.forward.y == 0,
+                  "Relaxed framing preserves cell setback, eye height and upright camera");
         }
         DrawList list;
         std::vector<MovementState> samples;
@@ -147,7 +151,9 @@ int main() {
                                  std::ios::in | std::ios::out | std::ios::binary);
             payload.put('x');
         }
-        rejects([&] { world_assets::load(fixture.directory); }, "Corrupt texture payload rejected");
+        const auto lazy = world_assets::load(fixture.directory);
+        rejects([&] { lazy.read(0); }, "Corrupt texture payload rejected on acquisition");
+        rejects([&] { lazy.verify(); }, "Offline verification rejects any corrupt payload");
         std::cout << "World CPU/publication checks passed\n";
     } catch (const std::exception& e) {
         watching = false;

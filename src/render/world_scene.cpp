@@ -1,6 +1,7 @@
 #include "render/world_scene.hpp"
 #include "core/preparation.hpp"
 #include "render/picking.hpp"
+#include "render/world_projection_parameters.hpp"
 #include "render/world_stairs.hpp"
 #include "world/view.hpp"
 #include <algorithm>
@@ -28,8 +29,9 @@ Camera camera(const MovementState& s) noexcept {
             r,
             yaw};
 }
-Camera camera(const MovementState& s, GeometryView g) noexcept {
+Camera camera(const MovementState& s, GeometryView g, float farClip) noexcept {
     auto c = camera(s);
+    c.farClip = farClip;
     const auto& t = s.transition;
     const auto a = t.active() ? t.from : s.player, b = t.active() ? t.to : s.player;
     const float p = t.active() ? t.progress() : 1, e = p * p * (3 - 2 * p);
@@ -47,11 +49,11 @@ ScreenPoint project(const Camera& c, Vec p) noexcept {
     const float dx = p.x - c.position.x, dz = p.z - c.position.z;
     const float d = dx * c.forward.x + dz * c.forward.z;
     return {viewWidth * .5f + focal() * (dx * c.right.x + dz * c.right.z) / d,
-            viewHeight * .34f - focal() * (p.y - c.position.y) / d, d};
+            viewHeight * viewHorizon - focal() * (p.y - c.position.y) / d, d};
 }
 bool sameCamera(const Camera& a, const Camera& b) noexcept {
     return a.position.x == b.position.x && a.position.y == b.position.y && a.position.z == b.position.z &&
-           a.yaw == b.yaw;
+           a.yaw == b.yaw && a.farClip == b.farClip;
 }
 std::size_t Scene::bytes() const noexcept {
     return sizeof(*this) + vertices.capacity() * sizeof(Vertex) + indices.capacity() * 4 +
@@ -68,11 +70,17 @@ struct Face {
     std::uint16_t id = UINT16_MAX;
     bool painted = false;
     std::uint8_t variant = noContainer;
+    bool cutout = false;
+    bool water = false;
 };
 template <class F>
 void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides, F emit,
-           const world_assets::CpuAssets* assets, const world_assets::Pack& pack) {
+           const world_assets::CpuAssets* assets, const world_assets::Pack& pack,
+           const std::array<world_assets::StaticModelId, buildingCapacity + sceneryCapacity>& buildings) {
     auto add = [&](std::array<Vec, 4> p, Vec n, unsigned material, bool wall) {
+        if (assets && material < pack.materialCount &&
+            assets->publication.textures[pack.materials[material]].clamp)
+            throw std::invalid_argument("Generated terrain requires an opaque material");
         Face q{};
         q.material = std::uint8_t(material);
         for (unsigned i = 0; i < 4; ++i)
@@ -120,15 +128,50 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                          Vec{px - r.x * .5f, high, pz - r.y * .5f}},
                         {float(-f.x), 0, float(-f.y)}, s.wall, true);
                 };
-                if (m.base().solid(next))
-                    wall(lo, hi);
-                else {
+                if (m.base().solid(next)) {
+                    if (!m.base().buildingOwned(next))
+                        wall(lo, hi);
+                } else {
                     wall(lo, std::min(hi, elevation(n.floor)));
                     if (n.ceiling != noCeiling)
                         wall(std::max(lo, elevation(n.ceiling)), hi);
                 }
             }
         }
+    auto placedModel = [&](const auto& b, unsigned i) {
+        if (b.anchor.x < cx || b.anchor.x >= cx + 8 || b.anchor.y < cz || b.anchor.y >= cz + 8)
+            return;
+        const auto r = right(b.facing), f = forward(b.facing);
+        for (auto part : pack.buildings[buildings[i].index].parts) {
+            const auto& mesh = assets->mesh(part);
+            const auto material =
+                std::find(pack.materials.begin(), pack.materials.begin() + pack.materialCount, mesh.texture) -
+                pack.materials.begin();
+            for (unsigned n = 0; n < mesh.vertices.size(); n += 3) {
+                Face q{};
+                q.material = std::uint8_t(material);
+                q.painted = true;
+                q.cutout = mesh.cutout;
+                q.water = mesh.water;
+                for (unsigned k = 0; k < 3; ++k) {
+                    const auto& v = mesh.vertices[n + k];
+                    q.v[k] = {{b.anchor.x + .5f + r.x * v[0] - f.x * v[2],
+                               elevation(m.surface(b.anchor).floor) + v[1],
+                               b.anchor.y + .5f + r.y * v[0] - f.y * v[2]},
+                              {r.x * v[3] - f.x * v[5], v[4], r.y * v[3] - f.y * v[5]},
+                              v[6],
+                              v[7]};
+                }
+                q.v[3] = q.v[2];
+                emit(q);
+            }
+        }
+    };
+    const auto& definition = m.base().definition();
+    for (unsigned i = 0; i < definition.buildings.size(); ++i)
+        placedModel(definition.buildings[i], i);
+    for (unsigned i = 0; i < definition.scenery.size(); ++i)
+        placedModel(definition.scenery[i], buildingCapacity + i);
     auto block = [&](float x, float z, float base, float width, float depth, float height, Cell r, Cell f,
                      unsigned material) {
         std::array<Vec, 4> bottom{}, top{};
@@ -174,13 +217,13 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                                    : d.kind == DecorationKind::Cage ? 2
                                                                     : 3;
             const unsigned last = d.kind == DecorationKind::Chest ? 2 : first + 1;
-            float wallward = d.kind == DecorationKind::Rack ? .5f : 0.f;
+            float wallward = 0.f;
             if (d.kind == DecorationKind::Chest) {
                 float back = 0;
                 for (unsigned variant = 0; variant < 2; ++variant) {
                     if (pack.models[variant] >= assets->publication.meshes.size())
                         throw std::runtime_error("Missing chest mesh binding");
-                    for (const auto& v : assets->publication.meshes[pack.models[variant]].vertices)
+                    for (const auto& v : assets->mesh(pack.models[variant]).vertices)
                         back = std::max(back, -.5f * v[2]);
                 }
                 // One transform for both states: leave clearance for the open lid.
@@ -191,8 +234,9 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
             for (unsigned model = first; model < last; ++model) {
                 if (pack.models[model] >= assets->publication.meshes.size())
                     throw std::runtime_error("Missing prop mesh binding");
-                const auto& mesh = assets->publication.meshes[pack.models[model]];
-                const float scale = d.kind == DecorationKind::Chest ? .5f : 1.f;
+                const auto& mesh = assets->mesh(pack.models[model]);
+                const float scale =
+                    d.kind == DecorationKind::Chest || d.kind == DecorationKind::Rack ? .5f : 1.f;
                 unsigned material = 0;
                 while (material < pack.materialCount && pack.materials[material] != mesh.texture)
                     ++material;
@@ -264,8 +308,27 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     limits.quads = std::min(limits.quads, std::size_t(262144));
     limits.ranges = std::min(limits.ranges, std::size_t(65536));
     limits.cpuBytes = std::min(limits.cpuBytes, std::size_t(64u * 1024 * 1024));
+    // Bounded preparation lease; transformed geometry owns its vertices after return.
+    const auto lease = assets ? assets->acquire(assets->requirements(m.base().definition().assetPack))
+                              : world_assets::AssetLease{};
     Scene s;
+    if (!m.base().definition().buildings.empty() || !m.base().definition().scenery.empty())
+        s.cullRadius = buildingCullRadius;
     const auto pack = assets ? assets->pack(m.base().definition().assetPack) : world_assets::Pack{};
+    s.farClip = pack.viewDistance;
+    if (s.farClip > farPlane)
+        s.cullRadius = extendedCullRadius;
+    std::array<world_assets::StaticModelId, buildingCapacity + sceneryCapacity> buildings{};
+    for (unsigned i = 0; i < m.base().definition().buildings.size(); ++i) {
+        if (!assets)
+            throw std::invalid_argument("Buildings require prepared mesh assets");
+        buildings[i] = pack.building(m.base().definition().buildings[i].model);
+    }
+    for (unsigned i = 0; i < m.base().definition().scenery.size(); ++i) {
+        if (!assets)
+            throw std::invalid_argument("Scenery requires prepared mesh assets");
+        buildings[buildingCapacity + i] = pack.building(m.base().definition().scenery[i].model);
+    }
     s.map = &m.base();
     for (auto h : m.base().definition().surfaces)
         s.outdoor |= h.ceiling == noCeiling;
@@ -327,7 +390,7 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     for (int z = 0; z < m.height(); z += 8)
         for (int x = 0; x < m.width(); x += 8) {
             preparationPoint("Preparing dungeon");
-            std::array<bool, 32 * (fixtureCapacity + containerCapacity + 1) * 4> used{};
+            std::array<bool, 32 * (fixtureCapacity + containerCapacity + 1) * 16> used{};
             std::size_t localCount = 0;
             faces(
                 m, x, z, defaults, overrides,
@@ -336,10 +399,11 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
                     ++localCount;
                     used[f.material +
                          32 * ((f.id == UINT16_MAX ? 0u : unsigned(f.id - PickingBuffer::fixtureBase) + 1) *
-                                   4 +
-                               unsigned(f.painted) * 2 + (f.variant == 1 ? 1 : 0))] = true;
+                                   16 +
+                               unsigned(f.water) * 8 + unsigned(f.cutout) * 4 + unsigned(f.painted) * 2 +
+                               (f.variant == 1 ? 1 : 0))] = true;
                 },
-                assets, pack);
+                assets, pack, buildings);
             maxLocal = std::max(maxLocal, localCount);
             ranges += std::count(used.begin(), used.end(), true);
             if (quads > limits.quads || ranges > limits.ranges)
@@ -359,10 +423,14 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
         for (int x = 0; x < m.width(); x += 8) {
             preparationPoint("Preparing dungeon");
             unsigned count = 0;
-            faces(m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; }, assets, pack);
+            faces(
+                m, x, z, defaults, overrides, [&](const Face& f) { local[count++] = f; }, assets, pack,
+                buildings);
             std::sort(local.begin(), local.begin() + count, [](const Face& a, const Face& b) {
                 return a.material != b.material ? a.material < b.material
                        : a.id != b.id           ? a.id < b.id
+                       : a.water != b.water     ? a.water < b.water
+                       : a.cutout != b.cutout   ? a.cutout < b.cutout
                        : a.painted != b.painted ? a.painted < b.painted
                                                 : a.variant < b.variant;
             });
@@ -398,9 +466,10 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
             for (unsigned i = 0; i < count; ++i) {
                 if (!i ||
                     (local[i].material != local[i - 1].material || local[i].id != local[i - 1].id ||
-                     local[i].painted != local[i - 1].painted || local[i].variant != local[i - 1].variant)) {
+                     local[i].painted != local[i - 1].painted || local[i].variant != local[i - 1].variant ||
+                     local[i].cutout != local[i - 1].cutout || local[i].water != local[i - 1].water)) {
                     s.ranges.push_back({std::uint32_t(s.indices.size()), 0, local[i].material, local[i].id,
-                                        local[i].painted, local[i].variant});
+                                        local[i].painted, local[i].variant, local[i].cutout, local[i].water});
                     ++chunk.count;
                 }
                 const auto first = std::uint32_t(s.vertices.size());
@@ -410,6 +479,15 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
                 s.ranges.back().count += 6;
             }
         }
+    // Static ranges have at most two paint modes per material in each candidate
+    // chunk. Fixture/container variants use the separately bounded global slots.
+    for (const auto& chunk : s.chunks) {
+        unsigned staticRanges = 0;
+        for (unsigned k = 0; k < chunk.count; ++k)
+            staticRanges += s.ranges[chunk.first + k].id == UINT16_MAX;
+        if (staticRanges > 2 * materialCapacity)
+            throw std::runtime_error("Static chunk draw capacity exceeded");
+    }
     if (s.bytes() > limits.cpuBytes)
         throw std::runtime_error("World CPU capacity budget exceeded");
     static std::atomic<std::uint64_t> next{1};
@@ -427,21 +505,21 @@ bool visible(const Camera& c, int x, int z, int width, int height, float low, fl
                 const float up = y - c.position.y, half = depth * viewWidth * .5f / focal();
                 constexpr float eps = 1e-4f;
                 inside[0] |= depth >= nearPlane - eps;
-                inside[1] |= depth <= farPlane + eps;
+                inside[1] |= depth <= c.farClip + eps;
                 inside[2] |= side >= -half - eps;
                 inside[3] |= side <= half + eps;
-                inside[4] |= up <= depth * viewHeight * .34f / focal() + eps;
-                inside[5] |= up >= -depth * viewHeight * .66f / focal() - eps;
+                inside[4] |= up <= depth * viewHeight * viewHorizon / focal() + eps;
+                inside[5] |= up >= -depth * viewHeight * (1 - viewHorizon) / focal() - eps;
             }
     return std::all_of(inside.begin(), inside.end(), [](bool v) { return v; });
 }
 void cull(const Scene& s, const Camera& c, DrawList& out) noexcept {
     out.count = out.tested = 0;
-    const int left = std::max(0, int(std::floor((c.position.x - 24) / 8))),
-              right = std::min(s.columns - 1, int(std::floor((c.position.x + 24) / 8)));
-    const int top = std::max(0, int(std::floor((c.position.z - 24) / 8))),
-              bottom = std::min(s.rows - 1, int(std::floor((c.position.z + 24) / 8)));
-    std::array<unsigned, 49> chunks{};
+    const int left = std::max(0, int(std::floor((c.position.x - s.cullRadius) / 8))),
+              right = std::min(s.columns - 1, int(std::floor((c.position.x + s.cullRadius) / 8)));
+    const int top = std::max(0, int(std::floor((c.position.z - s.cullRadius) / 8))),
+              bottom = std::min(s.rows - 1, int(std::floor((c.position.z + s.cullRadius) / 8)));
+    std::array<unsigned, buildingCullChunks> chunks{};
     unsigned n = 0;
     for (int z = top; z <= bottom; ++z)
         for (int x = left; x <= right; ++x) {

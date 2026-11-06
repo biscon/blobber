@@ -6,7 +6,8 @@
     "seed": 12,
     "trace": "output/pc071/goblin_pair/traces/c23b45835bc24bb28d1de210.jsonl",
     "returncode": 0,
-    "result": "{\"replay\":\"matched\"}\n"
+    "result": "{\"replay\":\"matched\"}\n",
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "rat_pack",
@@ -15,7 +16,8 @@
     "seed": 12,
     "trace": "output/pc071/rat_pack/traces/85864fd2a88bbadfbb0b1032.jsonl",
     "returncode": 0,
-    "result": "{\"replay\":\"matched\"}\n"
+    "result": "{\"replay\":\"matched\"}\n",
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "undead_pair",
@@ -24,7 +26,8 @@
     "seed": 12,
     "trace": "output/pc071/undead_pair/traces/6320e5f08b8410e1760ba369.jsonl",
     "returncode": 0,
-    "result": "{\"replay\":\"matched\"}\n"
+    "result": "{\"replay\":\"matched\"}\n",
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "bugbear_solo",
@@ -33,7 +36,8 @@
     "seed": 12,
     "trace": "output/pc071/bugbear_solo/traces/6fb8ece0bf702a8132e709c0.jsonl",
     "returncode": 0,
-    "result": "{\"replay\":\"matched\"}\n"
+    "result": "{\"replay\":\"matched\"}\n",
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "goblin_support",
@@ -42,7 +46,8 @@
     "seed": 8,
     "trace": "output/pc071/goblin_support/traces/9fc0ed650e1ebcf3772cca32.jsonl",
     "returncode": 0,
-    "result": "{\"replay\":\"matched\"}\n"
+    "result": "{\"replay\":\"matched\"}\n",
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   },
   {
     "recipe": "bugbear_support",
@@ -51,6 +56,7 @@
     "seed": 8,
     "trace": "output/pc071/bugbear_support/traces/1eeec615daa92bb68aa4ceb2.jsonl",
     "returncode": 0,
-    "result": "{\"replay\":\"matched\"}\n"
+    "result": "{\"replay\":\"matched\"}\n",
+    "artifact_status": "pruned-2026-11-05; historical identity/outcome only"
   }
 ]

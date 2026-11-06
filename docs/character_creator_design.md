@@ -119,7 +119,7 @@ and encoded sizes before decoding/upload. The current-assets bake measured 37,11
 KiB peak process RSS; this is one workload measurement, not a third-party allocator
 guarantee. Prepared tiles are drawn directly; there is no frame-time image resize.
 
-[Verification, retained captures and next-agent handoff](slice124_verification.md). The user accepted the slice on 2026-10-29 and chose to retain the current
+[Verification, retained captures and next-agent handoff](verification/archive/slice124_verification.md). The user accepted the slice on 2026-10-29 and chose to retain the current
 27-point buy, 8–15 base scores and fixed racial bonuses for now.
 
 

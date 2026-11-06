@@ -1,0 +1,102 @@
+[
+  {
+    "model": "low-house",
+    "triangles": 821,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "tall-house",
+    "triangles": 1419,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "low-house-hip",
+    "triangles": 817,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "inn",
+    "triangles": 1481,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "smithy",
+    "triangles": 857,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "provisioner",
+    "triangles": 845,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "sanctuary",
+    "triangles": 877,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "dungeon-entrance",
+    "triangles": 427,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "city-gate",
+    "triangles": 317,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  },
+  {
+    "model": "boundary-wall",
+    "triangles": 24,
+    "parts": 2,
+    "atlases": 2,
+    "atlas_size": 4096,
+    "texels_per_cell": 256,
+    "gutter": 16,
+    "panel_inset": 8
+  }
+]

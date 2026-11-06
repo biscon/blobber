@@ -2,9 +2,20 @@
 #include <cmath>
 #include <stdexcept>
 namespace blobber::world_render {
+static_assert(sizeof(EffectsPipeline) + sizeof(std::array<std::array<float, 4>, 1024>) <= 512u * 1024);
 namespace {
 float depth(const Camera& c, Vec p) {
     return (p.x - c.position.x) * c.forward.x + (p.z - c.position.z) * c.forward.z;
+}
+const AttackVisual* weaponAttack(const FrameInput& in, unsigned caster) noexcept {
+    if (!in.attacks)
+        return nullptr;
+    const auto& shot = in.attacks->attacks[NpcWorld::maxInstances + caster];
+    if (shot.spell != rules::SpellKind::SpiritualWeapon || shot.incoming ||
+        shot.stage == AttackStage::Empty || shot.stage == AttackStage::Canceled || in.now < shot.startedMs ||
+        in.now >= shot.impactMs + 240)
+        return nullptr;
+    return &shot;
 }
 Vec partyAnchor(const AttackVisual& shot, Player player, GeometryView geometry) {
     const auto f = forward(player.heading), r = right(player.heading);
@@ -13,53 +24,98 @@ Vec partyAnchor(const AttackVisual& shot, Player player, GeometryView geometry) 
             elevation(geometry.surface(player.cell).floor) + (shot.formationSlot < 2 ? .2f : .17f),
             player.cell.y + .5f + f.y * .1f + r.y * lane};
 }
-std::array<float, 4> spellTint(rules::SpellKind kind, float alpha) {
-    using rules::SpellKind;
-    switch (kind) {
-    case SpellKind::FireBolt:
-    case SpellKind::BurningHands:
-    case SpellKind::ScorchingRay:
-        return {1, 114.f / 255, 38.f / 255, alpha};
-    case SpellKind::PoisonSpray:
-    case SpellKind::AcidSplash:
-        return {118.f / 255, 242.f / 255, 60.f / 255, alpha};
-    case SpellKind::Sleep:
-    case SpellKind::ColorSpray:
-    case SpellKind::InflictWounds:
-    case SpellKind::Bane:
-        return {179.f / 255, 75.f / 255, 215.f / 255, alpha};
-    case SpellKind::RayOfFrost:
-    case SpellKind::ShockingGrasp:
-    case SpellKind::Thunderwave:
-    case SpellKind::MagicMissile:
-        return {110.f / 255, 174.f / 255, 1, alpha};
-    case SpellKind::Count:
-        return {1, 231.f / 255, 155.f / 255, alpha};
-    default:
-        return {1, 232.f / 255, 150.f / 255, alpha};
-    }
-}
 } // namespace
-EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) {
+Vec spiritualWeaponPosition(GeometryView geometry, Cell cell, std::uint64_t now) noexcept {
+    const float phase = float((now / 40) % 60) * (6.28318530718f / 60.f);
+    return {cell.x + .5f, elevation(geometry.surface(cell).floor) + .5f + .025f * std::sin(phase),
+            cell.y + .5f};
+}
+std::optional<Vec> spiritualWeaponPosition(const FrameInput& in, Cell cell) noexcept {
+    auto position = spiritualWeaponPosition(in.geometry, cell, in.now);
+    const auto& t = in.movement.transition;
+    if (t.active() && !(t.from.cell == t.to.cell)) {
+        const auto destination = followingWeaponCell(in.geometry, cell, t.from.cell, t.to.cell);
+        // A blocked follower retreats behind the party instead of passing through the camera.
+        if (cell == t.to.cell && destination == t.from.cell)
+            return {};
+        const auto target = spiritualWeaponPosition(in.geometry, destination, in.now);
+        const float p = t.progress(), e = p * p * (3 - 2 * p);
+        position = {position.x + (target.x - position.x) * e, position.y + (target.y - position.y) * e,
+                    position.z + (target.z - position.z) * e};
+    } else if (cell == in.movement.player.cell)
+        return {};
+    return position;
+}
+EffectsPipeline::EffectsPipeline(const world_assets::CpuAssets& assets) : spells_(assets) {
     constexpr const char* names[]{"effect/arrow",   "effect/tip",    "effect/feathers", "effect/slash",
                                   "effect/glint",   "effect/grease", "effect/web",      "effect/weapon",
                                   "effect/preview", "effect/white"};
+    for (unsigned i = 0; i < assets.publication.textures.size(); ++i)
+        if (assets.publication.textures[i].name == "effect/hearth-flame")
+            flame_ = i;
     for (unsigned i = 0; i < textures_.size(); ++i)
         textures_[i] = assets.named(names[i]);
 }
 bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     if (in.attacks && (!in.actors || in.attacks->world != in.actors->snapshot().world))
         throw std::invalid_argument("Foreign world attack snapshot");
-    const bool changed = shots_.update(in.attacks, in.now);
+    if (in.spells && (!in.actors || in.spells->world != in.actors->snapshot().world))
+        throw std::invalid_argument("Foreign world spell snapshot");
+    if (in.conditions && (!in.actors || in.conditions->world != in.actors->snapshot().world))
+        throw std::invalid_argument("Foreign world condition snapshot");
+    if (in.support && (!in.actors || in.support->world != in.actors->snapshot().world))
+        throw std::invalid_argument("Foreign world support snapshot");
+    const bool swipeChanged = swipes_.update(in, world);
+    const bool spellChanged = spells_.update(in, world);
+    const bool changed = shots_.update(in.attacks, in.now) || swipeChanged || spellChanged;
     SpellArea area = in.area ? *in.area : SpellArea{};
     if (world.moving)
         area.eligible.fill(false);
-    if (!changed && visibility_ == world.revision && area.cells == area_.cells && area.kind == area_.kind &&
-        area.eligible == area_.eligible && area.ground.revision == area_.ground.revision)
+    const auto& fire = in.geometry.base().definition().hearth;
+    bool visibleFire = false;
+    if (fire) {
+        const Vec anchor{fire->x, fire->y, fire->z};
+        const float d = depth(world.camera, anchor);
+        const float side = (anchor.x - world.camera.position.x) * world.camera.right.x +
+                           (anchor.z - world.camera.position.z) * world.camera.right.z;
+        visibleFire = d > nearPlane - .6f && d < world.camera.farClip + .6f &&
+                      std::abs(side) <= std::max(0.f, d) * (viewWidth * .5f / focal()) + .6f;
+    }
+    const auto tick = visibleFire ? in.now / 50 + 1 : 0;
+    bool visibleWeapon = false, attackingWeapon = false;
+    for (unsigned caster = 0; caster < area.ground.weapons.size(); ++caster) {
+        const auto& weapon = area.ground.weapons[caster];
+        if (!weapon.active)
+            continue;
+        const auto position = spiritualWeaponPosition(in, weapon.cell);
+        if (!position)
+            continue;
+        const auto p = *position;
+        const auto d = depth(world.camera, p);
+        const float side = (p.x - world.camera.position.x) * world.camera.right.x +
+                           (p.z - world.camera.position.z) * world.camera.right.z;
+        const bool visible = d >= nearPlane && d <= world.camera.farClip &&
+                             std::abs(side) <= d * (viewWidth * .5f / focal()) + .325f;
+        visibleWeapon |= visible;
+        attackingWeapon |= visible && weaponAttack(in, caster);
+    }
+    const auto weaponTick =
+        visibleWeapon ? (in.now / (attackingWeapon ? 20 : 40) + 1) * 2 + attackingWeapon : 0;
+    if (fire && flame_ == UINT16_MAX)
+        throw std::invalid_argument("Hearth flame artwork missing");
+    if (fireTick_ == tick && weaponTick_ == weaponTick && !changed && visibility_ == world.revision &&
+        area.cells == area_.cells && area.kind == area_.kind && area.eligible == area_.eligible &&
+        area.ground.revision == area_.ground.revision)
         return false;
+    fireTick_ = tick;
+    weaponTick_ = weaponTick;
     area_ = area;
     visibility_ = world.revision;
     frame_.count = 0;
+    frame_.lightCount = 0;
+    frame_.frost.fill(0);
+    frame_.guiding.fill(0);
+    frame_.swipes = swipes_.frame();
     ++frame_.revision;
     auto add = [&](EffectPacket p) {
         if (frame_.count == effectCapacity)
@@ -78,8 +134,6 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     for (const auto& patch : area.ground.areas)
         if (patch.active) {
             ground(patch.cell, patch.web ? 6 : 5, {1, 1, 1, 1}, .0015f);
-            if (patch.web && patch.burnMs)
-                ground(patch.cell, 9, {1, .412f, .118f, .255f}, .002f);
         }
     const auto color =
         area.kind == rules::SpellKind::Sleep         ? std::array<float, 4>{.545f, .49f, .87f, 1}
@@ -96,7 +150,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         p.tint = tint;
         p.texture = std::uint16_t(textures_[texture]);
         p.depth = depth(world.camera, center);
-        if (p.depth < nearPlane || p.depth > farPlane)
+        if (p.depth < nearPlane || p.depth > world.camera.farClip)
             return;
         constexpr float xs[]{-.5f, .5f, .5f, -.5f}, ys[]{-.5f, -.5f, .5f, .5f};
         for (unsigned i = 0; i < 4; ++i) {
@@ -106,11 +160,52 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
         add(p);
     };
-    for (const auto& weapon : area.ground.weapons)
-        if (weapon.active)
-            billboard({weapon.cell.x + .5f, elevation(in.geometry.surface(weapon.cell).floor) + .5f,
-                       weapon.cell.y + .5f},
-                      .65f, .65f, 7);
+    if (visibleFire) {
+        // Fixed analytic particles need no spawning, RNG state, allocation or save data.
+        const float t = float((in.now / 50) % 24000) * .05f;
+        for (unsigned i = 0; i < 24; ++i) {
+            const bool ember = i >= 16;
+            const float phase = std::fmod(t * (ember ? .48f : .8f) + float(i) * .618034f, 1.f);
+            const float lane = float(i % 5) * .065f - .13f;
+            Vec center{fire->x + .035f * std::sin(t * 2.3f + float(i)),
+                       fire->y + (ember ? .08f + phase * .52f : .07f + phase * .20f),
+                       fire->z + lane + .025f * std::sin(t * 3.f + float(i) * 2.f)};
+            const float h = ember ? .025f : .22f + .12f * (1.f - phase);
+            const unsigned before = frame_.count;
+            billboard(center, ember ? .012f : .13f, h, 9, .08f * std::sin(t + float(i)),
+                      {1, 1, 1, (ember ? .75f : .8f) * (1.f - phase * phase)});
+            if (frame_.count != before)
+                frame_.packets[before].texture = std::uint16_t(flame_);
+        }
+    }
+    for (unsigned caster = 0; caster < area.ground.weapons.size(); ++caster) {
+        const auto& weapon = area.ground.weapons[caster];
+        if (!weapon.active)
+            continue;
+        const auto position = spiritualWeaponPosition(in, weapon.cell);
+        if (!position)
+            continue;
+        auto p = *position;
+        float angle = 0;
+        if (const auto* shot = weaponAttack(in, caster)) {
+            const float t = in.now < shot->impactMs
+                                ? float(in.now - shot->startedMs) /
+                                      float(std::max<std::uint64_t>(1, shot->impactMs - shot->startedMs))
+                                : 1.f - float(in.now - shot->impactMs) / 240.f;
+            const float travel = t * t * (3.f - 2.f * t);
+            // The simulation has already moved the weapon into the destination cell.
+            // This short local strike uses its recorded subcell, including misses/deaths.
+            const Vec target{shot->targetPosition.x,
+                             elevation(in.geometry.surface(shot->npcOrigin.cell).floor) + .32f,
+                             shot->targetPosition.y};
+            const float side =
+                (target.x - p.x) * world.camera.right.x + (target.z - p.z) * world.camera.right.z;
+            angle = (side < 0 ? .45f : -.45f) * travel;
+            p = {p.x + (target.x - p.x) * travel, p.y + (target.y - p.y) * travel,
+                 p.z + (target.z - p.z) * travel};
+        }
+        billboard(p, .65f, .65f, 7, angle);
+    }
     std::array<const Billboard*, NpcWorld::maxInstances> bodies{};
     for (unsigned i = 0; i < world.count; ++i) {
         const auto& b = world.billboards[i];
@@ -118,6 +213,10 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             bodies[b.id] = &b;
     }
     for (const auto& shot : shots_) {
+        // Spell/support players own all spell artwork. The shared glint remains
+        // an ordinary arrow impact, never an alternate spell renderer.
+        if (shot.spell != rules::SpellKind::Count)
+            continue;
         const Billboard* body =
             in.actors && shot.enemy.world == in.actors->snapshot().world && shot.enemy.slot < bodies.size()
                 ? bodies[shot.enemy.slot]
@@ -134,8 +233,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
         const Vec party =
             partyAnchor(shot, shot.incoming ? in.movement.player : shot.partyOrigin, in.geometry);
-        const bool npcBless = shot.incoming && shot.spell == rules::SpellKind::Bless;
-        const Vec from = shot.incoming ? enemy : party, to = npcBless ? enemy : shot.incoming ? party : enemy;
+        const Vec from = shot.incoming ? enemy : party, to = shot.incoming ? party : enemy;
         const bool ending = in.now >= shot.impactMs;
         if (ending && (!shot.hit || shot.targetGone))
             continue;
@@ -160,13 +258,9 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             size = (shot.ranged ? 12.f : 28.f) * depth(world.camera, to) / focal();
         } else if (std::abs(b.x - a.x) < 25 && std::abs(b.y - a.y) < 35)
             texture = shot.incoming ? 1 : 2;
-        if (shot.spell != rules::SpellKind::Count) {
-            texture = 4;
-            size = ending ? 28.f * depth(world.camera, to) / focal()
-                          : std::max(.182f, 7.f * depth(world.camera, point) / focal());
-        }
         const float fade = ending ? 1.f - float(in.now - shot.impactMs) / 120.f : 1.f;
-        const auto tint = texture == 4 ? spellTint(shot.spell, fade) : std::array<float, 4>{1, 1, 1, fade};
+        const auto tint = texture == 4 ? std::array<float, 4>{1, 231.f / 255, 155.f / 255, fade}
+                                       : std::array<float, 4>{1, 1, 1, fade};
         if (ending) {
             // The body owns depth at this exact attachment plane. Pull only the
             // cosmetic impact forward slightly, retaining ordinary wall/body tests.
@@ -177,14 +271,13 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         for (unsigned dart = 0; dart < copies; ++dart) {
             auto center = point;
             float offset = (int(dart) * 2 - int(copies) + 1) * 5.f;
-            if (shot.spell == rules::SpellKind::ScorchingRay)
-                offset += (int(shot.id.serial % 3) - 1) * 6.f;
             offset *= depth(world.camera, point) / focal();
             center.x += world.camera.right.x * offset;
             center.z += world.camera.right.z * offset;
             billboard(center, size, size, texture, std::atan2(a.y - b.y, b.x - a.x), tint);
         }
     }
+    spells_.append(in, world, frame_);
     // Stable bounded insertion sort: ground layers retain submission order, airborne packets far-first.
     for (unsigned i = 1; i < frame_.count; ++i) {
         const auto v = frame_.packets[i];

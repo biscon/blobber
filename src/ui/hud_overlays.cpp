@@ -6,12 +6,13 @@
 #include "ui/save_screen.hpp"
 #include "ui/spell_layout.hpp"
 #include "ui/status_occlusion.hpp"
+#include "ui/world_view_draw.hpp"
 #include <cstring>
 namespace blobber {
 using namespace hudInk;
 void HudPainter::tooltip(const HudSnapshot& h) const {
     const auto& hover = h.hover;
-    if (hover.kind == HoverKind::None ||
+    if (!hover.tooltipVisible || hover.kind == HoverKind::None ||
         (h.modal() &&
          !(h.magic.open && (hover.kind == HoverKind::Status || hover.kind == HoverKind::Concentration))) ||
         h.suspended)
@@ -61,35 +62,41 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
     }
 }
 namespace {
-void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r) {
-    {
-        const Color color = feedback.immune    ? Color{100, 112, 126, 255}
-                            : feedback.healing ? Color{35, 140, 95, 255}
-                            : feedback.hit     ? Color{190, 24, 18, 255}
-                                               : WHITE;
-        const Vector2 center{r.x + r.width * .5f, r.y + r.height * .5f};
-        for (std::size_t i = 0; i < bloodSplat.size(); ++i) {
-            const auto a = bloodSplat[i], b = bloodSplat[(i + 1) % bloodSplat.size()];
-            const Vector2 one{r.x + a.x * (r.width - 1), r.y + a.y * (r.height - 1)},
-                two{r.x + b.x * (r.width - 1), r.y + b.y * (r.height - 1)};
-            p.triangle(center, two, one, color);
-            p.line(one, two, {65, 16, 12, 255});
+void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r, std::uint64_t now) {
+    const auto sample = feedbackPresentation(feedback, now);
+    if (sample.alpha <= 0 || !p.fonts)
+        return;
+    const bool portraitOnly = feedback.party && feedback.portrait != PortraitFeedbackKind::None;
+    const auto alpha = static_cast<unsigned char>(255 * sample.alpha);
+    if (!portraitOnly && p.art)
+        p.art->feedbackBackdrop(sample.backdrop, r, {255, 255, 255, alpha});
+    char label[32];
+    if (feedback.text)
+        std::snprintf(label, sizeof(label), "%s", feedback.text);
+    else if (feedback.hit)
+        std::snprintf(label, sizeof(label), feedback.healing ? "+%lld" : "%lld",
+                      static_cast<long long>(feedback.damage));
+    else
+        std::snprintf(label, sizeof(label), "MISS");
+    auto style = portraitOnly ? UiTextStyle::Small : UiTextStyle::Display;
+    const float available = r.width - 10.f;
+    if (p.fonts->width(label, style) > available)
+        style = UiTextStyle::Small;
+    const Color ink = portraitOnly ? Color{255, 255, 255, alpha} : Color{244, 226, 184, alpha};
+    auto line = [&](const char* value, float top, float height) {
+        const auto width = p.fonts->width(value, style);
+        p.text(value, r.x + (r.width - width) * .5f + sample.offsetX,
+               p.fonts->centeredY(value, top, height, style) + sample.offsetY, ink, style);
+    };
+    // Keep longer special outcomes readable inside the existing bounded card/viewport region.
+    if (p.fonts->width(label, style) > available)
+        if (auto* space = std::strchr(label, ' ')) {
+            *space = '\0';
+            line(label, float(r.y + 4), float(r.height - 8) * .5f);
+            line(space + 1, r.y + r.height * .5f, float(r.height - 8) * .5f);
+            return;
         }
-    }
-    if (p.fonts) {
-        char label[32];
-        if (feedback.text)
-            std::snprintf(label, sizeof(label), "%s", feedback.text);
-        else if (feedback.hit)
-            std::snprintf(label, sizeof(label), feedback.healing ? "+%lld" : "%lld",
-                          static_cast<long long>(feedback.damage));
-        else
-            std::snprintf(label, sizeof(label), "MISS");
-        const auto width = p.fonts->width(label, UiTextStyle::Heading);
-        p.text(label, r.x + (r.width - width) * .5f,
-               p.fonts->centeredY(label, float(r.y), float(r.height), UiTextStyle::Heading),
-               feedback.hit ? WHITE : BLACK, UiTextStyle::Heading);
-    }
+    line(label, float(r.y), float(r.height));
 }
 } // namespace
 void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const UiFonts* fonts,
@@ -99,6 +106,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     const HudPainter p(fonts, art, metrics);
     const auto& combat = h->combat;
     if (!h->modal() && picking && (!h->suspended || h->magic.armed)) {
+        const WorldOverlayScope world(h->worldTransform);
         const auto statuses = statusMarkerLayout(*h, picking);
         for (std::size_t slot = 0; slot < statuses.size(); ++slot)
             if (statuses[slot]) {
@@ -110,8 +118,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                     if (h->conditions[slot] & (1u << k)) {
                         const UiRect r{row.x + int(n) * 12, row.y, 12, 12};
                         forEachStatusClip(*picking, static_cast<std::uint16_t>(slot), r, [&](UiRect clip) {
-                            BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
-                                             clip.width * HudPainter::scale, clip.height * HudPainter::scale);
+                            world.clip(clip);
                             if (n == 5 && count > 6) {
                                 char label[16];
                                 std::snprintf(label, sizeof(label), "+%u", count - 5);
@@ -121,7 +128,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                                 p.box(r, harmfulEffect(EffectKind(k)) ? red : teal);
                                 p.picture(UiArt::effectIcon(EffectKind(k)), {r.x + 1, r.y + 1, 10, 10});
                             }
-                            EndScissorMode();
+                            world.viewportClip();
                         });
                         ++n;
                     }
@@ -166,31 +173,30 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                         p.line({left, top + 1}, {left + 1, top + 1}, color);
                 }
             }
-        if (!h->magic.casting() && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
+        if (h->hover.tooltipVisible && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
             h->hover.enemy->slot < picking->targets().anchors.size()) {
             const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
             if (anchor.valid) {
                 const UiRect r{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),
                                viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6};
                 forEachDepthClip(*picking, h->hover.enemy->slot, r, [&](UiRect clip) {
-                    BeginScissorMode(clip.x * HudPainter::scale, clip.y * HudPainter::scale,
-                                     clip.width * HudPainter::scale, clip.height * HudPainter::scale);
+                    world.clip(clip);
                     p.health(r, h->hover.health);
-                    EndScissorMode();
+                    world.viewportClip();
                 });
             }
         }
     }
     if (!h->suspended && combat.phase == CombatPhase::Turns && combat.upcomingCount) {
-        const int width = 54 + int(combat.upcomingCount) * 30;
-        const UiRect r{viewX + viewWidth - width - 6, 24, width, 34};
+        const int width = 27 + int(combat.upcomingCount) * 15;
+        const UiRect r{viewX + viewWidth - width - 6, viewY, width, 17};
         p.overlayBox(r, edge);
         char line[32];
-        std::snprintf(line, sizeof(line), "ROUND %llu", static_cast<unsigned long long>(combat.round));
-        p.label(line, {r.x + 2, r.y + 8, 50, 16}, gold, UiTextStyle::Small);
+        std::snprintf(line, sizeof(line), "RND %llu", static_cast<unsigned long long>(combat.round));
+        p.clipped(line, r.x + 2, r.y + 5, 23, gold, UiTextStyle::Small);
         for (std::size_t i = 0; i < combat.upcomingCount; ++i) {
             const auto& participant = combat.upcoming[i];
-            const UiRect tile{r.x + 54 + int(i) * 30, r.y + 3, 26, 27};
+            const UiRect tile{r.x + 27 + int(i) * 15, r.y + 1, 13, 14};
             unsigned portrait =
                 participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Skeleton
                     ? UiArt::skeletonPortraitIcon
@@ -207,25 +213,28 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                 for (const auto& card : h->cards)
                     if (card.id.index == participant.character->index)
                         portrait = card.portrait;
-            p.picture(portrait, {tile.x + 1, tile.y + 1, 24, 24});
+            p.picture(portrait, {tile.x + 1, tile.y + 1, 12, 12});
             p.border(tile, i == 0 ? bright : edge);
             if (i == 0)
                 p.border({tile.x - 1, tile.y - 1, tile.width + 2, tile.height + 2}, gold);
-            if (participant.enemy) {
-                std::snprintf(line, sizeof(line), "%u", unsigned(participant.enemy->slot) + 1);
-                p.fill({tile.x + 17, tile.y + 17, 8, 9}, background);
-                p.text(line, tile.x + 18, tile.y + 17, gold, UiTextStyle::Small);
-            }
             if (participant.deathSave) {
-                p.fill({tile.x, tile.y + 17, 26, 10}, background);
-                p.text("SAVE", tile.x + 2, tile.y + 18, red, UiTextStyle::Small);
+                p.fill({tile.x, tile.y + 7, 13, 7}, background);
+                p.centered("SAVE", {tile.x, tile.y + 7, 13, 7}, red, UiTextStyle::Small);
             }
         }
     }
-    p.spellMarkers(*h, picking);
+    {
+        const WorldOverlayScope world(h->worldTransform);
+        p.spellMarkers(*h, picking);
+        for (const auto& feedback : h->feedback)
+            if (!feedback.party)
+                if (const auto rect = feedbackRect(feedback, h->cards))
+                    splash(p, feedback, *rect, h->presentationMs);
+    }
     for (const auto& feedback : h->feedback)
-        if (const auto rect = feedbackRect(feedback, h->cards))
-            splash(p, feedback, *rect);
+        if (feedback.party)
+            if (const auto rect = feedbackRect(feedback, h->cards))
+                splash(p, feedback, *rect, h->presentationMs);
     if (h->campaignTerminal || (h->arena && h->arenaComplete && combat.phase == CombatPhase::Victory) ||
         combat.phase == CombatPhase::Defeat) {
         p.overlayBox(hudLayout::result);
@@ -299,11 +308,8 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
             p.label("SETTINGS", {242, 286, 156, 24});
         }
     }
-    if (h->lootHover[0] && !h->modal()) {
-        p.fill({viewX + 3, viewY + viewHeight - 20, viewWidth - 6, 18}, {12, 18, 18, 235});
-        p.clipped(h->lootHover.data(), viewX + 7, viewY + viewHeight - 16, viewWidth - 14, gold,
-                  UiTextStyle::Small);
-    }
+    if (const auto* prompt = h->interactionPrompt())
+        p.viewportPrompt(prompt);
     if (h->loot.open) {
         p.fill(hudLayout::viewport, {0, 0, 0, 110});
         p.loot(*h);

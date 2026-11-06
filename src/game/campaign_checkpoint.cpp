@@ -1,5 +1,7 @@
 #include "core/preparation.hpp"
 #include "game/campaign.hpp"
+#include "game/inn_interior.hpp"
+#include "game/sanctuary_hub.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <random>
@@ -92,7 +94,7 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     out->revision = revision_;
     out->runId = runId_;
     out->navigation = game().navigationCheckpoint();
-    for (unsigned i = 0; i < 4; ++i) {
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
         preparationPoint("Restoring campaign locations");
         const auto& from = locations_[i];
         auto& to = out->locations[i];
@@ -134,17 +136,19 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
     : runId_(s.runId), party_(catalog, s.party), timings_(timings), location_(s.activeLocation),
       revision_(s.revision), elapsed_(s.gameplayMs) {
     if (runId_.size() != 32 || runId_.find_first_not_of("0123456789abcdef") != std::string::npos ||
-        location_ > 3 || elapsed_ > maxCheckpointClock || !revision_ || revision_ == UINT64_MAX ||
-        !s.locations[0].visited || !s.locations[location_].visited || !s.locations[location_].state)
+        location_ >= campaignLocationCount || elapsed_ > maxCheckpointClock || !revision_ ||
+        revision_ == UINT64_MAX || !s.locations[0].visited || !s.locations[location_].visited ||
+        !s.locations[location_].state)
         throw std::invalid_argument("Invalid campaign checkpoint");
-    for (unsigned i = 0; i < 4; ++i) {
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
         preparationPoint("Restoring campaign locations");
         auto& from = s.locations[i];
         auto& to = locations_[i];
-        if (from.generated != (i != 0) || from.rows.empty() || from.rows.size() > 40 ||
+        if (from.generated != dungeonLocation(i) || from.rows.empty() || from.rows.size() > 40 ||
             from.rows.front().empty() || from.rows.front().size() > 40 || from.placements.size() > 32 ||
             from.types.empty() || from.types.size() != timings.size() ||
-            (i && from.visited && !s.locations[i - 1].visited) || (i && bool(from.state) != from.visited))
+            (dungeonLocation(i) && from.visited && !s.locations[i - 1].visited) ||
+            (i && bool(from.state) != from.visited))
             throw std::invalid_argument("Invalid campaign location definition");
         if (from.world.surfaces.empty() || from.world.fingerprint() != from.worldFingerprint)
             throw std::invalid_argument("Saved world definition fingerprint differs");
@@ -153,7 +157,9 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             throw std::invalid_argument("Saved surfaces disconnect the floor");
         if (map.width() * map.height() > int(generation::maxCells))
             throw std::invalid_argument("Campaign map capacity exceeded");
-        if (i) {
+        if (dungeonLocation(i)) {
+            if (from.recovery.freeRestEverywhere)
+                throw std::invalid_argument("Dungeon cannot grant free map-wide rest");
             for (auto value : from.layout.floor)
                 if (value > 1)
                     throw std::invalid_argument("Invalid saved tile value");
@@ -174,21 +180,14 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             to.generated.emplace(generation::GeneratedFloor{from.generation, from.layout, std::move(map),
                                                             from.diagnostics, from.fingerprint, from.seed});
         } else {
-            if (map.width() != 9 || map.height() != 9 || !(from.entry == Player{{4, 4}, Heading::East}) ||
-                !(from.exit == from.entry) || !from.placements.empty() || from.objective.count ||
-                from.recovery.groundCount || from.recovery.sanctuaryCount != 1 ||
-                !(from.recovery.sanctuaries[0] == Cell{4, 4}) || from.fixtures.count != 1 ||
-                from.fixtures.discovery || from.fixtures.depth || from.fixtures.landingCount != 1 ||
-                !(from.fixtures.landings[0] == Cell{4, 4}) ||
-                from.fixtures.entries[0].kind != FixtureKind::Downstairs ||
-                !(from.fixtures.entries[0].cell == Cell{5, 4}) ||
-                from.fixtures.entries[0].facing != Heading::East || from.fixtures.npcExcluded.count() != 2 ||
-                !from.fixtures.npcExcluded[40] || !from.fixtures.npcExcluded[41])
-                throw std::invalid_argument("Unsupported authored hub definition");
-            for (int y = 0; y < 9; ++y)
-                for (int x = 0; x < 9; ++x)
-                    if (map.solid({x, y}) != (x == 0 || y == 0 || x == 8 || y == 8))
-                        throw std::invalid_argument("Unsupported authored hub map");
+            if (i == unsigned(CampaignLocationId::City))
+                validateSanctuaryHub(map, from);
+            else {
+                validateInnInterior(map, from);
+                // Reconstruct accepted authored content (ceiling and seating
+                // reservations) without discarding any saved session state.
+                map = innInterior().map;
+            }
             to.authored.emplace(std::move(map));
         }
         to.entry = from.entry;
@@ -236,13 +235,13 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
     }
     if (locations_[3].saved && locations_[3].saved->objective.completed)
         throw std::invalid_argument("Completed campaign cannot resume as active");
+    configureDoorways();
     active_ = prepare(location_, locations_[location_].entry);
     active_->restorePose(s.pose, s.animated);
     active_->restoreNavigation(s.navigation);
     baseClock_ = game().combat().snapshot().gameplayMs;
     active_->campaign_ = this;
     for (unsigned i = 0; i < 4; ++i) {
-        preparationPoint("Restoring campaign locations");
         bool aided = false;
         for (const auto& e : game().effects().snapshot())
             if (e.active && e.kind == EffectKind::Aid)

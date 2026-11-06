@@ -18,7 +18,7 @@ for user approval before generating full animation sheets, as required by the
 accepted roadmap. Mechanics/owned fixture work may continue during reference review.
 Reference accepted on 2026-10-31: “yes concept art approved”.
 Full production art and normal arena availability are delivered. See
-[verification and review](b01_verification.md); user acceptance is recorded there.
+[verification and review](verification/archive/b01_verification.md); user acceptance is recorded there.
 
 Use the built-in imagegen skill, retain transparent masters, exact prompts and
 measured registration in assets/npcs/skeleton. Upright world height .74375 cells after the B01 review adjustment;

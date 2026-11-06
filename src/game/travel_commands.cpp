@@ -8,6 +8,10 @@ void CommandController::openTravel() noexcept {
     auto& run = *session_.campaign();
     if (run.status() != CampaignStatus::Active)
         return;
+    if (run.activeLocationId() == CampaignLocationId::Inn) {
+        state_.log.append("Leave the inn through its door.");
+        return;
+    }
     const bool hub = run.activeLocation() == 0;
     if (hub) {
         const auto check = run.previewTravel(run.request(session_.nearbyFixture()));

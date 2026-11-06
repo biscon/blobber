@@ -12,6 +12,8 @@
 namespace blobber {
 class AudioRuntime;
 class MapOverlayModel;
+// Composite a prepared image into the fixed native viewport; no target allocation.
+void drawWorldViewport(const Texture2D&, bool flipped, WorldViewTransform);
 class Presenter {
   public:
     AudioRuntime* audio = nullptr; // Application-owned; outlives presentation loops.
@@ -26,6 +28,7 @@ class Presenter {
                       const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
                       bool debug = false, const generation::DiagnosticView* diagnostic = nullptr,
                       bool reveal = false, const MapOverlayModel* mapModel = nullptr);
+    const WorldViewTransform& displayedWorldTransform() const noexcept { return displayedWorld_; }
     void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
     void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
     // Diagnostic operation: readback and export may allocate; never used during normal play.
@@ -38,6 +41,7 @@ class Presenter {
     void compose(const Texture2D&, bool flipped, const MovementState&, const Map&, bool debug,
                  const HudSnapshot*, const PickingBuffer*, const generation::DiagnosticView*, bool reveal,
                  const MapOverlayModel*);
+    WorldViewTransform displayedWorld_;
     PreparationWorker* worker_ = nullptr;
     bool showFps_ = false, saving_ = false;
     float fade_ = 0;
@@ -47,6 +51,7 @@ class Presenter {
     TextureHandle menuBackground_;
     std::filesystem::path assetsMenuPath_;
     UiFonts fonts_;
+    GpuExternalLease fontMemory_;
     UiArt uiArt_;
 };
 } // namespace blobber

@@ -7,6 +7,7 @@
 #include "game/save_ui.hpp"
 #include "game/session.hpp"
 #include "game/travel.hpp"
+#include "ui/screen_shake.hpp"
 #include <optional>
 
 namespace blobber {
@@ -48,6 +49,7 @@ struct HudCard {
 };
 enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration, Travel };
 struct HudHover {
+    bool tooltipVisible = true;
     HoverKind kind = HoverKind::None;
     int index = 0;
     std::optional<ActorId> enemy;
@@ -55,12 +57,24 @@ struct HudHover {
     CommandReason reason = CommandReason::Unavailable;
     std::array<std::array<char, 96>, StatusSummary::capacity * 2 + 1> lines{};
 };
+enum class PortraitFeedbackKind : std::uint8_t { None, Healing, Protection, Damage, Harmful, Negated };
+struct PortraitFeedback {
+    PortraitFeedbackKind kind = PortraitFeedbackKind::None;
+    rules::DamageType element = rules::DamageType::Bludgeoning;
+    std::uint64_t startedMs = 0;
+    unsigned durationMs = 0;
+    rules::SpellKind support = rules::SpellKind::Count;
+    SupportPhase phase = SupportPhase::Apply;
+    unsigned duplicate = 0;
+};
 struct CombatFeedback {
     static constexpr std::uint64_t durationMs = combatFeedbackDurationMs;
     bool active = false, party = false, hit = false, healing = false, immune = false;
     rules::CharacterId character;
     ActorId enemy;
     const char* text = nullptr;
+    PortraitFeedbackKind portrait = PortraitFeedbackKind::None;
+    rules::DamageType element = rules::DamageType::Bludgeoning;
     TargetAnchor anchor;
     std::int64_t damage = 0;
     std::uint64_t startedMs = 0;
@@ -140,6 +154,7 @@ struct EnemyTargetPicker {
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
+    WorldViewTransform worldTransform;
     ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
     std::array<HudCard, rules::partySize> cards{};
@@ -157,6 +172,9 @@ struct HudSnapshot {
     std::array<rules::CharacterId, rules::partySize> allies{};
     std::size_t allyCount = 0;
     std::array<CombatFeedback, 16> feedback{};
+    std::array<std::array<PortraitFeedback, 2>, rules::partySize> portraitFeedback{};
+    ActorConditionVisualSnapshot supportConditions{};
+    std::uint64_t presentationMs = 0;
     MagicHud magic;
     InventoryHud inventory;
     CampHud camp;
@@ -181,6 +199,12 @@ struct HudSnapshot {
     bool modal() const noexcept {
         return travel.open || advancement.open || loot.open || camp.open || inventory.open || logExpanded ||
                menuOpen || magic.open;
+    }
+    const char* interactionPrompt() const noexcept {
+        if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
+            magic.casting() || magic.armed || inventory.itemTargeting)
+            return nullptr;
+        return lootHover[0] ? lootHover.data() : fixturePrompt[0] ? fixturePrompt.data() : nullptr;
     }
 };
 inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, PartyAction::Defend,
@@ -325,10 +349,10 @@ class CommandController {
         state_.camp.controls.buttons.cancel();
         state_.advancement.controls.buttons.cancel();
     }
-    void reportCampaignSeed(std::uint32_t) noexcept;
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    bool interactionPromptsAvailable() const noexcept;
     void refreshTargetPicker() noexcept;
     bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;
     PartyCommand targetContext_;
@@ -353,15 +377,21 @@ class CommandController {
     void showFeedback(const CombatFeedback& feedback) noexcept;
     void refreshFeedback(bool clear) noexcept;
     void updateHover() noexcept;
+    void updateEnemyTooltip(ActorId) noexcept;
+    std::optional<ActorId> tooltipEnemy_;
+    std::uint64_t tooltipSinceMs_ = 0;
     void appendLog(const char* message) noexcept;
     bool objectiveReported_ = false, objectiveFailureReported_ = false;
     bool pointerKnown_ = false;
     float pointerX_ = 0, pointerY_ = 0;
     GameSession& session_;
+    std::optional<LootId> hoveredLoot_;
     std::array<std::uint64_t, rules::partySize> hitUntil_{};
+    std::uint64_t feedbackEpoch_ = 0, supportSeen_ = 0, supportEpoch_ = UINT64_MAX;
     const Party& party_;
     const ActorWorld& actors_;
     HudSnapshot state_;
+    ScreenShakePlayer shake_;
     CommandReason suspension_ = CommandReason::Ready;
 };
 } // namespace blobber

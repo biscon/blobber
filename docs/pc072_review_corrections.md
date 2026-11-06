@@ -91,7 +91,7 @@ suites were not rerun without a subsequent relevant change): `actors`, `automati
   wall/target/Bless and centered saving captures at 1920×1080 and 1280×720.
   Eight cached saving frames allocated no engine C++ or GPU resources. An injected
   close probe confirmed save work joins without worker cancellation, without OS events.
-  [Retained gallery](screenshots/pc072-review/index.html).
+  [Retained gallery](screenshots/pc072-review/README.md).
 
 Initial failures were retained in logs and resolved: runtime admission assumed one
 lock/key, old tests assumed potion rewards and fixture indices, transport fixtures

@@ -117,7 +117,7 @@ fingerprints (800,000 bytes of payload), then sorts/deduplicates them. Per-floor
 reports stream; no unbounded history is retained. Timing and stdout JSON allocation
 are explicit diagnostic work, outside the generator/frame storage guarantee.
 
-[Verification and next-agent handoff](pc01_verification.md) records executed checks,
+[Verification and next-agent handoff](verification/archive/pc01_verification.md) records executed checks,
 retained captures, storage measurements and limitations. User acceptance was recorded
 on 2026-10-30; the verification scope and limitations are unchanged.
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "world/environment_maps.hpp"
+#include "support/courtyard_fixture.hpp"
 namespace blobber::test {
 inline FloorFixtures rendererHeightFixtures() {
     FloorFixtures f;

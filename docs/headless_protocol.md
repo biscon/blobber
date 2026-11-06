@@ -1,7 +1,7 @@
 # Headless protocol v1
 
 Slice 13.1 implements a local, synchronous JSON-lines transport to the real arena
-simulation. See [design](headless_design.md) and [verification](slice131_verification.md).
+simulation. See [design](headless_design.md) and [verification](verification/archive/slice131_verification.md).
 The [experiment tooling](../experiments/arena/README.md) and optional
 [local MCP adapter](mcp_usage.md) reuse this protocol.
 
@@ -556,7 +556,7 @@ profile under the existing diagnostic-only admission. No new gameplay commands.
 floor review sample, both fallbacks and metric summaries. It requires Pillow and
 does not run combat, a broad sweep or a performance benchmark.
 
-## Underkeep containers (current follow-up)
+## Underkeep containers
 
 Generator/catalog 9/7, campaign schema/simulation 7/11 and visibility
 `world-visibility-v10` supersede the earlier examples' identities. Visibility v10
@@ -573,6 +573,15 @@ mode. Diagnostic generation reports include dressing placements and occupied
 footprints. State digests/checkpoints retain opened/remaining content state.
 See [Underkeep dressing](underkeep_dressing_design.md) for ownership and compatibility.
 
+### Underkeep prop placement correction (2026-11-06)
+
+Generator/templates are now **10/7**, campaign schema/simulation remain **10/14**,
+and visibility is **world-visibility-v18**. Previous campaigns/scenarios reject
+without migration or rewriting their files. Blocking props require same-room
+clearance, a room-local bypass and collision-aware key/guardian progression.
+The rack has one collision cell and half-size prepared geometry. Existing wire
+commands/record shapes are unchanged; terrain/population seed streams remain 8/6.
+
 ## Enemy targeting follow-up
 
 Visibility identity advances to `world-visibility-v11`. Visual-mode `targets`,
@@ -586,10 +595,54 @@ the changed visibility identity. See [target selection](target_selection_design.
 
 ## Creature occlusion correction
 
-Current visibility identity is `world-visibility-v13`. Creature bodies retain authored
+That correction introduced `world-visibility-v13`. Creature bodies retain authored
 animation dimensions and animated anchors beside walls, door geometry and viewport
 edges. Terrain/static-frame masks and leaf-free scenery depth gate body picking;
 moving leaves use shared ground-anchor ordering and finite ray coverage, including
 stable ordering around free tips. Other actors retain the v11 candidate behavior. Protocol/save
 schemas, simulation and prepared asset identities are unchanged. Strict earlier
 visual traces reject the new visibility identity. See [creature occlusion](creature_occlusion.md).
+
+## Sanctuary architecture foundation (SC01.2)
+
+Current visibility is `world-visibility-v14`, world publication format 6/appearance
+4, and campaign schema/simulation 8/11. Static building placement fields are
+serialized and hashed with world-definition revision 3. Generator/templates remain
+9/7 and terrain-rules-v2 is unchanged. Strict old recordings/saves reject rather
+than migrate. Protocol v1 gains no new scenario or command: the city is an explicit
+graphical development review flag, with a separate hidden capture tool. Normal
+campaign startup still uses the courtyard. See [SC01 design](sc01_design.md).
+
+
+### SC04 Sanctuary city campaign cutover (2026-11-05)
+
+Campaign saves use schema **9**, simulation **13**, generator/templates **9/7**.
+The diagnostic authored-location identity is `sanctuary-city-v1`; protocol remains
+v1. New Game starts in the square, recall arrives at the sanctuary, and upstairs
+return arrives facing into town. Callers must walk to the observed downstairs
+landing and face north before interacting or requesting an unlocked-floor waypoint.
+City discovery is incremental and persists across travel/Continue. Old save
+identities reject without modifying their bytes. See [SC04 design](sc04_design.md).
+
+
+### Inn doorway travel (2026-11-05)
+
+Campaign schema/simulation are **10/14**. Locations retain numeric IDs 0–3 for
+the city and dungeon floors; ID 4 is `Sanctuary inn`, an authored map with depth 0.
+`campaign.depth` is separate from `campaign.location`. `visited_entries` and
+`entry_unlocked` still refer only to dungeon floors. Diagnostic authored identities
+are `sanctuary-city-v2` and `sanctuary-inn-v1`. Old saves reject unchanged.
+
+Use `{"kind":"doorway"}` with the existing preview/act envelopes. It resolves the
+current facing-sensitive doorway and emits a `campaign_transition` with kind
+`doorway` and zero kit charge. `campaign.travel.doorway` exposes ready/reason/cost.
+The action requires the exact named approach and heading, settled safe exploration,
+and a current world/revision. No remote destination parameter is accepted.
+
+The inn grants free long rest on every walkable cell. The city's old recovery cell
+is removed; recall still arrives at sanctuary outdoors and never rests implicitly.
+Inn recall and waypoints reject with guidance to leave through the door. Canonical
+inn discovery, loot and saved pose survive travel and Continue. Generator/templates
+remain 9/7. The optional fingerprinted hearth has no simulation or picking effects;
+absent hearth metadata preserves existing dungeon world fingerprints. Strict replay
+also retains binary/content identity checks.

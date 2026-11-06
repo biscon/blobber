@@ -13,7 +13,7 @@ reaction art. Authoritative HP, occupancy, removal and identity contracts are un
 Implemented extension: [slice 05 melee combat](melee_combat_design.md). Slice 05 consumes these checked operations from stationary combat and shares damage timestamps with session animation time. Occupancy/death/flash contracts remain unchanged. The remainder records this subsystem’s original slice boundary.
 
 Status: implemented and accepted by the user (2026-10-25).
-See [verification and review](slice03_verification.md).
+See [verification and review](verification/archive/slice03_verification.md).
 
 ## Ownership and identity
 

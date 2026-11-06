@@ -37,8 +37,7 @@ StairGeometry stairGeometry(GeometryView geometry, const FixtureDefinition& stai
         for (unsigned k = 0; k < 4; ++k) {
             const float t = std::clamp(
                 (p[k].x - stair.cell.x - .5f) * n.x + (p[k].z - stair.cell.y - .5f) * n.y + .5f, 0.f, 1.f);
-            const float shade =
-                dark ? std::min(1.f, brightness * std::pow(1 - t, sign > 0 ? 2.4f : 1.f)) : 1;
+            const float shade = dark ? std::min(1.f, brightness * std::pow(1 - t, sign > 0 ? 2.4f : 1.f)) : 1;
             quad.vertices[k] = {p[k], normal,
                                 std::abs(normal.y) > .5f ? p[k].x
                                                          : (std::abs(normal.x) > .5f ? p[k].z : p[k].x),
@@ -83,8 +82,13 @@ StairGeometry stairGeometry(GeometryView geometry, const FixtureDefinition& stai
               point(.94f, y1 + clearance + .06f, t1), point(.06f, y1 + clearance + .06f, t1)},
              {0, 1, 0}, surfaces.stairWall, false);
     }
-    face({point(.06f, sign, .9999f), point(.94f, sign, .9999f), point(.94f, sign + clearance, .9999f),
-          point(.06f, sign + clearance, .9999f)},
+    // Raised facade trim may project in front of the backing building's footprint.
+    // Close the tunnel ahead of it so the authored arch cannot pierce the dark end cap.
+    const bool buildingBacked = geometry.base().buildingOwned(stair.cell + n);
+    const float terminal = buildingBacked ? .94f : .9999f;
+    const float terminalFloor = buildingBacked ? sign * terminal : sign;
+    face({point(.06f, terminalFloor, terminal), point(.94f, terminalFloor, terminal),
+          point(.94f, terminalFloor + clearance, terminal), point(.06f, terminalFloor + clearance, terminal)},
          {float(-n.x), 0, float(-n.y)}, surfaces.stairWall);
     // Force the terminal panel fully black, including its near-coplanar entrance-facing vertices.
     for (auto& v : result.quads[result.count - 1].vertices)

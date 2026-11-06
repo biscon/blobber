@@ -2,6 +2,7 @@
 #include "platform/window.hpp"
 #include "platform/world_renderer.hpp"
 #include "support/allocations.hpp"
+#include "support/architecture_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/environment_fixtures.hpp"
@@ -43,6 +44,110 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
     check(cpu == gpu, "CPU/GPU exact visible object membership");
     return mismatch;
 }
+// Small generated scene: pack atmosphere affects surfaces and actors together,
+// while the same scene in dungeon lighting must remain pixel-identical.
+void checkPackFog(GpuResources& resources) {
+    test::ArchitectureFixture fixture;
+    const auto capture = [&](bool soft, bool outdoor) {
+        auto publication = fixture.publication();
+        publication.packs[0].horizon = {0, 0, 1}; // Distinguish haze from white test artwork.
+        if (soft)
+            publication.packs[0].daylightFog = {4, 12, .22f};
+        auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
+        auto definition = test::architectureWorld(20, {7, 15});
+        if (!outdoor)
+            for (auto& surface : definition.surfaces)
+                surface.environment = Environment::Dungeon;
+        const Map map(test::architectureRows(20, {7, 15}), definition);
+        const auto catalog = creationCatalog(true);
+        const NpcWorld placements(map, {7, 3}, {"goblin"}, {{{0}, {8, 14}, {0, 0}, Heading::North}});
+        ActorWorld actors(map, catalog, placements);
+        std::vector<NpcTimings> timings(1);
+        timings[0][0] = {{{100, 0, 0, 0}}, 1};
+        NpcAnimator animator(actors, timings);
+        animator.setTime(0);
+        MovementState movement;
+        movement.player = {{7, 3}, Heading::South};
+        WorldRenderer renderer(resources, assets);
+        renderer.supersampling(false);
+        const world_render::FrameInput input{map, movement, &actors, &animator.snapshot()};
+        renderer.stage(input);
+        renderer.commit();
+        renderer.render(input);
+        OwnedImage image(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+        check(image.value.data && image.value.width == viewWidth, "Fog fixture readback");
+        ImageFlipVertical(&image.value);
+        ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        const auto* pixels = static_cast<const unsigned char*>(image.value.data);
+        std::vector<unsigned char> result(pixels, pixels + viewWidth * viewHeight * 4);
+        if (outdoor) {
+            // Append samples selected using the renderer's own camera projection.
+            for (const world_render::Vec point :
+                 {world_render::Vec{7.5f, .8f, 15.2f}, world_render::Vec{8.5f, .3f, 14.5f}}) {
+                const auto p = world_render::project(renderer.visibility()->frame().camera, point);
+                const auto at = (int(p.y) * viewWidth + int(p.x)) * 4;
+                result.insert(result.end(), pixels + at, pixels + at + 4);
+            }
+        }
+        return result;
+    };
+    const auto legacy = capture(false, true), haze = capture(true, true);
+    const auto first = std::size_t(viewWidth * viewHeight * 4);
+    for (unsigned i = 0; i < 2; ++i)
+        check(haze[first + i * 4] > legacy[first + i * 4] + 25,
+              "Capped daylight haze preserves distant surface and actor color");
+    check(capture(false, false) == capture(true, false),
+          "Pack daylight overrides leave dungeon pixels identical");
+}
+void checkViewDistance(GpuResources& resources) {
+    test::ArchitectureFixture fixture;
+    for (float distance : {16.f, 40.f}) {
+        auto publication = fixture.publication();
+        publication.packs[0].viewDistance = distance;
+        publication.packs[0].daylightFog = {4, 12, 0}; // Isolate clipping from atmosphere.
+        auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
+        const Map map(test::architectureRows(32, {7, 26}), test::architectureWorld(32, {7, 26}));
+        const auto catalog = creationCatalog(true);
+        const NpcWorld placements(map, {7, 5}, {"goblin"}, {{{0}, {8, 25}, {0, 0}, Heading::North}});
+        ActorWorld actors(map, catalog, placements);
+        std::vector<NpcTimings> timings(1);
+        timings[0][0] = {{{100, 0, 0, 0}}, 1};
+        NpcAnimator animator(actors, timings);
+        animator.setTime(0);
+        MovementState movement;
+        movement.player = {{7, 5}, Heading::South};
+        WorldRenderer renderer(resources, assets);
+        renderer.supersampling(false);
+        const world_render::FrameInput input{map, movement, &actors, &animator.snapshot()};
+        renderer.stage(input);
+        renderer.commit();
+        renderer.render(input);
+        const auto& frame = renderer.visibility()->frame();
+        check(frame.picking.exposed(0) == (distance == 40),
+              "Distant actor is drawn and picked only inside the selected clip range");
+        GpuLease<TargetHandle> ids(resources, resources.createTarget(viewWidth, viewHeight));
+        compare(resources, renderer, ids.get());
+        OwnedImage image(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+        ImageFlipVertical(&image.value);
+        ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        const auto wall = world_render::project(frame.camera, {7.5f, .8f, 26.2f});
+        const auto pixel = std::size_t(int(wall.y)) * viewWidth + int(wall.x);
+        const auto red = static_cast<const unsigned char*>(image.value.data)[pixel * 4];
+        check(distance == 40 ? red < 200 : red == 255,
+              "GPU draws distant house instead of sky only with extended clip plane");
+        const auto transfers = resources.transfers();
+        allocations = 0;
+        watching = true;
+        for (unsigned i = 0; i < 4; ++i) {
+            movement.player.heading = Heading(i);
+            renderer.render(input);
+        }
+        watching = false;
+        check(!allocations && resources.transfers().uploads == transfers.uploads,
+              "Extended GPU views allocate and upload no frame storage");
+    }
+    std::cout << "Default/40-cell CPU-GPU clipping, distant actor and allocation checks passed\n";
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -51,7 +156,7 @@ int main(int argc, char** argv) {
         auto assets = std::make_shared<const world_assets::CpuAssets>(fixture.publication());
         const auto catalog = creationCatalog(true);
         const auto map = test::rendererHeightMap();
-        const auto hub = sanctuaryMap();
+        const auto hub = courtyardMap();
         const NpcWorld placements(map, {3, 5}, {"goblin"}, {{{0}, {3, 2}, {0, 0}, Heading::South}});
         ActorWorld actors(map, catalog, placements);
         NpcAnimator animator(actors, fixture.timings);
@@ -132,6 +237,8 @@ int main(int argc, char** argv) {
             std::cout << "Height CPU/GPU edge differences: " << differences
                       << "; allocations: " << allocations << '\n';
         }
+        checkPackFog(resources);
+        checkViewDistance(resources);
         const auto counts = resources.counts();
         check(counts.textures == 0 && counts.targets == 0 && counts.meshes == 0 && counts.shaders == 0,
               "Height resources released before context");

@@ -3,9 +3,40 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <stdexcept>
 namespace blobber {
+const char* libraryFeedback(const LibraryResult& result) noexcept {
+    if (result.error != LibraryError::None)
+        std::fprintf(stderr, "Character library: %s\n", result.message.data());
+    switch (result.error) {
+    case LibraryError::None:
+        return "";
+    case LibraryError::Full:
+        return "Your character library is full. Delete a character before saving another.";
+    case LibraryError::Stale:
+        return "Your character library changed. Reopen it and try again.";
+    case LibraryError::NotFound:
+        return "That character is no longer available.";
+    case LibraryError::Busy:
+        return "Your character library is in use. Try again shortly.";
+    case LibraryError::DurabilityUncertain:
+        return "Couldn't confirm the character was saved. Reopen your library before trying again.";
+    case LibraryError::RecoveryRequired:
+        return "Couldn't open your character library. Your existing files have been kept.";
+    case LibraryError::Missing:
+        return "Your character library could not be found.";
+    case LibraryError::Invalid:
+    case LibraryError::Unsupported:
+        return "Couldn't read the character. Check your choices or choose another character.";
+    case LibraryError::Io:
+    case LibraryError::Entropy:
+    case LibraryError::Exhausted:
+        return "Couldn't update your character library. Please try again.";
+    }
+    return "Your character library is unavailable.";
+}
 namespace {
 bool contains(const char* name, const char* query) noexcept {
     const auto n = std::strlen(name), q = std::strlen(query);

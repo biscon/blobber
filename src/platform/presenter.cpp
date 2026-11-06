@@ -9,9 +9,19 @@
 #include <cstdio>
 #include <stdexcept>
 namespace blobber {
+void drawWorldViewport(const Texture2D& texture, bool flipped, WorldViewTransform transform) {
+    constexpr float scale = float(gameWidth) / artWidth;
+    const auto origin = transform.forward({float(viewX), float(viewY)});
+    BeginScissorMode(int(viewX * scale), int(viewY * scale), int(viewWidth * scale), int(viewHeight * scale));
+    DrawTexturePro(texture, {0, 0, float(viewWidth), float(viewHeight) * (flipped ? -1 : 1)},
+                   {origin.x * scale, origin.y * scale, viewWidth * scale * transform.zoom,
+                    viewHeight * scale * transform.zoom}, {0, 0}, 0, WHITE);
+    EndScissorMode();
+}
 Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets, PreparationWorker* worker)
     : worker_(worker), resources_(resources), assetsMenuPath_(assets / "ui/menu-background.png"),
-      fonts_(assets / "fonts"), uiArt_(resources_, assets / "ui") {
+      fonts_(assets / "fonts"), fontMemory_(resources_, fonts_.gpuBytes()),
+      uiArt_(resources_, assets / "ui") {
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);
@@ -111,9 +121,8 @@ void Presenter::compose(const Texture2D& texture, bool flipped, const MovementSt
     SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_POINT);
     BeginTextureMode(resources_.target(game_));
     ClearBackground({12, 18, 18, 255});
-    constexpr float scale = float(gameWidth) / artWidth;
-    DrawTexturePro(texture, {0, 0, float(viewWidth), float(viewHeight) * (flipped ? -1 : 1)},
-                   {viewX * scale, viewY * scale, viewWidth * scale, viewHeight * scale}, {0, 0}, 0, WHITE);
+    displayedWorld_ = hud ? hud->worldTransform : WorldViewTransform{};
+    drawWorldViewport(texture, flipped, displayedWorld_);
     EndTextureMode();
     BeginTextureMode(resources_.target(ui_));
     ClearBackground(BLANK);
@@ -152,6 +161,7 @@ void Presenter::prepareMenu() {
 void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context) {
     saving_ = false;
     loadingLabel_[0] = 0;
+    displayedWorld_ = {};
     fade_ = 0;
     SetTextureFilter(resources_.target(game_).texture, TEXTURE_FILTER_BILINEAR);
     BeginTextureMode(resources_.target(game_));
@@ -180,6 +190,7 @@ void Presenter::capture(const std::filesystem::path& path, int width, int height
     // Diagnostic-only allocation: the normal frame loop reuses its two targets.
     GpuResources captureResources;
     const auto composite = captureResources.createTarget(width, height);
+    GpuExternalLease captureMemory(resources_, captureResources.counts().bytes);
     BeginTextureMode(captureResources.target(composite));
     ClearBackground(BLACK);
     const auto fit = aspectFit(width, height);

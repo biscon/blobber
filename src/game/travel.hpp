@@ -2,9 +2,20 @@
 #include "game/inventory.hpp"
 #include "world/fixtures.hpp"
 namespace blobber {
-enum class TravelKind : std::uint8_t { Stairs, Recall, Waypoint };
+enum class CampaignLocationId : std::uint8_t { City, FloorOne, FloorTwo, FloorThree, Inn };
+constexpr unsigned campaignLocationCount = 5;
+constexpr bool dungeonLocation(unsigned i) noexcept {
+    return i >= 1 && i <= 3;
+}
+struct DoorwayId {
+    std::uint64_t world = 0;
+    std::uint16_t slot = UINT16_MAX;
+};
+enum class TravelKind : std::uint8_t { Stairs, Recall, Waypoint, Doorway };
 inline const char* travelKindName(TravelKind kind) noexcept {
     switch (kind) {
+    case TravelKind::Doorway:
+        return "doorway";
     case TravelKind::Stairs:
         return "stairs";
     case TravelKind::Recall:
@@ -18,6 +29,7 @@ struct TravelRequest {
     std::uint64_t revision = 0, world = 0;
     TravelKind kind = TravelKind::Stairs;
     FixtureRequest fixture;
+    DoorwayId doorway;
     unsigned depth = 0;
     ItemHandle supply;
     std::uint64_t inventoryRevision = 0;

@@ -88,7 +88,7 @@ speed, stealth or action-economy implementations. No perception rolls, hearing,
 shared alerts or surprise are active. Nimble Escape remains inactive by explicit
 user choice; decide its adaptation in slice 08 with disengagement. Existing melee
 rules, target selection and front-slot advancement remain authoritative.
-See [AI design](goblin_ai_design.md) and [verification](slice07_verification.md).
+See [AI design](goblin_ai_design.md) and [verification](verification/archive/slice07_verification.md).
 
 
 ## Slice 08 hybrid encounter adaptations
@@ -209,7 +209,7 @@ Projectile spells use immediate release and 180–450 ms travel; Inflict Wounds
 strikes at 200 ms; all other consequences occur at casting time. These timings,
 conservative grid visibility, pause/full-round clocks, UI confirmation rules and
 bounded capacities are project mechanics. See [spells design](spells_design.md)
-and [verification](slice10_verification.md).
+and [verification](verification/archive/slice10_verification.md).
 
 
 ## Slice 11 inventory, ammunition and potions
@@ -255,7 +255,7 @@ and the SRD's one-HP-at-start requirement. Require existing safe Exploration plu
 settled presentation/no dying ally. Skip gameplay time without AI movement.
 Camp kits, authored sanctuaries, instantaneous transactions and cosmetic camp
 playback are project adaptations. Implementation and checks are recorded in
-[slice 12 verification](slice12_verification.md).
+[slice 12 verification](verification/archive/slice12_verification.md).
 
 ## Character-creation interlude (approved 2026-10-28; updated 2026-10-29)
 
@@ -293,13 +293,13 @@ Reactions, other racial traits, progression and creation UI remain deferred.
 Source locations: Color Spray p.125; False Life p.142; Grease p.150; Guidance p.151;
 Poison Spray p.169; Ray of Frost p.174; Resistance p.175; Sanctuary p.176;
 Shocking Grasp p.179; Sleep p.180; temporary HP pp.98–99; conditions pp.358–359.
-Implementation and automated verification are recorded in the [handoff](slice121_verification.md).
+Implementation and automated verification are recorded in the [handoff](verification/archive/slice121_verification.md).
 User acceptance remains pending; these are project adaptations, not unchanged tabletop rules.
 
 ## Slice 12.2 — implemented, accepted and closed (2026-10-29)
 
 [Design and exact selections](character_builds_design.md),
-[verification/handoff](slice122_verification.md). The local SRD's High Elf cantrip,
+[verification/handoff](verification/archive/slice122_verification.md). The local SRD's High Elf cantrip,
 Wizard spellbook/preparation, Cleric preparation and Life Domain grants now feed
 explicit character-owned selections. Racial wizard cantrips use Intelligence,
 including on Clerics and martial classes. Mana and the existing class feature/action
@@ -350,7 +350,7 @@ explicit project adaptations. No bonus-action/reaction framework or unsupported
 features are claimed. Fixed subclass paths are Champion, Life, Thief and Evocation;
 Turn Undead, skills/Expertise, locks/traps/climbing, spell copying/Evocation Savant,
 upcasting and scenery destruction remain deferred. The eight spell implementations
-and limits are documented in the design; [verification and review](slice13_verification.md)
+and limits are documented in the design; [verification and review](verification/archive/slice13_verification.md)
 record the delivered behavior. The user accepted slice 13 and milestone C on
 2026-10-30, including existing Action Surge activation through class features.
 No further rule adaptation was introduced by acceptance.

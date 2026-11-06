@@ -106,7 +106,7 @@ void placeFixtures(FloorLayout& f) noexcept {
                     defs.npcExcluded.set(unsigned(y * f.width + x));
     }
 }
-Failure validateFixtures(const FloorLayout& f) noexcept {
+Failure validateFixtures(const FloorLayout& f, const CellMask* collision) noexcept {
     if (f.width < 3 || f.height < 3 || f.width > 40 || f.height > 40 || f.roomCount > maxRooms ||
         f.connectionCount > maxConnections || !floorCell(f, f.spawn.cell))
         return {Error::Capacity};
@@ -188,6 +188,8 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
     std::array<std::uint16_t, maxCells * 4> queue{};
     unsigned head = 0, tail = 0;
     const auto push = [&](Cell c, unsigned state) {
+        if (!floorCell(f, c) || (collision && (*collision)[unsigned(c.y * f.width + c.x)]))
+            return;
         const auto n = unsigned(c.y * f.width + c.x) + state * maxCells;
         if (!seen[n]) {
             seen[n] = 1;
@@ -205,7 +207,7 @@ Failure validateFixtures(const FloorLayout& f) noexcept {
             if (key >= 0 && fixtureReachable(defs.entries[key], c, Heading(h)))
                 push(c, state | 1);
             const auto next = c + forward(Heading(h));
-            if (!floorCell(f, next))
+            if (!floorCell(f, next) || (collision && (*collision)[unsigned(next.y * f.width + next.x)]))
                 continue;
             bool blocked = false;
             for (unsigned i = 0; i < defs.count; ++i)

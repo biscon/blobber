@@ -69,15 +69,15 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
     if (!f || (floor_.definition().discovery && !floor_.known(r.id.slot)))
         return {};
     if (r.revision != floor_.revision())
-        return {false, false, "Stale fixture request."};
+        return {false, false, "That is no longer available. Try again."};
     if (actionBusy())
         return {false, false,
                 opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};
     const auto pose = movement().player;
     if (!fixtureReachable(*f, pose.cell, pose.heading) || !map_.reach(pose.cell, f->cell))
-        return {false, false, "Move closer and face the fixture."};
+        return {false, false, "Move closer and face it."};
     if (!combat_.settledRecovery(pose, timeMs_) || effects_.area(pose.cell))
-        return {false, false, "Fixtures require settled safe exploration."};
+        return {false, false, "Wait until it is safe to interact."};
     bool able = false;
     for (std::uint16_t i = 0; i < 4; ++i)
         able |= effects_.canAct(rules::CharacterId{i});
@@ -88,7 +88,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
     if (f->kind == FixtureKind::GuardianGate)
         return {objective_.completed, false,
                 objective_.completed ? "Guardians defeated. Gate open; rewards beyond."
-                                     : "Defeat all designated guardians to open this gate."};
+                                     : "Defeat the guardians to open this gate."};
     if (f->kind != FixtureKind::Door && f->kind != FixtureKind::Key)
         return {false, false,
                 objective_.completed ? "Objective secured. Travel is not available yet."
@@ -114,7 +114,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
     }
     const bool firstOpening = !floor_.completed(r.id.slot);
     if (floor_.revision() == UINT64_MAX || floor_.geometryRevision() == UINT64_MAX)
-        return {false, false, "Fixture revision exhausted."};
+        return {false, false, "Couldn't interact. Save your progress and restart the game."};
     if (!preview) {
         events_.clear();
         if (f->kind == FixtureKind::Door && !firstOpening) {
@@ -128,7 +128,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
                 ++doors_.revision;
             }
         } else if (!completeFixture(r.id.slot))
-            return {false, false, "Fixture unavailable."};
+            return {false, false, "That is no longer available."};
         if (f->kind == FixtureKind::Key)
             party_.questKeys_ |= std::uint8_t(1u << f->key);
         audio_.emit({f->kind == FixtureKind::Key ? "key.pickup"

@@ -1,0 +1,14 @@
+{
+  "tool": "built-in imagegen",
+  "date": "2026-11-05",
+  "prompts": [
+    {
+      "name": "soil-master",
+      "prompt": "Use case: stylized-concept. Asset type: seamless square opaque ground material for a retro pixel-art medieval fantasy game. Primary request: real exposed dark brown garden soil viewed orthographically straight down, organic fine crumbly earth and uneven loose clods, a few tiny pebbles and short root fibers. Earthy umber, warm brown and muted taupe, softly painted depth with deliberate chunky pixel color clusters. No paving, no bricks, no tiles, no large rocks, no cracks forming a grid, no plant canopy, no grass carpet, no border, no text, no watermark. Entire image is soil, full bleed flat tile without perspective or directional cast shadows. Restrained low contrast; individual clumps readable at 256 pixels, not photographic noise. Intended for small planted beds among warm limestone cobblestone streets; must look unmistakably like loose dirt rather than recolored paving."
+    },
+    {
+      "name": "marble-master",
+      "prompt": "Use case: stylized-concept. Square seamless opaque game material texture: pale off-white weathered marble for a small medieval town fountain. Orthographic flat full-bleed surface, softly painted ivory white with faint cool-gray mineral veins and occasional subdued silver-gray mottling. Distinctly white stone, substantially brighter and less yellow than sandstone or limestone paving. Hand-painted retro pixel art using deliberate chunky clusters, restrained contrast, no photoreal noise, no glossy reflection or directional shadows. Fine irregular veins, no tile grid, no blocks, no mortar joints, no cracks resembling cobblestones, no ornaments, no objects, no border, no text or watermark. Texture will be sampled at 256 texels per game cell on a low-poly fountain under simplified lighting."
+    }
+  ]
+}

@@ -155,6 +155,7 @@ inline void creatureMaskExposure() {
     auto publication = fixture.publication();
     publication.appearances[0].height = 1;
     world_assets::CpuAssets assets(std::move(publication));
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     auto rows = std::vector<std::string>(9, std::string(9, '.'));
     rows.front() = rows.back() = std::string(9, '#');
     for (auto& row : rows)
@@ -197,7 +198,7 @@ inline void creatureMaskExposure() {
             if (picking.slot(x, y) == 0) {
                 const float height =
                     pipeline->frame().camera.position.y +
-                    (viewHeight * .34f - y - .5f) * picking.depth(y * viewWidth + x) / world_render::focal();
+                    (viewHeight * .40f - y - .5f) * picking.depth(y * viewWidth + x) / world_render::focal();
                 check(height >= 1.f - 1e-5f,
                       "Only body samples above the closed leaf survive its intersection mask");
             }

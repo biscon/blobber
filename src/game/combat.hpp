@@ -5,6 +5,8 @@
 #include "game/effects.hpp"
 #include "game/npc_ai.hpp"
 #include "game/npc_animation.hpp"
+#include "game/spell_visuals.hpp"
+#include "game/support_visuals.hpp"
 #include <cassert>
 #include <cstdlib>
 
@@ -79,6 +81,7 @@ struct CombatOutcome {
 };
 struct CombatEvents {
     audio::Journal* audioJournal = nullptr;
+    SupportVisualJournal* supportJournal = nullptr;
     static constexpr std::size_t capacity = 8192;
     // Allocate once at owner construction; never resize during simulation.
     std::vector<CombatOutcome> values = std::vector<CombatOutcome>(capacity);
@@ -95,6 +98,8 @@ struct CombatEvents {
         if (count >= capacity)
             std::abort(); // Internal bound violation must never drop consequences.
         values[count++] = out;
+        if (supportJournal)
+            supportJournal->combat(out);
         if (audioJournal)
             audioJournal->combat(out);
     }
@@ -162,6 +167,7 @@ class CombatController {
     CombatController& operator=(const CombatController&) = delete;
     const CombatSnapshot& snapshot() const noexcept { return state_; }
     const AttackVisualSnapshot& attacks() const noexcept { return visuals_; }
+    const SpellVisualSnapshot& spellVisuals() const noexcept { return spellVisuals_.snapshot(); }
     void resolveImpacts(Player pose, std::uint64_t now, CombatEvents&, std::uint64_t elapsed = 0) noexcept;
     void reconcileEffects(std::uint64_t now, CombatEvents&) noexcept;
     bool contact(Player pose, std::uint64_t now = 0) noexcept;
@@ -256,6 +262,8 @@ class CombatController {
     void spellPulse(ActorId, rules::CharacterId, rules::SpellKind, Player, std::uint64_t) noexcept;
     void applyDamage(CombatOutcome&, std::uint64_t, CombatEvents&) noexcept;
     AttackVisualSnapshot visuals_;
+    SpellVisualJournal spellVisuals_;
+    SpellTargetVisual spellTarget(const CombatOutcome&, std::uint64_t) const noexcept;
     std::uint64_t nextAttack_ = 1;
     bool drainedThisUpdate_ = false;
     static constexpr std::size_t timelineCapacity = attackCapacity + rules::partySize * 2;

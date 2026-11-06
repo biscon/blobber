@@ -18,7 +18,8 @@ void HudPainter::camp(const HudSnapshot& h) const {
     fill(hudLayout::viewport, background);
     if (art)
         art->camp(c.playing ? unsigned(c.elapsedMs / 200) % 4 : 0, campLayout::art);
-    text("MAKE CAMP", viewX + 14, viewY + 8, bright, UiTextStyle::Display);
+    text(h.campaign && c.preview.sanctuary ? "REST AT THE INN" : "MAKE CAMP", viewX + 14, viewY + 8, bright,
+         UiTextStyle::Display);
     text("A quiet moment between battles.", viewX + 14, viewY + 22, gold);
     fill(campLayout::panel, panel);
     const bool shortRest = c.request.kind == RestKind::Short;
@@ -81,7 +82,9 @@ void HudPainter::camp(const HudSnapshot& h) const {
                           c.supplier[0] ? c.supplier : "--", c.preview.kits);
         else
             std::snprintf(line, sizeof(line), "%s | Camp kits: %u",
-                          c.preview.sanctuary && !shortRest ? "Sanctuary: no cost" : "No supplies required",
+                          c.preview.sanctuary && !shortRest
+                              ? (h.campaign ? "Inn: no cost" : "Safe rest: no cost")
+                              : "No supplies required",
                           c.preview.kits);
         clipped(line, 14, 279, 323, gold, UiTextStyle::Small);
         if (!c.preview)

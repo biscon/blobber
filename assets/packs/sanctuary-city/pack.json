@@ -1,0 +1,169 @@
+{
+  "id": "sanctuary-city",
+  "worldScale": 1.0,
+  "horizon": [
+    0.6,
+    0.65,
+    0.71
+  ],
+  "wall": "packs/sanctuary-city/source/wall.png",
+  "floor": "packs/sanctuary-city/source/paving.png",
+  "ceiling": "packs/sanctuary-city/source/ceiling.png",
+  "stairWall": "packs/sanctuary-city/source/wall.png",
+  "stairFloor": "packs/sanctuary-city/source/paving.png",
+  "door": "packs/dungeon/source/door.png",
+  "lockedDoor": "packs/dungeon/source/door-locked.png",
+  "doorEdge": "packs/dungeon/source/door.png",
+  "crest": "packs/dungeon/source/crest.png",
+  "vine": "packs/dungeon/source/vine.png",
+  "sky": "packs/dungeon/source/sky.png",
+  "guardianEmblem": "packs/dungeon/source/guardian-emblem.png",
+  "buildings": [
+    {
+      "id": "low-house",
+      "parts": [
+        "packs/sanctuary-city/models/low-house.mesh.json",
+        "packs/sanctuary-city/models/low-house-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "tall-house",
+      "parts": [
+        "packs/sanctuary-city/models/tall-house.mesh.json",
+        "packs/sanctuary-city/models/tall-house-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "low-house-hip",
+      "parts": [
+        "packs/sanctuary-city/models/low-house-hip.mesh.json",
+        "packs/sanctuary-city/models/low-house-hip-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "inn",
+      "parts": [
+        "packs/sanctuary-city/models/inn.mesh.json",
+        "packs/sanctuary-city/models/inn-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-inn-sign-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "smithy",
+      "parts": [
+        "packs/sanctuary-city/models/smithy.mesh.json",
+        "packs/sanctuary-city/models/smithy-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-smithy-sign-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "provisioner",
+      "parts": [
+        "packs/sanctuary-city/models/provisioner.mesh.json",
+        "packs/sanctuary-city/models/provisioner-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-provisioner-sign-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "sanctuary",
+      "parts": [
+        "packs/sanctuary-city/models/sanctuary.mesh.json",
+        "packs/sanctuary-city/models/sanctuary-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "dungeon-entrance",
+      "parts": [
+        "packs/sanctuary-city/models/dungeon-entrance.mesh.json",
+        "packs/sanctuary-city/models/dungeon-entrance-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "city-gate",
+      "parts": [
+        "packs/sanctuary-city/models/city-gate.mesh.json",
+        "packs/sanctuary-city/models/city-gate-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "boundary-wall",
+      "parts": [
+        "packs/sanctuary-city/models/boundary-wall.mesh.json",
+        "packs/sanctuary-city/models/boundary-wall-part-1.mesh.json"
+      ]
+    },
+    {
+      "id": "courtyard-tree",
+      "parts": [
+        "packs/sanctuary-city/models/courtyard-tree-bark.mesh.json",
+        "packs/sanctuary-city/models/courtyard-tree-foliage.mesh.json"
+      ]
+    },
+    {
+      "id": "low-house-hip-ivy",
+      "parts": [
+        "packs/sanctuary-city/models/low-house-hip.mesh.json",
+        "packs/sanctuary-city/models/low-house-hip-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-low-house-hip-ivy-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "tall-house-ivy",
+      "parts": [
+        "packs/sanctuary-city/models/tall-house.mesh.json",
+        "packs/sanctuary-city/models/tall-house-part-1.mesh.json",
+        "packs/sanctuary-city/models/dressing-tall-house-ivy-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "courtyard-garden",
+      "parts": [
+        "packs/sanctuary-city/models/courtyard-tree-bark.mesh.json",
+        "packs/sanctuary-city/models/courtyard-tree-foliage.mesh.json",
+        "packs/sanctuary-city/models/dressing-courtyard-garden-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-courtyard-garden-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "lane-garden",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-lane-garden-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-lane-garden-cutout.mesh.json"
+      ]
+    },
+    {
+      "id": "east-garden",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-east-garden-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-east-garden-cutout.mesh.json",
+        "packs/sanctuary-city/models/dressing-east-tree-bark.mesh.json",
+        "packs/sanctuary-city/models/dressing-east-tree-foliage.mesh.json"
+      ]
+    },
+    {
+      "id": "market-produce",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-market-produce-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "market-grain",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-market-grain-opaque.mesh.json"
+      ]
+    },
+    {
+      "id": "fountain",
+      "parts": [
+        "packs/sanctuary-city/models/dressing-fountain-opaque.mesh.json",
+        "packs/sanctuary-city/models/dressing-fountain-water.mesh.json"
+      ]
+    }
+  ],
+  "daylightFog": [
+    4,
+    12,
+    0.22
+  ],
+  "viewDistance": 40
+}

@@ -13,7 +13,7 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
         return {InventoryError::Moving,
                 opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};
     if (!combat_.safeRecovery(movement().player))
-        return {InventoryError::Unsafe, "Dropping requires safe exploration."};
+        return {InventoryError::Unsafe, "Wait until it is safe to drop items."};
     const auto* stack = party_.inventory().stack(handle);
     if (revision != party_.inventory().revision())
         return {InventoryError::Stale, inventoryMessage(InventoryError::Stale)};
@@ -22,10 +22,10 @@ PickupResult GameSession::dropItem(ItemHandle handle, std::uint64_t revision, bo
     const auto cell = movement().player.cell;
     const auto& defs = floor_.definition();
     if (defs.landingCount && defs.npcExcluded[std::size_t(cell.y * map_.width() + cell.x)])
-        return {InventoryError::Unavailable, "Keep the protected stairs room clear."};
+        return {InventoryError::Unavailable, "Keep the entrance clear."};
     const auto ticket = loot_.availableDrop();
     if (!ticket)
-        return {InventoryError::Full, "Floor loot is full. Pick up a dropped stack first."};
+        return {InventoryError::Full, "Too many items on the ground. Pick some up first."};
     const auto item = stack->item;
     const auto quantity = stack->quantity;
     const auto result = party_.releaseItem(handle, revision, preview);
@@ -58,7 +58,7 @@ PickupResult GameSession::containerAccess(ContainerId id) const noexcept {
     if (actionBusy())
         return {InventoryError::Moving, "Wait until actions finish."};
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
-        return {InventoryError::Unsafe, "Chests require settled safe exploration."};
+        return {InventoryError::Unsafe, "Wait until it is safe to open the chest."};
     bool able = false;
     for (std::uint16_t i = 0; i < 4; ++i)
         able |= effects_.canAct(rules::CharacterId{i});
@@ -110,7 +110,7 @@ PickupResult GameSession::lootAccess(LootId id) const noexcept {
         return {InventoryError::Moving,
                 opening() ? "Wait until the door finishes moving." : "Wait until movement finishes."};
     if (!combat_.safeRecovery(movement().player))
-        return {InventoryError::Unsafe, "Loot requires safe exploration."};
+        return {InventoryError::Unsafe, "Wait until it is safe to collect loot."};
     if (!(s->cell == movement().player.cell) &&
         !inMeleeFront(map_, movement().player.cell, movement().player.heading, s->cell))
         return {InventoryError::Unavailable, "Move closer and face the loot bag."};
@@ -139,6 +139,14 @@ PickupResult GameSession::pickup(const PickupRequest& r, bool preview) noexcept 
     }
     return {};
 }
+bool GameSession::atSanctuary() const noexcept {
+    if (recovery_.freeRestEverywhere)
+        return true;
+    for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
+        if (recovery_.sanctuaries[i] == movement().player.cell)
+            return true;
+    return false;
+}
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     if (!runActive()) {
         RestPreview out;
@@ -147,8 +155,7 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     }
     RestPreview p;
     p.elapsedMs = r.kind == RestKind::Short ? 3600000 : 28800000;
-    for (std::size_t i = 0; i < recovery_.sanctuaryCount; ++i)
-        p.sanctuary |= recovery_.sanctuaries[i] == movement().player.cell;
+    p.sanctuary = atSanctuary();
     const auto supplies = party_.campSupplies();
     p.kits = supplies.kits;
     p.supply = supplies.supply;

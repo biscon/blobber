@@ -10,6 +10,7 @@ int main(int argc, char**) {
     try {
         test::VisibilityFixture fixture;
         world_assets::CpuAssets assets(fixture.publication());
+        const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         const auto catalog = creationCatalog(true);
         const auto generated = generation::generate({5, 1});
         check(bool(generated), "Benchmark generation");

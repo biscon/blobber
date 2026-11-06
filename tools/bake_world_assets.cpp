@@ -52,11 +52,12 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     const auto inputs = sourceFingerprints(source);
     world_assets::Writer writer(output);
     auto add = [&](const std::string& name, const fs::path& path, bool sprite, unsigned cutoff = 0,
-                   world_assets::Anchor anchor = {}, bool crop = false) {
+                   world_assets::Anchor anchor = {}, bool crop = false, bool cutoutMaterial = false) {
         unsigned w = 0, h = 0;
         auto rgba = pixels(path, w, h);
-        return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop);
+        return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop, cutoutMaterial);
     };
+    std::map<std::string, std::uint16_t> preparedPackTextures;
     std::vector<world_assets::Pack> packs;
     std::vector<world_assets::PropMesh> meshes;
     std::vector<fs::path> packDirectories;
@@ -69,9 +70,17 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         world_assets::Pack pack;
         pack.id = manifest.at("id");
         pack.worldScale = manifest.value("worldScale", 1.f);
+        pack.viewDistance = manifest.value("viewDistance", pack.viewDistance);
+        pack.daylightFog = manifest.value("daylightFog", pack.daylightFog);
         pack.horizon = manifest.at("horizon").get<std::array<float, 3>>();
         const auto addPack = [&](const std::string& role, bool sprite, unsigned maximum, bool material) {
             const auto path = source / relative(manifest.at(role).get<std::string>());
+            const auto key = path.lexically_normal().generic_string() + ":" + std::to_string(sprite) + ":" +
+                             std::to_string(maximum) + ":" + std::to_string(material) + ":" +
+                             std::to_string(role == "sky");
+            const auto existing = preparedPackTextures.find(key);
+            if (existing != preparedPackTextures.end())
+                return existing->second;
             OwnedImage image(LoadImage(path.string().c_str()));
             if (!image.value.data || image.value.width > 4096 || image.value.height > 4096)
                 throw std::runtime_error("Invalid pack artwork: " + path.string());
@@ -105,9 +114,11 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
                         }
                     }
             }
-            return std::uint16_t(writer.add("pack/" + pack.id + "/" + role, unsigned(image.value.width),
-                                            unsigned(image.value.height), sprite, rgba, sprite ? 16 : 0, {},
-                                            material));
+            const auto id = std::uint16_t(
+                writer.add("pack/" + pack.id + "/" + role, unsigned(image.value.width),
+                           unsigned(image.value.height), sprite, rgba, sprite ? 16 : 0, {}, material));
+            preparedPackTextures.emplace(key, id);
+            return id;
         };
         for (const auto* role : {"wall", "floor", "ceiling", "stairWall", "stairFloor"})
             pack.materials[pack.materialCount++] = addPack(role, false, 256, true);
@@ -147,7 +158,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         if (manifest.contains("models")) {
             unsigned slot = 0;
             for (const auto& path : manifest["models"]) {
-                if (slot >= 4 || meshes.size() >= 16)
+                if (slot >= 4 || meshes.size() >= world_assets::meshCapacity)
                     throw std::runtime_error("Too many prop meshes");
                 const auto model = read(source / relative(path.get<std::string>()));
                 const auto texture = model.at("texture").get<std::string>();
@@ -183,13 +194,67 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
             if (slot != 4)
                 throw std::runtime_error("Expected chest variants, cage and rack");
         }
+        if (manifest.contains("buildings")) {
+            if (!manifest["buildings"].is_array() ||
+                manifest["buildings"].size() > world_assets::staticModelCapacity)
+                throw std::runtime_error("Building catalog capacity exceeded");
+            std::map<std::string, unsigned> atlases;
+            std::map<std::string, std::uint16_t> sharedParts;
+            for (const auto& binding : manifest["buildings"]) {
+                world_assets::StaticModel building;
+                building.id = binding.at("id").get<std::string>();
+                const auto& parts = binding.at("parts");
+                if (!parts.is_array() || parts.empty() || parts.size() > world_assets::staticPartCapacity)
+                    throw std::runtime_error("Building part capacity exceeded");
+                for (const auto& path : parts) {
+                    const auto sourcePath = path.get<std::string>();
+                    const auto reused = sharedParts.find(sourcePath);
+                    if (reused != sharedParts.end()) {
+                        building.parts.push_back(reused->second);
+                        continue;
+                    }
+                    if (meshes.size() >= world_assets::meshCapacity)
+                        throw std::runtime_error("World mesh capacity exceeded");
+                    const auto model = read(source / relative(sourcePath));
+                    const auto texture = model.at("texture").get<std::string>();
+                    const bool cutout = model.value("cutout", false);
+                    auto found = atlases.find(texture);
+                    unsigned textureId;
+                    if (found == atlases.end()) {
+                        if (pack.materialCount == pack.materials.size())
+                            throw std::runtime_error("Building material palette full");
+                        textureId =
+                            add("pack/" + pack.id + "/atlas/" + texture, source / relative(texture), cutout,
+                                cutout ? world_assets::meshAlphaThreshold - 1 : 0, {}, false, cutout);
+                        atlases.emplace(texture, textureId);
+                        pack.materials[pack.materialCount++] = std::uint16_t(textureId);
+                    } else
+                        textureId = found->second;
+                    world_assets::PropMesh mesh;
+                    mesh.name = pack.id + "/" + model.at("name").get<std::string>();
+                    mesh.texture = std::uint16_t(textureId);
+                    mesh.architecture = true;
+                    mesh.cutout = cutout;
+                    mesh.water = model.value("water", false);
+                    if (!model.at("vertices").is_array() || model.at("vertices").size() > 6000)
+                        throw std::runtime_error("Building mesh capacity exceeded");
+                    mesh.vertices = model.at("vertices").get<std::vector<std::array<float, 8>>>();
+                    sharedParts.emplace(sourcePath, std::uint16_t(meshes.size()));
+                    building.parts.push_back(std::uint16_t(meshes.size()));
+                    meshes.push_back(std::move(mesh));
+                }
+                pack.buildings.push_back(std::move(building));
+            }
+        }
         packs.push_back(std::move(pack));
     }
-    if (packs.empty() || packs.size() > 8)
-        throw std::runtime_error("Expected one to eight world asset packs");
+    if (packs.empty() || packs.size() > world_assets::packCapacity)
+        throw std::runtime_error("World asset pack capacity exceeded");
     for (const auto* name : {"grease", "web", "spiritual_weapon"})
         add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
             source / "effects" / (std::string(name) + ".png"), true);
+    if (std::filesystem::exists(source / "packs/sanctuary-inn/source/flame.png"))
+        add("effect/hearth-flame", source / "packs/sanctuary-inn/source/flame.png", true);
     // Code-authored source artwork; reusable base images replace perspective rasters.
     for (unsigned kind = 0; kind < 7; ++kind) {
         constexpr const char* names[]{"arrow", "tip", "feathers", "slash", "glint", "preview", "white"};
@@ -306,6 +371,46 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         add(std::string("fixture/") + name, source / "fixtures" / (std::string(name) + ".png"), true);
     if (sourceFingerprints(source) != inputs)
         throw std::runtime_error("World source assets changed during preparation; rebuild");
+    unsigned effectWidth = 0, effectHeight = 0;
+    const auto bodyPixels = pixels(source / "effects/se01/body.png", effectWidth, effectHeight);
+    if (effectWidth != 1024 || effectHeight != 1024)
+        throw std::runtime_error("Invalid SE01 body atlas");
+    const auto body =
+        writer.add("effect/se01/body", effectWidth, effectHeight, true, bodyPixels, 0, {}, false);
+    const auto emissionPixels = pixels(source / "effects/se01/emission.png", effectWidth, effectHeight);
+    if (effectWidth != 1024 || effectHeight != 1024)
+        throw std::runtime_error("Invalid SE01 emission atlas");
+    const auto emission =
+        writer.add("effect/se01/emission", effectWidth, effectHeight, true, emissionPixels, 0, {}, false);
+    auto clips = world_assets::atlasEffectClips(body, emission);
+    unsigned first = 8;
+    for (const auto* sheet : {"arcane", "contact"}) {
+        const auto loadEffect = [&](const char* layer) {
+            const auto path = std::string("effects/se02/") + sheet + "-" + layer + ".png";
+            const auto data = pixels(source / path, effectWidth, effectHeight);
+            if (effectWidth != 1024 || effectHeight != 1024)
+                throw std::runtime_error("Invalid SE02 effect atlas");
+            return writer.add(std::string("effect/se02/") + sheet + "-" + layer, effectWidth, effectHeight,
+                              true, data, 0, {}, false);
+        };
+        const auto color = loadEffect("body"), glow = loadEffect("emission");
+        world_assets::mapEffectSheet(clips, first, color, glow);
+        first += 8;
+    }
+    for (const auto* sheet : {"support", "ground"}) {
+        const auto loadEffect = [&](const char* layer) {
+            const auto path = std::string("effects/se03/") + sheet + "-" + layer + ".png";
+            const auto data = pixels(source / path, effectWidth, effectHeight);
+            if (effectWidth != 1024 || effectHeight != 1024)
+                throw std::runtime_error("Invalid SE03 effect atlas");
+            return writer.add(std::string("effect/se03/") + sheet + "-" + layer, effectWidth, effectHeight,
+                              true, data, 0, {}, false);
+        };
+        const auto color = loadEffect("body"), glow = loadEffect("emission");
+        world_assets::mapEffectSheet(clips, first, color, glow);
+        first += 8;
+    }
+    writer.effects(clips);
     writer.finish(appearances, parsed.definitionFingerprint, packs, meshes);
     {
         std::ofstream provenance(output / "sources.json");

@@ -1,5 +1,7 @@
 #include "automation/protocol.hpp"
 #include "game/campaign.hpp"
+#include "game/inn_interior.hpp"
+#include "game/sanctuary_hub.hpp"
 #include "generation/report.hpp"
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
@@ -36,6 +38,7 @@ Json Protocol::observation(bool diagnostic) {
         j["campaign"] = {{"status", names[unsigned(campaign->status())]},
                          {"location", campaign->activeLocation()},
                          {"location_name", campaign->name()},
+                         {"depth", campaign->dungeonDepth()},
                          {"revision", std::to_string(campaign->revision())},
                          {"gameplay_ms", std::to_string(campaign->gameplayMs())},
                          {"visited_entries", Json::array()}};
@@ -51,13 +54,13 @@ Json Protocol::observation(bool diagnostic) {
         if (observation_.diagnostic) {
             j["campaign"]["locations"] = Json::array();
             auto state = std::make_unique<FloorState>();
-            for (unsigned i = 0; i < 4; ++i) {
+            for (unsigned i = 0; i < campaignLocationCount; ++i) {
                 const auto& location = campaign->location(i);
                 Json record = {{"location", i},
                                {"visited", location.visited},
                                {"fingerprint", location.generated
                                                    ? std::to_string(location.generated->fingerprint)
-                                                   : "hub-v1"}};
+                                                   : (i == 0 ? sanctuaryHubIdentity : innInteriorIdentity)}};
                 record["world_definition"] = std::to_string(location.map().definition().fingerprint());
                 if (i == campaign->activeLocation()) {
                     session_->game().exportFloor(*state);
@@ -260,9 +263,9 @@ Json Protocol::perform(const Json& r, Output& output) {
         const auto oldLocation = campaign ? campaign->activeLocation() : 0;
         const auto oldStatus = campaign ? campaign->status() : CampaignStatus::Active;
         const auto oldKits = session_->game().party().campSupplies().kits;
-        std::array<bool, 4> oldVisited{};
+        std::array<bool, campaignLocationCount> oldVisited{};
         if (campaign)
-            for (unsigned i = 0; i < 4; ++i)
+            for (unsigned i = 0; i < campaignLocationCount; ++i)
                 oldVisited[i] = campaign->location(i).visited;
         const auto result = session_->action(action, op == "preview");
         if (op == "act") {
@@ -281,7 +284,8 @@ Json Protocol::perform(const Json& r, Output& output) {
                     transition["kind"] = travelKindName(
                         action.operation == Operation::Travel ? action.travel.kind : TravelKind::Stairs);
                     transition["kit_charge"] = oldKits - session_->game().party().campSupplies().kits;
-                    if (!oldVisited[campaign->activeLocation()] && campaign->activeLocation() != 0)
+                    if (!oldVisited[campaign->activeLocation()] &&
+                        dungeonLocation(campaign->activeLocation()))
                         event["events"].push_back(
                             {{"event", "entry_unlocked"}, {"depth", campaign->activeLocation()}});
                 }

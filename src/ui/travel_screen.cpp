@@ -20,15 +20,16 @@ void HudPainter::travel(const HudSnapshot& h) const {
                           t.rows[i].depth, t.rows[i].request.kind == TravelKind::Stairs ? "" : " entry");
             label(line, r, i == t.cursor ? bright : hudInk::text);
         }
-        text("Arrival is at the entrance, never your departure cell.", 136, 202, muted, UiTextStyle::Small);
+        text("You will arrive at the floor entrance.", 136, 202, muted, UiTextStyle::Small);
     } else {
         std::snprintf(line, sizeof(line), "Camp kits: %u  |  Cost: 1  |  After recall: %u", t.kits,
                       t.kits ? t.kits - 1 : 0);
         text(line, 136, 106, gold, UiTextStyle::Small);
-        text("Destination: Sanctuary hub", 136, 133, hudInk::text);
-        text("Recovery is a separate rest at the sanctuary.", 136, 159, muted, UiTextStyle::Small);
-        text("Return from the hub uses an unlocked floor entrance.", 136, 182, muted, UiTextStyle::Small);
-        text("Your departure position is not a return waypoint.", 136, 202, muted, UiTextStyle::Small);
+        text("Destination: Sanctuary", 136, 133, hudInk::text);
+        text("Rest for free inside the inn.", 136, 159, muted, UiTextStyle::Small);
+        text("Use the dungeon entrance to return to a floor you have visited.", 136, 182, muted,
+             UiTextStyle::Small);
+        text("You will return at that floor's entrance.", 136, 202, muted, UiTextStyle::Small);
     }
     clipped(t.preview.reason, 136, 225, 366, t.preview ? teal : red, UiTextStyle::Small);
     box(travelLayout::cancel, gold);

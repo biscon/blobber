@@ -83,6 +83,8 @@ class GameSession {
         return objective_.count ? objectiveDefinition_.approachDoor : UINT16_MAX;
     }
     bool guardian(ActorId id) const noexcept;
+    bool atSanctuary() const noexcept;
+    LandingSafety arrivalSafety(Cell) const noexcept;
     LandingSafety landingSafety(unsigned index) const noexcept;
     GeometryView geometry() const noexcept { return map_; }
     const FloorGeometry& fixtures() const noexcept { return floor_; }
@@ -101,6 +103,7 @@ class GameSession {
     // All simulation operations invalidate the previous borrowed event batch.
     audio::Journal& audioEvents() noexcept { return audio_; }
     const CombatEvents& events() const noexcept { return events_; }
+    const SupportVisualSnapshot& supportVisuals() const noexcept { return support_.snapshot(); }
     EffectResult applyEffect(const EffectRequest&) noexcept;
     EffectResult removeEffect(EffectId) noexcept;
     EffectResult endConcentration(std::uint64_t world, rules::CharacterId) noexcept;
@@ -117,8 +120,10 @@ class GameSession {
     }
     void setAnimated(bool enabled) noexcept {
         if (!enabled && movement().transition.active() &&
-            !(movement().transition.from.cell == movement().transition.to.cell))
+            !(movement().transition.from.cell == movement().transition.to.cell)) {
+            effects_.followWeapons(movement().transition.from.cell, movement().transition.to.cell);
             audio_.emit({"party.step"});
+        }
         movement_.setAnimated(enabled);
         if (!enabled) {
             doors_.until.fill(0);
@@ -172,6 +177,7 @@ class GameSession {
     EffectController effects_;
     CombatController combat_;
     audio::Journal audio_;
+    SupportVisualJournal support_;
     std::array<std::uint64_t, NpcWorld::maxInstances> audioWalks_{};
     CombatEvents events_;
     bool enableAi_ = true, development_ = false;

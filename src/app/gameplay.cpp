@@ -36,6 +36,7 @@ struct PlayView {
     GameView frames;
     CommandController commands;
     const Map& map;
+    WorldViewTransform previousInputTransform;
     std::optional<generation::DiagnosticView> diagnostics;
     PlayView(const Map& m, const rules::Catalog& catalog, const NpcWorld& placements,
              const std::vector<NpcTimings>& timings, WorldRenderer& world, std::uint32_t seed, Player spawn,
@@ -107,8 +108,6 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                       launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
                       launch ? launch->arenaScenario : nullptr);
         auto& initial = *current;
-        if (campaign)
-            initial.commands.reportCampaignSeed(campaign->location(0).seed);
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
         initial.session.enableDevelopment(options.development);
@@ -212,27 +211,25 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             } else if ((!terminalCampaign || view.commands.snapshot().save.terminalWarning) &&
                        !(campWasOpen && !view.commands.snapshot().camp.open)) {
                 const auto* picking = view.frames.picking();
-                const auto hit =
-                    picking && sample.ui.pointer
-                        ? picking->pick(int(sample.ui.pointer->x) - viewX, int(sample.ui.pointer->y) - viewY)
-                        : std::nullopt;
-                auto lootHit = picking && sample.ui.pointer
-                                   ? picking->pickLoot(int(sample.ui.pointer->x) - viewX,
-                                                       int(sample.ui.pointer->y) - viewY)
-                                   : std::nullopt;
-                const auto groundHit =
-                    sample.ui.pointer
-                        ? view.frames.groundCell(view.session, int(sample.ui.pointer->x) - viewX,
-                                                 int(sample.ui.pointer->y) - viewY)
-                        : std::nullopt;
+                const auto displayed = presenter.displayedWorldTransform();
+                const auto previousTransform = view.previousInputTransform;
+                const bool imageMoved = displayed.x != previousTransform.x ||
+                                        displayed.y != previousTransform.y ||
+                                        displayed.zoom != previousTransform.zoom;
+                view.previousInputTransform = displayed;
+                const auto worldPointer = sample.ui.pointer ? displayed.inverse(*sample.ui.pointer)
+                                                           : std::nullopt;
+                const int px = worldPointer ? int(std::floor(worldPointer->x - viewX)) : -1;
+                const int py = worldPointer ? int(std::floor(worldPointer->y - viewY)) : -1;
+                const auto hit = picking && worldPointer ? picking->pick(px, py) : std::nullopt;
+                const auto lootHit = picking && worldPointer ? picking->pickLoot(px, py) : std::nullopt;
+                const auto groundHit = worldPointer ? view.frames.groundCell(view.session, px, py)
+                                                    : std::nullopt;
                 routeHudInput(
                     view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
-                    picking && sample.ui.pointer ? picking->pickFixture(int(sample.ui.pointer->x) - viewX,
-                                                                        int(sample.ui.pointer->y) - viewY)
-                                                 : std::nullopt,
-                    picking && sample.ui.pointer ? picking->pickContainer(int(sample.ui.pointer->x) - viewX,
-                                                                          int(sample.ui.pointer->y) - viewY)
-                                                 : std::nullopt);
+                    picking && worldPointer ? picking->pickFixture(px, py) : std::nullopt,
+                    picking && worldPointer ? picking->pickContainer(px, py) : std::nullopt,
+                    imageMoved);
             }
             if (campaign) {
                 std::optional<SavingScreen> saving;
@@ -290,15 +287,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                             replacement->frames.activate();
                             replacement->commands.travelMessage(
                                 request.kind == TravelKind::Recall
-                                    ? "Recalled to the sanctuary hub. One camp kit consumed. Rest separately."
-                                    : "Travel complete. No camp kit consumed.");
+                                    ? "Returned to Sanctuary. One camp kit used."
+                                    : "Arrived.");
                             current.swap(replacement);
                             replacement.reset(); // Source view dies before the source session in ticket.
                         } else {
                             current->commands.travelMessage("Travel changed; reopen Travel and try again.");
                         }
                     } catch (const std::exception& e) {
-                        current->commands.travelMessage(e.what());
+                        std::fprintf(stderr, "Travel failed: %s\n", e.what());
+                        current->commands.travelMessage(
+                            "Couldn't travel. Your party is still here. Try again.");
                     }
                     closing = travelLoading.closing();
                 }
@@ -327,7 +326,6 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 presenter.fade(0);
                 if (presenter.audio) {
                     presenter.audio->worldGain = 1;
-                    presenter.audio->play("travel");
                 }
                 inputArmed = false;
                 first = true;

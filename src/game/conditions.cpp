@@ -4,6 +4,40 @@
 #include <limits>
 
 namespace blobber {
+ActorConditionVisualSnapshot EffectController::visualConditions() const noexcept {
+    ActorConditionVisualSnapshot out;
+    out.world = actors_.snapshot().world;
+    for (unsigned i = 0; i < actors_.snapshot().count; ++i) {
+        out.guiding[i] = guiding(actors_.id(i));
+        out.slow[i] =
+            actors_.snapshot().actors[i].life == ActorLife::Alive &&
+            conditions_[i + rules::partySize][unsigned(EffectKind::Slow) - unsigned(EffectKind::Sleep)]
+                .active;
+    }
+    const auto mark = [&](EffectTarget target, EffectKind kind) {
+        if (!living(target))
+            return;
+        auto& mask = target.npc ? out.actors[target.enemy.slot] : out.party[target.character.index];
+        mask |= 1u << unsigned(kind);
+    };
+    for (const auto& e : instances_)
+        if (e.active) {
+            for (std::size_t i = 0; i < e.count; ++i)
+                mark(e.targets[i], e.kind);
+            if (e.kind == EffectKind::MirrorImage && e.count && !e.targets[0].npc && living(e.targets[0]))
+                out.duplicates[e.targets[0].character.index] = e.duplicates;
+        }
+    for (std::size_t i = 0; i < conditions_.size(); ++i) {
+        const auto target = i < rules::partySize ? EffectTarget(rules::CharacterId{std::uint16_t(i)})
+                                                 : EffectTarget(actors_.id(i - rules::partySize));
+        for (unsigned k = 0; k < 4; ++k)
+            if (conditions_[i][k].active)
+                mark(target, EffectKind(unsigned(EffectKind::Sleep) + k));
+        if (restrained_[i].area.serial)
+            mark(target, EffectKind::Restrained);
+    }
+    return out;
+}
 const char* effectName(EffectKind kind) noexcept {
     constexpr const char* names[]{
         "Bless",     "Bane",       "Shield of Faith", "Mage Armor", "Hold Person", "Guidance", "Resistance",
@@ -194,6 +228,16 @@ AreaId EffectController::createArea(Cell cell, rules::CharacterId caster, int dc
         if (!a.active) {
             a = {{actors_.snapshot().world, nextArea_++}, cell, caster, dc, gameplayMs_ + 60000, true};
             ++ground_.revision;
+            if (events.supportJournal) {
+                SupportVisual cue;
+                cue.spell = rules::SpellKind::Grease;
+                cue.phase = SupportPhase::Placement;
+                cue.cell = cell;
+                cue.area = a.id;
+                cue.source = caster;
+                cue.occurredMs = now;
+                events.supportJournal->emit(cue);
+            }
             if (empty)
                 groundDueMs_ = gameplayMs_ + 6000;
             (void)now;

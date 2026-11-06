@@ -21,7 +21,7 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         std::memcpy(&bits, &f, sizeof(bits));
         add(bits);
     };
-    add(2);
+    add(4);
     add(assetPack.size());
     for (unsigned char c : assetPack)
         add(c);
@@ -48,6 +48,39 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         real(d.width);
         real(d.height);
         real(d.depth);
+    }
+    add(buildings.size());
+    for (const auto& b : buildings) {
+        add(b.model.size());
+        for (unsigned char c : b.model)
+            add(c);
+        add(b.anchor.x);
+        add(b.anchor.y);
+        add(unsigned(b.facing));
+        add(b.footprint.x);
+        add(b.footprint.y);
+        add(b.width);
+        add(b.depth);
+    }
+    add(scenery.size());
+    for (const auto& s : scenery) {
+        add(s.model.size());
+        for (unsigned char c : s.model)
+            add(c);
+        add(s.anchor.x);
+        add(s.anchor.y);
+        add(unsigned(s.facing));
+        add(s.footprint.x);
+        add(s.footprint.y);
+        add(s.width);
+        add(s.depth);
+    }
+    // Absent extension retains established dungeon generation fingerprints.
+    if (hearth) {
+        add(0x686561727468ull);
+        real(hearth->x);
+        real(hearth->y);
+        real(hearth->z);
     }
     return h;
 }

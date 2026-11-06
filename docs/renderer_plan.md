@@ -23,7 +23,7 @@ for the explicit, bounded elevation extensions described below.
 | Accepted direction | Low-resolution 3D world, existing billboard artwork, interpolated camera, static prepared meshes, outdoor/height/decoration support; no stacked cells |
 | Active slice | None; renderer roadmap complete |
 | Awaiting review | None |
-| Next eligible slice | Bestiary B02 — Bugbear detailed planning, after [accepted B01](b01_verification.md); no automatic PC07 |
+| Next eligible slice | Bestiary B02 — Bugbear detailed planning, after [accepted B01](verification/archive/b01_verification.md); no automatic PC07 |
 | Next action | Renderer work closed; B01 Accepted and closed, B02 next for detailed planning |
 | Blockers | None for closure; recorded verification limitations remain unchanged |
 | Campaign status | Paused after P-B; do not start PC07 |
@@ -295,10 +295,10 @@ before the production architecture is expanded around it.
 [R01 detailed design](renderer_probe_design.md) with “Implement the plan.” Standalone
 manual/hidden probe, three sampling profiles, unchanged legacy comparison, source-art
 billboard, slab door/sky/decoration specimens and deterministic motion gallery are
-implemented. [Verification/handoff](r01_verification.md) records focused graphics
+implemented. [Verification/handoff](verification/archive/r01_verification.md) records focused graphics
 6/6 each in Debug/Release, headless 3/3 each, final CPU/GPU checks, CPU ASan/UBSan,
 zero tracked warmed C++ allocations, shipped/generated captures and fresh-process
-benchmarks. [Review gallery](screenshots/r01/index.html). Detailed manual coverage
+benchmarks. [Review gallery](screenshots/r01/README.md). Detailed manual coverage
 and other GPUs remain unverified. No production renderer replacement or later-slice
 work. The user prefers supersampling and requests retaining native filtered as an off
 option; this supersedes the provisional native-filtered recommendation. The user
@@ -332,7 +332,7 @@ the prior scene usable. Report draw calls/upload volume and frame timings.
 
 **Execution record:** **Accepted and closed** (2026-10-31).
 [Approved design](renderer_world_design.md), implemented after “Implement the plan.”
-[Verification/handoff](r02_verification.md) and [selected evidence](screenshots/r02/README.md)
+[Verification/handoff](verification/archive/r02_verification.md) and [selected evidence](screenshots/r02/README.md)
 record graphics 62/62 and headless 43/43 in Debug/Release, final focused checks,
 sanitizers, hidden GPU rollback/lifecycle and allocation/upload guards, capacity
 stress, incremental multi-config fixtures and 81 repeat-identical captures. Normal
@@ -367,7 +367,7 @@ through windowless visual mode. Show correctly clipped health/status indicators.
 
 **Execution record:** **Accepted and closed** (2026-10-31). User approved implementation with
 “Implement the plan.” [Design](renderer_visibility_design.md),
-[verification/handoff](r03_verification.md) and [review gallery](screenshots/r03/index.html)
+[verification/handoff](verification/archive/r03_verification.md) and [review gallery](screenshots/r03/README.md)
 record shared CPU/GPU billboards, full-pixel visibility, HUD clipping, explicit
 windowless backend and replay identities. Graphics 64/64 and headless 45/45 in
 Debug/Release, final affected checks/sanitizers/hidden GPU lifecycle and parity,
@@ -407,7 +407,7 @@ This milestone establishes playable parity, not campaign balance.
 
 **Execution record:** **Accepted and closed** (2026-10-31); milestone **R-B Accepted**.
 User approved the reviewed plan with “Implement the plan.” [Design](renderer_integration_design.md),
-[verification/handoff](r04_verification.md) and [gallery](screenshots/r04/index.html).
+[verification/handoff](verification/archive/r04_verification.md) and [gallery](screenshots/r04/README.md).
 Shared door scheduling/geometry, complete current effects, explicit world gameplay,
 staged campaign/save/Continue and CLI/client/local MCP/replay captures are delivered.
 Fresh graphics 65/65 and headless 46/46 Debug/Release suites, final affected/protocol
@@ -450,7 +450,7 @@ a height-sensitive occlusion case. Travel away and reload to show identical stat
 
 **Execution record:** **Accepted and closed** (2026-10-31). User approved
 the detailed plan with “Implement the plan.” [Design](renderer_environment_design.md),
-[verification](r05_verification.md) and [gallery](screenshots/r05/index.html) record
+[verification](verification/archive/r05_verification.md) and [gallery](screenshots/r05/README.md) record
 shared height rules, world presentation, outdoor hub, decorations, checkpoint
 schema 2/2 and fixture replay. Final focused CPU/save/replay 3/3 (0.65s), hidden
 GPU parity/lifecycle/allocation and optimized NPC animation checks pass. Historical
@@ -536,8 +536,8 @@ world renderer is the sole graphical path and CPU world depth/IDs serve visual
 automation. Old renderer/banks/bakers/probe/tests and standalone demos, capture
 runners, authored-demo loading and public height showcase are deleted. Shared
 preparation, artwork, native UI, arena and regular automation remain.
-[Removal inventory](r06_removal_inventory.md), [verification](r06_verification.md)
-and [gallery/motion sample](screenshots/r06/index.html) record 124 deleted tracked
+[Removal inventory](r06_removal_inventory.md), [verification](verification/archive/r06_verification.md)
+and [gallery/motion sample](screenshots/r06/README.md) record 124 deleted tracked
 files, clean graphics/headless builds, graphics 54/54 and headless 49/49 ordinary
 Release checks, final affected follow-ups, hidden GPU parity/lifecycle/failure/
 allocation checks, publication/retirement fixtures, real SDK stdio and a fresh
@@ -614,8 +614,8 @@ Recorded verification limitations remain; this table does not reopen completed w
 The renderer roadmap is **complete and closed** (2026-10-31): R01–R06 and milestones
 R-A/R-B/R-C are Accepted. The user explicitly accepted R06 and closed the roadmap:
 “slice accepted, close up the new renderer plan”. See the [accepted cutover design](renderer_cutover_design.md),
-[verification and limits](r06_verification.md), [completed removal inventory](r06_removal_inventory.md)
-and [gallery/motion sample](screenshots/r06/index.html).
+[verification and limits](verification/archive/r06_verification.md), [completed removal inventory](r06_removal_inventory.md)
+and [gallery/motion sample](screenshots/r06/README.md).
 
 The sole renderer serves normal game, arena and automation; no legacy implementation,
 banks, fallback, probe or standalone demo remains. Acceptance changes no verification

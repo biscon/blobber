@@ -11,7 +11,7 @@ Status: implemented, **Accepted and closed**, 2026-10-30. The user approved the 
 plan with “Implement the plan.” 13.1/13.2 remain Accepted and closed; save/resume
 remains slice 14 and unstarted. After reviewing the capture gallery, the user accepted:
 “I accept the slice, record it in the doc”. The design was recorded before code changes and now describes the implemented result.
-[Usage/configuration](mcp_usage.md) · [Verification/handoff](slice133_verification.md).
+[Usage/configuration](mcp_usage.md) · [Verification/handoff](verification/archive/slice133_verification.md).
 
 ## Responsibilities and interfaces
 
@@ -90,7 +90,7 @@ review commands. C++ Debug/Release replay/automation/allocation/visual/HUD check
 and focused sanitizers validate changed lifetimes. Hidden GPU/capture checks are
 separate; unavailable checks are explicitly unexecuted. Review includes a fixture
 encounter, opt-in smoke comparison, cancelled batch, trial rerun/replay and selected
-captures. Evidence and limitations are recorded in [the verification handoff](slice133_verification.md).
+captures. Evidence and limitations are recorded in [the verification handoff](verification/archive/slice133_verification.md).
 Tracking reached Ready for review before user acceptance on 2026-10-30; 13.3 is now closed.
 
 

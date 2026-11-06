@@ -126,6 +126,7 @@ Settings loadSettings(const std::filesystem::path& p, std::string& warning) {
             s.values = v;
             s.musicVolume = number(j, "music_volume", .5f, 0, 1);
             s.musicEnabled = j.value("music_enabled", true);
+            s.borderlessFullscreen = j.value("borderless_fullscreen", false);
         }
     } catch (const std::exception& e) {
         warning = e.what();
@@ -143,7 +144,8 @@ bool saveSettings(const std::filesystem::path& p, const Settings& s, std::string
             out << Json{{"version", 2},
                         {"audio", s.values},
                         {"music_volume", s.musicVolume},
-                        {"music_enabled", s.musicEnabled}}
+                        {"music_enabled", s.musicEnabled},
+                        {"borderless_fullscreen", s.borderlessFullscreen}}
                        .dump(2)
                 << '\n';
             out.close();

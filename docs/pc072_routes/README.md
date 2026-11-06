@@ -1,8 +1,8 @@
 # PC07.2 generated-route evidence
 
-2026-11-01. Eight explicitly approved serial diagnostic expeditions completed: **8 victories, 32 observed downings, zero permanent deaths, zero recorded merges**. All reached level two before the final guardian with three ordinary kit-funded field rests. Two selected retained traces strictly replayed and exported hidden application-owned captures. These are two seeds per composition/profile, not campaign win-rate estimates.
+2026-11-01. Eight explicitly approved serial diagnostic expeditions completed: **8 victories, 32 observed downings, zero permanent deaths, zero recorded merges**. All reached level two before the final guardian with three ordinary kit-funded field rests. Two selected traces strictly replayed at the original checkpoint and exported hidden application-owned captures. These are two seeds per composition/profile, not campaign win-rate estimates.
 
-[Design](../pc072_population_design.md) · [Verification](../pc072_verification.md) · [Gallery](../screenshots/pc072/index.html) · [Trace index/hashes](index.json)
+[Design](../pc072_population_design.md) · [Verification](../verification/archive/pc072_verification.md) · [Gallery](../screenshots/pc072/README.md) · [Trace index/hashes](index.json)
 
 ## Population and progression
 
@@ -51,7 +51,14 @@ nice -n 15 ionice -c 3 python3 tools/campaign_route_review.py \
 
 Cases 1–8 are balanced seeds 5/8 direct/reserve, then no_wizard seeds 5/8 direct/reserve. Do not rerun into that directory. A fresh reproduction is a new experiment requiring its own opt-in. The script enforces ordered cases, unchanged tool/binary/content identity, 120 seconds/60,000 ticks per route and thirty minutes/three GiB overall. Total trial wall time was 155.27 s; original trace bytes total 1,322,479,568. No ceiling was raised or reached.
 
-All eight complete traces are retained compressed with uncompressed SHA-256 values in `index.json`. The pinned matching runner remains locally at `output/pc072/bin/blobber_headless`. Decompress a selected trace to a new disk-backed output file, then use that runner with `--assets cmake-build-release/assets --mode diagnostic --replay FILE`. Strict replay rejects another binary/content identity; no translation is promised. The recorded tool copy is an audit artifact; use the original tools-directory path/context for fresh runs.
+On 2026-11-05, housekeeping removed the eight compressed trace bodies, raw decision
+journals, recorded tool copy and local pinned runner under `output/pc072/`. Exact
+historical replay is no longer available. `index.json` preserves the original
+uncompressed hashes, sizes and replay outcomes; `summary.json`, per-case results,
+scenarios, floor definitions and provenance retain the study conclusions and inputs.
+Use the maintained tool under `tools/` with a current runner and a fresh disposable
+run directory for an explicitly requested new experiment. The historical command
+above describes the original run, not a locally available pinned runner.
 
 Selected replays: balanced-8-reserve (six observed downings) and no_wizard-8-direct (five). Both matched. Their capture operations and per-floor incoming totals are in `review-selections.json`. Captures reconstruct current HUD/scene state, not historical hover/log feedback; no repeat-identical PNG claim. Two obsolete map-help strings were corrected after capture; retained study images are from the pinned binary before that text-only correction. The gallery uses native gameplay views.
 

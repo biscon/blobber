@@ -7,6 +7,7 @@ namespace blobber::test {
 inline void movingVisibilityWork() {
     VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
+    const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
     const auto catalog = creationCatalog(true);
     const auto map = worldRoom(9, 9);
     const Player start{{4, 6}, Heading::North}, end{{4, 5}, Heading::North};

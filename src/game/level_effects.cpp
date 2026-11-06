@@ -2,6 +2,27 @@
 #include "game/perception.hpp"
 #include <algorithm>
 namespace blobber {
+Cell followingWeaponCell(GeometryView map, Cell weapon, Cell from, Cell to) noexcept {
+    if (from == to)
+        return weapon;
+    const auto destination = weapon + to + from * -1;
+    if (map.canStep(weapon, destination))
+        return destination;
+    return weapon == to && map.canStep(weapon, from) ? from : weapon;
+}
+void EffectController::followWeapons(Cell from, Cell to) noexcept {
+    if (from == to)
+        return;
+    for (auto& e : instances_)
+        if (e.active && e.kind == EffectKind::SpiritualWeapon && !e.caster.npc) {
+            const auto cell = followingWeaponCell(actors_.map(), e.cell, from, to);
+            if (cell == e.cell)
+                continue;
+            e.cell = cell;
+            ground_.weapons[e.caster.character.index] = {cell, true};
+            ++ground_.revision;
+        }
+}
 void EffectController::reconcileAid() noexcept {
     for (std::uint16_t i = 0; i < 4; ++i)
         party_.aidBonus({i}, has(rules::CharacterId{i}, EffectKind::Aid) ? 5 : 0);
@@ -56,6 +77,16 @@ void EffectController::resolveMirror(MirrorReservation r, bool canceled, std::ui
                 if (events.audioJournal)
                     events.audioJournal->emit({"mirror.shatter"});
                 e.duplicates &= ~r.duplicate;
+                if (events.supportJournal) {
+                    SupportVisual cue;
+                    cue.spell = rules::SpellKind::MirrorImage;
+                    cue.phase = SupportPhase::ImageLost;
+                    cue.target = e.targets[0];
+                    cue.effect = e.id;
+                    cue.duplicate = r.duplicate;
+                    cue.occurredMs = now;
+                    events.supportJournal->emit(cue);
+                }
             }
             if (!e.duplicates)
                 end(e, EffectEnd::Consumed, now, events);
@@ -92,6 +123,17 @@ bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial) 
         return false;
     for (auto& e : instances_)
         if (e.active && e.kind == EffectKind::SpiritualWeapon && e.caster.character.index == id.index) {
+            if (events_ && events_->supportJournal) {
+                SupportVisual cue;
+                cue.spell = rules::SpellKind::SpiritualWeapon;
+                cue.phase = initial ? SupportPhase::Placement : SupportPhase::Move;
+                cue.from = e.cell;
+                cue.cell = to;
+                cue.effect = e.id;
+                cue.source = id;
+                cue.occurredMs = noticeMs_;
+                events_->supportJournal->emit(cue);
+            }
             e.cell = to;
             e.readyMs = gameplayMs_ + 6000;
             ground_.weapons[id.index] = {to, true};
@@ -152,6 +194,17 @@ bool EffectController::createWeb(const Cell* cells, std::size_t count, rules::Ch
                  result.id,
                  0};
             ++ground_.revision;
+            if (events.supportJournal) {
+                SupportVisual cue;
+                cue.spell = rules::SpellKind::Web;
+                cue.phase = SupportPhase::Placement;
+                cue.cell = a.cell;
+                cue.area = a.id;
+                cue.effect = a.effect;
+                cue.source = caster;
+                cue.occurredMs = now;
+                events.supportJournal->emit(cue);
+            }
         }
     if (groundDueMs_ <= gameplayMs_)
         groundDueMs_ = gameplayMs_ + 6000;

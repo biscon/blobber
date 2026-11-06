@@ -4,18 +4,13 @@
 #include "game/perception.hpp"
 #include "game/target_visibility.hpp"
 #include "ui/layout.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
 
 namespace blobber {
-void CommandController::reportCampaignSeed(std::uint32_t seed) noexcept {
-    char line[64];
-    std::snprintf(line, sizeof(line), "Campaign seed: %u.", seed);
-    appendLog(line);
-}
-
 const char* actionName(PartyAction action) noexcept {
     constexpr const char* names[]{"Melee", "Back-row melee", "Defend", "Ranged",
                                   "Spell", "Item",           "Aid",    "Ability"};
@@ -36,8 +31,8 @@ const char* commandMessage(CommandReason reason) noexcept {
         return "Requires an unarmored ally.";
     case CommandReason::MustBeDying:
         return "Requires a dying ally.";
-    case CommandReason::SameCellRequired:
-        return "Choose enemies in the same cell.";
+    case CommandReason::TargetsTooFar:
+        return "Targets must be within 1 cell of each other.";
     case CommandReason::InsufficientMana:
         return "Not enough mana.";
     case CommandReason::NoCharges:
@@ -51,9 +46,9 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::FullMana:
         return "Mana is already full.";
     case CommandReason::Unsafe:
-        return "Recovery requires exploration without active threats.";
+        return "Wait until it is safe to recover.";
     case CommandReason::EffectCapacity:
-        return "No effect capacity available.";
+        return "Too many spells are active. Wait for one to end.";
     case CommandReason::AttackPending:
         return "This attack is still playing.";
     case CommandReason::Cooldown:
@@ -61,7 +56,7 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::OutOfRange:
         return "Target is out of range for this attack.";
     case CommandReason::Blocked:
-        return "That step is blocked.";
+        return "An obstacle blocks that action.";
     case CommandReason::Ready:
         return "Ready: spends this turn's action.";
     case CommandReason::Resolved:
@@ -73,9 +68,9 @@ const char* commandMessage(CommandReason reason) noexcept {
     case CommandReason::StaleTurn:
         return "That turn has already ended.";
     case CommandReason::FrontProtected:
-        return "Front slot protects target.";
+        return "An enemy in front protects this target.";
     case CommandReason::RearBlocked:
-        return "Your front slot blocks melee.";
+        return "A companion in front blocks this melee attack.";
     case CommandReason::NoWeapon:
         return "No ready weapon for this action.";
     case CommandReason::InvalidAlly:
@@ -142,6 +137,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     if (out.event == CombatEvent::None ||
         (out.attackId.world && out.attackId.world != actors_.snapshot().world))
         return;
+    shake_.record(out, session_.timeMs(), actors_.snapshot().world);
+    state_.worldTransform = shake_.sample(session_.timeMs(), actors_.snapshot().world);
     char line[CombatLog::messageBytes];
     const auto* actor = party_.character(out.character);
     const auto* recipient = party_.character(out.recipient);
@@ -149,9 +146,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     const char* target = recipient ? recipient->build.name.c_str() : "?";
     char species[rules::Catalog::maxIdBytes + 1] = "Monster";
     if (const auto* enemy = actors_.actor(out.enemy)) {
-        std::snprintf(species, sizeof(species), "%s", actors_.catalog().monster(enemy->monster)->id.c_str());
-        if (species[0] >= 'a' && species[0] <= 'z')
-            species[0] = char(species[0] - 'a' + 'A');
+        std::snprintf(species, sizeof(species), "%s",
+                      monsterName(actors_.catalog().monster(enemy->monster)->id));
     }
     const char* pack = !out.enemyAttack || !out.packTactics ? ""
                        : out.attackRollMode == rules::RollMode::Advantage
@@ -163,6 +159,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         break;
     case CombatEvent::AttackStarted:
     case CombatEvent::ProjectileReleased:
+        updateHover();
         return;
     case CombatEvent::AttackCanceled:
         std::snprintf(line, sizeof(line), "Attack canceled: %s.",
@@ -286,6 +283,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             f.active = f.party = f.hit = f.healing = true;
             f.character = out.recipient;
             f.damage = out.damage;
+            f.portrait = out.spell == rules::SpellKind::FalseLife ? PortraitFeedbackKind::Protection
+                                                                  : PortraitFeedbackKind::Healing;
             f.startedMs = out.occurredMs;
             showFeedback(f);
         }
@@ -336,10 +335,15 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         if (e.notice == EffectNotice::Applied && !e.target.npc) {
             CombatFeedback f;
             f.active = f.party = f.hit = true;
-            f.healing = e.kind != EffectKind::Bane && e.kind != EffectKind::HoldPerson;
+            const bool positive = e.kind == EffectKind::Bless || e.kind == EffectKind::ShieldOfFaith ||
+                                  e.kind == EffectKind::MageArmor || e.kind == EffectKind::Guidance ||
+                                  e.kind == EffectKind::Resistance || e.kind == EffectKind::Sanctuary ||
+                                  e.kind == EffectKind::Aid || e.kind == EffectKind::MirrorImage ||
+                                  e.kind == EffectKind::SpiritualWeapon;
+            f.portrait = positive ? PortraitFeedbackKind::Protection : PortraitFeedbackKind::Harmful;
             f.character = e.target.character;
             f.startedMs = out.occurredMs;
-            f.text = effectName(e.kind);
+            f.text = ""; // Names remain in the log and status tooltips.
             showFeedback(f);
         }
         break;
@@ -375,6 +379,11 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
         next.text = out.hit ? "IMAGE LOST" : "IMAGE MISSED";
     if (out.fortitude.status == FortitudeStatus::Saved)
         next.text = "1 HP";
+    if (next.party && out.spell != rules::SpellKind::Count) {
+        next.portrait =
+            out.hit && out.damage > 0 ? PortraitFeedbackKind::Damage : PortraitFeedbackKind::Negated;
+        next.element = out.damageType;
+    }
     next.character = out.recipient;
     next.enemy = out.enemy;
     next.damage = out.damage;
@@ -393,6 +402,19 @@ void CommandController::recordFeedback(const CombatOutcome& out) noexcept {
     showFeedback(next);
 }
 void CommandController::showFeedback(const CombatFeedback& next) noexcept {
+    const auto now = session_.timeMs();
+    if (now < next.startedMs || now - next.startedMs >= CombatFeedback::durationMs)
+        return;
+    if (next.party && next.character.index < rules::partySize &&
+        next.portrait != PortraitFeedbackKind::None) {
+        const bool supportive = next.portrait == PortraitFeedbackKind::Healing ||
+                                next.portrait == PortraitFeedbackKind::Protection;
+        const unsigned duration = supportive                                       ? 640u
+                                  : next.portrait == PortraitFeedbackKind::Negated ? 240u
+                                                                                   : 400u;
+        state_.portraitFeedback[next.character.index][supportive ? 0 : 1] = {next.portrait, next.element,
+                                                                             next.startedMs, duration};
+    }
     auto* destination = &state_.feedback[0];
     for (auto& entry : state_.feedback) {
         if (entry.active && entry.party == next.party &&
@@ -405,16 +427,70 @@ void CommandController::showFeedback(const CombatFeedback& next) noexcept {
             destination = &entry;
     }
     *destination = next;
-    if (next.party && next.hit && next.damage > 0)
+    if (next.party && next.hit && !next.healing && next.portrait != PortraitFeedbackKind::Protection &&
+        next.damage > 0)
         hitUntil_[next.character.index] = next.startedMs + 150;
 }
 void CommandController::refreshFeedback(bool clear) noexcept {
+    const auto epoch = session_.combat().spellVisuals().epoch;
+    clear |= feedbackEpoch_ != epoch;
+    feedbackEpoch_ = epoch;
+    state_.presentationMs = session_.timeMs();
+    state_.supportConditions = session_.effects().visualConditions();
+    const auto& support = session_.supportVisuals();
+    if (supportEpoch_ != support.epoch) {
+        supportSeen_ = 0;
+        supportEpoch_ = support.epoch;
+    }
     if (clear) {
         state_.feedback = {};
+        state_.portraitFeedback = {};
         hitUntil_ = {};
         return;
     }
     const auto now = session_.timeMs();
+    state_.presentationMs = now;
+    std::array<std::array<const SupportVisual*, 2>, rules::partySize> latest{};
+    auto seen = supportSeen_;
+    for (const auto& cue : support.records) {
+        if (!cue.id.serial || cue.id.world != actors_.snapshot().world || cue.id.serial <= supportSeen_)
+            continue;
+        seen = std::max(seen, cue.id.serial);
+        if (cue.target.npc || cue.target.character.index >= rules::partySize ||
+            cue.spell == rules::SpellKind::SpiritualWeapon || cue.phase == SupportPhase::Placement ||
+            now < cue.occurredMs || now - cue.occurredMs >= supportDuration(cue.phase))
+            continue;
+        const auto k = cue.spell;
+        const bool harmful = k == rules::SpellKind::Bane || k == rules::SpellKind::Sleep ||
+                             k == rules::SpellKind::ColorSpray || k == rules::SpellKind::HoldPerson ||
+                             k == rules::SpellKind::Web || k == rules::SpellKind::Grease ||
+                             k == rules::SpellKind::RayOfFrost;
+        auto& selected = latest[cue.target.character.index][harmful ? 1 : 0];
+        if (!selected || selected->id.serial < cue.id.serial)
+            selected = &cue;
+    }
+    supportSeen_ = seen;
+    for (unsigned i = 0; i < rules::partySize; ++i)
+        for (unsigned channel = 0; channel < 2; ++channel) {
+            const auto* cue = latest[i][channel];
+            if (!cue)
+                continue;
+            auto& f = state_.portraitFeedback[i][channel];
+            if (f.kind != PortraitFeedbackKind::None && f.startedMs > cue->occurredMs)
+                continue;
+            f = {channel ? PortraitFeedbackKind::Harmful : PortraitFeedbackKind::Protection,
+                 rules::DamageType::Bludgeoning,
+                 cue->occurredMs,
+                 supportDuration(cue->phase),
+                 cue->spell,
+                 cue->phase,
+                 cue->duplicate};
+        }
+    for (auto& channels : state_.portraitFeedback)
+        for (auto& entry : channels)
+            if (entry.kind != PortraitFeedbackKind::None &&
+                (now < entry.startedMs || now - entry.startedMs >= entry.durationMs))
+                entry = {};
     for (auto& entry : state_.feedback)
         if (entry.active && now - entry.startedMs >= CombatFeedback::durationMs)
             entry.active = false;
@@ -435,6 +511,7 @@ bool CommandController::visible(ActorId id) const noexcept {
 }
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen,
                                 bool focused) noexcept {
+    state_.worldTransform = shake_.sample(session_.timeMs(), actors_.snapshot().world);
     moving |= session_.opening();
     if (session_.objective().known) {
         if (session_.objective().completed && !objectiveReported_) {
@@ -444,7 +521,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             objectiveReported_ = true;
         }
         if (session_.objective().capacityFailure && !objectiveFailureReported_) {
-            state_.log.append("Objective could not commit: floor revision capacity exhausted.");
+            state_.log.append("The gate could not open. Save your progress and restart the game.");
             objectiveFailureReported_ = true;
         }
     }
@@ -456,37 +533,57 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     state_.campaignTerminal = state_.campaign && session_.campaign()->status() != CampaignStatus::Active;
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";
-    const bool sanctuary = state_.campaign && !state_.campaignTerminal &&
-                           session_.movement().player.cell == Cell{4, 4} &&
-                           session_.campaign()->activeLocation() == 0;
     state_.fixturePrompt[0] = 0;
-    if (state_.campaignTerminal)
-        std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%s",
-                      "This expedition has ended. Return to Main Menu.");
+    state_.lootHover[0] = 0;
     state_.floor = &session_.fixtures();
     state_.questKeys = session_.party().questKeys();
-    if (!state_.campaignTerminal && !moving && !mapOpen && focused && !state_.modal() &&
-        !state_.magic.casting() && !state_.magic.armed && !state_.inventory.itemTargeting) {
-        if (sanctuary)
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "R: rest");
+    if (!moving && !mapOpen && focused && interactionPromptsAvailable()) {
+        const auto door = state_.campaign ? session_.campaign()->doorwayRequest() : TravelRequest{};
+        const bool doorway =
+            state_.campaign && door.kind == TravelKind::Doorway && door.doorway.slot != UINT16_MAX;
+        if (doorway) {
+            const auto check = session_.campaign()->previewTravel(door);
+            if (check)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s",
+                              session_.campaign()->activeLocationId() == CampaignLocationId::Inn
+                                  ? "Leave inn"
+                                  : "Enter inn");
+        }
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
-        if (f &&
+        if (!doorway && f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
-            std::snprintf(
-                state_.fixturePrompt.data(), state_.fixturePrompt.size(), "%sF / %s - %s",
-                sanctuary ? "R: rest | " : "", fixtureName(*f),
-                state_.campaign && session_.campaign()->activeLocation() == 0 && result
-                    ? (session_.campaign()->location(2).visited || session_.campaign()->location(3).visited
-                           ? "Choose a floor entry."
-                           : "Enter dungeon floor 1.")
-                    : result.reason);
-        } else if (const auto chest = session_.nearbyContainer()) {
+            const char* action = nullptr;
+            if (result) {
+                switch (f->kind) {
+                case FixtureKind::Door:
+                    action = session_.fixtures().open(request.id.slot) ? "Close" : "Open";
+                    break;
+                case FixtureKind::Key:
+                    if (!session_.fixtures().completed(request.id.slot))
+                        action = "Take";
+                    break;
+                case FixtureKind::Upstairs:
+                    action = "Ascend";
+                    break;
+                case FixtureKind::Downstairs:
+                    action = state_.campaign && session_.campaign()->activeLocation() == 0 ? "Enter dungeon"
+                                                                                           : "Descend";
+                    break;
+                case FixtureKind::Endpoint:
+                case FixtureKind::GuardianGate:
+                    break; // No player action; an open gate is only passable scenery.
+                }
+            }
+            if (action)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s", action);
+        } else if (const auto chest = doorway ? ContainerId{} : session_.nearbyContainer()) {
             const auto access = session_.containerAccess(chest);
             const auto* container = session_.loot().findContainer(chest);
-            std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "F / Treasure chest - %s",
-                          access ? (container->opened ? "Inspect contents." : "Open chest.") : access.reason);
+            if (access && container)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s",
+                              container->opened ? "Inspect" : "Open");
         }
     }
     state_.development = session_.development();
@@ -540,6 +637,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                   : mapOpen ? CommandReason::MapOpen
                             : CommandReason::Ready;
     state_.suspended = suspension_ != CommandReason::Ready;
+    floorHover(state_.suspended ? std::nullopt : hoveredLoot_);
     TargetSnapshot normalized;
     if (targets.count <= targets.ids.size() && targets.candidateCount <= targets.candidates.size() &&
         targets.world == actors_.snapshot().world && targets.revision == actors_.snapshot().revision) {

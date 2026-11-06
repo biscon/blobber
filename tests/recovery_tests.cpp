@@ -100,8 +100,14 @@ void clocksAndSupplier() {
     const auto cat = recoveryCatalog();
     const auto map = combatMap();
     const NpcWorld places(map, pose.cell, {"goblin"}, {{{0}, {1, 1}, {0, 0}, Heading::North}});
-    auto owner = std::make_unique<GameSession>(map, cat, places, 7, pose, true);
+    FloorFixtures fixtures;
+    fixtures.count = 1;
+    fixtures.entries[0] = {{3, 2}, Heading::North, FixtureKind::Door};
+    auto owner = std::make_unique<GameSession>(map, cat, places, 7, pose, true, std::vector<NpcTimings>{},
+                                               RecoveryLevel{}, fixtures);
     auto& s = *owner;
+    CommandController promptUi(s);
+    check(promptUi.snapshot().interactionPrompt(), "Quiet reachable door offers a prompt before acting");
     s.party().damage({0}, 5);
     PartyCommand wind;
     wind.character = {0};
@@ -113,8 +119,12 @@ void clocksAndSupplier() {
     s.update(.7, false);
     check(s.previewRest(restRequest(s, RestKind::Short)).error == RestError::Unsafe,
           "Rest waits for settled presentation");
+    promptUi.refresh({}, false, false, true);
+    check(!promptUi.snapshot().interactionPrompt(), "Unfinished action presentation hides door prompt");
     s.update(.4, false);
     check(s.combat().snapshot().cooldownMs[0] > 0, "Fixture retains cooldown before camp");
+    promptUi.refresh({}, false, false, true);
+    check(promptUi.snapshot().interactionPrompt(), "Finished presentation restores prompt during cooldown");
     const auto cell = s.actors().snapshot().actors[0].npc.cell;
     check(bool(s.rest(restRequest(s, RestKind::Short))), "Feature-only short rest has benefit");
     check(s.actors().snapshot().actors[0].npc.cell == cell && s.combat().snapshot().cooldownMs[0] == 0,

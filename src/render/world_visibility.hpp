@@ -8,7 +8,7 @@
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
 constexpr std::size_t viewScratchBudget = 8u * 1024 * 1024;
-constexpr const char* visibilityVersion = "world-visibility-v13";
+constexpr const char* visibilityVersion = "world-visibility-v18";
 // Rectangles in stored texture UVs, not logical canvas coordinates.
 struct BillboardClipRect {
     float left = 0, top = 0, right = 0, bottom = 0;
@@ -36,6 +36,9 @@ struct FrameInput {
     const SpellArea* area = nullptr;
     std::uint64_t now = 0;
     unsigned guardianDoor = UINT16_MAX;
+    const SpellVisualSnapshot* spells = nullptr;
+    const ActorConditionVisualSnapshot* conditions = nullptr;
+    const SupportVisualSnapshot* support = nullptr;
 };
 struct Billboard {
     Vec feet;
@@ -43,6 +46,8 @@ struct Billboard {
     std::uint16_t texture = UINT16_MAX, id = PickingBuffer::empty;
     bool alive = false, flash = false;
     NpcAttachment release{}, torso{};
+    NpcBodyBounds bodyBounds{};
+    float bodyCanvasWidth = 0; // Bounds refer to registered idle art, independent of attack canvas.
     // Drawable crop in logical canvas space; attachments/shadows keep that space.
     struct Region {
         float left = 0, top = 0, right = 1, bottom = 1;

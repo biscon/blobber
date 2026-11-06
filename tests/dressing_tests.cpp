@@ -7,8 +7,116 @@
 #include "support/recovery_fixtures.hpp"
 #include <iostream>
 #include <memory>
+#include <string_view>
 using namespace blobber;
 namespace {
+generation::FloorLayout roomFixture() {
+    generation::FloorLayout f;
+    f.width = 13;
+    f.height = 9;
+    f.roomCount = 1;
+    f.rooms[0].origin = {2, 2};
+    f.rooms[0].size = {7, 5};
+    f.rooms[0].anchor = {3, 3};
+    for (int y = 2; y <= 6; ++y)
+        for (int x = 2; x <= 8; ++x) {
+            f.floor[unsigned(y * f.width + x)] = 1;
+            f.membership[unsigned(y * f.width + x)] = 0;
+        }
+    return f;
+}
+void placementRules() {
+    using namespace generation;
+    auto f = roomFixture();
+    CellMask reserved{};
+    Decoration prop{{2, 2}, Heading::North, DecorationKind::Cage};
+    check(blockingPropFitsRoom(f, prop, reserved), "Spacious wall-backed room admits a cage");
+    prop.kind = DecorationKind::Rack;
+    check(blockingPropFitsRoom(f, prop, reserved), "Single-cell rack uses same room clearance");
+    reserved[unsigned(2 * f.width + 3)] = true;
+    check(!blockingPropFitsRoom(f, prop, reserved), "Existing furniture consumes supporting clearance");
+    reserved.fill(false);
+    f.membership[unsigned(2 * f.width + 2)] = noRegion;
+    check(!blockingPropFitsRoom(f, prop, reserved), "Bounding rectangle cannot admit corridor cells");
+    f = roomFixture();
+    f.rooms[0].role = Role::Entrance;
+    check(!blockingPropFitsRoom(f, prop, reserved), "Actual entrance membership excludes props");
+    f.rooms[0].role = Role::Objective;
+    check(!blockingPropFitsRoom(f, prop, reserved), "Actual objective membership excludes props");
+    for (unsigned width : {1u, 2u}) {
+        f = roomFixture();
+        for (int y = 2 + int(width); y <= 6; ++y)
+            for (int x = 2; x <= 8; ++x) {
+                f.floor[unsigned(y * f.width + x)] = 0;
+                f.membership[unsigned(y * f.width + x)] = noRegion;
+            }
+        f.rooms[0].anchor = {3, 2};
+        check(!blockingPropFitsRoom(f, prop, reserved), "One/two-cell-wide room strips reject props");
+    }
+    f = roomFixture();
+    f.connectionCount = 1;
+    f.connections[0].a = 0;
+    f.connections[0].b = 1;
+    f.connections[0].socketA = {2, 1};
+    f.connections[0].facingA = Heading::North;
+    check(!blockingPropFitsRoom(f, prop, reserved), "Room-side passage entrance remains free");
+    // Two spacious lobes share a narrow mouth. An outside detour preserves global
+    // connectivity, but must never make the room-local obstruction acceptable.
+    f = roomFixture();
+    for (int y = 2; y <= 6; ++y)
+        for (int x = 2; x <= 8; ++x) {
+            const auto n = unsigned(y * f.width + x);
+            const bool room = y <= 4 && (x != 5 || y == 3);
+            const bool detour = y == 6 || (y == 5 && (x == 2 || x == 8));
+            f.floor[n] = room || detour;
+            f.membership[n] = room ? 0 : noRegion;
+        }
+    prop.kind = DecorationKind::Cage;
+    prop.cell = {4, 3};
+    WorldDefinition world;
+    world.decorations.push_back(prop);
+    std::vector<std::string> rows(std::size_t(f.height), std::string(std::size_t(f.width), '#'));
+    for (int y = 0; y < f.height; ++y)
+        for (int x = 0; x < f.width; ++x)
+            if (floorCell(f, {x, y}))
+                rows[unsigned(y)][unsigned(x)] = '.';
+    check(Map(rows, world).connected(f.rooms[0].anchor), "Fixture retains a global alternate route");
+    check(!blockingPropFitsRoom(f, prop, reserved), "Outside detour cannot justify blocking a room");
+}
+void collisionProgression() {
+    using namespace generation;
+    const auto result = generate({5, 2});
+    check(bool(result), "Owned keyed progression fixture generated");
+    const auto& f = result.floor->layout;
+    CellMask blocked{};
+    check(!validateFixtures(f, &blocked), "Empty collision mask preserves progression");
+    // Both entry-side approaches reach the key room. With all doors open,
+    // the sector branch is a detour; before finding the key, that branch is locked.
+    auto world = result.floor->map.definition();
+    for (unsigned neighbor : {1u, 2u}) {
+        const auto* keyRoute = connectionBetween(f, 0, neighbor);
+        check(keyRoute != nullptr, "Owned seed has both entry-side key connections");
+        const auto obstruction = pathCell(f, *keyRoute, keyRoute->count / 2);
+        world.decorations.push_back({obstruction, Heading::North, DecorationKind::Cage});
+        blocked[unsigned(obstruction.y * f.width + obstruction.x)] = true;
+    }
+    std::vector<std::string> rows(std::size_t(f.height), std::string(std::size_t(f.width), '#'));
+    for (int y = 0; y < f.height; ++y)
+        for (int x = 0; x < f.width; ++x)
+            if (floorCell(f, {x, y}))
+                rows[unsigned(y)][unsigned(x)] = '.';
+    check(Map(rows, world).connected(f.spawn.cell), "Open-door geometry still has an alternate route");
+    check(validateFixtures(f, &blocked).code == Error::Progression,
+          "Geometric detour through locked doors cannot substitute for access to the key");
+    blocked.fill(false);
+    blocked[unsigned(f.guardianApproach.y * f.width + f.guardianApproach.x)] = true;
+    check(validateFixtures(f, &blocked).code == Error::Progression,
+          "Furniture blocking guardian access rejects progression");
+    check(!validateFixtures(f), "Terrain-only validation misses the furniture obstruction");
+    blocked.fill(false);
+    blocked[unsigned(f.spawn.cell.y * f.width + f.spawn.cell.x)] = true;
+    check(validateFixtures(f, &blocked).code == Error::Progression, "Blocked spawn rejects progression");
+}
 void generated() {
     for (unsigned seed : {0u, 1u, 5u, 13u})
         for (unsigned depth = 1; depth <= 3; ++depth) {
@@ -22,6 +130,14 @@ void generated() {
                   "Dressing deterministic");
             check(f.map.connected(f.layout.spawn.cell), "Furniture preserves walkable connectivity");
             unsigned chests = 0, large = 0;
+            generation::CellMask reserved{}, blocked{};
+            for (const auto& d : f.map.definition().decorations)
+                for (unsigned k = 0; k < d.footprintCount(); ++k) {
+                    const auto c = d.footprint(k);
+                    reserved[unsigned(c.y * f.layout.width + c.x)] = true;
+                    blocked[unsigned(c.y * f.layout.width + c.x)] = d.blocks();
+                }
+            check(!generation::validateFixtures(f.layout, &blocked), "Dressed progression remains valid");
             for (const auto& d : f.map.definition().decorations) {
                 if (d.kind == DecorationKind::Chest) {
                     ++chests;
@@ -29,8 +145,16 @@ void generated() {
                           "Container site binding");
                     check(!f.map.movementBlocked(d.cell + forward(d.face) * -1), "Chest has reachable front");
                 }
-                if (d.kind == DecorationKind::Cage || d.kind == DecorationKind::Rack)
+                if (d.kind == DecorationKind::Cage || d.kind == DecorationKind::Rack) {
                     ++large;
+                    auto others = reserved;
+                    for (unsigned k = 0; k < d.footprintCount(); ++k) {
+                        const auto c = d.footprint(k);
+                        others[unsigned(c.y * f.layout.width + c.x)] = false;
+                    }
+                    check(generation::blockingPropFitsRoom(f.layout, d, others),
+                          "Published furniture has same-room clearance and bypass");
+                }
                 if (d.kind == DecorationKind::Rack)
                     check(depth == 3, "Rack only at deepest depth");
                 for (unsigned k = 0; k < d.footprintCount(); ++k) {
@@ -86,6 +210,9 @@ void containers() {
     const auto world = game.loot().snapshot().world;
     const ContainerId chest{world, 0};
     const LootId first{world, std::uint16_t(NpcWorld::maxInstances * lootPerActor), 1};
+    CommandController promptUi(game);
+    check(std::string_view(promptUi.snapshot().fixturePrompt.data()) == "[F] Open",
+          "Closed accessible chest offers Open");
     check(map.canStep(pose.cell, {3, 4}) && map.canStep(pose.cell, {4, 5}) &&
               !game.geometry().npcAllowed({3, 4}),
           "Player can enter chest cell while NPCs cannot overlap it");
@@ -98,8 +225,9 @@ void containers() {
     check(bool(game.containerAccess(chest)),
           "Same-cell chest access remains available while turning in place");
     game.move(Action::TurnLeft);
-    check(!game.geometry().npcAllowed({5, 6}) && !game.geometry().npcAllowed({6, 6}),
-          "Both rack cells block NPCs");
+    check(!map.canStep({4, 6}, {5, 6}) && !game.geometry().npcAllowed({5, 6}) &&
+              map.canStep({6, 5}, {6, 6}) && game.geometry().npcAllowed({6, 6}),
+          "Rack blocks its anchor; party and NPCs can use the former second cell");
     check(lineOfSight(game.geometry(), pose.cell, {3, 3}),
           "Low furniture does not become full-height sight wall");
     check(!game.pickup({first, {0}, game.party().inventory().revision()}),
@@ -115,6 +243,9 @@ void containers() {
     check(bool(game.openContainer(chest)) && game.loot().snapshot().revision == revision,
           "Repeated open is idempotent");
     check(game.loot().findContainer(chest)->opened, "Open state retained");
+    promptUi.refresh({}, false, false, true);
+    check(std::string_view(promptUi.snapshot().fixturePrompt.data()) == "[F] Inspect",
+          "Opened chest offers Inspect");
     while (game.party().acquire({{3}, {4}, 1, game.party().inventory().revision()})) {
     }
     while (game.party().acquire({{3}, {10}, 1, game.party().inventory().revision()})) {
@@ -140,6 +271,8 @@ void containers() {
     check(game.loot().snapshot().stacks[NpcWorld::maxInstances * lootPerActor + 2].active,
           "Chest collection leaves loose loot intact");
     game.restorePose({{5, 5}, Heading::North}, false);
+    promptUi.refresh({}, false, false, true);
+    check(!promptUi.snapshot().interactionPrompt(), "Sealed chest offers no unavailable action");
     check(!game.openContainer({world, 1}) && !game.loot().findContainer({world, 1})->opened,
           "Sealed chest cannot open");
     auto saved = std::make_unique<FloorState>();
@@ -171,6 +304,8 @@ void containers() {
 } // namespace
 int main() {
     try {
+        placementRules();
+        collisionProgression();
         generated();
         containers();
         std::cout << "Underkeep dressing and container checks passed\n";

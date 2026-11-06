@@ -48,6 +48,47 @@ honor the selected temporary directory and clean up their own files. Never delet
 unrelated scratch data. Do not run benchmarks in default CTest or repeat them to
 obtain a reassuring number.
 
+## Artifact housekeeping
+
+Each task owns a disposable run directory. From the repository root:
+
+```sh
+python3 tools/agent_artifacts.py create
+# Pass the printed absolute run path to capture/review tools as their output root.
+python3 tools/agent_artifacts.py clean RUN_DIRECTORY
+python3 tools/agent_artifacts.py clean RUN_DIRECTORY --apply
+```
+
+Creation prints a unique marked directory under ignored `output/agent-runs/`.
+Cleanup defaults to a preview of file count/bytes and only accepts one marked direct
+child. It refuses symlinks, special files and tracked content, and fails closed if
+Git inspection fails. Repeat cleanup of an absent run is a no-op. Close its runners
+before cleanup; the helper is housekeeping for owned output, not a concurrent writer
+or a hostile-filesystem sandbox. It never sweeps other runs or ages out evidence.
+
+Generate into the run, then promote selected images to the existing feature gallery:
+at most six, or twelve awaiting user review. Explain exceptions in the README using
+the distinct cases that need review. Replace superseded images and repair links;
+keep test results and limitations in the existing relevant design/handoff. Do not
+create another report for each run. Archive completed historical verification in
+[the indexed archive](verification/archive/README.md). Preserve tool inputs, source
+artwork, references and user saves; raw captures, copied binaries, trace bodies and
+machine logs are disposable. A retained unresolved-failure diagnostic needs
+reproduction instructions and an explicit cleanup condition. Finish by cleaning the
+run and reporting cleanup/any exception in the final response, including after a
+failed check. Do not remove unrelated scratch, build caches or Git history.
+
+For changes to the housekeeping helper, use isolated fixture checks only:
+
+```sh
+python3 tests/agent_artifacts_tests.py
+```
+
+Historical output paths and broad retention promises in archived reports describe
+the original checkpoint. The current retention policy supersedes them. Pruned exact
+replay bodies and pinned historical binaries cannot be replayed locally; recorded
+hashes/outcomes are provenance, not a promise that the artifacts remain available.
+
 ## Why some checks cost more
 
 Full campaign persistence checks repeatedly encode/decode four locations, fixed

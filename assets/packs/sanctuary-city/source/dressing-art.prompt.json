@@ -1,0 +1,34 @@
+{
+  "tool": "built-in imagegen",
+  "date": "2026-11-05",
+  "prompts": [
+    {
+      "name": "inn-sign",
+      "prompt": "Use case: stylized-concept. Game material: one square medieval tavern sign face, orthographic flat front view, full bleed opaque painted wood. A single large ivory and muted ochre foaming tankard silhouette centered on a dark desaturated brown-green painted timber board, subtle cream inset border. Readable simple emblem at 96 pixels. Hand-painted retro pixel-art texture with deliberate chunky 3-6 pixel color clusters, earthy low saturation, aged worn paint, warm highlights, no photoreal grain. Fill entire square with the board face; no scene, no chains, no perspective, no extruded edges, no text, no letters, no watermark. This will map onto a modeled hanging sign in a cozy old limestone-and-timber fantasy town."
+    },
+    {
+      "name": "smithy-sign",
+      "prompt": "Use case: stylized-concept. One square medieval smithy sign face texture, orthographic flat front view, full bleed opaque painted timber. Single large recognizable ivory-gray ANVIL side silhouette with horn pointing left, no other objects, centered on dark desaturated blue-green painted wood, subtle cream inset border. Readable simple emblem at 96 pixels. Hand-painted retro pixel-art with deliberate chunky color clusters, earthy low saturation, aged worn paint and warm muted highlights, no photoreal grain. Fill whole square with board face; no scene, chains, perspective, extruded edges, text, letters or watermark. Material for a modeled hanging shop sign in cozy old limestone-and-timber fantasy town."
+    },
+    {
+      "name": "provisioner-sign",
+      "prompt": "Use case: stylized-concept. One square medieval provisioner shop sign face texture, orthographic flat front view, full bleed opaque painted timber. Single recognizable compact provisions bundle emblem: small tied grain sack with a golden loaf of bread and three wheat stalks. Ivory and muted ochre simple silhouettes centered on dark desaturated russet-brown painted wood, subtle cream inset border. Large simple emblem readable at 96 pixels. Hand-painted retro pixel-art with deliberate chunky color clusters, earthy low saturation, aged worn paint and warm muted highlights. Fill whole square with board face; no scene, chains, perspective, extruded edges, text, letters or watermark. Material for modeled hanging sign in a cozy limestone-and-timber fantasy town."
+    },
+    {
+      "name": "market-cloth",
+      "prompt": "Use case: stylized-concept. Square seamless game material texture of weathered medieval market canopy cloth, straight orthographic flat view, full bleed opaque. Broad alternating vertical stripes of muted terracotta russet and warm faded flax cream, about eight stripes across. Hand-painted retro pixel-art with chunky painted color clusters and subtle fabric wear, simple irregular darker patches, low saturation, soft baked diffuse shading only. No folds with cast shadows, no perspective, no canopy scene, no tassels, no border, no text, no objects. Should tile quietly on a low-poly timber stall in an earthy old fantasy town."
+    },
+    {
+      "name": "ivy-master",
+      "prompt": "Use case: stylized-concept. Game foliage alpha-cutout texture: one irregular narrow trailing clump of mature ivy, flat front view, isolated on genuinely transparent background. Olive and muted forest-green leaves with warm sage highlights, thin brown winding stems, dense clusters alternating with clear transparent holes, organic tapered tendrils downward. Clump occupies middle 70 percent width, 90 percent height of square image. Hand-painted retro pixel art with deliberate chunky color clusters, no photographic detail, readable at 160 pixels wide. Soft baked ambient shadows among leaves, no cast background shadow. No pot, wall, ground, frame, letters or watermark. For sparse ivy climbing old limestone and timber facades, muted earthy fantasy game."
+    },
+    {
+      "name": "ivy-alpha-correction",
+      "prompt": "Edit the ivy image: remove ALL the pale white/gray background and halo, including every gap between leaves and around thin stems. Keep only the green leaves and brown stems. The entire backdrop must be genuinely alpha transparent, crisp clean pixel-art edges without shadow or glow. Preserve the ivy design, painted pixel look, earthy green colors and composition exactly."
+    },
+    {
+      "name": "water-master",
+      "prompt": "Use case: stylized-concept. Square seamless opaque game texture of calm shallow fountain water viewed straight from above. Muted dark teal and sage blue-green with sparse pale turquoise short broken ripple highlights, subtle irregular painted patches of deeper teal. Hand-painted pixel art with crisp chunky pixel clusters, limited earthy palette, quiet surface, no gradient glow. The whole image is water, no basin, no shore, no objects, no reflections of objects, no perspective, no text or watermark. Make small discontinuous ripple marks not large dramatic waves; this is a cozy medieval stone fountain, low contrast and restrained highlights. Full bleed opaque tile."
+    }
+  ]
+}

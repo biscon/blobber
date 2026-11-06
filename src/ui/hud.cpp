@@ -1,8 +1,9 @@
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
+#include "ui/portrait_feedback.hpp"
 namespace blobber {
 using namespace hudInk;
-void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) const {
+void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, const HudSnapshot* hud) const {
     const auto r = hudLayout::card(i), portrait = hudLayout::portrait(i);
     const auto accent = c.castCaster ? bright
                         : c.active   ? bright
@@ -17,6 +18,57 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected) c
     fill(portrait, background);
     picture(c.portrait, portrait,
             c.status == DisplayStatus::Dead || !c.castEligible ? Color{100, 100, 100, 255} : WHITE);
+    if (hud && art && c.id.index < rules::partySize) {
+        const auto mask = hud->supportConditions.party[c.id.index];
+        auto has = [&](EffectKind k) { return bool(mask & (1u << unsigned(k))); };
+        // One ward, including exact duplicate bits; portrait copies are scissored to this card.
+        if (has(EffectKind::MirrorImage)) {
+            BeginScissorMode(portrait.x * 3, portrait.y * 3, portrait.width * 3, portrait.height * 3);
+            for (unsigned bit = 0; bit < 3; ++bit)
+                if (hud->supportConditions.duplicates[c.id.index] & (1u << bit)) {
+                    auto echo = portrait;
+                    echo.x += (int(bit) - 1) * 5;
+                    echo.y += bit == 1 ? -4 : 2;
+                    picture(c.portrait, echo, {145, 195, 255, 45});
+                }
+            EndScissorMode();
+        } else {
+            const unsigned row = has(EffectKind::Sanctuary)       ? 6
+                                 : has(EffectKind::ShieldOfFaith) ? 4
+                                 : has(EffectKind::MageArmor)     ? 5
+                                                                  : 8;
+            if (row < 8)
+                art->supportEffect(row, 5, portrait, {145, 205, 255, 40});
+        }
+        const unsigned harmful = has(EffectKind::HoldPerson) || has(EffectKind::Restrained) ? 3
+                                 : has(EffectKind::Sleep)                                   ? 7
+                                 : has(EffectKind::Blind) || has(EffectKind::Bane)          ? 3
+                                                                                            : 8;
+        if (harmful < 8)
+            art->supportEffect(harmful, harmful == 7 ? 4 + unsigned(hud->presentationMs / 160) % 4 : 5,
+                               portrait, {185, 150, 235, 45});
+    }
+    if (hud && art && c.id.index < rules::partySize)
+        for (const auto& feedback : hud->portraitFeedback[c.id.index]) {
+            const auto sample = portraitFeedbackSample(feedback, hud->presentationMs);
+            if (sample.active) {
+                const Color tint{sample.tint[0], sample.tint[1], sample.tint[2], sample.tint[3]};
+                if (feedback.phase == SupportPhase::ImageLost && feedback.duplicate) {
+                    BeginScissorMode(portrait.x * 3, portrait.y * 3, portrait.width * 3, portrait.height * 3);
+                    for (unsigned bit = 0; bit < 3; ++bit)
+                        if (feedback.duplicate & (1u << bit)) {
+                            auto echo = portrait;
+                            echo.x += (int(bit) - 1) * 5;
+                            echo.y += bit == 1 ? -4 : 2;
+                            picture(c.portrait, echo, {145, 195, 255, sample.tint[3]});
+                        }
+                    EndScissorMode();
+                } else if (sample.support)
+                    art->supportEffect(sample.row, sample.frame, portrait, tint);
+                else
+                    art->portraitEffect(sample.row, sample.frame, portrait, tint);
+            }
+        }
     border({portrait.x - 1, portrait.y - 1, portrait.width + 2, portrait.height + 2}, accent);
     if (c.castRecipient) {
         border({portrait.x, portrait.y, portrait.width, portrait.height}, teal);
@@ -140,7 +192,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     headerText(line, 245, gold, UiTextStyle::Small);
     {
         const auto depth = h && h->floor ? h->floor->definition().depth : 1;
-        headerText(h && h->campaign && depth == 0 ? "Sanctuary hub"
+        headerText(h && h->campaign && depth == 0 ? h->locationName
                    : h && h->arena                ? "Arena"
                    : depth == 2                   ? "Depth II"
                    : depth == 3                   ? "Depth III"
@@ -158,7 +210,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             eligible |= h->allies[j].index == h->cards[i].id.index;
         p.card(h->cards[i], i, h->selection.action == PartyAction::Aid && eligible,
                (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
-                   (h->loot.open && h->loot.recipient.index == h->cards[i].id.index));
+                   (h->loot.open && h->loot.recipient.index == h->cards[i].id.index),
+               h);
     }
     if (h->campaign)
         p.picture(UiArt::travelIcon, hudLayout::travelButton,
@@ -181,9 +234,9 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             constexpr const char* labels[]{"FACING NORTH", "FACING EAST", "FACING SOUTH", "FACING WEST"};
             actor = labels[static_cast<unsigned>(*h->combat.facing)];
         } else if (h->combat.phase == CombatPhase::Approach)
-            actor = "RANGED APPROACH";
+            actor = "ENEMIES APPROACHING";
         else if (h->combat.phase == CombatPhase::Contact)
-            actor = "CONTACT / WAIT";
+            actor = "COMBAT BEGINS";
         else if (h->combat.phase == CombatPhase::RoundEnd)
             actor = "ROUND END";
         else if (h->combat.phase == CombatPhase::Victory)
@@ -193,7 +246,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         if (h->campaignTerminal)
             actor = h->campaignVictory ? "CAMPAIGN COMPLETE" : "DEFEAT";
         std::snprintf(line, sizeof(line), "%s%s", actor,
-                      h->combat.resolvingAction  ? "  /  RESOLVING"
+                      h->combat.resolvingAction  ? "  /  ACTING"
                       : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
                                                  : "");
         p.clipped(line, 12, 308, 284, gold, UiTextStyle::Display);
@@ -242,11 +295,6 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
         std::snprintf(threats, sizeof(threats), "Threats %s%s", dirs,
                       h->combat.pendingCount ? " / arrivals" : "");
         p.text(threats, viewX + 6, viewY + 5, gold, UiTextStyle::Small);
-    }
-    if (h->fixturePrompt[0]) {
-        p.fill({viewX + 4, viewY + viewHeight - 17, viewWidth - 8, 15}, background);
-        p.clipped(h->fixturePrompt.data(), viewX + 8, viewY + viewHeight - 15, viewWidth - 16, gold,
-                  UiTextStyle::Small);
     }
     p.log(*h, false);
     (void)debug;

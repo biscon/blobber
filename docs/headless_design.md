@@ -2,7 +2,7 @@
 
 Status: implemented, **Accepted and closed**, 2026-10-30. User approved implementation
 with “Implement the plan.” [Protocol/client guide](headless_protocol.md) and
-[verification/handoff](slice131_verification.md) describe the delivered interface.
+[verification/handoff](verification/archive/slice131_verification.md) describe the delivered interface.
 The user accepted the slice on 2026-10-30: “slice accepted, update the docs.”
 The [automation roadmap](automation_plan.md) retains 13.2/13.3 as Planned; 13.2 is next
 eligible for separate planning. Verification scope and limitations remain unchanged.

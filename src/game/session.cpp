@@ -41,6 +41,9 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
         throw std::runtime_error("Session spawn is occupied or outside walkable map");
     audio_.enabled = false; // Headless simulation has no audio observer.
     events_.audioJournal = &audio_;
+    support_.clear(actors_.snapshot().world);
+    support_.bind(effects_);
+    events_.supportJournal = &support_;
     doors_.world = floor_.world();
     prepareObjective();
     ai_.bindEffects(&effects_);
@@ -124,14 +127,17 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     // Remember the settled endpoint before Controller consumes that queued step.
     const auto& transition = movement().transition;
     if (transition.active() && transition.elapsed + movementSeconds >= transition.durationSeconds) {
+        effects_.followWeapons(transition.from.cell, transition.to.cell);
         if (!(transition.from.cell == transition.to.cell))
             audio_.emit({"party.step"});
         floor_.discover(movement().player.cell, movement().player.heading);
         detectContact(true);
     }
     movement_.update(map_, movementSeconds, &actors_);
-    if (!movement().animated && !(oldCell == movement().player.cell))
+    if (!movement().animated && !(oldCell == movement().player.cell)) {
+        effects_.followWeapons(oldCell, movement().player.cell);
         audio_.emit({"party.step"});
+    }
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))
         for (std::uint16_t i = 0; i < rules::partySize; ++i)
@@ -175,8 +181,10 @@ void GameSession::move(Action action, bool fresh) noexcept {
         return;
     const auto oldCell = movement_.state().player.cell;
     movement_.submit(map_, action, fresh, &actors_);
-    if (!movement().animated && !(oldCell == movement().player.cell))
+    if (!movement().animated && !(oldCell == movement().player.cell)) {
+        effects_.followWeapons(oldCell, movement().player.cell);
         audio_.emit({"party.step"});
+    }
     effects_.partyCell(movement_.state().player.cell);
     if (!(oldCell == movement_.state().player.cell))
         for (std::uint16_t i = 0; i < rules::partySize; ++i)

@@ -1,4 +1,5 @@
 #include "ui/creator_screen.hpp"
+#include "ui/player_text.hpp"
 #include <algorithm>
 #include <cstring>
 namespace blobber {
@@ -148,11 +149,12 @@ void drawSelection(const HudPainter& p, const Catalog& c, const SpellSelection& 
         const UiRect description{466, 230, 142, 27};
         const int spacing = p.fonts->lineHeight(UiTextStyle::Small);
         s.detailPageLines = unsigned(description.height / spacing);
-        s.detailLines =
-            wrap(p, spell->description.c_str(), {466, 230, 142, 0}, text, UiTextStyle::Small, 0, spacing);
+        s.detailLines = wrap(p, spellDescription(spell->kind, spell->description.c_str()), {466, 230, 142, 0},
+                             text, UiTextStyle::Small, 0, spacing);
         const auto last = s.detailLines > s.detailPageLines ? s.detailLines - s.detailPageLines : 0;
         const auto offset = std::min(s.detailOffset, last);
-        wrap(p, spell->description.c_str(), description, text, UiTextStyle::Small, offset, spacing);
+        wrap(p, spellDescription(spell->kind, spell->description.c_str()), description, text,
+             UiTextStyle::Small, offset, spacing);
         scrollbar(selectionLayout::detailTrack, s.detailLines, s.detailPageLines, offset);
     } else {
         s.detailLines = 0;
@@ -318,10 +320,8 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                                     : "Intelligence",
                           cls->armor ? "Class proficiencies" : "None");
             p.text(line, 174, 273, muted);
-            p.text("Only implemented features are offered. Backgrounds and skills are reserved.", 174, 296,
-                   muted, UiTextStyle::Small);
         } else
-            p.text("Select a class to see its supported features.", 174, 211, muted);
+            p.text("Select a class to see its features.", 174, 211, muted);
         break;
     }
     case CreatorStep::Abilities: {

@@ -62,7 +62,7 @@ The complete production bake uses 209,665,518 resident bytes and 150,419,024 tra
 loading bytes. Duplicating both complete appearance sets uses 278,669,284 resident
 bytes, below the unchanged 512 MiB limits. These exclude driver/dependency memory.
 
-See the [verification and handoff](slice121_verification.md) for commands, captures,
+See the [verification and handoff](verification/archive/slice121_verification.md) for commands, captures,
 asset provenance and review instructions. Interactive desktop play remains
 unverified; no desktop input was automated. Slice 12.1 is accepted and closed;
 12.2 is next eligible for planning and remains unstarted.

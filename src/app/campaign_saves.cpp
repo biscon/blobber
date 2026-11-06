@@ -32,7 +32,8 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
         if (h.terminalWarning) {
             if (!commands.snapshot().menuOpen)
                 commands.toggleMenu();
-            message(result.error.c_str());
+            std::fprintf(stderr, "Closing save failed: %s\n", result.error.c_str());
+            message("Couldn't record the end of this expedition. Please retry.");
         } else {
             message("Expedition closed. Continue is unavailable.");
             if (commands.snapshot().menuOpen)
@@ -64,12 +65,14 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
             message("Campaign saved.");
             return h.leaveAfter;
         }
-        message(result.published ? "Save published, but durability is unconfirmed. Retry before leaving."
-                                 : result.error.c_str());
+        std::fprintf(stderr, "Campaign save failed: %s\n", result.error.c_str());
+        message(result.published ? "Couldn't confirm the save. Retry before leaving."
+                                 : "Couldn't save. Please try again.");
         slot_ = prepareCpu([&] { return store_->inspect(); });
     } catch (const std::exception& e) {
         h.replace = false;
-        message(e.what());
+        std::fprintf(stderr, "Campaign save failed: %s\n", e.what());
+        message("Couldn't save. Please try again.");
         slot_ = prepareCpu([&] { return store_->inspect(); });
     }
     return false;

@@ -60,7 +60,9 @@ class LoadingScreen {
             if (worker_)
                 worker_->cancel();
         }
-        const char* status = !travel_ || now - start_ >= .25 ? phase : nullptr;
+        // Preparation phases name engine resources; keep those details out of player UI.
+        const char* status =
+            phase && (!travel_ || now - start_ >= .25) ? (travel_ ? "Travelling..." : "Loading...") : nullptr;
         if (presenter_)
             presenter_->presentCached(1, status);
         else {

@@ -30,7 +30,7 @@ Inventory/Character page tabs now paint their own pressed state before their lab
 subtle green fill, teal label and underline; the selected page keeps its gold
 indicator. Party tabs use the same fill/underline without dimming portraits/text.
 The final generic button overlay skips these tabs. Mouse release/cancellation
-semantics and other button painting are unchanged. See the [two held-state captures](screenshots/ui-compatibility/index.html).
+semantics and other button painting are unchanged. See the [two held-state captures](screenshots/ui-compatibility/README.md).
 
 Release and Debug applications built successfully. Verification ran serially at low
 priority with one build worker/test process:

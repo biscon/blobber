@@ -1,5 +1,6 @@
 #pragma once
 #include "automation_fixtures.hpp"
+#include "world/sanctuary_city.hpp"
 #include <queue>
 namespace blobber::campaign_test {
 using namespace blobber::automation::test;
@@ -71,6 +72,50 @@ inline void walk(GameSession& g, Cell to) {
         g.move(Action::Forward);
         check(g.movement().player.cell == *i, "checked fixture movement");
     }
+}
+inline void enterInn(CampaignRun& run) {
+    const auto approach = sanctuaryCity().doorway("inn").approach;
+    walk(run.game(), approach.cell);
+    face(run.game(), approach.heading);
+    auto ticket = run.prepareTravel(run.doorwayRequest());
+    check(run.commitTravel(ticket), "Enter authored inn");
+}
+inline void leaveInn(CampaignRun& run) {
+    const auto exit = run.location(unsigned(CampaignLocationId::Inn)).exit;
+    walk(run.game(), exit.cell);
+    face(run.game(), exit.heading);
+    auto ticket = run.prepareTravel(run.doorwayRequest());
+    check(run.commitTravel(ticket), "Leave authored inn");
+}
+inline void entrance(CampaignRun& run) {
+    auto& g = run.game();
+    const auto f = *g.fixtures().find(stair(g, FixtureKind::Downstairs).id);
+    walk(g, stairLanding(f));
+    face(g, f.facing);
+}
+inline void entrance(Client& client) {
+    const auto& game = client.protocol.session()->game();
+    const auto f = *game.fixtures().find(stair(game, FixtureKind::Downstairs).id);
+    const auto move = [&](const char* direction) {
+        check(client.act({{"kind", "move"}, {"direction", direction}}).at("data").at("accepted"),
+              "Wire city navigation accepted");
+        client.advance(100, false);
+    };
+    const auto turn = [&](Heading h) {
+        while (game.movement().player.heading != h)
+            move("turn_right");
+    };
+    const auto target = stairLanding(f);
+    // Both town arrivals reach the clear landing row before crossing the square.
+    while (game.movement().player.cell.y != target.y) {
+        turn(game.movement().player.cell.y < target.y ? Heading::South : Heading::North);
+        move("forward");
+    }
+    while (game.movement().player.cell.x != target.x) {
+        turn(game.movement().player.cell.x < target.x ? Heading::East : Heading::West);
+        move("forward");
+    }
+    turn(f.facing);
 }
 inline void kill(GameSession& g) {
     for (std::size_t i = 0; i < g.actors().snapshot().count; ++i)

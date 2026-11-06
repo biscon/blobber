@@ -2,6 +2,7 @@
 #include "game/commands.hpp"
 #include "support/check.hpp"
 #include "support/progression_fixtures.hpp"
+#include "ui/interaction.hpp"
 #include <iostream>
 using namespace blobber;
 using namespace blobber::rules;
@@ -84,6 +85,221 @@ void spells() {
             c.turn = s.combat().snapshot().turn;
             check(s.submit(c).reason == CommandReason::Cooldown, "spectral followup has its own cooldown");
         }
+    }
+}
+void weaponFollowsMovement() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    for (unsigned h = 0; h < 4; ++h)
+        for (bool animated : {false, true}) {
+            const Player pose{{6, 6}, Heading(h)};
+            const auto f = forward(pose.heading);
+            NpcWorld places(map, pose.cell, {"goblin"}, {});
+            GameSession game(map, catalog, places, 5, pose, false);
+            game.setAnimated(animated);
+            EffectRequest request;
+            request.world = game.actors().snapshot().world;
+            request.kind = EffectKind::SpiritualWeapon;
+            request.caster = rules::CharacterId{1};
+            request.targets[0] = rules::CharacterId{1};
+            request.count = 1;
+            check(bool(game.applyEffect(request)), "Follower fixture summons a live weapon");
+            auto& effects = const_cast<EffectController&>(game.effects());
+            const auto start = pose.cell + f;
+            check(effects.moveWeapon({1}, start, true), "Follower fixture positions the weapon");
+            const auto ready = effects.spiritualWeapon({1})->readyMs;
+            const auto expires = effects.spiritualWeapon({1})->expiresMs;
+            const auto mana = game.party().character({1})->mana;
+            game.move(Action::Forward);
+            if (animated) {
+                check(effects.spiritualWeapon({1})->cell == start,
+                      "Animated step leaves authoritative weapon at source until completion");
+                game.update(.08, true);
+                check(effects.spiritualWeapon({1})->cell == start,
+                      "Paused movement cannot commit a following step");
+                game.move(Action::Forward); // Queue the next step at the first endpoint.
+                game.update(.16, false);
+                check(effects.spiritualWeapon({1})->cell == start + f,
+                      "Queued movement commits the first weapon step exactly once");
+                game.setAnimated(false);
+                check(effects.spiritualWeapon({1})->cell == start + f * 2,
+                      "Disabling animation settles the queued weapon step exactly once");
+                game.setAnimated(false);
+            }
+            const auto expected = start + f * (animated ? 2 : 1);
+            check(effects.spiritualWeapon({1})->cell == expected &&
+                      effects.ground().weapons[1].cell == expected,
+                  "Party advance moves authoritative and rendered weapon cells together");
+            check(effects.spiritualWeapon({1})->readyMs == ready &&
+                      effects.spiritualWeapon({1})->expiresMs == expires &&
+                      game.party().character({1})->mana == mana,
+                  "Following does not spend commands, mana or reset duration/cooldown");
+            game.move(Action::TurnRight);
+            check(effects.spiritualWeapon({1})->cell == expected, "Turning does not translate the weapon");
+            auto save = std::make_unique<FloorState>();
+            game.exportFloor(*save);
+            game.importFloor(*save);
+            check(game.effects().spiritualWeapon({1})->cell == expected,
+                  "Restore retains the followed weapon cell without applying another step");
+        }
+    const Map wall({"#######", "#.....#", "#..#..#", "#.....#", "#.....#", "#.....#", "#######"});
+    check(followingWeaponCell(wall, {3, 3}, {3, 4}, {3, 3}) == Cell{3, 4},
+          "Blocked follower retreats into the vacated party cell instead of the camera");
+    check(followingWeaponCell(wall, {3, 3}, {4, 4}, {4, 3}) == Cell{3, 3},
+          "Blocked remote follower stays put rather than crossing a wall");
+    FloorFixtures doors;
+    doors.count = 1;
+    doors.entries[0] = {{4, 2}, Heading::North, FixtureKind::Door};
+    FloorGeometry geometry(wall, doors);
+    check(followingWeaponCell(geometry.view(), {4, 3}, {3, 4}, {3, 3}) == Cell{4, 3},
+          "Following respects closed doors as well as walls");
+    NpcWorld empty(wall, {3, 3}, {"goblin"}, {});
+    GameSession blocked(wall, catalog, empty, 5, {{3, 3}, Heading::North}, false);
+    blocked.setAnimated(false);
+    EffectRequest request;
+    request.world = blocked.actors().snapshot().world;
+    request.kind = EffectKind::SpiritualWeapon;
+    request.caster = rules::CharacterId{1};
+    request.targets[0] = rules::CharacterId{1};
+    request.count = 1;
+    check(bool(blocked.applyEffect(request)), "Blocked-step fixture summons a weapon");
+    auto& effects = const_cast<EffectController&>(blocked.effects());
+    check(effects.moveWeapon({1}, {4, 3}, true), "Blocked-step fixture positions the weapon");
+    const auto revision = effects.ground().revision;
+    blocked.move(Action::Forward);
+    blocked.update(.16, false);
+    check(blocked.movement().player.cell == Cell{3, 3} && effects.spiritualWeapon({1})->cell == Cell{4, 3} &&
+              effects.ground().revision == revision,
+          "Rejected party movement cannot move or invalidate the weapon");
+}
+void weaponNextTurnControls() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
+    for (bool normalFirst : {false, true})
+        for (bool floorOnly : {false, true}) {
+            GameSession s(map, catalog, places, 7, spellSpawn, false);
+            levelParty(s, 3, SpellKind::SpiritualWeapon);
+            levelReady(s, 1);
+            const auto round = s.combat().snapshot().round;
+            auto cast = spellCommand(s, SpellKind::SpiritualWeapon);
+            cast.targetCount = 1;
+            cast.enemies[0] = s.actors().id(0);
+            check(s.submit(cast).reason == CommandReason::Resolved, "Cleric summons weapon on her turn");
+            s.update(1.1, false);
+            levelReady(s, 1);
+            check(s.combat().snapshot().round > round, "Follow-up reaches cleric's next round");
+            const auto mana = s.party().character({1})->mana;
+            if (normalFirst) {
+                auto defend = featureCommand(s, 1, Feature::None);
+                defend.action = PartyAction::Defend;
+                check(s.submit(defend).reason == CommandReason::Resolved,
+                      "Cleric spends normal action first");
+                s.update(1.1, false);
+            }
+            CommandController ui(s);
+            TargetSnapshot targets;
+            targets.world = s.actors().snapshot().world;
+            targets.revision = s.actors().snapshot().revision;
+            targets.ids[0] = s.actors().id(0);
+            targets.count = 1;
+            ui.refresh(targets, false, false, true);
+            ui.selectCharacter(1);
+            ui.openSpellbook();
+            ui.selectSpellbookTab(MagicHud::abilityTab);
+            const auto& book = ui.snapshot().magic;
+            std::size_t index = book.entries.size();
+            for (std::size_t i = 0; i < book.visibleCount; ++i)
+                if (book.entries[book.visible[i]].feature == Feature::SpiritualWeapon)
+                    index = book.visible[i];
+            check(index < book.count && book.entries[index].reason == CommandReason::MissingTarget,
+                  "Next-turn command is available under Abilities, before or after normal action");
+            ui.chooseSpellbook(index);
+            check(ui.magicSingleTarget() && ui.snapshot().targetPicker.available,
+                  "Weapon command uses immediate single-enemy targeting with the normal target list");
+            UiInput click;
+            click.pointer = ArtPoint{float(hudLayout::viewport.x + 20), float(hudLayout::viewport.y + 20)};
+            click.pressed[std::size_t(UiKey::Click)] = true;
+            const auto destination = s.effects().spiritualWeapon({1})->cell + Cell{1, 0};
+            if (floorOnly) {
+                ui.magicEnemy(
+                    s.actors().id(0)); // An earlier keyboard selection must not survive a floor click.
+                routeHudInput(ui, click, {}, true, {}, destination);
+                check(ui.snapshot().magic.armed && !ui.snapshot().magic.pending.target &&
+                          !ui.snapshot().magic.pending.targetCount &&
+                          ui.snapshot().magic.pending.aimedCell == destination,
+                      "Floor click clears old enemy and waits for movement confirmation");
+                UiInput confirm;
+                confirm.pressed[std::size_t(UiKey::Confirm)] = true;
+                routeHudInput(ui, confirm);
+                check(s.effects().spiritualWeapon({1})->cell == destination,
+                      "Keyboard confirms movement-only command");
+            } else {
+                routeHudInput(ui, click, s.actors().id(0), true, {}, s.effects().spiritualWeapon({1})->cell);
+                check(ui.snapshot().magic.state == CastingState::Resolving,
+                      "One enemy click immediately executes Spiritual Weapon, without another confirmation");
+                routeHudInput(ui, click, s.actors().id(0));
+                check(ui.confirm() != CommandReason::Resolved, "Double input cannot issue a second attack");
+            }
+            unsigned attacks = 0;
+            for (int n = 0; n < 12; ++n)
+                for (const auto& e : s.update(.1, false))
+                    attacks += e.event == CombatEvent::Attack && e.spell == SpellKind::SpiritualWeapon;
+            check(attacks == (floorOnly ? 0u : 1u) && s.party().character({1})->mana == mana,
+                  "Click attack or floor-only move resolves the intended action without extra mana");
+            if (!normalFirst) {
+                check(!s.combat().snapshot().spent[1], "Weapon command preserves normal action");
+                auto repeat = featureCommand(s, 1, Feature::SpiritualWeapon);
+                repeat.spell = cast.spell;
+                repeat.aimedCell = s.effects().spiritualWeapon({1})->cell;
+                check(s.submit(repeat).reason == CommandReason::Cooldown,
+                      "Weapon cannot be commanded twice in the same round");
+            }
+        }
+}
+void immediateActionSurge() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
+    for (bool normalFirst : {false, true}) {
+        GameSession s(map, catalog, places, 7, spellSpawn, false);
+        levelParty(s, 2);
+        levelReady(s, 0);
+        if (normalFirst) {
+            auto defend = featureCommand(s, 0, Feature::None);
+            defend.action = PartyAction::Defend;
+            check(s.submit(defend).reason == CommandReason::Resolved, "Fighter uses normal action first");
+            s.update(1.1, false);
+        }
+        CommandController ui(s);
+        ui.refresh(allCombatTargets(s), false, false, true);
+        ui.selectCharacter(0);
+        ui.openSpellbook();
+        ui.selectSpellbookTab(MagicHud::abilityTab);
+        const auto& book = ui.snapshot().magic;
+        std::size_t row = 0;
+        while (row < book.visibleCount && book.entries[book.visible[row]].feature != Feature::ActionSurge)
+            ++row;
+        check(row < book.visibleCount, "Action Surge is listed in Abilities");
+        const auto index = book.visible[row];
+        const auto rect = hudLayout::spellEntry(int(row - book.offset));
+        UiInput click;
+        click.pointer = ArtPoint{float(rect.x + 2), float(rect.y + 2)};
+        click.pressed[std::size_t(UiKey::Click)] = true;
+        routeHudInput(ui, click);
+        check(!s.party().character({0})->actionSurge && !ui.snapshot().magic.casting() &&
+                  !ui.snapshot().magic.open,
+              "One Abilities click spends Action Surge immediately without a confirmation panel");
+        ui.chooseSpellbook(index);
+        unsigned surges = 0;
+        for (const auto& event : s.events())
+            surges += event.event == CombatEvent::Recovery && event.feature == Feature::ActionSurge;
+        check(surges == 1, "Repeated selection cannot consume or grant Action Surge again");
+        s.update(1.1, false);
+        auto defend = featureCommand(s, 0, Feature::None);
+        defend.action = PartyAction::Defend;
+        check(s.submit(defend).reason == CommandReason::Resolved,
+              "Immediately selected surge grants its action");
     }
 }
 void aidAndMirror() {
@@ -453,6 +669,9 @@ int main(int argc, char**) {
             return 0;
         }
         spells();
+        weaponNextTurnControls();
+        weaponFollowsMovement();
+        immediateActionSurge();
         aidAndMirror();
         effects();
         features();

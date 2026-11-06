@@ -8,9 +8,10 @@
 #include <array>
 #include <filesystem>
 namespace blobber {
-// One startup-prepared atlas, owned by Presenter's resource registry.
+// Startup-prepared interface textures, owned by Presenter's resource registry.
 enum class EffectKind : std::uint8_t;
 enum class MapMarker : std::uint8_t;
+enum class FeedbackBackdrop : unsigned;
 class UiArt {
   public:
     static constexpr unsigned classFeaturesIcon = 28, silhouetteIcon = 44, restIcon = 48;
@@ -25,12 +26,16 @@ class UiArt {
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
     void creator(unsigned index, UiRect destination, Color tint = WHITE) const;
+    void portraitEffect(unsigned row, unsigned frame, UiRect destination, Color tint) const;
+    void supportEffect(unsigned row, unsigned frame, UiRect destination, Color tint) const;
+    void feedbackBackdrop(FeedbackBackdrop, UiRect destination, Color tint) const;
     void camp(unsigned frame, UiRect destination, Color tint = WHITE) const;
     void mapMarker(MapMarker, Rectangle destination, Heading facing = Heading::North) const;
 
   private:
     GpuResources& resources_;
-    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_;
+    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_, portraitEffects_,
+        feedback_, supportEffects_;
     std::array<Rectangle, 64> regions_{};
 };
 } // namespace blobber

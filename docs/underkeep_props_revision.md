@@ -67,9 +67,12 @@ benchmark, full build matrix or runtime lighting change.
 
 See the [in-game comparison gallery](screenshots/underkeep-props/README.md).
 Regenerate game captures using `blobber_world_integration_gpu_tests ASSET_DIRECTORY
-NEW_OUTPUT_DIRECTORY --underkeep-props-review`, then assemble the retained gallery
-with `python3 tools/underkeep_props_gallery.py`. This is an explicit art diagnostic,
-not an ordinary CPU test depending on game content.
+NEW_OUTPUT_DIRECTORY --underkeep-props-review`. For a new comparison, assemble
+fresh before/final game and Blender inputs with
+`python3 tools/underkeep_props_gallery.py --input CAPTURE_ROOT --output NEW_OUTPUT_DIRECTORY`.
+Use a disposable agent run and promote only selected images; the bulk original
+inputs were pruned on 2026-11-05. This is an explicit art diagnostic, not an
+ordinary CPU test depending on game content.
 
 Blender wrote all artifacts successfully but stalled at PulseAudio shutdown in
 this sandbox. Only task-owned background processes were terminated; final runs

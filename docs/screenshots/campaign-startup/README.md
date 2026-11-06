@@ -1,14 +1,10 @@
 # Campaign Continue correction
 
-2026-11-02. [Design and verification](../../procedural_campaign_save_design.md#graphical-continue-at-an-old-npc-spawn-2026-11-02).
+Curated on 2026-11-05 from existing evidence; no new capture or test run.
+Historical acceptance and verification limitations remain in the linked documentation.
 
-- [Continued campaign](continued-campaign.png): a read-only copy of the reported
-  save renders at its exact depth-1 position, facing the updated chest model.
-- [Readable menu error](readable-menu-error.png): the original error text is
-  deliberately injected to review the new opaque panel and larger text. It is
-  not an outstanding load failure.
+Superseded captures, raw logs, generated galleries and machine reports were removed.
 
-Both are native 1920×1080 application-owned captures from a hidden window.
-Saved simulation and file bytes remained unchanged. GL errors and world resource
-release checks passed. No desktop input or focus changes; interactive acceptance
-remains user review. The copied save stays outside the repository.
+- [Documentation: procedural campaign save design](../../procedural_campaign_save_design.md)
+- [continued campaign](continued-campaign.png)
+- [readable menu error](readable-menu-error.png)

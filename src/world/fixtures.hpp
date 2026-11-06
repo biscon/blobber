@@ -34,7 +34,7 @@ struct FixtureRequest {
 };
 struct FixtureResult {
     bool accepted = false, changed = false;
-    const char* reason = "Fixture unavailable.";
+    const char* reason = "There is nothing to use here.";
     explicit operator bool() const noexcept { return accepted; }
 };
 inline bool fixtureReachable(const FixtureDefinition& f, Cell cell, Heading heading) noexcept {

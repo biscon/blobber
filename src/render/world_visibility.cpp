@@ -1,5 +1,6 @@
 #include "render/world_visibility.hpp"
 #include "game/combat.hpp"
+#include "render/world_projection_parameters.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -57,7 +58,8 @@ VisibilityPipeline::VisibilityPipeline(const Scene& scene, const world_assets::C
         throw std::runtime_error("World visibility scratch budget exceeded");
 }
 std::size_t VisibilityPipeline::bytes() const noexcept {
-    return sizeof(*this) + 4u * viewWidth * viewHeight * (sizeof(std::uint16_t) + 2 * sizeof(float)) +
+    return sizeof(*this) + pack_.dynamicBytes() +
+           4u * viewWidth * viewHeight * (sizeof(std::uint16_t) + 2 * sizeof(float)) +
            2u * viewWidth * viewHeight * sizeof(float);
 }
 bool VisibilityPipeline::lootVisible(LootId id) const noexcept {
@@ -91,7 +93,7 @@ bool VisibilityPipeline::update(const FrameInput& in, bool rasterMoving) {
     const auto* fixtures = in.geometry.fixtures();
     if (fixtures && fixtures->definition().count > fixtureCapacity)
         throw std::invalid_argument("Too many world fixtures");
-    const auto c = camera(in.movement, in.geometry);
+    const auto c = camera(in.movement, in.geometry, scene_.farClip);
     const std::array<std::uint64_t, 11> stamp{in.geometry.world(),
                                               in.geometry.revision(),
                                               fixtures ? fixtures->revision() : 0,
@@ -159,8 +161,15 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const Vec foot{npc.cell.x + .25f + npc.subcell.x * .5f + selection.offsetX,
                            in.animation ? selection.elevation : actorElevation(actor, in.geometry, in.now),
                            npc.cell.y + .25f + npc.subcell.y * .5f + selection.offsetY};
-            const float travelX = foot.x - (npc.cell.x + .25f + npc.subcell.x * .5f),
-                        travelZ = foot.z - (npc.cell.y + .25f + npc.subcell.y * .5f);
+            // A cosmetic melee lunge must not cross a directional-art sector.
+            // Combat holds facing/view through the attack; keep its starting anchor
+            // for art selection while geometry and picking follow the animated feet.
+            const auto facingPosition =
+                actor.life == ActorLife::Alive && actor.hasAttack && selection.clip == NpcAnimation::Attack
+                    ? actorPosition(actor, actor.attackTimeMs)
+                    : ActorPosition{foot.x, foot.z};
+            const float travelX = facingPosition.x - (npc.cell.x + .25f + npc.subcell.x * .5f),
+                        travelZ = facingPosition.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
             const unsigned side = unsigned(sideFor(npc.facing, center.x - .5f - npc.cell.x - travelX,
                                                    center.z - .5f - npc.cell.y - travelZ));
             unsigned clip = unsigned(in.animation ? selection.clip : npc.animation),
@@ -177,7 +186,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             const auto texture = cl.textures[side][f];
             const auto anchor = assets_.publication.anchors[texture];
             const float depth = dot(sub(foot, out.camera.position), out.camera.forward);
-            if (depth < nearPlane || depth > farPlane)
+            if (depth < nearPlane || depth > out.camera.farClip)
                 continue;
             const Vec feet = foot;
             Billboard b{feet,
@@ -193,6 +202,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
                         selection.flash};
             b.release = a.attachments.release[side];
             b.torso = a.attachments.torso[side];
+            b.bodyBounds = a.attachments.bodyBounds[side];
+            b.bodyCanvasWidth = a.clips[0].width ? a.clips[0].width : a.width;
             const auto& stored = assets_.publication.textures[texture];
             b.crop = {float(stored.canvas.x) / stored.canvas.width,
                       float(stored.canvas.y) / stored.canvas.height,
@@ -204,6 +215,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             if (clip == unsigned(NpcAnimation::Prone) && a.clips[clip].textures[side][0] != UINT16_MAX) {
                 canonical = a.clips[clip].textures[side][0];
             }
+            if (assets_.masks[canonical].empty() || assets_.masks[texture].empty())
+                throw std::logic_error("Actor artwork was not acquired at preparation");
             const auto& canonicalTexture = assets_.publication.textures[canonical];
             const float top = float(canonicalTexture.canvas.y + assets_.bounds[canonical].top) /
                               canonicalTexture.canvas.height;
@@ -231,7 +244,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             Vec feet{stack.cell.x + .5f, elevation(in.geometry.surface(stack.cell).floor),
                      stack.cell.y + .5f};
             float depth = dot(sub(feet, out.camera.position), out.camera.forward);
-            if (depth < nearPlane || depth > farPlane)
+            if (depth < nearPlane || depth > out.camera.farClip)
                 continue;
             if (icons_[0] == UINT16_MAX)
                 throw std::invalid_argument("Missing prepared loot/bag");
@@ -277,7 +290,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
             Vec feet{entry.cell.x + .5f, elevation(in.geometry.surface(entry.cell).floor),
                      entry.cell.y + .5f};
             const float depth = dot(sub(feet, out.camera.position), out.camera.forward);
-            if (depth < nearPlane || depth > farPlane)
+            if (depth < nearPlane || depth > out.camera.farClip)
                 continue;
             const float size = std::clamp(focal() * .25f / depth, 4.f, 64.f) * depth / focal();
             const auto p = project(out.camera, feet);
@@ -315,7 +328,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         const float lateral = (x + .5f - viewWidth * .5f) / focal();
         if (frame.leaves.hides(frame.camera,
                                {frame.camera.forward.x + frame.camera.right.x * lateral,
-                                (viewHeight * .34f - y - .5f) / focal(),
+                                (viewHeight * viewHorizon - y - .5f) / focal(),
                                 frame.camera.forward.z + frame.camera.right.z * lateral},
                                depth, frame.bodyLeafRelations[owner].data()))
             return false;
@@ -337,19 +350,20 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
     if (in.geometry.world() != stamp_[0] || in.geometry.revision() != stamp_[1] ||
         (in.doors ? in.doors->revision : 0) != stamp_[8])
         return {};
-    const auto c = camera(in.movement, in.geometry);
+    const auto c = camera(in.movement, in.geometry, scene_.farClip);
     if (!sameCamera(c, frame().camera))
         return {};
-    const float lateral = (x + .5f - viewWidth * .5f) / focal(), vy = (viewHeight * .34f - y - .5f) / focal();
+    const float lateral = (x + .5f - viewWidth * .5f) / focal(),
+                vy = (viewHeight * viewHorizon - y - .5f) / focal();
     if (vy >= 0)
         return {};
     const float vx = c.forward.x + c.right.x * lateral, vz = c.forward.z + c.right.z * lateral;
     float start = nearPlane;
-    for (unsigned visit = 0; visit < 64 && start < farPlane; ++visit) {
+    for (unsigned visit = 0; visit < 128 && start < c.farClip; ++visit) {
         const float probe = start + 1e-5f;
         const Cell cell{int(std::floor(c.position.x + vx * probe)),
                         int(std::floor(c.position.z + vz * probe))};
-        float end = farPlane;
+        float end = c.farClip;
         if (std::abs(vx) > 1e-8f)
             end = std::min(end, ((vx > 0 ? cell.x + 1 : cell.x) - c.position.x) / vx);
         if (std::abs(vz) > 1e-8f)
@@ -357,7 +371,7 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
         if (in.geometry.base().solid(cell))
             return {};
         const float d = (elevation(in.geometry.surface(cell).floor) - c.position.y) / vy;
-        if (d >= start - epsilon && d <= end + epsilon && d >= nearPlane && d <= farPlane) {
+        if (d >= start - epsilon && d <= end + epsilon && d >= nearPlane && d <= c.farClip) {
             if (d > frame().picking.opaqueDepth(std::size_t(y) * viewWidth + x) + epsilon)
                 return {};
             return spellCell(in.geometry, in.movement.player, cell) ? std::optional<Cell>{cell}
@@ -381,7 +395,7 @@ Attachment attachment(const Camera& c, const Billboard& b, NpcAttachment a) noex
     return {{b.feet.x + c.right.x * b.width * (a.x - b.anchorX), b.feet.y + b.height * (b.anchorY - a.y),
              b.feet.z + c.right.z * b.width * (a.x - b.anchorX)},
             b.depth,
-            b.depth >= nearPlane && b.depth <= farPlane};
+            b.depth >= nearPlane && b.depth <= c.farClip};
 }
 Scene billboardMesh() {
     Scene s;

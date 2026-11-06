@@ -91,7 +91,7 @@ unknown portraits retain their placeholder. Generated PNG sources and exact prom
 live in `assets/ui/spells/`; loading/resizing/upload occurs only at startup.
 Log width changes rewrap by logical message position using fixed scratch buffers.
 
-Actual results and retained captures: [UI verification and handoff](slice10_ui_verification.md).
+Actual results and retained captures: [UI verification and handoff](verification/archive/slice10_ui_verification.md).
 
 ## Review polish: badge stability and spacing (2026-10-27)
 
@@ -112,7 +112,7 @@ Verify with hidden native/reduced captures and focused CPU/allocation checks.
 sets projected positions from fixed front-idle geometry and current travel offsets.
 The visibility scan publishes badge coordinates only for visible bodies. Badge
 collision layout uses these stable coordinates. No prepared-bank format changes.
-See [polish verification](slice10_ui_verification.md#review-polish-badge-stability-and-spacing).
+See [polish verification](verification/archive/slice10_ui_verification.md#review-polish-badge-stability-and-spacing).
 
 ## Class Features presentation
 
@@ -169,7 +169,7 @@ resource clarity. The automated verification below remains distinct from user re
   no OS input or focus automation was used. User acceptance is recorded above.
 - Final capture export completed with **274 PNGs**, including 48 feature views and
   63 reduced views. Selected native/reduced views were inspected, not every export.
-  Nine final images are retained in [class-features](screenshots/class-features/), including
+  Nine final images are retained in [class-features](screenshots/class-features), including
   [rogue browsing](screenshots/class-features/feature-2-combat-book.png),
   [Second Wind confirmation](screenshots/class-features/feature-0-combat-confirm.png),
   [exhausted uses](screenshots/class-features/feature-0-combat-used.png), and the

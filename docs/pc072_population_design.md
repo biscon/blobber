@@ -86,8 +86,8 @@ only the user accepts PC07/P-C, and PC08 does not start automatically.
 
 ## Delivered result
 
-[Verification and handoff](pc072_verification.md), [route costs and retained inputs](pc072_routes/README.md)
-and [capture gallery](screenshots/pc072/index.html) record delivery. All eight routes
+[Verification and handoff](verification/archive/pc072_verification.md), [route costs and retained inputs](pc072_routes/README.md)
+and [capture gallery](screenshots/pc072/README.md) record delivery. All eight routes
 won, with 32 observed downings, no permanent deaths and no recorded merges. Every
 route reached level two before the final guardian using three kit-funded rests.
 Both selected retained replays matched. These small diagnostic samples establish

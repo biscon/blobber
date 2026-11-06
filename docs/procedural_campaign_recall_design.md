@@ -101,8 +101,8 @@ Full headless Debug/Release 39/39 each, graphics Debug/Release 58/58 each, focus
 ASan/UBSan, zero tracked runtime C++ allocations and all exercised preparation
 allocation failures pass. CLI/client/local MCP and strict replay checks pass.
 Fourteen retained native/reduced PNGs match an independent hidden capture run.
-[Verification, commands, limits and review recipe](pc05_verification.md) and
-[gallery](screenshots/pc05/index.html) provide the evidence. PC05 is Accepted
+[Verification, commands, limits and review recipe](verification/archive/pc05_verification.md) and
+[gallery](screenshots/pc05/README.md) provide the evidence. PC05 is Accepted
 and closed; verification results and limitations are unchanged. No save, tuning,
 experiment, respawn or PC06 work was added. PC06 is next for detailed planning only,
 in a fresh context when requested.

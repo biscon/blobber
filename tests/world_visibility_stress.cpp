@@ -8,6 +8,7 @@ int main() {
     try {
         test::VisibilityFixture fixture;
         world_assets::CpuAssets assets(fixture.publication());
+        const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         const auto catalog = creationCatalog(true);
         const auto map = test::worldRoom(256, 32);
         const Player spawn{{128, 28}, Heading::North};

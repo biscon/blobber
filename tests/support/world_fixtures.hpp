@@ -26,6 +26,7 @@ struct WorldFixture {
         actor.id = "fixture";
         actor.cutoff = 15;
         actor.attachments.release[2] = {.25f, .75f};
+        actor.attachments.bodyBounds[2] = {.2f, .1f, .8f, .95f};
         actor.clips[0].timing = {{{100, 200, 0, 0}}, 2};
         actor.clips[0].width = .4f;
         for (auto& side : actor.clips[0].textures) {

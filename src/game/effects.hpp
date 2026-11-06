@@ -1,6 +1,7 @@
 #pragma once
 #include "game/actors.hpp"
 #include "game/party.hpp"
+#include "game/spell_visuals.hpp"
 #include "rules/spells.hpp"
 #include <optional>
 
@@ -174,6 +175,8 @@ struct SpectralWeapon {
     Cell cell{};
     bool active = false;
 };
+// Predict one party step without command costs or mutation; shared with presentation.
+Cell followingWeaponCell(GeometryView, Cell weapon, Cell partyFrom, Cell partyTo) noexcept;
 struct GroundSnapshot {
     std::array<SpectralWeapon, 4> weapons{};
     std::array<GroundArea, 16> areas{};
@@ -205,6 +208,7 @@ class EffectController {
     void advance(std::uint64_t gameplayMs, std::uint64_t sessionMs, bool realTime, CombatEvents&) noexcept;
     void damaged(EffectTarget, std::int64_t damage, std::uint64_t sessionMs, CombatEvents&) noexcept;
     bool has(EffectTarget, EffectKind) const noexcept;
+    ActorConditionVisualSnapshot visualConditions() const noexcept;
     StatusSummary statuses(EffectTarget) const noexcept;
     std::optional<StatusEntry> concentrationStatus(EffectSource) const noexcept;
     bool canAct(EffectTarget) const noexcept;
@@ -243,6 +247,7 @@ class EffectController {
     bool restoreCondition(rules::CharacterId, EffectKind, std::uint64_t, CombatEvents&) noexcept;
     const EffectInstance* spiritualWeapon(rules::CharacterId) const noexcept;
     bool moveWeapon(rules::CharacterId, Cell, bool initial = false) noexcept;
+    void followWeapons(Cell partyFrom, Cell partyTo) noexcept;
     bool weaponCanMove(rules::CharacterId, Cell) const noexcept;
     AreaId createArea(Cell, rules::CharacterId, int difficulty, std::uint64_t, CombatEvents&) noexcept;
     const GroundArea* area(Cell) const noexcept;

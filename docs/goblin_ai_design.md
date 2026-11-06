@@ -2,7 +2,7 @@
 
 Status: implemented, accepted and closed (2026-10-26), including attack-turn
 sequencing and interpolated-walking corrections. The user said: “slice accepted,
-update the document”. See [verification and acceptance](slice07_verification.md).
+update the document”. See [verification and acceptance](verification/archive/slice07_verification.md).
 User approved the plan with “Implement the plan.” Slice 08 is next eligible and
 remains Planned; it has not started.
 

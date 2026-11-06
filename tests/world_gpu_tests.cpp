@@ -34,14 +34,17 @@ int main() {
         const auto baseline = resources.counts();
         for (int failure = 0; failure < 7; ++failure) {
             resources.failAfter(failure);
-            rejects([&] { WorldRenderer renderer(resources, world_assets::load(fixture.directory)); },
-                    "Shared upload fault rejects");
+            rejects(
+                [&] {
+                    WorldRenderer renderer(resources, world_assets::load(fixture.directory), true, false);
+                },
+                "Shared upload fault rejects");
             check(same(resources.counts(), baseline), "Shared upload rollback releases resources");
         }
         resources.failAfter(-1);
         std::vector<unsigned char> reference;
         for (unsigned cycle = 0; cycle < 2; ++cycle) {
-            WorldRenderer renderer(resources, world_assets::load(fixture.directory));
+            WorldRenderer renderer(resources, world_assets::load(fixture.directory), true, false);
             MovementState state;
             state.player = {{1, 1}, Heading::West};
             renderer.stage(map, state);
@@ -167,7 +170,7 @@ int main() {
             for (const auto* name : {"wall", "floor", "ceiling"})
                 writer.add(name, 8, 8, false, pattern);
             writer.finish({});
-            WorldRenderer renderer(resources, world_assets::load(fixture.directory));
+            WorldRenderer renderer(resources, world_assets::load(fixture.directory), true, false);
             MovementState pose;
             pose.player = {{1, 1}, Heading::West};
             renderer.stage(map, pose);

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
 #include <vector>
 namespace blobber {
@@ -56,7 +57,7 @@ struct Decoration {
     }
     bool blocks() const noexcept { return kind == DecorationKind::Cage || kind == DecorationKind::Rack; }
     // Physical reservations protect even walkable chest cells from other props/NPCs.
-    unsigned footprintCount() const noexcept { return kind == DecorationKind::Rack ? 2 : model() ? 1 : 0; }
+    unsigned footprintCount() const noexcept { return model() ? 1 : 0; }
     Cell footprint(unsigned i) const noexcept { return cell + forward(face) * int(i); }
     bool model() const noexcept { return kind >= DecorationKind::Cage; }
     bool floorCutout() const noexcept {
@@ -65,13 +66,49 @@ struct Decoration {
     }
     bool web() const noexcept { return kind == DecorationKind::WebA || kind == DecorationKind::WebB; }
 };
+constexpr unsigned buildingCapacity = 128;
+// Local footprint cells rotate with the model about the anchor cell center.
+struct BuildingPlacement {
+    std::string model;
+    Cell anchor, footprint;
+    Heading facing = Heading::North;
+    unsigned width = 1, depth = 1;
+    Cell cell(unsigned x, unsigned z) const noexcept {
+        const auto r = right(facing), f = forward(facing);
+        return anchor + r * (footprint.x + int(x)) + f * -(footprint.y + int(z));
+    }
+};
+constexpr unsigned sceneryCapacity = 32;
+// Open-terrain physical base; visual overhangs do not reserve extra cells.
+struct SceneryPlacement {
+    std::string model;
+    Cell anchor, footprint;
+    Heading facing = Heading::North;
+    unsigned width = 1, depth = 1;
+    Cell cell(unsigned x, unsigned z) const noexcept {
+        return anchor + right(facing) * (footprint.x + int(x)) + forward(facing) * -(footprint.y + int(z));
+    }
+};
+struct AmbientFire {
+    float x = 0, y = 0, z = 0;
+};
 struct WorldDefinition {
+    std::optional<AmbientFire> hearth; // At most one decorative hearth per authored map.
     std::string assetPack = "dungeon";
     std::vector<CellSurface> surfaces;
     std::vector<Decoration> decorations;
+    std::vector<BuildingPlacement> buildings;
+    std::vector<SceneryPlacement> scenery;
     std::size_t bytes() const noexcept {
-        return sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
-               decorations.capacity() * sizeof(Decoration);
+        std::size_t n = sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
+                        decorations.capacity() * sizeof(Decoration) +
+                        buildings.capacity() * sizeof(BuildingPlacement) +
+                        scenery.capacity() * sizeof(SceneryPlacement);
+        for (const auto& b : buildings)
+            n += b.model.capacity();
+        for (const auto& s : scenery)
+            n += s.model.capacity();
+        return n;
     }
     std::uint64_t fingerprint() const noexcept;
 };
