@@ -128,7 +128,7 @@ add_custom_target(blobber_retire_assets ALL
 
 if(BLOBBER_BUILD_GRAPHICS)
     add_library(blobber_assets_io src/assets/map_icons.cpp src/assets/creator_art.cpp src/assets/portrait_preparation.cpp
-        src/assets/npc_sheet.cpp src/render/image_sampling.cpp)
+        src/assets/npc_sheet.cpp src/assets/world_preparation.cpp src/render/image_sampling.cpp)
     target_link_libraries(blobber_assets_io PUBLIC blobber_core blobber_npc_io raylib PRIVATE nlohmann_json::nlohmann_json)
     add_library(blobber_platform
         src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
@@ -701,6 +701,9 @@ if(BLOBBER_BUILD_GRAPHICS)
     add_executable(blobber_review_world_residency EXCLUDE_FROM_ALL tools/review_world_residency.cpp)
     target_link_libraries(blobber_review_world_residency PRIVATE blobber_application)
     blobber_warnings(blobber_review_world_residency)
+    add_executable(blobber_review_actor_resolution EXCLUDE_FROM_ALL tools/review_actor_resolution.cpp)
+    target_link_libraries(blobber_review_actor_resolution PRIVATE blobber_application)
+    blobber_warnings(blobber_review_actor_resolution)
     add_executable(blobber_capture_audio_settings EXCLUDE_FROM_ALL tools/capture_audio_settings.cpp)
     target_link_libraries(blobber_capture_audio_settings PRIVATE blobber_application)
     blobber_warnings(blobber_capture_audio_settings)

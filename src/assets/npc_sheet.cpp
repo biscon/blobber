@@ -17,8 +17,8 @@ using Json = nlohmann::json;
 namespace blobber {
 void prepareNpcAnimation(const fs::path& configPath, const NpcSheetOptions& options) {
     if ((options.sampling != ImageSampling::Nearest && options.sampling != ImageSampling::Area) ||
-        (options.resolution != 1 && options.resolution != 0.5))
-        throw std::runtime_error("Sheet profile requires nearest/area and resolution 1 or 0.5");
+        !npcResolutionSupported(options.resolution))
+        throw std::runtime_error("Sheet profile requires nearest/area and resolution 1, 0.875, 0.75 or 0.5");
     const fs::path root = configPath.parent_path();
     const fs::path destination = options.outputDirectory.empty() ? root : options.outputDirectory;
     if (fs::file_size(configPath) > 1024 * 1024)

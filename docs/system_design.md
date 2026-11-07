@@ -1,5 +1,11 @@
 # System design
 
+[World sprite preparation resolution](sprite_resolution_design.md): implemented and
+mechanically verified. Four standalone sprites use 512 pixels; rat uses half
+resolution and goblins, zombie and shaman use 7/8. Source artwork and world sizes
+are preserved; full publication saves 104.87 MiB of texture data. Focused CPU/GPU
+and copied-save travel checks pass; [visual review pending](screenshots/sprite-resolution/README.md).
+
 [Campaign travel residency correction](sc011_design.md#campaign-travel-residency-correction--2026-11-07):
 implemented and mechanically verified. The user-requested 1 GiB world GPU limit
 accommodates shipped city/dungeon overlap. Focused CPU/GPU residency checks and

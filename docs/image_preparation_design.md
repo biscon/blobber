@@ -1,5 +1,9 @@
 # Slice 8.1: offline image preparation and memory
 
+Historical slice: the current world renderer's per-appearance preparation settings
+are documented in [world sprite resolution](sprite_resolution_design.md). The
+profile selection below describes the earlier prepared-raster renderer.
+
 Status: implemented, **Accepted and closed** (2026-10-26). The user explicitly
 accepted the slice: “slice accepted, close it so we can start 8.2”.
 Slice 8.2 remains Planned and is now next eligible for planning. The user selected **NPC profile C**

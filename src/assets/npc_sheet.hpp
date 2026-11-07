@@ -2,6 +2,9 @@
 #include "render/image_sampling.hpp"
 #include <filesystem>
 namespace blobber {
+constexpr bool npcResolutionSupported(double resolution) noexcept {
+    return resolution == 1 || resolution == .875 || resolution == .75 || resolution == .5;
+}
 struct NpcSheetOptions {
     ImageSampling sampling = ImageSampling::Nearest;
     double resolution = 1;

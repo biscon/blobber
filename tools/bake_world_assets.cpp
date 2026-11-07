@@ -2,6 +2,7 @@
 #include "assets/image.hpp"
 #include "assets/npc_sheet.hpp"
 #include "assets/world_assets.hpp"
+#include "assets/world_preparation.hpp"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -11,12 +12,13 @@ namespace {
 namespace fs = std::filesystem;
 using namespace blobber;
 using Json = nlohmann::json;
-std::vector<unsigned char> pixels(const fs::path& path, unsigned& w, unsigned& h) {
+std::vector<unsigned char> pixels(const fs::path& path, unsigned& w, unsigned& h, unsigned maximum = 4096) {
     OwnedImage image(LoadImage(path.string().c_str()));
     if (!image.value.data || image.value.width <= 0 || image.value.height <= 0 || image.value.width > 4096 ||
         image.value.height > 4096)
         throw std::runtime_error("Invalid world source image: " + path.string());
     ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    limitWorldSprite(image, maximum);
     w = unsigned(image.value.width);
     h = unsigned(image.value.height);
     const auto* first = static_cast<const unsigned char*>(image.value.data);
@@ -50,11 +52,24 @@ std::map<std::string, std::string> sourceFingerprints(const fs::path& source) {
 }
 int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     const auto inputs = sourceFingerprints(source);
+    const Map dummy({"###", "#.#", "###"});
+    const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
+    for (const auto& definition : parsed.definitions)
+        if (definition.role == NpcRole::Hostile &&
+            definition.animations[unsigned(NpcAnimation::Prone)].timing.count != 1)
+            throw std::runtime_error(
+                "Every hostile NPC appearance requires a single-frame four-direction prone clip");
+    const auto level = read(source / "npcs/level.json");
+    std::vector<std::string> types;
+    for (unsigned i = 0; i < parsed.definitions.size(); ++i)
+        types.push_back(parsed.world.typeId({std::uint16_t(i)}));
+    const auto resolutions = npcPreparationResolutions(source / "npcs/preparation.json", types);
     world_assets::Writer writer(output);
     auto add = [&](const std::string& name, const fs::path& path, bool sprite, unsigned cutoff = 0,
-                   world_assets::Anchor anchor = {}, bool crop = false, bool cutoutMaterial = false) {
+                   world_assets::Anchor anchor = {}, bool crop = false, bool cutoutMaterial = false,
+                   unsigned maximum = 4096) {
         unsigned w = 0, h = 0;
-        auto rgba = pixels(path, w, h);
+        auto rgba = pixels(path, w, h, maximum);
         return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop, cutoutMaterial);
     };
     std::map<std::string, std::uint16_t> preparedPackTextures;
@@ -252,7 +267,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         throw std::runtime_error("World asset pack capacity exceeded");
     for (const auto* name : {"grease", "web", "spiritual_weapon"})
         add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
-            source / "effects" / (std::string(name) + ".png"), true);
+            source / "effects" / (std::string(name) + ".png"), true, 0, {}, false, false, 512);
     if (std::filesystem::exists(source / "packs/sanctuary-inn/source/flame.png"))
         add("effect/hearth-flame", source / "packs/sanctuary-inn/source/flame.png", true);
     // Code-authored source artwork; reusable base images replace perspective rasters.
@@ -301,14 +316,6 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
             }
         writer.add(std::string("effect/") + names[kind], 64, 64, true, rgba);
     }
-    const Map dummy({"###", "#.#", "###"});
-    const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
-    for (const auto& definition : parsed.definitions)
-        if (definition.role == NpcRole::Hostile &&
-            definition.animations[unsigned(NpcAnimation::Prone)].timing.count != 1)
-            throw std::runtime_error(
-                "Every hostile NPC appearance requires a single-frame four-direction prone clip");
-    const auto level = read(source / "npcs/level.json");
     const auto scratch = output / "source-frames.tmp";
     fs::remove_all(scratch);
     fs::create_directories(scratch);
@@ -329,8 +336,10 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         if (sheets) {
             const auto registration = relative(json.at("source_sheets").get<std::string>());
             prepareNpcAnimation(definition.parent_path() / registration,
-                                {ImageSampling::Nearest, 1, generated / registration.parent_path(), nullptr});
-        }
+                                {resolutions[i] == 1 ? ImageSampling::Nearest : ImageSampling::Area,
+                                 resolutions[i], generated / registration.parent_path(), nullptr});
+        } else if (resolutions[i] != 1)
+            throw std::runtime_error("Reduced NPC preparation requires registered source sheets");
         world_assets::Appearance a;
         a.id = parsed.world.typeId({std::uint16_t(i)});
         a.width = def.width;
@@ -367,7 +376,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
         }
         appearances.push_back(std::move(a));
     }
-    add("loot/bag", source / "ui/items/loot-bag.png", true);
+    add("loot/bag", source / "ui/items/loot-bag.png", true, 0, {}, false, false, 512);
     for (const auto* name : {"key-bronze", "key-silver", "endpoint", "threshold"})
         add(std::string("fixture/") + name, source / "fixtures" / (std::string(name) + ".png"), true);
     if (sourceFingerprints(source) != inputs)

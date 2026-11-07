@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "actors": {
+    "giant.rat": 0.5,
+    "goblin": 0.875,
+    "goblin.archer": 0.875,
+    "zombie": 0.875,
+    "goblin_shaman": 0.875
+  }
+}
