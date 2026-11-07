@@ -109,6 +109,19 @@ unnecessarily; follow the execution environment's permission rules when needed.
   rectangles, circles or other primitives for generated icon artwork. Drawing
   supplied/generated icon textures through the normal UI pipeline is appropriate.
 
+## Font rendering
+
+- Raylib fonts are rasterized glyph atlases, not a realtime TTF renderer. Draw
+  each font only at the exact pixel size at which its atlas was loaded.
+- If text needs another size, load another atlas at that size, even when using
+  the same font file. Do not create a different text size through a different
+  draw font size, transform matrix, render-target scaling or other glyph scaling.
+- Prepare the required size-specific atlases outside frame processing and include
+  them in font ownership, GPU memory accounting and resource cleanup.
+- Never render text at fractional coordinates. Round final native game-framebuffer
+  glyph positions to whole pixels after layout and animation offsets; do not
+  introduce fractional positions through a subsequent drawing transform.
+
 ## Desktop verification restriction
 
 - Do not control the user's mouse or keyboard, switch window focus or desktops,

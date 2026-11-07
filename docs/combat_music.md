@@ -1,5 +1,44 @@
 # Combat music
 
+## Compact announcement — 2026-11-07
+
+Status: compact typography accepted by the user; requested top-left integration
+implemented and mechanically verified. Replaces the old renderer and preview API.
+Use a fixed 540 × 90 native pixel panel for one title line and 540 × 117 for two,
+24 pixels inside the viewport's top and left edges (native origin 36, 78).
+Keep the accepted internal padding, colors, shadow, six-second animation and
+half-distance horizontal slide. Panel width does not expand: prepared titles split
+into up to two lines and each rendered line uses measured ellipsis clipping within
+its 504-pixel text area, including while letters scramble. Artist text is clipped
+by the same policy; no text may cross the enclosing panel.
+
+UiFonts owns separate IBM Plex Sans bold 24 px and regular 18 px atlases for title
+and caption/artist respectively, loaded at preparation and included in RAII cleanup
+and GPU memory accounting. Draw only at loaded sizes, rounding final native text
+origins after animation/layout. No glyph or render-target scaling, new per-frame
+allocation, prepared-world invalidation or audio transport change. Announcements
+retain existing modal deferral and silence rules; menu music has no announcements.
+
+The capture tool now exercises the production renderer directly, including settled
+one/two-line titles, entry/reveal/exit and deliberately overlong text. Verify hidden
+OpenGL captures at native 1920 × 1080, assert changes stay inside the viewport and
+long text stays within the panel, build the game, and run the focused music check.
+Replace superseded evidence with at most six selected captures. No desktop input
+or focus automation.
+
+Executed verification: rebuilt Debug `blobber`, `blobber_capture_music_banner` and
+`blobber_music_tests` with at most two low-priority workers and no compiler warnings.
+`nice -n 15 ionice -c 3 ctest --preset debug -R '^music$'` passes in 0.01 s.
+The hidden production-renderer capture succeeds outside the X11-restricted sandbox,
+without OS input or focus control. Inspected settled and overlong two-line captures;
+all six animation/title cases remain within the viewport, with settled origin
+(36, 78), expected panel/shadow bounds and no bright title pixels outside the panel.
+Fonts retain the accepted size-specific atlases and integer draw origins. No audio
+runtime suite or additional build configuration was repeated for this UI-only edit.
+Six selected captures replace superseded evidence in the existing gallery;
+disposable run output was cleaned. `git diff --check` and formatting checks pass.
+Interactive game/listening review was not performed.
+
 ## Sanctuary and menu extension — 2026-11-07
 
 Status: implemented and mechanically verified; listening/interactive review pending.
@@ -140,7 +179,7 @@ remains listening review.
 
 ## Announcement
 
-A six-second charcoal lower-left viewport panel slides in with a small overshoot,
+A six-second charcoal top-left viewport panel slides in with a small overshoot,
 uses teal/gold accents and deterministic scrambling letters that settle by 1.2s,
 holds through 5.5s then retracts. It announces every started track, never resumes.
 Tactical overlays defer the current unfinished announcement; only the latest is
@@ -190,9 +229,10 @@ shared limiter, unloads music/ambience streams and aliases/sources, then closes 
 device. Only the selected track is decoded during gameplay; raylib/decoder internals
 and their file reads are outside the engine-owned C++ allocation guarantee.
 
-The panel anchors to the lower-left viewport with a 360-art-unit width and 54/72-unit
-height for one/two title lines. Titles are split during preparation. Large bold
-native text, a teal edge and a gold rule provide readable visual hierarchy; a
+The panel anchors 8 art units inside the top-left viewport with a 180-art-unit
+width and 30/39-unit height for one/two title lines. Titles split during preparation
+and clip with ellipses to the measured text width. Native 24 px bold title and
+18 px regular caption atlases, a teal edge and a gold rule provide visual hierarchy; a
 12-Hz deterministic character scramble settles by 1.2 seconds. Its slide/overshoot,
 hold and sideways exit run for six seconds of visible, unpaused presentation time.
 

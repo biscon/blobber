@@ -1,5 +1,12 @@
 # System design
 
+[Compact music announcement](combat_music.md#compact-announcement--2026-11-07):
+**typography accepted; top-left integration implemented and mechanically verified**. Fixed-width
+compact panel with native 24 px bold/18 px regular atlases, integer text origins
+and measured ellipsis clipping. Retains animation, padding and modal rules while
+moving 24 pixels inside the top-left viewport. Game build, focused music check and
+[six hidden captures](screenshots/combat-music/README.md) pass. No audio transport changes.
+
 [Sanctuary and menu music](combat_music.md#sanctuary-and-menu-extension--2026-11-07):
 **implemented and mechanically verified; listening review pending**. Shared prepared
 playback provides a continuous town/interior shuffle and one-shot menu song,

@@ -3,4 +3,4 @@
 #include "ui/fonts.hpp"
 namespace blobber {
 void drawMusicBanner(const MusicBanner&, const UiFonts&);
-}
+} // namespace blobber
