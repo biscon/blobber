@@ -1,5 +1,6 @@
 #include "game/campaign.hpp"
 #include "core/preparation.hpp"
+#include "game/emporium_interior.hpp"
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
 #include "game/smithy_interior.hpp"
@@ -85,8 +86,17 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     smithy.fixtures = smithyDefinition.fixtures;
     smithy.recovery = smithyDefinition.recovery;
     smithy.placements.emplace(smithy.map(), smithy.entry.cell, types,
-                             std::vector<NpcInstance>{blacksmithPlacement(types)});
+                              std::vector<NpcInstance>{blacksmithPlacement(types)});
     smithy.seed = seed;
+    auto emporiumDefinition = emporiumInterior();
+    auto& emporium = locations_[unsigned(CampaignLocationId::Emporium)];
+    emporium.authored.emplace(std::move(emporiumDefinition.map));
+    emporium.entry = emporiumDefinition.entry;
+    emporium.exit = emporiumDefinition.exit;
+    emporium.fixtures = emporiumDefinition.fixtures;
+    emporium.recovery = emporiumDefinition.recovery;
+    emporium.placements.emplace(emporium.map(), emporium.entry.cell, types, std::vector<NpcInstance>{});
+    emporium.seed = seed;
     configureDoorways();
     active_ = prepare(0, spawn);
     active_->campaign_ = this;
@@ -111,6 +121,7 @@ void CampaignRun::configureDoorways() {
     };
     connect("inn", CampaignLocationId::Inn, "Enter inn", "Leave inn");
     connect("smithy", CampaignLocationId::Smithy, "Enter smithy", "Leave smithy");
+    connect("emporium", CampaignLocationId::Emporium, "Enter Arcane Emporium", "Leave Arcane Emporium");
 }
 const DoorwayLink* CampaignRun::doorway(DoorwayId id) const noexcept {
     const auto& location = locations_[location_];
@@ -156,8 +167,9 @@ CampaignStatus CampaignRun::status() const noexcept {
     return CampaignStatus::Active;
 }
 const char* CampaignRun::name() const noexcept {
-    constexpr const char* names[]{"Sanctuary",       "Dungeon floor 1", "Dungeon floor 2",
-                                  "Dungeon floor 3", "Sanctuary inn",   "Sanctuary smithy"};
+    constexpr const char* names[]{"Sanctuary",     "Dungeon floor 1",  "Dungeon floor 2", "Dungeon floor 3",
+                                  "Sanctuary inn", "Sanctuary smithy", "Arcane Emporium"};
+    static_assert(std::size(names) == campaignLocationCount);
     return names[location_];
 }
 TravelRequest CampaignRun::request(FixtureRequest fixture) const noexcept {

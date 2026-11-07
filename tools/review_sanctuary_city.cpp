@@ -50,10 +50,10 @@ int main(int argc, char** argv) try {
                           {"ivy-courtyard", {{7, 16}, Heading::West}},
                           {"sign-inn", {{14, 6}, Heading::East}},
                           {"sign-smithy", {{13, 13}, Heading::East}},
-                          {"sign-provisioner", {{14, 10}, Heading::East}},
+                          {"sign-emporium", {{14, 10}, Heading::East}},
                           {"sign-inn-near", {{16, 7}, Heading::North}},
                           {"sign-smithy-near", {{15, 14}, Heading::North}},
-                          {"sign-provisioner-near", {{16, 7}, Heading::South}},
+                          {"sign-emporium-near", {{16, 7}, Heading::South}},
                           {"tree-square", {{12, 8}, Heading::West}},
                           {"tree-east", {{7, 4}, Heading::West}},
                           {"tree-west", {{2, 4}, Heading::East}},
@@ -107,7 +107,7 @@ int main(int argc, char** argv) try {
                                       name.rfind("fountain-", 0) == 0 || name.rfind("market-", 0) == 0 ||
                                       name.rfind("ivy-", 0) == 0 || name.rfind("sign-", 0) == 0 ||
                                       name == "east-garden" || name == "lane-garden" || name == "door-inn" ||
-                                      name == "door-smithy" || name == "door-provisioner";
+                                      name == "door-smithy" || name == "door-emporium";
             const bool correctionShot =
                 name == "square" || name == "market" || name == "market-front" || name == "market-grain" ||
                 name == "former-market" || name == "inn-spacing" || name == "ivy-alley" ||

@@ -1,5 +1,18 @@
 # System design
 
+[Arcane Emporium](emporium_interior_design.md): **implemented and mechanically
+verified; runtime review pending (2026-11-07)**. Replaces the provisioner with a
+magic shop, leaving ordinary provisions at the inn. Uses the
+[approved mockups](mockups/magic-shop-v1/README.md), whole-cell room fixtures,
+third city doorway, reserved future merchant and regenerated exterior sign.
+Six focused CPU suites, extended persistence and hidden OpenGL travel/rollback/
+Continue checks pass; [six captures](screenshots/emporium/README.md). Merchant/stock
+is a later slice, following the smithy workflow. Current schema/simulation are
+**16/19**, requiring a new campaign; existing saves are untouched.
+The [herb-rack clearance correction](emporium_interior_design.md#herb-rack-window-clearance-correction--2026-11-07)
+moves the hanging bundles left of the window; geometry and hidden captures are
+verified, awaiting re-review. This cosmetic adjustment preserves current saves.
+
 [Duncan Ironballs](blacksmith_design.md): **implemented and mechanically verified;
 runtime review pending (2026-11-07)**. Smithy resident with innkeeper-style
 idle/talk, three conversation topics and a weapons/armor shop. Uses the
@@ -14,7 +27,7 @@ content fingerprint requires a new campaign; existing saves are untouched.
 counter resident position, two bounded city doorway links and shared flame
 residency. Six distinct focused CPU suites, extended persistence and hidden OpenGL
 travel/Continue/rollback checks pass; [six captures](screenshots/smithy/README.md).
-Current campaign schema/simulation are **15/18**, requiring a new campaign as selected;
+The smithy introduced schema/simulation **15/18**; the emporium above now requires **16/19**;
 older saves reject unchanged. Duncan is now implemented above; crafting is deferred.
 
 Shared party purse: **implemented and mechanically verified; UI review pending (2026-11-07)**. Party owns

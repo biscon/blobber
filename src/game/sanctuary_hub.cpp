@@ -35,7 +35,7 @@ SanctuaryHub sanctuaryHub() {
     hub.fixtures.landings = {hub.entry.cell, hub.exit.cell};
     for (const auto c : {hub.spawn.cell, hub.entry.cell, hub.exit.cell, city.dungeonFixture})
         hub.fixtures.npcExcluded.set(std::size_t(c.y * hub.map.width() + c.x));
-    for (const auto* name : {"inn", "smithy"}) {
+    for (const auto* name : {"inn", "smithy", "emporium"}) {
         const auto approach = city.doorway(name).approach.cell;
         hub.fixtures.npcExcluded.set(std::size_t(approach.y * hub.map.width() + approach.x));
     }

@@ -1,5 +1,6 @@
 #include "core/preparation.hpp"
 #include "game/campaign.hpp"
+#include "game/emporium_interior.hpp"
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
 #include "game/smithy_interior.hpp"
@@ -192,8 +193,10 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
                 // Reconstruct accepted authored content (ceiling and seating
                 // reservations) without discarding any saved session state.
                 map = innInterior().map;
-            } else {
+            } else if (i == unsigned(CampaignLocationId::Smithy)) {
                 validateSmithyInterior(map, from);
+            } else {
+                validateEmporiumInterior(map, from);
             }
             to.authored.emplace(std::move(map));
         }

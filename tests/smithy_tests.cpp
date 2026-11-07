@@ -281,7 +281,8 @@ void campaign() {
     check(client.act({{"kind", "doorway"}}).at("data").at("accepted"), "Wire smithy entry");
     const auto observed = client.protocol.state().at("campaign");
     check(observed.at("location") == 5 && observed.at("depth") == 0 &&
-              observed.at("location_name") == "Sanctuary smithy" && observed.at("locations").size() == 6 &&
+              observed.at("location_name") == "Sanctuary smithy" &&
+              observed.at("locations").size() == campaignLocationCount &&
               observed.at("locations")[5].at("fingerprint") == smithyInteriorIdentity,
           "Wire diagnostics distinguish smithy from inn and dungeon depth");
 }

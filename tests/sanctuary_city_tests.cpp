@@ -7,6 +7,9 @@ using namespace blobber;
 int main() try {
     const auto city = sanctuaryCity();
     validateSanctuaryCity(city);
+    check(city.doorway("emporium").approach == Player{{16, 9}, Heading::East} &&
+              city.map.definition().buildings[city.doorway("emporium").placement].model == "provisioner",
+          "Magic shop reuses the former provisioner footprint and street approach");
     check(city.map.width() == 24 && city.map.height() == 24 && city.doorCount == 12,
           "Complete ten-building town plus dungeon and gate");
     check(city.map.connected(city.spawn.cell), "Every street is connected");

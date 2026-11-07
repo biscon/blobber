@@ -14,7 +14,7 @@ struct DoorwayLink {
 struct CampaignLocation {
     std::optional<generation::GeneratedFloor> generated;
     std::optional<Map> authored;
-    static constexpr unsigned doorwayCapacity = 2;
+    static constexpr unsigned doorwayCapacity = 3;
     std::array<DoorwayLink, doorwayCapacity> doorways{}; // Canonical; never restored from disk.
     unsigned doorwayCount = 0;
     std::optional<NpcWorld> placements;

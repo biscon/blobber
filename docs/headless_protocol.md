@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 15/18 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 16/19 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -51,9 +51,10 @@ the save format. The legacy `door_opening` field covers both opening and closing
 
 Party purse observations include `party_gold` as a lossless uint64 decimal string
 in both diagnostic and player modes. Gold is shared and does not appear in
-character inventory entries. Campaign saves now require schema 15/simulation 18. The authored smithy is location
-5 at depth zero, with identity `sanctuary-smithy-v1`. City doorway requests resolve
-the inn or smithy by the current cell/facing; the existing `doorway` action is unchanged.
+character inventory entries. Campaign saves now require schema 16/simulation 19. The authored smithy is location
+5 at depth zero, with identity `sanctuary-smithy-v1`. Arcane Emporium is location 6 at depth zero, with identity
+`sanctuary-emporium-v1`. City doorway requests resolve the inn, smithy or emporium
+by the current cell/facing; the existing `doorway` action is unchanged.
 
 ## Transport and identities
 
