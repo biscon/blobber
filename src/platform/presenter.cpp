@@ -157,6 +157,7 @@ void Presenter::prepareMenu() {
         menuBackground_ = resources_.createTexture(background.value);
         SetTextureFilter(resources_.texture(menuBackground_), TEXTURE_FILTER_BILINEAR);
     }
+    uiArt_.prepareMenuTitle(assetsMenuPath_.parent_path() / "menu-title.png");
 }
 void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context) {
     saving_ = false;

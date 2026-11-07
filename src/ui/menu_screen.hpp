@@ -25,7 +25,6 @@ struct MenuView {
     int count = 0, focus = 0, detailOffset = 0, detailRows = 0;
     bool usable = false, canContinue = false;
     bool controlOverflow = false;
-    std::array<char, 192> continueSummary{};
     MenuScreen detailCaller = MenuScreen::Library;
     UiInput pointerInput(const UiInput& input) noexcept {
         ButtonTargets targets;

@@ -49,8 +49,8 @@ reconstructs from the same immutable builds/seed on defeat. Returning destroys t
 run and dungeon owners before the menu resumes.
 
 The menu background is a separate generated text-free PNG with recorded provenance.
-`Presenter::prepareMenu` runs before menu frames and adds one UI texture (seven of eight texture slots total); two
-presentation targets remain in use. Its one-time decode/upload is preparation,
+`Presenter::prepareMenu` runs before menu frames and adds the background and
+title UI textures; two presentation targets remain in use. Their one-time decode/upload is preparation,
 not steady-state rendering. Native menu output is bilinear fitted; dungeon output
 retains its point-filtered base. No frame image resizing or dungeon preloading.
 
@@ -67,6 +67,71 @@ active formation slot and retained MenuModel; saving must not auto-launch or rep
 an occupied slot.
 
 See [verification and next-agent handoff](verification/archive/slice123_verification.md).
+
+## Stone & Shadow title artwork — 2026-11-08
+
+Status: **artwork accepted; implemented and mechanically verified**. The user approved the gold
+`Stone & Shadow` wordmark and requested removal of the Continue location/party
+summary plus a centered, brighter navigation hint below the controls. Source
+artwork and exact built-in imagegen prompt are durable assets under `assets/ui/`.
+
+`Presenter::prepareMenu` calls `UiArt::prepareMenuTitle` before menu frames.
+`UiArt` owns one `GpuLease<TextureHandle>` backed by the existing registry. Decode,
+alpha-border selection (`.1f`), crop and bilinear texture upload occur only in
+preparation. Cropping to 2058×270 reduces the upload from 6.00 MiB to 2.12 MiB;
+preparation may temporarily hold the full 2172×724 decoded image. Empty/invalid
+artwork fails explicitly; repeated preparation reuses the existing texture.
+Registry exhaustion remains an explicit preparation error. The lease releases
+the texture with the presenter before the window closes.
+
+`drawMenu` borrows `UiArt` and draws the image at the approved native rectangle
+`{450, 165, 1020, 134}` without Continue, or `{450, 88, 1020, 134}` with Continue.
+`menuLayout` owns those integer pixel destinations. The title is only drawn on
+the main menu; submenus keep their current headers. Ordinary drawing creates no
+CPU or GPU resources. The unused cached Continue summary and its startup
+formatting are removed. Save inspection and Continue availability retain their current rules.
+The navigation hint is centered in the menu's 220-art-unit column, retaining its exact
+24 px atlas and integer glyph positioning, using bright warm ivory with a one-pixel
+dark shadow for contrast against the floor. Background, controls, fixed native
+presentation and persistent data remain unchanged.
+
+Validation selection: one Debug game build and existing headless menu test, plus
+a focused hidden production capture runner for both Continue layouts and a
+submenu. Check idempotent preparation, engine-owned C++ frame allocations, stable
+GPU counts/uploads, texture release and OpenGL errors. Export native and reduced
+captures for visual review; no OS input or user library/save access is needed.
+
+The separately requested window caption correction removes ` | Blobber` from
+`Window::Window`, leaving `Stone & Shadow`; it needs only a focused build and
+hidden-window initialization check, with no gameplay test matrix.
+
+Initial preview and caption build passed; the user accepted the artwork before
+integration. The original substitution runner and two preview images are now
+superseded by the [production runner](../tools/review_menu_title.cpp) and
+[five production captures](screenshots/menu-title-preview/README.md).
+
+Final verification commands (low priority, at most two build workers and one test):
+
+```sh
+nice -n 15 ionice -c 3 cmake --build cmake-build-debug --target blobber blobber_review_menu_title blobber_menu_tests --parallel 2
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-debug -R '^menu$' -j 1 --output-on-failure
+nice -n 15 ionice -c 3 cmake-build-debug/blobber_review_menu_title cmake-build-debug/assets NEW_CAPTURE_DIRECTORY
+```
+
+All passed. The hidden runner verified failed title-upload retry without leaked
+textures, idempotent preparation, six alternating Continue/no-Continue frames
+with zero engine-owned C++ allocations, stable GPU texture/target counts and
+uploads, title lease release, and no OpenGL errors. Its C++ guard excludes C and
+driver allocations. Total added prepared-menu GPU bytes: 6,942,696 (background
+and cropped title). Native and 1280×720 images for both menu layouts, plus a
+native library submenu, were visually inspected. The summary is absent, the
+brighter hint is centered, and the image title does not appear on submenus.
+
+Display access outside the sandbox was needed, as established by the initial
+preview's failure to open `:0`. The capture window remained hidden throughout;
+no desktop input/focus automation or interactive review was performed. Artwork
+acceptance is preserved; final interactive review remains with the user. Selected
+images, artwork and prompt are retained; disposable logs/captures were cleaned.
 
 ## Review correction: direct formation drag and search focus
 

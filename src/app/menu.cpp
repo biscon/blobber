@@ -50,11 +50,6 @@ int runMenus(const Options& options) try {
         v.canContinue = slot.active;
         if (!slot.error.empty())
             std::fprintf(stderr, "Continue unavailable: %s\n", slot.error.c_str());
-        std::snprintf(v.continueSummary.data(), v.continueSummary.size(), "%s",
-                      slot.active     ? (slot.location + " | " + slot.partySummary).c_str()
-                      : slot.terminal ? "This expedition has ended."
-                      : slot.exists   ? "This save cannot be opened. You can start a new expedition."
-                                      : "No saved expedition.");
     };
     refreshContinue();
     ArenaScenarioStore scenarioStore(catalog, characterLibraryPath().parent_path() / "scenarios");

@@ -16,18 +16,21 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
         p.fill({0, 0, 640, 360}, {12, 18, 18, 245});
     p.border({8, 8, 624, 344}, hudInk::edge);
     if (m.screen == MenuScreen::Main) {
-        p.centered("B L O B B E R", {180, v.canContinue ? 35 : 60, 280, 50}, hudInk::gold,
-                   UiTextStyle::Control);
-        if (v.canContinue) {
+        art.menuTitle(menuLayout::mainTitle(v.canContinue));
+        if (v.canContinue)
             v.button(p, {210, 96, 220, 30}, "Continue", 60);
-            p.clipped(v.continueSummary.data(), 125, 80, 390, hudInk::muted, UiTextStyle::Small);
-        }
         v.button(p, {210, 133, 220, 30}, "Start new game", 1);
         v.button(p, {210, 176, 220, 30}, "Arena", 4000);
         v.button(p, {210, 219, 220, 30}, "Character Creator", 2);
         v.button(p, {210, 257, 105, 30}, "Settings", 70);
         v.button(p, {325, 257, 105, 30}, "Quit", 3);
-        p.text("Arrows / Tab: navigate     Enter: select", 220, 310, hudInk::muted);
+        constexpr const char* hint = "Arrows / Tab: navigate     Enter: select";
+        constexpr auto hintRect = menuLayout::mainHint;
+        const float x = hintRect.x + (hintRect.width - fonts.width(hint, UiTextStyle::Label)) * .5f;
+        const float y = fonts.centeredY(hint, hintRect.y, hintRect.height, UiTextStyle::Label);
+        constexpr float shadowOffset = 1 / HudPainter::scale;
+        p.text(hint, x + shadowOffset, y + shadowOffset, {8, 10, 10, 255});
+        p.text(hint, x, y, {242, 232, 207, 255});
     } else if (m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios) {
         drawArena(v, p, art);
     } else if (m.screen == MenuScreen::Loading) {

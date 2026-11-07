@@ -1,5 +1,13 @@
 # System design
 
+[Stone & Shadow menu title](menu_launch_design.md#stone--shadow-title-artwork--2026-11-08):
+**artwork accepted; implemented and mechanically verified**. Generated antique-gold raster
+wordmark over the existing menu background. The approved follow-up removes the
+Continue summary and centers a brighter navigation hint below the controls.
+`UiArt` prepares and owns one cropped title texture; menu drawing borrows it.
+Window caption is `Stone & Shadow`. Debug build, focused menu test and hidden GPU
+preparation/allocation/lifetime checks pass; [five production captures](screenshots/menu-title-preview/README.md).
+
 [Compact music announcement](combat_music.md#compact-announcement--2026-11-07):
 **typography accepted; top-left integration implemented and mechanically verified**. Fixed-width
 compact panel with native 24 px bold/18 px regular atlases, integer text origins

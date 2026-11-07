@@ -27,6 +27,8 @@ class UiArt {
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
     void prepareDialogue(const std::vector<std::string>& files);
     void clearDialogue() noexcept;
+    void prepareMenuTitle(const std::filesystem::path& file);
+    void menuTitle(UiRect nativeDestination) const;
     void dialogueOverlay(DialogueOverlayId, UiRect, Color tint = WHITE) const;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
     void creator(unsigned index, UiRect destination, Color tint = WHITE) const;
@@ -41,6 +43,7 @@ class UiArt {
     TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_, portraitEffects_,
         feedback_, supportEffects_;
     std::array<Rectangle, 64> regions_{};
+    GpuLease<TextureHandle> menuTitle_;
     std::array<GpuLease<TextureHandle>, dialogueOverlayCapacity> dialogue_;
 };
 } // namespace blobber
