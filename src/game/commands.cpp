@@ -533,6 +533,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         state_.save.allowed = !state_.save.reason;
     }
     state_.campaign = session_.campaign();
+    state_.gameTime = session_.gameTime();
     state_.campaignTerminal = state_.campaign && session_.campaign()->status() != CampaignStatus::Active;
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";

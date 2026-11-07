@@ -95,6 +95,7 @@ class CampaignRun {
     unsigned activeLocation() const noexcept { return location_; }
     std::uint64_t revision() const noexcept { return revision_; }
     std::uint64_t gameplayMs() const noexcept;
+    GameTime gameTime() const noexcept { return {gameplayMs()}; }
     CampaignStatus status() const noexcept;
     const char* name() const noexcept;
     TravelRequest request(FixtureRequest) const noexcept;

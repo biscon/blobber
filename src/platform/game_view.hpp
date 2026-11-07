@@ -17,7 +17,8 @@ class GameView {
             world_.clear();
     }
     bool update(const GameSession& game, const NpcAnimationSnapshot& animation, const SpellArea& area,
-                std::optional<world_render::Camera> camera = {}, bool cameraMoving = false) {
+                std::optional<world_render::Camera> camera = {}, bool cameraMoving = false,
+                std::optional<GameTime> gameTimeOverride = {}) {
         const auto conditions = game.effects().visualConditions();
         const world_render::FrameInput input{game.geometry(),
                                              game.movement(),
@@ -33,7 +34,8 @@ class GameView {
                                              &conditions,
                                              &game.supportVisuals(),
                                              camera,
-                                             cameraMoving};
+                                             cameraMoving,
+                                             world_render::outdoorLighting(gameTimeOverride.value_or(game.gameTime()))};
         const auto previous = image_.revision;
         if (!ready_) {
             map_.prepare(game.geometry().base(), rooms_);

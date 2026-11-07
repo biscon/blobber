@@ -157,6 +157,7 @@ struct EnemyTargetPicker {
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
+    GameTime gameTime;
     DialogueHud dialogue;
     WorldViewTransform worldTransform;
     ButtonPress buttons;

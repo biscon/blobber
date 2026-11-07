@@ -20,6 +20,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [Game time and outdoor day/night](game-time/README.md) | 6 |
 | [Action dock cleanup](action-dock/README.md) | 2 |
 | [Dialogue panel cleanup](dialogue-panel/README.md) | 3 |
 | [Multi-NPC dialogue](multi-npc-dialogue/README.md) | 6 |

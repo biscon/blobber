@@ -4,6 +4,7 @@
 #include "render/picking.hpp"
 #include "render/world_doors.hpp"
 #include "render/world_scene.hpp"
+#include "render/outdoor_lighting.hpp"
 
 namespace blobber::world_render {
 constexpr unsigned billboardCapacity = NpcWorld::maxInstances + lootCapacity + fixtureCapacity;
@@ -41,6 +42,7 @@ struct FrameInput {
     const SupportVisualSnapshot* support = nullptr;
     std::optional<Camera> cameraOverride = {};
     bool cameraMoving = false;
+    OutdoorLighting outdoorLighting{};
 };
 struct Billboard {
     Vec feet;

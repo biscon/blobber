@@ -62,7 +62,7 @@ struct PlayView {
         if (floor)
             diagnostics = generation::diagnosticView(*floor);
     }
-    bool refresh(bool debug = false, bool focused = true) {
+    bool refresh(bool debug = false, bool focused = true, std::optional<GameTime> gameTimeOverride = {}) {
         animator.setTime(session.timeMs(), &session.effects(), commands.dialogueSpeaker(),
                          commands.dialoguePlayer().clockMs(), &commands.dialogueAnimation());
         const auto& player = commands.dialoguePlayer();
@@ -79,7 +79,7 @@ struct PlayView {
                 : std::optional<world_render::Camera>{};
         const auto area = debug ? SpellArea{} : commands.floorPreview();
         const bool changed =
-            frames.update(session, animator.snapshot(), area, override, dialogueCamera.moving());
+            frames.update(session, animator.snapshot(), area, override, dialogueCamera.moving(), gameTimeOverride);
         const auto* picking = frames.picking();
         commands.residentVisibility(picking ? picking->residents() : TargetSnapshot{});
         commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
@@ -88,7 +88,7 @@ struct PlayView {
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
             return frames.update(session, animator.snapshot(), currentArea, override,
-                                 dialogueCamera.moving()) ||
+                                 dialogueCamera.moving(), gameTimeOverride) ||
                    changed;
         return changed;
     }
@@ -326,7 +326,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                     ? &*campaign->location(ticket.destination()).generated
                                     : nullptr);
                         });
-                        replacement->refresh();
+                        replacement->refresh(false, true, campaign->gameTime());
                         replacement->commands.enableMainMenu();
                         replacement->commands.bindDialogue(&dialogueCatalog, &campaign->dialogue());
                         replacement->commands.saveMenu().enabled = launch && launch->saves;

@@ -1,5 +1,6 @@
 #pragma once
 #include "game/combat.hpp"
+#include "game/game_time.hpp"
 #include "game/floor_objective.hpp"
 #include "game/loot.hpp"
 #include "game/npc_ai.hpp"
@@ -38,6 +39,7 @@ class GameSession {
     void validateCheckpoint(const FloorState&) const;
     void importFloor(const FloorState&); // Preparation only; rejects invalid values.
     CampaignRun* campaign() const noexcept { return campaign_; }
+    GameTime gameTime() const noexcept;
     void restorePose(Player, bool animated); // Preparation only.
     bool beginConversation(ActorId) noexcept;
     void endConversation() noexcept;

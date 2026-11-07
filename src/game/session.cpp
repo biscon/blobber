@@ -4,6 +4,9 @@
 #include <cmath>
 #include <stdexcept>
 namespace blobber {
+GameTime GameSession::gameTime() const noexcept {
+    return campaign_ ? campaign_->gameTime() : GameTime{combat_.snapshot().gameplayMs};
+}
 GameSession::GameSession(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                          std::uint32_t seed, Player spawn, bool enableAi,
                          const std::vector<NpcTimings>& timings, const RecoveryLevel& recovery,

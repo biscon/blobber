@@ -1,5 +1,11 @@
 # System design
 
+[Game time and outdoor day/night](game_time_design.md): implemented and mechanically
+verified (2026-11-07). Formal saved campaign-time API, sequential day/24-hour map
+readout and outdoor-only lighting cycle. Five focused CPU suites, pre-change save
+compatibility and hidden GPU checks pass; exploration/combat/effect rates and saves
+are preserved. [Six review captures](screenshots/game-time/README.md) await acceptance.
+
 [Encounter-scoped Targets](target_selection_design.md#encounter-scoped-picker--2026-11-07)
 is implemented and mechanically verified: combat-only picker and keyboard cycling
 share visible, enrolled encounter members; direct world targeting retains its
