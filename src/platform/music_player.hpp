@@ -3,9 +3,10 @@
 #include "audio/music_banner.hpp"
 #include <raylib.h>
 namespace blobber {
-class CombatMusic {
+class MusicPlayer {
   public:
-    void prepare(const std::filesystem::path& root, const std::filesystem::path& state, std::string& warning);
+    void prepare(const std::filesystem::path& root, const std::filesystem::path& state, std::string& warning,
+                 audio::MusicPolicy policy = audio::MusicPolicy::Playlist);
     void update(audio::MusicInput input, float volume);
     void detach() noexcept;
     void shutdown() noexcept;

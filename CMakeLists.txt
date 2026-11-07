@@ -133,7 +133,7 @@ if(BLOBBER_BUILD_GRAPHICS)
         src/assets/npc_sheet.cpp src/assets/world_preparation.cpp src/render/image_sampling.cpp)
     target_link_libraries(blobber_assets_io PUBLIC blobber_core blobber_npc_io raylib PRIVATE nlohmann_json::nlohmann_json)
     add_library(blobber_platform
-        src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/combat_music.cpp src/ui/music_banner.cpp
+        src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/music_player.cpp src/ui/music_banner.cpp
         src/platform/gpu_resources.cpp src/platform/environment_ao.cpp src/platform/world_geometry_draw.cpp src/platform/world_renderer.cpp src/platform/window.cpp src/platform/input.cpp
         src/ui/trade_screen.cpp src/ui/dialogue_art.cpp src/ui/dialogue_screen.cpp src/ui/save_screen.cpp src/ui/creator_screen.cpp src/platform/presenter.cpp src/ui/loot_screen.cpp src/ui/camp_screen.cpp src/ui/travel_screen.cpp src/ui/character_sheet.cpp src/ui/inventory_screen.cpp src/ui/enemy_targets.cpp src/ui/spellbook.cpp src/ui/hud.cpp src/ui/hud_overlays.cpp src/ui/art.cpp src/ui/fonts.cpp)
     target_link_libraries(blobber_platform PUBLIC blobber_core blobber_world_cpu blobber_audio_io blobber_assets_io raylib)
@@ -694,7 +694,7 @@ if(BUILD_TESTING)
 endif()
 if(BUILD_TESTING AND BLOBBER_BUILD_GRAPHICS)
     # Fake raylib functions exercise our runtime without opening a device or window.
-    add_executable(blobber_audio_runtime_tests tests/audio_runtime_tests.cpp src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/combat_music.cpp)
+    add_executable(blobber_audio_runtime_tests tests/audio_runtime_tests.cpp src/platform/audio.cpp src/platform/dialogue_audio.cpp src/platform/music_player.cpp)
     target_include_directories(blobber_audio_runtime_tests PRIVATE tests)
     target_link_libraries(blobber_audio_runtime_tests PRIVATE blobber_audio_io blobber_world_cpu raylib)
     blobber_warnings(blobber_audio_runtime_tests)

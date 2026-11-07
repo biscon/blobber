@@ -11,7 +11,8 @@
     "mayor/mayor.json",
     "boric/boric.json",
     "balin/balin.json",
-    "blacksmith/blacksmith.json"
+    "blacksmith/blacksmith.json",
+    "shadowtart/shadowtart.json"
   ],
   "instances": [
     {

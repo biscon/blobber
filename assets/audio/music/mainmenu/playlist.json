@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "tracks": [
+    {
+      "id": "surprising_media-ambient-fantasy",
+      "path": "surprising_media-ambient-fantasy.mp3",
+      "title": "Ambient Fantasy",
+      "artist": "Surprising Media",
+      "gain_db": 0
+    }
+  ]
+}

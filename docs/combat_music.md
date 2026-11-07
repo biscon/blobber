@@ -1,5 +1,71 @@
 # Combat music
 
+## Sanctuary and menu extension — 2026-11-07
+
+Status: implemented and mechanically verified; listening/interactive review pending.
+
+Generalize the prepared player for three independently owned banks. Combat keeps
+its existing manifest and `music-state.json`; sanctuary and mainmenu use manifests
+inside their respective directories. Sanctuary uses the same bounded shuffle and
+transport, persisting to `sanctuary-music-state.json` beside settings. Menu uses a
+single-play policy with an explicit completed latch and no persisted progress.
+Each bank retains the 64-track ceiling; only the selected bank services a decoder.
+Missing/invalid banks remain silent. Original music files are not rewritten.
+
+Gameplay supplies the committed canonical location at initial attachment and after
+travel. AudioRuntime selects sanctuary for City/Inn/Smithy/Emporium locations,
+combat for other gameplay, and menu only within explicit menu-session boundaries.
+World cleanup stops old voices, dialogue and effect/ambient streams independently
+of music. Sanctuary-to-sanctuary travel preserves its track, decoder position and
+announcement clock through existing travel fades/loading pause. Other world/context
+changes stop the old music; returning to sanctuary consumes its next song. Failed
+travel keeps the source transport. Sanctuary overrides encounter activity and
+suppresses the ambient hiss even with music disabled; dungeon ambience is unchanged.
+
+Menu playback starts on initial menu presentation and restarts after returning from
+campaign/arena launch (including failure). Connected menus never restart it. Launch
+boundaries stop it before loading; a scope restores menu eligibility on return.
+EOF leaves the menu silent until the next menu session. No menu announcements.
+Menu Settings continues music, while gameplay Settings keeps its existing pause.
+All music shares existing Master/Music settings, mute/focus suspension, stereo
+compensation and limiter. Rename the settings label to Music. Sanctuary announcements
+use the existing modal visibility/deferred-clock rules; dialogue and inventory do
+not pause the song. No simulation, campaign schema or gameplay RNG changes.
+
+Preparation owns vectors, metadata and warmed decoder contexts. Frame updates and
+context transitions use fixed state, without filesystem access or engine C++
+allocation. Explicit persistence boundaries flush both shuffled banks. Shutdown
+stops and unloads all banks before closing the device.
+
+Owned music/runtime fixtures cover single-play exhaustion,
+re-entry, all sanctuary locations, world cleanup and travel continuity/rollback,
+ambience exclusion, modal deferral, mute/focus, independent persistence and warmed
+allocation invariants. Decoder servicing respects incoming pause/mute as well as
+already suspended state, preserving EOF detection when unmuting the menu song.
+No OS input automation; subjective listening remains user review.
+
+Executed verification (Debug, at most two low-priority build workers, serial tests):
+
+- Built `blobber`, `blobber_music_tests`, `blobber_audio_runtime_tests`,
+  `blobber_audio_tests` and `blobber_menu_tests`, without compiler warnings.
+- `nice -n 15 ionice -c 3 ctest --preset debug -R '^(music|audio_runtime|audio|menu)$'`
+  passed all four focused suites in 0.03 s. After tightening decoder suspension and
+  adding the EOF-boundary/transition allocation regressions, rebuilt the game and
+  runtime checker; the affected `audio_runtime` suite passed again in 0.01 s.
+- Runtime checks cover all four town locations, world replacement with old-voice
+  cleanup, source retention on rollback, town/dungeon music and ambience changes,
+  independent sanctuary persistence, one active song, deferred banners, focus/mute,
+  menu Settings continuity, exhaustion, re-entry and allocation-free transitions.
+- Both new manifests cover exactly the supplied ten sanctuary MP3s and one menu
+  MP3. Sequential FFmpeg checks decode the first 0.1 s of each without audio output;
+  these bounded checks do not establish whole-file integrity or listening quality.
+  The offline measurement tool's `--bank` CLI and `git diff --check` pass.
+- No physical-device listening, desktop interaction or new graphical capture was
+  performed. Banner artwork/animation is reused unchanged; the Settings label is
+  now Music. User settings, original song bytes and campaign formats are preserved.
+  Disposable run logs and the failed timing-assumption fixture were cleaned after
+  recording results; no new permanent screenshots or diagnostic exceptions remain.
+
 Status: implemented and mechanically verified, 2026-11-02. Subjective listening and
 interactive acceptance remain user review.
 
@@ -98,7 +164,7 @@ tests. Record final results and limitations here.
 `audio::MusicTransport::update(MusicInput)` consumes encounter identity/active state,
 audibility, pause, decoder EOF/remaining time and elapsed time. It publishes the
 current track, playback revision, fade level, suspension and announcement age.
-`CombatMusic` owns prepared decoders and fixed title buffers and exposes a borrowed
+`MusicPlayer` owns prepared decoders and fixed title buffers and exposes a borrowed
 `MusicBanner`. AudioRuntime owns this component alongside the existing SFX/ambience
 owners; its update takes separate music-pause/banner-visibility flags. Presenter
 draws the banner in its native HUD pass without rebuilding the world image.

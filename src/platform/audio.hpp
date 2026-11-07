@@ -2,7 +2,8 @@
 #include "audio/bank.hpp"
 #include "audio/events.hpp"
 #include "game/session.hpp"
-#include "platform/combat_music.hpp"
+#include "game/travel.hpp"
+#include "platform/music_player.hpp"
 #include <optional>
 #include <raylib.h>
 namespace blobber {
@@ -24,17 +25,25 @@ class AudioRuntime {
                        unsigned priority = 0);
     bool stop(audio::Handle) noexcept;
     void detach() noexcept;
+    void beginMenuMusic() noexcept;
+    void endMenuMusic() noexcept;
+    // Call at gameplay entry and after travel commits, never during preparation.
+    void setGameplayMusic(std::optional<CampaignLocationId> location) noexcept;
     void shutdown() noexcept;
     audio::Settings settings;
     float worldGain = 1; // Travel fade, never persisted.
     bool ready() const noexcept { return ready_; }
     void persist();
     void persistMusic(); // Explicit I/O boundary, never called by update.
-    MusicBanner musicBanner() const noexcept { return music_.banner(); }
+    MusicBanner musicBanner() const noexcept;
     const std::string& warning() const noexcept { return warning_; }
 
   private:
-    CombatMusic music_;
+    enum class MusicContext { None, Combat, Sanctuary, Menu };
+    MusicPlayer music_, sanctuaryMusic_, menuMusic_;
+    MusicContext musicContext_ = MusicContext::None;
+    bool menuMusicActive_ = false, sanctuary_ = false;
+    void detachWorld() noexcept;
     struct DialogueSound {
         Sound source{}, voice{};
         bool valid = false;

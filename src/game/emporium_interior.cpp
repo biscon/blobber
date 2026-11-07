@@ -1,7 +1,19 @@
 #include "game/emporium_interior.hpp"
 #include "game/campaign.hpp"
+#include "game/dialogue.hpp"
+#include <algorithm>
 #include <stdexcept>
 namespace blobber {
+NpcInstance shadowtartPlacement(const std::vector<std::string>& types) {
+    const auto type = std::find(types.begin(), types.end(), "shadowtart");
+    if (type == types.end())
+        throw std::invalid_argument("Campaign requires the Shadowtart appearance");
+    NpcInstance npc{
+        {std::uint16_t(type - types.begin())}, emporiumResidentCell, emporiumResidentSubcell, Heading::South};
+    npc.role = NpcRole::Resident;
+    npc.residentId = dialogueKey("sanctuary.shadowtart");
+    return npc;
+}
 SanctuaryHub emporiumInterior() {
     constexpr int size = 12;
     std::vector<std::string> rows(size, std::string(size, '#'));
@@ -44,13 +56,22 @@ void validateEmporiumInterior(const Map& map, const CampaignLocationState& state
     const auto expected = emporiumInterior();
     const auto& f = state.fixtures;
     const auto& e = expected.fixtures;
+    const auto resident = shadowtartPlacement(state.types);
+    if (state.placements.size() != 1)
+        throw std::invalid_argument("Emporium requires exactly one Shadowtart");
+    const auto& npc = state.placements[0];
+    if (npc.type.index != resident.type.index || npc.role != NpcRole::Resident ||
+        npc.residentId != resident.residentId || !(npc.cell == resident.cell) ||
+        !(npc.subcell == resident.subcell) || npc.facing != resident.facing ||
+        npc.animation != NpcAnimation::Idle || npc.phaseMs || npc.monster ||
+        npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount)
+        throw std::invalid_argument("Unsupported Shadowtart placement");
     if (map.width() != expected.map.width() || map.height() != expected.map.height() ||
         map.definition().fingerprint() != expected.map.definition().fingerprint() ||
-        !(state.entry == expected.entry) || !(state.exit == expected.exit) || !state.placements.empty() ||
-        state.objective.count || state.objective.rewardCount || state.recovery.groundCount ||
-        state.recovery.sanctuaryCount || state.recovery.freeRestEverywhere || f.count || f.depth ||
-        !f.discovery || f.landingCount != e.landingCount || f.landings != e.landings ||
-        f.npcExcluded != e.npcExcluded)
+        !(state.entry == expected.entry) || !(state.exit == expected.exit) || state.objective.count ||
+        state.objective.rewardCount || state.recovery.groundCount || state.recovery.sanctuaryCount ||
+        state.recovery.freeRestEverywhere || f.count || f.depth || !f.discovery ||
+        f.landingCount != e.landingCount || f.landings != e.landings || f.npcExcluded != e.npcExcluded)
         throw std::invalid_argument("Unsupported Arcane Emporium definition");
     for (int y = 0; y < map.height(); ++y)
         for (int x = 0; x < map.width(); ++x)

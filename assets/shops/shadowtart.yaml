@@ -1,0 +1,12 @@
+# Shadowtart: current health and mana potions; ordinary provisions stay at the inn.
+version: 1
+id: sanctuary_emporium
+restock_days: 3
+buyback_hours: 24
+buyback_markup_percent: 25
+prices:
+  healing_potion: {buy: 50, sell: 12}
+  mana_potion: {buy: 65, sell: 16}
+stock:
+  - {item: healing_potion, quantity: 6}
+  - {item: mana_potion, quantity: 6}

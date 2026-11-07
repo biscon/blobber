@@ -73,6 +73,7 @@ int runMenus(const Options& options) try {
     loading.reset();
     presenter.fade(0);
     Input input;
+    audio.beginMenuMusic();
     bool suppress = true;
     while (!WindowShouldClose()) {
         presenter.presentMenu(drawMenu, &v);

@@ -39,7 +39,7 @@ void layout() {
               smith.residentId == dialogueKey("sanctuary.blacksmith"),
           "Duncan binds the dedicated resident appearance and stable identity");
     auto missing = defs.types;
-    missing.pop_back();
+    missing.erase(std::find(missing.begin(), missing.end(), "blacksmith"));
     rejects([&] { blacksmithPlacement(missing); }, "Missing blacksmith appearance rejects");
     NpcWorld npcs(map, authored.entry.cell, defs.types, {smith});
     GameSession game(map, party, npcs, 5, authored.entry, defs.timings, authored.recovery, authored.fixtures,

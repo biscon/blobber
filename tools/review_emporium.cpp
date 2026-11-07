@@ -5,18 +5,25 @@
 #include "persistence/campaign_codec.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
+#include "review_shadowtart.hpp"
 #include "world/sanctuary_city.hpp"
 #include <fstream>
 #include <iostream>
 using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
-        throw std::runtime_error("Usage: blobber_review_emporium ASSETS NEW_OUTPUT [sign|alchemy]");
-    if (argc == 4 && std::string_view(argv[3]) != "sign" && std::string_view(argv[3]) != "alchemy")
+        throw std::runtime_error(
+            "Usage: blobber_review_emporium ASSETS NEW_OUTPUT [sign|alchemy|shadowtart]");
+    if (argc == 4 && std::string_view(argv[3]) != "sign" && std::string_view(argv[3]) != "alchemy" &&
+        std::string_view(argv[3]) != "shadowtart")
         throw std::runtime_error("Unknown emporium review selection");
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
+    if (argc == 4 && std::string_view(argv[3]) == "shadowtart") {
+        reviewShadowtart(root, output);
+        return 0;
+    }
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
     auto run =
@@ -110,8 +117,8 @@ int main(int argc, char** argv) try {
         throw std::runtime_error("Canceled staging retained destination assets");
     report << "Failed/canceled GPU preparation preserves city and exact residency\n";
     travel(false);
-    if (run->game().actors().snapshot().count || run->game().atSanctuary())
-        throw std::runtime_error("Emporium unexpectedly populated or grants free rest");
+    if (run->game().actors().snapshot().count != 1 || run->game().atSanctuary())
+        throw std::runtime_error("Emporium requires its resident and ordinary rest");
     capture("entry");
     memory("emporium-only");
     const std::pair<const char*, Player> shots[]{

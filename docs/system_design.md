@@ -1,13 +1,28 @@
 # System design
 
+[Sanctuary and menu music](combat_music.md#sanctuary-and-menu-extension--2026-11-07):
+**implemented and mechanically verified; listening review pending**. Shared prepared
+playback provides a continuous town/interior shuffle and one-shot menu song,
+preserves town doorway playback, suppresses town ambient hiss, and shares Music
+settings. Four focused Debug suites and the game build pass; no campaign or
+simulation format changes.
+
+[Shadowtart](shadowtart_design.md): **implemented and mechanically verified;
+runtime review pending (2026-11-07)**. Approved sorceress behind the emporium
+counter with four-view idle/front talk, three conversation topics and health/mana
+potion trading. Inn retains provisions. Eight focused CPU checks, extended save
+and hidden production dialogue/trade/Continue checks pass;
+[six captures](screenshots/shadowtart/README.md). Schema/simulation stay 16/19;
+changed NPC fingerprint requires a new campaign, existing saves untouched.
+
 [Arcane Emporium](emporium_interior_design.md): **implemented and mechanically
 verified; runtime review pending (2026-11-07)**. Replaces the provisioner with a
 magic shop, leaving ordinary provisions at the inn. Uses the
 [approved mockups](mockups/magic-shop-v1/README.md), whole-cell room fixtures,
-third city doorway, reserved future merchant and regenerated exterior sign.
+third city doorway, reserved merchant position and regenerated exterior sign.
 Six focused CPU suites, extended persistence and hidden OpenGL travel/rollback/
-Continue checks pass; [six captures](screenshots/emporium/README.md). Merchant/stock
-is a later slice, following the smithy workflow. Current schema/simulation are
+Continue checks pass; [six captures](screenshots/emporium/README.md). Shadowtart
+and potion stock are implemented in the linked slice above. Current schema/simulation are
 **16/19**, requiring a new campaign; existing saves are untouched.
 The [herb-rack clearance correction](emporium_interior_design.md#herb-rack-window-clearance-correction--2026-11-07)
 moves the hanging bundles left of the window; geometry and hidden captures are

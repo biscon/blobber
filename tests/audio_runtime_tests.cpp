@@ -18,6 +18,7 @@ unsigned lastPlayed = 0;
 struct MusicBuffer {
     bool live = false, playing = false, paused = false;
     float position = 0, duration = 10, volume = 0;
+    std::string path;
 };
 std::array<MusicBuffer, 256> musicBuffers{};
 unsigned musicNext = 1, lastMusic = 0, musicPlays = 0;
@@ -117,14 +118,14 @@ void SetSoundPitch(Sound, float) {}
 void SetSoundPan(Sound s, float v) {
     fake::buffers[fake::id(s)].pan = v;
 }
-Music LoadMusicStream(const char*) {
+Music LoadMusicStream(const char* path) {
     ++fake::streams;
     Music m{};
     m.frameCount = 480000;
     m.stream.sampleRate = 48000;
     auto n = fake::musicNext++;
     check(n < fake::musicBuffers.size(), "Mock stream bound");
-    fake::musicBuffers[n] = {true, false, false, 0, 10, 0};
+    fake::musicBuffers[n] = {true, false, false, 0, 10, 0, path};
     m.ctxData = reinterpret_cast<void*>(std::uintptr_t(n));
     return m;
 }
@@ -361,6 +362,13 @@ int main() {
     std::ofstream(dir / "audio/music/b.mp3") << "mock-owned fixture";
     std::ofstream(dir / "audio/music/playlist.json")
         << R"({"tracks":[{"id":"a","path":"a.mp3","title":"First Track","artist":"Fixture","gain_db":-6},{"id":"b","path":"b.mp3","title":"Second Track","artist":"Fixture","gain_db":-6}]})";
+    for (const char* bank : {"sanctuary", "mainmenu"}) {
+        const auto root = dir / "audio/music" / bank;
+        std::filesystem::create_directories(root);
+        std::ofstream(root / "a.mp3") << "owned mock song";
+        std::ofstream(root / "playlist.json")
+            << R"({"tracks":[{"id":"a","path":"a.mp3","title":"Owned Song","artist":"Fixture"}]})";
+    }
     runtime.prepare(dir, false, dir / "settings.json");
     runtime.update(&session, false, true, 0, false);
     CombatOutcome start;
@@ -431,6 +439,155 @@ int main() {
     check(fake::musicPlays == afterAttach, "Repeated restored session snapshot does not restart music");
     runtime.persistMusic();
     check(std::filesystem::is_regular_file(dir / "music-state.json"), "Explicit boundary persists playlist");
+
+    const auto ambientPlaying = [&] {
+        for (const auto& stream : fake::musicBuffers)
+            if (stream.live && stream.playing && stream.path == (dir / "audio/sample.wav").string())
+                return true;
+        return false;
+    };
+    const auto songsPlaying = [&] {
+        unsigned count = 0;
+        for (const auto& stream : fake::musicBuffers)
+            count += stream.live && stream.playing && stream.path.find("/audio/music/") != std::string::npos;
+        return count;
+    };
+    runtime.setGameplayMusic(CampaignLocationId::City);
+    runtime.update(&session, false, true, .01f, false);
+    const auto townSong = fake::lastMusic;
+    const auto townStarts = fake::musicPlays;
+    check(fake::musicBuffers[townSong].path == (dir / "audio/music/sanctuary/a.mp3").string() &&
+              runtime.musicBanner().visible && !ambientPlaying() && songsPlaying() == 1,
+          "Sanctuary starts its own music without ambient hiss");
+    auto townPosition = fake::musicBuffers[townSong].position;
+    runtime.play("test");
+    const auto sourceVoice = fake::lastPlayed;
+    for (const auto location : {CampaignLocationId::Inn, CampaignLocationId::Smithy,
+                                CampaignLocationId::Emporium, CampaignLocationId::City}) {
+        runtime.setGameplayMusic(location);
+        // Alternate owned worlds to model committed doorway replacement.
+        auto* destination = location == CampaignLocationId::Inn || location == CampaignLocationId::Emporium
+                                ? &active
+                                : &session;
+        runtime.update(destination, true, true, 0, true, false);
+        runtime.update(destination, false, true, .01f, false);
+        runtime.update(destination, false, true, .01f, false);
+        check(fake::musicPlays == townStarts && fake::lastMusic == townSong &&
+                  fake::musicBuffers[townSong].position > townPosition && !ambientPlaying(),
+              "Every town doorway preserves song position and excludes ambience");
+        townPosition = fake::musicBuffers[townSong].position;
+    }
+    check(!fake::buffers[sourceVoice].playing, "Town doorway replacement still stops old-world voices");
+    const auto townBanner = runtime.musicBanner();
+    runtime.update(&session, true, true, .01f, false, false);
+    check(!runtime.musicBanner().visible && runtime.musicBanner().age == townBanner.age &&
+              fake::musicBuffers[townSong].position > townPosition,
+          "Dialogue/inventory defers sanctuary announcement while song advances");
+    // A failed travel leaves the source world/location attached.
+    runtime.update(&session, true, true, 0, true, false);
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::lastMusic == townSong && fake::musicPlays == townStarts && runtime.musicBanner().visible,
+          "Travel rollback resumes source song and its deferred announcement");
+    townPosition = fake::musicBuffers[townSong].position;
+    runtime.update(&session, false, false, .01f, false);
+    const auto townUnfocusedPosition = fake::musicBuffers[townSong].position;
+    runtime.update(&session, false, false, .01f, false);
+    check(townUnfocusedPosition == townPosition && fake::musicBuffers[townSong].paused &&
+              fake::musicBuffers[townSong].position == townUnfocusedPosition,
+          "Focus loss suspends sanctuary music");
+    runtime.settings.musicEnabled = false;
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::musicBuffers[townSong].paused && !ambientPlaying() && !runtime.musicBanner().visible,
+          "Muted sanctuary stays free of hiss and announcements");
+    runtime.settings.musicEnabled = true;
+    runtime.update(&session, false, true, .01f, false);
+    fake::musicBuffers[townSong].position = 10;
+    allocations = 0;
+    watching = true;
+    runtime.update(&session, false, true, .01f, false);
+    watching = false;
+    check(!allocations && fake::musicPlays == townStarts + 1 && runtime.musicBanner().age == 0,
+          "Sanctuary advances at EOF without engine allocation, even in a one-song bank");
+    runtime.setGameplayMusic(CampaignLocationId::FloorOne);
+    runtime.update(&session, false, true, .01f, false);
+    check(!fake::musicBuffers[townSong].playing && ambientPlaying(),
+          "Leaving sanctuary stops town music and restores dungeon ambience");
+    const auto beforeReturn = fake::musicPlays;
+    runtime.setGameplayMusic(CampaignLocationId::City);
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::musicPlays == beforeReturn + 1 && !ambientPlaying(),
+          "Returning to sanctuary starts a new song and stops dungeon hiss");
+    runtime.persistMusic();
+    check(std::filesystem::is_regular_file(dir / "sanctuary-music-state.json"),
+          "Sanctuary persists independently of combat");
+
+    runtime.detach();
+    runtime.beginMenuMusic();
+    runtime.update(nullptr, false, true, .01f);
+    const auto menuSong = fake::lastMusic;
+    const auto menuStarts = fake::musicPlays;
+    check(fake::musicBuffers[menuSong].path == (dir / "audio/music/mainmenu/a.mp3").string() &&
+              !runtime.musicBanner().visible && !ambientPlaying() && songsPlaying() == 1,
+          "Menu starts its own song with no announcement or world ambience");
+    const auto menuPosition = fake::musicBuffers[menuSong].position;
+    // Menu Settings uses paused=true/musicPaused=true with no GameSession.
+    runtime.update(nullptr, true, true, .01f, true, false);
+    check(fake::musicBuffers[menuSong].position > menuPosition && fake::musicPlays == menuStarts,
+          "Connected menus and Settings continue the existing menu song");
+    runtime.update(nullptr, false, false, .01f);
+    const auto unfocusedPosition = fake::musicBuffers[menuSong].position;
+    runtime.update(nullptr, false, false, .01f);
+    check(fake::musicBuffers[menuSong].paused && fake::musicBuffers[menuSong].position == unfocusedPosition,
+          "Menu music respects focus suspension");
+    runtime.settings.musicEnabled = false;
+    runtime.update(nullptr, false, true, .01f);
+    check(fake::musicBuffers[menuSong].paused, "Menu music respects shared mute");
+    runtime.settings.musicEnabled = true;
+    runtime.update(nullptr, false, true, .01f);
+    fake::musicBuffers[menuSong].position = 10;
+    runtime.settings.musicEnabled = false;
+    runtime.update(nullptr, false, true, .01f);
+    check(fake::musicBuffers[menuSong].position == 10 && fake::musicBuffers[menuSong].paused,
+          "Muting at the menu EOF boundary freezes decoder without losing completion");
+    runtime.settings.musicEnabled = true;
+    runtime.update(nullptr, false, true, .01f);
+    runtime.update(nullptr, false, true, .01f);
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 100; ++i)
+        runtime.update(nullptr, true, true, .01f);
+    watching = false;
+    check(!allocations && !fake::musicBuffers[menuSong].playing && fake::musicPlays == menuStarts,
+          "Finished menu stays silent without allocation or repeated playback");
+    runtime.endMenuMusic();
+    runtime.update(nullptr, false, true, .01f);
+    check(fake::musicPlays == menuStarts, "Launch boundary does not restart menu music");
+    runtime.setGameplayMusic(std::nullopt);
+    runtime.update(&active, false, true, .01f, false);
+    runtime.detach();
+    runtime.beginMenuMusic();
+    runtime.update(nullptr, false, true, .01f);
+    check(fake::lastMusic == menuSong && fake::musicBuffers[menuSong].position < .1f &&
+              fake::musicPlays > menuStarts,
+          "Return from gameplay restarts menu song from the beginning");
+    runtime.endMenuMusic();
+    check(!fake::musicBuffers[menuSong].playing, "Menu music stops before launch loading");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 8; ++i) {
+        runtime.setGameplayMusic(CampaignLocationId::City);
+        runtime.update(&session, false, true, .01f, false);
+        runtime.setGameplayMusic(CampaignLocationId::Inn);
+        runtime.update(&active, false, true, .01f, false);
+        runtime.setGameplayMusic(CampaignLocationId::FloorOne);
+        runtime.update(&session, false, true, .01f, false);
+        runtime.detach();
+        runtime.beginMenuMusic();
+        runtime.update(nullptr, false, true, .01f);
+        runtime.endMenuMusic();
+    }
+    watching = false;
+    check(!allocations, "Warmed town/world/menu transitions allocate no engine C++ memory");
     runtime.shutdown();
     std::filesystem::remove_all(dir);
     std::cout << "Audio runtime ownership, failure and allocation checks passed\n";

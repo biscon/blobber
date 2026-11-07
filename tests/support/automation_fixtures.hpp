@@ -83,8 +83,8 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
 }
 inline NpcDefinitions definitions() {
     NpcDefinitions d;
-    d.types = {"goblin",  "goblin.archer", "skeleton", "zombie", "giant.rat", "goblin_shaman",
-               "bugbear", "innkeeper",     "mayor",    "boric",  "balin", "blacksmith"};
+    d.types = {"goblin",    "goblin.archer", "skeleton", "zombie", "giant.rat",  "goblin_shaman", "bugbear",
+               "innkeeper", "mayor",         "boric",    "balin",  "blacksmith", "shadowtart"};
     d.timings.resize(d.types.size());
     d.attachments.resize(d.types.size());
     d.timings[0][0] = {{{100, 0, 0, 0}}, 1};

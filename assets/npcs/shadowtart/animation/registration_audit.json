@@ -1,0 +1,219 @@
+{
+  "idle-front": {
+    "source_size": [
+      1774,
+      887
+    ],
+    "alpha_bounds": [
+      [
+        307,
+        6,
+        639,
+        882
+      ],
+      [
+        245,
+        6,
+        576,
+        882
+      ]
+    ],
+    "target_max_height": 464,
+    "registration": {
+      "name": "idle-front",
+      "columns": 2,
+      "rows": 1,
+      "split_x": 887,
+      "scale": 0.5296803652968036,
+      "pivot_x": [
+        473.5,
+        411.5
+      ],
+      "ground_y": [
+        882,
+        882
+      ],
+      "canvas_width": 800,
+      "canvas_height": 608,
+      "anchor_x": 400,
+      "anchor_y": 584
+    }
+  },
+  "idle-back": {
+    "source_size": [
+      1774,
+      887
+    ],
+    "alpha_bounds": [
+      [
+        386,
+        10,
+        716,
+        875
+      ],
+      [
+        170,
+        10,
+        501,
+        875
+      ]
+    ],
+    "target_max_height": 464,
+    "registration": {
+      "name": "idle-back",
+      "columns": 2,
+      "rows": 1,
+      "split_x": 887,
+      "scale": 0.5364161849710982,
+      "pivot_x": [
+        551.5,
+        336.0
+      ],
+      "ground_y": [
+        875,
+        875
+      ],
+      "canvas_width": 800,
+      "canvas_height": 608,
+      "anchor_x": 400,
+      "anchor_y": 584
+    }
+  },
+  "idle-left": {
+    "source_size": [
+      1774,
+      887
+    ],
+    "alpha_bounds": [
+      [
+        368,
+        6,
+        651,
+        879
+      ],
+      [
+        228,
+        6,
+        514,
+        879
+      ]
+    ],
+    "target_max_height": 464,
+    "registration": {
+      "name": "idle-left",
+      "columns": 2,
+      "rows": 1,
+      "split_x": 887,
+      "scale": 0.5315005727376861,
+      "pivot_x": [
+        518.0,
+        379.5
+      ],
+      "ground_y": [
+        879,
+        879
+      ],
+      "canvas_width": 800,
+      "canvas_height": 608,
+      "anchor_x": 400,
+      "anchor_y": 584
+    }
+  },
+  "idle-right": {
+    "source_size": [
+      1774,
+      887
+    ],
+    "alpha_bounds": [
+      [
+        328,
+        7,
+        602,
+        879
+      ],
+      [
+        219,
+        6,
+        492,
+        879
+      ]
+    ],
+    "target_max_height": 464,
+    "registration": {
+      "name": "idle-right",
+      "columns": 2,
+      "rows": 1,
+      "split_x": 887,
+      "scale": 0.5315005727376861,
+      "pivot_x": [
+        460.75,
+        350.0
+      ],
+      "ground_y": [
+        879,
+        879
+      ],
+      "canvas_width": 800,
+      "canvas_height": 608,
+      "anchor_x": 400,
+      "anchor_y": 584
+    }
+  },
+  "talk-front": {
+    "source_size": [
+      1086,
+      1448
+    ],
+    "alpha_bounds": [
+      [
+        142,
+        14,
+        401,
+        706
+      ],
+      [
+        142,
+        15,
+        401,
+        706
+      ],
+      [
+        143,
+        15,
+        401,
+        706
+      ],
+      [
+        142,
+        15,
+        401,
+        706
+      ]
+    ],
+    "target_max_height": 464,
+    "registration": {
+      "name": "talk-front",
+      "columns": 2,
+      "rows": 2,
+      "split_x": 543,
+      "scale": 0.6705202312138728,
+      "pivot_x": [
+        272.5,
+        273.0,
+        272.5,
+        272.5
+      ],
+      "ground_y": [
+        706,
+        706,
+        706,
+        706
+      ],
+      "canvas_width": 800,
+      "canvas_height": 608,
+      "anchor_x": 400,
+      "anchor_y": 584,
+      "split_y": 724
+    }
+  }
+}

@@ -4,8 +4,9 @@ Status: implemented and mechanically verified; runtime visual/interactive review
 pending (2026-11-07).
 The user approved both [interior and exterior sign](mockups/magic-shop-v1/README.md)
 and the name Arcane Emporium. This slice follows the smithy interior: build the
-room, city connection and sign first. Merchant identity/art, dialogue, stock and
-scroll mechanics remain a subsequent slice; inn supplies remain available.
+room, city connection and sign first. [Shadowtart](shadowtart_design.md) now adds
+the approved merchant identity/art, dialogue and potion stock as a subsequent
+slice; scroll mechanics remain deferred and inn supplies remain available.
 
 ## Authored layout and presentation
 
@@ -68,8 +69,9 @@ Enter/Leave Arcane Emporium. Existing checked world/slot/revision/facing handles
 transactional prepare/commit/cancel and source-view lifetime ordering apply.
 No new travel kind. Exclude the third city arrival from NPC placement.
 
-An `emporiumInterior()` constructor/validator owns map, entry/exit, fixtures,
-empty placements and restore rejection for tampered authored state. Use shared
+An `emporiumInterior()` constructor/validator owns map, entry/exit, fixtures
+and restore rejection for tampered authored state. The Shadowtart slice adds
+exactly one canonical resident placement, replacing the initial empty room. Use shared
 interior recall/waypoint restrictions and ordinary rest rules; no inn free rest.
 HUD/map/automation identify Arcane Emporium at depth zero and authored diagnostic
 identity `sanctuary-emporium-v1`. Add one bounded FloorState, with the same existing
@@ -78,8 +80,9 @@ mesh/catalog loading stays in preparation; steady-state frames reuse all storage
 
 Seven-location wire data requires campaign schema/simulation 16/19, replacing
 15/18 with strict old-save rejection and no migration. User saves remain untouched.
-NPC definitions, item rules, dungeon generator and existing merchant stock are
-unchanged. Future merchant stock can move temporary inn potions when implemented.
+The original room slice left NPC definitions, item rules, dungeon generator and
+merchant stock unchanged. Shadowtart's linked slice adds her appearance and moves
+temporary inn potion retail stock to her shop; item rules/generation are unchanged.
 
 ## Verification
 

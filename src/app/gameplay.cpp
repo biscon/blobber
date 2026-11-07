@@ -162,8 +162,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             initial.commands.arenaContext(false);
         initial.refresh();
         initial.frames.activate();
-        if (presenter.audio)
+        if (presenter.audio) {
+            presenter.audio->setGameplayMusic(
+                campaign ? std::optional<CampaignLocationId>(campaign->activeLocationId()) : std::nullopt);
             presenter.audio->update(&initial.session, false, true, 0);
+        }
         if (loading->closing())
             return PlayOutcome::Quit;
         loading.reset();
@@ -361,6 +364,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     return PlayOutcome::Quit;
                 auto& arrived = *current;
                 if (presenter.audio) {
+                    presenter.audio->setGameplayMusic(campaign->activeLocationId());
                     presenter.audio->update(&arrived.session, true, IsWindowFocused(), 0);
                 }
                 arrived.refresh(debug, sample.ui.focused);

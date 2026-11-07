@@ -34,10 +34,14 @@ void layout() {
     const auto cat = catalog();
     const auto defs = definitions();
     Party party(cat, *cat.preset());
-    NpcInstance future{{7}, emporiumResidentCell, emporiumResidentSubcell, Heading::South};
-    future.role = NpcRole::Resident;
-    future.residentId = dialogueKey("fixture.emporium");
-    NpcWorld npcs(map, authored.entry.cell, defs.types, {future});
+    const auto merchant = shadowtartPlacement(defs.types);
+    check(defs.types[merchant.type.index] == "shadowtart" && merchant.role == NpcRole::Resident &&
+              merchant.residentId == dialogueKey("sanctuary.shadowtart"),
+          "Shadowtart binds her dedicated appearance and stable resident identity");
+    auto missing = defs.types;
+    missing.erase(std::find(missing.begin(), missing.end(), "shadowtart"));
+    rejects([&] { shadowtartPlacement(missing); }, "Missing sorceress appearance rejects");
+    NpcWorld npcs(map, authored.entry.cell, defs.types, {merchant});
     GameSession game(map, party, npcs, 5, authored.entry, defs.timings, authored.recovery, authored.fixtures,
                      {});
     for (int y = 2; y <= 9; ++y)
@@ -48,7 +52,7 @@ void layout() {
     face(game, Heading::South);
     check(!game.beginConversation(game.actors().id(0)), "Wrong customer facing rejects conversation");
     face(game, emporiumCustomer.heading);
-    check(game.beginConversation(game.actors().id(0)), "Reserved merchant is in dialogue range");
+    check(game.beginConversation(game.actors().id(0)), "Shadowtart is in dialogue range across the counter");
     game.endConversation();
 }
 void campaign() {
@@ -110,8 +114,13 @@ void campaign() {
     face(run.game(), approach.heading);
     commit(run);
     check(run.activeLocationId() == CampaignLocationId::Emporium && !run.dungeonDepth() &&
-              std::string_view(run.name()) == "Arcane Emporium" && run.game().actors().snapshot().count == 0,
-          "Emporium is a separate depth-zero room with future merchant space");
+              std::string_view(run.name()) == "Arcane Emporium" && run.game().actors().snapshot().count == 1,
+          "Emporium is a separate depth-zero room with one resident");
+    const auto& resident = run.game().actors().snapshot().actors[0];
+    check(!resident.hostile() && resident.npc.cell == emporiumResidentCell &&
+              resident.npc.subcell == emporiumResidentSubcell && resident.npc.facing == Heading::South &&
+              run.game().actors().occupied(emporiumResidentCell),
+          "Shadowtart occupies the counter's staff subcell, facing customers");
     check(!run.previewTravel(request), "Source doorway handle is stale after travel");
     check(!run.previewTravel(run.recallRequest()) && !run.previewTravel(run.waypointRequest(1)) &&
               !run.game().atSanctuary(),
@@ -135,7 +144,21 @@ void campaign() {
     walk(run.game(), emporiumCustomer.cell);
     face(run.game(), emporiumCustomer.heading);
     inside.refresh({}, false, false, true);
-    check(!inside.snapshot().fixturePrompt[0], "Future merchant space has no fake interaction");
+    check(run.game().beginConversation(run.game().actors().id(0)), "Counter conversation admits Shadowtart");
+    const auto conversationPose = run.game().movement().player;
+    run.game().move(Action::Forward);
+    check(run.game().movement().player == conversationPose, "Conversation cannot move through the counter");
+    run.game().endConversation();
+    constexpr auto host = dialogueKey("sanctuary.shadowtart");
+    run.dialogue().get(host, true)->introduced = true;
+    check(run.dialogue().complete(host, dialogueKey("potions"), 0), "Sorceress topic history records");
+    ShopDefinition shop;
+    shop.id = dialogueKey("fixture.emporium.shop");
+    shop.key = "fixture.emporium.shop";
+    shop.stock.push_back({{0}, 6});
+    auto* vendor = run.merchants().visit(host, shop, run.game().gameTime());
+    check(vendor && vendor->stock[0] == 6, "Sorceress owns a separate merchant ledger");
+    vendor->stock[0] = 5; // Persisted ledger fixture; generic trade tests own transaction assertions.
     ItemHandle item;
     for (std::uint16_t i = 0; i < bagCells && !item; ++i) {
         const auto candidate = run.party().inventory().at({{0}, i});
@@ -166,7 +189,14 @@ void campaign() {
               restored->game().movement().player == pose && drops(restored->game()) &&
               restored->checkpoint()->locations[6].state->fixtures.discovered == discovery,
           "Continue retains emporium, pose, drops and discovery");
-    for (unsigned fault = 0; fault < 6; ++fault) {
+    check(restored->game().actors().snapshot().count == 1 &&
+              restored->game().actors().snapshot().actors[0].npc.residentId == host &&
+              restored->dialogue().get(host)->introduced &&
+              restored->dialogue().get(host)->completedCount == 1 &&
+              restored->dialogue().get(host)->completed[0] == dialogueKey("potions") &&
+              restored->merchants().find(host)->stock[0] == 5,
+          "Continue retains canonical Shadowtart, dialogue history and finite stock");
+    for (unsigned fault = 0; fault < 16; ++fault) {
         auto invalid = restored->checkpoint();
         auto& location = invalid->locations[6];
         if (fault == 0)
@@ -183,6 +213,26 @@ void campaign() {
         }
         if (fault == 5)
             location.fixtures.npcExcluded.reset();
+        if (fault == 6)
+            location.placements.clear();
+        if (fault == 7)
+            location.placements[0].residentId = dialogueKey("sanctuary.innkeeper");
+        if (fault == 8)
+            location.placements[0].cell.x = 7;
+        if (fault == 9)
+            location.placements[0].subcell.y = 0;
+        if (fault == 10)
+            location.placements[0].facing = Heading::North;
+        if (fault == 11)
+            location.placements[0].animation = NpcAnimation::Talk;
+        if (fault == 12)
+            location.placements[0].phaseMs = 1;
+        if (fault == 13)
+            location.placements[0].role = NpcRole::Hostile;
+        if (fault == 14)
+            location.state->actors.actors[0].npc.cell.x = 7;
+        if (fault == 15)
+            location.placements[0].type.index = 7;
         rejects([&] { CampaignRun rejected(cat, std::move(*invalid), defs.timings); },
                 "Noncanonical emporium state rejects");
     }
@@ -213,6 +263,9 @@ void campaign() {
     door(*restored, "emporium");
     commit(*restored);
     check(drops(restored->game()), "Inactive emporium retains drops through inn and smithy travel");
+    check(restored->game().actors().snapshot().actors[0].npc.residentId == host &&
+              restored->dialogue().get(host)->introduced && restored->merchants().find(host)->stock[0] == 5,
+          "Inactive travel retains sorceress, history and stock independently of other merchants");
 
     Client client(cat, defs);
     auto scenario = generatedScenario(cat);
@@ -242,7 +295,7 @@ void campaign() {
 int main() try {
     layout();
     campaign();
-    std::cout << "Emporium layout, third doorway, future resident and persistence checks passed\n";
+    std::cout << "Emporium layout, Shadowtart resident, third doorway and persistence checks passed\n";
     return 0;
 } catch (const std::exception& error) {
     watching = false;

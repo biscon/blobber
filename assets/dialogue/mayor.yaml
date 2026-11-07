@@ -21,27 +21,31 @@ greeting:
       text: |
         Hast thou uncovered tidings of fair Gwendolyn? Then speaketh post-haste, I command thee!
       animation: talk
+      audio: dialogue/mayor-torben3.wav
 introduction:
   beats:
     - speaker: mayor
       text: |
         Hold, ye travelers! Adventurers of fortune! Mine own daughter Gwendolyn was foully abducted yesternight. Vile fiends didst ascend from the dark dungeons beneath Sanctuary and carried her away into the abyss!
       animation: talk
+      audio: dialogue/mayor-torben1.wav
     - speaker: mayor
       text: |
         My beautiful flesh and blood, dragged into that most wretched, damp hollow! Find her, I beseech thee, and return her safely to the surface. Boric and Balin are meant to be assisting mine office with this investigation. Yet their principal contribution to the crown thus far hath been merely standing there like static pillars of meat.
       animation: talk
+      audio: dialogue/mayor-torben2.wav
     - speaker: boric
       text: |
         Uhhh.. heh hehe.
       camera:
         target: boric
         duration_ms: 400
-      audio: dialogue/boric-chuckle.wav
+      audio: dialogue/uh1.wav
     - speaker: mayor
       text: |
         Thou must find her post-haste!!.
       animation: talk
+      audio: dialogue/mayor-torben3.wav
       camera:
         target: mayor
         duration_ms: 300
@@ -57,6 +61,7 @@ topics:
         text: |
           Muck-rakers! Ye must recognize Gwendolyn upon thy sight! Watchmen! Produce the official royal tapestry from the town archives post-haste, that these sell-swords mayest know whom they seek!
         animation: talk
+        audio: dialogue/mayor-torben2.wav
       - speaker: boric
         text: |
           Verily, sire... heh, heh... lookest thou upon this scroll. I holdeth a most wondrous rendering of the maiden right here within my breastplate. 'Tis the freshest parchment in all the realm.
@@ -90,7 +95,7 @@ topics:
           target: mayor
           duration_ms: 200
         animation: explosive_rage
-        audio: dialogue/mayor-groan.wav
+        audio: dialogue/mayor-torben1.wav
         clear_overlay: true
 - id: kidnapping
   label: The kidnapping
@@ -100,7 +105,7 @@ topics:
           text: |
             The foul deed didst transpire during the dead of night! Vile abominations from the abyss didst seize her before any soul couldst raise a blade to halt their escape. I require sturdy sell-swords who possesseth the spine to descend after her -- not another lengthy parchment explaining why mine own watchmen noticed absolutely naught!
           animation: talk
-          audio: dialogue/mayor-groan.wav
+          audio: dialogue/mayor-torben2.wav
 - id: dungeon
   label: The dungeon
   responses:
@@ -109,6 +114,7 @@ topics:
         text: |
           They dragged her into the dark abyss beneath our town! I knowest not how many tiers down she abideth. Ye shall encounter endless, damp mineshafts plunging into the void!
         animation: talk
+        audio: dialogue/mayor-torben2.wav
       - speaker: boric
         text: |
           Hark! Heh, heh. Thou didst say 'shafts'... eh-heh-heh.
@@ -132,7 +138,7 @@ topics:
           target: mayor
           duration_ms: 200  # Furious rage snap-back
         animation: explosive_rage
-        audio: dialogue/mayor-groan.wav
+        audio: dialogue/mayor-torben1.wav
 - id: guards
   label: Your guards
   responses:
@@ -142,6 +148,7 @@ topics:
           text: |
             Boric and Balin have been diligently investigating since the first light of dawn. Verily, I await their official report with bated breath.
           animation: talk
+          audio: dialogue/mayor-torben2.wav
         - speaker: boric
           text: |
             Hark, sire! Heh, heh. We didst thoroughly investigate the midday feast... twice, in fact.
@@ -154,6 +161,7 @@ topics:
           text: |
             Mine own flesh and blood is missing! The tavern sandwiches art not suspects in this treason!
           animation: talk
+          audio: dialogue/mayor-torben3.wav
         - speaker: balin
           text: |
             Not any longer, your grace. Eh-heh. We didst completely eliminate them from the realm. Triumphant.
@@ -166,13 +174,14 @@ topics:
           text: |
             Their unyielding dedication to the entirely wrong endeavor is truly extraordinary. I beseech thee, go forth and find Gwendolyn.
           animation: talk
-          audio: dialogue/mayor-groan.wav
+          audio: dialogue/mayor-torben1.wav
     - when_fact: heard_guards_lunch
       beats:
         - speaker: mayor
           text: |
             Henceforth, I have strictly forbidden further investigations concerning the midday feast!
           animation: talk
+          audio: dialogue/mayor-torben3.wav
         - speaker: boric
           text: |
             Joyous tidings, sire! Heh, heh. We have uncovered a most promising lead regarding supper.
@@ -193,7 +202,7 @@ topics:
           text: |
             Dost thou witness the utter baseline human material I am forced to endure? Find my daughter!
           animation: talk
-          audio: dialogue/mayor-groan.wav
+          audio: dialogue/mayor-torben2.wav
 - id: farewell
   label: Farewell
   kind: farewell

@@ -1,10 +1,10 @@
-# Combat music
+# Music
 
-The 21 supplied Nick Panek MP3s are played directly; no authoring/model tools are
+The supplied MP3s are played directly; no authoring/model tools are
 needed on a player's machine. Original downloads are unchanged. Titles are readable
 versions of their filenames (these files do not contain embedded title/artist tags).
 
-In **Settings / Audio**, use **Combat music** to drag the volume slider, or select it
+In **Settings / Audio**, use **Music** to drag the volume slider, or select it
 with Tab and adjust with Left/Right. The separate On/Off button remembers the chosen
 volume. Music starts enabled at 50%. Master also controls music. Pause/settings and
 focus loss freeze playback; spell selection and other tactical panels keep it going.
@@ -15,6 +15,19 @@ seconds; a new encounter interrupts that fade with the next song. Muting freezes
 current track, which resumes if the same encounter is still active. Muted encounters
 do not consume playlist entries. The title announcement is hidden while muted.
 
+Sanctuary, the inn, smithy and Arcane Emporium share the ten supplied tracks in
+`sanctuary/`. Music plays continuously, advancing through a separate shuffled
+rotation. Doorway travel preserves the current song through the travel fade and
+loading suspension. Returning from the dungeon starts the next sanctuary track.
+Dialogue and inventory/character overlays defer announcements while music continues.
+The ambient hiss is disabled throughout town, including when music is muted.
+
+The supplied `mainmenu/` song plays once when menus first appear, continues across
+connected screens (including Settings), then leaves silence when finished. Returning
+from a campaign or arena starts it again from the beginning. Launching gameplay
+stops it before loading. Menu music has no title announcement. All three banks share
+the Music/Master controls; muting or losing focus suspends playback.
+
 ## Editing the bank
 
 Edit `playlist.json` to change a display title, artist, relative path or `gain_db`.
@@ -23,6 +36,12 @@ remove manifest entries to change the playlist (up to 64 tracks); simply droppin
 an unlisted file into the directory does not activate it. Missing/invalid files are
 skipped with a startup diagnostic. Paths stay within this music directory. Use
 printable ASCII titles for the existing HUD font atlas; long titles wrap/truncate.
+
+The combat manifest remains here. Sanctuary and menu each have their own
+`playlist.json` inside their directory; their paths are relative to that directory.
+Each bank accepts at most 64 entries. Keep the menu manifest to its one desired song.
+The supplied additional credits follow their filenames: Nick Panek for sanctuary,
+Surprising Media for the menu. No additional license verification is claimed.
 
 `gain_db` is an attenuation-only trim (-60 through 0 dB), independent of the Music
 slider. The supplied tracks use 0 dB: keep their mastered loudness. At 100% Master/Music,
@@ -35,6 +54,9 @@ To remeasure the MP3s under `combat/` without changing audio bytes:
 
 ```sh
 nice -n 15 ionice -c 3 python3 tools/audio/music_levels.py
+# Select a different bank explicitly:
+nice -n 15 ionice -c 3 python3 tools/audio/music_levels.py --bank sanctuary
+nice -n 15 ionice -c 3 python3 tools/audio/music_levels.py --bank mainmenu
 ```
 
 This rebuilds the manifest from that directory, preserving existing IDs/titles/artist
@@ -47,6 +69,9 @@ on menu exit from gameplay, settings, travel and orderly shutdown. A crash may l
 progress since the last checkpoint. To reset the rotation, remove that file while
 Blobber is closed. The next encounter after restarting always starts a new song;
 partial song positions are deliberately not saved.
+
+Sanctuary uses a separate `sanctuary-music-state.json` beside settings with the same
+rotation/persistence rules. Menu completion is not saved and has no state file.
 
 Source/provenance: tracks supplied by the user as royalty-free Nick Panek downloads.
 Original filenames and artist credit are retained; no new license verification or

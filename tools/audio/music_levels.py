@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """Measure supplied MP3s without normalizing them; preserve manual trims and audio bytes."""
 import json
+import argparse
 import math
 from pathlib import Path
 import re
 import subprocess
 
 root = Path(__file__).resolve().parents[2] / 'assets/audio/music'
-manifest = root / 'playlist.json'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--bank', choices=('combat', 'sanctuary', 'mainmenu'), default='combat')
+args = parser.parse_args()
+bank = root / args.bank
+metadata_root = root if args.bank == 'combat' else bank
+manifest = metadata_root / 'playlist.json'
 old = {t['path']: t for t in json.loads(manifest.read_text())['tracks']} if manifest.exists() else {}
 tracks = []
-for path in sorted((root / 'combat').glob('*.mp3')):
+for path in sorted(bank.glob('*.mp3')):
     proc = subprocess.run(['ffmpeg', '-hide_banner', '-nostdin', '-threads', '1', '-filter_threads', '1',
                            '-i', str(path), '-af', 'loudnorm=I=-18:TP=-3:LRA=11:print_format=json',
                            '-f', 'null', '-'], capture_output=True, text=True, check=True)
@@ -18,10 +24,11 @@ for path in sorted((root / 'combat').glob('*.mp3')):
     loudness, peak = float(result['input_i']), float(result['input_tp'])
     if not math.isfinite(loudness) or not math.isfinite(peak):
         raise ValueError(f'Invalid measurement: {path}')
-    relative = path.relative_to(root).as_posix()
-    stem = re.sub(r'-\d{6}$', '', path.stem.removeprefix('nickpanek-'))
+    relative = path.relative_to(metadata_root).as_posix()
+    artist = 'Nick Panek' if path.stem.startswith('nickpanek-') else 'Surprising Media'
+    stem = re.sub(r'-\d{6}$', '', re.sub(r'^(nickpanek|surprising_media)-', '', path.stem))
     track = old.get(relative, {'id': path.stem, 'path': relative,
-                              'title': stem.replace('-', ' ').title(), 'artist': 'Nick Panek'})
+                              'title': stem.replace('-', ' ').title(), 'artist': artist})
     track.setdefault('gain_db', 0)
     track.update(measured_lufs=loudness, measured_true_peak_db=peak)
     tracks.append(track)

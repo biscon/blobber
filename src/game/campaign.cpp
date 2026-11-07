@@ -95,7 +95,8 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     emporium.exit = emporiumDefinition.exit;
     emporium.fixtures = emporiumDefinition.fixtures;
     emporium.recovery = emporiumDefinition.recovery;
-    emporium.placements.emplace(emporium.map(), emporium.entry.cell, types, std::vector<NpcInstance>{});
+    emporium.placements.emplace(emporium.map(), emporium.entry.cell, types,
+                                std::vector<NpcInstance>{shadowtartPlacement(types)});
     emporium.seed = seed;
     configureDoorways();
     active_ = prepare(0, spawn);

@@ -1,10 +1,11 @@
-#include "platform/combat_music.hpp"
+#include "platform/music_player.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 namespace blobber {
-void CombatMusic::prepare(const std::filesystem::path& root, const std::filesystem::path& state,
-                          std::string& warning) {
+void MusicPlayer::prepare(const std::filesystem::path& root, const std::filesystem::path& state,
+                          std::string& warning, audio::MusicPolicy policy) {
+    transport_.policy = policy;
     statePath_ = state;
     auto candidates = audio::loadMusicTracks(root, warning);
     tracks_.reserve(audio::musicCapacity);
@@ -39,7 +40,7 @@ void CombatMusic::prepare(const std::filesystem::path& root, const std::filesyst
                               std::uint32_t(std::chrono::steady_clock::now().time_since_epoch().count()));
     audio::loadPlaylist(statePath_, tracks_, transport_.playlist, warning);
 }
-void CombatMusic::update(audio::MusicInput input, float volume) {
+void MusicPlayer::update(audio::MusicInput input, float volume) {
     input.audible &= std::isfinite(volume) && volume > 0;
     // raylib 6.2 applies its pan law to stereo music too: at center each channel
     // receives 0.5 * 0.5 * (3 - 0.5^2) = 0.6875. Preserve mastered stereo level.
@@ -49,7 +50,7 @@ void CombatMusic::update(audio::MusicInput input, float volume) {
         const auto stream = streams_[playing_];
         input.remaining = std::max(0.f, GetMusicTimeLength(stream) - GetMusicTimePlayed(stream));
         // StopMusicStream rewinds on EOF: capture remaining time before servicing it.
-        if (!paused_)
+        if (!paused_ && !input.paused && input.audible)
             UpdateMusicStream(stream);
         input.ended = !paused_ && !IsMusicStreamPlaying(stream);
     }
@@ -81,7 +82,7 @@ void CombatMusic::update(audio::MusicInput input, float volume) {
     }
     showBanner_ = input.audible && !input.paused && input.bannerVisible;
 }
-MusicBanner CombatMusic::banner() const noexcept {
+MusicBanner MusicPlayer::banner() const noexcept {
     if (playing_ >= tracks_.size())
         return {};
     return {titles_[playing_].first.data(),
@@ -91,17 +92,17 @@ MusicBanner CombatMusic::banner() const noexcept {
             transport_.bannerAge,
             showBanner_ && transport_.bannerAge < 6};
 }
-void CombatMusic::detach() noexcept {
+void MusicPlayer::detach() noexcept {
     if (playing_ < tracks_.size())
         StopMusicStream(streams_[playing_]);
     playing_ = audio::musicCapacity;
     paused_ = showBanner_ = false;
     transport_.stop();
 }
-void CombatMusic::persist(std::string& warning) {
+void MusicPlayer::persist(std::string& warning) {
     audio::savePlaylist(statePath_, tracks_, transport_.playlist, warning);
 }
-void CombatMusic::shutdown() noexcept {
+void MusicPlayer::shutdown() noexcept {
     detach();
     for (unsigned i = 0; i < tracks_.size(); ++i)
         UnloadMusicStream(streams_[i]);
