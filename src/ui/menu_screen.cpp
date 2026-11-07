@@ -16,7 +16,7 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
         p.fill({0, 0, 640, 360}, {12, 18, 18, 245});
     p.border({8, 8, 624, 344}, hudInk::edge);
     if (m.screen == MenuScreen::Main) {
-        art.menuTitle(menuLayout::mainTitle(v.canContinue));
+        art.menuTitle(menuLayout::mainTitle(v.canContinue), v.titleSeconds);
         if (v.canContinue)
             v.button(p, {210, 96, 220, 30}, "Continue", 60);
         v.button(p, {210, 133, 220, 30}, "Start new game", 1);

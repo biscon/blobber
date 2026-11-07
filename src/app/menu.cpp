@@ -69,8 +69,10 @@ int runMenus(const Options& options) try {
     presenter.fade(0);
     Input input;
     audio.beginMenuMusic();
+    const double menuStarted = GetTime();
     bool suppress = true;
     while (!WindowShouldClose()) {
+        v.titleSeconds = GetTime() - menuStarted;
         presenter.presentMenu(drawMenu, &v);
         auto sample = input.poll(GetFrameTime());
         audio.update(nullptr, false, sample.ui.focused, GetFrameTime());

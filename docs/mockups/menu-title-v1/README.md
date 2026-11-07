@@ -14,8 +14,13 @@ The approved preview used `GetImageAlphaBorder(image, .1f)` to select source rec
 `{450, 88, 1020, 134}` with Continue. Production preparation crops the same source
 region and uses the same destinations. The temporary overlay preview is superseded
 by direct production captures; its obsolete runner has been removed.
+The integrated shader now adds an occasional gleam and subtle warm shimmer while
+preserving this approved source artwork. Motion review remains pending.
 
 Build the opt-in `blobber_review_menu_title` target and run it with two paths:
 `blobber_review_menu_title cmake-build-debug/assets NEW_OUTPUT`.
 A live display is required, but the window is hidden and checked before and after
 capture. No OS input, focus control or user library/save access is used.
+The runner also exports 120 reduced animation frames at deterministic 0.1-second
+steps. Use a task-owned `TMPDIR` for its tiny generated world fixture, and follow
+the [encoding/verification notes](../../menu_launch_design.md#metallic-gleam--2026-11-08).

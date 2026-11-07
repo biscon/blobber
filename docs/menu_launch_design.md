@@ -133,6 +133,80 @@ no desktop input/focus automation or interactive review was performed. Artwork
 acceptance is preserved; final interactive review remains with the user. Selected
 images, artwork and prompt are retained; disposable logs/captures were cleaned.
 
+## Metallic gleam — 2026-11-08
+
+Status: **implemented and mechanically verified; motion review pending**. Combine a soft
+diagonal metallic sweep, emphasis on the artwork's brighter bevels and restrained
+warm torchlight shimmer between sweeps. Keep the generated texture and native
+layout. The sweep lasts two seconds, beginning after one second and repeating on
+a twelve-second cycle (ten seconds between sweeps). The slow warmth modulation
+is continuous, deterministic and seamless at the cycle boundary.
+
+`UiArt` owns the texture and one shader through registry-backed RAII leases.
+`src/ui/menu_title.cpp` contains title preparation, shader source and drawing;
+the generic art file retains other UI artwork responsibilities. Preparation
+stages both resources transactionally, validates the cached uniform location,
+and publishes only on complete success. Failed shader compilation/acquisition
+releases the staged texture; retry is supported. Missing/invalid artwork retains
+the existing explicit error behavior. Repeated preparation reuses both resources.
+
+`runMenus` owns the decorative clock, storing elapsed seconds in `MenuView` before
+each frame. Drawing receives that explicit time, enabling deterministic captures
+without changing the OS clock or injecting input. `UiArt::menuTitle` folds double
+precision elapsed time into a bounded twelve-second phase, treating negative or
+nonfinite diagnostic times as zero, then updates one cached shader uniform.
+The shader samples the original logo, uses luminance as an approximate bevel
+mask, adds a soft gold band with a narrow champagne highlight and applies a small
+warm color variation. It preserves source alpha. Shader scope surrounds only
+the logo draw and restores the default before controls/text are drawn. There is
+one logo draw, no additional render target/pass, no frame allocation, and no new
+texture uploads during ordinary frames. All fonts retain native atlas sizes.
+
+The registry's existing eight shader slots cover seven world programs (including
+AO and billboards) plus the persistent title program. Capacity and exhaustion
+behavior remain unchanged. Check coexistence using a tiny generated world with
+the menu resources still alive; this is important for menu-to-game transitions.
+
+Validation: one Debug game/review build, focused existing menu CPU test, hidden
+OpenGL preparation failure/retry, idempotency, phase/cycle and off-logo pixel
+invariants, resource release and engine-owned C++ allocation checks. Use fixed
+times in both menu layouts and a submenu; export a bounded twelve-second reduced
+animation for visual timing review. Driver/C allocations are excluded from the
+C++ guard. No OS input/focus automation or user save/library access.
+
+Verification completed in Debug with the existing `menu` CPU test and the opt-in
+`blobber_review_menu_title` runner. The game and runner build with two workers;
+the CPU test passed. Hidden OpenGL checks passed for title texture and shader
+acquisition failure/retry, atomic resource publication, preparation reuse, exact
+twelve-second repetition, negative/NaN/infinite diagnostic time handling, exact
+off-logo pixel preservation and visible logo changes during the sweep. A 7×7
+generated interactive world exercised all seven world shaders alongside the
+title shader in the unchanged eight-slot registry. Returning to menu drawing
+produced identical pixels at the same phase. Six alternating menu frames had
+zero engine-owned C++ allocations and stable texture/target/shader counts, bytes
+and texture uploads. Destruction released both title leases. No OpenGL errors.
+The first coexistence attempt used a geometry-only fixture and correctly rejected
+its missing interactive effect clips; the final check uses the existing complete,
+tiny generated visibility fixture. No production world assets are used for this
+coexistence check.
+
+The [gallery](screenshots/menu-title-preview/README.md) now retains five production
+PNGs plus a 768×432 animated WebP: twelve seconds at ten frames per second, with
+the complete rest/sweep cycle. Native and reduced title captures and selected
+motion frames were inspected. The single-threaded low-priority export command is:
+
+```sh
+nice -n 15 ionice -c 3 ffmpeg -hide_banner -loglevel error -threads 1 -filter_threads 1 -filter_complex_threads 1 -framerate 10 -i NEW_CAPTURE_DIRECTORY/frames/frame-%03d.png -c:v libwebp_anim -lossless 1 -compression_level 4 -q:v 100 -loop 0 -threads 1 menu-gleam.webp
+```
+
+Run the capture command from the preceding section with `TMPDIR` set to the
+task-owned agent run so the generated world fixture stays inside that run.
+The encoded animation was decoded to confirm dimensions, 120 frames, twelve
+seconds and infinite looping. Raw frames, phase-check files, logs and the failed
+capture directory were cleaned after selecting evidence. Artwork acceptance
+remains unchanged; animated appearance/timing awaits user review. Interactive
+desktop review and third-party/driver allocation measurement were not performed.
+
 ## Review correction: direct formation drag and search focus
 
 Implemented and accepted. Replaces pointer-based slot selection/Assign buttons with dragging an

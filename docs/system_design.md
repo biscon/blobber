@@ -6,7 +6,12 @@ wordmark over the existing menu background. The approved follow-up removes the
 Continue summary and centers a brighter navigation hint below the controls.
 `UiArt` prepares and owns one cropped title texture; menu drawing borrows it.
 Window caption is `Stone & Shadow`. Debug build, focused menu test and hidden GPU
-preparation/allocation/lifetime checks pass; [five production captures](screenshots/menu-title-preview/README.md).
+preparation/allocation/lifetime checks pass; [production captures](screenshots/menu-title-preview/README.md).
+The [logo gleam extension](menu_launch_design.md#metallic-gleam--2026-11-08)
+is **implemented and mechanically verified; motion review pending**: a two-second
+bevel-weighted light sweep and subtle warm shimmer share one prepared shader.
+Hidden phase, allocation, rollback, shader coexistence and lifecycle checks pass;
+a twelve-second animation is retained with five static captures.
 
 [Compact music announcement](combat_music.md#compact-announcement--2026-11-07):
 **typography accepted; top-left integration implemented and mechanically verified**. Fixed-width

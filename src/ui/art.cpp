@@ -177,29 +177,6 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
     atlas_ = resources_.createTexture(atlas.value);
     SetTextureFilter(resources_.texture(atlas_), TEXTURE_FILTER_BILINEAR);
 }
-void UiArt::prepareMenuTitle(const std::filesystem::path& file) {
-    if (menuTitle_)
-        return;
-    OwnedImage image(preparedImage(file));
-    if (!image.value.data || image.value.width > 4096 || image.value.height > 2048)
-        throw std::runtime_error("Missing or invalid menu title artwork");
-    const auto border = GetImageAlphaBorder(image.value, .1f);
-    if (border.width <= 0 || border.height <= 0)
-        throw std::runtime_error("Empty menu title artwork");
-    ImageCrop(&image.value, border);
-    if (!image.value.data)
-        throw std::runtime_error("Cannot prepare menu title artwork");
-    GpuLease<TextureHandle> staged(resources_, resources_.createTexture(image.value));
-    SetTextureFilter(resources_.texture(staged.get()), TEXTURE_FILTER_BILINEAR);
-    menuTitle_ = std::move(staged);
-}
-void UiArt::menuTitle(UiRect nativeDestination) const {
-    const auto& texture = resources_.texture(menuTitle_.get());
-    DrawTexturePro(texture, {0, 0, float(texture.width), float(texture.height)},
-                   {float(nativeDestination.x), float(nativeDestination.y), float(nativeDestination.width),
-                    float(nativeDestination.height)},
-                   {0, 0}, 0, WHITE);
-}
 static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 32,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {

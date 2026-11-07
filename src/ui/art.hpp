@@ -28,7 +28,7 @@ class UiArt {
     void prepareDialogue(const std::vector<std::string>& files);
     void clearDialogue() noexcept;
     void prepareMenuTitle(const std::filesystem::path& file);
-    void menuTitle(UiRect nativeDestination) const;
+    void menuTitle(UiRect nativeDestination, double elapsedSeconds) const;
     void dialogueOverlay(DialogueOverlayId, UiRect, Color tint = WHITE) const;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
     void creator(unsigned index, UiRect destination, Color tint = WHITE) const;
@@ -44,6 +44,8 @@ class UiArt {
         feedback_, supportEffects_;
     std::array<Rectangle, 64> regions_{};
     GpuLease<TextureHandle> menuTitle_;
+    GpuLease<ShaderHandle> menuTitleShader_;
+    int menuTitlePhaseLocation_ = -1;
     std::array<GpuLease<TextureHandle>, dialogueOverlayCapacity> dialogue_;
 };
 } // namespace blobber
