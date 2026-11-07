@@ -86,7 +86,7 @@ void CommandController::refreshTrade() noexcept {
     }
     t.merchantRevision = state->revision;
     t.inventoryRevision = party_.inventory().revision();
-    t.gold = characterGold(party_, t.character);
+    t.gold = party_.gold();
     t.nowMs = session_.gameTime().elapsedMs;
     t.restockMs = state->restockMs;
     const auto* character = party_.character(t.character);

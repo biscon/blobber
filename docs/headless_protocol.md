@@ -49,6 +49,10 @@ Movement actions during opening reject without queuing in headless mode. Preview
 action eligibility, save and travel use the same barrier. Doors restore their saved open/closed state settled; no transient motion enters
 the save format. The legacy `door_opening` field covers both opening and closing.
 
+Party purse observations include `party_gold` as a lossless uint64 decimal string
+in both diagnostic and player modes. Gold is shared and does not appear in
+character inventory entries. Campaign saves now require schema 14/simulation 17.
+
 ## Transport and identities
 
 Each input line is one UTF-8 JSON object. Every request contains `version:1`, a string

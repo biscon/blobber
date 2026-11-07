@@ -362,8 +362,8 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || (j.at("schema") != 12 && j.at("schema") != 13) ||
-        j.at("simulation") != 17 || j.at("generator") != generation::generatorVersion ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 14 || j.at("simulation") != 17 ||
+        j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
         invalid("Incompatible campaign schema, simulation or content");
@@ -379,7 +379,7 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 13},
+    Json j = {{"schema", 14},
               {"simulation", 17},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
@@ -397,14 +397,11 @@ std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog& catalog
                                                    const CampaignContent& content, const std::string& text) {
     auto j = parse(text);
     envelope(j, content);
-    if (j.at("schema") == 12) {
-        if (j.at("campaign").contains("merchants"))
-            invalid("Unexpected merchants in legacy campaign");
-        j["campaign"]["merchants"] = Json::array();
-    }
     auto out = std::make_unique<CampaignCheckpoint>();
     Archive archive{j, catalog, definitions, true};
     archive("campaign", *out);
+    Inventory inventoryValidation;
+    inventoryValidation.restore(out->party.inventory, catalog);
     MerchantLedger validation;
     validation.restore(out->merchants, catalog);
     for (auto& l : out->locations) {

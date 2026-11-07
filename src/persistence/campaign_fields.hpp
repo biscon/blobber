@@ -420,6 +420,7 @@ template <class A> void visit(A& a, Inventory::Saved& v) {
 template <class A> void visit(A& a, Party::Saved& v) {
     a("state", v.state);
     a("inventory", v.inventory);
+    a("gold", v.gold);
     a("questKeys", v.questKeys);
     a("preparationRevision", v.preparationRevision);
     a("progressionRevision", v.progressionRevision);

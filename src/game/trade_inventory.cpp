@@ -1,5 +1,4 @@
 #include "game/party.hpp"
-#include <algorithm>
 
 namespace blobber {
 InventoryResult Party::exchange(const InventoryExchange& r, bool preview) noexcept {
@@ -7,50 +6,32 @@ InventoryResult Party::exchange(const InventoryExchange& r, bool preview) noexce
         return {InventoryError::Stale};
     if (!r.quantity || r.quantity > UINT16_MAX || r.gold < -1000000000ll || r.gold > 1000000000ll)
         return {InventoryError::InvalidQuantity};
-    const auto gold = catalog_->findItem("gold");
-    const auto* currency = catalog_->item(gold);
-    if (!currency || currency->kind != rules::ItemKind::Currency)
-        return {InventoryError::Unavailable};
+    auto purse = gold_;
+    if (r.gold < 0) {
+        const auto payment = std::uint64_t(-r.gold);
+        if (payment > purse)
+            return {InventoryError::Funds};
+        purse -= payment;
+    } else {
+        const auto proceeds = std::uint64_t(r.gold);
+        if (purse > UINT64_MAX - proceeds)
+            return {InventoryError::GoldOverflow};
+        purse += proceeds;
+    }
     auto candidate = inventory_;
     if (r.sold) {
         const auto* s = candidate.stack(r.sold);
         const auto where = candidate.locate(r.sold);
         if (!s || where.character.index != r.character.index || where.cell >= bagCells ||
-            s->item.index == gold.index || !candidate.consume(r.sold, r.quantity))
+            catalog_->item(s->item)->kind == rules::ItemKind::Currency ||
+            !candidate.consume(r.sold, r.quantity))
             return {InventoryError::InvalidItem};
     }
-    if (r.gold < 0) {
-        auto remaining = std::uint64_t(-r.gold);
-        for (std::uint16_t cell = 0; cell < bagCells && remaining; ++cell) {
-            const auto h = candidate.at({r.character, cell});
-            const auto* s = candidate.stack(h);
-            if (!s || s->item.index != gold.index)
-                continue;
-            const auto taken = unsigned(std::min<std::uint64_t>(remaining, s->quantity));
-            if (!candidate.consume(h, taken))
-                return {InventoryError::Stale};
-            remaining -= taken;
-        }
-        if (remaining)
-            return {InventoryError::Funds};
-    }
-    auto acquire = [&](rules::ItemId item, std::uint64_t count) {
-        while (count) {
-            const auto q = std::uint16_t(std::min<std::uint64_t>(count, UINT16_MAX));
-            const auto result = candidate.acquire({r.character, item, q, candidate.revision()}, *catalog_);
-            if (!result)
-                return result;
-            count -= q;
-        }
-        return InventoryResult{InventoryError::None, true};
-    };
-    if (r.gold > 0) {
-        const auto result = acquire(gold, std::uint64_t(r.gold));
-        if (!result)
-            return result;
-    }
-    if (catalog_->item(r.bought)) {
-        const auto result = acquire(r.bought, r.quantity);
+    if (const auto* bought = catalog_->item(r.bought)) {
+        if (bought->kind == rules::ItemKind::Currency)
+            return {InventoryError::InvalidItem};
+        const auto result = candidate.acquire(
+            {r.character, r.bought, std::uint16_t(r.quantity), candidate.revision()}, *catalog_);
         if (!result)
             return result;
     } else if (!r.sold)
@@ -62,6 +43,7 @@ InventoryResult Party::exchange(const InventoryExchange& r, bool preview) noexce
                                                                    : InventoryError::Equipment};
     if (!preview) {
         inventory_ = candidate;
+        gold_ = purse;
         auto& c = state_.characters[r.character.index];
         c.stats = derived.value;
         c.stats.maxHitPoints += c.aidBonus;

@@ -126,7 +126,9 @@ void CommandController::collectLoot(LootId id) noexcept {
     const auto result = session_.pickup({id, state_.selection.character, party_.inventory().revision()});
     record(session_.events());
     char line[192];
-    if (result)
+    if (result && party_.catalog().item(item)->kind == rules::ItemKind::Currency)
+        std::snprintf(line, sizeof(line), "Added %u gold to the party purse.", unsigned(q));
+    else if (result)
         std::snprintf(line, sizeof(line), "%s collects %u %s.",
                       party_.character(state_.selection.character)->build.name.c_str(), unsigned(q),
                       party_.catalog().item(item)->name.c_str());

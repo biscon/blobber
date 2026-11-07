@@ -159,6 +159,7 @@ void CommandController::refreshInventory() noexcept {
             i.source = {};
         }
         i.revision = inv.revision();
+        i.gold = party_.gold();
         for (std::uint16_t cell = 0; cell < 52; ++cell) {
             auto& out = i.cells[cell];
             out = {};

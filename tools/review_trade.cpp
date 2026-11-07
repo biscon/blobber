@@ -42,9 +42,8 @@ int main(int argc, char** argv) try {
                                    run->party().inventory().revision()}))
             throw std::runtime_error("Cannot grant isolated review fixture");
     };
+    const auto initialGold = run->party().gold();
     grant("gold", 1000);
-    grant("gold", 200, 1);
-    grant("gold", 200, 2);
     grant("dagger", 1);
     Window window(1920, 1080, true);
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
@@ -73,20 +72,26 @@ int main(int argc, char** argv) try {
                                                      *controls.dialoguePlayer().character());
     const auto clock = game.gameTime().elapsedMs;
     std::ofstream report(output / "report.txt");
-    const auto shot = [&](const char* file) {
+    const auto shot = [&](const char* file, bool maximumBalance = false) {
         const auto& player = controls.dialoguePlayer();
         animation.setTime(game.timeMs(), &game.effects(), controls.dialogueSpeaker(), player.clockMs(),
                           &controls.dialogueAnimation());
         view->update(game, animation.snapshot(), {}, target, false);
         controls.residentVisibility(view->picking()->residents());
         controls.refresh(view->picking()->targets(), false, false, true);
-        view->present(presenter, game, run->map(), false, true, &controls.snapshot());
+        auto hud = controls.snapshot();
+        if (maximumBalance) {
+            hud.trade.gold = UINT64_MAX;
+            hud.inventory.gold = UINT64_MAX;
+        }
+        view->present(presenter, game, run->map(), false, true, &hud);
         presenter.capture(output / (std::string(file) + ".png"));
-        const auto& t = controls.snapshot().trade;
+        const auto& t = hud.trade;
         report << file << " trade=" << t.open << " character=" << t.characterName
-               << " tooltip=" << t.tooltipVisible << " gold=" << t.gold
-               << " stock_revision=" << t.merchantRevision << " game_ms=" << game.gameTime().elapsedMs
-               << '\n';
+               << " tooltip=" << t.tooltipVisible
+               << " gold=" << (hud.inventory.open ? hud.inventory.gold : t.gold)
+               << " maximum_balance_fixture=" << maximumBalance << " stock_revision=" << t.merchantRevision
+               << " game_ms=" << game.gameTime().elapsedMs << '\n';
         if (game.gameTime().elapsedMs != clock || !(game.movement().player == Player{{6, 5}, Heading::North}))
             throw std::runtime_error("Review trading advanced time or moved party");
     };
@@ -107,8 +112,9 @@ int main(int argc, char** argv) try {
         throw std::runtime_error("Trade topic did not open");
     cell(TradeSide::Merchant, 0, true);
     shot("trade-buy");
+    shot("trade-large-purse", true);
     key(UiKey::Confirm);
-    if (characterGold(run->party(), {0}) != 880)
+    if (run->party().gold() != initialGold + 880)
         throw std::runtime_error("Review purchase failed");
     key(UiKey::Two);
     cell(TradeSide::Merchant, 3, true);
@@ -134,7 +140,7 @@ int main(int argc, char** argv) try {
     controls.tickDialogue(.35, true);
     shot("trade-sell-comparison");
     key(UiKey::Confirm);
-    if (characterGold(run->party(), {0}) != 882)
+    if (run->party().gold() != initialGold + 882)
         throw std::runtime_error("Review sale failed");
     cell(TradeSide::Merchant, 5, true);
     shot("trade-buyback");
@@ -156,7 +162,7 @@ int main(int argc, char** argv) try {
     drag.pointerHeld = false;
     drag.pointerReleased = true;
     routeHudInput(controls, drag);
-    if (characterGold(run->party(), {0}) != 879)
+    if (run->party().gold() != initialGold + 879)
         throw std::runtime_error("Review drag buyback failed");
     UiInput close;
     close.pointerTracked = true;
@@ -172,6 +178,23 @@ int main(int argc, char** argv) try {
         throw std::runtime_error("Return to conversation failed");
     report << "mouse_close_returned_to_dialogue=1 drag_buyback_gold=879\n";
     controls.finishDialogue();
+    controls.openInventory();
+    shot("inventory-purse");
+    shot("inventory-large-purse", true);
+    auto lootHud = controls.snapshot();
+    lootHud.inventory.open = false;
+    lootHud.loot = {};
+    auto& loot = lootHud.loot;
+    loot.open = true;
+    loot.name = "Alden";
+    loot.count = 1;
+    loot.hovered = 0;
+    loot.canTake = loot.canTakeAny = true;
+    loot.reason = "Click to add to the party purse.";
+    loot.entries[0].definition = catalog.item(catalog.findItem("gold"));
+    loot.entries[0].quantity = 43;
+    view->present(presenter, game, run->map(), false, true, &lootHud);
+    presenter.capture(output / "loot-purse.png");
     auto checkpoint = run->checkpoint();
     if (checkpoint->merchants.size() != 1 ||
         checkpoint->merchants[0].stock[catalog.findItem("camp_kit").index] != 3)

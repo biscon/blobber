@@ -10,6 +10,7 @@ constexpr UiRect cell(TradeSide side, unsigned index) {
 constexpr UiRect grid(TradeSide side) {
     return {side == TradeSide::Merchant ? 12 : 264, 132, 222, 166};
 }
+constexpr UiRect gold{264, 120, 224, 11}; // Text ends at player grid border, including helper inset.
 constexpr UiRect close{482, 105, 15, 15};
 inline constexpr unsigned doubleClickMs = 400;
 inline constexpr unsigned labelAlpha = 128;

@@ -48,7 +48,7 @@ struct InventoryHud {
     std::array<InventoryActionState, static_cast<unsigned>(InventoryAction::Count)> actions{};
     InventoryRequest pending;
     unsigned quantity = 1, maximum = 1;
-    std::uint64_t revision = 0;
+    std::uint64_t revision = 0, gold = 0;
     float startX = 0, startY = 0, pointerX = 0, pointerY = 0;
     std::int64_t weight = 0, capacity = 0;
     int armorClass = 0, descriptionPage = 0;

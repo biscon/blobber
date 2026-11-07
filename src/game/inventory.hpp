@@ -36,7 +36,8 @@ enum class InventoryError : std::uint8_t {
     Unsafe,
     Moving,
     Unavailable,
-    Funds
+    Funds,
+    GoldOverflow
 };
 const char* inventoryMessage(InventoryError) noexcept;
 enum class InventoryOp : std::uint8_t { Move, Split, Transfer };
@@ -63,7 +64,7 @@ struct InventoryExchange {
     ItemHandle sold;
     rules::ItemId bought;
     unsigned quantity = 0;
-    std::int64_t gold = 0; // Positive proceeds, negative payment; selected bag only.
+    std::int64_t gold = 0; // Positive proceeds, negative payment; shared party purse.
     std::uint64_t revision = 0;
 };
 // Value storage; Party stages a copy before committing. Catalog and character strings stay outside it.

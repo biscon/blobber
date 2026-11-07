@@ -62,6 +62,7 @@ Json encodeObservation(const Observation& o) {
               {"heading", unsigned(movement.player.heading)},
               {"moving", movement.transition.active()},
               {"party", Json::array()},
+              {"party_gold", u(g.party().gold())},
               {"enemies", Json::array()},
               {"residents", Json::array()},
               {"loot", Json::array()},

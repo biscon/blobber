@@ -9,8 +9,7 @@ const char* name(const rules::ItemDefinition& item) {
     return item.id == "camp_kit" ? "Ration pack" : item.name.c_str();
 }
 const char* description(const rules::ItemDefinition& item) {
-    return item.kind == rules::ItemKind::Currency ? "Gold carried by this character. Used to buy supplies."
-                                                  : item.description.c_str();
+    return item.description.c_str();
 }
 void remaining(char* output, std::size_t bytes, std::uint64_t deadline, std::uint64_t now) {
     const auto hours = deadline > now ? (deadline - now + gameDuration::hour - 1) / gameDuration::hour : 0;
@@ -97,11 +96,13 @@ void HudPainter::trade(const HudSnapshot& h) const {
     std::snprintf(label, sizeof(label), "%s's bag", t.characterName);
     clipped(label, 264, 106, 210, gold, UiTextStyle::Display);
     std::snprintf(label, sizeof(label), "Gold: %" PRIu64, t.gold);
-    rightAligned(label, {409, 119, 85, 11}, gold);
+    rightAligned(label, tradeLayout::gold, gold);
+    const int hintWidth =
+        fonts ? std::max(0, std::min(140, 216 - int(fonts->width(label, UiTextStyle::Small) + 1))) : 0;
     box(tradeLayout::close);
     centered("X", tradeLayout::close, gold);
     clipped("Stock & buyback", 12, 120, 220, muted, UiTextStyle::Small);
-    clipped("Party portraits select trader", 264, 120, 140, muted, UiTextStyle::Small);
+    clipped("Party portraits select trader", 264, 120, hintWidth, muted, UiTextStyle::Small);
     if (t.pages > 1) {
         box(tradeLayout::previous);
         centered("<", tradeLayout::previous, t.page ? gold : muted, UiTextStyle::Small);

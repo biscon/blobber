@@ -65,7 +65,8 @@ enum class TradeError : std::uint8_t {
     Funds,
     Full,
     Overweight,
-    BuybackFull
+    BuybackFull,
+    GoldOverflow
 };
 struct TradeResult {
     TradeError error = TradeError::None;
@@ -75,7 +76,6 @@ struct TradeResult {
 };
 const char* tradeMessage(TradeError) noexcept;
 class Party;
-std::uint64_t characterGold(const Party&, rules::CharacterId) noexcept;
 TradeResult trade(Party&, MerchantLedger&, const ShopCatalog&, const TradeRequest&, GameTime,
                   bool preview = false) noexcept;
 std::optional<EquipmentSlot> itemEquipmentSlot(const rules::ItemDefinition&) noexcept;

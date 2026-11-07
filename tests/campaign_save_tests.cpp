@@ -120,7 +120,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 13;
+    bad["schema"] = 14;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
@@ -184,6 +184,7 @@ void roundtrip() {
     merchant->stock[0] = 2;
     merchant->buyback[0] = {{0}, 1, 13, gameDuration::day};
     auto before = run.checkpoint();
+    before->party.gold = UINT64_MAX;
     const auto text = encodeCampaign(c, d, content, *before);
     auto decoded = decodeCampaign(c, d, content, text);
     CampaignRun loaded(c, std::move(*decoded), d.timings);
@@ -195,15 +196,18 @@ void roundtrip() {
     check(restoredMerchant && restoredMerchant->stock[0] == 2 && restoredMerchant->buyback[0].price == 13 &&
               restoredMerchant->buyback[0].expiresMs == gameDuration::day,
           "Visited merchant stock, marked-up buyback and deadlines survive campaign codec/restore");
-    auto legacy = blobber::automation::Json::parse(text);
-    legacy["schema"] = 12;
-    legacy["campaign"].erase("merchants");
-    const auto legacyText = legacy.dump();
-    auto upgraded = decodeCampaign(c, d, content, legacyText);
-    check(upgraded->merchants.empty() &&
-              upgraded->party.inventory.revision == before->party.inventory.revision &&
-              upgraded->gameplayMs == before->gameplayMs && legacy.dump() == legacyText,
-          "Schema 12 initializes an empty merchant ledger without changing inventory, time or source bytes");
+    for (int schema : {12, 13}) {
+        auto legacy = blobber::automation::Json::parse(text);
+        legacy["schema"] = schema;
+        rejects([&] { decodeCampaign(c, d, content, legacy.dump()); },
+                "Older schemas reject without conversion");
+    }
+    check(loaded.party().gold() == UINT64_MAX, "Largest party purse survives canonical save round trip");
+    auto badGold = blobber::automation::Json::parse(text);
+    badGold["campaign"]["party"]["gold"] = "18446744073709551616";
+    rejects([&] { decodeCampaign(c, d, content, badGold.dump()); }, "Purse overflow rejects on decode");
+    badGold["campaign"]["party"].erase("gold");
+    rejects([&] { decodeCampaign(c, d, content, badGold.dump()); }, "Missing purse rejects on decode");
     auto badMerchant = blobber::automation::Json::parse(text);
     badMerchant["campaign"]["merchants"][0]["buyback"][0]["quantity"] = 65535;
     rejects([&] { decodeCampaign(c, d, content, badMerchant.dump()); },

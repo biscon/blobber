@@ -14,8 +14,10 @@
 using namespace blobber;
 namespace {
 constexpr auto host = dialogueKey("fixture.host");
-rules::Catalog fixtureCatalog() {
+rules::Catalog fixtureCatalog(bool atCapacity = false) {
     auto f = inventoryFixture();
+    if (atCapacity)
+        f.items[7].weight = 22900;
     rules::ItemDefinition gold;
     gold.id = "gold";
     gold.name = "Fixture gold";
@@ -78,6 +80,74 @@ unsigned quantity(const Party& p, unsigned item, unsigned character = 0) {
             out += s->quantity;
     return out;
 }
+void purse() {
+    const auto catalog = fixtureCatalog();
+    auto preset = *catalog.preset();
+    preset.characters[0].items[preset.characters[0].itemCount++] = {{12}, 65535};
+    preset.characters[1].items[preset.characters[1].itemCount++] = {{12}, 1500};
+    Party seeded(catalog, preset);
+    check(seeded.gold() == 67035 && !findInventoryItem(seeded, 0, 12) && !findInventoryItem(seeded, 1, 12),
+          "Starting currency is pooled without live stacks");
+    check(rules::deriveCharacter(catalog, preset.characters[0]).value.carriedWeight ==
+              seeded.character({0})->stats.carriedWeight,
+          "Authored previews also exclude currency weight");
+    const auto weight = seeded.character({0})->stats.carriedWeight;
+    const AcquisitionRequest credit{{0}, {12}, 100, seeded.inventory().revision()};
+    watching = true;
+    allocations = 0;
+    const auto preview = seeded.acquire(credit, true);
+    const auto committed = seeded.acquire(credit);
+    watching = false;
+    check(preview && committed && allocations == 0 && seeded.gold() == 67135 &&
+              seeded.character({0})->stats.carriedWeight == weight,
+          "Currency preview/commit are allocation-free and weightless");
+    check(seeded.acquire(credit).error == InventoryError::Stale && seeded.gold() == 67135,
+          "Currency credit advances the transaction revision to reject replay");
+    Party full(catalog);
+    while (full.acquire({{0}, {13}, 1, full.inventory().revision()})) {
+    }
+    acquire(full, 12, 123);
+    check(full.gold() == 123 && !findInventoryItem(full, 0, 12), "Full bags do not obstruct the purse");
+    auto fullShop = shops();
+    MerchantLedger fullLedger;
+    fullLedger.visit(host, fullShop.shops[0], {});
+    const auto partial = findInventoryItem(full, 0, 10);
+    check(bool(trade(full, fullLedger, fullShop, sale(full, fullLedger, fullShop, partial), {})) &&
+              full.gold() == 135 && full.inventory().stack(partial)->quantity == 1,
+          "Partial sales into a full bag credit the purse without needing a proceeds slot");
+    const auto heavyCatalog = fixtureCatalog(true);
+    Party heavy(heavyCatalog);
+    check(heavy.character({0})->stats.carriedWeight == heavy.character({0})->stats.carryingCapacity,
+          "Currency boundary fixture starts at carrying capacity");
+    acquire(heavy, 12, 65535);
+    check(heavy.gold() == 65535 &&
+              heavy.character({0})->stats.carriedWeight == heavy.character({0})->stats.carryingCapacity,
+          "Currency never consumes carrying capacity");
+    auto saved = seeded.checkpoint();
+    saved.gold = UINT64_MAX;
+    Party rich(catalog, saved);
+    const auto revision = rich.inventory().revision();
+    check(rich.acquire({{0}, {12}, 1, revision}, true).error == InventoryError::GoldOverflow &&
+              rich.acquire({{0}, {12}, 1, revision}).error == InventoryError::GoldOverflow &&
+              rich.gold() == UINT64_MAX && rich.inventory().revision() == revision,
+          "Overflow preview and commit conserve the purse and revision");
+    auto content = shops();
+    MerchantLedger ledger;
+    ledger.visit(host, content.shops[0], {});
+    const auto sold = findInventoryItem(rich, 0, 10);
+    check(trade(rich, ledger, content, sale(rich, ledger, content, sold), {}).error ==
+                  TradeError::GoldOverflow &&
+              rich.inventory().stack(sold)->quantity == 2 && ledger.find(host)->revision == 1 &&
+              rich.gold() == UINT64_MAX,
+          "Sale overflow rolls back goods, purse and merchant state");
+    Party poor(catalog);
+    check(trade(poor, ledger, content, request(poor, ledger, content), {}).error == TradeError::Funds &&
+              poor.gold() == 0 && ledger.find(host)->stock[10] == 3,
+          "Insufficient shared funds preserve merchant and party state");
+    saved.inventory.stacks[207] = {{12}, 1, 1};
+    saved.inventory.locations[0][47] = 207;
+    rejects([&] { Party invalid(catalog, saved); }, "Live saves reject currency stacks");
+}
 void transactions() {
     auto catalog = fixtureCatalog();
     Party p(catalog);
@@ -85,14 +155,14 @@ void transactions() {
     auto content = shops();
     MerchantLedger ledger;
     ledger.visit(host, content.shops[0], {});
-    const auto initialGold = characterGold(p, {0}), initialRevision = p.inventory().revision();
+    const auto initialGold = p.gold(), initialRevision = p.inventory().revision();
     auto r = request(p, ledger, content, 0, 2);
     auto foreign = r;
     ++foreign.inventoryIdentity;
     check(trade(p, ledger, content, foreign, {}).error == TradeError::Stale,
           "A purchase cannot replay against a different inventory owner");
     const auto quote = trade(p, ledger, content, r, {}, true);
-    check(bool(quote) && quote.total == 100 && characterGold(p, {0}) == initialGold &&
+    check(bool(quote) && quote.total == 100 && p.gold() == initialGold &&
               p.inventory().revision() == initialRevision && ledger.find(host)->stock[10] == 3,
           "Preview conserves both owners");
     watching = true;
@@ -100,29 +170,27 @@ void transactions() {
     const auto committed = trade(p, ledger, content, r, {});
     watching = false;
     check(bool(committed) && allocations == 0, "Atomic purchase does not allocate C++ memory");
-    check(quantity(p, 10) == 4 && characterGold(p, {0}) == 1400 && ledger.find(host)->stock[10] == 1,
-          "Atomic multi-quantity purchase decrements finite stock and personal currency");
+    check(quantity(p, 10) == 4 && p.gold() == 1400 && ledger.find(host)->stock[10] == 1,
+          "Atomic multi-quantity purchase decrements finite stock and shared currency");
     check(trade(p, ledger, content, r, {}).error == TradeError::Stale, "Replayed revisions reject");
     r = request(p, ledger, content, 0, 2);
     const auto revision = p.inventory().revision();
     check(trade(p, ledger, content, r, {}).error == TradeError::Quantity &&
-              p.inventory().revision() == revision && characterGold(p, {0}) == 1400,
+              p.inventory().revision() == revision && p.gold() == 1400,
           "Excess stock request conserves payment and inventory");
     r = request(p, ledger, content, 0, 1, 1);
-    check(trade(p, ledger, content, r, {}).error == TradeError::Funds && characterGold(p, {0}) == 1400,
-          "Purchasing never borrows another member's gold");
-    r = request(p, ledger, content, 0);
-    check(bool(trade(p, ledger, content, r, {})), "Last stocked item can be purchased");
+    check(bool(trade(p, ledger, content, r, {})) && p.gold() == 1350 && quantity(p, 10, 1) == 3,
+          "Another character spends shared funds and receives the purchase");
     check(trade(p, ledger, content, request(p, ledger, content), {}).error == TradeError::SoldOut,
           "Zero stock is not unlimited");
     auto sell = sale(p, ledger, content, findInventoryItem(p, 0, 10));
-    const auto beforeSale = characterGold(p, {0});
-    check(bool(trade(p, ledger, content, sell, {})) && characterGold(p, {0}) == beforeSale + 12,
-          "Sale pays exactly the selected character");
+    const auto beforeSale = p.gold();
+    check(bool(trade(p, ledger, content, sell, {})) && p.gold() == beforeSale + 12,
+          "Sale credits the shared party purse");
     check(ledger.find(host)->buyback[0].price == 15 && ledger.find(host)->buyback[0].quantity == 1,
           "Sold goods appear in marked-up buyback stock");
     r = request(p, ledger, content, shopStockCapacity);
-    check(bool(trade(p, ledger, content, r, {})) && characterGold(p, {0}) == beforeSale - 3 &&
+    check(bool(trade(p, ledger, content, r, {})) && p.gold() == beforeSale - 3 &&
               ledger.find(host)->buyback[0].quantity == 0,
           "Buyback restores the item at a markup and releases its slot");
     acquire(p, 0, 1);
@@ -133,9 +201,7 @@ void transactions() {
     sell = sale(p, ledger, content, p.inventory().at({{0}, 49}));
     check(trade(p, ledger, content, sell, {}).error == TradeError::Stale,
           "Equipped items cannot be sold from a bag transaction");
-    sell = sale(p, ledger, content, findInventoryItem(p, 0, 12));
-    check(trade(p, ledger, content, sell, {}).error == TradeError::NotForSale,
-          "Currency cannot be sold as merchandise");
+    check(!findInventoryItem(p, 0, 12), "The purse never creates a sellable currency stack");
     sell = sale(p, ledger, content, findInventoryItem(p, 1, 10));
     check(trade(p, ledger, content, sell, {}).error == TradeError::Stale,
           "Foreign-character item handles reject");
@@ -157,17 +223,16 @@ void capacityAndTime() {
           "Overweight rejection restores payment, inventory and merchant stock");
     while (p.acquire({{0}, {13}, 1, p.inventory().revision()})) {
     }
-    const auto gold = characterGold(p, {0});
+    const auto gold = p.gold();
     check(trade(p, ledger, content, request(p, ledger, content, 1), {}).error == TradeError::Full &&
-              characterGold(p, {0}) == gold && ledger.find(host)->stock[0] == 1,
+              p.gold() == gold && ledger.find(host)->stock[0] == 1,
           "Full-bag purchase rejection is atomic");
     Party exact(catalog);
     acquire(exact, 12, 50);
     while (exact.acquire({{0}, {13}, 1, exact.inventory().revision()})) {
     }
-    check(bool(trade(exact, ledger, content, request(exact, ledger, content), {})) &&
-              characterGold(exact, {0}) == 0,
-          "Payment can free its last currency slot before goods are inserted");
+    check(bool(trade(exact, ledger, content, request(exact, ledger, content), {})) && exact.gold() == 0,
+          "Exact payment spends the purse while goods merge into an existing stack");
     Party seller(catalog);
     acquire(seller, 9, 100);
     for (unsigned i = 0; i < buybackCapacity; ++i) {
@@ -175,9 +240,9 @@ void capacityAndTime() {
         check(bool(trade(seller, ledger, content, r, {})), "Bounded buyback storage accepts available slot");
     }
     auto r = sale(seller, ledger, content, findInventoryItem(seller, 0, 9));
-    const auto sellerGold = characterGold(seller, {0});
+    const auto sellerGold = seller.gold();
     check(trade(seller, ledger, content, r, {}).error == TradeError::BuybackFull &&
-              characterGold(seller, {0}) == sellerGold,
+              seller.gold() == sellerGold,
           "Full buyback storage rejects without losing goods");
     auto* state = ledger.visit(host, content.shops[0], {gameDuration::day - 1});
     check(state->buyback[0].quantity == 1, "Buyback remains until exact expiry");
@@ -341,48 +406,47 @@ void gestures(CommandController& controls, GameSession& game) {
               "Dragging does not move goods or payment before release");
         physical(destination, false, false, true);
     };
-    auto gold = characterGold(game.party(), {0});
+    auto gold = game.party().gold();
     click(TradeSide::Merchant, 0);
-    check(characterGold(game.party(), {0}) == gold, "First completed grid click only selects");
+    check(game.party().gold() == gold, "First completed grid click only selects");
     click(TradeSide::Merchant, 0);
-    check(characterGold(game.party(), {0}) == gold - 50, "Physical double-click buys one item");
+    check(game.party().gold() == gold - 50, "Physical double-click buys one item");
     // The last stocked potion is now gone; a third click cannot purchase a successor.
     UiInput logical;
     logical.pointer = point(TradeSide::Merchant, 0);
     logical.pressed[unsigned(UiKey::Click)] = true;
     routeHudInput(controls, logical);
-    check(characterGold(game.party(), {0}) == gold - 50, "A third click never repeats the completed trade");
+    check(game.party().gold() == gold - 50, "A third click never repeats the completed trade");
     click(TradeSide::Merchant, 1);
     controls.tickDialogue(.401, true);
     click(TradeSide::Merchant, 1);
-    check(characterGold(game.party(), {0}) == gold - 50,
-          "Clicks outside the double-click interval only select");
+    check(game.party().gold() == gold - 50, "Clicks outside the double-click interval only select");
     key(UiKey::Back);
     check(controls.snapshot().trade.open, "B/Back has no binding in trade");
-    gold = characterGold(game.party(), {0});
+    gold = game.party().gold();
     drag(TradeSide::Merchant, 1, point(TradeSide::Player, 0));
-    check(characterGold(game.party(), {0}) == gold - 100 && quantity(game.party(), 0) == 1,
+    check(game.party().gold() == gold - 100 && quantity(game.party(), 0) == 1,
           "Dropping merchant stock on an occupied player cell buys through normal placement");
     auto sword = cellOf(0);
-    gold = characterGold(game.party(), {0});
+    gold = game.party().gold();
     click(TradeSide::Player, sword);
     click(TradeSide::Player, sword);
-    check(characterGold(game.party(), {0}) == gold + 10 && quantity(game.party(), 0) == 0,
+    check(game.party().gold() == gold + 10 && quantity(game.party(), 0) == 0,
           "Double-clicking a bag item sells it");
     auto buyback = cellOf(0, true);
-    gold = characterGold(game.party(), {0});
+    gold = game.party().gold();
     drag(TradeSide::Merchant, buyback, point(TradeSide::Player, 47));
-    check(characterGold(game.party(), {0}) == gold - 13 && quantity(game.party(), 0) == 1,
+    check(game.party().gold() == gold - 13 && quantity(game.party(), 0) == 1,
           "Buyback uses normal drag purchase at its stored markup");
     sword = cellOf(0);
-    gold = characterGold(game.party(), {0});
+    gold = game.party().gold();
     drag(TradeSide::Player, sword, point(TradeSide::Merchant, 0));
-    check(characterGold(game.party(), {0}) == gold + 10 && quantity(game.party(), 0) == 0,
+    check(game.party().gold() == gold + 10 && quantity(game.party(), 0) == 0,
           "Dropping bag goods on occupied merchant stock sells them");
     buyback = cellOf(0, true);
     click(TradeSide::Merchant, buyback);
     click(TradeSide::Merchant, buyback);
-    check(characterGold(game.party(), {0}) == gold - 3 && quantity(game.party(), 0) == 1,
+    check(game.party().gold() == gold - 3 && quantity(game.party(), 0) == 1,
           "Buyback also uses normal double-click purchase");
     const auto potion = cellOf(10);
     click(TradeSide::Player, potion);
@@ -394,22 +458,22 @@ void gestures(CommandController& controls, GameSession& game) {
     check(quantity(game.party(), 10) == potions - 2 && controls.snapshot().trade.selected == potion &&
               controls.snapshot().trade.quantity == 1,
           "Double-click honors chosen quantity and retains a partially sold stack at quantity one");
-    gold = characterGold(game.party(), {0});
+    gold = game.party().gold();
     key(UiKey::Confirm);
-    check(characterGold(game.party(), {0}) == gold + 12 && controls.snapshot().trade.selected == potion,
+    check(game.party().gold() == gold + 12 && controls.snapshot().trade.selected == potion,
           "Repeated Sell can continue a remaining stack");
     acquire(game.party(), 10, 4);
     controls.refresh({}, false, false, true);
     click(TradeSide::Player, potion);
     key(UiKey::Right);
     const auto beforeDrag = quantity(game.party(), 10);
-    gold = characterGold(game.party(), {0});
+    gold = game.party().gold();
     drag(TradeSide::Player, potion, point(TradeSide::Merchant, 0));
-    check(quantity(game.party(), 10) == beforeDrag - 2 && characterGold(game.party(), {0}) == gold + 24 &&
+    check(quantity(game.party(), 10) == beforeDrag - 2 && game.party().gold() == gold + 24 &&
               controls.snapshot().trade.quantity == 1,
           "Drag captures the chosen quantity and commits it atomically");
     const ArtPoint sell{float(tradeLayout::accept.x + 4), float(tradeLayout::accept.y + 4)};
-    acquire(game.party(), 12, unsigned(1000 - characterGold(game.party(), {0})));
+    acquire(game.party(), 12, unsigned(1000 - game.party().gold()));
     acquire(game.party(), 13, 5);
     controls.refresh({}, false, false, true);
     const auto first = cellOf(13);
@@ -417,42 +481,40 @@ void gestures(CommandController& controls, GameSession& game) {
     for (unsigned i = 0; i < 5; ++i) {
         check(controls.snapshot().trade.selected == first + i,
               "Next adjacent sellable item is auto-selected");
-        gold = characterGold(game.party(), {0});
+        gold = game.party().gold();
         physical(sell, true, true, false);
         physical(sell, false, true, false);
-        check(characterGold(game.party(), {0}) == gold, "Held Sell button never repeats");
+        check(game.party().gold() == gold, "Held Sell button never repeats");
         physical(sell, false, false, true);
-        check(characterGold(game.party(), {0}) == gold + 10,
-              "Each fresh Sell click sells one successive item");
+        check(game.party().gold() == gold + 10, "Each fresh Sell click sells one successive item");
         physical(sell, false, false, true);
-        check(characterGold(game.party(), {0}) == gold + 10, "Replayed release cannot sell the successor");
+        check(game.party().gold() == gold + 10, "Replayed release cannot sell the successor");
     }
     check(quantity(game.party(), 13) == 0 && controls.snapshot().trade.selected == 48 &&
-              quantity(game.party(), 12) == 1050,
-          "Sequential sale skips proceeds inserted in a vacated slot and never wraps to earlier items");
-    gold = characterGold(game.party(), {0});
+              game.party().gold() == 1050 && quantity(game.party(), 12) == 0,
+          "Sequential sales credit the purse without creating stacks or wrapping to earlier items");
+    gold = game.party().gold();
     drag(TradeSide::Merchant, 2, point(TradeSide::Merchant, 0));
     drag(TradeSide::Merchant, 2, {505, 340});
-    check(characterGold(game.party(), {0}) == gold, "Own-side and outside drops cancel without a trade");
+    check(game.party().gold() == gold, "Own-side and outside drops cancel without a trade");
     physical(point(TradeSide::Merchant, 2), true, true, false);
     physical(point(TradeSide::Player, 0), false, true, false, false);
     physical(point(TradeSide::Player, 0), false, false, true);
-    check(characterGold(game.party(), {0}) == gold && !controls.snapshot().trade.gesture.down,
+    check(game.party().gold() == gold && !controls.snapshot().trade.gesture.down,
           "Focus loss cancels an in-progress drag");
     physical(point(TradeSide::Merchant, 2), true, true, false);
     key(UiKey::Two);
     physical(point(TradeSide::Player, 0), false, false, true);
-    check(characterGold(game.party(), {0}) == gold && characterGold(game.party(), {1}) == 0,
-          "Changing character cancels the captured source before drop");
+    check(game.party().gold() == gold, "Changing character cancels the captured source before drop");
     key(UiKey::One);
     physical(point(TradeSide::Merchant, 2), true, true, false);
     acquire(game.party(), 13, 1);
     controls.refresh({}, false, false, true);
     physical(point(TradeSide::Player, 0), false, false, true);
-    check(characterGold(game.party(), {0}) == gold, "Inventory revision changes cancel captured drops");
+    check(game.party().gold() == gold, "Inventory revision changes cancel captured drops");
     physical(point(TradeSide::Merchant, 2), true, true, false);
     physical(point(TradeSide::Player, 0), false, false, true, true, false);
-    check(characterGold(game.party(), {0}) == gold && !controls.snapshot().trade.gesture.down,
+    check(game.party().gold() == gold && !controls.snapshot().trade.gesture.down,
           "Rejected physical input cannot commit an earlier drag on release");
     physical(point(TradeSide::Merchant, 2), true, true, false);
     UiInput pointerLost;
@@ -460,14 +522,14 @@ void gestures(CommandController& controls, GameSession& game) {
     pointerLost.pointerHeld = true;
     routeHudInput(controls, pointerLost);
     physical(point(TradeSide::Player, 0), false, false, true);
-    check(characterGold(game.party(), {0}) == gold && !controls.snapshot().trade.gesture.down,
+    check(game.party().gold() == gold && !controls.snapshot().trade.gesture.down,
           "Losing the mapped pointer cancels a captured drop");
     click(TradeSide::Merchant, 2);
     UiInput blur;
     blur.focused = false;
     routeHudInput(controls, blur);
     click(TradeSide::Merchant, 2);
-    check(characterGold(game.party(), {0}) == gold,
+    check(game.party().gold() == gold,
           "Focus loss resets double-click history instead of completing a purchase after refocus");
 }
 void ui() {
@@ -576,12 +638,12 @@ void ui() {
     click.pointer = ArtPoint{float(rect.x + 4), float(rect.y + 4)};
     click.pressed[unsigned(UiKey::Click)] = true;
     routeHudInput(controls, click);
-    check(controls.snapshot().trade.selected == 0 && characterGold(game.party(), {0}) == 500,
+    check(controls.snapshot().trade.selected == 0 && game.party().gold() == 500,
           "Selecting a cell never commits a purchase");
     UiInput confirm;
     confirm.pressed[unsigned(UiKey::Confirm)] = true;
     routeHudInput(controls, confirm);
-    check(characterGold(game.party(), {0}) == 450 && !controls.snapshot().trade.tooltipVisible,
+    check(game.party().gold() == 450 && !controls.snapshot().trade.tooltipVisible,
           "Explicit confirmation commits a purchase and resets revision-bound hover");
     routeHudInput(controls, click);
     UiInput press;
@@ -590,21 +652,20 @@ void ui() {
     press.pointer = ArtPoint{float(tradeLayout::accept.x + 3), float(tradeLayout::accept.y + 3)};
     press.pressed[unsigned(UiKey::Click)] = true;
     routeHudInput(controls, press);
-    check(characterGold(game.party(), {0}) == 450, "Physical buy press waits for release");
+    check(game.party().gold() == 450, "Physical buy press waits for release");
     UiInput release;
     release.pointerTracked = true;
     release.pointerReleased = true;
     release.pointer = press.pointer;
     routeHudInput(controls, release);
-    check(characterGold(game.party(), {0}) == 400, "Matching physical release commits exactly one purchase");
+    check(game.party().gold() == 400, "Matching physical release commits exactly one purchase");
     routeHudInput(controls, click);
     routeHudInput(controls, press);
     other = {};
     other.pressed[unsigned(UiKey::Two)] = true;
     routeHudInput(controls, other);
     routeHudInput(controls, release);
-    check(characterGold(game.party(), {0}) == 400 && characterGold(game.party(), {1}) == 0,
-          "Character change cancels an armed purchase before its release");
+    check(game.party().gold() == 400, "Character change cancels an armed purchase before its release");
     other = {};
     other.pressed[unsigned(UiKey::One)] = true;
     routeHudInput(controls, other);
@@ -692,12 +753,20 @@ void ui() {
     check(!controls.snapshot().trade.open && controls.snapshot().dialogue.open && game.inConversation(),
           "Escape returns to conversation without leaking input or ending it");
     controls.finishDialogue();
+    controls.openInventory();
+    check(controls.snapshot().inventory.gold == game.party().gold(),
+          "Inventory and trade expose the same party purse");
+    controls.inventoryCharacter({1});
+    check(controls.snapshot().inventory.gold == game.party().gold(),
+          "Inventory character selection preserves the shared balance");
+    controls.closeOverlay();
     check(!controls.snapshot().trade.open && !game.inConversation(),
           "Conversation teardown closes trade safely");
 }
 } // namespace
 int main() try {
     parser();
+    purse();
     transactions();
     capacityAndTime();
     comparisons();

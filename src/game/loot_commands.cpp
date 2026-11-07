@@ -169,7 +169,9 @@ void CommandController::lootTake(unsigned index) noexcept {
     const auto e = h.entries[index];
     const auto out = session_.pickup({e.id, state_.selection.character, party_.inventory().revision()});
     record(session_.events());
-    if (out)
+    if (out && e.definition->kind == rules::ItemKind::Currency)
+        std::snprintf(h.feedback.data(), h.feedback.size(), "Added %u gold to the party purse.", e.quantity);
+    else if (out)
         std::snprintf(h.feedback.data(), h.feedback.size(), "%s takes %u %s.", h.name, e.quantity,
                       e.definition->name.c_str());
     else

@@ -34,6 +34,8 @@ void coveredObservations() {
     check(o.targets.count == 0 && o.targets.candidateCount == 1 && o.visible[0],
           "Visual observations retain covered command candidates separately from body pixels");
     const auto encoded = encodeObservation(o);
+    check(encoded.at("party_gold") == std::to_string(session.game().party().gold()),
+          "Player observations expose lossless shared gold outside inventories");
     check(encoded.at("targets") == Json::array({0}) && encoded.at("enemies").size() == 1 &&
               encoded.at("enemies")[0].at("targetable"),
           "Covered target is discoverable in player observations");

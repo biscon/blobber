@@ -94,15 +94,6 @@ void MerchantLedger::restore(const std::vector<MerchantState>& saved, const rule
     count_ = unsigned(saved.size());
     std::copy(saved.begin(), saved.end(), merchants_.begin());
 }
-std::uint64_t characterGold(const Party& party, rules::CharacterId who) noexcept {
-    const auto gold = party.catalog().findItem("gold");
-    std::uint64_t total = 0;
-    for (std::uint16_t cell = 0; cell < bagCells; ++cell)
-        if (const auto* s = party.inventory().stack(party.inventory().at({who, cell}));
-            s && s->item.index == gold.index)
-            total += s->quantity;
-    return total;
-}
 const char* tradeMessage(TradeError error) noexcept {
     switch (error) {
     case TradeError::None:
@@ -117,8 +108,10 @@ const char* tradeMessage(TradeError error) noexcept {
         return "That item is sold out.";
     case TradeError::NotForSale:
         return "The merchant does not buy this item.";
+    case TradeError::GoldOverflow:
+        return "The party purse cannot hold more gold.";
     case TradeError::Funds:
-        return "This character does not have enough gold.";
+        return "The party does not have enough gold.";
     case TradeError::Full:
         return "Not enough room in this character's bag.";
     case TradeError::Overweight:
@@ -133,6 +126,8 @@ TradeError inventoryError(InventoryError error) noexcept {
     switch (error) {
     case InventoryError::None:
         return TradeError::None;
+    case InventoryError::GoldOverflow:
+        return TradeError::GoldOverflow;
     case InventoryError::Funds:
         return TradeError::Funds;
     case InventoryError::Full:

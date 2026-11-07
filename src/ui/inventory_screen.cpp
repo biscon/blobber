@@ -1,5 +1,6 @@
 #include "ui/hud_painter.hpp"
 #include "ui/inventory_layout.hpp"
+#include <cinttypes>
 namespace blobber {
 using namespace hudInk;
 namespace {
@@ -88,8 +89,7 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     overlayBox(inventoryLayout::panel);
     const auto pressed = [&](UiRect r) {
         const auto held = h.buttons.feedback;
-        return held && held->x == r.x && held->y == r.y && held->width == r.width &&
-               held->height == r.height;
+        return held && held->x == r.x && held->y == r.y && held->width == r.width && held->height == r.height;
     };
     const auto pageTab = [&](const char* label, UiRect r, bool selected) {
         const bool held = pressed(r);
@@ -128,6 +128,9 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     text("EQUIPPED", 16, 69, gold, UiTextStyle::Display);
     text("BAG / 48 SLOTS", 178, 69, gold, UiTextStyle::Display);
     text("ITEM DETAILS", 490, 69, gold, UiTextStyle::Display);
+    char balance[40];
+    std::snprintf(balance, sizeof(balance), "Gold: %" PRIu64, i.gold);
+    rightAligned(balance, inventoryLayout::gold, gold);
     picture(UiArt::silhouetteIcon, {32, 93, 118, 200}, {160, 165, 154, 210});
     const InventoryCell* selected = nullptr;
     auto drawCell = [&](const InventoryCell& c, UiRect r, unsigned index) {

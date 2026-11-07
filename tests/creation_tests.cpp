@@ -73,7 +73,7 @@ int main() {
                         a.inventory().stack(a.inventory().at({{std::uint16_t(i)}, std::uint16_t(j)})))
                     if (cat.item(stack->item)->id == "camp_kit")
                         kits += stack->quantity;
-        check(kits == 3, "three launch kits");
+        check(kits == 1, "one launch camp kit");
         const auto wizard = CharacterId{3};
         const auto absent = cat.findSpell("false_life");
         check(!a.spellAccess(wizard, absent), "unlearned spell rejected");

@@ -3,6 +3,8 @@
 #include "ui/layout.hpp"
 namespace blobber::inventoryLayout {
 constexpr UiRect panel{4, 2, 632, 356}, close{606, 9, 20, 17};
+// rightAligned has a two-unit inset; compensate so text ends at the grid border.
+constexpr UiRect gold{178, 72, 303, 10};
 constexpr UiRect levelUp{16, 249, 152, 16};
 constexpr UiRect inventoryPage{14, 9, 65, 17}, characterPage{88, 9, 78, 17};
 constexpr UiRect tab(int i) {

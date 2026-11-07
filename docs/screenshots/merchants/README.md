@@ -1,31 +1,35 @@
-# Merchant trade runtime review
+# Merchant trade and party purse runtime review
 
 2026-11-07. **Ready for user review; runtime acceptance pending.** The user accepted
-the [mockup](../../mockups/trade-v1/README.md), with uniform slots and 350 ms item
-tooltips comparing the selected character's current equipment. These are native
-1920×1080 hidden OpenGL application captures of the implemented interface, refreshed
-after the interaction review. The user accepts comparison presentation; gesture
-and revised presentation review remain pending.
+the [mockup](../../mockups/trade-v1/README.md), uniform slots, delayed item tooltips
+and the comparison presentation. These six native 1920×1080 hidden OpenGL captures
+refresh the evidence for the shared, weightless party purse. This cleanup does
+not imply acceptance of the revised gestures or purse presentation.
 
 | Capture | Review case |
 | --- | --- |
-| [Buying supplies](trade-buy.png) | Square grids, 50%-opacity label backgrounds, close X, personal gold and no B hint. |
-| [Weapon comparison](trade-weapon-comparison.png) | Brunna's hovered longsword beside her equipped mace, including attack, damage and training differences. |
-| [Armor comparison](trade-armor-comparison.png) | Merrin's chain mail beside equipped leather, including AC and a red missing-training restriction. |
-| [Selling and bag comparison](trade-sell-comparison.png) | Alden's bag dagger beside equipped longsword, with an explicit Sell action. |
-| [Buyback](trade-buyback.png) | Sold dagger reappears as an ordinary purchase at 3 gold after being sold for 2, without a B badge. |
-| [Dragging to buy](trade-drag.png) | Item preview and destination highlight during a normal buyback drag into the player grid. |
+| [Inventory purse](inventory-purse.png) | Shared 879 gold above the bag, right-aligned to the grid border; no coin stack. |
+| [Inventory large balance](inventory-large-purse.png) | Largest uint64 balance fits above the grid without colliding with headings. |
+| [Buying supplies](trade-buy.png) | Shared 1000 gold right-aligned to the player grid, lowered onto the subtitle row; no inventory currency. |
+| [Trade large balance](trade-large-purse.png) | Largest uint64 balance fits without overlapping the helper text or close X. |
+| [Weapon comparison](trade-weapon-comparison.png) | Switching to Brunna retains the shared 880 gold after a 120-gold purchase; current mace comparison and red training warning remain. |
+| [Armor comparison](trade-armor-comparison.png) | Switching to Merrin retains 880 gold; equipped leather comparison and red missing-training restriction remain. |
 
-The review runner creates its own campaign and grants isolated example inventory;
-no user save is opened or modified. It exercises a 120-gold ration purchase, sale,
-buyback pricing and drag purchase, selected characters, frozen game clock, mouse-X
-return and checkpointed stock. All world textures/alpha residency are zero after view teardown. Tooltip
-panels stay inside the world/trade region and leave all portraits visible. Hover
-boundaries, empty equipment slots, focus/press cancellation, paging and rejection
-paths, double-clicks, both drag directions, chosen quantities and successive Sell
-clicks are covered by owned CPU fixtures. See [design and verification](../../merchant_design.md).
+The review runner creates its own campaign and grants isolated example inventory.
+It buys a ration for 120 gold (1000→880), sells a dagger for 2 (880→882), verifies
+3-gold buyback pricing, buys it back by dragging (882→879), switches characters,
+returns through the mouse X and opens inventory. The two maximum-balance captures
+change only a copy of the presentation snapshot, not the campaign balance.
+Gameplay time stays frozen and the party does not move. All world texture/alpha
+residency is zero after view teardown. No user save is used by this capture runner.
 
-No OS input injection, focus changes or desktop automation was used. Runtime
-interactive feel, economy tuning and user acceptance remain pending. Six selected
-captures are retained; disposable output and logs are removed using the owned
-agent-run cleanup workflow.
+Owned CPU fixtures cover double-clicks, both drag directions, buyback, quantities,
+successive Sell clicks, failure conservation, request replay, full bags, purse
+overflow, weightless pickup and 350 ms comparison hover. The separate one-time
+user-save edit was validated through the headless loader; see
+[design and verification](../../merchant_design.md#party-purse-verification--2026-11-07).
+
+No OS input injection, focus changes or desktop automation was used. Interactive
+feel, economy tuning and user acceptance remain pending. Superseded screenshots
+were replaced; exactly six images are retained. Disposable captures, logs and
+save-validation copies are cleaned using the owned agent-run workflow.

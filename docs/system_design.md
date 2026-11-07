@@ -1,11 +1,19 @@
 # System design
 
+Shared party purse: **implemented and mechanically verified; UI review pending (2026-11-07)**. Party owns
+weightless gold outside character bags; startup/loot credit it and trading uses
+the shared balance. Inventory and trade align their gold labels to the bag grid.
+Schema 14 only, with no runtime compatibility conversion; the user's current
+campaign received a one-time backed-up edit preserving all 43 gold. Seven focused
+CPU suites, extended save integration and hidden native captures pass. See [transactions and ownership](merchant_design.md#transactions-time-and-saves).
+
 [Merchants and trading](merchant_design.md): **implemented and mechanically verified;
 runtime user review pending (2026-11-07)**, based on the [accepted trade mockup](mockups/trade-v1/README.md).
 Uniform two-grid overlay, selectable party sidebar, 350 ms item tooltips with
 equipped-item comparisons, authored shops and saved finite stock/restock/buyback.
 Six focused CPU suites, extended save integration and hidden OpenGL captures pass.
-Schema 13/17 retains loading of current 12/17 saves; [six review captures](screenshots/merchants/README.md).
+The purse revision supersedes the initial schema 13/17 delivery with strict schema
+14/17 saves; [six review captures](screenshots/merchants/README.md).
 The [merchant interaction review revision](merchant_design.md#review-revision--2026-11-07)
 is implemented and mechanically verified: double-click/drag trading, sequential
 selling, translucent labels, close X, removal of the misleading B affordance and
@@ -83,7 +91,8 @@ CPU/GPU parity pass; [six runtime captures](screenshots/dialogue/README.md).
 Dialogue introduced schema/simulation **12/16**; Sanctuary residents now advance
 compatibility to **12/17**, requiring a new campaign as authorized.
 Trading is now implemented in the merchant system above; quests and procedural
-rumours remain later work. Merchants advance saves to 13/17 while retaining 12/17 loading.
+rumours remain later work. The purse revision now requires schema 14/17 with no
+runtime conversion; the user campaign received a one-time external edit.
 The user accepted the interface and fluid transition; an [eye-level correction](dialogue_design.md#eye-level-review-correction--2026-11-06)
 removes the rejected counter-height framing in favor of generic NPC-height framing.
 The new framing awaits review; this correction preserves current saves.

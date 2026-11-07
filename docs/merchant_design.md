@@ -31,14 +31,20 @@ purchase; requests validate resident/shop identity and ledger/inventory revision
 
 ## Transactions, time and saves
 
-Gold remains physical inventory currency owned by the selected character. Buying
-and selling only affect that character's bag; equipped items must first be
+Party purse revision (2026-11-07): implemented and mechanically verified; UI review pending. Party owns a
+weightless uint64 gold balance outside its inventory. Authored starting currency
+and collected loot credit this balance without creating live currency stacks.
+Character creation previews exclude currency weight too. Inventory's existing
+transaction revision covers both bag and purse changes, preserving checked
+requests and gesture cancellation without introducing a second revision domain.
+Buying and selling only affect the selected character's goods; equipped items must first be
 unequipped using the existing inventory screen. The merchant has no finite purse.
-Party stages an inventory copy, removes goods/payment, adds goods/proceeds, checks
+Party stages an inventory copy and purse value, removes goods/payment, adds goods/proceeds, checks
 bag and weight constraints, then commits together with vendor state. Explicit
 quantities are atomic: insufficient funds, capacity, weight, stock or stale
 requests change neither side. Prices and arithmetic use checked bounded values;
-currency is never taken from other party members automatically.
+purse overflow rejects before publication. Currency acquisition ignores bag
+capacity/weight but retains revision, quantity, valid recipient and loot-access checks.
 
 Restock and expiry use existing elapsed campaign GameTime. First visit starts
 the restock deadline; each due interval refills authored quantities to their
@@ -47,12 +53,31 @@ rather than per-day loops. Each sale expires after the shop's buyback duration;
 restocking never extends those deadlines. Refresh at entry and transaction time,
 with bounded work; conversations and trade freeze gameplay time.
 
-Checkpointing serializes only visited vendors. Save schema advances to 13,
-simulation remains 17; accept existing schema 12/simulation 17 by initializing an
-empty ledger. Item catalog and NPC fingerprints remain unchanged, avoiding a new
-campaign requirement. Validate restored vendor capacity, identities, stock counts,
+Checkpointing serializes only visited vendors and Party's purse. Save schema 14
+is the sole accepted version; simulation remains 17. There is no runtime save
+conversion or permanent conversion utility. The user's active campaign is backed
+up and edited once outside the game, pooling carried gold and clearing its stacks
+without moving other items; validate the candidate before atomic replacement and
+recheck the source bytes. Item catalog and NPC fingerprints remain unchanged.
+Validate restored vendor capacity, identities, stock counts,
 buyback item/quantity/price/deadlines and revision before publication. Shop price
 edits apply to ordinary trades; buyback prices already recorded stay fixed.
+New live inventories and saves reject currency stacks. Headless observations expose
+`party_gold` as the existing lossless uint64 string format in both modes. Inventory and trade show
+the shared balance in existing gold Small text, with text's right edge aligned
+to the bag grid border. Inventory label sits above the slots; trade label moves
+onto its subtitle row. Measure the balance to reserve space from the helper text.
+Gold loot details identify the weightless shared purse instead of showing legacy
+coin weight, inventory stack limits or the obsolete demo description; collection
+feedback names the party purse. Immutable catalog metadata remains untouched to
+preserve content fingerprints.
+
+Verification for this revision: focused inventory/recovery/trade/creation/HUD
+checks, purse and transaction boundary/preview/replay tests, schema-14 round trips
+and old-schema rejection, one affected campaign-save integration, then hidden
+native captures of both labels including the largest uint64 balance. No desktop
+input automation. Preserve a backup of the edited user campaign outside disposable
+agent output and clean temporary review output after selecting evidence.
 
 ## Input and presentation
 
@@ -112,7 +137,7 @@ Both grids use the same 8×6 square-cell geometry. Merchant left, selected bag
 right; character cards and 1–4 change the buyer/seller, resetting selection,
 quantity and hover. Single clicks select; double clicks, opposite-grid drops and
 explicit Buy/Sell controls commit the selected quantity. Show price, stock,
-available personal gold, weight, restock time and rejection feedback; buyback
+available party gold, weight, restock time and rejection feedback; buyback
 identity/expiry appear in item tooltips. Reuse existing prepared item
 art, including the supply artwork for the existing `camp_kit` ration/rest supply.
 Do not rename catalog items/fingerprints merely to label the shop's ration packs.
@@ -138,9 +163,9 @@ provisioner and weapon/armor to the smithy when those NPCs exist.
 ## Verification
 
 Owned small CPU fixtures cover parser/reference failures, finite stock, selected
-character funds/ownership, quantities, multi-stack payment, full bags/weight,
+character ownership and shared funds, quantities, full bags/weight,
 atomic rejection, stale handles/revisions, buyback markup/capacity/exact expiry,
-restock/time jumps, independent vendors, save roundtrip/legacy initialization and
+restock/time jumps, independent vendors, save roundtrip/old-schema rejection and
 warmed allocation guards. UI checks cover 349/350 ms dwell, both sides, equipped/
 empty comparisons and character changes, focus/exit/page reset, uniform slots,
 physical release isolation and conversation return. Run only affected Debug CPU
@@ -254,3 +279,63 @@ superseded return screenshot; the README and links are updated. Comparison
 acceptance is preserved. Interactive gesture feel and revised presentation remain
 user-owned review. The owned run is cleaned with preview/apply and no retained
 diagnostic exception; user saves, other runs and build caches are preserved.
+
+
+## Party purse verification — 2026-11-07
+
+Implemented the shared Party-owned uint64 purse, startup grants, weightless loot
+credit, atomic trade exchange, revision/replay checks and both aligned UI labels.
+Gold is absent from live bags. Inventory keeps the same fixed capacity and ordinary
+item arrangement. Currency is ignored by authored character weight previews too.
+Overflow reports an explicit rejection; previews and failed transactions preserve
+party, loot and vendor state. Headless observations expose `party_gold` losslessly.
+
+Validation used one Debug build with at most two workers, one test process, low CPU
+and I/O priority. Focused suites: `trade`, `inventory`, `recovery`, `creation`, `party`,
+`hud`, `automation`; all pass. The final trade check includes full-bag partial sale
+proceeds without a free coin slot. Recovery checks exercise an actual gold pickup
+with a full bag, duplicate/stale pickup, and Take All crediting the purse. Existing
+drop-capacity fixtures now use daggers rather than physical gold. A stale creation
+assertion expected three launch kits despite the existing one-kit grant; corrected
+that assertion without changing startup supply behavior. Trade and inventory
+allocation guards pass, including gold acquisition/preview and normal purchases.
+
+Commands:
+
+```sh
+nice -n 15 ionice -c 3 cmake --build --preset debug --target blobber_trade_tests blobber_inventory_tests blobber_recovery_tests blobber_creation_tests blobber_party_tests blobber_hud_tests blobber_automation_tests blobber_campaign_save_tests blobber_review_trade blobber_headless
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-debug -R '^(trade|inventory|recovery|creation|party|hud|automation)$' --output-on-failure -j 1
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-debug -R '^campaign_save$' --output-on-failure -j 1
+```
+
+Initial focused execution exposed the obsolete currency and kit assumptions above;
+affected suites were rebuilt and rerun after those fixture corrections. Extended
+`campaign_save` passed once in 104.05 s, including exact schema-14 round trips with
+UINT64_MAX gold, malformed/missing purse rejection and strict rejection of schemas
+12/13. No runtime upgrade branch or permanent conversion tool remains. The build
+reuses unchanged prepared art; the game executable is relinked with CMake's generated
+linker argv after updating affected libraries, avoiding unnecessary asset baking.
+
+The schema-13 user campaign at `/home/bison/.local/share/blobber/campaign.json`
+received a one-time external edit. The single 43-gold stack became purse balance
+43; its slot cleared, generation and transaction revision advanced, and unrelated
+campaign data/item positions stayed equal. The candidate loaded through the actual
+headless runner, reported `party_gold: "43"`, contained no live gold stacks and
+remained byte-identical after read-only validation. Source bytes were rechecked
+under the save lock before atomic replacement. Exact original backup retained at
+`/home/bison/.local/share/blobber/campaign.before-party-purse-20261107T174101Z.json`.
+This backup is user data and is excluded from disposable artifact cleanup.
+
+The hidden review runner passed on NVIDIA RTX 3060 / OpenGL 3.3 with bounded library
+threads. Application-owned scripted input exercised purchases, sales, buyback drag,
+character switching, frozen time/pose, close X and inventory return. A final
+synthetic loot snapshot confirms weightless/shared-purse details replace the old
+physical-coin metadata; that transient diagnostic capture is not retained. Both normal
+and maximum uint64 balances were visually inspected in native captures; equipped
+comparisons and red restrictions remain intact. Maximum balances are presentation
+fixtures only. World textures/alpha are zero after teardown. No OS input or focus
+control was used. [Six current captures](screenshots/merchants/README.md) replace
+superseded evidence; mockup/comparison acceptance is preserved, purse/interaction
+review remains pending. Temporary output was cleaned after evidence selection;
+interactive desktop feel remains unverified and no broad configuration matrix,
+benchmark or capacity stress was run.
