@@ -140,10 +140,37 @@ int main(int argc, char** argv) try {
     shot("trade-buyback");
     if (!controls.snapshot().trade.merchant[5].buyback || controls.snapshot().trade.merchant[5].price != 3)
         throw std::runtime_error("Review buyback markup failed");
-    key(UiKey::Cancel);
-    shot("trade-return");
+    UiInput drag;
+    const auto source = tradeLayout::cell(TradeSide::Merchant, 5);
+    drag.pointerTracked = true;
+    drag.pointerHeld = true;
+    drag.pointer = ArtPoint{float(source.x + 8), float(source.y + 8)};
+    drag.pressed[unsigned(UiKey::Click)] = true;
+    routeHudInput(controls, drag);
+    drag.pressed.fill(false);
+    drag.pointer = ArtPoint{360, 242};
+    routeHudInput(controls, drag);
+    if (!controls.snapshot().trade.gesture.dragging)
+        throw std::runtime_error("Review drag did not capture");
+    shot("trade-drag");
+    drag.pointerHeld = false;
+    drag.pointerReleased = true;
+    routeHudInput(controls, drag);
+    if (characterGold(run->party(), {0}) != 879)
+        throw std::runtime_error("Review drag buyback failed");
+    UiInput close;
+    close.pointerTracked = true;
+    close.pointerHeld = true;
+    close.pointer = ArtPoint{float(tradeLayout::close.x + 4), float(tradeLayout::close.y + 4)};
+    close.pressed[unsigned(UiKey::Click)] = true;
+    routeHudInput(controls, close);
+    close.pressed.fill(false);
+    close.pointerHeld = false;
+    close.pointerReleased = true;
+    routeHudInput(controls, close);
     if (controls.snapshot().trade.open || !controls.snapshot().dialogue.open)
         throw std::runtime_error("Return to conversation failed");
+    report << "mouse_close_returned_to_dialogue=1 drag_buyback_gold=879\n";
     controls.finishDialogue();
     auto checkpoint = run->checkpoint();
     if (checkpoint->merchants.size() != 1 ||

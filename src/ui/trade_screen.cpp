@@ -89,16 +89,19 @@ void itemText(TooltipText& lines, const HudPainter& p, const rules::ItemDefiniti
 } // namespace
 void HudPainter::trade(const HudSnapshot& h) const {
     const auto& t = h.trade;
+    const Color labelBackground{background.r, background.g, background.b, tradeLayout::labelAlpha};
     overlayBox(tradeLayout::panel);
     line({254, 104}, {254, 317}, edge);
     clipped(t.merchantName, 12, 106, 183, gold, UiTextStyle::Display);
     char label[160];
     std::snprintf(label, sizeof(label), "%s's bag", t.characterName);
-    clipped(label, 264, 106, 146, gold, UiTextStyle::Display);
+    clipped(label, 264, 106, 210, gold, UiTextStyle::Display);
     std::snprintf(label, sizeof(label), "Gold: %" PRIu64, t.gold);
-    rightAligned(label, {412, 105, 82, 13}, gold);
+    rightAligned(label, {409, 119, 85, 11}, gold);
+    box(tradeLayout::close);
+    centered("X", tradeLayout::close, gold);
     clipped("Stock & buyback", 12, 120, 220, muted, UiTextStyle::Small);
-    clipped("Select a party portrait to change trader", 264, 120, 230, muted, UiTextStyle::Small);
+    clipped("Party portraits select trader", 264, 120, 140, muted, UiTextStyle::Small);
     if (t.pages > 1) {
         box(tradeLayout::previous);
         centered("<", tradeLayout::previous, t.page ? gold : muted, UiTextStyle::Small);
@@ -122,7 +125,7 @@ void HudPainter::trade(const HudSnapshot& h) const {
                 {r.x + 2, r.y + 1, r.width - 4, side == TradeSide::Merchant ? r.height - 9 : r.height - 3},
                 tint);
             if (side == TradeSide::Merchant) {
-                fill({r.x + 1, r.y + r.height - 9, r.width - 2, 8}, background);
+                fill({r.x + 1, r.y + r.height - 9, r.width - 2, 8}, labelBackground);
                 std::snprintf(label, sizeof(label), cell.quantity ? "%ug" : "Out", cell.price);
                 centered(label, {r.x + 1, r.y + r.height - 9, r.width - 2, 8}, cell.quantity ? gold : muted,
                          UiTextStyle::Small);
@@ -130,12 +133,8 @@ void HudPainter::trade(const HudSnapshot& h) const {
             if (cell.quantity > 1 || side == TradeSide::Merchant) {
                 std::snprintf(label, sizeof(label), "%u", cell.quantity);
                 const int y = side == TradeSide::Merchant ? r.y + 1 : r.y + r.height - 10;
-                fill({r.x + 12, y, 13, 8}, background);
+                fill({r.x + 12, y, 13, 8}, labelBackground);
                 rightAligned(label, {r.x + 9, y, 16, 8}, hudInk::text, UiTextStyle::Small);
-            }
-            if (cell.buyback) {
-                fill({r.x + 1, r.y + 1, 8, 8}, background);
-                text("B", r.x + 2, r.y + 1, bright, UiTextStyle::Small);
             }
             if (selected)
                 border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, bright);
@@ -145,8 +144,6 @@ void HudPainter::trade(const HudSnapshot& h) const {
     remaining(duration, sizeof(duration), t.restockMs, t.nowMs);
     std::snprintf(label, sizeof(label), "Restocks in %s", duration);
     text(label, 12, 302, gold, UiTextStyle::Small);
-    std::snprintf(label, sizeof(label), "B: Buyback / sold items held for %uh", t.buybackHours);
-    clipped(label, 12, 313, 235, muted, UiTextStyle::Small);
     std::snprintf(label, sizeof(label), "Weight: %.2f / %.0f lb", double(t.weight) / 100,
                   double(t.capacity) / 100);
     text(label, 264, 302, gold, UiTextStyle::Small);
@@ -182,6 +179,23 @@ void HudPainter::trade(const HudSnapshot& h) const {
 }
 void HudPainter::tradeTooltip(const HudSnapshot& h) const {
     const auto& t = h.trade;
+    if (t.open && t.gesture.dragging && t.gesture.source < 48) {
+        const auto& g = t.gesture;
+        const auto& cell = (g.sourceSide == TradeSide::Merchant ? t.merchant : t.player)[g.source];
+        const auto opposite = g.sourceSide == TradeSide::Merchant ? TradeSide::Player : TradeSide::Merchant;
+        const auto destination = tradeLayout::grid(opposite);
+        if (destination.contains({t.pointerX, t.pointerY}))
+            border(destination, t.canTrade ? teal : red);
+        const UiRect ghost{std::clamp(int(t.pointerX) - 12, 4, 474),
+                           std::clamp(int(t.pointerY) - 12, 18, 330), 26, 26};
+        itemSlot(cell.definition, 0, ghost, gold);
+        char quantity[16];
+        std::snprintf(quantity, sizeof(quantity), "%u", g.request.quantity);
+        fill({ghost.x + 12, ghost.y + 16, 13, 8},
+             {background.r, background.g, background.b, tradeLayout::labelAlpha});
+        rightAligned(quantity, {ghost.x + 9, ghost.y + 16, 16, 8}, hudInk::text, UiTextStyle::Small);
+        return;
+    }
     if (!t.open || !t.tooltipVisible || t.hovered < 0 || t.hovered >= 48 || h.suspended)
         return;
     const auto& cell = (t.hoverSide == TradeSide::Merchant ? t.merchant : t.player)[unsigned(t.hovered)];
@@ -189,6 +203,7 @@ void HudPainter::tradeTooltip(const HudSnapshot& h) const {
         return;
     constexpr int width = 234, gap = 4;
     TooltipText offered, equipped;
+    unsigned warningStart = unsigned(offered.rows.size());
     const auto& comparison = t.comparison;
     char lineText[160];
     std::snprintf(lineText, sizeof(lineText), "%s: %ug each / quantity %u",
@@ -207,6 +222,7 @@ void HudPainter::tradeTooltip(const HudSnapshot& h) const {
              width - 16);
     if (comparison.restriction[0]) {
         offered.add("");
+        warningStart = offered.count;
         offered.wrap(*this, comparison.restriction, width - 16);
     }
     if (comparison.equippable) {
@@ -221,7 +237,7 @@ void HudPainter::tradeTooltip(const HudSnapshot& h) const {
     const int x = std::clamp(int(t.pointerX) + 8, 8, 500 - totalWidth);
     const int y = std::clamp(int(t.pointerY) + 8, 20, std::max(20, 356 - height));
     const auto panel = [&](int px, const char* heading, const rules::ItemDefinition* definition,
-                           const TooltipText& lines, bool current) {
+                           const TooltipText& lines, bool current, unsigned warningRow) {
         overlayBox({px, y, width, height}, current ? edge : gold);
         clipped(heading, px + 8, y + 7, width - 16, current ? muted : gold, UiTextStyle::Small);
         if (definition) {
@@ -230,14 +246,14 @@ void HudPainter::tradeTooltip(const HudSnapshot& h) const {
         } else
             text("Empty", px + 8, y + 25, gold, UiTextStyle::Display);
         for (unsigned i = 0; i < lines.count; ++i)
-            clipped(lines.rows[i].data(), px + 8, float(y + 45 + int(i) * 10), width - 16, hudInk::text,
-                    UiTextStyle::Small);
+            clipped(lines.rows[i].data(), px + 8, float(y + 45 + int(i) * 10), width - 16,
+                    i >= warningRow ? red : hudInk::text, UiTextStyle::Small);
     };
     panel(x, t.hoverSide == TradeSide::Merchant ? "MERCHANT ITEM" : "BAG ITEM", cell.definition, offered,
-          false);
+          false, warningStart);
     if (comparison.equippable) {
         std::snprintf(lineText, sizeof(lineText), "CURRENTLY EQUIPPED / %s", t.characterName);
-        panel(x + width + gap, lineText, comparison.equipped, equipped, true);
+        panel(x + width + gap, lineText, comparison.equipped, equipped, true, unsigned(equipped.rows.size()));
     }
 }
 } // namespace blobber

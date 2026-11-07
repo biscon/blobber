@@ -33,8 +33,11 @@ advances the same campaign clock. Prices can change between sessions without
 resetting saved stock. New stocked items remain empty until the next delivery in
 an already visited shop. Removing an item from stock hides its remaining stock.
 
-Sold goods appear as **B: Buyback** entries at the sale price plus the markup,
-rounded up. Their individual prices and expiry deadlines are saved. A sale of
+Sold goods appear in the ordinary merchant grid at the sale price plus the markup,
+rounded up. Their tooltip identifies them as Buyback and shows the expiry. Buy
+them with the regular button, double-click or drag into the character's grid;
+there is no B shortcut or separate buyback control. Their individual prices and
+expiry deadlines are saved. A sale of
 10 gold at 25% markup costs 13 gold to buy back. The markup is 1–100%; held time
 is 1–24 game hours. Restocking does not extend it. Buybacks are separate from
 ordinary stock and disappear at their deadline. At 48 outstanding buyback stacks,
@@ -44,6 +47,14 @@ Only the selected character's bag/gold participates. Equipped items must be
 unequipped before sale. Purchases go into that character's bag, respecting stack,
 space and carrying weight. No automatic payment from another party member and no
 automatic equipping. Merchant funds are unlimited; item stock is finite.
+
+Single click selects; double click buys/sells the selected quantity, default one.
+Drag from either grid to the opposite grid to trade that quantity. Same-side and
+outside drops cancel. After selling, a remaining source stack stays selected;
+otherwise the next sellable item in forward bag order is selected at quantity one,
+skipping gold/unpriced items and stopping at the end without wrapping. This permits
+successive Sell clicks through adjacent items. Rejected sales do not advance.
+Escape, the top-right X and the mouse Back control return to dialogue.
 
 Limits: 16 shop files, 1 MiB combined YAML, 48 stocked definitions per shop,
 64 item prices, quantity 1–65,535 per stocked item and 16 visited vendors per run.

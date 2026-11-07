@@ -295,6 +295,181 @@ void parser() {
 float measure(const char* text, void*) {
     return float(std::char_traits<char>::length(text) * 4);
 }
+void gestures(CommandController& controls, GameSession& game) {
+    auto point = [](TradeSide side, unsigned cell) {
+        const auto r = tradeLayout::cell(side, cell);
+        return ArtPoint{float(r.x + 5), float(r.y + 5)};
+    };
+    const auto physical = [&](ArtPoint p, bool press, bool held, bool release, bool focused = true,
+                              bool accept = true) {
+        UiInput in;
+        in.pointerTracked = true;
+        in.pointer = p;
+        in.pointerHeld = held;
+        in.pointerReleased = release;
+        in.focused = focused;
+        in.pressed[unsigned(UiKey::Click)] = press;
+        // Match production's pre-routing and routeHudInput's second, idempotent pass.
+        in = routeHudButtons(controls, in, accept);
+        routeHudInput(controls, in, {}, accept);
+    };
+    const auto click = [&](TradeSide side, unsigned cell) {
+        const auto p = point(side, cell);
+        physical(p, true, true, false);
+        check(controls.snapshot().trade.gesture.down, "Grid press captures a potential drag");
+        physical(p, false, false, true);
+    };
+    const auto key = [&](UiKey k) {
+        UiInput in;
+        in.pressed[unsigned(k)] = true;
+        routeHudInput(controls, in);
+    };
+    const auto cellOf = [&](unsigned item, bool buyback = false) {
+        const auto& cells = buyback ? controls.snapshot().trade.merchant : controls.snapshot().trade.player;
+        for (unsigned i = 0; i < 48; ++i)
+            if (cells[i].definition &&
+                cells[i].definition->id == game.party().catalog().item({std::uint16_t(item)})->id &&
+                (!buyback || cells[i].buyback))
+                return i;
+        throw std::runtime_error("Gesture fixture item not found");
+    };
+    const auto drag = [&](TradeSide side, unsigned cell, ArtPoint destination) {
+        physical(point(side, cell), true, true, false);
+        const auto revision = game.party().inventory().revision();
+        physical(destination, false, true, false);
+        check(controls.snapshot().trade.gesture.dragging && game.party().inventory().revision() == revision,
+              "Dragging does not move goods or payment before release");
+        physical(destination, false, false, true);
+    };
+    auto gold = characterGold(game.party(), {0});
+    click(TradeSide::Merchant, 0);
+    check(characterGold(game.party(), {0}) == gold, "First completed grid click only selects");
+    click(TradeSide::Merchant, 0);
+    check(characterGold(game.party(), {0}) == gold - 50, "Physical double-click buys one item");
+    // The last stocked potion is now gone; a third click cannot purchase a successor.
+    UiInput logical;
+    logical.pointer = point(TradeSide::Merchant, 0);
+    logical.pressed[unsigned(UiKey::Click)] = true;
+    routeHudInput(controls, logical);
+    check(characterGold(game.party(), {0}) == gold - 50, "A third click never repeats the completed trade");
+    click(TradeSide::Merchant, 1);
+    controls.tickDialogue(.401, true);
+    click(TradeSide::Merchant, 1);
+    check(characterGold(game.party(), {0}) == gold - 50,
+          "Clicks outside the double-click interval only select");
+    key(UiKey::Back);
+    check(controls.snapshot().trade.open, "B/Back has no binding in trade");
+    gold = characterGold(game.party(), {0});
+    drag(TradeSide::Merchant, 1, point(TradeSide::Player, 0));
+    check(characterGold(game.party(), {0}) == gold - 100 && quantity(game.party(), 0) == 1,
+          "Dropping merchant stock on an occupied player cell buys through normal placement");
+    auto sword = cellOf(0);
+    gold = characterGold(game.party(), {0});
+    click(TradeSide::Player, sword);
+    click(TradeSide::Player, sword);
+    check(characterGold(game.party(), {0}) == gold + 10 && quantity(game.party(), 0) == 0,
+          "Double-clicking a bag item sells it");
+    auto buyback = cellOf(0, true);
+    gold = characterGold(game.party(), {0});
+    drag(TradeSide::Merchant, buyback, point(TradeSide::Player, 47));
+    check(characterGold(game.party(), {0}) == gold - 13 && quantity(game.party(), 0) == 1,
+          "Buyback uses normal drag purchase at its stored markup");
+    sword = cellOf(0);
+    gold = characterGold(game.party(), {0});
+    drag(TradeSide::Player, sword, point(TradeSide::Merchant, 0));
+    check(characterGold(game.party(), {0}) == gold + 10 && quantity(game.party(), 0) == 0,
+          "Dropping bag goods on occupied merchant stock sells them");
+    buyback = cellOf(0, true);
+    click(TradeSide::Merchant, buyback);
+    click(TradeSide::Merchant, buyback);
+    check(characterGold(game.party(), {0}) == gold - 3 && quantity(game.party(), 0) == 1,
+          "Buyback also uses normal double-click purchase");
+    const auto potion = cellOf(10);
+    click(TradeSide::Player, potion);
+    key(UiKey::Right);
+    check(controls.snapshot().trade.quantity == 2, "Selected quick-trade quantity can be adjusted");
+    const auto potions = quantity(game.party(), 10);
+    click(TradeSide::Player, potion);
+    click(TradeSide::Player, potion);
+    check(quantity(game.party(), 10) == potions - 2 && controls.snapshot().trade.selected == potion &&
+              controls.snapshot().trade.quantity == 1,
+          "Double-click honors chosen quantity and retains a partially sold stack at quantity one");
+    gold = characterGold(game.party(), {0});
+    key(UiKey::Confirm);
+    check(characterGold(game.party(), {0}) == gold + 12 && controls.snapshot().trade.selected == potion,
+          "Repeated Sell can continue a remaining stack");
+    acquire(game.party(), 10, 4);
+    controls.refresh({}, false, false, true);
+    click(TradeSide::Player, potion);
+    key(UiKey::Right);
+    const auto beforeDrag = quantity(game.party(), 10);
+    gold = characterGold(game.party(), {0});
+    drag(TradeSide::Player, potion, point(TradeSide::Merchant, 0));
+    check(quantity(game.party(), 10) == beforeDrag - 2 && characterGold(game.party(), {0}) == gold + 24 &&
+              controls.snapshot().trade.quantity == 1,
+          "Drag captures the chosen quantity and commits it atomically");
+    const ArtPoint sell{float(tradeLayout::accept.x + 4), float(tradeLayout::accept.y + 4)};
+    acquire(game.party(), 12, unsigned(1000 - characterGold(game.party(), {0})));
+    acquire(game.party(), 13, 5);
+    controls.refresh({}, false, false, true);
+    const auto first = cellOf(13);
+    click(TradeSide::Player, first);
+    for (unsigned i = 0; i < 5; ++i) {
+        check(controls.snapshot().trade.selected == first + i,
+              "Next adjacent sellable item is auto-selected");
+        gold = characterGold(game.party(), {0});
+        physical(sell, true, true, false);
+        physical(sell, false, true, false);
+        check(characterGold(game.party(), {0}) == gold, "Held Sell button never repeats");
+        physical(sell, false, false, true);
+        check(characterGold(game.party(), {0}) == gold + 10,
+              "Each fresh Sell click sells one successive item");
+        physical(sell, false, false, true);
+        check(characterGold(game.party(), {0}) == gold + 10, "Replayed release cannot sell the successor");
+    }
+    check(quantity(game.party(), 13) == 0 && controls.snapshot().trade.selected == 48 &&
+              quantity(game.party(), 12) == 1050,
+          "Sequential sale skips proceeds inserted in a vacated slot and never wraps to earlier items");
+    gold = characterGold(game.party(), {0});
+    drag(TradeSide::Merchant, 2, point(TradeSide::Merchant, 0));
+    drag(TradeSide::Merchant, 2, {505, 340});
+    check(characterGold(game.party(), {0}) == gold, "Own-side and outside drops cancel without a trade");
+    physical(point(TradeSide::Merchant, 2), true, true, false);
+    physical(point(TradeSide::Player, 0), false, true, false, false);
+    physical(point(TradeSide::Player, 0), false, false, true);
+    check(characterGold(game.party(), {0}) == gold && !controls.snapshot().trade.gesture.down,
+          "Focus loss cancels an in-progress drag");
+    physical(point(TradeSide::Merchant, 2), true, true, false);
+    key(UiKey::Two);
+    physical(point(TradeSide::Player, 0), false, false, true);
+    check(characterGold(game.party(), {0}) == gold && characterGold(game.party(), {1}) == 0,
+          "Changing character cancels the captured source before drop");
+    key(UiKey::One);
+    physical(point(TradeSide::Merchant, 2), true, true, false);
+    acquire(game.party(), 13, 1);
+    controls.refresh({}, false, false, true);
+    physical(point(TradeSide::Player, 0), false, false, true);
+    check(characterGold(game.party(), {0}) == gold, "Inventory revision changes cancel captured drops");
+    physical(point(TradeSide::Merchant, 2), true, true, false);
+    physical(point(TradeSide::Player, 0), false, false, true, true, false);
+    check(characterGold(game.party(), {0}) == gold && !controls.snapshot().trade.gesture.down,
+          "Rejected physical input cannot commit an earlier drag on release");
+    physical(point(TradeSide::Merchant, 2), true, true, false);
+    UiInput pointerLost;
+    pointerLost.pointerTracked = true;
+    pointerLost.pointerHeld = true;
+    routeHudInput(controls, pointerLost);
+    physical(point(TradeSide::Player, 0), false, false, true);
+    check(characterGold(game.party(), {0}) == gold && !controls.snapshot().trade.gesture.down,
+          "Losing the mapped pointer cancels a captured drop");
+    click(TradeSide::Merchant, 2);
+    UiInput blur;
+    blur.focused = false;
+    routeHudInput(controls, blur);
+    click(TradeSide::Merchant, 2);
+    check(characterGold(game.party(), {0}) == gold,
+          "Focus loss resets double-click history instead of completing a purchase after refocus");
+}
 void ui() {
     const auto catalog = fixtureCatalog();
     const Map map(
@@ -442,11 +617,52 @@ void ui() {
     }
     watching = false;
     check(allocations == 0, "Warmed trade refresh, hover and equipment comparison allocate no C++ memory");
+    gestures(controls, game);
     auto* state = ledger.visit(host, content.shops[0], {});
     for (unsigned i = 0; i < state->buyback.size(); ++i)
         state->buyback[i] = {{10}, 1, 15, gameDuration::day};
     ++state->revision;
     controls.refresh({}, false, false, true);
+    UiInput selectMana;
+    for (unsigned i = 0; i < 48; ++i)
+        if (controls.snapshot().trade.player[i].definition &&
+            controls.snapshot().trade.player[i].definition->consumable == rules::Consumable::Mana) {
+            const auto rect = tradeLayout::cell(TradeSide::Player, i);
+            selectMana.pointer = ArtPoint{float(rect.x + 4), float(rect.y + 4)};
+        }
+    selectMana.pressed[unsigned(UiKey::Click)] = true;
+    routeHudInput(controls, selectMana);
+    UiInput more;
+    more.pressed[unsigned(UiKey::Right)] = true;
+    routeHudInput(controls, more);
+    const auto selected = controls.snapshot().trade.selected;
+    const auto oldRevision = game.party().inventory().revision();
+    UiInput sell;
+    sell.pressed[unsigned(UiKey::Confirm)] = true;
+    routeHudInput(controls, sell);
+    check(controls.snapshot().trade.selected == selected && controls.snapshot().trade.quantity == 2 &&
+              game.party().inventory().revision() == oldRevision,
+          "Rejected sale preserves selection and quantity instead of advancing");
+    UiInput gridPress;
+    gridPress.pointerTracked = true;
+    gridPress.pointerHeld = true;
+    gridPress.pressed[unsigned(UiKey::Click)] = true;
+    const auto armorCell = tradeLayout::cell(TradeSide::Merchant, 2);
+    gridPress.pointer = ArtPoint{float(armorCell.x + 4), float(armorCell.y + 4)};
+    routeHudInput(controls, gridPress);
+    UiInput turnPage;
+    turnPage.pressed[unsigned(UiKey::NextPage)] = true;
+    routeHudInput(controls, turnPage);
+    gridPress.pressed.fill(false);
+    gridPress.pointerHeld = false;
+    gridPress.pointerReleased = true;
+    gridPress.pointer = ArtPoint{270, 140};
+    routeHudInput(controls, gridPress);
+    check(game.party().inventory().revision() == oldRevision && !controls.snapshot().trade.gesture.down,
+          "Page changes cancel a source capture before its release");
+    turnPage.pressed.fill(false);
+    turnPage.pressed[unsigned(UiKey::PreviousPage)] = true;
+    routeHudInput(controls, turnPage);
     hover(TradeSide::Merchant, 1);
     controls.tickDialogue(.35, true);
     check(controls.snapshot().trade.tooltipVisible && controls.snapshot().trade.pages == 2,
@@ -456,6 +672,20 @@ void ui() {
     routeHudInput(controls, page);
     check(controls.snapshot().trade.page == 1 && !controls.snapshot().trade.tooltipVisible,
           "Changing merchant page resets the hover identity and dwell");
+    UiInput close;
+    close.pointerTracked = true;
+    close.pointerHeld = true;
+    close.pointer = ArtPoint{float(tradeLayout::close.x + 3), float(tradeLayout::close.y + 3)};
+    close.pressed[unsigned(UiKey::Click)] = true;
+    routeHudInput(controls, close);
+    check(controls.snapshot().trade.open, "Close X waits for physical release");
+    close.pressed.fill(false);
+    close.pointerHeld = false;
+    close.pointerReleased = true;
+    routeHudInput(controls, close);
+    check(!controls.snapshot().trade.open && controls.snapshot().dialogue.open,
+          "Close X returns to dialogue without click-through");
+    check(controls.openTrade(), "Trade can reopen after mouse close");
     UiInput back;
     back.pressed[unsigned(UiKey::Cancel)] = true;
     routeHudInput(controls, back);

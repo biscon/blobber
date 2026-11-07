@@ -31,6 +31,7 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         t.context[7] =
             trade.selected | (std::uint64_t(trade.side) << 8) | (std::uint64_t(trade.quantity) << 16);
         cards();
+        t.add(tradeLayout::close);
         t.add(tradeLayout::back);
         t.add(tradeLayout::previous, trade.page > 0);
         t.add(tradeLayout::next, trade.page + 1 < trade.pages);
@@ -39,7 +40,7 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         t.add(tradeLayout::accept, trade.canTrade);
         for (const auto side : {TradeSide::Merchant, TradeSide::Player})
             for (unsigned i = 0; i < 48; ++i)
-                t.add(tradeLayout::cell(side, i));
+                t.add(tradeLayout::cell(side, i), true, true);
         return t;
     }
     if (h.dialogue.open) {

@@ -381,6 +381,9 @@ class CommandController {
     void tradeCharacter(rules::CharacterId) noexcept;
     void tradeQuantity(int) noexcept;
     void confirmTrade() noexcept;
+    void executeTrade(const TradeRequest&) noexcept;
+    void tradeClick(TradeSide, unsigned) noexcept;
+    void clearTradeGesture() noexcept;
     TradeRequest tradeRequest() const noexcept;
     void clearTradeHover() noexcept;
     const ShopCatalog* shops_ = nullptr;

@@ -56,18 +56,64 @@ edits apply to ordinary trades; buyback prices already recorded stay fixed.
 
 ## Input and presentation
 
+### Review revision — 2026-11-07
+
+Implemented and mechanically verified; the user accepts the comparison
+presentation, while the revised interaction/presentation awaits runtime review.
+
+The user requests direct trading gestures and clearer presentation. Trade owns
+raw grid pointer presses/releases; ordinary buttons retain existing release
+capture. A single press selects without trading. A second completed click on the same
+occupied cell within 400 ms buys/sells the selected quantity (default one), then
+clears the sequence so a third click cannot accidentally repeat it. The clock
+is the focus-aware conversation presentation clock. Logical input clients can
+still submit completed clicks. Existing explicit quantity and Buy/Sell controls
+use the same atomic transaction path.
+
+Dragging at least three art units captures the selected source quantity and
+checked request; releasing inside the opposite grid trades it. Occupied and empty
+destination slots both work: the inventory transaction chooses legal stacking/
+placement. Own-side/outside drops cancel. No goods/payment move before release.
+Show a dragged item and destination highlight, suppress tooltips during drag.
+Revision, selected-character, page, quantity, focus/pointer loss, cancellation or
+exit clears captures and double-click history. No steady-state allocation or
+save/data-format change is needed.
+
+After a successful sale, retain a partially sold source stack; otherwise select
+the next sellable bag item in forward slot order, skipping currency/unpriced
+goods, without wrapping to earlier slots. Reset quantity to one for each next
+item. New selection uses committed inventory/merchant revisions. A held button
+cannot sell a successor without a fresh press/release. Failed trades retain
+selection/quantity and do not advance.
+
+Use 50% opacity for price/quantity label backgrounds, retaining opaque readable
+text. Remove the B badge/legend and ignore the B/Back key within trade; sold goods
+use ordinary purchase gestures/buttons and retain Buyback/expiry information in
+their hover tooltip. Add a top-right close X returning to dialogue; retain Escape
+and the existing mouse Back control. Color comparison restriction text red.
+
+Focused verification: owned trade gesture fixtures plus shared button/dialogue
+regressions; physical press/hold/release, double-click timeout/identity, all four
+buy/sell gesture directions including buyback, quantities, invalid drops, stale/
+focus/character/page cancellation, sequential and partial-stack sales, failure
+conservation and held-release isolation. Inspect hidden native captures for
+label opacity, close X, absent B labels, red restrictions and a drag in progress.
+Reuse the existing persistence checks because transaction/save contracts do not
+change; no full save suite, new build configuration, stress test or benchmark.
+
 Trade is a subview of the live conversation: keep its world camera, resident Idle
 and ambient audio, hide speech/topic/overlay cues and return to the same conversation
-with Escape/Back. Keep the world render target and four party cards unchanged.
+with Escape, the close X or mouse Back control. Keep the world render target and four party cards unchanged.
 Trading blocks world input, inventory hotkeys, saving/travel and other modals.
 Use existing physical press/release capture and context revisions to prevent
 click-through; focus loss cancels presses and pending hover.
 
 Both grids use the same 8×6 square-cell geometry. Merchant left, selected bag
 right; character cards and 1–4 change the buyer/seller, resetting selection,
-quantity and hover. Cells select an item without buying/selling; explicit quantity
-and Buy/Sell controls commit. Show price, stock, available personal gold, weight,
-timers, rejection feedback and a clear buyback marker. Reuse existing prepared item
+quantity and hover. Single clicks select; double clicks, opposite-grid drops and
+explicit Buy/Sell controls commit the selected quantity. Show price, stock,
+available personal gold, weight, restock time and rejection feedback; buyback
+identity/expiry appear in item tooltips. Reuse existing prepared item
 art, including the supply artwork for the existing `camp_kit` ration/rest supply.
 Do not rename catalog items/fingerprints merely to label the shop's ration packs.
 
@@ -103,7 +149,7 @@ captures of buying, selling and weapon/armor comparisons. No OS input/focus cont
 Keep at most six selected screenshots, record final results/limits here and clean
 the owned artifact run. Interactive runtime acceptance remains user-owned.
 
-## Implementation and verification — 2026-11-07
+## Initial implementation and verification — 2026-11-07
 
 Implemented the authored shop catalog/validation, per-resident campaign ledger,
 atomic bag/currency exchange, dialogue subview and native two-grid UI above.
@@ -166,3 +212,45 @@ as durable design/review inputs. The owned run's raw captures, logs and resolved
 failure output are cleaned with the artifact helper's preview/apply workflow;
 there is no retained diagnostic exception. Mockup approval is preserved and does
 not imply runtime acceptance.
+
+## Review revision verification — 2026-11-07
+
+The merchant pointer interaction is now a cohesive source file separate from
+snapshot/transaction orchestration. A fixed gesture record holds the source
+request and click/drag state. It uses existing raw grid edges; ordinary controls
+keep ButtonPress release capture. All input methods call the same execute path,
+which selects a surviving partial stack or the next forward sellable item after
+successful sales. The next request is built from committed revisions. No save,
+shop data, economy, item artwork or renderer resource contract changed.
+
+- Built `blobber_trade_tests`, `blobber_buttons_tests`, `blobber_dialogue_tests`,
+  `blobber_hud_tests`, `blobber_review_trade` and `blobber_headless` in Debug with
+  two low-priority workers. About 21 GiB available RAM and 452 GiB disk were checked.
+  Current application libraries were relinked into the game using CMake-generated
+  arguments, reusing the unchanged prepared assets.
+- `ctest --test-dir cmake-build-debug -R '^(trade|buttons|dialogue|hud)$' --output-on-failure -j 1`:
+  four suites pass in 0.22 s. The final trade-only run passes in 0.01 s after
+  extending quantity/sequential coverage. Fixtures exercise physical double-click
+  buying/selling, timeout and third-click isolation, merchant/player drag paths,
+  empty/occupied destinations, normal buyback gestures, chosen quantities,
+  no mutation while held, own-side/outside drops, focus/character/revision/rejected
+  input cancellation, B ignoring, close-X release and Escape. Five adjacent
+  items sell with five successive Sell clicks, including when the first sale's
+  gold occupies its vacated slot; held/replayed releases never sell a successor.
+  Partial stacks stay selected; failed sales preserve selection and quantity.
+- Hidden `blobber_review_trade cmake-build-debug/assets NEW_OUTPUT` passes on
+  NVIDIA RTX 3060 / OpenGL 3.3. All six refreshed native captures were inspected:
+  50%-opacity label backgrounds with opaque text, close X and rearranged header,
+  absent B labels/legend, red restriction text, and a captured drag with item
+  preview and destination highlight. The runner buys the 3-gold buyback by drag
+  (882→879), then returns to dialogue with a physical close-X click. Time/pose
+  stay fixed and released world texture/alpha residency are zero.
+- Existing persistence/economy coverage above is reused; no full save suite,
+  alternate build configuration, stress test or benchmark was repeated for this
+  UI/command revision. `git diff --check` and authored Markdown/image checks pass.
+
+Six refreshed images replace the old gallery, with a drag capture replacing the
+superseded return screenshot; the README and links are updated. Comparison
+acceptance is preserved. Interactive gesture feel and revised presentation remain
+user-owned review. The owned run is cleaned with preview/apply and no retained
+diagnostic exception; user saves, other runs and build caches are preserved.

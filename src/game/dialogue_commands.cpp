@@ -148,8 +148,10 @@ void CommandController::syncDialogueSpeech() noexcept {
     dialogueAnimation_.elapsedMs = dialogue_.beatElapsedMs();
 }
 void CommandController::tickDialogue(double seconds, bool focused) noexcept {
-    if (!focused)
+    if (!focused) {
         clearTradeHover();
+        clearTradeGesture();
+    }
     if (!dialogue_.active())
         return;
     const auto* c = dialogue_.character();

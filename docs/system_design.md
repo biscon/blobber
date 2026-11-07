@@ -6,6 +6,11 @@ Uniform two-grid overlay, selectable party sidebar, 350 ms item tooltips with
 equipped-item comparisons, authored shops and saved finite stock/restock/buyback.
 Six focused CPU suites, extended save integration and hidden OpenGL captures pass.
 Schema 13/17 retains loading of current 12/17 saves; [six review captures](screenshots/merchants/README.md).
+The [merchant interaction review revision](merchant_design.md#review-revision--2026-11-07)
+is implemented and mechanically verified: double-click/drag trading, sequential
+selling, translucent labels, close X, removal of the misleading B affordance and
+red equipment restrictions. Four focused CPU suites and refreshed hidden captures
+pass. The user accepts comparison presentation; interaction review is pending.
 
 [Game time and outdoor day/night](game_time_design.md): implemented and mechanically
 verified (2026-11-07). Formal saved campaign-time API, sequential day/24-hour map

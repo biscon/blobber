@@ -11,6 +11,10 @@ UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bo
     if (input.pointerTracked && !acceptPress) {
         commands.cancelPointerButtons();
         input.pressed[std::size_t(UiKey::Click)] = false;
+        if (commands.snapshot().trade.open) {
+            input.pointer.reset(); // Cancels a pending raw drag as well as ordinary buttons.
+            input.pointerHeld = input.pointerReleased = false;
+        }
     }
     const auto& h = commands.snapshot();
     if (!input.focused)

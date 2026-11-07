@@ -1,5 +1,4 @@
 #include "game/commands.hpp"
-#include "ui/trade_layout.hpp"
 #include <algorithm>
 #include <cstdio>
 
@@ -13,6 +12,9 @@ void CommandController::clearTradeHover() noexcept {
     state_.trade.hovered = -1;
     state_.trade.tooltipVisible = false;
     state_.trade.comparison = {};
+}
+void CommandController::clearTradeGesture() noexcept {
+    state_.trade.gesture = {};
 }
 bool CommandController::openTrade() noexcept {
     const auto* c = dialogue_.character();
@@ -80,13 +82,13 @@ void CommandController::refreshTrade() noexcept {
         t.selected = 48;
         t.quantity = 1;
         clearTradeHover();
+        clearTradeGesture();
     }
     t.merchantRevision = state->revision;
     t.inventoryRevision = party_.inventory().revision();
     t.gold = characterGold(party_, t.character);
     t.nowMs = session_.gameTime().elapsedMs;
     t.restockMs = state->restockMs;
-    t.buybackHours = shop->buybackHours;
     const auto* character = party_.character(t.character);
     t.characterName = character->build.name.c_str();
     t.weight = character->stats.carriedWeight;
@@ -144,9 +146,11 @@ void CommandController::selectTrade(TradeSide side, unsigned cell) noexcept {
     auto& t = state_.trade;
     if (!t.open || cell >= 48)
         return;
-    t.side = side;
-    t.selected = cell;
-    t.quantity = 1;
+    if (t.side != side || t.selected != cell) {
+        t.side = side;
+        t.selected = cell;
+        t.quantity = 1;
+    }
     t.feedback = {};
     clearTradeHover();
     cancelPointerButtons();
@@ -161,10 +165,12 @@ void CommandController::tradeCharacter(rules::CharacterId who) noexcept {
     t.quantity = 1;
     t.feedback = {};
     clearTradeHover();
+    clearTradeGesture();
     cancelPointerButtons();
     refreshTrade();
 }
 void CommandController::tradeQuantity(int delta) noexcept {
+    clearTradeGesture();
     auto& t = state_.trade;
     t.quantity = unsigned(std::clamp(int(t.quantity) + delta, 1, int(t.maximum)));
     refreshTrade();
@@ -174,82 +180,32 @@ void CommandController::confirmTrade() noexcept {
     if (!t.open || !session_.inConversation() || !shops_ || !merchants_ || t.selected >= 48 ||
         state_.suspended || !session_.runActive())
         return;
-    const auto result = trade(session_.party(), *merchants_, *shops_, tradeRequest(), session_.gameTime());
+    executeTrade(tradeRequest());
+}
+void CommandController::executeTrade(const TradeRequest& request) noexcept {
+    auto& t = state_.trade;
+    clearTradeGesture();
+    if (!t.open || !session_.inConversation() || !shops_ || !merchants_ || state_.suspended ||
+        !session_.runActive() || request.resident != t.resident || request.shop != t.shop ||
+        request.character.index != t.character.index)
+        return;
+    const auto source = party_.inventory().locate(request.item).cell;
+    const auto result = trade(session_.party(), *merchants_, *shops_, request, session_.gameTime());
     std::snprintf(t.feedback.data(), t.feedback.size(), "%s", tradeMessage(result.error));
     cancelPointerButtons();
     refreshTrade();
-}
-void CommandController::routeTrade(const UiInput& input) noexcept {
-    auto& t = state_.trade;
-    if (!t.open)
-        return;
-    if (!input.focused) {
-        clearTradeHover();
-        cancelPointerButtons();
-        return;
-    }
-    const auto inside = [&](UiRect rect) { return input.pointer && rect.contains(*input.pointer); };
-    const bool click = input.has(UiKey::Click);
-    if (input.has(UiKey::Cancel) || input.has(UiKey::Back) || (click && inside(tradeLayout::back))) {
-        closeTrade();
-        return;
-    }
-    for (unsigned i = 0; i < 4; ++i)
-        if (input.has(UiKey(i)) || (click && inside(hudLayout::card(int(i))))) {
-            tradeCharacter(state_.cards[i].id);
-            return;
+    if (result && request.side == TradeSide::Player && source < bagCells) {
+        const auto* remaining = party_.inventory().stack(request.item);
+        unsigned next = remaining ? source : source + 1;
+        while (next < bagCells && (!t.player[next].definition || !t.player[next].price))
+            ++next;
+        if (next < bagCells) {
+            // Preserve the transaction result while selecting against committed revisions.
+            t.side = TradeSide::Player;
+            t.selected = next;
+            t.quantity = 1;
+            refreshTrade();
         }
-    int pageDelta = 0;
-    if (input.has(UiKey::PreviousPage) || (click && inside(tradeLayout::previous)))
-        pageDelta = -1;
-    if (input.has(UiKey::NextPage) || (click && inside(tradeLayout::next)))
-        pageDelta = 1;
-    if (input.scroll && input.pointer && input.pointer->x < 254)
-        pageDelta = -input.scroll;
-    if (pageDelta) {
-        t.page = unsigned(std::clamp(int(t.page) + pageDelta, 0, int(t.pages) - 1));
-        t.selected = 48;
-        t.quantity = 1;
-        clearTradeHover();
-        cancelPointerButtons();
-        refreshTrade();
-        return;
     }
-    if (input.has(UiKey::Left) || (click && inside(tradeLayout::minus)))
-        tradeQuantity(-1);
-    else if (input.has(UiKey::Right) || (click && inside(tradeLayout::plus)))
-        tradeQuantity(1);
-    else if (input.has(UiKey::Confirm) || (click && inside(tradeLayout::accept))) {
-        confirmTrade();
-        return;
-    }
-    int hovered = -1;
-    TradeSide hoverSide = TradeSide::Merchant;
-    for (const auto side : {TradeSide::Merchant, TradeSide::Player})
-        for (unsigned cell = 0; cell < 48; ++cell)
-            if (inside(tradeLayout::cell(side, cell))) {
-                const auto& entry = (side == TradeSide::Merchant ? t.merchant : t.player)[cell];
-                if (entry.definition) {
-                    hovered = int(cell);
-                    hoverSide = side;
-                }
-                if (click) {
-                    selectTrade(side, cell);
-                    return;
-                }
-            }
-    if (hovered < 0) {
-        clearTradeHover();
-        return;
-    }
-    if (t.hovered != hovered || t.hoverSide != hoverSide) {
-        t.hovered = hovered;
-        t.hoverSide = hoverSide;
-        t.hoverSinceMs = dialogue_.clockMs();
-        t.tooltipVisible = false;
-    }
-    t.pointerX = input.pointer->x;
-    t.pointerY = input.pointer->y;
-    refreshTrade();
 }
 } // namespace blobber
