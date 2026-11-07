@@ -549,9 +549,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             const auto check = session_.campaign()->previewTravel(door);
             if (check)
                 std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s",
-                              session_.campaign()->activeLocationId() == CampaignLocationId::Inn
-                                  ? "Leave inn"
-                                  : "Enter inn");
+                              session_.campaign()->doorway(door.doorway)->action);
         }
         if (!doorway && nearbyResident()) {
             const auto* a = actors_.actor(*nearbyResident());

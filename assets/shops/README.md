@@ -59,5 +59,7 @@ Escape, the top-right X and the mouse Back control return to dialogue.
 Limits: 16 shop files, 1 MiB combined YAML, 48 stocked definitions per shop,
 64 item prices, quantity 1–65,535 per stocked item and 16 visited vendors per run.
 All runtime storage is bounded; shop parsing and save serialization happen outside
-the frame path. Current innkeeper potions are temporary provisioner stock;
-longsword and chain mail are temporary smithy stock for comparison review.
+the frame path. Current innkeeper potions are temporary provisioner stock.
+Duncan Ironballs at the smithy stocks all current weapons, body armor, shields
+and arrows. The inn retains its former equipment prices for selling/buyback;
+its temporary longsword and chain-mail retail stock has moved to Duncan.

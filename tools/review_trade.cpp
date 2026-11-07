@@ -27,11 +27,11 @@ int main(int argc, char** argv) try {
     validateShops(dialogue, shops);
     auto run =
         std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
-    run->game().restorePose(sanctuaryCity().doorway("inn").approach, false);
+    run->game().restorePose(sanctuaryCity().doorway("smithy").approach, false);
     {
         auto ticket = run->prepareTravel(run->doorwayRequest());
         if (!run->commitTravel(ticket))
-            throw std::runtime_error("Cannot enter review inn");
+            throw std::runtime_error("Cannot enter review smithy");
     }
     auto& game = run->game();
     game.restorePose({{6, 5}, Heading::North}, false);
@@ -107,23 +107,23 @@ int main(int argc, char** argv) try {
         in.pressed[unsigned(UiKey::Click)] = click;
         routeHudInput(controls, in);
     };
-    key(UiKey::One); // Innkeeper's authored Trade topic.
+    key(UiKey::One); // Duncan's authored Trade topic.
     if (!controls.snapshot().trade.open)
         throw std::runtime_error("Trade topic did not open");
     cell(TradeSide::Merchant, 0, true);
     shot("trade-buy");
     shot("trade-large-purse", true);
     key(UiKey::Confirm);
-    if (run->party().gold() != initialGold + 880)
+    if (run->party().gold() != initialGold + 970)
         throw std::runtime_error("Review purchase failed");
     key(UiKey::Two);
-    cell(TradeSide::Merchant, 3, true);
-    cell(TradeSide::Merchant, 3, false);
+    cell(TradeSide::Merchant, 0, true);
+    cell(TradeSide::Merchant, 0, false);
     controls.tickDialogue(.35, true);
     shot("trade-weapon-comparison");
     key(UiKey::Three);
-    cell(TradeSide::Merchant, 4, true);
-    cell(TradeSide::Merchant, 4, false);
+    cell(TradeSide::Merchant, 7, true);
+    cell(TradeSide::Merchant, 7, false);
     controls.tickDialogue(.35, true);
     shot("trade-armor-comparison");
     key(UiKey::One);
@@ -140,14 +140,14 @@ int main(int argc, char** argv) try {
     controls.tickDialogue(.35, true);
     shot("trade-sell-comparison");
     key(UiKey::Confirm);
-    if (run->party().gold() != initialGold + 882)
+    if (run->party().gold() != initialGold + 972)
         throw std::runtime_error("Review sale failed");
-    cell(TradeSide::Merchant, 5, true);
+    cell(TradeSide::Merchant, 12, true);
     shot("trade-buyback");
-    if (!controls.snapshot().trade.merchant[5].buyback || controls.snapshot().trade.merchant[5].price != 3)
+    if (!controls.snapshot().trade.merchant[12].buyback || controls.snapshot().trade.merchant[12].price != 3)
         throw std::runtime_error("Review buyback markup failed");
     UiInput drag;
-    const auto source = tradeLayout::cell(TradeSide::Merchant, 5);
+    const auto source = tradeLayout::cell(TradeSide::Merchant, 12);
     drag.pointerTracked = true;
     drag.pointerHeld = true;
     drag.pointer = ArtPoint{float(source.x + 8), float(source.y + 8)};
@@ -162,7 +162,7 @@ int main(int argc, char** argv) try {
     drag.pointerHeld = false;
     drag.pointerReleased = true;
     routeHudInput(controls, drag);
-    if (run->party().gold() != initialGold + 879)
+    if (run->party().gold() != initialGold + 969)
         throw std::runtime_error("Review drag buyback failed");
     UiInput close;
     close.pointerTracked = true;
@@ -176,7 +176,7 @@ int main(int argc, char** argv) try {
     routeHudInput(controls, close);
     if (controls.snapshot().trade.open || !controls.snapshot().dialogue.open)
         throw std::runtime_error("Return to conversation failed");
-    report << "mouse_close_returned_to_dialogue=1 drag_buyback_gold=879\n";
+    report << "mouse_close_returned_to_dialogue=1 drag_buyback_gold_delta=969\n";
     controls.finishDialogue();
     controls.openInventory();
     shot("inventory-purse");
@@ -197,7 +197,7 @@ int main(int argc, char** argv) try {
     presenter.capture(output / "loot-purse.png");
     auto checkpoint = run->checkpoint();
     if (checkpoint->merchants.size() != 1 ||
-        checkpoint->merchants[0].stock[catalog.findItem("camp_kit").index] != 3)
+        checkpoint->merchants[0].stock[catalog.findItem("longsword").index] != 1)
         throw std::runtime_error("Review merchant state not checkpointed");
     view.reset();
     const auto memory = renderer.memory();

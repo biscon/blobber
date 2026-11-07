@@ -10,7 +10,8 @@
     "innkeeper/innkeeper.json",
     "mayor/mayor.json",
     "boric/boric.json",
-    "balin/balin.json"
+    "balin/balin.json",
+    "blacksmith/blacksmith.json"
   ],
   "instances": [
     {

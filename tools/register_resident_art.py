@@ -19,9 +19,11 @@ DURATIONS = {"idle": [1800, 140], "walk": [150] * 4,
 def register(name, body_height):
     root = ROOT / "assets/npcs" / name
     entries, audit, animations = [], {}, {}
-    for clip in ("idle", "walk", "talk", *(("laugh",) if name != "mayor" else ()),
-                 *(("pull_document",) if name == "boric" else ()),
-                 *(("explosive_rage",) if name == "mayor" else ())):
+    clips = (("idle", "talk") if name == "blacksmith" else
+             ("idle", "walk", "talk", *(("laugh",) if name != "mayor" else ()),
+              *(("pull_document",) if name == "boric" else ()),
+              *(("explosive_rage",) if name == "mayor" else ())))
+    for clip in clips:
         views = {}
         for side in (("front",) if clip not in ("idle", "walk") else ("front", "back", "left", "right")):
             key = f"{clip}-{side}"
@@ -74,5 +76,10 @@ def register(name, body_height):
 
 
 if __name__ == "__main__":
-    for character, height in (("mayor", 464), ("boric", 500), ("balin", 420)):
-        register(character, height)
+    import argparse
+    heights = {"mayor": 464, "boric": 500, "balin": 420, "blacksmith": 520}
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("characters", nargs="*", choices=tuple(heights))
+    args = parser.parse_args()
+    for character in args.characters or ("mayor", "boric", "balin"):
+        register(character, heights[character])

@@ -1,0 +1,47 @@
+version: 2
+primary: blacksmith
+shop: sanctuary_smithy
+participants:
+  blacksmith:
+    resident: sanctuary.blacksmith
+    name: Duncan Ironballs
+greeting:
+  beats:
+    - speaker: blacksmith
+      text: |
+        Back in one piece! That's what I like to see. What can Duncan do for you?
+introduction:
+  beats:
+    - speaker: blacksmith
+      text: |
+        Duncan Ironballs. Aye, that's the name. Get your chuckling out now; I'd rather you laughed at that than at my workmanship.
+
+        I keep Sanctuary in good steel. Blades, armor, shields -- take a look. Find something that fits your hands, and let's see you come back to tell the tale.
+topics:
+  - id: trade
+    label: Trade
+    kind: trade
+  - id: about
+    label: About yourself
+    kind: introduction
+  - id: craft
+    label: Your craft
+    responses:
+      - beats:
+          - speaker: blacksmith
+            text: |
+              Good steel needs patience. Too cold and it cracks; too hot and you've ruined it before the hammer lands. A big arm helps, but knowing when to stop helps more.
+
+              I've blades, bows, staves, shields and armor for sale. Even the leather and woodwork get a proper inspection before they cross my counter. My name goes out the door with every piece.
+  - id: advice
+    label: Advice for the depths
+    responses:
+      - beats:
+          - speaker: blacksmith
+            text: |
+              Wear what you know how to use. The heaviest armor in the shop won't help if you can't fight in it, and a fine bow's just an awkward stick without arrows.
+
+              Keep your shield up, watch your companions, and turn back while you've still got the strength to climb. I'd rather sell you another blade next week than have someone bring yours back today.
+  - id: farewell
+    label: Farewell
+    kind: farewell

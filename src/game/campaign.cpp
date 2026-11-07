@@ -2,6 +2,7 @@
 #include "core/preparation.hpp"
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
+#include "game/smithy_interior.hpp"
 #include "world/sanctuary_city.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -76,6 +77,16 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     inn.placements.emplace(inn.map(), inn.entry.cell, types,
                            std::vector<NpcInstance>{innkeeperPlacement(types)});
     inn.seed = seed;
+    auto smithyDefinition = smithyInterior();
+    auto& smithy = locations_[unsigned(CampaignLocationId::Smithy)];
+    smithy.authored.emplace(std::move(smithyDefinition.map));
+    smithy.entry = smithyDefinition.entry;
+    smithy.exit = smithyDefinition.exit;
+    smithy.fixtures = smithyDefinition.fixtures;
+    smithy.recovery = smithyDefinition.recovery;
+    smithy.placements.emplace(smithy.map(), smithy.entry.cell, types,
+                             std::vector<NpcInstance>{blacksmithPlacement(types)});
+    smithy.seed = seed;
     configureDoorways();
     active_ = prepare(0, spawn);
     active_->campaign_ = this;
@@ -83,19 +94,39 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
 }
 void CampaignRun::configureDoorways() {
     const auto city = sanctuaryCity();
-    const auto approach = city.doorway("inn").approach;
-    auto outside = approach;
-    outside.heading = Heading((unsigned(outside.heading) + 2) % 4);
-    auto& inn = locations_[unsigned(CampaignLocationId::Inn)];
-    locations_[0].doorway = DoorwayLink{approach, inn.entry, CampaignLocationId::Inn};
-    inn.doorway = DoorwayLink{inn.exit, outside, CampaignLocationId::City};
+    for (auto& location : locations_)
+        location.doorwayCount = 0;
+    const auto append = [](CampaignLocation& location, DoorwayLink link) {
+        if (location.doorwayCount == CampaignLocation::doorwayCapacity)
+            throw std::invalid_argument("Campaign doorway capacity exhausted");
+        location.doorways[location.doorwayCount++] = link;
+    };
+    const auto connect = [&](const char* name, CampaignLocationId id, const char* enter, const char* leave) {
+        const auto approach = city.doorway(name).approach;
+        auto outside = approach;
+        outside.heading = Heading((unsigned(outside.heading) + 2) % 4);
+        auto& interior = locations_[unsigned(id)];
+        append(locations_[0], {approach, interior.entry, id, enter});
+        append(interior, {interior.exit, outside, CampaignLocationId::City, leave});
+    };
+    connect("inn", CampaignLocationId::Inn, "Enter inn", "Leave inn");
+    connect("smithy", CampaignLocationId::Smithy, "Enter smithy", "Leave smithy");
+}
+const DoorwayLink* CampaignRun::doorway(DoorwayId id) const noexcept {
+    const auto& location = locations_[location_];
+    if (id.world != game().actors().snapshot().world || id.slot >= location.doorwayCount)
+        return nullptr;
+    return &location.doorways[id.slot];
 }
 TravelRequest CampaignRun::doorwayRequest() const noexcept {
     auto r = request({});
     r.kind = TravelKind::Doorway;
-    const auto& link = locations_[location_].doorway;
-    if (link && game().movement().player == link->approach)
-        r.doorway = {r.world, 0};
+    const auto& location = locations_[location_];
+    for (unsigned i = 0; i < location.doorwayCount; ++i)
+        if (game().movement().player == location.doorways[i].approach) {
+            r.doorway = {r.world, std::uint16_t(i)};
+            break;
+        }
     return r;
 }
 std::unique_ptr<GameSession> CampaignRun::prepare(unsigned index, Player arrival, bool validate) {
@@ -125,8 +156,8 @@ CampaignStatus CampaignRun::status() const noexcept {
     return CampaignStatus::Active;
 }
 const char* CampaignRun::name() const noexcept {
-    constexpr const char* names[]{"Sanctuary", "Dungeon floor 1", "Dungeon floor 2", "Dungeon floor 3",
-                                  "Sanctuary inn"};
+    constexpr const char* names[]{"Sanctuary",       "Dungeon floor 1", "Dungeon floor 2",
+                                  "Dungeon floor 3", "Sanctuary inn",   "Sanctuary smithy"};
     return names[location_];
 }
 TravelRequest CampaignRun::request(FixtureRequest fixture) const noexcept {
@@ -156,18 +187,18 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
         return {false, false, "Travel changed. Choose your destination again."};
     const auto& g = game();
     if (r.kind == TravelKind::Doorway) {
-        const auto& link = locations_[location_].doorway;
-        if (!link || r.doorway.world != r.world || r.doorway.slot != 0)
+        const auto* link = doorway(r.doorway);
+        if (!link)
             return {false, false, "That doorway is no longer available."};
         if (!(g.movement().player == link->approach))
             return {false, false, "Stand before the door and face it."};
         if (const auto* reason = g.travelSafety())
             return {false, false, reason};
-        return {true, false, location_ == 0 ? "Enter inn." : "Leave inn."};
+        return {true, false, link->action};
     }
     if (r.kind == TravelKind::Recall) {
-        if (activeLocationId() == CampaignLocationId::Inn)
-            return {false, false, "Leave the inn through its door."};
+        if (interiorLocation(activeLocationId()))
+            return {false, false, "Leave through the interior door."};
         if (!location_)
             return {false, false, "You are already in Sanctuary."};
         if (const auto* reason = g.travelSafety())
@@ -186,8 +217,8 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
     if (r.kind == TravelKind::Waypoint &&
         (location_ != 0 || r.depth < 1 || r.depth > 3 || !locations_[r.depth].visited))
         return {false, false, "Use the dungeon entrance to return to a floor you have visited."};
-    if (activeLocationId() == CampaignLocationId::Inn)
-        return {false, false, "Leave the inn through its door."};
+    if (interiorLocation(activeLocationId()))
+        return {false, false, "Leave through the interior door."};
     const auto* f = g.fixtures().find(r.fixture.id);
     if (!f || !stairs(f->kind) || r.fixture.revision != g.fixtures().revision() ||
         (g.fixtures().definition().discovery && !g.fixtures().known(r.fixture.id.slot)))
@@ -227,7 +258,7 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
     const bool stair = r.kind == TravelKind::Stairs;
     const bool down = stair && game().fixtures().find(r.fixture.id)->kind == FixtureKind::Downstairs;
     if (r.kind == TravelKind::Doorway) {
-        const auto& link = *locations_[location_].doorway;
+        const auto& link = *doorway(r.doorway);
         ticket.to = unsigned(link.destination);
         ticket.arrival = link.arrival;
     } else {

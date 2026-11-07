@@ -2,6 +2,7 @@
 #include "game/campaign.hpp"
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
+#include "game/smithy_interior.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <random>
@@ -186,11 +187,13 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
         } else {
             if (i == unsigned(CampaignLocationId::City))
                 validateSanctuaryHub(map, from);
-            else {
+            else if (i == unsigned(CampaignLocationId::Inn)) {
                 validateInnInterior(map, from);
                 // Reconstruct accepted authored content (ceiling and seating
                 // reservations) without discarding any saved session state.
                 map = innInterior().map;
+            } else {
+                validateSmithyInterior(map, from);
             }
             to.authored.emplace(std::move(map));
         }

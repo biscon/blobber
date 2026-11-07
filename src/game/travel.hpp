@@ -2,10 +2,13 @@
 #include "game/inventory.hpp"
 #include "world/fixtures.hpp"
 namespace blobber {
-enum class CampaignLocationId : std::uint8_t { City, FloorOne, FloorTwo, FloorThree, Inn };
-constexpr unsigned campaignLocationCount = 5;
+enum class CampaignLocationId : std::uint8_t { City, FloorOne, FloorTwo, FloorThree, Inn, Smithy };
+constexpr unsigned campaignLocationCount = 6;
 constexpr bool dungeonLocation(unsigned i) noexcept {
     return i >= 1 && i <= 3;
+}
+constexpr bool interiorLocation(CampaignLocationId id) noexcept {
+    return id == CampaignLocationId::Inn || id == CampaignLocationId::Smithy;
 }
 struct DoorwayId {
     std::uint64_t world = 0;

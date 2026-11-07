@@ -1,5 +1,22 @@
 # System design
 
+[Duncan Ironballs](blacksmith_design.md): **implemented and mechanically verified;
+runtime review pending (2026-11-07)**. Smithy resident with innkeeper-style
+idle/talk, three conversation topics and a weapons/armor shop. Uses the
+[approved mockup](mockups/blacksmith-v1/README.md) and existing resident/dialogue/
+merchant systems. Eight focused CPU checks and hidden production dialogue/trade/
+Continue checks pass; [six captures](screenshots/blacksmith/README.md). New NPC
+content fingerprint requires a new campaign; existing saves are untouched.
+
+[Sanctuary smithy](smithy_interior_design.md): implemented and mechanically verified;
+**interior and reduced rack equipment accepted (2026-11-07)**, following the
+[approved mockup](mockups/smithy-v1/README.md). Cell-aligned authored workshop,
+counter resident position, two bounded city doorway links and shared flame
+residency. Six distinct focused CPU suites, extended persistence and hidden OpenGL
+travel/Continue/rollback checks pass; [six captures](screenshots/smithy/README.md).
+Current campaign schema/simulation are **15/18**, requiring a new campaign as selected;
+older saves reject unchanged. Duncan is now implemented above; crafting is deferred.
+
 Shared party purse: **implemented and mechanically verified; UI review pending (2026-11-07)**. Party owns
 weightless gold outside character bags; startup/loot credit it and trading uses
 the shared balance. Inventory and trade align their gold labels to the bag grid.
@@ -274,7 +291,7 @@ Sanctuary inn **implemented and mechanically verified; awaiting user review (202
 [design](inn_interior_design.md) adds an authored fifth campaign location,
 facing-sensitive doorway travel, a furnished common room and decorative hearth,
 and moves free long rest from the city sanctuary cell to the entire inn.
-Campaign schema/simulation are 10/14; older saves reject without migration.
+Campaign schema/simulation are 15/18; older saves reject without migration.
 [Verification](inn_interior_verification.md) records focused CPU/extended-save checks,
 hidden OpenGL captures and 348.09 MiB city–inn texture overlap within existing limits.
 [Capture gallery](screenshots/inn/README.md); interactive acceptance remains user-owned.
@@ -896,7 +913,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
+Campaign schema/simulation are 15/18 and generator/templates 9/7. Older saves reject
 without being modified; no migration. World publication is format 13, appearance 5,
 visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

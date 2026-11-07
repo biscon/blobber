@@ -1,4 +1,4 @@
-# Temporary potions -> provisioner; weapon/armor -> smithy when those NPCs exist.
+# Temporary potions -> provisioner. Weapons/armor are stocked by Duncan at the smithy.
 version: 1
 id: sanctuary_inn
 restock_days: 3
@@ -27,5 +27,3 @@ stock:
   - {item: camp_kit, quantity: 4}
   - {item: healing_potion, quantity: 3}
   - {item: mana_potion, quantity: 3}
-  - {item: longsword, quantity: 1}
-  - {item: chain_mail, quantity: 1}

@@ -120,7 +120,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 14;
+    bad["schema"] = 15;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
@@ -196,7 +196,7 @@ void roundtrip() {
     check(restoredMerchant && restoredMerchant->stock[0] == 2 && restoredMerchant->buyback[0].price == 13 &&
               restoredMerchant->buyback[0].expiresMs == gameDuration::day,
           "Visited merchant stock, marked-up buyback and deadlines survive campaign codec/restore");
-    for (int schema : {12, 13}) {
+    for (int schema : {12, 13, 14}) {
         auto legacy = blobber::automation::Json::parse(text);
         legacy["schema"] = schema;
         rejects([&] { decodeCampaign(c, d, content, legacy.dump()); },

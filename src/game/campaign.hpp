@@ -9,11 +9,14 @@ enum class CampaignStatus : std::uint8_t { Active, Victory, Defeat };
 struct DoorwayLink {
     Player approach, arrival;
     CampaignLocationId destination = CampaignLocationId::City;
+    const char* action = ""; // Static canonical label; never serialized.
 };
 struct CampaignLocation {
     std::optional<generation::GeneratedFloor> generated;
     std::optional<Map> authored;
-    std::optional<DoorwayLink> doorway; // Canonical, preparation-only; never restored from untrusted saves.
+    static constexpr unsigned doorwayCapacity = 2;
+    std::array<DoorwayLink, doorwayCapacity> doorways{}; // Canonical; never restored from disk.
+    unsigned doorwayCount = 0;
     std::optional<NpcWorld> placements;
     RecoveryLevel recovery;
     FloorFixtures fixtures;
@@ -105,6 +108,7 @@ class CampaignRun {
     CampaignLocationId activeLocationId() const noexcept { return CampaignLocationId(location_); }
     unsigned dungeonDepth() const noexcept { return dungeonLocation(location_) ? location_ : 0; }
     TravelRequest doorwayRequest() const noexcept;
+    const DoorwayLink* doorway(DoorwayId) const noexcept;
     TravelRequest recallRequest() const noexcept;
     TravelRequest waypointRequest(unsigned depth) const noexcept;
     FixtureResult previewTravel(const TravelRequest&) const noexcept;
