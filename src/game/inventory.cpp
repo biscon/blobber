@@ -41,6 +41,8 @@ const char* inventoryMessage(InventoryError e) noexcept {
         return "Wait until movement finishes.";
     case InventoryError::Unavailable:
         return "Inventory changes are unavailable.";
+    case InventoryError::Funds:
+        return "This character does not have enough gold.";
     }
     return "Invalid inventory request.";
 }

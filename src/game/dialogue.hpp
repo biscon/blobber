@@ -50,10 +50,11 @@ struct DialogueTopic {
     DialogueKey id = 0;
     std::string label;
     std::vector<DialogueResponse> responses;
-    bool introduction = false, farewell = false;
+    bool introduction = false, farewell = false, trade = false;
 };
 struct DialogueCharacter : DialogueFraming {
     DialogueKey id = 0;
+    DialogueKey shop = 0;
     std::string key, name;
     DialogueResponse greeting, introduction;
     std::vector<DialogueTopic> topics;
@@ -107,6 +108,8 @@ class DialoguePlayer {
     void tick(double seconds, bool focused) noexcept;
     void advance() noexcept;
     void choose(unsigned visibleRow) noexcept;
+    const DialogueTopic* topic(unsigned visibleRow) const noexcept;
+    void service() noexcept; // Interrupt speech without completing its response/facts.
     void select(int delta) noexcept;
     void scroll(int delta) noexcept;
     void skipIntroduction() noexcept;

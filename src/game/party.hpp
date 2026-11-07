@@ -66,6 +66,7 @@ class Party {
     InventoryResult previewInventoryChange(const InventoryRequest&) const noexcept;
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     InventoryResult acquire(const AcquisitionRequest&, bool preview = false) noexcept;
+    InventoryResult exchange(const InventoryExchange&, bool preview = false) noexcept;
     PreparationRequest preparationRequest() const noexcept;
     bool alternativePreparation(RestRequest&) const noexcept;
     std::uint64_t preparationRevision() const noexcept { return preparationRevision_; }

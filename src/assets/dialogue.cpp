@@ -223,7 +223,7 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
             unsigned visits = 0;
             bounded(n, 0, visits);
             fields(n, {"version", "primary", "participants", "presentation", "facts", "greeting",
-                       "introduction", "topics"});
+                       "introduction", "topics", "shop"});
             if (integer(n["version"], 2, 2) != 2)
                 throw std::runtime_error("Unsupported version");
             if (n["presentation"]) {
@@ -244,6 +244,8 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
                 presentationSeen = true;
             }
             DialogueCharacter c;
+            if (n["shop"])
+                c.shop = key(n["shop"]);
             const auto cast = n["participants"];
             if (!cast.IsMap() || !cast.size() || cast.size() > 8)
                 throw std::runtime_error("participants requires 1..8 entries");
@@ -299,6 +301,7 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
                 const auto kind = t["kind"] ? text(t["kind"], 16) : "response";
                 topic.introduction = kind == "introduction";
                 topic.farewell = kind == "farewell";
+                topic.trade = kind == "trade";
                 if (kind == "response") {
                     sequence(t["responses"], 1, 2, "responses");
                     unsigned defaults = 0;
@@ -308,7 +311,8 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
                     }
                     if (defaults != 1)
                         throw std::runtime_error("Topic needs exactly one default response");
-                } else if ((!topic.introduction && !topic.farewell) || t["responses"])
+                } else if ((!topic.introduction && !topic.farewell && !topic.trade) ||
+                           (topic.trade && !c.shop) || t["responses"])
                     throw std::runtime_error("Invalid special topic");
                 c.topics.push_back(std::move(topic));
             }

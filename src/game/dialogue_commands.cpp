@@ -148,6 +148,8 @@ void CommandController::syncDialogueSpeech() noexcept {
     dialogueAnimation_.elapsedMs = dialogue_.beatElapsedMs();
 }
 void CommandController::tickDialogue(double seconds, bool focused) noexcept {
+    if (!focused)
+        clearTradeHover();
     if (!dialogue_.active())
         return;
     const auto* c = dialogue_.character();
@@ -163,6 +165,7 @@ void CommandController::tickDialogue(double seconds, bool focused) noexcept {
     }
     syncDialogueSpeech();
     dialogue_.snapshot(state_.dialogue);
+    refreshTrade();
 }
 void CommandController::finishDialogue() noexcept {
     // An inactive controller may outlive its old session after a travel handoff.
@@ -173,6 +176,7 @@ void CommandController::finishDialogue() noexcept {
     dialogueAnimation_ = {};
     dialogue_.close();
     state_.dialogue = {};
+    closeTrade();
     cancelPointerButtons();
 }
 void CommandController::routeDialogue(const UiInput& input) noexcept {
@@ -180,6 +184,12 @@ void CommandController::routeDialogue(const UiInput& input) noexcept {
         return;
     const auto inside = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
     const bool click = input.has(UiKey::Click);
+    const auto choose = [&](unsigned row) {
+        if (const auto* topic = dialogue_.topic(row); topic && topic->trade)
+            openTrade();
+        else
+            dialogue_.choose(row);
+    };
     if (input.has(UiKey::Cancel))
         dialogue_.leave();
     else {
@@ -188,7 +198,7 @@ void CommandController::routeDialogue(const UiInput& input) noexcept {
                                   UiKey::Five, UiKey::Six, UiKey::Seven};
         for (unsigned i = 0; i < 7; ++i)
             if (input.has(numbers[i]) || (click && inside(dialogueLayout::row(i)))) {
-                dialogue_.choose(i);
+                choose(i);
                 chosen = true;
                 break;
             }
@@ -198,7 +208,7 @@ void CommandController::routeDialogue(const UiInput& input) noexcept {
             else if (input.has(UiKey::Down))
                 dialogue_.select(1);
             else if (input.has(UiKey::Confirm))
-                dialogue_.choose(dialogue_.cursor());
+                choose(dialogue_.cursor());
             else if (input.has(UiKey::DialogueAdvance) || (click && inside(dialogueLayout::advance) &&
                                                            dialogueLayout::advanceEnabled(state_.dialogue)))
                 dialogue_.advance();

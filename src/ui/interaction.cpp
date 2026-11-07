@@ -30,6 +30,10 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
                    std::optional<FixtureId> fixtureHit, std::optional<ContainerId> containerHit,
                    bool worldImageMoving, std::optional<ActorId> residentHit) noexcept {
     const auto input = routeHudButtons(commands, physical, allowConfirm);
+    if (commands.snapshot().trade.open) {
+        commands.routeTrade(input);
+        return;
+    }
     if (!input.focused) {
         commands.hover(HoverKind::None);
         return;

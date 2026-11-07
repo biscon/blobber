@@ -120,7 +120,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 12;
+    bad["schema"] = 13;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
@@ -177,6 +177,12 @@ void roundtrip() {
     walk(run.game(), {12, 20});
     face(run.game(), Heading::South);
     const CampaignContent content{"owned-fixture", 0};
+    ShopDefinition shop;
+    shop.id = dialogueKey("fixture.shop");
+    shop.stock.push_back({{0}, 4});
+    auto* merchant = run.merchants().visit(dialogueKey("fixture.merchant"), shop, run.gameTime());
+    merchant->stock[0] = 2;
+    merchant->buyback[0] = {{0}, 1, 13, gameDuration::day};
     auto before = run.checkpoint();
     const auto text = encodeCampaign(c, d, content, *before);
     auto decoded = decodeCampaign(c, d, content, text);
@@ -185,6 +191,23 @@ void roundtrip() {
     check(encodeCampaign(c, d, content, *after) == text, "hub exact canonical round trip");
     check(loaded.party().inventory().identity() != run.party().inventory().identity(),
           "fresh inventory epoch");
+    const auto* restoredMerchant = loaded.merchants().find(dialogueKey("fixture.merchant"));
+    check(restoredMerchant && restoredMerchant->stock[0] == 2 && restoredMerchant->buyback[0].price == 13 &&
+              restoredMerchant->buyback[0].expiresMs == gameDuration::day,
+          "Visited merchant stock, marked-up buyback and deadlines survive campaign codec/restore");
+    auto legacy = blobber::automation::Json::parse(text);
+    legacy["schema"] = 12;
+    legacy["campaign"].erase("merchants");
+    const auto legacyText = legacy.dump();
+    auto upgraded = decodeCampaign(c, d, content, legacyText);
+    check(upgraded->merchants.empty() &&
+              upgraded->party.inventory.revision == before->party.inventory.revision &&
+              upgraded->gameplayMs == before->gameplayMs && legacy.dump() == legacyText,
+          "Schema 12 initializes an empty merchant ledger without changing inventory, time or source bytes");
+    auto badMerchant = blobber::automation::Json::parse(text);
+    badMerchant["campaign"]["merchants"][0]["buyback"][0]["quantity"] = 65535;
+    rejects([&] { decodeCampaign(c, d, content, badMerchant.dump()); },
+            "Invalid persisted merchant quantity rejects before publication");
     entrance(run);
     auto travel = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(travel), "enter dungeon");

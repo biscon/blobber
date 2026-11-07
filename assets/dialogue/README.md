@@ -51,6 +51,16 @@ Limits: 1 MiB total scripts, 64 hosts, 8 cast members/host, 16 topics/host,
 `../audio/dialogue/` contains provisional synthetic character reactions, not final voice
 performances. Source/provenance is retained alongside the clips for replacement.
 
+## Merchant services
+
+A conversation host may set `shop: sanctuary_inn` at file level. This is a stable
+shop ID resolved from the separate `assets/shops/` catalog, not a path inside the
+dialogue directory. Add a topic with `id: trade`, `label: Trade` and `kind: trade`;
+it has no `responses` and requires a shop reference. Other hosts remain ordinary
+conversations. Trade can interrupt an introduction without completing its response
+or awarding facts. Escape returns from Trade to the same conversation; Escape
+again leaves it. Shop configuration is documented in [the shop README](../shops/README.md).
+
 ## Persistent pictures
 
 A beat may show `overlay_asset: dialogue/onlyscrolls_overlay.png` or use

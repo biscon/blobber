@@ -1,5 +1,12 @@
 # Friendly NPC dialogue
 
+[Merchant services](merchant_design.md) extend this system (2026-11-07): optional
+file-level shop IDs and `kind: trade` topics open a trade subview with the same
+camera, paused gameplay and ambient sound. Stock/prices live in a separate shop
+catalog; the campaign owns saved vendor state. Existing prose/history keys remain
+compatible. Historical dialogue delivery/verification notes below retain their
+original scope and dates.
+
 Current revision: [multi-NPC event beats](#multi-npc-event-beats), implemented and mechanically verified. The original delivery and its review history are preserved below.
 
 Status: implemented and mechanically verified; awaiting runtime visual/interactive review, 2026-11-06. The user approved the

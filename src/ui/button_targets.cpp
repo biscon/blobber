@@ -4,6 +4,7 @@
 #include "ui/inventory_layout.hpp"
 #include "ui/loot_layout.hpp"
 #include "ui/save_layout.hpp"
+#include "ui/trade_layout.hpp"
 #include "ui/travel_layout.hpp"
 namespace blobber {
 ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
@@ -21,6 +22,26 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         for (int i = 0; i < 4; ++i)
             t.add(hudLayout::card(i));
     };
+    if (h.trade.open) {
+        const auto& trade = h.trade;
+        panel(16);
+        t.context[4] = trade.inventoryRevision;
+        t.context[5] = trade.merchantRevision;
+        t.context[6] = trade.character.index | (std::uint64_t(trade.page) << 16);
+        t.context[7] =
+            trade.selected | (std::uint64_t(trade.side) << 8) | (std::uint64_t(trade.quantity) << 16);
+        cards();
+        t.add(tradeLayout::back);
+        t.add(tradeLayout::previous, trade.page > 0);
+        t.add(tradeLayout::next, trade.page + 1 < trade.pages);
+        t.add(tradeLayout::minus, trade.selected < 48 && trade.quantity > 1);
+        t.add(tradeLayout::plus, trade.selected < 48 && trade.quantity < trade.maximum);
+        t.add(tradeLayout::accept, trade.canTrade);
+        for (const auto side : {TradeSide::Merchant, TradeSide::Player})
+            for (unsigned i = 0; i < 48; ++i)
+                t.add(tradeLayout::cell(side, i));
+        return t;
+    }
     if (h.dialogue.open) {
         panel(15);
         t.context[4] = h.dialogue.revision;

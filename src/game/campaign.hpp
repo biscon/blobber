@@ -1,6 +1,7 @@
 #pragma once
 #include "game/dialogue.hpp"
 #include "game/session.hpp"
+#include "game/trade.hpp"
 #include "game/travel.hpp"
 #include "generation/population.hpp"
 namespace blobber {
@@ -42,6 +43,7 @@ struct CampaignLocationState {
 };
 struct CampaignCheckpoint {
     DialogueHistory dialogue;
+    std::vector<MerchantState> merchants;
     Party::Saved party;
     std::array<CampaignLocationState, campaignLocationCount> locations;
     Navigation::Saved navigation;
@@ -89,6 +91,7 @@ class CampaignRun {
     GameSession& game() noexcept { return *active_; }
     const GameSession& game() const noexcept { return *active_; }
     DialogueHistory& dialogue() noexcept { return dialogue_; }
+    MerchantLedger& merchants() noexcept { return merchants_; }
     Party& party() noexcept { return party_; }
     const CampaignLocation& location(unsigned i) const { return locations_.at(i); }
     const Map& map() const noexcept { return locations_[location_].map(); }
@@ -115,6 +118,7 @@ class CampaignRun {
 
   private:
     DialogueHistory dialogue_;
+    MerchantLedger merchants_;
     std::string runId_;
     Party party_;
     std::array<CampaignLocation, campaignLocationCount> locations_;

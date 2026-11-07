@@ -1,6 +1,7 @@
 # Edit each response as a linear screenplay. See README.md for defaults.
 version: 2
 primary: innkeeper
+shop: sanctuary_inn
 participants:
   innkeeper:
     resident: sanctuary.innkeeper
@@ -25,6 +26,9 @@ introduction:
         
         Now, what sayest thou? In what manner may I assist thy party?
 topics:
+  - id: trade
+    label: Trade
+    kind: trade
   - id: about
     label: About yourself
     kind: introduction

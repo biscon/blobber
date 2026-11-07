@@ -5,6 +5,7 @@
 #include "app/result_flow.hpp"
 #include "app/travel_fade.hpp"
 #include "assets/dialogue.hpp"
+#include "assets/shops.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
 #include "platform/audio.hpp"
@@ -78,8 +79,8 @@ struct PlayView {
                                         targetId ? session.actors().actor(*targetId) : nullptr, player)
                 : std::optional<world_render::Camera>{};
         const auto area = debug ? SpellArea{} : commands.floorPreview();
-        const bool changed =
-            frames.update(session, animator.snapshot(), area, override, dialogueCamera.moving(), gameTimeOverride);
+        const bool changed = frames.update(session, animator.snapshot(), area, override,
+                                           dialogueCamera.moving(), gameTimeOverride);
         const auto* picking = frames.picking();
         commands.residentVisibility(picking ? picking->residents() : TargetSnapshot{});
         commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
@@ -87,8 +88,8 @@ struct PlayView {
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
-            return frames.update(session, animator.snapshot(), currentArea, override,
-                                 dialogueCamera.moving(), gameTimeOverride) ||
+            return frames.update(session, animator.snapshot(), currentArea, override, dialogueCamera.moving(),
+                                 gameTimeOverride) ||
                    changed;
         return changed;
     }
@@ -103,7 +104,13 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                             options.assets / "audio", options.assets / "ui");
     });
     prepareDialogueUi(dialogueCatalog, presenter.fonts());
+    auto shopCatalog = prepareCpu([&] {
+        auto shops = loadShops(options.assets / "shops", catalog);
+        validateShops(dialogueCatalog, shops);
+        return shops;
+    });
     DialogueHistory standaloneDialogue;
+    MerchantLedger standaloneMerchants;
     struct AudioLeave {
         AudioRuntime* audio;
         Presenter& presenter;
@@ -144,6 +151,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         auto& initial = *current;
         initial.commands.bindDialogue(&dialogueCatalog,
                                       campaign ? &campaign->dialogue() : &standaloneDialogue);
+        initial.commands.bindTrade(&shopCatalog, campaign ? &campaign->merchants() : &standaloneMerchants);
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
         initial.session.enableDevelopment(options.development);
@@ -329,6 +337,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         replacement->refresh(false, true, campaign->gameTime());
                         replacement->commands.enableMainMenu();
                         replacement->commands.bindDialogue(&dialogueCatalog, &campaign->dialogue());
+                        replacement->commands.bindTrade(&shopCatalog, &campaign->merchants());
                         replacement->commands.saveMenu().enabled = launch && launch->saves;
                         if (campaign->commitTravel(ticket)) {
                             replacement->frames.activate();

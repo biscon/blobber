@@ -284,7 +284,21 @@ void DialoguePlayer::advance() noexcept {
         ++revision_;
     }
 }
+const DialogueTopic* DialoguePlayer::topic(unsigned row) const noexcept {
+    if (!active() || leaving() || !character_ || row >= 7 || offset_ + row >= character_->topics.size())
+        return nullptr;
+    return &character_->topics[offset_ + row];
+}
+void DialoguePlayer::service() noexcept {
+    if (!active() || leaving())
+        return;
+    overlay_ = {};
+    overlayDismissOnAdvance_ = false;
+    response(nullptr);
+}
 void DialoguePlayer::choose(unsigned row) noexcept {
+    if (const auto* t = topic(row); t && t->trade)
+        return; // Services are routed by CommandController, never dialogue history.
     if (!active() || leaving() || row >= 7 || offset_ + row >= character_->topics.size())
         return;
     cursor_ = offset_ + row;
@@ -377,8 +391,8 @@ void DialoguePlayer::snapshot(DialogueHud& out) const noexcept {
     for (unsigned i = 0; i < out.count; ++i) {
         const auto& t = character_->topics[offset_ + i];
         out.topics[i] = t.label.c_str();
-        out.read[i] = h && ((t.introduction && h->introduced) ||
-                            contains(h->completed, h->completedCount, t.id));
+        out.read[i] =
+            h && ((t.introduction && h->introduced) || contains(h->completed, h->completedCount, t.id));
     }
     if (response_) {
         out.page = page_ + 1;

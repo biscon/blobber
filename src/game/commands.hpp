@@ -7,6 +7,7 @@
 #include "game/recovery_ui.hpp"
 #include "game/save_ui.hpp"
 #include "game/session.hpp"
+#include "game/trade_ui.hpp"
 #include "game/travel.hpp"
 #include "ui/screen_shake.hpp"
 #include <optional>
@@ -159,6 +160,7 @@ struct EnemyTargetPicker {
 struct HudSnapshot {
     GameTime gameTime;
     DialogueHud dialogue;
+    TradeHud trade;
     WorldViewTransform worldTransform;
     ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
@@ -202,8 +204,8 @@ struct HudSnapshot {
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
     bool modal(bool includeDialogue = true) const noexcept {
-        return (includeDialogue && dialogue.open) || travel.open || advancement.open || loot.open ||
-               camp.open || inventory.open || logExpanded || menuOpen || magic.open;
+        return (includeDialogue && (dialogue.open || trade.open)) || travel.open || advancement.open ||
+               loot.open || camp.open || inventory.open || logExpanded || menuOpen || magic.open;
     }
     const char* interactionPrompt() const noexcept {
         if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
@@ -222,6 +224,10 @@ class CommandController {
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     ~CommandController();
     void bindDialogue(const DialogueCatalog*, DialogueHistory*) noexcept;
+    void bindTrade(const ShopCatalog*, MerchantLedger*) noexcept;
+    bool openTrade() noexcept;
+    void closeTrade() noexcept;
+    void routeTrade(const UiInput&) noexcept;
     void residentVisibility(const TargetSnapshot&) noexcept;
     CampaignRun* sessionCampaign() const noexcept { return session_.campaign(); }
     std::optional<ActorId> nearbyResident() const noexcept;
@@ -370,6 +376,15 @@ class CommandController {
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    void refreshTrade() noexcept;
+    void selectTrade(TradeSide, unsigned) noexcept;
+    void tradeCharacter(rules::CharacterId) noexcept;
+    void tradeQuantity(int) noexcept;
+    void confirmTrade() noexcept;
+    TradeRequest tradeRequest() const noexcept;
+    void clearTradeHover() noexcept;
+    const ShopCatalog* shops_ = nullptr;
+    MerchantLedger* merchants_ = nullptr;
     void syncDialogueSpeech() noexcept;
     bool admitDialogueResponse(const DialogueCharacter&, const DialogueResponse&) const noexcept;
     std::array<NpcTimings, NpcWorld::maxTypes> dialogueTimings_{};

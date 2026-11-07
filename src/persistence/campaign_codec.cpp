@@ -294,6 +294,9 @@ struct Archive {
                     if (j.size() != v.size())
                         invalid("Wrong fixed array size");
                 } else {
+                    if constexpr (std::is_same_v<typename T::value_type, MerchantState>)
+                        if (j.size() > merchantCapacity)
+                            invalid("Merchant capacity exceeded");
                     if (j.size() > generation::maxCells)
                         invalid("Vector capacity exceeded");
                     if constexpr (std::is_same_v<typename T::value_type, BuildingPlacement>)
@@ -359,8 +362,8 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 12 || j.at("simulation") != 17 ||
-        j.at("generator") != generation::generatorVersion ||
+        !j.at("templates").is_number_integer() || (j.at("schema") != 12 && j.at("schema") != 13) ||
+        j.at("simulation") != 17 || j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
         invalid("Incompatible campaign schema, simulation or content");
@@ -376,7 +379,7 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 12},
+    Json j = {{"schema", 13},
               {"simulation", 17},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
@@ -394,9 +397,16 @@ std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog& catalog
                                                    const CampaignContent& content, const std::string& text) {
     auto j = parse(text);
     envelope(j, content);
+    if (j.at("schema") == 12) {
+        if (j.at("campaign").contains("merchants"))
+            invalid("Unexpected merchants in legacy campaign");
+        j["campaign"]["merchants"] = Json::array();
+    }
     auto out = std::make_unique<CampaignCheckpoint>();
     Archive archive{j, catalog, definitions, true};
     archive("campaign", *out);
+    MerchantLedger validation;
+    validation.restore(out->merchants, catalog);
     for (auto& l : out->locations) {
         if (l.types != definitions.types || l.recovery.sanctuaryCount > 16 || l.recovery.groundCount > 64 ||
             l.fixtures.count > fixtureCapacity || l.fixtures.landingCount > 2 || l.objective.count > 32 ||

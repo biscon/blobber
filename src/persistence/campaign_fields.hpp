@@ -625,8 +625,23 @@ template <class A> void visit(A& a, DialogueHistory& v) {
     a("records", v.records);
     a("count", v.count);
 }
+template <class A> void visit(A& a, BuybackStack& v) {
+    a("item", v.item);
+    a("quantity", v.quantity);
+    a("price", v.price);
+    a("expiresMs", v.expiresMs);
+}
+template <class A> void visit(A& a, MerchantState& v) {
+    a("resident", v.resident);
+    a("shop", v.shop);
+    a("revision", v.revision);
+    a("restockMs", v.restockMs);
+    a("stock", v.stock);
+    a("buyback", v.buyback);
+}
 template <class A> void visit(A& a, CampaignCheckpoint& v) {
     a("dialogue", v.dialogue);
+    a("merchants", v.merchants);
     a("party", v.party);
     a("locations", v.locations);
     a("navigation", v.navigation);

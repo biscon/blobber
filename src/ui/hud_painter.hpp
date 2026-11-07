@@ -153,6 +153,8 @@ class HudPainter {
             border(r, hudInk::bright);
     }
     void itemTargets(const HudSnapshot& h) const;
+    void trade(const HudSnapshot&) const;
+    void tradeTooltip(const HudSnapshot&) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
     void enemyTargets(const HudSnapshot&, bool popover) const;

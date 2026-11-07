@@ -134,6 +134,7 @@ void CommandController::toggleMenu() noexcept {
     state_.hover = {};
 }
 void CommandController::closeOverlay() noexcept {
+    closeTrade();
     floorHover({});
     closeTargetPicker();
     cancelPointerButtons();
