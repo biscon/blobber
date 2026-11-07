@@ -107,6 +107,8 @@ void flow() {
     player.snapshot(h);
     check(h.introduction && h.count == 4 && h.text[0] == 0,
           "Introduction starts automatically, topics immediate");
+    check(h.read[0] && !h.read[1] && !h.read[2] && !h.read[3],
+          "Automatic introduction is read immediately; other topics remain unread");
     player.tick(.15, true);
     player.snapshot(h);
     check(h.text[0] == 0, "Greeting starts after panel fade");
@@ -135,6 +137,8 @@ void flow() {
     player.advance();
     player.snapshot(h);
     check(std::string_view(h.text.data()) == "Ask about advice first.", "Default response before fact");
+    check(h.read[0] && !h.read[1] && h.read[2],
+          "Interrupted introduction stays read while ordinary topics require completion");
     player.choose(1);
     player.advance();
     player.advance();
@@ -162,11 +166,14 @@ void flow() {
     player.snapshot(h);
     check(!h.introduction && std::string_view(h.text.data()) == "Welcome back.",
           "Return uses short greeting");
+    check(h.read[0], "Previously introduced resident stays read without an introduction completion key");
     player.close();
     check(player.start(c.characters[1].id), "Second friendly character opens");
     player.snapshot(h);
     check(h.introduction && !history.get(c.characters[1].id)->knows(dialogueKey("advice")),
           "Same dialogue/art has independent character history");
+    check(h.read[0] && !h.read[1] && !h.read[2],
+          "Each resident marks their own automatic introduction read without sharing topic history");
     DialogueHistory full;
     for (unsigned i = 0; i < 64; ++i) {
         check(full.get(i + 1, true) != nullptr, "Bounded history accepts capacity");

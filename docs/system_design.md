@@ -1,5 +1,13 @@
 # System design
 
+[Campaign travel residency correction](sc011_design.md#campaign-travel-residency-correction--2026-11-07):
+implemented and mechanically verified. The user-requested 1 GiB world GPU limit
+accommodates shipped city/dungeon overlap. Focused CPU/GPU residency checks and
+hidden travel with the reported save pass; Debug rebuilt, save unchanged.
+[Two review captures](screenshots/campaign-travel-budget/README.md); interactive review pending.
+
+[Automatic introduction read status](dialogue_design.md#automatic-introduction-read-status): implemented and verified; introduction topics use existing per-resident history to appear read immediately, including existing saves.
+
 [Dialogue panel cleanup](dialogue_design.md#dialogue-panel-cleanup): implemented and mechanically verified; larger speech, faster reveal and explicit Next controls. Focused tests and hidden captures pass; [visual review pending](screenshots/dialogue-panel/README.md).
 
 [OnlyScrolls overlay timing correction](dialogue_design.md#overlay-timing-correction): implemented and mechanically verified; YAML controls delayed show after the document pull and first-Next dismissal. Focused tests and refreshed hidden captures pass; interactive review pending.

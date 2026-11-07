@@ -377,7 +377,8 @@ void DialoguePlayer::snapshot(DialogueHud& out) const noexcept {
     for (unsigned i = 0; i < out.count; ++i) {
         const auto& t = character_->topics[offset_ + i];
         out.topics[i] = t.label.c_str();
-        out.read[i] = h && contains(h->completed, h->completedCount, t.id);
+        out.read[i] = h && ((t.introduction && h->introduced) ||
+                            contains(h->completed, h->completedCount, t.id));
     }
     if (response_) {
         out.page = page_ + 1;

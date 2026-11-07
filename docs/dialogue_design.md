@@ -603,3 +603,23 @@ other authored edits are preserved. Both current dialogue YAML files parse and
 pass a printable-ASCII scan. The Debug `blobber_assets` target succeeds at two
 low-priority workers; packaged mayor YAML matches source. No engine changes or
 interactive Continue check; this is a content-only repair. Owned build log cleaned.
+
+### Automatic introduction read status
+
+Implemented correction (2026-11-07): derive introduction topic HUD read status from
+that resident's existing persisted `introduced` flag, in addition to explicit
+completed-topic keys. `start()` already sets the flag after successful admission,
+so the automatic introduction appears read immediately, including before reveal
+and when interrupted. Existing saves need no migration. Other topics retain
+completion-based read status; introduction replay remains available. This uses
+the existing seven-row snapshot loop with no extra storage or allocations.
+Verify immediate read styling data, interruption/re-entry, independent residents
+and unchanged ordinary-topic completion with the focused dialogue CPU suite.
+
+Verification: Debug game and dialogue test target build successfully with two
+low-priority workers. `ctest --test-dir cmake-build-debug -R '^dialogue$'
+--output-on-failure` passes (0.18 s), including the new immediate/interrupted/
+returning/per-resident read-status assertions and existing allocation checks.
+The renderer already maps this read flag to muted text; no new graphics or
+interactive capture was needed. Existing saves use their persisted introduced
+flag without migration. Diff whitespace checks pass; owned build/test logs cleaned.

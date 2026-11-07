@@ -49,8 +49,8 @@ int main() {
             auto checkpoint = resources.transfers();
             renderer.stage(second, state);
             check(renderer.memory().textureCount == 4 &&
-                      resources.transfers().uploads - checkpoint.uploads == 2,
-                  "Transition uploads one new texture and one scene mesh; shared artwork reused");
+                      resources.transfers().uploads - checkpoint.uploads == 3,
+                  "Transition uploads new artwork, scene mesh and light texture; shared artwork reused");
             renderer.cancel();
             check(renderer.memory().applicationGpu == before.applicationGpu,
                   "Cancel returns to source residency");

@@ -61,7 +61,17 @@ void cityCampaign() {
         }
         check(rejected, "Changed canonical hub definition rejects");
     }
-    travel(run, FixtureKind::Downstairs);
+    entrance(run);
+    const auto entrancePose = run.game().movement().player;
+    run.game().move(Action::Forward);
+    check(run.game().movement().blocked && run.game().movement().player == entrancePose &&
+              !run.game().movement().transition.active(),
+          "Extra forward at the entrance cannot enter the stair cell or start movement");
+    const auto entranceRequest = run.request(run.game().nearbyFixture());
+    check(run.previewTravel(entranceRequest).accepted,
+          "Blocked entrance movement preserves explicit stair interaction");
+    auto entry = run.prepareTravel(entranceRequest);
+    check(run.commitTravel(entry), "Enter dungeon after blocked entrance movement");
     auto& saved = *run.location(0).saved;
     auto& hazard = saved.effects.ground.areas[0];
     hazard.active = true;

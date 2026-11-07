@@ -59,6 +59,82 @@ the normal on-mode is unchanged.
 
 ## Failure and capacity behavior
 
+### Campaign travel residency correction — 2026-11-07
+
+Status: **Implemented and mechanically verified; interactive user review pending.**
+The reported save loads and
+simulation-only travel succeeds, but city/floor-one texture overlap is 588,589,012
+bytes (561.32 MiB), exceeding the old 512 MiB texture ceiling. The live diagnostic
+confirms `Resident world active/staged GPU capacity exceeded`. The additional
+forward input remains blocked at the entrance; no saved pose corruption occurred.
+
+Keep active/staged leases, rollback and prepared-image fidelity unchanged. Raise
+the texture limit to 928 MiB and tracked world GPU limit to 1 GiB, as requested by
+the user, retaining 96 MiB for geometry/targets beyond texture payload. Raise alpha
+storage to 96 MiB:
+the conservative city plus every shipped actor appearance envelope is 655.76 MiB
+of textures / 79.35 MiB of alpha / 519 textures, so merely increasing the GPU cap
+would leave another content-dependent rejection. CPU total stays 352 MiB; texture
+counts and catalog limits stay unchanged. These are admission ceilings, not eager
+allocations; source-only resources still release at commit. Application UI/fonts
+and driver allocations remain separately accounted, not a whole-process guarantee.
+
+Verification: owned campaign regression for blocked extra movement followed by
+entry; existing CPU/GPU residency rollback/lifetime checks; one hidden production
+review using a read-only copy of the reported save, including cancelled staging,
+entry and return, unchanged saved bytes and GPU release. Use metadata-only
+accounting for the full appearance envelope rather than a large stress upload.
+Update the existing residency review tool to use the configured admission limits.
+No save schema, simulation, artwork or movement changes are required.
+
+The explicit diagnostic mode is:
+
+```sh
+cmake-build-release/blobber_world_integration_gpu_tests ASSETS NEW_OUTPUT \
+  --campaign-travel-review COPIED_SAVE
+```
+
+The diagnostic loads through CampaignStore, uses the same GameView staging and
+activation as gameplay, tests blocked movement and cancelled destination staging,
+then enters floor one and returns. It compares canonical campaign bytes after
+cancellation, checks source resource/image identity, GL errors, shutdown resource
+counts and unchanged copied-save bytes. It is opt-in; ordinary tests use owned
+small publications rather than production assets or user saves.
+
+Verification results (2026-11-07):
+
+- Release `ctest --test-dir cmake-build-release -R '^(campaign|world_residency)$'
+  with one process passed (1.02 s). The campaign test now verifies blocked forward
+  movement still permits explicit entrance travel.
+- Hidden production review passed using the copied reported save and the current
+  Debug asset publication, with supersampling enabled. City/floor overlap: 561.32
+  MiB textures, 61.62 MiB alpha, 589.27 MiB tracked world GPU and 715.99 MiB tracked
+  application GPU. Committed world GPU drops to 317.65 MiB in the dungeon and
+  393.17 MiB back in town. This accounting excludes driver internals.
+- The metadata-only envelope of all shipped location packs and appearances is
+  742.55 MiB textures / 79.43 MiB alpha / 525 textures, within the updated limits.
+  This conservative envelope includes combinations not needed by one transition.
+- The original GPU residency check exposed a stale upload-count assertion from
+  before per-scene lighting: preparation uploads the new artwork, geometry and
+  light texture (three uploads). Its assertion was corrected without changing
+  renderer behavior. `cmake-build-release/blobber_world_residency_gpu_tests` then
+  passed, covering sharing, rollback, repeated transitions, frame allocations and
+  final resource release. Initial sandbox display access was unavailable; hidden
+  GPU checks succeeded with display-socket access.
+- Release verification targets built with two low-priority workers; the Release
+  application was relinked against those verified libraries. A Ninja log-version
+  mismatch invalidated incremental build logs; the redundant Release rebuild was
+  interrupted and the Debug application completed a bounded full rebuild,
+  including deterministic asset preparation. No second test configuration ran.
+- Original save SHA256 remains
+  `88f51309aad27b25c6e2cd562af3a80254e12fcb105dab931078115ae75ff567`.
+  No save writes, schema changes, asset rebake requirements or desktop input.
+- [Two inspected captures](screenshots/campaign-travel-budget/README.md) retain
+  evidence; interactive user review remains pending. Temporary diagnostic output
+  was removed at handoff. No stress upload, benchmark or broad test matrix.
+
+### Original SC01.1 limits
+
 Validate the deduplicated active/destination union before uploading: resident
 world texture count remains 480, GPU registry 512, alpha masks 64 MiB, tracked
 world CPU 352 MiB, existing world texture/GPU safety ceilings 512/608 MiB.
