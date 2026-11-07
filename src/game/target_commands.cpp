@@ -7,6 +7,29 @@
 #include <cstdio>
 
 namespace blobber {
+namespace {
+bool encounterActive(CombatPhase phase) noexcept {
+    return phase == CombatPhase::Contact || phase == CombatPhase::Facing || phase == CombatPhase::Turns ||
+           phase == CombatPhase::RoundEnd;
+}
+} // namespace
+bool CommandController::pickerTarget(ActorId id) const noexcept {
+    const auto* actor = actors_.actor(id);
+    return encounterActive(session_.combat().snapshot().phase) && actor && actor->hostile() &&
+           actor->life == ActorLife::Alive && session_.combat().member(id);
+}
+bool CommandController::pickerRecipients() const noexcept {
+    const auto& m = state_.magic;
+    const auto& c = m.armed ? m.pending : state_.selection;
+    if (!m.armed || m.single)
+        return c.target && pickerTarget(*c.target) && visible(*c.target);
+    if (!c.targetCount || c.targetCount > c.enemies.size())
+        return false;
+    for (std::size_t i = 0; i < c.targetCount; ++i)
+        if (!pickerTarget(c.enemies[i]) || !visible(c.enemies[i]))
+            return false;
+    return true;
+}
 bool CommandController::sameTargetContext(const PartyCommand& a, const PartyCommand& b) const noexcept {
     return a.world == b.world && a.turn == b.turn && a.character.index == b.character.index &&
            a.action == b.action && a.spell.index == b.spell.index && a.feature == b.feature;
@@ -30,9 +53,10 @@ void CommandController::refreshTargetPicker() noexcept {
     auto& p = state_.targetPicker;
     const auto& m = state_.magic;
     const auto& c = m.armed ? m.pending : state_.selection;
+    const bool wasAvailable = p.available;
     p.available =
         !state_.suspended && !state_.modal() && !state_.inventory.itemTargeting && !state_.campaignTerminal &&
-        state_.combat.phase != CombatPhase::Victory && state_.combat.phase != CombatPhase::Defeat &&
+        encounterActive(session_.combat().snapshot().phase) &&
         (m.armed ? m.hostile && !m.area && (!m.ground || m.single) && !m.self
                  : !m.casting() && (c.action == PartyAction::Melee || c.action == PartyAction::BackMelee ||
                                     c.action == PartyAction::Ranged));
@@ -41,12 +65,28 @@ void CommandController::refreshTargetPicker() noexcept {
         p.feedback = {};
     }
     targetContext_ = c;
-    p.canConfirm =
-        p.available && (m.armed && m.single && c.target ? enemyEligibility(*c.target) == CommandReason::Ready
-                                                        : state_.availability == CommandReason::Ready);
+    bool changed = wasAvailable != p.available;
+    std::size_t count = 0;
+    if (p.available && state_.targets.world == actors_.snapshot().world &&
+        state_.targets.revision == actors_.snapshot().revision)
+        for (std::size_t i = 0; i < state_.targets.candidateCount; ++i) {
+            const auto id = state_.targets.candidates[i];
+            if (!pickerTarget(id))
+                continue;
+            changed |= count >= p.candidateCount || !sameActor(p.candidates[count], id);
+            p.candidates[count++] = id;
+        }
+    changed |= count != p.candidateCount;
+    p.candidateCount = count;
+    if (changed)
+        ++p.revision;
+    const auto pages = (count + 3) / 4;
+    state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
+    p.canConfirm = p.available && pickerRecipients() &&
+                   (m.armed && m.single && c.target ? enemyEligibility(*c.target) == CommandReason::Ready
+                                                    : state_.availability == CommandReason::Ready);
     p.rows = {};
     p.count = 0;
-    p.readout = {};
     const auto describe = [&](ActorId id, EnemyTargetRow& row) {
         row.id = id;
         const auto& a = *actors_.actor(id);
@@ -61,19 +101,8 @@ void CommandController::refreshTargetPicker() noexcept {
                       row.reason == CommandReason::Ready ? "Ready" : commandMessage(row.reason));
         row.selected = c.target && sameActor(*c.target, id);
     };
-    for (std::size_t i = state_.targetPage * 4; i < state_.targets.candidateCount && p.count < 4; ++i)
-        describe(state_.targets.candidates[i], p.rows[p.count++]);
-    if (c.target && visible(*c.target)) {
-        EnemyTargetRow row;
-        describe(*c.target, row);
-        const bool body = state_.targets.anchors[c.target->slot].valid;
-        std::snprintf(p.readout.data(), p.readout.size(), "%s%s", row.name.data(),
-                      body ? (m.armed ? " / Enter: cast / Tab: next" : " / Enter: attack / Tab: next")
-                           : " / Obscured by another enemy");
-    } else
-        std::snprintf(p.readout.data(), p.readout.size(), "%s",
-                      state_.targets.candidateCount ? "Tab: select / Shift+Tab: previous"
-                                                    : "No enemies in view");
+    for (std::size_t i = state_.targetPage * 4; i < p.candidateCount && p.count < 4; ++i)
+        describe(p.candidates[i], p.rows[p.count++]);
 }
 void CommandController::toggleTargetPicker() noexcept {
     refreshTargetPicker();
@@ -96,6 +125,10 @@ void CommandController::activateTargetRow(unsigned row, bool remove) noexcept {
     if (!p.open || row >= p.count || state_.suspended)
         return;
     const auto id = p.rows[row].id;
+    refreshTargetPicker();
+    if (!p.open || !p.available || !pickerTarget(id) || !visible(id))
+        return;
+    // A changed list must never redirect an old row activation to a new actor.
     if (remove && state_.magic.armed && !state_.magic.single) {
         magicEnemy(id, true);
     } else {
@@ -115,18 +148,19 @@ void CommandController::activateTargetRow(unsigned row, bool remove) noexcept {
 }
 void CommandController::cycleEnemyTarget(int delta) noexcept {
     refreshTargetPicker();
-    if (!state_.targetPicker.available || !state_.targets.candidateCount)
+    const auto& p = state_.targetPicker;
+    if (!p.available || !p.candidateCount)
         return;
-    const auto count = state_.targets.candidateCount;
+    const auto count = p.candidateCount;
     const auto current = state_.magic.armed ? state_.magic.pending.target : state_.selection.target;
     std::size_t index = delta < 0 ? 0 : count - 1;
     if (current)
         for (std::size_t i = 0; i < count; ++i)
-            if (sameActor(*current, state_.targets.candidates[i]))
+            if (sameActor(*current, p.candidates[i]))
                 index = i;
     for (std::size_t n = 0; n < count; ++n) {
         index = (index + (delta < 0 ? count - 1 : 1)) % count;
-        const auto id = state_.targets.candidates[index];
+        const auto id = p.candidates[index];
         if (enemyEligibility(id) != CommandReason::Ready)
             continue;
         if (state_.magic.armed) {
@@ -143,6 +177,14 @@ void CommandController::cycleEnemyTarget(int delta) noexcept {
                   "No eligible enemies for this action.");
 }
 void CommandController::targetPickerConfirm() noexcept {
+    refreshTargetPicker();
+    if (!state_.targetPicker.available)
+        return;
+    if (!pickerRecipients()) {
+        std::snprintf(state_.targetPicker.feedback.data(), state_.targetPicker.feedback.size(),
+                      "Choose an enemy in this encounter.");
+        return;
+    }
     const auto reason = confirm();
     if (reason != CommandReason::Resolved) {
         std::snprintf(state_.targetPicker.feedback.data(), state_.targetPicker.feedback.size(), "%s",

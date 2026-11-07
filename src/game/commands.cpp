@@ -786,8 +786,6 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                                                 : CommandReason::NotVisible));
         state_.selection.target.reset();
     }
-    const auto pages = (state_.targets.candidateCount + 3) / 4;
-    state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
     if (moving) {
         state_.selection.targetCount = 0;
         if (state_.magic.armed)
@@ -859,8 +857,9 @@ void CommandController::selectTarget(ActorId target) noexcept {
     if (state_.suspended || !visible(target))
         return;
     state_.selection.target = target;
-    for (std::size_t i = 0; i < state_.targets.candidateCount; ++i)
-        if (sameActor(target, state_.targets.candidates[i]))
+    refreshTargetPicker();
+    for (std::size_t i = 0; i < state_.targetPicker.candidateCount; ++i)
+        if (sameActor(target, state_.targetPicker.candidates[i]))
             state_.targetPage = i / 4;
     updateAvailability();
 }
@@ -879,9 +878,10 @@ void CommandController::cycleTarget(int delta) noexcept {
     cycleEnemyTarget(delta);
 }
 void CommandController::pageTargets(int delta) noexcept {
-    if (state_.suspended)
+    refreshTargetPicker();
+    if (!state_.targetPicker.available)
         return;
-    const auto pages = (state_.targets.candidateCount + 3) / 4;
+    const auto pages = (state_.targetPicker.candidateCount + 3) / 4;
     if (pages)
         state_.targetPage = (state_.targetPage + (delta < 0 ? pages - 1 : 1)) % pages;
     refreshTargetPicker();

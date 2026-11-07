@@ -45,8 +45,8 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         for (unsigned i = 0; i < h.targetPicker.count; ++i)
             t.add(hudLayout::enemyTargetRow(i, h.targetPicker.count), true, false,
                   0x20000u + h.targetPicker.rows[i].id.slot);
-        t.add(hudLayout::enemyPrevious, h.targets.candidateCount > 4);
-        t.add(hudLayout::enemyNext, h.targets.candidateCount > 4);
+        t.add(hudLayout::enemyPrevious, h.targetPicker.candidateCount > 4);
+        t.add(hudLayout::enemyNext, h.targetPicker.candidateCount > 4);
         t.add(hudLayout::enemyConfirm, h.targetPicker.canConfirm);
         t.add(hudLayout::enemyTargetButton(h.magic.armed));
         t.add({0, 0, artWidth, artHeight}, true, true); // Dismiss outside without a world action.

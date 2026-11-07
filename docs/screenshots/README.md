@@ -20,6 +20,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [Action dock cleanup](action-dock/README.md) | 2 |
 | [Dialogue panel cleanup](dialogue-panel/README.md) | 3 |
 | [Multi-NPC dialogue](multi-npc-dialogue/README.md) | 6 |
 | [Friendly NPC dialogue](dialogue/README.md) | 6 |
@@ -99,7 +100,7 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 | [slice81](slice81/README.md) | 5 |
 | [slice82](slice82/README.md) | 6 |
 | [slice83](slice83/README.md) | 6 |
-| [targeting](targeting/README.md) | 4 |
+| [targeting](targeting/README.md) | 6 |
 | [travel-icon](travel-icon/README.md) | 2 |
 | [ui-compatibility](ui-compatibility/README.md) | 2 |
 | [underkeep](underkeep/README.md) | 6 |

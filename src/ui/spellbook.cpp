@@ -220,7 +220,8 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     if (resolving)
         hint = c.action == PartyAction::Feature ? "Waiting for the ability to finish."
                                                 : "Waiting for the cast to finish.";
-    clipped(hint, 53, 347, 229, muted, UiTextStyle::Small);
+    if (!h.targetPicker.available)
+        clipped(hint, 53, 347, 229, muted, UiTextStyle::Small);
     const bool confirmEnabled = (enabled && (!m.single || m.ground)) || h.targetPicker.canConfirm;
     box(hudLayout::spellCast, confirmEnabled ? bright : edge);
     if (confirmEnabled)

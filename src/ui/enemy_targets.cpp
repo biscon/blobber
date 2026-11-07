@@ -8,11 +8,8 @@ void HudPainter::enemyTargets(const HudSnapshot& h, bool popover) const {
         return;
     if (!popover) {
         const auto b = hudLayout::enemyTargetButton(h.magic.armed);
-        fill({b.x, b.y, h.magic.armed ? 229 : 284, b.height}, background);
         box(b, p.open ? bright : gold);
-        label("Targets", b, gold, UiTextStyle::Small);
-        clipped(p.feedback[0] ? p.feedback.data() : p.readout.data(), b.x + 47, b.y,
-                h.magic.armed ? 182 : 237, p.feedback[0] ? gold : muted, UiTextStyle::Small);
+        centered("Targets", b, gold, UiTextStyle::Small);
         return;
     }
     if (!p.open)
@@ -22,7 +19,7 @@ void HudPainter::enemyTargets(const HudSnapshot& h, bool popover) const {
     text("TARGETS", 14, panel.y + 4, gold, UiTextStyle::Display);
     char pages[64];
     std::snprintf(pages, sizeof(pages), "%zu / %zu  / Tab next", h.targetPage + 1,
-                  (h.targets.candidateCount + 3) / 4 ? (h.targets.candidateCount + 3) / 4 : 1);
+                  (p.candidateCount + 3) / 4 ? (p.candidateCount + 3) / 4 : 1);
     clipped(pages, 165, panel.y + 5, 133, muted, UiTextStyle::Small);
     if (!p.count)
         text("No enemies in view.", 20, panel.y + 30, muted);
@@ -38,10 +35,9 @@ void HudPainter::enemyTargets(const HudSnapshot& h, bool popover) const {
         clipped(row.detail.data(), r.x + 4, r.y + 9, r.width - 8, muted, UiTextStyle::Small);
     }
     box(hudLayout::enemyPrevious, edge);
-    label("Previous", hudLayout::enemyPrevious, h.targets.candidateCount > 4 ? gold : muted,
-          UiTextStyle::Small);
+    label("Previous", hudLayout::enemyPrevious, p.candidateCount > 4 ? gold : muted, UiTextStyle::Small);
     box(hudLayout::enemyNext, edge);
-    label("Next", hudLayout::enemyNext, h.targets.candidateCount > 4 ? gold : muted, UiTextStyle::Small);
+    label("Next", hudLayout::enemyNext, p.candidateCount > 4 ? gold : muted, UiTextStyle::Small);
     box(hudLayout::enemyConfirm, gold);
     label(h.magic.armed                               ? "Cast [Enter]"
           : h.selection.action == PartyAction::Ranged ? "Fire [Enter]"

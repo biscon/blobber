@@ -81,7 +81,7 @@ constexpr UiRect enemyPicker(unsigned count) {
     return {8, 174 + int(4 - enemyRows(count)) * 18, 296, 126 - int(4 - enemyRows(count)) * 18};
 }
 constexpr UiRect enemyTargetButton(bool magic) {
-    return {magic ? 53 : 12, magic ? 347 : 349, 44, 9};
+    return {magic ? 53 : action(0).x, magic ? 347 : 349, action(0).width, 9};
 }
 constexpr UiRect enemyTargetRow(unsigned i, unsigned count) {
     return {14, enemyPicker(count).y + 18 + int(i) * 18, 284, 17};

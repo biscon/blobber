@@ -1,5 +1,20 @@
 # System design
 
+[Encounter-scoped Targets](target_selection_design.md#encounter-scoped-picker--2026-11-07)
+is implemented and mechanically verified: combat-only picker and keyboard cycling
+share visible, enrolled encounter members; direct world targeting retains its
+existing rules. Four focused Debug suites and hidden OpenGL captures pass;
+[review evidence](screenshots/targeting/README.md) awaits user acceptance.
+
+[Action dock cleanup](native_hud_design.md#action-dock-hover-and-layout-cleanup--2026-11-07):
+350 ms button tooltip dwell, icon-width centered Targets button and no adjacent
+target status readout. Debug HUD/targeting and hidden OpenGL checks pass;
+[two captures](screenshots/action-dock/README.md) await user review.
+
+[Party portrait hover cleanup](native_hud_design.md#party-portrait-hover-cleanup--2026-11-07):
+remove party-card hover tooltips using the existing HUD visibility flag; preserve
+selection, details and targeting input.
+
 [World sprite preparation resolution](sprite_resolution_design.md): implemented and
 mechanically verified. Four standalone sprites use 512 pixels; rat uses half
 resolution and goblins, zombie and shaman use 7/8. Source artwork and world sizes

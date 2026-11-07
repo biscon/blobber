@@ -288,7 +288,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             : h->combat.awaitingAction                ? "Click a reachable enemy to attack."
             : h->combat.phase == CombatPhase::Turns   ? "Waiting for the active participant."
                                                       : "WASD move / Q E turn / M map / R camp";
-        p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
+        if (!h->targetPicker.available && !realTime(h->combat.phase))
+            p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
     p.enemyTargets(*h, false);
     if ((h->combat.knownDirections || h->combat.pendingCount)) {

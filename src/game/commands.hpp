@@ -150,8 +150,10 @@ struct EnemyTargetRow {
 struct EnemyTargetPicker {
     bool available = false, open = false, canConfirm = false;
     unsigned count = 0;
+    std::array<ActorId, NpcWorld::maxInstances> candidates{};
+    std::size_t candidateCount = 0;
     std::array<EnemyTargetRow, 4> rows{};
-    std::array<char, 128> readout{}, feedback{};
+    std::array<char, 128> feedback{};
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
@@ -377,6 +379,8 @@ class CommandController {
     TargetSnapshot residents_;
     bool interactionPromptsAvailable() const noexcept;
     void refreshTargetPicker() noexcept;
+    bool pickerTarget(ActorId) const noexcept;
+    bool pickerRecipients() const noexcept;
     bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;
     PartyCommand targetContext_;
     void refreshInventory() noexcept;
@@ -403,6 +407,9 @@ class CommandController {
     void updateEnemyTooltip(ActorId) noexcept;
     std::optional<ActorId> tooltipEnemy_;
     std::uint64_t tooltipSinceMs_ = 0;
+    HoverKind buttonTooltipKind_ = HoverKind::None;
+    int buttonTooltipIndex_ = 0;
+    std::uint64_t buttonTooltipSinceMs_ = 0;
     void appendLog(const char* message) noexcept;
     bool objectiveReported_ = false, objectiveFailureReported_ = false;
     bool pointerKnown_ = false;

@@ -158,6 +158,8 @@ void CommandController::closeOverlay() noexcept {
 }
 void CommandController::hover(HoverKind kind, int index, std::optional<ActorId> enemy, float x,
                               float y) noexcept {
+    if (kind != state_.hover.kind || index != state_.hover.index)
+        buttonTooltipKind_ = HoverKind::None;
     if (kind != HoverKind::Enemy || !enemy || !tooltipEnemy_ || !sameActor(*enemy, *tooltipEnemy_))
         tooltipEnemy_.reset();
     state_.hover = {};
@@ -193,7 +195,7 @@ void CommandController::updateEnemyTooltip(ActorId id) noexcept {
 }
 void CommandController::updateHover() noexcept {
     auto& h = state_.hover;
-    h.tooltipVisible = h.kind != HoverKind::Enemy;
+    h.tooltipVisible = h.kind != HoverKind::Enemy && h.kind != HoverKind::Portrait;
     if (h.kind != HoverKind::Enemy)
         tooltipEnemy_.reset();
     h.lines = {};
@@ -202,8 +204,19 @@ void CommandController::updateHover() noexcept {
         state_.suspended) {
         tooltipEnemy_.reset();
         h.kind = HoverKind::None;
+        buttonTooltipKind_ = HoverKind::None;
         return;
     }
+    if (h.kind == HoverKind::Action || h.kind == HoverKind::Travel || h.kind == HoverKind::Rest) {
+        const auto now = session_.timeMs();
+        if (buttonTooltipKind_ != h.kind || buttonTooltipIndex_ != h.index || now < buttonTooltipSinceMs_) {
+            buttonTooltipKind_ = h.kind;
+            buttonTooltipIndex_ = h.index;
+            buttonTooltipSinceMs_ = now;
+        }
+        h.tooltipVisible = now - buttonTooltipSinceMs_ >= 350;
+    } else
+        buttonTooltipKind_ = HoverKind::None;
     auto command = state_.magic.armed ? state_.magic.pending : state_.selection;
     auto put = [&](int line, const char* text) {
         std::snprintf(h.lines[line].data(), h.lines[line].size(), "%s", text);
@@ -399,10 +412,6 @@ void CommandController::updateHover() noexcept {
             h.reason = validate(command);
             put(1, h.reason == CommandReason::Ready ? "Click to aid. Cost: 1 action."
                                                     : commandMessage(h.reason));
-        } else {
-            put(1, realTime(state_.combat.phase) ? "Click to select. [i] opens details."
-                                                 : "Click to inspect character.");
-            put(2, "Read-only details; pauses combat.");
         }
     }
 }
