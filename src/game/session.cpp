@@ -198,7 +198,7 @@ InventoryError GameSession::inventoryAccess(const InventoryRequest& request) con
     if (actionBusy())
         return InventoryError::Moving;
     const auto source = party_.inventory().locate(request.source);
-    if (source.cell >= 52)
+    if (source.cell >= inventoryCells)
         return InventoryError::InvalidItem;
     const auto phase = combat_.snapshot().phase;
     if (phase == CombatPhase::Victory || phase == CombatPhase::Defeat)

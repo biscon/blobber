@@ -40,8 +40,30 @@ inline rules::Catalog inventoryCatalog(PartyFixture f = inventoryFixture()) {
             f.items,
             f.preset};
 }
+inline PartyFixture wearableFixture() {
+    auto f = inventoryFixture();
+    constexpr rules::WearSlot locations[]{
+        rules::WearSlot::Head,   rules::WearSlot::Hands, rules::WearSlot::Feet, rules::WearSlot::Belt,
+        rules::WearSlot::Cloak,  rules::WearSlot::Ring,  rules::WearSlot::Ring, rules::WearSlot::Amulet,
+        rules::WearSlot::Wrists, rules::WearSlot::Ring};
+    for (auto location : locations) {
+        rules::ItemDefinition item;
+        item.id = "fixture.worn" + std::to_string(f.items.size());
+        item.name = item.id;
+        item.description = "Test-owned mundane wearable";
+        item.weight = 25;
+        item.wearSlot = location;
+        f.items.push_back(item);
+    }
+    rules::ItemDefinition token;
+    token.id = "fixture.token";
+    token.name = "Token";
+    token.description = "Weightless bag-capacity fixture";
+    f.items.push_back(token);
+    return f;
+}
 inline ItemHandle findInventoryItem(const Party& p, unsigned character, unsigned definition) {
-    for (std::uint16_t cell = 0; cell < 52; ++cell) {
+    for (std::uint16_t cell = 0; cell < inventoryCells; ++cell) {
         const auto h = p.inventory().at({{static_cast<std::uint16_t>(character)}, cell});
         const auto* s = p.inventory().stack(h);
         if (s && s->item.index == definition)

@@ -13,13 +13,11 @@ std::uint16_t equipDestination(const Inventory& inventory, ItemHandle handle,
                 return n;
         return UINT16_MAX;
     }
-    if (item.kind == rules::ItemKind::Armor)
-        return 48;
-    if (item.kind == rules::ItemKind::Shield)
-        return 50;
-    if (item.kind == rules::ItemKind::Weapon)
-        return item.ranged ? 51 : 49;
-    return UINT16_MAX;
+    auto slot = rules::itemEquipmentPosition(item);
+    if (slot == EquipmentSlot::Ring1 && inventory.at({location.character, unsigned(EquipmentSlot::Ring1)}) &&
+        !inventory.at({location.character, unsigned(EquipmentSlot::Ring2)}))
+        slot = EquipmentSlot::Ring2;
+    return slot == EquipmentSlot::Count ? UINT16_MAX : static_cast<std::uint16_t>(slot);
 }
 } // namespace
 PartyCommand CommandController::inventoryUseCommand() const noexcept {
@@ -48,8 +46,7 @@ void CommandController::refreshInventoryActions() noexcept {
         return access == InventoryError::None ? party_.previewInventoryChange(request).error : access;
     };
     auto& equip = i.actions[static_cast<unsigned>(InventoryAction::Equip)];
-    equip.visible = location.cell >= bagCells || item.kind == rules::ItemKind::Armor ||
-                    item.kind == rules::ItemKind::Shield || item.kind == rules::ItemKind::Weapon;
+    equip.visible = location.cell >= bagCells || rules::itemEquipmentPosition(item) != EquipmentSlot::Count;
     equip.label = location.cell >= bagCells ? "E  UNEQUIP" : "E  EQUIP";
     if (equip.visible) {
         const auto dest = equipDestination(party_.inventory(), i.selected, item);
@@ -160,7 +157,7 @@ void CommandController::refreshInventory() noexcept {
         }
         i.revision = inv.revision();
         i.gold = party_.gold();
-        for (std::uint16_t cell = 0; cell < 52; ++cell) {
+        for (std::uint16_t cell = 0; cell < inventoryCells; ++cell) {
             auto& out = i.cells[cell];
             out = {};
             out.handle = inv.at({i.character, cell});
@@ -198,7 +195,7 @@ void CommandController::refreshInventory() noexcept {
 }
 void CommandController::inventorySelect(std::uint16_t cell) noexcept {
     auto& i = state_.inventory;
-    if (!i.open || cell >= 52)
+    if (!i.open || cell >= inventoryCells)
         return;
     i.cursor = cell;
     if (i.selected != i.cells[cell].handle)
@@ -348,14 +345,14 @@ void CommandController::inventoryPointer(float x, float y, bool press, bool held
         for (std::uint16_t k = 0; k < 48; ++k)
             if (inventoryLayout::cell(k).contains({x, y}))
                 return k;
-        for (std::uint16_t k = 0; k < 4; ++k)
-            if (inventoryLayout::equipment(k).contains({x, y}))
+        for (std::uint16_t k = 0; k < equipmentSlots; ++k)
+            if (inventoryLayout::equipmentFrame(k).contains({x, y}))
                 return 48 + k;
         return UINT16_MAX;
     };
     if (press) {
         const auto k = hit();
-        if (k >= 52)
+        if (k >= inventoryCells)
             return;
         inventorySelect(k);
         i.source = i.selected;
@@ -377,7 +374,7 @@ void CommandController::inventoryPointer(float x, float y, bool press, bool held
                 return;
             }
         const auto k = hit();
-        if (k < 52)
+        if (k < inventoryCells)
             inventoryDrop({i.character, k}, i.splitDrag);
     }
 }

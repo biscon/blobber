@@ -109,7 +109,7 @@ InventoryResult Party::releaseItem(ItemHandle handle, std::uint64_t revision, bo
         return {InventoryError::Stale};
     const auto* stack = inventory_.stack(handle);
     const auto location = inventory_.locate(handle);
-    if (!stack || location.cell >= 52)
+    if (!stack || location.cell >= inventoryCells)
         return {InventoryError::InvalidItem};
     auto candidate = inventory_;
     if (!candidate.consume(handle, stack->quantity))
@@ -143,6 +143,8 @@ bool Party::restoreMana(rules::CharacterId id, int amount) noexcept {
     return true;
 }
 const rules::ItemDefinition* Party::equipped(rules::CharacterId c, EquipmentSlot slot) const noexcept {
+    if (static_cast<unsigned>(slot) < bagCells || static_cast<unsigned>(slot) >= inventoryCells)
+        return nullptr;
     const auto* s = inventory_.stack(inventory_.at({c, static_cast<std::uint16_t>(slot)}));
     return s ? catalog_->item(s->item) : nullptr;
 }

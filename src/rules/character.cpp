@@ -64,6 +64,43 @@ Ammunition ammunitionFor(const ItemDefinition& i) noexcept {
                ? Ammunition::Arrow
                : Ammunition::None;
 }
+EquipmentSlot itemEquipmentPosition(const ItemDefinition& item) noexcept {
+    if (item.kind == ItemKind::Armor)
+        return EquipmentSlot::Body;
+    if (item.kind == ItemKind::Shield)
+        return EquipmentSlot::OffHand;
+    if (item.kind == ItemKind::Weapon)
+        return item.ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand;
+    if (item.kind == ItemKind::Gear)
+        switch (item.wearSlot) {
+        case WearSlot::Head:
+            return EquipmentSlot::Head;
+        case WearSlot::Hands:
+            return EquipmentSlot::Hands;
+        case WearSlot::Feet:
+            return EquipmentSlot::Feet;
+        case WearSlot::Belt:
+            return EquipmentSlot::Belt;
+        case WearSlot::Cloak:
+            return EquipmentSlot::Cloak;
+        case WearSlot::Ring:
+            return EquipmentSlot::Ring1;
+        case WearSlot::Amulet:
+            return EquipmentSlot::Amulet;
+        case WearSlot::Wrists:
+            return EquipmentSlot::Wrists;
+        case WearSlot::None:
+            break;
+        }
+    return EquipmentSlot::Count;
+}
+bool equipmentFits(const ItemDefinition& item, EquipmentSlot slot) noexcept {
+    if (slot == EquipmentSlot::MainHand)
+        return item.kind == ItemKind::Weapon;
+    if (slot == EquipmentSlot::Ring2)
+        slot = EquipmentSlot::Ring1;
+    return slot != EquipmentSlot::Count && itemEquipmentPosition(item) == slot;
+}
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& b) noexcept {
     if (b.itemCount > maxStartingItems)
         return {{}, CharacterError::InvalidItems};
@@ -130,11 +167,11 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
     }
     if (stats.carriedWeight > stats.carryingCapacity)
         return fail(CharacterError::Overweight);
-    const std::array<OwnedItemId, 4> equipped{gear.equipment.body, gear.equipment.mainHand,
-                                              gear.equipment.offHand, gear.equipment.ranged};
-    std::array<const ItemDefinition*, 4> items{};
+    std::array<OwnedItemId, equipmentSlots> equipped{};
+    std::array<const ItemDefinition*, equipmentSlots> items{};
     for (std::size_t i = 0; i < equipped.size(); ++i) {
-        const auto id = equipped[i];
+        const auto slot = static_cast<EquipmentSlot>(bagCells + i);
+        const auto id = equipped[i] = gear.equipment.get(slot);
         if (id.index == UINT16_MAX)
             continue;
         if (id.index >= gear.itemCount || gear.items[id.index].quantity != 1)
@@ -143,6 +180,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
             if (equipped[j].index == id.index)
                 return fail(CharacterError::InvalidEquipment);
         items[i] = catalog.item(gear.items[id.index].item);
+        if (!items[i] || !equipmentFits(*items[i], slot))
+            return fail(CharacterError::InvalidEquipment);
     }
     if ((items[0] && items[0]->kind != ItemKind::Armor) || (items[1] && items[1]->kind != ItemKind::Weapon) ||
         (items[2] && items[2]->kind != ItemKind::Shield) || (items[1] && items[1]->twoHanded && items[2]))

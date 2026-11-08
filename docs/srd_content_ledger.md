@@ -247,6 +247,22 @@ characters start with two healing potions; Cleric and Wizard additionally start
 with two mana potions. Rogue starts with twenty arrows. Loot, arrow recovery, rest,
 progression, saves and dropping items are outside this slice.
 
+## Equipment foundation extension (2026-11-08)
+
+The accepted paperdoll adds Head, Hands, Feet, Belt, Cloak, Ring 1, Ring 2,
+Amulet and Wrists to the existing Body/Main Hand/Off Hand/Ranged positions.
+See [equipment design](inventory_design.md#expanded-paperdoll-mockup--2026-11-08).
+The earlier four-position/208-stack bound is superseded by thirteen positions,
+61 locations per character and a 244-stack party pool; bags remain 48 cells.
+
+Source: [official SRD 5.1, printed pp. 205–206](https://media.wizards.com/2023/downloads/dnd/SRD_CC_v5.1.pdf#page=205),
+Wearing and Wielding Items, Multiple Items of the Same Kind and Attunement.
+Separate gloves and bracers follow its distinction between these worn item kinds.
+The fixed slot grid and limits of two rings/one amulet are project adaptations,
+not general SRD limits. Wearing location is independent of item category. This
+foundation supplies no new shipped items or bonuses and implements no attunement;
+future magic content must address the separate three-attuned-item rule.
+
 ## Slice 12 loot and recovery — implemented, awaiting review
 
 Source: [official SRD 5.1 CC edition](https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf),

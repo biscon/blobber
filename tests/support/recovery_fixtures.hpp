@@ -45,7 +45,7 @@ inline RestRequest restRequest(const GameSession& s, RestKind kind = RestKind::L
 }
 inline unsigned inventoryQuantity(const Party& p, std::uint16_t c, std::uint16_t item) {
     unsigned n = 0;
-    for (std::uint16_t i = 0; i < 52; ++i) {
+    for (std::uint16_t i = 0; i < inventoryCells; ++i) {
         const auto* stack = p.inventory().stack(p.inventory().at({{c}, i}));
         if (stack && stack->item.index == item)
             n += stack->quantity;

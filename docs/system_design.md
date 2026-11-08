@@ -1,5 +1,22 @@
 # System design
 
+[Expanded inventory paperdoll](inventory_design.md#expanded-paperdoll-mockup--2026-11-08):
+**equipment foundation verified; readability correction implemented, revised runtime review pending (2026-11-08)**. Thirteen compact
+equipment positions surround the existing silhouette, with separate gloves,
+wrists and rings. [Approved mockup](screenshots/paperdoll/README.md); implementation
+adds 61-cell loadouts, a bounded 244-stack party pool and future wearable metadata,
+without shipped new items or attunement. Nine focused Debug suites, extended
+persistence and four hidden production captures pass, including frame allocation,
+drag/drop, AC and OpenGL checks. Debug game/headless rebuilt; runtime visual review
+pending. The [readability correction](inventory_design.md#paperdoll-readability-correction--2026-11-08)
+centers Head/Feet, pairs the rings and attaches labels inside slot cards. Focused
+inventory checks prove zero independent connector crossings/card intersections;
+four refreshed hidden captures and native caption-fit/allocation checks pass.
+The [card-finish follow-up](inventory_design.md#equipment-card-finish-correction--2026-11-08)
+adds bottom-only item padding, a uniform caption-colored card fill and one outer border.
+Campaign schema/simulation remain **18/22**; older campaigns reject unchanged
+under the existing strict save policy.
+
 [Precise spell areas and Sleep balance](spell_area_design.md): implemented and
 mechanically verified; user balance/appearance acceptance pending. Five-foot subcell templates shared by aiming, effects,
 persistent terrain and rendering; shorter Sleep and occasional intelligent rescues.

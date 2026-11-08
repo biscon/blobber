@@ -251,7 +251,7 @@ void preparation() {
                   "prepared party has full ordinary resources");
             check(member.experience == rules::nextLevelExperience(int(level) - 1),
                   "arena grants exact target XP");
-            for (std::uint16_t slot = 0; slot < 52; ++slot) {
+            for (std::uint16_t slot = 0; slot < inventoryCells; ++slot) {
                 const auto* a = fresh->inventory().stack(fresh->inventory().at({{i}, slot}));
                 const auto* b = party->inventory().stack(party->inventory().at({{i}, slot}));
                 check(bool(a) == bool(b) &&

@@ -188,6 +188,15 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                                               "currency", "supply"}));
         if (version < 6 && item.kind > ItemKind::Consumable)
             fail(p + ".kind", "currency/supplies require schema 6");
+        if (version >= 15 && j.contains("wear_slot")) {
+            if (item.kind != ItemKind::Gear)
+                fail(p + ".wear_slot", "only gear has a wearing location");
+            item.wearSlot = static_cast<WearSlot>(
+                choice(j.at("wear_slot"), p + ".wear_slot",
+                       std::array<const char*, 9>{"none", "head", "hands", "feet", "belt", "cloak", "ring",
+                                                  "amulet", "wrists"}));
+            j.erase("wear_slot");
+        }
         if (version >= 7 && item.kind == ItemKind::Armor) {
             item.metalArmor = boolean(j.at("metal_armor"), p + ".metal_armor");
             j.erase("metal_armor");

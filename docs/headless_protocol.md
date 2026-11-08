@@ -209,6 +209,11 @@ of spell recipients, inventory destinations or preparation choices.
 | `interact` | `fixture`: session-local fixture slot from observations/actions |
 
 Inventory cells 0–47 are backpack slots; 48 body, 49 main hand, 50 off hand, 51 ranged.
+The expanded paperdoll appends 52 head, 53 hands (gloves/gauntlets), 54 feet,
+55 belt, 56 cloak, 57 ring 1, 58 ring 2, 59 amulet and 60 wrists (bracers).
+Both ring positions accept the same ring wear-location type. New positions have
+no shipped item definitions yet; incompatible gear rejects through the ordinary
+transaction path. Current campaign saves use schema/simulation 18/22.
 Use move to equip/unequip or rearrange, split with quantity, transfer with a recipient
 and optional cell (omitted means automatic destination). There is no Take All macro;
 repeat checked pickups. Rest preparation arrays are complete desired selections;

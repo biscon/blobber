@@ -1,4 +1,6 @@
 #include "game/commands.hpp"
+#include "game/trade.hpp"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
 #include "support/inventory_fixtures.hpp"
@@ -15,7 +17,7 @@ std::array<unsigned, 64> quantities(const Party& p) {
     std::array<bool, inventoryCapacity> seen{};
     for (std::uint16_t c = 0; c < 4; ++c) {
         std::int64_t weight = 0;
-        for (std::uint16_t i = 0; i < 52; ++i) {
+        for (std::uint16_t i = 0; i < inventoryCells; ++i) {
             const auto h = p.inventory().at({{c}, i});
             if (!h)
                 continue;
@@ -358,7 +360,8 @@ void staleAndKeyboard() {
     UiInput tab;
     tab.pressed[static_cast<std::size_t>(UiKey::Tab)] = true;
     routeHudInput(ui, tab, {});
-    check(s.party().inventory().revision() == rev && ui.snapshot().inventory.cursor == 48,
+    check(s.party().inventory().revision() == rev &&
+              ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::Head),
           "Tab navigates equipment without committing a move");
     ui.inventoryCursor(45);
     UiInput enter;
@@ -643,6 +646,219 @@ void inputBehavior() {
     check(!ui.snapshot().inventory.itemTargeting && s.party().character({1})->hitPoints > 7,
           "Portrait use commits and closes targeting");
 }
+void wearableEquipment() {
+    const auto cat = inventoryCatalog(wearableFixture());
+    Party p(cat);
+    const int ac = p.character({0})->stats.armorClass;
+    const auto initialWeight = p.character({0})->stats.carriedWeight;
+    constexpr EquipmentSlot slots[]{EquipmentSlot::Head,  EquipmentSlot::Hands,  EquipmentSlot::Feet,
+                                    EquipmentSlot::Belt,  EquipmentSlot::Cloak,  EquipmentSlot::Ring1,
+                                    EquipmentSlot::Ring2, EquipmentSlot::Amulet, EquipmentSlot::Wrists};
+    for (std::uint16_t who = 0; who < rules::partySize; ++who) {
+        for (unsigned n = 0; n < std::size(slots); ++n) {
+            check(bool(p.acquire({{who}, {std::uint16_t(12 + n)}, 1, p.inventory().revision()})),
+                  "Acquire test-owned wearable");
+            const auto item = findInventoryItem(p, who, 12 + n);
+            check(bool(p.inventoryChange(inventoryRequest(p, item, who, unsigned(slots[n])))),
+                  "Every new equipment position accepts its own wearing location");
+            check(p.equipped({who}, slots[n]) == cat.item({std::uint16_t(12 + n)}),
+                  "Equipped queries expose every new position");
+        }
+        unsigned empty = 0;
+        for (std::uint16_t cell = 0; cell < bagCells; ++cell)
+            empty += !p.inventory().at({{who}, cell});
+        check(bool(p.acquire({{who}, {22}, std::uint16_t(empty), p.inventory().revision()})),
+              "New equipment does not reduce 48-cell bag capacity");
+    }
+    check(p.character({0})->stats.carriedWeight == initialWeight + 9 * 25 &&
+              p.character({0})->stats.armorClass == ac,
+          "Wearables count weight exactly once without inventing AC bonuses");
+    const auto comparison = compareItem(p, {3}, *cat.item({12}));
+    check(comparison.equippable && comparison.restriction[0] == 0 &&
+              comparison.offeredArmorClass == p.character({3})->stats.armorClass &&
+              !p.equipped({0}, static_cast<EquipmentSlot>(0)),
+          "Wearable comparisons invent no shield bonus/training requirement; invalid equipment is empty");
+    unsigned live = 0;
+    for (const auto& stack : p.inventory().checkpoint().stacks)
+        live += stack.quantity != 0;
+    check(live > 208 && live <= inventoryCapacity, "Expanded pool supports all four full bags and new gear");
+    const auto before = quantities(p);
+    const auto head = p.inventory().at({{0}, unsigned(EquipmentSlot::Head)});
+    check(p.inventoryChange(inventoryRequest(p, head, 1, UINT16_MAX, InventoryOp::Transfer)).error ==
+              InventoryError::Full,
+          "Transfer from a new equipment position rejects a full recipient bag atomically");
+    for (const auto slot : {EquipmentSlot::Feet, EquipmentSlot::MainHand, EquipmentSlot::Body})
+        check(p.inventoryChange(inventoryRequest(p, head, 0, unsigned(slot))).error ==
+                  InventoryError::Equipment,
+              "Wrong wearing location rejects atomically, including swaps");
+    const auto potion = findInventoryItem(p, 0, 10);
+    for (const auto slot : slots)
+        check(p.inventoryChange(inventoryRequest(p, potion, 0, unsigned(slot))).error ==
+                  InventoryError::Equipment,
+              "Existing consumables cannot occupy any new slot");
+    check(quantities(p) == before, "Rejected wearable swaps preserve all ownership and derived weight");
+    auto saved = p.checkpoint();
+    Party restored(cat, saved);
+    check(!restored.inventory().stack(head) && quantities(restored) == before &&
+              restored.equipped({0}, EquipmentSlot::Wrists)->wearSlot == rules::WearSlot::Wrists,
+          "Checkpoint restores last equipment position and issues fresh handle identity");
+    std::swap(saved.inventory.locations[0][unsigned(EquipmentSlot::Head)],
+              saved.inventory.locations[0][unsigned(EquipmentSlot::Feet)]);
+    bool rejected = false;
+    try {
+        Party invalid(cat, saved);
+    } catch (const std::invalid_argument&) {
+        rejected = true;
+    }
+    check(rejected, "Saved equipment with mismatched wear locations is rejected");
+    check(bool(p.releaseItem(p.inventory().at({{0}, 47}), p.inventory().revision())), "Vacate bag cell");
+    check(bool(p.acquire({{0}, {21}, 1, p.inventory().revision()})),
+          "Acquire replacement ring into full bag");
+    const auto ring = findInventoryItem(p, 0, 21);
+    const auto source = p.inventory().locate(ring);
+    check(bool(p.inventoryChange(inventoryRequest(p, ring, 0, unsigned(EquipmentSlot::Ring2)))) &&
+              p.inventory().stack(p.inventory().at(source))->item.index == 18,
+          "Full-bag replacement returns the second ring to the vacated source cell");
+    const auto revision = p.inventory().revision();
+    check(p.inventoryChange(inventoryRequest(p, ring, 0, inventoryCells)).error ==
+                  InventoryError::InvalidDestination &&
+              p.inventory().revision() == revision,
+          "One-past-last equipment location rejects without a mutation");
+}
+void paperdollGeometry() {
+    using namespace inventoryLayout;
+    const auto head = equipmentFrame(int(unsigned(EquipmentSlot::Head) - bagCells));
+    const auto feet = equipmentFrame(int(unsigned(EquipmentSlot::Feet) - bagCells));
+    check(head.x + head.width / 2 == silhouette.x + silhouette.width / 2 &&
+              feet.x + feet.width / 2 == head.x + head.width / 2 && head.y + head.height <= silhouette.y &&
+              feet.y >= silhouette.y + silhouette.height,
+          "Head is centered above the doll and Feet is centered below it");
+    check(equipment(int(unsigned(EquipmentSlot::Ring1) - bagCells)).y ==
+              equipment(int(unsigned(EquipmentSlot::Ring2) - bagCells)).y,
+          "Ring positions share a horizontal baseline");
+    const auto orientation = [](ArtPoint a, ArtPoint b, ArtPoint c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    };
+    const auto on = [](ArtPoint a, ArtPoint b, ArtPoint c) {
+        return c.x >= std::min(a.x, b.x) && c.x <= std::max(a.x, b.x) && c.y >= std::min(a.y, b.y) &&
+               c.y <= std::max(a.y, b.y);
+    };
+    const auto intersects = [&](ArtPoint a, ArtPoint b, ArtPoint c, ArtPoint d) {
+        const auto abC = orientation(a, b, c), abD = orientation(a, b, d);
+        const auto cdA = orientation(c, d, a), cdB = orientation(c, d, b);
+        return (abC * abD < 0 && cdA * cdB < 0) || (abC == 0 && on(a, b, c)) || (abD == 0 && on(a, b, d)) ||
+               (cdA == 0 && on(c, d, a)) || (cdB == 0 && on(c, d, b));
+    };
+    for (unsigned n = 0; n < equipmentSlots; ++n) {
+        const auto frame = equipmentFrame(int(n)), label = equipmentLabel(int(n)), icon = equipment(int(n));
+        check(label.x > frame.x && label.y > frame.y && label.x + label.width < frame.x + frame.width &&
+                  label.y + label.height <= icon.y && icon.y + icon.height < frame.y + frame.height,
+              "Each caption and item square belongs inside one contiguous card");
+        for (unsigned m = 0; m < n; ++m) {
+            const auto other = equipmentFrame(int(m));
+            check(frame.x + frame.width < other.x || other.x + other.width < frame.x ||
+                      frame.y + frame.height < other.y || other.y + other.height < frame.y,
+                  "Grouped equipment cards have visible separation");
+        }
+    }
+    for (unsigned n = 0; n < equipmentLeaders.size(); ++n) {
+        const auto& a = equipmentLeaders[n];
+        const std::array<ArtPoint, 3> path{a.start, a.elbow, a.target};
+        for (unsigned m = 0; m < n; ++m) {
+            const auto& b = equipmentLeaders[m];
+            if (a.slot == b.slot)
+                continue; // Feet intentionally shares a fork to both shoes.
+            const std::array<ArtPoint, 3> other{b.start, b.elbow, b.target};
+            for (unsigned i = 0; i < 2; ++i)
+                for (unsigned j = 0; j < 2; ++j)
+                    check(!intersects(path[i], path[i + 1], other[j], other[j + 1]),
+                          "Independent paperdoll connectors never cross or touch");
+        }
+        for (unsigned slot = 0; slot < equipmentSlots; ++slot) {
+            if (int(slot) == a.slot)
+                continue;
+            const auto r = equipmentFrame(int(slot));
+            const std::array<ArtPoint, 5> edges{{{float(r.x), float(r.y)},
+                                                 {float(r.x + r.width), float(r.y)},
+                                                 {float(r.x + r.width), float(r.y + r.height)},
+                                                 {float(r.x), float(r.y + r.height)},
+                                                 {float(r.x), float(r.y)}}};
+            for (unsigned i = 0; i < 2; ++i) {
+                check(!r.contains(path[i]), "Connector never enters another slot card");
+                for (unsigned j = 0; j < 4; ++j)
+                    check(!intersects(path[i], path[i + 1], edges[j], edges[j + 1]),
+                          "Connector never crosses another slot caption/card border");
+            }
+        }
+    }
+}
+void wearableInput() {
+    const auto cat = inventoryCatalog(wearableFixture());
+    const auto map = hybridRoom();
+    const Player spawn{{6, 8}, Heading::North};
+    const NpcWorld empty(map, spawn.cell, {}, {});
+    GameSession s(map, cat, empty, 5, spawn, false);
+    CommandController ui(s);
+    ui.refresh({}, false, false, true);
+    ui.openInventory(rules::CharacterId{0});
+    const auto press = [&](UiKey key) {
+        UiInput in;
+        in.pressed[unsigned(key)] = true;
+        routeHudInput(ui, in);
+    };
+    for (unsigned n = 0; n < equipmentSlots; ++n) {
+        const auto r = inventoryLayout::equipment(int(n));
+        UiInput in;
+        in.pointer = ArtPoint{float(r.x + r.width / 2), float(r.y + r.height / 2)};
+        in.pressed[unsigned(UiKey::Click)] = true;
+        routeHudInput(ui, in);
+        check(ui.snapshot().inventory.cursor == bagCells + n, "Every compact equipment box is selectable");
+        const auto label = inventoryLayout::equipmentLabel(int(n));
+        in.pointer = ArtPoint{float(label.x + label.width / 2), float(label.y + label.height / 2)};
+        routeHudInput(ui, in);
+        check(ui.snapshot().inventory.cursor == bagCells + n, "Attached captions select their own slot");
+        check(r.width == 24 && r.height == 24, "Compact targets occupy 72 native pixels");
+        for (unsigned m = 0; m < n; ++m) {
+            const auto other = inventoryLayout::equipment(int(m));
+            check(r.x + r.width <= other.x || other.x + other.width <= r.x || r.y + r.height <= other.y ||
+                      other.y + other.height <= r.y,
+                  "Equipment pointer targets never overlap");
+        }
+    }
+    ui.inventorySelect(0);
+    press(UiKey::Tab);
+    check(ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::Head), "Tab enters top-left equipment");
+    press(UiKey::Right);
+    check(ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::Amulet), "Right reaches upper side slot");
+    press(UiKey::Down);
+    check(ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::Cloak), "Down follows visual column");
+    for (const auto key : {UiKey::Down, UiKey::Down})
+        press(key);
+    check(ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::Ring2), "Keyboard reaches second ring");
+    press(UiKey::Down);
+    check(ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::Ranged), "Down enters weapon row");
+    press(UiKey::Left);
+    check(ui.snapshot().inventory.cursor == unsigned(EquipmentSlot::OffHand), "Left traverses weapon row");
+    for (std::uint16_t definition : {std::uint16_t(17), std::uint16_t(18), std::uint16_t(21)}) {
+        check(bool(s.party().acquire({{0}, {definition}, 1, s.party().inventory().revision()})),
+              "Grant ring fixture");
+        ui.refresh({}, false, false, true);
+        const auto ring = findInventoryItem(s.party(), 0, definition);
+        ui.inventorySelect(s.party().inventory().locate(ring).cell);
+        if (definition == 18)
+            check(!compareItem(s.party(), {0}, *cat.item({definition})).equipped,
+                  "Ring comparison uses the same empty second position as Equip");
+        allocations = 0;
+        watching = true;
+        ui.inventoryAction(InventoryAction::Equip);
+        ui.refresh({}, false, false, true);
+        watching = false;
+        check(allocations == 0, "First and repeated wearable equips/HUD refresh allocate no C++ storage");
+        const auto expected = definition == 18 ? EquipmentSlot::Ring2 : EquipmentSlot::Ring1;
+        check(s.party().inventory().at({{0}, static_cast<std::uint16_t>(expected)}) == ring,
+              "Equip fills empty ring positions before deterministically replacing Ring 1");
+    }
+}
 } // namespace
 int main(int argc, char** argv) {
     try {
@@ -657,6 +873,9 @@ int main(int argc, char** argv) {
         inputBehavior();
         contextualActions();
         characterSheet();
+        wearableEquipment();
+        paperdollGeometry();
+        wearableInput();
         std::cout << "Inventory transactions, costs, effects and input passed ("
                   << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                            start)

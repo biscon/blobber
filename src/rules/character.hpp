@@ -61,6 +61,27 @@ constexpr std::uint8_t armorBit(ArmorType type) noexcept {
 enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable, Currency, Supply };
 enum class Ammunition : std::uint8_t { None, Arrow };
 enum class Consumable : std::uint8_t { None, Healing, Mana };
+// Wearing location is independent of item category. Rings share one location type.
+enum class WearSlot : std::uint8_t { None, Head, Hands, Feet, Belt, Cloak, Ring, Amulet, Wrists };
+inline constexpr std::size_t bagCells = 48;
+enum class EquipmentSlot : std::uint16_t {
+    Body = bagCells,
+    MainHand,
+    OffHand,
+    Ranged,
+    Head,
+    Hands,
+    Feet,
+    Belt,
+    Cloak,
+    Ring1,
+    Ring2,
+    Amulet,
+    Wrists,
+    Count
+};
+inline constexpr std::size_t inventoryCells = static_cast<std::size_t>(EquipmentSlot::Count);
+inline constexpr std::size_t equipmentSlots = inventoryCells - bagCells;
 struct PortraitId {
     std::uint8_t index = UINT8_MAX;
 };
@@ -104,16 +125,57 @@ struct ItemDefinition {
     Ammunition ammunition = Ammunition::None;
     Consumable consumable = Consumable::None;
     bool metalArmor = false;
+    WearSlot wearSlot = WearSlot::None; // Gear only; no implicit magical/stat effects.
 };
 unsigned stackLimit(const ItemDefinition&) noexcept;
 Ammunition ammunitionFor(const ItemDefinition&) noexcept;
+bool equipmentFits(const ItemDefinition&, EquipmentSlot) noexcept;
+EquipmentSlot itemEquipmentPosition(const ItemDefinition&) noexcept; // Count means not equippable.
 struct OwnedItem {
     ItemId item;
     std::uint16_t quantity = 0;
 };
 struct Equipment {
     OwnedItemId body, mainHand, offHand;
-    OwnedItemId ranged{}; // Readied alternate weapon, not an additional hand.
+    OwnedItemId ranged{};                               // Readied alternate weapon, not an additional hand.
+    std::array<OwnedItemId, equipmentSlots - 4> worn{}; // Head through Wrists, in enum order.
+    OwnedItemId get(EquipmentSlot slot) const noexcept {
+        switch (slot) {
+        case EquipmentSlot::Body:
+            return body;
+        case EquipmentSlot::MainHand:
+            return mainHand;
+        case EquipmentSlot::OffHand:
+            return offHand;
+        case EquipmentSlot::Ranged:
+            return ranged;
+        default:
+            const auto index = static_cast<unsigned>(slot) - static_cast<unsigned>(EquipmentSlot::Head);
+            return index < worn.size() ? worn[index] : OwnedItemId{};
+        }
+    }
+    bool set(EquipmentSlot slot, OwnedItemId value) noexcept {
+        switch (slot) {
+        case EquipmentSlot::Body:
+            body = value;
+            return true;
+        case EquipmentSlot::MainHand:
+            mainHand = value;
+            return true;
+        case EquipmentSlot::OffHand:
+            offHand = value;
+            return true;
+        case EquipmentSlot::Ranged:
+            ranged = value;
+            return true;
+        default:
+            const auto index = static_cast<unsigned>(slot) - static_cast<unsigned>(EquipmentSlot::Head);
+            if (index >= worn.size())
+                return false;
+            worn[index] = value;
+            return true;
+        }
+    }
 };
 struct StartingGrant {
     ItemId item;
@@ -178,7 +240,7 @@ struct WeaponPreview {
     Dice damage{};
     DamageType damageType = DamageType::Piercing;
 };
-constexpr std::size_t maxCarriedItems = 52;
+constexpr std::size_t maxCarriedItems = inventoryCells;
 struct CharacterLoadout {
     std::array<OwnedItem, maxCarriedItems> items{};
     std::size_t itemCount = maxCarriedItems;

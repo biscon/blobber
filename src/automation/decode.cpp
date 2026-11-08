@@ -165,7 +165,7 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
         r.inventory.source = item(j.at("item"), g);
         r.inventory.destination.character = {std::uint16_t(bounded(j.at("character"), 3))};
         r.inventory.destination.cell =
-            j.contains("cell") ? std::uint16_t(bounded(j.at("cell"), 51)) : UINT16_MAX;
+            j.contains("cell") ? std::uint16_t(bounded(j.at("cell"), inventoryCells - 1)) : UINT16_MAX;
         r.inventory.quantity = j.contains("quantity") ? bounded(j.at("quantity"), UINT16_MAX) : 0;
         r.inventory.revision = g.party().inventory().revision();
         return r;

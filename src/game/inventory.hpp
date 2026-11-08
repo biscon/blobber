@@ -2,8 +2,11 @@
 #include "rules/content.hpp"
 
 namespace blobber {
-constexpr std::size_t bagCells = 48, equipmentSlots = 4, inventoryCapacity = 208;
-enum class EquipmentSlot : std::uint16_t { Body = 48, MainHand, OffHand, Ranged };
+using rules::bagCells;
+using rules::EquipmentSlot;
+using rules::equipmentSlots;
+using rules::inventoryCells;
+constexpr std::size_t inventoryCapacity = rules::partySize * inventoryCells;
 struct ItemHandle {
     std::uint64_t owner = 0, generation = 0;
     std::uint16_t slot = UINT16_MAX;
@@ -17,7 +20,7 @@ inline bool operator!=(ItemHandle a, ItemHandle b) noexcept {
 }
 struct ItemLocation {
     rules::CharacterId character{};
-    std::uint16_t cell = UINT16_MAX; // 0..47 bag, 48..51 equipment; sentinel auto-transfer.
+    std::uint16_t cell = UINT16_MAX; // Bag then equipment; sentinel auto-transfer.
 };
 struct ItemStack {
     rules::ItemId item{};
@@ -72,7 +75,7 @@ class Inventory {
   public:
     struct Saved {
         std::array<ItemStack, inventoryCapacity> stacks{};
-        std::array<std::array<std::uint16_t, 52>, rules::partySize> locations{};
+        std::array<std::array<std::uint16_t, inventoryCells>, rules::partySize> locations{};
         std::uint64_t revision = 1;
     };
     Inventory();
@@ -96,7 +99,7 @@ class Inventory {
     InventoryResult acquire(const AcquisitionRequest&, const rules::Catalog&) noexcept;
 
     std::array<ItemStack, inventoryCapacity> stacks_{};
-    std::array<std::array<ItemHandle, 52>, rules::partySize> locations_{};
+    std::array<std::array<ItemHandle, inventoryCells>, rules::partySize> locations_{};
     std::uint64_t identity_ = 0, revision_ = 1;
     ItemHandle create(rules::ItemId, unsigned) noexcept;
     void erase(ItemHandle) noexcept;
