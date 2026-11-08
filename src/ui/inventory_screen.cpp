@@ -151,7 +151,6 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     for (int n = 0; n < int(equipmentSlots); ++n) {
         const auto frame = inventoryLayout::equipmentFrame(n);
         fill(frame, {25, 33, 30, 255});
-        border(frame, i.cursor == bagCells + n ? teal : edge);
         centered(inventoryLayout::equipmentLabels[n], inventoryLayout::equipmentLabel(n), gold,
                  UiTextStyle::Small);
         const auto r = inventoryLayout::equipment(n);

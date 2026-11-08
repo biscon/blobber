@@ -23,7 +23,8 @@ class UiArt {
                               zombiePortraitIcon = giantRatPortraitIcon + 1,
                               shamanPortraitIcon = zombiePortraitIcon + 1;
     static unsigned itemIcon(const rules::ItemDefinition&) noexcept;
-    UiArt(GpuResources& resources, const std::filesystem::path& directory);
+    UiArt(GpuResources& resources, const std::filesystem::path& directory,
+          const std::filesystem::path& preparedDirectory = {});
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
     void prepareDialogue(const std::vector<std::string>& files);
     void clearDialogue() noexcept;

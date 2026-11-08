@@ -41,7 +41,15 @@ Xcode command-line tools plus CMake and Ninja. Linux/X11 is the verified platfor
 Open this directory or its `CMakeLists.txt`. Enable the `debug` or `release`
 CMake preset, wait for configuration, select the **blobber** executable, and Run.
 CLion's ordinary CMake profiles also work. No machine-specific `.idea` files or
-working-directory setup is required: assets are copied beside the executable.
+working-directory setup is required. Debug reads editable assets (including dialogue
+YAML and audio) directly from this checkout and uses offline-generated images from
+the build folder. Restart the game after editing, adding or deleting dialogue files;
+no build, clean or CMake file-list edit is needed. Dialogue edits do not rebuild images.
+Image preparation remains incremental and runs only when its own inputs change.
+Release stages assets beside the executable for a self-contained game folder.
+`--assets DIRECTORY` selects a complete alternative asset root, including its
+`prepared/` output; `--dialogue-dir DIRECTORY` overrides only the scripts.
+Tools that require a staged Debug asset folder can explicitly build `blobber_assets`.
 
 ## Development checks
 
@@ -69,7 +77,8 @@ when to run each check; full Debug/Release matrices and benchmarks are not routi
 | 2 / shield | Immediately defend |
 | 3 / bow | Select ranged attack |
 | 4 / spell | Browse paused Spells / Abilities, then resume to select targets |
-| I / 5 / backpack | Open the paused fullscreen panel on Inventory for the selected character |
+| I | Toggle the paused fullscreen Inventory/Character panel; open on Inventory for the selected character |
+| 5 / backpack | Open the paused fullscreen panel on Inventory for the selected character |
 | Portrait i | Open the fullscreen panel on Character for that portrait |
 | Inventory / Character top tabs | Switch pages while keeping the viewed character |
 | Fullscreen 1–4 / character strip | View another character; choose a recipient during inventory transfer |

@@ -7,7 +7,8 @@ struct Options {
     bool noAudio = false, development = false, supersampling = true, uncapped = false, help = false;
     bool sanctuaryCityReview = false, ambientOcclusion = true;
     int width = 1920, height = 1080;
-    std::filesystem::path assets, campaignSave, settings, dialogueDir;
+    // Editable runtime assets and offline-generated output have independent roots in Debug.
+    std::filesystem::path assets, preparedAssets, campaignSave, settings, dialogueDir;
     std::optional<std::uint32_t> seed;
 };
 Options parseOptions(int argc, char** argv);

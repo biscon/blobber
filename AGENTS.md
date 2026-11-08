@@ -95,6 +95,17 @@ the task explicitly changes them.
 
 ## Dependencies
 
+For existing CMake build trees, read `CMAKE_COMMAND` and `CMAKE_MAKE_PROGRAM` from
+that tree's `CMakeCache.txt` and keep both configured tools. This checkout uses
+CLion's bundled CMake and Ninja. Invoke the configured CMake with `--build`
+(including dry runs: `PATH_FROM_CMAKE_COMMAND --build --preset debug -- -n`), and
+use that same CMake for reconfiguration. Do not invoke bare/system `ninja` or
+reconfigure with a different CMake against these trees: incompatible Ninja logs
+can be discarded, and different CMake versions can change command hashes. Both
+can trigger a broad rebuild, including offline asset generation. CLion may also
+automatically regenerate its rules when CMake files change; do not alternate its
+bundled toolchain with system tools.
+
 Prefer compatible system packages when available. Keep a pinned, reproducible
 fallback for small dependencies such as raylib so a clean CLion/CMake checkout
 builds predictably. Do not install system packages or change toolchains

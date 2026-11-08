@@ -27,9 +27,9 @@ constexpr UiRect cell(int i) {
 }
 // Slot captions are inside their own card. Storage order retains the original four indices.
 inline constexpr std::array<UiRect, equipmentSlots> equipmentFrames{{{16, 120, 40, 36},
-                                                                     {20, 272, 40, 36},
+                                                                     {16, 272, 40, 36},
                                                                      {71, 272, 40, 36},
-                                                                     {122, 272, 40, 36},
+                                                                     {126, 272, 40, 36},
                                                                      {71, 82, 40, 36},
                                                                      {16, 194, 40, 36},
                                                                      {71, 231, 40, 36},

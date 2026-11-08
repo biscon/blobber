@@ -437,3 +437,53 @@ the unchanged prepared assets. No broader gameplay or persistence rerun was need
 Replaced the four production review images; six feature images remain including
 the historical accepted concept pair. The owned disposable run is cleaned after
 promotion; user references, saves and build caches are untouched.
+
+### Equipment outline/alignment follow-up — 2026-11-08
+
+The user requested removing the remaining outer gold card outlines and aligning
+Main Hand with Ring 1, and Ranged with Ring 2. Keep the uniform outer fill and
+attached caption, but draw no card perimeter, including for keyboard focus;
+the existing item-square border retains its selected/cursor feedback. Move the
+Main Hand card from x=20 to x=16 and Ranged from x=122 to x=126 art units, sharing
+the side columns' exact x positions. Shield stays centered. Shared layout drives
+the moved item squares, labels, hits and navigation. No assets, storage or save
+changes are involved. Extend the existing geometry assertions for column
+alignment, run the inventory suite and refresh the hidden production captures.
+
+Implemented and mechanically verified; appearance awaits user review. The Debug
+inventory suite passes (0.02 seconds), including the explicit column-alignment
+invariant and existing connector, card separation, pointer and keyboard checks.
+The hidden reviewer again passes native caption fit, compact drag/drop and AC,
+C++ frame allocation guards, stable GPU residency and OpenGL/lifetime checks.
+Inspected native and reduced exports; pixel samples on all thirteen card corners
+in both normal and focused-slot captures confirm no outer perimeter is drawn.
+
+Rebuilt affected Debug inventory/review/headless targets and relinked the game
+with CMake's generated link arguments, reusing unchanged prepared assets. Replaced
+four runtime gallery images; retained six images total with the historical
+accepted concept pair. Disposable run output is cleaned after promotion. No
+broader gameplay/save checks, asset bake, desktop input or save changes were needed.
+
+### Inventory-key toggle — 2026-11-08
+
+The user requests I to toggle the fullscreen inventory overlay, like M toggles the
+map. Its focused press edge opens the Inventory page when closed and closes the
+shared Inventory/Character overlay when open, including a pending split, transfer
+or drag. Closing uses the existing overlay teardown, never commits an inventory
+operation, and consumes the key so the same edge cannot reopen it. Physical key
+edge/held/refocus latches remain unchanged. Clicking the Inventory page tab still
+selects that page; 5/backpack entry and active potion targeting retain their rules.
+No layout, artwork, saved state or frame-storage changes are involved. Verify the
+open/close/held-key cycle, Character-page closure, tab-click navigation and safe
+cancellation of pending split/drag through the existing inventory input suite.
+
+Implemented and mechanically verified. Built the Debug inventory test and
+headless targets with the bounded low-priority preset; relinked the game from
+CMake's generated link arguments, reusing unchanged prepared assets.
+`ctest --test-dir cmake-build-debug -R '^inventory$' -j 1 --output-on-failure`
+passes (0.02 seconds). The regression routes real input edges through the HUD:
+open, held-open, close, held-closed, reopen, Character-page close, a page-tab click
+that remains open, pending split cancellation and drag closure followed by a
+harmless release. Inventory revision and destination cells prove no split/drag
+committed. No rendering, save or broad gameplay rerun was needed for this
+input-only change. Disposable run logs are cleaned; no new images were generated.

@@ -20,10 +20,11 @@ void drawWorldViewport(const Texture2D& texture, bool flipped, WorldViewTransfor
                    {0, 0}, 0, WHITE);
     EndScissorMode();
 }
-Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets, PreparationWorker* worker)
+Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets, PreparationWorker* worker,
+                     const std::filesystem::path& preparedAssets)
     : worker_(worker), resources_(resources), assetsMenuPath_(assets / "ui/menu-background.png"),
       fonts_(assets / "fonts"), fontMemory_(resources_, fonts_.gpuBytes()),
-      uiArt_(resources_, assets / "ui") {
+      uiArt_(resources_, assets / "ui", preparedAssets) {
     game_ = resources_.createTarget(gameWidth, gameHeight);
     ui_ = resources_.createTarget(gameWidth, gameHeight);
     SetTextureFilter(resources_.target(ui_).texture, TEXTURE_FILTER_BILINEAR);

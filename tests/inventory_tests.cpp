@@ -588,6 +588,71 @@ void contextualActions() {
               !locked.snapshot().inventory.actions[1].enabled,
           "Unsafe equipment and transfers remain visibly disabled");
 }
+void inventoryToggle() {
+    const auto map = hybridRoom();
+    const auto cat = inventoryCatalog();
+    const Player spawn{{6, 8}, Heading::North};
+    const NpcWorld empty(map, spawn.cell, {}, {});
+    GameSession session(map, cat, empty, 5, spawn, false);
+    CommandController ui(session);
+    ui.refresh({}, false, false, true);
+    UiInputEdges edges;
+    std::array<bool, uiKeyCount> down{};
+    const auto sample = [&] { routeHudInput(ui, edges.sample(down, true)); };
+    const auto press = [&] {
+        down[unsigned(UiKey::Inventory)] = false;
+        sample();
+        down[unsigned(UiKey::Inventory)] = true;
+        sample();
+    };
+    const auto& inventory = ui.snapshot().inventory;
+    press();
+    check(inventory.open && inventory.page == CharacterPage::Inventory, "I opens inventory");
+    sample();
+    check(inventory.open, "Holding I does not immediately close inventory");
+    press();
+    check(!inventory.open && !ui.snapshot().modal(), "Next I press closes inventory and releases pause");
+    sample();
+    check(!inventory.open, "Held closing key does not reopen inventory");
+    press();
+    check(inventory.open, "A fresh I press can reopen inventory");
+    UiInput click;
+    click.pressed[unsigned(UiKey::Click)] = true;
+    const auto tab = inventoryLayout::inventoryPage;
+    click.pointer = ArtPoint{float(tab.x + 3), float(tab.y + 3)};
+    routeHudInput(ui, click);
+    check(inventory.open, "Clicking the Inventory tab does not toggle the overlay closed");
+    ui.inventoryPage(CharacterPage::Character);
+    press();
+    check(!inventory.open, "I also closes the shared Character page");
+
+    ui.openInventory(rules::CharacterId{2});
+    const auto arrow = findInventoryItem(session.party(), 2, 9);
+    const auto cell = session.party().inventory().locate(arrow).cell;
+    const auto revision = session.party().inventory().revision();
+    ui.inventorySelect(cell);
+    ui.inventoryDrop({{2}, 47}, true);
+    check(inventory.mode == InventoryMode::Quantity, "Toggle fixture has an unconfirmed split");
+    press();
+    check(!inventory.open && inventory.mode == InventoryMode::Browse &&
+              session.party().inventory().revision() == revision &&
+              !session.party().inventory().at({{2}, 47}),
+          "I closes a pending split without committing it");
+    ui.openInventory(rules::CharacterId{2});
+    const auto from = inventoryLayout::cell(cell), to = inventoryLayout::cell(47);
+    ui.inventoryPointer(float(from.x + 4), float(from.y + 4), true, true, false, false);
+    ui.inventoryPointer(float(to.x + 4), float(to.y + 4), false, true, false, false);
+    check(inventory.dragging, "Toggle fixture has an active drag");
+    press();
+    UiInput release;
+    release.pointer = ArtPoint{float(to.x + 4), float(to.y + 4)};
+    release.pointerReleased = true;
+    routeHudInput(ui, release);
+    check(!inventory.open && !inventory.dragging && !inventory.pointerDown &&
+              session.party().inventory().revision() == revision &&
+              !session.party().inventory().at({{2}, 47}),
+          "I cancels the drag and its later release cannot move an item");
+}
 void inputBehavior() {
     const auto map = hybridRoom();
     const auto cat = inventoryCatalog();
@@ -727,6 +792,8 @@ void wearableEquipment() {
 }
 void paperdollGeometry() {
     using namespace inventoryLayout;
+    check(equipmentFrame(1).x == equipmentFrame(9).x && equipmentFrame(3).x == equipmentFrame(10).x,
+          "Main Hand and Ranged align vertically with their respective ring columns");
     const auto head = equipmentFrame(int(unsigned(EquipmentSlot::Head) - bagCells));
     const auto feet = equipmentFrame(int(unsigned(EquipmentSlot::Feet) - bagCells));
     check(head.x + head.width / 2 == silhouette.x + silhouette.width / 2 &&
@@ -871,6 +938,7 @@ int main(int argc, char** argv) {
         rejectionBoundaries();
         staleAndKeyboard();
         inputBehavior();
+        inventoryToggle();
         contextualActions();
         characterSheet();
         wearableEquipment();

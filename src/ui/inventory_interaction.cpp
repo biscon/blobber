@@ -55,7 +55,11 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
         commands.closeOverlay();
         return true;
     }
-    if (in.has(UiKey::Inventory) || (click && inside(inventoryLayout::inventoryPage))) {
+    if (in.has(UiKey::Inventory)) {
+        commands.closeOverlay();
+        return true;
+    }
+    if (click && inside(inventoryLayout::inventoryPage)) {
         commands.inventoryPage(CharacterPage::Inventory);
         return true;
     }

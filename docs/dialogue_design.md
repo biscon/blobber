@@ -15,10 +15,14 @@ camera approach, and fixed world viewport with conversation panels overlaid.
 
 ## Ownership and interfaces
 
-Immutable DialogueCatalog JSON is loaded during preparation, independently of
+Immutable DialogueCatalog YAML is loaded during preparation, independently of
 NPC artwork/publication. The application owns it for the entire gameplay run.
-A --dialogue-dir override supports editing source JSON and restarting without
-compilation; otherwise the normal runtime assets/dialogue directory is used.
+Debug reads the source `assets/dialogue/` directory directly, while generated
+world/UI images remain in the build tree. Script edits, additions and deletions
+need only a restart; the loader enumerates `.yaml`/`.yml` files on each gameplay
+launch, without a configured file inventory or image regeneration. Release reads
+its staged runtime assets. A `--dialogue-dir` override selects another script
+directory independently of audio/UI; `--assets` selects a complete asset root.
 Stable resident IDs identify characters, not artwork or ephemeral actor handles.
 CampaignRun owns bounded DialogueHistory and checkpoints it. CommandController
 owns transient DialoguePlayer and publishes a read-only HUD; GameSession tracks

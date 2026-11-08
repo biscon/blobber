@@ -69,7 +69,7 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     const auto& timings = loadedNpcs.timings;
     auto publication = prepareCpu([&] {
         preparationPoint("Validating prepared world assets");
-        return world_assets::load(options.assets / "prepared/world");
+        return world_assets::load(options.preparedAssets / "world");
     });
     if (publication.definitions != loadedNpcs.definitionFingerprint)
         throw std::runtime_error("World NPC definitions differ; rebuild world assets");

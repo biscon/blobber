@@ -1,5 +1,35 @@
 # System design
 
+**Development asset paths — 2026-11-08**
+
+**Implemented and mechanically verified:** Debug launches read unchanged runtime files directly from the
+checkout's `assets/`; offline-generated world/creator/portrait assets remain in
+the executable's `assets/prepared/`. `Options` owns these two startup paths;
+application world loading and Presenter/UiArt receive the prepared path explicitly.
+Existing tool callers retain the single-root default. `--assets` explicitly selects
+a complete asset root, including its `prepared/` child. Release retains staged,
+relocatable assets. Debug no longer depends on raw-asset copying; the explicit
+`blobber_assets` target remains available for tools using a complete staged root.
+Dialogue is enumerated/parsed at gameplay startup, so editing, adding or deleting
+YAML needs a restart, with no build or CMake inventory edit. Generated-image rules
+retain their existing input dependencies; scripts are not bake inputs. No new frame
+work, allocations, save format or rendering behavior is introduced.
+
+Verification: Debug `blobber`, `blobber_options_tests`, `blobber_packaged_options_tests`
+and `blobber_dialogue_tests` build. `ctest --test-dir cmake-build-debug -R
+'^(options|packaged_options|dialogue)$' -j 1 --output-on-failure` passes (0.16 s).
+Owned dialogue fixtures cover edited text, removed audio references and newly
+added/deleted YAML files; options cover source/packaged roots and explicit overrides.
+The Debug game graph has no raw-copy commands, and all three image-bake rules
+exclude dialogue inputs. A subsequent normal Debug game build preserves timestamps
+on all nine prepared outputs, with no copies or bakes. Help and option checks also
+pass from an unrelated working directory. Interactive desktop/listening review was
+not run. During verification, system Ninja discarded the existing log and changing
+CMake versions changed command hashes; recovery finished with the configured CLion
+tools, and the prevention rule is recorded in `AGENTS.md`. Disposable run output is
+cleaned; existing build caches and user asset edits are preserved. See also
+[dialogue ownership](dialogue_design.md#ownership-and-interfaces).
+
 [Expanded inventory paperdoll](inventory_design.md#expanded-paperdoll-mockup--2026-11-08):
 **equipment foundation verified; readability correction implemented, revised runtime review pending (2026-11-08)**. Thirteen compact
 equipment positions surround the existing silhouette, with separate gloves,
@@ -13,7 +43,12 @@ centers Head/Feet, pairs the rings and attaches labels inside slot cards. Focuse
 inventory checks prove zero independent connector crossings/card intersections;
 four refreshed hidden captures and native caption-fit/allocation checks pass.
 The [card-finish follow-up](inventory_design.md#equipment-card-finish-correction--2026-11-08)
-adds bottom-only item padding, a uniform caption-colored card fill and one outer border.
+adds bottom-only item padding and a uniform caption-colored card fill. The latest
+[outline/alignment follow-up](inventory_design.md#equipment-outlinealignment-follow-up--2026-11-08)
+removes the outer perimeter and aligns Main Hand/Ranged with the ring columns.
+The [inventory-key follow-up](inventory_design.md#inventory-key-toggle--2026-11-08)
+makes I open/close the shared overlay and cancel pending gestures without committing;
+implemented, with focused edge/held-key and cancellation regressions passing.
 Campaign schema/simulation remain **18/22**; older campaigns reject unchanged
 under the existing strict save policy.
 

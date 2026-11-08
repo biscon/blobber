@@ -19,7 +19,7 @@ class Presenter {
   public:
     AudioRuntime* audio = nullptr; // Application-owned; outlives presentation loops.
     Presenter(GpuResources& resources, const std::filesystem::path& assets,
-              PreparationWorker* worker = nullptr);
+              PreparationWorker* worker = nullptr, const std::filesystem::path& preparedAssets = {});
     PreparationWorker* loadingWorker() const noexcept { return worker_; }
     void presentCached(float fade, const char* status = nullptr);
     void presentSaving(); // Cached composite only; no live simulation/UI readers.

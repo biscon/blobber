@@ -5,6 +5,9 @@ readability correction implemented and verified, awaiting user review**.
 The latest card-finish follow-up adds padding only below the item square, uses
 one uniform caption-colored outer fill and removes its inset outline. It is
 implemented and mechanically verified; appearance remains awaiting review.
+The subsequent outline/alignment revision removes the remaining outer perimeter
+entirely and aligns Main Hand/Ranged with Ring 1/Ring 2. Item-square borders and
+cursor feedback remain; this is the version shown in the current captures.
 
 ## Production captures
 
@@ -12,12 +15,12 @@ implemented and mechanically verified; appearance remains awaiting review.
   centered Head/Feet, horizontally paired rings and attached caption bands.
 - [Inventory, reduced 1280×720](inventory-1280.png): label/icon readability.
 - [Ranged equipment](inventory-ranged.png): rogue with alternate bow.
-- [Empty Wrists selection](inventory-wrists.png): whole-card cursor highlight.
+- [Empty Wrists selection](inventory-wrists.png): item-square cursor highlight.
 
 These refreshed captures replace the rejected version's crossing connectors and
 floating labels. Independent connector paths never cross or touch; a focused
 geometric regression also excludes other cards and their caption bands. Each
-caption is inside its own bordered card and selects that slot. AC/safety readouts
+caption is inside its own filled card and selects that slot. AC/safety readouts
 and the bag/details panels remain present.
 
 These are application-owned exports from the production presenter, real inventory

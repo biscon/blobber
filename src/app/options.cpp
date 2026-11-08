@@ -8,6 +8,10 @@ namespace blobber {
 Options parseOptions(int argc, char** argv) {
     Options result;
     result.assets = std::filesystem::path(GetApplicationDirectory()) / "assets";
+    result.preparedAssets = result.assets / "prepared";
+#ifdef BLOBBER_SOURCE_ASSETS
+    result.assets = BLOBBER_SOURCE_ASSETS;
+#endif
     auto dimension = [](const char* text) {
         std::size_t consumed = 0;
         const int value = std::stoi(text, &consumed);
@@ -17,9 +21,10 @@ Options parseOptions(int argc, char** argv) {
     };
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        if (arg == "--assets" && i + 1 < argc)
+        if (arg == "--assets" && i + 1 < argc) {
             result.assets = argv[++i];
-        else if (arg == "--dialogue-dir" && i + 1 < argc)
+            result.preparedAssets = result.assets / "prepared";
+        } else if (arg == "--dialogue-dir" && i + 1 < argc)
             result.dialogueDir = std::filesystem::absolute(argv[++i]);
         else if (arg == "--sanctuary-city-review")
             result.sanctuaryCityReview = true;

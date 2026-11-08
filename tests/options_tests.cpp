@@ -1,5 +1,6 @@
 #include "app/options.hpp"
 #include "support/check.hpp"
+#include "raylib.h"
 #include <iostream>
 #include <stdexcept>
 using namespace blobber;
@@ -13,6 +14,22 @@ int main() {
               "explicit overrides and Continue do not draw entropy; Continue retains its saved seed");
         char program[] = "blobber", development[] = "--development", help[] = "--help";
         char* normal[]{program};
+        const auto defaults = parseOptions(1, normal);
+        const auto executableAssets = std::filesystem::path(GetApplicationDirectory()) / "assets";
+#ifdef BLOBBER_SOURCE_ASSETS
+        check(defaults.assets == std::filesystem::path(BLOBBER_SOURCE_ASSETS),
+              "Debug reads editable source assets independently of the working directory");
+#else
+        check(defaults.assets == executableAssets, "Packaged launch uses assets beside the executable");
+#endif
+        check(defaults.preparedAssets == executableAssets / "prepared",
+              "Generated images always default to the executable's build output");
+        char assets[] = "--assets", assetDirectory[] = "explicit-assets";
+        char* overridden[]{program, assets, assetDirectory};
+        const auto overrideOptions = parseOptions(3, overridden);
+        check(overrideOptions.assets == assetDirectory &&
+                  overrideOptions.preparedAssets == std::filesystem::path(assetDirectory) / "prepared",
+              "Explicit asset root selects a complete publication in Debug and packaged launches");
         check(!parseOptions(1, normal).development, "normal launch keeps development disabled");
         char* enabled[]{program, development};
         check(parseOptions(2, enabled).development, "development flag requires no argument");
@@ -64,6 +81,11 @@ int main() {
         char* authoring[]{program, dialogue, directory};
         check(parseOptions(3, authoring).dialogueDir == std::filesystem::absolute(directory),
               "Dialogue authoring directory is independent of artwork assets");
+        char* bothRoots[]{program, assets, assetDirectory, dialogue, directory};
+        const auto separateDialogue = parseOptions(5, bothRoots);
+        check(separateDialogue.dialogueDir == std::filesystem::absolute(directory) &&
+                  separateDialogue.preparedAssets == std::filesystem::path(assetDirectory) / "prepared",
+              "Dialogue override preserves the explicitly selected generated assets");
         char* missingDialogue[]{program, dialogue};
         rejects([&] { parseOptions(2, missingDialogue); }, "Missing dialogue directory rejects");
         std::cout << "Command-line option checks passed\n";
