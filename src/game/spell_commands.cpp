@@ -398,7 +398,7 @@ void CommandController::chooseSpellbook(std::size_t index) noexcept {
     state_.hover = {};
     refreshMagic();
     updateAvailability();
-    if (entry.feature == rules::Feature::ActionSurge)
+    if (entry.feature == rules::Feature::ActionSurge || entry.feature == rules::Feature::SecondWind)
         confirm();
 }
 bool CommandController::magicSingleTarget() const noexcept {

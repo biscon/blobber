@@ -2,8 +2,8 @@
 
 ## SRD combat movement — 2026-11-08
 
-Status: implemented and mechanically verified; interactive balance/presentation
-review pending. Approved design was recorded before implementation.
+Status: implemented, mechanically verified and accepted by the user (2026-11-08).
+The user reports better encounter pressure. Approved design was recorded before implementation.
 This revision supersedes the movement-spends-action rules below.
 
 Monster definitions own immutable integer `speedFeet` (nonnegative int32); catalog
@@ -113,9 +113,9 @@ Its assertions bind each flanker attack to the same round **and turn token** as
 movement; six captures were inspected and replaced the previous
 [positioning review evidence](screenshots/combat-positioning/README.md).
 The sandbox could not access X11; the authorized hidden-only check passed outside
-it. No OS input/focus automation was used. Interactive balance acceptance remains
-the user's saved-arena playthrough; no benchmark, stress test or sanitizer matrix
-was run.
+it. No OS input/focus automation was used. The user accepted the movement revision
+after their saved-arena playthrough on 2026-11-08; no benchmark, stress test or
+sanitizer matrix was run.
 
 Development failures exposed historical movement-spends-action assertions and a
 same-timestamp continuation boundary; tests now assert legal geometry, one action,
@@ -124,8 +124,8 @@ fixture repeated names after eleven types despite thirteen definitions; its owne
 name table now includes blacksmith and Shadowtart. Allocation integration passes.
 
 Disposable logs/captures were owned by an agent run; the selected six images replace
-superseded evidence, and cleanup removes the run after runners close. Acceptance
-status remains pending.
+superseded evidence, and the run was cleaned after runners closed. User acceptance
+was recorded on 2026-11-08.
 
 ## Previous implementation — 2026-11-03
 

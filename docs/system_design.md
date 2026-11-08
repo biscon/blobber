@@ -1,7 +1,12 @@
 # System design
 
+[Second Wind direct activation](spellcasting_ui_design.md#second-wind-direct-activation--2026-11-08):
+implemented and mechanically verified. Abilities selection uses the existing Action
+Surge immediate-confirm path; normal healing, charges and action/readiness costs
+remain. Three focused Debug suites pass; the Debug game is rebuilt.
+
 [SRD combat movement](combat_positioning.md#srd-combat-movement--2026-11-08):
-**implemented and mechanically verified; balance review pending**. Five feet per cardinal subcell,
+**implemented, mechanically verified and accepted by the user (2026-11-08)**. Five feet per cardinal subcell,
 species Speed, movement plus an action, Dash, and SRD movement condition costs.
 Combat-only subcell navigation leaves real-time roaming unchanged. Arena scenarios
 remain compatible; campaign schema/simulation are **16/20** under the strict save policy.

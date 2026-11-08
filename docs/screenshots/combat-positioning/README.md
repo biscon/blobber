@@ -1,7 +1,7 @@
 # Combat movement review — 2026-11-08
 
-Status: mechanically verified; interactive balance and movement presentation await
-user review. Earlier positioning acceptance is not changed by replacing evidence.
+Status: mechanically verified; movement revision accepted by the user on
+2026-11-08 after arena play, reporting improved encounter pressure.
 
 Six native 1920×1080 hidden application captures use owned safe combat mechanics
 and production goblin/Underkeep artwork. Two centre enemies hold position while

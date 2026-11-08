@@ -1,5 +1,31 @@
 # Spellcasting UI review correction
 
+## Second Wind direct activation — 2026-11-08
+
+Design recorded before implementation. Selecting an available Second Wind in
+Abilities immediately uses the existing `confirm()` command path, as Action Surge
+does. Mouse and keyboard selection share this path. No recipient or bottom-dock
+confirmation is needed for this fixed self target. Full health, spent uses, stale
+turns, suspension and normal readiness still reject through existing validation;
+healing, charge/action costs, event delivery and save compatibility are unchanged.
+Other abilities and self-target spells keep their current interaction policies.
+Verify mouse/keyboard activation in exploration and initiative, one healing/use,
+duplicate rejection and disabled entries in the existing spell UI tests, and
+retain Action Surge regression coverage. This input-only change needs no new art
+or rendering capture. This supersedes the historical Second Wind confirmation
+dock described below.
+
+Implemented with the existing validated `confirm()` path. Debug `spells`,
+`level_spells` and `commands` passed (3/3, 0.09 s), including mouse activation in
+initiative, Enter activation in exploration, full-health/suspended rejection,
+unchanged action/charge costs, one healing event and stale/duplicate rejection.
+The mixed-list Back test now uses End concentration, preserving coverage for
+abilities that retain confirmation. Existing immediate Action Surge checks pass.
+Command: `nice -n 15 ionice -c 3 ctest --test-dir cmake-build-debug -R '^(spells|level_spells|commands)$' -j 1 --output-on-failure`.
+The Debug game is rebuilt for the user's normal launch; no new graphics assets,
+save versions, or interactive desktop automation are involved. Disposable build
+logs are owned by an agent run and cleaned after completion.
+
 Status: implemented, **accepted and closed**, 2026-10-27. The user explicitly
 accepted slice 10 and its UI corrections; slice 11 remains Planned/unstarted.
 

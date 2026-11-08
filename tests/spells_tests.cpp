@@ -545,21 +545,24 @@ void classFeaturesUi() {
     s.party().damage({0}, 6);
     refresh();
     ui.openSpellbook();
+    const auto windHp = s.party().character({0})->hitPoints;
+    const auto wind = featureCommand(s, 0, rules::Feature::SecondWind);
+    ui.refresh(allCombatTargets(s), false, false, false);
     ui.chooseSpellbook(0);
-    check(ui.snapshot().magic.armed && ui.snapshot().magic.charges == 1 &&
-              ui.snapshot().magic.pending.action == PartyAction::Feature,
-          "Confirmation dock retains explicit feature identity and remaining uses");
-    ui.hover(HoverKind::Portrait, 1);
-    check(!std::strcmp(ui.snapshot().hover.lines[1].data(), "This feature needs no recipient selection."),
-          "Feature confirmation does not call the ability a spell in portrait hints");
-    key(UiKey::Cancel);
-    check(s.party().character({0})->secondWind && s.combat().snapshot().turn == turn,
-          "Canceling Second Wind spends neither use nor action");
-    ui.openSpellbook();
-    ui.chooseSpellbook(0);
-    check(ui.confirm() == CommandReason::Resolved && !s.party().character({0})->secondWind &&
+    check(ui.snapshot().magic.open && s.party().character({0})->secondWind &&
+              s.party().character({0})->hitPoints == windHp,
+          "Suspended picker cannot activate Second Wind");
+    refresh();
+    key(UiKey::Confirm);
+    check(!ui.snapshot().magic.open && !ui.snapshot().magic.casting() &&
+              !s.party().character({0})->secondWind && s.party().character({0})->hitPoints > windHp &&
               s.party().character({0})->mana == 0 && s.combat().snapshot().cooldownMs[0] == combatRoundMs,
-          "Second Wind spends one use and normal readiness, never mana");
+          "Enter in Abilities immediately heals and spends one use/readiness without a Cast click");
+    const auto healedHp = s.party().character({0})->hitPoints;
+    ui.chooseSpellbook(0);
+    check(s.submit(wind).reason != CommandReason::Resolved &&
+              s.party().character({0})->hitPoints == healedHp,
+          "Repeated selection or a stale immediate-use command cannot heal twice");
     s.update(6, false);
     refresh();
     ui.openSpellbook();
@@ -635,12 +638,12 @@ void classFeaturesUi() {
               mixedUi.snapshot().magic.entries[mixedCount - 1].feature ==
                   rules::Feature::DismissConcentration,
           "Abilities are separately filtered within bounded catalog storage");
-    mixedUi.chooseSpellbook(mixedCount - 2);
+    mixedUi.chooseSpellbook(mixedCount - 1);
     check(mixedUi.snapshot().magic.armed &&
-              mixedUi.snapshot().magic.pending.feature == rules::Feature::SecondWind,
-          "Scrolled activated feature creates the correct command");
+              mixedUi.snapshot().magic.pending.feature == rules::Feature::DismissConcentration,
+          "Other activated features retain their confirmation flow");
     mixedUi.backToSpellbook();
-    check(mixedUi.snapshot().magic.open && mixedUi.snapshot().magic.cursor == mixedCount - 2 &&
+    check(mixedUi.snapshot().magic.open && mixedUi.snapshot().magic.cursor == mixedCount - 1 &&
               mixedUi.snapshot().magic.offset == 0 && mixedUi.snapshot().magic.visibleCount == 2 &&
               mixed.party().character({1})->secondWind,
           "Back restores the ability tab and cursor without spending the feature");
@@ -652,13 +655,26 @@ void classFeaturesUi() {
     CommandController combatUi(combat);
     combatUi.refresh(allCombatTargets(combat), false, false, true);
     combatUi.openSpellbook();
+    const auto committed = featureCommand(combat, 0, rules::Feature::SecondWind);
+    const auto oldHp = combat.party().character({0})->hitPoints;
+    const auto rect = hudLayout::spellEntry(0);
+    UiInput click;
+    click.pointer = ArtPoint{float(rect.x + 2), float(rect.y + 2)};
+    click.pressed[static_cast<std::size_t>(UiKey::Click)] = true;
+    routeHudInput(combatUi, click);
+    check(!combatUi.snapshot().magic.open && !combatUi.snapshot().magic.casting() &&
+              combat.combat().snapshot().spent[0] && !combat.party().character({0})->secondWind &&
+              combat.party().character({0})->hitPoints > oldHp && combat.party().character({0})->mana == 0,
+          "One Abilities click uses Second Wind in initiative and spends its regular action/charge");
+    unsigned heals = 0;
+    for (const auto& event : combat.events())
+        heals += event.event == CombatEvent::Healing && event.feature == rules::Feature::SecondWind;
+    check(heals == 1, "Immediate Second Wind publishes exactly one healing event");
+    const auto finalHp = combat.party().character({0})->hitPoints;
     combatUi.chooseSpellbook(0);
-    const auto committed = combatUi.snapshot().magic.pending;
-    check(combatUi.confirm() == CommandReason::Resolved && combat.combat().snapshot().spent[0] &&
-              !combat.party().character({0})->secondWind && combat.party().character({0})->mana == 0,
-          "Second Wind in initiative spends the regular action and one charge");
-    check(combat.submit(committed).reason != CommandReason::Resolved,
-          "Repeated Second Wind confirmation cannot commit twice");
+    check(combat.submit(committed).reason != CommandReason::Resolved &&
+              combat.party().character({0})->hitPoints == finalHp,
+          "Repeated Second Wind selection or submission cannot commit twice");
 }
 void uiRevision() {
     const auto map = hybridRoom();
