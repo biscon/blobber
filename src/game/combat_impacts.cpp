@@ -407,7 +407,11 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         effects_.resolveMirror(out.mirror, true, when, events);
     if (out.hit && !out.targetGone && out.spell != rules::SpellKind::Count &&
         rules::spellRules(out.spell)->damage == rules::DamageType::Fire)
-        effects_.ignite(out.enemyAttack ? origin_.cell : target->npc.cell);
+        {
+            const auto tile = effects_.targetTile(out.enemyAttack ? EffectTarget(out.recipient) : EffectTarget(out.enemy),
+                                                  out.enemyAttack ? origin_.cell : target->npc.cell);
+            effects_.ignite(SubcellFootprint{tile, 1});
+        }
     events.append(out);
     if (out.hit && out.damage > 0)
         effects_.wake(out.enemyAttack ? EffectTarget(out.recipient) : EffectTarget(out.enemy), when, events);

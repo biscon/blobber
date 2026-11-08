@@ -372,7 +372,7 @@ void GameSession::importFloor(const FloorState& s) {
     }
     for (auto& r : effects_.restrained_)
         r.area.world = world;
-    effects_.partyCell(movement().player.cell);
+    effects_.partyPose(movement().player);
     effects_.bindEvents(events_, timeMs_);
     combat_.noticeTime_ = timeMs_;
     discoveredReady_ = false;

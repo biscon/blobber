@@ -249,6 +249,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::Move:
         std::snprintf(line, sizeof(line), "Enemy #%u moves.", unsigned(out.enemy.slot) + 1);
         break;
+    case CombatEvent::Wake:
+        std::snprintf(line, sizeof(line), "%s #%u wakes ally #%u.", species,
+                      unsigned(out.enemy.slot) + 1, unsigned(out.awakened.slot) + 1);
+        break;
     case CombatEvent::Dash:
         std::snprintf(line, sizeof(line), "Enemy #%u dashes.", unsigned(out.enemy.slot) + 1);
         break;

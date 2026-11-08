@@ -1,4 +1,5 @@
 #pragma once
+#include "game/subcell_area.hpp"
 #include "game/attack_timeline.hpp"
 #include <bitset>
 namespace blobber {
@@ -36,8 +37,9 @@ struct SpellCastVisual {
     std::uint8_t formation = 0;
     AttackStage stage = AttackStage::Empty;
     std::uint64_t releaseMs = 0, impactMs = 0;
-    std::array<Cell, 9> cells{};
-    std::array<bool, 9> eligible{};
+    SubcellFootprint footprint;
+    std::array<Cell, 16> cells{};
+    std::array<bool, 16> eligible{};
     bool includeOrigin = true;
     Cell center{};
     std::array<SpellDeliveryVisual, 3> deliveries{};

@@ -51,7 +51,7 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
     prepareObjective();
     ai_.bindEffects(&effects_);
     movement_.bindEffects(&effects_);
-    effects_.partyCell(spawn.cell);
+    effects_.partyPose(spawn);
     combat_.enableRoaming(enableAi_);
 }
 void GameSession::detectContact(bool settlingEndpoint) noexcept {
@@ -142,10 +142,7 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
         effects_.followWeapons(oldCell, movement().player.cell);
         audio_.emit({"party.step"});
     }
-    effects_.partyCell(movement_.state().player.cell);
-    if (!(oldCell == movement_.state().player.cell))
-        for (std::uint16_t i = 0; i < rules::partySize; ++i)
-            effects_.enter(rules::CharacterId{i}, movement_.state().player.cell, timeMs_);
+    effects_.partyPose(movement_.state().player, true);
     driveFacing();
     detectContact();
     if (enableAi_ && realTime(combat_.snapshot().phase)) {
@@ -191,10 +188,7 @@ void GameSession::move(Action action, bool fresh) noexcept {
         effects_.followWeapons(oldCell, movement().player.cell);
         audio_.emit({"party.step"});
     }
-    effects_.partyCell(movement_.state().player.cell);
-    if (!(oldCell == movement_.state().player.cell))
-        for (std::uint16_t i = 0; i < rules::partySize; ++i)
-            effects_.enter(rules::CharacterId{i}, movement_.state().player.cell, timeMs_);
+    effects_.partyPose(movement_.state().player, true);
     detectContact();
     discover();
 }
@@ -304,8 +298,11 @@ void GameSession::driveFacing() noexcept {
     movement_.clearPending();
     const auto offset = (static_cast<unsigned>(*combat.facing) + 4 - static_cast<unsigned>(heading)) % 4;
     movement_.submit(map_, offset == 3 ? Action::TurnLeft : Action::TurnRight, true, &actors_);
+    effects_.partyPose(movement_.state().player, true);
     // Animation-disabled mode still commits every quarter turn and revision.
-    if (!movement_.state().animated && movement_.state().player.heading != *combat.facing)
+    if (!movement_.state().animated && movement_.state().player.heading != *combat.facing) {
         movement_.submit(map_, Action::TurnRight, true, &actors_);
+        effects_.partyPose(movement_.state().player, true);
+    }
 }
 } // namespace blobber

@@ -76,6 +76,7 @@ void cityCampaign() {
     auto& hazard = saved.effects.ground.areas[0];
     hazard.active = true;
     hazard.cell = run.location(0).exit.cell;
+    hazard.footprint = wholeCellFootprint(hazard.cell);
     hazard.id.serial = saved.effects.nextArea++;
     hazard.untilMs = 60000;
     hazard.caster = rules::CharacterId{0};
@@ -338,6 +339,7 @@ void transferFailuresAndEffects() {
           "invalid snapshot rolls back");
     saved.actors.count = count;
     saved.effects.ground.areas[0].cell = run.location(1).entry.cell;
+    saved.effects.ground.areas[0].footprint = wholeCellFootprint(run.location(1).entry.cell);
     rejected = false;
     try {
         (void)run.prepareTravel(run.request(run.game().nearbyFixture()));
@@ -821,6 +823,7 @@ void recallSafetyAndRollback() {
     auto& area = hub.effects.ground.areas[0];
     area.active = true;
     area.cell = run.location(0).entry.cell;
+    area.footprint = wholeCellFootprint(area.cell);
     area.id.serial = hub.effects.nextArea++;
     area.untilMs = 60000;
     area.caster = rules::CharacterId{0};

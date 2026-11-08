@@ -271,8 +271,12 @@ Json encodeObservation(const Observation& o) {
     j["ground"] = Json::array();
     for (const auto& a : g.effects().ground().areas)
         if (a.active)
-            j["ground"].push_back(
-                {{"cell", xy(a.cell)}, {"caster", a.caster.index}, {"web", a.web}, {"until", u(a.untilMs)}});
+            j["ground"].push_back({{"cell", xy(a.cell)},
+                                   {"subcell_origin", xy(a.footprint.origin)},
+                                   {"subcell_mask", u(a.footprint.mask)},
+                                   {"caster", a.caster.index},
+                                   {"web", a.web},
+                                   {"until", u(a.untilMs)}});
     if (o.diagnostic) {
         j["turn"] = u(combat.turn);
         j["pending_count"] = combat.pendingCount;
@@ -322,6 +326,9 @@ Json encodeObservation(const Observation& o) {
             if (a.active)
                 j["ground"].push_back({{"serial", u(a.id.serial)},
                                        {"cell", xy(a.cell)},
+                                       {"subcell_origin", xy(a.footprint.origin)},
+                                       {"subcell_mask", u(a.footprint.mask)},
+                                       {"burn_subcells", a.burnDue},
                                        {"caster", a.caster.index},
                                        {"difficulty", a.difficulty},
                                        {"until", u(a.untilMs)},
@@ -379,7 +386,9 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
                         "healing",
                         "recovery",
                         "spell_save",
-                        "guiding_mark"};
+                        "guiding_mark",
+                        "dash",
+                        "wake"};
     Json j = {
         {"event", names[unsigned(e.event)]},
         {"time_ms", u(e.occurredMs)},
@@ -388,6 +397,7 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
         {"recipient", e.recipient.index},
         {"enemy", e.enemy.world ? Json(e.enemy.slot) : Json(nullptr)},
         {"enemy_attack", e.enemyAttack},
+        {"awakened", e.awakened.world ? Json(e.awakened.slot) : Json(nullptr)},
         {"hit", e.hit},
         {"critical", e.critical},
         {"died", e.died},

@@ -120,7 +120,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 16;
+    bad["schema"] = 17;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
@@ -917,12 +917,18 @@ void groundAndInactive() {
     check(!(web == grease), "owned ground-effect fixtures use distinct cells");
     check(bool(effects.createArea(grease, {0}, 10, 0, events).serial), "owned Grease area created");
     check(effects.createWeb(&web, 1, {2}, 1000, 0, events), "owned Web area/restraint created");
+    effects.ignite(SubcellFootprint{web * 2, 1});
     effects.condition(game.actors().id(0), EffectKind::Sleep, {0}, 0, events);
     effects.condition(rules::CharacterId{1}, EffectKind::Blind, {0}, 0, events);
     effects.guide(game.actors().id(0), 0, events);
     run = copy(c, d, *run);
     check(run->game().effects().area(grease) && run->game().effects().area(web),
           "nonempty ground effects retain logical references");
+    bool restoredBurn = false;
+    for (const auto& a : run->game().effects().ground().areas)
+        if (a.active && a.web)
+            restoredBurn = a.footprint == wholeCellFootprint(web) && a.burnDue[0] == 6000 && a.burnMs == 6000;
+    check(restoredBurn, "Precise Web mask and partial burning deadlines survive campaign roundtrip");
     check(bool(run->game().endConcentration(run->game().actors().snapshot().world, {2})),
           "local Web explicitly dismissed before departure");
     travel(*run, FixtureKind::Upstairs);

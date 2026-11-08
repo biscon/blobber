@@ -86,7 +86,7 @@ struct PlayView {
         commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
                          focused);
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
-        if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
+        if (!(area.footprint == currentArea.footprint) || area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
             return frames.update(session, animator.snapshot(), currentArea, override, dialogueCamera.moving(),
                                  gameTimeOverride) ||
@@ -286,7 +286,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                               picking && worldPointer ? picking->pickFixture(px, py) : std::nullopt,
                               picking && worldPointer ? picking->pickContainer(px, py) : std::nullopt,
                               imageMoved,
-                              picking && worldPointer ? picking->pickResident(px, py) : std::nullopt);
+                              picking && worldPointer ? picking->pickResident(px, py) : std::nullopt,
+                              worldPointer ? view.frames.groundAim(view.session, px, py) : std::nullopt);
             }
             if (campaign) {
                 std::optional<SavingScreen> saving;

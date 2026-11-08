@@ -170,8 +170,9 @@ bool NpcAiController::step(std::size_t slot, Cell destination, Player party, std
     if (!actors_.walk(actors_.id(slot), destination, subcell, party.cell, now, npcWalkDurationMs * factor)
              .changed)
         return false;
-    if (effects_ && !(old == destination))
-        effects_->enter(actors_.id(slot), destination, now);
+    if (effects_)
+        effects_->cross(actors_.id(slot), globalSubcell(old, oldSubcell), globalSubcell(destination, subcell),
+                        now);
     // Face along the committed step, never turn toward a blocked attempted move.
     const auto delta = destination == old ? subcell + oldSubcell * -1 : destination + old * -1;
     const auto heading = delta.x ? (delta.x > 0 ? Heading::East : Heading::West)
@@ -278,7 +279,7 @@ bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noex
     return position(id, party, now) == PositioningResult::Moved;
 }
 TacticalNavigation::Result NpcAiController::combatStep(ActorId id, Player party, std::uint64_t now,
-                                                        bool retreat) noexcept {
+                                                       bool retreat) noexcept {
     if (tacticalTime_ != now) {
         tacticalTime_ = now;
         tacticalWork_ = 0;
@@ -288,22 +289,33 @@ TacticalNavigation::Result NpcAiController::combatStep(ActorId id, Player party,
     state_.searchWork = tacticalWork_;
     return result;
 }
-bool NpcAiController::commitCombatStep(ActorId id, Player party,
-                                       const TacticalNavigation::Result& step, std::uint64_t now) noexcept {
+TacticalNavigation::Result NpcAiController::wakeStep(ActorId id, Player party, std::uint64_t now,
+                                                     const TacticalNavigation::WakeGoals& goals) noexcept {
+    if (tacticalTime_ != now) {
+        tacticalTime_ = now;
+        tacticalWork_ = 0;
+    }
+    auto result = tactical_.next(id, party, party.cell, false, effects_, tacticalWork_, &goals);
+    state_.searchWork = tacticalWork_;
+    return result;
+}
+bool NpcAiController::commitCombatStep(ActorId id, Player party, const TacticalNavigation::Result& step,
+                                       std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);
     if (!actor || actorWalking(*actor, now) || (effects_ && !effects_->mobile(id)) ||
         step.status != TacticalNavigation::Status::Step)
         return false;
     const auto old = actor->npc.cell;
+    const auto oldTile = globalSubcell(old, actor->npc.subcell);
     const auto delta = step.cell * 2 + step.subcell + (old * 2 + actor->npc.subcell) * -1;
     if (std::abs(delta.x) + std::abs(delta.y) != 1 ||
         !actors_.walk(id, step.cell, step.subcell, party.cell, now, npcWalkDurationMs / 2).changed)
         return false;
     actors_.face(id, delta.x ? (delta.x > 0 ? Heading::East : Heading::West)
-                            : (delta.y > 0 ? Heading::South : Heading::North));
+                             : (delta.y > 0 ? Heading::South : Heading::North));
     tactical_.committed();
-    if (effects_ && !(old == step.cell))
-        effects_->enter(id, step.cell, now);
+    if (effects_)
+        effects_->cross(id, oldTile, globalSubcell(step.cell, step.subcell), now);
     return true;
 }
 PositioningResult NpcAiController::position(ActorId id, Player party, std::uint64_t now) noexcept {

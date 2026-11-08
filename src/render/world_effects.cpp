@@ -71,6 +71,8 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     SpellArea area = in.area ? *in.area : SpellArea{};
     if (world.moving)
         area.eligible.fill(false);
+    if (world.moving)
+        area.footprint.mask = 0;
     const auto& fire = in.geometry.base().definition().hearth;
     bool visibleFire = false;
     if (fire) {
@@ -104,8 +106,8 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     if (fire && flame_ == UINT16_MAX)
         throw std::invalid_argument("Hearth flame artwork missing");
     if (fireTick_ == tick && weaponTick_ == weaponTick && !changed && visibility_ == world.revision &&
-        area.cells == area_.cells && area.kind == area_.kind && area.eligible == area_.eligible &&
-        area.ground.revision == area_.ground.revision)
+        area.footprint == area_.footprint && area.cells == area_.cells && area.kind == area_.kind &&
+        area.eligible == area_.eligible && area.ground.revision == area_.ground.revision)
         return false;
     fireTick_ = tick;
     weaponTick_ = weaponTick;
@@ -122,27 +124,32 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             throw std::logic_error("World effect capacity exceeded");
         frame_.packets[frame_.count++] = p;
     };
-    auto ground = [&](Cell cell, unsigned texture, std::array<float, 4> tint, float height) {
+    auto ground = [&](Cell tile, unsigned texture, std::array<float, 4> tint, float height) {
+        const auto cell = dungeonCell(tile);
         height += elevation(in.geometry.surface(cell).floor);
-        const float x = float(cell.x), z = float(cell.y);
-        add({{{{x, height, z + 1}, {x + 1, height, z + 1}, {x + 1, height, z}, {x, height, z}}},
-             tint,
-             depth(world.camera, {x + .5f, 0, z + .5f}),
-             std::uint16_t(textures_[texture]),
-             true});
+        const float x = float(tile.x) * .5f, z = float(tile.y) * .5f;
+        EffectPacket packet;
+        packet.points = {
+            {{x, height, z + .5f}, {x + .5f, height, z + .5f}, {x + .5f, height, z}, {x, height, z}}};
+        packet.tint = tint;
+        packet.depth = depth(world.camera, {x + .25f, 0, z + .25f});
+        packet.texture = std::uint16_t(textures_[texture]);
+        packet.ground = true;
+        add(packet);
     };
     for (const auto& patch : area.ground.areas)
-        if (patch.active) {
-            ground(patch.cell, patch.web ? 6 : 5, {1, 1, 1, 1}, .0015f);
-        }
+        if (patch.active)
+            for (unsigned bit = 0; bit < 64; ++bit)
+                if (patch.footprint.mask & (UINT64_C(1) << bit))
+                    ground(patch.footprint.tile(bit), patch.web ? 6 : 5, {1, 1, 1, 1}, .0015f);
     const auto color =
         area.kind == rules::SpellKind::Sleep         ? std::array<float, 4>{.545f, .49f, .87f, 1}
         : area.kind == rules::SpellKind::ColorSpray  ? std::array<float, 4>{.855f, .404f, .769f, 1}
         : area.kind == rules::SpellKind::Thunderwave ? std::array<float, 4>{.298f, .651f, .867f, 1}
                                                      : std::array<float, 4>{.949f, .525f, .106f, 1};
-    for (unsigned i = 0; i < area.cells.size(); ++i)
-        if (area.eligible[i])
-            ground(area.cells[i], 8, color, .0025f);
+    for (unsigned bit = 0; bit < 64; ++bit)
+        if (area.footprint.mask & (UINT64_C(1) << bit))
+            ground(area.footprint.tile(bit), 8, color, .0025f);
     auto billboard = [&](Vec center, float w, float h, unsigned texture, float angle = 0.f,
                          std::array<float, 4> tint = {1, 1, 1, 1}) {
         const float c = std::cos(angle), s = std::sin(angle);

@@ -64,8 +64,10 @@ void spells() {
             unsigned cells = 0;
             for (const auto& a : s.effects().ground().areas)
                 cells += a.active && a.web;
-            check(cells == 4 && s.effects().concentration({3}).serial,
-                  "Web reserves full four-cell footprint");
+            check(cells == 1 && s.effects().concentration({3}).serial,
+                  "Web reserves one logical cast");
+            for (const auto& a : s.effects().ground().areas)
+                if (a.active && a.web) check(a.footprint.count() == 16, "Web covers sixteen subcells");
         }
         if (kind == SpellKind::ScorchingRay) {
             unsigned rays = 0;
@@ -639,9 +641,9 @@ void capacityStress() {
         active += a.active;
     for (unsigned i = 0; i < 256; ++i)
         restrained += effects.has(actors.id(i), EffectKind::Restrained);
-    check(active == 16 && restrained == 64, "sixteen Web cells restrain sixty-four occupants");
+    check(active == 4 && restrained == 64, "four Web casts restrain sixty-four occupants");
     for (const auto& a : effects.ground().areas)
-        effects.ignite(a.cell);
+        if (a.active) effects.ignite(a.footprint);
     events.clear();
     effects.advance(6000, 6000, true, events);
     check(events.count < CombatEvents::capacity, "full burn batch fits fixed events");

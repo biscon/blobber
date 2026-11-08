@@ -249,6 +249,7 @@ inline void spellEffectsGpuChecks() {
             ground.ground.areas[0].active = ground.ground.areas[0].web = true;
             ground.ground.areas[0].burnMs = 6000;
             ground.ground.areas[0].cell = {6, 4};
+ground.ground.areas[0].footprint=wholeCellFootprint({6,4});ground.ground.areas[0].burnDue[0]=6000;
             ++ground.ground.revision;
             allocations = 0;
             watching = true;

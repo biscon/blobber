@@ -154,6 +154,8 @@ void doorsAndEffects() {
     area.ground.areas[0].web = true;
     area.ground.areas[0].burnMs = 1;
     area.ground.areas[0].cell = {4, 3};
+    area.ground.areas[0].footprint = wholeCellFootprint({4, 3});
+    area.ground.areas[0].burnDue[0] = 1;
     area.ground.weapons[0] = {{5, 3}, true};
     AttackVisualSnapshot attacks;
     attacks.world = game.actors().snapshot().world;
@@ -373,10 +375,15 @@ void stressEffects() {
     area.ground.revision = 1;
     area.eligible.fill(true);
     area.cells.fill({3, 3});
+    area.footprint = wholeCellFootprint({3, 3});
     for (auto& patch : area.ground.areas) {
         patch.active = patch.web = true;
         patch.burnMs = 1;
         patch.cell = {3, 3};
+        patch.footprint = wholeCellFootprint(patch.cell);
+        for (unsigned bit = 0; bit < 64; ++bit)
+            if (patch.footprint.mask & (UINT64_C(1) << bit))
+                patch.burnDue[bit] = 1;
     }
     for (auto& weapon : area.ground.weapons)
         weapon = {{5, 3}, true};

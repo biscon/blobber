@@ -145,7 +145,7 @@ void EffectController::condition(EffectTarget t, EffectKind kind, rules::Charact
     auto& c = conditions_[i][unsigned(kind) - unsigned(EffectKind::Sleep)];
     if (kind == EffectKind::Knockdown && c.active)
         return;
-    const auto duration = kind == EffectKind::Sleep ? 60000u : 6000u;
+    const auto duration = kind == EffectKind::Sleep ? 12000u : 6000u;
     if (gameplayMs_ > UINT64_MAX - duration)
         return;
     c = {caster,   gameplayMs_ + duration,
@@ -153,6 +153,13 @@ void EffectController::condition(EffectTarget t, EffectKind kind, rules::Charact
          true,     turns_ && (kind == EffectKind::Blind || kind == EffectKind::Slow)};
     conditionNotice(t, kind, EffectNotice::Applied, EffectEnd::None, caster, now, events);
     reconcile(now, events);
+}
+std::uint64_t EffectController::sleepRemaining(EffectTarget t) const noexcept {
+    const auto i = conditionIndex(t);
+    if (i >= conditions_.size())
+        return 0;
+    const auto& c = conditions_[i][0];
+    return c.active && c.untilMs > gameplayMs_ ? c.untilMs - gameplayMs_ : 0;
 }
 void EffectController::wake(EffectTarget t, std::uint64_t now, CombatEvents& events) noexcept {
     const auto i = conditionIndex(t);
@@ -220,13 +227,28 @@ bool EffectController::canCreateArea() const noexcept {
 }
 AreaId EffectController::createArea(Cell cell, rules::CharacterId caster, int dc, std::uint64_t now,
                                     CombatEvents& events) noexcept {
-    if (!canCreateArea() || actors_.map().solid(cell) || !canAct(caster) || dc < 1 || dc > 1000)
+    return createAreaFootprint(wholeCellFootprint(cell), caster, dc, now, events);
+}
+AreaId EffectController::createAreaFootprint(const SubcellFootprint& footprint, rules::CharacterId caster,
+                                             int dc, std::uint64_t now, CombatEvents& events) noexcept {
+    Cell cell{};
+    for (unsigned bit = 0; bit < 64; ++bit)
+        if (footprint.mask & (UINT64_C(1) << bit)) {
+            cell = dungeonCell(footprint.tile(bit));
+            break;
+        }
+    for (unsigned bit = 0; bit < 64; ++bit)
+        if ((footprint.mask & (UINT64_C(1) << bit)) && actors_.map().solid(dungeonCell(footprint.tile(bit))))
+            return {};
+    if (!footprint.mask || footprint.count() > 4 || !canCreateArea() || actors_.map().solid(cell) ||
+        !canAct(caster) || dc < 1 || dc > 1000)
         return {};
     const bool empty = std::none_of(ground_.areas.begin(), ground_.areas.end(),
                                     [](const GroundArea& a) { return a.active; });
     for (auto& a : ground_.areas)
         if (!a.active) {
             a = {{actors_.snapshot().world, nextArea_++}, cell, caster, dc, gameplayMs_ + 60000, true};
+            a.footprint = footprint;
             ++ground_.revision;
             if (events.supportJournal) {
                 SupportVisual cue;
@@ -249,28 +271,99 @@ AreaId EffectController::createArea(Cell cell, rules::CharacterId caster, int dc
 const GroundArea* EffectController::area(Cell cell) const noexcept {
     const GroundArea* found = nullptr;
     for (const auto& a : ground_.areas)
-        if (a.active && a.cell == cell &&
+        if (a.active &&
+            [&] {
+                for (unsigned bit = 0; bit < 64; ++bit)
+                    if ((a.footprint.mask & (UINT64_C(1) << bit)) &&
+                        dungeonCell(a.footprint.tile(bit)) == cell)
+                        return true;
+                return false;
+            }() &&
             (!found || a.difficulty > found->difficulty ||
              (a.difficulty == found->difficulty && a.id.serial < found->id.serial)))
             found = &a;
     return found;
 }
+const GroundArea* EffectController::areaAt(Cell tile) const noexcept {
+    const GroundArea* found = nullptr;
+    for (const auto& a : ground_.areas)
+        if (a.active && a.footprint.contains(tile) &&
+            (!found || a.difficulty > found->difficulty ||
+             (a.difficulty == found->difficulty && a.id.serial < found->id.serial)))
+            found = &a;
+    return found;
+}
+Cell EffectController::targetTile(EffectTarget t, Cell cell) const noexcept {
+    if (t.npc) {
+        const auto* a = actors_.actor(t.enemy);
+        return globalSubcell(cell, a ? a->npc.subcell : Cell{});
+    }
+    unsigned slot = 0;
+    for (unsigned i = 0; i < 4; ++i)
+        if (party_.snapshot().formation[i].index == t.character.index)
+            slot = i;
+    return formationSubcell({cell, partyHeading_}, slot);
+}
+void EffectController::cross(EffectTarget t, Cell from, Cell to, std::uint64_t now) noexcept {
+    if (!events_ || from == to)
+        return;
+    const auto delta = to + from * -1;
+    const int distance = std::abs(delta.x) + std::abs(delta.y);
+    const bool straight = (!delta.x || !delta.y) && distance <= 4;
+    const auto step = Cell{delta.x ? (delta.x > 0 ? 1 : -1) : 0, delta.y ? (delta.y > 0 ? 1 : -1) : 0};
+    const int count = straight ? distance : 1;
+    const auto start = from;
+    for (int n = 1; n <= count; ++n) {
+        const auto tile = straight ? start + step * n : to;
+        unsigned entered = 0;
+        for (unsigned i = 0; i < ground_.areas.size(); ++i) {
+            const auto& a = ground_.areas[i];
+            if (a.active && a.footprint.contains(tile) && !a.footprint.contains(from))
+                entered |= 1u << i;
+        }
+        if (entered)
+            groundCheck(t, dungeonCell(tile), now, *events_, entered, tile);
+        from = tile;
+    }
+    reconcileWeb(now, *events_);
+}
+void EffectController::partyPose(Player pose, bool checkEntry) noexcept {
+    const Player old{partyCell_, partyHeading_};
+    partyCell_ = pose.cell;
+    partyHeading_ = pose.heading;
+    if (checkEntry && events_ && !(old == pose))
+        for (unsigned i = 0; i < 4; ++i)
+            cross(party_.snapshot().formation[i], formationSubcell(old, i), formationSubcell(pose, i),
+                  noticeMs_);
+}
+unsigned EffectController::partyMovementFactor(Player from, Player to) const noexcept {
+    for (unsigned slot = 0; slot < 4; ++slot) {
+        const auto id = party_.snapshot().formation[slot];
+        if (!conscious(id))
+            continue;
+        const auto a = formationSubcell(from, slot), b = formationSubcell(to, slot);
+        if (areaAt(a) || areaAt(b) || areaAt({(a.x + b.x) / 2, (a.y + b.y) / 2}))
+            return 2;
+    }
+    return 1;
+}
 unsigned EffectController::movementFactor(EffectTarget t, Cell from, Cell to) const noexcept {
-    return has(t, EffectKind::Slow) || area(from) || area(to) ? 2 : 1;
+    return has(t, EffectKind::Slow) || areaAt(targetTile(t, from)) || areaAt(targetTile(t, to)) ? 2 : 1;
 }
 void EffectController::enter(EffectTarget t, Cell cell, std::uint64_t now) noexcept {
     if (events_)
         groundCheck(t, cell, now, *events_);
 }
-void EffectController::groundCheck(EffectTarget target, Cell cell, std::uint64_t now,
-                                   CombatEvents& events) noexcept {
+void EffectController::groundCheck(EffectTarget target, Cell cell, std::uint64_t now, CombatEvents& events,
+                                   unsigned areas, std::optional<Cell> tile) noexcept {
     if (!living(target))
         return;
     reconcileWeb(now, events);
     for (bool web : {false, true}) {
         const GroundArea* a = nullptr;
         for (const auto& g : ground_.areas)
-            if (g.active && g.web == web && g.cell == cell &&
+            if ((areas & (1u << unsigned(&g - ground_.areas.data()))) && g.active && g.web == web &&
+                g.footprint.contains(tile.value_or(targetTile(target, cell))) &&
                 (!a || g.difficulty > a->difficulty ||
                  (g.difficulty == a->difficulty && g.id.serial < a->id.serial)))
                 a = &g;

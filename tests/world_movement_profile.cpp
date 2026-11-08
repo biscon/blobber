@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
             const auto* picking = view.picking();
             commands.refresh(picking ? picking->targets() : TargetSnapshot{}, game.actionBusy(), false, true);
             const auto after = commands.floorPreview();
-            if (area.kind != after.kind || area.cells != after.cells || area.eligible != after.eligible ||
+            if (!(area.footprint == after.footprint) || area.kind != after.kind || area.cells != after.cells || area.eligible != after.eligible ||
                 area.ground.revision != after.ground.revision)
                 view.update(game, animator.snapshot(), after);
         };

@@ -346,6 +346,86 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
         enemyMovement_.spentFeet += speed / 2;
         remaining -= speed / 2;
     }
+    // Rescue intent shares the ordinary, bounded route workspace and movement budget.
+    const auto intelligence = actors_.catalog().monster(a->monster)->abilities[3];
+    if (!enemyMovement_.actionSpent && currentEvents_ && intelligence >= 6 &&
+        (!enemyMovement_.wakeDecided || enemyMovement_.wakeTarget.world)) {
+        TacticalNavigation::WakeGoals goals;
+        goals.budgetFeet = unsigned(remaining);
+        std::array<int, 8> proximity{};
+        const auto here = globalSubcell(a->npc.cell, a->npc.subcell);
+        for (std::size_t i = 0; i < state_.enemyCount; ++i) {
+            const auto ally = state_.enemies[i];
+            const auto* sleeper = actors_.actor(ally);
+            if (!sleeper || ally.slot == id.slot || sleeper->life != ActorLife::Alive ||
+                !effects_.has(ally, EffectKind::Sleep) ||
+                (enemyMovement_.wakeDecided && ally.slot != enemyMovement_.wakeTarget.slot))
+                continue;
+            bool unspent = false;
+            for (std::size_t o = position_; o < orderCount_; ++o)
+                if (!order_[o].party && groups_[order_[o].index].index == sleeper->monster.index)
+                    unspent = o > position_ || i > enemyCursor_;
+            if (effects_.sleepRemaining(ally) <= (unspent ? 0u : combatRoundMs))
+                continue;
+            const auto tile = globalSubcell(sleeper->npc.cell, sleeper->npc.subcell);
+            const int distance = std::abs(tile.x - here.x) + std::abs(tile.y - here.y);
+            const unsigned rank = (unspent ? 0u : unsigned(NpcWorld::maxInstances)) + ally.slot;
+            unsigned pos = 0;
+            while (pos < goals.count &&
+                   (proximity[pos] < distance || (proximity[pos] == distance && goals.rank[pos] < rank)))
+                ++pos;
+            if (pos >= goals.allies.size())
+                continue;
+            for (unsigned j = std::min<unsigned>(goals.count, 7); j > pos; --j) {
+                goals.allies[j] = goals.allies[j - 1];
+                goals.rank[j] = goals.rank[j - 1];
+                proximity[j] = proximity[j - 1];
+            }
+            goals.allies[pos] = ally;
+            goals.rank[pos] = rank;
+            proximity[pos] = distance;
+            goals.count = std::min<unsigned>(8, goals.count + 1);
+        }
+        if (goals.count) {
+            const auto step = ai_.wakeStep(id, origin_, now, goals);
+            if (step.status == TacticalNavigation::Status::Pending) {
+                waitingForPath = true;
+                out.event = CombatEvent::None;
+                return out;
+            }
+            if (!enemyMovement_.wakeDecided) {
+                enemyMovement_.wakeDecided = true;
+                if ((step.status == TacticalNavigation::Status::Step ||
+                     step.status == TacticalNavigation::Status::AtGoal) &&
+                    rng_.roll({1, 100, 0}).value.total <= wakeChance(unsigned(intelligence)))
+                    enemyMovement_.wakeTarget = step.target;
+            }
+            if (enemyMovement_.wakeTarget.world) {
+                if (step.status == TacticalNavigation::Status::AtGoal) {
+                    effects_.wake(enemyMovement_.wakeTarget, now, *currentEvents_);
+                    enemyMovement_.actionSpent = true;
+                    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+                    out.event = CombatEvent::Wake;
+                    out.awakened = enemyMovement_.wakeTarget;
+                    return out;
+                }
+                if (step.status == TacticalNavigation::Status::Step && step.costFeet <= remaining &&
+                    ai_.commitCombatStep(id, origin_, step, now)) {
+                    enemyMovement_.spentFeet += step.costFeet;
+                    enemyMovement_.arriving = true;
+                    state_.resolvingAction = true;
+                    state_.awaitingAction = false;
+                    due_ = now + a->walkDurationMs;
+                    out.event = CombatEvent::Move;
+                    return out;
+                }
+                enemyMovement_.wakeTarget = {};
+            }
+        } else {
+            enemyMovement_.wakeDecided = true;
+            enemyMovement_.wakeTarget = {};
+        }
+    }
     if (!enemyMovement_.actionSpent && enemyCaster(id)) {
         auto spell = enemySpell(id, now);
         if (spell.event != CombatEvent::None || spell.reason != CommandReason::Resolved)
@@ -400,16 +480,6 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
     }
     if (!enemyMovement_.actionSpent && shot)
         return enemyAttack(id, true, now);
-    if (!enemyMovement_.actionSpent && currentEvents_)
-        for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
-            const auto ally = actors_.id(i);
-            if (effects_.has(ally, EffectKind::Sleep) &&
-                (a->npc.cell == actors_.actor(ally)->npc.cell ||
-                 combatAdjacent(map_, a->npc.cell, actors_.actor(ally)->npc.cell))) {
-                effects_.wake(ally, now, *currentEvents_);
-                break;
-            }
-        }
     // Exhaustion/blocked movement and non-attacking actions still finish readiness once.
     enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
     return out;

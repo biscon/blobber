@@ -247,14 +247,8 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
             p.points[i] = {center.x + world.camera.right.x * x, center.y + y,
                            center.z + world.camera.right.z * x};
         }
-        if (cone) {
-            p.cells = cone->cells;
-            p.origin = cone->origin.cell;
-            p.footprint = 512 | (cone->includeOrigin ? 1024 : 0);
-            for (unsigned i = 0; i < 9; ++i)
-                if (cone->eligible[i])
-                    p.footprint |= 1u << i;
-        }
+        if (cone)
+            p.subcells = cone->footprint;
         frame.packets[frame.count++] = p;
     };
     auto light = [&](Vec p, bool frost, float strength, unsigned priority) {
@@ -313,8 +307,8 @@ void SpellEffectsPlayer::append(const FrameInput& in, const WorldFrame& world, E
                         // Depth overlap gives one release even when only one front cell has a victim.
                         const float reach = .12f + spread * (.35f + .27f * float(layer));
                         const float height = .16f + .50f * reach, width = .24f + 2.65f * reach;
-                        Vec p{c.origin.cell.x + .5f + f.x * (.12f + reach), floor + .02f + height * .5f,
-                              c.origin.cell.y + .5f + f.y * (.12f + reach)};
+                        Vec p{c.origin.cell.x + .5f + f.x * (.5f + reach), floor + .02f + height * .5f,
+                              c.origin.cell.y + .5f + f.y * (.5f + reach)};
                         if (!pass) {
                             const unsigned animation =
                                 std::min(7u, animationFrame(Clip::Cone, unsigned(age)) + layer % 2);

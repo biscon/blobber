@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 16/19 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 17/21 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -51,7 +51,7 @@ the save format. The legacy `door_opening` field covers both opening and closing
 
 Party purse observations include `party_gold` as a lossless uint64 decimal string
 in both diagnostic and player modes. Gold is shared and does not appear in
-character inventory entries. Campaign saves now require schema 16/simulation 19. The authored smithy is location
+character inventory entries. Campaign saves now require schema 17/simulation 21. The authored smithy is location
 5 at depth zero, with identity `sanctuary-smithy-v1`. Arcane Emporium is location 6 at depth zero, with identity
 `sanctuary-emporium-v1`. City doorway requests resolve the inn, smithy or emporium
 by the current cell/facing; the existing `doorway` action is unchanged.
@@ -653,3 +653,14 @@ inn discovery, loot and saved pose survive travel and Continue. Generator/templa
 remain 9/7. The optional fingerprinted hearth has no simulation or picking effects;
 absent hearth metadata preserves existing dungeon world fingerprints. Strict replay
 also retains binary/content identity checks.
+
+### Precise area targeting (2026-11-08)
+
+Ground area spells accept `"aim_subcell":{"x":12,"y":12}` in combat requests.
+These are intersections on the five-foot grid (twice the dungeon-cell coordinates).
+The legacy `"cell":[6,6]` maps to intersection `[13,13]`, its centre. Supplying both
+rejects. Ground spells share actual caster range and the same footprint as the UI.
+Other cell-targeted abilities retain `cell`. Ground observations include
+`subcell_origin` and decimal-string `subcell_mask` (eight bits per row). Diagnostic
+observations also include per-square burn deadlines. `wake` events expose rescuer
+`enemy` and recipient `awakened`; rescue consumes the enemy action.

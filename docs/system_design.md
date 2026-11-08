@@ -1,5 +1,14 @@
 # System design
 
+[Precise spell areas and Sleep balance](spell_area_design.md): implemented and
+mechanically verified; user balance/appearance acceptance pending. Five-foot subcell templates shared by aiming, effects,
+persistent terrain and rendering; shorter Sleep and occasional intelligent rescues.
+Campaign schema/simulation are now **17/21**; arena scenarios and libraries retain
+their formats. [Ground-area review captures](screenshots/spell-areas/README.md).
+The [fixed party-front correction](spell_area_design.md#party-front-fixed-templates--follow-up-2026-11-08)
+uses a 2/4-row fan and a symmetric 4×2 Thunderwave rectangle outside the whole party cell,
+independent of caster position. [Forward-spell review](screenshots/forward-spells/README.md).
+
 [Second Wind direct activation](spellcasting_ui_design.md#second-wind-direct-activation--2026-11-08):
 implemented and mechanically verified. Abilities selection uses the existing Action
 Surge immediate-confirm path; normal healing, charges and action/readiness costs
@@ -9,7 +18,8 @@ remain. Three focused Debug suites pass; the Debug game is rebuilt.
 **implemented, mechanically verified and accepted by the user (2026-11-08)**. Five feet per cardinal subcell,
 species Speed, movement plus an action, Dash, and SRD movement condition costs.
 Combat-only subcell navigation leaves real-time roaming unchanged. Arena scenarios
-remain compatible; campaign schema/simulation are **16/20** under the strict save policy.
+remain compatible. Movement introduced schema/simulation **16/20**; precise areas
+above advance them to **17/21**, under the strict save policy.
 Debug/Release games build, 20 affected Release CPU suites and extended campaign
 persistence pass. Six inspected hidden OpenGL captures verify same-turn flank
 movement/attacks and GPU cleanup; [review evidence](screenshots/combat-positioning/README.md).

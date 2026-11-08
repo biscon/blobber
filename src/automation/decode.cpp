@@ -235,7 +235,7 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (op != "combat")
         throw std::invalid_argument("Unknown action kind");
     fields(j, {"kind", "character", "action", "target", "ally", "spell", "feature", "item", "enemies",
-               "allies", "darts", "cell", "restore_paralysis"});
+               "allies", "darts", "cell", "restore_paralysis", "aim_subcell"});
     auto& c = r.combat;
     c.world = g.actors().snapshot().world;
     c.turn = g.combat().snapshot().turn;
@@ -295,8 +295,16 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
         for (std::size_t i = 0; i < a.size(); ++i)
             c.darts[i] = bounded(a[i], 3);
     }
+    if (j.contains("cell") && j.contains("aim_subcell"))
+        throw std::invalid_argument("Specify cell or aim_subcell, not both");
     if (j.contains("cell"))
         c.aimedCell = cell(j.at("cell"));
+    if (j.contains("aim_subcell")) {
+        const auto& aim = j.at("aim_subcell");
+        fields(aim, {"x", "y"});
+        c.aimedSubcell = SpellAim{int(bounded(aim.at("x"), Map::maxDimension * 2)),
+                                  int(bounded(aim.at("y"), Map::maxDimension * 2))};
+    }
     if (j.contains("restore_paralysis"))
         c.restoreParalysis = j.at("restore_paralysis").get<bool>();
     return r;

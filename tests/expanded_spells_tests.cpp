@@ -140,8 +140,10 @@ void budgetsAndGround() {
     const int mana = s.party().character({3})->mana;
     check(s.submit(c).reason == CommandReason::MissingTarget && s.party().character({3})->mana == mana,
           "Already sleeping recipients rejected before cost");
-    s.update(54, false);
-    check(!s.effects().has(s.actors().id(0), EffectKind::Sleep), "Sleep expires at sixty gameplay seconds");
+    s.update(5.999, false);
+    check(s.effects().has(s.actors().id(0), EffectKind::Sleep), "Sleep lasts until twelve gameplay seconds");
+    s.update(.001, false);
+    check(!s.effects().has(s.actors().id(0), EffectKind::Sleep), "Sleep expires at twelve gameplay seconds");
     const auto empty = spellPlacements(map, 0);
     GameSession friendly(map, catalog, empty, 5, spellSpawn, false);
     for (std::uint16_t i = 0; i < 4; ++i)
@@ -489,12 +491,12 @@ void wardsAndUi() {
         ++index;
     ui.chooseSpellbook(index);
     ui.magicGround(Cell{6, 7}, true);
-    check(ui.snapshot().magic.pending.aimedCell == std::optional<Cell>{{6, 7}} &&
-              ui.floorPreview().eligible[0],
-          "Ground UI selection and preview agree");
+    check(ui.snapshot().magic.pending.aimedSubcell == std::optional<SpellAim>{{13, 15}} &&
+              ui.floorPreview().eligible[0] && std::strstr(ui.snapshot().magic.targets.data(), "4 subcells"),
+          "Ground UI selection, units and preview agree");
     ui.magicKeyboardTarget(1);
-    check(!(ui.snapshot().magic.pending.aimedCell == std::optional<Cell>{{6, 7}}),
-          "Keyboard cycles ground cells");
+    check(!(ui.snapshot().magic.pending.aimedSubcell == std::optional<SpellAim>{{13, 15}}),
+          "Keyboard cycles precise ground intersections");
     ui.magicGround(Cell{6, 7}, true);
     check(ui.confirm() == CommandReason::Resolved, "Ground UI confirms cast");
     check(ui.floorPreview().ground.revision > 0, "Persistent ground survives targeting completion");

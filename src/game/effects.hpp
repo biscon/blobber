@@ -159,6 +159,8 @@ struct GroundArea {
     bool web = false;
     EffectId effect{};
     std::uint64_t burnMs = 0;
+    SubcellFootprint footprint = wholeCellFootprint(cell);
+    std::array<std::uint64_t, 64> burnDue{};
 };
 struct MirrorReservation {
     EffectId effect;
@@ -226,6 +228,7 @@ class EffectController {
     bool wardAllows(EffectTarget attacker, EffectTarget target, std::uint64_t, CombatEvents&) noexcept;
     void condition(EffectTarget, EffectKind, rules::CharacterId caster, std::uint64_t,
                    CombatEvents&) noexcept;
+    std::uint64_t sleepRemaining(EffectTarget) const noexcept;
     void wake(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     bool stand(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     void casterTurn(rules::CharacterId, std::uint64_t, CombatEvents&) noexcept;
@@ -237,8 +240,12 @@ class EffectController {
     const GroundSnapshot& ground() const noexcept { return ground_; }
     bool canCreateArea() const noexcept;
     bool canCreateWeb(const Cell*, std::size_t, rules::CharacterId) const noexcept;
+    bool canCreateWebFootprint(const SubcellFootprint&, rules::CharacterId) const noexcept;
     bool createWeb(const Cell*, std::size_t, rules::CharacterId, int, std::uint64_t, CombatEvents&) noexcept;
+    bool createWebFootprint(const SubcellFootprint&, rules::CharacterId, int, std::uint64_t,
+                            CombatEvents&) noexcept;
     void ignite(Cell) noexcept;
+    void ignite(const SubcellFootprint&) noexcept;
     bool escapeWeb(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     bool mobile(EffectTarget t) const noexcept { return canAct(t) && !has(t, EffectKind::Restrained); }
     MirrorReservation mirror(EffectTarget attacker, rules::CharacterId target, int attackRoll,
@@ -250,12 +257,20 @@ class EffectController {
     void followWeapons(Cell partyFrom, Cell partyTo) noexcept;
     bool weaponCanMove(rules::CharacterId, Cell) const noexcept;
     AreaId createArea(Cell, rules::CharacterId, int difficulty, std::uint64_t, CombatEvents&) noexcept;
+    AreaId createAreaFootprint(const SubcellFootprint&, rules::CharacterId, int, std::uint64_t,
+                               CombatEvents&) noexcept;
     const GroundArea* area(Cell) const noexcept;
+    const GroundArea* areaAt(Cell tile) const noexcept;
+    Cell targetTile(EffectTarget, Cell cell) const noexcept;
+    void cross(EffectTarget, Cell fromTile, Cell toTile, std::uint64_t) noexcept;
+    unsigned partyMovementFactor(Player, Player) const noexcept;
     unsigned movementFactor(EffectTarget, Cell from, Cell to) const noexcept;
     void enter(EffectTarget, Cell, std::uint64_t) noexcept;
-    void groundCheck(EffectTarget, Cell, std::uint64_t, CombatEvents&) noexcept;
+    void groundCheck(EffectTarget, Cell, std::uint64_t, CombatEvents&, unsigned areas = 0xffff,
+                     std::optional<Cell> tile = {}) noexcept;
     void groundOccupants(Cell partyCell, std::uint64_t, CombatEvents&) noexcept;
     void partyCell(Cell cell) noexcept { partyCell_ = cell; }
+    void partyPose(Player, bool checkEntry = false) noexcept;
     void skipHazards(std::uint64_t until) noexcept { groundDueMs_ = until + 6000; }
 
     std::array<bool, NpcWorld::maxInstances> incapacitatedActors() const noexcept;
@@ -295,6 +310,7 @@ class EffectController {
     void burnWeb(std::uint64_t, CombatEvents&) noexcept;
     std::uint64_t nextArea_ = 1, groundDueMs_ = 6000, noticeMs_ = 0;
     Cell partyCell_{};
+    Heading partyHeading_ = Heading::North;
     bool turns_ = false;
     CombatEvents* events_ = nullptr; // Borrowed only from the session's permanent event owner.
     std::size_t conditionIndex(EffectTarget) const noexcept;

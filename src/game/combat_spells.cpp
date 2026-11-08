@@ -20,21 +20,26 @@ bool delayed(SpellKind k) {
 } // namespace
 SpellArea spellArea(const ActorWorld& actors, Player pose) noexcept {
     SpellArea result;
-    for (int side = -1; side <= 1; ++side) {
-        const auto cell = pose.cell + forward(pose.heading) + right(pose.heading) * side;
-        result.cells[side + 1] = cell;
-        result.eligible[side + 1] = inMeleeFront(actors.map(), pose.cell, pose.heading, cell);
+    result.footprint = spellFootprint(actors.map(), pose, 0, rules::SpellKind::BurningHands, {});
+    unsigned n = 0;
+    for (unsigned bit = 0; bit < 64; ++bit) {
+        if (!(result.footprint.mask & (UINT64_C(1) << bit)))
+            continue;
+        const auto cell = dungeonCell(result.footprint.tile(bit));
+        bool seen = false;
+        for (unsigned i = 0; i < n; ++i)
+            seen |= result.cells[i] == cell;
+        if (!seen) {
+            result.cells[n] = cell;
+            result.eligible[n++] = true;
+        }
     }
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto* a = actors.actor(actors.id(i));
         if (!a || !a->hostile() || a->life != ActorLife::Alive)
             continue;
-        for (std::size_t j = 0; j < result.cells.size(); ++j)
-            if (result.eligible[j] && a->npc.cell == result.cells[j]) {
-                assert(result.count < result.actors.size());
-                result.actors[result.count++] = actors.id(i);
-                break;
-            }
+        if (result.footprint.contains(globalSubcell(a->npc.cell, a->npc.subcell)))
+            result.actors[result.count++] = actors.id(i);
     }
     return result;
 }
@@ -250,6 +255,8 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     const auto& r = *rules::spellRules(definition->kind);
     if (ch->mana < rules::spellManaCost(r.level))
         return CommandReason::InsufficientMana;
+    if (c.aimedSubcell && (!r.area || !r.ground))
+        return CommandReason::InvalidTargets;
     if (r.self && state_.gameplayMs > UINT64_MAX - 3600000)
         return CommandReason::EffectCapacity;
     if (r.self) {
@@ -263,22 +270,27 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
     if (r.area) {
         if (!effects_.sees(c.character))
             return CommandReason::NotVisible;
-        if (r.ground && (!c.aimedCell || !spellCell(map_, pose, *c.aimedCell)))
-            return CommandReason::MissingTarget;
+        if (c.aimedCell && c.aimedSubcell)
+            return CommandReason::InvalidTargets;
+        if (r.ground) {
+            unsigned formation = 0;
+            for (unsigned i = 0; i < 4; ++i)
+                if (party_.snapshot().formation[i].index == c.character.index)
+                    formation = i;
+            if ((!c.aimedCell && !c.aimedSubcell) ||
+                !validSpellAim(map_, pose, formation,
+                               c.aimedSubcell.value_or(cellAim(c.aimedCell.value_or(pose.cell)))))
+                return CommandReason::MissingTarget;
+        }
         if (c.targetCount)
             return CommandReason::InvalidTargets;
         if (definition->kind == SpellKind::Grease)
             return effects_.canCreateArea() ? CommandReason::Ready : CommandReason::EffectCapacity;
         const auto affected = area(c, pose);
-        if (definition->kind == SpellKind::Web) {
-            std::array<Cell, 4> cells{};
-            std::size_t n = 0;
-            for (unsigned i = 0; i < affected.cells.size(); ++i)
-                if (affected.eligible[i])
-                    cells[n++] = affected.cells[i];
-            return effects_.canCreateWeb(cells.data(), n, c.character) ? CommandReason::Ready
-                                                                       : CommandReason::EffectCapacity;
-        }
+        if (definition->kind == SpellKind::Web)
+            return effects_.canCreateWebFootprint(affected.footprint, c.character)
+                       ? CommandReason::Ready
+                       : CommandReason::EffectCapacity;
         return (affected.count || affected.recipientCount) ? CommandReason::Ready
                                                            : CommandReason::MissingTarget;
     }
@@ -440,14 +452,9 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             out = spectralAttack(c, pose, now, events);
         } else if (kind == SpellKind::Web) {
             const auto affected = area(c, pose);
-            std::array<Cell, 4> cells{};
-            std::size_t n = 0;
-            for (unsigned i = 0; i < affected.cells.size(); ++i)
-                if (affected.eligible[i])
-                    cells[n++] = affected.cells[i];
-            effects_.createWeb(cells.data(), n, c.character,
-                               8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier,
-                               now, events);
+            effects_.createWebFootprint(
+                affected.footprint, c.character,
+                8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier, now, events);
             for (std::size_t i = 0; i < affected.count; ++i)
                 alert(affected.actors[i], pose);
         } else if (kind == SpellKind::Shatter) {
@@ -475,10 +482,16 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         } else if (kind == SpellKind::Sleep || kind == SpellKind::ColorSpray) {
             auto affected = area(c, pose);
             if (auto* visual = spellVisuals_.begin(kind, c.character, pose, now)) {
+                for (unsigned slot = 0; slot < 4; ++slot)
+                    if (party_.snapshot().formation[slot].index == c.character.index)
+                        visual->formation = slot;
                 visual->cells = affected.cells;
+                visual->footprint = affected.footprint;
                 visual->eligible = affected.eligible;
                 visual->includeOrigin = kind == SpellKind::ColorSpray;
-                visual->center = c.aimedCell.value_or(pose.cell + forward(pose.heading));
+                visual->center =
+                    c.aimedCell.value_or(c.aimedSubcell ? dungeonCell({c.aimedSubcell->x, c.aimedSubcell->y})
+                                                        : pose.cell + forward(pose.heading));
             }
             const auto hp = [&](EffectTarget t) {
                 return t.npc ? actors_.actor(t.enemy)->hitPoints : party_.character(t.character)->hitPoints;
@@ -505,12 +518,16 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             }
             reconcileEffects(now, events);
         } else if (kind == SpellKind::Grease) {
-            effects_.createArea(*c.aimedCell, c.character,
-                                8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier,
-                                now, events);
+            effects_.createAreaFootprint(
+                area(c, pose).footprint, c.character,
+                8 + ch->stats.proficiency + party_.spellAccess(c.character, c.spell).modifier, now, events);
             const auto affected = area(c, pose);
             for (std::size_t i = 0; i < affected.recipientCount; ++i)
-                effects_.groundCheck(affected.recipients[i], *c.aimedCell, now, events);
+                effects_.groundCheck(affected.recipients[i],
+                                     affected.recipients[i].npc
+                                         ? actors_.actor(affected.recipients[i].enemy)->npc.cell
+                                         : pose.cell,
+                                     now, events);
             for (std::size_t i = 0; i < affected.count; ++i)
                 alert(affected.actors[i], pose);
             reconcileEffects(now, events);
@@ -546,7 +563,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             std::array<ActorId, 36> targets{};
             std::size_t count = 0;
             if (r.area) {
-                const auto area = spellArea(actors_, pose);
+                const auto area = this->area(c, pose);
                 targets = area.actors;
                 count = area.count;
             } else {
@@ -564,14 +581,17 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             SpellCastVisual* castVisual = nullptr;
             if (!delayed(kind) && elementalSpell(kind)) {
                 castVisual = spellVisuals_.begin(kind, c.character, pose, now);
-                const auto footprint = spellArea(actors_, pose);
+                const auto footprint = this->area(c, pose);
                 if (castVisual && r.area) {
-                    std::copy_n(footprint.cells.begin(), 3, castVisual->cells.begin());
-                    std::copy_n(footprint.eligible.begin(), 3, castVisual->eligible.begin());
+                    for (unsigned slot = 0; slot < 4; ++slot)
+                        if (party_.snapshot().formation[slot].index == c.character.index)
+                            castVisual->formation = slot;
+                    castVisual->cells = footprint.cells;
+                    castVisual->footprint = footprint.footprint;
+                    castVisual->eligible = footprint.eligible;
                 }
-                for (unsigned i = 0; i < footprint.cells.size(); ++i)
-                    if (kind == SpellKind::BurningHands && footprint.eligible[i])
-                        effects_.ignite(footprint.cells[i]);
+                if (kind == SpellKind::BurningHands)
+                    effects_.ignite(footprint.footprint);
             }
             const auto sharedDamage = r.attack ? 0 : rng_.roll(r.dice).value.total;
             std::array<bool, 36> push{};
@@ -669,12 +689,13 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                             continue;
                         subcell = {int(slot % 2), int(slot / 2)};
                     }
+                    const auto oldTile = globalSubcell(a->npc.cell, a->npc.subcell);
                     if (actors_
                             .walk(targets[i], destination, subcell, pose.cell, now,
                                   npcWalkDurationMs *
                                       effects_.movementFactor(targets[i], a->npc.cell, destination))
                             .changed) {
-                        effects_.groundCheck(targets[i], destination, now, events);
+                        effects_.cross(targets[i], oldTile, globalSubcell(destination, subcell), now);
                         auto moved = out;
                         moved.event = CombatEvent::Move;
                         moved.enemy = targets[i];

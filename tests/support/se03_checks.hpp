@@ -222,6 +222,8 @@ inline void se03Playback() {
     patch.active = patch.web = true;
     patch.burnMs = 6000;
     patch.cell = {6, 7};
+    patch.footprint = wholeCellFootprint(patch.cell);
+    patch.burnDue[0] = 6000;
     area.ground.areas[1] = patch;
     ++area.ground.revision;
     pipeline.update(input, world);

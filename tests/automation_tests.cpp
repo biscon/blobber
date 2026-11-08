@@ -22,6 +22,31 @@ class CoveredCandidates final : public Visibility {
     }
     bool lootVisible(LootId) const noexcept override { return false; }
 };
+void preciseAimProtocol() {
+    const auto cat = catalog();
+    const auto defs = definitions();
+    Session runner(cat, defs, scenario(cat), Mode::Diagnostic);
+    Json request = {{"kind", "combat"},
+                    {"action", "spell"},
+                    {"character", 3},
+                    {"spell", "sleep"},
+                    {"aim_subcell", {{"x", 20}, {"y", 20}}}};
+    const auto decoded = decodeAction(request, runner.game());
+    check(decoded.combat.aimedSubcell == std::optional<SpellAim>{{20, 20}} && !decoded.combat.aimedCell,
+          "Protocol preserves precise grid intersections");
+    request["cell"] = Json::array({10, 10});
+    rejects([&] { decodeAction(request, runner.game()); }, "Protocol rejects ambiguous mixed aiming");
+    request.erase("cell");
+    request["aim_subcell"]["x"] = -1;
+    rejects([&] { decodeAction(request, runner.game()); }, "Protocol rejects invalid subcell coordinates");
+    CombatOutcome event;
+    event.event = CombatEvent::Wake;
+    event.enemy = runner.game().actors().id(0);
+    event.awakened = {1, event.enemy.world};
+    const auto encoded = encodeEvent(event, cat, true);
+    check(encoded.at("event") == "wake" && encoded.at("enemy") == 0 && encoded.at("awakened") == 1,
+          "Wake event exposes rescuer and recipient identities");
+}
 void coveredObservations() {
     const auto c = catalog();
     const auto d = definitions();
@@ -585,6 +610,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        preciseAimProtocol();
         coveredObservations();
         preparedArena();
         casterSourceEvents();

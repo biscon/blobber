@@ -46,7 +46,7 @@ void Controller::submit(GeometryView map, Action action, bool fresh, const Actor
         return;
     const float duration =
         Transition::duration * (effects_ && !(old.cell == state_.player.cell) &&
-                                        (effects_->area(old.cell) || effects_->area(state_.player.cell))
+                                        effects_->partyMovementFactor(old, state_.player) == 2
                                     ? 2
                                     : 1);
     state_.transition = {old, state_.player, action, state_.animated ? 0.0f : duration, duration};

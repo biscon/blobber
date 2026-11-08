@@ -1,4 +1,5 @@
 #pragma once
+#include "game/subcell_area.hpp"
 #include "game/actors.hpp"
 #include "game/party.hpp"
 #include <optional>
@@ -69,6 +70,7 @@ struct PartyCommand {
     std::array<std::uint8_t, 3> darts{};
     std::size_t targetCount = 0;
     std::optional<Cell> aimedCell;
+    std::optional<SpellAim> aimedSubcell;
     bool restoreParalysis = false;
 };
 // Body visibility and geometry-exposed targeting. Combat validates range, rank, life and turn.

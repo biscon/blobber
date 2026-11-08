@@ -24,6 +24,9 @@ enum class CombatPhase : std::uint8_t {
     Facing,
     RoundEnd
 };
+inline unsigned wakeChance(unsigned intelligence) noexcept {
+    return intelligence < 6 ? 0 : (intelligence >= 22 ? 50u : 10u + 5u * ((intelligence - 6) / 2));
+}
 inline bool realTime(CombatPhase phase) noexcept {
     return phase == CombatPhase::Exploration || phase == CombatPhase::Approach;
 }
@@ -48,13 +51,14 @@ enum class CombatEvent : std::uint8_t {
     Recovery,
     SpellSave,
     GuidingMark,
-    Dash
+    Dash,
+    Wake
 };
 struct CombatOutcome {
     CombatEvent event = CombatEvent::None;
     CommandReason reason = CommandReason::Resolved;
     rules::CharacterId character{}, recipient{};
-    ActorId enemy{};
+    ActorId enemy{}, awakened{};
     bool enemyAttack = false, hit = false, critical = false, died = false;
     bool downed = false; // Presentation-only conscious -> unconscious transition.
     std::int64_t damage = 0;
@@ -145,9 +149,10 @@ struct CombatSnapshot {
     std::uint64_t gameplayMs = 0;
 };
 struct SpellArea {
+    SubcellFootprint footprint;
     rules::SpellKind kind = rules::SpellKind::Count;
-    std::array<Cell, 9> cells{};
-    std::array<bool, 9> eligible{};
+    std::array<Cell, 16> cells{}; // Coarse occupied-cell cache for lighting, not hit detection.
+    std::array<bool, 16> eligible{};
     std::array<ActorId, 36> actors{};
     std::array<EffectTarget, 40> recipients{};
     std::size_t recipientCount = 0;
@@ -157,7 +162,7 @@ struct SpellArea {
 };
 SpellArea spellArea(const ActorWorld&, Player) noexcept;
 SpellArea spellArea(const ActorWorld&, const Party&, const EffectController&, Player, rules::SpellKind,
-                    std::optional<Cell> = {}) noexcept;
+                    std::optional<Cell> = {}, std::optional<SpellAim> = {}, unsigned formation = 0) noexcept;
 bool spellCell(GeometryView, Player, Cell) noexcept;
 
 class CombatController {
@@ -292,6 +297,8 @@ class CombatController {
     struct EnemyMovement {
         bool initialized = false, actionSpent = false, dashed = false, arriving = false, retreated = false;
         std::uint64_t spentFeet = 0;
+        bool wakeDecided = false;
+        ActorId wakeTarget{};
     } enemyMovement_;
     std::uint64_t enemySpeed(ActorId) const noexcept;
     CombatPhase resumePhase_ = CombatPhase::Contact;

@@ -12,11 +12,17 @@ class TacticalNavigation {
     struct Result {
         Status status = Status::Blocked;
         Cell cell{}, subcell{};
-        unsigned costFeet = 0;
+        unsigned costFeet = 0, totalCostFeet = 0;
+        ActorId target{};
+    };
+    struct WakeGoals {
+        std::array<ActorId, 8> allies{};
+        std::array<unsigned, 8> rank{};
+        unsigned count = 0, budgetFeet = 0;
     };
     TacticalNavigation(GeometryView, const ActorWorld&);
-    Result next(ActorId, Player, Cell target, bool retreat, const EffectController*,
-                std::size_t& work) noexcept;
+    Result next(ActorId, Player, Cell target, bool retreat, const EffectController*, std::size_t& work,
+                const WakeGoals* wake = nullptr) noexcept;
     void committed() noexcept;
     void cancel() noexcept { valid_ = false; }
 
@@ -29,6 +35,7 @@ class TacticalNavigation {
     struct Goal {
         std::uint32_t node = 0;
         unsigned rank = 0;
+        ActorId target{};
     };
     std::array<Goal, 64> goals_{};
     std::size_t goalCount_ = 0, heapCount_ = 0, routeCount_ = 0, reset_ = 0;
@@ -38,7 +45,9 @@ class TacticalNavigation {
     ActorId actor_{};
     Player party_{};
     Cell target_{};
-    bool valid_ = false, retreat_ = false;
+    bool valid_ = false, retreat_ = false, waking_ = false;
+    WakeGoals wake_{};
+    ActorId wakeTarget_{};
     std::uint64_t geometry_ = 0, occupancy_ = 0, ground_ = 0;
     std::uint32_t index(Cell cell, Cell subcell) const noexcept;
     Cell cell(std::uint32_t) const noexcept;

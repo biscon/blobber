@@ -347,7 +347,7 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         return false;
     });
 }
-std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, int y) const noexcept {
+std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, int y, SpellAim* aim) const noexcept {
     if (!ready_ || map_ != &in.geometry.base() || (in.doors && in.doors->active()) ||
         in.movement.transition.active() || x < 0 || x >= viewWidth || y < 0 || y >= viewHeight)
         return {};
@@ -378,6 +378,8 @@ std::optional<Cell> VisibilityPipeline::groundCell(const FrameInput& in, int x, 
         if (d >= start - epsilon && d <= end + epsilon && d >= nearPlane && d <= c.farClip) {
             if (d > frame().picking.opaqueDepth(std::size_t(y) * viewWidth + x) + epsilon)
                 return {};
+            if (aim) *aim = {int(std::floor((c.position.x + vx * d) * 2 + .5f - 1e-5f)),
+                             int(std::floor((c.position.z + vz * d) * 2 + .5f - 1e-5f))};
             return spellCell(in.geometry, in.movement.player, cell) ? std::optional<Cell>{cell}
                                                                     : std::nullopt;
         }

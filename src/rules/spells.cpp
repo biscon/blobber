@@ -149,7 +149,7 @@ constexpr SpellRules spells[]{
      3},
     {"burning_hands",
      "Burning Hands",
-     "Three clear front cells: 3d6 fire, Dexterity save for half. No friendly fire.",
+     "Fixed party-front fan (2 then 4 subcells): 3d6 fire, Dexterity save for half. No friendly fire.",
      Casting::Intelligence,
      1,
      {3, 6, 0},
@@ -161,7 +161,7 @@ constexpr SpellRules spells[]{
      0},
     {"thunderwave",
      "Thunderwave",
-     "Three clear front cells: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one "
+     "Fixed party-front 4x2 subcell rectangle: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one "
      "cell forward if space permits.",
      Casting::Intelligence,
      1,
@@ -216,8 +216,8 @@ constexpr SpellRules spells[]{
      false},
     {"sleep",
      "Sleep",
-     "Aim within six cells. A 3x3 area sleeps creatures using a 5d8 HP budget, weakest first. Affects "
-     "allies. Damage or Aid wakes. 60 seconds.",
+     "Aim within 60 feet. A 30-foot square sleeps creatures using a 5d8 HP budget, weakest first. Affects "
+     "allies. Damage or Aid wakes. Two rounds (12 seconds).",
      Casting::Intelligence,
      1,
      {5, 8, 0},
@@ -246,8 +246,8 @@ constexpr SpellRules spells[]{
      true},
     {"grease",
      "Grease",
-     "Aim at one cell within six cells. Difficult terrain; Dexterity saves or knockdown, automatically "
-     "losing the next turn to stand. Allies affected. 60 seconds.",
+     "Aim a 10-foot square within 60 feet. Difficult terrain; Dexterity saves or knockdown; stand using "
+     "half movement. Allies affected. 60 seconds.",
      Casting::Intelligence,
      1,
      {1, 4, 0},
@@ -261,7 +261,7 @@ constexpr SpellRules spells[]{
      false},
     {"color_spray",
      "Color Spray",
-     "Three front cells: 6d10 HP budget blinds weakest seeing creatures until your next turn (6 seconds "
+     "Fixed party-front fan (2 then 4 subcells): 6d10 HP budget blinds weakest seeing creatures until your next turn (6 seconds "
      "outside turns).",
      Casting::Intelligence,
      1,
@@ -384,7 +384,7 @@ constexpr SpellRules spells[]{
      3},
     {"shatter",
      "Shatter",
-     "Aim a 3x3 area within six cells: 3d8 thunder, Constitution save for half. Affects allies and caster; "
+     "Aim a 10-foot-radius circle within 60 feet: 3d8 thunder, Constitution save for half. Affects allies and caster; "
      "Evocation protects other companions.",
      Casting::Intelligence,
      2,
@@ -414,7 +414,7 @@ constexpr SpellRules spells[]{
      true},
     {"web",
      "Web",
-     "Aim a 2x2 floor area: difficult terrain and Dexterity saves against restraint. Escape with a Strength "
+     "Aim a 20-foot square within 60 feet: difficult terrain and Dexterity saves against restraint. Escape with a Strength "
      "action. Affects allies, burns in fire; concentration, one hour.",
      Casting::Intelligence,
      2,

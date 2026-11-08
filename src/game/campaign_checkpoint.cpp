@@ -81,7 +81,7 @@ void GameSession::restorePose(Player pose, bool animated) {
     movement_.state_.blocked = false;
     movement_.state_.animated = animated;
     movement_.clearPending();
-    effects_.partyCell(pose.cell);
+    effects_.partyPose(pose);
     discoveredReady_ = false;
 }
 std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {

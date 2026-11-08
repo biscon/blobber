@@ -64,6 +64,14 @@ class GameView {
         return v ? v->groundCell({g.geometry(), g.movement(), nullptr, nullptr, nullptr, &g.doors()}, x, y)
                  : std::nullopt;
     }
+    std::optional<SpellAim> groundAim(const GameSession& g, int x, int y) const noexcept {
+        if (g.actionBusy()) return {};
+        const auto* v = staged_ ? world_.stagedVisibility() : world_.visibility();
+        SpellAim aim;
+        if (!v || !v->groundCell({g.geometry(), g.movement(), nullptr, nullptr, nullptr, &g.doors()}, x, y, &aim))
+            return {};
+        return aim;
+    }
     void present(Presenter& p, const GameSession& g, const Map& map, bool debug, bool /*changed*/,
                  const HudSnapshot* hud = nullptr, const generation::DiagnosticView* diagnostic = nullptr,
                  bool reveal = false) {

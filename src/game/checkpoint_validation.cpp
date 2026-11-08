@@ -187,9 +187,25 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
             reject("area clock capacity");
         if (a.difficulty < 0 || a.difficulty > 1000000 || !cell(a.cell) || map_.base().solid(a.cell))
             reject("ground effects");
+        if (!a.footprint.mask || a.footprint.count() > (a.web ? 16u : 4u) || a.footprint.origin.x < -7 ||
+            a.footprint.origin.y < -7 || a.footprint.origin.x > map_.width() * 2 ||
+            a.footprint.origin.y > map_.height() * 2)
+            reject("ground footprint");
+        std::uint64_t earliestBurn = 0;
+        for (unsigned bit = 0; bit < 64; ++bit) {
+            if (a.burnDue[bit] && (!earliestBurn || a.burnDue[bit] < earliestBurn))
+                earliestBurn = a.burnDue[bit];
+            const bool covered = a.footprint.mask & (UINT64_C(1) << bit);
+            if (a.burnDue[bit] > maxCheckpointClock || (a.burnDue[bit] && (!covered || !a.web)))
+                reject("ground fire");
+            if (covered && (!cell(dungeonCell(a.footprint.tile(bit))) ||
+                            map_.base().solid(dungeonCell(a.footprint.tile(bit)))))
+                reject("ground footprint");
+        }
+        if (a.burnMs != earliestBurn)
+            reject("ground fire deadline");
         for (unsigned j = 0; j < i; ++j)
-            if (s.effects.ground.areas[j].active && (s.effects.ground.areas[j].id.serial == a.id.serial ||
-                                                     s.effects.ground.areas[j].cell == a.cell))
+            if (s.effects.ground.areas[j].active && (s.effects.ground.areas[j].id.serial == a.id.serial))
                 reject("ground effects");
     }
     for (std::size_t i = 0; i < s.effects.restrained.size(); ++i) {
@@ -200,7 +216,13 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
             reject("ground effects");
         bool found = false;
         for (const auto& a : s.effects.ground.areas)
-            found |= a.active && a.web && a.id.serial == r.area.serial && a.cell == r.cell;
+            found |= a.active && a.web && a.id.serial == r.area.serial && [&] {
+                for (unsigned bit = 0; bit < 64; ++bit)
+                    if ((a.footprint.mask & (UINT64_C(1) << bit)) &&
+                        dungeonCell(a.footprint.tile(bit)) == r.cell)
+                        return true;
+                return false;
+            }();
         if (!found)
             reject("ground effects");
     }

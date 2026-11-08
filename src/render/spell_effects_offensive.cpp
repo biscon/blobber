@@ -72,14 +72,8 @@ struct Painter {
                         y = xs[i] * width * s + ys[i] * height * c;
             p.points[i] = {center.x + camera.right.x * x, center.y + y, center.z + camera.right.z * x};
         }
-        if (area) {
-            p.cells = area->cells;
-            p.origin = area->origin.cell;
-            p.footprint = 512 | (area->includeOrigin ? 1024 : 0);
-            for (unsigned i = 0; i < 9; ++i)
-                if (area->eligible[i])
-                    p.footprint |= 1u << i;
-        }
+        if (area)
+            p.subcells = area->footprint;
         frame.packets[frame.count++] = p;
     }
     void light(Vec position, Style st, float alpha, unsigned priority) {
@@ -143,18 +137,20 @@ void SpellEffectsPlayer::appendOffensive(const FrameInput& in, const WorldFrame&
                 const unsigned age = unsigned(in.now - c.impactMs);
                 const float t = std::min(1.f, float(age) / 240), fade = std::min(1.f, float(640 - age) / 240);
                 if (c.spell == Kind::Thunderwave) {
+                    const Vec source{c.origin.cell.x + .5f + f.x * .5f, floor + .18f,
+                                     c.origin.cell.y + .5f + f.y * .5f};
                     for (unsigned layer = 0; layer < 3; ++layer) {
-                        const float reach = .2f + t * (.25f + .25f * layer);
-                        paint.emit({from.x + f.x * reach, floor + .27f, from.z + f.y * reach}, .4f + 2.7f * t,
-                                   .55f, st.impact, age, fade * .5f, false, 0, &c);
+                        const float reach = .125f + t * (.125f + .25f * layer);
+                        paint.emit({source.x + f.x * reach, floor + .27f, source.z + f.y * reach},
+                                   .4f + 2.7f * t, .55f, st.impact, age, fade * .5f, false, 0, &c);
                     }
                 } else {
                     // One cast-centred burst with layered depth; fragments are clipped to the exact
                     // footprint.
                     const float base = elevation(in.geometry.surface(c.center).floor);
                     for (int layer = -1; layer <= 1; ++layer)
-                        paint.emit({c.center.x + .5f + f.x * layer * .65f, base + .40f,
-                                    c.center.y + .5f + f.y * layer * .65f},
+                        paint.emit({c.footprint.origin.x * .5f + 1.f + f.x * layer * .45f, base + .40f,
+                                    c.footprint.origin.y * .5f + 1.f + f.y * layer * .45f},
                                    .4f + 2.6f * t, .35f + .65f * t, st.impact, age, fade * .65f, false, 0,
                                    &c);
                 }

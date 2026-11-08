@@ -31,9 +31,11 @@ void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t
     auto* visual = spellVisuals_.begin(rules::SpellKind::Shatter, c.character, pose, now);
     if (visual) {
         visual->cells = affected.cells;
+        visual->footprint = affected.footprint;
         visual->eligible = affected.eligible;
         visual->includeOrigin = false;
-        visual->center = *c.aimedCell;
+        visual->center = c.aimedCell.value_or(
+            c.aimedSubcell ? dungeonCell({c.aimedSubcell->x, c.aimedSubcell->y}) : pose.cell);
     }
     const auto damage = rng_.roll({3, 8, 0}).value.total;
     const auto dc = party_.spellAccess(c.character, c.spell).difficulty;

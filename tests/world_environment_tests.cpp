@@ -134,6 +134,9 @@ int main(int argc, char**) {
         world_render::FrameInput input{map, movement};
         visibility.update(input);
         const auto p = world_render::project(visibility.frame().camera, {3.5f, .25f, 3.5f});
+        SpellAim aim;
+        check(visibility.groundCell(input, int(p.x), int(p.y), &aim) == Cell{3, 3} && aim == SpellAim{7, 7},
+              "Floor picking snaps to five-foot intersections on raised floors");
         check(visibility.groundCell(input, int(p.x), int(p.y)) == Cell{3, 3},
               "Ground picking finds raised floor");
         Controller controller({{3, 4}, Heading::North});
@@ -146,10 +149,11 @@ int main(int argc, char**) {
         area.ground.revision = 1;
         area.ground.areas[0].active = true;
         area.ground.areas[0].cell = {3, 3};
+        area.ground.areas[0].footprint = wholeCellFootprint({3, 3});
         area.ground.weapons[0] = {{3, 3}, true};
         input.area = &area;
         effects.update(input, visibility.frame());
-        check(effects.frame().count == 2 && std::abs(effects.frame().packets[0].points[0].y - .2515f) < 1e-5f,
+        check(effects.frame().count == 5 && std::abs(effects.frame().packets[0].points[0].y - .2515f) < 1e-5f,
               "Ground effect follows raised surface");
         FloorFixtures doors;
         doors.count = 1;

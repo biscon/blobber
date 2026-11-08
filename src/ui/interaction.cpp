@@ -32,7 +32,8 @@ UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bo
 void routeHudInput(CommandController& commands, const UiInput& physical, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
                    std::optional<FixtureId> fixtureHit, std::optional<ContainerId> containerHit,
-                   bool worldImageMoving, std::optional<ActorId> residentHit) noexcept {
+                   bool worldImageMoving, std::optional<ActorId> residentHit,
+                   std::optional<SpellAim> preciseGround) noexcept {
     const auto input = routeHudButtons(commands, physical, allowConfirm);
     if (commands.snapshot().trade.open) {
         commands.routeTrade(input);
@@ -427,9 +428,14 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
                 commands.inspect(i);
                 return;
             }
-    if (state.magic.armed && state.magic.ground && input.pointer && (moved || click))
-        commands.magicGround(inside(hudLayout::viewport) ? groundHit : std::nullopt,
-                             click && inside(hudLayout::viewport));
+    if (state.magic.armed && state.magic.ground && input.pointer && (moved || click)) {
+        if (preciseGround && commands.snapshot().magic.area)
+            commands.magicAim(inside(hudLayout::viewport) ? preciseGround : std::nullopt,
+                              click && inside(hudLayout::viewport));
+        else
+            commands.magicGround(inside(hudLayout::viewport) ? groundHit : std::nullopt,
+                                 click && inside(hudLayout::viewport));
+    }
     if (state.magic.casting()) {
         if (state.magic.state == CastingState::Resolving) {
             commands.hover(HoverKind::None);

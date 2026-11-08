@@ -385,7 +385,8 @@ void allDamageSpells() {
             for (const auto& e : s.events())
                 if (e.event == CombatEvent::Attack)
                     ++hits;
-            check(hits == 12, "Area includes all twelve occupants including protected rear slots");
+            check(hits == (kind == SpellKind::Thunderwave ? 8 : 6),
+                  "Fixed forward areas cover their exact occupied front-row subcells");
             for (unsigned i = 0; i < 4; ++i)
                 check(s.party().character({static_cast<std::uint16_t>(i)})->hitPoints ==
                           s.party().character({static_cast<std::uint16_t>(i)})->stats.maxHitPoints,
@@ -893,10 +894,10 @@ void sharedArea() {
         NpcWorld places(map, pose.cell, {"goblin"}, instances);
         GameSession s(map, catalog, places, 5, pose, false);
         spellReady(s, 3);
-        const auto preview = spellArea(s.actors(), s.movement().player);
-        check(preview.count == 12,
-              "Shared area includes protected and body-occluded occupants for every heading");
         auto command = spellCommand(s, SpellKind::BurningHands);
+        const auto preview = s.combat().area(command, s.movement().player);
+        check(preview.count == 6,
+              "Shared area selects exact subcells for every heading");
         check(s.submit(command).reason == CommandReason::Resolved, "Area preview validates for commit");
         std::size_t impacts = 0;
         for (const auto& e : s.events())
@@ -974,6 +975,12 @@ void geometryAndPush() {
     GameSession s(map, catalog, places, 5, spellSpawn, false);
     spellReady(s, 3);
     auto c = spellCommand(s, SpellKind::Thunderwave);
+    const auto footprint = s.combat().area(c, spellSpawn).footprint;
+    std::array<bool, 16> covered{};
+    for (unsigned i = 0; i < 16; ++i) {
+        const auto* a = s.actors().actor(s.actors().id(i));
+        covered[i] = footprint.contains(globalSubcell(a->npc.cell, a->npc.subcell));
+    }
     check(s.submit(c).reason == CommandReason::Resolved, "Area command accepts without explicit recipients");
     int pushed = 0;
     for (int i = 0; i < 12; ++i) {
@@ -982,11 +989,11 @@ void geometryAndPush() {
             check(a->npc.cell.y == 7, "Wall and full destination block pushes without chain movement");
         else
             pushed += a->npc.cell.y == 6;
-        check(a->hitPoints < 1000, "Blocked displacement still receives spell damage");
+        check((a->hitPoints < 1000) == covered[i], "Only covered subcells receive spell damage, even when displacement is blocked");
     }
     check(pushed > 0, "Failed-save survivors enter vacant destination slots");
     for (int i = 12; i < 16; ++i)
-        check(s.actors().actor(s.actors().id(i))->hitPoints == 1000, "Area excludes the second row");
+        check((s.actors().actor(s.actors().id(i))->hitPoints < 1000) == covered[i], "Further rows use actual subcell coverage");
     const auto far = spellPlacements(map);
     GameSession illegal(map, catalog, far, 5, spellSpawn, false);
     auto flame = spellCommand(illegal, SpellKind::SacredFlame);

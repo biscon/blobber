@@ -41,6 +41,8 @@ class NpcAiController {
     PositioningResult position(ActorId id, Player party, std::uint64_t now) noexcept;
     bool escape(ActorId id, Player party, std::uint64_t now) noexcept;
     TacticalNavigation::Result combatStep(ActorId, Player, std::uint64_t now, bool retreat) noexcept;
+    TacticalNavigation::Result wakeStep(ActorId, Player, std::uint64_t,
+                                        const TacticalNavigation::WakeGoals&) noexcept;
     bool commitCombatStep(ActorId, Player, const TacticalNavigation::Result&, std::uint64_t now) noexcept;
     void cancelCombatRoute() noexcept { tactical_.cancel(); }
     const NpcAiSnapshot& snapshot() const noexcept { return state_; }

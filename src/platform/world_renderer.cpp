@@ -46,7 +46,7 @@ constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
 uniform vec3 outdoorAmbient;uniform vec2 dungeonLighting;uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
-uniform vec4 effectUv;uniform int effectFootprint;uniform vec2 effectCells[9];uniform vec2 effectOrigin;
+uniform vec4 effectUv;uniform int effectFootprint;uniform ivec4 effectMask;uniform ivec2 effectOrigin;
 uniform sampler2D guidingAtlas;uniform float guidingStrength;uniform vec4 guidingUv;
 uniform sampler2D frostAtlas;uniform float frostStrength;uniform vec4 frostUv;uniform vec4 frostRegistration;
 uniform int leafCount;uniform vec4 leafData[96];uniform vec3 eye;uniform float farClip;
@@ -63,9 +63,9 @@ void main(){
 float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 if(kind==3){vec2 p=(uv-vec2(0.5))*2.0;float f=max(0.0,1.0-dot(p,p));finalColor=vec4(0,0,0,0.32*f*f*(1.0-fog));return;}
 if(kind==5||kind==6){if(leafHidden())discard;
-if(effectFootprint!=0){vec2 cell=floor(worldPosition.xz);bool inside=(effectFootprint&1024)!=0&&all(equal(cell,effectOrigin));
-for(int i=0;i<9;++i)if((effectFootprint&(1<<i))!=0&&all(equal(cell,effectCells[i])))inside=true;
-if(!inside)discard;}
+if(effectFootprint!=0){ivec2 tile=ivec2(floor(worldPosition.xz*2.0))-effectOrigin;
+if(any(lessThan(tile,ivec2(0)))||any(greaterThanEqual(tile,ivec2(8))))discard;
+int bit=tile.y*8+tile.x;if((effectMask[bit/16]&(1<<(bit%16)))==0)discard;}
 vec4 c=texture(texture0,effectUv.xy+uv*effectUv.zw)*idColor;
 if(kind==6){finalColor=vec4(c.rgb*idColor.a*(1.0-fog),0);return;}
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
@@ -331,9 +331,8 @@ WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& i
     if (v.effects)
         v.effects->update(in, v.visibility->frame());
     updateLights(v, in);
-    const auto result =
-        render(v, in.movement, &v.visibility->frame(), {}, v.effects ? &v.effects->frame() : nullptr,
-               in.outdoorLighting);
+    const auto result = render(v, in.movement, &v.visibility->frame(), {},
+                               v.effects ? &v.effects->frame() : nullptr, in.outdoorLighting);
     if (measure_) {
         stats.visibilityMs = std::chrono::duration<double, std::milli>(prepared - start).count();
         stats.submissionMs = std::chrono::duration<double, std::milli>(Clock::now() - prepared).count();
@@ -858,19 +857,18 @@ void WorldRenderer::drawEffects(const View& v, const world_render::EffectFrame& 
             rlEnableShader(shader.id);
             additive = p.additive;
         }
-        const int kind = p.additive ? 6 : 5, footprint = int(p.footprint);
-        float cells[18];
-        for (unsigned j = 0; j < 9; ++j) {
-            cells[j * 2] = float(p.cells[j].x);
-            cells[j * 2 + 1] = float(p.cells[j].y);
-        }
-        const float origin[]{float(p.origin.x), float(p.origin.y)};
+        const int kind = p.additive ? 6 : 5;
+        auto fp = p.subcells;
+        const int footprint = fp.mask ? 1 : 0;
+        const int lanes[]{int(fp.mask & 65535), int((fp.mask >> 16) & 65535), int((fp.mask >> 32) & 65535),
+                          int((fp.mask >> 48) & 65535)};
+        const int origin[]{fp.origin.x, fp.origin.y};
         rlSetUniform(billboardLocations_[3], &kind, SHADER_UNIFORM_INT, 1);
         rlSetUniform(GetShaderLocation(shader, "effectUv"), p.uv.data(), SHADER_UNIFORM_VEC4, 1);
         rlSetUniform(GetShaderLocation(shader, "effectFootprint"), &footprint, SHADER_UNIFORM_INT, 1);
         if (footprint) {
-            rlSetUniform(GetShaderLocation(shader, "effectCells[0]"), cells, SHADER_UNIFORM_VEC2, 9);
-            rlSetUniform(GetShaderLocation(shader, "effectOrigin"), origin, SHADER_UNIFORM_VEC2, 1);
+            rlSetUniform(GetShaderLocation(shader, "effectMask"), lanes, SHADER_UNIFORM_IVEC4, 1);
+            rlSetUniform(GetShaderLocation(shader, "effectOrigin"), origin, SHADER_UNIFORM_IVEC2, 1);
         }
         const auto& a = p.points[0];
         const auto& b = p.points[1];

@@ -12,6 +12,7 @@
 #include "support/check.hpp"
 #include "support/combat_entry_review.hpp"
 #include "support/combat_positioning_review.hpp"
+#include "support/spell_area_review.hpp"
 #include "support/creature_occlusion_review.hpp"
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
@@ -127,6 +128,18 @@ int main(int argc, char** argv) {
                             argc == 5 ? std::filesystem::path(argv[4]) : std::filesystem::path{});
             return 0;
         }
+        if (argc == 4 && std::string_view(argv[3]) == "--thunderwave-review") {
+            test::spellAreaReview(argv[1], argv[2], true, true);
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--forward-spell-review") {
+            test::spellAreaReview(argv[1], argv[2], true);
+            return 0;
+        }
+        if (argc == 4 && std::string_view(argv[3]) == "--spell-area-review") {
+            test::spellAreaReview(argv[1], argv[2]);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--combat-positioning-review") {
             test::combatPositioningReview(argv[1], argv[2]);
             return 0;
@@ -209,6 +222,7 @@ int main(int argc, char** argv) {
                 area.ground.revision = 1;
                 area.ground.areas[0].active = true;
                 area.ground.areas[0].cell = spawn.cell;
+area.ground.areas[0].footprint=wholeCellFootprint(spawn.cell);
                 area.ground.weapons[0] = {rotate({4, 3}), true};
                 auto input = [&] {
                     animator.setTime(game.timeMs());

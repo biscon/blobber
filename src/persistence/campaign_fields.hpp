@@ -270,6 +270,9 @@ template <class A> void visit(A& a, GroundArea& v) {
     a("web", v.web);
     a("effect", v.effect);
     a("burnMs", v.burnMs);
+    a("footprintOrigin", v.footprint.origin);
+    a("footprintMask", v.footprint.mask);
+    a("burnDue", v.burnDue);
 }
 template <class A> void visit(A& a, SpectralWeapon& v) {
     a("cell", v.cell);

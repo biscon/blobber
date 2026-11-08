@@ -78,14 +78,8 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                               ? Vec{center.x + x[j] * width, center.y, center.z - y[j] * height}
                               : Vec{center.x + world.camera.right.x * x[j] * width, center.y + y[j] * height,
                                     center.z + world.camera.right.z * x[j] * width};
-        if (footprint) {
-            p.cells = footprint->cells;
-            p.origin = footprint->origin.cell;
-            p.footprint = 512 | (footprint->includeOrigin ? 1024 : 0);
-            for (unsigned j = 0; j < 9; ++j)
-                if (footprint->eligible[j])
-                    p.footprint |= 1u << j;
-        }
+        if (footprint)
+            p.subcells = footprint->footprint;
         frame.packets[frame.count++] = p;
     };
     auto cellPoint = [&](Cell cell, float height) {
@@ -100,7 +94,7 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
             const auto age = unsigned(in.now - c.impactMs);
             const auto alpha = std::min(1.f, float(640 - age) / 160.f);
             if (c.spell == K::Sleep) {
-                for (unsigned i = 0; i < 9; ++i)
+                for (unsigned i = 0; i < c.cells.size(); ++i)
                     if (c.eligible[i])
                         emit(cellPoint(c.cells[i], .25f), .95f, .38f, C::SleepMist, age / 80, alpha * .65f,
                              false, &c);
@@ -108,7 +102,9 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                 const auto f = forward(c.origin.heading);
                 for (unsigned layer = 0; layer < 3; ++layer) {
                     const float reach = .18f + (.18f + .25f * layer) * std::min(1.f, age / 160.f);
-                    auto p = cellPoint(c.origin.cell, .22f + .1f * layer);
+                    Vec p{c.origin.cell.x + .5f + f.x * .5f,
+                          elevation(in.geometry.surface(c.origin.cell).floor) + .22f + .1f * layer,
+                          c.origin.cell.y + .5f + f.y * .5f};
                     p.x += f.x * reach;
                     p.z += f.y * reach;
                     emit(p, .4f + reach * 2.5f, .5f, C::PrismaticFan, age / 80, alpha * .70f, false, &c);
@@ -218,33 +214,39 @@ void SpellEffectsPlayer::appendSupport(const FrameInput& in, const WorldFrame& w
                      5, .18f);
         }
     if (in.area) {
-        std::array<Cell, 16> burning{};
+        std::array<Cell, 256> burning{};
         unsigned count = 0;
         for (const auto& patch : in.area->ground.areas) {
             if (!patch.active || !patch.web || !patch.burnMs)
                 continue;
-            bool duplicate = false;
-            for (unsigned i = 0; i < count; ++i)
-                duplicate |= burning[i] == patch.cell;
-            if (duplicate)
-                continue;
-            burning[count++] = patch.cell;
-            const auto p = cellPoint(patch.cell, .012f);
-            const auto anim = loopFrame(in.now);
-            emit(p, 1, 1, C::WebBurn, anim, .85f, true);
-            auto flame = p;
-            flame.y += .13f;
-            emit(flame, .7f, .3f, C::WebBurn, anim, .7f);
-            if (particles < spellParticleCapacity) {
-                ++particles;
-                emit(flame, .7f, .3f, C::WebBurn, anim, .18f, false, nullptr, true);
-            } else
-                ++diagnostics_.particles;
-            if (frame.lightCount < frame.lights.size())
-                frame.lights[frame.lightCount++] = {
-                    cellPoint(patch.cell, .2f), {1, .29f, .055f}, 1.5f, .25f, 0};
-            else
-                ++diagnostics_.lights;
+            for (unsigned bit = 0; bit < 64; ++bit) {
+                if (!patch.burnDue[bit] || !(patch.footprint.mask & (UINT64_C(1) << bit)))
+                    continue;
+                const auto tile = patch.footprint.tile(bit);
+                bool duplicate = false;
+                for (unsigned i = 0; i < count; ++i)
+                    duplicate |= burning[i] == tile;
+                if (duplicate)
+                    continue;
+                burning[count++] = tile;
+                const auto c = dungeonCell(tile);
+                const Vec p{tile.x * .5f + .25f, elevation(in.geometry.surface(c).floor) + .012f,
+                            tile.y * .5f + .25f};
+                const auto anim = loopFrame(in.now);
+                emit(p, .5f, .5f, C::WebBurn, anim, .85f, true);
+                auto flame = p;
+                flame.y += .13f;
+                emit(flame, .35f, .3f, C::WebBurn, anim, .7f);
+                if (particles < spellParticleCapacity) {
+                    ++particles;
+                    emit(flame, .35f, .3f, C::WebBurn, anim, .18f, false, nullptr, true);
+                } else
+                    ++diagnostics_.particles;
+                if (frame.lightCount < frame.lights.size())
+                    frame.lights[frame.lightCount++] = {flame, {1, .29f, .055f}, .75f, .25f, 0};
+                else
+                    ++diagnostics_.lights;
+            }
         }
     }
 }

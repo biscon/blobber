@@ -13,5 +13,5 @@ void routeHudInput(CommandController& commands, const UiInput& input, std::optio
                    bool allowConfirm = true, std::optional<LootId> lootHit = {},
                    std::optional<Cell> groundHit = {}, std::optional<FixtureId> fixtureHit = {},
                    std::optional<ContainerId> containerHit = {}, bool worldImageMoving = false,
-                   std::optional<ActorId> residentHit = {}) noexcept;
+                   std::optional<ActorId> residentHit = {}, std::optional<SpellAim> preciseGround = {}) noexcept;
 } // namespace blobber

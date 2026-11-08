@@ -27,12 +27,31 @@ bool TacticalNavigation::legal(std::uint32_t from, std::uint32_t to) const noexc
                      !(actors_.occupiedSlots(b) & (1u << (s.x + s.y * 2))));
 }
 unsigned TacticalNavigation::cost(std::uint32_t to, const EffectController* effects) const noexcept {
-    return effects && effects->area(cell(to)) ? 10 : 5;
+    return effects && effects->areaAt(globalSubcell(cell(to), subcell(to))) ? 10 : 5;
 }
 void TacticalNavigation::goals() noexcept {
     goalCount_ = 0;
     wantedRank_ = 3;
     const auto* actor = actors_.actor(actor_);
+    if (waking_) {
+        wantedRank_ = 0;
+        for (unsigned i = 0; i < wake_.count; ++i) {
+            const auto* ally = actors_.actor(wake_.allies[i]);
+            if (!ally)
+                continue;
+            const auto tile = globalSubcell(ally->npc.cell, ally->npc.subcell);
+            for (unsigned h = 0; h < 4; ++h) {
+                const auto t = tile + forward(Heading(h));
+                const auto c = dungeonCell(t), sub = t + c * -2;
+                if (!map_.npcAllowed(c) || c == party_.cell || !lineOfSight(map_, ally->npc.cell, c) ||
+                    ((actors_.occupiedSlots(c) & (1u << (sub.x + sub.y * 2))) &&
+                     !(actor->npc.cell == c && actor->npc.subcell == sub)))
+                    continue;
+                goals_[goalCount_++] = {index(c, sub), wake_.rank[i], wake_.allies[i]};
+            }
+        }
+        return;
+    }
     const auto f = forward(party_.heading);
     for (int dy = -2; dy <= 2; ++dy)
         for (int dx = -2; dx <= 2; ++dx) {
@@ -100,16 +119,27 @@ std::uint32_t TacticalNavigation::pop() noexcept {
     return result;
 }
 TacticalNavigation::Result TacticalNavigation::next(ActorId id, Player party, Cell target, bool retreat,
-                                                    const EffectController* effects,
-                                                    std::size_t& work) noexcept {
+                                                    const EffectController* effects, std::size_t& work,
+                                                    const WakeGoals* wake) noexcept {
     const auto* actor = actors_.actor(id);
     if (!actor)
         return {};
     const auto ground = effects ? effects->ground().revision : 0;
-    if (!valid_ || actor_.world != id.world || actor_.slot != id.slot || !(party_ == party) ||
+    bool wakeChanged = waking_ != bool(wake);
+    if (wake && waking_) {
+        wakeChanged |= wake->count != wake_.count || wake->budgetFeet != wake_.budgetFeet;
+        for (unsigned i = 0; i < wake->count; ++i)
+            wakeChanged |= wake->allies[i].world != wake_.allies[i].world ||
+                           wake->allies[i].slot != wake_.allies[i].slot || wake->rank[i] != wake_.rank[i];
+    }
+    if (!valid_ || wakeChanged || actor_.world != id.world || actor_.slot != id.slot || !(party_ == party) ||
         !(target_ == target) || retreat_ != retreat || geometry_ != map_.revision() ||
         occupancy_ != actors_.snapshot().revision || ground_ != ground ||
         root_ != index(actor->npc.cell, actor->npc.subcell)) {
+        waking_ = bool(wake);
+        if (wake)
+            wake_ = *wake;
+        wakeTarget_ = {};
         actor_ = id;
         party_ = party;
         target_ = target;
@@ -126,7 +156,7 @@ TacticalNavigation::Result TacticalNavigation::next(ActorId id, Player party, Ce
             epoch_ = UINT32_MAX;
         }
         best_ = building_ = missing;
-        bestRank_ = 3;
+        bestRank_ = UINT32_MAX;
         phase_ = Phase::Reset;
         valid_ = true;
         goals();
@@ -156,11 +186,20 @@ TacticalNavigation::Result TacticalNavigation::next(ActorId id, Player party, Ce
             }
             const auto node = pop();
             ++work;
+            if (waking_ && best_ != missing && distance_[node] > distance_[best_]) {
+                phase_ = Phase::Build;
+                building_ = best_;
+                continue;
+            }
             for (std::size_t g = 0; g < goalCount_; ++g)
-                if (goals_[g].node == node && goals_[g].rank < bestRank_) {
+                if (goals_[g].node == node &&
+                    (waking_ ? (best_ == missing || distance_[node] < distance_[best_] ||
+                                (distance_[node] == distance_[best_] && goals_[g].rank < bestRank_))
+                             : goals_[g].rank < bestRank_)) {
                     best_ = node;
                     bestRank_ = goals_[g].rank;
-                    if (bestRank_ == wantedRank_) {
+                    wakeTarget_ = goals_[g].target;
+                    if (!waking_ && bestRank_ == wantedRank_) {
                         phase_ = Phase::Build;
                         building_ = node;
                     }
@@ -181,7 +220,8 @@ TacticalNavigation::Result TacticalNavigation::next(ActorId id, Player party, Ce
                     distance_[next] = heapPosition_[next] = missing;
                 }
                 const auto edge = cost(next, effects);
-                if (distance_[node] > UINT32_MAX - edge || distance_[node] + edge >= distance_[next])
+                if ((waking_ && distance_[node] + edge > wake_.budgetFeet) ||
+                    distance_[node] > UINT32_MAX - edge || distance_[node] + edge >= distance_[next])
                     continue;
                 distance_[next] = distance_[node] + edge;
                 parent_[next] = node;
@@ -197,13 +237,14 @@ TacticalNavigation::Result TacticalNavigation::next(ActorId id, Player party, Ce
             ++work;
         } else if (phase_ == Phase::Ready) {
             if (!routeCount_)
-                return {Status::AtGoal};
+                return {Status::AtGoal, {}, {}, 0, 0, wakeTarget_};
             const auto next = route_[routeCount_ - 1];
             if (!legal(root_, next)) {
                 valid_ = false;
                 return {Status::Pending};
             }
-            return {Status::Step, cell(next), subcell(next), cost(next, effects)};
+            return {Status::Step,        cell(next),       subcell(next),
+                    cost(next, effects), distance_[best_], wakeTarget_};
         } else
             return {};
     }

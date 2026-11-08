@@ -1283,13 +1283,13 @@
     {
       "id": "burning_hands",
       "name": "Burning Hands",
-      "description": "Three clear front cells: 3d6 fire, Dexterity save for half. No friendly fire.",
+      "description": "Fixed party-front fan (2 then 4 subcells): 3d6 fire, Dexterity save for half. No friendly fire.",
       "kind": "burning_hands"
     },
     {
       "id": "thunderwave",
       "name": "Thunderwave",
-      "description": "Three clear front cells: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one cell forward if space permits.",
+      "description": "Fixed party-front 4x2 subcell rectangle: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one cell forward if space permits.",
       "kind": "thunderwave"
     },
     {
@@ -1314,7 +1314,7 @@
       "id": "sleep",
       "kind": "sleep",
       "name": "Sleep",
-      "description": "Aim within six cells. A 3x3 area sleeps creatures using a 5d8 HP budget, weakest first. Affects allies. Damage or Aid wakes. 60 seconds."
+      "description": "Aim within 60 feet. A 30-foot square sleeps creatures using a 5d8 HP budget, weakest first. Affects allies. Damage or Aid wakes. Two rounds (12 seconds)."
     },
     {
       "id": "false_life",
@@ -1326,13 +1326,13 @@
       "id": "grease",
       "kind": "grease",
       "name": "Grease",
-      "description": "Aim at one cell within six cells. Difficult terrain; Dexterity saves or knockdown, automatically losing the next turn to stand. Allies affected. 60 seconds."
+      "description": "Aim a 10-foot square within 60 feet. Difficult terrain; Dexterity saves or knockdown; stand using half movement. Allies affected. 60 seconds."
     },
     {
       "id": "color_spray",
       "kind": "color_spray",
       "name": "Color Spray",
-      "description": "Three front cells: 6d10 HP budget blinds weakest seeing creatures until your next turn (6 seconds outside turns)."
+      "description": "Fixed party-front fan (2 then 4 subcells): 6d10 HP budget blinds weakest seeing creatures until your next turn (6 seconds outside turns)."
     },
     {
       "id": "guidance",
@@ -1386,7 +1386,7 @@
       "id": "shatter",
       "kind": "shatter",
       "name": "Shatter",
-      "description": "Aim a 3x3 area within six cells: 3d8 thunder, Constitution save for half. Affects allies and caster; Evocation protects other companions."
+      "description": "Aim a 10-foot-radius circle within 60 feet: 3d8 thunder, Constitution save for half. Affects allies and caster; Evocation protects other companions."
     },
     {
       "id": "mirror_image",
@@ -1398,7 +1398,7 @@
       "id": "web",
       "kind": "web",
       "name": "Web",
-      "description": "Aim a 2x2 floor area: difficult terrain and Dexterity saves against restraint. Escape with a Strength action. Affects allies, burns in fire; concentration, one hour."
+      "description": "Aim a 20-foot square within 60 feet: difficult terrain and Dexterity saves against restraint. Escape with a Strength action. Affects allies, burns in fire; concentration, one hour."
     }
   ],
   "creation": [

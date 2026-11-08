@@ -142,9 +142,29 @@ bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial) 
         }
     return false;
 }
+namespace {
+SubcellFootprint webCells(const Cell* cells, std::size_t count) noexcept {
+    if (!count || count > 4)
+        return {};
+    Cell lo = cells[0];
+    for (std::size_t i = 1; i < count; ++i) {
+        lo.x = std::min(lo.x, cells[i].x);
+        lo.y = std::min(lo.y, cells[i].y);
+    }
+    SubcellFootprint fp{lo * 2, 0};
+    for (std::size_t i = 0; i < count; ++i)
+        for (int s = 0; s < 4; ++s)
+            fp.add(cells[i] * 2 + Cell{s % 2, s / 2});
+    return fp;
+}
+} // namespace
 bool EffectController::canCreateWeb(const Cell* cells, std::size_t count,
                                     rules::CharacterId caster) const noexcept {
-    if (!count || count > 4 || nextArea_ > UINT64_MAX - count || gameplayMs_ > UINT64_MAX - 3600000)
+    return canCreateWebFootprint(webCells(cells, count), caster);
+}
+bool EffectController::canCreateWebFootprint(const SubcellFootprint& fp,
+                                             rules::CharacterId caster) const noexcept {
+    if (!fp.mask || fp.count() > 16 || nextArea_ == UINT64_MAX || gameplayMs_ > UINT64_MAX - 3600000)
         return false;
     EffectRequest r;
     r.world = actors_.snapshot().world;
@@ -154,22 +174,22 @@ bool EffectController::canCreateWeb(const Cell* cells, std::size_t count,
     r.count = 1;
     if (validate(r) != EffectError::None)
         return false;
-    for (std::size_t i = 0; i < count; ++i) {
-        if (actors_.map().solid(cells[i]))
+    for (unsigned bit = 0; bit < 64; ++bit)
+        if ((fp.mask & (UINT64_C(1) << bit)) && actors_.map().solid(dungeonCell(fp.tile(bit))))
             return false;
-        for (std::size_t j = 0; j < i; ++j)
-            if (cells[i] == cells[j])
-                return false;
-    }
     const auto old = concentration(caster);
-    std::size_t free = 0;
     for (const auto& a : ground_.areas)
-        free += !a.active || (a.web && a.effect.serial == old.serial);
-    return free >= count;
+        if (!a.active || (a.web && a.effect.serial == old.serial))
+            return true;
+    return false;
 }
 bool EffectController::createWeb(const Cell* cells, std::size_t count, rules::CharacterId caster, int dc,
                                  std::uint64_t now, CombatEvents& events) noexcept {
-    if (!canCreateWeb(cells, count, caster) || dc < 1 || dc > 1000)
+    return createWebFootprint(webCells(cells, count), caster, dc, now, events);
+}
+bool EffectController::createWebFootprint(const SubcellFootprint& fp, rules::CharacterId caster, int dc,
+                                          std::uint64_t now, CombatEvents& events) noexcept {
+    if (!canCreateWebFootprint(fp, caster) || dc < 1 || dc > 1000)
         return false;
     EffectRequest r;
     r.world = actors_.snapshot().world;
@@ -178,21 +198,21 @@ bool EffectController::createWeb(const Cell* cells, std::size_t count, rules::Ch
     r.targets[0] = caster;
     r.count = 1;
     r.difficulty = dc;
-    const auto result = apply(r, now, events);
-    if (!result)
+    const auto effect = apply(r, now, events);
+    if (!effect)
         return false;
-    std::size_t cell = 0;
     for (auto& a : ground_.areas)
-        if (!a.active && cell < count) {
+        if (!a.active) {
             a = {{actors_.snapshot().world, nextArea_++},
-                 cells[cell++],
+                 dungeonCell(fp.firstTile()),
                  caster,
                  dc,
                  gameplayMs_ + 3600000,
                  true,
                  true,
-                 result.id,
+                 effect.id,
                  0};
+            a.footprint = fp;
             ++ground_.revision;
             if (events.supportJournal) {
                 SupportVisual cue;
@@ -205,6 +225,7 @@ bool EffectController::createWeb(const Cell* cells, std::size_t count, rules::Ch
                 cue.occurredMs = now;
                 events.supportJournal->emit(cue);
             }
+            break;
         }
     if (groundDueMs_ <= gameplayMs_)
         groundDueMs_ = gameplayMs_ + 6000;
@@ -222,7 +243,10 @@ void EffectController::reconcileWeb(std::uint64_t now, CombatEvents& events) noe
         const auto* a = t.npc ? actors_.actor(t.enemy) : nullptr;
         const auto cell = t.npc && a ? a->npc.cell : partyCell_;
         for (const auto& g : ground_.areas)
-            present |= g.active && g.web && g.id.serial == r.area.serial && g.cell == cell;
+            present |= g.active && g.web && g.id.serial == r.area.serial &&
+                       g.footprint.contains(targetTile(t, cell));
+        if (present)
+            r.cell = cell;
         if (!living(t) || !present) {
             conditionNotice(t, EffectKind::Restrained, EffectNotice::Ended, EffectEnd::Recovered, r.caster,
                             now, events);
@@ -263,34 +287,61 @@ bool EffectController::escapeWeb(EffectTarget t, std::uint64_t now, CombatEvents
     return true;
 }
 void EffectController::ignite(Cell cell) noexcept {
+    ignite(wholeCellFootprint(cell));
+}
+void EffectController::ignite(const SubcellFootprint& fp) noexcept {
     for (auto& a : ground_.areas)
-        if (a.active && a.web && a.cell == cell && !a.burnMs) {
-            if (events_ && events_->audioJournal)
-                events_->audioJournal->emit(
-                    {"web.ignite", {}, float(cell.x) + .5f, float(cell.y) + .5f, true});
-            a.burnMs = gameplayMs_ + 6000;
-            ++ground_.revision;
+        if (a.active && a.web) {
+            bool changed = false;
+            for (unsigned bit = 0; bit < 64; ++bit)
+                if ((a.footprint.mask & (UINT64_C(1) << bit)) && fp.contains(a.footprint.tile(bit)) &&
+                    !a.burnDue[bit]) {
+                    a.burnDue[bit] = gameplayMs_ + 6000;
+                    changed = true;
+                }
+            if (changed) {
+                a.burnMs = UINT64_MAX;
+                for (auto due : a.burnDue)
+                    if (due)
+                        a.burnMs = std::min(a.burnMs, due);
+                ++ground_.revision;
+                if (events_ && events_->audioJournal)
+                    events_->audioJournal->emit(
+                        {"web.ignite", {}, float(a.cell.x) + .5f, float(a.cell.y) + .5f, true});
+            }
         }
 }
 void EffectController::burnWeb(std::uint64_t now, CombatEvents& events) noexcept {
     for (auto& a : ground_.areas) {
         if (!a.active || !a.burnMs || a.burnMs > gameplayMs_)
             continue;
-        const auto cell = a.cell;
+        SubcellFootprint burned{a.footprint.origin, 0};
+        for (unsigned bit = 0; bit < 64; ++bit)
+            if (a.burnDue[bit] && a.burnDue[bit] <= gameplayMs_ && (a.footprint.mask & (UINT64_C(1) << bit)))
+                burned.mask |= UINT64_C(1) << bit;
         const auto caster = a.caster;
-        // Co-located burning webs burn once, regardless of overlapping casts.
         for (auto& g : ground_.areas)
-            if (g.active && g.web && g.cell == cell && g.burnMs && g.burnMs <= gameplayMs_) {
-                g.active = false;
-                ++ground_.revision;
+            if (g.active && g.web) {
+                for (unsigned bit = 0; bit < 64; ++bit)
+                    if ((g.footprint.mask & (UINT64_C(1) << bit)) && burned.contains(g.footprint.tile(bit)) &&
+                        g.burnDue[bit] && g.burnDue[bit] <= gameplayMs_) {
+                        g.footprint.mask &= ~(UINT64_C(1) << bit);
+                        g.burnDue[bit] = 0;
+                    }
+                g.active = g.footprint.mask != 0;
+                g.burnMs = 0;
+                for (auto due : g.burnDue)
+                    if (due && (!g.burnMs || due < g.burnMs))
+                        g.burnMs = due;
             }
+        ++ground_.revision;
         const auto damage = rng_.roll({2, 4, 0}).value.total;
         for (std::size_t i = 0; i < creatureCount; ++i) {
             const auto t =
                 i < 4 ? EffectTarget(rules::CharacterId{std::uint16_t(i)}) : EffectTarget(actors_.id(i - 4));
             if (!living(t))
                 continue;
-            if (!((t.npc ? actors_.actor(t.enemy)->npc.cell : partyCell_) == cell))
+            if (!burned.contains(targetTile(t, t.npc ? actors_.actor(t.enemy)->npc.cell : partyCell_)))
                 continue;
             CombatOutcome out;
             out.event = CombatEvent::Attack;

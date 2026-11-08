@@ -111,7 +111,7 @@ class VisibilityPipeline {
         return ready_ && id.slot < containerCapacity &&
                frame().visibleContainers[id.slot].world == id.world && bool(id);
     }
-    std::optional<Cell> groundCell(const FrameInput&, int x, int y) const noexcept;
+    std::optional<Cell> groundCell(const FrameInput&, int x, int y, SpellAim* aim = nullptr) const noexcept;
     std::size_t bytes() const noexcept;
 
   private:

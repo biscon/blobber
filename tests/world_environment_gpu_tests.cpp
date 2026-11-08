@@ -172,6 +172,7 @@ int main(int argc, char** argv) {
             area.ground.revision = 1;
             area.ground.areas[0].active = true;
             area.ground.areas[0].cell = {3, 3};
+area.ground.areas[0].footprint=wholeCellFootprint({3,3});
             area.ground.weapons[0] = {{3, 3}, true};
             auto input = [&] {
                 animator.setTime(0);

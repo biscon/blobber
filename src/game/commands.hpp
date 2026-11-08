@@ -109,6 +109,7 @@ struct MagicHud {
     unsigned assigned = 0, maximum = 0;
     bool single = false, ground = false, self = false;
     std::optional<Cell> hoverCell;
+    std::optional<SpellAim> hoverAim;
     bool casting() const noexcept {
         return state == CastingState::Targeting || state == CastingState::Resolving;
     }
@@ -128,7 +129,7 @@ struct MagicHud {
     bool spellcaster = false;
     std::array<ActorId, 36> affected{};
     std::size_t affectedCount = 0;
-    std::array<bool, 9> cells{};
+    std::array<bool, 16> cells{};
     std::array<char, 192> targets{};
 };
 struct TravelHud {
@@ -278,6 +279,7 @@ class CommandController {
     void magicAlly(std::size_t formationIndex) noexcept;
     bool magicSingleTarget() const noexcept;
     void magicKeyboardTarget(int delta) noexcept;
+    void magicAim(std::optional<SpellAim>, bool select) noexcept;
     void magicGround(std::optional<Cell>, bool select = false) noexcept;
     CommandController(const CommandController&) = delete;
     CommandController& operator=(const CommandController&) = delete;

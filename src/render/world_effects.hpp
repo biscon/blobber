@@ -12,13 +12,11 @@ struct EffectPacket {
     bool ground = false;
     bool additive = false;
     std::array<float, 4> uv{0, 0, 1, 1};
-    std::array<Cell, 9> cells{};
-    Cell origin{};
-    unsigned footprint = 0; // bit 9 enables clipping, bit 10 includes origin; low nine bits select cells
+    SubcellFootprint subcells;
 };
 // NPC attacks/pulses own one glyph; four party casters can each contribute two
 // additional Magic Missile glyphs beyond the retained record count.
-constexpr unsigned effectCapacity = 1024;
+constexpr unsigned effectCapacity = 1536;
 Vec spiritualWeaponPosition(GeometryView, Cell, std::uint64_t now) noexcept;
 std::optional<Vec> spiritualWeaponPosition(const FrameInput&, Cell) noexcept;
 struct EffectFrame {

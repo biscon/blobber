@@ -200,18 +200,22 @@ void CommandController::refreshMagic() noexcept {
         return;
     if (m.area) {
         auto aimed = m.pending;
-        if (m.hoverCell)
+        if (m.hoverAim) {
+            aimed.aimedSubcell = m.hoverAim;
+            aimed.aimedCell.reset();
+        } else if (m.hoverCell)
             aimed.aimedCell = m.hoverCell;
         m.footprint = session_.combat().area(aimed, session_.movement().player);
         m.cells = m.footprint.eligible;
         m.affected = m.footprint.actors;
         m.affectedCount = m.footprint.count;
-        const auto cells = std::count(m.cells.begin(), m.cells.end(), true);
+        const auto cells = m.footprint.footprint.count();
         const auto allies = std::count(m.footprint.allies.begin(), m.footprint.allies.end(), true);
         for (std::size_t i = 0; i < rules::partySize; ++i)
             m.selectedAllies[i] = m.footprint.allies[party_.snapshot().formation[i].index];
-        std::snprintf(m.targets.data(), m.targets.size(), "%d cells / %zu enemies / %d allies%s", int(cells),
-                      m.affectedCount, int(allies), m.ground && !m.pending.aimedCell ? " / aim first" : "");
+        std::snprintf(m.targets.data(), m.targets.size(), "%d subcells / %zu enemies / %d allies%s", int(cells),
+                      m.affectedCount, int(allies),
+                      m.ground && !m.pending.aimedCell && !m.pending.aimedSubcell ? " / aim first" : "");
     } else if (m.hostile) {
         for (std::size_t i = 0; i < m.pending.targetCount; ++i) {
             m.affected[m.affectedCount++] = m.pending.enemies[i];
@@ -389,7 +393,9 @@ void CommandController::chooseSpellbook(std::size_t index) noexcept {
     m.pending.ally.reset();
     m.pending.targetCount = 0;
     m.pending.aimedCell.reset();
+    m.pending.aimedSubcell.reset();
     m.hoverCell.reset();
+    m.hoverAim.reset();
     m.pending.action = entry.feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
     m.pending.spell = entry.spell;
     m.pending.feature = entry.feature;
@@ -515,6 +521,28 @@ void CommandController::magicAlly(std::size_t formation) noexcept {
 }
 void CommandController::magicKeyboardTarget(int delta) noexcept {
     auto& m = state_.magic;
+    if (m.ground && m.area) {
+        std::array<SpellAim, 625> points{};
+        std::size_t count = 0, index = 0;
+        unsigned formation = 0;
+        for (unsigned i = 0; i < 4; ++i)
+            if (party_.snapshot().formation[i].index == m.pending.character.index)
+                formation = i;
+        const auto pose = session_.movement().player;
+        const auto caster = formationSubcell(pose, formation);
+        for (int y = -12; y <= 12; ++y)
+            for (int x = -12; x <= 12; ++x) {
+                const SpellAim point{caster.x + x, caster.y + y};
+                if (!validSpellAim(actors_.map(), pose, formation, point))
+                    continue;
+                if (m.pending.aimedSubcell && *m.pending.aimedSubcell == point)
+                    index = count;
+                points[count++] = point;
+            }
+        if (count)
+            magicAim(points[(index + count + (delta < 0 ? -1 : 1)) % count], true);
+        return;
+    }
     if (m.ground) {
         std::array<Cell, 169> cells{};
         std::size_t count = 0, index = 0;
@@ -543,8 +571,33 @@ void CommandController::magicKeyboardTarget(int delta) noexcept {
         m.pending.ally = party_.snapshot().formation[index];
     }
 }
+void CommandController::magicAim(std::optional<SpellAim> aim, bool select) noexcept {
+    auto& m = state_.magic;
+    if (!m.armed || !m.ground || !m.area || state_.suspended)
+        return;
+    unsigned formation = 0;
+    for (unsigned i = 0; i < 4; ++i)
+        if (party_.snapshot().formation[i].index == m.pending.character.index)
+            formation = i;
+    if (aim && !validSpellAim(actors_.map(), session_.movement().player, formation, *aim))
+        aim.reset();
+    m.hoverAim = aim;
+    if (select && aim) {
+        m.pending.aimedSubcell = aim;
+        m.pending.aimedCell.reset();
+        m.pending.target.reset();
+        m.pending.targetCount = 0;
+        m.hoverAim.reset();
+    }
+    refreshMagic();
+    updateAvailability();
+}
 void CommandController::magicGround(std::optional<Cell> cell, bool select) noexcept {
     auto& m = state_.magic;
+    if (m.area) {
+        magicAim(cell ? std::optional<SpellAim>{cellAim(*cell)} : std::nullopt, select);
+        return;
+    }
     if (!m.armed || !m.ground || state_.suspended)
         return;
     if (cell && !spellCell(actors_.map(), session_.movement().player, *cell))
@@ -564,7 +617,10 @@ SpellArea CommandController::floorPreview() const noexcept {
     const auto& m = state_.magic;
     if (m.armed && m.area && !state_.modal() && !session_.actionBusy()) {
         auto aimed = m.pending;
-        if (m.hoverCell)
+        if (m.hoverAim) {
+            aimed.aimedSubcell = m.hoverAim;
+            aimed.aimedCell.reset();
+        } else if (m.hoverCell)
             aimed.aimedCell = m.hoverCell;
         result = session_.combat().area(aimed, session_.movement().player);
         result.kind = m.kind;
