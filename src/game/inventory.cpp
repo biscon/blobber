@@ -55,12 +55,13 @@ const ItemStack* Inventory::stack(ItemHandle h) const noexcept {
     return s.quantity && s.generation == h.generation ? &s : nullptr;
 }
 ItemHandle Inventory::at(ItemLocation l) const noexcept {
-    return l.character.index < 4 && l.cell < 52 ? locations_[l.character.index][l.cell] : ItemHandle{};
+    return l.character.index < 4 && l.cell < inventoryCells ? locations_[l.character.index][l.cell]
+                                                            : ItemHandle{};
 }
 ItemLocation Inventory::locate(ItemHandle h) const noexcept {
     if (stack(h))
         for (std::uint16_t c = 0; c < 4; ++c)
-            for (std::uint16_t i = 0; i < 52; ++i)
+            for (std::uint16_t i = 0; i < inventoryCells; ++i)
                 if (locations_[c][i] == h)
                     return {{c}, i};
     return {};
@@ -80,7 +81,7 @@ void Inventory::erase(ItemHandle h) noexcept {
     if (!stack(h))
         return;
     const auto l = locate(h);
-    if (l.cell < 52)
+    if (l.cell < inventoryCells)
         locations_[l.character.index][l.cell] = {};
     auto& s = stacks_[h.slot];
     s.quantity = 0;
@@ -102,13 +103,12 @@ rules::CharacterLoadout Inventory::loadout(rules::CharacterId c) const noexcept 
     rules::CharacterLoadout l;
     if (c.index >= 4)
         return l;
-    for (std::uint16_t i = 0; i < 52; ++i)
+    for (std::uint16_t i = 0; i < inventoryCells; ++i)
         if (const auto* s = stack(at({c, i})))
             l.items[i] = {s->item, s->quantity};
-    l.equipment = {l.items[48].quantity ? rules::OwnedItemId{48} : rules::OwnedItemId{},
-                   l.items[49].quantity ? rules::OwnedItemId{49} : rules::OwnedItemId{},
-                   l.items[50].quantity ? rules::OwnedItemId{50} : rules::OwnedItemId{},
-                   l.items[51].quantity ? rules::OwnedItemId{51} : rules::OwnedItemId{}};
+    for (std::uint16_t i = bagCells; i < inventoryCells; ++i)
+        l.equipment.set(static_cast<EquipmentSlot>(i),
+                        l.items[i].quantity ? rules::OwnedItemId{i} : rules::OwnedItemId{});
     return l;
 }
 ItemHandle Inventory::ammunition(rules::CharacterId c, rules::Ammunition kind,
@@ -140,8 +140,6 @@ unsigned Inventory::count(rules::CharacterId c, rules::Ammunition kind,
 void Inventory::initialize(const rules::Catalog& cat, const rules::PresetParty& preset) {
     for (std::uint16_t c = 0; c < 4; ++c) {
         const auto& b = preset.characters[c];
-        const std::array<rules::OwnedItemId, 4> eq{b.equipment.body, b.equipment.mainHand,
-                                                   b.equipment.offHand, b.equipment.ranged};
         for (std::size_t i = 0; i < b.itemCount; ++i) {
             const auto& item = b.items[i];
             unsigned q = item.quantity;
@@ -149,8 +147,8 @@ void Inventory::initialize(const rules::Catalog& cat, const rules::PresetParty& 
             if (!d || !q)
                 throw std::runtime_error("Invalid starting inventory");
             bool equipped = false;
-            for (std::uint16_t e = 0; e < 4; ++e)
-                if (eq[e].index == i) {
+            for (std::uint16_t e = 0; e < equipmentSlots; ++e)
+                if (b.equipment.get(static_cast<EquipmentSlot>(bagCells + e)).index == i) {
                     if (q != 1 || equipped)
                         throw std::runtime_error("Invalid equipped ownership");
                     locations_[c][48 + e] = create(item.item, 1);
@@ -198,7 +196,7 @@ InventoryResult Inventory::apply(const InventoryRequest& r, const rules::Catalog
 InventoryResult Inventory::move(const InventoryRequest& r, const rules::Catalog& cat) noexcept {
     const auto from = locate(r.source);
     const auto to = r.destination;
-    if (to.character.index >= 4 || from.cell >= 52)
+    if (to.character.index >= 4 || from.cell >= inventoryCells)
         return {InventoryError::InvalidDestination};
     const auto original = *stack(r.source);
     const auto* definition = cat.item(original.item);
@@ -248,7 +246,7 @@ InventoryResult Inventory::move(const InventoryRequest& r, const rules::Catalog&
     }
     if (r.operation != InventoryOp::Move && r.operation != InventoryOp::Split)
         return {InventoryError::Unavailable};
-    if (to.cell >= 52 || to.character.index != from.character.index)
+    if (to.cell >= inventoryCells || to.character.index != from.character.index)
         return {InventoryError::InvalidDestination};
     if (from.cell == to.cell)
         return {};

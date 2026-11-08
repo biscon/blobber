@@ -1,5 +1,50 @@
 # Combat music
 
+## Discard hidden announcements — 2026-11-08
+
+Status: **implemented and mechanically verified**; listening review unverified.
+`MusicTransport` previously advanced its announcement clock only while visible,
+so an overlay deferred or resumed a song announcement after the song already started.
+That deferral is replaced with permanent expiry: `bannerVisible=false` expires the
+current announcement before any suspension/early return; starting a track while
+hidden initializes its announcement as expired. Reopening gameplay never re-arms
+that track's announcement. A subsequent track that starts visibly announces normally.
+Explicit playback pause/mute/focus behavior remains independent; a hidden screen
+also discards the announcement when its music is paused. The six-second visible
+animation and renderer are unchanged.
+
+The player continues servicing only its selected prepared decoder. Dialogue does
+not restart playback, reset the playlist or consume additional selections on exit.
+The existing fixed-array shuffle consumes every song once per cycle and swaps the
+first selection on a wrap when it matches the last played song; a one-song bank
+necessarily repeats. No new allocation, ownership, storage or persistence format.
+
+Verification selection: focused Debug `music` and `audio_runtime` suites and game
+build. Owned multi-song runtime fixtures check selected mock stream identity and
+start counts at EOF during dialogue, repeated hidden starts, visible exit, wrap,
+and persisted continuation. Check hidden starts/interruption/paused suppression
+and normal later announcements in the CPU transport, retaining frame allocation
+coverage. No desktop automation or physical listening; the reported real-world
+repeat was not reproduced independently of the deferred banner.
+
+Executed verification: the new CPU regression first failed against the old
+transport at the hidden-announcement assertion. With the correction, configured
+CLion CMake `--build --preset debug --target blobber blobber_music_tests
+blobber_audio_runtime_tests -j 2` passes at low CPU/I/O priority. The game build
+also regenerated its existing prepared-asset dependencies; no asset inputs changed.
+After making the new runtime fixture use a fixed persisted RNG seed, rebuilt that
+checker and ran configured CTest `--preset debug -R '^(music|audio_runtime)$'
+--output-on-failure`: both suites pass in 0.02 seconds. Twelve selections cover
+four complete three-song cycles; reopening dialogue neither starts another stream
+nor revives the banner, and a persisted full-cycle boundary resumes with a different
+song. Existing single-song fallback remains covered. EOF transitions retain zero
+engine-owned C++ allocations. A read-only check of the user's ten-song sanctuary
+manifest/state found unique IDs/paths, consistent consumed/last state and a different
+next entry; playlist/settings/save files were not modified. Shuffle logic itself
+needed no change. Formatting and `git diff --check` pass. No device playback,
+desktop interaction or graphical captures were performed. Owned temporary output
+was cleaned; no retained diagnostics or new permanent evidence.
+
 ## Compact announcement — 2026-11-07
 
 Status: compact typography accepted by the user; requested top-left integration
@@ -17,7 +62,7 @@ and caption/artist respectively, loaded at preparation and included in RAII clea
 and GPU memory accounting. Draw only at loaded sizes, rounding final native text
 origins after animation/layout. No glyph or render-target scaling, new per-frame
 allocation, prepared-world invalidation or audio transport change. Announcements
-retain existing modal deferral and silence rules; menu music has no announcements.
+use the modal discard rules above and existing silence rules; menu music has no announcements.
 
 The capture tool now exercises the production renderer directly, including settled
 one/two-line titles, entry/reveal/exit and deliberately overlong text. Verify hidden
@@ -55,8 +100,8 @@ Gameplay supplies the committed canonical location at initial attachment and aft
 travel. AudioRuntime selects sanctuary for City/Inn/Smithy/Emporium locations,
 combat for other gameplay, and menu only within explicit menu-session boundaries.
 World cleanup stops old voices, dialogue and effect/ambient streams independently
-of music. Sanctuary-to-sanctuary travel preserves its track, decoder position and
-announcement clock through travel. The continuous doorway correction below also
+of music. Sanctuary-to-sanctuary travel preserves its track and decoder position;
+hidden announcements are discarded as described above. The continuous doorway correction below also
 keeps audible playback and gain stable through fades/loading. Other world/context
 changes stop the old music; returning to sanctuary consumes its next song. Failed
 travel keeps the source transport. Sanctuary overrides encounter activity and
@@ -70,7 +115,7 @@ EOF leaves the menu silent until the next menu session. No menu announcements.
 Menu Settings continues music, while gameplay Settings keeps its existing pause.
 All music shares existing Master/Music settings, mute/focus suspension, stereo
 compensation and limiter. Rename the settings label to Music. Sanctuary announcements
-use the existing modal visibility/deferred-clock rules; dialogue and inventory do
+use the modal discard rules above; dialogue and inventory do
 not pause the song. No simulation, campaign schema or gameplay RNG changes.
 
 Preparation owns vectors, metadata and warmed decoder contexts. Frame updates and
@@ -80,7 +125,7 @@ stops and unloads all banks before closing the device.
 
 Owned music/runtime fixtures cover single-play exhaustion,
 re-entry, all sanctuary locations, world cleanup and travel continuity/rollback,
-ambience exclusion, modal deferral, mute/focus, independent persistence and warmed
+ambience exclusion, modal suppression, mute/focus, independent persistence and warmed
 allocation invariants. Decoder servicing respects incoming pause/mute as well as
 already suspended state, preserving EOF detection when unmuting the menu song.
 No OS input automation; subjective listening remains user review.
@@ -415,7 +460,8 @@ width and 30/39-unit height for one/two title lines. Titles split during prepara
 and clip with ellipses to the measured text width. Native 24 px bold title and
 18 px regular caption atlases, a teal edge and a gold rule provide visual hierarchy; a
 12-Hz deterministic character scramble settles by 1.2 seconds. Its slide/overshoot,
-hold and sideways exit run for six seconds of visible, unpaused presentation time.
+hold and sideways exit run for six seconds of unpaused presentation time while
+visible. Hiding the panel discards its remaining animation as described above.
 
 ## Executed verification
 

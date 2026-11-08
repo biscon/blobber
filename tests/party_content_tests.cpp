@@ -634,6 +634,51 @@ void limits() {
     check(files.load(j).preset()->characters[0].items[0].quantity == 65535,
           "Maximum uint16 quantity survives loading");
 }
+void wearableLoading() {
+    Files files;
+    Json good{{"schema_version", 15},      {"attacks", Json::array()}, {"monsters", Json::array()},
+              {"races", Json::array()},    {"classes", Json::array()}, {"spells", Json::array()},
+              {"creation", Json::array()}, {"preset_party", nullptr},  {"items", Json::array()}};
+    constexpr const char* locations[]{"none",  "head", "hands",  "feet",  "belt",
+                                      "cloak", "ring", "amulet", "wrists"};
+    for (const auto* location : locations)
+        good["items"].push_back({{"id", std::string("fixture.") + location},
+                                 {"name", location},
+                                 {"description", "Test-owned wearable metadata"},
+                                 {"kind", "gear"},
+                                 {"weight", 25},
+                                 {"stack_limit", 1},
+                                 {"wear_slot", location}});
+    const auto catalog = files.load(good);
+    check(catalog.item({8})->wearSlot == WearSlot::Wrists &&
+              equipmentFits(*catalog.item({6}), EquipmentSlot::Ring1) &&
+              equipmentFits(*catalog.item({6}), EquipmentSlot::Ring2) &&
+              !equipmentFits(*catalog.item({2}), EquipmentSlot::Ring1),
+          "Schema fifteen loads independent wearing metadata and both ring destinations");
+    auto legacy = good;
+    legacy["schema_version"] = 14;
+    files.invalid(legacy, "wear_slot");
+    for (auto& item : legacy["items"])
+        item.erase("wear_slot");
+    const auto old = files.load(legacy);
+    check(old.item({1})->wearSlot == WearSlot::None &&
+              itemEquipmentPosition(*old.item({1})) == EquipmentSlot::Count,
+          "Legacy gear stays unequippable");
+    for (unsigned fault = 0; fault < 5; ++fault) {
+        auto bad = good;
+        if (fault == 0)
+            bad["items"][0]["wear_slot"] = "face";
+        if (fault == 1)
+            bad["items"][0]["wear_slot"] = 3;
+        if (fault == 2)
+            bad["items"][0]["kind"] = "shield";
+        if (fault == 3)
+            bad["items"][0]["stack_limit"] = 2;
+        if (fault == 4)
+            bad["items"][0]["wear_slots"] = "head";
+        rejects([&] { files.load(bad); }, "Invalid wearable metadata or stacking rejects");
+    }
+}
 } // namespace
 int main() {
     try {
@@ -642,6 +687,7 @@ int main() {
         inventoryLoading();
         hybridSchema();
         limits();
+        wearableLoading();
         std::cout << "Party content checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

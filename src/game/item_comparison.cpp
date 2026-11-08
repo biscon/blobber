@@ -4,21 +4,19 @@
 
 namespace blobber {
 std::optional<EquipmentSlot> itemEquipmentSlot(const rules::ItemDefinition& item) noexcept {
-    if (item.kind == rules::ItemKind::Armor)
-        return EquipmentSlot::Body;
-    if (item.kind == rules::ItemKind::Shield)
-        return EquipmentSlot::OffHand;
-    if (item.kind == rules::ItemKind::Weapon)
-        return item.ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand;
-    return {};
+    const auto slot = rules::itemEquipmentPosition(item);
+    return slot == EquipmentSlot::Count ? std::nullopt : std::optional<EquipmentSlot>{slot};
 }
 ItemComparison compareItem(const Party& party, rules::CharacterId who,
                            const rules::ItemDefinition& offered) noexcept {
     ItemComparison result;
     const auto* c = party.character(who);
-    const auto slot = itemEquipmentSlot(offered);
+    auto slot = itemEquipmentSlot(offered);
     if (!c || !slot)
         return result;
+    if (*slot == EquipmentSlot::Ring1 && party.equipped(who, EquipmentSlot::Ring1) &&
+        !party.equipped(who, EquipmentSlot::Ring2))
+        slot = EquipmentSlot::Ring2;
     result.equippable = true;
     result.equipped = party.equipped(who, *slot);
     result.equippedArmorClass = result.offeredArmorClass = c->stats.armorClass;
@@ -62,7 +60,7 @@ ItemComparison compareItem(const Party& party, rules::CharacterId who,
             result.offeredArmorClass = ac;
             if (!(training & rules::armorBit(offered.armor)))
                 result.restriction = "Missing armor training: cannot equip.";
-        } else {
+        } else if (offered.kind == rules::ItemKind::Shield) {
             result.offeredArmorClass = c->stats.armorClass + (shield ? 0 : 2);
             if (!(training & rules::armorBit(rules::ArmorType::Shield)))
                 result.restriction = "Missing shield training: cannot equip.";

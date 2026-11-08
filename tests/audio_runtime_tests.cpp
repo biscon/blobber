@@ -532,16 +532,15 @@ int main() {
         townPosition = fake::musicBuffers[townSong].position;
     }
     check(!fake::buffers[sourceVoice].playing, "Town doorway replacement still stops old-world voices");
-    const auto townBanner = runtime.musicBanner();
     runtime.update(&session, true, true, .01f, false, false);
-    check(!runtime.musicBanner().visible && runtime.musicBanner().age == townBanner.age &&
+    check(!runtime.musicBanner().visible && runtime.musicBanner().age == 6 &&
               fake::musicBuffers[townSong].position > townPosition,
-          "Dialogue/inventory defers sanctuary announcement while song advances");
+          "Dialogue/inventory discards sanctuary announcement while song advances");
     // A failed travel leaves the source world/location attached.
     runtime.update(&session, true, true, 0, true, false);
     runtime.update(&session, false, true, .01f, false);
-    check(fake::lastMusic == townSong && fake::musicPlays == townStarts && runtime.musicBanner().visible,
-          "Travel rollback resumes source song and its deferred announcement");
+    check(fake::lastMusic == townSong && fake::musicPlays == townStarts && !runtime.musicBanner().visible,
+          "Travel rollback resumes source song without resurrecting its announcement");
     townPosition = fake::musicBuffers[townSong].position;
     runtime.update(&session, false, false, .01f, false);
     const auto townUnfocusedPosition = fake::musicBuffers[townSong].position;
@@ -751,6 +750,60 @@ int main() {
     check(ambientPlaying() && !fake::musicBuffers[fake::lastMusic].paused && songsPlaying() == 0 &&
               !runtime.musicBanner().visible,
           "Missing combat playlist leaves ambience audible even during an active encounter");
+    runtime.shutdown();
+
+    // A multi-song sanctuary fixture exercises selection and decoder restarts,
+    // unlike the intentional one-song repeat fixture above.
+    const auto townRoot = dir / "audio/music/sanctuary";
+    std::ofstream(townRoot / "b.mp3") << "owned second song";
+    std::ofstream(townRoot / "c.mp3") << "owned third song";
+    std::ofstream(townRoot / "playlist.json")
+        << R"({"tracks":[{"id":"a","path":"a.mp3","title":"A","artist":"Fixture"},{"id":"b","path":"b.mp3","title":"B","artist":"Fixture"},{"id":"c","path":"c.mp3","title":"C","artist":"Fixture"}]})";
+    std::filesystem::create_directories(dir / "multi");
+    std::ofstream(dir / "multi/sanctuary-music-state.json")
+        << R"({"version":1,"order":["a","b","c"],"cursor":0,"random":42,"last":""})";
+    runtime.prepare(dir, false, dir / "multi/settings.json");
+    runtime.setGameplayMusic(CampaignLocationId::City);
+    runtime.update(&session, false, true, .01f, false);
+    check(runtime.musicBanner().visible, "Fresh visible sanctuary song announces normally");
+    auto previousSong = fake::lastMusic;
+    std::array<bool, 256> cycleSongs{};
+    cycleSongs[previousSong] = true;
+    for (unsigned selection = 1; selection < 12; ++selection) {
+        const auto starts = fake::musicPlays;
+        // Dialogue keeps playback running, but discards even a partly shown banner.
+        runtime.update(&session, true, true, .01f, false, false);
+        check(!runtime.musicBanner().visible, "Dialogue hides the current announcement");
+        fake::musicBuffers[previousSong].position = 10;
+        const bool hidden = selection % 4 != 0;
+        allocations = 0;
+        watching = true;
+        runtime.update(&session, hidden, true, .01f, false, !hidden);
+        watching = false;
+        const auto selectedSong = fake::lastMusic;
+        check(!allocations && selectedSong != previousSong && fake::musicPlays == starts + 1 &&
+                  songsPlaying() == 1 && !fake::musicBuffers[previousSong].playing,
+              "Sanctuary EOF starts exactly one different song, including shuffle wrap during dialogue");
+        if (selection % 3 == 0)
+            cycleSongs.fill(false);
+        check(!cycleSongs[selectedSong], "Every sanctuary song plays once within each shuffle cycle");
+        cycleSongs[selectedSong] = true;
+        check(runtime.musicBanner().visible == !hidden, "Only songs starting on a visible screen announce");
+        const auto positionBeforeExit = fake::musicBuffers[selectedSong].position;
+        runtime.update(&session, false, true, .01f, false);
+        check(runtime.musicBanner().visible == !hidden && fake::musicPlays == starts + 1 &&
+                  fake::musicBuffers[selectedSong].position > positionBeforeExit,
+              "Dialogue exit neither delays an announcement nor replays the song");
+        previousSong = selectedSong;
+    }
+    const auto lastTownPath = fake::musicBuffers[previousSong].path;
+    runtime.persistMusic();
+    runtime.shutdown();
+    runtime.prepare(dir, false, dir / "multi/settings.json");
+    runtime.setGameplayMusic(CampaignLocationId::City);
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::musicBuffers[fake::lastMusic].path != lastTownPath && runtime.musicBanner().visible,
+          "Persisted sanctuary shuffle wraps to a different song after reattachment");
     runtime.shutdown();
     std::filesystem::remove_all(dir);
     std::cout << "Audio runtime ownership, failure and allocation checks passed\n";

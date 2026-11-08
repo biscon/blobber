@@ -41,10 +41,58 @@ void ignoredCampaigns() {
               "new campaign is loadable after ignored save");
     }
 }
+rules::Catalog wearableSaveCatalog() {
+    const auto base = catalog();
+    std::vector<rules::AttackDefinition> attacks;
+    std::vector<rules::MonsterDefinition> monsters;
+    std::vector<rules::RaceDefinition> races;
+    std::vector<rules::ClassDefinition> classes;
+    std::vector<rules::ItemDefinition> items;
+    std::vector<rules::SpellDefinition> spells;
+    std::vector<rules::CreationClass> creation;
+    for (std::uint16_t i = 0; i < base.attackCount(); ++i)
+        attacks.push_back(*base.attack({i}));
+    for (std::uint16_t i = 0; i < base.monsterCount(); ++i)
+        monsters.push_back(*base.monster({i}));
+    for (std::uint16_t i = 0; i < base.raceCount(); ++i)
+        races.push_back(*base.race({i}));
+    for (std::uint16_t i = 0; i < base.classCount(); ++i) {
+        classes.push_back(*base.characterClass({i}));
+        if (const auto* value = base.creation({i}))
+            creation.push_back(*value);
+    }
+    for (std::uint16_t i = 0; i < base.itemCount(); ++i)
+        items.push_back(*base.item({i}));
+    for (std::uint16_t i = 0; i < base.spellCount(); ++i)
+        spells.push_back(*base.spell({i}));
+    rules::ItemDefinition wrists;
+    wrists.id = "fixture.bracers";
+    wrists.name = "Fixture bracers";
+    wrists.description = "Test-owned mundane wrist equipment";
+    wrists.wearSlot = rules::WearSlot::Wrists;
+    items.push_back(wrists);
+    return {attacks, monsters, races, classes, items, *base.preset(), spells, creation};
+}
 void environmentRoundtrip() {
-    const auto c = catalog();
+    const auto c = wearableSaveCatalog();
     const auto d = definitions();
     CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    check(bool(run.party().acquire(
+              {{0}, c.findItem("fixture.bracers"), 1, run.party().inventory().revision()})),
+          "Acquire save-owned wrist fixture");
+    ItemHandle wearable;
+    for (std::uint16_t cell = 0; cell < bagCells; ++cell) {
+        const auto handle = run.party().inventory().at({{0}, cell});
+        const auto* stack = run.party().inventory().stack(handle);
+        if (stack && stack->item.index == c.findItem("fixture.bracers").index)
+            wearable = handle;
+    }
+    check(bool(run.party().inventoryChange({InventoryOp::Move,
+                                            wearable,
+                                            {{0}, unsigned(EquipmentSlot::Wrists)},
+                                            0,
+                                            run.party().inventory().revision()})),
+          "Equip last runtime slot before serialization");
     auto state = run.checkpoint();
     auto& world = state->locations[1].world;
     const auto fixtureCell = state->locations[1].entry.cell;
@@ -101,6 +149,15 @@ void environmentRoundtrip() {
     const auto fingerprint = world.fingerprint();
     const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
     auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
+    Party restoredParty(c, decoded->party);
+    check(restoredParty.equipped({0}, EquipmentSlot::Wrists) == c.item(c.findItem("fixture.bracers")) &&
+              !restoredParty.inventory().stack(wearable),
+          "Campaign codec preserves final equipment cell with fresh runtime identity");
+    auto previous = blobber::automation::Json::parse(text);
+    previous["schema"] = 17;
+    previous["simulation"] = 21;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, previous.dump()); },
+            "Pre-paperdoll campaign format rejects under strict save policy");
     const auto& restoredWorld = decoded->locations[1].world;
     check(restoredWorld.fingerprint() == fingerprint && restoredWorld.buildings.size() == 1 &&
               restoredWorld.buildings[0].model == "owned-house" &&
@@ -120,7 +177,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 17;
+    bad["schema"] = 18;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());

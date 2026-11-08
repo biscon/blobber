@@ -165,7 +165,7 @@ Json encodeObservation(const Observation& o) {
             c["concentration"] = status(s);
         } else
             c["concentration"] = Json::array();
-        for (std::uint16_t slot = 0; slot < 52; ++slot) {
+        for (std::uint16_t slot = 0; slot < inventoryCells; ++slot) {
             const auto h = g.party().inventory().at({{i}, slot});
             const auto* stack = g.party().inventory().stack(h);
             if (stack)

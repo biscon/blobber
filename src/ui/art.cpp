@@ -12,7 +12,8 @@
 #include <fstream>
 #include <stdexcept>
 namespace blobber {
-UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : resources_(resources) {
+UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
+             const std::filesystem::path& preparedDirectory) : resources_(resources) {
     constexpr const char* names[]{"alden",
                                   "brunna",
                                   "merrin",
@@ -77,7 +78,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory) : 
                                   "giant-rat",
                                   "zombie",
                                   "goblin-shaman"};
-    const auto prepared = directory.parent_path() / "prepared";
+    const auto prepared = preparedDirectory.empty() ? directory.parent_path() / "prepared" : preparedDirectory;
     auto loadPreparedAtlas = [&](const char* name, int height) {
         preparationPoint("Loading interface atlases");
         const auto path = prepared / name;

@@ -55,7 +55,11 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
         commands.closeOverlay();
         return true;
     }
-    if (in.has(UiKey::Inventory) || (click && inside(inventoryLayout::inventoryPage))) {
+    if (in.has(UiKey::Inventory)) {
+        commands.closeOverlay();
+        return true;
+    }
+    if (click && inside(inventoryLayout::inventoryPage)) {
         commands.inventoryPage(CharacterPage::Inventory);
         return true;
     }
@@ -103,14 +107,21 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
         }
     }
     if (in.has(UiKey::Tab))
-        commands.inventorySelect(i.cursor < 48 ? 48 : 0);
+        commands.inventorySelect(i.cursor < bagCells ? unsigned(EquipmentSlot::Head) : 0);
     const int delta = in.has(UiKey::Left)    ? -1
                       : in.has(UiKey::Right) ? 1
                       : in.has(UiKey::Up)    ? (i.cursor < 48 ? -8 : -1)
                       : in.has(UiKey::Down)  ? (i.cursor < 48 ? 8 : 1)
                                              : 0;
     if (delta) {
-        const int cell = std::clamp(int(i.cursor) + delta, 0, 51);
+        const int cell = i.cursor < bagCells ? std::clamp(int(i.cursor) + delta, 0, int(inventoryCells) - 1)
+                                             : inventoryLayout::equipmentNeighbor(i.cursor,
+                                                                                  in.has(UiKey::Left)    ? -1
+                                                                                  : in.has(UiKey::Right) ? 1
+                                                                                                         : 0,
+                                                                                  in.has(UiKey::Up)     ? -1
+                                                                                  : in.has(UiKey::Down) ? 1
+                                                                                                        : 0);
         commands.inventorySelect(static_cast<std::uint16_t>(cell));
     }
     if (in.has(UiKey::Confirm))

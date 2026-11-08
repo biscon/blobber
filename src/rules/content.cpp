@@ -97,6 +97,9 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
         if (!validDisplayText(i.name, 64) || !validDisplayText(i.description, 512) || i.weight < 0 ||
             static_cast<unsigned>(i.kind) > static_cast<unsigned>(ItemKind::Supply))
             throw std::runtime_error("items." + i.id + ": invalid name, description, weight, or kind");
+        if (static_cast<unsigned>(i.wearSlot) > static_cast<unsigned>(WearSlot::Wrists) ||
+            (i.wearSlot != WearSlot::None && i.kind != ItemKind::Gear))
+            throw std::runtime_error("items." + i.id + ": invalid wear_slot");
         const unsigned expected = i.kind == ItemKind::Currency     ? 1000
                                   : i.kind == ItemKind::Supply     ? 5
                                   : i.kind == ItemKind::Ammunition ? 100

@@ -6,7 +6,7 @@ Inventory::Saved Inventory::checkpoint() const noexcept {
     s.stacks = stacks_;
     s.revision = revision_;
     for (unsigned c = 0; c < 4; ++c)
-        for (unsigned i = 0; i < 52; ++i)
+        for (unsigned i = 0; i < inventoryCells; ++i)
             s.locations[c][i] = locations_[c][i] ? locations_[c][i].slot : UINT16_MAX;
     return s;
 }
@@ -33,7 +33,7 @@ void Inventory::restore(const Saved& s, const rules::Catalog& catalog) {
     stacks_ = s.stacks;
     revision_ = s.revision;
     for (unsigned c = 0; c < 4; ++c)
-        for (unsigned i = 0; i < 52; ++i) {
+        for (unsigned i = 0; i < inventoryCells; ++i) {
             auto slot = s.locations[c][i];
             locations_[c][i] =
                 slot == UINT16_MAX ? ItemHandle{} : ItemHandle{identity_, stacks_[slot].generation, slot};

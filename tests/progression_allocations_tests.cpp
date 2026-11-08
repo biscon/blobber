@@ -190,7 +190,7 @@ int main() {
                 effects.resolveMirror(effects.mirror(actors.id(0), {3}, 20, 100), n % 2, 0, events);
             const std::array<Cell, 4> cells{{{5, 4}, {6, 4}, {5, 5}, {6, 5}}};
             okay &= effects.createWeb(cells.data(), 4, {3}, 10, 0, events);
-            effects.ignite({6, 4});
+            effects.ignite(Cell{6, 4});
             effects.advance(effects.gameplayMs() + 6000, (repeat + 1) * 6000, true, events);
         }
         tracking = false;

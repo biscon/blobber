@@ -43,7 +43,7 @@ class MusicTransport {
     float fadeLength_ = 0, fadeAge_ = 0;
     bool fading_ = false;
     bool completed_ = false;
-    void start() noexcept;
+    void start(bool bannerVisible) noexcept;
 };
 std::vector<MusicTrack> loadMusicTracks(const std::filesystem::path& root, std::string& warning);
 void loadPlaylist(const std::filesystem::path&, const std::vector<MusicTrack>&, Playlist&, std::string&);

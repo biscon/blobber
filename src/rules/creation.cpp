@@ -65,10 +65,12 @@ bool sameGear(const CharacterLoadout& a, const CharacterBuild& b) noexcept {
     for (std::size_t i = 0; i < a.itemCount; ++i)
         if (a.items[i].item.index != b.items[i].item.index || a.items[i].quantity != b.items[i].quantity)
             return false;
-    return a.equipment.body.index == b.equipment.body.index &&
-           a.equipment.mainHand.index == b.equipment.mainHand.index &&
-           a.equipment.offHand.index == b.equipment.offHand.index &&
-           a.equipment.ranged.index == b.equipment.ranged.index;
+    for (std::size_t i = bagCells; i < inventoryCells; ++i) {
+        const auto slot = static_cast<EquipmentSlot>(i);
+        if (a.equipment.get(slot).index != b.equipment.get(slot).index)
+            return false;
+    }
+    return true;
 }
 } // namespace
 const PortraitDefinition* portrait(PortraitId id) noexcept {

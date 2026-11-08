@@ -131,7 +131,14 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     char balance[40];
     std::snprintf(balance, sizeof(balance), "Gold: %" PRIu64, i.gold);
     rightAligned(balance, inventoryLayout::gold, gold);
-    picture(UiArt::silhouetteIcon, {32, 93, 118, 200}, {160, 165, 154, 210});
+    picture(UiArt::silhouetteIcon, inventoryLayout::silhouette, {160, 165, 154, 210});
+    for (const auto& leader : inventoryLayout::equipmentLeaders) {
+        const Vector2 start{leader.start.x, leader.start.y};
+        const Vector2 elbow{leader.elbow.x, leader.elbow.y}, target{leader.target.x, leader.target.y};
+        line(start, elbow, gold);
+        line(elbow, target, gold);
+        fill({int(target.x), int(target.y), 1, 1}, gold);
+    }
     const InventoryCell* selected = nullptr;
     auto drawCell = [&](const InventoryCell& c, UiRect r, unsigned index) {
         const bool chosen = c.definition && c.handle == i.selected;
@@ -141,15 +148,17 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     };
     for (int n = 0; n < 48; ++n)
         drawCell(i.cells[n], inventoryLayout::cell(n), n);
-    constexpr const char* slots[]{"BODY", "MAIN HAND", "SHIELD", "RANGED"};
-    for (int n = 0; n < 4; ++n) {
+    for (int n = 0; n < int(equipmentSlots); ++n) {
+        const auto frame = inventoryLayout::equipmentFrame(n);
+        fill(frame, {25, 33, 30, 255});
+        centered(inventoryLayout::equipmentLabels[n], inventoryLayout::equipmentLabel(n), gold,
+                 UiTextStyle::Small);
         const auto r = inventoryLayout::equipment(n);
         drawCell(i.cells[48 + n], r, 48 + n);
-        centered(slots[n], {r.x - 8, r.y - 13, r.width + 16, 12}, gold, UiTextStyle::Small);
     }
     char line[128];
     std::snprintf(line, sizeof(line), "AC %d", i.armorClass);
-    text(line, 16, 294, gold);
+    text(line, 16, 311, gold);
     std::snprintf(line, sizeof(line), "Weight %.2f / %.0f lb", double(i.weight) / 100,
                   double(i.capacity) / 100);
     text(line, 178, 316, i.weight > i.capacity ? red : gold, UiTextStyle::Label);
@@ -189,7 +198,7 @@ void HudPainter::inventory(const HudSnapshot& h) const {
     clipped("Drag: move / same item: merge / Shift-drag: split", 178, 330, 300, muted, UiTextStyle::Small);
     clipped(i.management == InventoryError::None ? "Equipment & transfers available"
                                                  : "Equipment & transfers locked in danger",
-            16, 313, 155, i.management == InventoryError::None ? muted : red, UiTextStyle::Small);
+            16, 325, 155, i.management == InventoryError::None ? muted : red, UiTextStyle::Small);
     clipped(i.feedback[0] ? i.feedback.data()
                           : "1-4: character / Arrows: select / Tab: "
                             "equipment / Esc: close",

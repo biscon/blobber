@@ -27,7 +27,7 @@ int runMenus(const Options& options) try {
     AudioRuntime audio;
     audio.prepare(options.assets, options.noAudio, options.settings);
     setBorderlessFullscreen(audio.settings.borderlessFullscreen);
-    Presenter presenter(resources, options.assets, &worker);
+    Presenter presenter(resources, options.assets, &worker, options.preparedAssets);
     presenter.audio = &audio;
     loading->attach(presenter);
     presenter.prepareMenu();

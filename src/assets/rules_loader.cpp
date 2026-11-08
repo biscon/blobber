@@ -61,8 +61,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         const int version = integer(root.at("schema_version"), "schema_version");
         if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
             version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 &&
-            version != 13 && version != 14)
-            fail("schema_version", "only versions 1 through 14 are supported");
+            version != 13 && version != 14 && version != 15)
+            fail("schema_version", "only versions 1 through 15 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else if (version >= 8)

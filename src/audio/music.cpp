@@ -38,13 +38,13 @@ void MusicTransport::stop() noexcept {
     suspended = false;
     completed_ = false;
 }
-void MusicTransport::start() noexcept {
+void MusicTransport::start(bool bannerVisible) noexcept {
     track = playlist.next();
     if (track == musicCapacity)
         return;
     ++revision;
     level = 1;
-    bannerAge = 0;
+    bannerAge = bannerVisible ? 0.f : 6.f;
     fading_ = false;
 }
 void MusicTransport::update(const MusicInput& in) noexcept {
@@ -53,6 +53,10 @@ void MusicTransport::update(const MusicInput& in) noexcept {
         stop();
         encounter_ = in.encounter;
     }
+    // Hidden screens discard announcements, even if playback is suspended.
+    // Returning to gameplay must never announce a song that already started.
+    if (!in.bannerVisible)
+        bannerAge = 6;
     // End-of-combat always wins over end-of-track, including while muted.
     if (!in.active && track != musicCapacity) {
         if (!in.audible || in.ended) {
@@ -81,7 +85,7 @@ void MusicTransport::update(const MusicInput& in) noexcept {
         }
         level = 1 - fadeAge_ / fadeLength_;
     } else if (in.active && !completed_ && (track == musicCapacity || in.ended)) {
-        start();
+        start(in.bannerVisible);
         return;
     }
     if (track != musicCapacity && in.bannerVisible)

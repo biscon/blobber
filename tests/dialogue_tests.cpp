@@ -29,6 +29,26 @@ struct Directory {
     }
     void write(const Json& j) { std::ofstream(path / "dialogue.yaml") << j.dump(2); }
 };
+void authoringReload() {
+    Directory d;
+    auto script = source();
+    script["greeting"]["beats"][0]["audio"] = "dialogue/removed.wav";
+    d.write(script);
+    check(loadDialogue(d.path).audioFiles.size() == 1, "Initial authored audio is discovered");
+    script["greeting"]["beats"][0].erase("audio");
+    script["greeting"]["beats"][0]["text"] = "Edited greeting.";
+    d.write(script);
+    auto edited = loadDialogue(d.path);
+    check(edited.audioFiles.empty() && edited.characters[0].greeting.beats[0].audio == 64 &&
+              edited.characters[0].greeting.beats[0].text == "Edited greeting.",
+          "Reload reads edited prose and removes old audio references without a build");
+    script["participants"]["host"]["resident"] = "fixture.second";
+    { std::ofstream(d.path / "new-resident.yml") << script.dump(2); }
+    check(loadDialogue(d.path).characters.size() == 2,
+          "New dialogue files are discovered without a configured file inventory");
+    std::filesystem::remove(d.path / "new-resident.yml");
+    check(loadDialogue(d.path).characters.size() == 1, "Deleted dialogue files disappear on reload");
+}
 float measure(const char* text, void*) {
     return float(std::strlen(text) * 4);
 }
@@ -1063,6 +1083,7 @@ int main() {
         delayedOverlays();
         authoredReactions();
         parser();
+        authoringReload();
         flow();
         integration();
         inputEdges();

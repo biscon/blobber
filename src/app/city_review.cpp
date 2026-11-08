@@ -11,7 +11,7 @@ int runCityReview(const Options& options) {
     Window window(options.width, options.height, false, options.uncapped);
     PreparationWorker worker;
     GpuResources resources;
-    Presenter presenter(resources, options.assets, &worker);
+    Presenter presenter(resources, options.assets, &worker, options.preparedAssets);
     auto loading = std::make_unique<LoadingScreen>(&worker, &presenter);
     const auto rules = prepareCpu([&] { return loadRules(options.assets / "rules/catalog.json"); });
     if (!rules.preset())
@@ -20,7 +20,7 @@ int runCityReview(const Options& options) {
         prepareCpu([&] { return loadNpcDefinitions(options.assets / "npcs/level.json"); });
     const auto scene = prepareCpu([] { return sanctuaryCity(); });
     const NpcWorld empty(scene.map, scene.spawn.cell, definitions.types, {});
-    auto publication = prepareCpu([&] { return world_assets::load(options.assets / "prepared/world"); });
+    auto publication = prepareCpu([&] { return world_assets::load(options.preparedAssets / "world"); });
     if (publication.definitions != definitions.definitionFingerprint)
         throw std::runtime_error("City review definitions differ; rebuild world assets");
     WorldRenderer renderer(resources, std::move(publication), options.supersampling,

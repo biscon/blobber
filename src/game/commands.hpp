@@ -246,7 +246,7 @@ class CommandController {
     void inventoryPage(CharacterPage) noexcept;
     void inventoryCharacter(rules::CharacterId) noexcept;
     void inventoryCursor(std::uint16_t cell) noexcept {
-        if (cell < 52)
+        if (cell < inventoryCells)
             state_.inventory.cursor = cell;
     }
     void inventorySelect(std::uint16_t) noexcept;

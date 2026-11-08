@@ -42,7 +42,7 @@ struct InventoryHud {
     bool open = false, pointerDown = false, dragging = false, splitDrag = false, itemTargeting = false;
     rules::CharacterId character{0};
     std::uint16_t cursor = 0;
-    std::array<InventoryCell, 52> cells{};
+    std::array<InventoryCell, inventoryCells> cells{};
     ItemHandle selected{}, source{};
     InventoryMode mode = InventoryMode::Browse;
     std::array<InventoryActionState, static_cast<unsigned>(InventoryAction::Count)> actions{};

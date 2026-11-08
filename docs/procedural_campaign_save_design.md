@@ -1,5 +1,10 @@
 # PC06: campaign save and resume
 
+Current paperdoll revision (2026-11-08): campaign schema/simulation **18/22**.
+The [approved equipment extension](inventory_design.md#expanded-paperdoll-mockup--2026-11-08)
+expands inventory storage to 61 locations per character and 244 stacks per party.
+Older campaigns reject unchanged without migration; library/arena formats remain.
+
 Current movement revision (2026-11-08): campaign schema/simulation **16/20**.
 [SRD combat movement](combat_positioning.md#srd-combat-movement--2026-11-08)
 changes the catalog fingerprint and simulation rules, retaining strict rejection
