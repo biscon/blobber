@@ -1,0 +1,9 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production animation sprite master for Stone & Shadow. Input reference is the APPROVED boric identity, wardrobe, material rendering and proportions; preserve them exactly. This is a new animation sheet, NOT a turnaround or bust sheet.\nExactly 4 full-body figures of the SAME character all strict side profile, nose and toes point SCREEN RIGHT. Layout an exact 2 by 2 grid, read left-to-right then top-to-bottom. Same body scale in every cell; complete head/crown/helmet and boots, generous empty gutters and padding on all edges, consistent local ground baseline and torso center. No labels or dividers. Four successive phases of one in-place walking cycle: left-foot contact, passing, right-foot contact, passing. Clearly alternate legs and opposing arm swings; shift weight naturally but keep body scale and center stable. Both boots remain entirely visible, no large lunge or root translation.\nIdentity constraints: Tall very thin hunched teenage human guard, narrow youthful face, undersized rusty helmet, loose green padded tunic, arm wraps, trousers and boots. Retain approved restrained facial anatomy, not grotesque. Match detailed painted game illustration with warm upper-left light, crisp contours and textured materials. Do not add weapons, props or change outfit. Genuine transparent alpha background, no floor, shadows, scenery, checkerboard, text, watermark or extra figures.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/docs/mockups/boric-v1/turnaround-v2.png"
+  ],
+  "transparent_background": true,
+  "generated_source": "/home/bison/.codex/generated_images/01a1b1f2-84ff-7771-a6d8-4421900f7f2a/exec-98a67eec-88f0-46c3-aadf-9256fd9373f8.png"
+}

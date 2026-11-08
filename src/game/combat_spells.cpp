@@ -27,7 +27,7 @@ SpellArea spellArea(const ActorWorld& actors, Player pose) noexcept {
     }
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto* a = actors.actor(actors.id(i));
-        if (!a || a->life != ActorLife::Alive)
+        if (!a || !a->hostile() || a->life != ActorLife::Alive)
             continue;
         for (std::size_t j = 0; j < result.cells.size(); ++j)
             if (result.eligible[j] && a->npc.cell == result.cells[j]) {
@@ -49,11 +49,10 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
     const auto kind = definition->kind;
     const auto* r = rules::spellRules(kind);
     if (r->hostile) {
-        if (kind == SpellKind::HoldPerson && actors_.actor(c.enemies[i]) &&
-            !actors_.catalog().monster(actors_.actor(c.enemies[i])->monster)->humanoid)
-            return CommandReason::InvalidTarget;
         const auto* a = actors_.actor(c.enemies[i]);
-        if (!a || a->life != ActorLife::Alive)
+        if (!a || !a->hostile() || a->life != ActorLife::Alive)
+            return CommandReason::InvalidTarget;
+        if (kind == SpellKind::HoldPerson && !actors_.catalog().monster(a->monster)->humanoid)
             return CommandReason::InvalidTarget;
         if (!effects_.sees(c.character))
             return CommandReason::NotVisible;
@@ -144,7 +143,7 @@ bool CombatController::safeRecovery(Player pose) const noexcept {
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto id = actors_.id(i);
         const auto* a = actors_.actor(id);
-        if (a && a->life == ActorLife::Alive &&
+        if (a && a->hostile() && a->life == ActorLife::Alive &&
             (ai_.aware(id) || combatAdjacent(map_, pose.cell, a->npc.cell)))
             return false;
     }
@@ -657,7 +656,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             if (kind == SpellKind::Thunderwave) {
                 for (std::size_t i = 0; i < count; ++i) {
                     const auto* a = actors_.actor(targets[i]);
-                    if (!push[i] || !a || a->life != ActorLife::Alive)
+                    if (!push[i] || !a || !a->hostile() || a->life != ActorLife::Alive)
                         continue;
                     const auto destination = a->npc.cell + forward(pose.heading);
                     Cell subcell = a->npc.subcell;

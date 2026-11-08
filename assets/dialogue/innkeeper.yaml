@@ -1,0 +1,75 @@
+# Edit each response as a linear screenplay. See README.md for defaults.
+version: 2
+primary: innkeeper
+shop: sanctuary_inn
+participants:
+  innkeeper:
+    resident: sanctuary.innkeeper
+    name: Innkeeper
+facts:
+  - heard_dungeon_advice
+greeting:
+  beats:
+    - speaker: innkeeper
+      text: |
+        'Tis a pleasure to behold thee once more. In what manner may I serve thee, traveler?
+introduction:
+  beats:
+    - speaker: innkeeper
+      text: |
+        Ah, unfamiliar faces! Step ye inside and warm thy weary bones by the hearth.
+        
+        I do keep this humble establishment, and eke an ear to the myriad tales that passeth through its halls. If thou art intent on venturing into the depths below, I beseech thee to inquire before thou dost depart. A modicum of wise counsel costs far less than a proper funeral.
+    - speaker: innkeeper
+      text: |
+        Some do journey hither to celebrate a grand discovery. Others seeketh merely a quiet stool and a patient soul to listen to their plight. There abideth ample room for both.
+        
+        Now, what sayest thou? In what manner may I assist thy party?
+topics:
+  - id: trade
+    label: Trade
+    kind: trade
+  - id: about
+    label: About yourself
+    kind: introduction
+  - id: inn
+    label: The inn
+    responses:
+      - beats:
+          - speaker: innkeeper
+            text: |
+              A sturdy roof, a roaring fire, and a sanctuary wherein thou mayest catch thy breath. Such is the comfort I endeavor to provide. Tarry here as long as thou dost require; the dark dungeon shall remain right where it abideth until thou art fully prepared.
+  - id: town
+    label: The town
+    responses:
+      - beats:
+          - speaker: innkeeper
+            text: |
+              Sanctuary earneth its noble name by ensuring that ordinary affairs continue apace. The hearths requireth tending and the citizenry must needs be fed, regardless of the foul malice that stirreth beneath our very feet.
+  - id: dungeon
+    label: The dungeon
+    responses:
+      - set_fact: heard_dungeon_advice
+        beats:
+          - speaker: innkeeper
+            text: |
+              Know thou the proper hour to turn back. A pack laden with gold is of no utility to a soul who never reacheth the ascending stairs.
+              
+              Furthermore, pay close heed to thy companions. He who appeareth most steadfast may well be the one too proud to beg for a rest.
+  - id: rumours
+    label: Rumours
+    responses:
+      - beats:
+          - speaker: innkeeper
+            text: |
+              I have heard an abundance of grand, boastful claims muttered over a frothing mug of ale. Ere we speak of such follies, interrogate me first regarding the dungeon. Sensible counsel is ever the wiser place to begin thy quest.
+      - when_fact: heard_dungeon_advice
+        beats:
+          - speaker: innkeeper
+            text: |
+              Since thou art willing to lend thine ear to counsel, receive thou another piece of wisdom: let not another man's fanciful tale dictate the perils thou art willing to face.
+              
+              A fable groweth grander each time it is recounted. Yet the stairs down do not get any closer, knave.
+  - id: farewell
+    label: Farewell
+    kind: farewell

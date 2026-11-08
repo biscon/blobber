@@ -128,6 +128,7 @@ class HudPainter {
         text(value, x + 2 / scale, y + 2 / scale, {8, 8, 8, 255}, style);
         text(value, x, y, WHITE, style);
     }
+    void dialogue(const DialogueHud&) const;
     void log(const HudSnapshot& h, bool expanded) const;
     void tooltip(const HudSnapshot& h) const;
     void characterSheet(const HudSnapshot& h) const;
@@ -152,6 +153,8 @@ class HudPainter {
             border(r, hudInk::bright);
     }
     void itemTargets(const HudSnapshot& h) const;
+    void trade(const HudSnapshot&) const;
+    void tradeTooltip(const HudSnapshot&) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
     void enemyTargets(const HudSnapshot&, bool popover) const;

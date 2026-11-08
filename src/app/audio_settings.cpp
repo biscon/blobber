@@ -34,7 +34,7 @@ void drawSettings(void* context, const UiFonts& fonts, const UiArt& art) {
             p.centered(plus ? "+" : "-", r, hudInk::text);
         }
     }
-    p.text("Combat music", 145, 225);
+    p.text("Music", 145, 225);
     p.box(musicSlider, v.focus == 5 ? hudInk::teal : hudInk::edge);
     p.fill({musicSlider.x + 4, musicSlider.y + 9, musicSlider.width - 8, 4}, hudInk::muted);
     const int knob = musicSlider.x + 4 + int((musicSlider.width - 8) * v.audio.settings.musicVolume);

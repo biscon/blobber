@@ -6,6 +6,7 @@
 #include <vector>
 namespace blobber::audio {
 constexpr unsigned musicCapacity = 64;
+enum class MusicPolicy { Playlist, Once };
 struct MusicTrack {
     std::string id, path, title, artist;
     float gain = 1;
@@ -32,6 +33,7 @@ class MusicTransport {
     std::uint64_t revision = 0;
     float level = 0, bannerAge = 6;
     bool suspended = false;
+    MusicPolicy policy = MusicPolicy::Playlist;
     void update(const MusicInput&) noexcept;
     void stop() noexcept;
     bool fading() const noexcept { return fading_; }
@@ -40,6 +42,7 @@ class MusicTransport {
     std::uint64_t encounter_ = 0;
     float fadeLength_ = 0, fadeAge_ = 0;
     bool fading_ = false;
+    bool completed_ = false;
     void start() noexcept;
 };
 std::vector<MusicTrack> loadMusicTracks(const std::filesystem::path& root, std::string& warning);

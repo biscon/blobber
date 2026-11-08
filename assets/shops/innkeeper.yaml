@@ -1,0 +1,27 @@
+# Provisions at the inn; potions at the emporium and equipment at Duncan's smithy.
+version: 1
+id: sanctuary_inn
+restock_days: 3
+buyback_hours: 24
+buyback_markup_percent: 25
+prices:
+  camp_kit: {buy: 120, sell: 30}
+  healing_potion: {buy: 50, sell: 12}
+  mana_potion: {buy: 65, sell: 16}
+  longsword: {buy: 30, sell: 10}
+  chain_mail: {buy: 100, sell: 30}
+  shield: {buy: 20, sell: 6}
+  mace: {buy: 12, sell: 4}
+  scale_mail: {buy: 75, sell: 22}
+  holy_symbol: {buy: 15, sell: 4}
+  shortsword: {buy: 20, sell: 6}
+  leather: {buy: 20, sell: 8}
+  shortbow: {buy: 40, sell: 12}
+  arrow: {buy: 2, sell: 1}
+  dagger: {buy: 6, sell: 2}
+  spellbook: {buy: 80, sell: 24}
+  arcane_focus: {buy: 20, sell: 6}
+  scimitar: {buy: 40, sell: 12}
+  quarterstaff: {buy: 8, sell: 2}
+stock:
+  - {item: camp_kit, quantity: 4}

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "tracks": [
+    {
+      "id": "nickpanek-ambient-piano-peaceful-and-relaxing-music-237007",
+      "path": "nickpanek-ambient-piano-peaceful-and-relaxing-music-237007.mp3",
+      "title": "Ambient Piano Peaceful And Relaxing Music",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-gunfighter-theme-flamenco-265091",
+      "path": "nickpanek-gunfighter-theme-flamenco-265091.mp3",
+      "title": "Gunfighter Theme Flamenco",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-melancholic-autumn-piano-melody-248321",
+      "path": "nickpanek-melancholic-autumn-piano-melody-248321.mp3",
+      "title": "Melancholic Autumn Piano Melody",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-peaceful-acoustic-guitar-instrumental-for-relaxation-230121",
+      "path": "nickpanek-peaceful-acoustic-guitar-instrumental-for-relaxation-230121.mp3",
+      "title": "Peaceful Acoustic Guitar Instrumental For Relaxation",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-peaceful-piano-background-music-218762",
+      "path": "nickpanek-peaceful-piano-background-music-218762.mp3",
+      "title": "Peaceful Piano Background Music",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-psychedelic-acoustic-folk-instrumental-232232",
+      "path": "nickpanek-psychedelic-acoustic-folk-instrumental-232232.mp3",
+      "title": "Psychedelic Acoustic Folk Instrumental",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-relaxing-piano-coffeehouse-music-for-vlogs-251263",
+      "path": "nickpanek-relaxing-piano-coffeehouse-music-for-vlogs-251263.mp3",
+      "title": "Relaxing Piano Coffeehouse Music For Vlogs",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-softie-relaxing-lofi-instrumental-265107",
+      "path": "nickpanek-softie-relaxing-lofi-instrumental-265107.mp3",
+      "title": "Softie Relaxing Lofi Instrumental",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-soothing-electric-guitar-lo-fi-instrumental-251404",
+      "path": "nickpanek-soothing-electric-guitar-lo-fi-instrumental-251404.mp3",
+      "title": "Soothing Electric Guitar Lo Fi Instrumental",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    },
+    {
+      "id": "nickpanek-thinking-piano-music-ambience-225272",
+      "path": "nickpanek-thinking-piano-music-ambience-225272.mp3",
+      "title": "Thinking Piano Music Ambience",
+      "artist": "Nick Panek",
+      "gain_db": -4
+    }
+  ]
+}

@@ -33,10 +33,15 @@ void HudPainter::loot(const HudSnapshot& h) const {
         constexpr const char* kinds[] = {"Weapon", "Armor",      "Shield",   "Ammunition",
                                          "Gear",   "Consumable", "Currency", "Supply"};
         clipped(kinds[static_cast<unsigned>(d.kind)], 374, 140, 72, muted, UiTextStyle::Small);
-        std::snprintf(buffer, sizeof(buffer), "Quantity %u / %.2f lb each", e.quantity, d.weight / 100.);
+        if (d.kind == rules::ItemKind::Currency)
+            std::snprintf(buffer, sizeof(buffer), "%u gold / weightless", e.quantity);
+        else
+            std::snprintf(buffer, sizeof(buffer), "Quantity %u / %.2f lb each", e.quantity, d.weight / 100.);
         clipped(buffer, 330, 166, 116, gold, UiTextStyle::Small);
         using K = rules::ItemKind;
-        if (d.kind == K::Weapon)
+        if (d.kind == K::Currency)
+            std::snprintf(buffer, sizeof(buffer), "Shared party purse");
+        else if (d.kind == K::Weapon)
             std::snprintf(buffer, sizeof(buffer), "Damage %dd%d%s", d.damage.count, d.damage.sides,
                           d.finesse ? " / finesse" : "");
         else if (d.kind == K::Armor)
@@ -50,7 +55,8 @@ void HudPainter::loot(const HudSnapshot& h) const {
         else
             std::snprintf(buffer, sizeof(buffer), "Stack limit %u", rules::stackLimit(d));
         clipped(buffer, 330, 180, 116, teal, UiTextStyle::Small);
-        clipped(d.description.c_str(), 330, 197, 116, muted, UiTextStyle::Small);
+        clipped(d.kind == K::Currency ? "Available to every companion." : d.description.c_str(), 330, 197,
+                116, muted, UiTextStyle::Small);
         clipped(l.reason, 330, 218, 116, l.canTake ? gold : red, UiTextStyle::Small);
     } else {
         clipped(l.count ? "Hover an item for stats." : "This bag is empty.", 330, 128, 116, muted,

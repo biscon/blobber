@@ -46,10 +46,26 @@ NpcWorld::NpcWorld(const Map& map, Cell spawn, std::vector<std::string> types,
             }
     }
     for (const auto& npc : instances_) {
-        if (npc.type.index >= types_.size() || npc.animation > NpcAnimation::Attack ||
-            static_cast<unsigned>(npc.facing) >= 4 || npc.subcell.x < 0 || npc.subcell.x > 1 ||
-            npc.subcell.y < 0 || npc.subcell.y > 1)
+        if (npc.type.index >= types_.size() ||
+            (npc.animation > NpcAnimation::Attack && !dialogueReaction(npc.animation)) ||
+            npc.role > NpcRole::Resident || static_cast<unsigned>(npc.facing) >= 4 || npc.subcell.x < 0 ||
+            npc.subcell.x > 1 || npc.subcell.y < 0 || npc.subcell.y > 1)
             throw std::runtime_error("Invalid NPC type, facing or subcell");
+        if (npc.role == NpcRole::Resident &&
+            ((npc.animation != NpcAnimation::Idle && npc.animation != NpcAnimation::Walk &&
+              !dialogueReaction(npc.animation)) ||
+             npc.monster || npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount))
+            throw std::runtime_error(
+                "Residents require stationary idle/walk/dialogue presentation without monster rules");
+        if (npc.residentId) {
+            if (npc.role != NpcRole::Resident)
+                throw std::runtime_error("Hostile NPC has resident identity");
+            for (const auto& other : instances_)
+                if (&other != &npc && other.residentId == npc.residentId)
+                    throw std::runtime_error("Duplicate resident identity");
+        }
+        if (npc.role == NpcRole::Hostile && dialogueReaction(npc.animation))
+            throw std::runtime_error("Dialogue reactions are resident animations");
         if (map.solid(npc.cell) || npc.cell == spawn)
             throw std::runtime_error("NPC placement overlaps wall, boundary or player spawn");
         if (npc.ai.routine > NpcRoutine::Wander || npc.ai.waypointCount > npc.ai.waypoints.size() ||

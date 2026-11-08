@@ -48,7 +48,7 @@ EffectId EffectController::concentrationSource(EffectSource caster) const noexce
 bool EffectController::living(EffectTarget t) const noexcept {
     if (t.npc) {
         const auto* a = actors_.actor(t.enemy);
-        return a && a->life == ActorLife::Alive;
+        return a && a->hostile() && a->life == ActorLife::Alive;
     }
     const auto* c = party_.character(t.character);
     return c && c->life != rules::Life::Dead;

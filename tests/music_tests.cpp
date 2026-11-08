@@ -98,6 +98,37 @@ int main() {
     in.active = false;
     t.update(in);
     check(t.track == 64, "Combat end while muted discards current song");
+
+    audio::MusicTransport menu;
+    menu.policy = audio::MusicPolicy::Once;
+    menu.playlist.reset(1, 12);
+    audio::MusicInput mi;
+    mi.active = true;
+    mi.audible = false;
+    menu.update(mi);
+    check(menu.playlist.cursor == 0, "Muted menu entry does not consume its song");
+    mi.audible = true;
+    menu.update(mi);
+    const auto menuRevision = menu.revision;
+    mi.paused = true;
+    mi.dt = 10;
+    menu.update(mi);
+    check(menu.suspended && menu.revision == menuRevision, "Menu pause preserves song");
+    mi.paused = false;
+    mi.ended = true;
+    menu.update(mi);
+    mi.ended = false;
+    for (unsigned i = 0; i < 10; ++i)
+        menu.update(mi);
+    mi.audible = false;
+    menu.update(mi);
+    mi.audible = true;
+    menu.update(mi);
+    check(menu.track == audio::musicCapacity && menu.revision == menuRevision && menu.playlist.cursor == 1,
+          "Single-play completion stays silent across frames and mute toggles");
+    menu.stop();
+    menu.update(mi);
+    check(menu.track == 0 && menu.revision == menuRevision + 1, "New menu session restarts the one song");
     audio::Journal journal;
     journal.enabled = false;
     CombatOutcome event;

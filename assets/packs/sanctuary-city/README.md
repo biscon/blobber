@@ -1,16 +1,17 @@
 # Sanctuary city — SC03 dressing
 
-Original painted architectural kit for the development-only
-`--sanctuary-city-review` town. Normal campaign Sanctuary remains the courtyard.
+Painted architectural kit for Sanctuary's campaign town and the
+`--sanctuary-city-review` development views.
 
 Ten named models provide low/gabled and hipped homes, a two-storey home, timber-
-framed inn, masonry smithy with broad chimney, shuttered provisioner, sanctuary
+framed inn, masonry smithy with broad chimney, shuttered Arcane Emporium, sanctuary
 with bell-cote, windowless dungeon entrance, paired closed gate and boundary wall.
 Six residences plus four service/landmark buildings, dungeon and gate use 91 total
-placements, including the complete modeled enclosure. Services and travel are not
-enabled. SC03 adds the accepted courtyard tree, a smaller eastern tree, three
+placements, including the complete modeled enclosure. Campaign door links now
+open the inn, smithy and Arcane Emporium. SC03 added the accepted courtyard tree, a smaller eastern tree, three
 planted beds, bushes, two ivy facade variants, two cloth-canopied stalls, a low
-stone fountain and tankard/anvil/provisions signs. Eight painted water phases
+stone fountain and hanging service signs. The former provisions sign now carries
+the approved flask/scroll/star emblem. Eight painted water phases
 advance at 8 FPS on fixed opaque geometry using the paused gameplay clock.
 Review corrections halve the stalls and move them to the square (8–9,15), shift
 the dungeon entrance one cell west, ground the bushes and clip ivy below eaves.
@@ -24,6 +25,22 @@ legacy defaults and dungeon lighting ignores the override.
 Other packs default to 16; extended candidate storage is bounded and reused.
 
 ## Regeneration
+
+The Arcane Emporium keeps the former `provisioner` model/source filename to
+preserve geometry bindings. Its canonical doorway is now `emporium`. Current
+`source/provisioner-sign.png` is the approved magic-shop artwork; exact built-in
+imagegen provenance is `source/magic-shop-sign.prompt.json`. Original concept and
+approval stay in `docs/mockups/magic-shop-v1`. This replaces the bread/wheat/sack
+art rather than adding a second sign.
+
+For sign/dressing iteration, stage a complete copy of this pack under an owned
+run's `assets/packs/sanctuary-city`, then run `tools/export_city_dressing.py` with
+`-- --output-root RUN_DIRECTORY/assets`. Rebuild the packed `city-dressing.blend`,
+GLB, atlas and runtime exports together, compare geometry and promote only changed
+files. The exporter retains its original default asset root for the legacy full
+city exporter, but agent review work must use staging. The magic-shop sign update
+changes only the sign source, atlas region and packed source formats: all 39
+runtime city mesh files and pack bindings compare byte-for-byte unchanged.
 
 Run sequentially from the repository root, with at most two workers:
 

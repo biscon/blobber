@@ -26,7 +26,8 @@ void Inventory::restore(const Saved& s, const rules::Catalog& catalog) {
         const auto& stack = s.stacks[i];
         const auto* item = catalog.item(stack.item);
         if (!stack.generation ||
-            (stack.quantity && (!used[i] || !item || stack.quantity > rules::stackLimit(*item))))
+            (stack.quantity && (!used[i] || !item || item->kind == rules::ItemKind::Currency ||
+                                stack.quantity > rules::stackLimit(*item))))
             throw std::invalid_argument("Invalid inventory stack");
     }
     stacks_ = s.stacks;
@@ -39,10 +40,10 @@ void Inventory::restore(const Saved& s, const rules::Catalog& catalog) {
         }
 }
 Party::Saved Party::checkpoint() const {
-    return {state_, inventory_.checkpoint(), questKeys_, preparationRevision_, progressionRevision_};
+    return {state_, inventory_.checkpoint(), questKeys_, preparationRevision_, progressionRevision_, gold_};
 }
 Party::Party(const rules::Catalog& catalog, const Saved& s)
-    : questKeys_(s.questKeys), catalog_(&catalog), state_(s.state),
+    : questKeys_(s.questKeys), catalog_(&catalog), state_(s.state), gold_(s.gold),
       preparationRevision_(s.preparationRevision), progressionRevision_(s.progressionRevision) {
     if (!rules::validFormation(state_.formation) || (questKeys_ & ~std::uint8_t((1u << 2) | (1u << 3))))
         throw std::invalid_argument("Invalid saved party formation or keys");

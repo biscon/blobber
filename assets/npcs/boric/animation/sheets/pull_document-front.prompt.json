@@ -1,0 +1,7 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "Use case: identity-preserve. Create a production NPC animation sprite sheet matching the supplied approved Boric reference. Same scrawny slouching adult town guard, simple rusty helmet, curly brown hair, dull olive padded tunic, brown trousers and boots, long slack face and foolish expression; same detailed painted 1990s fantasy RPG material rendering. Exactly FOUR full-body FRONT-FACING frames in an evenly spaced 2 by 2 grid, read left to right then top to bottom. Transparent background throughout, no labels, frames or floor shadows. Keep identical character scale, feet baseline within each cell, ample clear gutters and margin around ALL limbs, helmet and boots. Pull-document animation: frame 1 nervously reaches inside tunic lining at chest; frame 2 pulls a small rolled parchment from lining; frame 3 unrolls it between both hands at chest height; frame 4 holds a broad unfolded wrinkled parchment toward viewer with a foolish open-mouthed grin. Parchment on this small sprite can have faint ink illustration marks; no readable text. Feet stationary in same slouching pose, no walking. Preserve exact reference identity and clothing; do not turn to side. Four complete independent poses, no overlap. Genuine alpha transparency.",
+  "transparent_background": true,
+  "reference": "docs/mockups/boric-v1/turnaround-v2.png",
+  "status": "Derived artwork, awaiting user review"
+}

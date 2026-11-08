@@ -120,7 +120,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 10;
+    bad["schema"] = 16;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
@@ -177,7 +177,14 @@ void roundtrip() {
     walk(run.game(), {12, 20});
     face(run.game(), Heading::South);
     const CampaignContent content{"owned-fixture", 0};
+    ShopDefinition shop;
+    shop.id = dialogueKey("fixture.shop");
+    shop.stock.push_back({{0}, 4});
+    auto* merchant = run.merchants().visit(dialogueKey("fixture.merchant"), shop, run.gameTime());
+    merchant->stock[0] = 2;
+    merchant->buyback[0] = {{0}, 1, 13, gameDuration::day};
     auto before = run.checkpoint();
+    before->party.gold = UINT64_MAX;
     const auto text = encodeCampaign(c, d, content, *before);
     auto decoded = decodeCampaign(c, d, content, text);
     CampaignRun loaded(c, std::move(*decoded), d.timings);
@@ -185,6 +192,26 @@ void roundtrip() {
     check(encodeCampaign(c, d, content, *after) == text, "hub exact canonical round trip");
     check(loaded.party().inventory().identity() != run.party().inventory().identity(),
           "fresh inventory epoch");
+    const auto* restoredMerchant = loaded.merchants().find(dialogueKey("fixture.merchant"));
+    check(restoredMerchant && restoredMerchant->stock[0] == 2 && restoredMerchant->buyback[0].price == 13 &&
+              restoredMerchant->buyback[0].expiresMs == gameDuration::day,
+          "Visited merchant stock, marked-up buyback and deadlines survive campaign codec/restore");
+    for (int schema : {12, 13, 14}) {
+        auto legacy = blobber::automation::Json::parse(text);
+        legacy["schema"] = schema;
+        rejects([&] { decodeCampaign(c, d, content, legacy.dump()); },
+                "Older schemas reject without conversion");
+    }
+    check(loaded.party().gold() == UINT64_MAX, "Largest party purse survives canonical save round trip");
+    auto badGold = blobber::automation::Json::parse(text);
+    badGold["campaign"]["party"]["gold"] = "18446744073709551616";
+    rejects([&] { decodeCampaign(c, d, content, badGold.dump()); }, "Purse overflow rejects on decode");
+    badGold["campaign"]["party"].erase("gold");
+    rejects([&] { decodeCampaign(c, d, content, badGold.dump()); }, "Missing purse rejects on decode");
+    auto badMerchant = blobber::automation::Json::parse(text);
+    badMerchant["campaign"]["merchants"][0]["buyback"][0]["quantity"] = 65535;
+    rejects([&] { decodeCampaign(c, d, content, badMerchant.dump()); },
+            "Invalid persisted merchant quantity rejects before publication");
     entrance(run);
     auto travel = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(travel), "enter dungeon");

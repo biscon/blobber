@@ -27,18 +27,28 @@ struct NpcAnimationSnapshot {
 };
 // Borrows one runtime actor world; metadata and storage are copied/preallocated at startup.
 constexpr std::uint64_t npcHitFlashMs = 100;
+struct NpcDialogueOverride {
+    std::optional<ActorId> actor;
+    NpcAnimation clip = NpcAnimation::Idle;
+    std::uint64_t elapsedMs = 0;
+};
 class NpcAnimator {
   public:
     NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings);
     NpcAnimator(ActorWorld&&, const std::vector<NpcTimings>&) = delete;
     NpcAnimator(const ActorWorld&&, const std::vector<NpcTimings>&) = delete;
-    void setTime(std::uint64_t elapsedMs, const EffectController* effects = nullptr) noexcept;
+    void setTime(std::uint64_t elapsedMs, const EffectController* effects = nullptr,
+                 std::optional<ActorId> speaker = {}, std::uint64_t speakerMs = 0,
+                 const NpcDialogueOverride* override = nullptr) noexcept;
     const NpcAnimationSnapshot& snapshot() const noexcept { return snapshot_; }
 
   private:
     const ActorWorld& world_;
     std::array<NpcTimings, NpcWorld::maxTypes> timings_{};
     std::array<std::uint32_t, NpcWorld::maxInstances> idlePhases_{};
+    // View-owned cosmetic time: keep resident idle phases continuous across dialogue.
+    std::uint64_t residentDialogueMs_ = 0, lastDialogueMs_ = 0;
+    bool dialogueActive_ = false;
     NpcAnimationSnapshot snapshot_;
 };
 } // namespace blobber

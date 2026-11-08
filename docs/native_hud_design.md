@@ -1,5 +1,46 @@
 # Native-resolution HUD and impact alerts
 
+## Action dock hover and layout cleanup — 2026-11-07
+
+Action, travel and rest button tooltips wait 350 ms on the same control, using
+the session presentation clock while gameplay is unpaused. Moving within a button
+preserves dwell; changing controls, leaving, opening a modal or suspending input
+restarts it. CommandController owns one bounded kind/index/timestamp record; enemy
+hover retains its separate 250 ms/attack suppression policy, and portrait popups
+remain disabled. No frame allocations or new resources are needed.
+
+Targets uses the action-button width (34 logical pixels) and centered text in the
+existing shared draw/hit rectangle. Remove the adjacent dock readout, including
+selected-target and combat messages, and stop drawing underlying hints where this
+button is available. Target identity, eligibility and rejection feedback remain in
+the opened picker; spell-recipient controls and other dock modes are unchanged.
+Focused HUD tests cover dwell boundaries/reset and targeting tests cover picker
+input. Hidden GPU review checks drawing when available; desktop input stays manual.
+
+Verification: Debug game, HUD/targeting tests and world integration GPU runner
+rebuilt with two workers at low CPU/I/O priority. The focused
+`ctest --test-dir cmake-build-debug -j 1 --output-on-failure -R '^(hud|targeting)$'`
+passes (0.11 s). The hidden production `--interaction-prompts-review` check passes
+after granting display access (the sandbox attempt could not open X11). It checks
+OpenGL errors and resource cleanup; exploration/combat captures were inspected
+for width, centered text and the absent status line. [Two selected images](screenshots/action-dock/README.md)
+remain pending user review; other captures and temporary build/test logs were cleaned.
+
+## Party portrait hover cleanup — 2026-11-07
+
+Party-card and details-button hover no longer display portrait tooltips.
+CommandController suppresses their tooltip visibility while retaining hover identity
+and targeting eligibility. Selection, inspection, Aid and spell-recipient clicks
+keep their existing input routes; status and concentration tooltips remain available.
+This uses existing snapshot storage and adds no allocations or rendering resources.
+Verification uses the focused HUD and targeting checks; desktop review stays manual.
+
+Verification: Debug application and `blobber_hud_tests`/`blobber_targeting_tests`
+rebuilt with the two-worker preset at low CPU/I/O priority.
+`ctest --test-dir cmake-build-debug -j 1 --output-on-failure -R '^(hud|targeting)$'`
+passes both suites. No GPU capture or interactive review was performed for this
+visibility-only change. Disposable build/test logs were cleaned with no exceptions.
+
 Status: implemented, **accepted and closed**, 2026-10-27. The user explicitly
 accepted slice 10 including this correction. Slice 11 remains Planned/unstarted.
 

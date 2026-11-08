@@ -171,8 +171,55 @@ void delayedCreatureTooltip() {
     game.update(.001, false);
     refresh(ui, game);
     check(ui.snapshot().hover.tooltipVisible, "Recovered creature tooltip appears after 250 ms");
-    ui.hover(HoverKind::Action, 0);
+    ui.hover(HoverKind::Status, 0);
     check(ui.snapshot().hover.tooltipVisible, "Other HUD tooltip behavior remains immediate");
+}
+void delayedButtonTooltips() {
+    const auto map = combatMap();
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    const auto places = combatPlacements(map);
+    GameSession game(map, catalog, places, 5, spawn, false);
+    CommandController ui(game);
+    refresh(ui, game);
+    for (const auto kind : {HoverKind::Action, HoverKind::Travel, HoverKind::Rest}) {
+        ui.hover(kind, 0, {}, 20, 320);
+        check(!ui.snapshot().hover.tooltipVisible, "Button tooltip waits on initial entry");
+        game.update(.349, false);
+        refresh(ui, game);
+        ui.hover(kind, 0, {}, 21, 321);
+        check(!ui.snapshot().hover.tooltipVisible, "Button tooltip remains hidden at 349 ms");
+        game.update(.001, false);
+        refresh(ui, game);
+        check(ui.snapshot().hover.tooltipVisible, "Same button tooltip appears at 350 ms");
+    }
+    ui.hover(HoverKind::Action, 0);
+    game.update(.350, false);
+    refresh(ui, game);
+    check(ui.snapshot().hover.tooltipVisible, "Action tooltip matures after full dwell");
+    ui.hover(HoverKind::Action, 1);
+    check(!ui.snapshot().hover.tooltipVisible, "Moving to adjacent action restarts dwell");
+    game.update(.350, false);
+    refresh(ui, game);
+    ui.hover(HoverKind::None);
+    ui.hover(HoverKind::Action, 1);
+    check(!ui.snapshot().hover.tooltipVisible, "Leaving and returning restarts button dwell");
+    game.update(.350, false);
+    refresh(ui, game);
+    ui.refresh(allCombatTargets(game), false, false, false);
+    refresh(ui, game);
+    ui.hover(HoverKind::Action, 1);
+    check(!ui.snapshot().hover.tooltipVisible, "Focus loss resets button dwell");
+    ui.toggleMenu();
+    refresh(ui, game);
+    game.update(.350, true);
+    ui.closeOverlay();
+    refresh(ui, game);
+    ui.hover(HoverKind::Action, 1);
+    check(!ui.snapshot().hover.tooltipVisible, "Closing modal starts fresh button dwell");
+    ui.hover(HoverKind::Portrait, 0);
+    game.update(.350, false);
+    refresh(ui, game);
+    check(!ui.snapshot().hover.tooltipVisible, "Portrait tooltips stay disabled after dwell");
 }
 void meleeRangeFeedback() {
     const auto map = combatMap();
@@ -447,6 +494,7 @@ int main() {
     try {
         paintedFeedback();
         delayedCreatureTooltip();
+        delayedButtonTooltips();
         meleeRangeFeedback();
         directActions();
         keyboardHover();

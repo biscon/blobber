@@ -4,11 +4,15 @@
 #include "app/loading.hpp"
 #include "app/result_flow.hpp"
 #include "app/travel_fade.hpp"
+#include "assets/dialogue.hpp"
+#include "assets/shops.hpp"
 #include "game/arena.hpp"
 #include "game/campaign.hpp"
 #include "platform/audio.hpp"
 #include "platform/game_view.hpp"
 #include "platform/input.hpp"
+#include "render/dialogue_camera.hpp"
+#include "ui/dialogue_preparation.hpp"
 #include "ui/interaction.hpp"
 #include <algorithm>
 #include <iostream>
@@ -32,6 +36,8 @@ namespace {
 struct PlayView {
     std::unique_ptr<GameSession> ownedSession;
     GameSession& session;
+    WorldRenderer& renderer;
+    world_render::DialogueCameraController dialogueCamera;
     NpcAnimator animator;
     GameView frames;
     CommandController commands;
@@ -48,26 +54,43 @@ struct PlayView {
               arena ? prepareArenaParty(catalog, *arena)
                     : std::make_unique<Party>(catalog, starting ? *starting : *catalog.preset()),
               placements, seed, spawn, enableAi, timings, recovery, fixtures, objective)),
-          session(*ownedSession), animator(session.actors(), timings), frames(world),
+          session(*ownedSession), renderer(world), animator(session.actors(), timings), frames(world),
           commands(session, timings), map(m) {}
     PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, WorldRenderer& world,
              const generation::GeneratedFloor* floor = nullptr)
-        : session(game), animator(game.actors(), timings), frames(world, floor ? &floor->layout : nullptr),
-          commands(game, timings), map(m) {
+        : session(game), renderer(world), animator(game.actors(), timings),
+          frames(world, floor ? &floor->layout : nullptr), commands(game, timings), map(m) {
         if (floor)
             diagnostics = generation::diagnosticView(*floor);
     }
-    bool refresh(bool debug = false, bool focused = true) {
-        animator.setTime(session.timeMs(), &session.effects());
+    bool refresh(bool debug = false, bool focused = true, std::optional<GameTime> gameTimeOverride = {}) {
+        animator.setTime(session.timeMs(), &session.effects(), commands.dialogueSpeaker(),
+                         commands.dialoguePlayer().clockMs(), &commands.dialogueAnimation());
+        const auto& player = commands.dialoguePlayer();
+        const auto* character = player.character();
+        const auto primaryId =
+            character ? commands.dialogueActor(character->primary) : std::optional<ActorId>{};
+        const auto targetId = player.beat() ? commands.dialogueActor(player.beat()->target) : primaryId;
+        const auto override =
+            renderer.scene()
+                ? dialogueCamera.update(*renderer.scene(), renderer.assets(), session.geometry(),
+                                        world_render::camera(session.movement(), session.geometry()),
+                                        primaryId ? session.actors().actor(*primaryId) : nullptr,
+                                        targetId ? session.actors().actor(*targetId) : nullptr, player)
+                : std::optional<world_render::Camera>{};
         const auto area = debug ? SpellArea{} : commands.floorPreview();
-        const bool changed = frames.update(session, animator.snapshot(), area);
+        const bool changed = frames.update(session, animator.snapshot(), area, override,
+                                           dialogueCamera.moving(), gameTimeOverride);
         const auto* picking = frames.picking();
+        commands.residentVisibility(picking ? picking->residents() : TargetSnapshot{});
         commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
                          focused);
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
         if (area.kind != currentArea.kind || area.cells != currentArea.cells ||
             area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
-            return frames.update(session, animator.snapshot(), currentArea) || changed;
+            return frames.update(session, animator.snapshot(), currentArea, override, dialogueCamera.moving(),
+                                 gameTimeOverride) ||
+                   changed;
         return changed;
     }
 };
@@ -76,16 +99,34 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                         const std::vector<NpcTimings>& timings, Presenter& presenter, const Options& options,
                         WorldRenderer& world, const RecoveryLevel& recovery,
                         const rules::PresetParty* starting, const GameplayLaunch* launch) {
+    auto dialogueCatalog = prepareCpu([&] {
+        return loadDialogue(options.dialogueDir.empty() ? options.assets / "dialogue" : options.dialogueDir,
+                            options.assets / "audio", options.assets / "ui");
+    });
+    prepareDialogueUi(dialogueCatalog, presenter.fonts());
+    auto shopCatalog = prepareCpu([&] {
+        auto shops = loadShops(options.assets / "shops", catalog);
+        validateShops(dialogueCatalog, shops);
+        return shops;
+    });
+    DialogueHistory standaloneDialogue;
+    MerchantLedger standaloneMerchants;
     struct AudioLeave {
         AudioRuntime* audio;
+        Presenter& presenter;
         ~AudioLeave() {
+            presenter.clearDialogue();
             if (audio) {
+                audio->clearDialogue();
                 audio->persistMusic();
                 audio->detach();
                 audio->worldGain = 1;
             }
         }
-    } audioLeave{presenter.audio};
+    } audioLeave{presenter.audio, presenter};
+    presenter.prepareDialogue(dialogueCatalog.overlayFiles);
+    if (presenter.audio)
+        presenter.audio->prepareDialogue(dialogueCatalog.audioFiles);
     const Player spawn = launch ? launch->spawn : Player{};
     auto* campaign = launch ? launch->campaign : nullptr;
     const auto idle = gameplayPlacements(map, placements, spawn.cell, campaign);
@@ -108,6 +149,9 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                       launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
                       launch ? launch->arenaScenario : nullptr);
         auto& initial = *current;
+        initial.commands.bindDialogue(&dialogueCatalog,
+                                      campaign ? &campaign->dialogue() : &standaloneDialogue);
+        initial.commands.bindTrade(&shopCatalog, campaign ? &campaign->merchants() : &standaloneMerchants);
         CampaignSaveFlow saveFlow(launch ? launch->saves : nullptr);
         initial.commands.saveMenu().enabled = campaign && launch && launch->saves;
         initial.session.enableDevelopment(options.development);
@@ -118,8 +162,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             initial.commands.arenaContext(false);
         initial.refresh();
         initial.frames.activate();
-        if (presenter.audio)
+        if (presenter.audio) {
+            presenter.audio->setGameplayMusic(
+                campaign ? std::optional<CampaignLocationId>(campaign->activeLocationId()) : std::nullopt);
             presenter.audio->update(&initial.session, false, true, 0);
+        }
         if (loading->closing())
             return PlayOutcome::Quit;
         loading.reset();
@@ -132,10 +179,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             auto sample = input.poll(dt);
             sample.ui.text = pollTextInput();
             if (!inputArmed) {
-                inputArmed = !IsKeyDown(KEY_T) && !IsKeyDown(KEY_ENTER) && !IsKeyDown(KEY_F) &&
-                             !IsKeyDown(KEY_W) && !IsKeyDown(KEY_S) && !IsKeyDown(KEY_A) &&
-                             !IsKeyDown(KEY_D) && !IsKeyDown(KEY_Q) && !IsKeyDown(KEY_E) &&
-                             !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+                inputArmed = !IsKeyDown(KEY_SPACE) && !IsKeyDown(KEY_T) && !IsKeyDown(KEY_ENTER) &&
+                             !IsKeyDown(KEY_F) && !IsKeyDown(KEY_W) && !IsKeyDown(KEY_S) &&
+                             !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !IsKeyDown(KEY_Q) &&
+                             !IsKeyDown(KEY_E) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
                 sample.ui.pressed.fill(false);
                 sample.action.reset();
             }
@@ -153,6 +200,16 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 hudLayout::diagnosticMap.contains(*sample.ui.pointer)) {
                 reveal = !reveal;
                 sample.ui.pressed[std::size_t(UiKey::Click)] = false;
+            }
+            const bool dialogueWasOpen = view.commands.snapshot().dialogue.open;
+            const bool finishWithMove =
+                view.commands.dialoguePlayer().leaving() && sample.action && sample.fresh;
+            if (finishWithMove)
+                view.commands.finishDialogue();
+            view.commands.tickDialogue(dt, sample.ui.focused);
+            if (dialogueWasOpen && !view.commands.snapshot().dialogue.open && !finishWithMove) {
+                sample.action.reset();
+                inputArmed = false;
             }
             const bool campWasOpen = view.commands.snapshot().camp.open;
             view.commands.tickCamp(dt, sample.ui.focused);
@@ -217,19 +274,19 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                         displayed.y != previousTransform.y ||
                                         displayed.zoom != previousTransform.zoom;
                 view.previousInputTransform = displayed;
-                const auto worldPointer = sample.ui.pointer ? displayed.inverse(*sample.ui.pointer)
-                                                           : std::nullopt;
+                const auto worldPointer =
+                    sample.ui.pointer ? displayed.inverse(*sample.ui.pointer) : std::nullopt;
                 const int px = worldPointer ? int(std::floor(worldPointer->x - viewX)) : -1;
                 const int py = worldPointer ? int(std::floor(worldPointer->y - viewY)) : -1;
                 const auto hit = picking && worldPointer ? picking->pick(px, py) : std::nullopt;
                 const auto lootHit = picking && worldPointer ? picking->pickLoot(px, py) : std::nullopt;
-                const auto groundHit = worldPointer ? view.frames.groundCell(view.session, px, py)
-                                                    : std::nullopt;
-                routeHudInput(
-                    view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
-                    picking && worldPointer ? picking->pickFixture(px, py) : std::nullopt,
-                    picking && worldPointer ? picking->pickContainer(px, py) : std::nullopt,
-                    imageMoved);
+                const auto groundHit =
+                    worldPointer ? view.frames.groundCell(view.session, px, py) : std::nullopt;
+                routeHudInput(view.commands, sample.ui, hit, samePresentedTurn && !result, lootHit, groundHit,
+                              picking && worldPointer ? picking->pickFixture(px, py) : std::nullopt,
+                              picking && worldPointer ? picking->pickContainer(px, py) : std::nullopt,
+                              imageMoved,
+                              picking && worldPointer ? picking->pickResident(px, py) : std::nullopt);
             }
             if (campaign) {
                 std::optional<SavingScreen> saving;
@@ -250,6 +307,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (campaign && view.commands.snapshot().travelRequested) {
                 const auto request = *view.commands.snapshot().travelRequested;
                 view.commands.cancelTravel();
+                const auto* doorway =
+                    request.kind == TravelKind::Doorway ? campaign->doorway(request.doorway) : nullptr;
+                TravelMusicScope travelMusic(presenter.audio,
+                                             doorway && (doorway->destination == CampaignLocationId::City ||
+                                                         interiorLocation(doorway->destination)));
                 // No simulation or Party readers run while loading borrows their owners.
                 TravelFade fade;
                 while (fade.phase() == TravelFade::Phase::Out) {
@@ -280,8 +342,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                                     ? &*campaign->location(ticket.destination()).generated
                                     : nullptr);
                         });
-                        replacement->refresh();
+                        replacement->refresh(false, true, campaign->gameTime());
                         replacement->commands.enableMainMenu();
+                        replacement->commands.bindDialogue(&dialogueCatalog, &campaign->dialogue());
+                        replacement->commands.bindTrade(&shopCatalog, &campaign->merchants());
                         replacement->commands.saveMenu().enabled = launch && launch->saves;
                         if (campaign->commitTravel(ticket)) {
                             replacement->frames.activate();
@@ -305,6 +369,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                     return PlayOutcome::Quit;
                 auto& arrived = *current;
                 if (presenter.audio) {
+                    presenter.audio->setGameplayMusic(campaign->activeLocationId());
                     presenter.audio->update(&arrived.session, true, IsWindowFocused(), 0);
                 }
                 arrived.refresh(debug, sample.ui.focused);
@@ -340,10 +405,22 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 return launch && launch->arena ? PlayOutcome::ArenaSetup : PlayOutcome::MainMenu;
             if (view.commands.snapshot().quitRequested)
                 return PlayOutcome::Quit;
-            if (presenter.audio)
+            if (presenter.audio) {
+                const auto& hud = view.commands.snapshot();
+                // Dialogue pauses gameplay, but keeps its ambient bed continuous even
+                // on entry/exit frames. Every other pause reason still takes precedence.
+                std::optional<bool> ambiencePaused;
+                if (dialogueWasOpen || hud.dialogue.open)
+                    ambiencePaused = campWasOpen || debug || hud.modal(false);
                 presenter.audio->update(&view.session, paused || view.commands.snapshot().modal(),
                                         sample.ui.focused, dt, view.commands.snapshot().menuOpen || debug,
-                                        !view.commands.snapshot().modal() && !debug);
+                                        !view.commands.snapshot().modal() && !debug, ambiencePaused,
+                                        campWasOpen || debug || hud.modal(false));
+                const auto& dialogue = view.commands.dialoguePlayer();
+                presenter.audio->presentDialogue(dialogue.beatSerial(),
+                                                 dialogue.beat() ? dialogue.beat()->audio : 64,
+                                                 dialogue.cuesReady());
+            }
             if (view.commands.saveMenu().settingsRequested) {
                 view.commands.saveMenu().settingsRequested = false;
                 runAudioSettings(presenter, &view.session);

@@ -2,6 +2,8 @@
 #include "assets/rules_loader.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
+#include "review_dialogue.hpp"
+#include "review_residents.hpp"
 #include "sanctuary_city_layout.hpp"
 #include "world/sanctuary_city.hpp"
 #include <fstream>
@@ -9,13 +11,22 @@
 using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
-        throw std::runtime_error("Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT "
-                                 "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water|"
-                                 "corrections|fountain-orbit|distance-tone|inn-sign]");
+        throw std::runtime_error(
+            "Usage: blobber_review_sanctuary_city ASSETS NEW_OUTPUT "
+            "[SHOT|materials|layout|stills|motion|gate-motion|tree|dressing|water|"
+            "corrections|fountain-orbit|distance-tone|inn-sign|residents|residents-idle]");
     const std::string selected = argc == 4 ? argv[3] : "";
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
+    if (selected == "dialogue-beats") {
+        reviewDialogueBeats(root, output);
+        return 0;
+    }
+    if (selected == "residents" || selected == "residents-idle") {
+        reviewResidents(root, output, selected == "residents-idle");
+        return 0;
+    }
     const auto city = sanctuaryCity();
     std::ofstream layout(output / "layout.svg");
     writeCityLayout(layout, city);
@@ -39,10 +50,10 @@ int main(int argc, char** argv) try {
                           {"ivy-courtyard", {{7, 16}, Heading::West}},
                           {"sign-inn", {{14, 6}, Heading::East}},
                           {"sign-smithy", {{13, 13}, Heading::East}},
-                          {"sign-provisioner", {{14, 10}, Heading::East}},
+                          {"sign-emporium", {{14, 10}, Heading::East}},
                           {"sign-inn-near", {{16, 7}, Heading::North}},
                           {"sign-smithy-near", {{15, 14}, Heading::North}},
-                          {"sign-provisioner-near", {{16, 7}, Heading::South}},
+                          {"sign-emporium-near", {{16, 7}, Heading::South}},
                           {"tree-square", {{12, 8}, Heading::West}},
                           {"tree-east", {{7, 4}, Heading::West}},
                           {"tree-west", {{2, 4}, Heading::East}},
@@ -96,7 +107,7 @@ int main(int argc, char** argv) try {
                                       name.rfind("fountain-", 0) == 0 || name.rfind("market-", 0) == 0 ||
                                       name.rfind("ivy-", 0) == 0 || name.rfind("sign-", 0) == 0 ||
                                       name == "east-garden" || name == "lane-garden" || name == "door-inn" ||
-                                      name == "door-smithy" || name == "door-provisioner";
+                                      name == "door-smithy" || name == "door-emporium";
             const bool correctionShot =
                 name == "square" || name == "market" || name == "market-front" || name == "market-grain" ||
                 name == "former-market" || name == "inn-spacing" || name == "ivy-alley" ||

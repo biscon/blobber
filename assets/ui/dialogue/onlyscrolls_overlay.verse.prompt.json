@@ -1,0 +1,7 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "Use case: precise-object-edit. Asset type: existing game parchment overlay PNG. Input image is the EDIT TARGET. Change only the addition of handwritten text in the large empty parchment area to the LEFT of the woman, as an attractive vertically arranged verse. Preserve the existing adult 25-year-old Gwendolyn portrait exactly: face, blonde hair, costume, turkey leg, pose, size and position. Preserve raven stamp, parchment shape, folds, stains, color and all other artwork. Add beautiful but clearly readable dark brown-black handwritten calligraphic script with restrained flourishes, high contrast, large enough for an approximately 850px-wide in-game display. Keep all lettering left of the portrait and inside the parchment. Wrap the four verse lines into shorter lines as needed to fill the available left area, without changing words or punctuation. Exact text, in this order: \"There once was a maiden named Gwendolyn,\nWhom thou wouldst bounce upon like a trampoline.\nIf thou wanteth her portrait post-haste by tomorrow,\nPay the Premium Raven tier, or weep in thy sorrow!\" No additional words, no annotations, no arrows. Preserve the existing landscape 1536x1024 composition. Genuine transparent alpha outside the parchment, no opaque background or checkerboard.",
+  "transparent_background": true,
+  "edit_target": "assets/ui/dialogue/onlyscrolls_overlay.png (pre-verse revision in Git)",
+  "status": "Verse edit, awaiting user review"
+}

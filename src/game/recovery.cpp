@@ -67,6 +67,24 @@ bool Party::stageCampSupply(ItemHandle h, std::uint64_t revision, Inventory& can
     return true;
 }
 InventoryResult Party::acquire(const AcquisitionRequest& request, bool preview) noexcept {
+    if (request.revision != inventory_.revision() || request.revision == UINT64_MAX)
+        return {InventoryError::Stale};
+    if (!character(request.character))
+        return {InventoryError::InvalidDestination};
+    const auto* item = catalog_->item(request.item);
+    if (!item)
+        return {InventoryError::InvalidItem};
+    if (!request.quantity)
+        return {InventoryError::InvalidQuantity};
+    if (item->kind == rules::ItemKind::Currency) {
+        if (gold_ > UINT64_MAX - request.quantity)
+            return {InventoryError::GoldOverflow};
+        if (!preview) {
+            gold_ += request.quantity;
+            ++inventory_.revision_; // This revision covers bag and purse transactions.
+        }
+        return {InventoryError::None, true};
+    }
     auto candidate = inventory_;
     const auto result = candidate.acquire(request, *catalog_);
     if (!result)

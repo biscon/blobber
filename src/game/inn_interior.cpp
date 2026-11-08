@@ -1,7 +1,18 @@
 #include "game/inn_interior.hpp"
 #include "game/campaign.hpp"
+#include "game/dialogue.hpp"
+#include <algorithm>
 #include <stdexcept>
 namespace blobber {
+NpcInstance innkeeperPlacement(const std::vector<std::string>& types) {
+    const auto type = std::find(types.begin(), types.end(), "innkeeper");
+    if (type == types.end())
+        throw std::invalid_argument("Campaign requires the innkeeper appearance");
+    NpcInstance npc{{std::uint16_t(type - types.begin())}, {6, 3}, {1, 1}, Heading::South};
+    npc.role = NpcRole::Resident;
+    npc.residentId = dialogueKey("sanctuary.innkeeper");
+    return npc;
+}
 SanctuaryHub innInterior() {
     constexpr int width = 12, height = 12;
     std::vector<std::string> rows(height, std::string(width, '#'));
@@ -56,6 +67,16 @@ void validateInnInterior(const Map& map, const CampaignLocationState& state) {
     const auto expected = innInterior();
     const auto& f = state.fixtures;
     const auto& e = expected.fixtures;
+    const auto resident = innkeeperPlacement(state.types);
+    if (state.placements.size() != 1)
+        throw std::invalid_argument("Inn requires exactly one innkeeper");
+    const auto& npc = state.placements[0];
+    if (npc.type.index != resident.type.index || npc.role != NpcRole::Resident ||
+        npc.residentId != resident.residentId || !(npc.cell == resident.cell) ||
+        !(npc.subcell == resident.subcell) || npc.facing != resident.facing ||
+        npc.animation != NpcAnimation::Idle || npc.phaseMs || npc.monster ||
+        npc.ai.routine != NpcRoutine::Guard || npc.ai.waypointCount)
+        throw std::invalid_argument("Unsupported innkeeper placement");
     bool canonical = map.definition().fingerprint() == expected.map.definition().fingerprint();
     if (!canonical) {
         // Accept only the two shipped four-cell-table layouts. Validate the
@@ -69,12 +90,11 @@ void validateInnInterior(const Map& map, const CampaignLocationState& state) {
             surface.ceiling = 8;
         canonical |= map.definition().fingerprint() == previous.fingerprint();
     }
-    if (map.width() != expected.map.width() || map.height() != expected.map.height() ||
-        !canonical ||
-        !(state.entry == expected.entry) || !(state.exit == expected.exit) || !state.placements.empty() ||
-        state.objective.count || state.recovery.groundCount || state.recovery.sanctuaryCount ||
-        !state.recovery.freeRestEverywhere || f.count || f.depth || !f.discovery ||
-        f.landingCount != e.landingCount || f.landings != e.landings || f.npcExcluded != e.npcExcluded)
+    if (map.width() != expected.map.width() || map.height() != expected.map.height() || !canonical ||
+        !(state.entry == expected.entry) || !(state.exit == expected.exit) || state.objective.count ||
+        state.recovery.groundCount || state.recovery.sanctuaryCount || !state.recovery.freeRestEverywhere ||
+        f.count || f.depth || !f.discovery || f.landingCount != e.landingCount || f.landings != e.landings ||
+        f.npcExcluded != e.npcExcluded)
         throw std::invalid_argument("Unsupported Sanctuary inn definition");
     for (int y = 0; y < map.height(); ++y)
         for (int x = 0; x < map.width(); ++x)

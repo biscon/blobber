@@ -1,16 +1,20 @@
+#include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/campaign.hpp"
 #include "persistence/campaign_codec.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
+#include "render/dialogue_camera.hpp"
+#include "ui/dialogue_preparation.hpp"
+#include "ui/interaction.hpp"
 #include "world/sanctuary_city.hpp"
 #include <fstream>
 #include <iostream>
 using namespace blobber;
 int main(int argc, char** argv) try {
     if (argc != 3 && argc != 4)
-        throw std::runtime_error("Usage: blobber_review_inn ASSETS NEW_OUTPUT [details]");
+        throw std::runtime_error("Usage: blobber_review_inn ASSETS NEW_OUTPUT [details|innkeeper|dialogue]");
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
@@ -55,6 +59,13 @@ int main(int argc, char** argv) try {
         report << name << " location=" << run->name() << " cell=" << p.cell.x << ',' << p.cell.y
                << " heading=" << headingName(p.heading) << " clock=" << game.timeMs()
                << " prompt=" << commands.snapshot().fixturePrompt.data() << '\n';
+        if (game.actors().snapshot().count == 1 && !game.actors().snapshot().actors[0].hostile()) {
+            const auto& npc = game.actors().snapshot().actors[0].npc;
+            const auto feet = actorPosition(game.actors().snapshot().actors[0], game.timeMs());
+            report << "resident cell=" << npc.cell.x << ',' << npc.cell.y << " subcell=" << npc.subcell.x
+                   << ',' << npc.subcell.y << " feet=" << feet.x << ',' << feet.y
+                   << " facing=" << headingName(npc.facing) << '\n';
+        }
     };
     auto travel = [&](bool cancel) {
         auto ticket = run->prepareTravel(run->doorwayRequest());
@@ -79,6 +90,109 @@ int main(int argc, char** argv) try {
     capture("entry");
     memory("inn-only");
     if (argc == 4) {
+        if (std::string_view(argv[3]) == "dialogue") {
+            auto dialogue = loadDialogue(root / "dialogue");
+            prepareDialogueUi(dialogue, presenter.fonts());
+            auto& game = run->game();
+            game.restorePose({{6, 5}, Heading::North}, false);
+            update();
+            CommandController commands(game, definitions.timings);
+            commands.bindDialogue(&dialogue, &run->dialogue());
+            commands.residentVisibility(view->picking()->residents());
+            commands.refresh(view->picking()->targets(), false, false, true);
+            view->present(presenter, game, run->map(), false, true, &commands.snapshot());
+            presenter.capture(output / "dialogue-before.png");
+            if (!commands.startDialogue())
+                throw std::runtime_error("Dialogue admission failed");
+            const auto original = world_render::camera(game.movement(), game.geometry());
+            const auto target = world_render::dialogueCamera(
+                *renderer.scene(), renderer.assets(), game.geometry(), original,
+                *game.actors().actor(game.actors().id(0)), *commands.dialoguePlayer().character());
+            report << "dialogue camera source=" << original.position.x << ',' << original.position.y << ','
+                   << original.position.z << " target=" << target.position.x << ',' << target.position.y
+                   << ',' << target.position.z << " horizon=" << target.horizon << '\n';
+            NpcAnimator animation(game.actors(), definitions.timings);
+            const auto clock = game.timeMs();
+            auto shot = [&](const char* name) {
+                const auto& player = commands.dialoguePlayer();
+                animation.setTime(game.timeMs(), &game.effects(), commands.dialogueSpeaker(),
+                                  player.clockMs(), &commands.dialogueAnimation());
+                const auto camera =
+                    player.active() ? std::optional<world_render::Camera>(
+                                          world_render::interpolateCamera(original, target, player.weight()))
+                                    : std::nullopt;
+                view->update(game, animation.snapshot(), {}, camera,
+                             player.active() && (player.leaving() || player.weight() < 1));
+                commands.residentVisibility(view->picking() ? view->picking()->residents()
+                                                            : TargetSnapshot{});
+                commands.refresh(view->picking() ? view->picking()->targets() : TargetSnapshot{}, false,
+                                 false, true);
+                view->present(presenter, game, run->map(), false, true, &commands.snapshot());
+                presenter.capture(output / (std::string(name) + ".png"));
+                if (camera && !world_render::sameCamera(renderer.visibility()->frame().camera, *camera))
+                    throw std::runtime_error("Camera mismatch");
+                report << name << " weight=" << player.weight() << " revealing=" << player.revealing()
+                       << " clip=" << unsigned(animation.snapshot().frames[0].clip)
+                       << " game_ms=" << game.timeMs() << " presentation_ms=" << player.clockMs() << '\n';
+            };
+            commands.tickDialogue(.35, true);
+            game.update(.35, false);
+            shot("dialogue-transition");
+            commands.tickDialogue(.35, true);
+            shot("dialogue-greeting");
+            UiInput topic;
+            topic.pressed[unsigned(UiKey::Two)] = true;
+            routeHudInput(commands, topic);
+            UiInput reveal;
+            reveal.pressed[unsigned(UiKey::DialogueAdvance)] = true;
+            routeHudInput(commands, reveal);
+            shot("dialogue-topic-idle");
+            UiInput leave;
+            leave.pressed[unsigned(UiKey::Cancel)] = true;
+            routeHudInput(commands, leave);
+            commands.tickDialogue(.7, true);
+            shot("dialogue-restored");
+            if (game.timeMs() != clock || !(game.movement().player == Player{{6, 5}, Heading::North}))
+                throw std::runtime_error("Dialogue advanced simulation");
+            commands.residentVisibility(view->picking()->residents());
+            if (!commands.startDialogue())
+                throw std::runtime_error("Repeat conversation admission failed");
+            commands.tickDialogue(.7, true);
+            shot("dialogue-return");
+            if (commands.snapshot().dialogue.introduction)
+                throw std::runtime_error("Introduction repeated");
+            commands.finishDialogue();
+            auto saved = run->checkpoint();
+            if (!saved->dialogue.get(dialogueKey("sanctuary.innkeeper"))->introduced)
+                throw std::runtime_error("Introduction missing from save");
+            view.reset();
+            memory("released");
+            return 0;
+        }
+        if (std::string_view(argv[3]) == "innkeeper") {
+            auto& game = run->game();
+            game.restorePose({{6, 5}, Heading::North}, false);
+            capture("innkeeper-front");
+            if (!view->picking() || view->picking()->targets().count ||
+                view->picking()->targets().candidateCount ||
+                game.combat().snapshot().phase != CombatPhase::Exploration)
+                throw std::runtime_error("Innkeeper must remain outside offensive picking and combat");
+            game.restorePose({{5, 3}, Heading::East}, false);
+            capture("innkeeper-right");
+            game.restorePose({{7, 3}, Heading::West}, false);
+            capture("innkeeper-left");
+            game.restorePose({{6, 5}, Heading::North}, false);
+            if (!game.actors().talk(game.actors().id(0), true))
+                throw std::runtime_error("Resident talk preview rejected");
+            game.update(.18, false);
+            capture("innkeeper-talk-1");
+            game.update(.16, false);
+            capture("innkeeper-talk-2");
+            game.actors().talk(game.actors().id(0), false);
+            view.reset();
+            memory("released");
+            return 0;
+        }
         if (std::string_view(argv[3]) != "details")
             throw std::runtime_error("Unknown capture selection");
         run->game().restorePose({{3, 9}, Heading::West}, false);
@@ -93,11 +207,10 @@ int main(int argc, char** argv) try {
         {"common-room", {{5, 8}, Heading::North}}, {"bar", {{6, 5}, Heading::North}},
         {"hearth", {{4, 4}, Heading::West}},       {"seating", {{5, 6}, Heading::West}},
         {"stairs", {{7, 5}, Heading::East}},       {"plants-exit", {{5, 7}, Heading::South}},
-        {"staff-aisle", {{4, 3}, Heading::East}},
-        {"plant-close", {{3, 9}, Heading::West}},  {"ale-barrels", {{8, 3}, Heading::North}},
-        {"south-wall", {{5, 5}, Heading::South}},
+        {"staff-aisle", {{4, 3}, Heading::East}},  {"plant-close", {{3, 9}, Heading::West}},
+        {"ale-barrels", {{8, 3}, Heading::North}}, {"south-wall", {{5, 5}, Heading::South}},
         {"table-north", {{3, 5}, Heading::South}}, {"table-south", {{3, 7}, Heading::North}},
-        {"table-west", {{2, 6}, Heading::East}}, {"table-east", {{4, 6}, Heading::West}},
+        {"table-west", {{2, 6}, Heading::East}},   {"table-east", {{4, 6}, Heading::West}},
     };
     for (const auto& shot : shots) {
         run->game().restorePose(shot.second, false);

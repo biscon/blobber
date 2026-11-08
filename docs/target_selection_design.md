@@ -1,5 +1,57 @@
 # Enemy target selection
 
+## Encounter-scoped picker — 2026-11-07
+
+Implemented and mechanically verified; interactive acceptance pending. Targets is available only in Contact, Facing, Turns
+and RoundEnd, with existing action/modal/input gates. Exploration, Approach and
+terminal phases hide and close it. This applies to Tab/Shift-Tab and enemy arrow
+cycling too; direct world clicks and ordinary visibility/inspection remain unchanged.
+Hiding Targets during exploration does not restore the removed dock status line.
+
+CommandController filters normalized geometry candidates through live
+CombatController membership and actor life. EnemyTargetPicker owns a fixed
+maxInstances array/count in nearest-first order, separate from renderer targets.
+Rows, page counts/navigation, cycling and picker confirmation share this list.
+Existing range, LOS, turn, rank and resource rules still decide eligibility.
+No new distance cap or world visibility behavior is introduced. Filtering is one
+linear scan of normalized candidates; no per-candidate visibility scan is needed.
+
+Refresh clamps pages and increments the picker context revision when its list or
+availability changes, even without an actor revision. Pending row presses then
+cancel. Activation revalidates the captured actor before refreshing rows, so an
+old row cannot redirect to its replacement. Picker confirmation revalidates every
+hostile recipient; failures spend nothing and do not retarget. Deaths and enrolled
+reinforcements update the list; leaving combat closes it. Storage is bounded by
+the existing actor capacity, with no frame allocations, save or protocol changes.
+
+Verification: owned fixtures cover combat phases, unrelated visible enemies,
+filtered paging/cycling, hidden bodies, membership-only changes, reinforcements,
+deaths, stale clicks/confirmation and outside-combat direct attacks. Run focused
+Debug targeting/HUD/buttons/commands suites with bounded workers and hidden
+production captures; interactive desktop review remains manual.
+
+Verification: Debug game and the capture diagnostic rebuilt with two low-priority
+workers. `ctest --test-dir cmake-build-debug -j 1 --output-on-failure -R '^(targeting|hud|buttons|commands)$'`
+passes all four suites in 0.13 s, including the existing zero-allocation targeting
+guard. Initial development failures exposed two fixtures that assumed map-wide
+pagination; they now distinguish direct world visibility from enrolled picker
+targets. Tests exercise six enrolled and two unrelated visible enemies, filtered
+pages/cycling, multi-recipient rejection without mana spend, death/stale input,
+reinforcement enrollment, victory with an unrelated survivor, Exploration/Approach
+exclusion and a combat transition with an unchanged renderer snapshot. Existing
+covered-body, range/rank, spell, focus/modal and button-release checks still pass.
+
+`blobber_capture_targeting cmake-build-debug/assets RUN_DIRECTORY/captures`
+passes with a hidden OpenGL window after granting display access. Production
+checks confirm three visible geometry candidates but only two encounter rows,
+outside-combat button removal, bow eligibility, partial dart assignment and no
+OpenGL errors. Five scenes export at 1920×1080 and 1280×720. Native exploration/bow
+and reduced spell captures were inspected; [six selected images](screenshots/targeting/README.md)
+replace the previous targeting evidence. The earlier action-dock exploration image
+was refreshed to reflect the combat-only button. Interactive desktop review remains
+unverified. Temporary captures/build/test logs were previewed and cleaned, with no
+retained diagnostic exceptions. No benchmark or additional build configuration ran.
+
 Status: implemented and mechanically verified (2026-11-03); interactive acceptance remains user review.
 
 ## Responsibilities and data
@@ -27,8 +79,8 @@ spell focus is sufficient for existing Enter confirmation. Ground/area/ally spel
 and modal Tab controls retain their current controls. F2 replaces Tab as the
 movement-animation toggle. Input edges suppress holds and focus-return replay.
 
-A Targets button in the dock footer opens a non-pausing paginated popover with at most four rows
-above the action dock, shrinking for shorter lists. The same ordered candidates feed cycling and rows, while
+During active combat, a Targets button in the dock footer opens a non-pausing paginated popover with at most four rows
+above the action dock, shrinking for shorter lists. The same ordered encounter candidates feed cycling and rows, while
 rows also explain ineligible candidates. Names include stable slot numbers and
 party-relative front/rear rank. Hover outlines use only the existing body raster;
 fully obscured selection uses text. Selecting a row previews a single target;
@@ -36,7 +88,7 @@ multi-target row activation uses existing toggle/dart assignment semantics.
 Attack/Fire/Cast or Enter confirms. Rejection preserves the popover and reports a
 reason. Escape/outside click/right-click outside recipient controls dismisses and
 consumes input. Action/caster/turn/world/movement/focus/modal changes close it.
-No save or asset changes. Fixed row/readout buffers and existing bounded controls
+No save or asset changes. Fixed row/feedback buffers and existing bounded controls
 avoid frame allocations. Button identity includes actor world/slot and context
 revision so a pending physical click cannot be redirected by a changed list.
 

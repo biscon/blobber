@@ -13,16 +13,20 @@ int main(int argc, char** argv) {
     const auto target = LoadRenderTexture(1920, 1080);
     const std::filesystem::path output(argv[3]);
     std::filesystem::create_directories(output);
-    const float times[]{.12f, .65f, 2.f, 5.8f, 2.f};
-    const char* names[]{"entry", "reveal", "settled", "exit", "two-lines"};
-    for (unsigned i = 0; i < 5; ++i) {
+    const float times[]{.12f, .65f, 2.f, 5.8f, 2.f, 2.f};
+    const char* names[]{"entry", "reveal", "settled", "exit", "two-lines", "long-title"};
+    for (unsigned i = 0; i < 6; ++i) {
         BeginTextureMode(target);
         ClearBackground(BLACK);
         DrawTexturePro(background, {0, 0, float(background.width), float(background.height)},
                        {0, 0, 1920, 1080}, {0, 0}, 0, WHITE);
-        blobber::drawMusicBanner({i == 4 ? "Epic Hair Metal Synth Rock Instrumental"
-                                         : "SVT Speed Metal Trance With Chiptune Vibes",
-                                  i == 4 ? "High Energy Motivation" : "", "Nick Panek", 7, times[i], true},
+        blobber::drawMusicBanner({i == 5   ? "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+                                  : i == 4 ? "Epic Hair Metal Synth Rock Instrumental"
+                                           : "SVT Speed Metal Trance With Chiptune Vibes",
+                                  i == 5 ? "A deliberately overlong second line for the title clipping check"
+                                  : i == 4 ? "High Energy Motivation"
+                                           : "",
+                                  "Nick Panek", 7, times[i], true},
                                  fonts);
         EndTextureMode();
         auto image = LoadImageFromTexture(target.texture);

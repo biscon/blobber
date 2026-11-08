@@ -2,6 +2,7 @@
 #include "assets/image.hpp"
 #include "assets/map_icons.hpp"
 #include "assets/npc_sheet.hpp"
+#include "assets/world_preparation.hpp"
 #include "render/image_sampling.hpp"
 #include "support/check.hpp"
 #include <algorithm>
@@ -16,6 +17,23 @@ using namespace blobber;
 namespace fs = std::filesystem;
 using Json = nlohmann::json;
 namespace {
+void standaloneSprites() {
+    OwnedImage image(GenImageColor(8, 4, {0, 255, 255, 0}));
+    ImageDrawRectangle(&image.value, 0, 0, 4, 4, {255, 0, 0, 255});
+    limitWorldSprite(image, 3);
+    check(image.value.width == 3 && image.value.height == 2,
+          "World sprite preparation limits dimensions and preserves rounded aspect");
+    const auto middle = GetImageColor(image.value, 1, 0);
+    check(middle.r == 255 && middle.g == 0 && middle.b == 0 && middle.a == 128,
+          "Downsampled world sprite edges preserve coverage without hidden-RGB fringes");
+    const auto* data = image.value.data;
+    limitWorldSprite(image, 512);
+    check(image.value.data == data && image.value.width == 3,
+          "Already small world sprites are neither reallocated nor enlarged");
+    rejects([&] { limitWorldSprite(image, 0); }, "Zero sprite limit rejects");
+    OwnedImage empty({});
+    rejects([&] { limitWorldSprite(empty, 512); }, "Missing sprite pixels reject");
+}
 void mapIcons() {
     OwnedImage sheet(GenImageColor(66, 33, {0, 255, 255, 0}));
     for (int i = 0; i < mapIconCount; ++i) {
@@ -118,6 +136,22 @@ void derivatives() {
         }
     } cleanup{root};
     fs::create_directories(root / "sheets");
+    const auto profile = root / "preparation.json";
+    const std::vector<std::string> types{"small", "large"};
+    check(npcPreparationResolutions(profile, types) == std::vector<double>({1, 1}),
+          "Absent profile preserves existing preparation");
+    const Json config{{"version", 1}, {"actors", {{"small", .5}}}};
+    std::ofstream(profile) << config;
+    check(npcPreparationResolutions(profile, types) == std::vector<double>({.5, 1}),
+          "Profile matches appearance identity and defaults unlisted types to full resolution");
+    for (const Json bad : {Json{{"version", 1}, {"actors", {{"unknown", .5}}}},
+                           Json{{"version", 1}, {"actors", {{"small", .6}}}},
+                           Json{{"version", 1}, {"actors", {{"small", true}}}},
+                           Json{{"version", 2}, {"actors", Json::object()}},
+                           Json{{"version", 1}, {"actors", Json::object()}, {"typo", 1}}}) {
+        std::ofstream(profile) << bad;
+        rejects([&] { npcPreparationResolutions(profile, types); }, "Malformed actor profile rejects");
+    }
     OwnedImage sheet(GenImageColor(32, 16, BLANK));
     ImageDrawRectangle(&sheet.value, 4, 2, 8, 12, Color{240, 30, 50, 220});
     ImageDrawRectangle(&sheet.value, 20, 6, 8, 8, Color{240, 30, 50, 220});
@@ -152,6 +186,27 @@ void derivatives() {
               "Normalized anchors survive common resizing");
     }
     auto single = registration;
+    for (const double scale : {.75, .875}) {
+        prepareNpcAnimation(root / "sheets.json", {ImageSampling::Area, scale, root / "scaled"});
+        Json frames;
+        std::ifstream(root / "scaled/frames.json") >> frames;
+        for (unsigned frame = 0; frame < 2; ++frame) {
+            OwnedImage image(LoadImage(
+                (root / "scaled/frames" / ("poses-" + std::to_string(frame) + ".png")).string().c_str()));
+            check(image.value.width == int(16 * scale) && image.value.height == int(16 * scale) &&
+                      frames["poses"][frame]["anchor"] == Json::array({.5, .875}),
+                  "Every pose uses common scaled canvas dimensions and unchanged normalized anchors");
+            for (int y = int(std::ceil(14 * scale)); y < image.value.height; ++y)
+                for (int x = 0; x < image.value.width; ++x)
+                    check(GetImageColor(image.value, x, y).a == 0,
+                          "Reduced poses retain the registered ground plane");
+        }
+    }
+    auto fractional = registration;
+    fractional[0]["canvas_width"] = 15;
+    std::ofstream(root / "fractional.json") << fractional;
+    rejects([&] { prepareNpcAnimation(root / "fractional.json", {ImageSampling::Area, .875, root / "bad"}); },
+            "Fractional registered canvas dimensions reject instead of shifting anchors");
     single[0]["columns"] = 1;
     single[0].erase("split_x");
     single[0]["pivot_x"] = {16};
@@ -173,6 +228,7 @@ void derivatives() {
 int main() {
     try {
         SetTraceLogLevel(LOG_WARNING);
+        standaloneSprites();
         mapIcons();
         sampling();
         derivatives();

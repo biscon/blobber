@@ -34,6 +34,7 @@ class PickingBuffer {
     }
     void clearMetadata() noexcept {
         targets_ = {};
+        residents_ = {};
         bodyBounds_ = {};
         exposed_.fill(false);
         badgeAnchors_ = {};
@@ -104,11 +105,14 @@ class PickingBuffer {
     }
     void finish(const ActorWorld* actors) noexcept {
         targets_ = {};
+        residents_ = {};
         bodyBounds_ = {};
         if (!actors)
             return;
         targets_.world = actors->snapshot().world;
         targets_.revision = actors->snapshot().revision;
+        residents_.world = targets_.world;
+        residents_.revision = targets_.revision;
         std::array<bool, NpcWorld::maxInstances> seen{};
         std::array<Cell, NpcWorld::maxInstances> minimum{}, maximum{};
         for (int y = 0; y < viewHeight; ++y)
@@ -127,11 +131,16 @@ class PickingBuffer {
                 }
             }
         for (std::size_t i = 0; i < actors->snapshot().count; ++i) {
-            if ((seen[i] || exposed_[i]) && actors->snapshot().actors[i].life == ActorLife::Alive)
+            if ((seen[i] || exposed_[i]) && actors->snapshot().actors[i].hostile() &&
+                actors->snapshot().actors[i].life == ActorLife::Alive)
                 targets_.candidates[targets_.candidateCount++] = actors->id(i);
             if (seen[i]) {
+                if (!actors->snapshot().actors[i].hostile() &&
+                    actors->snapshot().actors[i].life == ActorLife::Alive)
+                    residents_.ids[residents_.count++] = actors->id(i);
                 bodyBounds_[i] = {minimum[i].x, minimum[i].y, maximum[i].x + 1, maximum[i].y + 1};
-                if (actors->snapshot().actors[i].life == ActorLife::Alive)
+                if (actors->snapshot().actors[i].hostile() &&
+                    actors->snapshot().actors[i].life == ActorLife::Alive)
                     targets_.ids[targets_.count++] = actors->id(i);
                 targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2,
                                        (minimum[i].y + maximum[i].y) / 2,
@@ -190,6 +199,14 @@ class PickingBuffer {
             return FixtureId{fixtureWorld_, std::uint16_t(s - fixtureBase)};
         return {};
     }
+    std::optional<ActorId> pickResident(int x, int y) const noexcept {
+        const auto s = slot(x, y);
+        for (unsigned i = 0; i < residents_.count; ++i)
+            if (residents_.ids[i].slot == s)
+                return residents_.ids[i];
+        return {};
+    }
+    const TargetSnapshot& residents() const noexcept { return residents_; }
     const TargetSnapshot& targets() const noexcept { return targets_; }
 
   private:
@@ -197,7 +214,7 @@ class PickingBuffer {
     bool (*bodyVisibility_)(const void*, std::uint16_t, int, int, float) = nullptr;
     std::unique_ptr<std::uint16_t[]> pixels_;
     std::unique_ptr<float[]> pixelDepth_, opaqueDepth_;
-    TargetSnapshot targets_;
+    TargetSnapshot targets_, residents_;
     std::array<PixelBounds, NpcWorld::maxInstances> bodyBounds_{};
     std::array<bool, NpcWorld::maxInstances> exposed_{};
     std::uint64_t lootWorld_ = 0, fixtureWorld_ = 0;

@@ -5,6 +5,12 @@ user with “Implement the plan.” The user accepted turnaround-v1.png with “
 full production animation is delivered. The user accepted the completed slice with
 “slice accepted, record it in the plan doc”.
 
+Current preparation settings and budgets are described in
+[world sprite resolution](sprite_resolution_design.md) and the
+[travel residency correction](sc011_design.md#campaign-travel-residency-correction--2026-11-07).
+The full-resolution extraction and capacity values below record the original B02
+delivery; selected actors now use uniform offline reductions before cropping.
+
 ## Delivery and ownership
 
 Deliver a bulky, single-subcell melee bugbear through normal Arena Setup. Append

@@ -51,21 +51,23 @@ ActorWorld::ActorWorld(GeometryView map, const rules::Catalog& catalog, const Np
     state_.count = placements.instances().size();
     state_.typeCount = placements.typeCount();
     std::array<rules::MonsterId, NpcWorld::maxTypes> bindings{};
+    types_.reserve(state_.typeCount);
     for (std::size_t i = 0; i < state_.typeCount; ++i) {
         const auto& name = placements.typeId({static_cast<std::uint16_t>(i)});
+        types_.push_back(name);
         bindings[i] = catalog.findMonster(name);
-        if (!catalog.monster(bindings[i]))
-            throw std::runtime_error("NPC appearance has no monster definition: " + name);
     }
     for (std::size_t i = 0; i < state_.count; ++i) {
         auto& actor = state_.actors[i];
         actor.npc = placements.instances()[i];
         if (!map.npcAllowed(actor.npc.cell))
             throw std::runtime_error("Actor placement overlaps runtime map wall or boundary");
-        actor.monster = actor.npc.monster.value_or(bindings[actor.npc.type.index]);
-        if (!catalog.monster(actor.monster))
-            throw std::runtime_error("Actor placement has an invalid monster definition");
-        actor.hitPoints = actor.maxHitPoints = catalog.monster(actor.monster)->hitPoints;
+        if (actor.hostile()) {
+            actor.monster = actor.npc.monster.value_or(bindings[actor.npc.type.index]);
+            if (!catalog.monster(actor.monster))
+                throw std::runtime_error("Hostile NPC appearance has no valid monster definition");
+            actor.hitPoints = actor.maxHitPoints = catalog.monster(actor.monster)->hitPoints;
+        }
         mask(actor.npc.cell) |= bit(actor.npc.subcell);
     }
 }
@@ -121,6 +123,8 @@ ActorResult ActorWorld::move(ActorId id, Cell cell, Cell subcell, Cell partyCell
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
+    if (!old->hostile())
+        return {ActorError::NotCombatant};
     if ((!(cell == old->npc.cell) && !map_.canStep(old->npc.cell, cell)) || !map_.npcAllowed(cell) ||
         subcell.x < 0 || subcell.x > 1 || subcell.y < 0 || subcell.y > 1)
         return {ActorError::InvalidDestination};
@@ -147,6 +151,8 @@ ActorResult ActorWorld::face(ActorId id, Heading facing) noexcept {
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
+    if (!old->hostile())
+        return {ActorError::NotCombatant};
     if (static_cast<unsigned>(facing) >= 4)
         return {ActorError::InvalidFacing};
     if (old->npc.facing == facing)
@@ -161,6 +167,8 @@ ActorResult ActorWorld::attack(ActorId id, std::uint64_t timeMs, bool ranged) no
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
+    if (!old->hostile())
+        return {ActorError::NotCombatant};
     if (old->hasAttack && timeMs < old->attackTimeMs)
         return {ActorError::InvalidTime};
     auto& a = state_.actors[id.slot];
@@ -190,6 +198,8 @@ ActorResult ActorWorld::suspendAttack(ActorId id, std::uint64_t when, std::uint6
 ActorResult ActorWorld::cancelAttack(ActorId id) noexcept {
     if (!actor(id))
         return {ActorError::InvalidHandle};
+    if (!actor(id)->hostile())
+        return {ActorError::NotCombatant};
     auto& a = state_.actors[id.slot];
     a.hasAttack = a.resumableAttack = false;
     ++state_.revision;
@@ -202,6 +212,8 @@ ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t ti
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
+    if (!old->hostile())
+        return {ActorError::NotCombatant};
     if (amount < 0)
         return {ActorError::InvalidDamage};
     if (!amount)
@@ -227,10 +239,27 @@ ActorResult ActorWorld::remove(ActorId id) noexcept {
     const auto* old = actor(id);
     if (!old)
         return {ActorError::InvalidHandle};
+    if (!old->hostile())
+        return {ActorError::NotCombatant};
     auto& a = state_.actors[id.slot];
     if (a.life == ActorLife::Alive)
         vacate(a);
     a.life = ActorLife::Removed;
+    ++state_.revision;
+    return {ActorError::None, true};
+}
+ActorResult ActorWorld::talk(ActorId id, bool talking) noexcept {
+    const auto* old = actor(id);
+    if (!old)
+        return {ActorError::InvalidHandle};
+    if (old->life != ActorLife::Alive)
+        return {ActorError::NotAlive};
+    if (old->hostile())
+        return {ActorError::NotCombatant};
+    const auto clip = talking ? NpcAnimation::Talk : NpcAnimation::Idle;
+    if (old->npc.animation == clip)
+        return {};
+    state_.actors[id.slot].npc.animation = clip;
     ++state_.revision;
     return {ActorError::None, true};
 }

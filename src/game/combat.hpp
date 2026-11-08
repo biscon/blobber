@@ -3,6 +3,7 @@
 #include "game/attack_timeline.hpp"
 #include "game/damage_resolution.hpp"
 #include "game/effects.hpp"
+#include "game/game_time.hpp"
 #include "game/npc_ai.hpp"
 #include "game/npc_animation.hpp"
 #include "game/spell_visuals.hpp"
@@ -12,7 +13,7 @@
 
 namespace blobber {
 constexpr std::uint64_t combatFeedbackDurationMs = 1000;
-constexpr std::uint64_t combatRoundMs = 6000;
+constexpr std::uint64_t combatRoundMs = gameDuration::round;
 enum class CombatPhase : std::uint8_t {
     Exploration,
     Contact,

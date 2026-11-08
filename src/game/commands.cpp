@@ -119,8 +119,11 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         throw std::invalid_argument("HUD animation/world type counts differ");
     for (const auto& timing : timings)
         validateNpcTimings(timing);
+    std::copy(timings.begin(), timings.end(), dialogueTimings_.begin());
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
+        if (!a.hostile())
+            continue;
         const auto& species = actors_.catalog().monster(a.monster)->id;
         state_.enemyPortraits[i] = species == "skeleton"        ? EnemyPortrait::Skeleton
                                    : species == "bugbear"       ? EnemyPortrait::Bugbear
@@ -530,6 +533,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         state_.save.allowed = !state_.save.reason;
     }
     state_.campaign = session_.campaign();
+    state_.gameTime = session_.gameTime();
     state_.campaignTerminal = state_.campaign && session_.campaign()->status() != CampaignStatus::Active;
     state_.campaignVictory = state_.campaign && session_.campaign()->status() == CampaignStatus::Victory;
     state_.locationName = state_.campaign ? session_.campaign()->name() : "";
@@ -545,13 +549,18 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             const auto check = session_.campaign()->previewTravel(door);
             if (check)
                 std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s",
-                              session_.campaign()->activeLocationId() == CampaignLocationId::Inn
-                                  ? "Leave inn"
-                                  : "Enter inn");
+                              session_.campaign()->doorway(door.doorway)->action);
+        }
+        if (!doorway && nearbyResident()) {
+            const auto* a = actors_.actor(*nearbyResident());
+            const auto* c = a && dialogueCatalog_ ? dialogueCatalog_->find(a->npc.residentId) : nullptr;
+            if (c)
+                std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] Talk to %s",
+                              c->name.c_str());
         }
         const auto request = session_.nearbyFixture();
         const auto* f = session_.fixtures().find(request.id);
-        if (!doorway && f &&
+        if (!doorway && !nearbyResident() && f &&
             (!session_.fixtures().definition().discovery || session_.fixtures().known(request.id.slot))) {
             const auto result = session_.interact(request, true);
             const char* action = nullptr;
@@ -578,7 +587,8 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             }
             if (action)
                 std::snprintf(state_.fixturePrompt.data(), state_.fixturePrompt.size(), "[F] %s", action);
-        } else if (const auto chest = doorway ? ContainerId{} : session_.nearbyContainer()) {
+        } else if (const auto chest =
+                       doorway || nearbyResident() ? ContainerId{} : session_.nearbyContainer()) {
             const auto access = session_.containerAccess(chest);
             const auto* container = session_.loot().findContainer(chest);
             if (access && container)
@@ -648,7 +658,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         std::array<bool, NpcWorld::maxInstances> included{};
         for (std::size_t i = 0; i < targets.count; ++i) {
             const auto* a = actors_.actor(targets.ids[i]);
-            if (a && a->life == ActorLife::Alive)
+            if (a && a->hostile() && a->life == ActorLife::Alive)
                 included[targets.ids[i].slot] = true;
         }
         for (std::size_t i = 0; i < included.size(); ++i)
@@ -661,7 +671,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         std::array<bool, NpcWorld::maxInstances> included{};
         const auto add = [&](ActorId id) {
             const auto* a = actors_.actor(id);
-            if (a && a->life == ActorLife::Alive)
+            if (a && a->hostile() && a->life == ActorLife::Alive)
                 included[id.slot] = true;
         };
         for (std::size_t i = 0; i < normalized.count; ++i)
@@ -775,8 +785,6 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                                                 : CommandReason::NotVisible));
         state_.selection.target.reset();
     }
-    const auto pages = (state_.targets.candidateCount + 3) / 4;
-    state_.targetPage = pages ? std::min(state_.targetPage, pages - 1) : 0;
     if (moving) {
         state_.selection.targetCount = 0;
         if (state_.magic.armed)
@@ -797,6 +805,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.castPreview = card.castRecipient ? m.name : "";
     }
     refreshInventory();
+    refreshTrade();
     refreshLoot();
     refreshRestAvailability();
     updateAvailability();
@@ -848,8 +857,9 @@ void CommandController::selectTarget(ActorId target) noexcept {
     if (state_.suspended || !visible(target))
         return;
     state_.selection.target = target;
-    for (std::size_t i = 0; i < state_.targets.candidateCount; ++i)
-        if (sameActor(target, state_.targets.candidates[i]))
+    refreshTargetPicker();
+    for (std::size_t i = 0; i < state_.targetPicker.candidateCount; ++i)
+        if (sameActor(target, state_.targetPicker.candidates[i]))
             state_.targetPage = i / 4;
     updateAvailability();
 }
@@ -868,9 +878,10 @@ void CommandController::cycleTarget(int delta) noexcept {
     cycleEnemyTarget(delta);
 }
 void CommandController::pageTargets(int delta) noexcept {
-    if (state_.suspended)
+    refreshTargetPicker();
+    if (!state_.targetPicker.available)
         return;
-    const auto pages = (state_.targets.candidateCount + 3) / 4;
+    const auto pages = (state_.targetPicker.candidateCount + 3) / 4;
     if (pages)
         state_.targetPage = (state_.targetPage + (delta < 0 ? pages - 1 : 1)) % pages;
     refreshTargetPicker();

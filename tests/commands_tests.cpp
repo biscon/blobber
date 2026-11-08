@@ -61,7 +61,7 @@ int main() {
               "Scroll bounded oldest");
         commands.scrollLog(-999);
         check(commands.snapshot().logOffset == 0, "Scroll bounded newest");
-        // Full-capacity pagination and selection must not truncate targets.
+        // Full-capacity visibility remains selectable; picker pages only encounter members.
         std::vector<std::string> rows(11, std::string(11, '.'));
         for (int i = 0; i < 11; ++i) {
             rows[0][i] = '#';
@@ -93,13 +93,19 @@ int main() {
         const auto lastCandidate = paged.snapshot().targets.candidates[all.count - 1];
         paged.selectTarget(lastCandidate);
         check(sameActor(*paged.snapshot().selection.target, lastCandidate) &&
-                  paged.snapshot().targetPage == 63,
-              "Last of 256 targets remains selectable and paginated");
+                  paged.snapshot().targets.candidateCount == NpcWorld::maxInstances,
+              "Last of 256 geometry candidates remains directly selectable");
+        const auto encounterCount = paged.snapshot().targetPicker.candidateCount;
+        check(encounterCount > 4 && encounterCount < all.count,
+              "Only the adjacent encounter appears in the picker");
+        paged.selectTarget(paged.snapshot().targetPicker.candidates[encounterCount - 1]);
+        check(paged.snapshot().targetPage == (encounterCount - 1) / 4,
+              "Last encounter target opens its filtered page");
         paged.selectTarget(many.id(0));
         check(paged.snapshot().selection.target->slot == 0 && paged.snapshot().targetPage == 0,
               "First candidate remains selectable");
         paged.pageTargets(-1);
-        check(paged.snapshot().targetPage == 63, "Paging wraps to last page");
+        check(paged.snapshot().targetPage == (encounterCount - 1) / 4, "Paging wraps to last encounter page");
         all.count = all.ids.size() + 1;
         paged.refresh(all, false, false, true);
         check(paged.snapshot().targets.count == 0 && !paged.snapshot().selection.target,

@@ -103,7 +103,7 @@ void CommandController::inventoryFeedback(const char* s) noexcept {
 }
 void CommandController::openInventory(std::optional<rules::CharacterId> character,
                                       CharacterPage page) noexcept {
-    if (state_.suspended)
+    if (state_.suspended || state_.dialogue.open)
         return;
     const auto selected = character.value_or(state_.selection.character);
     closeOverlay();
@@ -159,6 +159,7 @@ void CommandController::refreshInventory() noexcept {
             i.source = {};
         }
         i.revision = inv.revision();
+        i.gold = party_.gold();
         for (std::uint16_t cell = 0; cell < 52; ++cell) {
             auto& out = i.cells[cell];
             out = {};

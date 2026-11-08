@@ -13,6 +13,36 @@ int main() {
         const auto cat = catalog();
         const auto defs = definitions();
         CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        check(run.game().actors().snapshot().count == 3, "City owns exactly three residents");
+        const char* residents[]{"sanctuary.mayor", "sanctuary.boric", "sanctuary.balin"};
+        const Cell cells[]{{9, 8}, {8, 8}, {8, 9}};
+        for (unsigned i = 0; i < 3; ++i) {
+            const auto& actor = run.game().actors().snapshot().actors[i];
+            check(!actor.hostile() && actor.npc.residentId == dialogueKey(residents[i]) &&
+                      actor.npc.cell == cells[i] && actor.npc.facing == Heading::East,
+                  "City formation has stable peaceful identities and facing");
+        }
+        // Reach every doorway with the real resident occupancy installed.
+        const auto city = sanctuaryCity();
+        for (unsigned i = 0; i < city.doorCount; ++i)
+            if (std::string_view(city.doors[i].name) != "dungeon")
+                walk(run.game(), city.doors[i].approach.cell);
+        walk(run.game(), city.spawn.cell);
+        face(run.game(), city.spawn.heading);
+        for (unsigned fault = 0; fault < 4; ++fault) {
+            auto bad = run.checkpoint();
+            auto& residents = bad->locations[0].placements;
+            if (fault == 0)
+                residents.pop_back();
+            if (fault == 1)
+                residents[0].cell = {10, 8};
+            if (fault == 2)
+                residents[1].residentId = residents[0].residentId;
+            if (fault == 3)
+                residents[2].animation = NpcAnimation::Laugh;
+            rejects([&] { CampaignRun invalid(cat, std::move(*bad), defs.timings); },
+                    "Canonical city residents reject missing, moved, duplicate or non-idle data");
+        }
         const auto approach = sanctuaryCity().doorway("inn").approach;
         check(!run.previewTravel(run.doorwayRequest()), "No remote inn entry");
         walk(run.game(), approach.cell);
@@ -68,6 +98,12 @@ int main() {
         check(!run.previewTravel(request), "Old city request rejected after entry");
         check(!run.previewTravel(run.recallRequest()), "No paid recall from inn");
         check(!run.previewTravel(run.waypointRequest(1)), "No dungeon shortcut from inn");
+        check(run.game().actors().snapshot().count == 1 &&
+                  !run.game().actors().snapshot().actors[0].hostile() &&
+                  run.game().actors().snapshot().actors[0].npc.cell == Cell{6, 3} &&
+                  run.game().actors().snapshot().actors[0].npc.subcell == Cell{1, 1} &&
+                  run.game().actors().snapshot().actors[0].npc.facing == Heading::South,
+              "One peaceful innkeeper occupies the southern half-subcell nearest the counter");
         {
             CommandController innControls(run.game(), defs.timings);
             innControls.refresh({}, false, false, true);
@@ -89,7 +125,7 @@ int main() {
             }
         for (int y = 1; y < map.height() - 1; ++y)
             for (int x = 1; x < map.width() - 1; ++x)
-                if (!map.movementBlocked({x, y})) {
+                if (!map.movementBlocked({x, y}) && !run.game().actors().occupied({x, y})) {
                     walk(run.game(), {x, y});
                     check(run.game().atSanctuary(), "Every reachable inn cell grants free rest");
                 }
@@ -122,6 +158,10 @@ int main() {
             return false;
         };
         const auto pose = run.game().movement().player;
+        run.dialogue().get(dialogueKey("sanctuary.innkeeper"), true)->introduced = true;
+        check(run.dialogue().complete(dialogueKey("sanctuary.innkeeper"), dialogueKey("dungeon"),
+                                      dialogueKey("heard_dungeon_advice")),
+              "Dialogue history records fact before save");
         auto saved = run.checkpoint();
         const auto bytes = encodeCampaign(cat, defs, {"fixture", 0}, *saved);
         saved = decodeCampaign(cat, defs, {"fixture", 0}, bytes);
@@ -130,6 +170,34 @@ int main() {
                   restored.game().movement().player == pose,
               "Continue restores inn and pose");
         check(hasDropped(restored.game()), "Inn dropped items survive disk roundtrip");
+        check(restored.dialogue().get(dialogueKey("sanctuary.innkeeper")) &&
+                  restored.dialogue().get(dialogueKey("sanctuary.innkeeper"))->introduced &&
+                  restored.dialogue()
+                      .get(dialogueKey("sanctuary.innkeeper"))
+                      ->knows(dialogueKey("heard_dungeon_advice")),
+              "Dialogue introductions/facts survive save Continue");
+        check(restored.game().actors().snapshot().count == 1 &&
+                  !restored.game().actors().snapshot().actors[0].hostile() &&
+                  restored.game().actors().snapshot().actors[0].npc.cell == Cell{6, 3},
+              "Continue preserves the peaceful innkeeper's canonical placement");
+        for (unsigned fault = 0; fault < 6; ++fault) {
+            auto bad = restored.checkpoint();
+            auto& actor = bad->locations[4].state->actors.actors[0];
+            if (fault == 0)
+                actor.npc.role = NpcRole::Hostile;
+            if (fault == 1)
+                actor.npc.cell = {5, 3};
+            if (fault == 2)
+                actor.hitPoints = 1;
+            if (fault == 3)
+                actor.hasAttack = true;
+            if (fault == 4)
+                bad->locations[4].state->creditedDeaths[0] = true;
+            if (fault == 5)
+                bad->locations[4].placements.clear();
+            rejects([&] { CampaignRun invalid(cat, std::move(*bad), defs.timings); },
+                    "Forged resident role, body, combat state or authored placement rejects");
+        }
         for (const auto oldCeiling : {6, 8}) {
             auto previous = restored.checkpoint();
             auto& inn = previous->locations[4];
@@ -205,6 +273,8 @@ int main() {
               "Outdoor sanctuary cannot grant free long rest with zero kits");
         enterInn(restored);
         check(hasDropped(restored.game()), "Inn dropped items survive inactive travel snapshot");
+        check(restored.dialogue().get(dialogueKey("sanctuary.innkeeper"))->introduced,
+              "Dialogue history survives location travel");
         // Exercise the public wire action and transition events through real movement.
         Client client(cat, defs);
         auto scenario = generatedScenario(cat);
@@ -226,6 +296,12 @@ int main() {
         check(client.protocol.state().at("campaign").at("travel").at("doorway").at("ready"),
               "Wire doorway descriptor reflects facing");
         check(client.act({{"kind", "doorway"}}).at("data").at("accepted"), "Wire inn entry");
+        check(client.protocol.state().at("residents").size() == 1 &&
+                  client.protocol.state().at("residents")[0].at("type") == "innkeeper" &&
+                  !client.protocol.state().at("residents")[0].at("targetable").get<bool>() &&
+                  client.protocol.state().at("enemies").empty() &&
+                  client.protocol.state().at("targets").empty(),
+              "Wire observation reports peaceful resident separately from enemies and targets");
         const auto observation = client.protocol.state().at("campaign");
         check(observation.at("location") == 4 && observation.at("depth") == 0 &&
                   observation.at("locations").size() == campaignLocationCount,

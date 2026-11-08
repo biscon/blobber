@@ -63,7 +63,8 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
     }
     for (std::size_t i = 0; i < world.snapshot().count; ++i) {
         const auto& npc = world.snapshot().actors[i].npc;
-        if (!timings_[npc.type.index][static_cast<std::size_t>(npc.animation)].count)
+        if (!timings_[npc.type.index][static_cast<std::size_t>(npc.animation)].count &&
+            !(npc.role == NpcRole::Resident && npc.animation == NpcAnimation::Talk))
             throw std::runtime_error("NPC placement selects an absent animation");
         std::uint32_t cycle = 0;
         const auto& idle = timings_[npc.type.index][0];
@@ -78,7 +79,21 @@ NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>&
     snapshot_.world = world.snapshot().world;
     setTime(0);
 }
-void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effects) noexcept {
+void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effects,
+                          std::optional<ActorId> speaker, std::uint64_t speakerMs,
+                          const NpcDialogueOverride* override) noexcept {
+    const auto* speaking = speaker ? world_.actor(*speaker) : nullptr;
+    const bool dialogue = speaking && speaking->npc.role == NpcRole::Resident;
+    if (dialogue || dialogueActive_) {
+        // The focus-aware clock resets for each conversation and stops on focus loss.
+        // Also collect the final exit tick when the caller has just closed dialogue.
+        if (dialogue)
+            residentDialogueMs_ += speakerMs >= lastDialogueMs_ ? speakerMs - lastDialogueMs_ : speakerMs;
+        else if (speakerMs >= lastDialogueMs_)
+            residentDialogueMs_ += speakerMs - lastDialogueMs_;
+    }
+    lastDialogueMs_ = dialogue ? speakerMs : 0;
+    dialogueActive_ = dialogue;
     bool changed = false;
     for (std::size_t i = 0; i < snapshot_.count; ++i) {
         const auto& actor = world_.snapshot().actors[i];
@@ -94,12 +109,18 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
         const bool visible = actor.life == ActorLife::Alive || (dying ? deathVisible : flash);
         // Legacy death art freezes the exact living pose at the lethal timestamp.
         const auto time = actor.life == ActorLife::Dead && !dying ? actor.damageTimeMs : elapsedMs;
+        const auto idleTime = npc.role == NpcRole::Resident ? time + residentDialogueMs_ : time;
+        const bool isSpeaker = dialogue && speaker->slot == i;
         NpcFrameSelection next{0, 0, visible, flash};
         const auto position = actorPosition(actor, elapsedMs);
         next.elevation = actorElevation(actor, world_.map(), elapsedMs);
         next.offsetX = position.x - (npc.cell.x + .25f + npc.subcell.x * .5f);
         next.offsetY = position.y - (npc.cell.y + .25f + npc.subcell.y * .5f);
         next.clip = npc.animation;
+        const bool overridden = override && override->actor && world_.actor(*override->actor) &&
+                                override->actor->slot == i && npc.role == NpcRole::Resident;
+        if (overridden)
+            next.clip = override->clip;
         if (visible) {
             const auto attackClip = actor.rangedAttack ? NpcAnimation::RangedAttack : NpcAnimation::Attack;
             const auto& attack = timings[static_cast<std::size_t>(attackClip)];
@@ -145,13 +166,25 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
                 next.active = sample(timings[static_cast<std::size_t>(NpcAnimation::Walk)],
                                      (time - actor.walkTimeMs) * npcWalkDurationMs / actor.walkDurationMs, 0);
             } else {
-                const auto phase = npc.animation == NpcAnimation::Idle ? idlePhases_[i] : npc.phaseMs;
-                next.active = sample(timings[static_cast<std::size_t>(npc.animation)], time, phase);
+                const auto phase = next.clip == NpcAnimation::Idle ? idlePhases_[i]
+                                   : overridden                    ? 0
+                                                                   : npc.phaseMs;
+                // A resident without optional talk art remains safely idle.
+                if (!timings[static_cast<std::size_t>(next.clip)].count)
+                    next.clip = NpcAnimation::Idle;
+                const auto sampleTime = overridden && next.clip != NpcAnimation::Idle ? override->elapsedMs
+                                        : isSpeaker && !override                      ? speakerMs
+                                        : next.clip == NpcAnimation::Idle             ? idleTime
+                                                                                      : time;
+                const auto& clip = timings[static_cast<std::size_t>(next.clip)];
+                next.active = next.clip == NpcAnimation::PullDocument && sampleTime >= npcClipDuration(clip)
+                                  ? clip.count - 1
+                                  : sample(clip, sampleTime, phase);
             }
-            // Only an attack can expose a directional idle fallback. Keep legacy
+            // Attack and talk can expose a directional idle fallback. Keep legacy
             // idle snapshots stable; reaction/corpse holds need no idle invalidation.
-            if (next.clip <= NpcAnimation::Attack)
-                next.idle = sample(timings[0], time, idlePhases_[i]);
+            if (next.clip <= NpcAnimation::Attack || directionalIdleFallback(next.clip))
+                next.idle = sample(timings[0], isSpeaker && !override ? speakerMs : idleTime, idlePhases_[i]);
         }
         auto& old = snapshot_.frames[i];
         changed |= old.active != next.active || old.idle != next.idle || old.visible != next.visible ||

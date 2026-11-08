@@ -1,5 +1,7 @@
 #pragma once
+#include "game/dialogue.hpp"
 #include "game/session.hpp"
+#include "game/trade.hpp"
 #include "game/travel.hpp"
 #include "generation/population.hpp"
 namespace blobber {
@@ -7,11 +9,14 @@ enum class CampaignStatus : std::uint8_t { Active, Victory, Defeat };
 struct DoorwayLink {
     Player approach, arrival;
     CampaignLocationId destination = CampaignLocationId::City;
+    const char* action = ""; // Static canonical label; never serialized.
 };
 struct CampaignLocation {
     std::optional<generation::GeneratedFloor> generated;
     std::optional<Map> authored;
-    std::optional<DoorwayLink> doorway; // Canonical, preparation-only; never restored from untrusted saves.
+    static constexpr unsigned doorwayCapacity = 3;
+    std::array<DoorwayLink, doorwayCapacity> doorways{}; // Canonical; never restored from disk.
+    unsigned doorwayCount = 0;
     std::optional<NpcWorld> placements;
     RecoveryLevel recovery;
     FloorFixtures fixtures;
@@ -40,6 +45,8 @@ struct CampaignLocationState {
     std::uint32_t seed = 0;
 };
 struct CampaignCheckpoint {
+    DialogueHistory dialogue;
+    std::vector<MerchantState> merchants;
     Party::Saved party;
     std::array<CampaignLocationState, campaignLocationCount> locations;
     Navigation::Saved navigation;
@@ -86,18 +93,22 @@ class CampaignRun {
     CampaignRun& operator=(const CampaignRun&) = delete;
     GameSession& game() noexcept { return *active_; }
     const GameSession& game() const noexcept { return *active_; }
+    DialogueHistory& dialogue() noexcept { return dialogue_; }
+    MerchantLedger& merchants() noexcept { return merchants_; }
     Party& party() noexcept { return party_; }
     const CampaignLocation& location(unsigned i) const { return locations_.at(i); }
     const Map& map() const noexcept { return locations_[location_].map(); }
     unsigned activeLocation() const noexcept { return location_; }
     std::uint64_t revision() const noexcept { return revision_; }
     std::uint64_t gameplayMs() const noexcept;
+    GameTime gameTime() const noexcept { return {gameplayMs()}; }
     CampaignStatus status() const noexcept;
     const char* name() const noexcept;
     TravelRequest request(FixtureRequest) const noexcept;
     CampaignLocationId activeLocationId() const noexcept { return CampaignLocationId(location_); }
     unsigned dungeonDepth() const noexcept { return dungeonLocation(location_) ? location_ : 0; }
     TravelRequest doorwayRequest() const noexcept;
+    const DoorwayLink* doorway(DoorwayId) const noexcept;
     TravelRequest recallRequest() const noexcept;
     TravelRequest waypointRequest(unsigned depth) const noexcept;
     FixtureResult previewTravel(const TravelRequest&) const noexcept;
@@ -110,6 +121,8 @@ class CampaignRun {
     std::size_t snapshotBytes() const noexcept { return campaignLocationCount * sizeof(FloorState); }
 
   private:
+    DialogueHistory dialogue_;
+    MerchantLedger merchants_;
     std::string runId_;
     Party party_;
     std::array<CampaignLocation, campaignLocationCount> locations_;

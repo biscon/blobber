@@ -1,7 +1,9 @@
 #include "automation/protocol.hpp"
 #include "game/campaign.hpp"
+#include "game/emporium_interior.hpp"
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
+#include "game/smithy_interior.hpp"
 #include "generation/report.hpp"
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
@@ -56,11 +58,16 @@ Json Protocol::observation(bool diagnostic) {
             auto state = std::make_unique<FloorState>();
             for (unsigned i = 0; i < campaignLocationCount; ++i) {
                 const auto& location = campaign->location(i);
-                Json record = {{"location", i},
-                               {"visited", location.visited},
-                               {"fingerprint", location.generated
-                                                   ? std::to_string(location.generated->fingerprint)
-                                                   : (i == 0 ? sanctuaryHubIdentity : innInteriorIdentity)}};
+                Json record = {
+                    {"location", i},
+                    {"visited", location.visited},
+                    {"fingerprint",
+                     location.generated
+                         ? std::to_string(location.generated->fingerprint)
+                         : (i == 0                                      ? sanctuaryHubIdentity
+                            : i == unsigned(CampaignLocationId::Inn)    ? innInteriorIdentity
+                            : i == unsigned(CampaignLocationId::Smithy) ? smithyInteriorIdentity
+                                                                        : emporiumInteriorIdentity)}};
                 record["world_definition"] = std::to_string(location.map().definition().fingerprint());
                 if (i == campaign->activeLocation()) {
                     session_->game().exportFloor(*state);

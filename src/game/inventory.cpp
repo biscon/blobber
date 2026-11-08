@@ -41,6 +41,10 @@ const char* inventoryMessage(InventoryError e) noexcept {
         return "Wait until movement finishes.";
     case InventoryError::Unavailable:
         return "Inventory changes are unavailable.";
+    case InventoryError::GoldOverflow:
+        return "The party purse cannot hold more gold.";
+    case InventoryError::Funds:
+        return "The party does not have enough gold.";
     }
     return "Invalid inventory request.";
 }
@@ -152,6 +156,11 @@ void Inventory::initialize(const rules::Catalog& cat, const rules::PresetParty& 
                     locations_[c][48 + e] = create(item.item, 1);
                     equipped = true;
                 }
+            if (d->kind == rules::ItemKind::Currency) {
+                if (equipped)
+                    throw std::runtime_error("Currency cannot be equipped");
+                continue; // Party sums authored currency into its purse.
+            }
             if (equipped)
                 continue;
             for (std::uint16_t k = 0; k < bagCells && q; ++k) {
@@ -282,7 +291,7 @@ InventoryResult Inventory::acquire(const AcquisitionRequest& r, const rules::Cat
     if (r.character.index >= 4)
         return {InventoryError::InvalidDestination};
     const auto* d = cat.item(r.item);
-    if (!d)
+    if (!d || d->kind == rules::ItemKind::Currency)
         return {InventoryError::InvalidItem};
     if (!r.quantity)
         return {InventoryError::InvalidQuantity};

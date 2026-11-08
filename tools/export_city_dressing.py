@@ -2,6 +2,7 @@
 Run in background Blender after architecture/tree, or alone for dressing updates.
 Retains generated masters; exports packed source, unlit GLB and runtime meshes.
 """
+import argparse
 import json
 import math
 import sys
@@ -15,7 +16,12 @@ from city_materials import extract_tiles, sample_mirrored, pack_regions, padded_
 from city_mesh_export import export_collection
 
 ROOT = Path(__file__).resolve().parent.parent
-PACK = ROOT / 'assets/packs/sanctuary-city'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--output-root', type=Path, default=ROOT / 'assets',
+                    help='Staged assets root containing a complete sanctuary-city pack')
+args = parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+ASSETS = args.output_root
+PACK = ASSETS / 'packs/sanctuary-city'
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
 
@@ -310,7 +316,7 @@ def write_part(name,vertices,kind):
                     cutout=kind=='cutout',water=kind=='water',vertices=part)
         assert all(abs(v[0])<=4 and abs(v[2])<=4 and 0<=v[1]<=4 for v in part),(name,'bounds')
         path='packs/sanctuary-city/models/'+partname+'.mesh.json'
-        (ROOT/'assets'/path).write_text(json.dumps(record,separators=(',',':'))+'\n')
+        (ASSETS/path).write_text(json.dumps(record,separators=(',',':'))+'\n')
         records[path]=record
         yield path
 for name in models:
@@ -362,7 +368,7 @@ report=[]
 for i,name in enumerate(['courtyard-garden','lane-garden','east-garden','market-produce','market-grain','fountain','inn','smithy','provisioner','low-house-hip-ivy','tall-house-ivy']):
     total=0
     for path in base[name]:
-        record=records.get(path) or json.loads((ROOT/'assets'/path).read_text())
+        record=records.get(path) or json.loads((ASSETS/path).read_text())
         total+=len(record['vertices'])
         collection.append((record,[(i%4)*8,0,(i//4)*8]))
     assert total<=24000,(name,total)

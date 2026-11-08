@@ -4,6 +4,7 @@
 #include "platform/audio.hpp"
 #include "rlgl.h"
 #include "ui/hud.hpp"
+#include "ui/menu_background.hpp"
 #include "ui/music_banner.hpp"
 #include <cmath>
 #include <cstdio>
@@ -15,7 +16,8 @@ void drawWorldViewport(const Texture2D& texture, bool flipped, WorldViewTransfor
     BeginScissorMode(int(viewX * scale), int(viewY * scale), int(viewWidth * scale), int(viewHeight * scale));
     DrawTexturePro(texture, {0, 0, float(viewWidth), float(viewHeight) * (flipped ? -1 : 1)},
                    {origin.x * scale, origin.y * scale, viewWidth * scale * transform.zoom,
-                    viewHeight * scale * transform.zoom}, {0, 0}, 0, WHITE);
+                    viewHeight * scale * transform.zoom},
+                   {0, 0}, 0, WHITE);
     EndScissorMode();
 }
 Presenter::Presenter(GpuResources& resources, const std::filesystem::path& assets, PreparationWorker* worker)
@@ -156,9 +158,12 @@ void Presenter::prepareMenu() {
             throw std::runtime_error("Missing menu background");
         menuBackground_ = resources_.createTexture(background.value);
         SetTextureFilter(resources_.texture(menuBackground_), TEXTURE_FILTER_BILINEAR);
+        menuStarted_ = GetTime();
     }
+    uiArt_.prepareMenuTitle(assetsMenuPath_.parent_path() / "menu-title.png");
 }
-void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context) {
+void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context,
+                            std::optional<double> backgroundSeconds) {
     saving_ = false;
     loadingLabel_[0] = 0;
     displayedWorld_ = {};
@@ -167,7 +172,10 @@ void Presenter::presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), v
     BeginTextureMode(resources_.target(game_));
     ClearBackground({12, 18, 18, 255});
     const auto& background = resources_.texture(menuBackground_);
-    DrawTexturePro(background, {0, 0, float(background.width), float(background.height)},
+    const auto crop = menuBackgroundCrop(backgroundSeconds.value_or(GetTime() - menuStarted_));
+    DrawTexturePro(background,
+                   {crop.x * background.width, crop.y * background.height, crop.width * background.width,
+                    crop.height * background.height},
                    {0, 0, float(gameWidth), float(gameHeight)}, {0, 0}, 0, WHITE);
     draw(context, fonts_, uiArt_);
     EndTextureMode();

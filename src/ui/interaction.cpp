@@ -1,4 +1,5 @@
 #include "ui/interaction.hpp"
+#include "game/campaign.hpp"
 #include "ui/button_targets.hpp"
 #include "ui/camp_layout.hpp"
 #include "ui/inventory_interaction.hpp"
@@ -10,6 +11,10 @@ UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bo
     if (input.pointerTracked && !acceptPress) {
         commands.cancelPointerButtons();
         input.pressed[std::size_t(UiKey::Click)] = false;
+        if (commands.snapshot().trade.open) {
+            input.pointer.reset(); // Cancels a pending raw drag as well as ordinary buttons.
+            input.pointerHeld = input.pointerReleased = false;
+        }
     }
     const auto& h = commands.snapshot();
     if (!input.focused)
@@ -27,10 +32,18 @@ UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bo
 void routeHudInput(CommandController& commands, const UiInput& physical, std::optional<ActorId> viewportHit,
                    bool allowConfirm, std::optional<LootId> lootHit, std::optional<Cell> groundHit,
                    std::optional<FixtureId> fixtureHit, std::optional<ContainerId> containerHit,
-                   bool worldImageMoving) noexcept {
+                   bool worldImageMoving, std::optional<ActorId> residentHit) noexcept {
     const auto input = routeHudButtons(commands, physical, allowConfirm);
+    if (commands.snapshot().trade.open) {
+        commands.routeTrade(input);
+        return;
+    }
     if (!input.focused) {
         commands.hover(HoverKind::None);
+        return;
+    }
+    if (commands.snapshot().dialogue.open) {
+        commands.routeDialogue(input);
         return;
     }
     if (commands.snapshot().menuOpen && commands.snapshot().save.enabled) {
@@ -166,9 +179,8 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     if (routeInventoryInput(commands, input, allowConfirm))
         return;
     const auto& state = commands.snapshot();
-    const bool moved = input.pointer &&
-                       (commands.pointerMoved(input.pointer->x, input.pointer->y) ||
-                        (worldImageMoving && hudLayout::viewport.contains(*input.pointer)));
+    const bool moved = input.pointer && (commands.pointerMoved(input.pointer->x, input.pointer->y) ||
+                                         (worldImageMoving && hudLayout::viewport.contains(*input.pointer)));
     const bool click = input.has(UiKey::Click);
     const auto inside = [&](UiRect r) { return input.pointer && r.contains(*input.pointer); };
     if (!state.modal() && state.targetPicker.available) {
@@ -358,6 +370,15 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     if (state.suspended) {
         commands.hover(HoverKind::None);
         return;
+    }
+    if (allowConfirm && !worldImageMoving && ((click && residentHit) || input.has(UiKey::Interact))) {
+        const auto* run = commands.sessionCampaign();
+        const bool doorway = run && run->doorwayRequest().kind == TravelKind::Doorway &&
+                             run->doorwayRequest().doorway.slot != UINT16_MAX;
+        if ((!input.has(UiKey::Interact) || !doorway) && (residentHit || commands.nearbyResident())) {
+            commands.startDialogue(click ? residentHit : std::nullopt);
+            return; // The displayed talk action must not fall through to a fixture.
+        }
     }
     if (allowConfirm && (input.has(UiKey::Interact) || (click && fixtureHit)) && !state.magic.casting() &&
         !state.magic.armed && !state.inventory.itemTargeting) {

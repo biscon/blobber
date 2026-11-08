@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: stylized-concept. Production animation sprite master for Stone & Shadow. Input reference is the APPROVED balin identity, wardrobe, material rendering and proportions; preserve them exactly. This is a new animation sheet, NOT a turnaround or bust sheet.\nExactly 2 full-body figures of the SAME character all strict side profile, nose and toes point SCREEN RIGHT. Layout two equal cells in one horizontal row. Same body scale in every cell; complete head/crown/helmet and boots, generous empty gutters and padding on all edges, consistent local ground baseline and torso center. No labels or dividers. Frame 1: relaxed neutral standing breathing pose, eyes open. Frame 2: subtle breath and brief blink, tiny changes only; same planted feet, hands resting naturally. No speaking.\nIdentity constraints: Short stocky teenage human guard, round youthful face, oversized pot helmet, brown patched vest and chainmail, trousers and boots. Retain approved restrained facial anatomy, not grotesque. Match detailed painted game illustration with warm upper-left light, crisp contours and textured materials. Do not add weapons, props or change outfit. Genuine transparent alpha background, no floor, shadows, scenery, checkerboard, text, watermark or extra figures.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/docs/mockups/balin-v1/turnaround-v2.png"
+  ],
+  "transparent_background": true,
+  "generator": "image_gen.imagegen",
+  "generated_source": "/home/bison/.codex/generated_images/01a1b1f2-84ff-7771-a6d8-4421900f7f2a/exec-d5488374-f3de-48fe-ae19-43e042fc076f.png"
+}

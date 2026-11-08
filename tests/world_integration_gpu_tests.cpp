@@ -8,6 +8,7 @@
 #include "support/arena_preparation_review.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/campaign_startup_review.hpp"
+#include "support/campaign_travel_review.hpp"
 #include "support/check.hpp"
 #include "support/combat_entry_review.hpp"
 #include "support/combat_positioning_review.hpp"
@@ -75,6 +76,14 @@ unsigned compare(GpuResources& r, WorldRenderer& renderer, TargetHandle ids) {
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string_view(argv[3]) == "--rat-attack-review") {
+            test::enemyMeleeReview(argv[1], argv[2], "giant.rat");
+            return 0;
+        }
+        if (argc == 5 && std::string_view(argv[3]) == "--campaign-travel-review") {
+            test::campaignTravelReview(argv[1], argv[2], argv[4]);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--enemy-melee-review") {
             test::enemyMeleeReview(argv[1], argv[2]);
             return 0;

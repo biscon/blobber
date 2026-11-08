@@ -181,7 +181,7 @@ SanctuaryCity sanctuaryCity() {
     house("sanctuary", "sanctuary", {9, 6}, Heading::South);
     house("dungeon", "dungeon-entrance", {13, 6}, Heading::South);
     house("inn", "inn", {16, 5}, Heading::West, 4);
-    house("provisioner", "provisioner", {16, 9}, Heading::West);
+    house("emporium", "provisioner", {16, 9}, Heading::West);
     house("smithy", "smithy", {15, 12}, Heading::West);
     house("west-home", "low-house", {7, 8}, Heading::East);
     house("alley-home", "low-house-hip-ivy", {7, 12}, Heading::East);

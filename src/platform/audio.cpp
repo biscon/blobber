@@ -104,6 +104,7 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
             p.samples[j] = n;
         }
     }
+    residentBytes_ = bytes;
     for (unsigned i = 0; i < streams_.size(); ++i) {
         auto& s = streams_[i];
         s.cue = cue(i < 2 ? "ambience" : i < 6 ? "web.loop" : "spiritual.loop");
@@ -119,6 +120,12 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
                    settingsPath_.empty() ? std::filesystem::path{}
                                          : settingsPath_.parent_path() / "music-state.json",
                    warning_);
+    sanctuaryMusic_.prepare(root_ / "music/sanctuary",
+                            settingsPath_.empty()
+                                ? std::filesystem::path{}
+                                : settingsPath_.parent_path() / "sanctuary-music-state.json",
+                            warning_);
+    menuMusic_.prepare(root_ / "music/mainmenu", {}, warning_, audio::MusicPolicy::Once);
     unsigned sampleRate = samples_.empty() ? 0 : samples_.front().source.stream.sampleRate;
     if (!sampleRate) {
         float silence = 0;
@@ -243,7 +250,52 @@ audio::Handle AudioRuntime::play(const char* id, float x, float z, bool position
     return {slot, v.generation, owner_};
 }
 void AudioRuntime::detach() noexcept {
+    detachWorld();
     music_.detach();
+    sanctuaryMusic_.detach();
+    endMenuMusic();
+    musicContext_ = MusicContext::None;
+    sanctuary_ = false;
+    preserveSanctuaryTravel_ = false;
+}
+void AudioRuntime::beginMenuMusic() noexcept {
+    menuMusic_.detach();
+    menuMusicActive_ = true;
+}
+void AudioRuntime::endMenuMusic() noexcept {
+    menuMusic_.detach();
+    menuMusicActive_ = false;
+    if (musicContext_ == MusicContext::Menu)
+        musicContext_ = MusicContext::None;
+}
+void AudioRuntime::setGameplayMusic(std::optional<CampaignLocationId> location) noexcept {
+    sanctuary_ = location && (*location == CampaignLocationId::City || interiorLocation(*location));
+    if (!sanctuary_)
+        preserveSanctuaryTravel_ = false;
+}
+void AudioRuntime::beginTravelMusic(bool sanctuaryDestination) noexcept {
+    preserveSanctuaryTravel_ = sanctuaryDestination && sanctuary_ && musicContext_ == MusicContext::Sanctuary;
+}
+void AudioRuntime::pumpLoadingMusic(bool focused) {
+    if (!ready_ || !preserveSanctuaryTravel_ || musicContext_ != MusicContext::Sanctuary)
+        return;
+    audio::MusicInput input;
+    input.active = true;
+    input.audible = settings.musicEnabled;
+    input.paused = !focused;
+    input.bannerVisible = false;
+    sanctuaryMusic_.update(input, settings.values[0] * settings.musicVolume);
+}
+MusicBanner AudioRuntime::musicBanner() const noexcept {
+    if (musicContext_ == MusicContext::Sanctuary)
+        return sanctuaryMusic_.banner();
+    if (musicContext_ == MusicContext::Combat)
+        return music_.banner();
+    return {};
+}
+void AudioRuntime::detachWorld() noexcept {
+    stopDialogue();
+    dialogueSerial_ = 0;
     for (unsigned i = 0; i < 64; ++i)
         if (voices_[i].active && !voices_[i].interface)
             release(i);
@@ -258,11 +310,13 @@ void AudioRuntime::detach() noexcept {
     world_ = 0;
 }
 void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt, bool musicPaused,
-                          bool bannerVisible) {
+                          bool bannerVisible, std::optional<bool> ambiencePaused, bool dialoguePaused) {
     dt = std::isfinite(dt) ? std::clamp(dt, 0.f, .1f) : 0;
     const auto world = game ? game->actors().snapshot().world : 0;
     if (world != world_) {
-        detach();
+        detachWorld();
+        // World-local encounter IDs may coincide; only sanctuary survives replacement.
+        music_.detach();
         session_ = game;
         world_ = world;
         if (game) {
@@ -279,7 +333,21 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
     }
     session_ = game;
     worldPaused_ = paused;
+    ambiencePaused_ = ambiencePaused.value_or(paused);
     focused_ = focused;
+    dialoguePaused_ = dialoguePaused;
+    if (dialogueSound_ < dialogueSounds_.size()) {
+        auto sound = dialogueSounds_[dialogueSound_].voice;
+        const bool suspend = !focused || dialoguePaused;
+        if (suspend != dialogueVoicePaused_) {
+            if (suspend)
+                PauseSound(sound);
+            else
+                ResumeSound(sound);
+            dialogueVoicePaused_ = suspend;
+        }
+        SetSoundVolume(sound, gain(1, true));
+    }
     if (game) {
         const auto camera = world_render::camera(game->movement());
         x_ = camera.position.x;
@@ -344,21 +412,47 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
         journal.clear();
     }
     if (ready_) {
-        streamUpdate(dt);
+        const auto context = game ? (sanctuary_ ? MusicContext::Sanctuary : MusicContext::Combat)
+                                  : (menuMusicActive_ ? MusicContext::Menu : MusicContext::None);
+        if (context != musicContext_) {
+            music_.detach();
+            sanctuaryMusic_.detach();
+            menuMusic_.detach();
+            musicContext_ = context;
+        }
         audio::MusicInput input;
         if (game) {
             input.encounter = game->audioEvents().encounter;
             input.active = game->audioEvents().encounterActive;
         }
         input.audible = settings.musicEnabled && settings.musicVolume > 0 && settings.values[0] > 0;
-        input.paused = musicPaused || !focused;
-        input.bannerVisible = bannerVisible;
+        const bool continuousSanctuary = preserveSanctuaryTravel_ && musicContext_ == MusicContext::Sanctuary;
+        input.paused = (musicPaused && !continuousSanctuary) || !focused;
+        input.bannerVisible = bannerVisible && !continuousSanctuary;
         input.dt = dt;
-        music_.update(input, settings.values[0] * settings.musicVolume * worldGain);
+        const auto volume = settings.values[0] * settings.musicVolume;
+        switch (musicContext_) {
+        case MusicContext::Combat:
+            music_.update(input, volume * worldGain);
+            break;
+        case MusicContext::Sanctuary:
+            input.encounter = 0;
+            input.active = true;
+            sanctuaryMusic_.update(input, volume * (continuousSanctuary ? 1.f : worldGain));
+            break;
+        case MusicContext::Menu:
+            input.active = true;
+            input.paused = !focused;
+            input.bannerVisible = false;
+            menuMusic_.update(input, volume);
+            break;
+        case MusicContext::None:
+            break;
+        }
+        streamUpdate(musicContext_ == MusicContext::Combat && music_.audible());
     }
 }
-void AudioRuntime::streamUpdate(float dt) {
-    (void)dt;
+void AudioRuntime::streamUpdate(bool suppressAmbience) {
     struct Target {
         std::uint64_t id = 0;
         float x = 0, z = 0, d = 1e9f;
@@ -398,7 +492,7 @@ void AudioRuntime::streamUpdate(float dt) {
         auto& s = streams_[i];
         if (!s.valid)
             continue;
-        bool wanted = i == 0 && session_;
+        bool wanted = i == 0 && session_ && !sanctuary_;
         if (i >= 2) {
             wanted = false;
             for (unsigned j = i < 6 ? 0 : 4; j < (i < 6 ? 4 : 6); ++j)
@@ -429,11 +523,13 @@ void AudioRuntime::streamUpdate(float dt) {
             continue;
         }
         if (!s.active) {
+            if (i < 2 && suppressAmbience)
+                continue; // Restored/ongoing combat must not briefly start ambient playback.
             PlayMusicStream(s.music);
             s.active = true;
             s.paused = false;
         }
-        const bool pause = worldPaused_ || !focused_;
+        const bool pause = (i < 2 ? ambiencePaused_ || suppressAmbience : worldPaused_) || !focused_;
         if (pause != s.paused) {
             if (pause)
                 PauseMusicStream(s.music);
@@ -456,6 +552,7 @@ void AudioRuntime::streamUpdate(float dt) {
 }
 void AudioRuntime::persistMusic() {
     music_.persist(warning_);
+    sanctuaryMusic_.persist(warning_);
 }
 void AudioRuntime::persist() {
     warning_.clear();
@@ -472,6 +569,7 @@ void AudioRuntime::shutdown() noexcept {
         } catch (...) {
         }
         detach();
+        clearDialogue();
         for (unsigned i = 0; i < 64; ++i)
             if (voices_[i].active)
                 release(i);
@@ -480,6 +578,8 @@ void AudioRuntime::shutdown() noexcept {
             limiterAttached_ = false;
         }
         music_.shutdown();
+        sanctuaryMusic_.shutdown();
+        menuMusic_.shutdown();
         for (auto& s : streams_)
             if (s.valid)
                 UnloadMusicStream(s.music);
@@ -490,6 +590,7 @@ void AudioRuntime::shutdown() noexcept {
         }
         CloseAudioDevice();
     }
+    residentBytes_ = 0;
     ready_ = false;
     streams_ = {};
     samples_.clear();

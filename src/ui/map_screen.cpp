@@ -91,6 +91,10 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
         }
     if (keyY == 236)
         p.text("None collected", 394, 236, muted);
+    if (hud) {
+        const auto clock = hud->gameTime.text();
+        p.text(clock.data(), 394, 266, gold, UiTextStyle::Small);
+    }
     if (hud && hud->development) {
         p.box(hudLayout::diagnosticMap);
         p.label(reveal ? "Hide full map" : "Reveal full map", hudLayout::diagnosticMap, gold,

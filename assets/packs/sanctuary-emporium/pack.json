@@ -1,0 +1,83 @@
+{
+  "id": "sanctuary-emporium",
+  "worldScale": 1.0,
+  "horizon": [
+    0.6,
+    0.65,
+    0.71
+  ],
+  "wall": "packs/sanctuary-emporium/source/wall.png",
+  "floor": "packs/sanctuary-emporium/source/floor.png",
+  "ceiling": "packs/sanctuary-inn/source/ceiling.png",
+  "stairWall": "packs/sanctuary-city/source/wall.png",
+  "stairFloor": "packs/sanctuary-city/source/paving.png",
+  "door": "packs/dungeon/source/door.png",
+  "lockedDoor": "packs/dungeon/source/door-locked.png",
+  "doorEdge": "packs/dungeon/source/door.png",
+  "crest": "packs/dungeon/source/crest.png",
+  "vine": "packs/dungeon/source/vine.png",
+  "sky": "packs/dungeon/source/sky.png",
+  "guardianEmblem": "packs/dungeon/source/guardian-emblem.png",
+  "buildings": [
+    {
+      "id": "wall",
+      "parts": [
+        "packs/sanctuary-emporium/models/wall-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "exit-door",
+      "parts": [
+        "packs/sanctuary-emporium/models/exit-door-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "window-wall",
+      "parts": [
+        "packs/sanctuary-emporium/models/window-wall-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "counter",
+      "parts": [
+        "packs/sanctuary-emporium/models/counter-opaque-0.mesh.json"
+      ]
+    },
+    {
+      "id": "potion-cabinet",
+      "parts": [
+        "packs/sanctuary-emporium/models/potion-cabinet-opaque-0.mesh.json",
+        "packs/sanctuary-emporium/models/potion-cabinet-opaque-1.mesh.json",
+        "packs/sanctuary-emporium/models/potion-cabinet-opaque-2.mesh.json",
+        "packs/sanctuary-emporium/models/potion-cabinet-opaque-3.mesh.json"
+      ]
+    },
+    {
+      "id": "scroll-cabinet",
+      "parts": [
+        "packs/sanctuary-emporium/models/scroll-cabinet-opaque-0.mesh.json",
+        "packs/sanctuary-emporium/models/scroll-cabinet-opaque-1.mesh.json"
+      ]
+    },
+    {
+      "id": "rear-shelves",
+      "parts": [
+        "packs/sanctuary-emporium/models/rear-shelves-opaque-0.mesh.json",
+        "packs/sanctuary-emporium/models/rear-shelves-opaque-1.mesh.json",
+        "packs/sanctuary-emporium/models/rear-shelves-opaque-2.mesh.json"
+      ]
+    },
+    {
+      "id": "alchemy-bench",
+      "parts": [
+        "packs/sanctuary-emporium/models/alchemy-bench-opaque-0.mesh.json"
+      ]
+    }
+  ],
+  "daylightFog": [
+    12,
+    4,
+    0
+  ],
+  "viewDistance": 16
+}

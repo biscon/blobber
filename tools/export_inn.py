@@ -172,10 +172,11 @@ for i in range(4):
 # Source meshes above share the original layout; convert furnishings to adult
 # proportions BEFORE UV packing so density stays 256 texels per runtime cell.
 # Centers keep assemblies in their existing map/collision reservations.
+bar_shelf_scale=.85 # 2026-11-06 review: only counter/rear shelving shrink; keep the resident and seating scale.
 furniture_scales={
     'table-group':((.65,.55,.65),(.5,0,.5)),
-    'bar':((1,.55,.65),(0,0,0)),
-    'shelves':((1,.55,.65),(0,0,-.35)),
+    'bar':((bar_shelf_scale,.55*bar_shelf_scale,.65*bar_shelf_scale),(0,0,0)),
+    'shelves':((bar_shelf_scale,.55*bar_shelf_scale,.65*bar_shelf_scale),(0,0,-.35)),
     'barrels':((.65,.55,.65),(0,0,0)),
     'plant':((.65,.55,.65),(0,0,0)),
 }

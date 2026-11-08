@@ -1,0 +1,32 @@
+# Duncan Ironballs: all currently shipped weapons, body armor, shield and arrows.
+version: 1
+id: sanctuary_smithy
+restock_days: 3
+buyback_hours: 24
+buyback_markup_percent: 25
+prices:
+  longsword: {buy: 30, sell: 10}
+  chain_mail: {buy: 100, sell: 30}
+  shield: {buy: 20, sell: 6}
+  mace: {buy: 12, sell: 4}
+  scale_mail: {buy: 75, sell: 22}
+  shortsword: {buy: 20, sell: 6}
+  leather: {buy: 20, sell: 8}
+  shortbow: {buy: 40, sell: 12}
+  arrow: {buy: 2, sell: 1}
+  dagger: {buy: 6, sell: 2}
+  scimitar: {buy: 40, sell: 12}
+  quarterstaff: {buy: 8, sell: 2}
+stock:
+  - {item: longsword, quantity: 2}
+  - {item: mace, quantity: 2}
+  - {item: shortsword, quantity: 2}
+  - {item: dagger, quantity: 2}
+  - {item: scimitar, quantity: 2}
+  - {item: quarterstaff, quantity: 2}
+  - {item: shortbow, quantity: 2}
+  - {item: chain_mail, quantity: 2}
+  - {item: scale_mail, quantity: 2}
+  - {item: leather, quantity: 2}
+  - {item: shield, quantity: 2}
+  - {item: arrow, quantity: 100}

@@ -1,4 +1,5 @@
 #pragma once
+#include "game/dialogue.hpp"
 #include "platform/gpu_resources.hpp"
 #include "rules/character.hpp"
 #include "rules/creation.hpp"
@@ -24,6 +25,11 @@ class UiArt {
     static unsigned itemIcon(const rules::ItemDefinition&) noexcept;
     UiArt(GpuResources& resources, const std::filesystem::path& directory);
     static unsigned spellIcon(rules::SpellKind kind, rules::Feature feature = rules::Feature::None) noexcept;
+    void prepareDialogue(const std::vector<std::string>& files);
+    void clearDialogue() noexcept;
+    void prepareMenuTitle(const std::filesystem::path& file);
+    void menuTitle(UiRect nativeDestination, double elapsedSeconds) const;
+    void dialogueOverlay(DialogueOverlayId, UiRect, Color tint = WHITE) const;
     void draw(unsigned index, UiRect destination, Color tint = WHITE) const;
     void creator(unsigned index, UiRect destination, Color tint = WHITE) const;
     void portraitEffect(unsigned row, unsigned frame, UiRect destination, Color tint) const;
@@ -37,5 +43,9 @@ class UiArt {
     TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_, portraitEffects_,
         feedback_, supportEffects_;
     std::array<Rectangle, 64> regions_{};
+    GpuLease<TextureHandle> menuTitle_;
+    GpuLease<ShaderHandle> menuTitleShader_;
+    int menuTitlePhaseLocation_ = -1;
+    std::array<GpuLease<TextureHandle>, dialogueOverlayCapacity> dialogue_;
 };
 } // namespace blobber

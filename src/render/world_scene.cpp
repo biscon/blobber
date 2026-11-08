@@ -49,11 +49,11 @@ ScreenPoint project(const Camera& c, Vec p) noexcept {
     const float dx = p.x - c.position.x, dz = p.z - c.position.z;
     const float d = dx * c.forward.x + dz * c.forward.z;
     return {viewWidth * .5f + focal() * (dx * c.right.x + dz * c.right.z) / d,
-            viewHeight * viewHorizon - focal() * (p.y - c.position.y) / d, d};
+            viewHeight * c.horizon - focal() * (p.y - c.position.y) / d, d};
 }
 bool sameCamera(const Camera& a, const Camera& b) noexcept {
     return a.position.x == b.position.x && a.position.y == b.position.y && a.position.z == b.position.z &&
-           a.yaw == b.yaw && a.farClip == b.farClip;
+           a.yaw == b.yaw && a.farClip == b.farClip && a.horizon == b.horizon;
 }
 std::size_t Scene::bytes() const noexcept {
     return sizeof(*this) + vertices.capacity() * sizeof(Vertex) + indices.capacity() * 4 +
@@ -508,8 +508,8 @@ bool visible(const Camera& c, int x, int z, int width, int height, float low, fl
                 inside[1] |= depth <= c.farClip + eps;
                 inside[2] |= side >= -half - eps;
                 inside[3] |= side <= half + eps;
-                inside[4] |= up <= depth * viewHeight * viewHorizon / focal() + eps;
-                inside[5] |= up >= -depth * viewHeight * (1 - viewHorizon) / focal() - eps;
+                inside[4] |= up <= depth * viewHeight * c.horizon / focal() + eps;
+                inside[5] |= up >= -depth * viewHeight * (1 - c.horizon) / focal() - eps;
             }
     return std::all_of(inside.begin(), inside.end(), [](bool v) { return v; });
 }

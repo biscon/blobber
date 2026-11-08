@@ -83,7 +83,8 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
 }
 inline NpcDefinitions definitions() {
     NpcDefinitions d;
-    d.types = {"goblin", "goblin.archer", "skeleton", "zombie", "giant.rat", "goblin_shaman", "bugbear"};
+    d.types = {"goblin",    "goblin.archer", "skeleton", "zombie", "giant.rat",  "goblin_shaman", "bugbear",
+               "innkeeper", "mayor",         "boric",    "balin",  "blacksmith", "shadowtart"};
     d.timings.resize(d.types.size());
     d.attachments.resize(d.types.size());
     d.timings[0][0] = {{{100, 0, 0, 0}}, 1};
@@ -92,6 +93,11 @@ inline NpcDefinitions definitions() {
         d.timings[0][std::size_t(clip)] = {{{50, 50, 0, 0}}, 2};
     for (unsigned i = 1; i < d.timings.size(); ++i)
         d.timings[i] = d.timings[0];
+    for (unsigned i = 7; i < d.timings.size(); ++i) {
+        d.timings[i] = {};
+        d.timings[i][0] = {{{100, 100, 0, 0}}, 2};
+        d.timings[i][std::size_t(NpcAnimation::Talk)] = {{{80, 80, 80, 80}}, 4};
+    }
     return d;
 }
 inline ArenaScenario scenario(const rules::Catalog& c, unsigned count = 1) {

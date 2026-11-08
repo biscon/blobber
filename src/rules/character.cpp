@@ -125,7 +125,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
             return fail(CharacterError::InvalidReference);
         if (!gear.items[i].quantity)
             return fail(CharacterError::InvalidItems);
-        stats.carriedWeight += std::int64_t(item->weight) * gear.items[i].quantity;
+        if (item->kind != ItemKind::Currency)
+            stats.carriedWeight += std::int64_t(item->weight) * gear.items[i].quantity;
     }
     if (stats.carriedWeight > stats.carryingCapacity)
         return fail(CharacterError::Overweight);

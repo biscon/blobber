@@ -1,7 +1,9 @@
 #include "core/preparation.hpp"
 #include "game/campaign.hpp"
+#include "game/emporium_interior.hpp"
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
+#include "game/smithy_interior.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <random>
@@ -86,6 +88,8 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     if (const auto* error = saveSafety())
         throw std::invalid_argument(error);
     auto out = std::make_unique<CampaignCheckpoint>();
+    out->dialogue = dialogue_;
+    out->merchants = merchants_.checkpoint();
     out->party = party_.checkpoint();
     out->pose = game().movement().player;
     out->animated = game().movement().animated;
@@ -133,8 +137,10 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
 }
 CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
                          const std::vector<NpcTimings>& timings)
-    : runId_(s.runId), party_(catalog, s.party), timings_(timings), location_(s.activeLocation),
-      revision_(s.revision), elapsed_(s.gameplayMs) {
+    : dialogue_(s.dialogue), runId_(s.runId), party_(catalog, s.party), timings_(timings),
+      location_(s.activeLocation), revision_(s.revision), elapsed_(s.gameplayMs) {
+    dialogue_.validate();
+    merchants_.restore(s.merchants, catalog);
     if (runId_.size() != 32 || runId_.find_first_not_of("0123456789abcdef") != std::string::npos ||
         location_ >= campaignLocationCount || elapsed_ > maxCheckpointClock || !revision_ ||
         revision_ == UINT64_MAX || !s.locations[0].visited || !s.locations[location_].visited ||
@@ -182,11 +188,15 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
         } else {
             if (i == unsigned(CampaignLocationId::City))
                 validateSanctuaryHub(map, from);
-            else {
+            else if (i == unsigned(CampaignLocationId::Inn)) {
                 validateInnInterior(map, from);
                 // Reconstruct accepted authored content (ceiling and seating
                 // reservations) without discarding any saved session state.
                 map = innInterior().map;
+            } else if (i == unsigned(CampaignLocationId::Smithy)) {
+                validateSmithyInterior(map, from);
+            } else {
+                validateEmporiumInterior(map, from);
             }
             to.authored.emplace(std::move(map));
         }

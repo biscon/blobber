@@ -1,0 +1,47 @@
+version: 2
+primary: shadowtart
+shop: sanctuary_emporium
+participants:
+  shadowtart:
+    resident: sanctuary.shadowtart
+    name: Shadowtart
+greeting:
+  beats:
+    - speaker: shadowtart
+      text: |
+        Back already? Good. I prefer my customers breathing. What will it be?
+introduction:
+  beats:
+    - speaker: shadowtart
+      text: |
+        Welcome to the Arcane Emporium. You may call me Shadowtart. An unfortunate name? Perhaps. A memorable one? You haven't forgotten it yet.
+
+        I deal in remedies for wounds and exhausted magic. The red bottles mend flesh; the blue ones replenish mana. Everything else on these shelves is a story for another day.
+topics:
+  - id: trade
+    label: Trade
+    kind: trade
+  - id: about
+    label: About yourself
+    kind: introduction
+  - id: potions
+    label: Your potions
+    responses:
+      - beats:
+          - speaker: shadowtart
+            text: |
+              Health potions for the blood you've lost. Mana potions for the magic you've spent. Neither is improved by leaving it in your bag until everyone is on the floor.
+
+              Choose who needs a dose before you drink. A healing potion won't replenish a wizard's mana, and a mana potion won't close a sword wound. Do try to keep the colors straight.
+  - id: advice
+    label: Advice for the depths
+    responses:
+      - beats:
+          - speaker: shadowtart
+            text: |
+              Magic is a resource, darling, not a personality. Watch what you have left, watch your companions, and know the way back to the stairs.
+
+              Carry a little insurance, but don't mistake a full bag of potions for immortality. If the next door feels like a terrible idea, it may be the first sensible thought you've had all day.
+  - id: farewell
+    label: Farewell
+    kind: farewell

@@ -20,6 +20,8 @@ NpcAiController::NpcAiController(GeometryView map, ActorWorld& actors, std::uint
         a.homeFacing = npc.facing;
         a.config = npc.ai;
         a.moveDueMs = 1200;
+        if (!actors.snapshot().actors[i].hostile())
+            continue;
         const auto& monster = *actors.catalog().monster(actors.snapshot().actors[i].monster);
         bool melee = false, ranged = false;
         for (std::size_t j = 0; j < monster.attackCount; ++j) {
@@ -47,7 +49,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
     const auto& actor = actors_.snapshot().actors[slot];
     const auto here = actor.npc.cell;
     const auto now = state_.timeMs;
-    if (actor.life != ActorLife::Alive)
+    if (!actor.hostile() || actor.life != ActorLife::Alive)
         return {};
     if ((!effects_ || effects_->sees(actors_.id(slot))) &&
         npcSees(map_, here, actor.npc.facing, party.cell)) {
@@ -132,7 +134,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
 bool NpcAiController::step(std::size_t slot, Cell destination, Player party, std::uint64_t now,
                            bool approaching) noexcept {
     const auto& actor = actors_.snapshot().actors[slot];
-    if (actor.life != ActorLife::Alive || (!approaching && destination == actor.npc.cell))
+    if (!actor.hostile() || actor.life != ActorLife::Alive || (!approaching && destination == actor.npc.cell))
         return false;
     const auto occupied = actors_.occupiedSlots(destination);
     auto subcell = actor.npc.subcell;
@@ -213,7 +215,8 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
         auto& a = state_.actors[i];
         const auto& actor = actors_.snapshot().actors[i];
         if ((incapacitated && (*incapacitated)[i]) || (frozen && (*frozen)[i]) ||
-            actorWalking(actor, sessionTime) || actor.life != ActorLife::Alive || state_.timeMs < a.moveDueMs)
+            actorWalking(actor, sessionTime) || !actor.hostile() || actor.life != ActorLife::Alive ||
+            state_.timeMs < a.moveDueMs)
             continue;
         if (goals[i].active) {
             const auto result = navigation_.take(i);
@@ -256,7 +259,7 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
 }
 void NpcAiController::alert(ActorId id, Cell party) noexcept {
     const auto* actor = actors_.actor(id);
-    if (!actor || actor->life != ActorLife::Alive)
+    if (!actor || !actor->hostile() || actor->life != ActorLife::Alive)
         return;
     auto& a = state_.actors[id.slot];
     a.awareness = Awareness::Pursuing;
@@ -266,7 +269,7 @@ void NpcAiController::alert(ActorId id, Cell party) noexcept {
 }
 bool NpcAiController::aware(ActorId id) const noexcept {
     const auto* actor = actors_.actor(id);
-    if (!actor || actor->life != ActorLife::Alive)
+    if (!actor || !actor->hostile() || actor->life != ActorLife::Alive)
         return false;
     const auto a = state_.actors[id.slot].awareness;
     return a == Awareness::Pursuing || a == Awareness::Investigating || a == Awareness::Searching;
@@ -276,7 +279,7 @@ bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noex
 }
 PositioningResult NpcAiController::position(ActorId id, Player party, std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);
-    if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
+    if (!actor || !actor->hostile() || actor->life != ActorLife::Alive || actorWalking(*actor, now))
         return PositioningResult::Blocked;
     const auto goal = effects_ && !effects_->sees(id) ? state_.actors[id.slot].lastSeen : party.cell;
     const auto preferred = goal == party.cell ? preferredFront(party) : std::nullopt;
@@ -300,7 +303,7 @@ PositioningResult NpcAiController::position(ActorId id, Player party, std::uint6
 }
 bool NpcAiController::escape(ActorId id, Player party, std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);
-    if (!actor || actor->life != ActorLife::Alive || actorWalking(*actor, now))
+    if (!actor || !actor->hostile() || actor->life != ActorLife::Alive || actorWalking(*actor, now))
         return false;
     const auto away = static_cast<unsigned>(headingToward(party.cell, actor->npc.cell));
     for (const unsigned d : {away, (away + 3) % 4, (away + 1) % 4}) {

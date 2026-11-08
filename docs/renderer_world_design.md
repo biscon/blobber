@@ -135,8 +135,10 @@ this is not a measured GPU-residency figure.
 
 ## Current B02 amendment
 
-B02 raises shared mip payload to 512 MiB and tracked world GPU ceiling to 608 MiB;
-CPU remains 352 MiB and alpha remains 64 MiB. Full-resolution NPC crop rectangles
+B02 raised shared mip payload to 512 MiB and tracked world GPU ceiling to 608 MiB;
+the [campaign travel correction](sc011_design.md#campaign-travel-residency-correction--2026-11-07)
+now raises these to 928/1024 MiB and alpha to 96 MiB for current city/dungeon overlap.
+CPU remains 352 MiB. Full-resolution NPC crop rectangles
 are publication format 3. The original R02 figures below record its historical
 contract; [B02](b02_bugbear_design.md) documents the current storage and geometry.
 

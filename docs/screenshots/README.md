@@ -20,6 +20,13 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 
 | Feature | Images |
 | --- | ---: |
+| [Merchant trade and equipment comparisons](merchants/README.md) | 6 |
+| [Game time and outdoor day/night](game-time/README.md) | 6 |
+| [Action dock cleanup](action-dock/README.md) | 2 |
+| [Dialogue panel cleanup](dialogue-panel/README.md) | 3 |
+| [Multi-NPC dialogue](multi-npc-dialogue/README.md) | 6 |
+| [Friendly NPC dialogue](dialogue/README.md) | 6 |
+| [Innkeeper](innkeeper/README.md) | 6 |
 | [Prop placement and rack size](prop-placement/README.md) | 2 |
 | [spell-effects](spell-effects/README.md) | 12 |
 | [SE02 spell effects](spell-effects/se02/README.md) | 6 |
@@ -95,10 +102,12 @@ and limitations; a retained capture does not imply current coverage or acceptanc
 | [slice81](slice81/README.md) | 5 |
 | [slice82](slice82/README.md) | 6 |
 | [slice83](slice83/README.md) | 6 |
-| [targeting](targeting/README.md) | 4 |
+| [targeting](targeting/README.md) | 6 |
 | [travel-icon](travel-icon/README.md) | 2 |
 | [ui-compatibility](ui-compatibility/README.md) | 2 |
 | [underkeep](underkeep/README.md) | 6 |
 | [underkeep-corrections](underkeep-corrections/README.md) | 6 |
 | [underkeep-props](underkeep-props/README.md) | 6 |
 | [variable-layouts](variable-layouts/README.md) | 6 |
+
+- [OnlyScrolls portrait briefing](onlyscrolls/README.md): six hidden production captures; new artwork and timing await user review.

@@ -22,7 +22,7 @@ void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
 uniform int depthOnly;uniform int aoEnabled;uniform sampler2D environmentAo;uniform vec2 viewportSize;
-uniform vec2 dungeonLighting;uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
+uniform vec3 outdoorAmbient;uniform vec2 dungeonLighting;uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
 void main(){vec2 mapped=uv;
 if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
 if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
@@ -39,12 +39,12 @@ float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forwa
 if(uvMode==4) face=1.0;
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(face/(1.0+0.115*litDepth+0.015*litDepth*litDepth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 float ao=aoEnabled!=0?texture(environmentAo,gl_FragCoord.xy/viewportSize).r:1.0;
-if(spellLightCount==0){finalColor=vec4((c.rgb*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);return;}
+if(spellLightCount==0){finalColor=vec4((c.rgb*mix(vec3(1),outdoorAmbient,daylight)*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon*outdoorAmbient,daylight)*fog)*shade,1);return;}
 vec3 illumination=spellIllumination(worldPosition,normal,false);
-finalColor=vec4((c.rgb*(vec3(light)+illumination)*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog)*shade,1);})";
+finalColor=vec4((c.rgb*(mix(vec3(1),outdoorAmbient,daylight)*light+illumination)*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon*outdoorAmbient,daylight)*fog)*shade,1);})";
 constexpr const char* billboardFragment = R"(#version 330
 in vec2 uv;in float depth;in vec3 worldPosition;out vec4 finalColor;
-uniform vec2 dungeonLighting;uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
+uniform vec3 outdoorAmbient;uniform vec2 dungeonLighting;uniform float daylight;uniform vec3 horizon;uniform vec3 daylightFog;uniform sampler2D texture0;uniform int kind;uniform int threshold;uniform int flash;uniform vec4 idColor;
 uniform int clipCount;uniform vec4 clipRects[136];
 uniform vec4 effectUv;uniform int effectFootprint;uniform vec2 effectCells[9];uniform vec2 effectOrigin;
 uniform sampler2D guidingAtlas;uniform float guidingStrength;uniform vec4 guidingUv;
@@ -69,7 +69,7 @@ if(!inside)discard;}
 vec4 c=texture(texture0,effectUv.xy+uv*effectUv.zw)*idColor;
 if(kind==6){finalColor=vec4(c.rgb*idColor.a*(1.0-fog),0);return;}
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(1.0/(1.0+0.115*litDepth+0.015*litDepth*litDepth),1.0/(1.0+0.018*depth+0.0015*depth*depth),daylight);
-finalColor=vec4(c.rgb*idColor.a*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
+finalColor=vec4(c.rgb*idColor.a*mix(vec3(1),outdoorAmbient,daylight)*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon*outdoorAmbient,daylight)*fog*c.a,c.a);return;}
 
 if(leafHidden())discard;
 for(int i=0;i<clipCount;++i){vec4 r=clipRects[i];if(uv.x>=r.x&&uv.y>=r.y&&uv.x<=r.z&&uv.y<=r.w)discard;}
@@ -87,15 +87,15 @@ if(frostStrength>0.0){vec2 registered=frostRegistration.xy+uv*frostRegistration.
 vec4 ice=texture(frostAtlas,frostUv.xy+clamp(registered,vec2(0),vec2(1))*frostUv.zw);
 c.rgb=c.rgb*(1.0-ice.a*frostStrength)+ice.rgb*c.a*frostStrength;}
 if(spellLightCount>0){vec3 lit=spellIllumination(worldPosition,normalize(eye-worldPosition),true);
-finalColor=vec4(flash!=0?vec3(c.a):c.rgb*(vec3(light)+lit)*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);return;}
-finalColor=vec4(flash!=0?vec3(c.a):c.rgb*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon,daylight)*fog*c.a,c.a);
+finalColor=vec4(flash!=0?vec3(c.a):c.rgb*(mix(vec3(1),outdoorAmbient,daylight)*light+lit)*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon*outdoorAmbient,daylight)*fog*c.a,c.a);return;}
+finalColor=vec4(flash!=0?vec3(c.a):c.rgb*mix(vec3(1),outdoorAmbient,daylight)*light*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon*outdoorAmbient,daylight)*fog*c.a,c.a);
 })";
 constexpr const char* skyFragment = R"(#version 330
-out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;uniform sampler2D panorama;uniform float viewHorizon;
+out vec4 finalColor;uniform vec2 viewport;uniform vec3 forward;uniform vec3 right;uniform sampler2D panorama;uniform float viewHorizon;uniform vec3 outdoorAmbient;
 void main(){vec2 p=gl_FragCoord.xy/viewport;float f=250.0/tan(radians(42.0));
 vec3 ray=normalize(forward+right*((p.x-0.5)*500.0/f)+vec3(0,(p.y-(1.0-viewHorizon))*282.0/f,0));
 vec2 st=vec2(fract(atan(ray.x,-ray.z)/6.28318530718+0.5),acos(clamp(ray.y,-1.0,1.0))/3.14159265359);
-finalColor=vec4(texture(panorama,st).rgb,1);})";
+finalColor=vec4(texture(panorama,st).rgb*outdoorAmbient,1);})";
 constexpr const char* resolveFragment = R"(#version 330
 in vec2 fragTexCoord;out vec4 finalColor;uniform sampler2D texture0;
 void main(){ivec2 p=clamp(ivec2(fragTexCoord*vec2(500,282)),ivec2(0),ivec2(499,281))*2;
@@ -147,13 +147,15 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     ambientOcclusion_ = ambientOcclusion;
     world_ = {r, r.createShader(vertex, withSpellLighting(fragment).c_str())};
     sky_ = {r, r.createShader(nullptr, skyFragment)};
+    skyAmbientLocation_ = GetShaderLocation(r.shader(sky_.get()), "outdoorAmbient");
     resolve_ = {r, r.createShader(nullptr, resolveFragment)};
     const auto shader = r.shader(world_.get());
     mvp_ = GetShaderLocation(shader, "mvp");
     view_ = GetShaderLocation(shader, "matView");
     forward_ = GetShaderLocation(shader, "forward");
+    outdoorAmbientLocation_ = GetShaderLocation(shader, "outdoorAmbient");
     lightingLocation_ = GetShaderLocation(shader, "dungeonLighting");
-    if (lightingLocation_ < 0)
+    if (lightingLocation_ < 0 || outdoorAmbientLocation_ < 0 || skyAmbientLocation_ < 0)
         throw std::runtime_error("World lighting shader interface unavailable");
     model_ = GetShaderLocation(shader, "matModel");
     uvMode_ = GetShaderLocation(shader, "uvMode");
@@ -242,7 +244,8 @@ void WorldRenderer::prepareBillboards() {
             throw std::runtime_error("Billboard shader interface unavailable");
     }
     billboardLightingLocation_ = GetShaderLocation(resources_.shader(shader.get()), "dungeonLighting");
-    if (billboardLightingLocation_ < 0)
+    billboardAmbientLocation_ = GetShaderLocation(resources_.shader(shader.get()), "outdoorAmbient");
+    if (billboardLightingLocation_ < 0 || billboardAmbientLocation_ < 0)
         throw std::runtime_error("Billboard lighting shader interface unavailable");
     billboardLocations_ = locations;
     billboard_ = std::move(shader);
@@ -292,7 +295,7 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
         }
         updateLights(*staged_, in);
         render(*staged_, in.movement, &staged_->visibility->frame(), {},
-               staged_->effects ? &staged_->effects->frame() : nullptr);
+               staged_->effects ? &staged_->effects->frame() : nullptr, in.outdoorLighting);
         resources_.finishPreparation();
         staged_->publishedPicking = staged_->visibility->picking();
         if (cpuBytes() > world_assets::worldCpuBudget || gpuBytes() > world_assets::worldGpuBudget)
@@ -329,7 +332,8 @@ WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& i
         v.effects->update(in, v.visibility->frame());
     updateLights(v, in);
     const auto result =
-        render(v, in.movement, &v.visibility->frame(), {}, v.effects ? &v.effects->frame() : nullptr);
+        render(v, in.movement, &v.visibility->frame(), {}, v.effects ? &v.effects->frame() : nullptr,
+               in.outdoorLighting);
     if (measure_) {
         stats.visibilityMs = std::chrono::duration<double, std::milli>(prepared - start).count();
         stats.submissionMs = std::chrono::duration<double, std::milli>(Clock::now() - prepared).count();
@@ -366,16 +370,20 @@ WorldImage WorldRenderer::render(const MovementState& state) {
     return render(*active_, state);
 }
 WorldImage WorldRenderer::render(View& v, const MovementState& state, const world_render::WorldFrame* frame,
-                                 TargetHandle ids, const world_render::EffectFrame* effects) {
-    const auto camera =
-        v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip) : world_render::camera(state);
+                                 TargetHandle ids, const world_render::EffectFrame* effects,
+                                 world_render::OutdoorLighting outdoorLighting) {
+    const auto camera = frame       ? frame->camera
+                        : v.cpu.map ? world_render::camera(state, *v.cpu.map, v.cpu.farClip)
+                                    : world_render::camera(state);
+    if (!v.cpu.outdoor)
+        outdoorLighting = {};
     stats = {};
     if (v.effects)
         stats.effectDrops = v.effects->diagnostics();
     const auto lighting = world_render::effectiveDungeonLighting(dungeonLighting_, v.pack.id);
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
-        v.ao == ambientOcclusion_ && v.lighting == lighting &&
+        v.ao == ambientOcclusion_ && v.lighting == lighting && v.outdoorLighting == outdoorLighting &&
         (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) && world_render::sameCamera(camera, v.last)) {
         stats.cached = true;
         return {v.output.get(), v.revision};
@@ -396,7 +404,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         {0, 1, 0},
         60,
         CAMERA_PERSPECTIVE};
-    const auto projection = worldProjection(camera.farClip);
+    const auto projection = worldProjection(camera.farClip, camera.horizon);
     const int depthLocation = GetShaderLocation(shader, "depthOnly");
     if (!ids && ambientOcclusion_ &&
         (aoOwner_ != &v || !world_render::sameCamera(camera, aoCamera_) ||
@@ -453,8 +461,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         SetShaderValue(sky, GetShaderLocation(sky, "viewport"), viewport, SHADER_UNIFORM_VEC2);
         SetShaderValue(sky, GetShaderLocation(sky, "forward"), &camera.forward, SHADER_UNIFORM_VEC3);
         SetShaderValue(sky, GetShaderLocation(sky, "right"), &camera.right, SHADER_UNIFORM_VEC3);
-        SetShaderValue(sky, GetShaderLocation(sky, "viewHorizon"), &world_render::viewHorizon,
-                       SHADER_UNIFORM_FLOAT);
+        SetShaderValue(sky, GetShaderLocation(sky, "viewHorizon"), &camera.horizon, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(sky, skyAmbientLocation_, outdoorLighting.ambient.data(), SHADER_UNIFORM_VEC3);
         const auto skyTexture = resources_.texture(v.textures[v.pack.sky]);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_REPEAT);
         rlTextureParameters(skyTexture.id, RL_TEXTURE_WRAP_T, RL_TEXTURE_WRAP_CLAMP);
@@ -465,6 +473,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
         EndShaderMode();
     }
     const auto lightingParameters = world_render::dungeonLightingParameters(lighting);
+    SetShaderValue(shader, outdoorAmbientLocation_, outdoorLighting.ambient.data(), SHADER_UNIFORM_VEC3);
     SetShaderValue(shader, lightingLocation_, lightingParameters.data(), SHADER_UNIFORM_VEC2);
     SetShaderValue(shader, GetShaderLocation(shader, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shader, GetShaderLocation(shader, "worldScale"), &v.pack.worldScale, SHADER_UNIFORM_FLOAT);
@@ -473,6 +482,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
                    SHADER_UNIFORM_VEC3);
     if (billboard_) {
         const auto b = resources_.shader(billboard_.get());
+        SetShaderValue(b, billboardAmbientLocation_, outdoorLighting.ambient.data(), SHADER_UNIFORM_VEC3);
         SetShaderValue(b, billboardLightingLocation_, lightingParameters.data(), SHADER_UNIFORM_VEC2);
         SetShaderValue(b, GetShaderLocation(b, "daylight"), &ambient, SHADER_UNIFORM_FLOAT);
         SetShaderValue(b, GetShaderLocation(b, "farClip"), &camera.farClip, SHADER_UNIFORM_FLOAT);
@@ -624,6 +634,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     v.quality = supersampling_;
     v.ao = ambientOcclusion_;
     v.lighting = lighting;
+    v.outdoorLighting = outdoorLighting;
     v.visibleWater = visibleWater;
     v.drawnWaterFrame = v.waterFrame;
     v.ready = true;
@@ -957,7 +968,8 @@ void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequiremen
             ++extraCount;
         }
     }
-    if (count > world_assets::textureCapacity || resources_.counts().textures + extraCount > 512 ||
+    if (count > world_assets::textureCapacity ||
+        resources_.counts().textures + extraCount > gpuTextureCapacity ||
         unionBytes > world_assets::textureBudget ||
         gpuBytes() + extra + v.cpu.meshBytes() + viewWidth * viewHeight * 8 > world_assets::worldGpuBudget)
         throw std::runtime_error("Resident world active/staged GPU capacity exceeded");

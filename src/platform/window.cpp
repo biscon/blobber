@@ -12,7 +12,7 @@ void setBorderlessFullscreen(bool enabled) noexcept {
 Window::Window(int width, int height, bool hidden, bool uncapped) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | (uncapped ? 0 : FLAG_VSYNC_HINT) | FLAG_WINDOW_HIGHDPI |
                    (hidden ? FLAG_WINDOW_HIDDEN : 0));
-    InitWindow(width, height, "Stone & Shadow | Blobber");
+    InitWindow(width, height, "Stone & Shadow");
     if (!IsWindowReady()) {
         // raylib returns before initializing rlgl on platform failure; its
         // CloseWindow path assumes initialized GL resources.

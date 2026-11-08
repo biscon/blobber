@@ -37,6 +37,10 @@ weapons, party reactions, encounter/terminal cues and restrained Underkeep ambie
 Shared spell/species families are explicit in the manifest. Burning Web and spiritual
 weapons use selected nearest persistent loops, reconciled against live effects.
 No full music, diffraction, muffling, or simulation/mechanics changes.
+The later [music integration](combat_music.md) adds prepared playlists; dungeon
+ambience now pauses during audible combat music/fades and resumes afterward.
+Town doorway loading pumps only sanctuary music on the window thread, preserving
+its level without reading the session borrowed by the loading worker.
 
 Csound supplies substantive synthesis; SoX processes/exports. Python orchestrates
 recipes, seeds and validation. Generated files and replacement files are separate;
@@ -102,6 +106,49 @@ no settings fields enter campaign files. `--no-audio` skips device initializatio
 The existing source fallback has raudio enabled; an installed 6.2 package must pass
 an audio API compile/link probe before its imported target is promoted for use.
 Neither engine raylib patch is imported.
+
+### Dialogue beat reactions
+
+Implemented and mechanically verified (2026-11-06). [Multi-NPC dialogue](dialogue_design.md#multi-npc-event-beats)
+adds preloaded reaction files under the shared audio root, one active dialogue voice, exactly-once
+beat dispatch and its own pause domain. This voice uses Effects gain and continues
+while gameplay is frozen; focus loss and other modals pause it. Beat replacement,
+exit and world replacement stop it. Up to 64 source/alias pairs share the existing
+512-source/64 MiB PCM ceilings; the one dialogue voice is separate from the 64
+ordinary slots. `prepareDialogue`/`clearDialogue` are explicit resource boundaries.
+Mock runtime tests cover synchronization/dedup, failure paths, pause, ownership and
+allocation invariants. Three original synthetic placeholders and their Csound
+source are under `assets/audio/dialogue/`; listening approval remains pending.
+
+### Dialogue ambience
+
+Implemented and mechanically verified (2026-11-06): `AudioRuntime::update` accepts an optional
+ambience-pause override, defaulting to its existing world pause. Only the two
+ambient stream slots use this override; effect voices/streams still use world
+pause, and focus loss always suspends playback. Existing gains, stream identity
+and playback position remain intact; there is no restart, fade or ducking.
+
+Gameplay supplies an override on dialogue entry, open/exit transitions and the
+closing frame. `HudSnapshot::modal(false)` excludes only dialogue when computing
+other pause causes. Camp, map view and other modals still pause ambience. All
+other callers, including Settings and travel, keep their existing default.
+The extra bool/optional state is bounded, allocation-free and not persisted.
+
+Verification uses the owned audio runtime fixture to check playback position,
+start count, volume, effects isolation, focus/menu pause and warmed allocation
+behavior, plus focused audio/dialogue tests and a game build. Listening review
+remains with the user; no desktop automation or save compatibility change.
+
+Verification: rebuilt `blobber`, `blobber_audio_runtime_tests`, `blobber_audio_tests`
+and `blobber_dialogue_tests` in Release with two workers at low CPU/I/O priority.
+`nice -n 15 ionice -c 3 ctest --preset release -R '^(audio_runtime|audio|dialogue)$'`
+passed all three suites in 0.05 seconds. The runtime regression checks continuous
+ambient decoder position, unchanged volume/start count, paused gameplay voices,
+focus-loss/resume, explicit and default menu pause, and allocation-free warmed
+dialogue updates. Dialogue integration checks the separate modal policy and
+precedence of other overlays. No physical-device listening test was run for this
+transport-only correction. Task-owned build/test logs were cleaned after recording
+these results; no additional review captures were needed.
 
 ## Delivered cue inventory
 

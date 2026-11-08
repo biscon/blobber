@@ -132,6 +132,8 @@ template <class A> void visit(A& a, NpcInstance& v) {
     a("phaseMs", v.phaseMs);
     a("ai", v.ai);
     a("monster", v.monster);
+    a("role", v.role);
+    a("residentId", v.residentId);
 }
 template <class A> void visit(A& a, ActorState& v) {
     a("npc", v.npc);
@@ -418,6 +420,7 @@ template <class A> void visit(A& a, Inventory::Saved& v) {
 template <class A> void visit(A& a, Party::Saved& v) {
     a("state", v.state);
     a("inventory", v.inventory);
+    a("gold", v.gold);
     a("questKeys", v.questKeys);
     a("preparationRevision", v.preparationRevision);
     a("progressionRevision", v.progressionRevision);
@@ -611,7 +614,35 @@ template <class A> void visit(A& a, CampaignLocationState& v) {
     a("exit", v.exit);
     a("seed", v.seed);
 }
+template <class A> void visit(A& a, DialogueHistoryRecord& v) {
+    a("id", v.id);
+    a("introduced", v.introduced);
+    a("completed", v.completed);
+    a("facts", v.facts);
+    a("completedCount", v.completedCount);
+    a("factCount", v.factCount);
+}
+template <class A> void visit(A& a, DialogueHistory& v) {
+    a("records", v.records);
+    a("count", v.count);
+}
+template <class A> void visit(A& a, BuybackStack& v) {
+    a("item", v.item);
+    a("quantity", v.quantity);
+    a("price", v.price);
+    a("expiresMs", v.expiresMs);
+}
+template <class A> void visit(A& a, MerchantState& v) {
+    a("resident", v.resident);
+    a("shop", v.shop);
+    a("revision", v.revision);
+    a("restockMs", v.restockMs);
+    a("stock", v.stock);
+    a("buyback", v.buyback);
+}
 template <class A> void visit(A& a, CampaignCheckpoint& v) {
+    a("dialogue", v.dialogue);
+    a("merchants", v.merchants);
     a("party", v.party);
     a("locations", v.locations);
     a("navigation", v.navigation);

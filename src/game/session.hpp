@@ -1,5 +1,6 @@
 #pragma once
 #include "game/combat.hpp"
+#include "game/game_time.hpp"
 #include "game/floor_objective.hpp"
 #include "game/loot.hpp"
 #include "game/npc_ai.hpp"
@@ -38,7 +39,11 @@ class GameSession {
     void validateCheckpoint(const FloorState&) const;
     void importFloor(const FloorState&); // Preparation only; rejects invalid values.
     CampaignRun* campaign() const noexcept { return campaign_; }
+    GameTime gameTime() const noexcept;
     void restorePose(Player, bool animated); // Preparation only.
+    bool beginConversation(ActorId) noexcept;
+    void endConversation() noexcept;
+    bool inConversation() const noexcept { return bool(conversation_); }
     const char* saveSafety() const noexcept;
     Navigation::Saved navigationCheckpoint() const { return ai_.navigation_.checkpoint(); }
     void restoreNavigation(const Navigation::Saved& s) { ai_.navigation_.restore(s); }
@@ -155,6 +160,7 @@ class GameSession {
   private:
     void validateContainers(const FloorState&) const;
     friend class CampaignRun;
+    std::optional<ActorId> conversation_;
     CampaignRun* campaign_ = nullptr;
     std::uint64_t mutation_ = 0;
     FloorGeometry floor_;

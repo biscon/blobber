@@ -148,13 +148,13 @@ bool GameSession::atSanctuary() const noexcept {
     return false;
 }
 RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
-    if (!runActive()) {
+    if (conversation_ || !runActive()) {
         RestPreview out;
         out.error = RestError::Unsafe;
         return out;
     }
     RestPreview p;
-    p.elapsedMs = r.kind == RestKind::Short ? 3600000 : 28800000;
+    p.elapsedMs = r.kind == RestKind::Short ? gameDuration::shortRest : gameDuration::longRest;
     p.sanctuary = atSanctuary();
     const auto supplies = party_.campSupplies();
     p.kits = supplies.kits;

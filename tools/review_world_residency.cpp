@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
                         alphaBytes += assets->publication.textures[id].alphaBytes;
                     }
                 bytes += textureBytes;
-                require(textureBytes <= 512ull * 1024 * 1024 && alphaBytes <= 64ull * 1024 * 1024,
+                require(textureBytes <= world_assets::textureBudget && alphaBytes <= world_assets::alphaBudget,
                         "Legal location pair exceeds resident asset budget");
                 report << "projected_locations=" << a << ',' << b << " app_gpu=" << bytes
                        << " textures=" << ids.count() << " mip_bytes=" << textureBytes

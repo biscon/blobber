@@ -67,7 +67,7 @@ SpellArea spellArea(const ActorWorld& actors, const Party& party, const EffectCo
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto id = actors.id(i);
         const auto* a = actors.actor(id);
-        if (!a || a->life != ActorLife::Alive || !contains(a->npc.cell) || !eligible(id))
+        if (!a || !a->hostile() || a->life != ActorLife::Alive || !contains(a->npc.cell) || !eligible(id))
             continue;
         result.actors[result.count++] = id;
         result.recipients[result.recipientCount++] = id;

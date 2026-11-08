@@ -268,7 +268,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                     hudLayout::resultButton, gold);
         }
     }
-    if (h->modal() && !h->magic.open && !h->camp.open && !h->loot.open)
+    if (h->modal() && !h->dialogue.open && !h->magic.open && !h->camp.open && !h->loot.open)
         p.fill({0, 16, 640, 344}, {0, 0, 0, 110});
     if (h->logExpanded) {
         p.overlayBox(hudLayout::expandedLog);
@@ -332,5 +332,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.buttonFeedback(h->advancement.controls.buttons.feedback);
     if (h->camp.open && h->camp.preparing)
         p.buttonFeedback(h->camp.controls.buttons.feedback);
+    if (h->trade.open)
+        p.tradeTooltip(*h);
 }
 } // namespace blobber

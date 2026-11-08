@@ -5,13 +5,11 @@ namespace blobber {
 using namespace hudInk;
 void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, const HudSnapshot* hud) const {
     const auto r = hudLayout::card(i), portrait = hudLayout::portrait(i);
-    const auto accent = c.castCaster ? bright
-                        : c.active   ? bright
-                        : aidTarget  ? blue
-                        : inspected  ? gold
-                                     : edge;
+    const bool trading = hud && hud->trade.open && hud->trade.character.index == c.id.index;
+    const bool active = hud && hud->trade.open ? trading : c.active;
+    const auto accent = c.castCaster ? bright : active ? bright : aidTarget ? blue : inspected ? gold : edge;
     box(r, c.recentlyHit ? red : accent);
-    if (c.castCaster || c.active || aidTarget)
+    if (c.castCaster || active || aidTarget)
         border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, accent);
     if (c.incomingShot)
         border({r.x + 2, r.y + 2, r.width - 4, r.height - 4}, blue);
@@ -82,7 +80,7 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, c
                 hudInk::text, UiTextStyle::Small);
     } else if (c.castHovered)
         border(portrait, {170, 208, 204, 255});
-    clipped(c.name, r.x + 56, r.y + 4, 68, c.active ? bright : gold, UiTextStyle::Display);
+    clipped(c.name, r.x + 56, r.y + 4, 68, active ? bright : gold, UiTextStyle::Display);
     clipped(c.className, r.x + 56, r.y + 16, 68, muted, UiTextStyle::Small);
     constexpr const char* slots[]{"FRONT LEFT", "FRONT RIGHT", "REAR LEFT", "REAR RIGHT"};
     clipped(slots[i], r.x + 56, r.y + 26, 68, muted, UiTextStyle::Small);
@@ -96,10 +94,14 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, c
     const char* status = c.status == DisplayStatus::Dead          ? "DEAD"
                          : c.status == DisplayStatus::Stable      ? "STABLE"
                          : c.status == DisplayStatus::Unconscious ? "DYING"
-                         : c.active                               ? (c.selecting ? "SELECTED" : "YOUR TURN")
+                         : active                                 ? (trading       ? "TRADING"
+                                                                     : c.selecting ? "SELECTED"
+                                                                                   : "YOUR TURN")
                          : c.defending                            ? "DEFENDING"
                                                                   : "";
-    if (c.selecting && c.cooldownMs && c.status == DisplayStatus::Ready)
+    if (trading && c.status == DisplayStatus::Ready)
+        std::snprintf(line, sizeof(line), "TRADING");
+    else if (c.selecting && c.cooldownMs && c.status == DisplayStatus::Ready)
         std::snprintf(line, sizeof(line), "Ready %.1fs", c.cooldownMs / 1000.0);
     else if ((c.spent || c.cooldownMs) && !c.defending && c.status == DisplayStatus::Ready)
         std::snprintf(line, sizeof(line), "ACTION SPENT");
@@ -109,10 +111,10 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, c
         std::snprintf(line, sizeof(line), "Mana %d/%d", c.mana, c.maxMana);
     else
         std::snprintf(line, sizeof(line), "%s", status);
-    if (c.active)
+    if (active)
         fill({r.x + 54, r.y + 54, 72, 10}, {49, 39, 20, 255});
     clipped(line, r.x + 56, r.y + 54, 68,
-            c.active                           ? bright
+            active                             ? bright
             : c.status == DisplayStatus::Ready ? muted
                                                : red,
             UiTextStyle::Small);
@@ -188,7 +190,10 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     };
     headerText("STONE & SHADOW", 12, gold, UiTextStyle::Display);
     char line[96];
-    std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .", headingName(state.player.heading));
+    std::snprintf(line, sizeof(line), ".  .  .  %s  .  .  .",
+                  h && h->trade.open      ? "TRADE"
+                  : h && h->dialogue.open ? "CONVERSATION"
+                                          : headingName(state.player.heading));
     headerText(line, 245, gold, UiTextStyle::Small);
     {
         const auto depth = h && h->floor ? h->floor->definition().depth : 1;
@@ -201,7 +206,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
     }
     p.gear(hudLayout::gear);
     p.border({viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2}, edge);
-    p.box(hudLayout::actions);
+    if (!h || !h->dialogue.open)
+        p.box(hudLayout::actions);
     if (!h)
         return;
     for (int i = 0; i < 4; ++i) {
@@ -212,6 +218,14 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                (h->inventory.open && h->inventory.character.index == h->cards[i].id.index) ||
                    (h->loot.open && h->loot.recipient.index == h->cards[i].id.index),
                h);
+    }
+    if (h->trade.open) {
+        p.trade(*h);
+        return;
+    }
+    if (h->dialogue.open) {
+        p.dialogue(h->dialogue);
+        return;
     }
     if (h->campaign)
         p.picture(UiArt::travelIcon, hudLayout::travelButton,
@@ -282,7 +296,8 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
             : h->combat.awaitingAction                ? "Click a reachable enemy to attack."
             : h->combat.phase == CombatPhase::Turns   ? "Waiting for the active participant."
                                                       : "WASD move / Q E turn / M map / R camp";
-        p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
+        if (!h->targetPicker.available && !realTime(h->combat.phase))
+            p.clipped(hint, 12, 349, 284, muted, UiTextStyle::Small);
     }
     p.enemyTargets(*h, false);
     if ((h->combat.knownDirections || h->combat.pendingCount)) {

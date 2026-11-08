@@ -190,13 +190,17 @@ void lootAndPickup() {
     check(!s.loot().find({world, 8}), "Removing living actor gives no reward");
     const auto gold = s.loot().find({world, 1})->quantity;
     check(gold >= 1 && gold <= 6, "Gold roll range");
+    while (s.party().acquire({{3}, {4}, 1, s.party().inventory().revision()})) {
+    }
+    for (std::uint16_t cell = 0; cell < bagCells; ++cell)
+        check(bool(s.party().inventory().at({{3}, cell})), "Gold pickup fixture has a full bag");
     const auto revision = s.party().inventory().revision();
     check(s.pickup({{world + 1, 0}, {0}, revision}).error == InventoryError::Stale, "Foreign floor handle");
     check(bool(s.pickup({{world, 1}, {3}, revision}, true)) && s.loot().find({world, 1}),
-          "Preview does not take ownership");
+          "Preview does not take ownership, even with a full bag");
     check(bool(s.pickup({{world, 1}, {3}, revision})), "Acquire for explicit recipient");
-    check(inventoryQuantity(s.party(), 3, 12) == gold && !s.loot().find({world, 1}),
-          "Ownership transfers atomically");
+    check(s.party().gold() == gold && inventoryQuantity(s.party(), 3, 12) == 0 && !s.loot().find({world, 1}),
+          "Gold credits the shared purse atomically without a bag stack");
     check(s.pickup({{world, 1}, {0}, s.party().inventory().revision()}).error == InventoryError::Stale,
           "Double pickup fails");
     check(s.pickup({{world, 0}, {0}, revision}).error == InventoryError::Stale && s.loot().find({world, 0}),
@@ -281,7 +285,8 @@ void lootDialogAndRestButton() {
     ui.lootTakeAll();
     check(!ui.snapshot().loot.open && ui.snapshot().loot.count == 0,
           "Take All drains every page and closes the dialog");
-    check(inventoryQuantity(s.party(), 3, 12) == 11, "Take All uses selected recipient for every page");
+    check(s.party().gold() == 11 && inventoryQuantity(s.party(), 3, 12) == 0,
+          "Take All credits every page of currency to the shared purse");
     ui.closeOverlay();
     ui.refresh({}, false, false, true);
     check(!ui.snapshot().restAvailable, "No-benefit rest is visibly disabled");
@@ -424,9 +429,9 @@ void inventoryGroundDrop() {
     // Exhaust only player-drop capacity; failures must preserve inventory and death reservations.
     auto full = std::make_unique<GameSession>(map, cat, empty, 7, pose, false);
     for (unsigned n = 0; n < lootDropCapacity; ++n) {
-        check(bool(full->party().acquire({{0}, {12}, 1, full->party().inventory().revision()})),
-              "Capacity fixture acquires coin");
-        check(bool(full->dropItem(findInventoryItem(full->party(), 0, 12),
+        check(bool(full->party().acquire({{0}, {4}, 1, full->party().inventory().revision()})),
+              "Capacity fixture acquires a dagger");
+        check(bool(full->dropItem(findInventoryItem(full->party(), 0, 4),
                                   full->party().inventory().revision())),
               "Every dynamic floor slot usable");
     }

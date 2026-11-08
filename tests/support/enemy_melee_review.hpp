@@ -9,7 +9,8 @@
 
 namespace blobber::test {
 // Opt-in production-art review; ordinary enemy timelines, no desktop input.
-inline void enemyMeleeReview(const std::filesystem::path& assets, const std::filesystem::path& output) {
+inline void enemyMeleeReview(const std::filesystem::path& assets, const std::filesystem::path& output,
+                             std::string_view onlySpecies = {}) {
     if (std::filesystem::exists(output) && !std::filesystem::is_empty(output))
         throw std::runtime_error("Enemy melee review output must be new or empty");
     std::filesystem::create_directories(output);
@@ -22,6 +23,8 @@ inline void enemyMeleeReview(const std::filesystem::path& assets, const std::fil
     WorldRenderer renderer(resources, world_assets::load(assets / "prepared/world"));
     std::ofstream report(output / "checks.txt");
     for (const char* species : {"goblin", "giant.rat", "bugbear", "zombie"}) {
+        if (!onlySpecies.empty() && onlySpecies != species)
+            continue;
         const auto found = std::find(definitions.types.begin(), definitions.types.end(), species);
         check(found != definitions.types.end(), "Review species has production art");
         const NpcTypeId type{std::uint16_t(found - definitions.types.begin())};

@@ -1,0 +1,9 @@
+{
+  "generator": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Production animation sprite master for Stone & Shadow. Input reference is the APPROVED mayor identity, wardrobe, material rendering and proportions; preserve them exactly. This is a new animation sheet, NOT a turnaround or bust sheet.\nExactly 4 full-body figures of the SAME character all exactly front-facing, looking toward viewer. Layout an exact 2 by 2 grid, read left-to-right then top-to-bottom. Same body scale in every cell; complete head/crown/helmet and boots, generous empty gutters and padding on all edges, consistent local ground baseline and torso center. No labels or dividers. Four successive speaking mouth poses, closed/parted/open/parted, small natural head and hand gestures with feet planted. Irritable pompous complaint; a few tiny pale saliva flecks just outside mouth in frames 2 and 3, short comic spray not drool, no puddles.\nIdentity constraints: Very obese middle-aged human mayor, bald with gray side hair, tiny crown, burgundy/purple gold-embroidered robes, round naturally angry face. Preserve robe hem and boots. Retain approved restrained facial anatomy, not grotesque. Match detailed painted game illustration with warm upper-left light, crisp contours and textured materials. Do not add weapons, props or change outfit. Genuine transparent alpha background, no floor, shadows, scenery, checkerboard, text, watermark or extra figures.",
+  "referenced_image_paths": [
+    "/home/bison/Projects/blobber/docs/mockups/mayor-v1/turnaround-v2.png"
+  ],
+  "transparent_background": true,
+  "generated_source": "/home/bison/.codex/generated_images/01a1b1f2-84ff-7771-a6d8-4421900f7f2a/exec-2fd6f25c-cbd5-4c13-afbd-59a4e8299965.png"
+}

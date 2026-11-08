@@ -104,6 +104,7 @@ class WorldRenderer {
         world_render::Camera last{};
         bool ready = false, quality = false, ao = false;
         world_render::DungeonLighting lighting = world_render::DungeonLighting::Current;
+        world_render::OutdoorLighting outdoorLighting{};
         bool visibleWater = false;
         unsigned waterFrame = 0, drawnWaterFrame = 0;
         std::uint64_t revision = 0;
@@ -145,9 +146,11 @@ class WorldRenderer {
     bool supersampling_ = true, measure_ = false, ambientOcclusion_ = true;
     world_render::DungeonLighting dungeonLighting_ = world_render::DungeonLighting::Early;
     int lightingLocation_ = -1, billboardLightingLocation_ = -1;
+    int outdoorAmbientLocation_ = -1, billboardAmbientLocation_ = -1, skyAmbientLocation_ = -1;
     std::uint64_t revision_ = 0;
     WorldImage renderInput(View&, const world_render::FrameInput&);
     WorldImage render(View&, const MovementState&, const world_render::WorldFrame* = nullptr,
-                      TargetHandle ids = {}, const world_render::EffectFrame* effects = nullptr);
+                      TargetHandle ids = {}, const world_render::EffectFrame* effects = nullptr,
+                      world_render::OutdoorLighting outdoorLighting = {});
 };
 } // namespace blobber

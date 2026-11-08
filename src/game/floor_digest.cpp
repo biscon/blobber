@@ -56,6 +56,8 @@ struct Canonical {
         add(v.phaseMs);
         add(v.ai);
         add(v.monster);
+        add(v.role);
+        add(v.residentId);
     }
     void add(const ActorState& v) {
         add(v.npc);

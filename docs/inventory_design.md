@@ -7,6 +7,15 @@ planning and remains unstarted.
 
 ## Approved behavior
 
+Party purse revision (2026-11-07, implemented and mechanically verified; UI review pending): gold belongs to
+Party as a weightless uint64 balance, never a live item stack. Startup grants and
+loot collection credit the purse; all characters spend from it. The existing
+inventory transaction revision also advances on currency acquisition, preventing
+replayed requests and invalidating pending UI gestures. Currency contributes no
+weight in authored character previews. The inventory header displays the shared
+balance right-aligned to the bag grid. See [merchant design](merchant_design.md#transactions-time-and-saves)
+for atomic exchanges, schema 14 and the one-time external edit of the user's save.
+
 Four independent 8×6 bags plus body, main-hand, shield/off-hand and alternate
 ranged equipment positions. Equipment leaves the bag; all weight counts once
 against Strength × 15 lb. Preserve proficiency, Life heavy armor, Defense,

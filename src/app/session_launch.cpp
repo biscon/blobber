@@ -8,6 +8,7 @@
 #include "generation/diagnostic_view.hpp"
 #include "generation/population.hpp"
 #include "persistence/campaign_store.hpp"
+#include "platform/audio.hpp"
 #include "platform/game_view.hpp"
 #include "platform/presenter.hpp"
 #include "ui/interaction.hpp"
@@ -17,6 +18,19 @@
 #include <stdexcept>
 
 namespace blobber {
+namespace {
+struct MenuMusicSession {
+    AudioRuntime* audio;
+    explicit MenuMusicSession(Presenter& presenter) : audio(presenter.audio) {
+        if (audio)
+            audio->endMenuMusic();
+    }
+    ~MenuMusicSession() {
+        if (audio)
+            audio->beginMenuMusic();
+    }
+};
+} // namespace
 static bool launchSession(const Options& options, const rules::Catalog& rules,
                           const rules::PresetParty* starting, Presenter& presenter,
                           const ArenaScenario* arena, CampaignStore* saves = nullptr,
@@ -72,15 +86,18 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
 }
 bool launchMenuParty(const Options& o, const rules::Catalog& c, const rules::PresetParty& p,
                      Presenter& presenter, CampaignStore* saves) {
+    MenuMusicSession music(presenter);
     return launchSession(o, c, &p, presenter, nullptr, saves);
 }
 bool launchArena(const Options& o, const rules::Catalog& c, const ArenaScenario& arena,
                  Presenter& presenter) {
+    MenuMusicSession music(presenter);
     const auto party = arenaParty(c, arena);
     return launchSession(o, c, &party, presenter, &arena);
 }
 bool launchSavedCampaign(const Options& o, const rules::Catalog& c, Presenter& presenter,
                          CampaignStore& saves) {
+    MenuMusicSession music(presenter);
     std::unique_ptr<CampaignRun> run;
     {
         LoadingScreen loading(presenter.loadingWorker(), &presenter);

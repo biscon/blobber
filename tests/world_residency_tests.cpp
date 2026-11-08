@@ -86,7 +86,21 @@ int main() {
                   smallAssets.residency().meshBytes == assets.residency().meshBytes &&
                   smallAssets.residency().textures == assets.residency().textures,
               "Unused catalog growth does not grow resident payloads");
-        test::ResidencyFixture capacity(480);
+        auto smithyPublication = small.publication();
+        smithyPublication.packs[0].id = "sanctuary-smithy";
+        smithyPublication.packs[1].id = "sanctuary-inn";
+        world_assets::CpuAssets interiors(std::move(smithyPublication));
+        const auto fire = interiors.named("effect/hearth-flame");
+        check(!smallAssets.requirements("first").textures[fire],
+              "Ordinary locations do not retain unused hearth artwork");
+        for (const auto* name : {"sanctuary-smithy", "sanctuary-inn"}) {
+            const auto required = interiors.requirements(name);
+            check(required.textures[fire], "Both authored fire interiors require their shared flame");
+            auto lease = interiors.acquire(required);
+            check(!interiors.masks[fire].empty(), "Interior flame mask is resident before presentation");
+        }
+        check(!interiors.residency().textures, "Interior flame leases release with their location");
+        test::ResidencyFixture capacity(world_assets::textureCapacity);
         world_assets::CpuAssets capacityAssets(capacity.publication());
         rejects([&] { capacityAssets.acquire(world_assets::allAssets(capacityAssets.publication)); },
                 "Installed catalog can exceed resident capacity; oversized acquisition rejects");

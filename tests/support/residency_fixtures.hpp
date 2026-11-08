@@ -25,6 +25,7 @@ struct ResidencyFixture {
               "effect/arrow", "effect/tip", "effect/feathers", "effect/slash", "effect/glint",
               "effect/grease", "effect/web", "effect/weapon", "effect/preview", "effect/white"})
             w.add(name, 4, 4, true, rgba);
+        w.add("effect/hearth-flame", 4, 4, true, rgba);
         std::vector<world_assets::Pack> packs;
         std::vector<world_assets::PropMesh> meshes;
         for (unsigned i = 0; i < 2; ++i) {

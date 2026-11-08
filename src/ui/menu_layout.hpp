@@ -1,6 +1,11 @@
 #pragma once
 #include "ui/layout.hpp"
 namespace blobber::menuLayout {
+// Native pixels preserve the approved image's footprint independently of font layout.
+constexpr UiRect mainTitle(bool canContinue) {
+    return {450, canContinue ? 88 : 165, 1020, 134};
+}
+constexpr UiRect mainHint{210, 302, 220, 22};
 constexpr UiRect mainError{20, 328, 600, 25};
 constexpr UiRect search{20, 48, 250, 22};
 constexpr UiRect available(int i) {

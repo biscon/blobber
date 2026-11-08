@@ -1,11 +1,13 @@
 #pragma once
 #include "game/advancement_ui.hpp"
+#include "game/dialogue.hpp"
 #include "game/inventory_ui.hpp"
 #include "game/loot_ui.hpp"
 #include "game/npc_animation.hpp"
 #include "game/recovery_ui.hpp"
 #include "game/save_ui.hpp"
 #include "game/session.hpp"
+#include "game/trade_ui.hpp"
 #include "game/travel.hpp"
 #include "ui/screen_shake.hpp"
 #include <optional>
@@ -149,11 +151,16 @@ struct EnemyTargetRow {
 struct EnemyTargetPicker {
     bool available = false, open = false, canConfirm = false;
     unsigned count = 0;
+    std::array<ActorId, NpcWorld::maxInstances> candidates{};
+    std::size_t candidateCount = 0;
     std::array<EnemyTargetRow, 4> rows{};
-    std::array<char, 128> readout{}, feedback{};
+    std::array<char, 128> feedback{};
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
+    GameTime gameTime;
+    DialogueHud dialogue;
+    TradeHud trade;
     WorldViewTransform worldTransform;
     ButtonPress buttons;
     std::array<EnemyPortrait, NpcWorld::maxInstances> enemyPortraits{};
@@ -196,9 +203,9 @@ struct HudSnapshot {
     bool arena = false, arenaComplete = false, retryConfirmation = false, retryRequested = false;
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
-    bool modal() const noexcept {
-        return travel.open || advancement.open || loot.open || camp.open || inventory.open || logExpanded ||
-               menuOpen || magic.open;
+    bool modal(bool includeDialogue = true) const noexcept {
+        return (includeDialogue && (dialogue.open || trade.open)) || travel.open || advancement.open ||
+               loot.open || camp.open || inventory.open || logExpanded || menuOpen || magic.open;
     }
     const char* interactionPrompt() const noexcept {
         if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
@@ -215,6 +222,23 @@ inline constexpr std::array<PartyAction, 6> dockActions{{PartyAction::Melee, Par
 class CommandController {
   public:
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
+    ~CommandController();
+    void bindDialogue(const DialogueCatalog*, DialogueHistory*) noexcept;
+    void bindTrade(const ShopCatalog*, MerchantLedger*) noexcept;
+    bool openTrade() noexcept;
+    void closeTrade() noexcept;
+    void routeTrade(const UiInput&) noexcept;
+    void residentVisibility(const TargetSnapshot&) noexcept;
+    CampaignRun* sessionCampaign() const noexcept { return session_.campaign(); }
+    std::optional<ActorId> nearbyResident() const noexcept;
+    bool startDialogue(std::optional<ActorId> = {}) noexcept;
+    void tickDialogue(double, bool focused) noexcept;
+    void routeDialogue(const UiInput&) noexcept;
+    void finishDialogue() noexcept;
+    std::optional<ActorId> dialogueSpeaker() const noexcept { return speaker_; }
+    const NpcDialogueOverride& dialogueAnimation() const noexcept { return dialogueAnimation_; }
+    std::optional<ActorId> dialogueActor(unsigned participant) const noexcept;
+    const DialoguePlayer& dialoguePlayer() const noexcept { return dialogue_; }
     CommandController(GameSession&&) = delete;
     void openInventory(std::optional<rules::CharacterId> = {},
                        CharacterPage = CharacterPage::Inventory) noexcept;
@@ -352,8 +376,30 @@ class CommandController {
     const HudSnapshot& snapshot() const noexcept { return state_; }
 
   private:
+    void refreshTrade() noexcept;
+    void selectTrade(TradeSide, unsigned) noexcept;
+    void tradeCharacter(rules::CharacterId) noexcept;
+    void tradeQuantity(int) noexcept;
+    void confirmTrade() noexcept;
+    void executeTrade(const TradeRequest&) noexcept;
+    void tradeClick(TradeSide, unsigned) noexcept;
+    void clearTradeGesture() noexcept;
+    TradeRequest tradeRequest() const noexcept;
+    void clearTradeHover() noexcept;
+    const ShopCatalog* shops_ = nullptr;
+    MerchantLedger* merchants_ = nullptr;
+    void syncDialogueSpeech() noexcept;
+    bool admitDialogueResponse(const DialogueCharacter&, const DialogueResponse&) const noexcept;
+    std::array<NpcTimings, NpcWorld::maxTypes> dialogueTimings_{};
+    NpcDialogueOverride dialogueAnimation_;
+    const DialogueCatalog* dialogueCatalog_ = nullptr;
+    DialoguePlayer dialogue_;
+    std::optional<ActorId> speaker_;
+    TargetSnapshot residents_;
     bool interactionPromptsAvailable() const noexcept;
     void refreshTargetPicker() noexcept;
+    bool pickerTarget(ActorId) const noexcept;
+    bool pickerRecipients() const noexcept;
     bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;
     PartyCommand targetContext_;
     void refreshInventory() noexcept;
@@ -380,6 +426,9 @@ class CommandController {
     void updateEnemyTooltip(ActorId) noexcept;
     std::optional<ActorId> tooltipEnemy_;
     std::uint64_t tooltipSinceMs_ = 0;
+    HoverKind buttonTooltipKind_ = HoverKind::None;
+    int buttonTooltipIndex_ = 0;
+    std::uint64_t buttonTooltipSinceMs_ = 0;
     void appendLog(const char* message) noexcept;
     bool objectiveReported_ = false, objectiveFailureReported_ = false;
     bool pointerKnown_ = false;

@@ -1,5 +1,207 @@
 # System design
 
+[Stone & Shadow menu title](menu_launch_design.md#stone--shadow-title-artwork--2026-11-08):
+**artwork accepted; implemented and mechanically verified**. Generated antique-gold raster
+wordmark over the existing menu background. The approved follow-up removes the
+Continue summary and centers a brighter navigation hint below the controls.
+`UiArt` prepares and owns one cropped title texture; menu drawing borrows it.
+Window caption is `Stone & Shadow`. Debug build, focused menu test and hidden GPU
+preparation/allocation/lifetime checks pass; [production captures](screenshots/menu-title-preview/README.md).
+The [logo gleam extension](menu_launch_design.md#metallic-gleam--2026-11-08)
+is **implemented and mechanically verified; style accepted**: a two-second
+bevel-weighted light sweep and subtle warm shimmer share one prepared shader.
+Hidden phase, allocation, rollback, shader coexistence and lifecycle checks pass;
+a twelve-second animation is retained with five static captures. The gleam now
+repeats every six seconds. The [Ken Burns background trial](menu_launch_design.md#menu-background-motion--2026-11-08)
+is implemented and mechanically verified: a bounded 48-second zoom/pan leaves
+foreground UI fixed. Crop boundaries, loop agreement, foreground pixels and
+engine-owned C++ frame allocations pass; background motion awaits user review.
+
+[Compact music announcement](combat_music.md#compact-announcement--2026-11-07):
+**typography accepted; top-left integration implemented and mechanically verified**. Fixed-width
+compact panel with native 24 px bold/18 px regular atlases, integer text origins
+and measured ellipsis clipping. Retains animation, padding and modal rules while
+moving 24 pixels inside the top-left viewport. Game build, focused music check and
+[six hidden captures](screenshots/combat-music/README.md) pass. No audio transport changes.
+
+[Sanctuary and menu music](combat_music.md#sanctuary-and-menu-extension--2026-11-07):
+**implemented and mechanically verified; listening review pending**. Shared prepared
+playback provides a continuous town/interior shuffle and one-shot menu song,
+preserves town doorway playback, suppresses town ambient hiss, and shares Music
+settings. Four focused Debug suites and the game build pass; no campaign or
+simulation format changes.
+The [sanctuary balance trial](combat_music.md#sanctuary-balance-trim--2026-11-08)
+uses the existing playlist trims to lower town/interior music by 4 dB, preserving
+combat/effects levels. Debug build, focused music test and gain-only publication
+checks pass. The user liked the initial 3 dB reduction and requested one more
+decibel; final subjective balance awaits listening review.
+The [menu balance extension](combat_music.md#main-menu-balance-trim--2026-11-08)
+applies the same -4 dB trim to the main-menu song; Debug publication and gain-only
+checks pass, with listening review pending.
+The [dungeon ambience/music exclusion](combat_music.md#dungeon-ambience-and-combat-music--2026-11-08)
+pauses ambient playback while combat music is audible and resumes after its fade;
+Debug game and three focused audio suites pass. The
+[continuous doorway-music correction](combat_music.md#continuous-sanctuary-doorway-music--2026-11-08)
+keeps sanctuary music at normal level and refills its prepared stream during
+town-to-interior loading without accessing worker-owned session data. Debug build,
+focused runtime tests and a muted generated-MP3 backend loading check pass;
+listening review is pending.
+
+[Shadowtart](shadowtart_design.md): **implemented and mechanically verified;
+runtime review pending (2026-11-07)**. Approved sorceress behind the emporium
+counter with four-view idle/front talk, three conversation topics and health/mana
+potion trading. Inn retains provisions. Eight focused CPU checks, extended save
+and hidden production dialogue/trade/Continue checks pass;
+[six captures](screenshots/shadowtart/README.md). Schema/simulation stay 16/19;
+changed NPC fingerprint requires a new campaign, existing saves untouched.
+
+[Arcane Emporium](emporium_interior_design.md): **implemented and mechanically
+verified; runtime review pending (2026-11-07)**. Replaces the provisioner with a
+magic shop, leaving ordinary provisions at the inn. Uses the
+[approved mockups](mockups/magic-shop-v1/README.md), whole-cell room fixtures,
+third city doorway, reserved merchant position and regenerated exterior sign.
+Six focused CPU suites, extended persistence and hidden OpenGL travel/rollback/
+Continue checks pass; [six captures](screenshots/emporium/README.md). Shadowtart
+and potion stock are implemented in the linked slice above. Current schema/simulation are
+**16/19**, requiring a new campaign; existing saves are untouched.
+The [herb-rack clearance correction](emporium_interior_design.md#herb-rack-window-clearance-correction--2026-11-07)
+moves the hanging bundles left of the window; geometry and hidden captures are
+verified, awaiting re-review. This cosmetic adjustment preserves current saves.
+
+[Duncan Ironballs](blacksmith_design.md): **implemented and mechanically verified;
+runtime review pending (2026-11-07)**. Smithy resident with innkeeper-style
+idle/talk, three conversation topics and a weapons/armor shop. Uses the
+[approved mockup](mockups/blacksmith-v1/README.md) and existing resident/dialogue/
+merchant systems. Eight focused CPU checks and hidden production dialogue/trade/
+Continue checks pass; [six captures](screenshots/blacksmith/README.md). New NPC
+content fingerprint requires a new campaign; existing saves are untouched.
+
+[Sanctuary smithy](smithy_interior_design.md): implemented and mechanically verified;
+**interior and reduced rack equipment accepted (2026-11-07)**, following the
+[approved mockup](mockups/smithy-v1/README.md). Cell-aligned authored workshop,
+counter resident position, two bounded city doorway links and shared flame
+residency. Six distinct focused CPU suites, extended persistence and hidden OpenGL
+travel/Continue/rollback checks pass; [six captures](screenshots/smithy/README.md).
+The smithy introduced schema/simulation **15/18**; the emporium above now requires **16/19**;
+older saves reject unchanged. Duncan is now implemented above; crafting is deferred.
+
+Shared party purse: **implemented and mechanically verified; UI review pending (2026-11-07)**. Party owns
+weightless gold outside character bags; startup/loot credit it and trading uses
+the shared balance. Inventory and trade align their gold labels to the bag grid.
+Schema 14 only, with no runtime compatibility conversion; the user's current
+campaign received a one-time backed-up edit preserving all 43 gold. Seven focused
+CPU suites, extended save integration and hidden native captures pass. See [transactions and ownership](merchant_design.md#transactions-time-and-saves).
+
+[Merchants and trading](merchant_design.md): **implemented and mechanically verified;
+runtime user review pending (2026-11-07)**, based on the [accepted trade mockup](mockups/trade-v1/README.md).
+Uniform two-grid overlay, selectable party sidebar, 350 ms item tooltips with
+equipped-item comparisons, authored shops and saved finite stock/restock/buyback.
+Six focused CPU suites, extended save integration and hidden OpenGL captures pass.
+The purse revision supersedes the initial schema 13/17 delivery with strict schema
+14/17 saves; [six review captures](screenshots/merchants/README.md).
+The [merchant interaction review revision](merchant_design.md#review-revision--2026-11-07)
+is implemented and mechanically verified: double-click/drag trading, sequential
+selling, translucent labels, close X, removal of the misleading B affordance and
+red equipment restrictions. Four focused CPU suites and refreshed hidden captures
+pass. The user accepts comparison presentation; interaction review is pending.
+
+[Game time and outdoor day/night](game_time_design.md): implemented and mechanically
+verified (2026-11-07). Formal saved campaign-time API, sequential day/24-hour map
+readout and outdoor-only lighting cycle. Five focused CPU suites, pre-change save
+compatibility and hidden GPU checks pass; exploration/combat/effect rates and saves
+are preserved. [Six review captures](screenshots/game-time/README.md) await acceptance.
+
+[Encounter-scoped Targets](target_selection_design.md#encounter-scoped-picker--2026-11-07)
+is implemented and mechanically verified: combat-only picker and keyboard cycling
+share visible, enrolled encounter members; direct world targeting retains its
+existing rules. Four focused Debug suites and hidden OpenGL captures pass;
+[review evidence](screenshots/targeting/README.md) awaits user acceptance.
+
+[Action dock cleanup](native_hud_design.md#action-dock-hover-and-layout-cleanup--2026-11-07):
+350 ms button tooltip dwell, icon-width centered Targets button and no adjacent
+target status readout. Debug HUD/targeting and hidden OpenGL checks pass;
+[two captures](screenshots/action-dock/README.md) await user review.
+
+[Party portrait hover cleanup](native_hud_design.md#party-portrait-hover-cleanup--2026-11-07):
+remove party-card hover tooltips using the existing HUD visibility flag; preserve
+selection, details and targeting input.
+
+[World sprite preparation resolution](sprite_resolution_design.md): implemented and
+mechanically verified. Four standalone sprites use 512 pixels; rat uses half
+resolution and goblins, zombie and shaman use 7/8. Source artwork and world sizes
+are preserved; full publication saves 104.87 MiB of texture data. Focused CPU/GPU
+and copied-save travel checks pass; [visual review pending](screenshots/sprite-resolution/README.md).
+
+[Campaign travel residency correction](sc011_design.md#campaign-travel-residency-correction--2026-11-07):
+implemented and mechanically verified. The user-requested 1 GiB world GPU limit
+accommodates shipped city/dungeon overlap. Focused CPU/GPU residency checks and
+hidden travel with the reported save pass; Debug rebuilt, save unchanged.
+[Two review captures](screenshots/campaign-travel-budget/README.md); interactive review pending.
+
+[Automatic introduction read status](dialogue_design.md#automatic-introduction-read-status): implemented and verified; introduction topics use existing per-resident history to appear read immediately, including existing saves.
+
+[Dialogue panel cleanup](dialogue_design.md#dialogue-panel-cleanup): implemented and mechanically verified; larger speech, faster reveal and explicit Next controls. Focused tests and hidden captures pass; [visual review pending](screenshots/dialogue-panel/README.md).
+
+[OnlyScrolls overlay timing correction](dialogue_design.md#overlay-timing-correction): implemented and mechanically verified; YAML controls delayed show after the document pull and first-Next dismissal. Focused tests and refreshed hidden captures pass; interactive review pending.
+
+[OnlyScrolls portrait briefing](dialogue_design.md#onlyscrolls-portrait-briefing) **implemented and mechanically verified; artwork/timing review pending (2026-11-06)**: persistent prepared dialogue overlays, centered Gwendolyn parchment, Boric document pull and Mayor rage. Focused CPU, GPU lifecycle and hidden production checks pass; new campaign required by the changed NPC-content fingerprint. [Six review captures](screenshots/onlyscrolls/README.md).
+
+[Multi-NPC dialogue](dialogue_design.md#multi-npc-event-beats) **implemented and mechanically verified; timing/listening review pending (2026-11-06)**: per-host YAML timelines, independently authored speaker/camera/reaction/audio beats, 200 ms minimum/default pans; Talk/Laugh end with text reveal. Reaction files live under `assets/audio/dialogue`. The reveal/pan/audio-location correction passes focused CPU and hidden production checks; interactive review remains pending. Existing campaign history and resident placement remain compatible. [Six review captures](screenshots/multi-npc-dialogue/README.md).
+
+[Sanctuary mayor and guards](sanctuary_residents_design.md): implemented and
+mechanically verified; runtime appearance approved. The dialogue idle correction
+passes focused CPU and hidden render checks. Stationary residents, mayor
+dialogue, prepared Idle/Walk/Talk and guard Laugh; requires a new campaign
+(schema/simulation 12/17). [Review captures](screenshots/sanctuary-residents/README.md).
+The user approved the residents' appearance. A dialogue presentation correction
+keeps nearby residents idling while simulation is paused; see the resident design.
+Dialogue ambience correction, implemented and verified: separate the ambient-stream pause from gameplay
+audio so conversations preserve continuous background sound. Other pause causes
+retain their current behavior; details in [audio design](audio_design.md#dialogue-ambience).
+
+[Mayor](mockups/mayor-v1/README.md), [Boric](mockups/boric-v1/README.md) and
+[Balin](mockups/balin-v1/README.md) **v2 concepts approved (2026-11-06)**.
+[Gwendolyn](mockups/gwendolyn-v1/README.md) **v3 concept approved (2026-11-06)**.
+Each character folder retains only its approved sheet and generation prompt;
+superseded versions were deleted at the user's request. Use those approved sheets
+for future work. These concept folders follow the innkeeper mockup format;
+production mayor/guard assets live separately under `assets/npcs/`.
+
+[Friendly NPC dialogue](dialogue_design.md) **implemented and mechanically verified;
+awaiting runtime visual/interactive review (2026-11-06)**: the original JSON delivery is now superseded by YAML event beats above;
+per-character introduction/fact history, gradual text/Talk, fixed-viewport overlay
+and shared 700 ms conversation camera, based on the approved mockup.
+Eleven focused Release CPU suites, the extended campaign save check and hidden
+CPU/GPU parity pass; [six runtime captures](screenshots/dialogue/README.md).
+Dialogue introduced schema/simulation **12/16**; Sanctuary residents now advance
+compatibility to **12/17**, requiring a new campaign as authorized.
+Trading is now implemented in the merchant system above; quests and procedural
+rumours remain later work. The purse revision now requires schema 14/17 with no
+runtime conversion; the user campaign received a one-time external edit.
+The user accepted the interface and fluid transition; an [eye-level correction](dialogue_design.md#eye-level-review-correction--2026-11-06)
+removes the rejected counter-height framing in favor of generic NPC-height framing.
+The new framing awaits review; this correction preserves current saves.
+
+Innkeeper **implemented and mechanically verified; awaiting runtime visual review (2026-11-06)**:
+[Resident design](innkeeper_design.md) adds one stationary, peaceful innkeeper
+behind the bar with approved artwork, four-view idle and front-only talk.
+Twelve focused Release CPU suites and hidden OpenGL checks pass;
+[six review captures](screenshots/innkeeper/README.md). Campaign schema/simulation
+were 11/15 at the resident slice; dialogue advanced them to 12/16, and the mayor
+and guards now require 12/17.
+Trading is now implemented in the merchant system above.
+The user rejected the initial runtime scale impression and side orientations.
+The [review correction](innkeeper_design.md#runtime-review-correction--2026-11-06)
+reduces only the counter/rear shelves by 15%, corrects the NPC side-art assignment
+and verifies the closest counter-facing subcell. Focused inn and hidden production
+checks pass; the corrected presentation awaits re-review. That cosmetic correction
+preserved compatibility; the subsequent dialogue slice requires a new campaign.
+Character-reference approval is unchanged.
+
+[Friendly NPC dialogue mockup](mockups/dialogue-v1/README.md) **presentation direction
+approved (2026-11-06)**. The implemented UI uses the agreed fixed-viewport overlay
+and smooth camera approach; runtime acceptance is separate from mockup approval.
+
 Camera framing B **accepted and implemented (2026-11-06)**:
 [projection comparison](renderer_world_design.md#camera-framing-trial--2026-11-06)
 sets the horizon to 40% (about 5.8° down at screen centre), retaining .4-cell
@@ -157,7 +359,7 @@ Sanctuary inn **implemented and mechanically verified; awaiting user review (202
 [design](inn_interior_design.md) adds an authored fifth campaign location,
 facing-sensitive doorway travel, a furnished common room and decorative hearth,
 and moves free long rest from the city sanctuary cell to the entire inn.
-Campaign schema/simulation are 10/14; older saves reject without migration.
+Campaign schema/simulation are 15/18; older saves reject without migration.
 [Verification](inn_interior_verification.md) records focused CPU/extended-save checks,
 hidden OpenGL captures and 348.09 MiB city–inn texture overlap within existing limits.
 [Capture gallery](screenshots/inn/README.md); interactive acceptance remains user-owned.
@@ -779,7 +981,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 10/14 and generator/templates 9/7. Older saves reject
+Campaign schema/simulation are 15/18 and generator/templates 9/7. Older saves reject
 without being modified; no migration. World publication is format 13, appearance 5,
 visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

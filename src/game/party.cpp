@@ -32,6 +32,10 @@ Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingPa
             throw std::invalid_argument("Invalid spell grants");
     }
     inventory_.initialize(catalog, *preset);
+    for (const auto& build : preset->characters)
+        for (unsigned i = 0; i < build.itemCount; ++i)
+            if (catalog.item(build.items[i].item)->kind == rules::ItemKind::Currency)
+                gold_ += build.items[i].quantity; // Bounded startup loadouts cannot overflow uint64.
     state_.formation = preset->formation;
     for (std::size_t i = 0; i < rules::partySize; ++i) {
         auto& c = state_.characters[i];

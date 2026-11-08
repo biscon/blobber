@@ -27,9 +27,10 @@ int main(int argc, char** argv) {
         const Player pose{{4, 6}, Heading::North};
         NpcWorld places(
             map, pose.cell, definitions.types,
-            {{{0}, {4, 4}, {1, 1}, Heading::South},
-             {{std::uint16_t(archer - definitions.types.begin())}, {4, 4}, {1, 0}, Heading::South}});
-        GameSession game(map, catalog, places, 5, pose, false, definitions.timings);
+            {{{0}, {4, 5}, {1, 1}, Heading::South},
+             {{std::uint16_t(archer - definitions.types.begin())}, {4, 5}, {1, 0}, Heading::South},
+             {{0}, {4, 1}, {1, 1}, Heading::South}});
+        GameSession game(map, catalog, places, 5, {{4, 7}, Heading::North}, false, definitions.timings);
         Window window(1920, 1080, true);
         check(IsWindowState(FLAG_WINDOW_HIDDEN), "Capture window stays hidden");
         GpuResources resources;
@@ -41,15 +42,9 @@ int main(int argc, char** argv) {
         view.update(game, animator.snapshot(), {});
         CommandController ui(game, definitions.timings);
         ui.refresh(view.picking()->targets(), false, false, true);
-        ui.selectCharacter(2);
-        ui.selectAction(PartyAction::Ranged);
-        ui.cycleEnemyTarget(1);
-        ui.cycleEnemyTarget(1);
-        check(ui.snapshot().selection.target && ui.snapshot().selection.target->slot == 1 &&
-                  ui.snapshot().targetPicker.canConfirm,
-              "Production rear archer is an eligible bow target");
-        ui.toggleTargetPicker();
         auto capture = [&](const char* name) {
+            animator.setTime(game.timeMs(), &game.effects());
+            view.update(game, animator.snapshot(), {});
             ui.refresh(view.picking()->targets(), false, false, true);
             view.present(presenter, game, map, false, true, &ui.snapshot());
             presenter.capture(output / (std::string(name) + ".png"));
@@ -58,6 +53,27 @@ int main(int argc, char** argv) {
             check(reinterpret_cast<GlError>(rlGetProcAddress("glGetError"))() == 0,
                   "Target picker GL integration");
         };
+        ui.toggleTargetPicker();
+        check(!ui.snapshot().targetPicker.available && !ui.snapshot().targetPicker.open,
+              "Production exploration hides Targets");
+        capture("exploration");
+        game.restorePose(pose, false);
+        game.update(0, false);
+        spellReady(game, 2);
+        animator.setTime(game.timeMs(), &game.effects());
+        view.update(game, animator.snapshot(), {});
+        ui.refresh(view.picking()->targets(), false, false, true);
+        ui.selectCharacter(2);
+        ui.selectAction(PartyAction::Ranged);
+        ui.cycleEnemyTarget(1);
+        ui.cycleEnemyTarget(1);
+        check(ui.snapshot().selection.target && ui.snapshot().selection.target->slot == 1 &&
+                  ui.snapshot().targetPicker.canConfirm,
+              "Production rear archer is an eligible bow target");
+        ui.toggleTargetPicker();
+        check(ui.snapshot().targets.candidateCount == 3 && ui.snapshot().targetPicker.candidateCount == 2 &&
+                  !game.combat().member(game.actors().id(2)),
+              "Production picker excludes unrelated visible enemy");
         capture("bow");
         ui.closeTargetPicker();
         capture("bow-tab");
@@ -65,6 +81,10 @@ int main(int argc, char** argv) {
         ui.toggleTargetPicker();
         capture("blocked");
         ui.closeTargetPicker();
+        spellReady(game, 3);
+        animator.setTime(game.timeMs(), &game.effects());
+        view.update(game, animator.snapshot(), {});
+        ui.refresh(view.picking()->targets(), false, false, true);
         ui.selectCharacter(3);
         ui.openSpellbook();
         for (unsigned i = 0; i < ui.snapshot().magic.count; ++i)

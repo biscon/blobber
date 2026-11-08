@@ -30,6 +30,7 @@ class Party {
         Inventory::Saved inventory;
         std::uint8_t questKeys = 0;
         std::uint64_t preparationRevision = 0, progressionRevision = 0;
+        std::uint64_t gold = 0;
     };
     Saved checkpoint() const;
     Party(const rules::Catalog&, const Saved&); // Live restore, no starting grants.
@@ -62,10 +63,12 @@ class Party {
     int castingModifier(rules::CharacterId) const noexcept;
     rules::SpellAccess spellAccess(rules::CharacterId, rules::SpellId) const noexcept;
     void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
+    std::uint64_t gold() const noexcept { return gold_; }
     const Inventory& inventory() const noexcept { return inventory_; }
     InventoryResult previewInventoryChange(const InventoryRequest&) const noexcept;
     InventoryResult inventoryChange(const InventoryRequest&) noexcept;
     InventoryResult acquire(const AcquisitionRequest&, bool preview = false) noexcept;
+    InventoryResult exchange(const InventoryExchange&, bool preview = false) noexcept;
     PreparationRequest preparationRequest() const noexcept;
     bool alternativePreparation(RestRequest&) const noexcept;
     std::uint64_t preparationRevision() const noexcept { return preparationRevision_; }
@@ -92,6 +95,7 @@ class Party {
     const rules::Catalog* catalog_;
     PartySnapshot state_;
     Inventory inventory_;
+    std::uint64_t gold_ = 0;
     bool formationLocked_ = false;
     std::uint64_t preparationRevision_ = 0, progressionRevision_ = 0;
     bool stageCampSupply(ItemHandle, std::uint64_t, Inventory&, rules::CharacterId&,

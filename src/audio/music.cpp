@@ -36,6 +36,7 @@ void MusicTransport::stop() noexcept {
     bannerAge = 6;
     fading_ = false;
     suspended = false;
+    completed_ = false;
 }
 void MusicTransport::start() noexcept {
     track = playlist.next();
@@ -67,6 +68,11 @@ void MusicTransport::update(const MusicInput& in) noexcept {
     suspended = in.paused || !in.audible;
     if (suspended)
         return;
+    if (policy == MusicPolicy::Once && in.active && in.ended && track != musicCapacity) {
+        stop();
+        completed_ = true;
+        return;
+    }
     if (fading_) {
         fadeAge_ += dt;
         if (fadeLength_ <= 0 || fadeAge_ >= fadeLength_ || in.ended) {
@@ -74,7 +80,7 @@ void MusicTransport::update(const MusicInput& in) noexcept {
             return;
         }
         level = 1 - fadeAge_ / fadeLength_;
-    } else if (in.active && (track == musicCapacity || in.ended)) {
+    } else if (in.active && !completed_ && (track == musicCapacity || in.ended)) {
         start();
         return;
     }

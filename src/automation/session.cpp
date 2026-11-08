@@ -77,7 +77,8 @@ void Session::observe(Observation& out, bool diagnostic) {
         out.targets.revision = game().actors().snapshot().revision;
         if (!game().actionBusy())
             for (std::size_t i = 0; i < game().actors().snapshot().count; ++i)
-                if (game().actors().snapshot().actors[i].life == ActorLife::Alive)
+                if (game().actors().snapshot().actors[i].hostile() &&
+                    game().actors().snapshot().actors[i].life == ActorLife::Alive)
                     out.targets.ids[out.targets.count++] = game().actors().id(i);
     }
     if (!out.targets.candidateCount) {

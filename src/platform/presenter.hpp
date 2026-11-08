@@ -9,6 +9,7 @@
 #include "ui/fonts.hpp"
 #include <algorithm>
 #include <filesystem>
+#include <optional>
 namespace blobber {
 class AudioRuntime;
 class MapOverlayModel;
@@ -23,14 +24,19 @@ class Presenter {
     void presentCached(float fade, const char* status = nullptr);
     void presentSaving(); // Cached composite only; no live simulation/UI readers.
     void fade(float alpha) noexcept { fade_ = std::clamp(alpha, 0.f, 1.f); }
+    const UiFonts& fonts() const noexcept { return fonts_; }
     GpuResources& resources() noexcept { return resources_; }
     void presentWorld(TargetHandle logical, std::uint64_t revision, const MovementState&, const Map&,
                       const HudSnapshot* hud = nullptr, const PickingBuffer* picking = nullptr,
                       bool debug = false, const generation::DiagnosticView* diagnostic = nullptr,
                       bool reveal = false, const MapOverlayModel* mapModel = nullptr);
     const WorldViewTransform& displayedWorldTransform() const noexcept { return displayedWorld_; }
+    void prepareDialogue(const std::vector<std::string>& files) { uiArt_.prepareDialogue(files); }
+    void clearDialogue() noexcept { uiArt_.clearDialogue(); }
     void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
-    void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
+    // Optional explicit background time supports deterministic, application-owned capture.
+    void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context,
+                     std::optional<double> backgroundSeconds = std::nullopt);
     // Diagnostic operation: readback and export may allocate; never used during normal play.
     void capture(const std::filesystem::path& path, int width = gameWidth, int height = gameHeight) const;
 
@@ -49,6 +55,7 @@ class Presenter {
     GpuResources& resources_;
     TargetHandle game_, ui_;
     TextureHandle menuBackground_;
+    double menuStarted_ = 0;
     std::filesystem::path assetsMenuPath_;
     UiFonts fonts_;
     GpuExternalLease fontMemory_;
