@@ -82,6 +82,9 @@ void MusicPlayer::update(audio::MusicInput input, float volume) {
     }
     showBanner_ = input.audible && !input.paused && input.bannerVisible;
 }
+bool MusicPlayer::audible() const noexcept {
+    return playing_ < tracks_.size() && !paused_ && transport_.level > 0;
+}
 MusicBanner MusicPlayer::banner() const noexcept {
     if (playing_ >= tracks_.size())
         return {};

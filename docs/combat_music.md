@@ -56,10 +56,12 @@ travel. AudioRuntime selects sanctuary for City/Inn/Smithy/Emporium locations,
 combat for other gameplay, and menu only within explicit menu-session boundaries.
 World cleanup stops old voices, dialogue and effect/ambient streams independently
 of music. Sanctuary-to-sanctuary travel preserves its track, decoder position and
-announcement clock through existing travel fades/loading pause. Other world/context
+announcement clock through travel. The continuous doorway correction below also
+keeps audible playback and gain stable through fades/loading. Other world/context
 changes stop the old music; returning to sanctuary consumes its next song. Failed
 travel keeps the source transport. Sanctuary overrides encounter activity and
-suppresses the ambient hiss even with music disabled; dungeon ambience is unchanged.
+suppresses the ambient hiss even with music disabled. Dungeon combat/music
+exclusion is described below.
 
 Menu playback starts on initial menu presentation and restarts after returning from
 campaign/arena launch (including failure). Connected menus never restart it. Launch
@@ -108,6 +110,185 @@ Executed verification (Debug, at most two low-priority build workers, serial tes
 Status: implemented and mechanically verified, 2026-11-02. Subjective listening and
 interactive acceptance remain user review.
 
+
+## Combat/sanctuary balance investigation — 2026-11-08
+
+Both banks use Master × Music × world travel gain through the same `MusicPlayer`;
+at investigation time, source, Debug and Release manifests all had 0 dB trims.
+The sanctuary trial below supersedes those town values. No lower combat bus
+gain was found. A read-only, sequential FFmpeg `loudnorm` measurement of the two
+last persisted playlist selections found Epic Hair Metal Synth Rock at **-13.28
+LUFS / -3.38 dBTP**, versus Relaxing Piano Coffeehouse at **-15.80 LUFS / -0.33
+dBTP**. This pair's combat source is about 2.5 dB louder in integrated loudness;
+these selections do not establish levels for the whole sanctuary bank.
+
+The likely difference during play is masking by combat effects and possible
+shared-limiter gain reduction: the effects bus has a +12 dB boost, and the final
+-1.5 dBFS limiter lowers the entire mix when combined peaks exceed its ceiling.
+Music has no separate protection from that gain reduction. This mechanism is
+confirmed in code; its live contribution to the user's observation is not
+measured. No game process was running for live verification. No physical listening,
+audio/settings/playlist edits, or playback automation was performed. Temporary
+measurement output was cleaned after recording these findings.
+
+## Sanctuary balance trim — 2026-11-08
+
+Status: **implemented and mechanically verified; listening trial pending**. The user's goal
+is a smaller perceived music-volume change between town and combat while keeping
+effects prominent. Apply **-4 dB** to all ten sanctuary manifest entries using the
+existing attenuation-only `gain_db` field (linear gain about 0.631). The user liked
+the initial -3 dB trial and requested one additional decibel of reduction. This covers
+the city and its shared interior playlist. Combat retains its current trim;
+the menu balance extension below now matches sanctuary. Boosted effects and final
+peak limiting retain their current behavior.
+
+This is authored balance data, with no new mixer abstraction, resource ownership,
+frame processing or allocations. The existing prepared player loads trims before
+playback; relaunch to hear the new balance. IDs, playlist order/state, original
+MP3 bytes, Music/Master settings and saves are preserved. The level is a modest
+adjustment based on the user's listening feedback, not a claim of measured
+perceptual equality between all tracks or encounters.
+
+Validation selection: inspect the manifest diff for gain-only edits, confirm all
+ten safe paths and current trim values, build the Debug game to publish the updated
+manifest, verify the copied asset matches, and run the existing focused `music`
+test for loading/manual-gain semantics. No device playback or broad test matrix.
+
+Initial -3 dB verification passed: Debug `blobber` and `blobber_music_tests` build (two workers),
+the focused `music` CTest (0.01 seconds), and direct manifest/publication checks.
+All ten changes are exactly `gain_db: 0` to `gain_db: -3`; every other entry field
+is preserved, every source path exists, the copied Debug manifest is byte-identical,
+and combat/menu manifests match their prior bytes. No new tests, mixer changes,
+audio re-encoding or physical playback were needed. The user's listening review
+will determine whether this modest reduction is sufficient. Disposable output
+was cleaned after recording the result.
+
+The follow-up -4 dB publication also passed: Debug game build and gain-only
+checks confirm all ten -3 to -4 edits, preserved entry data/source paths, and a
+byte-identical copied manifest. The already-passing music parser/transport suite
+was not repeated for this parameter-only adjustment. Disposable output was cleaned.
+
+## Main-menu balance trim — 2026-11-08
+
+Status: **implemented and mechanically verified; listening review pending**. Match the user's improved sanctuary
+balance by changing the single menu song's existing `gain_db` from 0 to **-4 dB**.
+This reuses the prepared player and leaves its one-shot policy, Music/Master
+controls, source MP3, metadata identity and all other banks intact. No frame-path,
+resource or mixer changes are needed. Relaunch to load the authored trim.
+
+Validation selection: Debug game asset publication, gain-only manifest comparison,
+existing source path and source/build byte equality. The existing manual-trim
+tests already pass; no broad suite or device playback is needed for this data edit.
+
+Verification passed: low-priority Debug `blobber` build (two-worker cap), one
+gain-only change with all other entry fields preserved, an existing MP3 path and
+a byte-identical copied manifest. No repeat test matrix or physical playback.
+Disposable build output was cleaned after recording the result.
+
+## Dungeon ambience and combat music — 2026-11-08
+
+Status: **implemented and mechanically verified; listening review pending**. Dungeon ambience must pause
+while combat music is audible, including its ending fade, then resume from its
+held position. This uses actual prepared playback state rather than encounter
+activity or announcement visibility: muted/zero-volume/unavailable music permits
+ambience, while focus loss and ordinary pause rules still suspend it. Town's
+existing ambient exclusion and positional Web/Spiritual Weapon loops are unchanged.
+
+`MusicPlayer::audible()` exposes a bounded, allocation-free read of its selected
+track, suspension state and positive fade level. `AudioRuntime::update` advances
+the music transport before reconciling looping streams, so a start, track advance,
+mute or fade completion affects ambience in the same engine update. It passes
+an ephemeral suppression flag to `streamUpdate`; no persisted field, resource or
+per-frame container is added. Existing ambient streams use Pause/Resume without
+rewinding. A dungeon entered during existing combat defers starting its ambient
+stream until music is inaudible, avoiding a start-then-pause burst. Effects loops
+and boosted one-shots retain their independent world pause/admission rules.
+
+Validate one Debug game build and focused `audio_runtime`, `music` and `audio`
+CPU suites. Extend owned mock fixtures for entry, ongoing playback, track rollover,
+fade completion, mute/unmute, zero Music volume, restored active combat, missing
+playlist fallback, one-shot coexistence and allocation-free transitions. Preserve
+existing focus/modal/town/travel lifecycle coverage. No physical audio playback,
+desktop automation or re-encoding is needed for this coordination change.
+
+Verification passed: Debug game and the three focused suites (`audio_runtime`,
+`music`, `audio`), serially in 0.03 seconds. Owned mock coverage confirms ambient
+position preservation, same-update exclusion, mute/zero-volume fallback, rollover,
+fade completion, restored-combat deferred startup, missing-playlist fallback,
+one-shot coexistence and zero engine-owned C++ allocations during repeated
+switching. Existing focus, modal, town/travel and shutdown assertions pass.
+No device output or physical listening was performed.
+
+## Continuous sanctuary doorway music — 2026-11-08
+
+Status: **implemented and mechanically verified; listening review pending**. Preserve normal sanctuary
+music level and service its decoder during city/interior doorway fade-out,
+background loading, publication and fade-in. Previously travel both
+multiplied music by `worldGain` down to zero and suspended its transport during
+loading. Continuing an existing playlist cursor alone does not prevent silence.
+
+An application-owned `TravelMusicScope` brackets only validated doorway trips
+from sanctuary to another sanctuary location. It asks `AudioRuntime` to preserve
+sanctuary playback until scope exit, including failed-travel rollback and close/
+exception paths. Source/destination location checks happen before worker activity.
+World effects/ambience retain the travel fade and pause. Dungeon transitions keep
+their existing music fade/suspension behavior. Detach/shutdown clear the scope flag.
+
+`AudioRuntime::pumpLoadingMusic(focused)` services only the prepared sanctuary
+player while this scoped policy is active. It takes no GameSession, world, Party,
+renderer or store reference, performs no I/O for persistence, and hides/holds the
+announcement. Master/Music controls, track trims and focus suspension still apply;
+EOF advances the existing shuffle normally. Stream refilling, volume and transport
+operations stay on the window thread; raylib's audio callback remains raylib-owned.
+The worker never calls raylib. Ordinary updates use normal music gain throughout
+the scope, independently of `worldGain`, and ignore only the travel pause for this
+bank. The original explicit pause behavior resumes when the scope exits.
+
+`LoadingScreen::point` calls the pump when its presenter has audio, at the same
+throttled checkpoints used for cached presentation. It never services world audio
+or inspects the source/destination session, which may be borrowed by preparation.
+No extra decoder, thread, buffer, unbounded storage or frame allocation is added.
+Long uninterruptible work on the window thread can still exceed available stream
+buffering; the change services the existing responsive threaded/checkpoint path,
+not a guarantee against arbitrary driver/filesystem stalls.
+
+Validate the focused audio suites and Debug game build. Owned mock tests cover
+full-volume travel/black loading, thread ownership through `PreparationWorker`
+checkpoint pumping, deferred banner, EOF, focus/mute, non-town exclusion, cleanup
+and allocation-free pumping. An opt-in muted generated-MP3 test checks the real
+backend without physical speaker output or OS input automation.
+
+Verification passed: Debug `blobber` and runtime checker builds; the affected
+`audio_runtime` suite passed again in 0.01 seconds after the loading changes.
+The earlier three-suite result above remains the checkpoint for ambience/music
+coordination; unchanged core suites were not repeated. Mock assertions cover
+normal music gain even at `worldGain == 0`, all sanctuary locations/committed
+shop replacement, scope exit, non-town exclusion, deferred announcements,
+loading EOF, focus/mute/zero-volume controls and allocation-free pumping.
+`PreparationWorker` executes an owned background task while the waiting main
+thread services music through preparation checkpoints; every mock stream update
+asserts window-thread ownership.
+
+The optional `blobber_music_device_check` gained `--loading-only` to select this
+new integration without repeating its unrelated fade/limiter scenarios. The
+wrapper creates short/long MP3s and a separate sanctuary playlist from generated
+sine fixtures. Device master is set to zero before test playback. After 600 ms
+of threaded loading/checkpoint pumping, later captured application mixer samples
+remain audible at the normal song level: **0.0840149 normal peak versus 0.0839844
+loading peak**, with unchanged track revision. Ordinary pause is silent after
+the travel scope exits. These are application-owned samples before the muted
+device master, not system/desktop audio capture.
+
+```sh
+nice -n 15 ionice -c 3 cmake --build cmake-build-debug --target blobber_music_device_check --parallel 2
+TMPDIR=AGENT_RUN nice -n 15 ionice -c 3 python3 tests/music_device_check.py cmake-build-debug/blobber_music_device_check --loading-only
+```
+
+The sandbox attempt returned unavailable (77); the same muted check passed with
+audio-device access outside the sandbox. No OS input/focus control or physical
+listening was performed. Actual shop-travel listening remains user review.
+Source artwork, audio bytes, preferences and campaign data are untouched; test
+fixtures, logs and intermediate outputs were cleaned after verification.
 
 ## Music level correction (2026-11-03, implemented)
 

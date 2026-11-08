@@ -67,7 +67,7 @@ int main(int argc, char** argv) try {
         for (const bool canContinue : {false, true}) {
             menu.canContinue = canContinue;
             menu.titleSeconds = canContinue ? 2 : 0;
-            presenter.presentMenu(drawMenu, &menu);
+            presenter.presentMenu(drawMenu, &menu, 0);
             const auto name = canContinue ? "main-menu-continue" : "main-menu";
             presenter.capture(output / (std::string(name) + ".png"));
             presenter.capture(output / (std::string(name) + "-1280.png"), 1280, 720);
@@ -75,12 +75,16 @@ int main(int argc, char** argv) try {
         const auto active = pixels(output / "main-menu-continue.png");
         const auto captureAt = [&](double seconds) {
             menu.titleSeconds = seconds;
-            presenter.presentMenu(drawMenu, &menu);
+            presenter.presentMenu(drawMenu, &menu, 0);
             presenter.capture(output / "phase-check.png");
             return pixels(output / "phase-check.png");
         };
         const auto resting = captureAt(0);
         check(captureAt(14) == active, "Gleam repeats deterministically after twelve seconds");
+        const auto secondSweep = captureAt(8);
+        for (std::size_t i = 0; i < active.size(); ++i)
+            check(std::abs(int(active[i]) - int(secondSweep[i])) <= 12,
+                  "Sweep recurs after six seconds, within the independent warm-light variation");
         check(captureAt(-1) == resting && captureAt(std::numeric_limits<double>::quiet_NaN()) == resting &&
                   captureAt(std::numeric_limits<double>::infinity()) == resting,
               "Negative and nonfinite decorative times safely use phase zero");
@@ -97,6 +101,25 @@ int main(int argc, char** argv) try {
                     changed += different;
             }
         check(changed > 2000, "Active gleam visibly changes the logo");
+        const auto backgroundAt = [&](double seconds) {
+            menu.titleSeconds = 2;
+            presenter.presentMenu(drawMenu, &menu, seconds);
+            presenter.capture(output / "background-midpoint.png");
+            return pixels(output / "background-midpoint.png");
+        };
+        check(backgroundAt(48) == active, "Background loop returns to identical pixels after 48 seconds");
+        const auto moved = backgroundAt(24);
+        check(moved != active, "Ken Burns background visibly changes its framing");
+        for (int button = 0; button < menu.count; ++button) {
+            const auto r = menu.buttons[button];
+            for (int y = r.y * 3 + 6; y < (r.y + r.height) * 3 - 6; ++y)
+                for (int x = r.x * 3 + 6; x < (r.x + r.width) * 3 - 6; ++x) {
+                    const auto offset = std::size_t(y * 1920 + x) * 4;
+                    check(std::equal(active.begin() + offset, active.begin() + offset + 4,
+                                     moved.begin() + offset),
+                          "Background motion leaves opaque controls and their text pixel-identical");
+                }
+        }
         {
             test::VisibilityFixture fixture;
             const auto map = test::worldRoom(7, 7);
@@ -116,7 +139,7 @@ int main(int argc, char** argv) try {
         for (unsigned frame = 0; frame < 6; ++frame) {
             menu.canContinue = frame % 2;
             menu.titleSeconds = frame * .7;
-            presenter.presentMenu(drawMenu, &menu);
+            presenter.presentMenu(drawMenu, &menu, frame * .7);
         }
         watching = false;
         check(!allocations, "Engine-owned C++ menu frames allocate no heap storage");
@@ -126,14 +149,14 @@ int main(int argc, char** argv) try {
                   resources.transfers().uploads == frameTransfers.uploads,
               "Menu frames preserve GPU resource counts, bytes and uploads");
         menu.model.screen = MenuScreen::Library;
-        presenter.presentMenu(drawMenu, &menu);
+        presenter.presentMenu(drawMenu, &menu, 0);
         presenter.capture(output / "character-library.png");
         menu.model.screen = MenuScreen::Main;
         menu.canContinue = true;
         std::filesystem::create_directory(output / "frames");
         for (unsigned frame = 0; frame < 120; ++frame) {
             menu.titleSeconds = frame / 10.0;
-            presenter.presentMenu(drawMenu, &menu);
+            presenter.presentMenu(drawMenu, &menu, menu.titleSeconds);
             char name[32];
             std::snprintf(name, sizeof(name), "frame-%03u.png", frame);
             presenter.capture(output / "frames" / name, 768, 432);
@@ -148,8 +171,9 @@ int main(int argc, char** argv) try {
     const auto glError = reinterpret_cast<GlError>(rlGetProcAddress("glGetError"));
     check(glError && glError() == 0, "Menu preparation, drawing and release have no OpenGL errors");
     check(IsWindowState(FLAG_WINDOW_HIDDEN), "Capture window remains hidden");
-    std::cout << "Five production captures and 120 animation frames; preparation retry/reuse, phase and "
-                 "off-logo invariants, eight-shader coexistence, C++ allocations, GPU lifetime and OpenGL "
+    std::cout << "Six production captures and 120 animation frames; preparation retry/reuse, gleam and "
+                 "background cycles, fixed foreground, eight-shader coexistence, C++ allocations, GPU "
+                 "lifetime and OpenGL "
                  "checks passed. Driver/C allocations are outside this guard.\n";
     return 0;
 } catch (const std::exception& error) {

@@ -256,6 +256,7 @@ void AudioRuntime::detach() noexcept {
     endMenuMusic();
     musicContext_ = MusicContext::None;
     sanctuary_ = false;
+    preserveSanctuaryTravel_ = false;
 }
 void AudioRuntime::beginMenuMusic() noexcept {
     menuMusic_.detach();
@@ -269,6 +270,21 @@ void AudioRuntime::endMenuMusic() noexcept {
 }
 void AudioRuntime::setGameplayMusic(std::optional<CampaignLocationId> location) noexcept {
     sanctuary_ = location && (*location == CampaignLocationId::City || interiorLocation(*location));
+    if (!sanctuary_)
+        preserveSanctuaryTravel_ = false;
+}
+void AudioRuntime::beginTravelMusic(bool sanctuaryDestination) noexcept {
+    preserveSanctuaryTravel_ = sanctuaryDestination && sanctuary_ && musicContext_ == MusicContext::Sanctuary;
+}
+void AudioRuntime::pumpLoadingMusic(bool focused) {
+    if (!ready_ || !preserveSanctuaryTravel_ || musicContext_ != MusicContext::Sanctuary)
+        return;
+    audio::MusicInput input;
+    input.active = true;
+    input.audible = settings.musicEnabled;
+    input.paused = !focused;
+    input.bannerVisible = false;
+    sanctuaryMusic_.update(input, settings.values[0] * settings.musicVolume);
 }
 MusicBanner AudioRuntime::musicBanner() const noexcept {
     if (musicContext_ == MusicContext::Sanctuary)
@@ -404,15 +420,15 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
             menuMusic_.detach();
             musicContext_ = context;
         }
-        streamUpdate(dt);
         audio::MusicInput input;
         if (game) {
             input.encounter = game->audioEvents().encounter;
             input.active = game->audioEvents().encounterActive;
         }
         input.audible = settings.musicEnabled && settings.musicVolume > 0 && settings.values[0] > 0;
-        input.paused = musicPaused || !focused;
-        input.bannerVisible = bannerVisible;
+        const bool continuousSanctuary = preserveSanctuaryTravel_ && musicContext_ == MusicContext::Sanctuary;
+        input.paused = (musicPaused && !continuousSanctuary) || !focused;
+        input.bannerVisible = bannerVisible && !continuousSanctuary;
         input.dt = dt;
         const auto volume = settings.values[0] * settings.musicVolume;
         switch (musicContext_) {
@@ -422,7 +438,7 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
         case MusicContext::Sanctuary:
             input.encounter = 0;
             input.active = true;
-            sanctuaryMusic_.update(input, volume * worldGain);
+            sanctuaryMusic_.update(input, volume * (continuousSanctuary ? 1.f : worldGain));
             break;
         case MusicContext::Menu:
             input.active = true;
@@ -433,10 +449,10 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
         case MusicContext::None:
             break;
         }
+        streamUpdate(musicContext_ == MusicContext::Combat && music_.audible());
     }
 }
-void AudioRuntime::streamUpdate(float dt) {
-    (void)dt;
+void AudioRuntime::streamUpdate(bool suppressAmbience) {
     struct Target {
         std::uint64_t id = 0;
         float x = 0, z = 0, d = 1e9f;
@@ -507,11 +523,13 @@ void AudioRuntime::streamUpdate(float dt) {
             continue;
         }
         if (!s.active) {
+            if (i < 2 && suppressAmbience)
+                continue; // Restored/ongoing combat must not briefly start ambient playback.
             PlayMusicStream(s.music);
             s.active = true;
             s.paused = false;
         }
-        const bool pause = (i < 2 ? ambiencePaused_ : worldPaused_) || !focused_;
+        const bool pause = (i < 2 ? ambiencePaused_ || suppressAmbience : worldPaused_) || !focused_;
         if (pause != s.paused) {
             if (pause)
                 PauseMusicStream(s.music);

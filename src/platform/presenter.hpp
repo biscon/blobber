@@ -9,6 +9,7 @@
 #include "ui/fonts.hpp"
 #include <algorithm>
 #include <filesystem>
+#include <optional>
 namespace blobber {
 class AudioRuntime;
 class MapOverlayModel;
@@ -33,7 +34,9 @@ class Presenter {
     void prepareDialogue(const std::vector<std::string>& files) { uiArt_.prepareDialogue(files); }
     void clearDialogue() noexcept { uiArt_.clearDialogue(); }
     void prepareMenu(); // Explicit allocation-allowed UI preparation, before menu frames.
-    void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context);
+    // Optional explicit background time supports deterministic, application-owned capture.
+    void presentMenu(void (*draw)(void*, const UiFonts&, const UiArt&), void* context,
+                     std::optional<double> backgroundSeconds = std::nullopt);
     // Diagnostic operation: readback and export may allocate; never used during normal play.
     void capture(const std::filesystem::path& path, int width = gameWidth, int height = gameHeight) const;
 
@@ -52,6 +55,7 @@ class Presenter {
     GpuResources& resources_;
     TargetHandle game_, ui_;
     TextureHandle menuBackground_;
+    double menuStarted_ = 0;
     std::filesystem::path assetsMenuPath_;
     UiFonts fonts_;
     GpuExternalLease fontMemory_;

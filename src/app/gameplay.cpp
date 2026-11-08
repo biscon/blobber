@@ -307,6 +307,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (campaign && view.commands.snapshot().travelRequested) {
                 const auto request = *view.commands.snapshot().travelRequested;
                 view.commands.cancelTravel();
+                const auto* doorway =
+                    request.kind == TravelKind::Doorway ? campaign->doorway(request.doorway) : nullptr;
+                TravelMusicScope travelMusic(presenter.audio,
+                                             doorway && (doorway->destination == CampaignLocationId::City ||
+                                                         interiorLocation(doorway->destination)));
                 // No simulation or Party readers run while loading borrows their owners.
                 TravelFade fade;
                 while (fade.phase() == TravelFade::Phase::Out) {

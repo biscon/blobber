@@ -1,7 +1,25 @@
 #pragma once
 #include "core/preparation.hpp"
+#include "platform/audio.hpp"
 #include "platform/presenter.hpp"
 namespace blobber {
+// Outlives fade-out, threaded loading and fade-in; every exit restores normal policy.
+class TravelMusicScope {
+  public:
+    TravelMusicScope(AudioRuntime* audio, bool sanctuaryDestination) : audio_(audio) {
+        if (audio_)
+            audio_->beginTravelMusic(sanctuaryDestination);
+    }
+    ~TravelMusicScope() {
+        if (audio_)
+            audio_->endTravelMusic();
+    }
+    TravelMusicScope(const TravelMusicScope&) = delete;
+    TravelMusicScope& operator=(const TravelMusicScope&) = delete;
+
+  private:
+    AudioRuntime* audio_;
+};
 // A save is joined even after a native close request: publication is not cancellable.
 // Pumping borrows only the cached presenter, never the run, commands or store.
 class SavingScreen {
@@ -60,6 +78,8 @@ class LoadingScreen {
             if (worker_)
                 worker_->cancel();
         }
+        if (presenter_ && presenter_->audio)
+            presenter_->audio->pumpLoadingMusic(IsWindowFocused());
         // Preparation phases name engine resources; keep those details out of player UI.
         const char* status =
             phase && (!travel_ || now - start_ >= .25) ? (travel_ ? "Travelling..." : "Loading...") : nullptr;

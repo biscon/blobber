@@ -15,7 +15,8 @@ The approved preview used `GetImageAlphaBorder(image, .1f)` to select source rec
 region and uses the same destinations. The temporary overlay preview is superseded
 by direct production captures; its obsolete runner has been removed.
 The integrated shader now adds an occasional gleam and subtle warm shimmer while
-preserving this approved source artwork. Motion review remains pending.
+preserving this approved source artwork. The user accepts the gleam style and
+requested a six-second cycle; the Ken Burns background trial awaits review.
 
 Build the opt-in `blobber_review_menu_title` target and run it with two paths:
 `blobber_review_menu_title cmake-build-debug/assets NEW_OUTPUT`.

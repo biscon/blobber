@@ -1,3 +1,4 @@
+#include "app/loading.hpp"
 #include "audio/limiter.hpp"
 #include "platform/audio.hpp"
 #include "support/check.hpp"
@@ -21,9 +22,50 @@ void capture(void* data, unsigned frames) {
     peak.store(std::max(peak.load(), p));
     audibleFrames.fetch_add(audible);
 }
+void checkLoadingMusic(AudioRuntime& runtime, GameSession& session) {
+    runtime.setGameplayMusic(CampaignLocationId::City);
+    runtime.update(&session, false, true, 0, false);
+    peak = 0;
+    for (unsigned i = 0; i < 25; ++i) {
+        runtime.update(&session, false, true, .01f, false);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    const float normalPeak = peak.load();
+    const auto revision = runtime.musicBanner().revision;
+    {
+        TravelMusicScope music(&runtime, true);
+        runtime.worldGain = 0;
+        runtime.update(&session, true, true, 0, true, false);
+        PreparationWorker worker;
+        PreparationScope loading(
+            {[](void* owner, const char*) { static_cast<AudioRuntime*>(owner)->pumpLoadingMusic(true); },
+             &runtime, &worker});
+        prepareCpu([] { std::this_thread::sleep_for(std::chrono::milliseconds(600)); });
+        // Measure after existing queued buffers would have drained without servicing.
+        peak = 0;
+        audibleFrames = 0;
+        for (unsigned i = 0; i < 20; ++i) {
+            runtime.pumpLoadingMusic(true);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        const float loadingPeak = peak.load();
+        check(audibleFrames > 0 && normalPeak > .001f && loadingPeak > normalPeak * .95f &&
+                  loadingPeak < normalPeak * 1.05f && runtime.musicBanner().revision == revision &&
+                  !runtime.musicBanner().visible,
+              "Real MP3 stays at normal level across black threaded loading without restart");
+        std::cout << "Sanctuary normal peak=" << normalPeak << " loading peak=" << loadingPeak << '\n';
+        runtime.worldGain = 1;
+    }
+    runtime.update(&session, true, true, 0, true, false);
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
+    audibleFrames = 0;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    check(audibleFrames == 0, "Ordinary pause is silent again after the travel scope ends");
+}
 } // namespace
 int main(int argc, char** argv) {
-    if (argc != 2)
+    const bool loadingOnly = argc == 3 && std::string(argv[2]) == "--loading-only";
+    if (argc != 2 && !loadingOnly)
         return 2;
     SetTraceLogLevel(LOG_WARNING);
     const std::filesystem::path root(argv[1]);
@@ -50,6 +92,13 @@ int main(int argc, char** argv) {
     NpcWorld places(map, {5, 8}, {}, {});
     GameSession session(map, catalog, places, 5, {{5, 8}, Heading::North}, false);
     runtime.update(&session, false, true, 0, false);
+    if (loadingOnly) {
+        checkLoadingMusic(runtime, session);
+        DetachAudioMixedProcessor(capture);
+        runtime.shutdown();
+        std::cout << "Muted generated-fixture loading music integration passed\n";
+        return 0;
+    }
     auto tick = [&](unsigned ms, bool pause = false, bool focus = true, bool tactical = false) {
         for (unsigned i = 0; i < ms / 10; ++i) {
             runtime.update(&session, pause || tactical, focus, .01f, pause, !tactical);

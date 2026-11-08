@@ -37,6 +37,10 @@ weapons, party reactions, encounter/terminal cues and restrained Underkeep ambie
 Shared spell/species families are explicit in the manifest. Burning Web and spiritual
 weapons use selected nearest persistent loops, reconciled against live effects.
 No full music, diffraction, muffling, or simulation/mechanics changes.
+The later [music integration](combat_music.md) adds prepared playlists; dungeon
+ambience now pauses during audible combat music/fades and resumes afterward.
+Town doorway loading pumps only sanctuary music on the window thread, preserving
+its level without reading the session borrowed by the loading worker.
 
 Csound supplies substantive synthesis; SoX processes/exports. Python orchestrates
 recipes, seeds and validation. Generated files and replacement files are separate;

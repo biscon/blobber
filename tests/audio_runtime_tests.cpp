@@ -1,3 +1,4 @@
+#include "app/loading.hpp"
 #include "platform/audio.hpp"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
@@ -22,6 +23,7 @@ struct MusicBuffer {
 };
 std::array<MusicBuffer, 256> musicBuffers{};
 unsigned musicNext = 1, lastMusic = 0, musicPlays = 0;
+const auto audioThread = std::this_thread::get_id();
 unsigned musicId(Music m) {
     return unsigned(reinterpret_cast<std::uintptr_t>(m.ctxData));
 }
@@ -172,6 +174,7 @@ float GetMusicTimeLength(Music m) {
     return fake::musicBuffers[fake::musicId(m)].duration;
 }
 void UpdateMusicStream(Music m) {
+    check(std::this_thread::get_id() == fake::audioThread, "Music servicing stays on the window thread");
     auto& b = fake::musicBuffers[fake::musicId(m)];
     if (b.playing && !b.paused) {
         b.position += .01f;
@@ -371,6 +374,11 @@ int main() {
     }
     runtime.prepare(dir, false, dir / "settings.json");
     runtime.update(&session, false, true, 0, false);
+    const auto dungeonAmbient = fake::lastMusic;
+    const auto ambientBeforeMusic = fake::musicBuffers[dungeonAmbient].position;
+    check(fake::musicBuffers[dungeonAmbient].path == (dir / "audio/sample.wav").string() &&
+              !fake::musicBuffers[dungeonAmbient].paused,
+          "Dungeon ambience plays before combat music starts");
     CombatOutcome start;
     start.event = CombatEvent::Started;
     session.audioEvents().combat(start);
@@ -378,7 +386,20 @@ int main() {
     runtime.update(&session, false, true, .01f, false);
     check(fake::musicPlays == initialPlays + 1 && runtime.musicBanner().visible,
           "Encounter starts prepared music and banner once");
+    check(fake::musicBuffers[dungeonAmbient].paused &&
+              fake::musicBuffers[dungeonAmbient].position == ambientBeforeMusic,
+          "Combat music pauses ambience before it can advance in the same update");
+    const auto effectDuringMusic = runtime.play("test");
+    check(effectDuringMusic.slot < 64 && fake::buffers[fake::lastPlayed].playing,
+          "Combat music excludes ambience while preserving one-shot effects");
+    runtime.stop(effectDuringMusic);
     const auto song = fake::lastMusic;
+    const auto combatPosition = fake::musicBuffers[song].position;
+    runtime.beginTravelMusic(true);
+    runtime.pumpLoadingMusic(true);
+    runtime.endTravelMusic();
+    check(fake::musicBuffers[song].position == combatPosition,
+          "Loading pump does not service combat music even with a sanctuary destination");
     check(std::abs(fake::musicBuffers[song].volume * .6875f -
                    runtime.settings.values[0] * runtime.settings.musicVolume * std::pow(10.f, -6.f / 20.f)) <
               1e-6f,
@@ -391,16 +412,40 @@ int main() {
           "Repeated encounter and tactical modal preserve playback; banner defers");
     runtime.update(&session, true, true, .01f, true);
     check(fake::musicBuffers[song].paused, "Explicit menu pauses music");
+    check(fake::musicBuffers[dungeonAmbient].paused, "Menu pause keeps ambience suspended too");
     const auto position = fake::musicBuffers[song].position;
     runtime.update(&session, true, true, .01f, true);
     check(fake::musicBuffers[song].position == position, "Paused decoder is not serviced");
     runtime.settings.musicEnabled = false;
     runtime.update(&session, false, true, .01f, false);
     check(fake::musicBuffers[song].paused && !runtime.musicBanner().visible, "Toggle off freezes and hides");
+    check(!fake::musicBuffers[dungeonAmbient].paused &&
+              fake::musicBuffers[dungeonAmbient].position > ambientBeforeMusic,
+          "Muted combat music permits the same ambient stream to resume");
     runtime.settings.musicEnabled = true;
     runtime.update(&session, false, true, .01f, false);
     check(!fake::musicBuffers[song].paused && runtime.musicBanner().revision == bannerRevision,
           "Same encounter resumes without announcement restart");
+    check(fake::musicBuffers[dungeonAmbient].paused, "Unmuting combat music pauses ambience again");
+    const float musicVolume = runtime.settings.musicVolume;
+    runtime.settings.musicVolume = 0;
+    runtime.update(&session, false, true, .01f, false);
+    check(!fake::musicBuffers[dungeonAmbient].paused, "Zero Music volume restores dungeon ambience");
+    runtime.settings.musicVolume = musicVolume;
+    runtime.update(&session, false, true, .01f, false);
+    check(fake::musicBuffers[dungeonAmbient].paused && fake::musicPlays == initialPlays + 1,
+          "Restoring Music volume suppresses ambience without restarting either stream");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 4; ++i) {
+        runtime.settings.musicEnabled = false;
+        runtime.update(&session, false, true, .01f, false);
+        runtime.settings.musicEnabled = true;
+        runtime.update(&session, false, true, .01f, false);
+    }
+    watching = false;
+    check(!allocations && fake::musicBuffers[dungeonAmbient].paused && fake::musicPlays == initialPlays + 1,
+          "Warmed ambience/music switching allocates no engine C++ memory or restarts streams");
     fake::musicBuffers[song].position = 10;
     allocations = 0;
     watching = true;
@@ -408,18 +453,27 @@ int main() {
     watching = false;
     check(allocations == 0 && fake::lastMusic != song && runtime.musicBanner().revision > bannerRevision,
           "EOF advances to next prepared stream without C++ allocation");
+    check(fake::musicBuffers[dungeonAmbient].paused, "Track rollover does not leak ambience");
     const auto second = fake::lastMusic;
     fake::musicBuffers[second].position = 9.8f;
     CombatOutcome finish;
     finish.event = CombatEvent::Finished;
     session.audioEvents().combat(finish);
+    const auto ambientBeforeFade = fake::musicBuffers[dungeonAmbient].position;
     runtime.update(&session, false, true, .1f, false);
     check(fake::musicBuffers[second].volume > 0 && fake::musicBuffers[second].volume < .7f * .5f * .5012f,
           "Short remaining track starts attenuating");
+    check(fake::musicBuffers[dungeonAmbient].paused &&
+              fake::musicBuffers[dungeonAmbient].position == ambientBeforeFade,
+          "Ambience stays paused throughout audible combat-music fade");
     runtime.update(&session, false, true, .1f, false);
     runtime.update(&session, false, true, .1f, false);
     check(!fake::musicBuffers[second].playing && !runtime.musicBanner().visible,
           "Fade stops without starting another song");
+    check(!fake::musicBuffers[dungeonAmbient].paused &&
+              fake::musicBuffers[dungeonAmbient].position > ambientBeforeFade &&
+              fake::musicPlays == initialPlays + 2,
+          "Fade completion resumes the held ambient stream without rewinding or replaying it");
     // Attach after a real, owned session has already entered initiative. This is
     // the same presentation adoption path used after restoring an active save.
     NpcWorld contactPlaces(map, {5, 8}, {"goblin"}, {{{0}, {5, 7}, {0, 1}, Heading::South}});
@@ -432,8 +486,8 @@ int main() {
     const auto beforeAttach = fake::musicPlays;
     runtime.update(&active, false, true, 0, false);
     runtime.update(&active, false, true, .01f, false);
-    check(fake::musicPlays == beforeAttach + 2 && runtime.musicBanner().visible,
-          "Attach adopts active combat once (one ambience start and one song)");
+    check(fake::musicPlays == beforeAttach + 1 && runtime.musicBanner().visible,
+          "Attach adopts active combat once without briefly starting dungeon ambience");
     const auto afterAttach = fake::musicPlays;
     runtime.update(&active, false, true, .01f, false);
     check(fake::musicPlays == afterAttach, "Repeated restored session snapshot does not restart music");
@@ -508,6 +562,107 @@ int main() {
     watching = false;
     check(!allocations && fake::musicPlays == townStarts + 1 && runtime.musicBanner().age == 0,
           "Sanctuary advances at EOF without engine allocation, even in a one-song bank");
+    const auto normalTownVolume = fake::musicBuffers[townSong].volume;
+    runtime.worldGain = 0;
+    {
+        TravelMusicScope travel(&runtime, true);
+        runtime.update(&session, true, true, 0, true, false);
+        check(!fake::musicBuffers[townSong].paused && fake::musicBuffers[townSong].volume == normalTownVolume,
+              "Town doorway music keeps normal volume through a black travel frame");
+        const auto loadingPosition = fake::musicBuffers[townSong].position;
+        const auto loadingAge = runtime.musicBanner().age;
+        allocations = 0;
+        watching = true;
+        for (unsigned i = 0; i < 8; ++i)
+            runtime.pumpLoadingMusic(true);
+        watching = false;
+        check(!allocations && fake::musicBuffers[townSong].position > loadingPosition &&
+                  fake::musicBuffers[townSong].volume == normalTownVolume && !runtime.musicBanner().visible &&
+                  runtime.musicBanner().age == loadingAge,
+              "Loading pump advances existing music at normal gain without allocation or announcement");
+        {
+            PreparationWorker worker;
+            std::promise<void> gate;
+            auto ready = gate.get_future();
+            struct Pump {
+                AudioRuntime& audio;
+                std::promise<void>& gate;
+                unsigned calls = 0;
+            } pump{runtime, gate};
+            PreparationScope scope({[](void* owner, const char*) {
+                                        auto& pump = *static_cast<Pump*>(owner);
+                                        // Release before pumping so a failed assertion cannot strand the
+                                        // worker.
+                                        if (!pump.calls++)
+                                            pump.gate.set_value();
+                                        pump.audio.pumpLoadingMusic(true);
+                                    },
+                                    &pump, &worker});
+            const auto beforeWorker = fake::musicBuffers[townSong].position;
+            const auto workerThread = prepareCpu([&] {
+                ready.wait();
+                return std::this_thread::get_id();
+            });
+            check(pump.calls && workerThread != fake::audioThread &&
+                      fake::musicBuffers[townSong].position > beforeWorker,
+                  "Threaded preparation pumps sanctuary samples through main-thread checkpoints");
+        }
+        runtime.pumpLoadingMusic(false);
+        const auto unfocused = fake::musicBuffers[townSong].position;
+        runtime.pumpLoadingMusic(false);
+        check(fake::musicBuffers[townSong].paused && fake::musicBuffers[townSong].position == unfocused,
+              "Loading music respects focus loss");
+        runtime.pumpLoadingMusic(true);
+        runtime.pumpLoadingMusic(true);
+        runtime.settings.musicEnabled = false;
+        runtime.pumpLoadingMusic(true);
+        const auto muted = fake::musicBuffers[townSong].position;
+        runtime.pumpLoadingMusic(true);
+        check(fake::musicBuffers[townSong].paused && fake::musicBuffers[townSong].position == muted,
+              "Loading music respects the Music toggle");
+        runtime.settings.musicEnabled = true;
+        runtime.pumpLoadingMusic(true);
+        runtime.pumpLoadingMusic(true);
+        const auto loadingVolume = runtime.settings.musicVolume;
+        runtime.settings.musicVolume = 0;
+        runtime.pumpLoadingMusic(true);
+        check(fake::musicBuffers[townSong].paused, "Loading music respects zero Music volume");
+        runtime.settings.musicVolume = loadingVolume;
+        runtime.pumpLoadingMusic(true);
+        runtime.pumpLoadingMusic(true);
+        const auto beforeEof = fake::musicPlays;
+        fake::musicBuffers[townSong].position = 10;
+        runtime.pumpLoadingMusic(true);
+        check(fake::musicPlays == beforeEof + 1 && fake::lastMusic == townSong &&
+                  fake::musicBuffers[townSong].position < .1f && !runtime.musicBanner().visible,
+              "Playlist rollover continues during loading and defers the new announcement");
+        runtime.setGameplayMusic(CampaignLocationId::Emporium);
+        runtime.update(&active, true, true, 0, true, false);
+        runtime.worldGain = .5f;
+        runtime.update(&active, true, true, 0, true, false);
+        check(!fake::musicBuffers[townSong].paused &&
+                  fake::musicBuffers[townSong].volume == normalTownVolume &&
+                  fake::musicPlays == beforeEof + 1,
+              "Committed shop replacement and fade-in preserve the same song and music gain");
+        runtime.worldGain = 1;
+    }
+    runtime.update(&active, true, true, 0, true, false);
+    const auto outsideTravel = fake::musicBuffers[townSong].position;
+    runtime.pumpLoadingMusic(true);
+    check(fake::musicBuffers[townSong].paused && fake::musicBuffers[townSong].position == outsideTravel,
+          "Travel scope exit restores explicit pause and disables loading pumping");
+    runtime.update(&active, false, true, .01f, false);
+    runtime.update(&active, false, true, .01f, false);
+    {
+        TravelMusicScope travel(&runtime, false);
+        runtime.worldGain = 0;
+        runtime.update(&active, true, true, 0, true, false);
+        const auto leavingTown = fake::musicBuffers[townSong].position;
+        runtime.pumpLoadingMusic(true);
+        check(fake::musicBuffers[townSong].paused && fake::musicBuffers[townSong].position == leavingTown,
+              "Non-sanctuary travel keeps its existing music fade and suspension");
+        runtime.worldGain = 1;
+    }
     runtime.setGameplayMusic(CampaignLocationId::FloorOne);
     runtime.update(&session, false, true, .01f, false);
     check(!fake::musicBuffers[townSong].playing && ambientPlaying(),
@@ -588,6 +743,14 @@ int main() {
     }
     watching = false;
     check(!allocations, "Warmed town/world/menu transitions allocate no engine C++ memory");
+    runtime.shutdown();
+    std::filesystem::remove(dir / "audio/music/playlist.json");
+    runtime.prepare(dir, false, dir / "settings.json");
+    runtime.setGameplayMusic(CampaignLocationId::FloorOne);
+    runtime.update(&active, false, true, .01f, false);
+    check(ambientPlaying() && !fake::musicBuffers[fake::lastMusic].paused && songsPlaying() == 0 &&
+              !runtime.musicBanner().visible,
+          "Missing combat playlist leaves ambience audible even during an active encounter");
     runtime.shutdown();
     std::filesystem::remove_all(dir);
     std::cout << "Audio runtime ownership, failure and allocation checks passed\n";

@@ -135,11 +135,13 @@ images, artwork and prompt are retained; disposable logs/captures were cleaned.
 
 ## Metallic gleam — 2026-11-08
 
-Status: **implemented and mechanically verified; motion review pending**. Combine a soft
+Status: **implemented and mechanically verified; gleam style accepted**. Combine a soft
 diagonal metallic sweep, emphasis on the artwork's brighter bevels and restrained
 warm torchlight shimmer between sweeps. Keep the generated texture and native
 layout. The sweep lasts two seconds, beginning after one second and repeating on
-a twelve-second cycle (ten seconds between sweeps). The slow warmth modulation
+a six-second cycle (four seconds between sweeps), following the user's timing
+revision. The original twelve-second warm-light modulation is retained separately
+from the sweep phase. The slow warmth modulation
 is continuous, deterministic and seamless at the cycle boundary.
 
 `UiArt` owns the texture and one shader through registry-backed RAII leases.
@@ -191,21 +193,81 @@ tiny generated visibility fixture. No production world assets are used for this
 coexistence check.
 
 The [gallery](screenshots/menu-title-preview/README.md) now retains five production
-PNGs plus a 768×432 animated WebP: twelve seconds at ten frames per second, with
-the complete rest/sweep cycle. Native and reduced title captures and selected
+PNGs plus a 768×432 MP4: a twelve-second excerpt at ten frames per second,
+now showing two six-second gleam cycles and the moving background. Native and reduced title captures and selected
 motion frames were inspected. The single-threaded low-priority export command is:
 
 ```sh
-nice -n 15 ionice -c 3 ffmpeg -hide_banner -loglevel error -threads 1 -filter_threads 1 -filter_complex_threads 1 -framerate 10 -i NEW_CAPTURE_DIRECTORY/frames/frame-%03d.png -c:v libwebp_anim -lossless 1 -compression_level 4 -q:v 100 -loop 0 -threads 1 menu-gleam.webp
+nice -n 15 ionice -c 3 ffmpeg -hide_banner -loglevel error -threads 1 -filter_threads 1 -filter_complex_threads 1 -framerate 10 -i NEW_CAPTURE_DIRECTORY/frames/frame-%03d.png -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart -threads 1 menu-motion.mp4
 ```
 
 Run the capture command from the preceding section with `TMPDIR` set to the
 task-owned agent run so the generated world fixture stays inside that run.
-The encoded animation was decoded to confirm dimensions, 120 frames, twelve
-seconds and infinite looping. Raw frames, phase-check files, logs and the failed
+The encoded video metadata confirms dimensions, 120 frames and twelve seconds.
+Raw frames, phase-check files, logs and the failed
 capture directory were cleaned after selecting evidence. Artwork acceptance
-remains unchanged; animated appearance/timing awaits user review. Interactive
+remains unchanged; the user accepts the gleam's appearance and requested the
+six-second cadence. The background motion trial awaits user review. Interactive
 desktop review and third-party/driver allocation measurement were not performed.
+
+## Menu background motion — 2026-11-08
+
+Status: **implemented and mechanically verified; visual trial pending**. Apply a slow Ken Burns
+zoom/pan to the existing background bitmap while keeping logo, controls, text and
+native 1920×1080 destination stationary. Use a 48-second smooth periodic path:
+2.5% initial overscan, three percentage points of additional zoom at the midpoint,
+and small horizontal/vertical movement contained inside the available crop.
+Cosine zoom and sinusoidal drift join continuously without a loop cut. Image
+source coordinates may be fractional; text drawing receives no transform.
+
+`ui/menu_background.hpp` owns a small pure function returning normalized source
+crop coordinates. It folds finite elapsed time into the bounded cycle, maps
+negative/nonfinite diagnostics to the starting pose, and guarantees a positive
+crop entirely inside the source image. This preserves framing/aspect and avoids
+revealing image edges at every phase, including very long runtimes. It allocates
+no storage. There are no extra textures, shaders, targets or render passes.
+
+`Presenter` records its menu clock origin at first menu preparation. All normal
+menu callbacks (including settings) share that clock; `presentMenu` accepts an
+optional explicit time only for deterministic captures. It applies the crop to
+the existing background draw before the normal untransformed menu callback.
+The title retains its application-owned clock and six-second gleam cadence.
+Default clock use and capture override are separate so focus/input never needs
+automation. The fixed framebuffer and prepared-image approach remain unchanged.
+
+Validation selection: focused existing CPU menu test gains crop containment,
+movement, smooth-loop and invalid-time cases. One Debug game/review build and
+hidden production runner verify six-second gleam recurrence (with the independent
+warmth phase), deterministic background motion, exact static foreground pixels,
+48-second loop agreement, stable resources and engine-owned C++ allocations.
+The logo-only oracle freezes the background time while varying title time.
+Retain at most six gallery images; replace the old animation with a bounded
+twelve-second preview of both effects at real speed, plus selected background
+poses if useful. Motion/framing acceptance remains with the user.
+
+Verification: Debug game/review/menu-test builds passed with two workers, and
+`ctest --test-dir cmake-build-debug -R '^menu$' -j 1 --output-on-failure` passed.
+The pure CPU cases cover the complete crop path, smooth repeat, nonfinite/negative
+inputs and a very long runtime. Hidden GPU checks passed for the new six-second
+sweep recurrence (allowing only the independent warmth variation), exact full
+background pixel repetition at 48 seconds, visible framing change at the midpoint,
+and pixel-identical opaque button interiors/text while the image moves. The
+logo-only pixel oracle freezes background time to avoid conflating both effects.
+Existing preparation retry/reuse, eight-shader coexistence, resource release,
+six animated frames with zero engine-owned C++ allocations, stable GPU counts/
+bytes/uploads and OpenGL error checks also pass. Background motion adds no GPU
+resource. Third-party/C/driver allocation behavior is outside the guard.
+
+Selected native initial/midpoint poses, reduced output and motion frames were
+visually inspected. The [new preview](screenshots/menu-title-preview/menu-motion.mp4)
+is a twelve-second real-speed excerpt, showing two gleams and the first quarter
+of the camera path. The game's actual background loop takes 48 seconds and
+returns smoothly. The gallery keeps five PNGs plus this video, replacing the redundant reduced no-Continue image
+and previous logo-only animation. MP4 replaces the much larger lossless WebP
+because camera motion changes nearly every background pixel each frame.
+Original artwork/gleam acceptance is preserved.
+No OS input/focus automation or interactive desktop review was performed. Task
+logs, raw frames, phase checks and generated fixtures were cleaned after selection.
 
 ## Review correction: direct formation drag and search focus
 

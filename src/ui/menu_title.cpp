@@ -22,9 +22,10 @@ void main() {
     float torch = sin(angle * 7.0) + 0.45 * sin(angle * 11.0 + fragTexCoord.x * 3.0);
     vec3 color = base.rgb * (vec3(1.0) + vec3(0.016, 0.007, -0.004) * torch * bevel);
 
-    // Two-second diagonal sweep, followed by ten seconds of rest.
-    if (phaseSeconds >= 1.0 && phaseSeconds < 3.0) {
-        float progress = (phaseSeconds - 1.0) * 0.5;
+    // Preserve the independent warmth cadence while repeating the sweep every six seconds.
+    float sweepPhase = mod(phaseSeconds, 6.0);
+    if (sweepPhase >= 1.0 && sweepPhase < 3.0) {
+        float progress = (sweepPhase - 1.0) * 0.5;
         float center = mix(-0.20, 1.20, progress);
         float distance = fragTexCoord.x + (fragTexCoord.y - 0.5) * 0.12 - center;
         float shoulder = exp(-pow(distance / 0.055, 2.0));

@@ -12,6 +12,7 @@ class MusicPlayer {
     void shutdown() noexcept;
     void persist(std::string& warning);
     MusicBanner banner() const noexcept;
+    bool audible() const noexcept;
     const audio::MusicTransport& transport() const noexcept { return transport_; }
 
   private:

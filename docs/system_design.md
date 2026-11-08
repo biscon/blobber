@@ -8,10 +8,14 @@ Continue summary and centers a brighter navigation hint below the controls.
 Window caption is `Stone & Shadow`. Debug build, focused menu test and hidden GPU
 preparation/allocation/lifetime checks pass; [production captures](screenshots/menu-title-preview/README.md).
 The [logo gleam extension](menu_launch_design.md#metallic-gleam--2026-11-08)
-is **implemented and mechanically verified; motion review pending**: a two-second
+is **implemented and mechanically verified; style accepted**: a two-second
 bevel-weighted light sweep and subtle warm shimmer share one prepared shader.
 Hidden phase, allocation, rollback, shader coexistence and lifecycle checks pass;
-a twelve-second animation is retained with five static captures.
+a twelve-second animation is retained with five static captures. The gleam now
+repeats every six seconds. The [Ken Burns background trial](menu_launch_design.md#menu-background-motion--2026-11-08)
+is implemented and mechanically verified: a bounded 48-second zoom/pan leaves
+foreground UI fixed. Crop boundaries, loop agreement, foreground pixels and
+engine-owned C++ frame allocations pass; background motion awaits user review.
 
 [Compact music announcement](combat_music.md#compact-announcement--2026-11-07):
 **typography accepted; top-left integration implemented and mechanically verified**. Fixed-width
@@ -26,6 +30,22 @@ playback provides a continuous town/interior shuffle and one-shot menu song,
 preserves town doorway playback, suppresses town ambient hiss, and shares Music
 settings. Four focused Debug suites and the game build pass; no campaign or
 simulation format changes.
+The [sanctuary balance trial](combat_music.md#sanctuary-balance-trim--2026-11-08)
+uses the existing playlist trims to lower town/interior music by 4 dB, preserving
+combat/effects levels. Debug build, focused music test and gain-only publication
+checks pass. The user liked the initial 3 dB reduction and requested one more
+decibel; final subjective balance awaits listening review.
+The [menu balance extension](combat_music.md#main-menu-balance-trim--2026-11-08)
+applies the same -4 dB trim to the main-menu song; Debug publication and gain-only
+checks pass, with listening review pending.
+The [dungeon ambience/music exclusion](combat_music.md#dungeon-ambience-and-combat-music--2026-11-08)
+pauses ambient playback while combat music is audible and resumes after its fade;
+Debug game and three focused audio suites pass. The
+[continuous doorway-music correction](combat_music.md#continuous-sanctuary-doorway-music--2026-11-08)
+keeps sanctuary music at normal level and refills its prepared stream during
+town-to-interior loading without accessing worker-owned session data. Debug build,
+focused runtime tests and a muted generated-MP3 backend loading check pass;
+listening review is pending.
 
 [Shadowtart](shadowtart_design.md): **implemented and mechanically verified;
 runtime review pending (2026-11-07)**. Approved sorceress behind the emporium

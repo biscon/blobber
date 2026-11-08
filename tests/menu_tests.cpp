@@ -2,8 +2,10 @@
 #include "game/party.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "ui/menu_background.hpp"
 #include "ui/menu_layout.hpp"
 #include <iostream>
+#include <limits>
 #include <string_view>
 using namespace blobber;
 int main() {
@@ -173,6 +175,27 @@ int main() {
         held.pointerReleased = true;
         clicking.routeDrag(clicks, library, held);
         check(clicks.choices[0].empty(), "party-row leave/reenter cancels even below the drag threshold");
+        const auto start = menuBackgroundCrop(0), midpoint = menuBackgroundCrop(24);
+        const auto sameCrop = [](MenuBackgroundCrop a, MenuBackgroundCrop b) {
+            return std::abs(a.x - b.x) < 1e-6f && std::abs(a.y - b.y) < 1e-6f &&
+                   std::abs(a.width - b.width) < 1e-6f && std::abs(a.height - b.height) < 1e-6f;
+        };
+        check(!sameCrop(start, midpoint), "Background motion changes the crop over time");
+        check(sameCrop(start, menuBackgroundCrop(48)) && sameCrop(start, menuBackgroundCrop(48 - 1e-5)),
+              "Background returns smoothly to its starting crop");
+        check(sameCrop(start, menuBackgroundCrop(-1)) &&
+                  sameCrop(start, menuBackgroundCrop(std::numeric_limits<double>::quiet_NaN())) &&
+                  sameCrop(start, menuBackgroundCrop(std::numeric_limits<double>::infinity())),
+              "Invalid background times safely use the initial crop");
+        for (unsigned sample = 0; sample <= 96; ++sample) {
+            const auto crop = menuBackgroundCrop(sample * .5);
+            check(crop.width > 0 && crop.height > 0 && crop.x >= 0 && crop.y >= 0 &&
+                      crop.x + crop.width <= 1 && crop.y + crop.height <= 1,
+                  "Background stays inside its source throughout the pan and zoom");
+        }
+        const auto late = menuBackgroundCrop(1e12);
+        check(late.x >= 0 && late.y >= 0 && late.x + late.width <= 1 && late.y + late.height <= 1,
+              "Very long decorative runtimes retain valid source bounds");
         std::cout << "Menu tests passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

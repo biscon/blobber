@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Optional bounded device integration with owned MP3 fixtures; never game content."""
 import json
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -19,9 +20,14 @@ with tempfile.TemporaryDirectory(prefix='blobber-music-device-') as directory:
     (music / 'playlist.json').write_text(json.dumps({'tracks': [
         {'id': name, 'path': f'{name}.mp3', 'title': name.title(), 'artist': 'Owned fixture', 'gain_db': 0}
         for name in ('short', 'long')]}))
+    sanctuary = music / 'sanctuary'
+    sanctuary.mkdir()
+    shutil.copyfile(music / 'long.mp3', sanctuary / 'town.mp3')
+    (sanctuary / 'playlist.json').write_text(json.dumps({'tracks': [
+        {'id': 'town', 'path': 'town.mp3', 'title': 'Town', 'artist': 'Owned fixture', 'gain_db': 0}]}))
     (root / 'music-state.json').write_text(json.dumps({'version': 1, 'order': ['short', 'long'], 'cursor': 0, 'random': 42, 'last': ''}))
     (root / 'audio/bank.json').write_text(json.dumps({'mix_gain_db': {'effects': 12}, 'cues': {'hot': {
         'gain': 1, 'cooldown': 0, 'aliases': 8, 'concurrency': 8, 'pitch_min': 1, 'pitch_max': 1, 'volume_min': 1,
         'variants': [{'id': '01', 'path': 'hot.wav'}]}}}))
-    result = subprocess.run([sys.argv[1], str(root)])
+    result = subprocess.run([sys.argv[1], str(root), *sys.argv[2:]])
     sys.exit(result.returncode)

@@ -29,6 +29,10 @@ class AudioRuntime {
     void endMenuMusic() noexcept;
     // Call at gameplay entry and after travel commits, never during preparation.
     void setGameplayMusic(std::optional<CampaignLocationId> location) noexcept;
+    // One application-owned travel scope; pumping never reads a GameSession.
+    void beginTravelMusic(bool sanctuaryDestination) noexcept;
+    void endTravelMusic() noexcept { preserveSanctuaryTravel_ = false; }
+    void pumpLoadingMusic(bool focused);
     void shutdown() noexcept;
     audio::Settings settings;
     float worldGain = 1; // Travel fade, never persisted.
@@ -43,6 +47,7 @@ class AudioRuntime {
     MusicPlayer music_, sanctuaryMusic_, menuMusic_;
     MusicContext musicContext_ = MusicContext::None;
     bool menuMusicActive_ = false, sanctuary_ = false;
+    bool preserveSanctuaryTravel_ = false;
     void detachWorld() noexcept;
     struct DialogueSound {
         Sound source{}, voice{};
@@ -87,6 +92,6 @@ class AudioRuntime {
     unsigned cue(const char*) const noexcept;
     float gain(unsigned category, bool interface) const noexcept;
     void release(unsigned) noexcept;
-    void streamUpdate(float);
+    void streamUpdate(bool suppressAmbience);
 };
 } // namespace blobber
