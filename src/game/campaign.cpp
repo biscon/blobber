@@ -31,13 +31,12 @@ bool portable(const EffectInstance& e) noexcept {
     return true;
 }
 } // namespace
-CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty& starting,
-                         const std::vector<std::string>& types, const std::vector<NpcTimings>& timings,
-                         std::uint32_t seed)
-    : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
-    auto& hub = locations_[0];
+std::array<CampaignLocation, campaignLocationCount>
+prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::string>& types,
+                         std::uint32_t seed) {
+    std::array<CampaignLocation, campaignLocationCount> locations;
+    auto& hub = locations[0];
     auto definition = sanctuaryHub();
-    const auto spawn = definition.spawn;
     hub.authored.emplace(std::move(definition.map));
     hub.entry = definition.entry;
     hub.exit = definition.exit;
@@ -51,7 +50,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
         auto result = generation::generate({seed, depth});
         if (!result)
             throw std::runtime_error("Campaign generation failed");
-        auto& floor = locations_[depth];
+        auto& floor = locations[depth];
         floor.generated = std::move(result.floor);
         auto population = generation::preparePopulation(*floor.generated, catalog, types);
         floor.placements = std::move(population.placements);
@@ -69,7 +68,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
         floor.seed = floor.generated->runtimeSeed;
     }
     auto innDefinition = innInterior();
-    auto& inn = locations_[unsigned(CampaignLocationId::Inn)];
+    auto& inn = locations[unsigned(CampaignLocationId::Inn)];
     inn.authored.emplace(std::move(innDefinition.map));
     inn.entry = innDefinition.entry;
     inn.exit = innDefinition.exit;
@@ -79,7 +78,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
                            std::vector<NpcInstance>{innkeeperPlacement(types)});
     inn.seed = seed;
     auto smithyDefinition = smithyInterior();
-    auto& smithy = locations_[unsigned(CampaignLocationId::Smithy)];
+    auto& smithy = locations[unsigned(CampaignLocationId::Smithy)];
     smithy.authored.emplace(std::move(smithyDefinition.map));
     smithy.entry = smithyDefinition.entry;
     smithy.exit = smithyDefinition.exit;
@@ -89,7 +88,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
                               std::vector<NpcInstance>{blacksmithPlacement(types)});
     smithy.seed = seed;
     auto emporiumDefinition = emporiumInterior();
-    auto& emporium = locations_[unsigned(CampaignLocationId::Emporium)];
+    auto& emporium = locations[unsigned(CampaignLocationId::Emporium)];
     emporium.authored.emplace(std::move(emporiumDefinition.map));
     emporium.entry = emporiumDefinition.entry;
     emporium.exit = emporiumDefinition.exit;
@@ -98,6 +97,20 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty
     emporium.placements.emplace(emporium.map(), emporium.entry.cell, types,
                                 std::vector<NpcInstance>{shadowtartPlacement(types)});
     emporium.seed = seed;
+    return locations;
+}
+std::shared_ptr<const CampaignDefinitions> prepareCampaignDefinitions(const rules::Catalog& catalog,
+                                                                      const std::vector<std::string>& types,
+                                                                      std::uint32_t seed) {
+    return campaignDefinitions(prepareCampaignLocations(catalog, types, seed), seed, catalog);
+}
+CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty& starting,
+                         const std::vector<std::string>& types, const std::vector<NpcTimings>& timings,
+                         std::uint32_t seed)
+    : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
+    locations_ = prepareCampaignLocations(catalog, types, seed);
+    definitions_ = baseline_ = campaignDefinitions(locations_, seed, catalog);
+    const auto spawn = sanctuaryHub().spawn;
     configureDoorways();
     active_ = prepare(0, spawn);
     active_->campaign_ = this;
@@ -142,6 +155,7 @@ TravelRequest CampaignRun::doorwayRequest() const noexcept {
     return r;
 }
 std::unique_ptr<GameSession> CampaignRun::prepare(unsigned index, Player arrival, bool validate) {
+    preparationPoint("Preparing campaign session");
     const auto& l = locations_[index];
     auto game = std::make_unique<GameSession>(l.map(), party_, *l.placements, l.seed, arrival, timings_,
                                               l.recovery, l.fixtures, l.objective);

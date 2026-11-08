@@ -60,6 +60,7 @@ class DiceRng {
     explicit DiceRng(std::uint32_t seed) : engine_(seed) {}
     void describe(std::ostream& out) const { out << engine_; }
     bool restore(std::istream&); // Bounded exact textual mt19937 state, preparation only.
+    bool operator==(const DiceRng& other) const noexcept { return engine_ == other.engine_; }
     Result<DiceRoll> roll(Dice dice) noexcept;
     Result<DiceRoll> damage(Dice dice, bool critical) noexcept;
     Result<D20Roll> d20(RollMode mode = RollMode::Normal) noexcept;

@@ -206,22 +206,20 @@ CampaignSlot CampaignStore::inspect() {
             out.error = "Saved expedition has ended";
             return out;
         }
-        auto s = decodeCampaign(catalog_, definitions_, content_, r.data);
-        out.runId = s->runId;
+        const auto summary = inspectCampaign(content_, r.data);
+        out.runId = summary.runId;
         if (deniedRun_ == out.runId) {
             out.terminal = true;
             out.error = "This expedition ended in this process";
             return out;
         }
-        auto run = std::make_unique<CampaignRun>(catalog_, std::move(*s), definitions_.timings);
         out.active = true;
-        out.depth = run->dungeonDepth();
-        out.location = run->name();
-        for (const auto& member : run->party().snapshot().characters) {
-            if (!out.partySummary.empty())
-                out.partySummary += ", ";
-            out.partySummary += member.build.name;
-        }
+        out.depth = dungeonLocation(summary.location) ? summary.location : 0;
+        constexpr const char* names[]{"Sanctuary",       "Dungeon floor 1", "Dungeon floor 2",
+                                      "Dungeon floor 3", "Sanctuary inn",   "Sanctuary smithy",
+                                      "Arcane Emporium"};
+        out.location = names[summary.location];
+        out.partySummary = summary.party;
     } catch (const std::exception& e) {
         out.error = campaignError(e.what());
     }
@@ -242,21 +240,23 @@ std::unique_ptr<CampaignRun> CampaignStore::load() {
     return std::make_unique<CampaignRun>(catalog_, std::move(*s), definitions_.timings);
 }
 CampaignWrite CampaignStore::save(CampaignRun& run, const std::string& expected, bool replaceDifferent) {
-    auto s = run.checkpoint();
+    auto s = run.captureSave();
     if (deniedRun_ == run.runId())
         throw std::invalid_argument("Campaign has ended");
     auto current = read();
     if ((current.exists ? campaignRevision(current.data) : "missing") != expected)
         throw std::invalid_argument("Campaign slot changed; review it before retrying");
     if (current.exists && !replaceDifferent) {
-        auto info = inspect();
-        if (!info.active || info.runId != run.runId())
+        bool sameRun = false;
+        try {
+            sameRun = inspectCampaign(content_, current.data).runId == run.runId();
+        } catch (const std::exception&) {
+            // Invalid or incompatible slots require explicit replacement.
+        }
+        if (!sameRun)
             throw std::invalid_argument("Confirm replacing the previous campaign save");
     }
     auto text = encodeCampaign(catalog_, definitions_, content_, *s);
-    // A save must be restorable before replacing the only good slot. This staged
-    // owner borrows no live Party, consumes no live RNG and never publishes IDs.
-    auto admission = std::make_unique<CampaignRun>(catalog_, std::move(*s), definitions_.timings);
     auto result = files_.exchange({"replace", text, expected});
     if (result.published) {
         deniedRun_.clear();
@@ -266,12 +266,15 @@ CampaignWrite CampaignStore::save(CampaignRun& run, const std::string& expected,
             result.error};
 }
 CampaignWrite CampaignStore::terminal(const CampaignRun& run) {
-    if (run.status() == CampaignStatus::Active)
+    return terminal(CampaignTerminalRequest{run.runId(), run.status()});
+}
+CampaignWrite CampaignStore::terminal(const CampaignTerminalRequest& request) {
+    if (request.status == CampaignStatus::Active)
         throw std::invalid_argument("Campaign is still active");
     uncertainTerminal_ = true; // Fail closed even when reading/allocating the marker fails.
     try {
         if (deniedRun_.empty())
-            deniedRun_ = run.runId();
+            deniedRun_ = request.runId;
         auto current = read();
         uncertainTerminal_ = false;
         if (!current.exists)
@@ -281,12 +284,12 @@ CampaignWrite CampaignStore::terminal(const CampaignRun& run) {
             return {false, true, campaignRevision(current.data), {}};
         // Association must not depend on whether an older save is still restorable.
         // An unsaved expedition has no authority to replace another run's slot.
-        if (savedCampaignRunId(current.data) != run.runId())
+        if (savedCampaignRunId(current.data) != request.runId)
             return {false, true, campaignRevision(current.data), {}};
-        deniedRun_ = run.runId();
+        deniedRun_ = request.runId;
         const auto text = Json{{"terminal_schema", 2},
-                               {"run_id", run.runId()},
-                               {"status", run.status() == CampaignStatus::Victory ? "victory" : "defeat"}}
+                               {"run_id", request.runId},
+                               {"status", request.status == CampaignStatus::Victory ? "victory" : "defeat"}}
                               .dump() +
                           "\n";
         auto result = files_.exchange({"replace", text, campaignRevision(current.data)});

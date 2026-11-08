@@ -75,7 +75,12 @@ class Inventory {
   public:
     struct Saved {
         std::array<ItemStack, inventoryCapacity> stacks{};
-        std::array<std::array<std::uint16_t, inventoryCells>, rules::partySize> locations{};
+        std::array<std::array<std::uint16_t, inventoryCells>, rules::partySize> locations = [] {
+            std::array<std::array<std::uint16_t, inventoryCells>, rules::partySize> value{};
+            for (auto& row : value)
+                row.fill(UINT16_MAX);
+            return value;
+        }();
         std::uint64_t revision = 1;
     };
     Inventory();

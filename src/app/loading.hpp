@@ -25,8 +25,8 @@ class TravelMusicScope {
 class SavingScreen {
   public:
     SavingScreen(PreparationWorker* worker, Presenter& presenter,
-                 bool (*closeRequested)() = WindowShouldClose)
-        : presenter_(presenter), closeRequested_(closeRequested),
+                 bool (*closeRequested)() = WindowShouldClose, bool terminal = false)
+        : presenter_(presenter), closeRequested_(closeRequested), terminal_(terminal),
           scope_(
               {[](void* owner, const char*) { static_cast<SavingScreen*>(owner)->point(); }, this, worker}) {
         if (worker)
@@ -34,6 +34,7 @@ class SavingScreen {
         point(); // Display feedback before inspection or snapshot work starts.
     }
     bool closing() const noexcept { return closing_; }
+    unsigned presentations() const noexcept { return presentations_; }
 
   private:
     void point() {
@@ -41,13 +42,21 @@ class SavingScreen {
         if (last_ >= 0 && now - last_ < .004)
             return;
         closing_ |= closeRequested_();
-        presenter_.presentSaving();
+        ++presentations_;
+        if (presenter_.audio)
+            presenter_.audio->pumpLoadingMusic(IsWindowFocused());
+        if (terminal_)
+            presenter_.presentCached(0);
+        else
+            presenter_.presentSaving();
         last_ = GetTime();
     }
     Presenter& presenter_;
     bool (*closeRequested_)(); // Injectable close probe; verification never sends OS input.
+    bool terminal_;
     double last_ = -1;
     bool closing_ = false;
+    unsigned presentations_ = 0;
     PreparationScope scope_;
 };
 // Main-thread loading presentation. Scope ends only after every submitted task is joined.

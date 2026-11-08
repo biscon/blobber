@@ -1,27 +1,41 @@
 #include "game/navigation.hpp"
+#include <algorithm>
 #include <stdexcept>
 namespace blobber {
 Navigation::Saved Navigation::checkpoint() const {
-    return {queue_,
-            seen_,
-            first_,
-            requests_,
-            results_,
-            active_,
-            geometryRevision_,
-            owner_,
-            cursor_,
-            head_,
-            tail_,
-            cleanup_,
-            work_,
-            completed_,
-            cleaning_,
-            canceled_,
-            preferAvailable_,
-            centerAvailable_,
-            fallbackStep_,
-            frontStep_};
+    Saved out{queue_,
+              seen_,
+              first_,
+              requests_,
+              results_,
+              active_,
+              geometryRevision_,
+              owner_,
+              cursor_,
+              head_,
+              tail_,
+              cleanup_,
+              work_,
+              completed_,
+              cleaning_,
+              canceled_,
+              preferAvailable_,
+              centerAvailable_,
+              fallbackStep_,
+              frontStep_};
+    std::fill(out.queue.begin() + out.tail, out.queue.end(), 0);
+    for (std::size_t i = 0; i < out.first.size(); ++i)
+        if (!out.seen[i])
+            out.first[i] = 0;
+    for (auto& request : out.requests)
+        if (!request.pending)
+            request = {};
+    for (auto& result : out.results)
+        if (!result.ready)
+            result = {};
+    if (out.owner == out.requests.size())
+        out.active = {};
+    return out;
 }
 void Navigation::restore(const Saved& s) {
     const auto n = queue_.size();

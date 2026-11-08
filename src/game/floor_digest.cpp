@@ -44,7 +44,8 @@ struct Canonical {
     void add(const AreaId& v) { add(v.serial); }
     void add(const NpcAiConfig& v) {
         add(v.routine);
-        add(v.waypoints);
+        for (unsigned i = 0; i < v.waypointCount; ++i)
+            add(v.waypoints[i]);
         add(v.waypointCount);
     }
     void add(const NpcInstance& v) {
@@ -83,7 +84,8 @@ struct Canonical {
         add(v.walkFromElevation);
     }
     void add(const ActorSnapshot& v) {
-        add(v.actors);
+        for (std::size_t i = 0; i < v.count; ++i)
+            add(v.actors[i]);
         add(v.count);
         add(v.typeCount);
         add(v.revision);
@@ -106,15 +108,21 @@ struct Canonical {
         add(v.sealed);
     }
     void add(const FloorLoot& v) {
+        add(v.generation);
         add(v.container);
-        add(v.cell);
-        add(v.item.index);
         add(v.quantity);
         add(v.active);
-        add(v.generation);
+        if (v.container != noContainer)
+            add(v.cell);
+        if (!v.quantity && !v.active)
+            return;
+        if (v.container == noContainer)
+            add(v.cell);
+        add(v.item.index);
     }
     void add(const LootSnapshot& v) {
-        add(v.containers);
+        for (unsigned i = 0; i < v.containerCount; ++i)
+            add(v.containers[i]);
         add(v.containerCount);
         add(v.stacks);
         add(v.revision);
@@ -137,7 +145,8 @@ struct Canonical {
         add(v.moveDueMs);
     }
     void add(const NpcAiSnapshot& v) {
-        add(v.actors);
+        for (std::size_t i = 0; i < v.count; ++i)
+            add(v.actors[i]);
         add(v.count);
         add(v.searchWork);
         add(v.completedSearches);
@@ -161,15 +170,18 @@ struct Canonical {
         add(v.enemy);
     }
     void add(const EffectInstance& v) {
+        add(v.active);
+        if (!v.active)
+            return;
         add(v.id);
         add(v.kind);
         add(v.caster);
-        add(v.targets);
+        for (unsigned i = 0; i < v.count; ++i)
+            add(v.targets[i]);
         add(v.count);
         add(v.difficulty);
         add(v.expiresMs);
         add(v.retryMs);
-        add(v.active);
         add(v.duplicates);
         add(v.reserved);
         add(v.pendingBless);
@@ -177,25 +189,32 @@ struct Canonical {
         add(v.readyMs);
     }
     void add(const ConditionState& v) {
+        add(v.active);
+        if (!v.active)
+            return;
         add(v.caster.index);
         add(v.untilMs);
         add(v.remainingMs);
         add(v.casterTurn);
-        add(v.active);
         add(v.turnBound);
     }
     void add(const GroundArea& v) {
+        add(v.active);
+        if (!v.active)
+            return;
         add(v.id);
         add(v.cell);
         add(v.caster.index);
         add(v.difficulty);
         add(v.untilMs);
-        add(v.active);
         add(v.web);
         add(v.effect);
         add(v.burnMs);
     }
     void add(const SpectralWeapon& v) {
+        add(v.active);
+        if (!v.active)
+            return;
         add(v.cell);
         add(v.active);
     }
@@ -206,6 +225,8 @@ struct Canonical {
     }
     void add(const Restraint& v) {
         add(v.area);
+        if (!v.area.serial)
+            return;
         add(v.cell);
         add(v.difficulty);
         add(v.caster.index);
@@ -238,9 +259,11 @@ struct Canonical {
         add(v.resolvingAction);
         add(v.canEndTurn);
         add(v.defending);
-        add(v.enemies);
+        for (unsigned i = 0; i < v.enemyCount; ++i)
+            add(v.enemies[i]);
         add(v.enemyCount);
-        add(v.upcoming);
+        for (unsigned i = 0; i < v.upcomingCount; ++i)
+            add(v.upcoming[i]);
         add(v.upcomingCount);
         add(v.cooldownMs);
         add(v.spent);
@@ -270,7 +293,8 @@ struct Canonical {
         add(v.enemyTarget);
     }
     void add(const FloorObjectiveSnapshot& v) {
-        add(v.members);
+        for (unsigned i = 0; i < v.count; ++i)
+            add(v.members[i]);
         add(v.count);
         add(v.known);
         add(v.completed);

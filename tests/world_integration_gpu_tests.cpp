@@ -7,12 +7,12 @@
 #include "support/allocations.hpp"
 #include "support/arena_preparation_review.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/campaign_save_review.hpp"
 #include "support/campaign_startup_review.hpp"
 #include "support/campaign_travel_review.hpp"
 #include "support/check.hpp"
 #include "support/combat_entry_review.hpp"
 #include "support/combat_positioning_review.hpp"
-#include "support/spell_area_review.hpp"
 #include "support/creature_occlusion_review.hpp"
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
@@ -25,6 +25,7 @@
 #include "support/pc072_review.hpp"
 #include "support/screen_shake_gpu.hpp"
 #include "support/screen_shake_review.hpp"
+#include "support/spell_area_review.hpp"
 #include "support/spell_effects_gpu.hpp"
 #include "support/spell_effects_review.hpp"
 #include "support/underkeep_review.hpp"
@@ -180,6 +181,10 @@ int main(int argc, char** argv) {
             test::layoutReview(argv[1], argv[2]);
             return 0;
         }
+        if (argc == 4 && std::string_view(argv[3]) == "--campaign-save-review") {
+            test::campaignSaveReview(argv[1], argv[2]);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--pc072-controls") {
             test::pc072ControlsReview(argv[1], argv[2]);
             return 0;
@@ -222,7 +227,7 @@ int main(int argc, char** argv) {
                 area.ground.revision = 1;
                 area.ground.areas[0].active = true;
                 area.ground.areas[0].cell = spawn.cell;
-area.ground.areas[0].footprint=wholeCellFootprint(spawn.cell);
+                area.ground.areas[0].footprint = wholeCellFootprint(spawn.cell);
                 area.ground.weapons[0] = {rotate({4, 3}), true};
                 auto input = [&] {
                     animator.setTime(game.timeMs());

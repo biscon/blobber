@@ -5,7 +5,8 @@ namespace blobber {
 bool CampaignSaveFlow::closeRequested(CampaignRun& run, CommandController& commands) {
     if (!store_)
         return true;
-    (void)poll(run, commands);
+    if (terminalPending(run, commands))
+        return false; // The application must present the result before starting terminal I/O.
     if (run.status() != CampaignStatus::Active && !commands.saveMenu().terminalWarning)
         return true;
     if (!commands.snapshot().menuOpen)
@@ -27,7 +28,9 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
     if ((run.status() != CampaignStatus::Active && !terminalAttempted_) ||
         intent == SaveIntent::RetryTerminal) {
         terminalAttempted_ = true;
-        const auto result = store_->terminal(run);
+        const CampaignTerminalRequest request{run.runId(), run.status()};
+        store_->denyContinue(request.runId);
+        const auto result = prepareCpu([&] { return store_->terminal(request); });
         h.terminalWarning = !result.durable;
         if (h.terminalWarning) {
             if (!commands.snapshot().menuOpen)
@@ -43,8 +46,7 @@ bool CampaignSaveFlow::poll(CampaignRun& run, CommandController& commands) {
     }
     if (intent != SaveIntent::Save && intent != SaveIntent::SaveMenu)
         return false;
-    // Inspecting restores/validates the entire saved run. Never do it on pause entry
-    // or idle menu frames. A confirmed overwrite must keep its previously reviewed revision.
+    // Metadata only; a confirmed overwrite keeps its previously reviewed revision.
     if (!h.replace)
         slot_ = prepareCpu([&] { return store_->inspect(); });
     h.leaveAfter = intent == SaveIntent::SaveMenu;

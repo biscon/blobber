@@ -45,6 +45,18 @@ ActorPosition actorPosition(const ActorState& a, std::uint64_t timeMs) noexcept 
     return {a.walkFrom.x + (destination.x - a.walkFrom.x) * t,
             a.walkFrom.y + (destination.y - a.walkFrom.y) * t};
 }
+ActorState initialActorState(const rules::Catalog& catalog, const NpcInstance& npc,
+                             rules::MonsterId appearanceBinding) {
+    ActorState actor;
+    actor.npc = npc;
+    if (actor.hostile()) {
+        actor.monster = npc.monster.value_or(appearanceBinding);
+        if (!catalog.monster(actor.monster))
+            throw std::runtime_error("Hostile NPC appearance has no valid monster definition");
+        actor.hitPoints = actor.maxHitPoints = catalog.monster(actor.monster)->hitPoints;
+    }
+    return actor;
+}
 ActorWorld::ActorWorld(GeometryView map, const rules::Catalog& catalog, const NpcWorld& placements)
     : map_(map), catalog_(catalog), occupancy_(static_cast<std::size_t>(map.width()) * map.height(), 0) {
     state_.world = nextWorld();
@@ -59,15 +71,10 @@ ActorWorld::ActorWorld(GeometryView map, const rules::Catalog& catalog, const Np
     }
     for (std::size_t i = 0; i < state_.count; ++i) {
         auto& actor = state_.actors[i];
-        actor.npc = placements.instances()[i];
+        const auto& npc = placements.instances()[i];
+        actor = initialActorState(catalog, npc, bindings[npc.type.index]);
         if (!map.npcAllowed(actor.npc.cell))
             throw std::runtime_error("Actor placement overlaps runtime map wall or boundary");
-        if (actor.hostile()) {
-            actor.monster = actor.npc.monster.value_or(bindings[actor.npc.type.index]);
-            if (!catalog.monster(actor.monster))
-                throw std::runtime_error("Hostile NPC appearance has no valid monster definition");
-            actor.hitPoints = actor.maxHitPoints = catalog.monster(actor.monster)->hitPoints;
-        }
         mask(actor.npc.cell) |= bit(actor.npc.subcell);
     }
 }

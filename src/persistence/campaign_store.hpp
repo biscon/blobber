@@ -37,6 +37,10 @@ struct CampaignWrite {
     bool published = false, durable = false;
     std::string revision, error;
 };
+struct CampaignTerminalRequest {
+    std::string runId;
+    CampaignStatus status = CampaignStatus::Active;
+};
 std::string campaignError(const char*); // Bounded ASCII-safe errors, including corrupt UTF-8.
 std::string campaignRevision(const std::string&);
 std::filesystem::path campaignSavePath(const std::filesystem::path& overridePath = {});
@@ -47,6 +51,11 @@ class CampaignStore {
     std::unique_ptr<CampaignRun> load();
     CampaignWrite save(CampaignRun&, const std::string& expected, bool replaceDifferent = false);
     CampaignWrite terminal(const CampaignRun&);
+    CampaignWrite terminal(const CampaignTerminalRequest&);
+    void denyContinue(const std::string& runId) {
+        if (deniedRun_.empty())
+            deniedRun_ = runId;
+    }
     std::string synchronizeIdentity(const std::string& proposed);
 
   private:

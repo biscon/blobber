@@ -1,4 +1,5 @@
 #include "persistence/campaign_codec.hpp"
+#include "assets/fingerprint.hpp"
 #include <charconv>
 #include <cmath>
 #include <locale>
@@ -71,16 +72,6 @@ struct Archive {
     const rules::Catalog& catalog;
     const NpcDefinitions& definitions;
     bool reading;
-    std::size_t fields = 0;
-    template <class T> void operator()(const char* name, T& value) {
-        ++fields;
-        if (reading) {
-            if (!object.is_object() || !object.contains(name))
-                invalid("Missing campaign field");
-            transfer(object.at(name), value);
-        } else
-            transfer(object[name], value);
-    }
     template <class Id, class Find, class Get> void content(Json& j, Id& id, Find find, Get get) {
         if (reading) {
             if (j.is_null()) {
@@ -276,74 +267,12 @@ struct Archive {
                     v.describe(out);
                 j = out.str();
             }
-        } else if constexpr (Bits<T>::value) {
-            if (reading) {
-                if (!j.is_string())
-                    invalid("Expected bitset");
-                const auto s = j.get<std::string>();
-                if (s.size() != v.size() || s.find_first_not_of("01") != std::string::npos)
-                    invalid("Invalid bitset");
-                v = T(s);
-            } else
-                j = v.to_string();
-        } else if constexpr (Array<T>::value || Vector<T>::value) {
-            if (reading) {
-                if (!j.is_array())
-                    invalid("Expected array");
-                if constexpr (Array<T>::value) {
-                    if (j.size() != v.size())
-                        invalid("Wrong fixed array size");
-                } else {
-                    if constexpr (std::is_same_v<typename T::value_type, MerchantState>)
-                        if (j.size() > merchantCapacity)
-                            invalid("Merchant capacity exceeded");
-                    if (j.size() > generation::maxCells)
-                        invalid("Vector capacity exceeded");
-                    if constexpr (std::is_same_v<typename T::value_type, BuildingPlacement>)
-                        if (j.size() > buildingCapacity)
-                            invalid("Building placement capacity exceeded");
-                    if constexpr (std::is_same_v<typename T::value_type, SceneryPlacement>)
-                        if (j.size() > sceneryCapacity)
-                            invalid("Scenery placement capacity exceeded");
-                    v.resize(j.size());
-                }
-                for (std::size_t i = 0; i < v.size(); ++i)
-                    transfer(j[i], v[i]);
-            } else {
-                j = Json::array();
-                for (auto& item : v) {
-                    Json one;
-                    transfer(one, item);
-                    j.push_back(std::move(one));
-                }
-            }
-        } else if constexpr (Optional<T>::value || Pointer<T>::value) {
-            if (reading) {
-                if (j.is_null())
-                    v.reset();
-                else {
-                    if constexpr (Optional<T>::value)
-                        v.emplace();
-                    else
-                        v = std::make_unique<typename T::element_type>();
-                    transfer(j, *v);
-                }
-            } else {
-                if (v)
-                    transfer(j, *v);
-                else
-                    j = nullptr;
-            }
         } else {
-            if (!reading)
-                j = Json::object();
-            Archive nested{j, catalog, definitions, reading};
-            visit(nested, v);
-            if (reading && j.size() != nested.fields)
-                invalid("Unknown campaign field");
+            static_assert(!sizeof(T), "Composite save values must use the sparse archive");
         }
     }
 };
+#include "persistence/campaign_delta.hpp"
 Json parse(const std::string& text) {
     if (text.size() > campaignMaxBytes)
         invalid("Campaign save exceeds 16 MiB");
@@ -360,13 +289,21 @@ Json parse(const std::string& text) {
     });
 }
 void envelope(const Json& j, const CampaignContent& content) {
-    if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
+    if (!j.is_object() || j.size() != 10 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 19 || j.at("simulation") != 23 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 20 || j.at("simulation") != 23 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
-        j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
+        j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign") ||
+        !j.at("campaign").is_object() || !j.at("seed").is_number_unsigned() ||
+        j.at("seed").get<std::uint64_t>() > UINT32_MAX || !j.at("baseline").is_array() ||
+        j.at("baseline").size() != campaignLocationCount)
         invalid("Incompatible campaign schema, simulation or content");
+    for (const auto& signature : j.at("baseline"))
+        if (!signature.is_string() || signature.get_ref<const std::string&>().empty() ||
+            signature.get_ref<const std::string&>().size() > 20 ||
+            signature.get_ref<const std::string&>().find_first_not_of("0123456789") != std::string::npos)
+            invalid("Invalid campaign baseline fingerprint");
 }
 } // namespace
 std::string savedCampaignRunId(const std::string& text) {
@@ -377,75 +314,160 @@ std::string savedCampaignRunId(const std::string& text) {
         invalid("Invalid saved campaign run identity");
     return id;
 }
-std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
-                           const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 19},
+namespace {
+std::string definitionSignature(const CampaignLocationState& location) {
+    auto h = fingerprintBasis;
+    for (auto value : {location.worldFingerprint, location.fingerprint})
+        for (unsigned byte = 0; byte < 8; ++byte) {
+            const auto part = static_cast<unsigned char>(value >> (byte * 8));
+            fingerprintBytes(h, &part, 1);
+        }
+    for (const auto& row : location.rows)
+        fingerprintBytes(h, row.data(), row.size());
+    return std::to_string(h);
+}
+Json signatures(const CampaignDefinitions& definitions) {
+    Json out = Json::array();
+    for (const auto& location : definitions.locations)
+        out.push_back(definitionSignature(location));
+    return out;
+}
+void cloneDefinition(CampaignLocationState& to, const CampaignLocationState& from) {
+    to.generated = from.generated;
+    to.generation = from.generation;
+    to.layout = from.layout;
+    to.diagnostics = from.diagnostics;
+    to.fingerprint = from.fingerprint;
+    to.world = from.world;
+    to.worldFingerprint = from.worldFingerprint;
+    to.rows = from.rows;
+    to.types = from.types;
+    to.placements = from.placements;
+    to.initialActors = from.initialActors;
+    to.recovery = from.recovery;
+    to.fixtures = from.fixtures;
+    to.objective = from.objective;
+    to.entry = from.entry;
+    to.exit = from.exit;
+    to.seed = from.seed;
+}
+template <class T>
+std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definitions,
+                   const CampaignContent& content, T& value, const T& baseline) {
+    if (!value.baseline || value.runId.size() != 32 ||
+        value.runId.find_first_not_of("0123456789abcdef") != std::string::npos ||
+        value.activeLocation >= campaignLocationCount)
+        invalid("Invalid campaign capture");
+    Json summary = {{"location", value.activeLocation}, {"party", Json::array()}};
+    for (const auto& member : value.party.state.characters)
+        summary["party"].push_back(member.build.name);
+    Json j = {{"schema", 20},
               {"simulation", 23},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},
-              {"npcs", std::to_string(content.npcs)}};
-    Archive archive{j, catalog, definitions, false};
-    archive("campaign", value);
+              {"npcs", std::to_string(content.npcs)},
+              {"seed", value.baseline->seed},
+              {"baseline", signatures(*value.baseline)},
+              {"summary", std::move(summary)}};
+    auto scratch = std::make_unique<FloorState>();
+    DeltaArchive archive{j, catalog, definitions, false, 0, scratch.get()};
+    archive("campaign", value, baseline);
     auto text = j.dump() + "\n";
     if (text.size() > campaignMaxBytes)
         invalid("Campaign save exceeds 16 MiB");
     return text;
+}
+} // namespace
+namespace {
+CampaignSummary campaignSummary(const Json& j) {
+    CampaignSummary out;
+    out.runId = j.at("campaign").at("runId").get<std::string>();
+    const auto& summary = j.at("summary");
+    if (out.runId.size() != 32 || out.runId.find_first_not_of("0123456789abcdef") != std::string::npos ||
+        !summary.is_object() || summary.size() != 2 || !summary.at("location").is_number_unsigned() ||
+        summary.at("location").get<std::uint64_t>() >= campaignLocationCount ||
+        !summary.at("party").is_array() || summary.at("party").size() != rules::partySize)
+        invalid("Invalid campaign summary");
+    out.location = summary.at("location").get<unsigned>();
+    for (const auto& name : summary.at("party")) {
+        if (!name.is_string() || !rules::validDisplayText(name.get<std::string>(), 64))
+            invalid("Invalid saved party summary");
+        if (!out.party.empty())
+            out.party += ", ";
+        out.party += name.get<std::string>();
+    }
+    return out;
+}
+} // namespace
+CampaignSummary inspectCampaign(const CampaignContent& content, const std::string& text) {
+    const auto j = parse(text);
+    envelope(j, content);
+    return campaignSummary(j);
+}
+
+std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
+                           const CampaignContent& content, CampaignSaveData& value) {
+    CampaignSaveData baseline;
+    if (!value.baseline)
+        invalid("Missing campaign baseline");
+    for (unsigned i = 0; i < campaignLocationCount; ++i)
+        baseline.locations[i].definition = &value.baseline->locations[i];
+    return encode(catalog, definitions, content, value, baseline);
+}
+std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
+                           const CampaignContent& content, CampaignCheckpoint& value) {
+    auto baseline = std::make_unique<CampaignCheckpoint>();
+    if (!value.baseline)
+        invalid("Missing campaign baseline");
+    for (unsigned i = 0; i < campaignLocationCount; ++i)
+        cloneDefinition(baseline->locations[i], value.baseline->locations[i]);
+    return encode(catalog, definitions, content, value, *baseline);
 }
 std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog& catalog,
                                                    const NpcDefinitions& definitions,
                                                    const CampaignContent& content, const std::string& text) {
     auto j = parse(text);
     envelope(j, content);
+    if (!j.at("seed").is_number_unsigned() || j.at("seed").get<std::uint64_t>() > UINT32_MAX)
+        invalid("Invalid campaign seed");
     auto out = std::make_unique<CampaignCheckpoint>();
-    Archive archive{j, catalog, definitions, true};
-    archive("campaign", *out);
-    Inventory inventoryValidation;
-    inventoryValidation.restore(out->party.inventory, catalog);
-    MerchantLedger validation;
-    validation.restore(out->merchants, catalog);
-    for (auto& l : out->locations) {
-        if (l.types != definitions.types || l.recovery.sanctuaryCount > 16 || l.recovery.groundCount > 64 ||
-            l.fixtures.count > fixtureCapacity || l.fixtures.landingCount > 2 || l.objective.count > 32 ||
-            l.objective.rewardCount > 2)
-            invalid("Invalid saved location capacities/content");
-        if (l.generated) {
-            if (l.generation.seed != out->locations[1].generation.seed || l.layout.populationCount > 32 ||
-                l.placements.size() != l.layout.populationCount ||
-                l.diagnostics.attempts > generation::maxAttempts)
-                invalid("Inconsistent campaign generation provenance/population");
-            const auto definition =
-                generation::resolvePopulation(l.layout, l.generation, catalog, definitions.types);
-            auto expected = definition.objective;
-            auto recovery = definition.recovery;
-            for (unsigned i = 0; i < definition.count; ++i) {
-                Json want, got;
-                Archive verify{want, catalog, definitions, false}, actual{got, catalog, definitions, false};
-                auto npc = definition.actors[i];
-                verify.transfer(want, npc);
-                actual.transfer(got, l.placements[i]);
-                if (want != got)
-                    invalid("Saved initial population differs from its definition");
-            }
-            Json want, got;
-            Archive verify{want, catalog, definitions, false}, actual{got, catalog, definitions, false};
-            verify.transfer(want, expected);
-            actual.transfer(got, l.objective);
-            if (want != got)
-                invalid("Saved guardian definition mismatch");
-            verify.transfer(want, recovery);
-            actual.transfer(got, l.recovery);
-            if (want != got)
-                invalid("Saved supply definition mismatch");
-            // The layout and shared geometry cannot describe different doors or protected cells.
-            Json a, b;
-            Archive aa{a, catalog, definitions, false}, bb{b, catalog, definitions, false};
-            aa.transfer(a, l.fixtures);
-            bb.transfer(b, l.layout.fixtures);
-            if (a != b || !(l.entry == l.layout.spawn))
-                invalid("Saved fixture/layout mismatch");
-        }
+    out->baseline = prepareCampaignDefinitions(catalog, definitions.types, j["seed"].get<std::uint32_t>());
+    if (j.at("baseline") != signatures(*out->baseline))
+        invalid("Campaign definition baseline differs");
+    auto baseline = std::make_unique<CampaignCheckpoint>();
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
+        cloneDefinition(out->locations[i], out->baseline->locations[i]);
+        cloneDefinition(baseline->locations[i], out->baseline->locations[i]);
     }
+    DeltaArchive archive{j["campaign"], catalog, definitions, true};
+    archive.transfer(j["campaign"], *out, *baseline);
+    const auto summary = campaignSummary(j);
+    if (summary.runId != out->runId || summary.location != out->activeLocation)
+        invalid("Campaign summary differs from state");
+    for (unsigned i = 0; i < rules::partySize; ++i)
+        if (j["summary"]["party"][i] != out->party.state.characters[i].build.name)
+            invalid("Campaign party summary differs from state");
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
+        const auto& location = out->locations[i];
+        const auto& original = out->baseline->locations[i];
+        if (location.generated != original.generated || location.seed != original.seed ||
+            location.types != original.types ||
+            !CampaignEqual::same(location.generation, original.generation) ||
+            !CampaignEqual::same(location.placements, original.placements) ||
+            !CampaignEqual::same(location.recovery, original.recovery) ||
+            !CampaignEqual::same(location.fixtures, original.fixtures) ||
+            !CampaignEqual::same(location.objective, original.objective) ||
+            !CampaignEqual::same(location.entry, original.entry) ||
+            !CampaignEqual::same(location.exit, original.exit))
+            invalid("Saved initial definition differs from its baseline");
+        auto expectedLayout = original.layout;
+        if (location.generated)
+            expectedLayout.dressingFingerprint = location.worldFingerprint;
+        if (!CampaignEqual::same(location.layout, expectedLayout))
+            invalid("Saved generated layout differs from its baseline");
+    }
+    // Full logical admission is performed once by the restoring CampaignRun.
     return out;
 }
 } // namespace blobber

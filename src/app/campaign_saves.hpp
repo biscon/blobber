@@ -8,6 +8,11 @@ class CampaignSaveFlow {
     explicit CampaignSaveFlow(CampaignStore* store) : store_(store) {}
     bool closeRequested(CampaignRun&, CommandController&); // Native-close intent, no OS input.
     bool poll(CampaignRun&, CommandController&);           // true: successful Save and Main Menu.
+    bool terminalPending(const CampaignRun& run, const CommandController& commands) const {
+        return store_ && ((run.status() != CampaignStatus::Active && !terminalAttempted_) ||
+                          commands.snapshot().save.intent == SaveIntent::RetryTerminal);
+    }
+
   private:
     CampaignStore* store_;
     CampaignSlot slot_;

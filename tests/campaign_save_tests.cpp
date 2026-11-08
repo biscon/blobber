@@ -6,6 +6,7 @@
 #include "support/campaign_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/save_layout.hpp"
+#include <chrono>
 #include <fstream>
 #include <iostream>
 using namespace blobber;
@@ -20,6 +21,23 @@ template <class F> void rejects(F f, const char* message) {
         rejected = true;
     }
     check(rejected, message);
+}
+// Mutable access to schema-20 indexed changes for corruption fixtures.
+blobber::automation::Json& savedEntry(blobber::automation::Json& entries, unsigned index) {
+    using Json = blobber::automation::Json;
+    if (entries.is_null())
+        entries = Json::array();
+    for (auto& entry : entries)
+        if (entry[0] == index)
+            return entry[1];
+    const auto at = std::find_if(entries.begin(), entries.end(), [&](const auto& entry) {
+        return entry[0].template get<unsigned>() > index;
+    });
+    const auto inserted = entries.insert(at, Json::array({index, Json::object()}));
+    return (*inserted)[1];
+}
+blobber::automation::Json& savedLocation(blobber::automation::Json& save, unsigned index) {
+    return savedEntry(save["campaign"]["locations"], index);
 }
 void ignoredCampaigns() {
     const auto c = catalog();
@@ -167,7 +185,7 @@ void environmentRoundtrip() {
               restoredWorld.scenery[0].facing == Heading::East,
           "Scenery identity, orientation and physical base survive campaign codec roundtrip");
     auto bad = blobber::automation::Json::parse(text);
-    bad["campaign"]["locations"][0]["world"]["surfaces"][20]["floor"] = 99;
+    savedEntry(savedLocation(bad, 0)["world"]["surfaces"]["entries"], 20)["floor"] = 99;
     rejects(
         [&] {
             auto v = decodeCampaign(c, d, {"fixture", 0}, bad.dump());
@@ -177,16 +195,14 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 19;
-    bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
-    for (unsigned i = 0; i <= buildingCapacity; ++i)
-        bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());
+    bad["schema"] = 20;
+    savedLocation(bad, 1)["world"]["buildings"] = {{"size", buildingCapacity + 1},
+                                                   {"entries", blobber::automation::Json::array()}};
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Placement decode capacity rejects before resizing");
     bad = blobber::automation::Json::parse(text);
-    bad["campaign"]["locations"][0]["world"]["scenery"] = blobber::automation::Json::array();
-    for (unsigned i = 0; i <= sceneryCapacity; ++i)
-        bad["campaign"]["locations"][0]["world"]["scenery"].push_back(blobber::automation::Json::object());
+    savedLocation(bad, 0)["world"]["scenery"] = {{"size", sceneryCapacity + 1},
+                                                 {"entries", blobber::automation::Json::array()}};
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Scenery decode capacity rejects before resizing");
     bad = blobber::automation::Json::parse(text);
@@ -270,9 +286,14 @@ void roundtrip() {
     badGold["campaign"]["party"].erase("gold");
     rejects([&] { decodeCampaign(c, d, content, badGold.dump()); }, "Missing purse rejects on decode");
     auto badMerchant = blobber::automation::Json::parse(text);
-    badMerchant["campaign"]["merchants"][0]["buyback"][0]["quantity"] = 65535;
-    rejects([&] { decodeCampaign(c, d, content, badMerchant.dump()); },
-            "Invalid persisted merchant quantity rejects before publication");
+    savedEntry(savedEntry(badMerchant["campaign"]["merchants"]["entries"], 0)["buyback"], 0)["quantity"] =
+        65535;
+    rejects(
+        [&] {
+            auto state = decodeCampaign(c, d, content, badMerchant.dump());
+            CampaignRun invalid(c, std::move(*state), d.timings);
+        },
+        "Invalid persisted merchant quantity rejects before publication");
     entrance(run);
     auto travel = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(travel), "enter dungeon");
@@ -609,31 +630,29 @@ void malformed() {
     };
     bad([](auto& j) { j["schema"] = 1; });
     bad([](auto& j) { j["schema"] = 6; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["membership"][0] = 0; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["paths"][0] = 0; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["pathCount"] = 1601; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["connections"][0]["facingA"] = 255; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["profile"] = 255; });
+    bad([](auto& j) { savedEntry(savedLocation(j, 1)["layout"]["membership"], 0) = 0; });
+    bad([](auto& j) { savedEntry(savedLocation(j, 1)["layout"]["paths"], 0) = 0; });
+    bad([](auto& j) { savedLocation(j, 1)["layout"]["pathCount"] = 1601; });
+    bad([](auto& j) { savedEntry(savedLocation(j, 1)["layout"]["connections"], 0)["facingA"] = 255; });
+    bad([](auto& j) { savedLocation(j, 1)["layout"]["profile"] = 255; });
     bad([](auto& j) { j["campaign"]["gameplayMs"] = "18446744073709551615"; });
     bad([](auto& j) { j["catalog"] = "other"; });
+    bad([](auto& j) { savedEntry(j["campaign"]["party"]["state"]["formation"], 1) = 0; });
     bad([](auto& j) {
-        j["campaign"]["party"]["state"]["formation"][1] = j["campaign"]["party"]["state"]["formation"][0];
+        savedEntry(savedEntry(j["campaign"]["party"]["inventory"]["locations"], 0), 1) =
+            savedEntry(savedEntry(j["campaign"]["party"]["inventory"]["locations"], 0), 0);
     });
-    bad([](auto& j) {
-        j["campaign"]["party"]["inventory"]["locations"][0][1] =
-            j["campaign"]["party"]["inventory"]["locations"][0][0];
-    });
-    bad([](auto& j) { j["campaign"]["party"]["state"]["characters"][0]["mana"] = 999; });
+    bad([](auto& j) { savedEntry(j["campaign"]["party"]["state"]["characters"], 0)["mana"] = 999; });
     bad([](auto& j) { j["campaign"]["pose"]["cell"]["x"] = -1; });
-    bad([](auto& j) { j["campaign"]["locations"][0]["state"]["combat"]["state"]["enemyCount"] = "999"; });
-    bad([](auto& j) { j["campaign"]["locations"][0]["state"]["rng"] = "1"; });
+    bad([](auto& j) { savedLocation(j, 0)["state"]["value"]["combat"]["state"]["enemyCount"] = "999"; });
+    bad([](auto& j) { savedLocation(j, 0)["state"]["value"]["rng"] = "1"; });
     bad([](auto& j) { j["campaign"]["navigation"]["tail"] = "1601"; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["population"][0]["recipe"] = 255; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["encounters"][0]["count"] = 31; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["layout"]["routeCount"] = 33; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["recovery"]["ground"][0]["quantity"] = 19; });
+    bad([](auto& j) { savedEntry(savedLocation(j, 1)["layout"]["population"], 0)["recipe"] = 255; });
+    bad([](auto& j) { savedEntry(savedLocation(j, 1)["layout"]["encounters"], 0)["count"] = 31; });
+    bad([](auto& j) { savedLocation(j, 1)["layout"]["routeCount"] = 33; });
+    bad([](auto& j) { savedEntry(savedLocation(j, 1)["recovery"]["ground"], 0)["quantity"] = 19; });
     bad([](auto& j) { j["simulation"] = 7; });
-    bad([](auto& j) { j["campaign"]["locations"][1]["fixtures"]["npcExcluded"] = std::string(1600, '0'); });
+    bad([](auto& j) { savedLocation(j, 1)["fixtures"]["npcExcluded"] = std::string(1600, '0'); });
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, std::string(campaignMaxBytes + 1, 'x')); },
             "oversized input rejected");
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, "{\"schema\":1,\"schema\":1}"); },
@@ -688,11 +707,13 @@ class CountedCampaignDisk final : public CampaignFiles {
     explicit CountedCampaignDisk(const std::filesystem::path& path) : disk_(path) {}
     CampaignIoReply exchange(const CampaignIoRequest& request) override {
         ioThread = std::this_thread::get_id();
+        if (delayMs)
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
         reads += request.operation == "read";
         writes += request.operation == "replace";
         return disk_.exchange(request);
     }
-    unsigned reads = 0, writes = 0;
+    unsigned reads = 0, writes = 0, delayMs = 0;
     std::thread::id ioThread;
 
   private:
@@ -1116,7 +1137,13 @@ void navigationContinuation() {
     check(checkpoint.work == Navigation::nodeBudget && checkpoint.owner < 8 &&
               checkpoint.head < checkpoint.tail,
           "fixture retains a partially processed navigation search");
-    resumed.restore(checkpoint);
+    CampaignRun transport(c, *c.preset(), d.types, d.timings, 5);
+    auto payload = transport.checkpoint();
+    payload->navigation = checkpoint;
+    const auto text = encodeCampaign(c, d, {"fixture", 0}, *payload);
+    auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
+    // Validate transported navigation against the 40x40 fixture that owns it.
+    resumed.restore(decoded->navigation);
     for (unsigned tick = 0; tick < 10; ++tick) {
         for (unsigned i = 0; i < 8; ++i) {
             const auto a = original.take(i), b = resumed.take(i);
@@ -1133,10 +1160,263 @@ void navigationContinuation() {
     rejects([&] { resumed.restore(checkpoint); }, "inconsistent search workspace rejected");
 }
 
+void sparsePersistence() {
+    using Json = blobber::automation::Json;
+    const auto c = catalog();
+    const auto d = definitions();
+    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    auto capture = run.captureSave();
+    const auto text = encodeCampaign(c, d, {"fixture", 0}, *capture);
+    auto json = Json::parse(text);
+    check(text.size() < 64 * 1024, "Fresh campaign is small without compression");
+    check(json["campaign"]["locations"].size() == 1,
+          "Unvisited locations have no snapshots or copied definitions");
+    auto& city = savedLocation(json, 0);
+    check(city.size() == 2 && city.contains("visited") && city.contains("state"),
+          "Unchanged map, fixtures, population and generator data inherit baseline");
+    auto& state = city["state"]["value"];
+    check(!state.contains("actors"), "Unchanged actors inherit their initial baseline");
+    check(!state.contains("effects"), "Empty effect/condition/area pools write no records");
+    check(!state["loot"]["state"].contains("stacks"), "Empty loot pool writes no records");
+    check(state["ai"]["state"]["actors"].size() == run.game().ai().count, "AI arrays use actor count");
+    check(json["campaign"]["party"]["inventory"]["stacks"].size() < inventoryCapacity,
+          "Inventory capacity does not become empty JSON stacks");
+
+    EffectRequest ward;
+    ward.world = run.game().actors().snapshot().world;
+    ward.kind = EffectKind::ShieldOfFaith;
+    ward.caster = rules::CharacterId{1};
+    ward.targets[0] = rules::CharacterId{0};
+    ward.count = 1;
+    check(bool(run.game().applyEffect(ward)), "Sparse effect fixture applies a live ward");
+    auto checkpoint = run.checkpoint();
+    auto& floor = *checkpoint->locations[0].state;
+    const auto item = checkpoint->party.inventory.stacks[0].item;
+    check(checkpoint->party.inventory.stacks[0].quantity != 0, "Owned inventory source exists");
+    constexpr auto last = inventoryCapacity - 1;
+    checkpoint->party.inventory.stacks[last] = checkpoint->party.inventory.stacks[0];
+    checkpoint->party.inventory.stacks[last].generation = 7;
+    checkpoint->party.inventory.stacks[0].quantity = 0;
+    checkpoint->party.inventory.stacks[0].generation = UINT64_MAX;
+    for (auto& row : checkpoint->party.inventory.locations)
+        for (auto& slot : row)
+            if (slot == 0)
+                slot = last;
+    floor.loot.state.stacks.back() = {checkpoint->pose.cell, item, 1, true, 17};
+    // Dormant payloads must not leak onto disk. Keep generation/container metadata.
+    floor.loot.state.stacks[lootReservedCapacity] = {{9, 9}, item, 0, false, 21};
+    floor.effects.instances.back() = floor.effects.instances[0];
+    floor.effects.instances[0] = {};
+    floor.effects.instances[floor.effects.instances.size() - 2].id.serial = 1234; // Inactive old effect.
+    floor.effects.conditions.back().back().untilMs = 1234;
+    floor.effects.ground.areas.back().untilMs = 1234;
+    checkpoint->dialogue.complete(dialogueKey("fixture.resident"), dialogueKey("fixture.topic"),
+                                  dialogueKey("fixture.fact"));
+    checkpoint->dialogue.records.back().id = 999; // Outside count, not meaningful.
+    checkpoint->dialogue.records[0].completed.back() = 999;
+    MerchantState merchant;
+    merchant.resident = 10;
+    merchant.shop = 20;
+    merchant.restockMs = 1000;
+    merchant.stock[item.index] = 1;
+    merchant.buyback.back() = {item, 1, 10, 1000};
+    checkpoint->merchants.push_back(merchant);
+    auto sparse = Json::parse(encodeCampaign(c, d, {"fixture", 0}, *checkpoint));
+    auto& saved = savedLocation(sparse, 0)["state"]["value"];
+    check(saved["effects"]["instances"].size() == 1 && !saved["effects"].contains("conditions") &&
+              !saved["effects"].contains("ground"),
+          "High active effect slot survives while expired effects/conditions/areas are omitted");
+    check(saved["loot"]["state"]["stacks"].size() == 2,
+          "High loot slot and recycled empty metadata are sparse records");
+    check(savedEntry(saved["loot"]["state"]["stacks"], lootReservedCapacity).size() == 1,
+          "Empty recycled loot retains generation without dead item/cell payload");
+    check(sparse["campaign"]["dialogue"]["records"].size() == 1 &&
+              savedEntry(sparse["campaign"]["dialogue"]["records"], 0)["completed"].size() == 1,
+          "Dialogue record and nested topic capacities are omitted");
+    check(savedEntry(sparse["campaign"]["merchants"]["entries"], 0)["buyback"].size() == 1,
+          "Merchant buyback saves only its occupied slot");
+    auto decoded = decodeCampaign(c, d, {"fixture", 0}, sparse.dump());
+    CampaignRun restored(c, std::move(*decoded), d.timings);
+    auto after = restored.checkpoint();
+    check(after->party.inventory.stacks[last].generation == 7 &&
+              after->party.inventory.stacks[0].generation == UINT64_MAX &&
+              after->locations[0].state->loot.state.stacks.back().generation == 17 &&
+              after->locations[0].state->loot.state.stacks[lootReservedCapacity].generation == 21 &&
+              after->locations[0].state->effects.instances.back().active &&
+              !after->locations[0].state->effects.instances[0].active,
+          "Sparse restore preserves high slots, recycled generations and retired slots");
+    check(encodeCampaign(c, d, {"fixture", 0}, *after) == sparse.dump() + "\n",
+          "Discarding dormant payloads preserves the canonical save");
+
+    const auto reject = [&](Json invalidJson) {
+        rejects(
+            [&] {
+                auto decodedBad = decodeCampaign(c, d, {"fixture", 0}, invalidJson.dump());
+                CampaignRun invalid(c, std::move(*decodedBad), d.timings);
+            },
+            "Malformed sparse values reject before publication");
+    };
+    auto bad = sparse;
+    auto& slots = bad["campaign"]["party"]["inventory"]["stacks"];
+    slots.push_back(slots[0]);
+    reject(bad);
+    bad = sparse;
+    bad["campaign"]["party"]["inventory"]["stacks"][0][0] = inventoryCapacity;
+    reject(bad);
+    bad = sparse;
+    savedLocation(bad, 0)["state"]["value"]["actors"]["count"] = "257";
+    reject(bad);
+    bad = sparse;
+    bad["baseline"][0] = "1";
+    reject(bad);
+    bad = sparse;
+    bad["summary"]["party"][0] = "Different name";
+    reject(bad);
+    bad = sparse;
+    savedLocation(bad, 0)["state"]["value"]["effects"]["conditions"] =
+        Json::array({Json::array({259, Json::array({Json::array({0, {{"untilMs", "1"}}})})})});
+    reject(bad); // Dormant conditions cannot smuggle fields into skipped payloads.
+
+    Directory directory;
+    CampaignDisk disk(directory.path / "campaign.json");
+    CampaignStore store(c, d, {"fixture", 0}, disk);
+    unsigned constructionPoints = 0;
+    PreparationScope scope({[](void* owner, const char* phase) {
+                                const std::string_view label(phase);
+                                if (label == "Generating dungeon floors" ||
+                                    label == "Restoring campaign locations" ||
+                                    label == "Preparing campaign session")
+                                    ++*static_cast<unsigned*>(owner);
+                            },
+                            &constructionPoints, nullptr});
+    check(store.save(run, "missing").durable && store.inspect().active,
+          "Save and metadata inspection succeed");
+    check(store.save(run, store.inspect().revision).durable && !constructionPoints,
+          "Save/Inspect never generate floors or reconstruct campaign/session owners");
+    // A structurally readable slot can have a semantic error. Inspection is metadata;
+    // only explicit Load performs full admission, without losing the current slot.
+    auto corrupt = Json::parse(text);
+    savedEntry(corrupt["campaign"]["party"]["state"]["characters"], 0)["mana"] = 999;
+    std::ofstream(directory.path / "campaign.json") << corrupt.dump();
+    check(store.inspect().active && !constructionPoints,
+          "Metadata inspection does not reconstruct owners to preflight Continue");
+    rejects([&] { store.load(); }, "Explicit Load rejects semantically invalid state");
+}
+
+std::unique_ptr<CampaignRun> representativeCampaign(const rules::Catalog& c, const NpcDefinitions& d) {
+    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    const auto position = [&](Player pose) {
+        auto checkpoint = run->checkpoint();
+        checkpoint->pose = pose;
+        checkpoint->animated = false;
+        run = std::make_unique<CampaignRun>(c, std::move(*checkpoint), d.timings);
+        run->game().discover();
+    };
+    for (const auto* name : {"inn", "smithy", "emporium"}) {
+        position(sanctuaryCity().doorway(name).approach);
+        auto enter = run->prepareTravel(run->doorwayRequest());
+        check(run->commitTravel(enter), "Measurement enters interior");
+        position(run->location(run->activeLocation()).exit);
+        auto leave = run->prepareTravel(run->doorwayRequest());
+        check(run->commitTravel(leave), "Measurement leaves interior");
+    }
+    for (unsigned depth = 0; depth < 3; ++depth) {
+        if (depth)
+            kill(run->game());
+        const auto request = stair(run->game(), FixtureKind::Downstairs);
+        const auto fixture = *run->game().fixtures().find(request.id);
+        position({stairLanding(fixture), fixture.facing});
+        auto ticket = run->prepareTravel(run->request(stair(run->game(), FixtureKind::Downstairs)));
+        check(run->commitTravel(ticket), "Measurement descends");
+    }
+    return run;
+}
+void terminalWorker() {
+    const auto c = catalog();
+    const auto d = definitions();
+    for (bool victory : {false, true}) {
+        Directory directory;
+        CountedCampaignDisk disk(directory.path / "campaign.json");
+        CampaignStore store(c, d, {"fixture", 0}, disk);
+        auto run = victory ? representativeCampaign(c, d)
+                           : std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+        check(store.save(*run, "missing").durable, "Terminal fixture owns a saved run");
+        if (victory)
+            kill(run->game());
+        else
+            for (unsigned i = 0; i < rules::partySize; ++i)
+                run->party().damage({std::uint16_t(i)}, 100000);
+        check(run->status() == (victory ? CampaignStatus::Victory : CampaignStatus::Defeat),
+              "Terminal fixture reaches its intended result");
+        CommandController commands(run->game(), d.timings);
+        commands.refresh({}, false, false, true);
+        CampaignSaveFlow flow(&store);
+        CampaignSaveFlow disabled(nullptr);
+        check(!disabled.terminalPending(*run, commands),
+              "Disabled persistence never starts a terminal presentation job");
+        const auto beforeReads = disk.reads;
+        check(flow.terminalPending(*run, commands) && !flow.closeRequested(*run, commands) &&
+                  disk.reads == beforeReads,
+              "Native close defers terminal I/O until the result can be presented");
+        const auto clock = run->gameplayMs();
+        disk.delayMs = 20;
+        unsigned pumps = 0;
+        PreparationWorker worker;
+        {
+            PreparationScope scope(
+                {[](void* owner, const char*) { ++*static_cast<unsigned*>(owner); }, &pumps, &worker});
+            check(!flow.poll(*run, commands), "Terminal publication does not navigate away");
+        }
+        check(pumps > 1 && disk.ioThread != std::this_thread::get_id() &&
+                  !commands.saveMenu().terminalWarning && run->gameplayMs() == clock,
+              "Victory/defeat file work runs on the worker while the frozen result pumps");
+        disk.delayMs = 0;
+        check(store.inspect().terminal && !flow.terminalPending(*run, commands) &&
+                  flow.closeRequested(*run, commands),
+              "Durable terminal completion denies Continue and releases deferred close");
+    }
+}
+void measureSave(const std::filesystem::path& path) {
+    const auto c = catalog();
+    const auto d = definitions();
+    auto run = representativeCampaign(c, d);
+    using Clock = std::chrono::steady_clock;
+    const auto ms = [](auto from, auto to) {
+        return std::chrono::duration<double, std::milli>(to - from).count();
+    };
+    const auto start = Clock::now();
+    auto snapshot = run->captureSave();
+    const auto captured = Clock::now();
+    auto text = encodeCampaign(c, d, {"fixture", 0}, *snapshot);
+    const auto encoded = Clock::now();
+    // The same fixture encoded by schema 19 occupied 5,831,821 bytes.
+    check(text.size() < 583182 && text.size() < 256 * 1024,
+          "Representative save is at least 90% smaller and below 256 KiB");
+    CampaignDisk disk(path);
+    CampaignStore store(c, d, {"fixture", 0}, disk);
+    const auto before = store.inspect();
+    const auto writing = Clock::now();
+    check(disk.exchange({"replace", text, before.revision}).durable, "Measurement writes atomically");
+    const auto saving = Clock::now();
+    check(store.save(*run, campaignRevision(text), true).durable, "Measurement saves safely");
+    const auto saved = Clock::now();
+    check(store.save(*run, store.inspect().revision).durable, "Measurement overwrites same run");
+    const auto overwritten = Clock::now();
+    std::cout << "bytes=" << text.size() << " capture_ms=" << ms(start, captured)
+              << " encode_ms=" << ms(captured, encoded) << " write_flush_ms=" << ms(writing, saving)
+              << " save_ms=" << ms(saving, saved) << " inspect_and_overwrite_ms=" << ms(saved, overwritten)
+              << '\n';
+}
 } // namespace
 int main(int argc, char** argv) {
     try {
+        if (argc == 3 && std::string(argv[1]) == "--measure") {
+            measureSave(argv[2]);
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--smoke") {
+            terminalWorker();
+            sparsePersistence();
             ignoredCampaigns();
             environmentRoundtrip();
             roundtrip();
@@ -1149,6 +1429,8 @@ int main(int argc, char** argv) {
         }
         if (argc != 1)
             throw std::invalid_argument("Expected no arguments or --smoke");
+        terminalWorker();
+        sparsePersistence();
         ignoredCampaigns();
         environmentRoundtrip();
         roundtrip();

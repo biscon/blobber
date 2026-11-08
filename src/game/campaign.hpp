@@ -37,6 +37,7 @@ struct CampaignLocationState {
     std::uint64_t worldFingerprint = 0;
     std::vector<std::string> rows, types;
     std::vector<NpcInstance> placements;
+    std::vector<ActorState> initialActors; // Preparation baseline, actual population only; never serialized.
     RecoveryLevel recovery;
     FloorFixtures fixtures;
     FloorObjectiveDefinition objective;
@@ -44,7 +45,13 @@ struct CampaignLocationState {
     Player entry{}, exit{}; // Hub: recall / dungeon return; floors: upper / lower landing.
     std::uint32_t seed = 0;
 };
+// Immutable preparation data shared by captures. Never contains floor snapshots.
+struct CampaignDefinitions {
+    std::uint32_t seed = 0;
+    std::array<CampaignLocationState, campaignLocationCount> locations;
+};
 struct CampaignCheckpoint {
+    std::shared_ptr<const CampaignDefinitions> baseline;
     DialogueHistory dialogue;
     std::vector<MerchantState> merchants;
     Party::Saved party;
@@ -56,6 +63,32 @@ struct CampaignCheckpoint {
     std::uint64_t gameplayMs = 0, revision = 1;
     std::string runId;
 };
+struct CampaignLocationSave {
+    const CampaignLocationState* definition = nullptr; // Owned by CampaignSaveData::definitions.
+    bool visited = false;
+    std::unique_ptr<FloorState> state;
+};
+// Disk capture shares immutable definitions; mutable values are exclusively owned.
+struct CampaignSaveData {
+    std::shared_ptr<const CampaignDefinitions> baseline, definitions;
+    DialogueHistory dialogue;
+    std::vector<MerchantState> merchants;
+    Party::Saved party;
+    std::array<CampaignLocationSave, campaignLocationCount> locations;
+    Navigation::Saved navigation;
+    Player pose;
+    bool animated = true;
+    unsigned activeLocation = 0;
+    std::uint64_t gameplayMs = 0, revision = 1;
+    std::string runId;
+};
+std::array<CampaignLocation, campaignLocationCount>
+prepareCampaignLocations(const rules::Catalog&, const std::vector<std::string>&, std::uint32_t seed);
+std::shared_ptr<const CampaignDefinitions>
+campaignDefinitions(const std::array<CampaignLocation, campaignLocationCount>&, std::uint32_t seed,
+                    const rules::Catalog&, const CampaignDefinitions* canonical = nullptr);
+std::shared_ptr<const CampaignDefinitions>
+prepareCampaignDefinitions(const rules::Catalog&, const std::vector<std::string>&, std::uint32_t seed);
 class CampaignRun {
   public:
     class PreparedTravel {
@@ -85,6 +118,7 @@ class CampaignRun {
                 const std::vector<NpcTimings>& timings, std::uint32_t seed);
     CampaignRun(const rules::Catalog&, CampaignCheckpoint&&, const std::vector<NpcTimings>&);
     std::unique_ptr<CampaignCheckpoint> checkpoint() const;
+    std::unique_ptr<CampaignSaveData> captureSave() const;
     const char* saveSafety() const noexcept { return game().saveSafety(); }
     const std::string& runId() const noexcept { return runId_; }
     void preparePersistenceIdentity(std::string id); // New-owner preparation, before publication.
@@ -130,6 +164,7 @@ class CampaignRun {
     unsigned location_ = 0;
     std::uint64_t revision_ = 1, elapsed_ = 0, baseClock_ = 0;
     std::unique_ptr<GameSession> active_;
+    std::shared_ptr<const CampaignDefinitions> baseline_, definitions_;
     void configureDoorways();
     std::unique_ptr<GameSession> prepare(unsigned, Player, bool validate = false);
     std::array<std::uint64_t, 100> partyStamp() const noexcept;

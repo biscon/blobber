@@ -1,5 +1,14 @@
 # System design
 
+[Compact campaign persistence](procedural_campaign_save_design.md#compact-persistence--2026-11-09)
+is implemented and mechanically verified: schema 20 stores canonical baselines
+plus sparse changes and removes save/inspection reconstruction. The owned Debug
+seven-location save fell from 5.56 MiB to 110.4 KiB; inspect/overwrite fell from
+4.60 s to 42.9 ms in one observation. Persistence, CLI/replay, allocation, startup
+and hidden OpenGL checks pass. Terminal results present before worker-owned I/O;
+[two selected captures](screenshots/compact-saves/README.md) await interactive review.
+Existing campaign formats reject without migration; user saves remain untouched.
+
 [Archer visibility and firing-position correction](combat_positioning.md#archer-visibility-and-firing-positions--2026-11-08-follow-up):
 implemented and mechanically verified after user corner/doorway targeting reports;
 interactive review pending.

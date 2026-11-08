@@ -86,8 +86,9 @@ struct PlayView {
         commands.refresh(picking ? picking->targets() : TargetSnapshot{}, session.actionBusy(), debug,
                          focused);
         const auto currentArea = debug ? SpellArea{} : commands.floorPreview();
-        if (!(area.footprint == currentArea.footprint) || area.kind != currentArea.kind || area.cells != currentArea.cells ||
-            area.eligible != currentArea.eligible || area.ground.revision != currentArea.ground.revision)
+        if (!(area.footprint == currentArea.footprint) || area.kind != currentArea.kind ||
+            area.cells != currentArea.cells || area.eligible != currentArea.eligible ||
+            area.ground.revision != currentArea.ground.revision)
             return frames.update(session, animator.snapshot(), currentArea, override, dialogueCamera.moving(),
                                  gameTimeOverride) ||
                    changed;
@@ -292,7 +293,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (campaign) {
                 std::optional<SavingScreen> saving;
                 const auto intent = view.commands.saveMenu().intent;
-                if (intent == SaveIntent::Save || intent == SaveIntent::SaveMenu) {
+                const bool terminalSave = saveFlow.terminalPending(*campaign, view.commands);
+                if (terminalSave) {
+                    view.frames.present(presenter, view.session, view.map, debug, true,
+                                        &view.commands.snapshot());
+                    saving.emplace(presenter.loadingWorker(), presenter, WindowShouldClose, true);
+                } else if (intent == SaveIntent::Save || intent == SaveIntent::SaveMenu) {
                     view.commands.cancelPointerButtons();
                     saving.emplace(presenter.loadingWorker(), presenter);
                 }

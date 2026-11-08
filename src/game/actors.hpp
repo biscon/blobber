@@ -35,6 +35,7 @@ struct ActorState {
     float walkFromElevation = 0;
     bool hostile() const noexcept { return npc.role == NpcRole::Hostile; }
 };
+ActorState initialActorState(const rules::Catalog&, const NpcInstance&, rules::MonsterId appearanceBinding);
 ActorPosition actorPosition(const ActorState& actor, std::uint64_t timeMs) noexcept;
 float actorElevation(const ActorState&, GeometryView, std::uint64_t) noexcept;
 bool actorWalking(const ActorState& actor, std::uint64_t timeMs) noexcept;

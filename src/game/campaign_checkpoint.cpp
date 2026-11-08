@@ -61,6 +61,81 @@ void validateSurfaceProgression(const CampaignLocation& location) {
         }
 }
 } // namespace
+namespace {
+void copyDefinition(CampaignLocationState& to, const CampaignLocation& from) {
+    to.world = from.map().definition();
+    to.worldFingerprint = to.world.fingerprint();
+    to.generated = bool(from.generated);
+    if (from.generated) {
+        to.generation = from.generated->request;
+        to.layout = from.generated->layout;
+        to.diagnostics = from.generated->diagnostics;
+        to.fingerprint = from.generated->fingerprint;
+    }
+    for (int y = 0; y < from.map().height(); ++y) {
+        std::string row;
+        for (int x = 0; x < from.map().width(); ++x)
+            row += from.map().solid({x, y}) ? '#' : '.';
+        to.rows.push_back(std::move(row));
+    }
+    for (unsigned t = 0; t < from.placements->typeCount(); ++t)
+        to.types.push_back(from.placements->typeId({std::uint16_t(t)}));
+    to.placements = from.placements->instances();
+    to.recovery = from.recovery;
+    to.fixtures = from.fixtures;
+    to.objective = from.objective;
+    to.entry = from.entry;
+    to.exit = from.exit;
+    to.seed = from.seed;
+}
+} // namespace
+std::shared_ptr<const CampaignDefinitions>
+campaignDefinitions(const std::array<CampaignLocation, campaignLocationCount>& locations, std::uint32_t seed,
+                    const rules::Catalog& catalog, const CampaignDefinitions* canonical) {
+    auto out = std::make_shared<CampaignDefinitions>();
+    out->seed = seed;
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
+        auto& definition = out->locations[i];
+        copyDefinition(definition, locations[i]);
+        if (canonical)
+            definition.initialActors = canonical->locations[i].initialActors;
+        else {
+            definition.initialActors.reserve(definition.placements.size());
+            for (const auto& npc : definition.placements)
+                definition.initialActors.push_back(initialActorState(
+                    catalog, npc, catalog.findMonster(definition.types.at(npc.type.index))));
+        }
+    }
+    return out;
+}
+std::unique_ptr<CampaignSaveData> CampaignRun::captureSave() const {
+    if (const auto* error = saveSafety())
+        throw std::invalid_argument(error);
+    auto out = std::make_unique<CampaignSaveData>();
+    out->baseline = baseline_;
+    out->definitions = definitions_;
+    out->dialogue = dialogue_;
+    out->merchants = merchants_.checkpoint();
+    out->party = party_.checkpoint();
+    out->pose = game().movement().player;
+    out->animated = game().movement().animated;
+    out->activeLocation = location_;
+    out->gameplayMs = gameplayMs();
+    out->revision = revision_;
+    out->runId = runId_;
+    out->navigation = game().navigationCheckpoint();
+    for (unsigned i = 0; i < campaignLocationCount; ++i) {
+        auto& to = out->locations[i];
+        to.definition = &definitions_->locations[i];
+        to.visited = locations_[i].visited;
+        if (i == location_) {
+            to.state = std::make_unique<FloorState>();
+            game().exportFloor(*to.state);
+        } else if (locations_[i].saved)
+            to.state = std::make_unique<FloorState>(*locations_[i].saved);
+    }
+    return out;
+}
 std::string campaignRunId() {
     std::random_device entropy;
     char id[33];
@@ -88,6 +163,7 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     if (const auto* error = saveSafety())
         throw std::invalid_argument(error);
     auto out = std::make_unique<CampaignCheckpoint>();
+    out->baseline = baseline_;
     out->dialogue = dialogue_;
     out->merchants = merchants_.checkpoint();
     out->party = party_.checkpoint();
@@ -102,31 +178,9 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
         preparationPoint("Restoring campaign locations");
         const auto& from = locations_[i];
         auto& to = out->locations[i];
-        to.world = from.map().definition();
-        to.worldFingerprint = to.world.fingerprint();
-        to.generated = bool(from.generated);
+        copyDefinition(to, from);
+        to.initialActors = baseline_->locations[i].initialActors;
         to.visited = from.visited;
-        if (from.generated) {
-            to.generation = from.generated->request;
-            to.layout = from.generated->layout;
-            to.diagnostics = from.generated->diagnostics;
-            to.fingerprint = from.generated->fingerprint;
-        }
-        for (int y = 0; y < from.map().height(); ++y) {
-            std::string row;
-            for (int x = 0; x < from.map().width(); ++x)
-                row += from.map().solid({x, y}) ? '#' : '.';
-            to.rows.push_back(std::move(row));
-        }
-        for (unsigned t = 0; t < from.placements->typeCount(); ++t)
-            to.types.push_back(from.placements->typeId({std::uint16_t(t)}));
-        to.placements = from.placements->instances();
-        to.recovery = from.recovery;
-        to.fixtures = from.fixtures;
-        to.objective = from.objective;
-        to.entry = from.entry;
-        to.exit = from.exit;
-        to.seed = from.seed;
         if (i == location_) {
             to.state = std::make_unique<FloorState>();
             game().exportFloor(*to.state);
@@ -146,6 +200,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
         revision_ == UINT64_MAX || !s.locations[0].visited || !s.locations[location_].visited ||
         !s.locations[location_].state)
         throw std::invalid_argument("Invalid campaign checkpoint");
+    std::unique_ptr<GameSession> restoredActive;
     for (unsigned i = 0; i < campaignLocationCount; ++i) {
         preparationPoint("Restoring campaign locations");
         auto& from = s.locations[i];
@@ -212,7 +267,11 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             throw std::invalid_argument("Invalid saved arrival");
         to.placements.emplace(to.map(), to.entry.cell, from.types, from.placements);
         to.saved = std::move(from.state);
-        auto checked = prepare(i, to.entry, true);
+        if (to.saved) {
+            auto checked = prepare(i, to.entry, true);
+            if (i == location_)
+                restoredActive = std::move(checked);
+        }
         validateSurfaceProgression(to);
         if (i != location_ && to.saved) {
             for (unsigned c = 0; c < 4; ++c)
@@ -245,8 +304,12 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
     }
     if (locations_[3].saved && locations_[3].saved->objective.completed)
         throw std::invalid_argument("Completed campaign cannot resume as active");
+    baseline_ = s.baseline;
+    if (!baseline_)
+        throw std::invalid_argument("Missing campaign definition baseline");
+    definitions_ = campaignDefinitions(locations_, baseline_->seed, catalog, baseline_.get());
     configureDoorways();
-    active_ = prepare(location_, locations_[location_].entry);
+    active_ = std::move(restoredActive);
     active_->restorePose(s.pose, s.animated);
     active_->restoreNavigation(s.navigation);
     baseClock_ = game().combat().snapshot().gameplayMs;

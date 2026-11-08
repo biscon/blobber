@@ -1,11 +1,130 @@
 # PC06: campaign save and resume
 
-Current paperdoll revision (2026-11-08): campaign schema/simulation **18/22**.
+## Compact persistence — 2026-11-09
+
+**Implemented and mechanically verified; interactive timing/user acceptance pending.**
+Schema **20**, simulation **23**, generator/templates **11/8**. Older campaign
+formats reject without migration or automatic deletion; explicit overwrite is
+still required. Library and arena formats are unchanged.
+
+### Baselines, ownership and disk data
+
+`prepareCampaignLocations` supplies New Game and Load with the same deterministic
+authored/generated definitions. `CampaignDefinitions` owns immutable preparation
+values for the seven locations and actual-population actor baselines, using the
+same `initialActorState` helper as ActorWorld. Each run shares its canonical and
+actual definitions with `CampaignSaveData`; captures copy mutable values only.
+They never copy map definitions or retain another set of dense floor baselines.
+The definition caches are bounded by seven locations, 1,600 cells per location
+and the actual population; they trade a small amount of preparation memory for
+zero generation/reconstruction and no map copies at save time. Runtime and travel
+pools remain dense. Captures, JSON storage and one reusable FloorState comparison
+workspace allocate only at explicit persistence/preparation boundaries.
+
+The envelope stores compatibility, campaign seed, baseline fingerprints and a
+small menu summary. Canonical terrain, layouts, placements, recovery/fixture
+and objective definitions inherit from the regenerated baseline. Unvisited
+locations have no state records. Existing supported generated-world surface,
+architecture and scenery overrides are changes against that baseline. Vectors
+carry an explicit final length plus changed indices, supporting replacement,
+append and removal without a full-map fallback. Generation diagnostics stay off
+disk. Immutable definition admission uses typed comparisons instead of JSON dumps.
+
+The explicit field list supplies typed defaults and canonical baselines. Arrays
+are sorted `[slot, change]` records, vectors contain `size`/`entries`, bitsets
+contain changed bit indices and optional values distinguish clears from absence.
+Omitted fields inherit their baseline/default. Counted actor/AI, target, waypoint,
+container, objective and dialogue arrays traverse only their meaningful prefix;
+other pools emit only meaningful non-default slots. Empty inventory mappings
+inherit UINT16_MAX. Inventory/loot generations, retired slots and container-owner
+cells remain explicit even for empty slots. Expired effect/condition/area/restraint
+and empty buyback payloads do not survive merely because a pool slot once held
+something. Navigation retains pending/ready records, its meaningful queue prefix,
+visited membership, first-step data and exact scheduling; unused workspace is
+canonicalized during checkpoint export. Canonical floor diagnostic hashes now
+ignore dormant payloads; historical raw diagnostic hashes are superseded.
+
+Unknown fields, duplicate/unordered/out-of-range indices, logical-count overflow,
+invalid vector sizes, content references, enum/numeric limits, baseline mismatch,
+oversized input and excessive nesting reject transactionally. Current bounds
+remain 16 MiB and nesting 32. Uint64 state remains lossless decimal text. RNG,
+clocks, effect durations and subsequent simulation/navigation behavior are retained.
+
+### Store and presentation
+
+Save performs eligibility, owned capture, encoding and atomic publication; it
+neither generates locations nor constructs CampaignRun/GameSession candidates.
+Inspect reads compatible metadata only, with no simulation owners or generation.
+It does not promise that an otherwise readable slot passes deeper logical checks:
+Continue performs full admission and retains the current session/save on failure.
+Load decodes once, regenerates baselines once, applies changes, then constructs
+one replacement campaign. Each visited session is admitted once and the checked
+active session is reused. No fresh starting party, supplies, rewards or live RNG
+are used to validate a save.
+
+Normal saves use the existing single worker with exclusive simulation access while
+the window thread pumps cached Saving frames and audio. Terminal transitions first
+present the result, immediately deny in-process Continue, then submit a small owned
+ID/status request to the worker. Cached result frames remain visible during file
+work; close is deferred without cancelling publication. CLI/MCP/replay use the same
+codec/store and may run synchronously. Revision checks, locks, atomic rename,
+file/directory fsync, overwrite confirmation, durability uncertainty, terminal
+association and retry behavior remain intact.
+
+### Verification — 2026-11-09
+
+Configured CLion CMake/Ninja, Debug only, at most two low-priority build workers
+and one test process. Focused integration selection was campaign persistence and
+travel, CLI/MCP/strict replay, frame allocations and graphical startup. All passed:
+
+- `ctest --test-dir cmake-build-debug -j 1 --output-on-failure -R '^(campaign_save|campaign|campaign_save_cli|automation_allocations|gameplay_startup)$'`:
+  allocation guard 16.20 s, campaign 3.25 s, CLI/replay 1.28 s and startup 0.13 s.
+  Initial persistence testing exposed a discarded empty chest-owner cell; corrected
+  its encoding and canonical digest. The affected full `campaign_save` rerun passed
+  in **7.49 s**, including chest depletion, effects, inactive floors, corruption,
+  I/O faults, high/retired slots, partial navigation transport and actual victory/
+  defeat worker/close tests. A final disabled-store guard was covered by
+  `campaign_save_smoke` (2.12 s) and a Debug application rebuild. Passing unrelated
+  suites were not repeated.
+- New structural checks cover sparse pool families, nested counts, default/expired
+  payload omission, geometry overrides and duplicate/capacity failures. Preparation
+  probes verify that Save/Inspect never generate floors or construct campaign/session
+  owners. The explicit seven-location measurement checks a 256 KiB/90%-reduction
+  budget; timing is reported, never asserted by routine tests.
+- Hidden `blobber_world_integration_gpu_tests cmake-build-debug/assets NEW_OUTPUT --campaign-save-review`
+  passed: repeated Saving/result presentation during deliberately delayed worker
+  work, non-cancellable close deferral, stable engine C++/GPU resource counts and
+  no OpenGL errors. Both native 1920×1080 captures were visually inspected;
+  [two selected images](screenshots/compact-saves/README.md) remain. No desktop input
+  automation or interactive play review was performed.
+
+One bounded Debug observation used the same owned low-occupancy seed-5 campaign
+with all seven locations visited (two completed dungeon floors). No compression:
+
+| Measurement | Schema 19 | Schema 20 |
+| --- | ---: | ---: |
+| Save bytes | 5,831,821 | 113,060 |
+| Capture | 1.10 ms | 0.13 ms |
+| Encode | 614.20 ms | 11.05 ms |
+| Inspect plus ordinary overwrite | 4,595.95 ms | 42.90 ms |
+
+The new atomic write/flush stage measured 21.36 ms and the complete save call
+24.62 ms. These are single observations, affected by scheduling/filesystem flushes,
+not latency guarantees. Size fell **98.06%**; the strict continuation/fault tests,
+not the measurement, establish correctness. Debug game rebuilt. Disposable
+captures, old codec copies, measurement saves and logs were cleaned after selecting
+review evidence; no user saves were modified.
+
+## Historical format and rollout notes
+
+The sections below describe earlier deliveries and their superseded formats.
+
+Historical paperdoll revision (2026-11-08): campaign schema/simulation **18/22**.
 The [approved equipment extension](inventory_design.md#expanded-paperdoll-mockup--2026-11-08)
 expands inventory storage to 61 locations per character and 244 stacks per party.
 Older campaigns reject unchanged without migration; library/arena formats remain.
 
-Current movement revision (2026-11-08): campaign schema/simulation **16/20**.
+Historical movement revision (2026-11-08): campaign schema/simulation **16/20**.
 [SRD combat movement](combat_positioning.md#srd-combat-movement--2026-11-08)
 changes the catalog fingerprint and simulation rules, retaining strict rejection
 of older campaigns without rewriting them. Tactical paths and active movement
