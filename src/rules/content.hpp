@@ -49,6 +49,7 @@ struct MonsterDefinition {
     bool humanoid = false;
     DamageProfile damageProfile;
     EnemyCasting spellcasting = EnemyCasting::None;
+    std::int32_t speedFeet = 30; // Legacy catalogs/owned fixtures; schema 14 authors this explicitly.
 };
 // Indices never recycle, and are local to this immutable catalog's lifetime.
 struct CreationClass;

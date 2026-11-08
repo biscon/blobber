@@ -5,6 +5,21 @@ Page references below are printed page numbers. Only listed primitives/data are
 adopted; this is not an import of the complete SRD. Attribution travels with the
 catalog in `assets/rules/ATTRIBUTION.md`.
 
+## Combat Speed revision — 2026-11-08
+
+Adopt SRD 5.1 Speed, movement plus an action, and Dash (combat movement/actions,
+pp. 90–93). One cardinal subcell is five feet. Zombie Speed is 20 feet; goblin,
+skeleton, bugbear and giant rat are 30. Goblin archer/guardian variants and the
+custom shaman use an authored goblin-derived 30 feet. No wolf is added.
+Within initiative, difficult terrain doubles entered-subcell cost without stacking;
+Ray of Frost subtracts ten feet (p. 174), standing costs half Speed while retaining
+the action, and restraint prevents movement/standing. Existing condition lifetimes
+remain. This supersedes earlier notes that tabletop movement Speed is omitted.
+Real-time pursuit/roaming and condition timing, cardinal-only movement, solid ally
+occupancy, one-subcell footprints, party formation lock and adapted attack/spell
+ranges remain project rules. Party automatic standing happens at turn selection
+and retains its action; discretionary party translation/crawling is not introduced.
+
 | Rule/content | Source | Slice 01 treatment |
 | --- | --- | --- |
 | Six abilities and modifiers | pp. 76–77 | Scores 1–30; round down, including negative modifiers. |

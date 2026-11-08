@@ -152,6 +152,10 @@ void environmentRoundtrip() {
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Previous schema/simulation 9/13 rejects explicitly");
     bad = blobber::automation::Json::parse(text);
+    bad["simulation"] = 19;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Pre-Speed simulation 19 rejects without implicit migration");
+    bad = blobber::automation::Json::parse(text);
     bad["generator"] = 9;
     {
         std::ofstream file(directory.path / "campaign.json");

@@ -221,7 +221,10 @@ void offscreenAndPartialRound() {
         else {
             const auto out = s.update(.5, false).step;
             if (out.event == CombatEvent::AttackStarted)
-                check(out.enemy.slot == 0, "Side and rear enemies cannot attack while front group remains");
+                check(inPartyView(s.geometry(), p.cell, p.heading,
+                                  s.actors().actor(out.enemy)->npc.cell,
+                                  s.actors().actor(out.enemy)->npc.subcell),
+                      "Side and rear enemies must move into the visible front before attacking");
         }
     }
     // Outside combat an alerted offscreen archer also cannot shoot.
@@ -631,8 +634,9 @@ void frontApproachInCombat() {
                   "Healthy approaching goblin stays in the frontal fight across rounds");
             check(actor->hitPoints == actor->maxHitPoints, "Route fixture stays at full health");
         }
-        check(approached && melee == 2 && s.actors().actor(s.actors().id(1))->npc.cell == front,
-              "Approaching goblin joins the existing front group and keeps attacking");
+        check(approached && melee == 2 &&
+                  inMeleeFront(map, party.cell, party.heading, s.actors().actor(s.actors().id(1))->npc.cell),
+              "Approaching goblin joins a reachable front attack position and keeps attacking");
     }
 }
 void singleWeaponPolicies() {
@@ -734,11 +738,17 @@ void singleWeaponPolicies() {
     }
     check(moved && retreat.actors().actor(retreat.actors().id(0))->npc.cell == Cell{5, 6},
           "Full-health ranged-only NPC escapes without needing Nimble Escape");
-    const auto deadline = retreat.combat().snapshot().gameplayMs + combatRoundMs;
-    for (int i = 0; i < 30 && retreat.combat().snapshot().gameplayMs < deadline; ++i) {
+    const auto retreatTurn = retreat.combat().snapshot().turn;
+    bool retreatShot = false;
+    for (int i = 0; i < 30 && !retreatShot; ++i) {
         const auto out = retreat.update(.1, false).step;
-        check(out.event != CombatEvent::AttackStarted, "Escaping cannot also shoot before action cooldown");
+        if (out.event == CombatEvent::AttackStarted) {
+            check(out.kind == rules::AttackKind::Ranged && retreat.combat().snapshot().turn == retreatTurn,
+                  "Retreating archer uses its retained action to shoot in the same turn");
+            retreatShot = true;
+        }
     }
+    check(retreatShot, "Escaping preserves the archer's ordinary attack action");
 
     const Map trapped({"#####", "#####", "##.##", "#...#", "#####"});
     archer.cell = {2, 2};
@@ -856,15 +866,20 @@ void traitAndPresentation() {
         s.actors().damage(s.actors().id(0), 500, 0);
         s.update(0, false);
 
-        bool acted = false;
+        bool acted = false, moved = false;
         for (int i = 0; i < 80 && !acted; ++i) {
             if (s.combat().snapshot().awaitingAction)
                 s.submit(turnCommand(s));
             else {
                 const auto out = s.update(.5, false).step;
-                if (out.event == CombatEvent::Move || out.event == CombatEvent::AttackStarted) {
-                    check(enabled ? out.event == CombatEvent::Move : out.event == CombatEvent::AttackStarted,
-                          "Catalog trait controls escape, not creature name");
+                if (out.event == CombatEvent::Move) {
+                    check(enabled, "Only the wounded Nimble Escape actor retreats");
+                    moved = true;
+                }
+                if (out.event == CombatEvent::AttackStarted) {
+                    check(enabled ? moved && out.kind == rules::AttackKind::Ranged
+                                  : !moved && out.kind == rules::AttackKind::Melee,
+                          "Catalog trait chooses retreat plus shot or an immediate melee attack");
                     acted = true;
                 }
             }

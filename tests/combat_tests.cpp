@@ -559,8 +559,8 @@ void groupedTurnsAndAidInput() {
         }
     }
     check(characterActions == std::array<int, 4>{1, 1, 1, 1}, "Individual turns once each per round");
-    check(enemyActions == std::array<int, 4>{0, 0, 1, 1},
-          "Separate enemy groups act once, protected rear never attacks");
+    check(enemyActions == std::array<int, 4>{1, 1, 1, 1},
+          "Separate enemy groups act once, with rear enemies routing into free attack positions");
     awaitCharacter(game, {0});
     game.party().damage({2}, game.party().character({2})->hitPoints);
     CommandController ui(game);

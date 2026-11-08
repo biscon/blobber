@@ -312,30 +312,44 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     alert(id, origin_);
     return queueAttack(out, origin_, now);
 }
+std::uint64_t CombatController::enemySpeed(ActorId id) const noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || effects_.has(id, EffectKind::Restrained))
+        return 0;
+    const auto base = std::uint64_t(actors_.catalog().monster(actor->monster)->speedFeet);
+    return effects_.has(id, EffectKind::Slow) ? (base > 10 ? base - 10 : 0) : base;
+}
 CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& waitingForPath) noexcept {
     waitingForPath = false;
     CombatOutcome out;
     out.enemy = id;
+    out.event = CombatEvent::Spent;
     const auto* a = actors_.actor(id);
-    if (!a || !a->hostile() || a->life != ActorLife::Alive)
+    if (!a || !a->hostile() || a->life != ActorLife::Alive || !effects_.conscious(id))
         return out;
-    if (currentEvents_ && effects_.stand(id, now, *currentEvents_)) {
-        out.event = CombatEvent::Spent;
-        return out;
-    }
-    if (!effects_.canAct(id) || surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
-        surprised_[id.slot] = false;
-        out.event = CombatEvent::Spent;
-        return out;
-    }
-    if (currentEvents_ && effects_.escapeWeb(id, now, *currentEvents_)) {
-        out.event = CombatEvent::Spent;
-        return out;
-    }
-    if (enemyCaster(id)) {
-        out = enemySpell(id, now);
-        if (out.event != CombatEvent::None || out.reason != CommandReason::Resolved)
+    if (!enemyMovement_.initialized) {
+        if (surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
+            surprised_[id.slot] = false;
             return out;
+        }
+        enemyMovement_.initialized = true;
+        if (currentEvents_ && effects_.escapeWeb(id, now, *currentEvents_)) {
+            enemyMovement_.actionSpent = true;
+            enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+        }
+    }
+    const auto speed = enemySpeed(id);
+    const auto allowance = speed * (enemyMovement_.dashed ? 2 : 1);
+    auto remaining = allowance > enemyMovement_.spentFeet ? allowance - enemyMovement_.spentFeet : 0;
+    if (currentEvents_ && effects_.has(id, EffectKind::Knockdown) && speed && remaining >= speed / 2 &&
+        effects_.stand(id, now, *currentEvents_)) {
+        enemyMovement_.spentFeet += speed / 2;
+        remaining -= speed / 2;
+    }
+    if (!enemyMovement_.actionSpent && enemyCaster(id)) {
+        auto spell = enemySpell(id, now);
+        if (spell.event != CombatEvent::None || spell.reason != CommandReason::Resolved)
+            return spell;
     }
     const bool adjacent = combatAdjacent(map_, a->npc.cell, origin_.cell);
     const bool wounded =
@@ -345,35 +359,48 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
     const bool ranged = actors_.catalog().attack(ranged_[id.slot]);
     const bool shot = frontal(id) && ranged && effects_.sees(id) && inBowRange(a->npc.cell, origin_.cell) &&
                       lineOfSight(map_, a->npc.cell, origin_.cell);
-    bool moved = false;
-    if (adjacent && ranged && (!melee || wounded))
-        moved = ai_.escape(id, origin_, now);
-    // Hold usable positions; only waiting combatants route into vacancies.
-    if (!moved && adjacent && melee && frontal(id)) {
+    const bool retreat = adjacent && ranged && (!melee || wounded);
+    if (!enemyMovement_.actionSpent && !retreat && melee && frontal(id)) {
         const auto slot = meleeSlot(id, actors_.occupiedSlots(a->npc.cell));
-        if (slot && (a->npc.subcell == *slot || actors_.move(id, a->npc.cell, *slot, origin_.cell)))
+        if (slot && *slot == a->npc.subcell)
             return enemyAttack(id, false, now);
     }
-    if (!moved && (!shot || (melee && !wounded))) {
-        const auto position = ai_.position(id, origin_, now);
-        if (position == PositioningResult::Pending) {
+    const bool travel = retreat || (!enemyMovement_.retreated && ((!wounded && melee) || !shot));
+    if (travel && speed && effects_.mobile(id) && !effects_.has(id, EffectKind::Knockdown)) {
+        const auto step = ai_.combatStep(id, origin_, now, retreat);
+        if (step.status == TacticalNavigation::Status::Pending) {
             waitingForPath = true;
+            out.event = CombatEvent::None;
             return out;
         }
-        moved = position == PositioningResult::Moved;
+        if (step.status == TacticalNavigation::Status::Step) {
+            if (step.costFeet > remaining && step.costFeet <= remaining + speed &&
+                !enemyMovement_.actionSpent && !retreat && !shot) {
+                enemyMovement_.dashed = true;
+                enemyMovement_.actionSpent = true;
+                enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+                remaining += speed;
+                if (currentEvents_) {
+                    auto dash = out;
+                    dash.event = CombatEvent::Dash;
+                    currentEvents_->append(dash);
+                }
+            }
+            if (step.costFeet <= remaining && ai_.commitCombatStep(id, origin_, step, now)) {
+                enemyMovement_.spentFeet += step.costFeet;
+                enemyMovement_.retreated |= retreat;
+                enemyMovement_.arriving = true;
+                state_.resolvingAction = true;
+                state_.awaitingAction = false;
+                due_ = now + a->walkDurationMs;
+                out.event = CombatEvent::Move;
+                return out;
+            }
+        }
     }
-    if (moved) {
-        out.event = CombatEvent::Move;
-        enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
-        state_.resolvingAction = true;
-        state_.awaitingAction = false;
-        due_ = now + (actorWalking(*a, now) ? a->walkDurationMs : actionDelayMs);
-        return out;
-    }
-    if (shot) {
+    if (!enemyMovement_.actionSpent && shot)
         return enemyAttack(id, true, now);
-    }
-    if (currentEvents_)
+    if (!enemyMovement_.actionSpent && currentEvents_)
         for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
             const auto ally = actors_.id(i);
             if (effects_.has(ally, EffectKind::Sleep) &&
@@ -383,7 +410,8 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
                 break;
             }
         }
-    out.event = CombatEvent::Spent;
+    // Exhaustion/blocked movement and non-attacking actions still finish readiness once.
+    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
     return out;
 }
 CombatOutcome CombatController::deathSave(rules::CharacterId id, std::uint64_t) noexcept {

@@ -1,5 +1,5 @@
 {
-  "schema_version": 13,
+  "schema_version": 14,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -92,6 +92,7 @@
       },
       "armor_class": 15,
       "hit_points": 7,
+      "speed_ft": 30,
       "attacks": [
         "goblin.scimitar"
       ],
@@ -174,6 +175,7 @@
       },
       "armor_class": 15,
       "hit_points": 7,
+      "speed_ft": 30,
       "attacks": [
         "goblin.shortbow"
       ],
@@ -265,6 +267,7 @@
       },
       "armor_class": 15,
       "hit_points": 14,
+      "speed_ft": 30,
       "attacks": [
         "goblin.scimitar"
       ],
@@ -347,6 +350,7 @@
       },
       "armor_class": 13,
       "hit_points": 13,
+      "speed_ft": 30,
       "attacks": [
         "skeleton.shortsword"
       ],
@@ -386,6 +390,7 @@
       },
       "armor_class": 16,
       "hit_points": 27,
+      "speed_ft": 30,
       "attacks": [
         "bugbear.morningstar"
       ],
@@ -421,6 +426,7 @@
       },
       "armor_class": 12,
       "hit_points": 7,
+      "speed_ft": 30,
       "attacks": [
         "giant.rat.bite"
       ],
@@ -448,6 +454,7 @@
       },
       "armor_class": 8,
       "hit_points": 22,
+      "speed_ft": 20,
       "attacks": [
         "zombie.slam"
       ],
@@ -477,6 +484,7 @@
       },
       "armor_class": 10,
       "hit_points": 9,
+      "speed_ft": 30,
       "attacks": [
         "goblin_shaman.staff"
       ],

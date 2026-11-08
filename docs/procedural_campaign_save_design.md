@@ -1,5 +1,12 @@
 # PC06: campaign save and resume
 
+Current movement revision (2026-11-08): campaign schema/simulation **16/20**.
+[SRD combat movement](combat_positioning.md#srd-combat-movement--2026-11-08)
+changes the catalog fingerprint and simulation rules, retaining strict rejection
+of older campaigns without rewriting them. Tactical paths and active movement
+budgets are transient because encounters cannot be saved. Arena scenarios retain
+their existing format. Extended campaign persistence passes for this revision.
+
 Status: **Accepted and closed**, 2026-10-30.
 User approved the reviewed PC06-only plan with “Implement the plan”, then accepted
 the delivered save/load slice on 2026-10-30. Review corrections are included.

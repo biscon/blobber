@@ -63,7 +63,8 @@ inline void combatPositioningReview(const std::filesystem::path& assets,
                       "Combat positioning render has no GL errors");
             };
             capture("initial-two-visible-two-flanking");
-            std::array<bool, 4> moved{}, attacked{};
+            std::array<bool, 4> moved{}, attacked{}, captured{};
+            std::array<std::uint64_t, 4> movedRound{}, movedTurn{};
             for (unsigned tick = 0; tick < 500 && !(attacked[2] && attacked[3]); ++tick) {
                 if (game.combat().snapshot().awaitingAction)
                     commands.record(game.submit(turnCommand(game)));
@@ -75,24 +76,35 @@ inline void combatPositioningReview(const std::filesystem::path& assets,
                         continue;
                     if (step.event == CombatEvent::Move) {
                         check(step.enemy.slot >= 2, "Attack-ready centre goblins hold their positions");
+                        movedRound[step.enemy.slot] = game.combat().snapshot().round;
+                        movedTurn[step.enemy.slot] = game.combat().snapshot().turn;
                         moved[step.enemy.slot] = true;
-                        commands.record(game.update(.3f, false));
-                        capture("flank-" + std::to_string(step.enemy.slot) + "-walking");
-                        commands.record(game.update(.3f, false));
-                        capture("flank-" + std::to_string(step.enemy.slot) + "-arrived");
+                        const auto& arriving = game.actors().actor(step.enemy)->npc;
+                        if (!captured[step.enemy.slot] &&
+                            inPartyView(map, pose.cell, pose.heading, arriving.cell, arriving.subcell)) {
+                            captured[step.enemy.slot] = true;
+                            commands.record(game.update(.15, false));
+                            capture("flank-" + std::to_string(step.enemy.slot) + "-walking");
+                            commands.record(game.update(.15, false));
+                            capture("flank-" + std::to_string(step.enemy.slot) + "-arrived");
+                        }
                     }
                     if (step.event == CombatEvent::AttackStarted) {
                         const auto& actor = *game.actors().actor(step.enemy);
                         check(inPartyView(map, pose.cell, pose.heading, actor.npc.cell, actor.npc.subcell),
                               "Every attack in the scripted encounter is frontal");
                         attacked[step.enemy.slot] = true;
+                        if (step.enemy.slot >= 2)
+                            check(movedRound[step.enemy.slot] == game.combat().snapshot().round &&
+                                      movedTurn[step.enemy.slot] == game.combat().snapshot().turn,
+                                  "Flanker movement and attack retain the same round and turn");
                     }
                 }
                 check(game.movement().player == pose,
                       "Advancing flank actors keep the populated front facing");
             }
             check(moved[2] && moved[3] && attacked[2] && attacked[3],
-                  "Both formerly offscreen goblins move on their turns and later attack");
+                  "Both formerly offscreen goblins move and attack in the same initiative turns");
             for (unsigned i = 0; i < 100 && !game.combat().snapshot().awaitingAction; ++i)
                 commands.record(game.update(.1f, false));
             capture("all-four-engaged");

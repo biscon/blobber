@@ -151,7 +151,8 @@ void drawArena(MenuView& v, const HudPainter& p, const UiArt& art) {
                 quantity = a.scenario.roster[n].quantity;
         p.box({240, y, 375, 37}, quantity ? hudInk::teal : hudInk::edge);
         p.clipped(monsterName(monster.id), 248, y + 5, 240, hudInk::gold, UiTextStyle::Heading);
-        std::snprintf(text, sizeof(text), "HP %d   AC %d", monster.hitPoints, monster.armorClass);
+        std::snprintf(text, sizeof(text), "HP %d   AC %d   Speed %d ft (%d steps)", monster.hitPoints,
+                      monster.armorClass, monster.speedFeet, monster.speedFeet / 5);
         p.text(a.available[i] ? text : "Appearance unavailable", 248, y + 23, hudInk::muted,
                UiTextStyle::Small);
         if (quantity)

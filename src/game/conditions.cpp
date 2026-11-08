@@ -166,7 +166,7 @@ void EffectController::wake(EffectTarget t, std::uint64_t now, CombatEvents& eve
 }
 bool EffectController::stand(EffectTarget t, std::uint64_t now, CombatEvents& events) noexcept {
     const auto i = conditionIndex(t);
-    if (i >= conditions_.size() || !conscious(t))
+    if (i >= conditions_.size() || !conscious(t) || (turns_ && has(t, EffectKind::Restrained)))
         return false;
     auto& c = conditions_[i][3];
     if (!c.active)

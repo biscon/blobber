@@ -1,6 +1,7 @@
 #pragma once
 #include "game/movement.hpp"
 #include "game/navigation.hpp"
+#include "game/tactical_navigation.hpp"
 namespace blobber {
 enum class Awareness : std::uint8_t { Routine, Pursuing, Investigating, Searching, Returning };
 struct NpcAiState {
@@ -39,6 +40,9 @@ class NpcAiController {
     bool approach(ActorId id, Player party, std::uint64_t now) noexcept;
     PositioningResult position(ActorId id, Player party, std::uint64_t now) noexcept;
     bool escape(ActorId id, Player party, std::uint64_t now) noexcept;
+    TacticalNavigation::Result combatStep(ActorId, Player, std::uint64_t now, bool retreat) noexcept;
+    bool commitCombatStep(ActorId, Player, const TacticalNavigation::Result&, std::uint64_t now) noexcept;
+    void cancelCombatRoute() noexcept { tactical_.cancel(); }
     const NpcAiSnapshot& snapshot() const noexcept { return state_; }
 
     // Preparation-only owned values; no borrowed pointers or navigation workspace.
@@ -55,6 +59,9 @@ class NpcAiController {
     GeometryView map_;
     ActorWorld& actors_;
     Navigation navigation_;
+    TacticalNavigation tactical_;
+    std::uint64_t tacticalTime_ = UINT64_MAX;
+    std::size_t tacticalWork_ = 0;
     EffectController* effects_ = nullptr;
     bool turnMovement_ = false;
     std::array<std::optional<Cell>, NpcWorld::maxInstances> prepared_{};

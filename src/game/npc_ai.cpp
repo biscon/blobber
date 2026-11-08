@@ -11,7 +11,7 @@ int distance(Cell a, Cell b) noexcept {
 }
 } // namespace
 NpcAiController::NpcAiController(GeometryView map, ActorWorld& actors, std::uint32_t seed)
-    : map_(map), actors_(actors), navigation_(map, actors), rng_(seed ^ 0x41493037u) {
+    : map_(map), actors_(actors), navigation_(map, actors), tactical_(map, actors), rng_(seed ^ 0x41493037u) {
     state_.count = actors.snapshot().count;
     for (std::size_t i = 0; i < state_.count; ++i) {
         const auto& npc = actors.snapshot().actors[i].npc;
@@ -276,6 +276,35 @@ bool NpcAiController::aware(ActorId id) const noexcept {
 }
 bool NpcAiController::approach(ActorId id, Player party, std::uint64_t now) noexcept {
     return position(id, party, now) == PositioningResult::Moved;
+}
+TacticalNavigation::Result NpcAiController::combatStep(ActorId id, Player party, std::uint64_t now,
+                                                        bool retreat) noexcept {
+    if (tacticalTime_ != now) {
+        tacticalTime_ = now;
+        tacticalWork_ = 0;
+    }
+    const auto goal = effects_ && !effects_->sees(id) ? state_.actors[id.slot].lastSeen : party.cell;
+    auto result = tactical_.next(id, party, retreat ? party.cell : goal, retreat, effects_, tacticalWork_);
+    state_.searchWork = tacticalWork_;
+    return result;
+}
+bool NpcAiController::commitCombatStep(ActorId id, Player party,
+                                       const TacticalNavigation::Result& step, std::uint64_t now) noexcept {
+    const auto* actor = actors_.actor(id);
+    if (!actor || actorWalking(*actor, now) || (effects_ && !effects_->mobile(id)) ||
+        step.status != TacticalNavigation::Status::Step)
+        return false;
+    const auto old = actor->npc.cell;
+    const auto delta = step.cell * 2 + step.subcell + (old * 2 + actor->npc.subcell) * -1;
+    if (std::abs(delta.x) + std::abs(delta.y) != 1 ||
+        !actors_.walk(id, step.cell, step.subcell, party.cell, now, npcWalkDurationMs / 2).changed)
+        return false;
+    actors_.face(id, delta.x ? (delta.x > 0 ? Heading::East : Heading::West)
+                            : (delta.y > 0 ? Heading::South : Heading::North));
+    tactical_.committed();
+    if (effects_ && !(old == step.cell))
+        effects_->enter(id, step.cell, now);
+    return true;
 }
 PositioningResult NpcAiController::position(ActorId id, Player party, std::uint64_t now) noexcept {
     const auto* actor = actors_.actor(id);

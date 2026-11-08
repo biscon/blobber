@@ -27,7 +27,7 @@ void checkOccupancy(const ActorWorld& actors) {
 void runToAttack(GameSession& game, ActorId waiting, unsigned limit = 8) {
     const auto party = game.movement().player;
     const auto anchor = game.actors().actor(game.actors().id(0))->npc;
-    std::uint64_t movedRound = 0, attackedRound = 0;
+    std::uint64_t attackedRound = 0;
     unsigned moves = 0, attacks = 0;
     for (unsigned tick = 0; tick < 800 && game.combat().snapshot().round <= limit && !attacks; ++tick) {
         const auto before = game.combat().snapshot();
@@ -51,14 +51,13 @@ void runToAttack(GameSession& game, ActorId waiting, unsigned limit = 8) {
                 if (!sameActor(out.enemy, waiting))
                     continue;
                 if (out.event == CombatEvent::Move) {
-                    check(movedRound != before.round && attackedRound != before.round,
-                          "A positioning move consumes exactly one enemy action in its round");
-                    movedRound = before.round;
+                    check(attackedRound != before.round,
+                          "An enemy does not resume positioning after attacking");
                     ++moves;
                 }
                 if (out.event == CombatEvent::AttackStarted) {
-                    check(movedRound != before.round && attackedRound != before.round,
-                          "A repositioning enemy cannot also attack in the same round");
+                    check(attackedRound != before.round,
+                          "A repositioning enemy attacks at most once in its round");
                     attackedRound = before.round;
                     ++attacks;
                 }
@@ -263,7 +262,6 @@ void reopenedVacancy() {
 void facePartyOnArrival() {
     const auto map = hybridRoom();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
-    unsigned changedDirections = 0;
     for (unsigned h = 0; h < 4; ++h)
         for (bool sameCell : {false, true}) {
             const Player party{{6, 6}, Heading(h)};
@@ -287,8 +285,8 @@ void facePartyOnArrival() {
             check(moved, "Facing fixture reaches the waiting enemy's positioning move");
             const auto* actor = game.actors().actor(id);
             const auto travelFacing = actor->npc.facing;
-            const auto arrivedFacing = headingToward(actor->npc.cell, party.cell);
-            changedDirections += travelFacing != arrivedFacing;
+            const auto arrivedFacing = inMeleeFront(game.geometry(), party.cell, party.heading, actor->npc.cell)
+                                           ? headingToward(actor->npc.cell, party.cell) : travelFacing;
             check(actorWalking(*actor, game.timeMs()), "Arrival fixture starts during committed travel");
             const auto end = actor->walkTimeMs + actor->walkDurationMs;
             const auto turn = game.combat().snapshot().turn;
@@ -314,7 +312,6 @@ void facePartyOnArrival() {
                 check(out.event != CombatEvent::AttackStarted,
                       "Arrival-facing must not begin the next enemy's attack");
         }
-    check(changedDirections >= 4, "Arrival cases exercise actual direction changes across all headings");
 }
 } // namespace
 

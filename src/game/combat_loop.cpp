@@ -165,14 +165,12 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
     } else if (state_.phase == CombatPhase::Turns) {
         if (finish(now))
             out.event = CombatEvent::Finished;
-        else if (!moving && settleFront(now)) {
+        else if (!moving && !(state_.activeEnemy && enemyMovement_.initialized) && settleFront(now)) {
             out.phase = state_.phase;
             return out;
         } else if (now >= due_ && !moving) {
             if (state_.activeCharacter) {
                 const auto id = *state_.activeCharacter;
-                if (effects_.stand(id, now, events))
-                    state_.spent[id.index] = true;
                 if (hasActions(id))
                     state_.awaitingAction = true;
                 else {

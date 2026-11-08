@@ -1,5 +1,14 @@
 # System design
 
+[SRD combat movement](combat_positioning.md#srd-combat-movement--2026-11-08):
+**implemented and mechanically verified; balance review pending**. Five feet per cardinal subcell,
+species Speed, movement plus an action, Dash, and SRD movement condition costs.
+Combat-only subcell navigation leaves real-time roaming unchanged. Arena scenarios
+remain compatible; campaign schema/simulation are **16/20** under the strict save policy.
+Debug/Release games build, 20 affected Release CPU suites and extended campaign
+persistence pass. Six inspected hidden OpenGL captures verify same-turn flank
+movement/attacks and GPU cleanup; [review evidence](screenshots/combat-positioning/README.md).
+
 [Stone & Shadow menu title](menu_launch_design.md#stone--shadow-title-artwork--2026-11-08):
 **artwork accepted; implemented and mechanically verified**. Generated antique-gold raster
 wordmark over the existing menu background. The approved follow-up removes the

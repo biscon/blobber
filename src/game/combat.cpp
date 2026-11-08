@@ -328,6 +328,8 @@ void CombatController::begin(std::uint64_t now) noexcept {
     selectTurn();
 }
 void CombatController::selectTurn() noexcept {
+    enemyMovement_ = {};
+    ai_.cancelCombatRoute();
     state_.awaitingAction = false;
     state_.activeCharacter.reset();
     state_.activeEnemy.reset();
@@ -343,6 +345,8 @@ void CombatController::selectTurn() noexcept {
                 state_.defending[e.index] = false;
             const auto life = party_.character({e.index})->life;
             if (life == rules::Life::Conscious || life == rules::Life::Dying) {
+                if (currentEvents_)
+                    effects_.stand(rules::CharacterId{e.index}, noticeTime_, *currentEvents_);
                 state_.activeCharacter = rules::CharacterId{e.index};
                 state_.spent[e.index] = state_.spent[e.index] || partyReady_[e.index] > state_.gameplayMs;
                 state_.awaitingAction = hasActions(rules::CharacterId{e.index});

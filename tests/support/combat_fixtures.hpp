@@ -2,7 +2,8 @@
 #include "game/session.hpp"
 #include "party_fixtures.hpp"
 namespace blobber {
-inline rules::Catalog combatCatalog(int hp = 7, int bonus = 4, rules::Dice damage = {1, 6, 2}, int ac = 15) {
+inline rules::Catalog combatCatalog(int hp = 7, int bonus = 4, rules::Dice damage = {1, 6, 2}, int ac = 15,
+                                    int speed = 30) {
     auto f = partyFixture();
     rules::MonsterDefinition m;
     m.id = "goblin";
@@ -11,6 +12,7 @@ inline rules::Catalog combatCatalog(int hp = 7, int bonus = 4, rules::Dice damag
     m.hitPoints = hp;
     m.attacks[0] = {0};
     m.attackCount = 1;
+    m.speedFeet = speed;
     return {{{"melee", rules::AttackKind::Melee, bonus, damage, rules::DamageType::Slashing}},
             {m},
             f.races,

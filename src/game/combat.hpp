@@ -47,7 +47,8 @@ enum class CombatEvent : std::uint8_t {
     Healing,
     Recovery,
     SpellSave,
-    GuidingMark
+    GuidingMark,
+    Dash
 };
 struct CombatOutcome {
     CombatEvent event = CombatEvent::None;
@@ -288,6 +289,11 @@ class CombatController {
     std::size_t groupCount_ = 0, orderCount_ = 0, position_ = 0, enemyCursor_ = 0, autoCursor_ = 0;
     std::uint64_t due_ = 0, partyBusy_ = 0;
     bool episode_ = false, enableRoaming_ = true, resumeAwaiting_ = false;
+    struct EnemyMovement {
+        bool initialized = false, actionSpent = false, dashed = false, arriving = false, retreated = false;
+        std::uint64_t spentFeet = 0;
+    } enemyMovement_;
+    std::uint64_t enemySpeed(ActorId) const noexcept;
     CombatPhase resumePhase_ = CombatPhase::Contact;
     bool partyExposed(rules::CharacterId) const noexcept;
     bool packSupported(ActorId, Cell partyCell) const noexcept;

@@ -74,7 +74,7 @@ bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept 
     return false;
 }
 bool EffectController::canAct(EffectTarget t) const noexcept {
-    if (!conscious(t) || has(t, EffectKind::Knockdown))
+    if (!conscious(t) || (!turns_ && has(t, EffectKind::Knockdown)))
         return false;
     return t.npc || party_.character(t.character)->life == rules::Life::Conscious;
 }

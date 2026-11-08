@@ -331,6 +331,18 @@ void packTraits() {
           "Noncasters retain explicit none profile");
     casting["monsters"][0]["spellcasting"] = "wizard";
     files.invalid(casting, "spellcasting");
+    auto movement = casting;
+    movement["schema_version"] = 14;
+    movement["monsters"][0]["spellcasting"] = "none";
+    movement["monsters"][0]["speed_ft"] = 40;
+    check(files.load(movement).monster({0})->speedFeet == 40 && zombie.monster({0})->speedFeet == 30,
+          "Authored speed loads; legacy catalogs explicitly default to thirty feet");
+    for (auto value : {Json(-1), Json(1.5), Json(true), Json(2147483648LL)}) {
+        movement["monsters"][0]["speed_ft"] = value;
+        files.invalid(movement, "speed_ft");
+    }
+    movement["monsters"][0].erase("speed_ft");
+    files.invalid(movement, "speed_ft");
     casting["monsters"][0].erase("spellcasting");
     files.invalid(casting, "spellcasting");
     check(zombie.monster({0})->spellcasting == EnemyCasting::None, "Earlier schemas default to noncaster");

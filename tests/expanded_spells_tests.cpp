@@ -103,7 +103,10 @@ void allCasts() {
         const int mana = s->party().character(c.character)->mana;
         const auto out = s->submit(c);
         if (out.reason != CommandReason::Resolved)
-            throw std::runtime_error(std::string(r.id) + ": " + commandMessage(out.reason));
+            throw std::runtime_error(std::string(r.id) + ": " + commandMessage(out.reason) +
+                                     " command " + std::to_string(c.world) + "/" + std::to_string(c.turn) +
+                                     " current " + std::to_string(s->combat().snapshot().world) + "/" +
+                                     std::to_string(s->combat().snapshot().turn));
         check(s->party().character(c.character)->mana == mana - r.level * 2, "Exactly one spell cost");
         check(s->submit(c).reason != CommandReason::Resolved,
               "Accepted command cannot repeat on same cooldown/turn");
@@ -420,7 +423,8 @@ void hazardsAndMovement() {
     f.effects.clockMode(true);
     check(f.effects.stand(enemy, 0, f.events), "Turn begins by standing");
     f.effects.groundCheck(enemy, {6, 4}, 0, f.events);
-    check(!f.effects.canAct(enemy), "End-turn Grease can knock standing creature down again");
+    check(f.effects.has(enemy, EffectKind::Knockdown) && f.effects.canAct(enemy),
+          "End-turn Grease causes prone without removing the next action");
     f.effects.clockMode(false);
     f.effects.advance(6000, 6000, true, f.events);
     check(f.effects.has(enemy, EffectKind::Knockdown), "Stationary hazard recurs after automatic recovery");

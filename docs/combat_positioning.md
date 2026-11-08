@@ -1,5 +1,134 @@
 # Combat positioning for waiting enemies
 
+## SRD combat movement — 2026-11-08
+
+Status: implemented and mechanically verified; interactive balance/presentation
+review pending. Approved design was recorded before implementation.
+This revision supersedes the movement-spends-action rules below.
+
+Monster definitions own immutable integer `speedFeet` (nonnegative int32); catalog
+schema 14 requires `speed_ft`, while older catalogs explicitly default to 30 feet.
+Zombie is 20; other shipped species are 30, including authored goblin variants and
+shaman. Each cardinal subcell step costs five feet. No wolf content is added.
+Real-time roaming/pursuit, party combat movement lock and attack geometry remain
+project adaptations. Arena setup exposes Speed and subcell allowance.
+
+CombatController owns one transient active-enemy turn record: initialization,
+movement spent, action spent, Dash and movement presentation. Selection resets it;
+movement arrival resumes the same turn without advancing initiative or readiness.
+Attack/cast completion ends the turn. Casting and existing ranged/retreat priorities
+remain; healthy mixed attackers approach before fallback shots. A legal attack
+position stops approach. Dash spends the action once for another current Speed,
+only when ordinary movement cannot produce a usable action and a route progresses.
+A retreat prefers reachable visible firing positions and stops when separation
+is established, then takes its shot if legal. Active movement/action continuation
+defers automatic facing/disengagement until the turn finishes. No discretionary
+post-attack movement or bonus-action Dash is added.
+
+NpcAiController owns a separate reusable TacticalNavigation workspace. Incremental
+Dijkstra searches four cardinal nodes per dungeon cell with five/ten-foot terrain
+edges. Preallocated distance, parent, indexed binary heap, route and generation
+arrays use 24 bytes/subcell plus bounded metadata: one workspace for the active
+session, rather than one per creature, with no frame allocation. Generations avoid
+whole-map clears per turn; generation exhaustion clears incrementally. Search/reset
+work is capped at 4096 nodes per update. Tactical and ordinary navigation run in
+mutually exclusive simulation phases, sharing that per-update allowance; at most
+one tactical step commits per update.
+Goals preserve visible-near, visible-rear, hidden priority, cheapest route within
+rank and stable ties. Occupied subcells/party cell block movement; cross-cell edges
+use existing wall/elevation rules. Ally traversal and diagonals remain deferred.
+Cached routes revalidate geometry, occupancy and ground revisions and each next
+edge. Pending search does not consume RNG, movement or the action; a failed search
+ends that turn's movement. Half the existing whole-cell walk duration presents each
+step; there is no extra action delay between steps. Cell-entry effects run only
+on cell boundaries.
+
+Combat movement separates Speed from terrain cost: Ray of Frost subtracts ten
+feet (minimum zero); destination difficult terrain doubles step cost without
+stacking; restrained creatures have zero movement. Standing costs half current
+Speed (integer feet, SRD rounding), retains the action, and requires positive
+Speed and sufficient movement. Party standing also retains its action, but party
+translation stays locked. Escaping Web spends the action and successful escape
+allows remaining movement. Hazards/impacts recheck consciousness and mobility;
+knockdown stops further travel until standing is affordable. Surprise/incapacity
+preclude normal movement/actions. Existing real-time condition adaptations remain.
+
+New movement/search records are transient: safe saves already exclude encounters.
+Campaign schema remains 16, simulation becomes 20, and changed catalog fingerprint
+rejects old campaigns unchanged. Arena scenarios retain their format and content IDs.
+
+Validation uses owned 20/30/40-foot fixtures; exact budgets, movement-to-attack,
+Dash exclusion, detours/occupancy/headings, conditions/entry hazards, pause and
+readiness, pending search and allocation guards. Run focused CPU suites in one
+configuration, affected callers/persistence once, and a hidden production-art
+walk/attack diagnostic. Keep owned output in an agent run, promote at most six
+review captures and clean disposable output. Interactive acceptance belongs to
+the user; no desktop input or focus automation.
+
+### Delivered verification
+
+Both Release and CLion Debug games build without compiler warnings. Release was
+the development/test configuration; Debug was built for the user's normal launch,
+without repeating a test matrix. Resource-intensive jobs used low CPU/I/O priority,
+at most two compiler workers and one test process; GPU library threads were bounded.
+
+The final affected Release run passed **20/20 suites in 3.77 s**:
+`combat_movement`, `combat_positioning`, `rules_content`, `ai`, `hybrid`, `combat`,
+`commands`, `actors`, `effects`, `impact`, `spells`, `expanded_spells`, `shaman`,
+`zombie`, `giant_rat`, `bugbear`, `arena`, `automation`, `automation_allocations`,
+and `gameplay_startup`. Build their corresponding `blobber_*_tests` targets, then:
+
+```sh
+nice -n 15 ionice -c 3 ctest --test-dir cmake-build-release -j 1 --output-on-failure \
+  -R '^(combat_movement|combat_positioning|rules_content|ai|hybrid|combat|commands|actors|effects|impact|spells|expanded_spells|shaman|zombie|giant_rat|bugbear|arena|automation|automation_allocations|gameplay_startup)$'
+```
+
+The separately labelled extended `campaign_save` suite passed in **7.27 s** during
+the integration checkpoint, including unchanged old-save rejection and new-save
+roundtrip. It was not repeated after transient retreat/presentation corrections.
+The new simulation-19 rejection has no implicit migration; shipped source, Debug
+and Release catalogs all publish schema 14 and identical explicit creature speeds.
+Arena reload/rematch uses unchanged scenario schema/content IDs. No user saves or
+scenario files were modified.
+
+Owned movement tests cover 0/1/20/25/30/40-foot allowances, ordinary-versus-Dash
+boundaries, exact cardinal displacement, normal arrival plus attack, Dash arrival
+without attack, frost and terrain both separately and combined, one cell-entry
+hazard check plus one end-turn check, standing with/without sufficient Speed,
+party stand-and-act, failed/successful Web escape, sleep, bounded pending searches,
+unchanged turn tokens/round clocks and engine-owned C++ allocation guards. Existing
+heading/flank, detour, blocked-rank, pause, stale request and navigation continuation
+checks pass. This is not a no-allocation claim about drivers/third-party internals.
+
+The opt-in hidden diagnostic passed with production art, no GL errors and matched
+world GPU resource counts after release:
+
+```sh
+env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 LP_NUM_THREADS=2 nice -n 15 ionice -c 3 \
+  cmake-build-release/blobber_world_integration_gpu_tests cmake-build-release/assets \
+  RUN_DIRECTORY/captures --combat-positioning-review
+```
+
+Its assertions bind each flanker attack to the same round **and turn token** as
+movement; six captures were inspected and replaced the previous
+[positioning review evidence](screenshots/combat-positioning/README.md).
+The sandbox could not access X11; the authorized hidden-only check passed outside
+it. No OS input/focus automation was used. Interactive balance acceptance remains
+the user's saved-arena playthrough; no benchmark, stress test or sanitizer matrix
+was run.
+
+Development failures exposed historical movement-spends-action assertions and a
+same-timestamp continuation boundary; tests now assert legal geometry, one action,
+subcell arrival and retained turn ownership. A pre-existing generated-appearance
+fixture repeated names after eleven types despite thirteen definitions; its owned
+name table now includes blacksmith and Shadowtart. Allocation integration passes.
+
+Disposable logs/captures were owned by an agent run; the selected six images replace
+superseded evidence, and cleanup removes the run after runners close. Acceptance
+status remains pending.
+
+## Previous implementation — 2026-11-03
+
 Status: implemented and mechanically verified (2026-11-03); interactive acceptance remains user review.
 
 The reproduced flank goblin received no moves or attacks over six rounds, although

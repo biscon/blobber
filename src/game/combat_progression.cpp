@@ -60,6 +60,14 @@ void CombatController::completeAction(std::uint64_t now) noexcept {
             inMeleeFront(map_, origin_.cell, origin_.heading, actor->npc.cell))
             actors_.face(id, headingToward(actor->npc.cell, origin_.cell));
     }
+    if (state_.activeEnemy && enemyMovement_.arriving) {
+        enemyMovement_.arriving = false;
+        state_.resolvingAction = false;
+        due_ = now + 1;
+        // Arrival continues this same initiative opportunity on the next update.
+        refreshReadiness();
+        return;
+    }
     if (state_.phase == CombatPhase::Turns && state_.activeCharacter &&
         party_.progressionClass(*state_.activeCharacter) == rules::ProgressionClass::Rogue &&
         party_.character(*state_.activeCharacter)->build.level >= 2 &&

@@ -184,6 +184,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
             throw std::runtime_error("attacks." + a.id + ".damage.type: invalid physical damage type");
     }
     for (const auto& m : monsters_) {
+        if (m.speedFeet < 0)
+            throw std::runtime_error("monsters." + m.id + ".speed_ft: must be nonnegative");
         if (m.spellcasting > EnemyCasting::AcolyteSupport)
             throw std::runtime_error("Unsupported enemy casting profile");
         if (!validDamageProfile(m.damageProfile))

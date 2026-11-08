@@ -1,14 +1,21 @@
-# Combat positioning review — 2026-11-03
+# Combat movement review — 2026-11-08
 
-Curated on 2026-11-05 from existing evidence; no new capture or test run.
-Historical acceptance and verification limitations remain in the linked documentation.
+Status: mechanically verified; interactive balance and movement presentation await
+user review. Earlier positioning acceptance is not changed by replacing evidence.
 
-Superseded captures, raw logs, generated galleries and machine reports were removed.
+Six native 1920×1080 hidden application captures use owned safe combat mechanics
+and production goblin/Underkeep artwork. Two centre enemies hold position while
+two flankers walk through cardinal subcells. The diagnostic asserts both flankers
+attack in the same round and initiative turn as their movement, all four bodies
+are CPU-picked at the end, no GL errors occur and world GPU resources are released.
+No desktop input, focus control or user-save mutation was used.
 
-- [Documentation: combat positioning](../../combat_positioning.md)
-- [initial two visible two flanking](initial-two-visible-two-flanking.png)
-- [flank 2 walking](flank-2-walking.png)
-- [flank 2 arrived](flank-2-arrived.png)
-- [flank 3 walking](flank-3-walking.png)
-- [flank 3 arrived](flank-3-arrived.png)
-- [all four engaged](all-four-engaged.png)
+- [Initial centre pair, two offscreen flankers](initial-two-visible-two-flanking.png)
+- [Left flanker walking into view](flank-2-walking.png)
+- [Left flanker arrived, retaining its action](flank-2-arrived.png)
+- [Right flanker walking into view](flank-3-walking.png)
+- [Right flanker arrived, retaining its action](flank-3-arrived.png)
+- [All four engaged after both flank attacks](all-four-engaged.png)
+
+[Movement design and verification](../../combat_positioning.md#srd-combat-movement--2026-11-08).
+These six replace the prior positioning captures; disposable diagnostics are cleaned.
