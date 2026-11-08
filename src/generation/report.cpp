@@ -47,6 +47,17 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                     {"distinct_room_areas", m.distinctRoomAreas},
                     {"distinct_connection_lengths", m.distinctConnectionLengths},
                     {"progression_steps", m.progressionSteps}};
+    const auto pacing = encounterMetrics(l, f.map);
+    j["encounter_pacing"] = {
+        {"first_steps", pacing.firstEncounterSteps},
+        {"longest_empty_steps", pacing.longestEmptySteps},
+        {"route_steps", pacing.routeSteps},
+        {"alternate_first_steps", pacing.alternateFirstSteps},
+        {"alternate_longest_empty_steps", pacing.alternateLongestEmptySteps},
+        {"alternate_steps", pacing.alternateSteps},
+        {"first_target", 12},
+        {"gap_target", 15},
+        {"definition", "forward steps to first entry into each populated room; not human search time"}};
     j["width"] = l.width;
     j["height"] = l.height;
     j["map"] = ascii(l);

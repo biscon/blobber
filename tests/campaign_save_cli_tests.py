@@ -19,14 +19,20 @@ def setup(root):
     enemy=cat['monsters'][0]
     for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear'):
         cat['monsters'].append(dict(enemy,id=name))
+    for name in ('goblin.captain', 'bugbear.captain', 'bugbear.commander'):
+        cat['monsters'].append(dict(enemy, id=name))
     for name in ('healing_potion','mana_potion','arrow'):
         cat['items'].append(dict(cat['items'][1],id=name,**(dict(kind='ammunition',stack_limit=100,ammunition='arrow') if name=='arrow' else {})))
     path.write_text(json.dumps(cat))
     npc=json.loads((root/'npcs/enemy.json').read_text())
     for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear'):
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc,id=name)))
-    (root/'npcs/level.json').write_text(json.dumps(dict(definitions=['enemy.json',*[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')]],instances=[])))
-    return dict(kind='campaign',schema_version=1,generator_version=10,template_version=7,seed=5,party=arena['party'])
+    residents = ('mayor', 'boric', 'balin', 'innkeeper', 'blacksmith', 'shadowtart')
+    for name in residents:
+        (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name, role='resident')))
+    definitions = ['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')], *[n+'.json' for n in residents]]
+    (root/'npcs/level.json').write_text(json.dumps(dict(definitions=definitions,instances=[])))
+    return dict(kind='campaign',schema_version=1,generator_version=11,template_version=8,seed=5,party=arena['party'])
 
 
 def main(runner):

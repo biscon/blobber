@@ -70,7 +70,7 @@ NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noe
     if (rangedOnly_[slot] && (!effects_ || effects_->sees(actors_.id(slot))) &&
         (a.awareness == Awareness::Pursuing ||
          (a.awareness == Awareness::Investigating && a.lastSeen == party.cell)) &&
-        inPartyView(map_, party.cell, party.heading, here)) {
+        inPartyView(map_, party.cell, party.heading, here, actor.npc.subcell)) {
         face(slot, party.cell);
         return {};
     }

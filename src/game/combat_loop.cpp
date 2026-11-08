@@ -39,7 +39,8 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             aware |= ai_.aware(actors_.id(i));
         if (aware) {
             episode_ = true;
-            enroll(pose, false);
+            if (!orderCount_)
+                enroll(pose, false);
             state_.phase = CombatPhase::Approach;
         }
         if (finish(now)) {
@@ -105,6 +106,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                 out.phase = state_.phase;
                 return out;
             }
+            out.resumedRound = state_.round && state_.gameplayMs < roundEndMs_;
             begin(now);
             out.event = CombatEvent::Started;
             if (finish(now))
@@ -112,7 +114,9 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
         }
     } else if (state_.phase == CombatPhase::RoundEnd) {
         if (now >= due_) {
-            state_.gameplayMs += combatRoundMs;
+            const auto elapsed = roundEndMs_ > state_.gameplayMs ? roundEndMs_ - state_.gameplayMs : 0;
+            state_.gameplayMs += elapsed;
+            roundEndMs_ = state_.gameplayMs + combatRoundMs;
             effects_.advance(state_.gameplayMs, now, false, events);
             reconcileEffects(now, events);
             refreshReadiness();
@@ -133,7 +137,7 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             }
             if (enableRoaming_) {
                 const auto incapacitated = effects_.incapacitatedActors();
-                ai_.update(combatRoundMs, now, pose, &frozen, &incapacitated);
+                ai_.update(elapsed, now, pose, &frozen, &incapacitated);
             }
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i)
                 if (!(before[i] == actors_.snapshot().actors[i].npc.cell))
@@ -182,6 +186,8 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
                         if (out.event == CombatEvent::None) {
                             out.event = CombatEvent::Spent;
                             out.character = id;
+                            out.spentCause =
+                                state_.cooldownMs[id.index] ? SpentCause::Cooldown : SpentCause::NoAction;
                         }
                         advance(now);
                     }

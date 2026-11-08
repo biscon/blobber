@@ -14,7 +14,7 @@ void run(const char* executable) {
     check(c.request("start", {{"scenario", setup}}).at("ok"), "prototype start");
     const auto first = c.protocol.state();
     check(first.at("generation").contains("map") && !first.at("terminal") &&
-              c.protocol.session()->game().actors().snapshot().count == 11,
+              c.protocol.session()->game().actors().snapshot().count == 18,
           "populated generated floor stays nonterminal");
     check(first.at("containers").size() == 3, "Diagnostic container identities published");
     check(!c.request("preview", {{"action", {{"kind", "open_container"}, {"container", 0}}}})

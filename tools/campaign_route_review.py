@@ -27,6 +27,14 @@ def path_step(state, goal, adjacent=False):
     rows = state["generation"]["map"].splitlines()
     blocked = {tuple(f["position"]) for f in state["fixtures"] if f["kind"] in (2, 3, 5)}
     blocked.update(tuple(e["position"]) for e in state["enemies"] if e["health_fraction"] > 0)
+    blocked.update(tuple(d["cell"]) for d in state["generation"].get("dressing", []) if d["blocking"])
+    rooms = state["generation"].get("rooms", [])
+    owners = {tuple(c): r["id"] for r in rooms for c in r.get("cells", [])}
+    allowed = {owners.get(start), owners.get(tuple(goal))}
+    living = {e.get("actor") for e in state["enemies"] if e["health_fraction"] > 0}
+    for encounter in state["generation"].get("encounters", []):
+        if encounter["room"] not in allowed and living.intersection(range(encounter["first"], encounter["first"]+encounter["count"])):
+            blocked.update(c for c, owner in owners.items() if owner == encounter["room"])
     # Completed guardian gates are ordinary traversable cells.
     blocked.difference_update(tuple(f["position"]) for f in state["fixtures"] if f["kind"] == 5 and f["open"])
     goals = {tuple(goal)} if not adjacent else {(goal[0]+dx, goal[1]+dy) for dx, dy in DIRECTIONS}
@@ -53,10 +61,10 @@ def path_step(state, goal, adjacent=False):
 
 
 class Route:
-    def __init__(self, runner, assets, directory, scenario, reserve, deadline):
+    def __init__(self, runner, assets, directory, scenario, reserve, deadline, *, record=True):
         self.directory, self.reserve = directory, reserve
         self.scenario = scenario
-        self.deadline = min(time.monotonic()+120, deadline)
+        self.deadline = min(time.monotonic()+180, deadline)
         self.metrics, self.policy = Metrics(), Policy(POLICY)
         self.state = None
         self.next_action = 25
@@ -69,7 +77,7 @@ class Route:
         self.expected = set()
         self.merges = []
         self.coverage = {}
-        self.client = Client(runner, assets, "diagnostic", directory/"trace.jsonl", self.events,
+        self.client = Client(runner, assets, "diagnostic", (directory/"trace.jsonl") if record else None, self.events,
                              deadline=self.deadline)
 
     def events(self, chunk):
@@ -81,7 +89,7 @@ class Route:
                 self.metrics.round_damage = [0]*4
                 self.metrics.previous_time = None
             if event["event"] == "started" and self.state:
-                self.journal.append(dict(event="combat_started", location=self.state["campaign"]["location"],
+                self.journal.append(dict(event="combat_started", location=self.state.get("campaign", {}).get("location", self.state.get("generation", {}).get("depth", 0)),
                                          expected=sorted(self.expected)))
 
     def call(self, op, **fields):
@@ -97,22 +105,22 @@ class Route:
         if state is not None:
             self.state = state
             self.metrics.observe(state)
-            if state["ticks"] >= 60000:
+            if state["ticks"] >= 90000:
                 raise StopTrial("timeout", "simulation_tick_limit")
             if self.expected and state["phase"] != "exploration":
                 unexpected = sorted(e["actor"] for e in state["enemies"] if e["health_fraction"] > 0
                                     and e.get("awareness") in (1, 2, 3) and e["actor"] not in self.expected)
                 if unexpected and (not self.merges or self.merges[-1]["actors"] != unexpected):
-                    self.merges.append(dict(location=state["campaign"]["location"], actors=unexpected,
+                    self.merges.append(dict(location=state.get("campaign", {}).get("location", state.get("generation", {}).get("depth", 0)), actors=unexpected,
                                             tick=state["ticks"]))
             if state["mutations"] >= 20000:
                 raise StopTrial("timeout", "mutation_limit")
-            if state["campaign"]["status"] == "defeat":
+            if state.get("campaign", {}).get("status") == "defeat":
                 raise StopTrial("combat_loss", "campaign_defeat")
         return data
 
     def advance(self, ticks=1000, decision=True):
-        self.call("advance", ticks=min(ticks, 60000-self.state["ticks"]), until_decision=decision)
+        self.call("advance", ticks=min(ticks, 90000-self.state["ticks"]), until_decision=decision)
 
     @staticmethod
     def quantities(state):
@@ -128,7 +136,7 @@ class Route:
             self.advance(self.next_action-self.state["ticks"], False)
             if self.state["phase"] not in ("exploration", "approach"):
                 return False
-        if action["kind"] in ("interact", "pickup", "rest", "advancement"):
+        if action["kind"] in ("interact", "pickup", "open_container", "rest", "advancement"):
             # Movement can be legal during presentation tails; management must wait.
             for _ in range(12):
                 cooldown = max(int(p["cooldown_ms"]) for p in self.state["party"])
@@ -144,7 +152,7 @@ class Route:
                 raise StopTrial("policy_failure", "rejected_action: "+preview["reason"])
             return False
         before = self.quantities(self.state)
-        at = dict(tick=self.state["ticks"], location=self.state["campaign"]["location"],
+        at = dict(tick=self.state["ticks"], location=self.state.get("campaign", {}).get("location", self.state.get("generation", {}).get("depth", 0)),
                   phase=self.state["phase"], action=action, operation=self.client.sequence+1)
         result = self.call("act", action=action)
         if not result["accepted"]:
@@ -161,7 +169,7 @@ class Route:
 
     def settle(self):
         for _ in range(200):
-            if self.state["campaign"]["status"] == "victory":
+            if self.state.get("campaign", {}).get("status") == "victory":
                 raise StopTrial("victory", "campaign_victory")
             if self.state["phase"] == "victory":
                 self.act(dict(kind="continue"))
@@ -229,7 +237,7 @@ class Route:
                 self.act(dict(kind="interact", fixture=door["fixture"]))
                 continue
             if self.act(dict(kind="move", direction="forward"), False):
-                location = self.state["campaign"]["location"]
+                location = self.state.get("campaign", {}).get("location", self.state.get("generation", {}).get("depth", 0))
                 marker = (location, *step)
                 self.retraced += marker in self.visited
                 self.visited.add(marker)
@@ -265,6 +273,17 @@ class Route:
             self.advance(25, False)
         raise StopTrial("stall", "encounter_limit")
 
+    def collect_cache(self, slot):
+        definition = next((c for c in self.state.get("generation", {}).get("containers", [])
+                           if c["slot"] == slot), None)
+        if not definition:
+            raise StopTrial("policy_failure", "missing_cache")
+        dx, dy = DIRECTIONS[definition["facing"]]
+        self.goto((definition["cell"][0]-dx, definition["cell"][1]-dy))
+        self.face(definition["facing"])
+        self.act(dict(kind="open_container", container=slot))
+        self.loot()
+
     def loot(self):
         for _ in range(80):
             self.settle()
@@ -295,13 +314,13 @@ class Route:
         fixture = next(f for f in self.state["fixtures"] if f["kind"] == kind)
         dx, dy = DIRECTIONS[fixture["heading"]] if "heading" in fixture else (0, 0)
         # Observation fixtures do not expose facing; generation does. Hub is authored north.
-        if self.state["campaign"]["location"] == 0:
+        if self.state.get("campaign", {}).get("location", self.state.get("generation", {}).get("depth", 0)) == 0:
             heading = 0
         else:
             heading = next(f["heading"] for f in self.state["generation"]["fixtures"] if f["id"] == fixture["fixture"])
         dx, dy = DIRECTIONS[heading]
         landing = fixture["position"][0]-dx, fixture["position"][1]-dy
-        if self.state["campaign"]["location"] == 0:
+        if self.state.get("campaign", {}).get("location", self.state.get("generation", {}).get("depth", 0)) == 0:
             # Named stair observation determines the target; traverse the clear square row.
             for axis in (1, 0):
                 while self.state["position"][axis] != landing[axis]:
@@ -323,10 +342,12 @@ class Route:
             layout = copy.deepcopy(self.state["generation"])
             rooms = {r["id"]: r for r in layout["rooms"]}
             groups = {e["room"]: e for e in layout["encounters"]}
+            cleared = set()
             for room in layout["route"][1:-1]:
                 encounter = groups.get(room)
-                if encounter:
+                if encounter and encounter["id"] not in cleared:
                     self.fight(encounter)
+                    cleared.add(encounter["id"])
                 self.goto(rooms[room]["anchor"])
                 for fixture in self.state["fixtures"]:
                     if fixture["kind"] == 1 and fixture["position"] == rooms[room]["anchor"] and not fixture["completed"]:
@@ -334,13 +355,26 @@ class Route:
                 self.loot()
                 self.advance_party()
             if self.reserve:
-                encounter = next(e for e in layout["encounters"] if e["role"] == "optional")
-                self.fight(encounter)
-                self.goto(layout["supplies"]["optional"])
-                self.loot()
-                self.advance_party()
-            self.goto(layout["supplies"]["direct"])
-            self.loot()
+                remaining = [e for e in layout["encounters"] if e["role"] == "optional"]
+                while remaining:
+                    for encounter in remaining:
+                        living = self.living(encounter)
+                        try:
+                            if living:
+                                path_step(self.state, living[0]["position"], True)
+                        except StopTrial as exc:
+                            if exc.reason == "no_diagnostic_path":
+                                continue
+                            raise
+                        self.fight(encounter)
+                        self.loot()
+                        self.advance_party()
+                        remaining.remove(encounter)
+                        break
+                    else:
+                        raise StopTrial("policy_failure", "no_reachable_optional_encounter")
+                self.collect_cache(1)
+            self.collect_cache(0)
             self.advance_party()
             pre_recovery = resources(self.state)
             rest = dict(kind="rest", type="long")
@@ -355,15 +389,20 @@ class Route:
             self.checkpoints.append(dict(depth=depth, pre_recovery=pre_recovery, resources=resources(self.state),
                 xp=[(p["xp"], p.get("xp_fraction")) for p in self.state["party"]],
                 campaign_ms=self.state["campaign"]["gameplay_ms"], operation=self.client.sequence, consumed=dict(self.consumed), collected=dict(self.collected)))
-            if depth == 3 and any(p["life"] == 0 and p["level"] < 2 for p in self.state["party"]):
-                raise StopTrial("progression_shortfall", "conscious member below level two before final guardian")
+            if depth >= 2 and any(p["life"] == 0 and p["level"] < 2 for p in self.state["party"]):
+                raise StopTrial("progression_shortfall", "conscious member below level two before guardian two/three")
             guardian = next(e for e in layout["encounters"] if e["role"] == "guardian")
             approach = next(f for f in layout["fixtures"] if f["id"] == layout["objective"]["approach_door"])
+            dx, dy = DIRECTIONS[approach["heading"]]
+            self.goto((approach["position"][0]-dx, approach["position"][1]-dy))
             self.face(approach["heading"])
             self.act(dict(kind="interact", fixture=approach["id"]))
             self.fight(guardian)
-            self.goto(layout["objective"]["reward"])
-            self.loot()
+            if depth < 3:
+                self.collect_cache(2)
+            else:
+                self.goto(layout["objective"]["reward"])
+                self.loot()
             self.advance_party()
             self.stairs(3)
         raise StopTrial("policy_failure", "missing_campaign_victory")
@@ -389,14 +428,16 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=args.case != 1)
     root = Path(__file__).resolve().parents[1]
-    manifest = json.loads((root/"docs/pc071_calibration/bugbear_support/manifest.json").read_text())
+    manifest = dict(parties=[dict(id=name, scenario=json.loads(
+        (root/"experiments/encounter_density/parties"/(name+".json")).read_text()))
+        for name in ("balanced", "no_wizard")])
     previous = json.loads((args.output/"summary.json").read_text()) if args.case > 1 else []
     if len(previous) != args.case-1 or any(r["status"] not in ("victory", "combat_loss") or not r["trace_complete"] for r in previous):
         raise ValueError("Previous cases must complete in order; do not silently rerun or expand the study")
     provenance = dict(binary_sha256=hashlib.sha256(args.runner.read_bytes()).hexdigest(),
                       script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                       runner=str(args.runner.resolve()), assets=str(args.assets.resolve()), policy=POLICY,
-                      limit_seconds=120, limit_ticks=60000, study_seconds=1800, output_bytes=3*1024*MIB,
+                      limit_seconds=180, limit_ticks=90000, study_seconds=1800, output_bytes=3*1024*MIB,
                       code={str(p.relative_to(root/"tools")): hashlib.sha256(p.read_bytes()).hexdigest()
                             for p in [root/"tools/headless_client.py", *sorted((root/"tools/arena_experiments").glob("*.py"))]},
                       content={str(p.relative_to(args.assets)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -425,7 +466,7 @@ def main():
                 name = f"{package['id']}-{seed}-{'reserve' if reserve else 'direct'}"
                 directory = args.output/name
                 directory.mkdir()
-                scenario = dict(kind="campaign", schema_version=1, generator_version=10, template_version=7,
+                scenario = dict(kind="campaign", schema_version=1, generator_version=11, template_version=8,
                                 seed=seed, party=package["scenario"]["party"])
                 (directory/"scenario.json").write_text(json.dumps(scenario, indent=2)+"\n")
                 route = Route(args.runner, args.assets, directory, scenario, reserve, deadline)

@@ -33,6 +33,11 @@ class RouteTests(unittest.TestCase):
         s["fixtures"] = [dict(kind=3, position=[2, 1]), dict(kind=0, position=[1, 2], open=False)]
         self.assertEqual(path_step(s, [4, 1]), (1, 2))
 
+    def test_blocking_dressing_is_not_a_walkable_corridor(self):
+        s = state()
+        s["generation"]["dressing"] = [dict(cell=[2, 1], blocking=True)]
+        self.assertEqual(path_step(s, [4, 1]), (1, 2))
+
     def test_transfer_not_consumption(self):
         s = dict(party=[dict(inventory=[dict(item="mana_potion", quantity=2)]), dict(inventory=[])])
         transferred = copy.deepcopy(s)

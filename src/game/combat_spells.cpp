@@ -71,7 +71,7 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         } else {
             if (!inBowRange(pose.cell, a->npc.cell))
                 return CommandReason::OutOfRange;
-            if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell))
+            if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell, a->npc.subcell))
                 return CommandReason::NotVisible;
         }
         if (kind == SpellKind::PoisonSpray && !inMeleeFront(map_, pose.cell, pose.heading, a->npc.cell))
@@ -386,8 +386,10 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         cunningDefend(c.character, now, events);
         extraAction_[c.character.index] = false;
         state_.spent[c.character.index] = true;
+        partyReady_[c.character.index] = std::max(partyReady_[c.character.index], actionReadyMs());
         advance(now);
         out.event = CombatEvent::Spent;
+        out.spentCause = SpentCause::EndTurn;
         return out;
     }
     spendAction(c);
@@ -397,7 +399,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
     events.append(out);
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::SpiritualWeapon) {
         const Cell destination = c.aimedCell ? *c.aimedCell : actors_.actor(c.enemies[0])->npc.cell;
-        effects_.moveWeapon(c.character, destination);
+        effects_.moveWeapon(c.character, destination, false, actionReadyMs());
         if (c.targetCount)
             out = spectralAttack(c, pose, now, events);
     } else if (c.action == PartyAction::Feature) {
@@ -412,11 +414,11 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             result.event = CombatEvent::None;
         } else if (c.feature == rules::Feature::ActionSurge) {
             extraAction_[c.character.index] = true;
-            extraUntil_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            extraUntil_[c.character.index] = actionReadyMs();
             result.event = CombatEvent::Recovery;
         } else if (c.feature == rules::Feature::CunningAction) {
             state_.defending[c.character.index] = true;
-            defendDue_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            defendDue_[c.character.index] = actionReadyMs();
             result.event = CombatEvent::Defend;
         } else if (c.feature == rules::Feature::PreserveLife) {
             for (std::uint16_t i = 0; i < 4; ++i)
@@ -448,7 +450,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             effects_.breakWard(c.character, now, events);
         if (kind == SpellKind::SpiritualWeapon) {
             effects_.apply(spellEffect(c, kind), now, events);
-            effects_.moveWeapon(c.character, actors_.actor(c.enemies[0])->npc.cell, true);
+            effects_.moveWeapon(c.character, actors_.actor(c.enemies[0])->npc.cell, true, actionReadyMs());
             out = spectralAttack(c, pose, now, events);
         } else if (kind == SpellKind::Web) {
             const auto affected = area(c, pose);

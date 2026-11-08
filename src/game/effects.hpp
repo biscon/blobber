@@ -253,7 +253,7 @@ class EffectController {
     void resolveMirror(MirrorReservation, bool canceled, std::uint64_t, CombatEvents&) noexcept;
     bool restoreCondition(rules::CharacterId, EffectKind, std::uint64_t, CombatEvents&) noexcept;
     const EffectInstance* spiritualWeapon(rules::CharacterId) const noexcept;
-    bool moveWeapon(rules::CharacterId, Cell, bool initial = false) noexcept;
+    bool moveWeapon(rules::CharacterId, Cell, bool initial = false, std::uint64_t readyMs = 0) noexcept;
     void followWeapons(Cell partyFrom, Cell partyTo) noexcept;
     bool weaponCanMove(rules::CharacterId, Cell) const noexcept;
     AreaId createArea(Cell, rules::CharacterId, int difficulty, std::uint64_t, CombatEvents&) noexcept;

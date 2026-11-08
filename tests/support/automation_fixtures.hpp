@@ -23,7 +23,7 @@ struct Directory {
     }
 };
 inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 5, bool rangedArcher = false,
-                              bool npcCasting = false, bool normalXp = false) {
+                              bool npcCasting = false, bool normalXp = false, bool fixedGuardianHp = true) {
     const auto base = creationCatalog(true);
     std::vector<rules::RaceDefinition> races;
     std::vector<rules::ClassDefinition> classes;
@@ -76,10 +76,22 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
         rat.experience = 25;
         bugbear.experience = 200;
     }
-    return {{attack, bow}, {monster, archer, guardian, skeleton, zombie, rat, shaman, bugbear},
-            races,         classes,
-            items,         *base.preset(),
-            spells,        creation};
+    auto captain = monster, bugbearCaptain = bugbear, commander = bugbear;
+    captain.id = "goblin.captain";
+    captain.hitPoints = fixedGuardianHp ? 20 : hp;
+    bugbearCaptain.id = "bugbear.captain";
+    bugbearCaptain.hitPoints = fixedGuardianHp ? 34 : hp;
+    commander.id = "bugbear.commander";
+    commander.hitPoints = fixedGuardianHp ? 42 : hp;
+    return {{attack, bow},
+            {monster, archer, guardian, skeleton, zombie, rat, shaman, bugbear, captain, bugbearCaptain,
+             commander},
+            races,
+            classes,
+            items,
+            *base.preset(),
+            spells,
+            creation};
 }
 inline NpcDefinitions definitions() {
     NpcDefinitions d;
@@ -174,7 +186,8 @@ inline void approach(Client& c) {
     }
     c.advance();
 }
-inline void fight(Client& c, bool attack = true, unsigned limit = 2000, bool stopAtResult = false) {
+inline void fight(Client& c, bool attack = true, unsigned limit = 2000, bool stopAtResult = false,
+                  bool rangedFallback = false) {
     for (unsigned i = 0;
          i < limit && !c.protocol.session()->terminal() && !(stopAtResult && c.protocol.session()->result());
          ++i) {
@@ -198,6 +211,30 @@ inline void fight(Client& c, bool attack = true, unsigned limit = 2000, bool sto
                         break;
                     }
                 }
+            if (attack && rangedFallback && !accepted) {
+                const auto attempt = [&](const Json& command) {
+                    const auto decoded = decodeAction(command, g);
+                    return g.combat().validate(decoded.combat, g.movement().player) == CommandReason::Ready &&
+                           c.act(command).at("data").at("accepted").get<bool>();
+                };
+                for (unsigned n = 0; n < g.actors().snapshot().count && !accepted; ++n) {
+                    if (g.actors().snapshot().actors[n].life != ActorLife::Alive)
+                        continue;
+                    accepted = attempt(
+                        {{"kind", "combat"}, {"action", "ranged"}, {"character", actor}, {"target", n}});
+                    for (const auto* spell : {"fire_bolt", "sacred_flame", "ray_of_frost"}) {
+                        if (accepted)
+                            break;
+                        const auto id = g.party().catalog().findSpell(spell);
+                        if (g.party().catalog().spell(id))
+                            accepted = attempt({{"kind", "combat"},
+                                                {"action", "spell"},
+                                                {"character", actor},
+                                                {"spell", spell},
+                                                {"enemies", {n}}});
+                    }
+                }
+            }
             if (!accepted) {
                 const auto defended = c.act({{"kind", "combat"}, {"character", actor}, {"action", "defend"}});
                 if (!defended.at("data").at("accepted"))
@@ -214,6 +251,21 @@ inline void fight(Client& c, bool attack = true, unsigned limit = 2000, bool sto
             c.advance(100, false);
         } else
             c.advance();
+    }
+    if (rangedFallback && !c.protocol.session()->terminal() &&
+        !(stopAtResult && c.protocol.session()->result())) {
+        const auto& game = c.protocol.session()->game();
+        std::ostringstream report;
+        report << "Ranged fixture stalled phase=" << unsigned(game.combat().snapshot().phase)
+               << " pose=" << game.movement().player.cell.x << ',' << game.movement().player.cell.y
+               << " heading=" << unsigned(game.movement().player.heading);
+        for (unsigned i = 0; i < game.actors().snapshot().count; ++i) {
+            const auto& actor = game.actors().snapshot().actors[i];
+            if (actor.life == ActorLife::Alive)
+                report << " actor=" << i << " hp=" << actor.hitPoints << " cell=" << actor.npc.cell.x << ','
+                       << actor.npc.cell.y;
+        }
+        throw std::runtime_error(report.str());
     }
     check(c.protocol.session()->terminal() || (stopAtResult && c.protocol.session()->result()),
           "script reaches arena outcome within bound");

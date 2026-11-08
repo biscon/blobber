@@ -54,7 +54,10 @@ enum class CombatEvent : std::uint8_t {
     Dash,
     Wake
 };
+enum class SpentCause : std::uint8_t { NoAction, Cooldown, Surprise, EndTurn };
 struct CombatOutcome {
+    SpentCause spentCause = SpentCause::NoAction;
+    bool resumedRound = false;
     CombatEvent event = CombatEvent::None;
     CommandReason reason = CommandReason::Resolved;
     rules::CharacterId character{}, recipient{};
@@ -292,7 +295,8 @@ class CombatController {
     std::array<std::uint64_t, NpcWorld::maxInstances> knownUntil_{}, enemyReady_{}, enemyBusy_{};
     std::array<std::uint64_t, rules::partySize> partyReady_{}, saveDue_{}, defendDue_{};
     std::size_t groupCount_ = 0, orderCount_ = 0, position_ = 0, enemyCursor_ = 0, autoCursor_ = 0;
-    std::uint64_t due_ = 0, partyBusy_ = 0;
+    std::uint64_t due_ = 0, partyBusy_ = 0, roundEndMs_ = 0;
+    std::uint64_t actionReadyMs() const noexcept;
     bool episode_ = false, enableRoaming_ = true, resumeAwaiting_ = false;
     struct EnemyMovement {
         bool initialized = false, actionSpent = false, dashed = false, arriving = false, retreated = false;

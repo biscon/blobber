@@ -118,7 +118,8 @@ bool EffectController::weaponCanMove(rules::CharacterId id, Cell to) const noexc
     }
     return false;
 }
-bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial) noexcept {
+bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial,
+                                  std::uint64_t readyMs) noexcept {
     if ((!initial && !weaponCanMove(id, to)) || actors_.map().solid(to))
         return false;
     for (auto& e : instances_)
@@ -135,7 +136,7 @@ bool EffectController::moveWeapon(rules::CharacterId id, Cell to, bool initial) 
                 events_->supportJournal->emit(cue);
             }
             e.cell = to;
-            e.readyMs = gameplayMs_ + 6000;
+            e.readyMs = readyMs ? readyMs : gameplayMs_ + 6000;
             ground_.weapons[id.index] = {to, true};
             ++ground_.revision;
             return true;

@@ -281,3 +281,45 @@ both inspected arrival frames face the party before those enemies attack.
 GL error and resource-release checks pass on RTX 3060/OpenGL 3.3. No broader
 configuration matrix or interactive desktop review. Logs are
 `/tmp/combat-arrival-facing-{build,test-build,review}.log`.
+
+## Archer visibility and firing positions — 2026-11-08 follow-up
+
+Status: implemented and mechanically verified; interactive acceptance pending.
+The user supplied corner/doorway screenshots with visible but unselectable archers,
+retreat loops and a backwards-facing archer. The design was recorded before
+implementation. Accepted population/stat tuning is preserved.
+
+The actor-specific `inPartyView` query must use the existing camera/subcell viewport
+predicate and shared logical LOS/range, rather than also rejecting by the coarser
+cell-centre cone. Party ranged weapons, single-target hostile spells, enemy firing,
+ranged pursuit and tactical firing goals must call that same actor-aware predicate.
+The renderer's geometry/pixel exposure remains an additional player-target admission
+check; do not make gameplay depend on a render frame or expose targets through walls.
+Closed doors/walls and the existing six-cell range remain authoritative. Exact visual
+door-frame aperture physics is not introduced by this fix.
+
+Tactical ranged repositioning seeks reachable, visible firing positions two cells
+from the party. Never prefer a hidden retreat goal over a legal shot. Continue a
+multi-subcell reposition until a usable separated shot is reached, even after crossing
+out of adjacency. A trapped archer retains its legal shot instead of inventing melee.
+Face the known party after settled visible movement, including beyond melee distance.
+Keep ordinary last-seen investigation, Speed/action/Dash costs, bounded shared routing
+and allocation-free frame processing. No generic flee mode, omniscient pursuit or
+new serialized route state is added.
+
+Owned regressions cover four headings, diagonal cell-cone/body disagreements,
+closed-door rejection, pursuit/hold behavior and same-opportunity movement/shot
+continuation for pure archers and wounded mixed goblins. CPU visibility integration
+uses generated artwork and the real raster/picking pipeline: diagonal bodies have
+visible pixels, pass command validation and can be selected through Tab-style cycling.
+Fire Bolt and Magic Missile pass both recipient and live command-controller checks.
+
+Twenty affected Release suites pass; the shared results are recorded in the
+[interrupted-round follow-up](combat_entry_followup.md#verification-of-the-2026-11-08-correction).
+One old Poison Spray fixture targeted an offscreen diagonal subslot; it now uses a
+visible central body and separately verifies offscreen rejection without mana cost.
+No appearance/rendering code changed, so no GPU capture or desktop automation was
+run. The exact screenshot's narrow open-door frame/partial-occlusion case has not
+been reproduced; logical LOS still treats an open doorway as a full cell. This
+correction does not claim exact jamb/leaf aperture parity or all animated-body/LOS
+edge cases. Further interactive review belongs to the user.

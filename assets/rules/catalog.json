@@ -497,6 +497,161 @@
       "damage_immunities": [],
       "damage_vulnerabilities": [],
       "spellcasting": "acolyte_support"
+    },
+    {
+      "id": "goblin.captain",
+      "abilities": {
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 10,
+        "intelligence": 10,
+        "wisdom": 8,
+        "charisma": 8
+      },
+      "armor_class": 15,
+      "hit_points": 20,
+      "speed_ft": 30,
+      "attacks": [
+        "goblin.scimitar"
+      ],
+      "traits": [
+        "nimble_escape"
+      ],
+      "loot": [
+        {
+          "item": "scimitar",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "leather",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "gold",
+          "quantity": 1,
+          "sides": 6,
+          "roll": [
+            1,
+            100
+          ]
+        },
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            15
+          ]
+        },
+        {
+          "item": "mana_potion",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            16,
+            20
+          ]
+        }
+      ],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
+    },
+    {
+      "id": "bugbear.captain",
+      "abilities": {
+        "strength": 15,
+        "dexterity": 14,
+        "constitution": 13,
+        "intelligence": 8,
+        "wisdom": 11,
+        "charisma": 9
+      },
+      "armor_class": 16,
+      "hit_points": 34,
+      "speed_ft": 30,
+      "attacks": [
+        "bugbear.morningstar"
+      ],
+      "traits": [],
+      "loot": [
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        }
+      ],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 200,
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
+    },
+    {
+      "id": "bugbear.commander",
+      "abilities": {
+        "strength": 15,
+        "dexterity": 14,
+        "constitution": 13,
+        "intelligence": 8,
+        "wisdom": 11,
+        "charisma": 9
+      },
+      "armor_class": 16,
+      "hit_points": 42,
+      "speed_ft": 30,
+      "attacks": [
+        "bugbear.morningstar"
+      ],
+      "traits": [],
+      "loot": [
+        {
+          "item": "shield",
+          "quantity": 1,
+          "sides": 0,
+          "roll": [
+            1,
+            100
+          ]
+        }
+      ],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 200,
+      "humanoid": true,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none"
     }
   ],
   "races": [

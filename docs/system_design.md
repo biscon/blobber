@@ -1,5 +1,28 @@
 # System design
 
+[Archer visibility and firing-position correction](combat_positioning.md#archer-visibility-and-firing-positions--2026-11-08-follow-up):
+implemented and mechanically verified after user corner/doorway targeting reports;
+interactive review pending.
+Preserve the reviewed encounter tuning; align actor-aware ranged geometry and prevent
+hidden retreat goals. [Interrupted rounds](combat_entry_followup.md#resume-interrupted-rounds--2026-11-08-correction)
+resume their initiative cursor and spent actions, with one remaining-time boundary
+and direct selection of usable party opportunities. Twenty affected CPU suites pass,
+including raster/picking integration, allocation and save/load checks. Exact narrow
+visual doorway aperture behavior remains unverified. Debug game rebuilt; disposable
+output cleaned.
+
+[Encounter density and guardian balance](encounter_density_balance_design.md):
+implemented, mechanically verified and positively reviewed in one full user playthrough, 2026-11-08.
+Floors contain 6/7/8 encounters, cohesive multi-cell formations and distinct
+20/34/42-HP guardian leads. Current damage and finite supplies remain; four-survivor
+full-clear XP is 793.75 each. Generator/templates 11/8 and save schema/simulation
+19/23 require new campaigns. Focused CPU/replay/allocation/persistence and owned
+full-clear checks pass; the Debug game is built. Soft spacing targets remain unmet
+on some reviewed routes. The authorized combat sample stopped before combat on a
+corrected diagnostic setup error and was not restarted; automated production balance
+rates remain unmeasured. The later 40–50 minute human full clear was positive and
+finished just below level three. Disposable output is cleaned.
+
 [Music announcement suppression](combat_music.md#discard-hidden-announcements--2026-11-08):
 **implemented and mechanically verified**. Hiding the music banner permanently expires the current
 announcement, including track starts during dialogue, overlays or loading. Playback

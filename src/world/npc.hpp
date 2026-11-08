@@ -11,7 +11,11 @@
 namespace blobber {
 // Explicit temporary content alias; ordinary IDs retain their own appearance.
 inline std::string_view monsterAppearance(std::string_view id) noexcept {
-    return id == "goblin.guardian.placeholder" ? "goblin" : id;
+    if (id == "goblin.guardian.placeholder" || id == "goblin.captain")
+        return "goblin";
+    if (id == "bugbear.captain" || id == "bugbear.commander")
+        return "bugbear";
+    return id;
 }
 struct NpcTypeId {
     std::uint16_t index = 0;

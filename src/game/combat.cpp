@@ -260,7 +260,8 @@ bool CombatController::contact(Player pose, std::uint64_t now) noexcept {
     if (!arrived)
         return false;
     origin_ = pose;
-    enroll(pose, true);
+    if (!orderCount_)
+        enroll(pose, true);
     episode_ = true;
     for (std::size_t i = 0; i < state_.enemyCount; ++i) {
         const auto id = state_.enemies[i];
@@ -316,10 +317,17 @@ void CombatController::begin(std::uint64_t now) noexcept {
                                      c.stats.abilities[1]};
         }
     }
-    addGroups();
-    ++state_.round;
-    position_ = enemyCursor_ = 0;
-    state_.spent.fill(false);
+    const bool resume = state_.round && state_.gameplayMs < roundEndMs_;
+    if (!resume) {
+        if (state_.round)
+            surprised_.fill(false);
+        enroll(origin_, false);
+        addGroups();
+        ++state_.round;
+        roundEndMs_ = state_.gameplayMs + combatRoundMs;
+        position_ = enemyCursor_ = 0;
+        state_.spent.fill(false);
+    }
     due_ = now + actionDelayMs;
     state_.phase = CombatPhase::Turns;
     state_.awaitingAction = false;
@@ -347,9 +355,23 @@ void CombatController::selectTurn() noexcept {
             if (life == rules::Life::Conscious || life == rules::Life::Dying) {
                 if (currentEvents_)
                     effects_.stand(rules::CharacterId{e.index}, noticeTime_, *currentEvents_);
-                state_.activeCharacter = rules::CharacterId{e.index};
                 state_.spent[e.index] = state_.spent[e.index] || partyReady_[e.index] > state_.gameplayMs;
-                state_.awaitingAction = hasActions(rules::CharacterId{e.index});
+                const auto id = rules::CharacterId{e.index};
+                if (life == rules::Life::Conscious && !hasActions(id)) {
+                    if (currentEvents_) {
+                        CombatOutcome skipped;
+                        skipped.event = CombatEvent::Spent;
+                        skipped.character = id;
+                        skipped.spentCause =
+                            state_.cooldownMs[e.index] ? SpentCause::Cooldown : SpentCause::NoAction;
+                        currentEvents_->append(skipped);
+                        effects_.groundCheck(id, origin_.cell, noticeTime_, *currentEvents_);
+                    }
+                    ++position_;
+                    continue;
+                }
+                state_.activeCharacter = id;
+                state_.awaitingAction = hasActions(id);
                 ++state_.turn;
                 return;
             }
@@ -406,7 +428,7 @@ void CombatController::leave() noexcept {
     episode_ = false;
     episodeActors_.fill(false);
     orderCount_ = groupCount_ = 0;
-    state_.round = 0;
+    state_.round = roundEndMs_ = 0;
     processedCasterRound_.fill(0);
     effects_.clockMode(false);
     ai_.turnMovement(false);

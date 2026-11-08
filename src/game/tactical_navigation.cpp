@@ -64,11 +64,14 @@ void TacticalNavigation::goals() noexcept {
                     ((actors_.occupiedSlots(c) & (1u << s)) &&
                      !(actor->npc.cell == c && actor->npc.subcell == sub)))
                     continue;
+                // A retreat destination must actually permit the shot it is seeking.
+                // A hidden ring square causes repeated approach/retreat oscillation.
+                if (retreat_ && !inPartyView(map_, party_.cell, party_.heading, c, sub))
+                    continue;
                 // The eight contact cells each have four slots; retreat's ring
                 // has sixteen cells, hence the fixed 64-goal capacity.
                 const bool near = f.x ? sub.x == (f.x > 0 ? 0 : 1) : sub.y == (f.y > 0 ? 0 : 1);
-                const unsigned rank = retreat_
-                                          ? (inPartyView(map_, party_.cell, party_.heading, c, sub) ? 0 : 1)
+                const unsigned rank = retreat_                                                ? 0
                                       : !inPartyViewport(party_.cell, party_.heading, c, sub) ? 2
                                       : near                                                  ? 0
                                                                                               : 1;

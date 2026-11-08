@@ -158,7 +158,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                            : " Pack Tactics: canceled by disadvantage.";
     switch (out.event) {
     case CombatEvent::Started:
-        std::snprintf(line, sizeof(line), "Combat begins.");
+        std::snprintf(line, sizeof(line),
+                      out.resumedRound ? "Melee resumes. Continuing the round." : "Combat begins.");
         break;
     case CombatEvent::AttackStarted:
     case CombatEvent::ProjectileReleased:
@@ -250,8 +251,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         std::snprintf(line, sizeof(line), "Enemy #%u moves.", unsigned(out.enemy.slot) + 1);
         break;
     case CombatEvent::Wake:
-        std::snprintf(line, sizeof(line), "%s #%u wakes ally #%u.", species,
-                      unsigned(out.enemy.slot) + 1, unsigned(out.awakened.slot) + 1);
+        std::snprintf(line, sizeof(line), "%s #%u wakes ally #%u.", species, unsigned(out.enemy.slot) + 1,
+                      unsigned(out.awakened.slot) + 1);
         break;
     case CombatEvent::Dash:
         std::snprintf(line, sizeof(line), "Enemy #%u dashes.", unsigned(out.enemy.slot) + 1);
@@ -260,7 +261,17 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         std::snprintf(line, sizeof(line), "New round.");
         break;
     case CombatEvent::Spent:
-        std::snprintf(line, sizeof(line), "Turn spent: cooldown, NPC surprise or no legal action.");
+        if (out.enemy.world) {
+            const char* cause = out.spentCause == SpentCause::Surprise   ? "surprised"
+                                : out.spentCause == SpentCause::Cooldown ? "action is recharging"
+                                                                         : "no available action";
+            std::snprintf(line, sizeof(line), "%s #%u: %s.", species, unsigned(out.enemy.slot) + 1, cause);
+        } else {
+            const char* cause = out.spentCause == SpentCause::EndTurn    ? "ends their turn"
+                                : out.spentCause == SpentCause::Cooldown ? "action is recharging"
+                                                                         : "no available action";
+            std::snprintf(line, sizeof(line), "%s: %s.", name, cause);
+        }
         break;
     case CombatEvent::Disengaged:
         std::snprintf(line, sizeof(line), "Contact broken. Ranged approach resumes.");

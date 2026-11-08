@@ -55,9 +55,9 @@ template <class T> constexpr unsigned enumMaximum() {
     else if constexpr (std::is_same_v<T, generation::Role>)
         return unsigned(generation::Role::Optional);
     else if constexpr (std::is_same_v<T, generation::ActorRecipe>)
-        return unsigned(generation::ActorRecipe::Bugbear);
+        return unsigned(generation::ActorRecipe::BugbearCommander);
     else if constexpr (std::is_same_v<T, generation::EncounterRecipe>)
-        return unsigned(generation::EncounterRecipe::BugbearSupport);
+        return unsigned(generation::EncounterRecipe::FinalGuardians);
     else if constexpr (std::is_same_v<T, generation::EncounterRole>)
         return unsigned(generation::EncounterRole::Guardian);
     else if constexpr (std::is_same_v<T, generation::Error>)
@@ -362,7 +362,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!j.is_object() || j.size() != 7 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 18 || j.at("simulation") != 22 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 19 || j.at("simulation") != 23 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign"))
@@ -379,8 +379,8 @@ std::string savedCampaignRunId(const std::string& text) {
 }
 std::string encodeCampaign(const rules::Catalog& catalog, const NpcDefinitions& definitions,
                            const CampaignContent& content, CampaignCheckpoint& value) {
-    Json j = {{"schema", 18},
-              {"simulation", 22},
+    Json j = {{"schema", 19},
+              {"simulation", 23},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

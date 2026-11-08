@@ -79,8 +79,9 @@ void rangesAndCosts() {
     const auto round = s.combat().snapshot().round;
     for (int i = 0; i < 150 && s.combat().snapshot().round == round; ++i) {
         const auto st = s.combat().snapshot();
-        if (st.activeCharacter && st.activeCharacter->index == 2) {
-            check(!st.awaitingAction && st.spent[2], "Recent approach shot spends first-round action");
+        if (st.spent[2]) {
+            check(!st.activeCharacter || st.activeCharacter->index != 2,
+                  "Recent approach shot is debited without publishing a false player turn");
             skipped = true;
         }
         tick(s);
@@ -221,8 +222,7 @@ void offscreenAndPartialRound() {
         else {
             const auto out = s.update(.5, false).step;
             if (out.event == CombatEvent::AttackStarted)
-                check(inPartyView(s.geometry(), p.cell, p.heading,
-                                  s.actors().actor(out.enemy)->npc.cell,
+                check(inPartyView(s.geometry(), p.cell, p.heading, s.actors().actor(out.enemy)->npc.cell,
                                   s.actors().actor(out.enemy)->npc.subcell),
                       "Side and rear enemies must move into the visible front before attacking");
         }
@@ -266,6 +266,115 @@ void offscreenAndPartialRound() {
         check(!(st.awaitingAction && st.activeCharacter->index == actor.index),
               "Re-contact cannot replay the spent action");
         tick(partial);
+    }
+}
+void enemySurpriseFeedback() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false);
+    const Player p{{5, 6}, Heading::North};
+    // The guard faces away and AI is disabled so it has not noticed this contact.
+    NpcWorld places(map, p.cell, {"goblin"}, {npc({5, 5}, Heading::North, {0, 1})});
+    GameSession s(map, catalog, places, 5, p, false);
+    CommandController commands(s);
+    unsigned surprise = 0;
+    bool laterAttack = false;
+    for (unsigned n = 0; n < 200 && !laterAttack; ++n) {
+        if (s.combat().snapshot().awaitingAction)
+            s.submit(turnCommand(s));
+        else {
+            const auto& events = s.update(.1, false);
+            for (const auto& out : events) {
+                if (out.event == CombatEvent::Spent && out.spentCause == SpentCause::Surprise) {
+                    ++surprise;
+                    check(sameActor(out.enemy, s.actors().id(0)) && s.combat().snapshot().round == 1,
+                          "Only the unaware enemy loses its opening opportunity to surprise");
+                    commands.record(out);
+                    check(std::string(commands.snapshot().log.newest(0)).find("surprised") !=
+                              std::string::npos,
+                          "Surprise log identifies the enemy and the specific cause");
+                }
+                if (out.event == CombatEvent::AttackStarted && out.enemyAttack) {
+                    check(s.combat().snapshot().round > 1,
+                          "Surprised enemy cannot attack during its first round");
+                    laterAttack = true;
+                }
+            }
+        }
+    }
+    check(surprise == 1 && laterAttack, "Enemy-only surprise is consumed once and normal actions resume");
+}
+void interruptedRoundReadiness() {
+    for (const unsigned gap : {0u, 1200u, 7000u}) {
+        const auto m = hybridRoom();
+        const auto c = hybridCatalog(false);
+        const Player p{{5, 8}, Heading::North};
+        auto reinforcement = npc({10, 10});
+        reinforcement.monster = c.findMonster("swordsman");
+        NpcWorld places(m, p.cell, {"goblin"},
+                        {npc({5, 5}, Heading::South, {0, 1}), npc({5, 2}, Heading::South), reinforcement});
+        GameSession s(m, c, places, 5, p, false);
+        s.setAnimated(false);
+        s.submit(shot(s, s.actors().id(1)));
+        s.move(Action::Forward);
+        s.move(Action::Forward);
+        for (unsigned n = 0; n < 80 && !s.combat().snapshot().awaitingAction; ++n)
+            s.update(.1, false);
+        const auto first = s.combat().snapshot();
+        check(first.awaitingAction, "Interrupted-round fixture reaches a real decision");
+        const auto spent = *first.activeCharacter;
+        s.submit(turnCommand(s));
+        s.actors().damage(s.actors().id(0), 1000, s.timeMs());
+        s.update(0, false);
+        check(s.combat().snapshot().phase == CombatPhase::Approach,
+              "Only distant threat remains between contacts");
+        s.update(double(gap) / 1000, false);
+        const auto approached = s.combat().snapshot().gameplayMs;
+        s.move(Action::Forward);
+        s.move(Action::Forward);
+        s.move(Action::Forward);
+        const auto newcomer = s.actors().id(2);
+        const auto arrival = s.movement().player.cell + Cell{1, 0};
+        for (int y = 9; y >= arrival.y; --y)
+            check(bool(s.actors().move(newcomer, {10, y}, {0, 1}, s.movement().player.cell)),
+                  "Reinforcement approaches along legal cells");
+        for (int x = 9; x >= arrival.x; --x)
+            check(bool(s.actors().move(newcomer, {x, arrival.y}, {0, 1}, s.movement().player.cell)),
+                  "A new monster group arrives during the contact break");
+        auto contact = s.update(0, false).step;
+        for (unsigned n = 0; n < 50 && s.combat().snapshot().phase == CombatPhase::Contact; ++n)
+            contact = s.update(.1, false).step;
+        const auto resumed = s.combat().snapshot();
+        check(contact.event == CombatEvent::Started && contact.resumedRound == (gap < 6000),
+              "Contact announcement distinguishes resumed and fresh rounds");
+        check(resumed.round == first.round + (gap >= 6000),
+              "Short contact break retains the initiative round; a full interval renews it");
+        check(resumed.gameplayMs == approached, "Recontact does not add game time");
+        if (gap < 6000) {
+            check(resumed.spent[spent.index], "Spent action survives a brief contact break");
+            check(!s.combat().member(newcomer), "Recontact defers a newcomer until the round boundary");
+            bool unusedActed = false;
+            for (unsigned n = 0; n < 150 && s.combat().snapshot().round == first.round; ++n) {
+                const auto st = s.combat().snapshot();
+                check(!st.activeCharacter || st.activeCharacter->index != spent.index,
+                      "Spent character never flashes as an active turn on recontact");
+                if (st.awaitingAction) {
+                    unusedActed = true;
+                    s.submit(turnCommand(s));
+                } else
+                    s.update(.1, false);
+            }
+            check(unusedActed, "Unused party opportunities remain in the resumed round");
+            check(s.combat().member(newcomer), "The deferred monster group joins the next round");
+            check(s.combat().snapshot().gameplayMs == first.gameplayMs + 6000,
+                  "Approach interval is counted exactly once in round time");
+            check(s.combat().snapshot().cooldownMs[spent.index] == 0,
+                  "Pre-break action is ready at the ordinary next-round boundary");
+            for (unsigned i = 0; i < rules::partySize; ++i)
+                check(s.combat().snapshot().cooldownMs[i] == 0,
+                      "Actions used after resuming also recharge at that boundary");
+        } else
+            check(!resumed.spent[spent.index] && resumed.cooldownMs[spent.index] == 0,
+                  "A whole interval in approach renews the old spent action");
     }
 }
 void reinforcementAndSaves() {
@@ -639,6 +748,52 @@ void frontApproachInCombat() {
               "Approaching goblin joins a reachable front attack position and keeps attacking");
     }
 }
+void sideArcherFiringPositions() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog();
+    for (unsigned h = 0; h < 4; ++h)
+        for (bool mixed : {false, true}) {
+            const Player p{{6, 6}, Heading(h)};
+            const auto f = forward(p.heading), r = right(p.heading);
+            const auto side = p.cell + r;
+            auto archer = npc(side, headingToward(side, p.cell), {1, 0});
+            archer.monster = catalog.findMonster(mixed ? "goblin" : "archer");
+            NpcWorld places(map, p.cell, {"goblin"}, {npc(p.cell + f, Heading((h + 2) % 4), {0, 0}), archer});
+            GameSession s(map, catalog, places, 5, p, false);
+            if (mixed)
+                s.actors().damage(s.actors().id(1), 600, 0);
+            bool moved = false, fired = false;
+            std::uint64_t moveRound = 0, moveTurn = 0;
+            for (unsigned n = 0; n < 400 && !fired; ++n) {
+                if (s.combat().snapshot().awaitingAction)
+                    s.submit(turnCommand(s));
+                else {
+                    const auto out = s.update(.1, false).step;
+                    if (out.enemy.slot != 1 || !out.enemy.world)
+                        continue;
+                    if (out.event == CombatEvent::Move && !moved) {
+                        moved = true;
+                        moveRound = s.combat().snapshot().round;
+                        moveTurn = s.combat().snapshot().turn;
+                    }
+                    if (out.event == CombatEvent::AttackStarted) {
+                        check(moved && out.kind == rules::AttackKind::Ranged,
+                              "Hidden side archer moves to a firing position before shooting");
+                        check(s.combat().snapshot().round == moveRound &&
+                                  s.combat().snapshot().turn == moveTurn,
+                              "Archer completes multi-step reposition and shot in one opportunity");
+                        const auto& a = *s.actors().actor(out.enemy);
+                        check(inPartyView(map, p.cell, s.movement().player.heading, a.npc.cell,
+                                          a.npc.subcell) &&
+                                  a.npc.facing == headingToward(a.npc.cell, p.cell),
+                              "Repositioned archer is targetable and faces the party");
+                        fired = true;
+                    }
+                }
+            }
+            check(fired, "Pure and wounded mixed archers find usable firing positions in every heading");
+        }
+}
 void singleWeaponPolicies() {
     const auto map = hybridRoom();
     const auto catalog = hybridCatalog();
@@ -783,7 +938,7 @@ void rangedPursuit() {
         for (int i = 1; i <= 80 && !reached; ++i) {
             ai.update(100, i * 100, p);
             const auto cell = actors.actor(actors.id(0))->npc.cell;
-            reached = inPartyView(map, p.cell, p.heading, cell);
+            reached = inPartyView(map, p.cell, p.heading, cell, actors.actor(actors.id(0))->npc.subcell);
         }
         const auto cell = actors.actor(actors.id(0))->npc.cell;
         check(reached && !(cell == start) && cellDistance(cell, p.cell) > 1,
@@ -792,6 +947,42 @@ void rangedPursuit() {
             ai.update(100, i * 100, p);
         check(actors.actor(actors.id(0))->npc.cell == cell,
               "Pursuit stops once a usable ranged position is reached");
+    }
+}
+void diagonalBodyTargeting() {
+    const auto map = hybridRoom();
+    const auto catalog = hybridCatalog(false);
+    for (unsigned h = 0; h < 4; ++h) {
+        const Player p{{6, 6}, Heading(h)};
+        const auto f = forward(p.heading), r = right(p.heading);
+        auto sub = Cell{0, 1};
+        for (unsigned turn = 0; turn < h; ++turn)
+            sub = {1 - sub.y, sub.x};
+        auto archer = npc(p.cell + f * 2 + r * 2, Heading((h + 2) % 4), sub);
+        archer.monster = catalog.findMonster("archer");
+        NpcWorld places(map, p.cell, {"goblin"}, {archer});
+        GameSession game(map, catalog, places, 5, p, true);
+        check(!inPartyView(game.geometry(), p.cell, p.heading, archer.cell),
+              "Regression straddles the old cell-centre cone");
+        check(inPartyView(game.geometry(), p.cell, p.heading, archer.cell, sub),
+              "Visible diagonal body is inside the actual camera viewport");
+        auto command = shot(game, game.actors().id(0));
+        check(game.combat().validate(command, p) == CommandReason::Ready,
+              "Bow can select the visible diagonal body in every heading");
+        check(game.submit(command).event == CombatEvent::AttackStarted, "Opening shot alerts archer");
+        bool replied = false;
+        for (unsigned tick = 0; tick < 50 && !replied; ++tick)
+            for (const auto& event : game.update(.1, false))
+                replied |= event.event == CombatEvent::AttackStarted && event.enemyAttack;
+        check(replied, "Archer can return fire from the same visible position");
+        check(game.actors().actor(game.actors().id(0))->npc.cell == archer.cell,
+              "Archer holds a usable firing position instead of wandering");
+        FloorFixtures doors;
+        doors.count = 1;
+        doors.entries[0] = {p.cell + f + r, Heading::North, FixtureKind::Door, 0};
+        FloorGeometry blocked(map, doors);
+        check(!inPartyView(blocked.view(), p.cell, p.heading, archer.cell, sub),
+              "Actor-aware viewport does not bypass a closed door");
     }
 }
 void detailsInput() {
@@ -920,14 +1111,18 @@ int main() {
         facingPresentation();
         offscreenAndPartialRound();
         traitAndPresentation();
+        enemySurpriseFeedback();
+        interruptedRoundReadiness();
         reinforcementAndSaves();
         capacityAndBlockedEscape();
         threeCellFront();
         contactNeedsAnActionableFront();
         offscreenDiagonalHandoff();
         frontApproachInCombat();
+        sideArcherFiringPositions();
         singleWeaponPolicies();
         rangedPursuit();
+        diagonalBodyTargeting();
         detailsInput();
         std::cout << "Hybrid checks passed\n";
     } catch (const std::exception& e) {

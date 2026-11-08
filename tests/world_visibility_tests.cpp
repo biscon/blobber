@@ -14,6 +14,64 @@
 #include <iostream>
 using namespace blobber;
 namespace {
+void visibleDiagonalBowTargets() {
+    test::VisibilityFixture fixture;
+    world_assets::CpuAssets assets(fixture.publication());
+    const auto lease = assets.acquire(world_assets::allAssets(assets.publication));
+    const auto map = test::worldRoom(11, 11);
+    const auto scene = world_render::prepare(map);
+    const auto catalog = hybridCatalog(false);
+    world_render::VisibilityPipeline pipeline(scene, assets);
+    for (unsigned h = 0; h < 4; ++h) {
+        const Player p{{5, 5}, Heading(h)};
+        Cell sub{0, 1};
+        for (unsigned n = 0; n < h; ++n)
+            sub = {1 - sub.y, sub.x};
+        const auto cell = p.cell + forward(p.heading) * 2 + right(p.heading) * 2;
+        NpcInstance archer{{0}, cell, sub, headingToward(cell, p.cell)};
+        archer.monster = catalog.findMonster("archer");
+        NpcWorld places(map, p.cell, {"goblin"},
+                        {{{0}, p.cell + forward(p.heading) * 2, {0, 0}, Heading((h + 2) % 4)}, archer});
+        GameSession game(map, catalog, places, 5, p, true, fixture.timings);
+        game.update(.1, false);
+        check(bool(game.actors().move(game.actors().id(0), p.cell + forward(p.heading), {0, 0}, p.cell)),
+              "Owned melee guard closes after archer awareness is established");
+        for (unsigned n = 0; n < 100 && !(game.combat().snapshot().awaitingAction &&
+                                          game.combat().snapshot().activeCharacter->index == 2);
+             ++n) {
+            if (game.combat().snapshot().awaitingAction)
+                game.submit(turnCommand(game));
+            else
+                game.update(.1, false);
+        }
+        check(game.combat().snapshot().awaitingAction && game.combat().member(game.actors().id(1)),
+              "Rendered targeting fixture reaches a party decision with the archer enrolled");
+        NpcAnimator animator(game.actors(), fixture.timings);
+        animator.setTime(game.timeMs());
+        pipeline.update({game.geometry(), game.movement(), &game.actors(), &animator.snapshot()});
+        const auto targets = pipeline.picking()->targets();
+        bool seen = false;
+        for (unsigned i = 0; i < targets.count; ++i)
+            seen |= sameActor(targets.ids[i], game.actors().id(1));
+        check(seen, "Diagonal archer has actual visible, pickable pixels in all headings");
+        CommandController commands(game);
+        commands.refresh(targets, false, false, true);
+        commands.selectCharacter(2);
+        commands.selectAction(PartyAction::Ranged);
+        bool cycled = false;
+        for (unsigned n = 0; n < 2; ++n) {
+            commands.cycleTarget(1);
+            const auto selected = commands.snapshot().selection.target;
+            cycled |= selected && sameActor(*selected, game.actors().id(1));
+        }
+        auto c = turnCommand(game, PartyAction::Ranged);
+        c.character = {2};
+        c.target = game.actors().id(1);
+        check(commands.validate(c) == CommandReason::Ready,
+              "Rendered diagonal body passes both picking and bow mechanics gates");
+        check(cycled, "Tab-style target cycling selects the rendered diagonal body");
+    }
+}
 void meleeAttackFacing() {
     test::VisibilityFixture fixture;
     const auto catalog = hybridCatalog(false);
@@ -338,6 +396,7 @@ void alphaAnchorsAndWalls() {
 } // namespace
 int main() {
     try {
+        visibleDiagonalBowTargets();
         meleeAttackFacing();
         test::movingVisibilityWork();
         test::creatureIntersectionMasks();

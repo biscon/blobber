@@ -3,6 +3,12 @@
 #include <string_view>
 namespace blobber {
 inline const char* monsterName(std::string_view id) noexcept {
+    if (id == "goblin.captain")
+        return "Goblin Captain";
+    if (id == "bugbear.captain")
+        return "Bugbear Captain";
+    if (id == "bugbear.commander")
+        return "Bugbear Commander";
     if (id == "goblin")
         return "Goblin";
     if (id == "goblin.archer")

@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 10, templateVersion = 7;
+constexpr unsigned generatorVersion = 11, templateVersion = 8;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 using CellMask = std::array<bool, maxCells>;
 constexpr int floorDimension = 36;
@@ -48,8 +48,29 @@ struct Connection {
     Heading facingA = Heading::North, facingB = Heading::South;
     std::uint16_t first = 0, count = 0;
 };
-enum class ActorRecipe : std::uint8_t { Goblin, Archer, Skeleton, Zombie, Rat, Shaman, Bugbear };
-enum class EncounterRecipe : std::uint8_t { GoblinPair, RatPack, UndeadPair, GoblinSupport, BugbearSupport };
+enum class ActorRecipe : std::uint8_t {
+    Goblin,
+    Archer,
+    Skeleton,
+    Zombie,
+    Rat,
+    Shaman,
+    Bugbear,
+    GoblinCaptain,
+    BugbearCaptain,
+    BugbearCommander
+};
+enum class EncounterRecipe : std::uint8_t {
+    GoblinPair,
+    RatPack,
+    UndeadPair,
+    GoblinSupport,
+    BugbearSupport,
+    MixedPatrol,
+    GoblinGuardians,
+    BugbearGuardians,
+    FinalGuardians
+};
 enum class EncounterRole : std::uint8_t { Direct, Optional, Guardian };
 struct Encounter {
     EncounterRecipe recipe = EncounterRecipe::GoblinPair;
@@ -58,7 +79,7 @@ struct Encounter {
 };
 struct Recipe {
     const char* name;
-    std::array<ActorRecipe, 4> members;
+    std::array<ActorRecipe, 6> members;
     unsigned count;
 };
 const Recipe& encounterRecipe(EncounterRecipe) noexcept;
@@ -96,7 +117,7 @@ struct FloorLayout {
     FloorFixtures fixtures;
     std::array<PopulationPlacement, 32> population{};
     unsigned populationCount = 0;
-    std::array<Encounter, 5> encounters{};
+    std::array<Encounter, 8> encounters{};
     unsigned encounterCount = 0;
     std::array<std::uint8_t, maxRooms * 2> route{};
     unsigned routeCount = 0;
@@ -172,6 +193,12 @@ struct LayoutMetrics {
     unsigned walkableCells = 0, minRoomArea = 0, maxRoomArea = 0, distinctRoomAreas = 0;
     unsigned distinctConnectionLengths = 0, progressionSteps = 0;
 };
+struct EncounterMetrics {
+    unsigned firstEncounterSteps = 0, longestEmptySteps = 0, routeSteps = 0;
+    unsigned alternateFirstSteps = 0, alternateLongestEmptySteps = 0, alternateSteps = 0;
+};
+// Diagnostic pacing: cardinal steps to first entry into each previously unvisited populated room.
+EncounterMetrics encounterMetrics(const FloorLayout&, const Map&) noexcept;
 LayoutMetrics layoutMetrics(const FloorLayout&) noexcept;
 std::size_t scratchBytes() noexcept;
 // Diagnostic helpers allocate only during inspection/export.

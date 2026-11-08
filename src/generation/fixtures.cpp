@@ -248,12 +248,12 @@ Failure validateFixtures(const FloorLayout& f, const CellMask* collision) noexce
         return failure;
     if (!f.populationCount || f.populationCount > f.population.size())
         return {Error::Population};
-    unsigned guardians = 0, optionalActors = 0, ordinaryActors = 0;
+    unsigned guardians = 0;
     for (unsigned i = 0; i < f.populationCount; ++i) {
         const auto& p = f.population[i];
         if (p.id != i || !floorCell(f, p.cell) || defs.npcExcluded[index(p.cell)] || unsigned(p.facing) > 3 ||
             p.subcell.x < 0 || p.subcell.x > 1 || p.subcell.y < 0 || p.subcell.y > 1 ||
-            unsigned(p.recipe) > unsigned(ActorRecipe::Bugbear))
+            unsigned(p.recipe) > unsigned(ActorRecipe::BugbearCommander))
             return {Error::Population};
         for (unsigned j = 0; j < i; ++j)
             if (p.cell == f.population[j].cell && p.subcell == f.population[j].subcell)
@@ -266,10 +266,6 @@ Failure validateFixtures(const FloorLayout& f, const CellMask* collision) noexce
         if (!room || (p.guardian && room->role != Role::Approach) ||
             (!p.guardian && room->role != Role::Junction && room->role != Role::Optional))
             return {Error::Population};
-        if (!p.guardian) {
-            optionalActors += room->role == Role::Optional;
-            ordinaryActors += room->role == Role::Junction;
-        }
         if (p.guardian && (!inBowRange(f.guardianApproach, p.cell) ||
                            !gridSight([&](Cell c) { return !floorCell(f, c); }, f.guardianApproach, p.cell)))
             return {Error::Population};
@@ -279,8 +275,7 @@ Failure validateFixtures(const FloorLayout& f, const CellMask* collision) noexce
                 return {Error::Population};
         }
     }
-    if (guardians != (f.depth == 3 ? 3u : 4u) || optionalActors != (f.depth == 1 ? 3u : 2u) ||
-        ordinaryActors != (f.depth == 1 ? 4u : 6u))
+    if (guardians != (f.depth == 3 ? 6u : 5u))
         return {Error::Population};
     // Allocation-free supercover on final base tiles: every door is treated open.
     const auto sight = [&](Cell from, Cell to) {

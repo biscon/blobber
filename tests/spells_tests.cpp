@@ -10,6 +10,33 @@
 using namespace blobber;
 using rules::SpellKind;
 namespace {
+void visibleDiagonalSpellTargets() {
+    const auto map = hybridRoom();
+    const auto catalog = spellCatalog();
+    const Player p{{6, 8}, Heading::North};
+    NpcWorld places(map, p.cell, {"goblin"}, {{{0}, {8, 6}, {0, 1}, Heading::South}});
+    for (const auto kind : {SpellKind::FireBolt, SpellKind::MagicMissile}) {
+        GameSession game(map, catalog, places, 5, p, false);
+        auto command = spellCommand(game, kind);
+        command.targetCount = 1;
+        command.enemies[0] = game.actors().id(0);
+        if (kind == SpellKind::MagicMissile)
+            command.darts[0] = 3;
+        check(game.combat().validate(command, p) == CommandReason::Ready,
+              "Visible diagonal body accepts Fire Bolt and Magic Missile");
+        CommandController ui(game);
+        ui.refresh(allCombatTargets(game), false, false, true);
+        ui.selectCharacter(3);
+        ui.openSpellbook();
+        std::size_t index = 0;
+        while (index < ui.snapshot().magic.count && ui.snapshot().magic.entries[index].kind != kind)
+            ++index;
+        check(index < ui.snapshot().magic.count, "Regression spell is in the book");
+        ui.chooseSpellbook(index);
+        check(ui.magicEligibility(game.actors().id(0)) == CommandReason::Ready,
+              "Visible body is not rejected by the spell-target UI");
+    }
+}
 void acidSplashProximity() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog();
@@ -561,8 +588,7 @@ void classFeaturesUi() {
           "Enter in Abilities immediately heals and spends one use/readiness without a Cast click");
     const auto healedHp = s.party().character({0})->hitPoints;
     ui.chooseSpellbook(0);
-    check(s.submit(wind).reason != CommandReason::Resolved &&
-              s.party().character({0})->hitPoints == healedHp,
+    check(s.submit(wind).reason != CommandReason::Resolved && s.party().character({0})->hitPoints == healedHp,
           "Repeated selection or a stale immediate-use command cannot heal twice");
     s.update(6, false);
     refresh();
@@ -896,8 +922,7 @@ void sharedArea() {
         spellReady(s, 3);
         auto command = spellCommand(s, SpellKind::BurningHands);
         const auto preview = s.combat().area(command, s.movement().player);
-        check(preview.count == 6,
-              "Shared area selects exact subcells for every heading");
+        check(preview.count == 6, "Shared area selects exact subcells for every heading");
         check(s.submit(command).reason == CommandReason::Resolved, "Area preview validates for commit");
         std::size_t impacts = 0;
         for (const auto& e : s.events())
@@ -989,11 +1014,13 @@ void geometryAndPush() {
             check(a->npc.cell.y == 7, "Wall and full destination block pushes without chain movement");
         else
             pushed += a->npc.cell.y == 6;
-        check((a->hitPoints < 1000) == covered[i], "Only covered subcells receive spell damage, even when displacement is blocked");
+        check((a->hitPoints < 1000) == covered[i],
+              "Only covered subcells receive spell damage, even when displacement is blocked");
     }
     check(pushed > 0, "Failed-save survivors enter vacant destination slots");
     for (int i = 12; i < 16; ++i)
-        check((s.actors().actor(s.actors().id(i))->hitPoints < 1000) == covered[i], "Further rows use actual subcell coverage");
+        check((s.actors().actor(s.actors().id(i))->hitPoints < 1000) == covered[i],
+              "Further rows use actual subcell coverage");
     const auto far = spellPlacements(map);
     GameSession illegal(map, catalog, far, 5, spellSpawn, false);
     auto flame = spellCommand(illegal, SpellKind::SacredFlame);
@@ -1144,6 +1171,7 @@ int main(int argc, char** argv) {
         meleeAlertTiming();
         allDamageSpells();
         acidSplashProximity();
+        visibleDiagonalSpellTargets();
         invalidAndPool();
         ui();
         classFeaturesUi();

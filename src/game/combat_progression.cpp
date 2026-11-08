@@ -1,6 +1,9 @@
 #include "game/combat.hpp"
 #include "game/perception.hpp"
 namespace blobber {
+std::uint64_t CombatController::actionReadyMs() const noexcept {
+    return state_.phase == CombatPhase::Turns ? roundEndMs_ : state_.gameplayMs + combatRoundMs;
+}
 bool CombatController::normalAction(rules::CharacterId id) const noexcept {
     return extraAction_[id.index] ||
            (realTime(state_.phase) ? partyReady_[id.index] <= state_.gameplayMs : !state_.spent[id.index]);
@@ -21,9 +24,9 @@ void CombatController::cunningDefend(rules::CharacterId id, std::uint64_t now,
                                      CombatEvents& events) noexcept {
     if (!effects_.canAct(id) || !cunningAvailable(id) || state_.defending[id.index])
         return;
-    cunningReady_[id.index] = state_.gameplayMs + combatRoundMs;
+    cunningReady_[id.index] = actionReadyMs();
     state_.defending[id.index] = true;
-    defendDue_[id.index] = state_.gameplayMs + combatRoundMs;
+    defendDue_[id.index] = actionReadyMs();
     CombatOutcome event;
     event.reason = CommandReason::Resolved;
     event.character = event.recipient = id;
@@ -43,13 +46,13 @@ bool CombatController::hasActions(rules::CharacterId id) const noexcept {
 void CombatController::spendAction(const PartyCommand& c) noexcept {
     if (freeAction(c)) {
         if (c.action == PartyAction::Item || c.feature == rules::Feature::CunningAction)
-            cunningReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
+            cunningReady_[c.character.index] = actionReadyMs();
         return;
     }
     if ((state_.phase == CombatPhase::Turns && state_.spent[c.character.index]) ||
         (realTime(state_.phase) && partyReady_[c.character.index] > state_.gameplayMs))
         extraAction_[c.character.index] = false;
-    partyReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
+    partyReady_[c.character.index] = actionReadyMs();
     state_.spent[c.character.index] = true;
 }
 void CombatController::completeAction(std::uint64_t now) noexcept {
@@ -57,7 +60,7 @@ void CombatController::completeAction(std::uint64_t now) noexcept {
         const auto id = *state_.activeEnemy;
         const auto* actor = actors_.actor(id);
         if (actor && actor->hasTravel && !actorWalking(*actor, now) && effects_.canAct(id) &&
-            inMeleeFront(map_, origin_.cell, origin_.heading, actor->npc.cell))
+            effects_.sees(id) && frontal(id))
             actors_.face(id, headingToward(actor->npc.cell, origin_.cell));
     }
     if (state_.activeEnemy && enemyMovement_.arriving) {

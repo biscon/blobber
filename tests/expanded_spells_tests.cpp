@@ -98,14 +98,21 @@ void allCasts() {
         if (!r.area && !r.self) {
             c.targetCount = 1;
             c.allies[0] = {0};
-            c.enemies[0] = s->actors().id(close ? 2 : 0);
+            c.enemies[0] = s->actors().id(close ? 6 : 0);
         }
         const int mana = s->party().character(c.character)->mana;
+        if (kind == SpellKind::PoisonSpray) {
+            auto hidden = c;
+            hidden.enemies[0] = s->actors().id(2);
+            check(s->submit(hidden).reason == CommandReason::NotVisible &&
+                      s->party().character(c.character)->mana == mana,
+                  "Poison Spray rejects an offscreen diagonal subslot without spending mana");
+        }
         const auto out = s->submit(c);
         if (out.reason != CommandReason::Resolved)
-            throw std::runtime_error(std::string(r.id) + ": " + commandMessage(out.reason) +
-                                     " command " + std::to_string(c.world) + "/" + std::to_string(c.turn) +
-                                     " current " + std::to_string(s->combat().snapshot().world) + "/" +
+            throw std::runtime_error(std::string(r.id) + ": " + commandMessage(out.reason) + " command " +
+                                     std::to_string(c.world) + "/" + std::to_string(c.turn) + " current " +
+                                     std::to_string(s->combat().snapshot().world) + "/" +
                                      std::to_string(s->combat().snapshot().turn));
         check(s->party().character(c.character)->mana == mana - r.level * 2, "Exactly one spell cost");
         check(s->submit(c).reason != CommandReason::Resolved,

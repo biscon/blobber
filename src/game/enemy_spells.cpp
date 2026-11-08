@@ -73,7 +73,7 @@ CombatOutcome CombatController::enemySpell(ActorId id, std::uint64_t now) noexce
             return out;
         // Capacity/deadlines are checked before ward or damage/save RNG.
         enemyTarget_[id.slot] = std::uint8_t((selected + 1) % rules::partySize);
-        enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+        enemyReady_[id.slot] = actionReadyMs();
         bool allowed = false;
         for (std::size_t n = 0; n < rules::partySize; ++n) {
             const auto index = (selected + n) % rules::partySize;
@@ -105,7 +105,7 @@ CombatOutcome CombatController::enemySpell(ActorId id, std::uint64_t now) noexce
     ai_.discardPreparation(id);
     actors_.face(id, headingToward(a->npc.cell, origin_.cell));
     actors_.attack(id, now, true);
-    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+    enemyReady_[id.slot] = actionReadyMs();
     alert(id, origin_);
     out.kind = rules::AttackKind::Ranged;
     out.impactMs = timing.bowImpact ? timing.bowImpact : 600;

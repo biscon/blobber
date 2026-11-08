@@ -78,7 +78,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         if (!lineOfSight(map_, pose.cell, a->npc.cell))
             return CommandReason::NotVisible;
         // Rendering additionally verifies exposure to dungeon geometry, ignoring actor overlap.
-        if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell))
+        if (!inPartyView(map_, pose.cell, pose.heading, a->npc.cell, a->npc.subcell))
             return CommandReason::NotVisible;
         return CommandReason::Ready;
     }
@@ -165,7 +165,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     if (c.action == PartyAction::Defend) {
         out.event = CombatEvent::Defend;
         state_.defending[c.character.index] = true;
-        defendDue_[c.character.index] = state_.gameplayMs + combatRoundMs;
+        defendDue_[c.character.index] = actionReadyMs();
     } else if (c.action == PartyAction::Aid) {
         out.event = CombatEvent::Aid;
         out.recipient = *c.ally;
@@ -212,7 +212,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
                 out.damage +=
                     rng_.damage({party_.character(c.character)->build.level >= 3 ? 2 : 1, 6, 0}, out.critical)
                         .value.total;
-                sneakReady_[c.character.index] = state_.gameplayMs + combatRoundMs;
+                sneakReady_[c.character.index] = actionReadyMs();
             }
         }
         out = queueAttack(out, pose, now);
@@ -267,7 +267,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
         if (count == 2)
             choice %= 2;
     }
-    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+    enemyReady_[id.slot] = actionReadyMs();
     bool allowed = false;
     for (std::size_t attempt = 0; attempt < count; ++attempt) {
         const auto candidate = targets[(choice + attempt) % count];
@@ -308,7 +308,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     if (out.hit && !out.mirror.effect.serial) {
         out.damage = rng_.damage(attack->damage, out.critical).value.total;
     }
-    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+    enemyReady_[id.slot] = actionReadyMs();
     alert(id, origin_);
     return queueAttack(out, origin_, now);
 }
@@ -329,13 +329,14 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
         return out;
     if (!enemyMovement_.initialized) {
         if (surprised_[id.slot] || enemyReady_[id.slot] > state_.gameplayMs) {
+            out.spentCause = surprised_[id.slot] ? SpentCause::Surprise : SpentCause::Cooldown;
             surprised_[id.slot] = false;
             return out;
         }
         enemyMovement_.initialized = true;
         if (currentEvents_ && effects_.escapeWeb(id, now, *currentEvents_)) {
             enemyMovement_.actionSpent = true;
-            enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+            enemyReady_[id.slot] = actionReadyMs();
         }
     }
     const auto speed = enemySpeed(id);
@@ -404,7 +405,7 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
                 if (step.status == TacticalNavigation::Status::AtGoal) {
                     effects_.wake(enemyMovement_.wakeTarget, now, *currentEvents_);
                     enemyMovement_.actionSpent = true;
-                    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+                    enemyReady_[id.slot] = actionReadyMs();
                     out.event = CombatEvent::Wake;
                     out.awakened = enemyMovement_.wakeTarget;
                     return out;
@@ -439,7 +440,7 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
     const bool ranged = actors_.catalog().attack(ranged_[id.slot]);
     const bool shot = frontal(id) && ranged && effects_.sees(id) && inBowRange(a->npc.cell, origin_.cell) &&
                       lineOfSight(map_, a->npc.cell, origin_.cell);
-    const bool retreat = adjacent && ranged && (!melee || wounded);
+    const bool retreat = ranged && (!melee || wounded) && (adjacent || !shot);
     if (!enemyMovement_.actionSpent && !retreat && melee && frontal(id)) {
         const auto slot = meleeSlot(id, actors_.occupiedSlots(a->npc.cell));
         if (slot && *slot == a->npc.subcell)
@@ -458,7 +459,7 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
                 !enemyMovement_.actionSpent && !retreat && !shot) {
                 enemyMovement_.dashed = true;
                 enemyMovement_.actionSpent = true;
-                enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+                enemyReady_[id.slot] = actionReadyMs();
                 remaining += speed;
                 if (currentEvents_) {
                     auto dash = out;
@@ -480,8 +481,12 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
     }
     if (!enemyMovement_.actionSpent && shot)
         return enemyAttack(id, true, now);
+    // Movement headings are presentation, not an instruction to stare away from
+    // the known opponent when a turn ends without a shot.
+    if (enemyMovement_.spentFeet && effects_.sees(id) && frontal(id))
+        actors_.face(id, headingToward(a->npc.cell, origin_.cell));
     // Exhaustion/blocked movement and non-attacking actions still finish readiness once.
-    enemyReady_[id.slot] = state_.gameplayMs + combatRoundMs;
+    enemyReady_[id.slot] = actionReadyMs();
     return out;
 }
 CombatOutcome CombatController::deathSave(rules::CharacterId id, std::uint64_t) noexcept {
@@ -493,7 +498,7 @@ CombatOutcome CombatController::deathSave(rules::CharacterId id, std::uint64_t) 
     out.event = CombatEvent::DeathSave;
     out.roll = rng_.d20().value.selected;
     out.died = party_.deathSave(id, out.roll, effects_.saveModifier(id)).died;
-    saveDue_[id.index] = state_.gameplayMs + combatRoundMs;
+    saveDue_[id.index] = actionReadyMs();
     return out;
 }
 } // namespace blobber

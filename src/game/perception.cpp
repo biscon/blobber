@@ -110,7 +110,8 @@ bool inPartyViewport(Cell from, Heading heading, Cell target, Cell subcell) noex
     return ahead > 0 && std::abs(lateral) < ahead * partyViewHalfTangent - .05f;
 }
 bool inPartyView(GeometryView map, Cell from, Heading heading, Cell target, Cell subcell) noexcept {
-    return inPartyView(map, from, heading, target) && inPartyViewport(from, heading, target, subcell);
+    return inBowRange(from, target) && inPartyViewport(from, heading, target, subcell) &&
+           lineOfSight(map, from, target);
 }
 int cellDistance(Cell a, Cell b) noexcept {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y);

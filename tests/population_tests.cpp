@@ -1,4 +1,5 @@
 #include "game/perception.hpp"
+#include "game/sanctuary_hub.hpp"
 #include "generation/population.hpp"
 #include "support/automation_fixtures.hpp"
 #include <iostream>
@@ -30,13 +31,17 @@ void knowledge() {
     scenario.erase("depth");
     Client player(c, d, blobber::automation::Mode::Visual, hiddenVisibility);
     check(player.request("start", {{"scenario", scenario}}).at("ok"), "owned player campaign starts");
+    const auto stairs = sanctuaryHub().fixtures.entries[0];
+    player.protocol.replaySession()->replayGame().restorePose({stairLanding(stairs), stairs.facing}, false);
+    player.protocol.replaySession()->replayGame().update(0, false);
     const auto entry = player.act({{"kind", "interact"}, {"fixture", 0}}).at("data");
-    check(entry.at("accepted"), "player legally enters generated floor");
+    check(entry.at("accepted"),
+          (std::string("player legally enters generated floor: ") + entry.dump()).c_str());
     const auto before = player.request("observe").at("data");
     check(!before.at("generation").contains("route") && !before.at("generation").contains("encounters"),
           "player generation identity does not expose route or recipe metadata");
     const auto full = player.request("inspect").at("data");
-    check(full.at("generation").at("encounters").size() == 4 && full.at("generation").contains("route"),
+    check(full.at("generation").at("encounters").size() == 6 && full.at("generation").contains("route"),
           "explicit diagnostic campaign inspection exposes active encounter definition");
     const auto after = player.request("observe").at("data");
     check(!after.at("generation").contains("route") && !after.at("generation").contains("encounters") &&
@@ -67,19 +72,36 @@ void budgets() {
                 if (e.role == EncounterRole::Guardian)
                     guardianXp += xp;
             }
-            check(directXp == (depth == 1 ? 200u : 300u) && guardianXp == (depth == 3 ? 300u : 200u),
+            check(directXp == (depth == 3 ? 600u : 500u) && guardianXp == (depth == 1   ? 250u
+                                                                           : depth == 2 ? 400u
+                                                                                        : 450u),
                   "catalog XP matches intended route without milestone grants");
-            check(reserveXp == (depth == 1 ? 75u : 100u), "finite accessible reserve XP");
-            check(p.count <= 32 && f.encounterCount <= 5 && f.fixtures.count <= 32,
+            check(reserveXp == (depth == 1 ? 75u : 200u), "finite accessible reserve XP");
+            check(p.count <= 32 &&
+                      f.encounterCount == (depth == 1   ? 6u
+                                           : depth == 2 ? 7u
+                                                        : 8u) &&
+                      f.fixtures.count <= 32,
                   "population stays within fixed content admission bounds");
             check(p.recovery.groundCount == 6 && p.recovery.ground[0].quantity == 1 &&
                       p.recovery.ground[1].quantity == 2 && p.recovery.ground[2].quantity == 20 &&
                       p.recovery.ground[3].quantity == 1 && p.recovery.ground[4].quantity == 1 &&
                       p.recovery.ground[5].quantity == 10 && p.objective.rewardCount == (depth < 3 ? 1u : 0u),
                   "main/reserve caches and final victory have explicit finite budgets");
-            for (unsigned i = 0; i < p.count; ++i)
-                check(depth == 3 || c.monster(*p.actors[i].monster)->id != "bugbear",
-                      "no level-one bugbears");
+            const auto lead = c.monster(*p.actors[p.objective.members[0]].monster);
+            check(lead->hitPoints == (depth == 1 ? 20 : depth == 2 ? 34 : 42), "guardian lead durability");
+            for (unsigned i = 0; i < f.encounterCount; ++i) {
+                const auto& e = f.encounters[i];
+                unsigned distinct = 0;
+                for (unsigned n = 0; n < e.count; ++n) {
+                    bool unique = true;
+                    for (unsigned k = 0; k < n; ++k)
+                        unique &= !(f.population[e.first + n].cell == f.population[e.first + k].cell);
+                    distinct += unique;
+                }
+                check(distinct >= (unsigned(e.count) + 1) / 2,
+                      "groups use multiple cells without overfilling");
+            }
             auto bad = f;
             bad.encounters[0].count = 32;
             check(validate(bad).code == Error::Population, "invalid member range rejects");
@@ -101,7 +123,7 @@ void budgets() {
             }
         }
     }
-    check(beforeFinal == 1200 && optional == 275, "level two direct-route target and optional margin");
+    check(beforeFinal == 2250 && optional == 475, "revised direct-route XP and finite optional margin");
 }
 void approaches() {
     const auto c = catalog(false, 50, 7, true);
@@ -110,7 +132,7 @@ void approaches() {
         const auto result = generate({8, depth});
         const auto& f = *result.floor;
         const auto p = preparePopulation(f, c, d.types);
-        for (unsigned i = 0; i + 1 < f.layout.encounterCount; ++i) {
+        for (unsigned i = 0; i < f.layout.encounterCount; ++i) {
             const auto& e = f.layout.encounters[i];
             const auto& actor = f.layout.population[e.first];
 
@@ -121,6 +143,8 @@ void approaches() {
                         previous = f.layout.route[j - 1];
                         break;
                     }
+            } else if (e.role == EncounterRole::Guardian) {
+                previous = sectorJunction(f.layout);
             } else {
                 for (unsigned j = 0; j < f.layout.connectionCount; ++j) {
                     const auto& edge = f.layout.connections[j];
@@ -144,15 +168,19 @@ void approaches() {
             Player spawn{outside, towardDoor};
             int key = -1;
             for (unsigned j = 0; j < f.layout.fixtures.count; ++j)
-                if (f.layout.fixtures.entries[j].kind == FixtureKind::Key) {
+                if (f.layout.fixtures.entries[unsigned(door)].key &&
+                    f.layout.fixtures.entries[j].kind == FixtureKind::Key) {
                     key = int(j);
                     spawn.cell = f.layout.fixtures.entries[j].cell;
                 }
-            GameSession game(f.map, c, p.placements, f.runtimeSeed, spawn, false, d.timings, p.recovery,
+            Party party(c);
+            GameSession game(f.map, party, p.placements, f.runtimeSeed, spawn, d.timings, p.recovery,
                              f.layout.fixtures, p.objective);
             // Arrival from a previously cleared room must not create an unrelated encounter behind us.
             for (unsigned n = 0; n < game.actors().snapshot().count; ++n)
-                if (regionAt(f.layout, game.actors().snapshot().actors[n].npc.cell) == previous)
+                if (regionAt(f.layout, game.actors().snapshot().actors[n].npc.cell) == previous ||
+                    (key >= 0 && regionAt(f.layout, game.actors().snapshot().actors[n].npc.cell) ==
+                                     regionAt(f.layout, f.layout.fixtures.entries[unsigned(key)].cell)))
                     game.actors().damage(game.actors().id(n), 100000, 0);
             game.update(0, false);
             if (key >= 0)
@@ -160,8 +188,21 @@ void approaches() {
                       "checked key acquisition before sector approach");
             game.restorePose({outside, towardDoor}, false);
             game.update(0, false);
-            check(game.interact({game.fixtures().id(unsigned(door)), game.fixtures().revision()}).accepted,
-                  "ordinary approach opens by checked interaction");
+            const auto opened =
+                game.interact({game.fixtures().id(unsigned(door)), game.fixtures().revision()});
+            if (!opened.accepted) {
+                std::cerr << "depth=" << depth << " encounter=" << i << " previous=" << previous
+                          << " room=" << unsigned(e.room) << " pose=" << outside.x << ',' << outside.y
+                          << " key=" << key << " reason=" << opened.reason << '\n';
+                for (unsigned n = 0; n < game.actors().snapshot().count; ++n)
+                    if (game.ai().actors[n].awareness != Awareness::Routine)
+                        std::cerr << n << " awareness=" << unsigned(game.ai().actors[n].awareness)
+                                  << " pos=" << game.actors().snapshot().actors[n].npc.cell.x << ','
+                                  << game.actors().snapshot().actors[n].npc.cell.y
+                                  << " hp=" << game.actors().snapshot().actors[n].hitPoints << " region="
+                                  << regionAt(f.layout, game.actors().snapshot().actors[n].npc.cell) << '\n';
+            }
+            check(opened.accepted, "ordinary approach opens by checked interaction");
             // Walk only through this room's opened port toward a legal contact cell.
             // Pillar/bent interiors require an actual turn rather than an assumed straight sightline.
             std::array<int, maxCells> parent;

@@ -10,11 +10,12 @@ from campaign_route_review import Route
 from arena_experiments.trial import StopTrial
 
 exe = Path(sys.argv[1])
-city_entry_only = len(sys.argv) == 3 and sys.argv[2] == "--city-entry"
+city_entry_only = "--city-entry" in sys.argv
+full_clear = "--full-clear" in sys.argv
 scenario = json.loads(subprocess.check_output([str(exe), "--scenario"], text=True))
 with tempfile.TemporaryDirectory(prefix="blobber-route-") as name:
     directory = Path(name)
-    route = Route(exe, directory, directory, scenario, False, time.monotonic()+30)
+    route = Route(exe, directory, directory, scenario, full_clear, time.monotonic()+30, record=False)
     try:
         if city_entry_only:
             route.call("start", scenario=scenario)
@@ -26,7 +27,8 @@ with tempfile.TemporaryDirectory(prefix="blobber-route-") as name:
             route.run()
     except StopTrial as exc:
         if exc.status != "victory":
-            print(json.dumps({k: route.state[k] for k in ("position", "phase", "ticks", "campaign", "party", "enemies")}, indent=2), file=sys.stderr)
+            print(json.dumps(dict(position=route.state["position"], phase=route.state["phase"], ticks=route.state["ticks"],
+                                  rests=route.rests, recent=route.journal[-15:]), indent=2), file=sys.stderr)
             raise RuntimeError((exc.status, exc.reason))
     finally:
         route.close()
@@ -35,4 +37,7 @@ with tempfile.TemporaryDirectory(prefix="blobber-route-") as name:
         assert all(p[0] >= 300 for p in route.checkpoints[-1]["xp"])
         assert route.rests <= 3
         assert route.state["campaign"]["status"] == "victory"
+        if full_clear:
+            assert route.state["party"][0]["xp"] == 793
+            assert route.state["party"][0]["xp_fraction"] == 9
 print("Owned city entry route passed" if city_entry_only else "Owned scripted campaign route passed")

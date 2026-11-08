@@ -15,7 +15,7 @@ PopulationDefinition resolvePopulation(const FloorLayout& layout, GenerationRequ
         const auto& p = layout.population[i];
         const auto name = speciesName(p.recipe);
         const auto monster = catalog.findMonster(name);
-        const auto appearance = std::find(types.begin(), types.end(), name);
+        const auto appearance = std::find(types.begin(), types.end(), monsterAppearance(name));
         if (!catalog.monster(monster) || appearance == types.end())
             throw std::invalid_argument("Generated monster or appearance unavailable");
         NpcInstance npc{{std::uint16_t(appearance - types.begin())}, p.cell, p.subcell, p.facing};

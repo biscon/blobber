@@ -177,7 +177,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 18;
+    bad["schema"] = 19;
     bad["campaign"]["locations"][1]["world"]["buildings"] = blobber::automation::Json::array();
     for (unsigned i = 0; i <= buildingCapacity; ++i)
         bad["campaign"]["locations"][1]["world"]["buildings"].push_back(blobber::automation::Json::object());

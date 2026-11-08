@@ -1,138 +1,86 @@
-#include "generation/floor.hpp"
+#include "game/perception.hpp"
+#include "generation/encounter_planning.hpp"
 #include <algorithm>
 namespace blobber::generation {
 const Recipe& encounterRecipe(EncounterRecipe id) noexcept {
     using A = ActorRecipe;
-    static constexpr Recipe recipes[]{{"goblin_pair", {A::Goblin, A::Goblin}, 2},
-                                      {"rat_pack", {A::Rat, A::Rat, A::Rat}, 3},
-                                      {"undead_pair", {A::Skeleton, A::Zombie}, 2},
-                                      {"goblin_support", {A::Goblin, A::Goblin, A::Archer, A::Shaman}, 4},
-                                      {"bugbear_support", {A::Bugbear, A::Goblin, A::Shaman}, 3}};
-    return recipes[unsigned(id) < 5 ? unsigned(id) : 0];
+    static constexpr Recipe recipes[]{
+        {"goblin_pair", {A::Goblin, A::Goblin}, 2},
+        {"rat_pack", {A::Rat, A::Rat, A::Rat}, 3},
+        {"undead_pair", {A::Skeleton, A::Zombie}, 2},
+        {"goblin_support", {A::Goblin, A::Goblin, A::Archer, A::Shaman}, 4},
+        {"bugbear_support", {A::Bugbear, A::Goblin, A::Shaman}, 3},
+        {"mixed_patrol", {A::Goblin, A::Goblin, A::Archer}, 3},
+        {"goblin_guardians", {A::GoblinCaptain, A::Goblin, A::Archer, A::Archer, A::Shaman}, 5},
+        {"bugbear_guardians", {A::BugbearCaptain, A::Goblin, A::Goblin, A::Archer, A::Shaman}, 5},
+        {"final_guardians", {A::BugbearCommander, A::Goblin, A::Goblin, A::Goblin, A::Archer, A::Shaman}, 6}};
+    return recipes[unsigned(id) <= unsigned(EncounterRecipe::FinalGuardians) ? unsigned(id) : 0];
 }
 const char* speciesName(ActorRecipe id) noexcept {
-    constexpr const char* names[]{"goblin",    "goblin.archer", "skeleton", "zombie",
-                                  "giant.rat", "goblin_shaman", "bugbear"};
-    return unsigned(id) < 7 ? names[unsigned(id)] : "";
+    constexpr const char* names[]{"goblin",          "goblin.archer",    "skeleton", "zombie",
+                                  "giant.rat",       "goblin_shaman",    "bugbear",  "goblin.captain",
+                                  "bugbear.captain", "bugbear.commander"};
+    return unsigned(id) <= unsigned(ActorRecipe::BugbearCommander) ? names[unsigned(id)] : "";
 }
-namespace {
-struct DepthBand {
-    std::array<EncounterRecipe, 3> ordinary;
-    unsigned count;
-    EncounterRecipe optional, guardian;
-};
-const DepthBand& band(unsigned depth) noexcept {
+const DepthBand& encounterBand(unsigned depth) noexcept {
     using R = EncounterRecipe;
     static constexpr DepthBand bands[]{
-        {{R::GoblinPair, R::GoblinPair}, 2, R::RatPack, R::GoblinSupport},
-        {{R::UndeadPair, R::GoblinSupport}, 2, R::GoblinPair, R::GoblinSupport},
-        {{R::GoblinPair, R::UndeadPair, R::GoblinPair}, 3, R::UndeadPair, R::BugbearSupport}};
+        {{R::GoblinPair, R::MixedPatrol, R::GoblinPair, R::MixedPatrol},
+         4,
+         1,
+         R::RatPack,
+         R::GoblinGuardians},
+        {{R::UndeadPair, R::MixedPatrol, R::UndeadPair, R::MixedPatrol},
+         4,
+         2,
+         R::GoblinPair,
+         R::BugbearGuardians},
+        {{R::UndeadPair, R::GoblinSupport, R::UndeadPair, R::GoblinPair, R::UndeadPair},
+         5,
+         2,
+         R::UndeadPair,
+         R::FinalGuardians}};
     const auto spec = floorSpec(depth);
     return bands[spec ? spec->populationBand - 1 : 0];
 }
-bool path(FloorLayout& f, unsigned from, unsigned to, unsigned blocked = maxRooms) noexcept {
-    std::array<unsigned, maxRooms> parents{}, queue{};
-    parents.fill(maxRooms);
-    unsigned head = 0, tail = 1;
-    queue[0] = from;
-    parents[from] = from;
-    while (head < tail) {
-        const auto here = queue[head++];
-        // Stable room-ID order, independent of connection iteration order.
-        for (unsigned next = 0; next < f.roomCount; ++next) {
-            bool edge = false;
-            for (unsigned i = 0; i < f.connectionCount; ++i) {
-                const auto e = f.connections[i];
-                edge |= (e.a == here && e.b == next) || (e.b == here && e.a == next);
-            }
-            if (edge && next != blocked && parents[next] == maxRooms) {
-                parents[next] = here;
-                queue[tail++] = next;
-            }
-        }
-    }
-    if (parents[to] == maxRooms)
-        return false;
-    std::array<unsigned, maxRooms> reverse{};
-    unsigned count = 0;
-    for (auto n = to; n != from; n = parents[n])
-        reverse[count++] = n;
-    if (f.routeCount + count > f.route.size())
-        return false;
-    while (count)
-        f.route[f.routeCount++] = std::uint8_t(reverse[--count]);
-    return true;
-}
-} // namespace
 void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept {
     f.populationCount = f.encounterCount = f.routeCount = 0;
-    unsigned entry = maxRooms, approach = maxRooms, optional = maxRooms, key = maxRooms;
-    for (unsigned i = 0; i < f.roomCount; ++i) {
-        const auto& r = f.rooms[i];
-        if (r.role == Role::Entrance)
-            entry = i;
-        if (r.role == Role::Approach)
-            approach = i;
-        if (r.role == Role::Optional && optional == maxRooms)
-            optional = i;
-        for (unsigned j = 0; j < f.fixtures.count; ++j)
-            if (f.fixtures.entries[j].kind == FixtureKind::Key && f.fixtures.entries[j].cell == r.anchor)
-                key = i;
-    }
-    if (entry == maxRooms || approach == maxRooms || optional == maxRooms)
+    const auto& depth = encounterBand(f.depth);
+    std::array<unsigned, 7> sites{};
+    if (!planEncounterSites(f, depth, sites))
         return;
-    f.route[f.routeCount++] = std::uint8_t(entry);
-    if (key < maxRooms && !path(f, entry, key, sectorJunction(f)))
-        return;
-    if (!path(f, key < maxRooms ? key : entry, approach))
-        return;
-    const auto add = [&](unsigned room, EncounterRecipe recipe, EncounterRole role, Heading facing) {
-        if (f.encounterCount == f.encounters.size())
-            return;
-        const auto& r = encounterRecipe(recipe);
-        if (f.populationCount + r.count > f.population.size())
-            return;
-        f.encounters[f.encounterCount++] = {recipe, role, std::uint8_t(room), std::uint8_t(f.populationCount),
-                                            std::uint8_t(r.count)};
-        for (unsigned n = 0; n < r.count; ++n) {
-            const auto i = f.populationCount++;
-            f.population[i] = {f.rooms[room].anchor,
-                               rotate({int(n % 2), int(n / 2)}, 2, unsigned(facing)),
-                               facing,
-                               r.members[n],
-                               std::uint8_t(i),
-                               role == EncounterRole::Guardian};
+    for (unsigned i = 0; i < depth.count + depth.optionalCount; ++i) {
+        const auto room = sites[i];
+        unsigned previous = maxRooms;
+        if (i < depth.count) {
+            for (unsigned j = 1; j < f.routeCount; ++j)
+                if (f.route[j] == room) {
+                    previous = f.route[j - 1];
+                    break;
+                }
+        } else {
+            for (unsigned j = 0; j < f.connectionCount; ++j) {
+                const auto& e = f.connections[j];
+                const auto next = e.a == room ? e.b : e.b == room ? e.a : maxRooms;
+                if (next < previous)
+                    previous = next;
+            }
         }
-    };
-    std::array<bool, maxRooms> used{};
-    const auto& depth = band(f.depth);
-    const unsigned wanted = depth.count;
-    for (unsigned i = 1; i < f.routeCount && f.encounterCount < wanted; ++i) {
-        const unsigned room = f.route[i];
-        if (f.rooms[room].role != Role::Junction || room == key || used[room])
-            continue;
-        used[room] = true;
-        add(room, depth.ordinary[f.encounterCount], EncounterRole::Direct,
-            incomingFacing(*connectionBetween(f, room, f.route[i - 1]), room));
+        const auto* edge = connectionBetween(f, room, previous);
+        if (!edge ||
+            !placeEncounterFormation(f, room, i < depth.count ? depth.ordinary[i] : depth.optional,
+                                     i < depth.count ? EncounterRole::Direct : EncounterRole::Optional,
+                                     incomingFacing(*edge, room)))
+            return;
     }
-    if (f.encounterCount != wanted)
-        return;
-    unsigned neighbor = optional;
-    for (unsigned i = 0; i < f.connectionCount; ++i) {
-        const auto e = f.connections[i];
-        if (e.a == optional)
-            neighbor = e.b;
-        if (e.b == optional)
-            neighbor = e.a;
-    }
-    add(optional, depth.optional, EncounterRole::Optional,
-        incomingFacing(*connectionBetween(f, optional, neighbor), optional));
-    f.optionalSupply = f.rooms[optional].anchor;
+    f.optionalSupply = f.rooms[sites[depth.count]].anchor;
     const auto& door = f.fixtures.entries[f.approachDoor];
     f.supply = door.cell + forward(door.facing) * -1;
-    add(approach, depth.guardian, EncounterRole::Guardian,
-        incomingFacing(*connectionBetween(f, sectorJunction(f), approach), approach));
-    // One ordinary door per populated-room connection; existing special doors win.
+    const auto room = f.route[f.routeCount - 1];
+    const auto* edge = connectionBetween(f, sectorJunction(f), room);
+    if (!edge || !placeEncounterFormation(f, room, depth.guardian, EncounterRole::Guardian,
+                                          incomingFacing(*edge, room)))
+        return;
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         const auto e = f.connections[i];
         bool populated = false;
@@ -141,18 +89,21 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
                          (f.encounters[j].room == e.a || f.encounters[j].room == e.b);
         if (!populated)
             continue;
-        const auto c = threshold(e);
+        const auto cell = threshold(e);
         bool existing = false;
         for (unsigned j = 0; j < f.fixtures.count; ++j)
-            existing |= f.fixtures.entries[j].cell == c;
-        if (!existing && f.fixtures.count < fixtureCapacity)
-            f.fixtures.entries[f.fixtures.count++] = {c, e.facingA, FixtureKind::Door, 0};
+            existing |= f.fixtures.entries[j].cell == cell;
+        if (!existing) {
+            if (f.fixtures.count == fixtureCapacity)
+                return;
+            f.fixtures.entries[f.fixtures.count++] = {cell, e.facingA, FixtureKind::Door, 0};
+        }
     }
 }
 Failure validatePopulation(const FloorLayout& f) noexcept {
-    const auto& depth = band(f.depth);
-    if (f.depth < 1 || f.depth > 3 || f.encounterCount != depth.count + 2 || !f.routeCount ||
-        f.routeCount > f.route.size() || f.populationCount > f.population.size())
+    const auto& depth = encounterBand(f.depth);
+    if (f.depth < 1 || f.depth > 3 || f.encounterCount != depth.count + depth.optionalCount + 1 ||
+        !f.routeCount || f.routeCount > f.route.size() || f.populationCount > f.population.size())
         return {Error::Population};
     for (unsigned i = 0; i < f.routeCount; ++i) {
         if (f.route[i] >= f.roomCount)
@@ -171,15 +122,35 @@ Failure validatePopulation(const FloorLayout& f) noexcept {
     if (f.rooms[f.route[0]].role != Role::Entrance ||
         f.rooms[f.route[f.routeCount - 1]].role != Role::Approach)
         return {Error::Population};
+    bool keyHeld = f.depth == 1;
+    unsigned visited = 0, nextDirect = 0;
+    for (unsigned i = 0; i < f.routeCount; ++i) {
+        const auto room = f.route[i];
+        for (unsigned j = 0; j < f.fixtures.count; ++j)
+            if (f.fixtures.entries[j].kind == FixtureKind::Key &&
+                f.fixtures.entries[j].cell == f.rooms[room].anchor)
+                keyHeld = true;
+        if (room == sectorJunction(f) && !keyHeld)
+            return {Error::Population};
+        for (unsigned j = 0; j < depth.count; ++j)
+            if (f.encounters[j].room == room && !(visited & (1u << j))) {
+                if (j != nextDirect++)
+                    return {Error::Population};
+                visited |= 1u << j;
+            }
+    }
+    if (nextDirect != depth.count)
+        return {Error::Population};
     unsigned member = 0;
     for (unsigned i = 0; i < f.encounterCount; ++i) {
         const auto& e = f.encounters[i];
-        if (unsigned(e.recipe) > 4 || unsigned(e.role) > 2 || e.room >= f.roomCount || e.first != member ||
-            e.count != encounterRecipe(e.recipe).count || member + e.count > f.populationCount)
+        if (unsigned(e.recipe) > unsigned(EncounterRecipe::FinalGuardians) || unsigned(e.role) > 2 ||
+            e.room >= f.roomCount || e.first != member || e.count != encounterRecipe(e.recipe).count ||
+            member + e.count > f.populationCount)
             return {Error::Population};
-        const auto expectedRole = i + 1 == f.encounterCount   ? EncounterRole::Guardian
-                                  : i + 2 == f.encounterCount ? EncounterRole::Optional
-                                                              : EncounterRole::Direct;
+        const auto expectedRole = i < depth.count                         ? EncounterRole::Direct
+                                  : i < depth.count + depth.optionalCount ? EncounterRole::Optional
+                                                                          : EncounterRole::Guardian;
         const auto expectedRecipe = expectedRole == EncounterRole::Guardian   ? depth.guardian
                                     : expectedRole == EncounterRole::Optional ? depth.optional
                                                                               : depth.ordinary[i];
@@ -192,20 +163,38 @@ Failure validatePopulation(const FloorLayout& f) noexcept {
         if ((e.role == EncounterRole::Direct &&
              (roomRole != Role::Junction || std::find(f.route.begin(), f.route.begin() + f.routeCount,
                                                       e.room) == f.route.begin() + f.routeCount)) ||
-            (e.role == EncounterRole::Optional && roomRole != Role::Optional) ||
+            (e.role == EncounterRole::Optional &&
+             (roomRole != Role::Optional && roomRole != Role::Junction)) ||
             (e.role == EncounterRole::Guardian && roomRole != Role::Approach))
             return {Error::Population};
-        for (unsigned j = 0; j < f.fixtures.count; ++j)
-            if (f.fixtures.entries[j].kind == FixtureKind::Key &&
-                f.fixtures.entries[j].cell == f.rooms[e.room].anchor)
-                return {Error::Population};
+        if (e.role == EncounterRole::Optional && std::find(f.route.begin(), f.route.begin() + f.routeCount,
+                                                           e.room) != f.route.begin() + f.routeCount)
+            return {Error::Population};
         for (unsigned n = 0; n < e.count; ++n) {
             const auto& p = f.population[member++];
-            if (p.recipe != encounterRecipe(e.recipe).members[n] || !(p.cell == f.rooms[e.room].anchor) ||
+            if (p.recipe != encounterRecipe(e.recipe).members[n] || regionAt(f, p.cell) != e.room ||
                 unsigned(p.facing) > 3 || p.facing != f.population[e.first].facing ||
-                !(p.subcell == rotate({int(n % 2), int(n / 2)}, 2, unsigned(p.facing))) ||
+                std::abs(p.cell.x - f.rooms[e.room].anchor.x) > 1 ||
+                std::abs(p.cell.y - f.rooms[e.room].anchor.y) > 1 ||
                 p.guardian != (e.role == EncounterRole::Guardian))
                 return {Error::Population};
+            for (unsigned k = 0; k < e.count; ++k) {
+                const auto other = f.population[e.first + k].cell;
+                if (std::abs(p.cell.x - other.x) + std::abs(p.cell.y - other.y) > 3)
+                    return {Error::Population};
+            }
+            unsigned sameCell = 0;
+            for (unsigned k = 0; k < e.count; ++k)
+                sameCell += f.population[e.first + k].cell == p.cell;
+            if (sameCell > 2 ||
+                (sameCell > 1 && (p.recipe == ActorRecipe::Archer || p.recipe == ActorRecipe::Shaman)))
+                return {Error::Population};
+            for (unsigned k = 0; k < f.connectionCount; ++k) {
+                const auto& edge = f.connections[k];
+                if ((edge.a == e.room && p.cell == edge.socketA + forward(edge.facingA) * -1) ||
+                    (edge.b == e.room && p.cell == edge.socketB + forward(edge.facingB) * -1))
+                    return {Error::Population};
+            }
         }
     }
     for (unsigned i = 0; i < f.connectionCount; ++i) {
@@ -232,7 +221,7 @@ Failure validatePopulation(const FloorLayout& f) noexcept {
         if (fixture.cell == f.supply || fixture.cell == f.optionalSupply)
             return {Error::Population};
     }
-    const auto& reserve = f.encounters[f.encounterCount - 2];
+    const auto& reserve = f.encounters[depth.count];
     if (!(f.optionalSupply == f.rooms[reserve.room].anchor))
         return {Error::Population};
     if (member != f.populationCount ||

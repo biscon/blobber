@@ -22,7 +22,7 @@ void objective() {
     const auto p = preparePopulation(f, cat, defs.types);
     GameSession g(f.map, cat, p.placements, f.runtimeSeed, f.layout.spawn, true, defs.timings, p.recovery,
                   f.layout.fixtures, p.objective);
-    check(g.objective().count == 4 && !g.objective().completed && active(g) == 6,
+    check(g.objective().count == 5 && !g.objective().completed && active(g) == 6,
           "only optional supplies start active");
     check(g.landingSafety(0).safe && g.landingSafety(1).safe && !g.landingSafety(2).safe,
           "both initially protected landings are safe");
@@ -102,7 +102,7 @@ void objective() {
     for (unsigned n = 0; n < drops.objective().count; ++n)
         drops.actors().damage(drops.objective().members[n], 1000, 0);
     drops.update(0, false);
-    check(drops.objective().completed && active(drops) == lootDropCapacity + 11,
+    check(drops.objective().completed && active(drops) == lootDropCapacity + 12,
           "full player-drop pool cannot exhaust reserved guardian rewards");
     const LootId reward{drops.actors().snapshot().world,
                         std::uint16_t(NpcWorld::maxInstances * lootPerActor + p.recovery.groundCount), 1};
