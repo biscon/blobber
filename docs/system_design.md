@@ -1,5 +1,14 @@
 # System design
 
+[Music announcement suppression](combat_music.md#discard-hidden-announcements--2026-11-08):
+**implemented and mechanically verified**. Hiding the music banner permanently expires the current
+announcement, including track starts during dialogue, overlays or loading. Playback
+and its bounded, persistent shuffle remain independent of banner visibility. Debug
+game build and focused transport/runtime regressions pass, including hidden EOF,
+overlay exit and distinct tracks across shuffle/persistence boundaries. An actual
+audio repeat was not reproduced; listening review remains unverified. No rendering
+or save-format changes; disposable output cleaned.
+
 **Development asset paths — 2026-11-08**
 
 **Implemented and mechanically verified:** Debug launches read unchanged runtime files directly from the

@@ -93,7 +93,33 @@ int main() {
     in.paused = false;
     in.bannerVisible = false;
     t.update(in);
-    check(t.bannerAge == age && !t.suspended, "Tactical overlay hides banner without pausing music");
+    check(t.bannerAge == 6 && !t.suspended, "Tactical overlay discards banner without pausing music");
+    in.bannerVisible = true;
+    in.dt = .01f;
+    t.update(in);
+    check(t.bannerAge == 6 && t.revision == generation,
+          "Closing overlay never resumes or restarts the discarded announcement");
+    in.bannerVisible = false;
+    in.ended = true;
+    t.update(in);
+    const auto hiddenRevision = t.revision;
+    check(hiddenRevision == generation + 1 && t.bannerAge == 6,
+          "Track starting behind an overlay has no pending announcement");
+    in.ended = false;
+    in.bannerVisible = true;
+    t.update(in);
+    check(t.bannerAge == 6 && t.revision == hiddenRevision,
+          "Quick overlay exit does not announce a song that already started");
+    in.ended = true;
+    t.update(in);
+    check(t.bannerAge == 0 && t.revision == hiddenRevision + 1,
+          "A later song starting visibly still gets its announcement");
+    in.ended = false;
+    in.paused = true;
+    in.bannerVisible = false;
+    t.update(in);
+    check(t.bannerAge == 6 && t.suspended, "A hidden paused screen also discards the announcement");
+    in.paused = false;
     in.audible = false;
     in.active = false;
     t.update(in);
